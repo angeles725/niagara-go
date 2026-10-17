@@ -128,7 +128,7 @@ func TestCheckFeature(t *testing.T) {
 		qty  int64
 		want string
 	}{{"nope", 1, EFeatureLocked}, {"pid", 9, EFeatureQty}, {"pid", 4, OK}, {"log", 999, OK}, {"odd", 1, OK}} {
-		if code, _ := CheckFeature(f, tc.name, tc.qty); code != tc.want {
+		if code, _, _ := CheckFeature(f, tc.name, tc.qty); code != tc.want {
 			t.Errorf("%s/%d: %s want %s", tc.name, tc.qty, code, tc.want)
 		}
 	}

@@ -90,14 +90,17 @@ func RunSelftest(tmp string, bits int, s cli.Stdio) (exit int) {
 	expect("A3 tamper payload", ESignature, v(strings.Join(bad, "."), VerifyOpts{}))
 	expect("A4 expirada", ETimeExpired, v(art(claims(map[string]pyjson.Value{"expires": pyjson.String("2026-01-01T00:00:00+00:00")})), VerifyOpts{}))
 	_, cl, _ := Verify(pub, art(claims(nil)), VerifyOpts{Product: &product, Host: &host, Now: now})
-	code, _ := CheckFeature(*cl, "nope", 1)
-	expect("A5 feature faltante", EFeatureLocked, code)
-	code, _ = CheckFeature(*cl, "pid", 9)
-	expect("A6 qty insuficiente", EFeatureQty, code)
-	code, _ = CheckFeature(*cl, "pid", 4)
-	expect("A6b qty justa", OK, code)
-	code, _ = CheckFeature(*cl, "logging", 999)
-	expect("A6c qty ilimitada", OK, code)
+	feature := func(name string, qty int64) string {
+		code, _, err := CheckFeature(*cl, name, qty)
+		if err != nil {
+			panic(err)
+		}
+		return code
+	}
+	expect("A5 feature faltante", EFeatureLocked, feature("nope", 1))
+	expect("A6 qty insuficiente", EFeatureQty, feature("pid", 9))
+	expect("A6b qty justa", OK, feature("pid", 4))
+	expect("A6c qty ilimitada", OK, feature("logging", 999))
 	rev := claims(map[string]pyjson.Value{"serial": pyjson.String("DEADBEEF001")})
 	bl := art(revocation([]string{"DEADBEEF001"}, "2026-08-01T00:00:00+00:00"))
 	if err := writeText(filepath.Join(tmp, "bl.refl"), bl+"\n"); err != nil {

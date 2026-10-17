@@ -9,6 +9,8 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
+	"math"
+	"math/big"
 	"os"
 	"strings"
 	"time"
@@ -359,24 +361,49 @@ func readLastSeen(path string) *pyTime {
 }
 
 // CheckFeature mirrors check_feature: the code and the remaining quantity
-// (nil = unlimited).
-func CheckFeature(claims pyjson.Value, name string, qty int64) (string, *pyjson.Value) {
+// (nil = unlimited). The limit is compared like Python's `qty > fqty`: exactly
+// against any int, float (5.0, inf, nan) or bool; any other JSON type is
+// Python's TypeError, returned as the error.
+func CheckFeature(claims pyjson.Value, name string, qty int64) (string, *pyjson.Value, error) {
 	feats, _ := claims.Get("features")
 	f, ok := feats.Get(name)
 	if !feats.Truthy() || !ok {
 		zero := pyjson.IntValue(0)
-		return EFeatureLocked, &zero
+		return EFeatureLocked, &zero, nil
 	}
 	fq, _ := f.Get("qty")
-	if fq.Kind == pyjson.Null {
-		return OK, nil
-	}
-	if fq.Kind == pyjson.Int && fq.I.IsInt64() {
-		if qty > fq.I.Int64() {
-			return EFeatureQty, &fq
+	var rest pyjson.Value
+	over := false
+	switch fq.Kind {
+	case pyjson.Null:
+		return OK, nil, nil
+	case pyjson.Bool, pyjson.Int:
+		limit := fq.I
+		if fq.Kind == pyjson.Bool {
+			limit = big.NewInt(0)
+			if fq.B {
+				limit = big.NewInt(1)
+			}
 		}
-		rest := pyjson.IntValue(fq.I.Int64() - qty)
-		return OK, &rest
+		left := new(big.Int).Sub(limit, big.NewInt(qty))
+		over = left.Sign() < 0
+		rest = pyjson.Value{Kind: pyjson.Int, I: left}
+	case pyjson.Float:
+		// int > float is exact in Python (no rounding of qty); nan is never
+		// exceeded and inf never runs out, as in Python.
+		if !math.IsNaN(fq.F) {
+			if math.IsInf(fq.F, 0) {
+				over = fq.F < 0
+			} else {
+				over = new(big.Float).SetInt64(qty).Cmp(big.NewFloat(fq.F)) > 0
+			}
+		}
+		rest = pyjson.Value{Kind: pyjson.Float, F: fq.F - float64(qty)}
+	default:
+		return "", nil, fmt.Errorf("TypeError: '>' not supported between instances of 'int' and '%s'", fq.TypeName())
 	}
-	return OK, &fq
+	if over {
+		return EFeatureQty, &fq, nil
+	}
+	return OK, &rest, nil
 }
