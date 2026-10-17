@@ -29,10 +29,10 @@ func (c *command) helpText() string {
 	return "Alias of '" + c.aliasOf + "': " + strings.ToLower(string(r[0])) + string(r[1:])
 }
 
-// commandGroups are the cmd_*.py modules, in their import order.
+// commandGroups are the cmd_*.py modules, in their import order, holding
+// the commands the Go port keeps.
 var commandGroups = [][]command{
-	classCommands, memberCommands, docCommands, sourceCommands,
-	analysisCommands, developCommands, exportCommands, adminCommands,
+	classCommands, memberCommands, docCommands, sourceCommands, adminCommands,
 	versionCommands,
 }
 
@@ -53,65 +53,58 @@ func buildRegistry() map[string]*command {
 	return r
 }
 
-// order is the order of the subcommands in --help (app.py ORDER).
+// order is the order of the subcommands in --help (app.py ORDER without the
+// retired commands).
 var order = []string{
-	"class", "search", "hierarchy", "guide", "guide-search", "devguide", "pdf",
-	"module", "method", "source", "package", "xref", "slots", "implementors",
-	"find", "related", "devguide-search", "stats", "source-grep",
-	"inherited-slots", "examples", "method-sig", "enum", "module-deps",
-	"compare", "annotations", "profile", "snippet", "callers", "overrides",
-	"contract", "inherited-methods", "compatible", "graph", "api", "hotspots",
-	"chain", "fuzzy", "module-summary", "export", "interface-hierarchy",
-	"archetypes", "orphans", "recipe", "checklist", "topics", "action-params",
-	"event-flow", "export-html", "export-module", "coverage", "diff-api",
-	"build-call-index", "freshness", "rebuild-all", "selftest", "repl",
-	"versions",
+	"class", "search", "guide", "guide-search", "devguide", "pdf", "method",
+	"source", "package", "slots", "find", "devguide-search", "stats",
+	"source-grep", "freshness", "selftest", "versions",
 }
 
-// epilog is the --help example list (app.py build_parser).
+// retired are the niagara_help.py commands the Go port does not carry
+// (decision D32: no recorded use). Each still parses to one stderr line
+// pointing at docs/retired-commands.md, and exit 2.
+var retired = map[string]bool{}
+
+func init() {
+	for _, n := range []string{
+		"hierarchy", "module", "xref", "implementors", "related", "module-deps",
+		"compare", "annotations", "profile", "snippet", "callers", "overrides",
+		"contract", "inherited-methods", "compatible", "graph", "api", "hotspots",
+		"chain", "module-summary", "archetypes", "orphans", "checklist",
+		"action-params", "diff-api", "build-call-index", "interface-hierarchy",
+		"inherited-slots", "topics", "recipe", "event-flow", "examples", "fuzzy",
+		"enum", "method-sig", "export", "export-html", "export-module", "repl",
+		"coverage", "rebuild-all",
+	} {
+		retired[n] = true
+	}
+}
+
+// retiredMessage is the line a retired command prints on stderr.
+func retiredMessage(name string) string {
+	return "nh: '" + name + "' was retired in the Go port (no recorded use); see docs/retired-commands.md"
+}
+
+// epilog is the --help example list (app.py build_parser), without the
+// examples of retired commands.
 const epilog = "Examples:\n" +
 	"  %(prog)s class BWebServlet\n" +
 	"  %(prog)s search \"BAlarm*\"\n" +
-	"  %(prog)s hierarchy BComponent --depth 2\n" +
 	"  %(prog)s guide bacnet\n" +
 	"  %(prog)s guide-search \"discovery timeout\"\n" +
 	"  %(prog)s devguide \"component model\"\n" +
 	"  %(prog)s pdf \"modbus configuration\"\n" +
-	"  %(prog)s module alarm\n" +
 	"  %(prog)s method doGet\n" +
-	"  %(prog)s method-sig BAlarmRecord\n" +
 	"  %(prog)s source BAlarmService --code\n" +
 	"  %(prog)s source-grep \"getSession()\" -n 20\n" +
 	"  %(prog)s package javax.baja.alarm\n" +
-	"  %(prog)s xref BAlarmService\n" +
 	"  %(prog)s slots BAlarmClass\n" +
 	"  %(prog)s slots faultCause\n" +
 	"  %(prog)s slots BAlarmClass --inherited\n" +
-	"  %(prog)s implementors BIAlarmSource\n" +
 	"  %(prog)s find \"setpoint reference\"\n" +
-	"  %(prog)s related BAlarmService\n" +
 	"  %(prog)s devguide-search \"web servlet\"\n" +
-	"  %(prog)s examples BWebServlet\n" +
-	"  %(prog)s enum BAckState\n" +
-	"  %(prog)s module-deps alarm-rt\n" +
-	"  %(prog)s compare BWebServlet BServletView\n" +
-	"  %(prog)s annotations NiagaraAction\n" +
-	"  %(prog)s profile BAlarmService\n" +
-	"  %(prog)s snippet BAlarmService doRouteAlarm\n" +
-	"  %(prog)s callers doRouteAlarm\n" +
-	"  %(prog)s overrides BOrionAlarmService\n" +
-	"  %(prog)s contract BIAlarmSource\n" +
-	"  %(prog)s inherited-methods BNumericWritable\n" +
-	"  %(prog)s compatible BStatusNumeric\n" +
-	"  %(prog)s graph BAlarmService\n" +
-	"  %(prog)s api BAlarmService\n" +
-	"  %(prog)s hotspots\n" +
-	"  %(prog)s chain doRouteAlarm --depth 3\n" +
-	"  %(prog)s fuzzy \"alarm service route\"\n" +
-	"  %(prog)s module-summary alarm-rt\n" +
-	"  %(prog)s export BAlarmService report.md\n" +
-	"  %(prog)s versions add /mnt/c/Niagara/Niagara-4.16.0.1\n" +
-	"  %(prog)s repl\n"
+	"  %(prog)s versions add /mnt/c/Niagara/Niagara-4.16.0.1\n"
 
 // commandNames lists the registered commands in --help order; a command
 // missing from order is listed last rather than lost (app.py build_parser).

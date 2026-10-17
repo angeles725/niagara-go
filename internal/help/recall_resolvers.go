@@ -1,13 +1,17 @@
 package help
 
-// The resolvers the recall oracle calls once per item, built once per run:
-// hierarchy._key_maps (resolve_inheritance_key), enum_search.resolve_enum
-// and the class -> keys map behind slots_search.class_slot_entries.
+// The resolvers the recall oracle calls for the lookups of commands the Go
+// port retires (hierarchy, implementors, enum, module), kept as resolvers
+// only: hierarchy._key_maps (resolve_inheritance_key, built once per run),
+// implementor_matches, enum_search.resolve_enum, module_class_matches, and
+// the class -> keys map behind slots_search.class_slot_entries.
 
 import (
+	"regexp"
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/index"
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // inheritanceKeys is hierarchy._key_maps: the lookups resolve_inheritance_key
@@ -107,4 +111,88 @@ func slotKeys(si *index.Object) map[string][]string {
 		}
 	}
 	return m
+}
+
+var htmlGenerics = regexp.MustCompile(`&lt;.*?&gt;`)
+
+// stripGenerics removes HTML-encoded generics such as &lt;E&gt; from a key.
+func stripGenerics(name string) string { return htmlGenerics.ReplaceAllString(name, "") }
+
+// bareType is _bare: lower-case type name without generics, "$" as ".".
+func bareType(t string) string {
+	s := stripGenerics(t)
+	if i := strings.IndexByte(s, '<'); i >= 0 {
+		s = s[:i]
+	}
+	return lowerStr(strings.ReplaceAll(pycompat.Strip(s), "$", "."))
+}
+
+type implementor struct{ name, pkg string }
+
+// implementorMatches is hierarchy.implementor_matches: the classes (key
+// without generics, package) implementing iface. A simple name matches every
+// interface with that simple name, a qualified one only that interface.
+func implementorMatches(inh *index.Object, iface string) []implementor {
+	want := bareType(iface)
+	wantSimple := want[strings.LastIndex(want, ".")+1:]
+	qualified := strings.Contains(want, ".")
+	var out []implementor
+	for _, key := range inh.Keys() {
+		entry := inh.Object(key)
+		for _, impl := range strList(entry, "implements") {
+			got := bareType(impl)
+			var same bool
+			if qualified && strings.Contains(got, ".") {
+				same = got == want
+			} else {
+				same = got[strings.LastIndex(got, ".")+1:] == wantSimple
+			}
+			if same {
+				pkg := getStr(entry, "package", "")
+				name := stripGenerics(key)
+				if pkg != "" && strings.HasPrefix(name, pkg+".") {
+					name = name[len(pkg)+1:] // FQN key of a collision
+				}
+				out = append(out, implementor{name, pkg})
+				break
+			}
+		}
+	}
+	return out
+}
+
+// moduleSuffix is r"-(rt|ux|wb|se|doc)$"; Python's $ also matches before a
+// final newline, which the optional group keeps.
+var moduleSuffix = regexp.MustCompile(`-(?:rt|ux|wb|se|doc)(\n?)$`)
+
+// moduleKey is _module_key: "alarm-rt" -> "alarm", "docAlarms" -> "alarm".
+func moduleKey(name string) string {
+	clean := moduleSuffix.ReplaceAllString(lowerStr(name), "$1")
+	clean = strings.TrimPrefix(clean, "doc")
+	return strings.TrimRight(clean, "s")
+}
+
+type namedEntry struct {
+	name string
+	data *index.Object
+}
+
+// moduleClassMatches is module_class_matches: every class variant whose
+// module equals the name or contains the key, or whose name or package
+// contains the key.
+func moduleClassMatches(idx *index.Object, module string) []namedEntry {
+	clean, exact := moduleKey(module), lowerStr(module)
+	var out []namedEntry
+	for _, name := range idx.Keys() {
+		entry := idx.Object(name)
+		variants := append([]*index.Object{entry}, objList(entry, "others")...)
+		for _, d := range variants {
+			mod, pkg := lowerStr(getStr(d, "module", "")), lowerStr(getStr(d, "package", ""))
+			if mod == exact || (clean != "" && strings.Contains(mod, clean)) ||
+				strings.Contains(lowerStr(name), clean) || strings.Contains(pkg, clean) {
+				out = append(out, namedEntry{name, d})
+			}
+		}
+	}
+	return out
 }

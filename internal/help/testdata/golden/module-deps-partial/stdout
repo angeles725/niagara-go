@@ -1,7 +1,0 @@
-MODULE: alarmOrion-rt (1 classes)
-
-DEPENDS ON (1 modules):
-
-  alarm-rt (2 imports)
-    <- BAlarmRecord
-    <- BAlarmService

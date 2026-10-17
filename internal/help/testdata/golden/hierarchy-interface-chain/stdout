@@ -1,6 +1,0 @@
-INTERFACE CHAIN: BIAlarmSource
-
-BIObject > BInterface > BIAlarmSource
-
-Package: javax.baja.alarm
-Type: interface

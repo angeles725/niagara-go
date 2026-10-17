@@ -1,9 +1,7 @@
 package help
 
 import (
-	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 )
 
@@ -28,7 +26,6 @@ func TestMalformedSlotItem(t *testing.T) {
 	}{
 		{[]string{"slots", "BBad"}, ""}, {[]string{"slots", "ok"}, ""},
 		{[]string{"slots", "--by-type", "int"}, ""}, {[]string{"slots", "BBad", "--inherited"}, ""},
-		{[]string{"compatible", "int"}, "COMPATIBLE: int\n" + strings.Repeat("=", 60) + "\n"},
 	} {
 		out, errs, code := run(t, dir, append([]string{"--niagara-version", "4.14.0.162"}, c.args...)...)
 		if code != 2 || out != c.out || errs != want {
@@ -40,23 +37,5 @@ func TestMalformedSlotItem(t *testing.T) {
 		if _, errs, code := run(t, dir, append([]string{"--niagara-version", "4.14.0.162"}, args...)...); errs != "" || code == 2 {
 			t.Errorf("%v: code %d stderr %q", args, code, errs)
 		}
-	}
-}
-
-// overrides requires method-index.json (Python: the same ERROR line, exit 2);
-// inherited-methods and api read it as optional (golden cases *-no-index).
-func TestOverridesMissingMethodIndex(t *testing.T) {
-	root, err := filepath.Abs(filepath.Join("testdata", "s3adv"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	if _, err := os.Stat(filepath.Join(root, "indexes", "method-index.json")); err == nil {
-		t.Fatal("fixture must not have method-index.json")
-	}
-	out, errs, code := run(t, root, "--niagara-version", "4.14.0.162", "overrides", "BChild")
-	want := "ERROR: index indexes/method-index.json is missing under " + root +
-		"; rebuild the indexes with: python3 tools/niagara_help.py rebuild-all\n"
-	if code != 2 || out != "" || errs != want {
-		t.Errorf("code %d stdout %q stderr %q", code, out, errs)
 	}
 }

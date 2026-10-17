@@ -1,7 +1,0 @@
-usage: niagara_help compatible [-h] type
-
-positional arguments:
-  type        Type name (e.g. BStatusNumeric)
-
-options:
-  -h, --help  show this help message and exit

@@ -1,8 +1,0 @@
-usage: niagara_help callers [-h] [-n MAX_RESULTS] method
-
-positional arguments:
-  method                Method name (e.g. doRouteAlarm)
-
-options:
-  -h, --help            show this help message and exit
-  -n, --max-results MAX_RESULTS

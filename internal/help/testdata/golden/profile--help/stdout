@@ -1,7 +1,0 @@
-usage: niagara_help profile [-h] name
-
-positional arguments:
-  name        Class name (e.g. BAlarmService)
-
-options:
-  -h, --help  show this help message and exit

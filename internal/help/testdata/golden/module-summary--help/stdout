@@ -1,7 +1,0 @@
-usage: niagara_help module-summary [-h] name
-
-positional arguments:
-  name        Module name (e.g. alarm-rt)
-
-options:
-  -h, --help  show this help message and exit

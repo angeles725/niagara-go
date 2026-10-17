@@ -1,8 +1,0 @@
-usage: niagara_help event-flow [-h] [-n MAX_RESULTS] topic
-
-positional arguments:
-  topic                 Topic name or partial match
-
-options:
-  -h, --help            show this help message and exit
-  -n, --max-results MAX_RESULTS

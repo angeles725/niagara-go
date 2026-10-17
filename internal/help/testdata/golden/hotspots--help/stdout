@@ -1,5 +1,0 @@
-usage: niagara_help hotspots [-h] [-n TOP]
-
-options:
-  -h, --help     show this help message and exit
-  -n, --top TOP  Number of top entries to show (default: 20)

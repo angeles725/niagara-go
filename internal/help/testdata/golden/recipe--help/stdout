@@ -1,7 +1,0 @@
-usage: niagara_help recipe [-h] query
-
-positional arguments:
-  query       Concept to look up (e.g. 'alarm extension')
-
-options:
-  -h, --help  show this help message and exit

@@ -1,2 +1,0 @@
-Inheritance chain for BOrionAlarmService:
-  java.lang.Object > BObject > BValue > BComplex > BComponent > BAbstractService > BAlarmService > BOrionAlarmService

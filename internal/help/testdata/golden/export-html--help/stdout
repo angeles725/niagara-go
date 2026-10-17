@@ -1,8 +1,0 @@
-usage: niagara_help export-html [-h] name file
-
-positional arguments:
-  name        Class name (e.g. BAlarmService)
-  file        Output .html file path
-
-options:
-  -h, --help  show this help message and exit

@@ -1,7 +1,0 @@
-usage: niagara_help contract [-h] name
-
-positional arguments:
-  name        Interface name (e.g. BIAlarmSource)
-
-options:
-  -h, --help  show this help message and exit

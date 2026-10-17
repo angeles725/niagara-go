@@ -1,8 +1,0 @@
-usage: niagara_help graph [-h] [-n MAX_NODES] name
-
-positional arguments:
-  name                  Class name
-
-options:
-  -h, --help            show this help message and exit
-  -n, --max-nodes MAX_NODES

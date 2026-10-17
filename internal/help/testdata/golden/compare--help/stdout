@@ -1,8 +1,0 @@
-usage: niagara_help compare [-h] class1 class2
-
-positional arguments:
-  class1      First class name
-  class2      Second class name
-
-options:
-  -h, --help  show this help message and exit

@@ -1,7 +1,0 @@
-usage: niagara_help enum [-h] name
-
-positional arguments:
-  name        Enum class name (e.g. BAckState)
-
-options:
-  -h, --help  show this help message and exit

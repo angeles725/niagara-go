@@ -1,7 +1,6 @@
 package help
 
 import (
-	"errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -25,19 +24,9 @@ func TestMisses(t *testing.T) {
 		{"search", []string{"search", "Zz*"}},
 		{"search-jdk", []string{"search", "Zz*", "--jdk"}},
 		{"package", []string{"package", "zzz"}},
-		{"hierarchy", []string{"hierarchy", "BZzz"}},
-		{"implementors", []string{"implementors", "BIZzz"}},
-		{"xref", []string{"xref", "BZzz"}},
-		{"interface-hierarchy", []string{"interface-hierarchy", "Zzz"}},
 		{"slots", []string{"slots", "Zzz"}},
 		{"slots-by-type", []string{"slots", "--by-type", "BZzz"}},
-		{"inherited-slots", []string{"inherited-slots", "Zzz"}},
-		{"inherited-methods", []string{"inherited-methods", "Zzz"}},
-		{"overrides", []string{"overrides", "Zzz"}},
-		{"api", []string{"api", "Zzz"}},
-		{"contract", []string{"contract", "Zzz"}},
 		{"slots-inherited", []string{"slots", "BZzz", "--inherited"}},
-		{"overrides-generic", []string{"overrides", "AbstractCursor"}},
 	}
 	for _, c := range cases {
 		t.Run(c.file, func(t *testing.T) {
@@ -74,43 +63,5 @@ func TestCleanClassName(t *testing.T) {
 		if got := cleanClassName(in); got != want {
 			t.Errorf("cleanClassName(%q) = %q, want %q", in, got, want)
 		}
-	}
-}
-
-// TestEmptyIndexMisses covers the archetypes and orphans misses, which need
-// an empty (but present) inheritance or xref index.
-func TestEmptyIndexMisses(t *testing.T) {
-	dir := t.TempDir()
-	for _, name := range []string{"inheritance.json", "class-index.json", "xref-index.json"} {
-		write(t, filepath.Join(dir, "indexes", name), "{}")
-	}
-	for _, c := range []struct {
-		run  func(e *Env) error
-		want string
-	}{
-		{func(e *Env) error { return e.Archetypes(ArchetypesParams{}) },
-			"No match for '' (archetypes) in this scope.\n  searched: Niagara unregistered (" + dir +
-				") -- inheritance.json: 0 entries\n"},
-		{func(e *Env) error { return e.Orphans(OrphansParams{Top: 30}) },
-			"No match for '' (orphans) in this scope.\n  searched: Niagara unregistered (" + dir +
-				") -- xref-index.json: 0 entries\n"},
-	} {
-		var out strings.Builder
-		e := &Env{Out: &out, BaseDir: dir}
-		if err := c.run(e); err != nil || e.misses != 1 || !strings.HasPrefix(out.String(), c.want) {
-			t.Errorf("err %v misses %d out:\n%s", err, e.misses, out.String())
-		}
-	}
-}
-
-func TestCompatibleNeedsEveryIndex(t *testing.T) {
-	dir := t.TempDir()
-	write(t, filepath.Join(dir, "indexes", "class-index.json"), "{}")
-	var out, errb strings.Builder
-	e := &Env{Out: &out, Err: &errb, BaseDir: dir}
-	err := e.Compatible(CompatibleParams{Type: "BStatusNumeric"})
-	var missing *MissingIndexError
-	if !errors.As(err, &missing) || missing.Name != "slots-index.json" || out.Len() != 0 {
-		t.Errorf("err %v, stdout %q; want the missing slots-index.json before any output", err, out.String())
 	}
 }

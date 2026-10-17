@@ -21,14 +21,10 @@ func TestCannotSearchPaths(t *testing.T) {
 		args       []string
 		stderr     func(dir string) string
 	}{
-		{"hierarchy --interface needs inheritance.json", "{}", []string{"hierarchy", "BX", "--interface"},
-			func(dir string) string { return missing(dir, "inheritance.json") }},
-		{"xref needs xref-index.json", "{}", []string{"xref", "BX"},
-			func(dir string) string { return missing(dir, "xref-index.json") }},
+		{"guide needs guides-index.json", "{}", []string{"guide", "bacnet"},
+			func(dir string) string { return missing(dir, "guides-index.json") }},
 		{"source --grep waits for the Python-regex package", "{}", []string{"source", "BX", "--grep", "x"},
 			func(string) string { return "nh: 'source --grep' is not ported yet\n" }},
-		{"topics is not ported (it is not profile)", "{}", []string{"topics", "BX"},
-			func(string) string { return "nh: 'topics' is not ported yet\n" }},
 		{"others item that is not an object", `{"BX": {"package": "p", "type": "class", "others": ["oops"]}}`,
 			[]string{"class", "BX"},
 			func(string) string { return "ERROR: malformed class index: \"others\"[0] of BX is not an object\n" }},
@@ -58,17 +54,6 @@ func TestTypoSimilarityEmptyStrings(t *testing.T) {
 	}
 	if got := suggest([]string{"", "a", ""}, "", 5); len(got) != 0 {
 		t.Errorf("suggest for an empty query = %q, want none (an empty name is no typo of it)", got)
-	}
-}
-
-func TestClampTopIsPythonSliceEnd(t *testing.T) {
-	tests := []struct{ top, n, want int }{
-		{3, 5, 3}, {9, 5, 5}, {0, 5, 0}, {-1, 5, 4}, {-5, 5, 0}, {-9, 5, 0}, {-1, 0, 0},
-	}
-	for _, tt := range tests {
-		if got := clampTop(tt.top, tt.n); got != tt.want {
-			t.Errorf("clampTop(%d, %d) = %d, want %d", tt.top, tt.n, got, tt.want)
-		}
 	}
 }
 
