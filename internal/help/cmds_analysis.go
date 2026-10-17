@@ -50,7 +50,8 @@ var analysisCommands = []command{
 			intOpt(p, 20, "Number of top entries to show (default: 20)", "-n", "--top")
 		}},
 	{name: "module-summary", help: "Full module overview: classes, deps, slots, API summary",
-		args: func(p *argparse.Parser) { positional(p, "name", "Module name (e.g. alarm-rt)") }},
+		args: func(p *argparse.Parser) { positional(p, "name", "Module name (e.g. alarm-rt)") },
+		run:  func(e *Env, ns *argparse.Namespace) error { return e.ModuleSummary(ns.String("name")) }},
 }
 
 // Development-guidance commands (cli/cmd_develop.py): recipe, checklist,

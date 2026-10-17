@@ -1,0 +1,7 @@
+{
+  "ackAlarm": [{"class": "BAlarmService", "package": "javax.baja.alarm", "section": "methods", "signature": "public void ackAlarm(BAlarmRecord rec)"}, {"class": "BAlarmService", "section": "constructors", "signature": "ackAlarm()"}],
+  "doRouteAlarm": [{"class": "BAlarmService", "section": "methods", "signature": "public void doRouteAlarm(BAlarmRecord r)"}, {"class": "BOrionAlarmService", "section": "methods", "signature": "public void doRouteAlarm(BAlarmRecord r)"}],
+  "getUuid": [{"class": "BAlarmRecord", "section": "methods", "signature": "public BUuid getUuid()"}],
+  "ALARM": [{"class": "BAlarmRecord", "section": "fields", "signature": "static final int ALARM"}],
+  "make": [{"class": "BAckState", "section": "methods", "signature": "public static BAckState make(int)"}, {"class": "BAlarmService", "section": "methods", "signature": "public static BAlarmService make()"}]
+}

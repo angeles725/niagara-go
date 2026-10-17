@@ -36,6 +36,7 @@ func TestS4Misses(t *testing.T) {
 		{"guide", []string{"guide", "zzqq"}},
 		{"devguide", []string{"devguide", "zzqq"}},
 		{"module-deps", []string{"module-deps", "zzqq"}},
+		{"module-summary", []string{"module-summary", "zzqq"}},
 	}
 	for _, c := range cases {
 		t.Run(c.file, func(t *testing.T) { s4Case(t, c.file, 1, c.args...) })

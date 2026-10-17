@@ -1,0 +1,23 @@
+{
+  "BAlarmService": {"extends": "BAbstractService", "implements": ["BIAlarmSource", "BIRestrictedComponent"], "package": "javax.baja.alarm", "subclasses": ["BOrionAlarmService"]},
+  "BAbstractService": {"extends": "BComponent", "package": "javax.baja.sys", "subclasses": ["BAlarmService"]},
+  "BComponent": {"extends": "BObject", "package": "javax.baja.sys", "subclasses": ["BAlarmRecord", "BFaultAlgorithm", "BAlarmClass", "BAbstractService", "BLoopPoint", "BBacnetDevice", "BBacnetNetwork", "BZoneAlarm", "BAlarmTable&lt;T&gt;", "BAlarmPort", "BAlarmRouter", "BAlarmDb"]},
+  "BObject": {"package": "javax.baja.sys", "subclasses": ["BComponent"]},
+  "BAlarmRecord": {"extends": "BComponent", "package": "javax.baja.alarm"},
+  "BAlarmClass": {"extends": "BComponent", "implements": ["BIAlarmSource", "BIPingable"], "package": "javax.baja.alarm"},
+  "BAckState": {"extends": "BFrozenEnum", "package": "javax.baja.alarm"},
+  "BFaultAlgorithm": {"extends": "BComponent", "package": "javax.baja.alarm", "subclasses": ["BOffnormalAlgorithm"]},
+  "BOffnormalAlgorithm": {"extends": "BFaultAlgorithm", "package": "javax.baja.alarm"},
+  "BAlarmExt": {"extends": "BPointExtension", "implements": ["BIExt00", "BIExt01", "BIExt02", "BIExt03", "BIExt04", "BIExt05", "BIExt06", "BIExt07", "BIExt08", "BIExt09", "BIExt10", "BIExt11", "BIExt12", "BIExt13", "BIExt14", "BIExt15", "BIExt16", "BIExt17", "BIExt18", "BIExt19", "BIExt20"], "package": "javax.baja.alarm.ext"},
+  "BAlarmTable&lt;T&gt;": {"extends": "BComponent", "package": "javax.baja.alarm"},
+  "BZoneAlarm": {"extends": "BComponent", "package": "javax.baja.alarm"},
+  "BAlarmPort": {"extends": "BComponent", "package": "javax.baja.alarm.ext"},
+  "BAlarmRouter": {"extends": "BComponent"},
+  "BAlarmDb": {"extends": "BComponent", "package": "javax.baja.alarm"},
+  "BOrionAlarmService": {"extends": "BAlarmService", "package": "javax.baja.alarmOrion"},
+  "BLoopPoint": {"extends": "BComponent", "package": "com.tridium.kc"},
+  "BBacnetDevice": {"extends": "BComponent", "package": "javax.baja.bacnet"},
+  "BBacnetNetwork": {"extends": "BComponent", "package": "javax.baja.bacnet"},
+  "BLoopA": {"extends": "BLoopB"},
+  "BLoopB": {"extends": "BLoopA"}
+}
