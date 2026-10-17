@@ -1,0 +1,3 @@
+usage: module-find.py [root] slots [-h] [--json] [--csv] [--limit N]
+                                   [--type TYPE] [--flags FLAGS] [--name NAME]
+module-find.py [root] slots: error: argument --name: invalid regex '(': missing ), unterminated subpattern at position 0

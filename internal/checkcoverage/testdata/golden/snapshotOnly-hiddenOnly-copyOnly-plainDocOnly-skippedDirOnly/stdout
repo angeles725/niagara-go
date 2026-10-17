@@ -1,0 +1,8 @@
+prior-coverage gate — scanned 21 block(s)
+
+  [CLEAR]   snapshotOnly — no prior block mentions it. Safe to open as net-new.
+  [CLEAR]   hiddenOnly — no prior block mentions it. Safe to open as net-new.
+  [CLEAR]   copyOnly — no prior block mentions it. Safe to open as net-new.
+  [CLEAR]   plainDocOnly — no prior block mentions it. Safe to open as net-new.
+  [CLEAR]   skippedDirOnly — no prior block mentions it. Safe to open as net-new.
+VERDICT: clear. No prior coverage for any name — safe to open as net-new.

@@ -1,0 +1,5 @@
+B6 · Security incident review
+  <- B4 · Enrutamiento de alarmas
+  -> B5 · Histories and trend logs
+
+2 hop(s); '->' cites the next block, '<-' is cited by it.

@@ -1,0 +1,14 @@
+Corpus totals
+  blocks : 5
+  sub-corpus blocks: 3
+  docs   : 2
+  retros : 1
+  focuses: 1
+  blocks with a Connections section: 2
+
+Evidence markers (occurrences across blocks)
+  CERT                    4
+  INFER                   3
+  CERT-doc                1
+  CERT-hw                 1
+  CERT-live               1

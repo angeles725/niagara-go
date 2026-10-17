@@ -1,0 +1,1 @@
+{"args": ["srcA", "actions", "--name", "DEF"], "env": {"COLUMNS": "80", "GIT_DIR": "/nonexistent"}}

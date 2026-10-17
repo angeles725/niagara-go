@@ -1,0 +1,2 @@
+usage: gen-catalog.py [-h] [--check | --stdout]
+gen-catalog.py: error: argument --stdout: not allowed with argument --check

@@ -1,0 +1,4 @@
+  FAIL  'BStatus' (single-word) → 0 blocks; expected > 0
+  FAIL  'BStatus overridden' (two-word OR) → 0 blocks; expected > 0
+  FAIL  'BStatus overridden' (two-word AND) → 0 blocks; expected > 0
+  FAIL  semantic 'point health fault override status': top-5 [] titles [] — expected one mentioning status/BStatus

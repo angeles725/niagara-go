@@ -1,0 +1,257 @@
+// Package gencatalog is tools/gen-catalog.py: it writes CATALOG.md, the table of every
+// main-corpus block with its title, or checks (--check) or prints (--stdout) it.
+//
+// The repository is the parent of the directory holding the executable, symlinks
+// resolved (Python: Path(__file__).resolve().parent.parent), so the binary installed
+// as <repo>/tools/gen-catalog finds <repo> from any working directory.
+package gencatalog
+
+import (
+	"errors"
+	"fmt"
+	"io/fs"
+	"os"
+	"path/filepath"
+	"strings"
+	"unicode/utf8"
+
+	"github.com/angeles725/niagara-go/internal/argparse"
+	"github.com/angeles725/niagara-go/internal/blockfiles"
+	"github.com/angeles725/niagara-go/internal/cli"
+	"github.com/angeles725/niagara-go/internal/pycompat"
+	"github.com/angeles725/niagara-go/internal/pyre"
+)
+
+const catalogName = "CATALOG.md"
+
+// snapshots are listed in their own section (gen-catalog.py SNAPSHOTS).
+var snapshots = []string{"niagara-mental-model.2026-04-19.md"}
+
+var (
+	// _H1_PREFIX_RE and _H1_NO_TITLE_RE of gen-catalog.py.
+	h1PrefixRe = pyre.MustCompile(`^#\s+`+
+		`(?:Niagara\s+N4\s+[—\-]+\s+)?(?:Mental\s+Model\s+[·\-—]+\s+)?`+
+		`Bloque\s+(?:#?\d+|TI)\s*[—:\-]+\s*`, pyre.IGNORECASE)
+	h1NoTitleRe = pyre.MustCompile(
+		`^(?:Niagara\s+N4\s+[—\-]+\s+)?(?:Mental\s+Model\s+[·\-—]+\s+)?Bloque\s+(?:#?\d+|TI)\s*$`, pyre.IGNORECASE)
+	catalogRowRe = pyre.MustCompile(`^\| [^|]+ \| \[([^\]]+)\]`, pyre.MULTILINE)
+)
+
+// repoRoot locates the repository; tests replace it.
+var repoRoot = func() (string, error) {
+	exe, err := invokedPath()
+	if err != nil {
+		return "", err
+	}
+	if exe, err = filepath.EvalSymlinks(exe); err != nil {
+		return "", err
+	}
+	return filepath.Dir(filepath.Dir(exe)), nil
+}
+
+// invokedPath is the executable as it was started (Python's __file__): argv[0] made
+// absolute, or looked up on $PATH when it has no separator; else os.Executable.
+func invokedPath() (string, error) {
+	arg0 := os.Args[0]
+	if !strings.ContainsRune(arg0, filepath.Separator) && !strings.ContainsRune(arg0, '/') {
+		if found, err := lookPath(arg0); err == nil {
+			arg0 = found
+		} else {
+			return os.Executable()
+		}
+	}
+	return filepath.Abs(arg0)
+}
+
+func lookPath(name string) (string, error) {
+	for _, dir := range filepath.SplitList(os.Getenv("PATH")) {
+		if dir == "" {
+			dir = "."
+		}
+		p := filepath.Join(dir, name)
+		if st, err := os.Stat(p); err == nil && !st.IsDir() && st.Mode()&0o111 != 0 {
+			return p, nil
+		}
+	}
+	return "", fs.ErrNotExist
+}
+
+type entry struct{ label, filename, title string }
+
+// Main runs gen-catalog with argv (without the program name).
+func Main(args []string, s cli.Stdio) int {
+	p := argparse.New(argparse.Config{Prog: "gen-catalog.py", Description: "Generate CATALOG.md from the block H1s."})
+	mode := p.AddMutuallyExclusiveGroup(false)
+	mode.Add(argparse.Arg{Action: argparse.StoreTrue, Help: "exit 1 if CATALOG.md is stale; write nothing"}, "--check")
+	mode.Add(argparse.Arg{Action: argparse.StoreTrue, Help: "print the catalog instead of writing it"}, "--stdout")
+	ns, code, done := p.Parse(args, s)
+	if done {
+		return code
+	}
+	root, err := repoRoot()
+	if err != nil {
+		fmt.Fprintf(s.Err, "gen-catalog: cannot locate the repository: %v\n", err)
+		return 1
+	}
+	entries, err := collect(root)
+	if err != nil {
+		fmt.Fprintf(s.Err, "gen-catalog: %v\n", err)
+		return 1
+	}
+	content := render(entries)
+	catalog := filepath.Join(root, catalogName)
+	switch {
+	case ns.Bool("stdout"):
+		fmt.Fprint(s.Out, content)
+		return 0
+	case ns.Bool("check"):
+		return check(s, catalog, content, entries)
+	}
+	if err := os.WriteFile(catalog, []byte(content), 0o666); err != nil {
+		fmt.Fprintf(s.Err, "gen-catalog: cannot write %s: %v\n", catalog, err)
+		return 1
+	}
+	fmt.Fprintf(s.Out, "Generated %s — %d blocks listed.\n", catalogName, len(entries))
+	for _, e := range entries {
+		fmt.Fprintf(s.Out, "  Bloque %s  %s\n", padLeft(e.label, 4), e.filename)
+	}
+	return 0
+}
+
+func check(s cli.Stdio, catalog, content string, entries []entry) int {
+	current, present, err := readCatalog(catalog)
+	if err != nil {
+		fmt.Fprintf(s.Err, "gen-catalog: cannot read %s: %v\n", catalog, err)
+		return 1
+	}
+	if present && current == content {
+		fmt.Fprintf(s.Out, "%s is up to date — %d blocks.\n", catalogName, len(entries))
+		return 0
+	}
+	listed := map[string]bool{}
+	for _, f := range catalogRowRe.FindAll(current) {
+		listed[f] = true
+	}
+	onDisk := map[string]bool{}
+	for _, e := range entries {
+		onDisk[e.filename] = true
+	}
+	missing, orphan := 0, 0
+	for f := range onDisk {
+		if !listed[f] {
+			missing++
+		}
+	}
+	for f := range listed {
+		if !onDisk[f] {
+			orphan++
+		}
+	}
+	absent := ""
+	if !present {
+		absent = " (file absent)"
+	}
+	fmt.Fprintf(s.Out, "%s is stale: %d block file(s) missing, %d row(s) without a file%s. "+
+		"Regenerate: python3 tools/gen-catalog.py\n", catalogName, missing, orphan, absent)
+	return 1
+}
+
+// readCatalog is Path.read_text when Path.is_file(): UTF-8, universal newlines.
+func readCatalog(path string) (text string, present bool, err error) {
+	st, err := os.Stat(path)
+	if err != nil || !st.Mode().IsRegular() {
+		return "", false, nil
+	}
+	text, err = readText(path)
+	return text, err == nil, err
+}
+
+// readText is open(path, encoding="utf-8").read(): strict UTF-8, universal newlines.
+func readText(path string) (string, error) {
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		return "", err
+	}
+	if !utf8.Valid(raw) {
+		return "", errors.New("not valid UTF-8")
+	}
+	return strings.ReplaceAll(strings.ReplaceAll(string(raw), "\r\n", "\n"), "\r", "\n"), nil
+}
+
+func collect(root string) ([]entry, error) {
+	var out []entry
+	for _, b := range blockfiles.MainBlocks(root) {
+		h1, err := extractH1(b.Path)
+		if err != nil {
+			return nil, fmt.Errorf("cannot read %s: %v", b.Path, err)
+		}
+		title := normalizeTitle(h1)
+		if t, ok := titleOverrides[b.Label]; ok {
+			title = t
+		}
+		if title == "" && h1 != "" {
+			title = pycompat.Strip(strings.TrimLeft(h1, "# "))
+		}
+		if title == "" {
+			title = "(no title)"
+		}
+		out = append(out, entry{b.Label, filepath.Base(b.Path), title})
+	}
+	return out, nil
+}
+
+// extractH1 is gen-catalog.extract_h1: the first stripped line starting with "# ".
+func extractH1(path string) (string, error) {
+	text, err := readText(path)
+	if err != nil {
+		return "", err
+	}
+	for _, line := range strings.SplitAfter(text, "\n") {
+		if line = pycompat.Strip(line); strings.HasPrefix(line, "# ") {
+			return line, nil
+		}
+	}
+	return "", nil
+}
+
+// normalizeTitle is gen-catalog.normalize_title: the H1 without its block prefix, ""
+// when it holds nothing but block metadata.
+func normalizeTitle(h1 string) string {
+	if h1 == "" {
+		return ""
+	}
+	text := pycompat.Strip(strings.TrimLeft(h1, "# "))
+	if h1NoTitleRe.MatchString(text) {
+		return ""
+	}
+	text = "# " + text
+	if m := h1PrefixRe.Search(text); m != nil {
+		text = string([]rune(text)[m.End():])
+	}
+	return pycompat.Strip(strings.TrimLeft(text, "# "))
+}
+
+func render(entries []entry) string {
+	lines := []string{
+		"<!-- AUTOGENERADO por tools/gen-catalog.py — NO EDITAR A MANO. Regenerar: python3 tools/gen-catalog.py -->",
+		"", "# Catálogo de bloques", "", fmt.Sprintf("Total: **%d bloques**", len(entries)), "",
+		"| Bloque | Archivo | Título |", "|--------|---------|--------|",
+	}
+	for _, e := range entries {
+		lines = append(lines, fmt.Sprintf("| %s | [%s](%s) | %s |", e.label, e.filename, e.filename, e.title))
+	}
+	lines = append(lines, "", "## Snapshots", "", "Archivos de snapshot histórico (excluidos del catálogo activo):", "")
+	for _, s := range snapshots {
+		lines = append(lines, fmt.Sprintf("- [%s](%s) — snapshot sesión httpapi (2026-04-19)", s, s))
+	}
+	lines = append(lines, "")
+	return strings.Join(lines, "\n")
+}
+
+// padLeft is f"{s:>n}": right-aligned in n code points.
+func padLeft(s string, n int) string {
+	if c := utf8.RuneCountInString(s); c < n {
+		return strings.Repeat(" ", n-c) + s
+	}
+	return s
+}

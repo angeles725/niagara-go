@@ -1,0 +1,8 @@
+prior-coverage gate — scanned 21 block(s)
+
+  [COVERED] palette:
+      SUBJECT  notes/bloque40-palettes.md — Notes bloque 40 — palettes
+
+VERDICT: prior coverage found. DO NOT declare "extends X, never re-derives" blindly.
+For each covered module, decide in the bootstrap: net-new / deepening of B<n> (cite it) /
+already covered -> out of scope. A focus that is entirely covered does NOT open.

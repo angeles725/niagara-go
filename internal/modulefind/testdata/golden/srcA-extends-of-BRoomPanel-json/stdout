@@ -1,0 +1,8 @@
+{
+  "class": "BRoomPanel",
+  "chain": [
+    "BRoomPanel",
+    "BColdRoom",
+    "BComponent"
+  ]
+}

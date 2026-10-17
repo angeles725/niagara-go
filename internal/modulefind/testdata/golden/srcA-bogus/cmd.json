@@ -1,0 +1,1 @@
+{"args": ["srcA", "bogus"], "env": {"COLUMNS": "80", "GIT_DIR": "/nonexistent"}}

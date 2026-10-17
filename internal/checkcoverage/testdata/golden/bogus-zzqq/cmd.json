@@ -1,0 +1,1 @@
+{"args": ["--bogus", "zzqq"], "env": {"COLUMNS": "80"}, "cwd_fixture": "corpus"}
