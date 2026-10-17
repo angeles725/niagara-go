@@ -56,8 +56,12 @@ func TestParseLabsFixture(t *testing.T) {
 				ck.status, ck.live, ck.ranges)
 		}
 	}
-	if g := c.group("LB"); g == nil || g.Ranges[0] != (Range{21, 24}) || c.lookup("LB.1").Subsection != "Customising the manager" {
-		t.Errorf("Bonus lab group or subsection wrong: %+v", g)
+	g, lb := c.group("LB"), c.lookup("LB.1")
+	switch {
+	case g == nil || len(g.Ranges) != 1 || g.Ranges[0] != (Range{21, 24}):
+		t.Errorf("Bonus lab group wrong: %+v", g)
+	case lb == nil || lb.Subsection != "Customising the manager":
+		t.Errorf("LB.1 missing or subsection wrong: %+v", lb)
 	}
 }
 
@@ -68,7 +72,8 @@ func TestParseLabsErrors(t *testing.T) {
 		got = append(got, e.msg)
 	}
 	want := []string{"malformed item ID L1.x", "item L2.1 is outside its group L1",
-		"duplicate ID L1.1 (first at " + labsFile + ":5)", "live-run ID L1.9 is not an item"}
+		"duplicate ID L1.1 (first at " + labsFile + ":5)", "live-run ID L1.9 is not an item",
+		"live-run range L1.4–L1.2 is reversed or crosses groups"}
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("errors:\n%s\nwant:\n%s", strings.Join(got, "\n"), strings.Join(want, "\n"))
 	}

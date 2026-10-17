@@ -3,6 +3,7 @@ package course
 import (
 	"os"
 	"path/filepath"
+	"reflect"
 	"regexp"
 	"sort"
 	"strconv"
@@ -127,7 +128,12 @@ func checkRecall(t *testing.T, root string) *Corpus {
 		if it.Kind == "exam problem" {
 			id = "Problem " + strings.TrimPrefix(it.ID, "P")
 		}
-		if line := files[it.File][it.Line-1]; !strings.Contains(line, id) {
+		lines := files[it.File]
+		if it.Line < 1 || it.Line > len(lines) {
+			t.Errorf("%s: line %d is outside %s (%d lines)", it.ID, it.Line, it.File, len(lines))
+			continue
+		}
+		if line := lines[it.Line-1]; !strings.Contains(line, id) {
 			t.Errorf("%s: %s:%d does not name it: %q", it.ID, it.File, it.Line, line)
 		}
 	}
@@ -143,8 +149,20 @@ func TestRecallFixture(t *testing.T) {
 
 func TestParseErrorsFixture(t *testing.T) {
 	c, problems := load("testdata/dup-root")
-	if c != nil || len(problems) != 7 {
-		t.Fatalf("dup-root: corpus %v, problems %q; want 6 errors + summary", c != nil, problems)
+	want := []string{
+		labsFile + ":6: malformed item ID L1.x",
+		labsFile + ":7: item L2.1 is outside its group L1",
+		labsFile + ":8: duplicate ID L1.1 (first at " + labsFile + ":5)",
+		labsFile + ":12: live-run ID L1.9 is not an item",
+		labsFile + ":12: live-run range L1.4–L1.2 is reversed or crosses groups",
+		reviewFile + ":10: duplicate ID D1.1 (first at " + reviewFile + ":9)",
+		reviewFile + ":11: table row has 2 cells, want 3",
+		reviewFile + ":17: traceability ID RA1.R9 is not a requirement",
+		reviewFile + ":19: traceability row FOO is not a requirement ID",
+		"9 parse errors; nothing searched",
+	}
+	if c != nil || !reflect.DeepEqual(problems, want) {
+		t.Errorf("dup-root: corpus %v, problems:\n%s\nwant:\n%s", c != nil, strings.Join(problems, "\n"), strings.Join(want, "\n"))
 	}
 }
 

@@ -21,7 +21,7 @@ The text files are needed only by `course text`.
 ## Root discovery
 
 1. `--root DIR`.
-2. `NIAGARA_RESEARCH_DIR` (an empty value counts as unset).
+2. `NIAGARA_RESEARCH_DIR`, trimmed (an empty or blank value counts as unset).
 3. The first directory at or above the working directory that holds
    `docs/n4-dev-course-solutions/labs.md`.
 4. The same walk from the directory of the executable (symlinks resolved).
@@ -33,7 +33,7 @@ walk). Nothing found is exit 2 with one line naming the three options.
 
 | Group | Heading | `--lab` / `text` spellings (any case) |
 |---|---|---|
-| `L1`..`L11` | `## Lab <n> — <title> (`LI:a-b`)` | `3`, `L3` |
+| `L1`..`L11` | `## Lab <n> — <title> (`LI:a-b`)` | `3`, `L3` (leading zeros ignored: `03`, `L03`) |
 | `LB` | `## Bonus lab — <title> (`LI:a-b`)` | `B`, `LB` |
 | `LA` | `## Appendix A — <title> (`LI:a-b`)` | `A`, `LA` |
 | `RA1`, `RA2` | `## <n>. Review Assignment <k> — <title>` | `RA1`, `RA2` |
@@ -86,7 +86,9 @@ Tables are recognised by their header row; cells are split on `|` except `\|`.
   (`:2-3`, `:2, :5`) gives the ranges.
 - A range ID (`RA1.V9–V14`, en dash or hyphen) is one item; `RA1.V12` finds it. A traceability
   range (`RA1.M1–M6`) applies to every requirement it covers. A traceability row whose ID is
-  not a requirement is an error; a non-ID cell such as `(robustness)` is skipped.
+  not a requirement is an error; a parenthesised label cell such as `(robustness)` is skipped, any
+  other first cell that is not an `RA` ID is an error.
+- A data row with fewer than three cells in a recognised table is an error.
 - Headings and tables inside code fences are ignored.
 
 ## certification-exam.md items
@@ -114,8 +116,9 @@ not items, and is not applied to the items.
 ## Errors (exit 2)
 
 Duplicate IDs (within or across files), malformed IDs in a lab section (`- **L1.x** · ...`),
-an ID under the wrong group, unknown IDs in the live-run list or a traceability table are
-parse errors. Every error is printed as `course: <file>:<line>: <reason>` and the command
+an ID under the wrong group, unknown IDs in the live-run list or a traceability table, a
+reversed or cross-group live-run range (`L2.4–L2.2`), a table row with fewer than three cells
+and a traceability row that names no requirement are parse errors. Every error is printed as `course: <file>:<line>: <reason>` and the command
 exits 2: an answer key that cannot be read without ambiguity is not searched.
 
 ## Commands
@@ -137,6 +140,9 @@ exits 2: an answer key that cannot be read without ambiguity is not searched.
 - `internal/course/testdata/golden/`: hand-written expectations over the fixture roots
   (`root`, `dup-root`, `partial-root`, `norelated`); the help and usage cases were captured
   from the first green build and reviewed.
+- `root_test.go`: the discovery order (flag, variable, cwd walk, executable walk) and the
+  not-found error, run from a temporary directory with the executable stubbed, so no `labs.md`
+  above the real checkout can leak in.
 - `oracle_test.go`: the recall oracle (plain regexes over the raw files, its own range
   expansion) must equal the parsed ID set on the fixture, and on the real checkout when
   `NIAGARA_RESEARCH_DIR` is set, where the counts per group and per status are pinned.
