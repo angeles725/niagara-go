@@ -1,0 +1,30 @@
+INHERITED SLOTS: BAlarmService
+CHAIN: java.lang.Object > BObject > BValue > BComplex > BComponent > BAbstractService > BAlarmService
+TOTAL: 6 properties, 3 actions, 3 topics
+
+PROPERTIES (6):
+
+  -- from BAbstractService --
+    status: BStatus = BStatus.ok [Flags.READONLY | Flags.TRANSIENT]
+    faultCause: BString = "" [Flags.READONLY]
+    enabled: boolean = true
+  -- from BAlarmService (this) --
+    capacity: int = 500
+    masterAlarmInstructions: BAlarmInstructions = BAlarmInstructions.make("Call the service desk,... [Flags.HIDDEN]
+    descripción: BString = "Cámara fría — línea 2 😀"
+
+ACTIONS (3):
+
+  -- from BAbstractService --
+    restart()
+  -- from BAlarmService (this) --
+    routeAlarm (BAlarmRecord)
+    ackAlarm (BAlarmRecord)
+
+TOPICS (3):
+
+  -- from BAbstractService --
+    serviceEvent -> BValue
+  -- from BAlarmService (this) --
+    alarm -> BAlarmRecord
+    tick

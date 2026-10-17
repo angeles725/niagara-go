@@ -128,6 +128,9 @@ var memberCommands = []command{
 			positional(p, "name", "Class name (e.g. BAlarmClass)")
 			p.Add(argparse.Arg{Dest: "islots_json", Action: argparse.StoreTrue, Help: "Output as JSON"},
 				"--json")
+		},
+		run: func(e *Env, ns *argparse.Namespace) error {
+			return e.InheritedSlots(InheritedSlotsParams{Name: ns.String("name"), JSON: ns.Bool("islots_json")})
 		}},
 	{name: "inherited-methods", help: "Show all methods including inherited from parents",
 		args: func(p *argparse.Parser) { positional(p, "name", "Class name") }},

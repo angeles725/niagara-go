@@ -40,7 +40,7 @@ func (e *Env) Slots(p SlotsParams) error {
 		if p.Query == "" {
 			return usageError("slots --inherited needs a class name")
 		}
-		return notPortedError("slots --inherited")
+		return e.InheritedSlots(InheritedSlotsParams{Name: p.Query, JSON: p.JSON})
 	}
 	idx, err := e.loadIndex("slots-index.json", false)
 	if err != nil {

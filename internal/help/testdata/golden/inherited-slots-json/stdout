@@ -1,0 +1,179 @@
+{
+  "class": "BOrionAlarmService",
+  "chain": [
+    "java.lang.Object",
+    "BObject",
+    "BValue",
+    "BComplex",
+    "BComponent",
+    "BAbstractService",
+    "BAlarmService",
+    "BOrionAlarmService"
+  ],
+  "properties": [
+    {
+      "name": "status",
+      "type": "BStatus",
+      "declared_in": "BAbstractService",
+      "slot": {
+        "name": "status",
+        "type": "BStatus",
+        "defaultValue": "BStatus.ok",
+        "flags": "Flags.READONLY | Flags.TRANSIENT"
+      }
+    },
+    {
+      "name": "faultCause",
+      "type": "BString",
+      "declared_in": "BAbstractService",
+      "slot": {
+        "name": "faultCause",
+        "type": "BString",
+        "defaultValue": "\"\"",
+        "flags": "Flags.READONLY"
+      }
+    },
+    {
+      "name": "enabled",
+      "type": "boolean",
+      "declared_in": "BAbstractService",
+      "slot": {
+        "name": "enabled",
+        "type": "boolean",
+        "defaultValue": "true"
+      }
+    },
+    {
+      "name": "capacity",
+      "type": "int",
+      "declared_in": "BAlarmService",
+      "slot": {
+        "name": "capacity",
+        "type": "int",
+        "defaultValue": "500"
+      }
+    },
+    {
+      "name": "masterAlarmInstructions",
+      "type": "BAlarmInstructions",
+      "declared_in": "BAlarmService",
+      "slot": {
+        "name": "masterAlarmInstructions",
+        "type": "BAlarmInstructions",
+        "defaultValue": "BAlarmInstructions.make(\"Call the service desk, then acknowledge the alarm from the console\")",
+        "flags": "Flags.HIDDEN"
+      }
+    },
+    {
+      "name": "descripci\u00f3n",
+      "type": "BString",
+      "declared_in": "BAlarmService",
+      "slot": {
+        "name": "descripci\u00f3n",
+        "type": "BString",
+        "defaultValue": "\"C\u00e1mara fr\u00eda \u2014 l\u00ednea 2 \ud83d\ude00\"",
+        "facets": "\u0001\u007f"
+      }
+    },
+    {
+      "name": "cleanupDays",
+      "type": "BStatusNumeric",
+      "declared_in": "BOrionAlarmService",
+      "slot": {
+        "name": "cleanupDays",
+        "type": "BStatusNumeric",
+        "defaultValue": "",
+        "order": 3,
+        "weight": 1.5,
+        "big": 12345678901234567890123,
+        "tiny": 1e-07,
+        "huge": 1e+22,
+        "neg": 0,
+        "none": null,
+        "on": true,
+        "off": false,
+        "tags": [],
+        "meta": {},
+        "nested": {
+          "a": [
+            1,
+            "b",
+            {
+              "c": null
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "orionUrl",
+      "type": "BString",
+      "declared_in": "BOrionAlarmService",
+      "slot": {
+        "name": "orionUrl",
+        "type": "BString",
+        "defaultValue": null,
+        "flags": ""
+      }
+    }
+  ],
+  "actions": [
+    {
+      "name": "restart",
+      "parameterType": "",
+      "declared_in": "BAbstractService",
+      "slot": {
+        "name": "restart"
+      }
+    },
+    {
+      "name": "routeAlarm",
+      "parameterType": "BAlarmRecord",
+      "declared_in": "BAlarmService",
+      "slot": {
+        "name": "routeAlarm",
+        "parameterType": "BAlarmRecord",
+        "defaultValue": "new BAlarmRecord()",
+        "flags": "Flags.HIDDEN"
+      }
+    },
+    {
+      "name": "ackAlarm",
+      "parameterType": "BAlarmRecord",
+      "declared_in": "BAlarmService",
+      "slot": {
+        "name": "ackAlarm",
+        "parameterType": "BAlarmRecord",
+        "returnType": "BOrd"
+      }
+    }
+  ],
+  "topics": [
+    {
+      "name": "serviceEvent",
+      "eventType": "BValue",
+      "declared_in": "BAbstractService",
+      "slot": {
+        "name": "serviceEvent",
+        "eventType": "BValue"
+      }
+    },
+    {
+      "name": "alarm",
+      "eventType": "BAlarmRecord",
+      "declared_in": "BAlarmService",
+      "slot": {
+        "name": "alarm",
+        "eventType": "BAlarmRecord"
+      }
+    },
+    {
+      "name": "tick",
+      "eventType": "",
+      "declared_in": "BAlarmService",
+      "slot": {
+        "name": "tick"
+      }
+    }
+  ]
+}
