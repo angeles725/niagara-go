@@ -1,0 +1,1 @@
+# <repo-relative path> <max lines>. Entries may only be lowered or removed.
