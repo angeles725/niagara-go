@@ -9,8 +9,8 @@ import (
 
 func init() {
 	registry.Register("security", []registry.Command{
-		{Name: "license-feature", Help: "Call sites that check or read a licensed feature (checkFeature/getFeature)", Args: argsLicenseFeature},
-		{Name: "license-features", Help: "Licensed feature names with counts; --module: features a module requires", Args: argsLicenseFeatures},
+		{Name: "license-feature", Help: "Call sites that check or read a licensed feature (checkFeature/getFeature)", Args: argsLicenseFeature, Run: runLicenseFeature},
+		{Name: "license-features", Help: "Licensed feature names with counts; --module: features a module requires", Args: argsLicenseFeatures, Run: runLicenseFeatures},
 		{Name: "permissions", Help: "List classes with permission checks and auth methods", Args: argsPermissions},
 		{Name: "license-inspect", Help: "Parse installed .license files and aggregate features", Args: argsLicenseInspect},
 		{Name: "policy-inspect", Help: "Parse bin/policy/{signing.properties,java.policy,java.security}", Args: argsPolicyInspect},

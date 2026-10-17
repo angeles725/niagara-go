@@ -1,0 +1,2 @@
+ERROR: corpus not found: fixture/no-corpus
+  Set NAV_CORPUS_BASE to the organized/ directory.

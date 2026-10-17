@@ -1,0 +1,1 @@
+{"args": ["--base-dir", "fixture/lic", "license-features", "-m", "nope"], "env": {"NAV_CORPUS_BASE": "fixture/lic-organized"}}

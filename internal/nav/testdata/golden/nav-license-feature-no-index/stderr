@@ -1,0 +1,2 @@
+ERROR: token index not found: fixture/nav/indexes/token-index.db
+  Run: ./reindex.sh

@@ -1,0 +1,12 @@
+
+  UNRESOLVED licensing calls: 1
+    lic/lic-rt/vineflower/com/x/BLicNetwork.java:7  checkFeature(vendorVar, featureVar)
+
+  getLicenseManager() sites without a feature: 4 of 7
+    lic/lic-rt/vineflower/com/x/BLicNetwork.java:6  getFeatures(): every licensed feature, none named
+    lic/lic-rt/vineflower/com/x/BLicNetwork.java:7  feature argument not resolvable: featureVar
+
+  Candidate files that could not be read: 1
+    lic/lic-rt/vineflower/com/x/Gone.java  could not read
+    ... limit reached (2) — use -n to increase
+

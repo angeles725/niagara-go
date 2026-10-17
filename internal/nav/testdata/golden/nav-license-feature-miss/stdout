@@ -1,0 +1,21 @@
+  0 matches for license feature 'feat' in 5 licensing calls (4 resolved to 2 feature names, 1 unresolved) in 4 candidate files (1 unreadable) from 3 submodules, token index built 2026-03-04T05:06:07.
+  Try: license-features
+
+  Fallback hints for 'feat':
+    Related feature names (2):
+      - licFeat
+      - otherFeat
+    Related method names (4):
+      - Feature()
+      - feat()
+      - featureOf()
+      - getFeature()
+    Related class names (1):
+      - BFeatureView
+    Next commands to try:
+      license-feature licFeat
+      license-features                     # full aggregate of feature names
+      method Feature
+      source BFeatureView
+      grep 'feat'
+

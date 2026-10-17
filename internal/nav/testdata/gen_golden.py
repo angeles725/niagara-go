@@ -29,6 +29,8 @@ DRV_BASE = "fixture/drivers"
 CORPUS = {"NAV_CORPUS_BASE": "fixture/organized"}
 SRC = {"NAV_CORPUS_BASE": "fixture/search-organized"}
 SRC_BASE = "fixture/search"
+LIC = {"NAV_CORPUS_BASE": "fixture/lic-organized"}
+LIC_BASE = "fixture/lic"
 
 CLASS_NAMES = ["BAlarmService", "BAlarmClass", "BAlarmRecord", "AlarmDbConnection", "BAckState",
                "AlarmSupport", "BAlarmArchive", "BAlarmablePointMarkerTag", "BAlarm", "Entry",
@@ -169,6 +171,16 @@ CASES = [
     ("token-context-no-corpus", ["token", "ackAlarm", "--context", "1", "-n", "2"], NO_CORPUS, SRC_BASE),
     ("ask", ["ask", "who calls ackAlarm"], NO_CORPUS),
     ("ask-n", ["ask", "-n", "2", "como funciona el ack de alarmas"], NO_CORPUS),
+    ("license-feature", ["license-feature", "LICFEAT"], LIC, LIC_BASE),
+    ("license-feature-module", ["license-feature", "licFeat", "-m", "lic", "-n", "1"], LIC, LIC_BASE),
+    ("license-feature-miss", ["license-feature", "feat"], LIC, LIC_BASE),
+    ("license-feature-no-index", ["license-feature", "x"], LIC, "fixture/nav"),
+    ("license-features", ["license-features"], LIC, LIC_BASE),
+    ("license-features-n", ["license-features", "-n", "1"], LIC, LIC_BASE),
+    ("license-features-module", ["license-features", "--module", "lic-rt"], LIC, LIC_BASE),
+    ("license-features-module-miss", ["license-features", "-m", "nope"], LIC, LIC_BASE),
+    ("license-features-unresolved", ["license-features", "--unresolved", "-n", "2"], LIC, LIC_BASE),
+    ("license-features-no-corpus", ["license-features"], NO_CORPUS, LIC_BASE),
 ]
 
 
@@ -455,6 +467,82 @@ def fresh_class_index():
         os.utime(path, (future, future))
 
 
+# license-feature(s) and resources: a token index over three candidate files
+# (direct, variable and helper calls, every unresolved site reason, an
+# unreadable file), small method and class indexes for the miss hints, and a
+# JAR with resources by extension (a cp437 name, a directory entry, a file
+# without extension); lic-wb holds a JAR that is not a zip.
+LIC_SOURCES = {
+    "lic/lic-rt/vineflower/com/x/BLicNetwork.java": """package com.x;
+public class BLicNetwork {
+  static final String VENDOR = "acme";
+  void a() { Sys.getLicenseManager().checkFeature(VENDOR, "licFeat"); }
+  void b() { LicenseManager lm = Sys.getLicenseManager(); lm.getFeature("Acme", "otherFeat"); }
+  void c() { Sys.getLicenseManager().getFeatures(); }
+  void d() { Sys.getLicenseManager().checkFeature(vendorVar, featureVar); }
+  void e() { use(Sys.getLicenseManager()); }
+}
+""",
+    "lic/lic-wb/vineflower/com/x/BLicView.java": """package com.x;
+class BLicView {
+  void a() { Sys.getLicenseManager().checkFeature("tridium", "licFeat"); }
+  void b() { LicenseManager unused = Sys.getLicenseManager(); }
+}
+""",
+    "other/other-rt/vineflower/com/y/Helper.java": """class Helper {
+  void a() { Helper.checkFeature(null, "licFeat"); }
+}
+""",
+}
+
+LIC_JAR = ["META-INF/MANIFEST.MF", "META-INF/", "com/x/BLicNetwork.class", "com/x/BLicView.class",
+           "module.palette", "lic-rt.lexicon", "com/x/icons/a.png", "com/x/icons/b.PNG", "README",
+           "dir.d/NOTICE", "~t~.png"]  # ~t~ becomes cp437 bytes (no UTF-8 flag): "été"
+
+
+def build_lic():
+    import zipfile
+    fx = os.path.join(HERE, "fixture")
+    idx = os.path.join(fx, "lic", "indexes")
+    org = os.path.join(fx, "lic-organized")
+    for d in (os.path.join(fx, "lic"), org):
+        shutil.rmtree(d, ignore_errors=True)
+    os.makedirs(idx)
+    conn = sqlite3.connect(os.path.join(idx, "token-index.db"))
+    conn.executescript("CREATE TABLE files (id INTEGER PRIMARY KEY, path TEXT NOT NULL, module TEXT NOT NULL, "
+                       "class_name TEXT NOT NULL); CREATE TABLE postings (token TEXT NOT NULL, file_id INTEGER "
+                       "NOT NULL, line_no INTEGER NOT NULL); CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT "
+                       "NOT NULL); INSERT INTO meta VALUES ('timestamp', '2026-03-04T05:06:07');")
+    for rel in sorted(LIC_SOURCES) + ["lic/lic-rt/vineflower/com/x/Gone.java"]:
+        cur = conn.execute("INSERT INTO files (path, module, class_name) VALUES (?, ?, ?)",
+                           (rel, rel.split("/")[1], os.path.basename(rel)[:-5]))
+        conn.execute("INSERT INTO postings VALUES ('getLicenseManager', ?, 3)", (cur.lastrowid,))
+        conn.execute("INSERT INTO postings VALUES ('checkFeature', ?, 4)", (cur.lastrowid,))
+        if rel in LIC_SOURCES:
+            path = os.path.join(org, rel)
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            with open(path, "w", encoding="utf-8") as f:
+                f.write(LIC_SOURCES[rel])
+    conn.commit()
+    conn.execute("VACUUM")
+    conn.close()
+    with open(os.path.join(idx, "method-index.json"), "w", encoding="utf-8") as f:
+        json.dump({"_meta": {}, "methods": {"getFeature": [], "featureOf": [], "feat": [], "Feature": []}}, f)
+    with open(os.path.join(idx, "class-index.json"), "w", encoding="utf-8") as f:
+        json.dump({"_meta": {"timestamp": "2026-03-04T05:06:07"}, "classes": {"BFeatureView": []}}, f)
+    jar = os.path.join(org, "lic", "lic-rt", "lic-rt.jar")
+    with zipfile.ZipFile(jar, "w") as zf:
+        for name in LIC_JAR:
+            info = zipfile.ZipInfo(name, date_time=(2026, 1, 2, 3, 4, 6))
+            zf.writestr(info, b"" if name.endswith("/") else name.encode("utf-8"))
+    with open(jar, "rb") as f:
+        data = f.read()
+    with open(jar, "wb") as f:
+        f.write(data.replace(b"~t~.png", b"\x82t\x82.png"))
+    with open(os.path.join(org, "lic", "lic-wb", "lic-wb.jar"), "wb") as f:
+        f.write(b"not a zip file\n")
+
+
 def build_fixture():
     fx = os.path.join(HERE, "fixture")
     shutil.rmtree(fx, ignore_errors=True)
@@ -511,14 +599,23 @@ def capture(cid, args, env, base=BASE):
 
 
 def main():
+    """--fixture rebuilds every fixture; --search only the grep/source/token one,
+    --lic only the license/resources one.
+    --only a,b captures just those case ids (without the nav- prefix)."""
     if "--fixture" in sys.argv:
         build_fixture()
         build_drivers()
     if "--fixture" in sys.argv or "--search" in sys.argv:
         build_search()
+    if "--fixture" in sys.argv or "--lic" in sys.argv:
+        build_lic()
+    only = set(sys.argv[sys.argv.index("--only") + 1].split(",")) if "--only" in sys.argv else None
     fresh_class_index()
     for cid, args, env, *base in CASES:
-        capture("nav-" + cid, args, env, *base)
+        if only is None or cid in only:
+            capture("nav-" + cid, args, env, *base)
+    if only is not None:
+        return
     for cache in glob.glob(os.path.join(HERE, "fixture", "*", "indexes", "class-rank.cache")):
         os.remove(cache)  # Python's rank cache; the Go port keeps its own
     for cid, args in PARSE_CASES:

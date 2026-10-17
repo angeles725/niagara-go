@@ -1,0 +1,1 @@
+WARNING: could not read 1 of 4 candidate files under fixture/lic-organized (e.g. lic/lic-rt/vineflower/com/x/Gone.java); results exclude them (license-features --unresolved lists them)
