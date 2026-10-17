@@ -67,9 +67,25 @@ type syntaxError struct{ msg string }
 func (e syntaxError) Error() string { return e.msg }
 
 type xmlParser struct {
-	s    string
-	i    int
-	line int
+	s     string
+	i     int
+	line  int
+	depth int // open elements, the one being parsed included
+}
+
+// maxDepth is libxml2's xmlParserMaxDepth without XML_PARSE_HUGE (lxml's
+// default huge_tree=False): the 257th nested element is a fatal error.
+const maxDepth = 256
+
+// checkDepth raises libxml2's "Excessive depth" error once the start tag of
+// an element nested deeper than maxDepth is read (p.i at its '>' or "/>").
+func (p *xmlParser) checkDepth() {
+	if p.depth <= maxDepth {
+		return
+	}
+	lineStart := strings.LastIndexByte(p.s[:p.i], '\n') + 1
+	panic(syntaxError{fmt.Sprintf("Excessive depth in document: %d, use XML_PARSE_HUGE option, line %d, column %d",
+		maxDepth, 1+strings.Count(p.s[:p.i], "\n"), utf8.RuneCountInString(p.s[lineStart:p.i])+1)})
 }
 
 func (p *xmlParser) fail(format string, a ...any) {
@@ -320,14 +336,18 @@ func (p *xmlParser) element() *node {
 	p.i++
 	startLine := 1 + strings.Count(p.s[:p.i], "\n")
 	n := &node{kind: elemNode, name: p.name(), line: startLine}
+	p.depth++
+	defer func() { p.depth-- }()
 	for {
 		hadSpace := p.i < len(p.s) && isSpace(p.s[p.i])
 		p.skipSpace()
 		if strings.HasPrefix(p.s[p.i:], "/>") {
+			p.checkDepth()
 			p.i += 2
 			return n
 		}
 		if strings.HasPrefix(p.s[p.i:], ">") {
+			p.checkDepth()
 			p.i++
 			break
 		}

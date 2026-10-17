@@ -162,7 +162,33 @@ func decodeError(msg string, doc []rune, pos int) error {
 
 type stopIteration int
 
-type jsonScanner struct{ s []rune }
+// MaxDepth is the deepest container nesting Loads accepts. CPython 3.15 has
+// no fixed limit: its scanner raises RecursionError when the C stack runs out
+// (about 52,100 levels on Linux's 8 MiB main-thread stack, fewer on smaller
+// stacks). Loads stops at this fixed bound, below that ceiling, instead of
+// overflowing Go's stack and killing the process.
+const MaxDepth = 50000
+
+// RecursionError is json.loads' RecursionError on runaway nesting. CPython
+// 3.15's text carries the stack it used ("Stack overflow (used 8152 kB) while
+// decoding ..."); this is the fixed text of the earlier depth-counted limit.
+type RecursionError struct{ Container string } // "array" or "object"
+
+func (e *RecursionError) Error() string {
+	return "maximum recursion depth exceeded while decoding a JSON " + e.Container + " from a unicode string"
+}
+
+type jsonScanner struct {
+	s     []rune
+	depth int
+}
+
+// enter mirrors Py_EnterRecursiveCall in scan_once before a container.
+func (p *jsonScanner) enter(container string) {
+	if p.depth++; p.depth > MaxDepth {
+		panic(jsonError{&RecursionError{container}})
+	}
+}
 
 func isWS(r rune) bool { return r == ' ' || r == '\t' || r == '\n' || r == '\r' }
 
@@ -217,9 +243,15 @@ func (p *jsonScanner) scan(i int) (Value, int) {
 		s, end := p.scanString(i + 1)
 		return String(s), end
 	case c == '{':
-		return p.scanObject(i + 1)
+		p.enter("object")
+		v, end := p.scanObject(i + 1)
+		p.depth--
+		return v, end
 	case c == '[':
-		return p.scanArray(i + 1)
+		p.enter("array")
+		v, end := p.scanArray(i + 1)
+		p.depth--
+		return v, end
 	case c == 'n' && p.has(i, "null"):
 		return Value{}, i + 4
 	case c == 't' && p.has(i, "true"):

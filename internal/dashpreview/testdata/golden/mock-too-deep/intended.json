@@ -1,0 +1,4 @@
+{
+ "reason": "Python dies with an uncaught RecursionError (traceback, exit 1) whose text carries the C stack used ('Stack overflow (used 8148 kB) ...'), which varies by host; Go stops at pyjson.MaxDepth (50,000) and prints one fixed 'RecursionError: <message>' line, exit 1",
+ "stderr": "RecursionError: maximum recursion depth exceeded while decoding a JSON array from a unicode string\n"
+}

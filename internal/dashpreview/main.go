@@ -197,6 +197,10 @@ func loadMock(path string) (pyjson.Value, error) {
 		return pyjson.Value{}, errors.New("UnicodeDecodeError: 'utf-8' codec can't decode the mock file")
 	}
 	v, err := pyjson.Loads(text)
+	var re *pyjson.RecursionError
+	if errors.As(err, &re) {
+		return pyjson.Value{}, fmt.Errorf("RecursionError: %v", err)
+	}
 	if err != nil {
 		return pyjson.Value{}, fmt.Errorf("json.decoder.JSONDecodeError: %v", err)
 	}

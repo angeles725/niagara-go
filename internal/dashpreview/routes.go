@@ -21,16 +21,22 @@ func pyStripSpace(s string) string {
 	return strings.TrimFunc(s, func(r rune) bool { return unicode.IsSpace(r) || r >= 0x1C && r <= 0x1F })
 }
 
-// loadsOrEmpty mirrors `json.loads(body or "{}")` with ValueError -> {}.
-func loadsOrEmpty(body string) pyjson.Value {
+// loadsOrEmpty mirrors `json.loads(body or "{}")` with ValueError -> {}. A
+// RecursionError is not a ValueError: it escapes the handler, returned here
+// as the exception line for rp.drop.
+func loadsOrEmpty(body string) (pyjson.Value, string) {
 	if body == "" {
 		body = "{}"
 	}
 	v, err := pyjson.Loads([]rune(body))
-	if err != nil {
-		return pyjson.NewObject()
+	var re *pyjson.RecursionError
+	if errors.As(err, &re) {
+		return v, "RecursionError: " + re.Error()
 	}
-	return v
+	if err != nil {
+		return pyjson.NewObject(), ""
+	}
+	return v, ""
 }
 
 // attrError is the AttributeError `req.get` raises on a non-dict body.
@@ -124,10 +130,13 @@ func (h *Handler) doPOST(rp *reply) {
 			return
 		}
 		h.expires = h.now() + float64(h.Login.TTL)
-		req := loadsOrEmpty(body)
-		if req.Kind != pyjson.Object {
+		req, exc := loadsOrEmpty(body)
+		if exc == "" && req.Kind != pyjson.Object {
+			exc = attrError(req)
+		}
+		if exc != "" {
 			h.mu.Unlock()
-			rp.drop(attrError(req))
+			rp.drop(exc)
 			return
 		}
 		row = h.changeRow(req)
@@ -174,10 +183,13 @@ func (h *Handler) login(rp *reply, p, body string) {
 		rp.json(ok, 200, "dp_config_session=; Path="+h.Prefix+"/; Max-Age=0; SameSite=Lax")
 		return
 	}
-	req := loadsOrEmpty(body)
-	if req.Kind != pyjson.Object {
+	req, exc := loadsOrEmpty(body)
+	if exc == "" && req.Kind != pyjson.Object {
+		exc = attrError(req)
+	}
+	if exc != "" {
 		h.mu.Unlock()
-		rp.drop(attrError(req))
+		rp.drop(exc)
 		return
 	}
 	user := pyStripSpace(getOr(req, "user", pyjson.String("")).Str())
