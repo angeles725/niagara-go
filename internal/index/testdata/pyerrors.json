@@ -39,4 +39,13 @@
   ["{\"a\":[1,{\"b\":}]}", "Expecting value: line 1 column 14 (char 13)"],
   ["[Infinit]", "Expecting value: line 1 column 2 (char 1)"],
   ["\"\\ud83d\\uzzzzzz\"", "Invalid \\uXXXX escape: line 1 column 9 (char 8)"],
-  ["[1]\n\u00e9", "Extra data: line 2 column 1 (char 4)"]]}
+  ["[1]\n\u00e9", "Extra data: line 2 column 1 (char 4)"]],
+ "file": [
+  ["0d0a5b0d0a312c0d5d", "Illegal trailing comma before end of array: line 3 column 2 (char 4)"],
+  ["0d0d7b22612220317d", "Expecting ':' delimiter: line 3 column 6 (char 7)"],
+  ["7b2261223a2022ff227d", "'utf-8' codec can't decode byte 0xff in position 7: invalid start byte"],
+  ["5b312c2022e441225d", "'utf-8' codec can't decode byte 0xe4 in position 5: invalid continuation byte"],
+  ["5b2278e4b8", "'utf-8' codec can't decode bytes in position 3-4: unexpected end of data"],
+  ["efbbbf7b7d", "Unexpected UTF-8 BOM (decode using utf-8-sig): line 1 column 1 (char 0)"],
+  ["7b226b223a205b312c20322c5d7d0a", "Illegal trailing comma before end of array: line 1 column 12 (char 11)"],
+  ["", "Expecting value: line 1 column 1 (char 0)"]]}

@@ -1,6 +1,7 @@
 package index
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"os"
 	"path/filepath"
@@ -17,6 +18,7 @@ func TestPythonErrorTexts(t *testing.T) {
 	}
 	var fx struct {
 		Loads [][2]*string `json:"loads"`
+		File  [][2]*string `json:"file"`
 	}
 	if err := json.Unmarshal(raw, &fx); err != nil {
 		t.Fatal(err)
@@ -33,6 +35,21 @@ func TestPythonErrorTexts(t *testing.T) {
 	for _, c := range fx.Loads {
 		t.Run("loads "+*c[0], func(t *testing.T) {
 			_, err := Decode([]byte(*c[0]))
+			check(t, err, c[1])
+		})
+	}
+	dir := t.TempDir()
+	for _, c := range fx.File {
+		t.Run("file "+*c[0], func(t *testing.T) {
+			data, err := hex.DecodeString(*c[0])
+			if err != nil {
+				t.Fatal(err)
+			}
+			path := filepath.Join(dir, "index.json")
+			if err := os.WriteFile(path, data, 0o644); err != nil {
+				t.Fatal(err)
+			}
+			_, err = LoadPython(path)
 			check(t, err, c[1])
 		})
 	}
@@ -90,5 +107,14 @@ func TestDecodeValues(t *testing.T) {
 	}
 	if v13, _ := big.Get("k13"); v13 != json.Number("13") || big.Values()[13] != json.Number("13") {
 		t.Error("indexed lookup")
+	}
+}
+
+func TestOSErrorText(t *testing.T) {
+	dir := t.TempDir()
+	_, err := LoadPython(filepath.Join(dir, "missing.json"))
+	want := "[Errno 2] No such file or directory: '" + filepath.Join(dir, "missing.json") + "'"
+	if err == nil || err.Error() != want {
+		t.Errorf("got %v, want %q", err, want)
 	}
 }
