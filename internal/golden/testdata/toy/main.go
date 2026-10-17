@@ -19,6 +19,9 @@ func main() {
 	case "--crash":
 		fmt.Fprintln(os.Stderr, "toy: boom")
 		os.Exit(2)
+	case "--tmp":
+		fmt.Printf("wrote %s\n", args[1])
+		return
 	case "--env":
 		wd, _ := os.Getwd()
 		fmt.Printf("COLUMNS=%s NO_COLOR=%s cwd=%s\n", os.Getenv("COLUMNS"), os.Getenv("NO_COLOR"), filepath.Base(wd))
