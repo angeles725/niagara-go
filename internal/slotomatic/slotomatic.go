@@ -16,6 +16,8 @@ import (
 	"regexp"
 	"strings"
 	"unicode/utf8"
+
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // Decl is one declared slot.
@@ -162,7 +164,7 @@ func findClass(text string) []string {
 			return nil
 		}
 		at := pos + loc[0]
-		if r, ok := lastRune(text[:at]); !ok || !IsWord(r) {
+		if r, ok := lastRune(text[:at]); !ok || !pycompat.IsWordRune(r) {
 			m := make([]string, 3)
 			for g := 0; g < 3; g++ {
 				if loc[2*g] >= 0 {
@@ -193,7 +195,7 @@ func findAssign(text, name string, start int) (int, bool) {
 		}
 		at := i + j
 		i = at + 1
-		if r, ok := lastRune(text[:at]); ok && (IsWord(r) || r == '.') {
+		if r, ok := lastRune(text[:at]); ok && (pycompat.IsWordRune(r) || r == '.') {
 			continue
 		}
 		k := skipSpace(text, at+len(name))
@@ -207,8 +209,8 @@ func findAssign(text, name string, start int) (int, bool) {
 
 func skipSpace(s string, i int) int {
 	for i < len(s) {
-		r, n := decodeRune(s[i:])
-		if !IsSpace(r) {
+		r, n := utf8.DecodeRuneInString(s[i:])
+		if !pycompat.IsSpace(r) {
 			break
 		}
 		i += n
@@ -292,11 +294,11 @@ func SplitArgs(s string) []string {
 		case c == ')' || c == ']' || c == '}':
 			depth--
 		case c == ',' && depth == 0:
-			args = append(args, Strip(s[cur:i]))
+			args = append(args, pycompat.Strip(s[cur:i]))
 			cur = i + 1
 		}
 	}
-	if tail := Strip(s[cur:]); tail != "" || len(args) > 0 {
+	if tail := pycompat.Strip(s[cur:]); tail != "" || len(args) > 0 {
 		args = append(args, tail)
 	}
 	return args
@@ -305,13 +307,13 @@ func SplitArgs(s string) []string {
 // Clean is _clean: leading decompiler casts ((BValue)x, (int)0) dropped, whitespace runs
 // collapsed to one space.
 func Clean(expr string) string {
-	e := Strip(expr)
+	e := pycompat.Strip(expr)
 	for {
 		m := castRE.FindStringSubmatch(e)
 		if m == nil {
 			break
 		}
-		e = Strip(m[1])
+		e = pycompat.Strip(m[1])
 	}
 	return spaceRE.ReplaceAllLiteralString(e, " ")
 }

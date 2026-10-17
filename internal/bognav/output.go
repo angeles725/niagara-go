@@ -5,7 +5,6 @@ import (
 	"io"
 	"strconv"
 	"strings"
-	"unicode"
 	"unicode/utf8"
 
 	"github.com/angeles725/niagara-go/internal/argparse"
@@ -199,43 +198,3 @@ func head(s string, n int) string {
 	}
 	return s
 }
-
-// pyRepr is Python repr() of a str.
-func pyRepr(s string) string {
-	q := byte('\'')
-	if strings.ContainsRune(s, '\'') && !strings.ContainsRune(s, '"') {
-		q = '"'
-	}
-	var b strings.Builder
-	b.WriteByte(q)
-	for _, r := range s {
-		switch {
-		case r == rune(q) || r == '\\':
-			b.WriteByte('\\')
-			b.WriteRune(r)
-		case r == '\n':
-			b.WriteString(`\n`)
-		case r == '\r':
-			b.WriteString(`\r`)
-		case r == '\t':
-			b.WriteString(`\t`)
-		case r < ' ' || r == 0x7f:
-			fmt.Fprintf(&b, `\x%02x`, r)
-		case r >= 0x80 && !isPrintable(r):
-			switch {
-			case r <= 0xff:
-				fmt.Fprintf(&b, `\x%02x`, r)
-			case r <= 0xffff:
-				fmt.Fprintf(&b, `\u%04x`, r)
-			default:
-				fmt.Fprintf(&b, `\U%08x`, r)
-			}
-		default:
-			b.WriteRune(r)
-		}
-	}
-	b.WriteByte(q)
-	return b.String()
-}
-
-func isPrintable(r rune) bool { return unicode.IsPrint(r) }

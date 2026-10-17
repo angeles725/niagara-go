@@ -11,7 +11,9 @@
 package bognav
 
 import (
+	"errors"
 	"fmt"
+	"math"
 	"sort"
 	"strings"
 
@@ -19,6 +21,7 @@ import (
 	"github.com/angeles725/niagara-go/internal/bog"
 	"github.com/angeles725/niagara-go/internal/cli"
 	"github.com/angeles725/niagara-go/internal/honest"
+	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/version"
 )
 
@@ -40,14 +43,17 @@ var limitCommands = []string{"find", "types", "grep", "links", "writable", "rela
 
 // positiveInt is cliflags.positive_int: a whole number >= 1.
 var positiveInt = &argparse.Type{Name: "positive_int", Convert: func(text string) (any, error) {
-	n, err := argparse.ParseInt(text)
+	n, err := pycompat.ParseInt(text)
+	if errors.Is(err, pycompat.ErrRange) && !strings.HasPrefix(pycompat.Strip(text), "-") {
+		return math.MaxInt, nil // Python's int has no bound: a huge --limit caps nothing
+	}
 	if err != nil {
-		return nil, argparse.NewTypeError("invalid int value: %s", pyRepr(text))
+		return nil, argparse.NewTypeError("invalid int value: %s", pycompat.StrRepr(text))
 	}
 	if n < 1 {
 		return nil, argparse.NewTypeError("must be at least 1, not %d", n)
 	}
-	return n, nil
+	return int(n), nil
 }}
 
 // outputParent is one of cliflags.output_parents: --json, --csv and --limit, with the given

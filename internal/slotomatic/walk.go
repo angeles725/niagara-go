@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // WalkFunc receives one directory of a Walk: its path, its subdirectories (the callback may
@@ -62,7 +64,7 @@ func Join(dir, name string) string {
 // decision D24).
 func OrganizedRoot() string {
 	if env, ok := os.LookupEnv("NIAGARA_ORGANIZED"); ok {
-		switch strings.ToLower(Strip(env)) {
+		switch strings.ToLower(pycompat.Strip(env)) {
 		case "", "off", "0":
 			return ""
 		}

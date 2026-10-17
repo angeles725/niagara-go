@@ -3,6 +3,8 @@ package bognav
 import (
 	"bytes"
 	"testing"
+
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 func TestCSVQuotingAndJSONEscaping(t *testing.T) {
@@ -25,8 +27,8 @@ func TestCSVQuotingAndJSONEscaping(t *testing.T) {
 func TestPyRepr(t *testing.T) {
 	cases := map[string]string{"x": "'x'", "it's": `"it's"`, `a'b"c`: `'a\'b"c'`, "tab\t\x01é ": `'tab\t\x01é\xa0'`}
 	for in, want := range cases {
-		if got := pyRepr(in); got != want {
-			t.Errorf("pyRepr(%q) = %s, want %s", in, got, want)
+		if got := pycompat.StrRepr(in); got != want {
+			t.Errorf("StrRepr(%q) = %s, want %s", in, got, want)
 		}
 	}
 }

@@ -8,6 +8,7 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/bog"
 	"github.com/angeles725/niagara-go/internal/cli"
+	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
@@ -355,7 +356,7 @@ func cmdTypes(e *env) (int, int) {
 func cmdGrep(e *env) (int, int) {
 	rx, err := regexp.Compile("(?i)" + e.str("regex"))
 	if err != nil {
-		fmt.Fprintf(e.err, "bog-nav: invalid regex %s: %v\n", pyRepr(e.str("regex")), err)
+		fmt.Fprintf(e.err, "bog-nav: invalid regex %s: %v\n", pycompat.StrRepr(e.str("regex")), err)
 		return 0, cli.ExitCannotSearch
 	}
 	var rows []row

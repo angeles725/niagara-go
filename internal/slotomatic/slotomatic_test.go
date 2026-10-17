@@ -167,19 +167,7 @@ func TestSplitArgsAndClean(t *testing.T) {
 	}
 }
 
-func TestDecodeReplace(t *testing.T) {
-	cases := map[string]string{
-		"caf\xc3\xa9":  "café",
-		"\xe2\x82 x":   "� x",
-		"\xff\xfe":     "��",
-		"\xed\xa0\x80": "���",
-		"\xf0\x9f\x98": "�",
-	}
-	for in, want := range cases {
-		if got := DecodeReplace([]byte(in)); got != want {
-			t.Errorf("%q -> %q, want %q", in, got, want)
-		}
-	}
+func TestUniversalNewlines(t *testing.T) {
 	if got := UniversalNewlines("a\r\nb\rc\n"); got != "a\nb\nc\n" {
 		t.Errorf("newlines %q", got)
 	}

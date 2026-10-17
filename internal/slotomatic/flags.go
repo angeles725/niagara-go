@@ -3,6 +3,8 @@ package slotomatic
 import (
 	"strconv"
 	"strings"
+
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // Flag is one javax.baja.sys.Flags bit and its slot-sheet letter.
@@ -47,7 +49,7 @@ var (
 func DecodeFlags(expr string) (int64, []string) {
 	var total int64
 	for _, part := range strings.Split(expr, "|") {
-		tok := Strip(intCastRE.ReplaceAllLiteralString(Strip(part), ""))
+		tok := pycompat.Strip(intCastRE.ReplaceAllLiteralString(pycompat.Strip(part), ""))
 		if tok == "" {
 			continue
 		}
@@ -59,7 +61,8 @@ func DecodeFlags(expr string) (int64, []string) {
 		}
 		switch {
 		case decRE.MatchString(tok):
-			total |= decimal(tok)
+			v, _ := pycompat.ParseInt(tok) // int(tok); beyond int64 it adds nothing
+			total |= v
 		case hexRE.MatchString(tok):
 			v, _ := strconv.ParseInt(tok[2:], 16, 64)
 			total |= v
@@ -81,30 +84,4 @@ func flagBit(name string) (int64, bool) {
 		}
 	}
 	return 0, false
-}
-
-// decimal is Python int() of an -?\d+ token: any Unicode decimal digits.
-func decimal(tok string) int64 {
-	var v int64
-	neg := strings.HasPrefix(tok, "-")
-	for _, r := range strings.TrimPrefix(tok, "-") {
-		v = v*10 + int64(digitValue(r))
-	}
-	if neg {
-		return -v
-	}
-	return v
-}
-
-// digitValue is the value of a Unicode decimal digit: Nd digits come in contiguous runs whose
-// length is a multiple of ten, each starting at a zero.
-func digitValue(r rune) int {
-	if r >= '0' && r <= '9' {
-		return int(r - '0')
-	}
-	z := r
-	for z > 0 && isDigit(z-1) {
-		z--
-	}
-	return int(r-z) % 10
 }

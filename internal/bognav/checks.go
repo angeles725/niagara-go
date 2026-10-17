@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/bog"
+	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
@@ -90,7 +91,7 @@ func (e *env) writeOnUp(point *bog.Comp) string {
 		}
 		policy := e.child(tps, func(c *bog.Comp) bool { return c.Name == name })
 		if policy == nil {
-			return fmt.Sprintf("? (no tuning policy %s under %s)", pyRepr(name), tps.Path)
+			return fmt.Sprintf("? (no tuning policy %s under %s)", pycompat.StrRepr(name), tps.Path)
 		}
 		value, how, ok := e.slotOrDefault(policy, "writeOnUp")
 		if !ok {

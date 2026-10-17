@@ -6,7 +6,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/angeles725/niagara-go/internal/argparse"
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // Alerton Compass DisplayService PointCache: bacref ORD decoding and freshness
@@ -159,9 +159,9 @@ func instKey(s string) int {
 	if s == "" {
 		return 0
 	}
-	n, err := argparse.ParseInt(s)
+	n, err := pycompat.ParseInt(s)
 	if err != nil || strings.ContainsAny(s, "+-_ ") {
 		return 0
 	}
-	return n
+	return int(n)
 }
