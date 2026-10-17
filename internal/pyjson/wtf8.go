@@ -1,5 +1,7 @@
 package pyjson
 
+import "unicode/utf8"
+
 // Strings coming out of the JSON decoder are WTF-8: valid UTF-8 plus lone
 // surrogates encoded as 3-byte sequences (Python str can hold them), so
 // equality and ordering stay byte-wise while every code point round-trips.
@@ -18,28 +20,29 @@ func AppendRune(b []byte, r rune) []byte {
 	}
 }
 
-// Runes decodes a WTF-8 string produced by this package into code points.
+// Runes decodes a WTF-8 string into code points: every valid UTF-8 sequence and every
+// 3-byte lone surrogate (ED A0..BF 80..BF) is one code point; any other byte is one U+FFFD and
+// decoding resumes at the next byte, so a bad byte never swallows the text after it.
 func Runes(s string) []rune {
 	out := make([]rune, 0, len(s))
 	for i := 0; i < len(s); {
-		c := s[i]
-		switch {
-		case c < 0x80:
+		if c := s[i]; c < 0x80 {
 			out = append(out, rune(c))
 			i++
-		case c < 0xE0 && i+1 < len(s):
-			out = append(out, rune(c&0x1F)<<6|rune(s[i+1]&0x3F))
-			i += 2
-		case c < 0xF0 && i+2 < len(s):
-			out = append(out, rune(c&0x0F)<<12|rune(s[i+1]&0x3F)<<6|rune(s[i+2]&0x3F))
-			i += 3
-		case i+3 < len(s):
-			out = append(out, rune(c&0x07)<<18|rune(s[i+1]&0x3F)<<12|rune(s[i+2]&0x3F)<<6|rune(s[i+3]&0x3F))
-			i += 4
-		default:
-			out = append(out, 0xFFFD)
-			i++
+			continue
 		}
+		if r, size := utf8.DecodeRuneInString(s[i:]); r != utf8.RuneError || size > 1 {
+			out = append(out, r)
+			i += size
+			continue
+		}
+		if i+2 < len(s) && s[i] == 0xED && s[i+1]&0xE0 == 0xA0 && s[i+2]&0xC0 == 0x80 {
+			out = append(out, 0xD000|rune(s[i+1]&0x3F)<<6|rune(s[i+2]&0x3F))
+			i += 3
+			continue
+		}
+		out = append(out, utf8.RuneError)
+		i++
 	}
 	return out
 }
