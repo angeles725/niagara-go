@@ -1,0 +1,6 @@
+<license vendor='Ac&amp;me "q"' note="a&#10;b	c
+d  &lt;&gt;&#233;" hostId = "H2" >
+  <feature name="café" limit="&#x31;0"   />
+  <feature name="cdata"><![CDATA[raw <x> & y]]></feature>
+  <feature name="n"><sub a="1">t&amp;x</sub>tail &gt; "q"</feature>
+</license>

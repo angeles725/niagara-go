@@ -1,0 +1,4 @@
+{
+ "reason": "Python lets lxml's XMLSyntaxError escape (traceback, exit 1); Go prints only its final line, same text, exit 1",
+ "stderr": "lxml.etree.XMLSyntaxError: Opening and ending tag mismatch: a line 1 and license, line 1, column 34\n"
+}

@@ -1,0 +1,5 @@
+<license vendor="Ac&amp;me &quot;q&quot;" note="a&#10;b c d  &lt;&gt;é" hostId="H2">
+  <feature name="café" limit="10"/>
+  <feature name="cdata">raw &lt;x&gt; &amp; y</feature>
+  <feature name="n"><sub a="1">t&amp;x</sub>tail &gt; "q"</feature>
+<signature>MCwCFCD/MLIrNxTtJGfpT6VsplSGm599AhQg/iLIcObQtvu9CP5DEQ2hoOCMJQ==</signature></license>

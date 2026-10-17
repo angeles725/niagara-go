@@ -1,0 +1,19 @@
+Traceback (most recent call last):
+  File "/home/cristian/niagara-research/tools/niagara-license-tool.py", line 269, in <module>
+    cmd_sign(*rest)
+    ~~~~~~~~^^^^^^^
+  File "/home/cristian/niagara-research/tools/niagara-license-tool.py", line 199, in cmd_sign
+    sig_b64 = _sign_bytes(data, privkey_path)
+  File "/home/cristian/niagara-research/tools/niagara-license-tool.py", line 137, in _sign_bytes
+    sig = subprocess.run(
+          ~~~~~~~~~~~~~~^
+        ["openssl", "dgst", "-sha1", "-sign", privkey_path, name],
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        capture_output=True, check=True,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ).stdout
+    ^
+  File "/home/linuxbrew/.linuxbrew/opt/python@3.15/lib/python3.15/subprocess.py", line 692, in run
+    raise CalledProcessError(retcode, process.args,
+                             output=stdout, stderr=stderr)
+subprocess.CalledProcessError: Command '['openssl', 'dgst', '-sha1', '-sign', 'no-such.key', '/tmp/tmp3tpylqyb.xml']' returned non-zero exit status 1.

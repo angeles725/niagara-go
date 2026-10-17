@@ -1,0 +1,4 @@
+{
+ "reason": "Python lets lxml's OSError escape (traceback, exit 1); Go prints only its final line, same text, exit 1",
+ "stderr": "OSError: Error reading file 'nope.license': failed to load \"nope.license\": No such file or directory\n"
+}

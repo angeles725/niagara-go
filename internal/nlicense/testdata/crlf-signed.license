@@ -1,0 +1,4 @@
+<license vendor="Acme" version="4.10" hostId="Qnx-OLD" expiration="2027-01-01" generated="2026-01-01">
+  <feature name="bacnet" device.limit="50"/>
+  <feature name="fox"/>
+  <signature>MCwCFDmCL18OjCkeuLg647siW8OS7gZRAhQiD97PlyZSk6xHE8pqtDyCRZzOzQ==</signature></license>

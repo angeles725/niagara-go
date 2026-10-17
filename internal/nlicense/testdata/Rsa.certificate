@@ -1,0 +1,12 @@
+<certificate vendor="Acme" version="1">
+  <publicKey algorithm="DSA">
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAt3AGngMFDOW21F7GHH4z
+EdD/IhCPECDIKq8mCSvQ4tKfmSAoXLigafsmmAwxAS+or7FVH4KBo1QwU7TjkpHR
+MXVLzug0ilR8SSqrcyPsyxXzDdTMrzDzgJ2cdh4nF7sX9Z4wJPaBj16+SZC6ynfY
+wIZeoZ07UNGSPua9pc2YaTWyl0EdYTGwvvbaJ8NdgaxzlcWjmXlXQsoXSk33nUul
+cAsZl/RzSOQer+p6aWPX6mLQWHa7J40UexFBo2sh94ZapW/TF4lZqJ2l9YEefZxz
+tJJBcxWh/Tqp4NXwIFPqGsc3GPXaBgUXKaaZT6z1je2VNCpL+Zcf3Vjl3MJud96a
+/wIDAQAB
+  </publicKey>
+  <signature>AAAA</signature>
+</certificate>

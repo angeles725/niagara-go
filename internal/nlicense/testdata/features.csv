@@ -1,0 +1,6 @@
+bacnet,device.limit=50;point.limit=500
+fox
+"quoted, name",a=1, b = 2 ;c
+
+  
+bacnet,device.limit=99

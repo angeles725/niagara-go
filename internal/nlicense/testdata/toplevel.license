@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<!-- top comment -->
+<?top-pi data?>
+<!DOCTYPE license>
+<license vendor="Acme" hostId="H1">
+  <feature name="x"/>
+</license>
+<!-- after -->
