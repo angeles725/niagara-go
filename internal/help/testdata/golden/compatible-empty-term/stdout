@@ -1,0 +1,7 @@
+COMPATIBLE: B
+============================================================
+
+TYPE: B (x, class)
+
+SLOT USAGE: 1 properties of type 'B' across 1 classes
+  (use 'slots --by-type B' for full list)

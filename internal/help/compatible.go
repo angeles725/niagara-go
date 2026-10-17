@@ -90,7 +90,11 @@ func (e *Env) Compatible(p CompatibleParams) error {
 	slotCount, classCount := 0, 0
 	for _, cls := range slots.Keys() {
 		found := false
-		for _, s := range objects(slots.Object(cls), "properties") {
+		props, err := objects(cls, slots.Object(cls), "properties")
+		if err != nil {
+			return err
+		}
+		for _, s := range props {
 			if lowerStr(getStr(s, "type", "")) == want {
 				slotCount++
 				found = true

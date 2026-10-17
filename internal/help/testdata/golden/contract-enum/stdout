@@ -1,0 +1,11 @@
+'BMode' is a enum — expected interface.
+CONTRACT: BMode (x)
+TYPE: enum
+============================================================
+EXTENDS: BFrozenEnum
+
+METHODS TO IMPLEMENT (1):
+
+  public static BMode make(int)
+
+IMPLEMENTORS: (none found)

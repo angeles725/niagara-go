@@ -1,0 +1,16 @@
+ORPHAN CLASSES (0 used_by references)
+=================================================================
+
+Total: 14 orphans out of 16 indexed classes
+
+ISOLATED (no references, no subclasses): 9
+
+  class                                      uses  package
+  -----                                      ----  -------
+  ... +9 more
+
+ROOT ORPHANS (no references but have subclasses): 5
+
+  class                                      uses   subs  package
+  -----                                      ----   ----  -------
+  ... +5 more

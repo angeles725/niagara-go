@@ -67,7 +67,11 @@ func (e *Env) Contract(p ContractParams) error {
 	e.printMembers("CONSTANTS/FIELDS", fs)
 
 	data := slots.Object(name)
-	props, actions := objects(data, "properties"), objects(data, "actions")
+	lists, err := slotLists(name, data, "properties", "actions")
+	if err != nil {
+		return err
+	}
+	props, actions := lists[0], lists[1]
 	if len(props) > 0 || len(actions) > 0 {
 		fmt.Fprintln(e.Out, "\nSLOTS:")
 		for _, s := range props {

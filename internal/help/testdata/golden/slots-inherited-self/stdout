@@ -1,0 +1,8 @@
+INHERITED SLOTS: BSelf
+CHAIN: BSelf > BSelf
+TOTAL: 0 properties, 1 actions, 0 topics
+
+ACTIONS (1):
+
+  -- from BSelf (this) --
+    poke()

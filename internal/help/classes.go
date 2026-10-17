@@ -26,21 +26,33 @@ func newClassEntry(key string, o *index.Object) classEntry {
 }
 
 // expand lists every class behind one key: primary first, then others.
-func expand(key string, entry *index.Object) []classEntry {
+// "others" must be a list of objects; anything else is a malformed index
+// (Python raises a TypeError there; nh reports it as an error, exit 2).
+func expand(key string, entry *index.Object) ([]classEntry, error) {
 	out := []classEntry{newClassEntry(key, entry)}
-	others, _ := get(entry, "others", nil).([]any)
-	for _, v := range others {
-		o, _ := v.(*index.Object)
+	raw, present := entry.Get("others")
+	if !present {
+		return out, nil
+	}
+	others, ok := raw.([]any)
+	if !ok {
+		return nil, fmt.Errorf("malformed class index: \"others\" of %s is not a list", key)
+	}
+	for i, v := range others {
+		o, ok := v.(*index.Object)
+		if !ok {
+			return nil, fmt.Errorf("malformed class index: \"others\"[%d] of %s is not an object", i, key)
+		}
 		out = append(out, newClassEntry(key, o))
 	}
-	return out
+	return out, nil
 }
 
 func (c classEntry) qualified() string { return c.Package + "." + c.Name }
 
 // classMatches is class_search.class_matches: every class a simple, nested
 // or qualified name refers to, falling back to a case-insensitive simple name.
-func classMatches(idx *index.Object, name string) []classEntry {
+func classMatches(idx *index.Object, name string) ([]classEntry, error) {
 	if idx.Has(name) {
 		return expand(name, idx.Object(name))
 	}
@@ -50,24 +62,32 @@ func classMatches(idx *index.Object, name string) []classEntry {
 		if !idx.Has(simple) {
 			continue
 		}
+		all, err := expand(simple, idx.Object(simple))
+		if err != nil {
+			return nil, err
+		}
 		var hit []classEntry
-		for _, e := range expand(simple, idx.Object(simple)) {
+		for _, e := range all {
 			if e.Package == pkg {
 				hit = append(hit, e)
 			}
 		}
 		if len(hit) > 0 {
-			return hit
+			return hit, nil
 		}
 	}
 	var out []classEntry
 	want := lowerStr(name)
 	for _, key := range idx.Keys() {
 		if lowerStr(key) == want {
-			out = append(out, expand(key, idx.Object(key))...)
+			all, err := expand(key, idx.Object(key))
+			if err != nil {
+				return nil, err
+			}
+			out = append(out, all...)
 		}
 	}
-	return out
+	return out, nil
 }
 
 // sourceLabel is _source_label: a sibling-tree .bajadoc XML path or the
@@ -126,7 +146,10 @@ func (e *Env) Class(p ClassParams) error {
 	if err != nil {
 		return err
 	}
-	hits := classMatches(idx, p.Name)
+	hits, err := classMatches(idx, p.Name)
+	if err != nil {
+		return err
+	}
 	if len(hits) == 0 {
 		simple := p.Name[strings.LastIndex(p.Name, ".")+1:]
 		if close := suggest(idx.Keys(), simple, 5); len(close) > 0 {

@@ -1,0 +1,10 @@
+INHERITED SLOTS: BLoopA
+CHAIN: BLoopA > BLoopB > BLoopA
+TOTAL: 2 properties, 0 actions, 0 topics
+
+PROPERTIES (2):
+
+  -- from BLoopA (this) --
+    a: BStatusNumeric
+  -- from BLoopB --
+    b: BStatusBoolean

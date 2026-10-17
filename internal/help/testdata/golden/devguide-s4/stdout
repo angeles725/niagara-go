@@ -1,0 +1,20 @@
+5 devguide entries matching 'component model':
+
+  [Framework] Component Model
+    Explains the component model: slots, properties, actions and topics.
+    file: devguide/componentModel.html
+
+  [Framework] Components
+    model of a component
+    file: devguide/compModel2.html
+
+  [Misc] Model views
+    The model behind views
+    file: devguide/x.html
+
+  [Framework] Data models
+    file: devguide/models.html
+
+  [Misc] Alarm components
+    file: devguide/componentAlarm.html
+

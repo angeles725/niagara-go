@@ -1,0 +1,21 @@
+{
+  "docAlarm_Guide_00": {"source_pdf": "Alarms/docAlarm_Guide_00.pdf", "folder": "Alarms", "pages": 10, "category": "software"},
+  "docAlarm_Guide_01": {"source_pdf": "Alarms/docAlarm_Guide_01.pdf", "folder": "Alarms", "pages": 11, "category": "software"},
+  "docAlarm_Guide_02": {"source_pdf": "Alarms/docAlarm_Guide_02.pdf", "folder": "Alarms", "pages": 12, "category": "software"},
+  "docAlarm_Guide_03": {"source_pdf": "Alarms/docAlarm_Guide_03.pdf", "folder": "Alarms", "pages": 13, "category": "software"},
+  "docAlarm_Guide_04": {"source_pdf": "Alarms/docAlarm_Guide_04.pdf", "folder": "Alarms", "pages": 14, "category": "software"},
+  "docAlarm_Guide_05": {"source_pdf": "Alarms/docAlarm_Guide_05.pdf", "folder": "Alarms", "pages": 15, "category": "software"},
+  "docAlarm_Guide_06": {"source_pdf": "Alarms/docAlarm_Guide_06.pdf", "folder": "Alarms", "pages": 16, "category": "software"},
+  "docAlarm_Guide_07": {"source_pdf": "Alarms/docAlarm_Guide_07.pdf", "folder": "Alarms", "pages": 17, "category": "software"},
+  "docAlarm_Guide_08": {"source_pdf": "Alarms/docAlarm_Guide_08.pdf", "folder": "Alarms", "pages": 18, "category": "software"},
+  "docAlarm_Guide_09": {"source_pdf": "Alarms/docAlarm_Guide_09.pdf", "folder": "Alarms", "pages": 19, "category": "software"},
+  "docAlarm_Guide_10": {"source_pdf": "Alarms/docAlarm_Guide_10.pdf", "folder": "Alarms", "pages": 20, "category": "software"},
+  "docAlarm_Guide_11": {"source_pdf": "Alarms/docAlarm_Guide_11.pdf", "folder": "Alarms", "pages": 21, "category": "software"},
+  "docAlarm_Guide_12": {"source_pdf": "Alarms/docAlarm_Guide_12.pdf", "folder": "Alarms", "pages": 22, "category": "software"},
+  "docAlarm_Guide_13": {"source_pdf": "Alarms/docAlarm_Guide_13.pdf", "folder": "Alarms", "pages": 23, "category": "software"},
+  "docAlarm_Guide_14": {"source_pdf": "Alarms/docAlarm_Guide_14.pdf", "folder": "Alarms", "pages": 24, "category": "software"},
+  "docAlarm_Guide_15": {"source_pdf": "Alarms/docAlarm_Guide_15.pdf", "folder": "Alarms", "pages": 25, "category": "software"},
+  "docAlarm_Guide_16": {"source_pdf": "Alarms/docAlarm_Guide_16.pdf", "folder": "Alarms", "pages": 26, "category": "software"},
+  "Bacnet_Integration": {"source_pdf": "Drivers/Bacnet_Integration.pdf", "folder": "Drivers"},
+  "JACE_Install": {"source_pdf": "Hardware/alarmRelay/JACE_Install.pdf", "folder": "Hardware", "pages": "12", "category": "hardware"}
+}

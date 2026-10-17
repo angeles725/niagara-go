@@ -1,4 +1,3 @@
-com.tridium.event.recipients.BAlarmRecipient (com.tridium.event.recipients)
-  extends: BComponent
-  implements: javax.baja.alarm.BIAlarmSource&lt;T&gt;
-  direct subclasses: 0
+Inheritance chain for BAlarmService:
+  java.lang.Object > BObject > BValue > BComplex > BComponent > BAbstractService > BAlarmService
+  implements: BIAlarmSource, BIRestrictedComponent

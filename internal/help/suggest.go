@@ -60,7 +60,9 @@ func typoSimilarity(word, name string) float64 {
 		return 0
 	}
 	d := editDistance(w, n, limit)
-	if d > limit {
+	if d > limit || max(len(w), len(n)) == 0 {
+		// Two empty strings are not a typo of each other; Python divides
+		// by zero there (ZeroDivisionError), Go would score NaN.
 		return 0
 	}
 	return 1.0 - float64(d)/float64(max(len(w), len(n)))

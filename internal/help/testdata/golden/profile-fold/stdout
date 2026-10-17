@@ -1,0 +1,24 @@
+PROFILE: BAlarmRecord
+============================================================
+  Package:  javax.baja.alarm
+  Type:     class
+  Module:   alarm-rt
+  Source:   300 lines
+
+HIERARCHY:
+  Chain: BObject > BComponent > BAlarmRecord
+
+SLOTS (2 props, 0 actions, 0 topics):
+  [P] uuid: BUuid
+  [P] source: BOrdList
+
+METHODS (1):
+  public BUuid getUuid()
+
+XREF:
+  Uses (1): BComponent
+  Used by (7): BAlarmService, BBacnetDevice, BOrionAlarmService, BUser01, BUser02, BUser03, BUser04
+
+SOURCE: source/alarm-rt/javax/baja/alarm/BAlarmRecord.java
+
+Tip: Use 'snippet BAlarmRecord <method>' to read a specific method

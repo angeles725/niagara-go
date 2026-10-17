@@ -16,7 +16,8 @@ func andOr(p *argparse.Parser, dest string) {
 // devguide, devguide-search, pdf, find, fuzzy.
 var docCommands = []command{
 	{name: "guide", help: "Search guides by topic/folder",
-		args: func(p *argparse.Parser) { positional(p, "query", "Search term (e.g. 'bacnet')") }},
+		args: func(p *argparse.Parser) { positional(p, "query", "Search term (e.g. 'bacnet')") },
+		run:  func(e *Env, ns *argparse.Namespace) error { return e.Guide(ns.String("query")) }},
 	{name: "guide-search", help: "Full-text search in guides-clean/ with relevance ranking",
 		args: func(p *argparse.Parser) {
 			positional(p, "query", "Search text (e.g. 'discovery timeout')")
@@ -24,7 +25,8 @@ var docCommands = []command{
 			andOr(p, "gs_mode")
 		}},
 	{name: "devguide", help: "Search Developer Guide TOC",
-		args: func(p *argparse.Parser) { positional(p, "query", "Search term (e.g. 'component model')") }},
+		args: func(p *argparse.Parser) { positional(p, "query", "Search term (e.g. 'component model')") },
+		run:  func(e *Env, ns *argparse.Namespace) error { return e.Devguide(ns.String("query")) }},
 	{name: "devguide-search", help: "Full-text search in devguide-clean/ with relevance ranking",
 		args: func(p *argparse.Parser) {
 			positional(p, "query", "Search text")

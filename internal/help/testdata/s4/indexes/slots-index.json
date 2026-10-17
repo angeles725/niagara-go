@@ -1,0 +1,8 @@
+{
+  "BAlarmService": {"module": "alarm-rt", "package": "javax.baja.alarm", "properties": [{"name": "alarmDbConfig", "type": "BAlarmDbConfig", "flags": "h"}, {"name": "untyped"}, {"name": "defaultAlarmClass", "type": "BAlarmClass", "flags": ""}], "actions": [{"name": "ackAlarm", "parameterType": "BAlarmRecord"}, {"name": "routeAlarm"}], "topics": [{"name": "alarm", "eventType": "BAlarmRecord"}, {"name": "quiet"}]},
+  "BAlarmRecord": {"properties": [{"name": "uuid", "type": "BUuid"}, {"name": "source", "type": "BOrdList"}]},
+  "BAlarmClass": {"properties": [{"name": "ackRequired", "type": "BAlarmTransitionBits"}, {"name": "priority", "type": "BAlarmPriorities"}], "topics": [{"name": "escalated", "eventType": "BAlarmRecord"}]},
+  "BLoopPoint": {"properties": [{"name": "out", "type": "BStatusNumeric"}, {"name": "in", "type": "BStatusNumeric"}, {"name": "sp", "type": "BStatusNumeric"}]},
+  "BBacnetDevice": {"properties": [{"name": "status", "type": "BStatus"}, {"name": "enabled", "type": "boolean"}, {"name": "x", "type": ""}], "actions": [{"name": "ping"}]},
+  "BZoneAlarm": {"actions": [{"name": "clear"}]}
+}

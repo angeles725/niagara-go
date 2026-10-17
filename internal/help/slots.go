@@ -50,12 +50,13 @@ func (e *Env) Slots(p SlotsParams) error {
 		return e.slotsByType(idx, p.ByType, p.JSON)
 	}
 	if idx.Has(p.Query) {
-		e.printClassSlots(p.Query, idx.Object(p.Query), p.JSON)
-		return nil
+		return e.printClassSlots(p.Query, idx.Object(p.Query), p.JSON)
 	}
 	if keys := classSlotKeys(idx, p.Query); len(keys) > 0 {
 		for _, k := range keys {
-			e.printClassSlots(k, idx.Object(k), p.JSON)
+			if err := e.printClassSlots(k, idx.Object(k), p.JSON); err != nil {
+				return err
+			}
 		}
 		return nil
 	}
@@ -82,15 +83,33 @@ type slotHit struct {
 	slot           *index.Object
 }
 
-// objects is o.get(k, []) as the objects of a list (a non-object item is an
-// empty dict, a non-list value an empty list).
-func objects(o *index.Object, k string) []*index.Object {
+// objects is the slot list o.get(k, []) of class cls (a non-list value is an
+// empty list). An item that is not an object is a malformed index: Python
+// raises an AttributeError on it, nh reports an error (exit 2).
+func objects(cls string, o *index.Object, k string) ([]*index.Object, error) {
 	arr, _ := get(o, k, nil).([]any)
 	out := make([]*index.Object, len(arr))
 	for i, v := range arr {
-		out[i], _ = v.(*index.Object)
+		x, ok := v.(*index.Object)
+		if !ok {
+			return nil, fmt.Errorf("malformed slots index: %q[%d] of %s is not an object", k, i, cls)
+		}
+		out[i] = x
 	}
-	return out
+	return out, nil
+}
+
+// slotLists is objects for several sections of one class.
+func slotLists(cls string, o *index.Object, sections ...string) ([][]*index.Object, error) {
+	out := make([][]*index.Object, len(sections))
+	for i, s := range sections {
+		l, err := objects(cls, o, s)
+		if err != nil {
+			return nil, err
+		}
+		out[i] = l
+	}
+	return out, nil
 }
 
 // globOrFold is the match of a slot name or type: a pattern with * or ?
@@ -116,7 +135,11 @@ func (e *Env) slotsByName(idx *index.Object, query, slotType string, asJSON bool
 			if slotType != "" && section != slotType {
 				continue
 			}
-			for _, slot := range objects(data, section) {
+			list, err := objects(cls, data, section)
+			if err != nil {
+				return err
+			}
+			for _, slot := range list {
 				if globOrFold(getStr(slot, "name", ""), query, false) {
 					hits = append(hits, slotHit{section, cls, get(data, "package", ""), slot})
 				}
@@ -185,7 +208,11 @@ func (e *Env) slotsByType(idx *index.Object, query string, asJSON bool) error {
 		data := idx.Object(cls)
 		pkg := get(data, "package", "")
 		for _, section := range slotSections {
-			for _, slot := range objects(data, section) {
+			list, err := objects(cls, data, section)
+			if err != nil {
+				return err
+			}
+			for _, slot := range list {
 				stype := pyStr(get(slot, typeFields[section], get(slot, "type", "")))
 				if globOrFold(stype, query, true) {
 					hits = append(hits, slotHit{section, cls, pkg, slot})
@@ -222,7 +249,7 @@ func (e *Env) slotsByType(idx *index.Object, query string, asJSON bool) error {
 }
 
 // printClassSlots is _print_class_slots.
-func (e *Env) printClassSlots(class string, data *index.Object, asJSON bool) {
+func (e *Env) printClassSlots(class string, data *index.Object, asJSON bool) error {
 	pkg, module := get(data, "package", "?"), get(data, "module", "?")
 	if asJSON {
 		out := jsonObj{{"class", class}, {"package", pkg}, {"module", module}}
@@ -230,10 +257,14 @@ func (e *Env) printClassSlots(class string, data *index.Object, asJSON bool) {
 			out = append(out, jsonKV{s, get(data, s, []any{})})
 		}
 		fmt.Fprintln(e.Out, dumpsIndent2(out))
-		return
+		return nil
+	}
+	lists, err := slotLists(class, data, slotSections...)
+	if err != nil {
+		return err
 	}
 	fmt.Fprintf(e.Out, "SLOTS: %s (%s, %s)\n", class, pyStr(pkg), pyStr(module))
-	props, actions, topics := objects(data, "properties"), objects(data, "actions"), objects(data, "topics")
+	props, actions, topics := lists[0], lists[1], lists[2]
 	if len(props) > 0 {
 		fmt.Fprintf(e.Out, "\nPROPERTIES (%d):\n\n", len(props))
 		for _, p := range props {
@@ -260,6 +291,7 @@ func (e *Env) printClassSlots(class string, data *index.Object, asJSON bool) {
 	if len(props) == 0 && len(actions) == 0 && len(topics) == 0 {
 		fmt.Fprintln(e.Out, "  (no annotated slots found)")
 	}
+	return nil
 }
 
 // defaultSuffix is " = <defaultValue>" (shortened to max code points) when

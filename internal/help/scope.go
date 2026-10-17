@@ -24,10 +24,15 @@ type scopeDef struct {
 	alternatives []string
 }
 
-// scopes are the scope.py SCOPES that search indexes only. The scopes over
-// text directories (guides, devguide, pdf, fulltext) need text_sources and
-// arrive with the commands that report them.
+// scopes are the scope.py SCOPES that search indexes and unshared text
+// directories. The scopes over shared text (pdf, fulltext: docs-text and
+// course-text may come from another version) need text_sources.shared_root
+// and arrive with the commands that report them.
 var scopes = map[string]scopeDef{
+	"guides": {[]string{"guides-index.json"}, docTypesExcluded,
+		[]string{"guide-search", "find", "devguide-search"}},
+	"devguide": {[]string{"devguide-toc.json"}, docTypesExcluded,
+		[]string{"devguide-search", "find", "guide-search"}},
 	"classes": {[]string{"class-index.json"}, "JDK API (opt-in: --jdk); " + docTypesExcluded,
 		[]string{"find", "fuzzy", "class --jdk", "source-grep"}},
 	"jdk": {[]string{"jdk-class-index.json"}, "Niagara classes (drop --jdk)",
@@ -50,12 +55,18 @@ var scopes = map[string]scopeDef{
 		[]string{"module", "find", "search"}},
 }
 
+// scopeDirs are the text directories a scope counts after its indexes.
+var scopeDirs = map[string][]string{
+	"guides":   {"guides-clean"},
+	"devguide": {"devguide-clean", "devguide-examples"},
+}
+
 // reportMiss prints the honest-zero block for a lookup that matched nothing
 // and counts the miss (scope.report_miss).
 func (e *Env) reportMiss(command, query, scope string) error {
 	e.Miss()
 	def := scopes[scope]
-	line, err := e.scopeLine(def)
+	line, err := e.scopeLine(def, scopeDirs[scope])
 	if err != nil {
 		return err
 	}
@@ -70,8 +81,8 @@ func (e *Env) reportMiss(command, query, scope string) error {
 	return nil
 }
 
-// scopeLine is scope.scope_line for an index-only scope.
-func (e *Env) scopeLine(def scopeDef) (string, error) {
+// scopeLine is scope.scope_line for a scope without shared text.
+func (e *Env) scopeLine(def scopeDef, dirs []string) (string, error) {
 	vid := identify(e.BaseDir)
 	if vid == "" {
 		vid = "unregistered"
@@ -83,6 +94,9 @@ func (e *Env) scopeLine(def scopeDef) (string, error) {
 			return "", err
 		}
 		parts[i] = p
+	}
+	for _, d := range dirs {
+		parts = append(parts, dirCount(e.BaseDir, d))
 	}
 	return fmt.Sprintf("searched: Niagara %s (%s) -- %s", vid, e.BaseDir, strings.Join(parts, "; ")), nil
 }
@@ -105,6 +119,18 @@ func (e *Env) indexCount(name string) (string, error) {
 		return fmt.Sprintf("%s: %s names / %s classes", name, thousands(data.Len()), thousands(total)), nil
 	}
 	return fmt.Sprintf("%s: %s entries", name, thousands(data.Len())), nil
+}
+
+// dirCount is scope._dir_count for a directory no other version shares:
+// "<name>/: absent" or "<name>/: N files" (every file os.walk lists).
+func dirCount(baseDir, name string) string {
+	path := filepath.Join(baseDir, name)
+	if !isDir(path) {
+		return name + "/: absent"
+	}
+	n := 0
+	pyWalkFiles(path, func(string) { n++ })
+	return fmt.Sprintf("%s/: %s files", name, thousands(n))
 }
 
 // identify is versions.identify: the registered version whose data root is

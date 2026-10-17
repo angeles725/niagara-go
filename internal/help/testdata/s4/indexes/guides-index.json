@@ -1,0 +1,7 @@
+{
+  "Bacnet": {"html_count": 12, "source_jar": "docBacnet-doc.jar", "topics": ["bacnetOverview", "BacnetDiscovery", "bbmdSetup", "bacnetTrend", "bacnetAlarm", "bacnetSchedule", "bacnetCov", "Wiretap"], "total_topics": 14, "titles": {"bacnetOverview": "About BACnet", "Wiretap": "BACnet wiretap", "bbmdSetup": "Foreign device (BBMD)"}},
+  "docAlarms": {"html_count": 7, "source_jar": null, "topics": ["alarmConsole", "AlarmClass", "escalation"]},
+  "Drivers": {"source_jar": "docDrivers-doc.jar", "topics": ["driverBacnetNotes", "pointsAlarm"], "titles": {}},
+  "BacnetAws": {"html_count": 3, "source_jar": "docBacnetAws-doc.jar", "topics": [], "total_topics": 3},
+  "Platform": {"html_count": 4, "source_jar": "docPlatform-doc.jar", "topics": ["platformAlarms"], "total_topics": 4, "titles": {"platformAlarms": "Platform alarm services"}}
+}
