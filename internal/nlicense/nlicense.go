@@ -7,8 +7,10 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"syscall"
 	"time"
@@ -16,6 +18,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/angeles725/niagara-go/internal/cli"
+	"github.com/angeles725/niagara-go/internal/pyjson"
 )
 
 // exitError is a Python SystemExit: message to stderr, then the code.
@@ -254,9 +257,12 @@ type feature struct {
 func readFeaturesCSV(path string) ([]feature, error) {
 	f, err := os.Open(path)
 	if err != nil {
-		return nil, fmt.Errorf("FileNotFoundError: [Errno 2] No such file or directory: '%s'", path)
+		return nil, pyOpenError(err, path)
 	}
 	defer f.Close()
+	if st, err := f.Stat(); err == nil && st.IsDir() {
+		return nil, pyOpenError(dirOpenErrno(), path)
+	}
 	r := csv.NewReader(f)
 	r.FieldsPerRecord, r.LazyQuotes = -1, true
 	var feats []feature
@@ -350,6 +356,48 @@ func cmdGen(outPath, vendor, hostID, expiration, featuresCSV, keyPath string, to
 	}
 	fmt.Fprintf(s.Out, "OK   generated %s\n", outPath)
 	return nil
+}
+
+// pyOpenError mirrors the last traceback line of an OSError raised by
+// Python's open(path): the PEP 3151 subclass, "[Errno N] strerror" and the
+// path's repr ("FileNotFoundError: [Errno 2] No such file or directory: 'x'").
+func pyOpenError(err error, path string) error {
+	cls, code, msg := "OSError", 0, ""
+	var errno syscall.Errno
+	switch {
+	case runtime.GOOS != "windows" && errors.As(err, &errno):
+		code, msg = int(errno), strerror(errno)
+		switch errno {
+		case syscall.ENOENT:
+			cls = "FileNotFoundError"
+		case syscall.EACCES, syscall.EPERM:
+			cls = "PermissionError"
+		case syscall.EISDIR:
+			cls = "IsADirectoryError"
+		case syscall.ENOTDIR:
+			cls = "NotADirectoryError"
+		case syscall.EEXIST:
+			cls = "FileExistsError"
+		case syscall.EINTR:
+			cls = "InterruptedError"
+		}
+	case errors.Is(err, fs.ErrNotExist): // Windows: the CRT errno Python reports
+		cls, code, msg = "FileNotFoundError", 2, "No such file or directory"
+	case errors.Is(err, fs.ErrPermission):
+		cls, code, msg = "PermissionError", 13, "Permission denied"
+	default:
+		return fmt.Errorf("OSError: %s", err)
+	}
+	return fmt.Errorf("%s: [Errno %d] %s: %s", cls, code, msg, pyjson.StrRepr(path))
+}
+
+// dirOpenErrno is what Python's open() raises for a directory: EISDIR on
+// POSIX (its post-open fstat check), EACCES from the Windows CRT.
+func dirOpenErrno() error {
+	if runtime.GOOS == "windows" {
+		return fs.ErrPermission
+	}
+	return syscall.EISDIR
 }
 
 // strerror is the C strerror text of an OS error ("No such file or directory").
