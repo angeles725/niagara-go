@@ -317,8 +317,24 @@ func (p *jsonScanner) scanNumber(start int) (Value, int) {
 		f, _ := strconv.ParseFloat(text, 64)
 		return Value{Kind: Float, F: f}, i
 	}
+	if digits := len(strings.TrimPrefix(text, "-")); digits > IntDigitsLimit {
+		panic(jsonError{&IntDigitsError{digits}})
+	}
 	n, _ := new(big.Int).SetString(text, 10)
 	return Value{Kind: Int, I: n}, i
+}
+
+// IntDigitsLimit is CPython's default int_max_str_digits: json.loads refuses an int
+// literal with more digits (a float literal has no limit).
+const IntDigitsLimit = 4300
+
+// IntDigitsError is the ValueError json.loads raises at the first int literal longer than
+// IntDigitsLimit digits (the sign is not counted).
+type IntDigitsError struct{ Digits int }
+
+func (e *IntDigitsError) Error() string {
+	return fmt.Sprintf("Exceeds the limit (%d digits) for integer string conversion: value has %d digits; "+
+		"use sys.set_int_max_str_digits() to increase the limit", IntDigitsLimit, e.Digits)
 }
 
 func hexVal(r rune) (rune, bool) {
