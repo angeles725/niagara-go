@@ -4,6 +4,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/angeles725/niagara-go/internal/blockfiles"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyre"
 )
@@ -91,8 +92,22 @@ type graph struct {
 	unreadable []string
 }
 
-func sortLabels(labels []string) {
-	sort.SliceStable(labels, func(i, j int) bool { return labelSortKey(labels[i]).less(labelSortKey(labels[j])) })
+// pyInt is str(int(digits)) for the Unicode decimal digits re's \d matched.
+func pyInt(digits string) string {
+	n, err := pycompat.ParseBigInt(digits)
+	if err != nil {
+		return "0"
+	}
+	return n.String()
+}
+
+func isDigits(s string) bool {
+	for _, r := range s {
+		if !pycompat.IsDigit(r) {
+			return false
+		}
+	}
+	return s != ""
 }
 
 func setKeys(set map[string]bool) []string {
@@ -138,7 +153,7 @@ func buildGraph(blocks []blockFile, bare bool) *graph {
 		}
 		delete(cited, label)
 		targets := setKeys(cited)
-		sortLabels(targets)
+		blockfiles.SortLabels(targets)
 		g.forward[label] = targets
 		for _, t := range targets {
 			g.reverse[t] = append(g.reverse[t], label)
@@ -150,8 +165,8 @@ func buildGraph(blocks []blockFile, bare bool) *graph {
 			g.dangling = append(g.dangling, k)
 		}
 	}
-	sortLabels(g.reverseIDs)
-	sortLabels(g.dangling)
+	blockfiles.SortLabels(g.reverseIDs)
+	blockfiles.SortLabels(g.dangling)
 	return g
 }
 
@@ -185,7 +200,7 @@ func shortestPath(g *graph, src, dst string, directed bool) []string {
 			}
 		}
 		next := setKeys(nbrs)
-		sortLabels(next)
+		blockfiles.SortLabels(next)
 		for _, n := range next {
 			_, seen := prev[n]
 			if _, ok := g.forward[n]; !seen && ok {

@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/angeles725/niagara-go/internal/blockfiles"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyre"
 	"github.com/angeles725/niagara-go/internal/textfold"
@@ -88,7 +89,7 @@ func (c *corpus) blocksForFocus(focus string) []string {
 		}
 	}
 	labels := setKeys(found)
-	sortLabels(labels)
+	blockfiles.SortLabels(labels)
 	return labels
 }
 

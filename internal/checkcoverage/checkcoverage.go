@@ -15,6 +15,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/angeles725/niagara-go/internal/blockfiles"
 	"github.com/angeles725/niagara-go/internal/cli"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/textfold"
@@ -153,15 +154,15 @@ func scan(root string, names []string) (map[string]*coverage, []string, int) {
 			order = append(order, n)
 		}
 	}
-	files := allBlocks(root)
+	files := blockfiles.AllBlocks(root)
 	for _, b := range files {
-		ident := "B" + b.label
-		if b.corpus != "main" {
-			if rel, err := filepath.Rel(root, b.path); err == nil {
+		ident := "B" + b.Label
+		if b.Corpus != "main" {
+			if rel, err := filepath.Rel(root, b.Path); err == nil {
 				ident = rel
 			}
 		}
-		raw, err := os.ReadFile(b.path)
+		raw, err := os.ReadFile(b.Path)
 		if err != nil {
 			continue
 		}

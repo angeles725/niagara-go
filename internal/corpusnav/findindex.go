@@ -16,8 +16,9 @@ import (
 )
 
 // corpusnav/findindex.py: BM25 (textsearch, title counted 8x) over a search scope, in
-// memory or from a cache file. The cache is a gob file, find-<scope>.gob (the Python
-// tool keeps find-<scope>.sqlite: the two never read each other's file), holding the
+// memory or from a cache file. The cache is a gob file, find-<scope>.gob: a private
+// gob cache avoids a SQLite dependency for a small index (the Python tool keeps
+// find-<scope>.sqlite; the two never read each other's file). It holds the
 // document table and the (doc, tf) postings of every term; it is trusted only when its
 // fingerprint (schema, this executable, the stat of CATALOG.md and of every searched
 // file) matches, else the query is ranked in memory and the cache rebuilt atomically.

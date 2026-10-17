@@ -3,6 +3,8 @@ package corpusnav
 import (
 	"fmt"
 	"strings"
+
+	"github.com/angeles725/niagara-go/internal/blockfiles"
 )
 
 // The connections, graph, path and lint-refs commands of corpusnav/graph.py.
@@ -195,7 +197,7 @@ func (c *corpus) cmdLintRefs(files []string, warn bool, limit int) int {
 	if len(files) > 0 {
 		for _, f := range files {
 			p := pyPath(f)
-			label := mainLabel(baseName(p))
+			label := blockfiles.MainLabel(baseName(p))
 			if label == "" {
 				label = f
 			}
@@ -207,7 +209,7 @@ func (c *corpus) cmdLintRefs(files []string, warn bool, limit int) int {
 	found, unreadable := lintRefs(targets)
 	for _, f := range found[:min(limit, len(found))] {
 		where := f.path
-		if mainLabel(baseName(f.path)) != "" {
+		if blockfiles.MainLabel(baseName(f.path)) != "" {
 			where = displayID(f.block)
 		}
 		fmt.Fprintf(c.out, "%s:%d: %s %s  -> %s\n", where, f.line, padRight(f.form, 14), f.text, f.canonical)

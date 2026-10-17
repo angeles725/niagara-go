@@ -9,6 +9,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
+	"github.com/angeles725/niagara-go/internal/blockfiles"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyre"
 	"github.com/angeles725/niagara-go/internal/textfold"
@@ -71,16 +72,27 @@ func relTo(path, root string) string {
 
 // displayID is corpus.display_id: B720, B1-3, BTI; sub-corpus labels as they are.
 func displayID(label string) string {
-	if isMainLabel(label) {
+	if blockfiles.IsMainLabel(label) {
 		return "B" + label
 	}
 	return label
 }
 
-func isMainLabel(label string) bool { return isDigits(label) || label == "1-3" || label == "TI" }
+// blockFile is a blockfiles.Block as the commands use it.
+type blockFile struct {
+	label, path, corpus string
+}
 
-func (c *corpus) blocks() []blockFile    { return mainBlocks(c.root) }
-func (c *corpus) subBlocks() []blockFile { return subBlocks(c.root) }
+func fromShared(bs []blockfiles.Block) []blockFile {
+	out := make([]blockFile, len(bs))
+	for i, b := range bs {
+		out[i] = blockFile{b.Label, b.Path, b.Corpus}
+	}
+	return out
+}
+
+func (c *corpus) blocks() []blockFile    { return fromShared(blockfiles.MainBlocks(c.root)) }
+func (c *corpus) subBlocks() []blockFile { return fromShared(blockfiles.SubBlocks(c.root)) }
 
 // dirFiles is corpus.iter_dir_files: every *.md below dir (pathlib rglob, symlinked
 // directories not followed), in Path order (component by component).
@@ -239,7 +251,7 @@ func (c *corpus) targets(scope string) []target {
 
 // mainLabelOf is findindex._main_label: the main-block label of a display id, or "".
 func mainLabelOf(display string) string {
-	if strings.HasPrefix(display, "B") && isMainLabel(display[1:]) {
+	if strings.HasPrefix(display, "B") && blockfiles.IsMainLabel(display[1:]) {
 		return display[1:]
 	}
 	return ""
