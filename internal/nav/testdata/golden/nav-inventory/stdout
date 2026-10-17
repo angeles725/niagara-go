@@ -1,0 +1,41 @@
+============================================================
+MODULE INVENTORY
+============================================================
+
+  Total submodules (JARs):       13
+  Unique modules:                10
+  With Java code:                11
+  Without code (docs/res):        2
+  With vineflower/:              11
+  ZKM obfuscated:                 6
+  Total .java files:         13,221
+  Total .class files:        14,598
+  Unique 3rd-party libs:         65
+
+  Type breakdown:
+    doc              1
+    rt               6
+    se               3
+    standalone       1
+    ux               1
+    wb               1
+
+  Bytecode versions:
+    v52 (Java 8  ):     9
+    v53 (Java 9  ):     1
+
+  Index built: 2026-10-16T08:40:20
+  Build time:  0.7s
+
+  Top 10 by .java files:
+    apachePoi-rt                             6,337 files  8,244 classes
+    opcUaCore-rt                             3,114 files  4,496 classes
+    docSource-doc                            2,603 files      0 classes
+    baja                                       901 files  1,262 classes
+    alarm-rt                                   111 files    196 classes
+    alarm-wb                                    53 files    215 classes
+    obix-se                                     37 files    101 classes
+    alarmOrion-rt                               33 files     34 classes
+    alarm-ux                                    23 files     23 classes
+    backup-rt                                    5 files     21 classes
+

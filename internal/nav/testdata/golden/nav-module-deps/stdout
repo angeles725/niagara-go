@@ -1,0 +1,11 @@
+
+  Module:      alarm-rt
+  module.xml:  fixture/organized/alarm/alarm-rt/extracted/META-INF/module.xml
+
+  DEPENDENCIES (3)
+  NAME                           VENDOR       VERSION
+  ----------------------------------------------------------------
+  baja                           Tridium      4.14.0
+  aVeryLongDependencyModuleNameT TridiumVendo 4.14.0
+  control-rt                     Tridium      
+

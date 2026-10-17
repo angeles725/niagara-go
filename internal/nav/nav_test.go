@@ -62,3 +62,11 @@ func TestEpilogListsEveryCommandOnce(t *testing.T) {
 		}
 	}
 }
+
+func TestModuleSMANotPortedYet(t *testing.T) {
+	var out, errb bytes.Buffer
+	code := Main([]string{"--base-dir", t.TempDir(), "module", "alarm-rt", "--sma"}, cli.Stdio{Out: &out, Err: &errb})
+	if code != cli.ExitCannotSearch || out.Len() != 0 || errb.String() != "mnav: 'module --sma' is not ported yet\n" {
+		t.Fatalf("code=%d stdout=%q stderr=%q", code, out.String(), errb.String())
+	}
+}

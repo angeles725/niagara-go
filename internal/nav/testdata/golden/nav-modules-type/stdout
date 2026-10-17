@@ -1,0 +1,13 @@
+
+  Modules (type=rt): 6 results
+  NAME                                     TYPE    JAVA   CLASS  ZKM   BC
+  ----------------------------------------------------------------------
+  alarm-rt                                   rt     111     196  YES  v52
+  alarmOrion-rt                              rt      33      34       v52
+  apachePoi-rt                               rt   6,337   8,244  YES  v53
+  backup-rt                                  rt       5      21       v52
+  lonNico-rt                                 rt       0       0  YES  v?
+  opcUaCore-rt                               rt   3,114   4,496  YES  v52
+
+  Total: 6 modules, 9,600 java files, 12,991 classes
+

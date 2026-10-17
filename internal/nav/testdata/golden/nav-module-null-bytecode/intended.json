@@ -1,0 +1,6 @@
+{
+ "reason": "Python raises TypeError comparing a null bytecode with 45 after printing half the detail block; the port prints the whole block with 'vNone (Java ?)'",
+ "stdout": "\n  Module:      lonNico-rt\n  Parent:      lonNico\n  Type:        rt\n  JAR:         lonNico-rt.jar\n  Has code:    no\n  Class count: 0\n  Java files:  0\n  ZKM:         YES\n  Bytecode:    vNone (Java ?)\n  Vineflower:  no\n  CFR:         yes\n\n",
+ "stderr": "",
+ "exit": 0
+}

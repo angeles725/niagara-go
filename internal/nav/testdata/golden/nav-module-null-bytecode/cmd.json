@@ -1,0 +1,1 @@
+{"args": ["--base-dir", "fixture/nav", "module", "lonNico-rt"], "env": {"NAV_CORPUS_BASE": "fixture/organized"}}
