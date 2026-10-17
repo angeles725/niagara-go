@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/angeles725/niagara-go/internal/bog"
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // Component name matchers (Python `$` also matches before a final newline).
@@ -61,7 +62,7 @@ func strconstValue(c *bog.Comp) string {
 	if v == nil || *v == "" {
 		return ""
 	}
-	return pyStrip(pyUnescape(*v))
+	return pycompat.Strip(pycompat.HTMLUnescape(*v))
 }
 
 // supPanels maps each GM number to its supervisor folder content and confirmed schedule links.

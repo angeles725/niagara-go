@@ -37,18 +37,6 @@ func TestCSVMatchesPython(t *testing.T) {
 	}
 }
 
-func TestPyUnescape(t *testing.T) {
-	for in, want := range map[string]string{
-		"a &amp; b": "a & b", "&amp;amp;": "&amp;", "&#xe9;&#233;": "éé", "&#128;": "€", "&#1;x": "x",
-		"&#xD800;": "�", "&#99999999999;": "�", "&ampx": "&x", "&bogus;": "&bogus;",
-		"&#;": "&#;", "&notit;": "¬it;", "&lt": "<", "no refs": "no refs", "&#x;": "&#x;",
-	} {
-		if got := pyUnescape(in); got != want {
-			t.Errorf("pyUnescape(%q) = %q, want %q", in, got, want)
-		}
-	}
-}
-
 func TestCSVRowQuoting(t *testing.T) {
 	got := csvRow([]string{"a", `b "c"`, "d,e", "", " f", "g\nh"})
 	if want := "a,\"b \"\"c\"\"\",\"d,e\",, f,\"g\nh\"\r\n"; got != want {

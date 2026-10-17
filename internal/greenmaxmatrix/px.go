@@ -7,6 +7,8 @@ import (
 	"sort"
 	"strings"
 	"unicode/utf8"
+
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // navHeaders are the shared nav-bar labels of every panel Px (never a zone).
@@ -68,7 +70,7 @@ func parsePx(dir string) (map[int]*pxPanel, error) {
 		if err != nil {
 			return nil, err
 		}
-		txt := decodeReplace(data)
+		txt := pycompat.DecodeReplace(data)
 		cur, have := 0, false
 		for _, t := range pxTokRE.FindAllStringSubmatch(txt, -1) {
 			if t[1] != "" {
@@ -80,7 +82,7 @@ func parsePx(dir string) (map[int]*pxPanel, error) {
 			}
 		}
 		for _, t := range pxTextRE.FindAllStringSubmatch(txt, -1) {
-			tt := pyStrip(pyUnescape(t[1]))
+			tt := pycompat.Strip(pycompat.HTMLUnescape(t[1]))
 			low := strings.ToLower(tt)
 			if navHeaders[low] || digitsRE.MatchString(tt) || pxStatusRE.MatchString(tt) ||
 				strings.Contains(low, "comunicaci") || head(tt, 2) == "AL" {
