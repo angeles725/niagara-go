@@ -160,7 +160,7 @@ def classrank_cases():
         cases.append({"query": q, "terms": terms, "postings": post,
                       "scores": {r.name: hx(r.score) for r in results}})
     return {"names": ranker.doc_names, "lengths": ranker.lengths, "avg_len": hx(ranker.avg_len),
-            "prior": {n: hx(p) for n, p in ranker.prior.items()},
+            "prior": {n: hx(ranker.prior[n]) for n in sorted(ranker.prior)},
             "importers": {n: IMPORTERS.get(n, 0) for n in ranker.doc_names}, "cases": cases}
 
 
