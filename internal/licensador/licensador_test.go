@@ -133,3 +133,20 @@ func TestCheckFeature(t *testing.T) {
 		}
 	}
 }
+
+// TestVerifyStripsLikePython pins artifact.strip(): Python counts U+001C..U+001F as
+// whitespace, so an artifact wrapped in them still parses (strings.TrimSpace keeps them).
+func TestVerifyStripsLikePython(t *testing.T) {
+	key, err := generateKey(1024)
+	if err != nil {
+		t.Fatal(err)
+	}
+	c := pyjson.NewObject()
+	c.Set("ver", pyjson.IntValue(1))
+	c.Set("issued", pyjson.String("2026-08-01T00:00:00+00:00"))
+	a, _ := Artifact(key, c)
+	now := time.Date(2026, 8, 2, 0, 0, 0, 0, time.UTC)
+	if code, _, err := Verify(key.Public(), "\x1c\x1d"+a+"\x1e\x1f\n", VerifyOpts{Now: now}); err != nil || code != OK {
+		t.Errorf("Verify: %s %v, want %s", code, err, OK)
+	}
+}
