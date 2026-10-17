@@ -23,7 +23,7 @@ type Options struct {
 	Schema  bool   // history id, record type and field list (the default when nothing else is set)
 	Ops     bool   // count audit-log operation strings
 	Strings bool   // printable strings of the record region
-	Mask    bool   // redact user identities and long values (with Strings)
+	Mask    bool   // rule v5 redaction of --strings, --ops names and the --schema history id
 	Records bool   // decode fixed-length trend records: CSV on stdout, summary on stderr
 	JSON    bool   // with Records: a JSON list instead of CSV
 }
@@ -122,17 +122,25 @@ func Run(o Options, s cli.Stdio) int {
 		fmt.Fprintln(s.Err, err)
 		return cli.ExitNoMatch
 	}
+	return report(o, f, s)
+}
+
+// report prints the --schema, --ops and --strings sections of the parsed file f.
+func report(o Options, f *file, s cli.Stdio) int {
 	id, rt, fields := schemaOf(f.xml)
 	fmt.Fprintf(s.Out, "# %s\n", o.Path)
 	fmt.Fprintf(s.Out, "magic=A106F11E version=%d data_offset=%d data_section=%d bytes\n",
 		f.version, f.offset, len(f.section))
 	if o.Schema || !(o.Ops || o.Strings || o.Mask) {
+		if o.Mask { // the history id is free text from the file: rule v5 masks it
+			id = valueMasked
+		}
 		fmt.Fprintf(s.Out, "history_id=%s\n", id)
 		fmt.Fprintf(s.Out, "record_type=%s\n", rt)
 		fmt.Fprintf(s.Out, "schema (%d fields): %s\n", len(fields), strings.Join(fields, ", "))
 	}
 	if o.Ops {
-		if err := printOps(s, f.section, rt, fields); err != nil {
+		if err := printOps(s, f.section, rt, fields, o.Mask); err != nil {
 			fmt.Fprintln(s.Err, err)
 			return cli.ExitNoMatch
 		}

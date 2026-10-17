@@ -200,7 +200,10 @@ func unanchoredOps(rec []byte, ops map[string]int, anchored map[int]bool) map[st
 	return extra
 }
 
-func printOps(s cli.Stdio, rec []byte, rt string, fields []string) error {
+// printOps prints the --ops lines. With doMask (rule v5) only auditOperations constants print
+// verbatim: every other decoded name folds into one "op <VALUE-MASKED>" line, after the constant
+// lines, whose count and "not counted" figure are the sums over the folded names.
+func printOps(s cli.Stdio, rec []byte, rt string, fields []string, doMask bool) error {
 	has := false
 	for _, f := range fields {
 		has = has || f == "operation"
@@ -221,8 +224,23 @@ func printOps(s cli.Stdio, rec []byte, rt string, fields []string) error {
 		}
 	}
 	sort.Strings(tail)
+	folded, foldedExtra, hasExtra := 0, 0, false
 	for _, op := range append(names, tail...) {
+		if doMask && !isAuditOperation(op) {
+			folded += ops[op]
+			if e, ok := extra[op]; ok {
+				foldedExtra, hasExtra = foldedExtra+e, true
+			}
+			continue
+		}
 		writeOp(s.Out, op, ops[op], extra)
+	}
+	if folded > 0 || hasExtra {
+		e := map[string]int{}
+		if hasExtra {
+			e[valueMasked] = foldedExtra
+		}
+		writeOp(s.Out, valueMasked, folded, e)
 	}
 	return nil
 }

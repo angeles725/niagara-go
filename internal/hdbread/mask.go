@@ -4,7 +4,8 @@ package hdbread
 const userMasked = "<USER-MASKED>"
 
 // valueMasked replaces every other printable run under --strings --mask that is not an
-// operation constant at a framed operation field.
+// operation constant at a framed operation field; under --mask it also stands for the --ops
+// names that are not auditOperations constants and for the --schema history id.
 const valueMasked = "<VALUE-MASKED>"
 
 // loginOps are the AuditEvent operations whose other fields describe the session's user.
