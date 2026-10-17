@@ -8,6 +8,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/angeles725/niagara-go/internal/difflib"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
@@ -204,8 +205,8 @@ func (p *Parser) checkValue(a *Action, v any) error {
 	value := pycompat.Repr(pycompat.Str(v))
 	list := strings.Join(quoted, ", ")
 	if s, ok := v.(string); ok && !p.cfg.NoSuggest && allStr {
-		if best, found := closeMatch(s, names); found {
-			return newArgError(a, "invalid choice: "+value+", maybe you meant "+pycompat.Repr(best)+"? (choose from "+list+")")
+		if best, _ := difflib.GetCloseMatches(s, names, 1, 0.6); len(best) == 1 {
+			return newArgError(a, "invalid choice: "+value+", maybe you meant "+pycompat.Repr(best[0])+"? (choose from "+list+")")
 		}
 	}
 	return newArgError(a, "invalid choice: "+value+" (choose from "+list+")")
