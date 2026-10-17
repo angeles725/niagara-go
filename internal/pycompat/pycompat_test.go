@@ -28,6 +28,9 @@ type fixtures struct {
 	HTML     [][]json.RawMessage `json:"html"`
 	Paths    [][]json.RawMessage `json:"paths"`
 	Joins    [][]json.RawMessage `json:"joins"`
+	Case     [][]json.RawMessage `json:"case"`
+	Just     [][]json.RawMessage `json:"just"`
+	Cut      [][]json.RawMessage `json:"cut"`
 	Digests  map[string]string   `json:"digests"`
 }
 
@@ -323,7 +326,11 @@ func TestEveryCodePoint(t *testing.T) {
 		"alpha": is(IsAlpha), "decimal": is(IsDecimal), "digit": is(IsDigit), "numeric": is(IsNumeric),
 		"alnum": is(IsAlnum), "printable": is(IsPrintable), "space": is(IsSpace), "word": is(IsWordRune),
 		"linebreak": is(IsLineBreak),
-		"repr":      func(r rune) (string, bool) { return StrRepr(string(r)), true },
+		"isupper":   isStr(IsUpper), "islower": isStr(IsLower), "istitle": isStr(IsTitle),
+		"upper": mapStr(Upper), "title": mapStr(Title), "capitalize": mapStr(Capitalize),
+		"swapcase":     mapStr(SwapCase),
+		"case_context": func(r rune) (string, bool) { return caseContext(string(r)), true },
+		"repr":         func(r rune) (string, bool) { return StrRepr(string(r)), true },
 		"decimal_value": func(r rune) (string, bool) {
 			return string(r) + strconv.Itoa(decimalValue(r)), decimalValue(r) >= 0
 		},
