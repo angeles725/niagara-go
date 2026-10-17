@@ -1,0 +1,30 @@
+No match for 'zzqq' (module-deps) in this scope.
+  searched: Niagara 4.14.0.162 (<TESTDATA>) -- source-index.json: 39 entries
+  excluded from this scope: modules shipped without source (module names come from the source files)
+  not proof of absence; try: module 'zzqq', find 'zzqq', search 'zzqq'
+
+Available modules:
+  acme-rt (1 classes)
+  alarm-rt (13 classes)
+  alarmOrion-rt (1 classes)
+  bacnet-rt (2 classes)
+  baja (3 classes)
+  control-rt (1 classes)
+  kitControl-rt (1 classes)
+  m01-rt (1 classes)
+  m02-rt (1 classes)
+  m03-rt (1 classes)
+  m04-rt (1 classes)
+  m05-rt (1 classes)
+  m06-rt (1 classes)
+  m07-rt (1 classes)
+  m08-rt (1 classes)
+  m09-rt (1 classes)
+  m10-rt (1 classes)
+  m11-rt (1 classes)
+  m12-rt (1 classes)
+  m13-rt (1 classes)
+  m14-rt (1 classes)
+  m15-rt (1 classes)
+  m16-rt (1 classes)
+  web-rt (1 classes)

@@ -29,6 +29,9 @@ var analysisCommands = []command{
 		args: func(p *argparse.Parser) {
 			positional(p, "name", "Module name (e.g. alarm-rt)")
 			flag(p, "Show modules that depend on this one", "--reverse")
+		},
+		run: func(e *Env, ns *argparse.Namespace) error {
+			return e.ModuleDeps(ModuleDepsParams{Name: ns.String("name"), Reverse: ns.Bool("reverse")})
 		}},
 	{name: "compare", help: "Side-by-side comparison of two classes",
 		args: func(p *argparse.Parser) {

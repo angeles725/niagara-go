@@ -1,0 +1,14 @@
+MODULE: alarm-rt (13 classes)
+
+DEPENDS ON (4 modules):
+
+  baja (4 imports)
+    <- BAbstractService
+    <- BComponent
+    <- BObject
+  control-rt (1 imports)
+    <- BLoopCtl
+  kitControl-rt (1 imports)
+    <- BLoopPoint
+  web-rt (1 imports)
+    <- BWebServlet
