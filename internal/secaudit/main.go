@@ -13,6 +13,7 @@ import (
 	"github.com/angeles725/niagara-go/internal/argparse"
 	"github.com/angeles725/niagara-go/internal/bog"
 	"github.com/angeles725/niagara-go/internal/cli"
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // prog is the Python program name, kept for byte-identical usage and error lines.
@@ -43,7 +44,7 @@ func run(e *env, home, station, host, scanDir string, asJSON bool, s cli.Stdio) 
 	if scanDir != "" {
 		return runScanLogs(scanDir, asJSON, s)
 	}
-	if !isDir(home) {
+	if !pycompat.IsDir(home) {
 		fmt.Fprintf(s.Err, "ERROR: not a directory: %s\n", home)
 		return 1
 	}
@@ -73,19 +74,19 @@ func readStation(path string) (string, []byte, error) {
 	}
 	f, err := os.Open(path)
 	if err != nil {
-		return "", nil, errors.New(pyOSError(err))
+		return "", nil, errors.New(pycompat.OSErrorText(err))
 	}
 	defer f.Close()
 	buf := make([]byte, sec12Window)
 	n, err := io.ReadFull(f, buf)
 	if err != nil && !errors.Is(err, io.ErrUnexpectedEOF) && !errors.Is(err, io.EOF) {
-		return "", nil, errors.New(pyOSError(err))
+		return "", nil, errors.New(pycompat.OSErrorText(err))
 	}
 	return text, buf[:n], nil
 }
 
 func runScanLogs(dir string, asJSON bool, s cli.Stdio) int {
-	if !isDir(dir) {
+	if !pycompat.IsDir(dir) {
 		fmt.Fprintf(s.Err, "ERROR: --scan-logs: not a directory: %s\n", dir)
 		return cli.ExitCannotSearch
 	}

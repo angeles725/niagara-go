@@ -103,7 +103,7 @@ func startMessage(name string, err error) string {
 	if errors.Is(err, exec.ErrNotFound) {
 		return fmt.Sprintf("[Errno 2] No such file or directory: %s", pycompat.StrRepr(name))
 	}
-	return pyOSError(err)
+	return pycompat.OSErrorText(err)
 }
 
 func dialTCP(host string, port int) bool {
@@ -121,16 +121,6 @@ func lookPath(name string) string {
 		return ""
 	}
 	return p
-}
-
-func isFile(p string) bool {
-	st, err := os.Stat(p)
-	return err == nil && st.Mode().IsRegular()
-}
-
-func isDir(p string) bool {
-	st, err := os.Stat(p)
-	return err == nil && st.IsDir()
 }
 
 // keytoolOutcome is one "keytool -list" run against the default store password.
@@ -180,13 +170,13 @@ func (e *env) keytoolList(path string, verbose bool) (keytoolOutcome, error) {
 		text = pycompat.Strip(errText)
 	}
 	first, _, _ := strings.Cut(text, "\n") // -v adds a stack trace after the error line
-	out.failure = fmt.Sprintf("exit %d: %s", r.code, head(pycompat.Strip(first), 120))
+	out.failure = fmt.Sprintf("exit %d: %s", r.code, pycompat.Cut(pycompat.Strip(first), 120))
 	return out, nil
 }
 
 // keytoolDefault is the SEC-02 probe of the store at path; nil when it is no file.
 func (e *env) keytoolDefault(path string) (*keytoolOutcome, error) {
-	if !isFile(path) {
+	if !pycompat.IsFile(path) {
 		return nil, nil
 	}
 	o, err := e.keytoolList(path, false)
@@ -198,7 +188,7 @@ var bitsRE = regexp.MustCompile(`([0-9]+)-bit`)
 // keytoolKeysizes are the key sizes "keytool -list -v" prints for the store at path. failure is
 // set (and sizes nil) when keytool did not exit 0: the sizes were not read, which is not "none".
 func (e *env) keytoolKeysizes(path string) (sizes []int, failure string, err error) {
-	if !isFile(path) {
+	if !pycompat.IsFile(path) {
 		return nil, "", nil
 	}
 	o, err := e.keytoolList(path, true)
@@ -251,7 +241,7 @@ func (e *env) findIcacls() string {
 		return p
 	}
 	for _, p := range icaclsPaths {
-		if isFile(p) {
+		if pycompat.IsFile(p) {
 			return p
 		}
 	}
@@ -274,7 +264,7 @@ func (e *env) runIcacls(exe, winpath string) (listing, why string, err error) {
 		if text == "" {
 			text = stdout
 		}
-		return "", fmt.Sprintf("exit %d: %s", r.code, head(pycompat.Strip(text), 120)), nil
+		return "", fmt.Sprintf("exit %d: %s", r.code, pycompat.Cut(pycompat.Strip(text), 120)), nil
 	}
 	return stdout, "", nil
 }

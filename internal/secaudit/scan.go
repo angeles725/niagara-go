@@ -19,7 +19,7 @@ var keyRingRE = regexp.MustCompile(`KeyRingPermission"[^>]*?(?:name|target)="([^
 // sec15 flags a wildcard KeyRingPermission declared by an unsigned module.
 func sec15(home string, rep *report) {
 	moddir := filepath.Join(home, "modules")
-	if !isDir(moddir) {
+	if !pycompat.IsDir(moddir) {
 		return
 	}
 	total, wild, wildUnsigned := scanKeyringPerms(moddir)
@@ -169,7 +169,7 @@ func scanLogs(root string) (hits []hit, nfiles int, bad, badDirs []unreadable) {
 // isDirEntry is DirEntry.is_dir(): a symlink counts as its target.
 func isDirEntry(p string, ent os.DirEntry) bool {
 	if ent.Type()&os.ModeSymlink != 0 {
-		return isDir(p)
+		return pycompat.IsDir(p)
 	}
 	return ent.IsDir()
 }
@@ -180,10 +180,10 @@ func scanFile(p string) ([]hit, error) {
 		return nil, err
 	}
 	var found []hit
-	for i, line := range splitLines(pycompat.DecodeReplace(data)) {
+	for i, line := range pycompat.Lines(pycompat.DecodeReplace(data)) {
 		for _, ioc := range logIOCs {
 			if ioc.re.MatchString(line) {
-				found = append(found, hit{ioc.sev, ioc.label, p, i + 1, head(pycompat.Strip(line), 160)})
+				found = append(found, hit{ioc.sev, ioc.label, p, i + 1, pycompat.Cut(pycompat.Strip(line), 160)})
 			}
 		}
 	}

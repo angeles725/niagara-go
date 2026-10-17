@@ -14,7 +14,7 @@ const sec03Run = `run: icacls <home>\security`
 // is an interrupt that came while icacls ran.
 func (e *env) sec03(home string, rep *report) error {
 	secdir := pycompat.PosixJoin(home, "security")
-	if !isDir(secdir) {
+	if !pycompat.IsDir(secdir) {
 		return nil
 	}
 	skip := func(observed string) {
@@ -40,9 +40,9 @@ func (e *env) sec03(home string, rep *report) error {
 		aces, unparsed := parseListing(listing, winpath)
 		switch {
 		case len(aces) == 0:
-			skip(fmt.Sprintf("not checked: %s printed no ACE lines: %s", icacls, pycompat.StrRepr(head(pycompat.Strip(listing), 80))))
+			skip(fmt.Sprintf("not checked: %s printed no ACE lines: %s", icacls, pycompat.StrRepr(pycompat.Cut(pycompat.Strip(listing), 80))))
 		case len(unparsed) > 0:
-			skip(fmt.Sprintf("not checked: %d ACE line(s) not understood: %s", len(unparsed), pycompat.StrRepr(head(unparsed[0], 80))))
+			skip(fmt.Sprintf("not checked: %d ACE line(s) not understood: %s", len(unparsed), pycompat.StrRepr(pycompat.Cut(unparsed[0], 80))))
 		default:
 			loose := looseACEs(aces)
 			rep.add("SEC-03", "crit", "security/ filesystem ACLs",

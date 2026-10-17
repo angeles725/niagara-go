@@ -15,12 +15,12 @@ import (
 
 // aceRE is one ACE line: `[<path> ]<principal>:(<inheritance>)...(<rights>)`. The rights letters
 // are the same in every Windows language and read case-insensitively.
-var aceRE = regexp.MustCompile(pyRe(`(?i)^(.*?):((?:\([A-Z]+(?:,[A-Z]+)*\))+)\s*$`))
+var aceRE = regexp.MustCompile(pycompat.RE2Space(`(?i)^(.*?):((?:\([A-Z]+(?:,[A-Z]+)*\))+)\s*$`))
 
 var groupRE = regexp.MustCompile(`\(([A-Za-z,]+)\)`)
 
 // broadGroupRE names the broad groups in English, Spanish, Portuguese, French, German and Italian.
-var broadGroupRE = regexp.MustCompile(pyRe(`(?i)(?:^|[\s\\])(Authenticated Users|Users|Everyone` +
+var broadGroupRE = regexp.MustCompile(pycompat.RE2Space(`(?i)(?:^|[\s\\])(Authenticated Users|Users|Everyone` +
 	`|Usuarios autentificados|Usuarios autenticados|Usuarios|Todos` +
 	`|Usuários autenticados|Usuários` +
 	`|Utilisateurs authentifiés|Utilisateurs|Tout le monde` +
@@ -43,7 +43,7 @@ type ace struct {
 // parseListing returns the ACEs of an icacls listing and the ACE-looking lines (holding ":(")
 // it did not understand. The queried path is cut from the line that starts with it.
 func parseListing(text, winpath string) (aces []ace, unparsed []string) {
-	for _, line := range strings.Split(normalizeNewlines(text), "\n") {
+	for _, line := range pycompat.SplitLines(text, false) {
 		line = pycompat.Strip(line)
 		if winpath != "" && strings.HasPrefix(strings.ToLower(line), strings.ToLower(winpath)) {
 			line = pycompat.Strip(string([]rune(line)[utf8.RuneCountInString(winpath):]))
@@ -60,18 +60,6 @@ func parseListing(text, winpath string) (aces []ace, unparsed []string) {
 		}
 	}
 	return aces, unparsed
-}
-
-// normalizeNewlines maps the line boundaries str.splitlines knows to "\n".
-func normalizeNewlines(s string) string {
-	s = strings.ReplaceAll(s, "\r\n", "\n")
-	return strings.Map(func(r rune) rune {
-		switch r {
-		case '\r', '\v', '\f', 0x1c, 0x1d, 0x1e, 0x85, 0x2028, 0x2029:
-			return '\n'
-		}
-		return r
-	}, s)
 }
 
 // looseACEs are the principals naming a broad group that hold a write right. A deny ACE
