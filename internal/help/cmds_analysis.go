@@ -19,7 +19,8 @@ var analysisCommands = []command{
 			return e.Xref(XrefParams{Name: ns.String("name"), Direction: ns.String("direction")})
 		}},
 	{name: "related", help: "Discovery: related classes by package, hierarchy, xref, guides",
-		args: func(p *argparse.Parser) { positional(p, "name", "Class name") }},
+		args: func(p *argparse.Parser) { positional(p, "name", "Class name") },
+		run:  func(e *Env, ns *argparse.Namespace) error { return e.Related(ns.String("name")) }},
 	{name: "stats", help: "Corpus overview with counts and sizes",
 		args: func(p *argparse.Parser) {
 			p.Add(argparse.Arg{Dest: "stats_json", Action: argparse.StoreTrue, Help: "Output as JSON"},
@@ -39,7 +40,8 @@ var analysisCommands = []command{
 			positional(p, "class2", "Second class name")
 		}},
 	{name: "profile", help: "Full class profile: identity, hierarchy, slots, methods, xref",
-		args: func(p *argparse.Parser) { positional(p, "name", "Class name (e.g. BAlarmService)") }},
+		args: func(p *argparse.Parser) { positional(p, "name", "Class name (e.g. BAlarmService)") },
+		run:  func(e *Env, ns *argparse.Namespace) error { return e.Profile(ns.String("name")) }},
 	{name: "graph", help: "ASCII dependency graph for a class",
 		args: func(p *argparse.Parser) {
 			positional(p, "name", "Class name")
@@ -66,7 +68,8 @@ var developCommands = []command{
 			positional(p, "base_class", "Base class (e.g. BAbstractService)")
 		}},
 	{name: "topics", help: "Show topics fired by a class and potential subscribers",
-		args: func(p *argparse.Parser) { positional(p, "name", "Class name (e.g. BAlarmService)") }},
+		args: func(p *argparse.Parser) { positional(p, "name", "Class name (e.g. BAlarmService)") },
+		run:  func(e *Env, ns *argparse.Namespace) error { return e.Profile(ns.String("name")) }},
 	{name: "action-params", help: "Find actions that accept a given parameter type",
 		args: func(p *argparse.Parser) {
 			positional(p, "type", "Parameter type (e.g. BAlarmRecord)")

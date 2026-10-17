@@ -1,0 +1,25 @@
+RELATED: BAlarmService (javax.baja.alarm, class)
+============================================================
+
+SAME PACKAGE - javax.baja.alarm (20 classes):
+  BAckState (class)
+  BAlarmClass (class)
+  BAlarmDb (class)
+  BAlarmExt (class)
+  BAlarmFolder (class)
+  BAlarmPort (class)
+  BAlarmRecord (class)
+  BAlarmRouter (class)
+  BAlarmTable (class)
+  BAlarmView (class)
+  ... +10 more
+
+HIERARCHY:
+  parent: BAbstractService
+  implements: BIAlarmSource, BIRestrictedComponent
+  children (1): BOrionAlarmService
+
+IMPORT DEPENDENCIES:
+  uses (11): BAlarmRecord, BAlarmClass, BAlarmDb, BComponent, BAbstractService, BLoopCtl, BAlarmRouter, BAlarmTable, BZoneAlarm, BIAlarmSource
+    ... +1 more
+  used by (4): BOrionAlarmService, BWebServlet, BBacnetDevice, BBacnetNetwork
