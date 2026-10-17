@@ -1,0 +1,2 @@
+# Byte-exact fixtures: CRLF, a lone CR and invalid UTF-8 are part of the cases.
+* -text

@@ -1,0 +1,8 @@
+
+  grep /veryLong/ — 1+ matches in 1 files (4 files searched)
+
+  [alarm-rt]
+    BAlarmService:9   void veryLong() { ackAlarm(xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx...
+
+  ... limit reached (1) — use -n to increase
+

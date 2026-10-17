@@ -1,0 +1,8 @@
+
+  grep /class/ — 0+ matches in 1 files (1 files searched)
+
+  [alarm]
+    Standalone:1 class Standalone {}
+
+  ... limit reached (0) — use -n to increase
+

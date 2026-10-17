@@ -3,6 +3,7 @@ package core
 import (
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/index"
@@ -121,14 +122,35 @@ type JavaFile struct{ Sub, Path, Rel string }
 // are listed but not entered).
 func IterJava(organized string) []JavaFile {
 	var out []JavaFile
-	var walk func(sub, dir string)
-	walk = func(sub, dir string) {
+	WalkJava(organized, nil, func(f JavaFile) bool {
+		out = append(out, f)
+		return true
+	})
+	return out
+}
+
+// WalkJava is the lazy corpus.iter_java: fn receives every vineflower .java
+// file of the submodules keep accepts (all of them when keep is nil), in
+// IterJava order, and ends the walk early by returning false. Skipping a
+// submodule as a whole yields the same files, in the same order, as walking it
+// and filtering each file by its submodule.
+func WalkJava(organized string, keep func(Submodule) bool, fn func(JavaFile) bool) {
+	var walk func(sub, dir string) bool
+	walk = func(sub, dir string) bool {
+		// os.walk over scandir: an entry is a directory when it is one or links
+		// to one (the entry type saves a stat for everything but symlinks); a
+		// symlinked directory is listed but not entered.
 		var dirs, files []string
-		for _, name := range sortedNames(dir) {
-			p := filepath.Join(dir, name)
-			if isDir(p) {
+		links := map[string]bool{}
+		for _, e := range sortedEntries(dir) {
+			name := e.Name()
+			switch {
+			case e.IsDir():
 				dirs = append(dirs, name)
-			} else {
+			case e.Type()&os.ModeSymlink != 0 && isDir(filepath.Join(dir, name)):
+				dirs = append(dirs, name)
+				links[name] = true
+			default:
 				files = append(files, name)
 			}
 		}
@@ -139,21 +161,29 @@ func IterJava(organized string) []JavaFile {
 				if err != nil {
 					rel = p
 				}
-				out = append(out, JavaFile{sub, p, strings.ReplaceAll(filepath.ToSlash(rel), "\\", "/")})
+				if !fn(JavaFile{sub, p, strings.ReplaceAll(filepath.ToSlash(rel), "\\", "/")}) {
+					return false
+				}
 			}
 		}
 		for _, name := range dirs {
-			p := filepath.Join(dir, name)
-			if st, err := os.Lstat(p); err == nil && st.Mode()&os.ModeSymlink != 0 {
+			if links[name] {
 				continue
 			}
-			walk(sub, p)
+			if !walk(sub, filepath.Join(dir, name)) {
+				return false
+			}
 		}
+		return true
 	}
 	for _, s := range IterSubmodules(organized, nil) {
-		walk(s.Name, filepath.Join(s.Path, "vineflower"))
+		if keep != nil && !keep(s) {
+			continue
+		}
+		if !walk(s.Name, filepath.Join(s.Path, "vineflower")) {
+			return
+		}
 	}
-	return out
 }
 
 // ClassEntry is one class-index entry with its class name.
@@ -194,4 +224,16 @@ func TopLevelFiles(classes *index.Object) []ClassEntry {
 		}
 	}
 	return out
+}
+
+// sortedEntries is sorted(os.scandir(dir)) by name; nil when dir cannot be read.
+func sortedEntries(dir string) []os.DirEntry {
+	f, err := os.Open(dir)
+	if err != nil {
+		return nil
+	}
+	defer f.Close()
+	entries, _ := f.ReadDir(-1)
+	sort.Slice(entries, func(a, b int) bool { return entries[a].Name() < entries[b].Name() })
+	return entries
 }

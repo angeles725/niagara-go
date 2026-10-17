@@ -16,13 +16,15 @@ import (
 // regenerates both). The module-navigator golden suite (tests/golden_cli.py with
 // GOLDEN_BIN) covers every command against the real corpus.
 func TestGolden(t *testing.T) {
-	// A checkout gives the drivers class index and its corpus the same mtime;
-	// dated ahead, the index is never "older than the corpus" (no staleness
-	// warning), as when the cases were captured.
+	// A checkout gives the drivers and search class indexes and their corpora
+	// the same mtime; dated ahead, an index is never "older than the corpus"
+	// (no staleness warning), as when the cases were captured.
 	future := time.Now().Add(time.Hour)
-	ci := filepath.Join("testdata", "fixture", "drivers", "indexes", "class-index.json")
-	if err := os.Chtimes(ci, future, future); err != nil {
-		t.Fatal(err)
+	for _, base := range []string{"drivers", "search"} {
+		ci := filepath.Join("testdata", "fixture", base, "indexes", "class-index.json")
+		if err := os.Chtimes(ci, future, future); err != nil {
+			t.Fatal(err)
+		}
 	}
 	golden.Run(t, "testdata", Main)
 }

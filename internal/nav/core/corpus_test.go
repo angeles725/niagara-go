@@ -52,6 +52,37 @@ func TestIterJavaOrderAndSubmodules(t *testing.T) {
 	}
 }
 
+func TestWalkJavaFiltersSubmodulesAndStopsEarly(t *testing.T) {
+	org := t.TempDir()
+	for _, rel := range []string{"a/a-rt/vineflower/A.java", "a/a-rt/vineflower/p/B.java",
+		"a/a-wb/vineflower/C.java", "b/b-rt/vineflower/D.java"} {
+		touch(t, filepath.Join(org, filepath.FromSlash(rel)))
+	}
+	walk := func(keep func(Submodule) bool, stopAfter int) []string {
+		var got []string
+		WalkJava(org, keep, func(f JavaFile) bool {
+			got = append(got, f.Sub+":"+f.Rel)
+			return len(got) < stopAfter
+		})
+		return got
+	}
+	all := walk(nil, 99)
+	var iter []string
+	for _, f := range IterJava(org) {
+		iter = append(iter, f.Sub+":"+f.Rel)
+	}
+	if !reflect.DeepEqual(all, iter) || len(all) != 4 {
+		t.Errorf("WalkJava %q, IterJava %q", all, iter)
+	}
+	if got := walk(nil, 2); !reflect.DeepEqual(got, all[:2]) {
+		t.Errorf("stop after 2: %q (the walk must end inside a nested directory too)", got)
+	}
+	rt := walk(func(s Submodule) bool { return SubmoduleKind(s.Module, s.Name) == "rt" }, 99)
+	if want := []string{all[0], all[1], all[3]}; !reflect.DeepEqual(rt, want) {
+		t.Errorf("rt submodules %q, want %q", rt, want)
+	}
+}
+
 func TestTopLevelFiles(t *testing.T) {
 	classes := NewTestMeta(t, `{
 		"A": [{"path": "p/A.java", "outer_class": null}, {"path": "q/A.java", "outer_class": "None"}],
