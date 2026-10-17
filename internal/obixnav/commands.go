@@ -7,6 +7,8 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // rooms maps a room number to its ColdRoom container (Cuarto5 is comfort, no per-evap defrost).
@@ -91,7 +93,7 @@ func (r *runner) detectMap(coldroom string, units []string) ([]string, error) {
 			}
 			for _, v := range []value{fv, uv} {
 				if v.kind == 's' {
-					return nil, valueError(fmt.Sprintf("could not convert string to float: %s", pyStrRepr(v.s)))
+					return nil, valueError(fmt.Sprintf("could not convert string to float: %s", pycompat.StrRepr(v.s)))
 				}
 			}
 			if math.Abs(fv.f-uv.f) < 1e-6 {
@@ -195,7 +197,7 @@ func (r *runner) cmdMap() error {
 			present = "PRESENTE"
 		}
 		fmt.Fprintf(w, "  defrost: room-level DefrostController=%s | per-evap=%d/%d %s\n", present, len(per),
-			len(units), pyListRepr(per))
+			len(units), pycompat.Repr(per))
 		if err := r.compareRoom(w, ri, cr, fmap); err != nil {
 			return err
 		}
@@ -235,7 +237,7 @@ func (r *runner) compareRoom(w io.Writer, ri int, cr string, fmap []string) erro
 		case fv.tag == "err" && rv.tag == "err":
 			continue // slot family absent (e.g. no resistance defrost)
 		case rv.tag == "err":
-			miss = append(miss, fmt.Sprintf("  MISSING rt   %s (facade=%s, rt slot ausente)", p.rslot, optStr(fv.val)))
+			miss = append(miss, fmt.Sprintf("  MISSING rt   %s (facade=%s, rt slot ausente)", p.rslot, pycompat.OptStr(fv.val)))
 			continue
 		case fv.tag == "err":
 			miss = append(miss, "  MISSING fac  "+p.fslot)
@@ -244,8 +246,8 @@ func (r *runner) compareRoom(w io.Writer, ri int, cr string, fmap []string) erro
 		fn, rn := num(fv), num(rv)
 		same := fn.str() == rn.str() || fn.kind == 'f' && rn.kind == 'f' && math.Abs(fn.f-rn.f) < 1e-6
 		if !same {
-			miss = append(miss, fmt.Sprintf("  DIFF  evap%d %s=%s  !=  rt %s=%s", p.m, p.fslot, optStr(fv.val),
-				p.rslot, optStr(rv.val)))
+			miss = append(miss, fmt.Sprintf("  DIFF  evap%d %s=%s  !=  rt %s=%s", p.m, p.fslot, pycompat.OptStr(fv.val),
+				p.rslot, pycompat.OptStr(rv.val)))
 		}
 	}
 	if len(miss) > 0 {
@@ -281,7 +283,7 @@ func (r *runner) cmdCond() error {
 		case fv.tag == "err" || rv.tag == "err":
 			tag = "MISSING"
 		}
-		fmt.Fprintf(r.s.Out, "  %-8s %-14s facade=%s  rt=%s  [%s]\n", tag, p.facade, optStr(fv.val), optStr(rv.val), p.rt)
+		fmt.Fprintf(r.s.Out, "  %-8s %-14s facade=%s  rt=%s  [%s]\n", tag, p.facade, pycompat.OptStr(fv.val), pycompat.OptStr(rv.val), p.rt)
 	}
 	return nil
 }

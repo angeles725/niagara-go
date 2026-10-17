@@ -12,6 +12,7 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/cli"
 	"github.com/angeles725/niagara-go/internal/honest"
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // Options is the parsed command line.
@@ -43,7 +44,7 @@ func Run(o Options, s cli.Stdio) int {
 		return honest.Fail(s.Err, "obix-nav", fmt.Sprintf("cannot read %s: %v", o.PassFile, err), honest.ExitInput)
 	}
 	base := strings.TrimRight(o.Base, "/")
-	r := &runner{o: o, c: newClient(base, pyStrip(string(raw))), s: s}
+	r := &runner{o: o, c: newClient(base, pycompat.Strip(string(raw))), s: s}
 	cmds := map[string]func() error{"map": r.cmdMap, "cond": r.cmdCond, "wiring": r.cmdWiring,
 		"config": r.cmdConfig, "read": r.cmdRead, "dump": r.cmdDump}
 	cmd, ok := cmds[o.Command]
@@ -72,27 +73,27 @@ func (r *runner) cmdRead() error {
 	}
 	items := make([]string, len(vals.keys))
 	for i, k := range vals.keys {
-		items[i] = pyStrRepr(k) + ": " + tupleRepr(vals.m[k])
+		items[i] = pycompat.StrRepr(k) + ": " + tupleRepr(vals.m[k])
 	}
 	fmt.Fprintf(r.s.Out, "{%s}\n", strings.Join(items, ", "))
 	return nil
 }
 
 func tupleRepr(res result) string {
-	return "(" + pyStrRepr(res.tag) + ", " + optRepr(res.val) + ")"
+	return "(" + pycompat.StrRepr(res.tag) + ", " + pycompat.OptRepr(res.val) + ")"
 }
 
 var pyIntRE = regexp.MustCompile(`^[+-]?[0-9](?:_?[0-9])*$`)
 
 // pyInt parses like Python int(str) for decimal text.
 func pyInt(s string) (int, error) {
-	t := pyStrip(s)
+	t := pycompat.Strip(s)
 	if !pyIntRE.MatchString(t) {
-		return 0, valueError(fmt.Sprintf("invalid literal for int() with base 10: %s", pyStrRepr(s)))
+		return 0, valueError(fmt.Sprintf("invalid literal for int() with base 10: %s", pycompat.StrRepr(s)))
 	}
 	var n int
 	if _, err := fmt.Sscan(strings.ReplaceAll(strings.TrimPrefix(t, "+"), "_", ""), &n); err != nil {
-		return 0, valueError(fmt.Sprintf("invalid literal for int() with base 10: %s", pyStrRepr(s)))
+		return 0, valueError(fmt.Sprintf("invalid literal for int() with base 10: %s", pycompat.StrRepr(s)))
 	}
 	return n, nil
 }
@@ -132,6 +133,6 @@ func (r *runner) cmdDump() error {
 	for _, o := range ords {
 		fmt.Fprintf(r.s.Out, "  %-26s %s\n", o[strings.LastIndex(o, "/")+1:], tupleRepr(vals.get(o)))
 	}
-	fmt.Fprintf(r.s.Out, "  units rt: %s\n", pyListRepr(units))
+	fmt.Fprintf(r.s.Out, "  units rt: %s\n", pycompat.Repr(units))
 	return nil
 }

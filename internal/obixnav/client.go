@@ -15,6 +15,8 @@ import (
 	"strings"
 	"syscall"
 	"time"
+
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // httpError is urllib's HTTPError: str() is "HTTP Error <code>: <reason>".
@@ -142,7 +144,7 @@ func (c *client) fetch(method, url string, body []byte, timeout time.Duration) (
 	if err != nil {
 		return "", &urlError{netReason(err)}
 	}
-	return decodeReplace(data), nil
+	return pycompat.DecodeReplace(data), nil
 }
 
 func (c *client) getConfig(path string) (string, error) {
@@ -273,7 +275,7 @@ func num(r result) value {
 	if r.val == nil {
 		return value{kind: 'n'}
 	}
-	if f, ok := pyFloat(*r.val); ok {
+	if f, err := pycompat.ParseFloat(*r.val); err == nil {
 		return value{kind: 'f', f: f}
 	}
 	return value{kind: 's', s: *r.val}
@@ -285,7 +287,7 @@ func (v value) str() string {
 	case 'n':
 		return "None"
 	case 'f':
-		return pyRepr(v.f)
+		return pycompat.FloatRepr(v.f)
 	}
 	return v.s
 }

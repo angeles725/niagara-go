@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/angeles725/niagara-go/internal/cli"
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // Expected values are Python 3 repr()/int() output.
@@ -14,8 +15,8 @@ func TestPyStrRepr(t *testing.T) {
 		"tab\there": `'tab\there'`, "é": `'é'`, "\x00\x7f": `'\x00\x7f'`, "\u2028": `'\u2028'`,
 		"\U0001F600": "'\U0001F600'", `back\slash`: `'back\\slash'`}
 	for in, want := range cases {
-		if got := pyStrRepr(in); got != want {
-			t.Errorf("pyStrRepr(%q) = %s, want %s", in, got, want)
+		if got := pycompat.StrRepr(in); got != want {
+			t.Errorf("pycompat.StrRepr(%q) = %s, want %s", in, got, want)
 		}
 	}
 }

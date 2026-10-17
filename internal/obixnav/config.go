@@ -3,6 +3,8 @@ package obixnav
 import (
 	"fmt"
 	"strings"
+
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // roomAir: true for air defrost rooms; Cuarto3 is resistance (-20 C).
@@ -22,9 +24,9 @@ func rtSecs(v *string) (float64, bool, error) {
 		case unit[ch] != 0:
 			f := 0.0
 			if digits != "" {
-				var ok bool
-				if f, ok = pyFloat(digits); !ok {
-					return 0, false, valueError(fmt.Sprintf("could not convert string to float: %s", pyStrRepr(digits)))
+				var err error
+				if f, err = pycompat.ParseFloat(digits); err != nil {
+					return 0, false, valueError(fmt.Sprintf("could not convert string to float: %s", pycompat.StrRepr(digits)))
 				}
 			}
 			tot += f * unit[ch]
@@ -85,7 +87,7 @@ func (r *runner) unitConfig(cr, u string, air bool) error {
 	if err != nil {
 		return err
 	}
-	g := func(s string) string { return optStr(v.get(baseU + s).val) }
+	g := func(s string) string { return pycompat.OptStr(v.get(baseU + s).val) }
 	gd := func(s string) *string { return v.get(baseU + "DefrostController/" + s).val }
 	var flags []string
 	du, dd := num(v.get(baseU+"evapDifferentialUp")), num(v.get(baseU+"evapDifferentialDown"))
@@ -93,7 +95,7 @@ func (r *runner) unitConfig(cr, u string, air bool) error {
 		flags = append(flags, fmt.Sprintf("hasDefrost=%s (debe true)", g("hasDefrost")))
 	}
 	if want := map[bool]string{true: "true", false: "false"}[air]; g("airDefrost") != want {
-		flags = append(flags, fmt.Sprintf("airDefrost=%s (debe %s)", g("airDefrost"), pyBool(air)))
+		flags = append(flags, fmt.Sprintf("airDefrost=%s (debe %s)", g("airDefrost"), pycompat.Repr(air)))
 	}
 	if du.kind == 'f' && du.f <= 0 {
 		flags = append(flags, "evapDifferentialUp=0 (sin histéresis)")
@@ -115,9 +117,9 @@ func (r *runner) unitConfig(cr, u string, air bool) error {
 		g("evapDifferentialDown"), g("evapCoolOnSensorFault"), g("freezeProtect"), g("freezeSetpoint"),
 		g("freezeDiffStop"), g("freezeDiffRestart"), g("hasDefrost"), g("airDefrost"), g("fanRunMode"), g("startDelay"))
 	if hasCtrl {
-		fmt.Fprintf(w, "      defrost: mode=%s interval=%s duration=%s term=%s thr=%s stagger=%s\n", optStr(gd("mode")),
-			optStr(gd("interval")), optStr(gd("duration")), optStr(gd("terminateOnResistanceTemp")),
-			optStr(gd("resistanceTempThreshold")), optStr(gd("staggerDelay")))
+		fmt.Fprintf(w, "      defrost: mode=%s interval=%s duration=%s term=%s thr=%s stagger=%s\n", pycompat.OptStr(gd("mode")),
+			pycompat.OptStr(gd("interval")), pycompat.OptStr(gd("duration")), pycompat.OptStr(gd("terminateOnResistanceTemp")),
+			pycompat.OptStr(gd("resistanceTempThreshold")), pycompat.OptStr(gd("staggerDelay")))
 	}
 	for _, f := range flags {
 		fmt.Fprintln(w, "      ⚠ "+f)
@@ -135,7 +137,7 @@ func defrostFlags(gd func(string) *string, thr value, air bool) ([]string, error
 	if err != nil {
 		return nil, err
 	}
-	term := optStr(gd("terminateOnResistanceTemp"))
+	term := pycompat.OptStr(gd("terminateOnResistanceTemp"))
 	if ivOK && iv <= 0 {
 		flags = append(flags, "DefrostController.interval=0")
 	}
@@ -144,10 +146,10 @@ func defrostFlags(gd func(string) *string, thr value, air bool) ([]string, error
 	}
 	if ivOK && drOK && iv <= dr {
 		flags = append(flags, fmt.Sprintf("interval(%s) <= duration(%s) — deshiela más seguido que su propia duración",
-			optStr(gd("interval")), optStr(gd("duration"))))
+			pycompat.OptStr(gd("interval")), pycompat.OptStr(gd("duration"))))
 	} else if ivOK && iv < 1800 {
 		flags = append(flags, fmt.Sprintf("interval=%s muy corto (<30 min) — ¿typo? (los demás cuartos ~4h)",
-			optStr(gd("interval"))))
+			pycompat.OptStr(gd("interval"))))
 	}
 	if !air && term != "true" {
 		flags = append(flags, fmt.Sprintf("terminateOnResistanceTemp=%s (Cuarto3 debe true)", term))
