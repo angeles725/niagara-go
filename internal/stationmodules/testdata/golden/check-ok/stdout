@@ -1,0 +1,7 @@
+install : install-ok
+station : ok.xml
+modules referenced: 2
+  baja               parts:[rt]  types:Station
+  control            parts:[rt]  types:BooleanWritable
+
+OK — all required module-parts are installed. Nothing missing.

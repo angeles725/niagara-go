@@ -1,0 +1,9 @@
+install : install-exists
+installed module-parts: 2
+
+MISSING module-parts: 1
+  ✗ kitPid-rt  (required by kitControl-rt)
+      → already present at install-exists/modules/kitPid-rt.jar
+      ⚠ staged version 4.14.0.99 != install 4.14.0.162
+
+After copying jars into modules/, RESTART Workbench, then reopen config.bog.

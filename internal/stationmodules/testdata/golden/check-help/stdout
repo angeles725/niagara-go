@@ -1,0 +1,10 @@
+usage: station-modules.py check [-h] [--install INSTALL] [--fix] [--json] target
+
+positional arguments:
+  target             config.bog | .dist backup | file.xml
+
+options:
+  -h, --help         show this help message and exit
+  --install INSTALL
+  --fix
+  --json

@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<bajaObjectGraph version='4.0'>
+<p h='1' m='b=baja c=control' t='b:Station'>
+ <p n='Services' h='2' t='b:ServiceContainer'/>
+ <p n='W' h='3' t='c:NumericWritable'/>
+ <p n='D' h='4' m="dsb=dashboard" t="dsb:Dashboard"/>
+ <p n='V' h='5' t='dsb:DashboardView'/>
+ <p n='R' h='6' m='CRP=ColdRoomPan h=history' t='CRP:ColdRoom'/>
+ <p n='L' h='7' m='kc=kitControl' t='kc:LoopPoint'/>
+ <p n='X' h='8' t='zz:Unknown'/>
+</p>
+</bajaObjectGraph>

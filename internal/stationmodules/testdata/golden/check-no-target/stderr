@@ -1,0 +1,2 @@
+usage: station-modules.py check [-h] [--install INSTALL] [--fix] [--json] target
+station-modules.py check: error: the following arguments are required: target

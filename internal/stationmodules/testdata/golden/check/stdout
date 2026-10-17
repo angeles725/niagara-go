@@ -1,0 +1,24 @@
+install : install
+station : station.xml
+modules referenced: 6
+  ColdRoomPan        parts:[— NONE —]  types:ColdRoom
+  baja               parts:[rt]  types:ServiceContainer,Station
+  control            parts:[rt,wb]  types:NumericWritable
+  dashboard          parts:[wb]  types:Dashboard,DashboardView
+  history            parts:[— NONE —]
+  kitControl         parts:[rt]  types:LoopPoint
+
+MISSING module-parts: 4
+  ✗ ColdRoomPan-rt  (provides ColdRoomPan:ColdRoom (used by station))
+      not staged in sw/ — obtain from the source supervisor's modules/ or a matching install
+  ✗ dashboard-rt  (provides dashboard:Dashboard (used by station))
+      staged in sw/ (v4.14.0.162): install/sw/4.14.0.162/dashboard-rt.jar
+      fix: cp "install/sw/4.14.0.162/dashboard-rt.jar" "install/modules/dashboard-rt.jar"
+  ✗ history-rt  (module history referenced, no part installed)
+      not staged in sw/ — obtain from the source supervisor's modules/ or a matching install
+  ✗ kitPid-rt  (dependency of an installed part the station uses)
+      staged in sw/ (v4.14.0.99): install/sw/4.14/kitPid-rt.jar
+      fix: cp "install/sw/4.14/kitPid-rt.jar" "install/modules/kitPid-rt.jar"
+      ⚠ staged version 4.14.0.99 != install 4.14.0.162
+
+After copying jars into modules/, RESTART Workbench, then reopen config.bog.

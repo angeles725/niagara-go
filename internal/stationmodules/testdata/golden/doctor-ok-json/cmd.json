@@ -1,0 +1,1 @@
+{"args": ["doctor", "--install", "install-ok", "--json"], "cwd_fixture": "fixtures"}

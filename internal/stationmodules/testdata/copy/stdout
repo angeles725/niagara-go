@@ -1,0 +1,12 @@
+install : install-copy
+station : kit.xml
+modules referenced: 2
+  baja               parts:[rt]  types:Station
+  kitControl         parts:[rt]  types:LoopPoint
+
+MISSING module-parts: 1
+  ✗ kitPid-rt  (dependency of an installed part the station uses)
+      → COPIED (v4.14.0.162) from install-copy/sw/4.14.0.162/kitPid-rt.jar
+        sha256 f6dcac7362c4f9e7b62ca0f245f2cfba7ff2ae0c3078e4a09067b81fc95fb226
+
+After copying jars into modules/, RESTART Workbench, then reopen config.bog.

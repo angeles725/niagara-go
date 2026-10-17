@@ -1,0 +1,37 @@
+{
+  "install": "install-exists",
+  "station": "kit.xml",
+  "modules": {
+    "baja": {
+      "installed": [
+        "baja-rt"
+      ],
+      "types": [
+        "Station"
+      ]
+    },
+    "kitControl": {
+      "installed": [
+        "kitControl-rt"
+      ],
+      "types": [
+        "LoopPoint"
+      ]
+    }
+  },
+  "missing": {
+    "kitPid-rt": "dependency of an installed part the station uses"
+  },
+  "fixes": {
+    "kitPid-rt": {
+      "reason": "dependency of an installed part the station uses",
+      "staged": "install-exists/sw/4.14/kitPid-rt.jar",
+      "staged_version": "4.14.0.99",
+      "cp": "cp \"install-exists/sw/4.14/kitPid-rt.jar\" \"install-exists/modules/kitPid-rt.jar\"",
+      "warn": "staged version 4.14.0.99 != install 4.14.0.162",
+      "action": "exists",
+      "dst": "install-exists/modules/kitPid-rt.jar",
+      "sha256": "3a4abe320271b52d0d96db642faf6c4b403cbba26ad31502ec19d5356c45bbaa"
+    }
+  }
+}

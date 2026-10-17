@@ -1,0 +1,1 @@
+{"args": ["check", "kit.xml", "--install", "install-exists", "--fix", "--json"], "cwd_fixture": "fixtures"}

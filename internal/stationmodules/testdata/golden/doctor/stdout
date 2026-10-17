@@ -1,0 +1,16 @@
+install : install
+installed module-parts: 6
+
+MISSING module-parts: 3
+  ✗ acmeLib-rt  (required by acme-rt)
+      staged in sw/ (v): install/sw/stub/acmeLib-rt.jar
+      fix: cp "install/sw/stub/acmeLib-rt.jar" "install/modules/acmeLib-rt.jar"
+  ✗ dashboard-rt  (required by dashboard-wb)
+      staged in sw/ (v4.14.0.162): install/sw/4.14.0.162/dashboard-rt.jar
+      fix: cp "install/sw/4.14.0.162/dashboard-rt.jar" "install/modules/dashboard-rt.jar"
+  ✗ kitPid-rt  (required by kitControl-rt)
+      staged in sw/ (v4.14.0.99): install/sw/4.14/kitPid-rt.jar
+      fix: cp "install/sw/4.14/kitPid-rt.jar" "install/modules/kitPid-rt.jar"
+      ⚠ staged version 4.14.0.99 != install 4.14.0.162
+
+After copying jars into modules/, RESTART Workbench, then reopen config.bog.

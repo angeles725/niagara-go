@@ -1,0 +1,11 @@
+install : install-nostaged
+station : kit.xml
+modules referenced: 2
+  baja               parts:[rt]  types:Station
+  kitControl         parts:[rt]  types:LoopPoint
+
+MISSING module-parts: 1
+  ✗ kitPid-rt  (dependency of an installed part the station uses)
+      not staged in sw/ — obtain from the source supervisor's modules/ or a matching install
+
+After copying jars into modules/, RESTART Workbench, then reopen config.bog.
