@@ -1,0 +1,8 @@
+{
+ "args": [
+  ".",
+  "--scan-logs",
+  "inputs/logs-locked",
+  "--json"
+ ]
+}

@@ -1,0 +1,10 @@
+# GM1 — Tablero (`float-inf-width.px`) con selector de nombre
+
+> 1 circuitos. Original de GM1: HOA+popups quitados, pills+LEDs conservados, 1 selectores NameMux/SelR (ords absolutos Iluminacion/GM1/).
+
+```xml
+<CanvasPane viewSize="inf,272.0"><Picture layout="10.0,200.0,60.0,30.0"><ValueBinding ord="slot:Relay$5b1$5d$2eBO"><IBooleanToSimple/></ValueBinding></Picture>    <Picture layout="10.0,230.0,60.0,22.0" image="file:^Imagenes/The Harbor/Buttons/BotonNormal.png" scale="fitWidth" />
+    <Label layout="10.0,230.0,60.0,20.0" halign="center" font="bold 10.0pt Arial"><ValueBinding ord="station:|slot:/Iluminacion/GM1/NameMux1"><ObjectToString name="text" format="%out.value%" /></ValueBinding></Label>
+    <ImageButton layout="10.0,230.0,60.0,22.0" buttonStyle="none"><ActionBinding ord="station:|slot:/Iluminacion/GM1/SelR1/set" widgetEvent="actionPerformed" /></ImageButton>
+  </CanvasPane>
+```

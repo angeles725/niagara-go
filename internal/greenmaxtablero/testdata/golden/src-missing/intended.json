@@ -1,0 +1,5 @@
+{
+  "reason": "Python ends in a FileNotFoundError traceback on a missing source; Go prints the OSError as one line and exits 2",
+  "stderr": "greenmax-tablero-gen: [Errno 2] No such file or directory: 'inputs/nope.px'\n",
+  "exit": 2
+}

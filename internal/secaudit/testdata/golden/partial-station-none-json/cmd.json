@@ -1,0 +1,8 @@
+{
+ "args": [
+  "inputs/home-partial",
+  "--station",
+  "inputs/station-none.xml",
+  "--json"
+ ]
+}

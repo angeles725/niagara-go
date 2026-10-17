@@ -1,0 +1,1 @@
+ERROR: --scan-logs: 0 readable log files (*.log, console/station/nre/daemon *.txt) under inputs/logs-none (0 unreadable)

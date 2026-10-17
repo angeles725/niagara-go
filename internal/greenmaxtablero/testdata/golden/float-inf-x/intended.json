@@ -1,0 +1,5 @@
+{
+  "reason": "Python ends in an OverflowError traceback when a pill coordinate is too large for a float (int(inf)); Go prints the error in one line and exits 1 like the tool's other coordinate refusals",
+  "stderr": "greenmax-tablero-gen: cannot convert float infinity to integer\n",
+  "exit": 1
+}

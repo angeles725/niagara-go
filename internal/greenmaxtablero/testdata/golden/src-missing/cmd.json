@@ -1,0 +1,7 @@
+{
+ "args": [
+  "inputs/nope.px",
+  "--gm",
+  "GM1"
+ ]
+}

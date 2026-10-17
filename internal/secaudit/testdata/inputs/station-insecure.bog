@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bajaObjectGraph version="4.0" reversibleEncryptionKeySource="none">
+<p t="b:Station" m="b=baja">
+<p n="Services" t="b:ServiceContainer">
+<p n="ProgramService" t="program:ProgramService" m="program=program">
+<p n="allowProgramRuntimeExec" v="true"/>
+</p>
+</p>
+</p>
+</bajaObjectGraph>

@@ -1,0 +1,37 @@
+# GM1 — Tablero (`tablero-tall.px`) con selector de nombre
+
+> 3 circuitos. Original de GM1: HOA+popups quitados, pills+LEDs conservados, 3 selectores NameMux/SelR (ords absolutos Iluminacion/GM1/); + leyenda Horarios.
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Niagara Presentation XML -->
+<PxView version="1.0">
+  <import>
+    <module name="bajaui" />
+  </import>
+  <content>
+  <CanvasPane viewSize="1280.0,1024.0">
+    <Label layout="10.0,5.0,200.0,20.0" text="Tablero AL3 &amp; AL4" />
+    <Picture layout="40.0,40.0,60.0,30.0" image="file:^Imagenes/GreenMax On.png">
+      <ValueBinding ord="slot:Relay$5b3$5d$2eBO">
+        <IBooleanToSimple name="image" trueValue="file:^Imagenes/GreenMax On.png" falseValue="file:^Imagenes/GreenMax Off.png" />
+      </ValueBinding>
+    </Picture>
+    <Picture layout="40.0,40.0,10.0,10.0">
+      <ValueBinding ord="slot:Relay$5b3$5d$2eBO">
+        <IStatusToSimple name="background" />
+      </ValueBinding>
+    </Picture>
+      <Picture layout="40.0,70.0,60.0,22.0" image="file:^Imagenes/The Harbor/Buttons/BotonNormal.png" scale="fitWidth" />
+    <Label layout="40.0,70.0,60.0,20.0" halign="center" font="bold 10.0pt Arial"><ValueBinding ord="station:|slot:/Iluminacion/GM1/NameMux3"><ObjectToString name="text" format="%out.value%" /></ValueBinding></Label>
+    <ImageButton layout="40.0,70.0,60.0,22.0" buttonStyle="none"><ActionBinding ord="station:|slot:/Iluminacion/GM1/SelR3/set" widgetEvent="actionPerformed" /></ImageButton>
+    <Label layout="1080.0,140.0,240.0,18.0" font="bold 12.0pt Arial" halign="left" text="Horarios:" />
+    <Label layout="1080.0,162.0,250.0,16.0" font="11.0pt Arial" halign="left"><ValueBinding ord="station:|slot:/Iluminacion/Horarios/Horario1_Nombre"><ObjectToString name="text" format="1  %out.value%" /></ValueBinding></Label>
+    <Label layout="1080.0,180.0,250.0,16.0" font="11.0pt Arial" halign="left"><ValueBinding ord="station:|slot:/Iluminacion/Horarios/Horario2_Nombre"><ObjectToString name="text" format="2  %out.value%" /></ValueBinding></Label>
+    <Label layout="1080.0,198.0,250.0,16.0" font="11.0pt Arial" halign="left"><ValueBinding ord="station:|slot:/Iluminacion/Horarios/Horario3_Nombre"><ObjectToString name="text" format="3  %out.value%" /></ValueBinding></Label>
+    <Label layout="1080.0,216.0,250.0,16.0" font="11.0pt Arial" halign="left"><ValueBinding ord="station:|slot:/Iluminacion/Horarios/Horario4_Nombre"><ObjectToString name="text" format="4  %out.value%" /></ValueBinding></Label>
+    <Label layout="1080.0,234.0,250.0,16.0" font="11.0pt Arial" halign="left"><ValueBinding ord="station:|slot:/Iluminacion/Horarios/Horario5_Nombre"><ObjectToString name="text" format="5  %out.value%" /></ValueBinding></Label>
+  </CanvasPane>
+  </content>
+</PxView>
+```

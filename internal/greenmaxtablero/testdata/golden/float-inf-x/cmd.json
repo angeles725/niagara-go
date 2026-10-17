@@ -1,0 +1,8 @@
+{
+ "args": [
+  "inputs/float-inf-x.px",
+  "--gm",
+  "GM1",
+  "--stdout"
+ ]
+}

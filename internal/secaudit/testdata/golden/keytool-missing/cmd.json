@@ -1,0 +1,8 @@
+{
+ "args": [
+  "inputs/home-truststore"
+ ],
+ "env": {
+  "PATH": "/nonexistent"
+ }
+}

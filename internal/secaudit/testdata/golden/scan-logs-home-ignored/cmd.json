@@ -1,0 +1,7 @@
+{
+ "args": [
+  "inputs/nope",
+  "--scan-logs",
+  "inputs/logs-clean"
+ ]
+}

@@ -1,0 +1,8 @@
+{
+ "args": [
+  "inputs/float-past-int64.px",
+  "--gm",
+  "GM1",
+  "--stdout"
+ ]
+}

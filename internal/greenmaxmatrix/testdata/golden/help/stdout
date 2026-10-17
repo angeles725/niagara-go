@@ -1,0 +1,12 @@
+usage: greenmax-matrix.py [-h] [-o OUT] supervisor jace px_dir
+
+Build the GreenMAX lighting points matrix.
+
+positional arguments:
+  supervisor
+  jace
+  px_dir
+
+options:
+  -h, --help     show this help message and exit
+  -o, --out OUT

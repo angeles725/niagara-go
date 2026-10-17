@@ -1,0 +1,9 @@
+{
+ "args": [
+  "inputs/empty-a.bog",
+  "inputs/empty-b.bog",
+  "inputs/px",
+  "-o",
+  "/dev/null"
+ ]
+}

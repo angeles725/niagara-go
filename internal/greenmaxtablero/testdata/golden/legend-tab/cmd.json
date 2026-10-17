@@ -1,0 +1,11 @@
+{
+ "args": [
+  "inputs/tablero.px",
+  "--gm",
+  "GM08",
+  "--legend",
+  "--tab",
+  "GreenMAX07 TabAL8.px",
+  "--stdout"
+ ]
+}

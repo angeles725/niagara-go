@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bajaObjectGraph version="4.0">
+<p h="1" m="b=baja c=control s=schedule k=kitControl n=niagaraDriver" t="b:Station">
+ <p n="Drivers" h="2" t="b:DriverContainer">
+  <p n="NiagaraNetwork" h="3" t="n:NiagaraNetwork">
+   <p n="HM_BMS" h="4" t="n:NiagaraStation">
+    <p n="points" h="5" t="n:NiagaraPointDeviceExt">
+     <p n="GM01ilum" h="10" t="n:NiagaraPointFolder">
+      <p n="Schedule1" h="11" t="s:BooleanSchedule"/>
+      <p n="Schedule2" h="12" t="s:BooleanSchedule"/>
+      <p n="SchdlGM01$20R1" h="13" t="c:BooleanWritable">
+       <p n="Link1" t="b:Link">
+        <p n="sourceOrd" t="b:Ord" v="h:11"/>
+        <p n="sourceSlotName" v="out"/>
+        <p n="targetSlotName" v="in10"/>
+       </p>
+      </p>
+      <p n="SchdlGM01$20R2" h="14" t="c:BooleanWritable">
+       <p n="Link1" t="b:Link">
+        <p n="sourceOrd" t="b:Ord" v="h:12"/>
+        <p n="sourceSlotName" v="out"/>
+        <p n="targetSlotName" v="in16"/>
+       </p>
+      </p>
+      <p n="Relay$5b1$5d$2eBO" h="15" t="n:NiagaraProxyPoint"/>
+      <p n="Relay$5b2$5d$2eBO" h="16" t="n:NiagaraProxyPoint"/>
+     </p>
+     <p n="GM2ilum" h="20" t="n:NiagaraPointFolder">
+      <p n="R1" h="21" t="s:BooleanSchedule"/>
+      <p n="R3" h="22" t="s:BooleanSchedule"/>
+      <p n="HorR1" h="23" t="c:BooleanWritable">
+       <p n="Link1" t="b:Link">
+        <p n="sourceOrd" t="b:Ord" v="h:21"/>
+        <p n="sourceSlotName" v="out"/>
+        <p n="targetSlotName" v="in10"/>
+       </p>
+      </p>
+      <p n="HorR3" h="24" t="c:BooleanWritable">
+       <p n="Link1" t="b:Link">
+        <p n="sourceOrd" t="b:Ord" v="h:30"/>
+        <p n="sourceSlotName" v="out"/>
+        <p n="targetSlotName" v="in10"/>
+       </p>
+      </p>
+      <p n="labelR1" h="25" t="k:StringConst">
+       <p n="out" t="b:StatusString">
+        <p n="value" v="Pasillo &amp;amp; Lobby &#xe9;"/>
+       </p>
+      </p>
+      <p n="tabR1" h="26" t="k:StringConst">
+       <p n="out" v=" AL5 "/>
+      </p>
+      <p n="labelR3" h="27" t="k:StringConst">
+       <p n="out" v="Sala &quot;VIP&quot;, Norte"/>
+      </p>
+      <p n="labelR4" h="31" t="k:StringConst"/>
+      <p n="Relay$5b1$5d$2eBO" h="28" t="n:NiagaraProxyPoint"/>
+      <p n="Relay$5b3$5d$2eBO" h="29" t="n:NiagaraProxyPoint"/>
+     </p>
+     <p n="Fixed" h="30" t="c:BooleanWritable"/>
+     <p n="GM07ilum" h="40" t="b:Folder"/>
+    </p>
+   </p>
+  </p>
+ </p>
+</p>
+</bajaObjectGraph>

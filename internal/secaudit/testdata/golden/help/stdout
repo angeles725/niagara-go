@@ -1,0 +1,12 @@
+usage: niagara-security-audit.py [-h] [--station STATION] [--host HOST] [--scan-logs DIR] [--json]
+                                 niagara_home
+
+positional arguments:
+  niagara_home
+
+options:
+  -h, --help         show this help message and exit
+  --station STATION
+  --host HOST
+  --scan-logs DIR    forensic mode: harvest signature/verification IOCs from a log tree (B112)
+  --json

@@ -1,0 +1,9 @@
+{
+ "args": [
+  "inputs/jace.bog",
+  "inputs/sup.bog",
+  "inputs/px",
+  "-o",
+  "/dev/null"
+ ]
+}

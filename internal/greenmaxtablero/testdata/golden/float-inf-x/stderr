@@ -1,0 +1,11 @@
+Traceback (most recent call last):
+  File "/home/cristian/niagara-research/tools/greenmax-tablero-gen.py", line 150, in <module>
+    main()
+    ~~~~^^
+  File "/home/cristian/niagara-research/tools/greenmax-tablero-gen.py", line 132, in main
+    xml, n, stats = transform(src, args.gm, add_legend=args.legend)
+                    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cristian/niagara-research/tools/greenmax-tablero-gen.py", line 85, in transform
+    xi, yi = int(x), int(yp + 30)
+             ~~~^^^
+OverflowError: cannot convert float infinity to integer

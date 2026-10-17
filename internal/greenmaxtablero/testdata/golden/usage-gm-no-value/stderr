@@ -1,0 +1,2 @@
+usage: greenmax-tablero-gen.py [-h] --gm GM [--out OUT] [--tab TAB] [--legend] [--stdout] src
+greenmax-tablero-gen.py: error: argument --gm: expected one argument

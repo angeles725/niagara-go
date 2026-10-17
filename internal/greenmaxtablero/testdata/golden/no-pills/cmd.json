@@ -1,0 +1,7 @@
+{
+ "args": [
+  "inputs/no-pills.px",
+  "--gm",
+  "GM1"
+ ]
+}

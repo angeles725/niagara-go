@@ -1,0 +1,5 @@
+{
+  "reason": "Python ends in a FileNotFoundError traceback when -o cannot be opened; Go prints the OSError as one line and exits 2 (cannot write the matrix)",
+  "stderr": "greenmax-matrix: [Errno 2] No such file or directory: 'inputs/nodir/out.csv'\n",
+  "exit": 2
+}

@@ -1,0 +1,20 @@
+Traceback (most recent call last):
+  File "/home/cristian/niagara-research/tools/greenmax-tablero-gen.py", line 150, in <module>
+    main()
+    ~~~~^^
+  File "/home/cristian/niagara-research/tools/greenmax-tablero-gen.py", line 132, in main
+    xml, n, stats = transform(src, args.gm, add_legend=args.legend)
+                    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cristian/niagara-research/tools/greenmax-tablero-gen.py", line 111, in transform
+    minidom.parseString(text)  # validate XML (raises on malformed)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/home/linuxbrew/.linuxbrew/opt/python@3.15/lib/python3.15/xml/dom/minidom.py", line 2011, in parseString
+    return expatbuilder.parseString(string)
+           ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "/home/linuxbrew/.linuxbrew/opt/python@3.15/lib/python3.15/xml/dom/expatbuilder.py", line 922, in parseString
+    return builder.parseString(string)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "/home/linuxbrew/.linuxbrew/opt/python@3.15/lib/python3.15/xml/dom/expatbuilder.py", line 220, in parseString
+    parser.Parse(string, True)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^
+xml.parsers.expat.ExpatError: mismatched tag: line 24, column 4

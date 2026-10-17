@@ -1,0 +1,2 @@
+usage: greenmax-matrix.py [-h] [-o OUT] supervisor jace px_dir
+greenmax-matrix.py: error: the following arguments are required: supervisor, jace, px_dir

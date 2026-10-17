@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PxView version="1.0">
+<CanvasPane viewSize="800.0,600.0">
+  <Label text="Periferico"/>
+  <Label text="Zona  Norte"/>
+  <Label text="12"/>
+  <Label text="Auto"/>
+  <Label text="Comunicación OK"/>
+  <Picture layout="10.0,10.0,60.0,30.0"><ValueBinding ord="slot:Relay$5b1$5d$2eBO"/></Picture>
+  <Label text="AL3-1"/>
+  <Label text="AL3-9"/>
+  <Picture><ValueBinding ord="slot:Relay$5b2$5d$2eBO"/></Picture>
+  <Label text="AL3-2"/>
+  <Label text="Lobby &amp; Bar"/>
+  <Label text="Zona"/>
+  <Label text="ALx"/>
+</CanvasPane>
+</PxView>

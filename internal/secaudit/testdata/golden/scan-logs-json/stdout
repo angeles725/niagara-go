@@ -1,0 +1,9 @@
+[
+  {
+    "sev": "med",
+    "ioc": "self-signed cert not permitted",
+    "file": "inputs/logs/sub/app.log.1",
+    "line": 1,
+    "text": "Self signed signing certificate not permitted \u00e9"
+  }
+]
