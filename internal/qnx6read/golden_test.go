@@ -5,8 +5,10 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"testing"
 
@@ -14,7 +16,7 @@ import (
 )
 
 // root is a fresh directory per test process, so concurrent `go test` runs of this package never
-// share files: root/golden links to testdata/golden and root/run (the cwd_fixture of every case)
+// share files: root/golden links to (or, without symlink privilege, copies) testdata/golden and root/run (the cwd_fixture of every case)
 // holds the sparse disk images of testdata/inputs/images.txt (the real P2/P3 offsets are 129 MiB
 // and 3.5 GiB) and the extract outputs. TestMain removes it afterwards.
 var root, runDir string
@@ -38,7 +40,7 @@ func withImages(m *testing.M) (int, error) {
 		return 0, err
 	}
 	defer os.RemoveAll(dir)
-	if err := os.Symlink(filepath.Join(testdata, "golden"), filepath.Join(dir, "golden")); err != nil {
+	if err := linkOrCopy(filepath.Join(testdata, "golden"), filepath.Join(dir, "golden"), os.Symlink); err != nil {
 		return 0, err
 	}
 	if err := materializeImages(testdata, dir); err != nil {
@@ -46,6 +48,32 @@ func withImages(m *testing.M) (int, error) {
 	}
 	root, runDir = dir, filepath.Join(dir, "run")
 	return m.Run(), nil
+}
+
+// linkOrCopy links dst to the directory src, or copies the tree when symlink fails (Windows
+// without symlink privilege).
+func linkOrCopy(src, dst string, symlink func(oldname, newname string) error) error {
+	if symlink(src, dst) == nil {
+		return nil
+	}
+	return filepath.WalkDir(src, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		rel, err := filepath.Rel(src, path)
+		if err != nil {
+			return err
+		}
+		out := filepath.Join(dst, rel)
+		if d.IsDir() {
+			return os.MkdirAll(out, 0o755)
+		}
+		data, err := os.ReadFile(path)
+		if err != nil {
+			return err
+		}
+		return os.WriteFile(out, data, 0o644)
+	})
 }
 
 // materializeImages writes each manifest image under dst as a sparse file: zeros up to the
@@ -112,11 +140,13 @@ func TestGolden(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	seen := map[string]bool{}
 	for _, c := range cases {
 		if len(c.Args) < 3 || c.Args[len(c.Args)-3] != "extract" || c.Exit != 0 {
 			continue
 		}
 		dst := c.Args[len(c.Args)-1]
+		seen[dst] = true
 		want, ok := extracted[dst]
 		if !ok {
 			t.Errorf("%s: no sha256 recorded for %s", c.Name, dst)
@@ -127,5 +157,49 @@ func TestGolden(t *testing.T) {
 		if err != nil || hex.EncodeToString(sum[:]) != want {
 			t.Errorf("%s: %s sha256 %x (%v), want %s", c.Name, dst, sum, err, want)
 		}
+	}
+	for _, dst := range unmatchedHashes(extracted, seen) {
+		t.Errorf("extracted[%q] is checked by no successful extract case", dst)
+	}
+}
+
+// unmatchedHashes returns, sorted, the keys of hashes absent from seen.
+func unmatchedHashes(hashes map[string]string, seen map[string]bool) []string {
+	var out []string
+	for dst := range hashes {
+		if !seen[dst] {
+			out = append(out, dst)
+		}
+	}
+	sort.Strings(out)
+	return out
+}
+
+// Without symlink privilege (Windows) linkOrCopy copies the golden tree instead of aborting.
+func TestLinkOrCopyFallsBackToCopy(t *testing.T) {
+	src, dst := t.TempDir(), filepath.Join(t.TempDir(), "golden")
+	if err := os.MkdirAll(filepath.Join(src, "case"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(src, "case", "cmd.json"), []byte("{}\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	noLink := func(string, string) error { return &os.LinkError{Op: "symlink", Err: os.ErrPermission} }
+	if err := linkOrCopy(src, dst, noLink); err != nil {
+		t.Fatal(err)
+	}
+	if fi, err := os.Lstat(dst); err != nil || fi.Mode()&os.ModeSymlink != 0 || !fi.IsDir() {
+		t.Fatalf("dst %v (%v): want a copied directory", fi, err)
+	}
+	if b, err := os.ReadFile(filepath.Join(dst, "case", "cmd.json")); err != nil || string(b) != "{}\n" {
+		t.Fatalf("copied cmd.json = %q, %v", b, err)
+	}
+}
+
+// unmatchedHashes names every extracted entry no extract case checked.
+func TestUnmatchedHashes(t *testing.T) {
+	got := unmatchedHashes(map[string]string{"a": "1", "b": "2", "c": "3"}, map[string]bool{"b": true})
+	if strings.Join(got, ",") != "a,c" {
+		t.Fatalf("unmatched = %q, want a,c", got)
 	}
 }
