@@ -31,6 +31,8 @@ func (c *command) helpText() string {
 
 // commandGroups are the cmd_*.py modules, in their import order.
 var commandGroups = [][]command{
+	classCommands, memberCommands, docCommands, sourceCommands,
+	analysisCommands, developCommands, exportCommands, adminCommands,
 	versionCommands,
 }
 
@@ -154,4 +156,35 @@ func buildParser() *argparse.Parser {
 			"env NIAGARA_HELP_VERSION). Accepted anywhere on the command line."},
 		"--niagara-version")
 	return p
+}
+
+// Argument helpers for the add_args functions of the command files.
+
+// positional is add_argument(name, help=help).
+func positional(p *argparse.Parser, name, help string) {
+	p.Add(argparse.Arg{Help: help}, name)
+}
+
+// optionalPositional is add_argument(name, nargs="?", default=def, help=help).
+func optionalPositional(p *argparse.Parser, name string, def any, help string) {
+	p.Add(argparse.Arg{Nargs: argparse.Optional, Default: def, Help: help}, name)
+}
+
+// flag is add_argument(*names, action="store_true", help=help).
+func flag(p *argparse.Parser, help string, names ...string) {
+	p.Add(argparse.Arg{Action: argparse.StoreTrue, Help: help}, names...)
+}
+
+// intOpt is add_argument(*names, type=int, default=def, help=help).
+func intOpt(p *argparse.Parser, def any, help string, names ...string) {
+	p.Add(argparse.Arg{Type: argparse.Int, Default: def, Help: help}, names...)
+}
+
+// choices converts option values to argparse choices.
+func choices(vals ...string) []any {
+	out := make([]any, len(vals))
+	for i, v := range vals {
+		out[i] = v
+	}
+	return out
 }
