@@ -1,0 +1,9 @@
+usage: bog-write.py generate [-h] --out OUT [--plain] plan
+
+positional arguments:
+  plan
+
+options:
+  -h, --help  show this help message and exit
+  --out OUT
+  --plain

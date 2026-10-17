@@ -1,0 +1,6 @@
+ERROR  bad wsAnnotation value '1,2' at R/W3/wsAnnotation (expected x,y,w[,h])
+ERROR  bad wsAnnotation value '1,x,8' at R/W4/wsAnnotation (expected x,y,w[,h])
+ERROR  bad wsAnnotation value '1,2,3,4,5' at R/W6/wsAnnotation (expected x,y,w[,h])
+ERROR  bad wsAnnotation value '1,2,-3' at R/W7/wsAnnotation (expected x,y,w[,h])
+ERROR  bad wsAnnotation value '1,2,3|a\nb' at R/W9/wsAnnotation (expected x,y,w[,h])
+5 error(s), 0 warning(s)

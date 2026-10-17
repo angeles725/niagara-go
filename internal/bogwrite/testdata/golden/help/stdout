@@ -1,0 +1,30 @@
+usage: bog-write.py [-h] {generate,validate,selftest} ...
+
+bog-write: offline BOG-XML generator + validator for planned station logic (B1186, gap AM31).
+
+WHY: tools/bog-nav.py only READS bogs. The MCP's offline route (R-F) needs the opposite: turn a PLAN
+(components, slot values, links, wire-sheet positions) into an importable `.bog` snippet and refuse malformed
+documents before anyone imports them. Grammar facts are those read from real artefacts in B1186:
+`<p n h m t f v>` nodes, ZIP container with one entry `file.xml` (or plain XML), links = persistent children
+`Link`/`Link1` of the TARGET with children sourceOrd (`h:<source handle>`), sourceSlotName, targetSlotName,
+module prefixes declared on first use (document order), `wsAnnotation` = "x,y,w[,h]".
+
+Usage:
+    bog-write.py generate <plan.json> --out file.bog [--plain]
+    bog-write.py validate <file.bog|backup.dist|file.xml>
+    bog-write.py selftest
+
+Plan JSON:
+  {"root": {"name": "Demo", "type": "baja:Folder"},
+   "components": [{"name": "SelR", "type": "control:NumericWritable", "parent": "optional/path",
+                   "ws": [x, y, w], "slots": {"slot": "scalar" | {"type": "baja:Facets", "value": "..."}}}],
+   "links": [{"from": "SelR.out", "to": "Mux.select"}]}
+A component name ending in `?` is made unique like BComponent.add (Foo -> Foo1). Never emits passwords.
+Validation never proves the station will accept the document (no checkLink/checkAdd, no licence): it is a
+structural gate, the live import stays a tracked PoC (B1186 AM32).
+
+positional arguments:
+  {generate,validate,selftest}
+
+options:
+  -h, --help            show this help message and exit

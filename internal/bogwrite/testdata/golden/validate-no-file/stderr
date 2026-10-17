@@ -1,0 +1,2 @@
+usage: bog-write.py validate [-h] file
+bog-write.py validate: error: the following arguments are required: file

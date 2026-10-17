@@ -1,0 +1,1 @@
+{"args": ["generate", "crlf.json", "--out", "out.xml", "--plain"], "cwd_fixture": "fixtures"}

@@ -1,0 +1,1 @@
+{"args": ["generate", "nodot.json", "--out", "never-written.bog"], "cwd_fixture": "fixtures"}

@@ -1,0 +1,3 @@
+ERROR  illegal slot name 'bad name' at R/bad name
+ERROR  illegal slot name '9x' at R/9x
+2 error(s), 0 warning(s)

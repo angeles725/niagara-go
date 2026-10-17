@@ -1,0 +1,1 @@
+{"args": ["generate", "plan.json", "--out", "out.xml", "--plain"], "cwd_fixture": "fixtures"}

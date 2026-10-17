@@ -1,0 +1,1 @@
+{"reason": "Go prints only the last line of the Python traceback", "stderr": "json.decoder.JSONDecodeError: Expecting ',' delimiter: line 1 column 29 (char 28)\n"}

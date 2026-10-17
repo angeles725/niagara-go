@@ -1,0 +1,1 @@
+{"args": ["generate", "rich.json", "--plain", "--out", "out.xml"], "cwd_fixture": "fixtures"}

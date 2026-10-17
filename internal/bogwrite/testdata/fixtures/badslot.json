@@ -1,0 +1,11 @@
+{
+ "components": [
+  {
+   "name": "A",
+   "type": "baja:Folder",
+   "slots": {
+    "bad name": 1
+   }
+  }
+ ]
+}

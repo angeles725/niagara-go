@@ -1,0 +1,1 @@
+{"reason": "Go prints only the last line of the Python traceback", "stderr": "json.decoder.JSONDecodeError: Illegal trailing comma before end of object: line 4 column 8 (char 19)\n"}
