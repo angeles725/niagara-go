@@ -1,0 +1,12 @@
+-         12 /Upper
+-       3000 /big.dat
+d         96 /bin
+-         64 /bin/ls
+-         12 /café
+d         64 /empty
+d         96 /etc
+-          4 /etc/a-very-long-file-name-beyond-27-bytes.cfg
+-         20 /etc/hosts
+-       1500 /huge.dat
+-       2500 /readme.txt
+-          0 /zero-length

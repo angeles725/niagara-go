@@ -1,0 +1,9 @@
+{
+ "args": [
+  "--image",
+  "testdata/images/p2.img",
+  "P2",
+  "extract",
+  "/etc/hosts"
+ ]
+}

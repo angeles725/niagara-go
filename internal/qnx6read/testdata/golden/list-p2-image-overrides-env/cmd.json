@@ -1,0 +1,9 @@
+{
+ "args": [
+  "--image",
+  "testdata/images/p2.img"
+ ],
+ "env": {
+  "QNX6_IMG": "testdata/images/missing.img"
+ }
+}

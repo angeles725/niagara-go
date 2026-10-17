@@ -1,0 +1,6 @@
+{
+ "args": [],
+ "env": {
+  "QNX6_IMG": "testdata/images/p2.img"
+ }
+}

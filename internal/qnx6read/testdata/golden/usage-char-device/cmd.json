@@ -1,0 +1,6 @@
+{
+ "args": [
+  "--image",
+  "/dev/null"
+ ]
+}

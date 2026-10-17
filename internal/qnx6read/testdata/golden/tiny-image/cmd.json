@@ -1,0 +1,6 @@
+{
+ "args": [
+  "--image",
+  "testdata/images/tiny.img"
+ ]
+}

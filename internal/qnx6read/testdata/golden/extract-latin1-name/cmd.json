@@ -1,0 +1,10 @@
+{
+ "args": [
+  "--image",
+  "testdata/images/p2.img",
+  "P2",
+  "extract",
+  "/caf\u00e9",
+  "out-cafe.bin"
+ ]
+}

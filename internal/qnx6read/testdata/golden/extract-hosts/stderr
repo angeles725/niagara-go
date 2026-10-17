@@ -1,0 +1,2 @@
+P2 OFF=3 blocksize=1024 inodes=12
+extracted /etc/hosts -> out-hosts.bin (20 bytes)

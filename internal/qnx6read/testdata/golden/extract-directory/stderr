@@ -1,0 +1,2 @@
+P2 OFF=3 blocksize=1024 inodes=12
+extracted /etc -> out-etc.bin (96 bytes)

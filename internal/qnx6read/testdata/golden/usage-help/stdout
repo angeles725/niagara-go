@@ -1,0 +1,23 @@
+usage: qnx6read.py [-h] [--image IMAGE] [--char-device] [{P2,P3}] [extract SRC DST ...]
+
+qnx6read: minimal read-only QNX6 (Power-Safe) reader for the JACE-8000 SD image (B674).
+
+Lists the directory tree of one partition of a raw disk image, or extracts one file. READ-ONLY.
+
+Usage:
+  qnx6read.py [--image disk.img] [P2|P3]                  list the tree (default P2)
+  qnx6read.py [--image disk.img] P2 extract <src> <dst>  copy one file out of the image
+The image comes from --image, else from the QNX6_IMG environment variable: a regular file or a block
+device (`--image /dev/sdb` reads the card directly); a character device (a BSD raw disk /dev/rdiskN)
+only with --char-device, so a terminal or /dev/null is never read as a disk.
+Exit 0 ok, 1 listing incomplete (depth limit hit), 2 usage (no image, an image that is not a file or a
+block device, an unreadable image, bad arguments).
+
+positional arguments:
+  {P2,P3}          partition (default P2)
+  extract SRC DST  extract one file instead of listing
+
+options:
+  -h, --help       show this help message and exit
+  --image IMAGE    raw disk image (default: $QNX6_IMG)
+  --char-device    accept a character device as the image (a BSD raw disk); refused by default

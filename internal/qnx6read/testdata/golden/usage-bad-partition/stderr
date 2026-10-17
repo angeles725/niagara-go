@@ -1,0 +1,2 @@
+usage: qnx6read.py [-h] [--image IMAGE] [--char-device] [{P2,P3}] [extract SRC DST ...]
+qnx6read.py: error: argument part: invalid choice: 'P9' (choose from 'P2', 'P3')

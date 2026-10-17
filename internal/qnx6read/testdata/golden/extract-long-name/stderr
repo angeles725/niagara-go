@@ -1,0 +1,2 @@
+P2 OFF=3 blocksize=1024 inodes=12
+extracted /etc/a-very-long-file-name-beyond-27-bytes.cfg -> out-long.bin (4 bytes)

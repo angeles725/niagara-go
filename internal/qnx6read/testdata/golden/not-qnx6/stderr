@@ -1,0 +1,10 @@
+Traceback (most recent call last):
+  File "/home/cristian/niagara-research/tools/qnx6read.py", line 231, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "/home/cristian/niagara-research/tools/qnx6read.py", line 210, in main
+    fs = QNX6(a.image, PARTS[a.part])
+  File "/home/cristian/niagara-research/tools/qnx6read.py", line 27, in __init__
+    assert magic == 0x68191122, "not qnx6"
+           ^^^^^^^^^^^^^^^^^^^
+AssertionError: not qnx6

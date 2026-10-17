@@ -1,0 +1,7 @@
+{
+ "args": [
+  "--image",
+  "testdata/images/p3.img",
+  "P3"
+ ]
+}
