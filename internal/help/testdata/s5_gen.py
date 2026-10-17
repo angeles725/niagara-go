@@ -45,6 +45,7 @@ CLI = [
     ("class-jdk-sanitized", ["class", "Bad", "--jdk"]),
     ("class-jdk-interface", ["class", "Other", "--jdk"]),
     ("class-jdk-not-in-file", ["class", "Ghost", "--jdk"]),
+    ("selftest-recall", ["selftest", "--recall", "--no-samples"]),
 ]
 
 

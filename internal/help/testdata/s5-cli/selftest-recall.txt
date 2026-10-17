@@ -1,0 +1,51 @@
+RECALL 4.14.0.162 (ground truth from raw sources, parsed in 0s)
+  command             expected     found   missed  note
+  (.bajadoc parse)           6         5        1  an unparseable file would hide its classes
+      miss: devguide/broken.bajadoc
+  class                      8         5        3  
+      miss: com.acme.BBase
+      miss: com.acme.BNoTitle
+      miss: javax.baja.alarm.BIAlarmSource
+  search                     8         5        3  
+      miss: com.acme.BBase
+      miss: com.acme.BNoTitle
+      miss: javax.baja.alarm.BIAlarmSource
+  package                    8         5        3  
+      miss: com.acme.BBase
+      miss: com.acme.BNoTitle
+      miss: javax.baja.alarm.BIAlarmSource
+  api / related              8         5        3  shared resolver resolve_entry
+      miss: com.acme.BBase
+      miss: com.acme.BNoTitle
+      miss: javax.baja.alarm.BIAlarmSource
+  hierarchy                  8         4        4  
+      miss: com.acme.BBase
+      miss: com.acme.BNoTitle
+      miss: com.acme.real.BMoved
+      miss: javax.baja.alarm.BIAlarmSource
+  implementors               3         2        1  
+      miss: Comparable <- javax.baja.alarm.BAlarmRecord
+  enum                       3         1        2  
+      miss: com.acme.BBase
+      miss: com.acme.BGuideThing
+  module                     4         4        0  
+  class --jdk                3         3        0  
+  method                     4         2        2  
+      miss: javax.baja.alarm.BAckState#make
+      miss: javax.baja.alarm.BAlarmRecord#getAlarms
+  slots                      3         2        1  
+      miss: javax.baja.alarm.BAlarmRecord#ack
+  source                     5         5        0  
+  xref                       5         2        3  the file's own entry (package), not only used_by
+      miss: source/a/BFoo.java
+      miss: source/b/BFoo.java
+      miss: source/x/BCrlf.java
+  guide-search               4         2        2  
+      miss: Alarm/ack.txt
+      miss: Alarm/sub/deep.htm
+  guide                      4         3        1  topic = page path in guides-index.json
+      miss: Alarm/sub/deep.htm
+  devguide-search            2         1        1  
+      miss: notes.txt
+  callers                    0         0        0  excluded: keyed by call sites; a method with no caller has no entry by definition (its class is covered by source/xref recall)
+RESULT: FAIL (14 command(s) with misses)

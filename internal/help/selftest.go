@@ -22,7 +22,7 @@ type SelftestParams struct {
 // result of the assertions (or of the recall oracle), never the misses.
 func (e *Env) Selftest(p SelftestParams) error {
 	if p.Recall {
-		return notPortedError("selftest --recall")
+		return e.Recall(!p.NoSamples)
 	}
 	return e.selftest()
 }

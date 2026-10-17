@@ -1,0 +1,21 @@
+{
+ "BAlarmRecord": {
+  "package": "javax.baja.alarm",
+  "properties": [
+   {
+    "name": "ackState",
+    "type": "BAckState"
+   }
+  ],
+  "actions": [],
+  "topics": []
+ },
+ "balarmrecord (other-rt)": {
+  "package": "javax.baja.alarm",
+  "topics": [
+   {
+    "name": "acked"
+   }
+  ]
+ }
+}

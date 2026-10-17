@@ -18,5 +18,6 @@
 {"name": "class-jdk", "args": ["--niagara-version", "4.14.0.162", "class", "String", "--jdk"], "exit": 0, "stderr": ""},
 {"name": "class-jdk-sanitized", "args": ["--niagara-version", "4.14.0.162", "class", "Bad", "--jdk"], "exit": 0, "stderr": ""},
 {"name": "class-jdk-interface", "args": ["--niagara-version", "4.14.0.162", "class", "Other", "--jdk"], "exit": 0, "stderr": ""},
-{"name": "class-jdk-not-in-file", "args": ["--niagara-version", "4.14.0.162", "class", "Ghost", "--jdk"], "exit": 0, "stderr": ""}
+{"name": "class-jdk-not-in-file", "args": ["--niagara-version", "4.14.0.162", "class", "Ghost", "--jdk"], "exit": 0, "stderr": ""},
+{"name": "selftest-recall", "args": ["--niagara-version", "4.14.0.162", "selftest", "--recall", "--no-samples"], "exit": 1, "stderr": ""}
 ]

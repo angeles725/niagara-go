@@ -60,3 +60,16 @@ The Go tests (`fts/ftsfixture`) copy `fulltext/` to a temporary folder with the 
 install the databases with `<ROOT>` replaced by that folder; the fingerprint test then proves
 that Go computes exactly the fingerprint Python stored. Regenerate everything after changing
 `fulltext/`.
+
+## s5 fixture
+
+`s5/` is a checkout for the commands ported after S6 (source, method, freshness, class --jdk,
+selftest --recall): javadoc HTML pages under `bajadoc/` (navigation, `class-use/`, `doc-files/`
+and `index-files/` pages the recall skips, a page declaring another package), `.bajadoc` XML
+under `devguide/`, `guides/` and `jdk/` (an unparseable file, a `&#x0;` reference only the
+sanitizer gets past), Java sources (CRLF, invalid UTF-8, trailing whitespace, a colliding simple
+name, a missing file), guide and devguide pages, a stamped `indexes/.manifest.json` with every
+freshness status, and `install/` with doc jars against `versions/4.14.0.162.manifest.json`.
+`s5_gen.py` (`python3 -I internal/help/testdata/s5_gen.py`) runs the Python niagara-help on a
+fresh copy per case and writes `s5-cli/<case>.txt` (stdout, `<ROOT>` for the checkout) and
+`s5-cli/cases.json` (arguments, exit status, stderr), checked by `s5_test.go`.
