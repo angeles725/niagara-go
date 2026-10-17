@@ -58,7 +58,7 @@ func newParser() *argparse.Parser {
 	flag("--schema", "history id, record type and field list (default)")
 	flag("--ops", "count audit-log operation strings")
 	flag("--strings", "printable strings of the record region")
-	flag("--mask", "redact user identities and long values (--strings)")
+	flag("--mask", "fail-closed redaction of --strings, --ops and --schema output")
 	flag("--records", "decode Numeric/Boolean/EnumTrendRecord rows: CSV on stdout, summary on stderr")
 	flag("--json", "with --records: a JSON list instead of CSV")
 	return p
