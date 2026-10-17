@@ -1,0 +1,3 @@
+usage: licensador.py issue [-h] --key KEY --product PRODUCT --host HOST [--licensee LICENSEE]
+                           [--expires EXPIRES] --out OUT [--feature FEATURE]
+licensador.py issue: error: the following arguments are required: --product, --host, --out

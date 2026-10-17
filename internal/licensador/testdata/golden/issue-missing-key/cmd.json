@@ -1,0 +1,1 @@
+{"args": ["issue", "--key", "nope.pem", "--product", "p", "--host", "REF-0123456789AB", "--out", "x.refl"]}

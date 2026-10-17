@@ -1,0 +1,2 @@
+host: REF-0123456789AB
+RESULTADO: OK  product=reflow-oven licensee=lab serial=0F1E2D3C4B5A69788796A5B4C3D2E1F0 features=['logging', 'pid']

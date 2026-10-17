@@ -1,0 +1,1 @@
+{"args": ["revoke", "--key", "nope.pem", "--serial", "S1", "--out", "bl-new.refl"]}

@@ -1,0 +1,11 @@
+usage: licensador.py verify [-h] --root ROOT --file FILE [--product PRODUCT] [--host HOST]
+                            [--state STATE] [--blacklist BLACKLIST]
+
+options:
+  -h, --help            show this help message and exit
+  --root ROOT
+  --file FILE
+  --product PRODUCT
+  --host HOST
+  --state STATE
+  --blacklist BLACKLIST

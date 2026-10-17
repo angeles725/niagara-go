@@ -1,0 +1,1 @@
+{"args": ["hostid", "--salt", "otra-sal/ñ"], "requires": {"machine_id_sha256": "92f9ad770c2809742902dd5bd2efe75273bf59cb3791a7470fe7b68130365c1f"}}
