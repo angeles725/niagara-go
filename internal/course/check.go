@@ -301,8 +301,8 @@ func (s *station) checkLink(ck *Check) (string, string) {
 }
 
 func (s *station) checkFiles(ck *Check) (string, string) {
-	pattern := strings.ReplaceAll(ck.Glob, "{station}", s.name)
-	matches, err := filepath.Glob(filepath.Join(s.dir, filepath.FromSlash(pattern)))
+	pattern := strings.ReplaceAll(ck.Glob, "{station}", globEscape(s.name))
+	matches, err := filepath.Glob(filepath.Join(globEscape(s.dir), filepath.FromSlash(pattern)))
 	if err != nil {
 		return verdictSkip, fmt.Sprintf("bad pattern %s: %v", pattern, err)
 	}
@@ -440,4 +440,21 @@ func entryCount(n int) string {
 		return "1 entry"
 	}
 	return fmt.Sprintf("%d entries", n)
+}
+
+// globEscape makes s match only itself in a filepath.Glob pattern: each meta character becomes a
+// one-character class, which works on every OS (Windows has no backslash escape in patterns).
+func globEscape(s string) string {
+	var b strings.Builder
+	for _, r := range s {
+		switch {
+		case r == '*' || r == '?' || r == '[':
+			b.WriteString("[" + string(r) + "]")
+		case r == '\\' && filepath.Separator != '\\':
+			b.WriteString(`[\\]`)
+		default:
+			b.WriteRune(r)
+		}
+	}
+	return b.String()
 }

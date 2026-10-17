@@ -20,13 +20,21 @@ func TestCheckZippedBog(t *testing.T) {
 		t.Fatal(err)
 	}
 	zw := zip.NewWriter(f)
-	w, _ := zw.Create("file.xml")
-	_, _ = w.Write(xml)
+	w, err := zw.Create("file.xml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := w.Write(xml); err != nil {
+		t.Fatal(err)
+	}
 	if err := zw.Close(); err != nil {
 		t.Fatal(err)
 	}
 	f.Close()
-	csvs, _ := filepath.Glob(filepath.Join(goodStation, "shared", "*.csv"))
+	csvs, err := filepath.Glob(filepath.Join(goodStation, "shared", "*.csv"))
+	if err != nil || len(csvs) == 0 {
+		t.Fatalf("fixture CSVs: %d, %v", len(csvs), err)
+	}
 	if err := os.Mkdir(filepath.Join(dir, "shared"), 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -36,6 +44,9 @@ func TestCheckZippedBog(t *testing.T) {
 		}
 	}
 	plain, zipped := runAll(t, goodStation, fixtureInstall), runAll(t, dir, fixtureInstall)
+	if len(plain) == 0 || len(plain) != len(zipped) {
+		t.Fatalf("plain station gave %d results, zipped %d", len(plain), len(zipped))
+	}
 	for i := range plain {
 		if plain[i].Verdict != verdictPass || plain[i].Verdict != zipped[i].Verdict || plain[i].Evidence != zipped[i].Evidence {
 			t.Errorf("%s: plain %s %q, zipped %s %q", plain[i].ID, plain[i].Verdict, plain[i].Evidence,
