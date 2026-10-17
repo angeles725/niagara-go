@@ -149,7 +149,7 @@ func (h *Handler) now() float64 {
 
 func (h *Handler) cookieToken(r *http.Request) (string, bool) {
 	for _, part := range strings.Split(r.Header.Get("Cookie"), ";") {
-		k, v, _ := strings.Cut(strings.TrimSpace(part), "=")
+		k, v, _ := strings.Cut(pycompat.Strip(part), "=")
 		if k == "dp_config_session" {
 			return v, true
 		}
