@@ -1,0 +1,172 @@
+// Package hdbread reads Niagara N4 .hdb history files (port of niagara-research tools/hdbread.py).
+// The on-disk format and the history-rt file:line of each rule are documented in the Python
+// module docstring; this package reproduces its output byte for byte.
+package hdbread
+
+import (
+	"bytes"
+	"encoding/binary"
+	"errors"
+	"fmt"
+	"os"
+	"regexp"
+	"strings"
+	"syscall"
+
+	"github.com/angeles725/niagara-go/internal/cli"
+)
+
+// Options is the parsed command line. The caller validates it (JSON needs Records).
+type Options struct {
+	Path    string // the .hdb file
+	Schema  bool   // history id, record type and field list (the default when nothing else is set)
+	Ops     bool   // count audit-log operation strings
+	Strings bool   // printable strings of the record region
+	Mask    bool   // redact user identities and long values (with Strings)
+	Records bool   // decode fixed-length trend records: CSV on stdout, summary on stderr
+	JSON    bool   // with Records: a JSON list instead of CSV
+}
+
+var magic = []byte{0xa1, 0x06, 0xf1, 0x1e}
+
+// exitError is a Python `raise SystemExit("message")`: the message on stderr, exit 1.
+type exitError string
+
+func (e exitError) Error() string { return string(e) }
+
+// file is the parsed file header: version, data offset, config XML text and data section.
+type file struct {
+	version uint32
+	offset  uint32
+	xml     string
+	section []byte
+}
+
+// parse splits a .hdb into its header fields; the config ends at dataOffset
+// (BFileHistoryTable.java:821-873).
+func parse(d []byte) (*file, error) {
+	head := d
+	if len(head) > 4 {
+		head = head[:4]
+	}
+	if !bytes.Equal(head, magic) {
+		return nil, exitError(fmt.Sprintf("not a .hdb (bad magic %x)", head))
+	}
+	if len(d) < 12 {
+		return nil, exitError(fmt.Sprintf("not a .hdb (truncated header, %d bytes)", len(d)))
+	}
+	ver := binary.BigEndian.Uint32(d[4:8])
+	off := binary.BigEndian.Uint32(d[8:12])
+	if off < 12 || uint64(off) > uint64(len(d)) {
+		return nil, exitError(fmt.Sprintf("not a .hdb (data offset %d outside the %d-byte file)", off, len(d)))
+	}
+	xml := decodeReplace(d[12:off])
+	const closing = "</bajaObjectGraph>"
+	if end := strings.Index(xml, closing); end >= 0 {
+		xml = xml[:end+len(closing)]
+	} else {
+		xml = strings.TrimRight(xml, " \x00")
+	}
+	return &file{version: ver, offset: off, xml: xml, section: d[off:]}, nil
+}
+
+var (
+	schemaRE     = regexp.MustCompile(`n="schema"[^>]*v="([^"]*)"`)
+	recordTypeRE = regexp.MustCompile(`n="recordType"[^>]*v="([^"]*)"`)
+	idRE         = regexp.MustCompile(`n="id"[^>]*v="([^"]*)"`)
+)
+
+func firstGroup(re *regexp.Regexp, s, missing string) string {
+	if m := re.FindStringSubmatch(s); m != nil {
+		return m[1]
+	}
+	return missing
+}
+
+// schemaOf returns the history id, the record type and the schema field names.
+func schemaOf(xml string) (id, recordType string, fields []string) {
+	if m := schemaRE.FindStringSubmatch(xml); m != nil {
+		for _, pair := range strings.Split(m[1], ";") {
+			if name, _, ok := strings.Cut(pair, ","); ok {
+				fields = append(fields, name)
+			}
+		}
+	}
+	return firstGroup(idRE, xml, "?"), firstGroup(recordTypeRE, xml, "?"), fields
+}
+
+// strerror renders an I/O error the way Python's OSError.strerror does.
+func strerror(err error) string {
+	var errno syscall.Errno
+	if errors.As(err, &errno) {
+		msg := errno.Error()
+		if msg != "" {
+			return strings.ToUpper(msg[:1]) + msg[1:]
+		}
+	}
+	return err.Error()
+}
+
+// Run executes one hdbread invocation and returns its exit code.
+func Run(o Options, s cli.Stdio) int {
+	data, err := os.ReadFile(o.Path)
+	if err != nil {
+		fmt.Fprintf(s.Err, "hdbread: cannot read %s: %s\n", o.Path, strerror(err))
+		return cli.ExitCannotSearch
+	}
+	if o.Records {
+		return runRecords(o, data, s)
+	}
+	f, err := parse(data)
+	if err != nil {
+		fmt.Fprintln(s.Err, err)
+		return cli.ExitNoMatch
+	}
+	id, rt, fields := schemaOf(f.xml)
+	fmt.Fprintf(s.Out, "# %s\n", o.Path)
+	fmt.Fprintf(s.Out, "magic=A106F11E version=%d data_offset=%d data_section=%d bytes\n",
+		f.version, f.offset, len(f.section))
+	if o.Schema || !(o.Ops || o.Strings || o.Mask) {
+		fmt.Fprintf(s.Out, "history_id=%s\n", id)
+		fmt.Fprintf(s.Out, "record_type=%s\n", rt)
+		fmt.Fprintf(s.Out, "schema (%d fields): %s\n", len(fields), strings.Join(fields, ", "))
+	}
+	if o.Ops {
+		if err := printOps(s, f.section, rt, fields); err != nil {
+			fmt.Fprintln(s.Err, err)
+			return cli.ExitNoMatch
+		}
+	}
+	if o.Strings {
+		for _, run := range printableRuns(f.section) {
+			if o.Mask {
+				run = mask(run)
+			}
+			fmt.Fprintln(s.Out, run)
+		}
+	}
+	return cli.ExitFound
+}
+
+func runRecords(o Options, data []byte, s cli.Stdio) int {
+	t, err := decodeTrend(data)
+	if err != nil {
+		var exit exitError
+		if errors.As(err, &exit) {
+			fmt.Fprintln(s.Err, err)
+		} else {
+			fmt.Fprintf(s.Err, "hdbread: --records: %s\n", err)
+		}
+		return cli.ExitNoMatch
+	}
+	if o.JSON {
+		printJSON(s.Out, t.records)
+	} else {
+		printCSV(s.Out, t.records)
+	}
+	fmt.Fprintf(s.Err, "# %s\n# %s\n", o.Path, trendSummary(t))
+	if len(t.records) == 0 {
+		return cli.ExitNoMatch
+	}
+	return cli.ExitFound
+}
