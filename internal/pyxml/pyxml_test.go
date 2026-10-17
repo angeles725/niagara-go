@@ -1,0 +1,95 @@
+package pyxml
+
+import (
+	"encoding/hex"
+	"encoding/json"
+	"os"
+	"strings"
+	"testing"
+)
+
+type xmlCase struct {
+	In    *string `json:"in"`
+	Hex   string  `json:"hex"`
+	Expat *string `json:"expat"`
+	Etree string  `json:"etree"`
+	Tree  any     `json:"tree"`
+}
+
+// treeJSON renders el like the generator's tree(): [tag, [[name, value]...], [children]].
+func treeJSON(el *Element) any {
+	attrs := []any{}
+	for _, a := range el.Attrs {
+		attrs = append(attrs, []any{a.Name, a.Value})
+	}
+	kids := []any{}
+	for _, c := range el.Children {
+		kids = append(kids, treeJSON(c))
+	}
+	return []any{el.Tag, attrs, kids}
+}
+
+func xmlVerdict(data []byte, mode Mode) string {
+	if _, err := Parse(data, mode); err != nil {
+		return err.Error()
+	}
+	return ""
+}
+
+// TestPyXMLMatchesExpat replays testdata/xmlerrors.json (gen_xmlerrors.py, from expat).
+func TestPyXMLMatchesExpat(t *testing.T) {
+	raw, err := os.ReadFile("testdata/xmlerrors.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var cases []xmlCase
+	if err := json.Unmarshal(raw, &cases); err != nil {
+		t.Fatal(err)
+	}
+	bad := 0
+	for _, c := range cases {
+		var data []byte
+		if c.In != nil {
+			data = []byte(*c.In)
+		} else if data, err = hex.DecodeString(c.Hex); err != nil {
+			t.Fatal(err)
+		}
+		if c.Expat != nil {
+			if got := xmlVerdict(data, Mode{}); got != *c.Expat {
+				bad++
+				if bad <= 60 {
+					t.Errorf("expat %q:\n got  %q\n want %q", data, got, *c.Expat)
+				}
+			}
+		}
+		got := xmlVerdict(data, Mode{ETree: true})
+		if c.Etree == "!LookupError" && strings.HasPrefix(got, errEncoding+":") {
+			continue
+		}
+		if c.Tree != nil {
+			root, _ := Parse(data, Mode{ETree: true})
+			if g, w := mustJSON(t, treeJSON(root)), mustJSON(t, c.Tree); g != w {
+				bad++
+				t.Errorf("tree %q:\n got  %s\n want %s", data, g, w)
+			}
+		}
+		if got != c.Etree {
+			bad++
+			if bad <= 60 {
+				t.Errorf("etree %q:\n got  %q\n want %q", data, got, c.Etree)
+			}
+		}
+	}
+	if bad > 0 {
+		t.Errorf("%d of %d verdicts differ", bad, 2*len(cases))
+	}
+}
+
+func mustJSON(t *testing.T, v any) string {
+	t.Helper()
+	b, err := json.Marshal(v)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return string(b)
+}
