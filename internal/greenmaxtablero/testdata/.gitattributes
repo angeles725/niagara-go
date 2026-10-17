@@ -1,0 +1,3 @@
+# tablero-crlf.px must keep its CRLF line endings byte for byte (the crlf golden case reads them):
+# no end-of-line conversion, whatever core.autocrlf or a later "* text=auto" says.
+inputs/tablero-crlf.px -text
