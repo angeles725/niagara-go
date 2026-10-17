@@ -1,0 +1,2 @@
+usage: greenmax-matrix.py [-h] [-o OUT] supervisor jace px_dir
+greenmax-matrix.py: error: unrecognized arguments: extra

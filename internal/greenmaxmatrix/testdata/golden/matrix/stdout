@@ -1,0 +1,5 @@
+panels=3  circuits=5  with-description=4  -> /dev/null
+GM   Tablero     Zona               relays  desc schedOK feedOK
+GM01  AL3/AL4     Zona  Norte / Lo        2     2       1      2
+GM02  AL5         Estacionamiento         3     2       1      1
+GM05                                      0     0       0      0

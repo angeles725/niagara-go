@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bajaObjectGraph version="4.0">
+<p h="1" m="b=baja bac=bacnet n=niagaraDriver c=control" t="b:Station">
+ <p n="Drivers" h="2" t="b:DriverContainer">
+  <p n="NiagaraNetwork" h="3" t="n:NiagaraNetwork">
+   <p n="HM_BMS" h="4" t="n:NiagaraStation">
+    <p n="points" h="5" t="n:NiagaraPointDeviceExt">
+     <p n="GreenMAX1" h="6" t="n:NiagaraPointFolder">
+      <p n="SchdlGM01$20R1" h="7" t="c:BooleanPoint"/>
+     </p>
+    </p>
+   </p>
+  </p>
+  <p n="BcpBacnetNetwork" h="8" t="bac:BacnetNetwork">
+   <p n="GM01ilum" h="10" t="bac:BacnetDevice">
+    <p n="points" h="11" t="bac:BacnetPointDeviceExt">
+     <p n="Relay$5b1$5d$2eBO" h="12" t="bac:BacnetBooleanWritable">
+      <p n="objectId" v="binaryOutput:1"/>
+      <p n="Link1" t="b:Link">
+       <p n="sourceOrd" t="b:Ord" v="h:7"/>
+       <p n="sourceSlotName" v="out"/>
+       <p n="targetSlotName" v="in16"/>
+      </p>
+     </p>
+     <p n="Relay$5b2$5d$2eBO" h="13" t="bac:BacnetBooleanWritable">
+      <p n="proxyExt" t="bac:BacnetBooleanProxyExt">
+       <p n="objectId" v="binaryOutput:2"/>
+      </p>
+      <p n="Link1" t="b:Link">
+       <p n="sourceOrd" t="b:Ord" v="h:7"/>
+       <p n="sourceSlotName" v="out"/>
+       <p n="targetSlotName" v="in9"/>
+      </p>
+      <p n="Link2" t="b:Link">
+       <p n="sourceOrd" t="b:Ord" v="h:7"/>
+       <p n="sourceSlotName" v="out"/>
+       <p n="targetSlotName" v="in16"/>
+      </p>
+     </p>
+    </p>
+   </p>
+   <p n="GM02ilum" h="20" t="bac:BacnetDevice">
+    <p n="points" h="21" t="bac:BacnetPointDeviceExt">
+     <p n="Relay$5b1$5d$2eBO" h="22" t="bac:BacnetBooleanWritable">
+      <p n="objectId" v="binaryOutput:11"/>
+      <p n="Link1" t="b:Link">
+       <p n="sourceOrd" t="b:Ord" v="station:|slot:/x"/>
+       <p n="targetSlotName" v="in10"/>
+      </p>
+     </p>
+     <p n="Relay$5b4$5d$2eBO" h="23" t="bac:BacnetBooleanWritable"/>
+    </p>
+   </p>
+   <p n="GM05ilum" h="30" t="bac:BacnetDevice"/>
+   <p n="Spare" h="31" t="b:Folder">
+    <p n="Relay$5b9$5d$2eBO" h="32" t="bac:BacnetBooleanWritable"/>
+   </p>
+  </p>
+ </p>
+</p>
+</bajaObjectGraph>

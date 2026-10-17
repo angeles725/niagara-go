@@ -1,0 +1,1 @@
+greenmax-matrix: the two bogs look swapped: the GM<n>ilum NiagaraPointFolders (supervisor role) are in inputs/sup.bog and/or the GM<n>ilum BacnetDevices (JACE role) are in inputs/jace.bog; usage: greenmax-matrix.py <supervisor.bog> <jace.bog> <px_dir>

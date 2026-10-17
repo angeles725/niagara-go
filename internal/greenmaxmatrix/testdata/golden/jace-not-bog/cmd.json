@@ -1,0 +1,9 @@
+{
+ "args": [
+  "inputs/sup.bog",
+  "inputs/not-a-bog.txt",
+  "inputs/px",
+  "-o",
+  "/dev/null"
+ ]
+}

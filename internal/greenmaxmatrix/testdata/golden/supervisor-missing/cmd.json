@@ -1,0 +1,9 @@
+{
+ "args": [
+  "inputs/nope.bog",
+  "inputs/jace.bog",
+  "inputs/px",
+  "-o",
+  "/dev/null"
+ ]
+}
