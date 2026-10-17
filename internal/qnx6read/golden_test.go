@@ -87,31 +87,6 @@ func materializeImages(testdata string) error {
 	return sc.Err()
 }
 
-// optionsFromArgs maps the argv of a non-usage golden case onto Options (a test fixture, not a
-// parser: usage and error text belong to internal/argparse).
-func optionsFromArgs(t *testing.T, c golden.Case) Options {
-	t.Helper()
-	o := Options{Image: c.Env["QNX6_IMG"], Part: "P2"}
-	var pos []string
-	for i := 0; i < len(c.Args); i++ {
-		if c.Args[i] == "--image" && i+1 < len(c.Args) {
-			o.Image = c.Args[i+1]
-			i++
-			continue
-		}
-		pos = append(pos, c.Args[i])
-	}
-	if len(pos) > 0 {
-		o.Part, pos = pos[0], pos[1:]
-	}
-	if len(pos) == 3 && pos[0] == "extract" {
-		o.Extract = &Extract{Src: pos[1], Dst: pos[2]}
-	} else if len(pos) != 0 {
-		t.Fatalf("golden argv %q is not a plain case; name it usage-*", c.Args)
-	}
-	return o
-}
-
 // intended lists the cases where Python ends in a traceback; Go prints one line instead
 // (stdout still has to match the golden).
 var intended = map[string]struct {
@@ -143,44 +118,45 @@ var extracted = map[string]string{
 	"out-root.bin":   "671bcd4339a4d5f52e3aa8c84becf0616b6ef5fee8df280b91b5026d002cb69a",
 }
 
-// TestGolden checks Run against the frozen Python cases at the logic level (options already
-// parsed). Once Main exists (internal/argparse), golden.Run(t, "testdata", Main) replaces it.
+// TestGolden runs every parity case through Main, then checks the bytes each extract case wrote.
 func TestGolden(t *testing.T) {
-	cases, err := golden.Load("testdata")
+	golden.Run(t, "testdata", Main)
+	for name, want := range extracted {
+		data, err := os.ReadFile(filepath.Join(runDir, name))
+		sum := sha256.Sum256(data)
+		if err != nil || hex.EncodeToString(sum[:]) != want {
+			t.Errorf("%s: sha256 %x (%v), want %s", name, sum, err, want)
+		}
+	}
+}
+
+// TestIntendedDiffs runs the frozen cases where Python ends in a traceback
+// (testdata/intended/golden): stdout must still match Python; stderr and exit are the Go ones.
+func TestIntendedDiffs(t *testing.T) {
+	cases, err := golden.Load("testdata/intended")
 	if err != nil {
 		t.Fatal(err)
 	}
 	for _, c := range cases {
 		t.Run(c.Name, func(t *testing.T) {
-			if strings.HasPrefix(c.Name, "usage-") {
-				t.Skip("awaiting internal/argparse")
+			d, ok := intended[c.Name]
+			if !ok {
+				t.Fatalf("no intended result recorded for %s", c.Name)
 			}
-			if c.CwdFixture != "run" {
-				t.Fatalf("cwd_fixture %q, want run", c.CwdFixture)
+			for k, v := range c.Environ() {
+				t.Setenv(k, v)
 			}
-			t.Chdir(runDir)
-			o := optionsFromArgs(t, c)
+			t.Chdir(filepath.Join(filepath.Dir(runDir), c.CwdFixture))
 			var out, errb bytes.Buffer
-			code := Run(o, cli.Stdio{In: strings.NewReader(""), Out: &out, Err: &errb})
-			wantExit, wantErr := c.Exit, string(c.Stderr)
-			if d, ok := intended[c.Name]; ok {
-				wantExit, wantErr = d.exit, d.stderr
-			}
-			if code != wantExit {
-				t.Errorf("exit = %d, want %d", code, wantExit)
+			code := Main(c.Args, cli.Stdio{In: strings.NewReader(""), Out: &out, Err: &errb})
+			if code != d.exit {
+				t.Errorf("exit = %d, want %d", code, d.exit)
 			}
 			if !bytes.Equal(out.Bytes(), c.Stdout) {
 				t.Errorf("stdout: %s", golden.Diff(c.Stdout, out.Bytes()))
 			}
-			if errb.String() != wantErr {
-				t.Errorf("stderr: %s", golden.Diff([]byte(wantErr), errb.Bytes()))
-			}
-			if o.Extract != nil && code == 0 {
-				data, err := os.ReadFile(o.Extract.Dst)
-				sum := sha256.Sum256(data)
-				if err != nil || hex.EncodeToString(sum[:]) != extracted[o.Extract.Dst] {
-					t.Errorf("%s: sha256 %x (%v), want %s", o.Extract.Dst, sum, err, extracted[o.Extract.Dst])
-				}
+			if errb.String() != d.stderr {
+				t.Errorf("stderr: %s", golden.Diff([]byte(d.stderr), errb.Bytes()))
 			}
 		})
 	}
