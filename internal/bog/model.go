@@ -1,6 +1,10 @@
 package bog
 
-import "strings"
+import (
+	"strings"
+
+	"github.com/angeles725/niagara-go/internal/pycompat"
+)
 
 // Comp is one component of the graph: a <p> element that carries a handle (bognav/model.py Comp).
 type Comp struct {
@@ -133,16 +137,8 @@ func (b *Bog) LinkRow(l *Link) LinkRow {
 	}
 	return LinkRow{
 		Link:        l.LinkName,
-		Source:      srcPath + "." + pyStr(l.SrcSlot),
-		Target:      l.ContainerPath + "." + pyStr(l.TgtSlot),
+		Source:      srcPath + "." + pycompat.OptStr(l.SrcSlot),
+		Target:      l.ContainerPath + "." + pycompat.OptStr(l.TgtSlot),
 		SrcResolved: src != nil,
 	}
-}
-
-// pyStr formats an optional string the way a Python f-string formats str-or-None.
-func pyStr(s *string) string {
-	if s == nil {
-		return "None"
-	}
-	return *s
 }

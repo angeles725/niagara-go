@@ -28,22 +28,30 @@ func TestFixtures(t *testing.T) {
 			p := specParser(t, doc.Parsers[c.Parser], parents)
 			var out, errb bytes.Buffer
 			ns, code, done := p.Parse(append([]string{}, c.Argv...), cli.Stdio{Out: &out, Err: &errb})
-			if got := out.String(); got != c.Stdout {
-				t.Errorf("stdout differs at %s", firstDiff(got, c.Stdout))
-			}
-			if got := errb.String(); got != c.Stderr {
-				t.Errorf("stderr differs at %s", firstDiff(got, c.Stderr))
-			}
-			switch {
-			case c.Exit == nil && done:
-				t.Errorf("exited with %d, want a namespace %s", code, *c.NS)
-			case c.Exit != nil && !done:
-				t.Errorf("returned a namespace, want exit %d", *c.Exit)
-			case c.Exit != nil && code != *c.Exit:
-				t.Errorf("exit %d, want %d", code, *c.Exit)
-			case c.Exit == nil && ns.Repr() != *c.NS:
-				t.Errorf("namespace\n   got %s\n  want %s", ns.Repr(), *c.NS)
-			}
+			checkResult(c, out.String(), errb.String(), ns, code, done, t.Errorf)
 		})
+	}
+}
+
+// checkResult compares one parse with its fixture and reports each difference through errorf.
+func checkResult(c fixtureCase, stdout, stderr string, ns *Namespace, code int, done bool,
+	errorf func(string, ...any)) {
+	if stdout != c.Stdout {
+		errorf("stdout differs at %s", firstDiff(stdout, c.Stdout))
+	}
+	if stderr != c.Stderr {
+		errorf("stderr differs at %s", firstDiff(stderr, c.Stderr))
+	}
+	switch {
+	case c.Exit == nil && c.NS == nil:
+		errorf("malformed fixture: exit is null and there is no namespace")
+	case c.Exit == nil && done:
+		errorf("exited with %d, want a namespace %s", code, *c.NS)
+	case c.Exit != nil && !done:
+		errorf("returned a namespace, want exit %d", *c.Exit)
+	case c.Exit != nil && code != *c.Exit:
+		errorf("exit %d, want %d", code, *c.Exit)
+	case c.Exit == nil && ns.Repr() != *c.NS:
+		errorf("namespace\n   got %s\n  want %s", ns.Repr(), *c.NS)
 	}
 }

@@ -3,9 +3,13 @@ package argparse
 import (
 	"errors"
 	"fmt"
+	"math/big"
 	"regexp"
 	"strings"
 	"sync"
+
+	"github.com/angeles725/niagara-go/internal/difflib"
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // argError is argparse.ArgumentError: "argument NAME: message", or the bare message when
@@ -175,7 +179,7 @@ func (p *Parser) getValue(a *Action, s string) (any, error) {
 		if errors.As(err, &te) {
 			return nil, newArgError(a, te.Msg)
 		}
-		return nil, newArgError(a, "invalid "+a.typ.Name+" value: "+pyRepr(s))
+		return nil, newArgError(a, "invalid "+a.typ.Name+" value: "+pycompat.Repr(s))
 	}
 	return v, nil
 }
@@ -195,14 +199,14 @@ func (p *Parser) checkValue(a *Action, v any) error {
 		}
 		_, ok := c.(string)
 		allStr = allStr && ok
-		names[i] = pyStr(c)
-		quoted[i] = pyRepr(names[i])
+		names[i] = pycompat.Str(c)
+		quoted[i] = pycompat.Repr(names[i])
 	}
-	value := pyRepr(pyStr(v))
+	value := pycompat.Repr(pycompat.Str(v))
 	list := strings.Join(quoted, ", ")
 	if s, ok := v.(string); ok && !p.cfg.NoSuggest && allStr {
-		if best, found := closeMatch(s, names); found {
-			return newArgError(a, "invalid choice: "+value+", maybe you meant "+pyRepr(best)+"? (choose from "+list+")")
+		if best, _ := difflib.GetCloseMatches(s, names, 1, 0.6); len(best) == 1 {
+			return newArgError(a, "invalid choice: "+value+", maybe you meant "+pycompat.Repr(best[0])+"? (choose from "+list+")")
 		}
 	}
 	return newArgError(a, "invalid choice: "+value+" (choose from "+list+")")
@@ -223,6 +227,10 @@ func pyEqual(x, y any) bool {
 			return 0, true
 		}
 		return 0, false
+	}
+	if bx, ok := x.(*big.Int); ok {
+		by, ok := y.(*big.Int)
+		return ok && bx.Cmp(by) == 0
 	}
 	if a, ok := num(x); ok {
 		b, ok := num(y)
@@ -247,6 +255,22 @@ func copyItems(v any) []any {
 	return []any{v}
 }
 
+// iterItems is list(values) for extend: a list's items, a string's characters. Python
+// raises TypeError for any other scalar; it is appended as one item instead.
+func iterItems(v any) []any {
+	switch x := v.(type) {
+	case []any:
+		return x
+	case string:
+		var out []any
+		for _, r := range x {
+			out = append(out, string(r))
+		}
+		return out
+	}
+	return []any{v}
+}
+
 // callAction is Action.__call__.
 func (p *Parser) callAction(ctx *runCtx, a *Action, ns *Namespace, values any, option string) error {
 	switch a.kind {
@@ -259,7 +283,7 @@ func (p *Parser) callAction(ctx *runCtx, a *Action, ns *Namespace, values any, o
 	case AppendConst:
 		ns.Set(a.Dest, append(copyItems(ns.Get(a.Dest)), a.constant))
 	case Extend:
-		ns.Set(a.Dest, append(copyItems(ns.Get(a.Dest)), values.([]any)...))
+		ns.Set(a.Dest, append(copyItems(ns.Get(a.Dest)), iterItems(values)...))
 	case Count:
 		n, _ := ns.Get(a.Dest).(int)
 		ns.Set(a.Dest, n+1)

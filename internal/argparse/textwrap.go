@@ -2,7 +2,8 @@ package argparse
 
 import (
 	"strings"
-	"unicode"
+
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // A port of the parts of Python's textwrap that argparse uses: wrap() and fill() with the
@@ -14,11 +15,11 @@ func isTWSpace(r rune) bool { // textwrap._whitespace
 }
 
 func isWordChar(r rune) bool { // re \w (Unicode)
-	return r == '_' || unicode.IsLetter(r) || unicode.IsNumber(r)
+	return pycompat.IsWordRune(r)
 }
 
 func isLetter(r rune) bool { // [^\d\W]
-	return isWordChar(r) && !unicode.IsDigit(r)
+	return isWordChar(r) && !pycompat.IsDecimal(r)
 }
 
 func isWordPunct(r rune) bool { // [\w!"\'&.,?]
@@ -86,7 +87,7 @@ func splitChunks(text string) [][]rune {
 
 func isBlank(chunk []rune) bool {
 	for _, r := range chunk {
-		if !isPySpace(r) {
+		if !pycompat.IsSpace(r) {
 			return false
 		}
 	}

@@ -3,6 +3,8 @@ package argparse
 import (
 	"sort"
 	"strings"
+
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // Namespace is argparse.Namespace: the parsed values by dest. Values are nil (None), bool,
@@ -64,7 +66,7 @@ func (n *Namespace) String(dest string) string {
 	case string:
 		return v
 	default:
-		return pyStr(v)
+		return pycompat.Str(v)
 	}
 }
 
@@ -111,7 +113,7 @@ func (n *Namespace) Strings(dest string) []string {
 			if s, ok := x.(string); ok {
 				out[i] = s
 			} else {
-				out[i] = pyStr(x)
+				out[i] = pycompat.Str(x)
 			}
 		}
 		return out
@@ -128,9 +130,9 @@ func (n *Namespace) Repr() string {
 		if i > 0 {
 			b.WriteString(", ")
 		}
-		b.WriteString(pyRepr(k))
+		b.WriteString(pycompat.Repr(k))
 		b.WriteString(": ")
-		b.WriteString(pyRepr(n.vals[k]))
+		b.WriteString(pycompat.Repr(n.vals[k]))
 	}
 	b.WriteByte('}')
 	return b.String()

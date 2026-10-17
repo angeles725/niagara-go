@@ -3,6 +3,8 @@ package bog
 import (
 	"strings"
 	"unicode/utf8"
+
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // frameKind is the kind of an open element on the parser stack.
@@ -35,7 +37,7 @@ var writableTypes = map[string]bool{
 // first decoded as ReadText does.
 func Parse(srcPath, text string) *Bog {
 	if !utf8.ValidString(text) {
-		text = decodeReplace([]byte(text))
+		text = pycompat.DecodeReplace([]byte(text))
 	}
 	p := parser{b: &Bog{SrcPath: srcPath}}
 	sc := tagScanner{s: text}
@@ -122,7 +124,7 @@ func (p *parser) property(t tag) {
 	m, _ := attr(t.full, attrM)
 	flags, _ := attr(t.full, attrF)
 
-	for _, part := range pyFields(m) {
+	for _, part := range pycompat.Fields(m) {
 		if k, mod, ok := strings.Cut(part, "="); ok {
 			p.b.Prefixes.Set(k, mod)
 		}

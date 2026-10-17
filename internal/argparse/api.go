@@ -89,10 +89,10 @@ type Type struct {
 
 // The builtin type= converters.
 var (
-	// Int is type=int: Python int(text), base 10.
-	Int = &Type{Name: "int", Convert: func(s string) (any, error) { return ParseInt(s) }}
+	// Int is type=int: Python int(text), base 10; an int, or a *big.Int beyond int's range.
+	Int = &Type{Name: "int", Convert: intValue}
 	// Float is type=float: Python float(text).
-	Float = &Type{Name: "float", Convert: func(s string) (any, error) { return ParseFloat(s) }}
+	Float = &Type{Name: "float", Convert: floatValue}
 	// String is type=str: the text unchanged.
 	String = &Type{Name: "str", Convert: func(s string) (any, error) { return s, nil }}
 )
