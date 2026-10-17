@@ -1,6 +1,6 @@
 {
  "args": [
-  "testdata/inputs/audit-garbage.hdb",
+  "inputs/audit-garbage.hdb",
   "--ops"
  ]
 }

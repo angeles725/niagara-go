@@ -1,2 +1,2 @@
-# testdata/inputs/not-monotonic.hdb
+# inputs/not-monotonic.hdb
 # records=6 (pages declare 6) record_type=history:NumericTrendRecord version=2 first=2018-09-26T17:30:00.008Z last=2018-09-26T17:30:04.008Z monotonic=no (2 steps back) median_interval_ms=2000 (config interval 900000)

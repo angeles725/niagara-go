@@ -1,6 +1,6 @@
 {
  "args": [
-  "testdata/inputs/trimmed.hdb",
+  "inputs/trimmed.hdb",
   "--records"
  ]
 }

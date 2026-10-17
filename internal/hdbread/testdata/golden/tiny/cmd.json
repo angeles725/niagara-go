@@ -1,5 +1,5 @@
 {
  "args": [
-  "testdata/inputs/tiny.hdb"
+  "inputs/tiny.hdb"
  ]
 }

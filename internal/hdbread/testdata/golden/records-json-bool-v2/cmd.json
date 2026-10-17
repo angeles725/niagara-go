@@ -1,6 +1,6 @@
 {
  "args": [
-  "testdata/inputs/bool-v2.hdb",
+  "inputs/bool-v2.hdb",
   "--records",
   "--json"
  ]

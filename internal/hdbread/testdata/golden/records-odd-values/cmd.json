@@ -1,6 +1,6 @@
 {
  "args": [
-  "testdata/inputs/odd-values.hdb",
+  "inputs/odd-values.hdb",
   "--records"
  ]
 }

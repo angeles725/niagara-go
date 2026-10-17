@@ -1,6 +1,6 @@
 {
  "args": [
-  "testdata/inputs/short-section.hdb",
+  "inputs/short-section.hdb",
   "--records"
  ]
 }

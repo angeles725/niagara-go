@@ -1,6 +1,6 @@
 {
  "args": [
-  "testdata/inputs/audit-type.hdb",
+  "inputs/audit-type.hdb",
   "--records"
  ]
 }

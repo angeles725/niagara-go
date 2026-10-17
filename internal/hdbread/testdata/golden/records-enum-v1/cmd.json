@@ -1,6 +1,6 @@
 {
  "args": [
-  "testdata/inputs/enum-v1.hdb",
+  "inputs/enum-v1.hdb",
   "--records"
  ]
 }

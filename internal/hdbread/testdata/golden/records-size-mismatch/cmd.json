@@ -1,6 +1,6 @@
 {
  "args": [
-  "testdata/inputs/size-mismatch.hdb",
+  "inputs/size-mismatch.hdb",
   "--records"
  ]
 }

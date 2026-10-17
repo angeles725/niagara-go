@@ -1,6 +1,6 @@
 {
  "args": [
-  "testdata/inputs/hist-v3.hdb",
+  "inputs/hist-v3.hdb",
   "--records"
  ]
 }

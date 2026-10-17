@@ -1,6 +1,6 @@
 {
  "args": [
-  "testdata/inputs/bad-page.hdb",
+  "inputs/bad-page.hdb",
   "--records"
  ]
 }

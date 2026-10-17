@@ -1,5 +1,5 @@
 {
  "args": [
-  "testdata/inputs/no-close-tag.hdb"
+  "inputs/no-close-tag.hdb"
  ]
 }

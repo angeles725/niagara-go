@@ -1,2 +1,2 @@
-# testdata/inputs/ring.hdb
+# inputs/ring.hdb
 # records=8 (pages declare 8) record_type=history:NumericTrendRecord version=2 first=2018-09-26T17:30:00.008Z last=2018-09-26T17:30:00.015Z monotonic=yes median_interval_ms=1 (config interval 900000)
