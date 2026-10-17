@@ -1,1 +1,1 @@
-{"args": ["--niagara-version", "4.14.0.162", "hierarchy", "com.tridium.event.recipients.BAlarmRecipient"]}
+{"args": ["--niagara-version", "4.14.0.162", "hierarchy", "javax.baja.alarm.BAlarmService", "--chain"]}

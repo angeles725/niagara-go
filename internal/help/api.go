@@ -43,7 +43,10 @@ func (e *Env) API(p APIParams) error {
 	if err != nil {
 		return err
 	}
-	hits := classMatches(classes, p.Name)
+	hits, err := classMatches(classes, p.Name)
+	if err != nil {
+		return err
+	}
 	if len(hits) == 0 {
 		return e.reportMiss("api", p.Name, "classes")
 	}

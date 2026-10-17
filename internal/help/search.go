@@ -26,11 +26,16 @@ func (e *Env) Search(p SearchParams) error {
 	if err != nil {
 		return err
 	}
+	var expandErr error
 	tries := []func(key string) bool{
 		func(k string) bool { return fnmatch.Fnmatch(k, p.Pattern) },
 		func(k string) bool { return lowerGlob(k, p.Pattern) },
 		func(k string) bool {
-			for _, c := range expand(k, idx.Object(k)) {
+			all, err := expand(k, idx.Object(k))
+			if err != nil && expandErr == nil {
+				expandErr = err
+			}
+			for _, c := range all {
 				if fnmatch.Fnmatch(c.qualified(), p.Pattern) {
 					return true
 				}
@@ -45,6 +50,9 @@ func (e *Env) Search(p SearchParams) error {
 				matches = append(matches, k)
 			}
 		}
+		if expandErr != nil {
+			return expandErr
+		}
 		if len(matches) > 0 {
 			break
 		}
@@ -53,12 +61,17 @@ func (e *Env) Search(p SearchParams) error {
 		return e.reportMiss("search", p.Pattern, classScope(p.JDK))
 	}
 	sort.Strings(matches)
-	fmt.Fprintf(e.Out, "%d classes matching '%s':\n\n", len(matches), p.Pattern)
+	var rows []string
 	for _, name := range matches {
-		for _, c := range expand(name, idx.Object(name)) {
-			fmt.Fprintf(e.Out, "  %s (%s) - %s\n", name, c.Type, c.Package)
+		all, err := expand(name, idx.Object(name))
+		if err != nil {
+			return err
+		}
+		for _, c := range all {
+			rows = append(rows, fmt.Sprintf("  %s (%s) - %s\n", name, c.Type, c.Package))
 		}
 	}
+	fmt.Fprintf(e.Out, "%d classes matching '%s':\n\n%s", len(matches), p.Pattern, strings.Join(rows, ""))
 	return nil
 }
 
@@ -80,7 +93,11 @@ func (e *Env) Package(p PackageParams) error {
 	var order []string // packages in first-seen order (dict insertion)
 	packages := map[string][]pkgClass{}
 	for _, key := range idx.Keys() {
-		for _, c := range expand(key, idx.Object(key)) {
+		all, err := expand(key, idx.Object(key))
+		if err != nil {
+			return err
+		}
+		for _, c := range all {
 			if _, seen := packages[c.Package]; !seen {
 				order = append(order, c.Package)
 			}
