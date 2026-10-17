@@ -1,0 +1,1 @@
+{"args": ["generate", "latin1.json", "--out", "never-written.bog"], "cwd_fixture": "fixtures"}

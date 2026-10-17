@@ -1,0 +1,57 @@
+{
+ "links": 4,
+ "components": 5,
+ "cycles": [
+  {
+   "components": [
+    "/Logic/Pid",
+    "/Logic/Valve Out"
+   ],
+   "handles": [
+    "3",
+    "4"
+   ],
+   "edges": [
+    {
+     "source": "/Logic/Pid",
+     "sourceSlot": "out",
+     "target": "/Logic/Valve Out",
+     "targetSlot": "inA",
+     "link": "Link"
+    },
+    {
+     "source": "/Logic/Valve Out",
+     "sourceSlot": "out",
+     "target": "/Logic/Pid",
+     "targetSlot": "controlledVariable",
+     "link": "Link"
+    }
+   ]
+  },
+  {
+   "components": [
+    "/Logic/Latch"
+   ],
+   "handles": [
+    "5"
+   ],
+   "edges": [
+    {
+     "source": "/Logic/Latch",
+     "sourceSlot": "out",
+     "target": "/Logic/Latch",
+     "targetSlot": "inB",
+     "link": "Link"
+    }
+   ]
+  }
+ ],
+ "dangling": [
+  {
+   "source": "h:99",
+   "target": "/Logic/Latch",
+   "sourceSlot": "out",
+   "targetSlot": "inA"
+  }
+ ]
+}

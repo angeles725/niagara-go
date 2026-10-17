@@ -1,0 +1,22 @@
+Traceback (most recent call last):
+  File "/home/cristian/niagara-research/tools/bog-write.py", line 308, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "/home/cristian/niagara-research/tools/bog-write.py", line 287, in main
+    plan = json.load(fh)
+  File "/home/linuxbrew/.linuxbrew/opt/python@3.15/lib/python3.15/json/__init__.py", line 306, in load
+    return loads(fp.read(),
+        cls=cls, object_hook=object_hook,
+        parse_float=parse_float, parse_int=parse_int,
+        parse_constant=parse_constant, object_pairs_hook=object_pairs_hook,
+        array_hook=array_hook, **kw)
+  File "/home/linuxbrew/.linuxbrew/opt/python@3.15/lib/python3.15/json/__init__.py", line 371, in loads
+    return _default_decoder.decode(s)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^
+  File "/home/linuxbrew/.linuxbrew/opt/python@3.15/lib/python3.15/json/decoder.py", line 358, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/linuxbrew/.linuxbrew/opt/python@3.15/lib/python3.15/json/decoder.py", line 374, in raw_decode
+    obj, end = self.scan_once(s, idx)
+               ~~~~~~~~~~~~~~^^^^^^^^
+json.decoder.JSONDecodeError: Expecting ',' delimiter: line 1 column 29 (char 28)

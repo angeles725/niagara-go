@@ -1,0 +1,1 @@
+{"args": ["generate", "trailing.json", "--out", "never-written.bog"], "cwd_fixture": "fixtures"}

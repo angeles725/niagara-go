@@ -1,0 +1,57 @@
+{
+ "links": 5,
+ "components": 5,
+ "cycles": [
+  {
+   "components": [
+    "/R/A",
+    "/R/B"
+   ],
+   "handles": [
+    "3",
+    "4"
+   ],
+   "edges": [
+    {
+     "source": "/R/A",
+     "sourceSlot": "out",
+     "target": "/R/B",
+     "targetSlot": "in",
+     "link": "Link"
+    },
+    {
+     "source": "/R/B",
+     "sourceSlot": "out",
+     "target": "/R/A",
+     "targetSlot": "in",
+     "link": "Link"
+    },
+    {
+     "source": "/R/B",
+     "sourceSlot": "x",
+     "target": "/R/A",
+     "targetSlot": "y",
+     "link": "Link1"
+    }
+   ]
+  },
+  {
+   "components": [
+    "/R/Room 1"
+   ],
+   "handles": [
+    "2"
+   ],
+   "edges": [
+    {
+     "source": "/R/Room 1",
+     "sourceSlot": "out a",
+     "target": "/R/Room 1",
+     "targetSlot": "in",
+     "link": "Link"
+    }
+   ]
+  }
+ ],
+ "dangling": []
+}

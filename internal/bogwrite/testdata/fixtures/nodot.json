@@ -1,0 +1,14 @@
+{
+ "components": [
+  {
+   "name": "A",
+   "type": "baja:Folder"
+  }
+ ],
+ "links": [
+  {
+   "from": "Aout",
+   "to": "A.in"
+  }
+ ]
+}

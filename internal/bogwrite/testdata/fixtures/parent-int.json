@@ -1,0 +1,9 @@
+{
+ "components": [
+  {
+   "name": "A",
+   "type": "baja:Folder",
+   "parent": 5
+  }
+ ]
+}

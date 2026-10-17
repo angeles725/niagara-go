@@ -1,0 +1,1 @@
+{"args": ["check", "backup.dist", "--install", "install", "--json"], "cwd_fixture": "fixtures"}

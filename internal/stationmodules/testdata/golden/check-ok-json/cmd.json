@@ -1,0 +1,1 @@
+{"args": ["check", "ok.xml", "--install", "install-ok", "--json"], "cwd_fixture": "fixtures"}

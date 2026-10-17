@@ -1,0 +1,31 @@
+{
+ "links": 1,
+ "components": 2,
+ "cycles": [
+  {
+   "components": [
+    "/R/A"
+   ],
+   "handles": [
+    "2"
+   ],
+   "edges": [
+    {
+     "source": "/R/A",
+     "sourceSlot": null,
+     "target": "/R/A",
+     "targetSlot": null,
+     "link": "Link"
+    }
+   ]
+  }
+ ],
+ "dangling": [
+  {
+   "source": "h:77",
+   "target": "/R/A",
+   "sourceSlot": null,
+   "targetSlot": null
+  }
+ ]
+}

@@ -1,0 +1,1 @@
+{"reason": "Go prints only the last line of the Python traceback", "stderr": "ValueError: unknown parent 'Nope'\n"}

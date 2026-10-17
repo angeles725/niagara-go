@@ -1,0 +1,4 @@
+components=2 links=1 cycles=1 dangling=1
+  CYCLE(1): /R/A
+      /R/A.- -> /R/A.-
+  DANGLING: h:77 -> /R/A.-

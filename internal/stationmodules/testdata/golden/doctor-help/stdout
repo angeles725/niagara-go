@@ -1,0 +1,7 @@
+usage: station-modules.py doctor [-h] [--install INSTALL] [--fix] [--json]
+
+options:
+  -h, --help         show this help message and exit
+  --install INSTALL
+  --fix
+  --json

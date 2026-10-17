@@ -1,0 +1,82 @@
+{
+  "install": "install",
+  "station": "station.xml",
+  "modules": {
+    "ColdRoomPan": {
+      "installed": [],
+      "types": [
+        "ColdRoom"
+      ]
+    },
+    "baja": {
+      "installed": [
+        "baja-rt"
+      ],
+      "types": [
+        "ServiceContainer",
+        "Station"
+      ]
+    },
+    "control": {
+      "installed": [
+        "control-rt",
+        "control-wb"
+      ],
+      "types": [
+        "NumericWritable"
+      ]
+    },
+    "dashboard": {
+      "installed": [
+        "dashboard-wb"
+      ],
+      "types": [
+        "Dashboard",
+        "DashboardView"
+      ]
+    },
+    "history": {
+      "installed": [],
+      "types": []
+    },
+    "kitControl": {
+      "installed": [
+        "kitControl-rt"
+      ],
+      "types": [
+        "LoopPoint"
+      ]
+    }
+  },
+  "missing": {
+    "ColdRoomPan-rt": "provides ColdRoomPan:ColdRoom (used by station)",
+    "dashboard-rt": "provides dashboard:Dashboard (used by station)",
+    "history-rt": "module history referenced, no part installed",
+    "kitPid-rt": "dependency of an installed part the station uses"
+  },
+  "fixes": {
+    "ColdRoomPan-rt": {
+      "reason": "provides ColdRoomPan:ColdRoom (used by station)",
+      "staged": null,
+      "note": "not staged in sw/ \u2014 obtain from the source supervisor's modules/ or a matching install"
+    },
+    "dashboard-rt": {
+      "reason": "provides dashboard:Dashboard (used by station)",
+      "staged": "install/sw/4.14.0.162/dashboard-rt.jar",
+      "staged_version": "4.14.0.162",
+      "cp": "cp \"install/sw/4.14.0.162/dashboard-rt.jar\" \"install/modules/dashboard-rt.jar\""
+    },
+    "history-rt": {
+      "reason": "module history referenced, no part installed",
+      "staged": null,
+      "note": "not staged in sw/ \u2014 obtain from the source supervisor's modules/ or a matching install"
+    },
+    "kitPid-rt": {
+      "reason": "dependency of an installed part the station uses",
+      "staged": "install/sw/4.14/kitPid-rt.jar",
+      "staged_version": "4.14.0.99",
+      "cp": "cp \"install/sw/4.14/kitPid-rt.jar\" \"install/modules/kitPid-rt.jar\"",
+      "warn": "staged version 4.14.0.99 != install 4.14.0.162"
+    }
+  }
+}

@@ -1,0 +1,1 @@
+{"args": ["generate", "parent-int.json", "--out", "never-written.bog"], "cwd_fixture": "fixtures"}

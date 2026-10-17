@@ -1,0 +1,1 @@
+{"reason": "Go prints only the last line of the Python traceback", "stderr": "ValueError: generated document failed validation: [('ERROR', \"illegal slot name 'bad name' at Generated/A/bad name\")]\n"}

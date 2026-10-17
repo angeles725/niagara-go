@@ -1,0 +1,24 @@
+{
+  "install": "install-ok",
+  "station": "ok.xml",
+  "modules": {
+    "baja": {
+      "installed": [
+        "baja-rt"
+      ],
+      "types": [
+        "Station"
+      ]
+    },
+    "control": {
+      "installed": [
+        "control-rt"
+      ],
+      "types": [
+        "BooleanWritable"
+      ]
+    }
+  },
+  "missing": {},
+  "fixes": {}
+}

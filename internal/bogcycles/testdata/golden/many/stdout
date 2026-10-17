@@ -1,0 +1,184 @@
+components=132 links=134 cycles=61 dangling=22
+  CYCLE(10): /R/Ring0 <-> /R/Ring1 <-> /R/Ring2 <-> /R/Ring3 <-> /R/Ring4 <-> /R/Ring5 <-> /R/Ring6 <-> /R/Ring7 ...
+      /R/Ring0.out -> /R/Ring1.in
+      /R/Ring0.x -> /R/Ring1.y
+      /R/Ring1.out -> /R/Ring2.in
+      /R/Ring1.x -> /R/Ring2.y
+      /R/Ring2.out -> /R/Ring3.in
+      /R/Ring2.x -> /R/Ring3.y
+      /R/Ring3.out -> /R/Ring4.in
+      /R/Ring4.out -> /R/Ring5.in
+      /R/Ring5.out -> /R/Ring6.in
+      /R/Ring6.out -> /R/Ring7.in
+      /R/Ring7.out -> /R/Ring8.in
+      /R/Ring8.out -> /R/Ring9.in
+      ... 2 more edges (--json lists all)
+  CYCLE(2): /R/L00a <-> /R/L00b
+      /R/L00a.out -> /R/L00b.in
+      /R/L00b.out -> /R/L00a.in
+  CYCLE(2): /R/L01a <-> /R/L01b
+      /R/L01a.out -> /R/L01b.in
+      /R/L01b.out -> /R/L01a.in
+  CYCLE(2): /R/L02a <-> /R/L02b
+      /R/L02a.out -> /R/L02b.in
+      /R/L02b.out -> /R/L02a.in
+  CYCLE(2): /R/L03a <-> /R/L03b
+      /R/L03a.out -> /R/L03b.in
+      /R/L03b.out -> /R/L03a.in
+  CYCLE(2): /R/L04a <-> /R/L04b
+      /R/L04a.out -> /R/L04b.in
+      /R/L04b.out -> /R/L04a.in
+  CYCLE(2): /R/L05a <-> /R/L05b
+      /R/L05a.out -> /R/L05b.in
+      /R/L05b.out -> /R/L05a.in
+  CYCLE(2): /R/L06a <-> /R/L06b
+      /R/L06a.out -> /R/L06b.in
+      /R/L06b.out -> /R/L06a.in
+  CYCLE(2): /R/L07a <-> /R/L07b
+      /R/L07a.out -> /R/L07b.in
+      /R/L07b.out -> /R/L07a.in
+  CYCLE(2): /R/L08a <-> /R/L08b
+      /R/L08a.out -> /R/L08b.in
+      /R/L08b.out -> /R/L08a.in
+  CYCLE(2): /R/L09a <-> /R/L09b
+      /R/L09a.out -> /R/L09b.in
+      /R/L09b.out -> /R/L09a.in
+  CYCLE(2): /R/L10a <-> /R/L10b
+      /R/L10a.out -> /R/L10b.in
+      /R/L10b.out -> /R/L10a.in
+  CYCLE(2): /R/L11a <-> /R/L11b
+      /R/L11a.out -> /R/L11b.in
+      /R/L11b.out -> /R/L11a.in
+  CYCLE(2): /R/L12a <-> /R/L12b
+      /R/L12a.out -> /R/L12b.in
+      /R/L12b.out -> /R/L12a.in
+  CYCLE(2): /R/L13a <-> /R/L13b
+      /R/L13a.out -> /R/L13b.in
+      /R/L13b.out -> /R/L13a.in
+  CYCLE(2): /R/L14a <-> /R/L14b
+      /R/L14a.out -> /R/L14b.in
+      /R/L14b.out -> /R/L14a.in
+  CYCLE(2): /R/L15a <-> /R/L15b
+      /R/L15a.out -> /R/L15b.in
+      /R/L15b.out -> /R/L15a.in
+  CYCLE(2): /R/L16a <-> /R/L16b
+      /R/L16a.out -> /R/L16b.in
+      /R/L16b.out -> /R/L16a.in
+  CYCLE(2): /R/L17a <-> /R/L17b
+      /R/L17a.out -> /R/L17b.in
+      /R/L17b.out -> /R/L17a.in
+  CYCLE(2): /R/L18a <-> /R/L18b
+      /R/L18a.out -> /R/L18b.in
+      /R/L18b.out -> /R/L18a.in
+  CYCLE(2): /R/L19a <-> /R/L19b
+      /R/L19a.out -> /R/L19b.in
+      /R/L19b.out -> /R/L19a.in
+  CYCLE(2): /R/L20a <-> /R/L20b
+      /R/L20a.out -> /R/L20b.in
+      /R/L20b.out -> /R/L20a.in
+  CYCLE(2): /R/L21a <-> /R/L21b
+      /R/L21a.out -> /R/L21b.in
+      /R/L21b.out -> /R/L21a.in
+  CYCLE(2): /R/L22a <-> /R/L22b
+      /R/L22a.out -> /R/L22b.in
+      /R/L22b.out -> /R/L22a.in
+  CYCLE(2): /R/L23a <-> /R/L23b
+      /R/L23a.out -> /R/L23b.in
+      /R/L23b.out -> /R/L23a.in
+  CYCLE(2): /R/L24a <-> /R/L24b
+      /R/L24a.out -> /R/L24b.in
+      /R/L24b.out -> /R/L24a.in
+  CYCLE(2): /R/L25a <-> /R/L25b
+      /R/L25a.out -> /R/L25b.in
+      /R/L25b.out -> /R/L25a.in
+  CYCLE(2): /R/L26a <-> /R/L26b
+      /R/L26a.out -> /R/L26b.in
+      /R/L26b.out -> /R/L26a.in
+  CYCLE(2): /R/L27a <-> /R/L27b
+      /R/L27a.out -> /R/L27b.in
+      /R/L27b.out -> /R/L27a.in
+  CYCLE(2): /R/L28a <-> /R/L28b
+      /R/L28a.out -> /R/L28b.in
+      /R/L28b.out -> /R/L28a.in
+  CYCLE(2): /R/L29a <-> /R/L29b
+      /R/L29a.out -> /R/L29b.in
+      /R/L29b.out -> /R/L29a.in
+  CYCLE(2): /R/L30a <-> /R/L30b
+      /R/L30a.out -> /R/L30b.in
+      /R/L30b.out -> /R/L30a.in
+  CYCLE(2): /R/L31a <-> /R/L31b
+      /R/L31a.out -> /R/L31b.in
+      /R/L31b.out -> /R/L31a.in
+  CYCLE(2): /R/L32a <-> /R/L32b
+      /R/L32a.out -> /R/L32b.in
+      /R/L32b.out -> /R/L32a.in
+  CYCLE(2): /R/L33a <-> /R/L33b
+      /R/L33a.out -> /R/L33b.in
+      /R/L33b.out -> /R/L33a.in
+  CYCLE(2): /R/L34a <-> /R/L34b
+      /R/L34a.out -> /R/L34b.in
+      /R/L34b.out -> /R/L34a.in
+  CYCLE(2): /R/L35a <-> /R/L35b
+      /R/L35a.out -> /R/L35b.in
+      /R/L35b.out -> /R/L35a.in
+  CYCLE(2): /R/L36a <-> /R/L36b
+      /R/L36a.out -> /R/L36b.in
+      /R/L36b.out -> /R/L36a.in
+  CYCLE(2): /R/L37a <-> /R/L37b
+      /R/L37a.out -> /R/L37b.in
+      /R/L37b.out -> /R/L37a.in
+  CYCLE(2): /R/L38a <-> /R/L38b
+      /R/L38a.out -> /R/L38b.in
+      /R/L38b.out -> /R/L38a.in
+  CYCLE(2): /R/L39a <-> /R/L39b
+      /R/L39a.out -> /R/L39b.in
+      /R/L39b.out -> /R/L39a.in
+  CYCLE(2): /R/L40a <-> /R/L40b
+      /R/L40a.out -> /R/L40b.in
+      /R/L40b.out -> /R/L40a.in
+  CYCLE(2): /R/L41a <-> /R/L41b
+      /R/L41a.out -> /R/L41b.in
+      /R/L41b.out -> /R/L41a.in
+  CYCLE(2): /R/L42a <-> /R/L42b
+      /R/L42a.out -> /R/L42b.in
+      /R/L42b.out -> /R/L42a.in
+  CYCLE(2): /R/L43a <-> /R/L43b
+      /R/L43a.out -> /R/L43b.in
+      /R/L43b.out -> /R/L43a.in
+  CYCLE(2): /R/L44a <-> /R/L44b
+      /R/L44a.out -> /R/L44b.in
+      /R/L44b.out -> /R/L44a.in
+  CYCLE(2): /R/L45a <-> /R/L45b
+      /R/L45a.out -> /R/L45b.in
+      /R/L45b.out -> /R/L45a.in
+  CYCLE(2): /R/L46a <-> /R/L46b
+      /R/L46a.out -> /R/L46b.in
+      /R/L46b.out -> /R/L46a.in
+  CYCLE(2): /R/L47a <-> /R/L47b
+      /R/L47a.out -> /R/L47b.in
+      /R/L47b.out -> /R/L47a.in
+  CYCLE(2): /R/L48a <-> /R/L48b
+      /R/L48a.out -> /R/L48b.in
+      /R/L48b.out -> /R/L48a.in
+  ... 11 more cycles (--json lists all)
+  DANGLING: h:900 -> /R/D.i0
+  DANGLING: h:901 -> /R/D.i1
+  DANGLING: h:902 -> /R/D.i2
+  DANGLING: h:903 -> /R/D.i3
+  DANGLING: h:904 -> /R/D.i4
+  DANGLING: h:905 -> /R/D.i5
+  DANGLING: h:906 -> /R/D.i6
+  DANGLING: h:907 -> /R/D.i7
+  DANGLING: h:908 -> /R/D.i8
+  DANGLING: h:909 -> /R/D.i9
+  DANGLING: h:910 -> /R/D.i10
+  DANGLING: h:911 -> /R/D.i11
+  DANGLING: h:912 -> /R/D.i12
+  DANGLING: h:913 -> /R/D.i13
+  DANGLING: h:914 -> /R/D.i14
+  DANGLING: h:915 -> /R/D.i15
+  DANGLING: h:916 -> /R/D.i16
+  DANGLING: h:917 -> /R/D.i17
+  DANGLING: h:918 -> /R/D.i18
+  DANGLING: h:919 -> /R/D.i19
+  ... 2 more dangling links (--json lists all)

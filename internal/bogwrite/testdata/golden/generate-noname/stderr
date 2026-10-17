@@ -1,0 +1,13 @@
+Traceback (most recent call last):
+  File "/home/cristian/niagara-research/tools/bog-write.py", line 308, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "/home/cristian/niagara-research/tools/bog-write.py", line 288, in main
+    write_bog(plan, a.out, plain=a.plain)
+    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cristian/niagara-research/tools/bog-write.py", line 261, in write_bog
+    xml = generate_xml(plan)
+  File "/home/cristian/niagara-research/tools/bog-write.py", line 106, in generate_xml
+    raw = comp["name"]
+          ~~~~^^^^^^^^
+KeyError: 'name'

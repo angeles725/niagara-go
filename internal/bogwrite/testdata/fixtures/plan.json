@@ -1,0 +1,46 @@
+{
+ "root": {
+  "name": "Demo",
+  "type": "baja:Folder"
+ },
+ "components": [
+  {
+   "name": "SelR",
+   "type": "control:NumericWritable",
+   "ws": [
+    4,
+    10,
+    8
+   ],
+   "slots": {
+    "facets": {
+     "type": "baja:Facets",
+     "value": "min=0.0;max=4.0;precision=0"
+    }
+   }
+  },
+  {
+   "name": "Mux",
+   "type": "kitControl:BooleanSelect",
+   "ws": [
+    26,
+    8,
+    8
+   ]
+  },
+  {
+   "name": "Mux?",
+   "type": "kitControl:BooleanSelect"
+  }
+ ],
+ "links": [
+  {
+   "from": "SelR.out",
+   "to": "Mux.select"
+  },
+  {
+   "from": "SelR.out",
+   "to": "Mux1.select"
+  }
+ ]
+}

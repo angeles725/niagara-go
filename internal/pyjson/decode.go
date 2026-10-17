@@ -317,8 +317,24 @@ func (p *jsonScanner) scanNumber(start int) (Value, int) {
 		f, _ := strconv.ParseFloat(text, 64)
 		return Value{Kind: Float, F: f}, i
 	}
+	if digits := len(strings.TrimPrefix(text, "-")); digits > IntDigitsLimit {
+		panic(jsonError{&IntDigitsError{digits}})
+	}
 	n, _ := new(big.Int).SetString(text, 10)
 	return Value{Kind: Int, I: n}, i
+}
+
+// IntDigitsLimit is CPython's default int_max_str_digits: json.loads refuses an int
+// literal with more digits (a float literal has no limit).
+const IntDigitsLimit = 4300
+
+// IntDigitsError is the ValueError json.loads raises at the first int literal longer than
+// IntDigitsLimit digits (the sign is not counted).
+type IntDigitsError struct{ Digits int }
+
+func (e *IntDigitsError) Error() string {
+	return fmt.Sprintf("Exceeds the limit (%d digits) for integer string conversion: value has %d digits; "+
+		"use sys.set_int_max_str_digits() to increase the limit", IntDigitsLimit, e.Digits)
 }
 
 func hexVal(r rune) (rune, bool) {
@@ -372,12 +388,12 @@ func (p *jsonScanner) scanString(end int) (string, int) {
 		}
 		next++
 		end = next + 4
-		if end >= len(s) {
+		if end > len(s) {
 			p.fail("Invalid \\uXXXX escape", next-1)
 		}
 		u := p.hex4(next, end)
 		next = end
-		if u >= 0xD800 && u <= 0xDBFF && end+6 < len(s) && s[next] == '\\' && s[next+1] == 'u' {
+		if u >= 0xD800 && u <= 0xDBFF && end+6 <= len(s) && s[next] == '\\' && s[next+1] == 'u' {
 			end += 6
 			u2 := p.hex4(next+2, end)
 			if u2 >= 0xDC00 && u2 <= 0xDFFF {

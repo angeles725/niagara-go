@@ -1,0 +1,4 @@
+install : install-ok
+installed module-parts: 2
+
+OK — all required module-parts are installed. Nothing missing.

@@ -1,0 +1,21 @@
+Traceback (most recent call last):
+  File "/home/cristian/niagara-research/tools/bog-write.py", line 308, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "/home/cristian/niagara-research/tools/bog-write.py", line 288, in main
+    write_bog(plan, a.out, plain=a.plain)
+    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cristian/niagara-research/tools/bog-write.py", line 261, in write_bog
+    xml = generate_xml(plan)
+  File "/home/cristian/niagara-research/tools/bog-write.py", line 180, in generate_xml
+    out.append(emit(root, True))
+               ~~~~^^^^^^^^^^^^
+  File "/home/cristian/niagara-research/tools/bog-write.py", line 177, in emit
+    s += emit(c)
+         ~~~~^^^
+  File "/home/cristian/niagara-research/tools/bog-write.py", line 170, in emit
+    ws = ",".join(str(int(x)) for x in node.ws)
+  File "/home/cristian/niagara-research/tools/bog-write.py", line 170, in <genexpr>
+    ws = ",".join(str(int(x)) for x in node.ws)
+                      ~~~^^^
+ValueError: invalid literal for int() with base 10: 'x'

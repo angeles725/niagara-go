@@ -1,0 +1,1 @@
+{"args": ["check", "station.xml", "--install", "no-modules"], "cwd_fixture": "fixtures"}

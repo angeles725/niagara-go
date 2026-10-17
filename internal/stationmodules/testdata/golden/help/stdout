@@ -1,0 +1,11 @@
+usage: station-modules.py [-h] {check,doctor} ...
+
+Resolve a station's module deps against a Niagara install.
+
+positional arguments:
+  {check,doctor}
+    check         station-driven dependency check
+    doctor        install-integrity check (unresolved deps of installed parts)
+
+options:
+  -h, --help      show this help message and exit

@@ -1,0 +1,13 @@
+{
+ "components": [
+  {
+   "name": "A",
+   "type": "baja:Folder",
+   "ws": [
+    "x",
+    1,
+    2
+   ]
+  }
+ ]
+}

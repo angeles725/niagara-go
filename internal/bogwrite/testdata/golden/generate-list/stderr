@@ -1,0 +1,13 @@
+Traceback (most recent call last):
+  File "/home/cristian/niagara-research/tools/bog-write.py", line 308, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "/home/cristian/niagara-research/tools/bog-write.py", line 288, in main
+    write_bog(plan, a.out, plain=a.plain)
+    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cristian/niagara-research/tools/bog-write.py", line 261, in write_bog
+    xml = generate_xml(plan)
+  File "/home/cristian/niagara-research/tools/bog-write.py", line 92, in generate_xml
+    root_spec = plan.get("root") or {"name": "Generated", "type": "baja:Folder"}
+                ^^^^^^^^
+AttributeError: 'list' object has no attribute 'get'

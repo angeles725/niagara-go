@@ -1,0 +1,12 @@
+install : install-exists
+station : kit.xml
+modules referenced: 2
+  baja               parts:[rt]  types:Station
+  kitControl         parts:[rt]  types:LoopPoint
+
+MISSING module-parts: 1
+  ✗ kitPid-rt  (dependency of an installed part the station uses)
+      → already present at install-exists/modules/kitPid-rt.jar
+      ⚠ staged version 4.14.0.99 != install 4.14.0.162
+
+After copying jars into modules/, RESTART Workbench, then reopen config.bog.

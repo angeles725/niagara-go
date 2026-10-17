@@ -1,0 +1,131 @@
+{
+ "root": {
+  "name": "Plant",
+  "type": "control:Folder"
+ },
+ "components": [
+  {
+   "name": "A",
+   "type": "baja:Folder",
+   "ws": [
+    1.7,
+    -2.2,
+    "3",
+    true
+   ],
+   "slots": {
+    "i": 5,
+    "f": 1.5,
+    "big": 1e+16,
+    "small": 1e-05,
+    "neg": -0.0,
+    "t": true,
+    "n": null,
+    "l": [
+     1,
+     "a",
+     null,
+     2.5,
+     {
+      "k": [
+       true
+      ]
+     }
+    ],
+    "q": "say \"hi\" & 'bye' <x>",
+    "dq": "only \"double\"",
+    "ws": "tab\there\nline\rret",
+    "u": "caf\u00e9 \ud83d\ude00",
+    "x": {
+     "type": "control:StatusNumeric",
+     "value": 3
+    },
+    "nested": {
+     "type": "baja:Struct",
+     "children": {
+      "a": "1",
+      "b": {
+       "type": "baja:Integer",
+       "value": "2"
+      },
+      "c": {
+       "children": {}
+      }
+     }
+    },
+    "notype": {
+     "value": "v"
+    },
+    "empty": {},
+    "nullval": {
+     "type": "baja:String",
+     "value": null
+    }
+   }
+  },
+  {
+   "name": "Foo9",
+   "type": "kitControl:Add"
+  },
+  {
+   "name": "Foo9?",
+   "type": "kitControl:Add"
+  },
+  {
+   "name": "Foo009",
+   "type": "kitControl:Add"
+  },
+  {
+   "name": "Foo009?",
+   "type": "kitControl:Add"
+  },
+  {
+   "name": "B?",
+   "type": "kitControl:Add",
+   "parent": "A",
+   "ws": []
+  },
+  {
+   "name": "C",
+   "type": "baja:Folder",
+   "parent": "A/B",
+   "ws": [
+    0,
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "name": "Link",
+   "type": "baja:Folder",
+   "slots": {}
+  },
+  {
+   "name": "Link1",
+   "type": "baja:Folder"
+  }
+ ],
+ "links": [
+  {
+   "from": "A.out",
+   "to": "Foo9.inA"
+  },
+  {
+   "from": "Foo10.out",
+   "to": "Foo9.inB"
+  },
+  {
+   "from": "A/B/C.o\"ut",
+   "to": "A.in&1"
+  },
+  {
+   "from": "A/B.x",
+   "to": "Foo0010.in"
+  },
+  {
+   "from": "A.out",
+   "to": ".in"
+  }
+ ]
+}

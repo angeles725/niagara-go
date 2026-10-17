@@ -1,0 +1,11 @@
+Traceback (most recent call last):
+  File "/home/cristian/niagara-research/tools/bog-write.py", line 308, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "/home/cristian/niagara-research/tools/bog-write.py", line 288, in main
+    write_bog(plan, a.out, plain=a.plain)
+    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cristian/niagara-research/tools/bog-write.py", line 266, in write_bog
+    with open(path, "w", encoding="utf-8") as fh:
+         ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'no/such/dir.xml'

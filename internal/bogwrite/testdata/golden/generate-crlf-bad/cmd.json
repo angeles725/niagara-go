@@ -1,0 +1,1 @@
+{"args": ["generate", "crlf-bad.json", "--out", "never-written.bog"], "cwd_fixture": "fixtures"}

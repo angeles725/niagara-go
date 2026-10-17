@@ -1,0 +1,2 @@
+usage: bog-write.py generate [-h] --out OUT [--plain] plan
+bog-write.py generate: error: the following arguments are required: --out

@@ -1,0 +1,1 @@
+{"reason": "Go prints only the last line of the Python traceback", "stderr": "UnicodeDecodeError: 'utf-8' codec can't decode byte 0xe9 in position 26: invalid continuation byte\n"}

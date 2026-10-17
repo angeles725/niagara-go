@@ -1,0 +1,30 @@
+{
+  "install": "install",
+  "installed_parts": 6,
+  "missing": {
+    "acmeLib-rt": "required by acme-rt",
+    "dashboard-rt": "required by dashboard-wb",
+    "kitPid-rt": "required by kitControl-rt"
+  },
+  "fixes": {
+    "acmeLib-rt": {
+      "reason": "required by acme-rt",
+      "staged": "install/sw/stub/acmeLib-rt.jar",
+      "staged_version": "",
+      "cp": "cp \"install/sw/stub/acmeLib-rt.jar\" \"install/modules/acmeLib-rt.jar\""
+    },
+    "dashboard-rt": {
+      "reason": "required by dashboard-wb",
+      "staged": "install/sw/4.14.0.162/dashboard-rt.jar",
+      "staged_version": "4.14.0.162",
+      "cp": "cp \"install/sw/4.14.0.162/dashboard-rt.jar\" \"install/modules/dashboard-rt.jar\""
+    },
+    "kitPid-rt": {
+      "reason": "required by kitControl-rt",
+      "staged": "install/sw/4.14/kitPid-rt.jar",
+      "staged_version": "4.14.0.99",
+      "cp": "cp \"install/sw/4.14/kitPid-rt.jar\" \"install/modules/kitPid-rt.jar\"",
+      "warn": "staged version 4.14.0.99 != install 4.14.0.162"
+    }
+  }
+}
