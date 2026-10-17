@@ -5,7 +5,6 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
-	"regexp"
 	"sort"
 	"unicode/utf8"
 
@@ -90,37 +89,48 @@ func validModifiedUTF8(b []byte) bool {
 	return true
 }
 
-// recordEnd frames the auditFields writeUTF strings of a record starting at i.
-func recordEnd(buf []byte, i int) (int, bool) {
+// fieldBounds frames the auditFields writeUTF strings of a record starting at i: the content
+// [start, end) of each string, without its 2-byte length.
+func fieldBounds(buf []byte, i int) ([auditFields][2]int, bool) {
+	var b [auditFields][2]int
 	for k := 0; k < auditFields; k++ {
 		if i+2 > len(buf) {
-			return 0, false
+			return b, false
 		}
 		end := i + 2 + int(binary.BigEndian.Uint16(buf[i:i+2]))
 		if end > len(buf) || !validModifiedUTF8(buf[i+2:end]) {
-			return 0, false
+			return b, false
 		}
+		b[k] = [2]int{i + 2, end}
 		i = end
 	}
-	return i, true
+	return b, true
 }
 
-// unanchoredOps counts operations in operation position that countOps did not count: the name
-// heads a full six-string audit record that does not lie inside an earlier accepted record.
-func unanchoredOps(rec []byte, ops map[string]int, anchored map[int]bool) map[string]int {
-	vocab := map[string]bool{}
-	for op := range ops {
-		vocab[op] = true
+// framedRecord is one six-string audit record accepted by frameRecords.
+type framedRecord struct {
+	pos    int
+	op     string
+	fields [auditFields][2]int
+}
+
+// frameRecords returns the audit records in operation position: a name of vocab (plus the
+// AuditEvent constants) written as writeUTF heads a full six-string record that does not lie
+// inside an earlier accepted record. Candidates are tried by offset, then name.
+func frameRecords(rec []byte, vocab map[string]bool) []framedRecord {
+	all := map[string]bool{}
+	for op := range vocab {
+		all[op] = true
 	}
 	for _, op := range auditOperations {
-		vocab[op] = true
+		all[op] = true
 	}
 	type cand struct {
 		pos int
 		op  string
 	}
 	var cands []cand
-	for op := range vocab {
+	for op := range all {
 		pat := binary.BigEndian.AppendUint16(nil, uint16(len(op)))
 		pat = append(pat, op...)
 		for from := 0; ; {
@@ -138,18 +148,33 @@ func unanchoredOps(rec []byte, ops map[string]int, anchored map[int]bool) map[st
 		}
 		return cands[a].op < cands[b].op
 	})
-	extra, coveredTo := map[string]int{}, -1
+	var out []framedRecord
+	coveredTo := -1
 	for _, c := range cands {
 		if c.pos < coveredTo {
 			continue
 		}
-		end, ok := recordEnd(rec, c.pos)
+		f, ok := fieldBounds(rec, c.pos)
 		if !ok {
 			continue
 		}
-		coveredTo = end
-		if !anchored[c.pos] {
-			extra[c.op]++
+		coveredTo = f[auditFields-1][1]
+		out = append(out, framedRecord{c.pos, c.op, f})
+	}
+	return out
+}
+
+// unanchoredOps counts operations in operation position that countOps did not count: the name
+// heads a full six-string audit record that does not lie inside an earlier accepted record.
+func unanchoredOps(rec []byte, ops map[string]int, anchored map[int]bool) map[string]int {
+	vocab := map[string]bool{}
+	for op := range ops {
+		vocab[op] = true
+	}
+	extra := map[string]int{}
+	for _, r := range frameRecords(rec, vocab) {
+		if !anchored[r.pos] {
+			extra[r.op]++
 		}
 	}
 	return extra
@@ -188,39 +213,4 @@ func writeOp(w io.Writer, op string, n int, extra map[string]int) {
 		suffix = fmt.Sprintf("  (+%d with an empty, non-slot or 4096+ byte target, not counted)", e)
 	}
 	fmt.Fprintf(w, "op %-14s = %d%s\n", op, n, suffix)
-}
-
-// printableRuns returns the runs of 3 or more printable ASCII bytes (Python [ -~]{3,}).
-func printableRuns(b []byte) []string {
-	var runs []string
-	start := -1
-	for i := 0; i <= len(b); i++ {
-		if i < len(b) && b[i] >= ' ' && b[i] <= '~' {
-			if start < 0 {
-				start = i
-			}
-			continue
-		}
-		if start >= 0 && i-start >= 3 {
-			runs = append(runs, string(b[start:i]))
-		}
-		start = -1
-	}
-	return runs
-}
-
-var (
-	roleRE  = regexp.MustCompile(`^(admin|guest|root|niagarad|station|daemon|sshd)$`)
-	valueRE = regexp.MustCompile(`[A-Za-z0-9+/]{16,}`)
-)
-
-// mask redacts anything that looks like a credential value; role logins stay.
-func mask(s string) string {
-	if roleRE.MatchString(s) {
-		return s
-	}
-	if valueRE.MatchString(s) {
-		return "<VALUE-MASKED>"
-	}
-	return s
 }

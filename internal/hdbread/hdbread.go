@@ -138,11 +138,8 @@ func Run(o Options, s cli.Stdio) int {
 		}
 	}
 	if o.Strings {
-		for _, run := range printableRuns(f.section) {
-			if o.Mask {
-				run = mask(run)
-			}
-			fmt.Fprintln(s.Out, run)
+		for _, line := range stringsLines(f.section, o.Mask) {
+			fmt.Fprintln(s.Out, line)
 		}
 	}
 	return cli.ExitFound

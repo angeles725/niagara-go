@@ -123,3 +123,46 @@ func TestRunMissingFileIsExit2(t *testing.T) {
 		t.Fatalf("code %d, stderr %q", code, errb.String())
 	}
 }
+
+// --strings --mask must not print any user identity: the userName of every framed audit record
+// and the identity fields of a login-family record (here jdoe, admin, guest, station, root and the
+// "bad" login attempt), role accounts included. Python's mask() let all of them through.
+func TestStringsMaskHidesUserIdentities(t *testing.T) {
+	var out, errb bytes.Buffer
+	code := Run(Options{Path: "testdata/inputs/audit.hdb", Strings: true, Mask: true},
+		cli.Stdio{Out: &out, Err: &errb})
+	if code != cli.ExitFound {
+		t.Fatalf("code %d, stderr %q", code, errb.String())
+	}
+	lines := strings.Split(out.String(), "\n")
+	for _, id := range []string{"jdoe", "admin", "guest", "station", "root", "bad"} {
+		for _, l := range lines {
+			if strings.Contains(l, id) {
+				t.Errorf("identity %q leaks under --mask: line %q", id, l)
+			}
+		}
+	}
+	if n := strings.Count(out.String(), userMasked+"\n"); n != 11 {
+		t.Errorf("want 11 %s lines (one per identity field), got %d:\n%s", userMasked, n, out.String())
+	}
+	// Non-identity strings stay readable: operation names and slot names.
+	for _, keep := range []string{"Login Failure\n", "Logout (Timeout)\n", "setpoint\n"} {
+		if !strings.Contains(out.String(), keep) {
+			t.Errorf("%q was masked but is not an identity", keep)
+		}
+	}
+}
+
+func TestIdentityRangesFraming(t *testing.T) {
+	utf := func(s string) string { return string([]byte{byte(len(s) >> 8), byte(len(s))}) + s }
+	rec := utf("Login Failure") + utf("x") + utf("") + utf("") + utf("eve") + utf("root") +
+		utf("Changed") + utf("/a") + utf("out") + utf("1") + utf("2") + utf("ann")
+	got := identityRanges([]byte(rec))
+	var names []string
+	for _, r := range got {
+		names = append(names, rec[r[0]:r[1]])
+	}
+	if want := "x,eve,root,ann"; strings.Join(names, ",") != want {
+		t.Fatalf("identity fields = %q, want %q", strings.Join(names, ","), want)
+	}
+}
