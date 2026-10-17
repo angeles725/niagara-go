@@ -1,0 +1,739 @@
+{
+ "comps": [
+  {
+   "key": "1",
+   "name": "Station",
+   "handle": "1",
+   "type": "b:Station",
+   "pfx": "b",
+   "module": "baja",
+   "path": "Station",
+   "parent_h": null,
+   "children": [
+    "10",
+    "20",
+    "40",
+    "50"
+   ],
+   "slots": [],
+   "actions": [],
+   "has_fallback": false,
+   "is_writable": false,
+   "value_type": null,
+   "value_val": null,
+   "present": [
+    "DisplayService",
+    "Drivers",
+    "Logic",
+    "Panel"
+   ],
+   "simple_type": "Station"
+  },
+  {
+   "key": "10",
+   "name": "Panel",
+   "handle": "10",
+   "type": "DPCD:RoomPanel",
+   "pfx": "DPCD",
+   "module": "DashboardPan",
+   "path": "Station/Panel",
+   "parent_h": "1",
+   "children": [],
+   "slots": [
+    [
+     "setpoint",
+     {
+      "type": "b:StatusNumeric",
+      "value": "3.0",
+      "flags": "",
+      "child": [
+       [
+        "value",
+        "3.0"
+       ]
+      ]
+     }
+    ],
+    [
+     "differentialUp",
+     {
+      "type": "",
+      "value": "1.5",
+      "flags": ""
+     }
+    ]
+   ],
+   "actions": [],
+   "has_fallback": false,
+   "is_writable": false,
+   "value_type": null,
+   "value_val": null,
+   "present": [
+    "Link",
+    "differentialUp",
+    "setpoint"
+   ],
+   "simple_type": "RoomPanel"
+  },
+  {
+   "key": "20",
+   "name": "Logic",
+   "handle": "20",
+   "type": "CRP:ColdRoom",
+   "pfx": "CRP",
+   "module": "ColdRoomPan",
+   "path": "Station/Logic",
+   "parent_h": "1",
+   "children": [
+    "30"
+   ],
+   "slots": [
+    [
+     "setpoint",
+     {
+      "type": "b:StatusNumeric",
+      "value": "3.0",
+      "flags": "",
+      "child": [
+       [
+        "value",
+        "3.0"
+       ]
+      ]
+     }
+    ],
+    [
+     "valveMode",
+     {
+      "type": "",
+      "value": "auto",
+      "flags": ""
+     }
+    ]
+   ],
+   "actions": [],
+   "has_fallback": false,
+   "is_writable": false,
+   "value_type": null,
+   "value_val": null,
+   "present": [
+    "EvaporatorUnit_3",
+    "Link",
+    "Link1",
+    "setpoint",
+    "valveMode"
+   ],
+   "simple_type": "ColdRoom"
+  },
+  {
+   "key": "30",
+   "name": "EvaporatorUnit_3",
+   "handle": "30",
+   "type": "CRP:EvaporatorUnit",
+   "pfx": "CRP",
+   "module": "ColdRoomPan",
+   "path": "Station/Logic/EvaporatorUnit_3",
+   "parent_h": "20",
+   "children": [],
+   "slots": [
+    [
+     "valveOut",
+     {
+      "type": "b:StatusBoolean",
+      "value": "false",
+      "flags": "",
+      "child": [
+       [
+        "value",
+        "false"
+       ]
+      ]
+     }
+    ]
+   ],
+   "actions": [],
+   "has_fallback": false,
+   "is_writable": false,
+   "value_type": null,
+   "value_val": null,
+   "present": [
+    "valveOut"
+   ],
+   "simple_type": "EvaporatorUnit"
+  },
+  {
+   "key": "40",
+   "name": "Drivers",
+   "handle": "40",
+   "type": "c:BooleanWritable",
+   "pfx": "c",
+   "module": "control",
+   "path": "Station/Drivers",
+   "parent_h": "1",
+   "children": [
+    "41",
+    "42"
+   ],
+   "slots": [],
+   "actions": [],
+   "has_fallback": false,
+   "is_writable": true,
+   "value_type": null,
+   "value_val": null,
+   "present": [
+    "ro1",
+    "ro2"
+   ],
+   "simple_type": "BooleanWritable"
+  },
+  {
+   "key": "41",
+   "name": "ro1",
+   "handle": "41",
+   "type": "c:BooleanWritable",
+   "pfx": "c",
+   "module": "control",
+   "path": "Station/Drivers/ro1",
+   "parent_h": "40",
+   "children": [],
+   "slots": [],
+   "actions": [],
+   "has_fallback": true,
+   "is_writable": true,
+   "value_type": null,
+   "value_val": null,
+   "present": [
+    "Link",
+    "fallback"
+   ],
+   "simple_type": "BooleanWritable"
+  },
+  {
+   "key": "42",
+   "name": "ro2",
+   "handle": "42",
+   "type": "c:BooleanWritable",
+   "pfx": "c",
+   "module": "control",
+   "path": "Station/Drivers/ro2",
+   "parent_h": "40",
+   "children": [],
+   "slots": [],
+   "actions": [],
+   "has_fallback": false,
+   "is_writable": true,
+   "value_type": null,
+   "value_val": null,
+   "present": [
+    "Link"
+   ],
+   "simple_type": "BooleanWritable"
+  },
+  {
+   "key": "50",
+   "name": "DisplayService",
+   "handle": "50",
+   "type": "disp:BtDisplayService",
+   "pfx": "disp",
+   "module": "btsDisp",
+   "path": "Station/DisplayService",
+   "parent_h": "1",
+   "children": [
+    "51"
+   ],
+   "slots": [],
+   "actions": [],
+   "has_fallback": false,
+   "is_writable": false,
+   "value_type": null,
+   "value_val": null,
+   "present": [
+    "pointCache"
+   ],
+   "simple_type": "BtDisplayService"
+  },
+  {
+   "key": "51",
+   "name": "pointCache",
+   "handle": "51",
+   "type": "disp:PointCache",
+   "pfx": "disp",
+   "module": "btsDisp",
+   "path": "Station/DisplayService/pointCache",
+   "parent_h": "50",
+   "children": [
+    "52",
+    "53"
+   ],
+   "slots": [],
+   "actions": [],
+   "has_fallback": false,
+   "is_writable": false,
+   "value_type": null,
+   "value_val": null,
+   "present": [
+    "bts:bacref:dopr=2_50_85_8_101",
+    "bts:bacref:dopr=5_100_85_8_101"
+   ],
+   "simple_type": "PointCache"
+  },
+  {
+   "key": "52",
+   "name": "bts:bacref:dopr=5_100_85_8_101",
+   "handle": "52",
+   "type": "disp:PointCacheObj",
+   "pfx": "disp",
+   "module": "btsDisp",
+   "path": "Station/DisplayService/pointCache/bts:bacref:dopr=5_100_85_8_101",
+   "parent_h": "51",
+   "children": [],
+   "slots": [
+    [
+     "polledTime",
+     {
+      "type": "b:AbsTime",
+      "value": "2022-04-18T12:12:54.046-05:00",
+      "flags": ""
+     }
+    ]
+   ],
+   "actions": [],
+   "has_fallback": false,
+   "is_writable": false,
+   "value_type": "bac:BacnetBinaryPv",
+   "value_val": "inactive",
+   "present": [
+    "polledTime",
+    "value"
+   ],
+   "simple_type": "PointCacheObj"
+  },
+  {
+   "key": "53",
+   "name": "bts:bacref:dopr=2_50_85_8_101",
+   "handle": "53",
+   "type": "disp:PointCacheObj",
+   "pfx": "disp",
+   "module": "btsDisp",
+   "path": "Station/DisplayService/pointCache/bts:bacref:dopr=2_50_85_8_101",
+   "parent_h": "51",
+   "children": [],
+   "slots": [
+    [
+     "polledTime",
+     {
+      "type": "b:AbsTime",
+      "value": "2026-09-03T00:00:00.000-05:00",
+      "flags": ""
+     }
+    ]
+   ],
+   "actions": [],
+   "has_fallback": false,
+   "is_writable": false,
+   "value_type": "b:Float",
+   "value_val": "72.5",
+   "present": [
+    "polledTime",
+    "value"
+   ],
+   "simple_type": "PointCacheObj"
+  }
+ ],
+ "handle_count": [
+  [
+   "1",
+   1
+  ],
+  [
+   "10",
+   1
+  ],
+  [
+   "20",
+   1
+  ],
+  [
+   "30",
+   1
+  ],
+  [
+   "40",
+   1
+  ],
+  [
+   "41",
+   1
+  ],
+  [
+   "42",
+   1
+  ],
+  [
+   "50",
+   1
+  ],
+  [
+   "51",
+   1
+  ],
+  [
+   "52",
+   1
+  ],
+  [
+   "53",
+   1
+  ]
+ ],
+ "prefix_map": [
+  [
+   "b",
+   "baja"
+  ],
+  [
+   "CRP",
+   "ColdRoomPan"
+  ],
+  [
+   "DPCD",
+   "DashboardPan"
+  ],
+  [
+   "c",
+   "control"
+  ],
+  [
+   "disp",
+   "btsDisp"
+  ],
+  [
+   "bac",
+   "bacnet"
+  ]
+ ],
+ "roots": [
+  "1"
+ ],
+ "links": [
+  {
+   "container_h": "10",
+   "container_path": "Station/Panel",
+   "link_name": "Link",
+   "src_h": "30",
+   "src_ord": null,
+   "src_slot": "valveOut",
+   "tgt_slot": "evap1ValveState"
+  },
+  {
+   "container_h": "20",
+   "container_path": "Station/Logic",
+   "link_name": "Link",
+   "src_h": "10",
+   "src_ord": null,
+   "src_slot": "setpoint",
+   "tgt_slot": "setpoint"
+  },
+  {
+   "container_h": "20",
+   "container_path": "Station/Logic",
+   "link_name": "Link1",
+   "src_h": "10",
+   "src_ord": null,
+   "src_slot": "evap1FanMode",
+   "tgt_slot": "fanMode"
+  },
+  {
+   "container_h": "41",
+   "container_path": "Station/Drivers/ro1",
+   "link_name": "Link",
+   "src_h": "30",
+   "src_ord": null,
+   "src_slot": "valveOut",
+   "tgt_slot": "in10"
+  },
+  {
+   "container_h": "42",
+   "container_path": "Station/Drivers/ro2",
+   "link_name": "Link",
+   "src_h": "30",
+   "src_ord": null,
+   "src_slot": "valveOut",
+   "tgt_slot": "in10"
+  }
+ ],
+ "link_rows": [
+  {
+   "link": "Link",
+   "source": "Station/Logic/EvaporatorUnit_3.valveOut",
+   "target": "Station/Panel.evap1ValveState",
+   "src_resolved": true
+  },
+  {
+   "link": "Link",
+   "source": "Station/Panel.setpoint",
+   "target": "Station/Logic.setpoint",
+   "src_resolved": true
+  },
+  {
+   "link": "Link1",
+   "source": "Station/Panel.evap1FanMode",
+   "target": "Station/Logic.fanMode",
+   "src_resolved": true
+  },
+  {
+   "link": "Link",
+   "source": "Station/Logic/EvaporatorUnit_3.valveOut",
+   "target": "Station/Drivers/ro1.in10",
+   "src_resolved": true
+  },
+  {
+   "link": "Link",
+   "source": "Station/Logic/EvaporatorUnit_3.valveOut",
+   "target": "Station/Drivers/ro2.in10",
+   "src_resolved": true
+  }
+ ],
+ "resolve": [
+  [
+   "",
+   null,
+   null
+  ],
+  [
+   "/",
+   null,
+   null
+  ],
+  [
+   "nope",
+   null,
+   null
+  ],
+  [
+   "h:nope",
+   null,
+   null
+  ],
+  [
+   "h:",
+   null,
+   null
+  ],
+  [
+   "h:1",
+   "1",
+   "Station"
+  ],
+  [
+   "Station",
+   "1",
+   "Station"
+  ],
+  [
+   "/Station/",
+   "1",
+   "Station"
+  ],
+  [
+   "Station/Panel",
+   "10",
+   "Station/Panel"
+  ],
+  [
+   "/Station/Panel/",
+   "10",
+   "Station/Panel"
+  ],
+  [
+   "Panel",
+   "10",
+   "Station/Panel"
+  ],
+  [
+   "h:10",
+   "10",
+   "Station/Panel"
+  ],
+  [
+   "Station/Logic",
+   "20",
+   "Station/Logic"
+  ],
+  [
+   "/Station/Logic/",
+   "20",
+   "Station/Logic"
+  ],
+  [
+   "Logic",
+   "20",
+   "Station/Logic"
+  ],
+  [
+   "h:20",
+   "20",
+   "Station/Logic"
+  ],
+  [
+   "Station/Logic/EvaporatorUnit_3",
+   "30",
+   "Station/Logic/EvaporatorUnit_3"
+  ],
+  [
+   "/Station/Logic/EvaporatorUnit_3/",
+   "30",
+   "Station/Logic/EvaporatorUnit_3"
+  ],
+  [
+   "EvaporatorUnit_3",
+   "30",
+   "Station/Logic/EvaporatorUnit_3"
+  ],
+  [
+   "h:30",
+   "30",
+   "Station/Logic/EvaporatorUnit_3"
+  ],
+  [
+   "Station/Drivers",
+   "40",
+   "Station/Drivers"
+  ],
+  [
+   "/Station/Drivers/",
+   "40",
+   "Station/Drivers"
+  ],
+  [
+   "Drivers",
+   "40",
+   "Station/Drivers"
+  ],
+  [
+   "h:40",
+   "40",
+   "Station/Drivers"
+  ],
+  [
+   "Station/Drivers/ro1",
+   "41",
+   "Station/Drivers/ro1"
+  ],
+  [
+   "/Station/Drivers/ro1/",
+   "41",
+   "Station/Drivers/ro1"
+  ],
+  [
+   "ro1",
+   "41",
+   "Station/Drivers/ro1"
+  ],
+  [
+   "h:41",
+   "41",
+   "Station/Drivers/ro1"
+  ],
+  [
+   "Station/Drivers/ro2",
+   "42",
+   "Station/Drivers/ro2"
+  ],
+  [
+   "/Station/Drivers/ro2/",
+   "42",
+   "Station/Drivers/ro2"
+  ],
+  [
+   "ro2",
+   "42",
+   "Station/Drivers/ro2"
+  ],
+  [
+   "h:42",
+   "42",
+   "Station/Drivers/ro2"
+  ],
+  [
+   "Station/DisplayService",
+   "50",
+   "Station/DisplayService"
+  ],
+  [
+   "/Station/DisplayService/",
+   "50",
+   "Station/DisplayService"
+  ],
+  [
+   "DisplayService",
+   "50",
+   "Station/DisplayService"
+  ],
+  [
+   "h:50",
+   "50",
+   "Station/DisplayService"
+  ],
+  [
+   "Station/DisplayService/pointCache",
+   "51",
+   "Station/DisplayService/pointCache"
+  ],
+  [
+   "/Station/DisplayService/pointCache/",
+   "51",
+   "Station/DisplayService/pointCache"
+  ],
+  [
+   "pointCache",
+   "51",
+   "Station/DisplayService/pointCache"
+  ],
+  [
+   "h:51",
+   "51",
+   "Station/DisplayService/pointCache"
+  ],
+  [
+   "Station/DisplayService/pointCache/bts:bacref:dopr=5_100_85_8_101",
+   "52",
+   "Station/DisplayService/pointCache/bts:bacref:dopr=5_100_85_8_101"
+  ],
+  [
+   "/Station/DisplayService/pointCache/bts:bacref:dopr=5_100_85_8_101/",
+   "52",
+   "Station/DisplayService/pointCache/bts:bacref:dopr=5_100_85_8_101"
+  ],
+  [
+   "bts:bacref:dopr=5_100_85_8_101",
+   "52",
+   "Station/DisplayService/pointCache/bts:bacref:dopr=5_100_85_8_101"
+  ],
+  [
+   "h:52",
+   "52",
+   "Station/DisplayService/pointCache/bts:bacref:dopr=5_100_85_8_101"
+  ],
+  [
+   "Station/DisplayService/pointCache/bts:bacref:dopr=2_50_85_8_101",
+   "53",
+   "Station/DisplayService/pointCache/bts:bacref:dopr=2_50_85_8_101"
+  ],
+  [
+   "/Station/DisplayService/pointCache/bts:bacref:dopr=2_50_85_8_101/",
+   "53",
+   "Station/DisplayService/pointCache/bts:bacref:dopr=2_50_85_8_101"
+  ],
+  [
+   "bts:bacref:dopr=2_50_85_8_101",
+   "53",
+   "Station/DisplayService/pointCache/bts:bacref:dopr=2_50_85_8_101"
+  ],
+  [
+   "h:53",
+   "53",
+   "Station/DisplayService/pointCache/bts:bacref:dopr=2_50_85_8_101"
+  ]
+ ]
+}

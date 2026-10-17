@@ -1,0 +1,809 @@
+{
+ "comps": [
+  {
+   "key": "1",
+   "name": "",
+   "handle": "1",
+   "type": "b:Station",
+   "pfx": "b",
+   "module": "baja",
+   "path": "",
+   "parent_h": null,
+   "children": [
+    "2",
+    "20",
+    "21"
+   ],
+   "slots": [],
+   "actions": [],
+   "has_fallback": false,
+   "is_writable": false,
+   "value_type": null,
+   "value_val": null,
+   "present": [
+    "Drivers",
+    "Panel",
+    "Room"
+   ],
+   "simple_type": "Station"
+  },
+  {
+   "key": "2",
+   "name": "Drivers",
+   "handle": "2",
+   "type": "b:Folder",
+   "pfx": "b",
+   "module": "baja",
+   "path": "Drivers",
+   "parent_h": "1",
+   "children": [
+    "3"
+   ],
+   "slots": [],
+   "actions": [],
+   "has_fallback": false,
+   "is_writable": false,
+   "value_type": null,
+   "value_val": null,
+   "present": [
+    "Net"
+   ],
+   "simple_type": "Folder"
+  },
+  {
+   "key": "3",
+   "name": "Net",
+   "handle": "3",
+   "type": "b:Folder",
+   "pfx": "b",
+   "module": "baja",
+   "path": "Drivers/Net",
+   "parent_h": "2",
+   "children": [
+    "4",
+    "7"
+   ],
+   "slots": [],
+   "actions": [],
+   "has_fallback": false,
+   "is_writable": false,
+   "value_type": null,
+   "value_val": null,
+   "present": [
+    "points",
+    "tuningPolicies"
+   ],
+   "simple_type": "Folder"
+  },
+  {
+   "key": "4",
+   "name": "tuningPolicies",
+   "handle": "4",
+   "type": "d:TuningPolicyMap",
+   "pfx": "d",
+   "module": "driver",
+   "path": "Drivers/Net/tuningPolicies",
+   "parent_h": "3",
+   "children": [
+    "5",
+    "6"
+   ],
+   "slots": [],
+   "actions": [],
+   "has_fallback": false,
+   "is_writable": false,
+   "value_type": null,
+   "value_val": null,
+   "present": [
+    "defaultPolicy",
+    "slowPolicy"
+   ],
+   "simple_type": "TuningPolicyMap"
+  },
+  {
+   "key": "5",
+   "name": "defaultPolicy",
+   "handle": "5",
+   "type": "d:TuningPolicy",
+   "pfx": "d",
+   "module": "driver",
+   "path": "Drivers/Net/tuningPolicies/defaultPolicy",
+   "parent_h": "4",
+   "children": [],
+   "slots": [],
+   "actions": [],
+   "has_fallback": false,
+   "is_writable": false,
+   "value_type": null,
+   "value_val": null,
+   "present": [],
+   "simple_type": "TuningPolicy"
+  },
+  {
+   "key": "6",
+   "name": "slowPolicy",
+   "handle": "6",
+   "type": "d:TuningPolicy",
+   "pfx": "d",
+   "module": "driver",
+   "path": "Drivers/Net/tuningPolicies/slowPolicy",
+   "parent_h": "4",
+   "children": [],
+   "slots": [
+    [
+     "writeOnUp",
+     {
+      "type": "",
+      "value": "false",
+      "flags": ""
+     }
+    ]
+   ],
+   "actions": [],
+   "has_fallback": false,
+   "is_writable": false,
+   "value_type": null,
+   "value_val": null,
+   "present": [
+    "writeOnUp"
+   ],
+   "simple_type": "TuningPolicy"
+  },
+  {
+   "key": "7",
+   "name": "points",
+   "handle": "7",
+   "type": "b:Folder",
+   "pfx": "b",
+   "module": "baja",
+   "path": "Drivers/Net/points",
+   "parent_h": "3",
+   "children": [
+    "8",
+    "10",
+    "12"
+   ],
+   "slots": [],
+   "actions": [],
+   "has_fallback": false,
+   "is_writable": false,
+   "value_type": null,
+   "value_val": null,
+   "present": [
+    "ro1",
+    "ro2",
+    "ro3"
+   ],
+   "simple_type": "Folder"
+  },
+  {
+   "key": "8",
+   "name": "ro1",
+   "handle": "8",
+   "type": "c:BooleanWritable",
+   "pfx": "c",
+   "module": "control",
+   "path": "Drivers/Net/points/ro1",
+   "parent_h": "7",
+   "children": [
+    "9"
+   ],
+   "slots": [],
+   "actions": [],
+   "has_fallback": true,
+   "is_writable": true,
+   "value_type": null,
+   "value_val": null,
+   "present": [
+    "Link",
+    "fallback",
+    "proxyExt"
+   ],
+   "simple_type": "BooleanWritable"
+  },
+  {
+   "key": "9",
+   "name": "proxyExt",
+   "handle": "9",
+   "type": "nrio:NrioRelayOutputProxyExt",
+   "pfx": "nrio",
+   "module": "nrio",
+   "path": "Drivers/Net/points/ro1/proxyExt",
+   "parent_h": "8",
+   "children": [],
+   "slots": [],
+   "actions": [],
+   "has_fallback": false,
+   "is_writable": false,
+   "value_type": null,
+   "value_val": null,
+   "present": [],
+   "simple_type": "NrioRelayOutputProxyExt"
+  },
+  {
+   "key": "10",
+   "name": "ro2",
+   "handle": "10",
+   "type": "c:BooleanWritable",
+   "pfx": "c",
+   "module": "control",
+   "path": "Drivers/Net/points/ro2",
+   "parent_h": "7",
+   "children": [
+    "11"
+   ],
+   "slots": [],
+   "actions": [],
+   "has_fallback": false,
+   "is_writable": true,
+   "value_type": null,
+   "value_val": null,
+   "present": [
+    "Link",
+    "proxyExt"
+   ],
+   "simple_type": "BooleanWritable"
+  },
+  {
+   "key": "11",
+   "name": "proxyExt",
+   "handle": "11",
+   "type": "nrio:NrioRelayOutputProxyExt",
+   "pfx": "nrio",
+   "module": "nrio",
+   "path": "Drivers/Net/points/ro2/proxyExt",
+   "parent_h": "10",
+   "children": [],
+   "slots": [
+    [
+     "tuningPolicyName",
+     {
+      "type": "",
+      "value": "slowPolicy",
+      "flags": ""
+     }
+    ]
+   ],
+   "actions": [],
+   "has_fallback": false,
+   "is_writable": false,
+   "value_type": null,
+   "value_val": null,
+   "present": [
+    "tuningPolicyName"
+   ],
+   "simple_type": "NrioRelayOutputProxyExt"
+  },
+  {
+   "key": "12",
+   "name": "ro3",
+   "handle": "12",
+   "type": "c:BooleanWritable",
+   "pfx": "c",
+   "module": "control",
+   "path": "Drivers/Net/points/ro3",
+   "parent_h": "7",
+   "children": [
+    "13"
+   ],
+   "slots": [],
+   "actions": [],
+   "has_fallback": false,
+   "is_writable": true,
+   "value_type": null,
+   "value_val": null,
+   "present": [
+    "Link",
+    "proxyExt"
+   ],
+   "simple_type": "BooleanWritable"
+  },
+  {
+   "key": "13",
+   "name": "proxyExt",
+   "handle": "13",
+   "type": "nrio:NrioRelayOutputProxyExt",
+   "pfx": "nrio",
+   "module": "nrio",
+   "path": "Drivers/Net/points/ro3/proxyExt",
+   "parent_h": "12",
+   "children": [],
+   "slots": [
+    [
+     "tuningPolicyName",
+     {
+      "type": "",
+      "value": "missingPolicy",
+      "flags": ""
+     }
+    ]
+   ],
+   "actions": [],
+   "has_fallback": false,
+   "is_writable": false,
+   "value_type": null,
+   "value_val": null,
+   "present": [
+    "tuningPolicyName"
+   ],
+   "simple_type": "NrioRelayOutputProxyExt"
+  },
+  {
+   "key": "20",
+   "name": "Room",
+   "handle": "20",
+   "type": "CRP:ColdRoom",
+   "pfx": "CRP",
+   "module": "ColdRoomPan",
+   "path": "Room",
+   "parent_h": "1",
+   "children": [],
+   "slots": [
+    [
+     "valveMode",
+     {
+      "type": "",
+      "value": "hand",
+      "flags": ""
+     }
+    ]
+   ],
+   "actions": [],
+   "has_fallback": false,
+   "is_writable": false,
+   "value_type": null,
+   "value_val": null,
+   "present": [
+    "valveMode"
+   ],
+   "simple_type": "ColdRoom"
+  },
+  {
+   "key": "21",
+   "name": "Panel",
+   "handle": "21",
+   "type": "CRP:Unknown",
+   "pfx": "CRP",
+   "module": "ColdRoomPan",
+   "path": "Panel",
+   "parent_h": "1",
+   "children": [],
+   "slots": [],
+   "actions": [],
+   "has_fallback": false,
+   "is_writable": false,
+   "value_type": null,
+   "value_val": null,
+   "present": [],
+   "simple_type": "Unknown"
+  }
+ ],
+ "handle_count": [
+  [
+   "1",
+   1
+  ],
+  [
+   "2",
+   1
+  ],
+  [
+   "3",
+   1
+  ],
+  [
+   "4",
+   1
+  ],
+  [
+   "5",
+   1
+  ],
+  [
+   "6",
+   1
+  ],
+  [
+   "7",
+   1
+  ],
+  [
+   "8",
+   1
+  ],
+  [
+   "9",
+   1
+  ],
+  [
+   "10",
+   1
+  ],
+  [
+   "11",
+   1
+  ],
+  [
+   "12",
+   1
+  ],
+  [
+   "13",
+   1
+  ],
+  [
+   "20",
+   1
+  ],
+  [
+   "21",
+   1
+  ]
+ ],
+ "prefix_map": [
+  [
+   "b",
+   "baja"
+  ],
+  [
+   "c",
+   "control"
+  ],
+  [
+   "d",
+   "driver"
+  ],
+  [
+   "nrio",
+   "nrio"
+  ],
+  [
+   "CRP",
+   "ColdRoomPan"
+  ]
+ ],
+ "roots": [
+  "1"
+ ],
+ "links": [
+  {
+   "container_h": "8",
+   "container_path": "Drivers/Net/points/ro1",
+   "link_name": "Link",
+   "src_h": "20",
+   "src_ord": null,
+   "src_slot": "valveOut",
+   "tgt_slot": "in10"
+  },
+  {
+   "container_h": "10",
+   "container_path": "Drivers/Net/points/ro2",
+   "link_name": "Link",
+   "src_h": "20",
+   "src_ord": null,
+   "src_slot": "fanOut",
+   "tgt_slot": "in10"
+  },
+  {
+   "container_h": "12",
+   "container_path": "Drivers/Net/points/ro3",
+   "link_name": "Link",
+   "src_h": "20",
+   "src_ord": null,
+   "src_slot": "lightOut",
+   "tgt_slot": "in10"
+  }
+ ],
+ "link_rows": [
+  {
+   "link": "Link",
+   "source": "Room.valveOut",
+   "target": "Drivers/Net/points/ro1.in10",
+   "src_resolved": true
+  },
+  {
+   "link": "Link",
+   "source": "Room.fanOut",
+   "target": "Drivers/Net/points/ro2.in10",
+   "src_resolved": true
+  },
+  {
+   "link": "Link",
+   "source": "Room.lightOut",
+   "target": "Drivers/Net/points/ro3.in10",
+   "src_resolved": true
+  }
+ ],
+ "resolve": [
+  [
+   "",
+   "1",
+   ""
+  ],
+  [
+   "/",
+   "1",
+   ""
+  ],
+  [
+   "nope",
+   null,
+   null
+  ],
+  [
+   "h:nope",
+   null,
+   null
+  ],
+  [
+   "h:",
+   null,
+   null
+  ],
+  [
+   "h:1",
+   "1",
+   ""
+  ],
+  [
+   "//",
+   "1",
+   ""
+  ],
+  [
+   "Drivers",
+   "2",
+   "Drivers"
+  ],
+  [
+   "/Drivers/",
+   "2",
+   "Drivers"
+  ],
+  [
+   "h:2",
+   "2",
+   "Drivers"
+  ],
+  [
+   "Drivers/Net",
+   "3",
+   "Drivers/Net"
+  ],
+  [
+   "/Drivers/Net/",
+   "3",
+   "Drivers/Net"
+  ],
+  [
+   "Net",
+   "3",
+   "Drivers/Net"
+  ],
+  [
+   "h:3",
+   "3",
+   "Drivers/Net"
+  ],
+  [
+   "Drivers/Net/tuningPolicies",
+   "4",
+   "Drivers/Net/tuningPolicies"
+  ],
+  [
+   "/Drivers/Net/tuningPolicies/",
+   "4",
+   "Drivers/Net/tuningPolicies"
+  ],
+  [
+   "tuningPolicies",
+   "4",
+   "Drivers/Net/tuningPolicies"
+  ],
+  [
+   "h:4",
+   "4",
+   "Drivers/Net/tuningPolicies"
+  ],
+  [
+   "Drivers/Net/tuningPolicies/defaultPolicy",
+   "5",
+   "Drivers/Net/tuningPolicies/defaultPolicy"
+  ],
+  [
+   "/Drivers/Net/tuningPolicies/defaultPolicy/",
+   "5",
+   "Drivers/Net/tuningPolicies/defaultPolicy"
+  ],
+  [
+   "defaultPolicy",
+   "5",
+   "Drivers/Net/tuningPolicies/defaultPolicy"
+  ],
+  [
+   "h:5",
+   "5",
+   "Drivers/Net/tuningPolicies/defaultPolicy"
+  ],
+  [
+   "Drivers/Net/tuningPolicies/slowPolicy",
+   "6",
+   "Drivers/Net/tuningPolicies/slowPolicy"
+  ],
+  [
+   "/Drivers/Net/tuningPolicies/slowPolicy/",
+   "6",
+   "Drivers/Net/tuningPolicies/slowPolicy"
+  ],
+  [
+   "slowPolicy",
+   "6",
+   "Drivers/Net/tuningPolicies/slowPolicy"
+  ],
+  [
+   "h:6",
+   "6",
+   "Drivers/Net/tuningPolicies/slowPolicy"
+  ],
+  [
+   "Drivers/Net/points",
+   "7",
+   "Drivers/Net/points"
+  ],
+  [
+   "/Drivers/Net/points/",
+   "7",
+   "Drivers/Net/points"
+  ],
+  [
+   "points",
+   "7",
+   "Drivers/Net/points"
+  ],
+  [
+   "h:7",
+   "7",
+   "Drivers/Net/points"
+  ],
+  [
+   "Drivers/Net/points/ro1",
+   "8",
+   "Drivers/Net/points/ro1"
+  ],
+  [
+   "/Drivers/Net/points/ro1/",
+   "8",
+   "Drivers/Net/points/ro1"
+  ],
+  [
+   "ro1",
+   "8",
+   "Drivers/Net/points/ro1"
+  ],
+  [
+   "h:8",
+   "8",
+   "Drivers/Net/points/ro1"
+  ],
+  [
+   "Drivers/Net/points/ro1/proxyExt",
+   "9",
+   "Drivers/Net/points/ro1/proxyExt"
+  ],
+  [
+   "/Drivers/Net/points/ro1/proxyExt/",
+   "9",
+   "Drivers/Net/points/ro1/proxyExt"
+  ],
+  [
+   "proxyExt",
+   null,
+   null
+  ],
+  [
+   "h:9",
+   "9",
+   "Drivers/Net/points/ro1/proxyExt"
+  ],
+  [
+   "Drivers/Net/points/ro2",
+   "10",
+   "Drivers/Net/points/ro2"
+  ],
+  [
+   "/Drivers/Net/points/ro2/",
+   "10",
+   "Drivers/Net/points/ro2"
+  ],
+  [
+   "ro2",
+   "10",
+   "Drivers/Net/points/ro2"
+  ],
+  [
+   "h:10",
+   "10",
+   "Drivers/Net/points/ro2"
+  ],
+  [
+   "Drivers/Net/points/ro2/proxyExt",
+   "11",
+   "Drivers/Net/points/ro2/proxyExt"
+  ],
+  [
+   "/Drivers/Net/points/ro2/proxyExt/",
+   "11",
+   "Drivers/Net/points/ro2/proxyExt"
+  ],
+  [
+   "h:11",
+   "11",
+   "Drivers/Net/points/ro2/proxyExt"
+  ],
+  [
+   "Drivers/Net/points/ro3",
+   "12",
+   "Drivers/Net/points/ro3"
+  ],
+  [
+   "/Drivers/Net/points/ro3/",
+   "12",
+   "Drivers/Net/points/ro3"
+  ],
+  [
+   "ro3",
+   "12",
+   "Drivers/Net/points/ro3"
+  ],
+  [
+   "h:12",
+   "12",
+   "Drivers/Net/points/ro3"
+  ],
+  [
+   "Drivers/Net/points/ro3/proxyExt",
+   "13",
+   "Drivers/Net/points/ro3/proxyExt"
+  ],
+  [
+   "/Drivers/Net/points/ro3/proxyExt/",
+   "13",
+   "Drivers/Net/points/ro3/proxyExt"
+  ],
+  [
+   "h:13",
+   "13",
+   "Drivers/Net/points/ro3/proxyExt"
+  ],
+  [
+   "Room",
+   "20",
+   "Room"
+  ],
+  [
+   "/Room/",
+   "20",
+   "Room"
+  ],
+  [
+   "h:20",
+   "20",
+   "Room"
+  ],
+  [
+   "Panel",
+   "21",
+   "Panel"
+  ],
+  [
+   "/Panel/",
+   "21",
+   "Panel"
+  ],
+  [
+   "h:21",
+   "21",
+   "Panel"
+  ]
+ ]
+}

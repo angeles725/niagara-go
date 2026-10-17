@@ -1,0 +1,61 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<bajaObjectGraph version='4.0'>
+<p h='1' m='b=baja c=control' t='b:Station'>
+ <p n='Dup' h='5' t='b:Folder'><p n='Inner' h='5' t='c:NumericWritable'/><p n='Kid' h='6' t='b:Folder'/></p>
+ <p n='Multi' h='7'
+   t='b:Folder'/>
+<p n='Span0' h='s0't='b:Folder'/>
+<p n='Span1' h='s1't='b:Folder'/>
+<p n='Span2' h='s2't='b:Folder'/>
+<p n='Span3' h='s3't='b:Folder'/>
+<p n='Span4' h='s4't='b:Folder'/>
+<p n='Span5' h='s5't='b:Folder'/>
+<p n='Span6' h='s6't='b:Folder'/>
+<p n='Span7' h='s7't='b:Folder'/>
+<p n='Span8' h='s8' t='b:Folder'/>
+<p n='Span9' h='s9' t='b:Folder'/>
+<p n='Span10' h='s10' t='b:Folder'/>
+<p n='Span11' h='s11' t='b:Folder'/>
+ <p n='CRLF' h='8' t='b:Folder'/>
+ <pé n='Uni' h='20' t='b:Folder'/><P n='Upper' h='20b'/><p_x n='Under' h='20c'/>
+ <p xn='bad' én='z' n='good' h='21' t='b:Folder'/>
+ <p n="dq" h='22' t="b:Folder" v='sq' v="dq"/>
+ <p n='unclosed h='23' t='b:Folder'/>
+ <p n='A$20b$u00e9$zz$$4' h='24' t='b:Folder'/>
+ <p n='Bad��X' h='60' t='b:Folder'/>
+ <p n='W1' h='25' t='control:BooleanWritable'/><p n='W2' h='26' t='NumericWritableX'/><p n='W3' h='27' t='IntegerWritable'/>
+ <p n='W4' h='28' t='a:b:FloatWritable'/>
+ <p n='Pt' h='30' t='c:NumericPoint' m='c=controlXz=zed noeq q=a=b'>
+  <p n='value' t='b:Float' v='1.5'/>
+  <p n='value' v='untyped'/>
+  <p n='status' v='{ok}'/>
+  <p n='facets' f='r'/>
+  <p n='noattrs'/>
+  <p n='fallback' t='b:StatusNumeric'><p n='value' v='2'/></p>
+  <p n='fallback'/>
+  <p n='setpoint' t='b:StatusNumeric'><p n='value' v='3'/><p n='status' v='{fault}'/><p n='other' v='9'/></p>
+  <p n='setpoint' t='b:StatusNumeric2' f='s'>
+  </p>
+  <p n='plain' v='1'/>
+  <p n='plain' v='2' f='x'/>
+  <p n='wsAnnotation' t='b:WsAnnotation' v='1,1,8'/>
+  <p n='out' t='b:StatusNumeric'><p n='value' v='4'/><p n='value'/></p>
+  <a n='doIt' f='c'/><a n='doIt' f='d'/><a/>
+  <!-- <p n='InComment' h='31' t='b:Folder'/> -->
+ </p>
+ <p n='Links' h='40' t='b:Folder'>
+  <p n='L1' t='b:Link'><p n='sourceOrd' v='h:'/><p n='sourceSlotName' v='a$20b'/></p>
+  <p n='L2' t='b:Link'><p n='sourceOrd' v='station:|slot:/X'/><p n='targetSlotName' v='in'/><p n='nested'><p n='deep' v='1'/></p></p>
+  <p n='L3' t='b:ConversionLink' h='41'><p n='sourceOrd' v='h:24'/><p n='HandleKid' h='42' t='b:Folder'><p n='x' v='1'/></p></p>
+  <p n='L4' t='b:FooLink'><p n='sourceOrd' v='h:30'/></p>
+  <p n='L5' t='b:Link'/>
+  <p n='L6' t='x:Link' h='43'><p n='sourceOrd' v=''/><p n='sourceSlotName' v=''/></p>
+ </p>
+ <p n='' h='' t='b:Folder'/>
+ <p n='Empty' h='50' t='nopfx'/>
+ <p n='Late' h='51' t='c:Folder' m='c=late'/>
+ <p n='Hdup' h='51' t='b:Folder'/>
+ <p n='Act' h='52' t='b:Folder'><a n='x'>y</a><p n='after' v='1'/></p>
+ <p n='Last' h='53' t='b:Folder'/>
+</p>
+</bajaObjectGraph>

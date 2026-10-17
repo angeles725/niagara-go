@@ -1,0 +1,114 @@
+{
+ "backup.dist": {
+  "len": 607,
+  "sha256": "cab2b1b97e9db01365d4b226e4e4ccf536943d6f22eb55fda5751eb0bca1f3f9"
+ },
+ "blank.bog": {
+  "error": "empty BOG document in {path}"
+ },
+ "bzip2.bog": {
+  "len": 607,
+  "sha256": "cab2b1b97e9db01365d4b226e4e4ccf536943d6f22eb55fda5751eb0bca1f3f9"
+ },
+ "crlf.xml": {
+  "len": 624,
+  "sha256": "67559f55c49559156812cac0b7991582734275fd8d6deae1d057be0ac6a27935"
+ },
+ "damaged-deflate.bog": {
+  "error": "corrupt or unsupported ZIP file.xml of {path}: Error -3 while decompressing data: invalid block type"
+ },
+ "damaged.bog": {
+  "error": "corrupt or unsupported ZIP file.xml of {path}: Bad CRC-32 for file 'file.xml'"
+ },
+ "deep.dist": {
+  "error": "config.bog of config.bog of config.bog of {path} nests config.bog more than 3 levels deep"
+ },
+ "deflated.bog": {
+  "len": 607,
+  "sha256": "cab2b1b97e9db01365d4b226e4e4ccf536943d6f22eb55fda5751eb0bca1f3f9"
+ },
+ "duplicate.bog": {
+  "len": 607,
+  "sha256": "cab2b1b97e9db01365d4b226e4e4ccf536943d6f22eb55fda5751eb0bca1f3f9"
+ },
+ "empty-member.bog": {
+  "error": "empty BOG document in {path}"
+ },
+ "empty.bog": {
+  "error": "empty BOG document in {path}"
+ },
+ "encrypted.bog": {
+  "error": "corrupt or unsupported ZIP file.xml of {path}: File 'file.xml' is encrypted, password required for extraction"
+ },
+ "exact-wins.bog": {
+  "len": 607,
+  "sha256": "cab2b1b97e9db01365d4b226e4e4ccf536943d6f22eb55fda5751eb0bca1f3f9"
+ },
+ "garbage.bog": {
+  "error": "corrupt or unsupported ZIP {path}: File is not a zip file"
+ },
+ "late-root.bog": {
+  "error": "{path} is not a BOG document (no <bajaObjectGraph root element)"
+ },
+ "method99.bog": {
+  "error": "corrupt or unsupported ZIP file.xml of {path}: That compression method is not supported"
+ },
+ "nbsp.bog": {
+  "error": "{path} is not a BOG document (no <bajaObjectGraph root element)"
+ },
+ "nest1.dist": {
+  "len": 607,
+  "sha256": "cab2b1b97e9db01365d4b226e4e4ccf536943d6f22eb55fda5751eb0bca1f3f9"
+ },
+ "nest3.dist": {
+  "len": 607,
+  "sha256": "cab2b1b97e9db01365d4b226e4e4ccf536943d6f22eb55fda5751eb0bca1f3f9"
+ },
+ "nest4.dist": {
+  "error": "config.bog of config.bog of config.bog of {path} nests config.bog more than 3 levels deep"
+ },
+ "nested-empty.dist": {
+  "error": "no file.xml or config.bog inside config.bog of {path}"
+ },
+ "nested-garbage.dist": {
+  "error": "corrupt or unsupported ZIP nested config.bog of {path}: File is not a zip file"
+ },
+ "no-member.bog": {
+  "error": "no file.xml or config.bog inside {path}"
+ },
+ "not-bog-member.bog": {
+  "error": "{path} is not a BOG document (no <bajaObjectGraph root element)"
+ },
+ "ok.bog": {
+  "len": 607,
+  "sha256": "cab2b1b97e9db01365d4b226e4e4ccf536943d6f22eb55fda5751eb0bca1f3f9"
+ },
+ "oversized-nested.dist": {
+  "error": "file.xml of config.bog of {path} is too large (4294967280 bytes > 1073741824)"
+ },
+ "oversized.bog": {
+  "error": "file.xml of {path} is too large (4294967280 bytes > 1073741824)"
+ },
+ "pk.bog": {
+  "error": "corrupt or unsupported ZIP {path}: File is not a zip file"
+ },
+ "plain.bog": {
+  "len": 607,
+  "sha256": "cab2b1b97e9db01365d4b226e4e4ccf536943d6f22eb55fda5751eb0bca1f3f9"
+ },
+ "suffix.bog": {
+  "len": 607,
+  "sha256": "cab2b1b97e9db01365d4b226e4e4ccf536943d6f22eb55fda5751eb0bca1f3f9"
+ },
+ "text.bog": {
+  "error": "{path} is not a BOG document (no <bajaObjectGraph root element)"
+ },
+ "truncated.bog": {
+  "error": "corrupt or unsupported ZIP {path}: File is not a zip file"
+ },
+ "utf8.bog": {
+  "len": 701,
+  "sha256": "7125cca99c6622b9f25fdc96c22bf59ba45bc66f3738d09f01d0b44cb48ceab0",
+  "text": "<?xml version='1.0' encoding='UTF-8'?>\n<bajaObjectGraph version='4.0'>\n <p h='1' m='b=baja c=control conv=converters' t='b:Station'>\n  <p n='Services' h='2' t='b:ServiceContainer'>\n   <p n=\"Job�|�|���|�|��|����|�����|���|�|��|����|é€😀\" h=\"c\" t=\"b:JobService\"/>\n   <p n='object$20tags' h='3' t='b:Folder'/>\n  </p>\n  <p n='A' h='4' t='c:NumericWritable'/>\n  <p n='B' h='5' t='c:BooleanWritable'>\n   <p n='Link20' t='b:ConversionLink'>\n    <p n=\"sourceOrd\" t=\"b:Ord\" v=\"h:4\"/>\n    <p n=\"sourceSlotName\" v=\"out\"/>\n    <p n=\"targetSlotName\" v=\"in10\"/>\n    <p n=\"converter\" t=\"conv:NumericToStatusBoolean\"/>\n   </p>\n  </p>\n </p>\n</bajaObjectGraph>"
+ }
+}
