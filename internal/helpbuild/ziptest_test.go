@@ -41,13 +41,26 @@ func writeJar(t *testing.T, path string, files ...[2]string) {
 // bytes, the general-purpose flags, the extract version, the central
 // directory extra field and, when size64 is set, a file_size field of
 // 0xFFFFFFFF whose real value lives in that extra field.
+//
+// The entry-reader corners: localName replaces the name in the local header
+// only, method is the compression method written to both headers (the data
+// stays raw), crcXor flips CRC bits in both headers, shortSize (> 0) makes
+// the central file_size that many bytes (with their CRC), compPlus is
+// added to the central compress_size, and sharedHeader (> 0) points the
+// entry at the local header of entry sharedHeader-1 instead of a new one.
 type rawEntry struct {
-	name    string
-	data    string
-	flags   uint16
-	extract uint8
-	extra   []byte
-	size64  bool
+	name         string
+	data         string
+	flags        uint16
+	extract      uint8
+	extra        []byte
+	size64       bool
+	localName    string
+	method       uint16
+	crcXor       uint32
+	shortSize    int
+	compPlus     uint32
+	sharedHeader int
 }
 
 // rawZip builds a zip by hand, so the tests reach the central-directory
@@ -58,29 +71,43 @@ func rawZip(prefix string, entries []rawEntry, comment string) []byte {
 	le16 := func(b *bytes.Buffer, v uint16) { _ = binary.Write(b, binary.LittleEndian, v) }
 	le32 := func(b *bytes.Buffer, v uint32) { _ = binary.Write(b, binary.LittleEndian, v) }
 	var body, cd bytes.Buffer
-	for _, e := range entries {
+	offsets := make([]uint32, len(entries))
+	for i, e := range entries {
 		extract := e.extract
 		if extract == 0 {
 			extract = 20
 		}
-		crc := crc32.ChecksumIEEE([]byte(e.data))
+		crc := crc32.ChecksumIEEE([]byte(e.data)) ^ e.crcXor
 		size := uint32(len(e.data))
+		if e.shortSize > 0 {
+			size = uint32(e.shortSize)
+			crc = crc32.ChecksumIEEE([]byte(e.data[:e.shortSize])) ^ e.crcXor
+		}
 		if e.size64 {
 			size = 0xFFFFFFFF
 		}
+		local := e.name
+		if e.localName != "" {
+			local = e.localName
+		}
 		offset := uint32(body.Len())
-		body.WriteString("PK\x03\x04")
-		le16(&body, uint16(extract))
-		le16(&body, e.flags)
-		le16(&body, 0) // stored
-		le32(&body, 0) // time, date
-		le32(&body, crc)
-		le32(&body, uint32(len(e.data)))
-		le32(&body, uint32(len(e.data)))
-		le16(&body, uint16(len(e.name)))
-		le16(&body, 0)
-		body.WriteString(e.name)
-		body.WriteString(e.data)
+		if e.sharedHeader > 0 {
+			offset = offsets[e.sharedHeader-1]
+		} else {
+			body.WriteString("PK\x03\x04")
+			le16(&body, uint16(extract))
+			le16(&body, e.flags)
+			le16(&body, e.method)
+			le32(&body, 0) // time, date
+			le32(&body, crc)
+			le32(&body, uint32(len(e.data)))
+			le32(&body, uint32(len(e.data)))
+			le16(&body, uint16(len(local)))
+			le16(&body, 0)
+			body.WriteString(local)
+			body.WriteString(e.data)
+		}
+		offsets[i] = offset
 
 		cd.WriteString("PK\x01\x02")
 		cd.WriteByte(20) // create version
@@ -88,10 +115,10 @@ func rawZip(prefix string, entries []rawEntry, comment string) []byte {
 		cd.WriteByte(extract)
 		cd.WriteByte(0)
 		le16(&cd, e.flags)
-		le16(&cd, 0)
+		le16(&cd, e.method)
 		le32(&cd, 0)
 		le32(&cd, crc)
-		le32(&cd, uint32(len(e.data)))
+		le32(&cd, uint32(len(e.data))+e.compPlus)
 		le32(&cd, size)
 		le16(&cd, uint16(len(e.name)))
 		le16(&cd, uint16(len(e.extra)))
