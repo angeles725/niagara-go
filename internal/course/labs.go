@@ -7,8 +7,8 @@ import (
 )
 
 var (
-	labHeadRe  = regexp.MustCompile("^## (?:Lab (\\d+)|(Bonus lab)|(Appendix A)) — ")
-	headLIRe   = regexp.MustCompile("\\(`LI:(\\d+)(?:-(\\d+))?`\\)\\s*$")
+	labHeadRe  = regexp.MustCompile(`^## (?:Lab (\d+)|(Bonus lab)|(Appendix A)) — `)
+	headLIRe   = regexp.MustCompile(`\(` + "`" + `LI:(\d+)(?:-(\d+))?` + "`" + `\)\s*$`)
 	bulletRe   = regexp.MustCompile(`^- \*\*([^*]+)\*\* · (.*)$`)
 	labIDRe    = regexp.MustCompile(`^(L\d+|LB|LA)\.\d+$`)
 	labRangeRe = regexp.MustCompile(`^(L\d+|LB|LA)\.\d+[–-](L\d+|LB|LA)\.\d+$`)
