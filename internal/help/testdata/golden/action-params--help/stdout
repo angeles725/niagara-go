@@ -1,0 +1,8 @@
+usage: niagara_help action-params [-h] [-n MAX_RESULTS] type
+
+positional arguments:
+  type                  Parameter type (e.g. BAlarmRecord)
+
+options:
+  -h, --help            show this help message and exit
+  -n, --max-results MAX_RESULTS

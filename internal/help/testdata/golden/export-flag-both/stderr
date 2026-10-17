@@ -1,0 +1,2 @@
+usage: niagara_help export [-h] [--html | --module] name file
+niagara_help export: error: argument --html: not allowed with argument --module

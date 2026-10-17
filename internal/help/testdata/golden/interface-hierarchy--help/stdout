@@ -1,0 +1,9 @@
+usage: niagara_help interface-hierarchy [-h] [--depth DEPTH] [--chain] name
+
+positional arguments:
+  name           Interface name (e.g. BIAlarmSource)
+
+options:
+  -h, --help     show this help message and exit
+  --depth DEPTH  Max depth for subtree (default: 3)
+  --chain        Show extends chain upward
