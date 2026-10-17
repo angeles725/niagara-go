@@ -55,3 +55,27 @@ func TestMissingPassFileIsExit1(t *testing.T) {
 		t.Fatalf("code %d stderr %q", code, errb.String())
 	}
 }
+
+// The room key is read once: an int from --room (map, wiring, config), a string from the dump
+// positional; neither leaks into the other field.
+func TestParseRoomKey(t *testing.T) {
+	cases := []struct {
+		args []string
+		room int
+		dump string
+	}{
+		{[]string{"map", "--room", "3"}, 3, ""},
+		{[]string{"wiring"}, 0, ""},
+		{[]string{"config", "--room", "2"}, 2, ""},
+		{[]string{"dump", "4"}, 0, "4"},
+		{[]string{"dump", "x"}, 0, "x"},
+	}
+	for _, c := range cases {
+		var out, errb bytes.Buffer
+		o, code, done := parse(c.args, cli.Stdio{Out: &out, Err: &errb})
+		if done || o.Room != c.room || o.DumpRoom != c.dump {
+			t.Errorf("%q: Room %d DumpRoom %q (done %v code %d %s), want %d %q",
+				c.args, o.Room, o.DumpRoom, done, code, errb.String(), c.room, c.dump)
+		}
+	}
+}
