@@ -1,6 +1,7 @@
 package bogwrite
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
@@ -116,6 +117,18 @@ func TestValidateXMLFindings(t *testing.T) {
 		{"ws final newline", ws("1,2,3,4&#10;"), ""},
 		{"ws two newlines", ws("1,2,3&#10;&#10;"),
 			`('ERROR', "bad wsAnnotation value '1,2,3\\n\\n' at R/A/wsAnnotation (expected x,y,w[,h])")`},
+		{"duplicate handle", base("<p n='A' h='2' t='b:Folder'/><p n='B' h='2' t='b:Folder'/>"),
+			"('ERROR', 'duplicate handle h=2 at R/B (also R/A)')"},
+		{"unresolved sourceOrd", base("<p n='A' h='2' t='b:Folder'>" + fmt.Sprintf(selfLink, "99") + "</p>"),
+			"('ERROR', 'unresolved sourceOrd h:99 at R/A/Link')"},
+		{"transient link", base("<p n='A' h='2' t='b:Folder'>" +
+			strings.Replace(fmt.Sprintf(selfLink, "2"), "t='b:Link'", "f='tr' t='b:Link'", 1) + "</p>"),
+			"('ERROR', 'transient link flag at R/A/Link (links must be persistent, B1168 D2)')"},
+		{"conversion link without slot names", base("<p n='A' h='2' t='b:Folder'><p n='L' t='b:ConversionLink'>" +
+			"<p n='sourceOrd' v='slot:/x'/><p n='targetSlotName' v=''/></p></p>"),
+			"('ERROR', 'link at R/A/L missing child sourceSlotName'); ('ERROR', 'link at R/A/L missing child targetSlotName')"},
+		{"password type", base("<p n='A' h='2' t='b:Folder'><p n='pw' t='b:PassWord' v='x'/></p>"),
+			"('ERROR', 'password-typed value at R/A/pw (secrets must never be generated)')"},
 	} {
 		var got []string
 		for _, f := range validateXML(c.doc) {
@@ -123,6 +136,35 @@ func TestValidateXMLFindings(t *testing.T) {
 		}
 		if g := strings.Join(got, "; "); g != c.want {
 			t.Errorf("%s:\n got  %s\n want %s", c.name, g, c.want)
+		}
+	}
+}
+
+// TestReadPlanTextLikeOpenRead: strict UTF-8 with CPython's UnicodeDecodeError texts (bytes
+// printed by Python 3.15's b.decode("utf-8")), then universal newlines.
+func TestReadPlanTextLikeOpenRead(t *testing.T) {
+	for in, want := range map[string]string{
+		"a\r\nb\rc\n":   "text a\nb\nc\n",
+		"\xe1\x80A":     "UnicodeDecodeError: 'utf-8' codec can't decode bytes in position 0-1: invalid continuation byte",
+		"\xf0\x90\x80A": "UnicodeDecodeError: 'utf-8' codec can't decode bytes in position 0-2: invalid continuation byte",
+		"\xf0\x90A":     "UnicodeDecodeError: 'utf-8' codec can't decode bytes in position 0-1: invalid continuation byte",
+		"\xe1A":         "UnicodeDecodeError: 'utf-8' codec can't decode byte 0xe1 in position 0: invalid continuation byte",
+		"\xe1\x80":      "UnicodeDecodeError: 'utf-8' codec can't decode bytes in position 0-1: unexpected end of data",
+		"\xf0\x90\x80":  "UnicodeDecodeError: 'utf-8' codec can't decode bytes in position 0-2: unexpected end of data",
+		"\xed\xa0\x80":  "UnicodeDecodeError: 'utf-8' codec can't decode byte 0xed in position 0: invalid continuation byte",
+		"\xf4\x90":      "UnicodeDecodeError: 'utf-8' codec can't decode byte 0xf4 in position 0: invalid continuation byte",
+		"ok\xc3":        "UnicodeDecodeError: 'utf-8' codec can't decode byte 0xc3 in position 2: unexpected end of data",
+		"\xc3(":         "UnicodeDecodeError: 'utf-8' codec can't decode byte 0xc3 in position 0: invalid continuation byte",
+		"\xff":          "UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte",
+		"\xe0\x80\x80":  "UnicodeDecodeError: 'utf-8' codec can't decode byte 0xe0 in position 0: invalid continuation byte",
+	} {
+		text, err := readPlanText([]byte(in))
+		got := "text " + text
+		if err != nil {
+			got = err.Error()
+		}
+		if got != want {
+			t.Errorf("readPlanText(%q) = %q, want %q", in, got, want)
 		}
 	}
 }

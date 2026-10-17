@@ -37,10 +37,13 @@ func mustRead(t *testing.T, p string) []byte {
 // TestGenerated replays testdata/generated: generate in a scratch directory, then compare
 // the output with Python's and the written file with the one Python wrote.
 func TestGenerated(t *testing.T) {
-	td, _ := filepath.Abs("testdata")
-	dirs, _ := filepath.Glob(filepath.Join(td, "generated", "*"))
-	if len(dirs) == 0 {
-		t.Fatal("no generated cases")
+	td, err := filepath.Abs("testdata")
+	if err != nil {
+		t.Fatal(err)
+	}
+	dirs, err := filepath.Glob(filepath.Join(td, "generated", "*"))
+	if err != nil || len(dirs) == 0 {
+		t.Fatalf("no generated cases: %v", err)
 	}
 	for _, d := range dirs {
 		t.Run(filepath.Base(d), func(t *testing.T) {
@@ -50,6 +53,9 @@ func TestGenerated(t *testing.T) {
 			if err := json.Unmarshal(mustRead(t, filepath.Join(d, "cmd.json")), &cmd); err != nil {
 				t.Fatal(err)
 			}
+			if len(cmd.Args) < 2 {
+				t.Fatalf("cmd.json args %q: want generate <plan> ...", cmd.Args)
+			}
 			tmp := t.TempDir()
 			plan := cmd.Args[1]
 			if err := os.WriteFile(filepath.Join(tmp, plan), mustRead(t, filepath.Join(td, "fixtures", plan)), 0o644); err != nil {
@@ -58,7 +64,10 @@ func TestGenerated(t *testing.T) {
 			t.Chdir(tmp)
 			start := time.Now()
 			code, out, errText := run(cmd.Args...)
-			want, _ := strconv.Atoi(strings.TrimSpace(string(mustRead(t, filepath.Join(d, "exit")))))
+			want, err := strconv.Atoi(strings.TrimSpace(string(mustRead(t, filepath.Join(d, "exit")))))
+			if err != nil {
+				t.Fatal(err)
+			}
 			if code != want || out != string(mustRead(t, filepath.Join(d, "stdout"))) || errText != string(mustRead(t, filepath.Join(d, "stderr"))) {
 				t.Fatalf("exit %d out %q err %q", code, out, errText)
 			}

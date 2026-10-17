@@ -76,5 +76,9 @@ func utf8Error(data []byte, i int) error {
 			break
 		}
 	}
-	return raise("UnicodeDecodeError", "'utf-8' codec can't decode byte 0x%02x in position %d: invalid continuation byte", c, i)
+	// j is the bad byte: CPython names the valid prefix before it
+	if j-i == 1 {
+		return raise("UnicodeDecodeError", "'utf-8' codec can't decode byte 0x%02x in position %d: invalid continuation byte", c, i)
+	}
+	return raise("UnicodeDecodeError", "'utf-8' codec can't decode bytes in position %d-%d: invalid continuation byte", i, j-1)
 }

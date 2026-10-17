@@ -194,16 +194,17 @@ func selftest(w io.Writer) int {
 	skipped := 0
 	checks := selfChecks()
 	for _, c := range checks {
-		switch {
-		case c.skip != "":
+		if c.skip != "" {
 			skipped++
 			fmt.Fprint(w, "s")
-		case c.run() != nil:
-			failures = append(failures, fmt.Sprintf("FAIL: %s\n%v", c.name, c.run()))
-			fmt.Fprint(w, "F")
-		default:
-			fmt.Fprint(w, ".")
+			continue
 		}
+		if err := c.run(); err != nil {
+			failures = append(failures, fmt.Sprintf("FAIL: %s\n%v", c.name, err))
+			fmt.Fprint(w, "F")
+			continue
+		}
+		fmt.Fprint(w, ".")
 	}
 	fmt.Fprintln(w)
 	for _, f := range failures {
