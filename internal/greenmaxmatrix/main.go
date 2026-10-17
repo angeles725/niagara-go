@@ -14,6 +14,8 @@ import (
 	"github.com/angeles725/niagara-go/internal/argparse"
 	"github.com/angeles725/niagara-go/internal/bog"
 	"github.com/angeles725/niagara-go/internal/cli"
+	"github.com/angeles725/niagara-go/internal/pycompat"
+	"github.com/angeles725/niagara-go/internal/pycsv"
 )
 
 // prog is the Python program name, kept for byte-identical usage and error lines.
@@ -78,7 +80,7 @@ func run(supPath, jacePath, pxDir, out string, s cli.Stdio) int {
 	px, err := parsePx(pxDir)
 	if err != nil {
 		// Python ends in a traceback on a Px it cannot open.
-		fmt.Fprintf(s.Err, "greenmax-matrix: %s\n", pyOSError(err))
+		fmt.Fprintf(s.Err, "greenmax-matrix: %s\n", pycompat.OSErrorText(err))
 		return cli.ExitCannotSearch
 	}
 	if len(sup) == 0 && len(jac) == 0 {
@@ -89,7 +91,7 @@ func run(supPath, jacePath, pxDir, out string, s cli.Stdio) int {
 	rows := buildRows(sup, jac, px)
 	if err := writeCSV(out, rows); err != nil {
 		// Python ends in a traceback when the output cannot be written.
-		fmt.Fprintf(s.Err, "greenmax-matrix: %s\n", pyOSError(err))
+		fmt.Fprintf(s.Err, "greenmax-matrix: %s\n", pycompat.OSErrorText(err))
 		return cli.ExitCannotSearch
 	}
 	summary(s.Out, sup, jac, px, rows, out)
@@ -177,11 +179,16 @@ func yesOr(b bool) string {
 	return "?"
 }
 
+// writeCSV writes the header and rows with csv.writer (pycsv: QUOTE_MINIMAL, "\r\n").
 func writeCSV(path string, rows [][]string) error {
 	var b strings.Builder
-	b.WriteString(csvRow(fields))
-	for _, r := range rows {
-		b.WriteString(csvRow(r))
+	w := pycsv.NewWriter(&b)
+	for _, r := range append([][]string{fields}, rows...) {
+		row := make([]any, len(r))
+		for i, f := range r {
+			row[i] = f
+		}
+		_ = w.WriteRow(row) // a strings.Builder never fails
 	}
 	return os.WriteFile(path, []byte(b.String()), 0o666)
 }
@@ -218,11 +225,11 @@ func summary(w io.Writer, sup map[int]*supPanel, jac map[int]*jacePanel, px map[
 		}
 		z := ""
 		if p := px[gm]; p != nil {
-			z = head(p.zone, 16)
+			z = pycompat.Cut(p.zone, 16)
 		}
 		t := ""
 		if len(gr) > 0 {
-			t = head(gr[0][1], 11)
+			t = pycompat.Cut(gr[0][1], 11)
 		}
 		fmt.Fprintf(w, "%s  %-12s%-18s%7d%6d%8d%7d\n", gmName(gm), t, z, len(gr), dc, so, fo)
 	}

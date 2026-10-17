@@ -85,7 +85,7 @@ func parsePx(dir string) (map[int]*pxPanel, error) {
 			tt := pycompat.Strip(pycompat.HTMLUnescape(t[1]))
 			low := strings.ToLower(tt)
 			if navHeaders[low] || digitsRE.MatchString(tt) || pxStatusRE.MatchString(tt) ||
-				strings.Contains(low, "comunicaci") || head(tt, 2) == "AL" {
+				strings.Contains(low, "comunicaci") || pycompat.Cut(tt, 2) == "AL" {
 				continue
 			}
 			if e.zone == "" {
