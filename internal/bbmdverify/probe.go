@@ -34,7 +34,8 @@ func color(s, k string) string { return colors[k] + s + colors["off"] }
 type frame struct {
 	ip   string
 	fn   byte
-	inst int // -1 = no I-Am
+	inst int    // -1 = no I-Am
+	orig []byte // Forwarded-NPDU originating B/IP address (6 bytes), else nil
 	raw  []byte
 }
 
@@ -53,11 +54,11 @@ func collect(conn *net.UDPConn, deadline time.Time, wantIAm bool) []frame {
 		if !ok {
 			continue
 		}
-		inst := -1
+		inst, orig := -1, []byte(nil)
 		if wantIAm {
-			inst, _ = extractIAm(fn, payload)
+			inst, orig = extractIAm(fn, payload)
 		}
-		out = append(out, frame{from.IP.To4().String(), fn, inst, data})
+		out = append(out, frame{from.IP.To4().String(), fn, inst, orig, data})
 	}
 	return out
 }
@@ -72,18 +73,25 @@ func localIPToward(ip string, port int) (string, error) {
 	return c.LocalAddr().(*net.UDPAddr).IP.String(), nil
 }
 
-// verdict mirrors verdict(): the text and its colour key.
+// verdict mirrors verdict(): the text and its colour key. Unlike Python it
+// reports REBIND OK only when an I-Am came back from the device subnet
+// (crossed); Python also passed when merely some BBMD answered Read-BDT,
+// which says nothing about whether its BDT reaches the device subnet.
 func verdict(onDeviceSubnet, unicast, crossed, anyBBMD bool) (string, string) {
 	switch {
 	case onDeviceSubnet:
 		return "INCONCLUSIVE — this host is ON the device subnet, so its broadcast never crossed a " +
 			"router. Run it from the supervisor's subnet, or fix --device-prefix.", "high"
-	case crossed || anyBBMD:
+	case crossed:
 		s := "REBIND OK — a broadcast Who-Is reaches the device subnet"
 		if anyBBMD {
 			s += " (BBMD confirmed)"
 		}
 		return s + ". Instance-based re-binding will work on IP change.", "ok"
+	case anyBBMD:
+		return "REBIND NOT CONFIRMED — a BBMD answered Read-BDT, but no I-Am came back from the device " +
+			"subnet (directly or forwarded), so the broadcast Who-Is was not seen to reach it. Check that " +
+			"the BBMD's BDT lists the device subnet's BBMD, then re-run.", "high"
 	case unicast:
 		return "REBIND WILL FAIL — the device answers UNICAST (pinned IP:port works, like " +
 			"ICMP) but NOT the broadcast Who-Is, and no BBMD answered. On an IP change " +
@@ -109,6 +117,7 @@ type report struct {
 	uniInstance    int
 	order          []string         // responder IPs in first-seen order
 	responders     map[string][]int // instances in add() order
+	fwdCrossed     bool             // a forwarded I-Am originated in the device subnet
 	bbmd           []bbmdResult
 }
 
@@ -181,15 +190,7 @@ func (r *report) probe(conn *net.UDPConn, send func([]byte, string) error, windo
 	if err := send(buildWhoIs(nil, true), o.LocalBcast); err != nil {
 		return err
 	}
-	for _, f := range collect(conn, time.Now().Add(window), true) {
-		if f.inst < 0 {
-			continue
-		}
-		if _, ok := r.responders[f.ip]; !ok {
-			r.order = append(r.order, f.ip)
-		}
-		r.responders[f.ip] = append(r.responders[f.ip], f.inst)
-	}
+	r.addBroadcast(collect(conn, time.Now().Add(window), true))
 	var targets []string
 	for _, t := range []string{o.BBMD, o.DeviceIP} {
 		if t != "" && !contains(targets, t) {
@@ -221,6 +222,25 @@ func (r *report) probe(conn *net.UDPConn, send func([]byte, string) error, windo
 	return nil
 }
 
+// addBroadcast records the broadcast Who-Is answers: responders keyed by UDP
+// source like Python, plus whether a Forwarded-NPDU I-Am (relayed by a local
+// BBMD, so its UDP source is local) originated inside the device subnet.
+func (r *report) addBroadcast(frames []frame) {
+	for _, f := range frames {
+		if f.inst < 0 {
+			continue
+		}
+		if _, ok := r.responders[f.ip]; !ok {
+			r.order = append(r.order, f.ip)
+		}
+		r.responders[f.ip] = append(r.responders[f.ip], f.inst)
+		if len(f.orig) == 6 {
+			ip := net.IP(f.orig[:4]).String()
+			r.fwdCrossed = r.fwdCrossed || inSubnet(ip, r.o.DeviceIP, r.o.DevicePrefix)
+		}
+	}
+}
+
 func contains(xs []string, x string) bool {
 	for _, y := range xs {
 		if y == x {
@@ -237,7 +257,12 @@ func sortedUnique(xs []int) []int {
 	return out
 }
 
+// crossed: an I-Am answered the broadcast from inside the device subnet,
+// directly (UDP source) or forwarded (originating address).
 func (r *report) crossed() bool {
+	if r.fwdCrossed {
+		return true
+	}
 	for _, ip := range r.order {
 		if inSubnet(ip, r.o.DeviceIP, r.o.DevicePrefix) {
 			return true
