@@ -174,7 +174,7 @@ func (c *corpus) cmdSemantic(query string, hasQuery, buildIndex, forceTFIDF bool
 		}
 		return 1
 	}
-	for _, h := range scored[:min(limit, len(scored))] {
+	for _, h := range scored[:min(max(limit, 0), len(scored))] {
 		fmt.Fprintf(c.out, "%s · %s   (score %.3f)\n", displayID(h.b.label), titleFor(h.b.label, catalog, h.b.path), h.score)
 		text, _ := readText(h.b.path)
 		if snippet := bestSnippet(pycompat.SplitLines(text, false), terms); snippet != "" {

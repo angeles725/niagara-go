@@ -89,8 +89,9 @@ func miss(o *opts, text string) {
 }
 
 // capRows is cliflags.cap: the note goes to stdout in text mode, to stderr otherwise.
+// A limit of 0 or less caps nothing (the command line only passes 0, "not given").
 func capRows(rows []row, o *opts, text bool) ([]row, string) {
-	if o.limit == 0 || len(rows) <= o.limit {
+	if o.limit <= 0 || len(rows) <= o.limit {
 		return rows, ""
 	}
 	note := fmt.Sprintf("... %d more rows (raise --limit)", len(rows)-o.limit)

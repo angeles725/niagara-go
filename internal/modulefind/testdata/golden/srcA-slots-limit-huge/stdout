@@ -1,0 +1,6 @@
+BColdRoom.setpoint  <baja:StatusNumeric>  flags=Flags.SUMMARY | Flags.OPERATOR  min=-40.0  [COMPLEX]
+BColdRoom.mode  <baja:String>  flags=Flags.OPERATOR
+BRoomPanel.temp  <BStatusNumeric>  flags=Flags.OPERATOR  [COMPLEX]
+BRoomPanel.label  <baja:String>  flags=Flags.READONLY | Flags.SUMMARY
+BRoomPanel.cache  <baja:Integer>  flags=Flags.TRANSIENT | Flags.HIDDEN
+BRoomPanel.untyped  <>  flags=-

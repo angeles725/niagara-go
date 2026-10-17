@@ -145,7 +145,7 @@ func (c *corpus) cmdGraph(asJSON bool, top int, bare bool) int {
 	fmt.Fprintln(c.out, "\nMost cited")
 	order := append([]string(nil), g.reverseIDs...) // label order, then a stable sort by count
 	sortStable(order, func(a, b string) bool { return len(g.reverse[a]) > len(g.reverse[b]) })
-	for _, label := range order[:min(top, len(order))] {
+	for _, label := range order[:min(max(top, 0), len(order))] {
 		fmt.Fprintf(c.out, "  %s  %s\n", padLeft(fmt.Sprint(len(g.reverse[label])), 5), c.titled(label, catalog, byFile))
 	}
 	return rc
@@ -193,6 +193,7 @@ func (c *corpus) cmdPath(a, b string, directed, bare bool) int {
 }
 
 func (c *corpus) cmdLintRefs(files []string, warn bool, limit int) int {
+	limit = max(limit, 0) // positive_int on the command line; a caller's 0 or less prints none
 	var targets []blockFile
 	if len(files) > 0 {
 		for _, f := range files {
