@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Niagara Presentation XML -->
+<PxView version="1.0">
+  <import>
+    <module name="bajaui" />
+  </import>
+  <content>
+  <CanvasPane viewSize="900.0,200.0" background="#ffffff">
+    <Label layout="10.0,5.0,200.0,20.0" text="Tablero AL3 &amp; AL4" text="dup" />
+    <Picture layout="100.0,50.0,60.0,30.0" image="file:^Imagenes/GreenMax On.png">
+      <ValueBinding ord="slot:Relay$5b1$5d$2eBO">
+        <IBooleanToSimple name="image" trueValue="file:^Imagenes/GreenMax On.png" falseValue="file:^Imagenes/GreenMax Off.png" />
+      </ValueBinding>
+    </Picture>
+    <Picture layout="100.0,50.0,10.0,10.0">
+      <ValueBinding ord="slot:Relay$5b1$5d$2eBO">
+        <IStatusToSimple name="background" />
+      </ValueBinding>
+    </Picture>
+    <ImageButton layout="100.0,50.0,20.0,20.0" image="file:^Imagenes/active.png">
+      <ActionBinding ord="slot:Relay$5b1$5d$2eBO/active" widgetEvent="actionPerformed">
+        <Note text="active" />
+      </ActionBinding>
+    </ImageButton>
+    <ImageButton layout="100.0,50.0,20.0,20.0" image="file:^Imagenes/inactive.png">
+      <ActionBinding widgetEvent="actionPerformed" ord="slot:Relay$5b1$5d$2eBO/inactive" hyperlink="x">
+        <Note text="inactive" />
+      </ActionBinding>
+    </ImageButton>
+    <ImageButton layout="100.0,50.0,20.0,20.0" image="file:^Imagenes/auto.png">
+      <ActionBinding ord="slot:Relay$5b1$5d$2eBO/auto" widgetEvent="actionPerformed">
+        <Note text="auto" />
+      </ActionBinding>
+    </ImageButton>
+    <Picture layout="100.0,50.0,20.0,20.0" image="file:^Imagenes/cal.png">
+      <PopupBinding widgetEvent="mousePressed" ord="slot:R1" />
+    </Picture>
+    <Picture layout="200.5,50.0,60.0,30.0" image="file:^Imagenes/GreenMax On.png">
+      <ValueBinding ord="slot:Relay$5b2$5d$2eBO">
+        <IBooleanToSimple name="image" trueValue="file:^Imagenes/GreenMax On.png" falseValue="file:^Imagenes/GreenMax Off.png" />
+      </ValueBinding>
+    </Picture>
+    <Picture layout="200.5,50.0,10.0,10.0">
+      <ValueBinding ord="slot:Relay$5b2$5d$2eBO">
+        <IStatusToSimple name="background" />
+      </ValueBinding>
+    </Picture>
+    <ImageButton layout="200.5,50.0,20.0,20.0" image="file:^Imagenes/active.png">
+      <ActionBinding ord="slot:Relay$5b2$5d$2eBO/active" widgetEvent="actionPerformed">
+        <Note text="active" />
+      </ActionBinding>
+    </ImageButton>
+    <ImageButton layout="200.5,50.0,20.0,20.0" image="file:^Imagenes/inactive.png">
+      <ActionBinding widgetEvent="actionPerformed" ord="slot:Relay$5b2$5d$2eBO/inactive" hyperlink="x">
+        <Note text="inactive" />
+      </ActionBinding>
+    </ImageButton>
+    <ImageButton layout="200.5,50.0,20.0,20.0" image="file:^Imagenes/auto.png">
+      <ActionBinding ord="slot:Relay$5b2$5d$2eBO/auto" widgetEvent="actionPerformed">
+        <Note text="auto" />
+      </ActionBinding>
+    </ImageButton>
+    <Picture layout="200.5,50.0,20.0,20.0" image="file:^Imagenes/cal.png">
+      <PopupBinding widgetEvent="mousePressed" ord="slot:R2" />
+    </Picture>
+    <Picture layout="100.0,150.7,60.0,30.0" image="file:^Imagenes/GreenMax On.png">
+      <ValueBinding ord="slot:Relay$5b4$5d$2eBO">
+        <IBooleanToSimple name="image" trueValue="file:^Imagenes/GreenMax On.png" falseValue="file:^Imagenes/GreenMax Off.png" />
+      </ValueBinding>
+    </Picture>
+    <Picture layout="100.0,150.7,10.0,10.0">
+      <ValueBinding ord="slot:Relay$5b4$5d$2eBO">
+        <IStatusToSimple name="background" />
+      </ValueBinding>
+    </Picture>
+    <ImageButton layout="100.0,150.7,20.0,20.0" image="file:^Imagenes/active.png">
+      <ActionBinding ord="slot:Relay$5b4$5d$2eBO/active" widgetEvent="actionPerformed">
+        <Note text="active" />
+      </ActionBinding>
+    </ImageButton>
+    <ImageButton layout="100.0,150.7,20.0,20.0" image="file:^Imagenes/inactive.png">
+      <ActionBinding widgetEvent="actionPerformed" ord="slot:Relay$5b4$5d$2eBO/inactive" hyperlink="x">
+        <Note text="inactive" />
+      </ActionBinding>
+    </ImageButton>
+    <ImageButton layout="100.0,150.7,20.0,20.0" image="file:^Imagenes/auto.png">
+      <ActionBinding ord="slot:Relay$5b4$5d$2eBO/auto" widgetEvent="actionPerformed">
+        <Note text="auto" />
+      </ActionBinding>
+    </ImageButton>
+    <Picture layout="100.0,150.7,20.0,20.0" image="file:^Imagenes/cal.png">
+      <PopupBinding widgetEvent="mousePressed" ord="slot:R4" />
+    </Picture>
+  </CanvasPane>
+  </content>
+</PxView>

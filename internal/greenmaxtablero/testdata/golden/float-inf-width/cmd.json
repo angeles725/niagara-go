@@ -1,0 +1,8 @@
+{
+ "args": [
+  "inputs/float-inf-width.px",
+  "--gm",
+  "GM1",
+  "--stdout"
+ ]
+}
