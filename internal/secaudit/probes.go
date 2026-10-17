@@ -216,16 +216,30 @@ func (e *env) keytoolKeysizes(path string) (sizes []int, failure string, err err
 }
 
 // tlsSubject is the "subject=..." line of the certificate host:port serves; "" on any failure.
-func (e *env) tlsSubject(host string, port int) string {
+// Only an interrupt is returned as an error: it ends the audit instead of skipping the check.
+func (e *env) tlsSubject(host string, port int) (string, error) {
 	r, err := e.run([]string{"openssl", "s_client", "-connect", host + ":" + strconv.Itoa(port)}, nil, 15*time.Second)
+	if isInterrupt(err) {
+		return "", err
+	}
 	if err != nil || !utf8.Valid(r.stdout) {
-		return ""
+		return "", nil
 	}
 	c, err := e.run([]string{"openssl", "x509", "-noout", "-subject"}, r.stdout, 0)
-	if err != nil || !utf8.Valid(c.stdout) {
-		return ""
+	if isInterrupt(err) {
+		return "", err
 	}
-	return pycompat.Strip(string(c.stdout))
+	if err != nil || !utf8.Valid(c.stdout) {
+		return "", nil
+	}
+	return pycompat.Strip(string(c.stdout)), nil
+}
+
+// isInterrupt reports whether err is the *interruptError of a signal that came while a probe
+// child ran; every caller of e.run returns it up so the audit stops.
+func isInterrupt(err error) bool {
+	var in *interruptError
+	return errors.As(err, &in)
 }
 
 // icaclsPaths is where WSL keeps icacls when System32 is not on PATH.
@@ -245,11 +259,14 @@ func (e *env) findIcacls() string {
 }
 
 // runIcacls returns the decoded listing, or the reason there is none: failure to start, timeout
-// or a non-zero exit.
-func (e *env) runIcacls(exe, winpath string) (string, string) {
+// or a non-zero exit. An interrupt is returned as the error instead: it ends the audit.
+func (e *env) runIcacls(exe, winpath string) (listing, why string, err error) {
 	r, err := e.run([]string{exe, winpath}, nil, 60*time.Second)
+	if isInterrupt(err) {
+		return "", "", err
+	}
 	if err != nil {
-		return "", "failed: " + err.Error()
+		return "", "failed: " + err.Error(), nil
 	}
 	stdout, stderr := decodeConsole(r.stdout), decodeConsole(r.stderr)
 	if r.code != 0 {
@@ -257,7 +274,7 @@ func (e *env) runIcacls(exe, winpath string) (string, string) {
 		if text == "" {
 			text = stdout
 		}
-		return "", fmt.Sprintf("exit %d: %s", r.code, head(pycompat.Strip(text), 120))
+		return "", fmt.Sprintf("exit %d: %s", r.code, head(pycompat.Strip(text), 120)), nil
 	}
-	return stdout, ""
+	return stdout, "", nil
 }

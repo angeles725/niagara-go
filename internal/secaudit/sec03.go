@@ -10,11 +10,12 @@ import (
 const sec03Run = `run: icacls <home>\security`
 
 // sec03 checks the security/ ACLs with icacls (a home under a WSL /mnt/<drive> mount only).
-// Any listing that is missing, empty or only partly understood is a SKIP, never a PASS.
-func (e *env) sec03(home string, rep *report) {
+// Any listing that is missing, empty or only partly understood is a SKIP, never a PASS. The error
+// is an interrupt that came while icacls ran.
+func (e *env) sec03(home string, rep *report) error {
 	secdir := pycompat.PosixJoin(home, "security")
 	if !isDir(secdir) {
-		return
+		return nil
 	}
 	skip := func(observed string) {
 		rep.add("SEC-03", "crit", "security/ filesystem ACLs", observed, "Admin/SYSTEM only", "SKIP", "B316/B113", sec03Run)
@@ -28,10 +29,13 @@ func (e *env) sec03(home string, rep *report) {
 	case winpath != "" && icacls == "":
 		skip("not checked: icacls.exe not on PATH nor at " + strings.Join(icaclsPaths, " / "))
 	case icacls != "":
-		listing, why := e.runIcacls(icacls, winpath)
+		listing, why, err := e.runIcacls(icacls, winpath)
+		if err != nil {
+			return err
+		}
 		if why != "" {
 			skip(fmt.Sprintf("not checked: %s %s", icacls, why))
-			return
+			return nil
 		}
 		aces, unparsed := parseListing(listing, winpath)
 		switch {
@@ -50,4 +54,5 @@ func (e *env) sec03(home string, rep *report) {
 		rep.add("SEC-03", "crit", "security/ filesystem ACLs", "not checked (need icacls)",
 			"Admin/SYSTEM only", "MANUAL", "B316/B113", sec03Run)
 	}
+	return nil
 }

@@ -1,6 +1,7 @@
 package secaudit
 
 import (
+	"errors"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -306,4 +307,39 @@ func fakeKeytool(t *testing.T, timeout time.Duration, body func(sleep, dir strin
 	keytoolTimeout = timeout
 	t.Cleanup(func() { keytoolTimeout = saved })
 	return dir
+}
+
+// An interrupt while any probe child runs (keytool, openssl, icacls) ends the audit: it is
+// returned up, never read as a failed probe that lets the next check run.
+func TestInterruptInAnyProbeStopsTheAudit(t *testing.T) {
+	interrupted := func() *env {
+		e := fakeEnv(nil, nil, 0, &interruptError{os.Interrupt})
+		e.lookPath = func(string) string { return "" }
+		e.winpath = func(string) string { return "" }
+		return e
+	}
+	for _, tc := range []struct {
+		name string
+		home func(t *testing.T) string
+		host string
+		e    func() *env
+	}{
+		{"keytool", homeWithTruststore, "", interrupted},
+		{"openssl", func(t *testing.T) string { return t.TempDir() }, "10.0.0.5", interrupted},
+		{"icacls", func(t *testing.T) string {
+			home := t.TempDir()
+			if err := os.Mkdir(filepath.Join(home, "security"), 0o755); err != nil {
+				t.Fatal(err)
+			}
+			return home
+		}, "", func() *env { return fakeEnv(nil, nil, 0, &interruptError{os.Interrupt}) }},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.e().audit(tc.home(t), "", tc.host, nil, &report{})
+			var in *interruptError
+			if !errors.As(err, &in) {
+				t.Errorf("audit = %v, want the *interruptError", err)
+			}
+		})
+	}
 }

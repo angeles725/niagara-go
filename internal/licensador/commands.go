@@ -332,6 +332,7 @@ func RunGenkeys(outDir string, bits int, s cli.Stdio) int {
 
 func generateKey(bits int) (*rsa.PrivateKey, error) {
 	if bits < 1024 {
+		//lint:ignore ST1005 parity with the Python message
 		return nil, errors.New("key_size must be at least 1024-bits.")
 	}
 	return rsa.GenerateKey(rand.Reader, bits)

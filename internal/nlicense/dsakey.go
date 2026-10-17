@@ -1,7 +1,8 @@
 package nlicense
 
 import (
-	"crypto/dsa" //nolint:staticcheck // the Niagara license format is DSA/SHA-1 by definition
+	//lint:ignore SA1019 the Niagara license format is DSA/SHA-1 by definition
+	"crypto/dsa"
 	"crypto/rand"
 	"crypto/sha1" //nolint:gosec // SHA-1 is what the platform verifies
 	"crypto/x509"

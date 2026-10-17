@@ -36,16 +36,30 @@ func TestTimeoutKillsForkedChildren(t *testing.T) {
 	waitGone(t, pid)
 }
 
-// interruptHelperEnv makes the test binary act as the audit process of TestInterruptKillsChildGroup.
-const interruptHelperEnv = "SECAUDIT_INTERRUPT_HELPER"
+// interruptHelperEnv makes the test binary act as the audit process of killsChildGroupOn; it
+// holds the keytool timeout the helper uses, since fakeKeytool sets it in the parent only.
+const interruptHelperEnv = "SECAUDIT_INTERRUPT_HELPER_TIMEOUT"
 
 // Ctrl-C on the audit while keytool runs kills keytool's whole process group, which does not get
-// the terminal's SIGINT itself, and then the audit dies of SIGINT as it would by default. The
-// test binary re-runs itself as the audit so the signal hits a separate process.
-func TestInterruptKillsChildGroup(t *testing.T) {
-	if os.Getenv(interruptHelperEnv) == "1" {
+// the terminal's SIGINT itself, and then the audit dies of SIGINT as it would by default (130).
+func TestInterruptKillsChildGroup(t *testing.T) { killsChildGroupOn(t, syscall.SIGINT) }
+
+// SIGTERM to the audit does the same, and the audit dies of SIGTERM (143).
+func TestTerminateKillsChildGroup(t *testing.T) { killsChildGroupOn(t, syscall.SIGTERM) }
+
+// killsChildGroupOn re-runs the test binary as the audit so sig hits a separate process, waits
+// for the fake keytool to fork, signals the audit and checks that it died of sig and that the
+// forked child is gone.
+func killsChildGroupOn(t *testing.T, sig syscall.Signal) {
+	if v := os.Getenv(interruptHelperEnv); v != "" {
+		d, err := time.ParseDuration(v)
+		if err != nil {
+			fmt.Printf("bad %s=%q: %v\n", interruptHelperEnv, v, err)
+			os.Exit(4)
+		}
+		keytoolTimeout = d
 		o, err := defaultEnv().keytoolList("ts.jks", false)
-		fmt.Printf("keytoolList survived SIGINT: %+v, %v\n", o, err)
+		fmt.Printf("keytoolList survived %s: %+v, %v\n", sig, o, err)
 		os.Exit(3)
 	}
 	needProc(t)
@@ -55,7 +69,7 @@ func TestInterruptKillsChildGroup(t *testing.T) {
 		t.Fatal(err)
 	}
 	cmd := exec.Command(self, "-test.run=^"+t.Name()+"$")
-	cmd.Env = append(os.Environ(), interruptHelperEnv+"=1")
+	cmd.Env = append(os.Environ(), interruptHelperEnv+"="+keytoolTimeout.String())
 	cmd.Stdout, cmd.Stderr = os.Stderr, os.Stderr
 	if err := cmd.Start(); err != nil {
 		t.Fatal(err)
@@ -76,16 +90,16 @@ func TestInterruptKillsChildGroup(t *testing.T) {
 		}
 		time.Sleep(20 * time.Millisecond)
 	}
-	if err := cmd.Process.Signal(syscall.SIGINT); err != nil {
+	if err := cmd.Process.Signal(sig); err != nil {
 		t.Fatal(err)
 	}
 	err = cmd.Wait()
 	waited = true
 	var exitErr *exec.ExitError
 	if !errors.As(err, &exitErr) {
-		t.Errorf("audit process ended with %v, want death by SIGINT", err)
-	} else if ws := exitErr.Sys().(syscall.WaitStatus); !ws.Signaled() || ws.Signal() != syscall.SIGINT {
-		t.Errorf("audit process ended with %v, want death by SIGINT", exitErr)
+		t.Errorf("audit process ended with %v, want death by %s", err, sig)
+	} else if ws := exitErr.Sys().(syscall.WaitStatus); !ws.Signaled() || ws.Signal() != sig {
+		t.Errorf("audit process ended with %v, want death by %s", exitErr, sig)
 	}
 	waitGone(t, pid)
 }

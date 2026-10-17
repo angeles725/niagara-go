@@ -1,3 +1,4 @@
+// Command greenmax-matrix builds the GreenMAX lighting points matrix (Go port of tools/greenmax-matrix.py).
 package main
 
 import (

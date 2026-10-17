@@ -57,6 +57,7 @@ func pemBlocks(data []byte) ([]*pem.Block, error) {
 		out = append(out, b)
 	}
 	if len(out) == 0 {
+		//lint:ignore ST1005 parity with the Python message
 		return nil, errors.New(pemFAQ + "MalformedFraming")
 	}
 	return out, nil
@@ -88,6 +89,7 @@ func LoadPublicKey(path string) (crypto.PublicKey, error) {
 			return k, nil
 		}
 	}
+	//lint:ignore ST1005 parity with the Python message
 	return nil, errors.New("Valid PEM but no BEGIN PUBLIC KEY/END PUBLIC KEY delimiters. Are you sure this is a public key?")
 }
 
@@ -111,6 +113,7 @@ func LoadPrivateKey(path string) (crypto.Signer, error) {
 		case "EC PRIVATE KEY":
 			k, err = x509.ParseECPrivateKey(b.Bytes)
 		case "ENCRYPTED PRIVATE KEY":
+			//lint:ignore ST1005 parity with the Python message
 			return nil, errors.New("Password was not given but private key is encrypted")
 		default:
 			continue
@@ -121,8 +124,10 @@ func LoadPrivateKey(path string) (crypto.Signer, error) {
 		if s, ok := k.(crypto.Signer); ok {
 			return s, nil
 		}
+		//lint:ignore ST1005 parity with the Python message
 		return nil, errors.New(keyDataErr + "unsupported key type")
 	}
+	//lint:ignore ST1005 parity with the Python message
 	return nil, errors.New("Valid PEM but no BEGIN/END delimiters for a private key found. Are you sure this is a private key?")
 }
 

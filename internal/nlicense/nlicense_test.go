@@ -2,7 +2,8 @@ package nlicense
 
 import (
 	"bytes"
-	"crypto/dsa" //nolint:staticcheck // DSA is the license format
+	//lint:ignore SA1019 DSA is the Niagara license format
+	"crypto/dsa"
 	"crypto/rand"
 	"crypto/x509"
 	"encoding/asn1"

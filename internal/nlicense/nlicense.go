@@ -1,7 +1,8 @@
 package nlicense
 
 import (
-	"crypto/dsa" //nolint:staticcheck // the license format is DSA by definition
+	//lint:ignore SA1019 the Niagara license format is DSA by definition
+	"crypto/dsa"
 	"crypto/rsa"
 	"encoding/csv"
 	"errors"

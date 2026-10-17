@@ -31,7 +31,9 @@ func sec03Row(t *testing.T, e *env) row {
 		t.Fatal(err)
 	}
 	rep := &report{}
-	e.sec03(home, rep)
+	if err := e.sec03(home, rep); err != nil {
+		t.Fatal(err)
+	}
 	if len(rep.rows) != 1 {
 		t.Fatalf("rows = %v", rep.rows)
 	}

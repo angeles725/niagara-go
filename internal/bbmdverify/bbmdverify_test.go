@@ -197,3 +197,12 @@ func TestInvalidNetworkMessages(t *testing.T) {
 		}
 	}
 }
+
+// TestJSONStringMatchesPython checks jsonStr against json.dumps output frozen
+// from Python 3.15: json.dumps("a\bb\fc\x01\x7f\u00e9\U0001F600\"\\\n\r\t").
+func TestJSONStringMatchesPython(t *testing.T) {
+	const want = `"a\bb\fc\u0001\u007f\u00e9\ud83d\ude00\"\\\n\r\t"`
+	if got := jsonStr("a\bb\fc\x01\x7f\u00e9\U0001F600\"\\\n\r\t"); got != want {
+		t.Errorf("jsonStr: %s, want %s", got, want)
+	}
+}

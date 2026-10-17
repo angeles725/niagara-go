@@ -1,5 +1,7 @@
 package hdbread
 
+import "sort"
+
 // userMasked replaces a printable run that carries a user identity under --strings --mask.
 const userMasked = "<USER-MASKED>"
 
@@ -20,7 +22,33 @@ const (
 // maskPlan is what --mask needs to know about a record section.
 type maskPlan struct {
 	ids      [][2]int       // identity field contents [start, end) of the framed records
+	idIndex  spans          // ids, indexed for the overlap test of maskRun
 	opStarts map[int]string // first content byte -> operation of each trusted framed record
+}
+
+// spans indexes half-open ranges [start, end) so "does any range start before hi and end after
+// lo" costs O(log n): starts sorted, maxEnd[i] the largest end among the first i+1 of them.
+type spans struct {
+	starts, maxEnd []int
+}
+
+func newSpans(ranges [][2]int) spans {
+	sorted := append([][2]int(nil), ranges...)
+	sort.Slice(sorted, func(a, b int) bool { return sorted[a][0] < sorted[b][0] })
+	sp := spans{make([]int, len(sorted)), make([]int, len(sorted))}
+	for i, r := range sorted {
+		sp.starts[i], sp.maxEnd[i] = r[0], r[1]
+		if i > 0 && sp.maxEnd[i-1] > r[1] {
+			sp.maxEnd[i] = sp.maxEnd[i-1]
+		}
+	}
+	return sp
+}
+
+// any reports whether some range r has r[0] < hi and lo < r[1].
+func (sp spans) any(lo, hi int) bool {
+	n := sort.SearchInts(sp.starts, hi) // ranges [0, n) start before hi
+	return n > 0 && sp.maxEnd[n-1] > lo
 }
 
 // isAuditOperation reports whether s is one of the auditOperations constants.
@@ -50,15 +78,10 @@ func planMask(rec []byte) maskPlan {
 		vocab[op] = true
 	}
 	framed, failed := frameRecords(rec, vocab)
+	inFailed := newSpans(failed)
 	p := maskPlan{opStarts: map[int]string{}}
 	for _, r := range framed {
-		trusted := true
-		for _, f := range failed {
-			if f[0] < r.pos && r.pos < f[1] {
-				trusted = false
-			}
-		}
-		if trusted {
+		if !inFailed.any(r.pos, r.pos) { // no failed f with f[0] < r.pos < f[1]
 			p.opStarts[r.fields[0][0]] = r.op
 		}
 		for k := fieldTarget; k <= fieldUserName; k++ {
@@ -75,6 +98,7 @@ func planMask(rec []byte) maskPlan {
 			}
 		}
 	}
+	p.idIndex = newSpans(p.ids)
 	return p
 }
 
@@ -126,10 +150,8 @@ func stringsLines(rec []byte, doMask bool) []string {
 //
 // No role-account exception, no slot paths: nothing else can print verbatim.
 func maskRun(p maskPlan, r printableRun, s string) string {
-	for _, id := range p.ids {
-		if r.start < id[1] && id[0] < r.end {
-			return userMasked
-		}
+	if p.idIndex.any(r.start, r.end) { // some id with r.start < id[1] && id[0] < r.end
+		return userMasked
 	}
 	if op, ok := p.opStarts[r.start]; ok && s == op && isAuditOperation(s) {
 		return s

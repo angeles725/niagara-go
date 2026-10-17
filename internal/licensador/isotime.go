@@ -110,6 +110,7 @@ func parseClock(s string) (h, m, sec, us int, ok bool) {
 // parseISO mirrors datetime.fromisoformat for the calendar-date forms
 // (YYYY-MM-DD / YYYYMMDD, any one-character separator, Z or +-HH[:MM[:SS]] offsets).
 func parseISO(s string) (pyTime, error) {
+	//lint:ignore ST1005 parity with the Python message
 	bad := fmt.Errorf("Invalid isoformat string: %s", pyjson.StrRepr(s))
 	var y, mo, d int
 	var ok bool

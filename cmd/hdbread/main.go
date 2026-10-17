@@ -1,3 +1,4 @@
+// Command hdbread is a read-only reader for Niagara N4 .hdb history files (Go port of tools/hdbread.py).
 package main
 
 import (

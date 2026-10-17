@@ -70,7 +70,7 @@ func TestStartupBanners(t *testing.T) {
 				ConfigLogin: ns.Bool("config_login"), ConfigPassword: ns.String("config_password"),
 				ConfigTTL: ns.Int("config_ttl"), Editor: ns.Bool("editor")}
 			ctx, cancel := context.WithCancel(context.Background())
-			done2 := make(chan int)
+			done2 := make(chan int, 1) // buffered: a timed-out test does not leak the Run goroutine
 			go func() { done2 <- Run(ctx, o, s) }()
 			// Run prints the "Ctrl+C" banner right before Serve; stop it once the
 			// banner is out (Serve then returns ErrServerClosed), or take an early exit.

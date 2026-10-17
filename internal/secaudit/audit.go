@@ -103,14 +103,20 @@ func (e *env) audit(home, stationXML, host string, rawHead []byte, rep *report) 
 			verd, "B392/B397", note)
 	}
 
-	e.sec03(home, rep)
+	if err := e.sec03(home, rep); err != nil {
+		return fmt.Errorf("icacls: %w", err)
+	}
 
 	if host != "" {
 		for _, p := range []struct {
 			port int
 			name string
 		}{{443, "station HTTPS"}, {5011, "platform TLS"}} {
-			if s := e.tlsSubject(host, p.port); s != "" {
+			s, err := e.tlsSubject(host, p.port)
+			if err != nil {
+				return fmt.Errorf("openssl: %w", err)
+			}
+			if s != "" {
 				def := strings.Contains(s, "ForRecoveryPurposes")
 				rep.add("SEC-04:"+strconv.Itoa(p.port), "crit", p.name+" certificate",
 					pick(def, "default self-signed (ForRecoveryPurposes)", s), "CA-issued cert, replaced",
@@ -217,11 +223,18 @@ func (e *env) sec06(home string, rep *report) {
 }
 
 func (e *env) sec11(home, ts string, rep *report) error {
+	fips := isFile(filepath.Join(home, "jre", "lib", "security", "cacerts.bcfks"))
+	if !isFile(ts) { // no key was read: the check did not run, which is not a PASS (Python passes)
+		rep.add("SEC-11", "med", "weak signing keys / FIPS",
+			"not checked (no security/truststore.jks); FIPS keystore "+pick(fips, "present", "absent"),
+			"all keys >= 2048; FIPS suppresses RSA-1024 option", "SKIP", "B113/B392",
+			"run: keytool -list -v -keystore <home>/security/truststore.jks with the store password")
+		return nil
+	}
 	sizes, failure, err := e.keytoolKeysizes(ts)
 	if err != nil {
 		return fmt.Errorf("keytool: %w", err)
 	}
-	fips := isFile(filepath.Join(home, "jre", "lib", "security", "cacerts.bcfks"))
 	if failure != "" { // the store did not open with "changeit": its key sizes are unknown, not absent
 		rep.add("SEC-11", "med", "weak signing keys / FIPS",
 			"key sizes not read (keytool "+failure+"); FIPS keystore "+pick(fips, "present", "absent"),

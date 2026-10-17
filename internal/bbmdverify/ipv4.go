@@ -25,10 +25,12 @@ func isASCIIDigits(s string) bool {
 // parseIPv4 mirrors ipaddress.IPv4Address(str) and its AddressValueError texts.
 func parseIPv4(s string) (uint32, error) {
 	if s == "" {
+		//lint:ignore ST1005 parity with the Python message
 		return 0, errors.New("Address cannot be empty")
 	}
 	octets := strings.Split(s, ".")
 	if len(octets) != 4 {
+		//lint:ignore ST1005 parity with the Python message
 		return 0, fmt.Errorf("Expected 4 octets in %s", pycompat.StrRepr(s))
 	}
 	var v uint32
@@ -60,6 +62,7 @@ func parseIPv4(s string) (uint32, error) {
 func checkNetwork(ip string, prefix int) error {
 	full := fmt.Sprintf("%s/%d", ip, prefix)
 	if strings.Count(full, "/") > 1 {
+		//lint:ignore ST1005 parity with the Python message
 		return fmt.Errorf("Only one '/' permitted in %s", pycompat.StrRepr(full))
 	}
 	if _, err := parseIPv4(ip); err != nil {
