@@ -1,0 +1,6 @@
+5 slots of type 'bstatusnumeric' across 4 classes:
+
+  BAlarmClass (javax.baja.alarm) — priority
+  BAlarmCursor (javax.baja.alarm) — ?, faultSeen
+  BAlarmService (javax.baja.alarm) — status
+  BOrionAlarmService (javax.baja.alarmOrion) — cleanupDays

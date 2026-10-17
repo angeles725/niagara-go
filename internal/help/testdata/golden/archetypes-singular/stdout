@@ -1,0 +1,7 @@
+ARCHETYPE: CONVERTERS (Type converters between Niagara types)
+BASE CLASS: BConverter
+TOTAL: 1 classes
+
+  converters (1)
+    BStatusToNumeric (javax.baja.converters)
+

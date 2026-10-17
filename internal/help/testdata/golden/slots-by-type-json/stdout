@@ -1,0 +1,41 @@
+[
+  {
+    "section": "actions",
+    "class": "BAlarmService",
+    "package": "javax.baja.alarm",
+    "slot": {
+      "name": "routeAlarm",
+      "parameterType": "BAlarmRecord",
+      "defaultValue": "new BAlarmRecord()",
+      "flags": "Flags.HIDDEN"
+    }
+  },
+  {
+    "section": "actions",
+    "class": "BAlarmService",
+    "package": "javax.baja.alarm",
+    "slot": {
+      "name": "ackAlarm",
+      "parameterType": "BAlarmRecord",
+      "returnType": "BOrd"
+    }
+  },
+  {
+    "section": "topics",
+    "class": "BAlarmService",
+    "package": "javax.baja.alarm",
+    "slot": {
+      "name": "alarm",
+      "eventType": "BAlarmRecord"
+    }
+  },
+  {
+    "section": "actions",
+    "class": "BAlarmClass",
+    "package": "javax.baja.alarm",
+    "slot": {
+      "name": "ackAlarms",
+      "parameterType": "BAlarmRecord"
+    }
+  }
+]

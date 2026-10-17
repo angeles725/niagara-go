@@ -13,6 +13,9 @@ var analysisCommands = []command{
 			positional(p, "name", "Class name")
 			p.Add(argparse.Arg{Choices: choices("uses", "used_by", "both"), Default: "both"},
 				"--direction")
+		},
+		run: func(e *Env, ns *argparse.Namespace) error {
+			return e.Xref(XrefParams{Name: ns.String("name"), Direction: ns.String("direction")})
 		}},
 	{name: "related", help: "Discovery: related classes by package, hierarchy, xref, guides",
 		args: func(p *argparse.Parser) { positional(p, "name", "Class name") }},

@@ -1,0 +1,6 @@
+{
+  "HashMap": {"path": "../jdk/java/util/HashMap.bajadoc", "package": "java.util", "type": "class"},
+  "Hashtable": {"path": "../jdk/java/util/Hashtable.bajadoc", "package": "java.util", "type": "class"},
+  "HashSet": {"path": "../jdk/java/util/HashSet.bajadoc", "package": "java.util", "type": "class"},
+  "String": {"path": "../jdk/java/lang/String.bajadoc", "package": "java.lang", "type": "class"}
+}

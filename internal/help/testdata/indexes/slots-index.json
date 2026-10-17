@@ -1,0 +1,47 @@
+{
+  "BAbstractService": {"module": "baja", "package": "javax.baja.sys",
+    "properties": [
+      {"name": "status", "type": "BStatus", "defaultValue": "BStatus.ok", "flags": "Flags.READONLY | Flags.TRANSIENT"},
+      {"name": "faultCause", "type": "BString", "defaultValue": "\"\"", "flags": "Flags.READONLY"},
+      {"name": "enabled", "type": "boolean", "defaultValue": "true"}],
+    "actions": [{"name": "restart"}],
+    "topics": [{"name": "serviceEvent", "eventType": "BValue"}]},
+  "BAlarmService": {"module": "alarm-rt", "package": "javax.baja.alarm",
+    "properties": [
+      {"name": "capacity", "type": "int", "defaultValue": "500"},
+      {"name": "status", "type": "BStatusNumeric", "defaultValue": "new BStatusNumeric()"},
+      {"name": "masterAlarmInstructions", "type": "BAlarmInstructions",
+       "defaultValue": "BAlarmInstructions.make(\"Call the service desk, then acknowledge the alarm from the console\")",
+       "flags": "Flags.HIDDEN"},
+      {"name": "descripción", "type": "BString", "defaultValue": "\"Cámara fría — línea 2 😀\"", "facets": "\u0001\u007f"}],
+    "actions": [
+      {"name": "routeAlarm", "parameterType": "BAlarmRecord", "defaultValue": "new BAlarmRecord()", "flags": "Flags.HIDDEN"},
+      {"name": "ackAlarm", "parameterType": "BAlarmRecord", "returnType": "BOrd"},
+      {"name": "restart"}],
+    "topics": [{"name": "alarm", "eventType": "BAlarmRecord"}, {"name": "tick"}]},
+  "BOrionAlarmService": {"module": "alarmOrion-rt", "package": "javax.baja.alarmOrion",
+    "properties": [
+      {"name": "cleanupDays", "type": "BStatusNumeric", "defaultValue": "", "order": 3, "weight": 1.50,
+       "big": 12345678901234567890123, "tiny": 1e-7, "huge": 1E22, "neg": -0, "none": null, "on": true, "off": false,
+       "tags": [], "meta": {}, "nested": {"a": [1, "b", {"c": null}]}},
+      {"name": "orionUrl", "type": "BString", "defaultValue": null, "flags": ""}],
+    "actions": [],
+    "topics": []},
+  "BAlarmClass": {"module": "alarm-rt", "package": "javax.baja.alarm",
+    "properties": [
+      {"name": "ackRequired", "type": "BAlarmTransitionBits",
+       "defaultValue": "BAlarmTransitionBits.make(BAlarmTransitionBits.TO_OFFNORMAL | BAlarmTransitionBits.TO_FAULT)"},
+      {"name": "faultCause", "type": "BString", "defaultValue": "\"\"", "flags": "Flags.READONLY | Flags.TRANSIENT"},
+      {"name": "priority", "type": "bstatusnumeric"}],
+    "actions": [{"name": "ackAlarms", "parameterType": "BAlarmRecord"}],
+    "topics": [{"name": "faultCauseChanged", "eventType": "BString"}]},
+  "BAlarmClass (alarm-wb)": {"module": "alarm-wb", "package": "com.tridium.alarm.ui",
+    "properties": [{"name": "label", "type": "BFormat"}]},
+  "BWebServlet": {"module": "web-rt", "package": "javax.baja.web"},
+  "BAlarmCursor": {"package": "javax.baja.alarm",
+    "properties": [{"type": "BStatusNumeric"}],
+    "actions": [{"name": "next", "parameterType": "", "type": "BStatusNumeric"}],
+    "topics": [{"name": "faultSeen", "eventType": "BStatusNumeric"}]},
+  "AbstractCursor": {"module": "baja", "package": "javax.baja.collection",
+    "properties": [{"name": "cursorFault", "type": "BStatus*"}]}
+}

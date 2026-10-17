@@ -1,1 +1,19 @@
-{}
+{
+  "BWebServlet": {"path": "javax/baja/web/BWebServlet.html", "package": "javax.baja.web", "type": "class", "module": "web-rt"},
+  "BAlarmService": {"path": "javax/baja/alarm/BAlarmService.html", "package": "javax.baja.alarm", "type": "class", "module": "alarm-rt"},
+  "BAlarmRecipient": {"path": "javax/baja/alarm/BAlarmRecipient.html", "package": "javax.baja.alarm", "type": "class", "module": "alarm-rt",
+    "others": [{"path": "../devguide/event-rt/com/tridium/event/recipients/BAlarmRecipient.bajadoc", "package": "com.tridium.event.recipients", "type": "class", "module": "event-rt"}]},
+  "BIAlarmSource": {"path": "javax/baja/alarm/BIAlarmSource.html", "package": "javax.baja.alarm", "type": "interface", "module": "alarm-rt"},
+  "BIPingable": {"path": "javax/baja/util/BIPingable.html", "package": "javax.baja.util", "type": "interface", "module": "baja"},
+  "BOrionAlarmService": {"path": "javax/baja/alarmOrion/BOrionAlarmService.html", "package": "javax.baja.alarmOrion", "type": "class", "module": "alarmOrion-rt"},
+  "BComponent": {"path": "javax/baja/sys/BComponent.html", "package": "javax.baja.sys", "type": "class", "module": "baja"},
+  "BAbstractService": {"path": "javax/baja/sys/BAbstractService.html", "package": "javax.baja.sys", "type": "class", "module": "baja"},
+  "BDevice": {"path": "javax/baja/driver/BDevice.html", "package": "javax.baja.driver", "type": "class", "module": "driver-rt"},
+  "BDeviceNetwork": {"path": "javax/baja/driver/BDeviceNetwork.html", "package": "javax.baja.driver", "type": "class", "module": "driver-rt"},
+  "BConverter": {"path": "javax/baja/converters/BConverter.html", "package": "javax.baja.converters", "type": "class", "module": "baja"},
+  "BStatusToNumeric": {"path": "javax/baja/converters/BStatusToNumeric.html", "package": "javax.baja.converters", "type": "class", "module": "baja"},
+  "AbstractCursor&lt;E&gt;": {"path": "javax/baja/collection/AbstractCursor.html", "package": "javax.baja.collection", "type": "class", "module": "baja"},
+  "Helper": {"path": "../devguide/x/com/acme/Helper.bajadoc", "package": "com.acme", "type": "class"},
+  "BalarmLegacy": {"path": "com/acme/BalarmLegacy.html", "package": "com.acme", "type": "class", "module": ""},
+  "BAlarmClass": {"path": "javax/baja/alarm/BAlarmClass.html", "package": "Javax.Baja.Alarm", "type": "class", "module": "alarm-rt"}
+}

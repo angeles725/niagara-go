@@ -1,0 +1,25 @@
+CONTRACT: BIAlarmSource (javax.baja.alarm)
+TYPE: interface
+============================================================
+EXTENDS: BInterface
+
+METHODS TO IMPLEMENT (3):
+
+  BBoolean ackAlarm(BAlarmRecord record)
+  BBoolean ackAlarm(BAlarmRecord record, Context cx)
+  BAlarmClass getAlarmClass()
+
+CONSTANTS/FIELDS (2):
+
+  static final String ALARM_SOURCE_FACET
+  public static final Type TYPE
+
+IMPLEMENTORS (3):
+
+  BAlarmRecipient (javax.baja.alarm)
+  BAlarmService (javax.baja.alarm)
+  BDevice (javax.baja.driver)
+
+DESCRIPTION:
+  BIAlarmSource is implemented by components that generate alarms.
+  METHODS: inside the description stay.

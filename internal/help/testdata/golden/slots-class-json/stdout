@@ -1,0 +1,40 @@
+{
+  "class": "BOrionAlarmService",
+  "package": "javax.baja.alarmOrion",
+  "module": "alarmOrion-rt",
+  "properties": [
+    {
+      "name": "cleanupDays",
+      "type": "BStatusNumeric",
+      "defaultValue": "",
+      "order": 3,
+      "weight": 1.5,
+      "big": 12345678901234567890123,
+      "tiny": 1e-07,
+      "huge": 1e+22,
+      "neg": 0,
+      "none": null,
+      "on": true,
+      "off": false,
+      "tags": [],
+      "meta": {},
+      "nested": {
+        "a": [
+          1,
+          "b",
+          {
+            "c": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "orionUrl",
+      "type": "BString",
+      "defaultValue": null,
+      "flags": ""
+    }
+  ],
+  "actions": [],
+  "topics": []
+}

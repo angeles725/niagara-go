@@ -1,0 +1,28 @@
+CONTRACT: BAlarmService (javax.baja.alarm)
+TYPE: class
+============================================================
+EXTENDS: BAbstractService
+ALSO EXTENDS: BIAlarmSource, BIRestrictedComponent
+
+METHODS TO IMPLEMENT (5):
+
+  public Type getType()
+  public void routeAlarm(BAlarmRecord record)
+  public void routeAlarm(BAlarmRecord record, Context cx)
+  public void serviceStarted() throws Exception
+  public String toString(Context cx)
+
+CONSTANTS/FIELDS (1):
+
+  public static final Type TYPE
+
+SLOTS:
+  [P] capacity: int
+  [P] status: BStatusNumeric
+  [P] masterAlarmInstructions: BAlarmInstructions
+  [P] descripción: BString
+  [A] routeAlarm(BAlarmRecord)
+  [A] ackAlarm(BAlarmRecord)
+  [A] restart()
+
+IMPLEMENTORS: (none found)

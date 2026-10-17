@@ -1,0 +1,54 @@
+{
+  "class": "BAlarmCursor",
+  "chain": [
+    "java.lang.Object",
+    "BObject",
+    "BValue",
+    "BComplex",
+    "BComponent",
+    "AbstractCursor",
+    "BAlarmCursor"
+  ],
+  "properties": [
+    {
+      "name": "cursorFault",
+      "type": "BStatus*",
+      "declared_in": "AbstractCursor",
+      "slot": {
+        "name": "cursorFault",
+        "type": "BStatus*"
+      }
+    },
+    {
+      "name": "",
+      "type": "BStatusNumeric",
+      "declared_in": "BAlarmCursor",
+      "slot": {
+        "type": "BStatusNumeric"
+      }
+    }
+  ],
+  "actions": [
+    {
+      "name": "next",
+      "parameterType": "",
+      "declared_in": "BAlarmCursor",
+      "slot": {
+        "name": "next",
+        "parameterType": "",
+        "type": "BStatusNumeric"
+      }
+    }
+  ],
+  "topics": [
+    {
+      "name": "faultSeen",
+      "eventType": "BStatusNumeric",
+      "declared_in": "BAlarmCursor",
+      "slot": {
+        "name": "faultSeen",
+        "eventType": "BStatusNumeric"
+      }
+    }
+  ]
+}

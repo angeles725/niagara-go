@@ -1,0 +1,19 @@
+SLOTS: BAlarmService (javax.baja.alarm, alarm-rt)
+
+PROPERTIES (4):
+
+  capacity: int = 500
+  status: BStatusNumeric = new BStatusNumeric()
+  masterAlarmInstructions: BAlarmInstructions = BAlarmInstructions.make("Call the service desk, then ackn... [Flags.HIDDEN]
+  descripción: BString = "Cámara fría — línea 2 😀"
+
+ACTIONS (3):
+
+  routeAlarm (BAlarmRecord)
+  ackAlarm (BAlarmRecord)
+  restart()
+
+TOPICS (2):
+
+  alarm -> BAlarmRecord
+  tick

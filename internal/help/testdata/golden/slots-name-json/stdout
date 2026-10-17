@@ -1,0 +1,23 @@
+[
+  {
+    "section": "properties",
+    "class": "BAbstractService",
+    "package": "javax.baja.sys",
+    "slot": {
+      "name": "status",
+      "type": "BStatus",
+      "defaultValue": "BStatus.ok",
+      "flags": "Flags.READONLY | Flags.TRANSIENT"
+    }
+  },
+  {
+    "section": "properties",
+    "class": "BAlarmService",
+    "package": "javax.baja.alarm",
+    "slot": {
+      "name": "status",
+      "type": "BStatusNumeric",
+      "defaultValue": "new BStatusNumeric()"
+    }
+  }
+]

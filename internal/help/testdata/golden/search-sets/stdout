@@ -1,0 +1,10 @@
+8 classes matching 'B[!A-C]?[a-z-]*':
+
+  BDevice (class) - javax.baja.driver
+  BDeviceNetwork (class) - javax.baja.driver
+  BIAlarmSource (interface) - javax.baja.alarm
+  BIPingable (interface) - javax.baja.util
+  BOrionAlarmService (class) - javax.baja.alarmOrion
+  BStatusToNumeric (class) - javax.baja.converters
+  BWebServlet (class) - javax.baja.web
+  BalarmLegacy (class) - com.acme

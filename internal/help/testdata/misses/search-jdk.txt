@@ -1,0 +1,4 @@
+No match for 'Zz*' (search) in this scope.
+  searched: Niagara 4.14.0.162 (<TESTDATA>) -- jdk-class-index.json: 4 names / 4 classes
+  excluded from this scope: Niagara classes (drop --jdk)
+  not proof of absence; try: class (without --jdk) 'Zz*', find 'Zz*'

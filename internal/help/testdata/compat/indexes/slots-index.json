@@ -1,0 +1,43 @@
+{
+ "BNumericWritable": {
+  "package": "javax.baja.control",
+  "properties": [
+   {
+    "name": "out",
+    "type": "BStatusNumeric"
+   },
+   {
+    "name": "fallback",
+    "type": "bstatusnumeric"
+   },
+   {
+    "name": "in10",
+    "type": "BStatusNumeric[]"
+   }
+  ]
+ },
+ "BNumericPoint": {
+  "package": "javax.baja.control",
+  "properties": [
+   {
+    "name": "out",
+    "type": "BStatusNumeric"
+   }
+  ],
+  "actions": [
+   {
+    "name": "set",
+    "parameterType": "BStatusNumeric"
+   }
+  ]
+ },
+ "BBooleanWritable": {
+  "package": "javax.baja.control",
+  "properties": [
+   {
+    "name": "out",
+    "type": "BStatusBoolean"
+   }
+  ]
+ }
+}

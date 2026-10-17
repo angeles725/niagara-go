@@ -1,0 +1,43 @@
+26 slots matching '':
+
+  [action] BAbstractService.restart: 
+  [action] BAlarmClass.ackAlarms: BAlarmRecord
+  [action] BAlarmCursor.next: BStatusNumeric
+  [action] BAlarmService.routeAlarm: BAlarmRecord
+    default: new BAlarmRecord()
+    flags: Flags.HIDDEN
+  [action] BAlarmService.ackAlarm: BAlarmRecord
+  [action] BAlarmService.restart: 
+  [propertie] AbstractCursor.cursorFault: BStatus*
+  [propertie] BAbstractService.status: BStatus
+    default: BStatus.ok
+    flags: Flags.READONLY | Flags.TRANSIENT
+  [propertie] BAbstractService.faultCause: BString
+    default: ""
+    flags: Flags.READONLY
+  [propertie] BAbstractService.enabled: boolean
+    default: true
+  [propertie] BAlarmClass.ackRequired: BAlarmTransitionBits
+    default: BAlarmTransitionBits.make(BAlarmTransitionBits.TO_OFFNORMAL | BAlarmTransitio...
+  [propertie] BAlarmClass.faultCause: BString
+    default: ""
+    flags: Flags.READONLY | Flags.TRANSIENT
+  [propertie] BAlarmClass.priority: bstatusnumeric
+  [propertie] BAlarmClass (alarm-wb).label: BFormat
+  [propertie] BAlarmCursor.?: BStatusNumeric
+  [propertie] BAlarmService.capacity: int
+    default: 500
+  [propertie] BAlarmService.status: BStatusNumeric
+    default: new BStatusNumeric()
+  [propertie] BAlarmService.masterAlarmInstructions: BAlarmInstructions
+    default: BAlarmInstructions.make("Call the service desk, then acknowledge the alarm fr...
+    flags: Flags.HIDDEN
+  [propertie] BAlarmService.descripción: BString
+    default: "Cámara fría — línea 2 😀"
+  [propertie] BOrionAlarmService.cleanupDays: BStatusNumeric
+  [propertie] BOrionAlarmService.orionUrl: BString
+  [topic] BAbstractService.serviceEvent: BValue
+  [topic] BAlarmClass.faultCauseChanged: BString
+  [topic] BAlarmCursor.faultSeen: BStatusNumeric
+  [topic] BAlarmService.alarm: BAlarmRecord
+  [topic] BAlarmService.tick: 

@@ -1,0 +1,2 @@
+usage: niagara_help xref [-h] [--direction {uses,used_by,both}] name
+niagara_help xref: error: argument --direction: invalid choice: 'bad' (choose from 'uses', 'used_by', 'both')

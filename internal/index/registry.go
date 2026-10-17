@@ -158,6 +158,10 @@ func DataRoot(repoRoot, id string) (string, error) {
 	if !ok || !e.Raw.Has("data_root") {
 		return "", fmt.Errorf("%s: version %s has no data_root", RegistryRel, id)
 	}
+	if _, isStr := e.Raw.String("data_root"); !isStr {
+		// Python's os.path.join raises TypeError on null or a number.
+		return "", fmt.Errorf("%s: data_root of version %s is not a string", RegistryRel, id)
+	}
 	if filepath.IsAbs(e.DataRoot) { // os.path.join drops abs when rel is absolute
 		return filepath.Clean(e.DataRoot), nil
 	}

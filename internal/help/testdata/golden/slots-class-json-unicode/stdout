@@ -1,0 +1,54 @@
+{
+  "class": "BAlarmService",
+  "package": "javax.baja.alarm",
+  "module": "alarm-rt",
+  "properties": [
+    {
+      "name": "capacity",
+      "type": "int",
+      "defaultValue": "500"
+    },
+    {
+      "name": "status",
+      "type": "BStatusNumeric",
+      "defaultValue": "new BStatusNumeric()"
+    },
+    {
+      "name": "masterAlarmInstructions",
+      "type": "BAlarmInstructions",
+      "defaultValue": "BAlarmInstructions.make(\"Call the service desk, then acknowledge the alarm from the console\")",
+      "flags": "Flags.HIDDEN"
+    },
+    {
+      "name": "descripci\u00f3n",
+      "type": "BString",
+      "defaultValue": "\"C\u00e1mara fr\u00eda \u2014 l\u00ednea 2 \ud83d\ude00\"",
+      "facets": "\u0001\u007f"
+    }
+  ],
+  "actions": [
+    {
+      "name": "routeAlarm",
+      "parameterType": "BAlarmRecord",
+      "defaultValue": "new BAlarmRecord()",
+      "flags": "Flags.HIDDEN"
+    },
+    {
+      "name": "ackAlarm",
+      "parameterType": "BAlarmRecord",
+      "returnType": "BOrd"
+    },
+    {
+      "name": "restart"
+    }
+  ],
+  "topics": [
+    {
+      "name": "alarm",
+      "eventType": "BAlarmRecord"
+    },
+    {
+      "name": "tick"
+    }
+  ]
+}

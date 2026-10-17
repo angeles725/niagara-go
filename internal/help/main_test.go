@@ -2,12 +2,14 @@ package help
 
 import (
 	"bytes"
+	"errors"
 	"os"
 	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
 
+	"github.com/angeles725/niagara-go/internal/argparse"
 	"github.com/angeles725/niagara-go/internal/cli"
 )
 
@@ -178,5 +180,31 @@ func TestRepoRoot(t *testing.T) {
 	if code := Main(nil, cli.Stdio{Out: &out}); code != 1 ||
 		out.String() != "ERROR: Cannot find niagara-help directory.\nSet NIAGARA_HELP_DIR or run from tools/ directory.\n" {
 		t.Errorf("no checkout Main: code %d out %q", code, out.String())
+	}
+}
+
+func TestRunExitBranches(t *testing.T) {
+	tests := []struct {
+		name   string
+		run    func(e *Env, ns *argparse.Namespace) error
+		code   int
+		stderr string
+	}{
+		{name: "found", run: func(*Env, *argparse.Namespace) error { return nil }, code: 0},
+		{name: "explicit exit status", run: func(*Env, *argparse.Namespace) error { return ExitCode(3) }, code: 3},
+		{name: "generic error", run: func(*Env, *argparse.Namespace) error { return errors.New("index broken") },
+			code: 2, stderr: "ERROR: index broken\n"},
+		{name: "recorded miss", run: func(e *Env, _ *argparse.Namespace) error { e.Miss(); return nil }, code: 1},
+		{name: "not ported", code: 2, stderr: "nh: 'demo' is not ported yet\n"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var out, errb bytes.Buffer
+			e := &Env{Out: &out, Err: &errb}
+			code := e.run(&command{name: "demo", run: tt.run}, argparse.NewNamespace())
+			if code != tt.code || errb.String() != tt.stderr || out.Len() != 0 {
+				t.Errorf("code %d stderr %q stdout %q; want %d %q", code, errb.String(), out.String(), tt.code, tt.stderr)
+			}
+		})
 	}
 }

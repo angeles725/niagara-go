@@ -1,0 +1,7 @@
+5 classes implement 'javax.baja.alarm.BIAlarmSource':
+
+  BAlarmRecipient (javax.baja.alarm)
+  BAlarmRecipient (com.tridium.event.recipients)
+  BAlarmService (javax.baja.alarm)
+  BDevice (javax.baja.driver)
+  BWebServlet (javax.baja.web)

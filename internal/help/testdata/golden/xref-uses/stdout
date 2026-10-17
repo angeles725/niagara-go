@@ -1,0 +1,6 @@
+XREF: BAlarmService (javax.baja.alarm)
+
+USES (3 classes):
+  BComponent (javax.baja.sys)
+  BAlarmDbChannel 
+  BAbstractService 

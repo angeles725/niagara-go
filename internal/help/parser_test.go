@@ -36,8 +36,8 @@ func TestAliasHelp(t *testing.T) {
 
 func TestNotPortedStub(t *testing.T) {
 	dir := repo(t, twoVersions, ".")
-	out, errs, code := run(t, dir, "--niagara-version", "1.0", "slots", "BX")
-	if code != 2 || out != "" || errs != "nh: 'slots' is not ported yet\n" {
+	out, errs, code := run(t, dir, "--niagara-version", "1.0", "repl")
+	if code != 2 || out != "" || errs != "nh: 'repl' is not ported yet\n" {
 		t.Errorf("code %d out %q err %q", code, out, errs)
 	}
 }

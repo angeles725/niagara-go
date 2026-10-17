@@ -1,0 +1,27 @@
+OVERRIDES: BOrionAlarmService
+CHAIN: java.lang.Object > BObject > BValue > BComplex > BComponent > BAbstractService > BAlarmService > BOrionAlarmService
+
+OVERRIDDEN (2):
+
+  public Type getType() (from BAlarmService)
+  public void started() -> BComponent
+    parent: public void started() throws Exception
+
+NEW METHODS (1):
+
+  public void doRouteAlarm(BAlarmRecord record)
+
+INHERITED (not overridden) (6):
+
+  -- from BValue --
+    public boolean equivalent(Object o)
+  -- from BAbstractService --
+    public Type[] getServiceTypes()
+  -- from BComplex --
+    public Slot getSlot(String name)
+  -- from BAlarmService --
+    public void routeAlarm(BAlarmRecord record, Context cx)
+    public void serviceStarted() throws Exception
+    public String toString(Context cx)
+
+Summary: 2 overridden, 1 new, 6 inherited

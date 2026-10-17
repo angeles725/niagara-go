@@ -1,0 +1,20 @@
+INHERITED SLOTS: BAlarmClass
+CHAIN: BAlarmClass
+TOTAL: 3 properties, 1 actions, 1 topics
+
+PROPERTIES (3):
+
+  -- from BAlarmClass (this) --
+    ackRequired: BAlarmTransitionBits = BAlarmTransitionBits.make(BAlarmTransitionBits....
+    faultCause: BString = "" [Flags.READONLY | Flags.TRANSIENT]
+    priority: bstatusnumeric
+
+ACTIONS (1):
+
+  -- from BAlarmClass (this) --
+    ackAlarms (BAlarmRecord)
+
+TOPICS (1):
+
+  -- from BAlarmClass (this) --
+    faultCauseChanged -> BString

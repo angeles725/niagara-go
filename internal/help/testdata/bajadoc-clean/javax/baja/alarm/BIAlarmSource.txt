@@ -1,0 +1,12 @@
+CLASS: BIAlarmSource
+PACKAGE: javax.baja.alarm
+TYPE: interface
+
+DESCRIPTION:
+  BIAlarmSource is implemented by components that generate alarms.
+  METHODS: inside the description stay.
+
+FIELDS:
+  TYPE
+METHODS:
+  ackAlarm

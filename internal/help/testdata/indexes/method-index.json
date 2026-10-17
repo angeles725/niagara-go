@@ -1,0 +1,47 @@
+{
+  "toString": [
+    {"class": "BObject", "package": "javax.baja.sys", "section": "methods", "signature": "public String toString(Context cx)"},
+    {"class": "BAlarmService", "package": "javax.baja.alarm", "section": "methods", "signature": "public String toString(Context cx)"}],
+  "getType": [
+    {"class": "BObject", "package": "javax.baja.sys", "section": "methods", "signature": "public Type getType()"},
+    {"class": "BAlarmService", "package": "javax.baja.alarm", "section": "methods", "signature": "public Type getType()"},
+    {"class": "BOrionAlarmService", "package": "javax.baja.alarmOrion", "section": "methods", "signature": "public Type getType()"}],
+  "equivalent": [
+    {"class": "BValue", "package": "javax.baja.sys", "section": "methods", "signature": "public boolean equivalent(Object o)"}],
+  "getSlot": [
+    {"class": "BComplex", "package": "javax.baja.sys", "section": "methods", "signature": "public Slot getSlot(String name)"}],
+  "started": [
+    {"class": "BComponent", "package": "javax.baja.sys", "section": "methods", "signature": "public void started() throws Exception"},
+    {"class": "BOrionAlarmService", "package": "javax.baja.alarmOrion", "section": "methods", "signature": "public void started()"}],
+  "getServiceTypes": [
+    {"class": "BAbstractService", "package": "javax.baja.sys", "section": "methods", "signature": "public Type[] getServiceTypes()"}],
+  "serviceStarted": [
+    {"class": "BAbstractService", "package": "javax.baja.sys", "section": "methods", "signature": "public void serviceStarted() throws Exception"},
+    {"class": "BAlarmService", "package": "javax.baja.alarm", "section": "methods", "signature": "public void serviceStarted() throws Exception"}],
+  "routeAlarm": [
+    {"class": "BAlarmService", "package": "javax.baja.alarm", "section": "methods", "signature": "public void routeAlarm(BAlarmRecord record)"},
+    {"class": "BAlarmService", "package": "javax.baja.alarm", "section": "methods", "signature": "public void routeAlarm(BAlarmRecord record, Context cx)"}],
+  "doRouteAlarm": [
+    {"class": "BOrionAlarmService", "package": "javax.baja.alarmOrion", "section": "methods", "signature": "public void doRouteAlarm(BAlarmRecord record)"}],
+  "BAlarmService": [
+    {"class": "BAlarmService", "package": "javax.baja.alarm", "section": "constructors", "signature": "public BAlarmService()"}],
+  "TYPE": [
+    {"class": "BAlarmService", "package": "javax.baja.alarm", "section": "fields", "signature": "public static final Type TYPE"},
+    {"class": "BIAlarmSource", "package": "javax.baja.alarm", "section": "fields", "signature": "public static final Type TYPE"}],
+  "ackAlarm": [
+    {"class": "BIAlarmSource", "package": "javax.baja.alarm", "section": "methods", "signature": "BBoolean ackAlarm(BAlarmRecord record)"},
+    {"class": "BIAlarmSource", "package": "javax.baja.alarm", "section": "methods", "signature": "BBoolean ackAlarm(BAlarmRecord record, Context cx)"}],
+  "getAlarmClass": [
+    {"class": "BIAlarmSource", "package": "javax.baja.alarm", "section": "methods", "signature": "BAlarmClass getAlarmClass()"}],
+  "ALARM_SOURCE_FACET": [
+    {"class": "BIAlarmSource", "package": "javax.baja.alarm", "section": "fields", "signature": "static final String ALARM_SOURCE_FACET"}],
+  "next": [
+    {"class": "AbstractCursor", "package": "javax.baja.collection", "section": "methods", "signature": "public boolean next()"},
+    {"package": "javax.baja.alarm", "section": "methods", "signature": "public boolean next() (no class)"},
+    {"class": "BAlarmCursor", "package": "javax.baja.alarm", "section": "methods", "signature": "public boolean next()"}],
+  "get": [
+    {"class": "AbstractCursor&lt;E&gt;", "package": "javax.baja.collection", "section": "methods", "signature": "public E get()"},
+    {"class": "BAlarmCursor", "package": "javax.baja.alarm", "section": "methods", "signature": "public BAlarmRecord get()"}],
+  "close": [
+    {"class": "AbstractCursor", "package": "javax.baja.collection", "section": "methods", "signature": "public void close()"}]
+}

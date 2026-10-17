@@ -1,0 +1,2 @@
+CLASS: AbstractCursor<E>
+PACKAGE: javax.baja.collection

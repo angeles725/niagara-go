@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -128,12 +129,25 @@ func TestResolveWithoutRegistry(t *testing.T) {
 	}
 }
 
+// absRegistry is registryJSON with the absolute data_root of 4.13.2.18
+// replaced by abs plus a trailing separator, so the test holds on Windows
+// (where "/abs/413/" is not absolute) as well as on POSIX.
+func absRegistry(t *testing.T, abs string) string {
+	t.Helper()
+	q, err := json.Marshal(abs + string(filepath.Separator))
+	if err != nil {
+		t.Fatal(err)
+	}
+	return strings.Replace(registryJSON, `"/abs/413/"`, string(q), 1)
+}
+
 func TestDataRootAndExtraction(t *testing.T) {
-	repo := repoWithRegistry(t, registryJSON)
+	abs := filepath.Join(t.TempDir(), "abs413")
+	repo := repoWithRegistry(t, absRegistry(t, abs))
 	for id, want := range map[string]string{
 		"4.14.0.162": repo,
 		"4.15.6.20":  filepath.Join(repo, "versions", "4.15.6.20"),
-		"4.13.2.18":  "/abs/413",
+		"4.13.2.18":  abs,
 		"":           repo,
 	} {
 		if got, err := DataRoot(repo, id); err != nil || got != want {
@@ -174,5 +188,23 @@ func TestMalformedRegistry(t *testing.T) {
 	repo := repoWithRegistry(t, `{"versions": {"1.0": {"data_root": "."}}}`)
 	if _, err := ResolveVersion(repo, "", env(nil)); err == nil {
 		t.Error("no default and no request resolved")
+	}
+
+}
+
+func TestDataRootRequiresAString(t *testing.T) {
+	repo := repoWithRegistry(t, `{"default": "1", "versions": {
+ "1": {"label": "null root", "data_root": null},
+ "2": {"label": "number root", "data_root": 7},
+ "3": {"label": "no root"}}}`)
+	for id, want := range map[string]string{
+		"1": "versions/registry.json: data_root of version 1 is not a string",
+		"2": "versions/registry.json: data_root of version 2 is not a string",
+		"3": "versions/registry.json: version 3 has no data_root",
+	} {
+		want = strings.Replace(want, "versions/registry.json", RegistryRel, 1)
+		if got, err := DataRoot(repo, id); err == nil || err.Error() != want {
+			t.Errorf("DataRoot(%q) = %q, %v; want error %q", id, got, err, want)
+		}
 	}
 }
