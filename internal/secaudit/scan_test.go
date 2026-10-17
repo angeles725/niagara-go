@@ -39,7 +39,8 @@ func TestScanLogsUnreadableRoot(t *testing.T) {
 	}
 }
 
-// Hits found next to an unlistable directory are still printed; the exit says incomplete.
+// Hits found next to an unlistable directory are still printed (text and JSON), the directory is
+// named on stderr and the exit says incomplete.
 func TestScanLogsHitsBesideAnUnreadableDir(t *testing.T) {
 	root := t.TempDir()
 	if err := os.WriteFile(filepath.Join(root, "nre.log"), []byte("No code signers for entry x\n"), 0o644); err != nil {
@@ -50,8 +51,30 @@ func TestScanLogsHitsBesideAnUnreadableDir(t *testing.T) {
 	if len(hits) != 1 || nfiles != 1 || len(bad) != 0 || len(badDirs) != 1 || badDirs[0].path != root+"/old" {
 		t.Fatalf("hits %v nfiles %d bad %v badDirs %v", hits, nfiles, bad, badDirs)
 	}
-	var out, errb bytes.Buffer
-	if code := runScanLogs(root, true, cli.Stdio{Out: &out, Err: &errb}); code != cli.ExitCannotSearch {
-		t.Errorf("exit %d, want %d (incomplete)", code, cli.ExitCannotSearch)
+	warning := "WARNING: --scan-logs: 1 unreadable directory(ies) not scanned:\n  " + root + "/old: Permission denied\n"
+	for _, tc := range []struct {
+		name   string
+		asJSON bool
+		stdout string
+	}{
+		{"text", false, "\n  Log-IOC harvest — 1 indicator(s) in 1 log file(s) under " + root + "\n\n" +
+			"  " + color["high"] + "[high]" + color["off"] + " unsigned module loaded (No code signers)  " +
+			root + "/nre.log:1\n         No code signers for entry x\n\n"},
+		{"json", true, "[\n  {\n    \"sev\": \"high\",\n    \"ioc\": \"unsigned module loaded (No code signers)\",\n" +
+			"    \"file\": \"" + root + "/nre.log\",\n    \"line\": 1,\n    \"text\": \"No code signers for entry x\"\n  }\n]\n"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			var out, errb bytes.Buffer
+			code := runScanLogs(root, tc.asJSON, cli.Stdio{Out: &out, Err: &errb})
+			if code != cli.ExitCannotSearch {
+				t.Errorf("exit %d, want %d (incomplete)", code, cli.ExitCannotSearch)
+			}
+			if out.String() != tc.stdout {
+				t.Errorf("stdout %q, want %q", out.String(), tc.stdout)
+			}
+			if errb.String() != warning {
+				t.Errorf("stderr %q, want %q", errb.String(), warning)
+			}
+		})
 	}
 }

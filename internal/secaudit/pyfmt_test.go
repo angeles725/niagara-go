@@ -5,6 +5,7 @@ import (
 	"os"
 	"reflect"
 	"regexp"
+	"runtime"
 	"syscall"
 	"testing"
 )
@@ -59,6 +60,9 @@ func TestPyJSONString(t *testing.T) {
 }
 
 func TestOSErrorTexts(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("the expected texts are the Linux errno numbers and strerror messages")
+	}
 	_, err := os.Open("/nonexistent/x")
 	if got, want := pyOSError(err), "[Errno 2] No such file or directory: '/nonexistent/x'"; got != want {
 		t.Errorf("pyOSError = %q, want %q", got, want)

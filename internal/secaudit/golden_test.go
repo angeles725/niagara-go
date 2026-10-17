@@ -13,23 +13,21 @@ import (
 func TestGolden(t *testing.T) { golden.Run(t, "testdata", Main) }
 
 // TestGoldenUnreadableDir runs the cases that need a log directory nobody can list. Git keeps
-// no permissions, so the directory is created here (mode 000, holding an IOC) and removed after.
+// no permissions, so the suite is copied under a temp root and the directory (mode 000, holding
+// an IOC) is created there: the checked-in tree is never written, and a killed run leaves
+// nothing behind in it.
 func TestGoldenUnreadableDir(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("mode 000 does not lock a directory on Windows")
 	}
-	locked := filepath.Join("testdata", "unreadable-dir", "inputs", "logs-locked", "locked")
-	_ = os.Chmod(locked, 0o755) // left behind by an interrupted run
-	_ = os.RemoveAll(locked)
+	suite := t.TempDir()
+	if err := os.CopyFS(suite, os.DirFS(filepath.Join("testdata", "unreadable-dir"))); err != nil {
+		t.Fatal(err)
+	}
+	locked := filepath.Join(suite, "inputs", "logs-locked", "locked")
 	if err := os.Mkdir(locked, 0o755); err != nil {
 		t.Fatal(err)
 	}
-	t.Cleanup(func() {
-		_ = os.Chmod(locked, 0o755)
-		if err := os.RemoveAll(locked); err != nil {
-			t.Error(err)
-		}
-	})
 	ioc := []byte("Module validation has been DISABLED\n")
 	if err := os.WriteFile(filepath.Join(locked, "station.log"), ioc, 0o644); err != nil {
 		t.Fatal(err)
@@ -37,8 +35,9 @@ func TestGoldenUnreadableDir(t *testing.T) {
 	if err := os.Chmod(locked, 0); err != nil {
 		t.Fatal(err)
 	}
+	t.Cleanup(func() { _ = os.Chmod(locked, 0o755) }) // runs before TempDir removes the suite
 	if _, err := os.ReadDir(locked); err == nil {
 		t.Skip("mode 000 does not stop this user listing a directory (root?)")
 	}
-	golden.Run(t, filepath.Join("testdata", "unreadable-dir"), Main)
+	golden.Run(t, suite, Main)
 }

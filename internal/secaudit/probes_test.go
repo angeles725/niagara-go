@@ -209,3 +209,36 @@ func TestKeytoolPasswordStaysOffTheCommandLine(t *testing.T) {
 		t.Errorf("%s=%q leaked into the auditor's own environment", storepassVar, v)
 	}
 }
+
+// SEC-11 on a store keytool cannot open is a SKIP whether or not the FIPS keystore exists; the
+// observed text names which.
+func TestSec11FailureWithFIPSKeystoreIsASkip(t *testing.T) {
+	home := homeWithTruststore(t)
+	secdir := filepath.Join(home, "jre", "lib", "security")
+	if err := os.MkdirAll(secdir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(secdir, "cacerts.bcfks"), []byte("x"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	rows := rowsByID(t, keytoolEnv(result{stdout: []byte("keytool error: boom\n"), code: 1}), home, "")
+	want := "key sizes not read (keytool exit 1: keytool error: boom); FIPS keystore present"
+	if r := rows["SEC-11"]; r.verdict != "SKIP" || r.observed != want {
+		t.Errorf("SEC-11 = %s %q, want SKIP %q", r.verdict, r.observed, want)
+	}
+}
+
+// The failure text keeps the first 120 code points (not bytes) of keytool's first output line.
+func TestKeytoolFailureTextIsCutAt120CodePoints(t *testing.T) {
+	long := strings.Repeat("é", 119) + "xyz" // 122 code points, 241 bytes
+	exact := strings.Repeat("é", 120)
+	for _, tc := range []struct{ stdout, want string }{
+		{"  " + long + "\nsecond line\n", "exit 1: " + strings.Repeat("é", 119) + "x"},
+		{exact + "\n", "exit 1: " + exact},
+	} {
+		o, err := keytoolEnv(result{stdout: []byte(tc.stdout), code: 1}).keytoolList("ts.jks", false)
+		if err != nil || o.failure != tc.want {
+			t.Errorf("failure = %q, %v; want %q", o.failure, err, tc.want)
+		}
+	}
+}
