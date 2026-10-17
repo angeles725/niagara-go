@@ -73,8 +73,7 @@ var developCommands = []command{
 			positional(p, "base_class", "Base class (e.g. BAbstractService)")
 		}},
 	{name: "topics", help: "Show topics fired by a class and potential subscribers",
-		args: func(p *argparse.Parser) { positional(p, "name", "Class name (e.g. BAlarmService)") },
-		run:  func(e *Env, ns *argparse.Namespace) error { return e.Profile(ns.String("name")) }},
+		args: func(p *argparse.Parser) { positional(p, "name", "Class name (e.g. BAlarmService)") }},
 	{name: "action-params", help: "Find actions that accept a given parameter type",
 		args: func(p *argparse.Parser) {
 			positional(p, "type", "Parameter type (e.g. BAlarmRecord)")

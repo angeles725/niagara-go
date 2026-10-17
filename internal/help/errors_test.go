@@ -27,6 +27,8 @@ func TestCannotSearchPaths(t *testing.T) {
 			func(dir string) string { return missing(dir, "xref-index.json") }},
 		{"class --jdk is not ported", "{}", []string{"class", "BX", "--jdk"},
 			func(string) string { return "nh: 'class --jdk' is not ported yet\n" }},
+		{"topics is not ported (it is not profile)", "{}", []string{"topics", "BX"},
+			func(string) string { return "nh: 'topics' is not ported yet\n" }},
 		{"others item that is not an object", `{"BX": {"package": "p", "type": "class", "others": ["oops"]}}`,
 			[]string{"class", "BX"},
 			func(string) string { return "ERROR: malformed class index: \"others\"[0] of BX is not an object\n" }},
