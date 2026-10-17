@@ -67,11 +67,7 @@ func (e *Env) printRanked(query string, r *fts.Result, shown []*fts.Hit, label, 
 	fmt.Fprintln(e.Out)
 	dirs := fts.SourceDirs(e.BaseDir)
 	for _, h := range shown {
-		fmt.Fprintf(e.Out, "  [%s] %s\n", tag(h), h.Title)
-		if n, text := fts.Snippet(dirs, h, r.Groups); n != 0 {
-			fmt.Fprintf(e.Out, "    L%d: %s\n", n, text)
-		}
-		fmt.Fprintf(e.Out, "    path: %s\n\n", h.Key())
+		fmt.Fprintln(e.Out, fts.FormatHit(dirs, h, r.Groups, tag(h)))
 	}
 	if len(r.Hits) > len(shown) {
 		fmt.Fprintf(e.Out, "  ... and %d more files\n", len(r.Hits)-len(shown))
