@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/angeles725/niagara-go/internal/cli"
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // Review findings on the first argparse port; every expectation was printed by Python 3.15.
@@ -14,8 +15,8 @@ import (
 // int() has no range: -2**63 and 10**20 parse; type=int keeps the exact value.
 func TestIntTypeKeepsPythonRange(t *testing.T) {
 	t.Setenv("COLUMNS", "100")
-	if n, err := ParseInt("-9223372036854775808"); err != nil || n != math.MinInt64 {
-		t.Errorf("ParseInt(-2**63) = %d, %v", n, err)
+	if n, err := pycompat.ParseInt("-9223372036854775808"); err != nil || n != math.MinInt64 {
+		t.Errorf("pycompat.ParseInt(-2**63) = %d, %v", n, err)
 	}
 	p := New(Config{Prog: "t"})
 	p.Add(Arg{Type: Int}, "-n")
@@ -114,10 +115,10 @@ func TestErrorExitMapping(t *testing.T) {
 }
 
 func TestNormalizeSpaceAndPadRight(t *testing.T) {
-	if got := normalizeSpace(" \t a \n\r\f\v b   "); got != "a b" {
+	if got := normalizeSpace(" \t a \n\r\f\v b\u00a0 \u2003"); got != "a b" {
 		t.Errorf("normalizeSpace = %q", got)
 	}
-	if got := normalizeSpace("a  b"); got != "a  b" {
+	if got := normalizeSpace("a\u00a0\u00a0b"); got != "a\u00a0\u00a0b" {
 		t.Errorf("normalizeSpace kept NBSP? %q", got)
 	}
 	for _, c := range []struct {

@@ -7,6 +7,8 @@ import (
 	"regexp"
 	"strings"
 	"sync"
+
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // argError is argparse.ArgumentError: "argument NAME: message", or the bare message when
@@ -176,7 +178,7 @@ func (p *Parser) getValue(a *Action, s string) (any, error) {
 		if errors.As(err, &te) {
 			return nil, newArgError(a, te.Msg)
 		}
-		return nil, newArgError(a, "invalid "+a.typ.Name+" value: "+pyRepr(s))
+		return nil, newArgError(a, "invalid "+a.typ.Name+" value: "+pycompat.Repr(s))
 	}
 	return v, nil
 }
@@ -196,14 +198,14 @@ func (p *Parser) checkValue(a *Action, v any) error {
 		}
 		_, ok := c.(string)
 		allStr = allStr && ok
-		names[i] = pyStr(c)
-		quoted[i] = pyRepr(names[i])
+		names[i] = pycompat.Str(c)
+		quoted[i] = pycompat.Repr(names[i])
 	}
-	value := pyRepr(pyStr(v))
+	value := pycompat.Repr(pycompat.Str(v))
 	list := strings.Join(quoted, ", ")
 	if s, ok := v.(string); ok && !p.cfg.NoSuggest && allStr {
 		if best, found := closeMatch(s, names); found {
-			return newArgError(a, "invalid choice: "+value+", maybe you meant "+pyRepr(best)+"? (choose from "+list+")")
+			return newArgError(a, "invalid choice: "+value+", maybe you meant "+pycompat.Repr(best)+"? (choose from "+list+")")
 		}
 	}
 	return newArgError(a, "invalid choice: "+value+" (choose from "+list+")")

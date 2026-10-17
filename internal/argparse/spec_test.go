@@ -6,6 +6,8 @@ import (
 	"sort"
 	"strings"
 	"testing"
+
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // This file builds a Parser from the declarative spec that gen_fixtures.py also builds a
@@ -16,9 +18,9 @@ type spec = map[string]any
 var testTypes = map[string]*Type{
 	"int": Int, "float": Float, "str": String,
 	"positive_int": {Name: "positive_int", Convert: func(s string) (any, error) {
-		n, err := ParseInt(s)
+		n, err := pycompat.ParseInt(s)
 		if err != nil {
-			return nil, NewTypeError("invalid int value: %s", pyRepr(s))
+			return nil, NewTypeError("invalid int value: %s", pycompat.Repr(s))
 		}
 		if n < 1 {
 			return nil, NewTypeError("must be at least 1, not %d", n)
@@ -26,9 +28,9 @@ var testTypes = map[string]*Type{
 		return int(n), nil
 	}},
 	"nav_positive_int": {Name: "nav_positive_int", Convert: func(s string) (any, error) {
-		n, err := ParseInt(s)
+		n, err := pycompat.ParseInt(s)
 		if err != nil || n < 1 {
-			return nil, NewTypeError("must be a positive integer, got %s", pyRepr(s))
+			return nil, NewTypeError("must be a positive integer, got %s", pycompat.Repr(s))
 		}
 		return int(n), nil
 	}},
