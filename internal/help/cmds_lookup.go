@@ -141,6 +141,9 @@ var memberCommands = []command{
 		args: func(p *argparse.Parser) {
 			positional(p, "name", "Class name (e.g. BAlarmService)")
 			flag(p, "Also show inherited methods from non-framework parents", "--inherited")
+		},
+		run: func(e *Env, ns *argparse.Namespace) error {
+			return e.API(APIParams{Name: ns.String("name"), Inherited: ns.Bool("inherited")})
 		}},
 	{name: "overrides", help: "Show which methods a class overrides from parents",
 		args: func(p *argparse.Parser) { positional(p, "name", "Class name") },

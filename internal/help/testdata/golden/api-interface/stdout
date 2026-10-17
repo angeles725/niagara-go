@@ -1,0 +1,10 @@
+API: BIAlarmSource (javax.baja.alarm)
+============================================================
+  extends BInterface
+
+OWN METHODS (2):
+
+  BBoolean ackAlarm(BAlarmRecord record, Context cx)
+  BAlarmClass getAlarmClass()
+
+SUMMARY: 2 own + 0 overrides = 2 useful
