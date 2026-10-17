@@ -127,12 +127,14 @@ type unreadable struct{ path, why string }
 
 // scanLogs harvests the IOCs of the log files under root, walked top-down like os.walk
 // (a directory's files before its subdirectories; names sorted, symlinked directories not entered).
-func scanLogs(root string) (hits []hit, nfiles int, bad []unreadable) {
+// A log file that cannot be read lands in bad, a directory that cannot be listed in badDirs (with
+// whatever entries were listed before the error still scanned): neither is ever counted as clean.
+func scanLogs(root string) (hits []hit, nfiles int, bad, badDirs []unreadable) {
 	var walk func(dir string)
 	walk = func(dir string) {
 		entries, err := os.ReadDir(dir)
 		if err != nil {
-			return
+			badDirs = append(badDirs, unreadable{dir, strerror(err)})
 		}
 		var subdirs []string
 		for _, ent := range entries {
@@ -159,7 +161,7 @@ func scanLogs(root string) (hits []hit, nfiles int, bad []unreadable) {
 		}
 	}
 	walk(root)
-	return hits, nfiles, bad
+	return hits, nfiles, bad, badDirs
 }
 
 // isDirEntry is DirEntry.is_dir(): a symlink counts as its target.

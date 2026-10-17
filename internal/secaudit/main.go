@@ -89,16 +89,22 @@ func runScanLogs(dir string, asJSON bool, s cli.Stdio) int {
 		fmt.Fprintf(s.Err, "ERROR: --scan-logs: not a directory: %s\n", dir)
 		return cli.ExitCannotSearch
 	}
-	hits, nfiles, bad := scanLogs(dir)
+	hits, nfiles, bad, badDirs := scanLogs(dir)
 	if len(bad) > 0 {
 		fmt.Fprintf(s.Err, "WARNING: --scan-logs: %d unreadable log file(s) not scanned:\n", len(bad))
 		for _, u := range bad {
 			fmt.Fprintf(s.Err, "  %s: %s\n", u.path, u.why)
 		}
 	}
+	if len(badDirs) > 0 { // a directory os.walk would skip in silence is a blind spot too
+		fmt.Fprintf(s.Err, "WARNING: --scan-logs: %d unreadable directory(ies) not scanned:\n", len(badDirs))
+		for _, u := range badDirs {
+			fmt.Fprintf(s.Err, "  %s: %s\n", u.path, u.why)
+		}
+	}
 	if nfiles == 0 {
 		fmt.Fprintf(s.Err, "ERROR: --scan-logs: 0 readable log files (*.log, console/station/nre/daemon "+
-			"*.txt) under %s (%d unreadable)\n", dir, len(bad))
+			"*.txt) under %s (%d unreadable)\n", dir, len(bad)+len(badDirs))
 		return cli.ExitCannotSearch
 	}
 	if asJSON {
@@ -115,6 +121,10 @@ func runScanLogs(dir string, asJSON bool, s cli.Stdio) int {
 				h.label, h.file, h.line, h.text)
 		}
 		switch {
+		case len(hits) == 0 && len(badDirs) > 0:
+			fmt.Fprintf(s.Out, "  no signature-bypass / unsigned-load IOCs in the readable files; "+
+				"%d unreadable file(s) and %d unreadable directory(ies) not scanned (incomplete, not clean).\n",
+				len(bad), len(badDirs))
 		case len(hits) == 0 && len(bad) > 0:
 			fmt.Fprintf(s.Out, "  no signature-bypass / unsigned-load IOCs in the readable files; "+
 				"%d unreadable file(s) not scanned (incomplete, not clean).\n", len(bad))
@@ -123,7 +133,7 @@ func runScanLogs(dir string, asJSON bool, s cli.Stdio) int {
 		}
 		fmt.Fprintln(s.Out)
 	}
-	if len(bad) > 0 {
+	if len(bad) > 0 || len(badDirs) > 0 { // a partial scan is never clean: the exit says incomplete
 		return cli.ExitCannotSearch
 	}
 	return cli.ExitFound
