@@ -174,6 +174,52 @@ JUST = ["", "a", "ab", "abc", "h\u00e9llo", "\u65e5\u672c", "e\u0301", "\U0001f6
 FILLS = [" ", "*", "\u00e9", "\u65e5"]
 WIDTHS = [-1, 0, 1, 2, 3, 4, 5, 6, 7, 10]
 CUTS = ["", "a", "abc", "h\u00e9llo w\u00f6rld", "e\u0301\U0001f600x", "\u65e5\u672c\u8a9e\u30c6\u30ad\u30b9\u30c8"]
+# format(value, spec): every static spec the niagara-research tools use (an AST survey of
+# tools/, module-navigator/ and niagara-help/), then the rest of the mini-language and its errors.
+SURVEY_SPECS = """+d , ,d .0% .0f .1% .1f .2f .3f .3g 02d 04X 08X 10s 11 11s 12s 14 14s 15s 16 18s 19s 20s 22s 24
+24s 25s 26s 28s 2d 30s 32s 34 34s 35s 36s 3d 40s 42s 45s 4d 4s 5.1% 50s 55s 5s 6 60s 6s 7 7s 8 8s 9s <10s
+<12 <14 <14s <15 <15s <16 <18 <19s <1d <20 <20s <22 <24 <25 <25s <28s <3 <30s <33 <35 <35s <40s <45s <5 <52s
+<5d <7 <8 >10 >10, >10.1f >10s >11, >2 >2d >3 >3,d >35s >3d >3s >4 >4, >4,d >40s >45s >4d >4s >5 >5, >5,d
+>5.0f >5.1f >5d >5s >6 >6, >6,.0f >6,d >6.1f >6d >6s >7 >7, >7,d >7.1f >7d >7s >8 >8, >8,.1f >8,d >8.1f
+>8d >8s >9 >9, >9.1f >9s ^14s d s""".split()
+MINI_SPECS = """<8 >8 ^8 =8 *<8 *>9 *^9 *=9 \u00e9^7 \u65e5>5 {<6 }>6 0<8 0>8 0^8 0=8 < > ^ = + - +8 -8 +08 -08 +=10
++^9 z z.1f z.0f +z.2f z, z.3e z% zg z.0e z=8.1f #b #o #x #X #010x #.0f #.0e #g #.3g #10b #_x #_b # #.0% #e
+0 05 010 010, 010_ 012,.2f 0=10 x=10, 010.2% -010d 010b 0x 1 3 20 \u0661\u0660 \u0661\u0660.\u0662f _ _d _b _o
+_x _X ,x ,.2f _.3e ,g ,% ,n ,c ,s ,, __ ,_ _, ,e 012,d 015,.5_f 09_x #012_b ,b .0 .1 .3 .10 .0f .10f .30f .0e
+.3e .3E .0g .1g .10g .17g .3G .2% .3s .0s .1s 10.3s ^10.2s .,f .4,f ._f ,.4_f .,e .,% .10,g ., ._ .,_f ._,f
+.__f .,,f .,n ._n ,._n .,s .,d .,c .,x .,b d n b o x X c e E f F g G % r a i u \u00e9 \x01 \x7f \U0001f600 .
+1. xx << 99999999999999999999999 .99999999999999999999 .3000000000 08.3d =s +s -s \x20s #s zs +c #c \x20c
+-c =c 5c ,.2s 8.3 .2d .0d <8.3e >10.4g ^12.3% =+12.2f \x20.3f \x20d \x20 \x20x""".split()
+MINI_SPECS = [x.encode().decode("unicode_escape") if "\\" in x else x for x in MINI_SPECS]
+FORMAT_SPECS = sorted(set([""] + SURVEY_SPECS + MINI_SPECS))
+FORMAT_VALUES = ["", "a", "ab", "h\u00e9llo", "\u65e5\u672c\u8a9e", "e\u0301", "\U0001f600x", "a longer string value",
+                 0, 1, -1, 5, 42, -42, 65, 255, 1234, -1234567, 1000000007, 2 ** 63, 2 ** 70, -(2 ** 70), 0x10FFFF,
+                 0x110000, True, False, None, 10 ** 400]
+
+
+def py_format(v, spec):
+    try:
+        return format(v, spec)
+    except (ValueError, TypeError, OverflowError) as e:
+        return [type(e).__name__, str(e)]
+
+
+def float_path(v, spec):
+    """True when format(v, spec) runs CPython's float formatter: v is a float, or an int (bool
+    included) whose spec ends in a float presentation type (int.__format__ converts it)."""
+    return isinstance(v, float) or (isinstance(v, int) and spec != "" and spec[-1] in "eEfFgG%")
+
+
+# The format(value, spec) cases are generated goldens under testdata/golden/, one per formatter,
+# so each one travels with the Go code it checks. Each holds the Python version, its typed values
+# and one [spec, results] row per spec; a result is the str or [exception class, message], and
+# null marks a pair that belongs to the other formatter's golden.
+def format_golden(values, keep):
+    return {"python": sys.version.split()[0], "values": [typed(v) for v in values],
+            "format": [[spec, [py_format(v, spec) if keep(v, spec) else None for v in values]]
+                       for spec in FORMAT_SPECS]}
+
+
 JOINS = [["a", "b"], ["a/", "b"], ["a", "/b", "c"], ["", "a"], ["a", ""], ["/", "x"], ["a", "b/", "c"]]
 
 
@@ -192,6 +238,23 @@ def float_samples():
     for _ in range(200):
         out.append(round(rnd.uniform(-1e6, 1e6), rnd.randint(0, 6)))
     return out
+
+
+def write_json(path, out):
+    """out as JSON with one list row per line."""
+    with open(path, "w", encoding="utf-8") as fh:
+        fh.write("{\n")
+        keys = list(out)
+        for i, k in enumerate(keys):
+            v = out[k]
+            sep = "," if i < len(keys) - 1 else ""
+            if isinstance(v, list):
+                fh.write(" %s: [\n" % json.dumps(k))
+                fh.write(",\n".join("  " + json.dumps(row, ensure_ascii=False) for row in v))
+                fh.write("\n ]%s\n" % sep)
+            else:
+                fh.write(" %s: %s%s\n" % (json.dumps(k), json.dumps(v, ensure_ascii=False, sort_keys=True), sep))
+        fh.write("}\n")
 
 
 def main():
@@ -242,19 +305,10 @@ def main():
             "case_context": digest(case_context(ch) for ch in chars()),
         },
     }
-    with open(os.path.join(HERE, "fixtures.json"), "w", encoding="utf-8") as fh:
-        fh.write("{\n")
-        keys = list(out)
-        for i, k in enumerate(keys):
-            v = out[k]
-            sep = "," if i < len(keys) - 1 else ""
-            if isinstance(v, list):
-                fh.write(" %s: [\n" % json.dumps(k))
-                fh.write(",\n".join("  " + json.dumps(row, ensure_ascii=False) for row in v))
-                fh.write("\n ]%s\n" % sep)
-            else:
-                fh.write(" %s: %s%s\n" % (json.dumps(k), json.dumps(v, ensure_ascii=False, sort_keys=True), sep))
-        fh.write("}\n")
+    write_json(os.path.join(HERE, "fixtures.json"), out)
+    os.makedirs(os.path.join(HERE, "golden"), exist_ok=True)
+    write_json(os.path.join(HERE, "golden", "format_str_int.golden"),
+               format_golden(FORMAT_VALUES, lambda v, spec: not float_path(v, spec)))
     print("unicode.txt and fixtures.json written", file=sys.stderr)
 
 
