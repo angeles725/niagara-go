@@ -99,7 +99,7 @@ func walkJava(root string, fn func(path, name string)) {
 	}
 	var dirs []string
 	for _, e := range entries { // os.ReadDir sorts by name
-		name, path := e.Name(), pyJoin(root, e.Name())
+		name, path := e.Name(), pycompat.PosixJoin(root, e.Name())
 		if e.IsDir() {
 			if !strings.HasPrefix(name, ".") {
 				dirs = append(dirs, path)
@@ -118,14 +118,6 @@ func walkJava(root string, fn func(path, name string)) {
 	for _, d := range dirs {
 		walkJava(d, fn)
 	}
-}
-
-// pyJoin is posixpath.join(a, b) for a relative b: no cleaning, so paths print as Python's.
-func pyJoin(a, b string) string {
-	if a == "" || strings.HasSuffix(a, "/") {
-		return a + b
-	}
-	return a + "/" + b
 }
 
 // sortedSet is sorted(a Python set).

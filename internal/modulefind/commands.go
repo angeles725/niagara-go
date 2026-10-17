@@ -175,7 +175,7 @@ func cmdGrep(m *module, o *opts, rx *pyre.Regexp, source bool) int {
 				if err != nil {
 					rel = l.path
 				}
-				rows = append(rows, row{{"file", rel}, {"line", l.n}, {"text", truncate(pycompat.Strip(l.text), 120)}})
+				rows = append(rows, row{{"file", rel}, {"line", l.n}, {"text", pycompat.Cut(pycompat.Strip(l.text), 120)}})
 			}
 		}
 		o.scope = scope(m, "source lines in "+m.root)
@@ -210,7 +210,7 @@ func cmdGrep(m *module, o *opts, rx *pyre.Regexp, source bool) int {
 	}
 	o.scope = scope(m, "class/slot/action names in "+m.root+" (grep --source searches the code)")
 	return render(rows, o, func(r row) string {
-		return fmt.Sprintf("%s %s  %s", padRight(r.str("kind"), 7), r.str("class"), r.str("name"))
+		return fmt.Sprintf("%s %s  %s", pycompat.LJust(r.str("kind"), 7, ' '), r.str("class"), r.str("name"))
 	}, "(no matches)")
 }
 
@@ -221,7 +221,7 @@ func cmdCallers(m *module, o *opts, method string) int {
 		if rx.MatchString(l.text) {
 			base := filepath.Base(l.path)
 			rows = append(rows, row{{"class", base[:len(base)-5]}, {"line", l.n},
-				{"text", truncate(pycompat.Strip(l.text), 90)}})
+				{"text", pycompat.Cut(pycompat.Strip(l.text), 90)}})
 		}
 	}
 	o.scope = scope(m, m.root)

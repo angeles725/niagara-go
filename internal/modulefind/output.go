@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 	"strings"
-	"unicode/utf8"
 
 	"github.com/angeles725/niagara-go/internal/pycompat"
 )
@@ -216,27 +215,4 @@ func jsonString(s string) string {
 	}
 	b.WriteByte('"')
 	return b.String()
-}
-
-// padRight / padLeft are f"{s:<n}" / f"{s:>n}" (code points).
-func padRight(s string, n int) string {
-	if c := utf8.RuneCountInString(s); c < n {
-		return s + strings.Repeat(" ", n-c)
-	}
-	return s
-}
-
-func padLeft(s string, n int) string {
-	if c := utf8.RuneCountInString(s); c < n {
-		return strings.Repeat(" ", n-c) + s
-	}
-	return s
-}
-
-// truncate is s[:n] in code points.
-func truncate(s string, n int) string {
-	if utf8.RuneCountInString(s) <= n {
-		return s
-	}
-	return string([]rune(s)[:n])
 }

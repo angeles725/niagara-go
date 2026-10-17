@@ -15,7 +15,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"unicode/utf8"
 
 	"github.com/angeles725/niagara-go/internal/argparse"
 	"github.com/angeles725/niagara-go/internal/blockfiles"
@@ -88,7 +87,7 @@ func Main(args []string, s cli.Stdio) int {
 	}
 	fmt.Fprintf(s.Out, "Generated %s — %d blocks listed.\n", catalogName, len(entries))
 	for _, e := range entries {
-		fmt.Fprintf(s.Out, "  Bloque %s  %s\n", padLeft(e.label, 4), e.filename)
+		fmt.Fprintf(s.Out, "  Bloque %s  %s\n", pycompat.RJust(e.label, 4, ' '), e.filename)
 	}
 	return 0
 }
@@ -209,12 +208,4 @@ func render(entries []entry) string {
 	}
 	lines = append(lines, "")
 	return strings.Join(lines, "\n")
-}
-
-// padLeft is f"{s:>n}": right-aligned in n code points.
-func padLeft(s string, n int) string {
-	if c := utf8.RuneCountInString(s); c < n {
-		return strings.Repeat(" ", n-c) + s
-	}
-	return s
 }

@@ -50,15 +50,12 @@ func pyPath(p string) string {
 	return s
 }
 
-// pyJoin is Path(a) / b for a relative b.
+// pyJoin is Path(a) / b for a relative b: posixpath.join, except that Path(".") / b is b.
 func pyJoin(a, b string) string {
 	if a == "." {
 		return b
 	}
-	if strings.HasSuffix(a, "/") {
-		return a + b
-	}
-	return a + "/" + b
+	return pycompat.PosixJoin(a, b)
 }
 
 // relTo is str(path.relative_to(root)) for a path below root.
