@@ -16,6 +16,9 @@ func main() {
 		data, _ := io.ReadAll(os.Stdin)
 		fmt.Fprintf(os.Stderr, "no match in %d bytes\n", len(data))
 		os.Exit(1)
+	case "--crash":
+		fmt.Fprintln(os.Stderr, "toy: boom")
+		os.Exit(2)
 	case "--env":
 		wd, _ := os.Getwd()
 		fmt.Printf("COLUMNS=%s NO_COLOR=%s cwd=%s\n", os.Getenv("COLUMNS"), os.Getenv("NO_COLOR"), filepath.Base(wd))

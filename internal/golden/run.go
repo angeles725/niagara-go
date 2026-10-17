@@ -43,6 +43,9 @@ func Run(t *testing.T, testdata string, m cli.Main) {
 	}
 	for _, c := range cases {
 		t.Run(c.Name, func(t *testing.T) {
+			if c.Intended != nil {
+				t.Logf("intended difference: %s", c.Intended.Reason)
+			}
 			var got result
 			if bin != "" {
 				got = execCase(t, testdata, bin, c)
