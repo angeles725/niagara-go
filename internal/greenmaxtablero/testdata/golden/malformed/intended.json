@@ -1,0 +1,4 @@
+{
+  "reason": "Python ends in an xml.parsers.expat.ExpatError traceback when the transformed Px is not well-formed; Go prints one line (exit 1 like the tool's other refusals)",
+  "stderr": "greenmax-tablero-gen: the generated Px is not well-formed XML: XML syntax error on line 24: element <Label> closed by </CanvasPane>\n"
+}
