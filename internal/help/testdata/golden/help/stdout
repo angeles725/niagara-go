@@ -1,0 +1,121 @@
+usage: niagara_help [-h] [--niagara-version VERSION]
+                    {class,search,hierarchy,guide,guide-search,devguide,pdf,module,method,source,package,xref,slots,implementors,find,related,devguide-search,stats,source-grep,inherited-slots,examples,method-sig,enum,module-deps,compare,annotations,profile,snippet,callers,overrides,contract,inherited-methods,compatible,graph,api,hotspots,chain,fuzzy,module-summary,export,interface-hierarchy,archetypes,orphans,recipe,checklist,topics,action-params,event-flow,export-html,export-module,coverage,diff-api,build-call-index,freshness,rebuild-all,selftest,repl,versions} ...
+
+Niagara N4 Documentation Navigator
+
+positional arguments:
+  {class,search,hierarchy,guide,guide-search,devguide,pdf,module,method,source,package,xref,slots,implementors,find,related,devguide-search,stats,source-grep,inherited-slots,examples,method-sig,enum,module-deps,compare,annotations,profile,snippet,callers,overrides,contract,inherited-methods,compatible,graph,api,hotspots,chain,fuzzy,module-summary,export,interface-hierarchy,archetypes,orphans,recipe,checklist,topics,action-params,event-flow,export-html,export-module,coverage,diff-api,build-call-index,freshness,rebuild-all,selftest,repl,versions}
+                        Available commands
+    class               Look up a class by name (package, inheritance, methods)
+    search              Search classes by glob pattern
+    hierarchy           Show subclass tree or inheritance chain
+    guide               Search guides by topic/folder
+    guide-search        Full-text search in guides-clean/ with relevance ranking
+    devguide            Search Developer Guide TOC
+    pdf                 Search PDFs by name and full-text
+    module              Cross-reference summary: classes + guides + PDFs
+    method              Search methods/fields/constructors by name
+    source              Look up or view Java source code
+    package             Browse classes by package
+    xref                Show import cross-references
+    slots               Search/view @NiagaraProperty, @NiagaraAction, @NiagaraTopic
+    implementors        Find classes implementing an interface
+    find                Unified full-text search across ALL sources with relevance ranking
+    related             Discovery: related classes by package, hierarchy, xref, guides
+    devguide-search     Full-text search in devguide-clean/ with relevance ranking
+    stats               Corpus overview with counts and sizes
+    source-grep         Full-text regex search across ALL source files
+    inherited-slots     Alias of 'slots --inherited': show all slots including inherited from
+                        parents
+    examples            Find usage examples of a class across source files
+    method-sig          Search methods by parameter/return type
+    enum                Show enum/frozen values and ordinals
+    module-deps         Show module dependency graph
+    compare             Side-by-side comparison of two classes
+    annotations         Search source files for Niagara annotations
+    profile             Full class profile: identity, hierarchy, slots, methods, xref
+    snippet             Extract a single method's source code
+    callers             Find classes that call a specific method
+    overrides           Show which methods a class overrides from parents
+    contract            Show interface contract: methods + implementors
+    inherited-methods   Show all methods including inherited from parents
+    compatible          Find converters, points, and extensions for a type
+    graph               ASCII dependency graph for a class
+    api                 Public API surface (own methods + overrides, no framework noise)
+    hotspots            Most referenced/complex classes and most used types
+    chain               Multi-hop call chain tracing for a method
+    fuzzy               Approximate search across classes, methods, slots, guides
+    module-summary      Full module overview: classes, deps, slots, API summary
+    export              Export full class report to markdown file
+    interface-hierarchy
+                        Alias of 'hierarchy --interface': show interface inheritance hierarchy
+    archetypes          List Niagara architectural patterns (services, points, etc.)
+    orphans             Find classes with zero used_by references
+    recipe              Development recipe for a concept (alarm, service, driver, etc.)
+    checklist           Implementation checklist for a base class
+    topics              Show topics fired by a class and potential subscribers
+    action-params       Find actions that accept a given parameter type
+    event-flow          Trace event flow for a topic name
+    export-html         Alias of 'export --html': export class report as standalone HTML file
+    export-module       Alias of 'export --module': export full module report to markdown
+    coverage            Documentation coverage report (overview exits 1 on guide folders with
+                        unindexed HTML pages)
+    diff-api            Compare two API export JSON files
+    build-call-index    Build call-index.json (pre-computed method call graph)
+    freshness           Check whether indexes are in sync with the raw corpus
+    rebuild-all         Rebuild all indexes in dependency order, then stamp the manifest
+    selftest            Assert core search behaviours (exits non-zero on failure)
+    repl                Interactive mode (keeps indexes in memory)
+    versions            Manage Niagara versions: 'versions add <install>' onboards a new install
+                        in one command (exit 0 ready, 1 a gate failed, 2 cannot add); 'versions
+                        list'
+
+options:
+  -h, --help            show this help message and exit
+  --niagara-version VERSION
+                        Niagara version to query (default from versions/registry.json; env
+                        NIAGARA_HELP_VERSION). Accepted anywhere on the command line.
+
+Examples:
+  niagara_help class BWebServlet
+  niagara_help search "BAlarm*"
+  niagara_help hierarchy BComponent --depth 2
+  niagara_help guide bacnet
+  niagara_help guide-search "discovery timeout"
+  niagara_help devguide "component model"
+  niagara_help pdf "modbus configuration"
+  niagara_help module alarm
+  niagara_help method doGet
+  niagara_help method-sig BAlarmRecord
+  niagara_help source BAlarmService --code
+  niagara_help source-grep "getSession()" -n 20
+  niagara_help package javax.baja.alarm
+  niagara_help xref BAlarmService
+  niagara_help slots BAlarmClass
+  niagara_help slots faultCause
+  niagara_help slots BAlarmClass --inherited
+  niagara_help implementors BIAlarmSource
+  niagara_help find "setpoint reference"
+  niagara_help related BAlarmService
+  niagara_help devguide-search "web servlet"
+  niagara_help examples BWebServlet
+  niagara_help enum BAckState
+  niagara_help module-deps alarm-rt
+  niagara_help compare BWebServlet BServletView
+  niagara_help annotations NiagaraAction
+  niagara_help profile BAlarmService
+  niagara_help snippet BAlarmService doRouteAlarm
+  niagara_help callers doRouteAlarm
+  niagara_help overrides BOrionAlarmService
+  niagara_help contract BIAlarmSource
+  niagara_help inherited-methods BNumericWritable
+  niagara_help compatible BStatusNumeric
+  niagara_help graph BAlarmService
+  niagara_help api BAlarmService
+  niagara_help hotspots
+  niagara_help chain doRouteAlarm --depth 3
+  niagara_help fuzzy "alarm service route"
+  niagara_help module-summary alarm-rt
+  niagara_help export BAlarmService report.md
+  niagara_help versions add /mnt/c/Niagara/Niagara-4.16.0.1
+  niagara_help repl

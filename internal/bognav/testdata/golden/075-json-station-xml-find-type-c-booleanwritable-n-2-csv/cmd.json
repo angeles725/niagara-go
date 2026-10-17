@@ -1,0 +1,16 @@
+{
+ "args": [
+  "--json",
+  "station.xml",
+  "find",
+  "--type",
+  "c:BooleanWritable",
+  "-n",
+  "2",
+  "--csv"
+ ],
+ "env": {
+  "NIAGARA_ORGANIZED": "organized-mini",
+  "NIAGARA_CACHE_DIR": "off"
+ }
+}

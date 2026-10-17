@@ -1,0 +1,7 @@
+usage: niagara_help selftest [-h] [--recall] [--no-samples]
+
+options:
+  -h, --help    show this help message and exit
+  --recall      Recall oracle: every class/method/slot/java file/page in the raw sources must be
+                found by its lookup command
+  --no-samples  With --recall: skip the sampled find/fuzzy rows

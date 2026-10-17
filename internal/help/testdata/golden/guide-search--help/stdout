@@ -1,0 +1,10 @@
+usage: niagara_help guide-search [-h] [-n MAX_RESULTS] [--and | --or] query
+
+positional arguments:
+  query                 Search text (e.g. 'discovery timeout')
+
+options:
+  -h, --help            show this help message and exit
+  -n, --max-results MAX_RESULTS
+  --and                 ALL terms must appear in each file (default)
+  --or                  ANY term in file

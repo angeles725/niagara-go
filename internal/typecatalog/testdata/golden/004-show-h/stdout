@@ -1,0 +1,8 @@
+usage: n4-type-catalog.py show [-h] catalog type
+
+positional arguments:
+  catalog
+  type
+
+options:
+  -h, --help  show this help message and exit

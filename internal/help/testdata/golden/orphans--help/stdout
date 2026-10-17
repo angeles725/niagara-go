@@ -1,0 +1,5 @@
+usage: niagara_help orphans [-h] [-n TOP]
+
+options:
+  -h, --help     show this help message and exit
+  -n, --top TOP  Max results to show (default: 30)

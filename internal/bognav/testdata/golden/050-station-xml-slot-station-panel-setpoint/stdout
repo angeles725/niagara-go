@@ -1,0 +1,1 @@
+Station/Panel.setpoint  type=b:StatusNumeric  value=3.0  child={value=3.0}  flags=  write=complex [child-leaf ORD bare <real> preferred; parent wrapped-obj = silent-zero hazard]

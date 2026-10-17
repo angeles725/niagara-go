@@ -1,0 +1,4 @@
+Room  h:20  <CRP:ColdRoom>
+  slot  valveMode = hand  <frozen simple (type in source)>  f=  [bare]
+  slot  setpoint = new BStatusNumeric(-18.0) (default)  <BColdRoom>  f=o
+  slot  defrostEnabled = true (default)  <BColdRoom>  f=

@@ -1,0 +1,2 @@
+usage: n4-type-catalog.py build [-h] [--out OUT] dirs [dirs ...]
+n4-type-catalog.py build: error: the following arguments are required: dirs

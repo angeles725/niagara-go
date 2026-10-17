@@ -256,6 +256,10 @@ PARSERS = {
                        "ab-c a-bc mid-sentence-hyphen --flag-like -- dash-- --lead well-known."}, "ops": [
         arg("--pick", choices=["abcx", "abcy", "zzzz"], help="x-ray a-b ab-cd abc-d e-mail-x"),
     ]},
+    "review": {"kw": {"prog": "rv"}, "ops": [
+        arg("-n", type="int", help="any size"), arg("--ex", action="extend", help="one string"),
+        arg("-é", "-bar", help="short then single-dash long"), defaults(zeta=1, alpha=2),
+    ]},
     "subnodest": {"kw": {"prog": "nodest"}, "ops": [
         subparsers([sub("alpha", help="first"), sub("beta", help="second")], required=True),
     ]},
@@ -353,6 +357,8 @@ def cases():
         ("corpus", ["path", "1"]), ("corpus", ["quiet"]), ("corpus", ["semantik", "q"]),
         ("corpus", ["--version"]), ("corpus", ["rank", "q", "--top", "0"]),
         ("hyphens", ["--pick", "abcz"]), ("hyphens", ["--pick", "abc"]), ("hyphens", ["--pick", "zz"]),
+        ("review", ["-n", "-9223372036854775808", "--ex", "abc", "--ex", "dé"]),
+        ("review", ["-n", "99999999999999999999", "-bar", "x"]), ("review", ["-é", "y", "-n", "1_0"]),
         ("subnodest", []), ("subnodest", ["gamma"]), ("subnodest", ["alpha", "-h"]),
         ("subtitle", ["run"]), ("subtitle", ["run", "t", "--verbose"]),
         ("subtitle", ["--verbose", "stop"]),

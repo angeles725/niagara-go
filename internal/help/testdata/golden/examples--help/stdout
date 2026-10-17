@@ -1,0 +1,8 @@
+usage: niagara_help examples [-h] [-n MAX_RESULTS] name
+
+positional arguments:
+  name                  Class name (e.g. BWebServlet)
+
+options:
+  -h, --help            show this help message and exit
+  -n, --max-results MAX_RESULTS

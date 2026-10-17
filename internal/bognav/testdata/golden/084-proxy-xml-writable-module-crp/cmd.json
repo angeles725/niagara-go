@@ -1,0 +1,12 @@
+{
+ "args": [
+  "proxy.xml",
+  "writable",
+  "--module",
+  "CRP"
+ ],
+ "env": {
+  "NIAGARA_ORGANIZED": "organized-mini",
+  "NIAGARA_CACHE_DIR": "off"
+ }
+}

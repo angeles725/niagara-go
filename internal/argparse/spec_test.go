@@ -3,8 +3,11 @@ package argparse
 import (
 	"encoding/json"
 	"fmt"
+	"sort"
 	"strings"
 	"testing"
+
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // This file builds a Parser from the declarative spec that gen_fixtures.py also builds a
@@ -15,21 +18,21 @@ type spec = map[string]any
 var testTypes = map[string]*Type{
 	"int": Int, "float": Float, "str": String,
 	"positive_int": {Name: "positive_int", Convert: func(s string) (any, error) {
-		n, err := ParseInt(s)
+		n, err := pycompat.ParseInt(s)
 		if err != nil {
-			return nil, NewTypeError("invalid int value: %s", pyRepr(s))
+			return nil, NewTypeError("invalid int value: %s", pycompat.Repr(s))
 		}
 		if n < 1 {
 			return nil, NewTypeError("must be at least 1, not %d", n)
 		}
-		return n, nil
+		return int(n), nil
 	}},
 	"nav_positive_int": {Name: "nav_positive_int", Convert: func(s string) (any, error) {
-		n, err := ParseInt(s)
+		n, err := pycompat.ParseInt(s)
 		if err != nil || n < 1 {
-			return nil, NewTypeError("must be a positive integer, got %s", pyRepr(s))
+			return nil, NewTypeError("must be a positive integer, got %s", pycompat.Repr(s))
 		}
-		return n, nil
+		return int(n), nil
 	}},
 	"checked": {Name: "checked", Convert: func(s string) (any, error) {
 		if strings.HasPrefix(s, "bad") {
@@ -106,6 +109,15 @@ func specConfig(t *testing.T, kw spec, parents map[string]*Parser) Config {
 		}
 	}
 	return c
+}
+
+func sortedKeys(m spec) []string {
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return keys
 }
 
 func asList(v any) []any {
@@ -211,11 +223,12 @@ func specOps(t *testing.T, c specContainer, ops []any, parents map[string]*Parse
 			desc, _ := op["description"].(string)
 			specOps(t, c.(*Parser).AddArgumentGroup(title, desc), asList(op["ops"]), parents)
 		case "defaults":
-			d := map[string]any{}
-			for k, v := range op["kw"].(spec) {
-				d[k] = specValue(v)
+			kw := op["kw"].(spec)
+			var pairs []any
+			for _, k := range sortedKeys(kw) {
+				pairs = append(pairs, k, specValue(kw[k]))
 			}
-			c.(*Parser).SetDefaults(d)
+			c.(*Parser).SetDefaults(pairs...)
 		case "set":
 			p := c.(*Parser)
 			switch op["attr"] {

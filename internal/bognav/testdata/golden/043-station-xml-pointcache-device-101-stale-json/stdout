@@ -1,0 +1,13 @@
+[
+  {
+    "coordinate": "binary-value:100@dev101",
+    "device": "101",
+    "obj_type": "binary-value",
+    "obj_inst": "100",
+    "property": "present-value",
+    "value": "inactive",
+    "polled": "2022-04-18T12:12:54.046-05:00",
+    "year": "2022",
+    "fresh": "STALE"
+  }
+]

@@ -13,6 +13,8 @@ import (
 	"syscall"
 	"unicode"
 	"unicode/utf8"
+
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // RootTag is the root element every BOG document carries in its first 64 KiB.
@@ -63,7 +65,7 @@ func ReadText(path string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return decodeReplace(data), nil
+	return pycompat.DecodeReplace(data), nil
 }
 
 // ReadBytes returns the BOG XML bytes of path. The input kind is detected by content: a
@@ -125,7 +127,7 @@ func osErr(path string, err error) *ReadError {
 		if r, size := utf8.DecodeRuneInString(msg); size > 0 {
 			msg = string(unicode.ToUpper(r)) + msg[size:]
 		}
-		detail = fmt.Sprintf("[Errno %d] %s: %s", int(errno), msg, pyRepr(pe.Path))
+		detail = fmt.Sprintf("[Errno %d] %s: %s", int(errno), msg, pycompat.StrRepr(pe.Path))
 	}
 	return readErr(err, "cannot read %s: %s", path, detail)
 }
@@ -215,7 +217,7 @@ func readMember(zr *zip.Reader, name, label string) ([]byte, error) {
 	case f.Flags&flagStrongEncryption != 0:
 		return fail(nil, "strong encryption (flag bit 6)")
 	case f.Flags&flagEncrypted != 0:
-		return fail(nil, fmt.Sprintf("File %s is encrypted, password required for extraction", pyRepr(name)))
+		return fail(nil, fmt.Sprintf("File %s is encrypted, password required for extraction", pycompat.StrRepr(name)))
 	}
 	rc, err := f.Open()
 	if errors.Is(err, zip.ErrAlgorithm) {
@@ -227,7 +229,7 @@ func readMember(zr *zip.Reader, name, label string) ([]byte, error) {
 	defer rc.Close()
 	data, err := io.ReadAll(rc)
 	if errors.Is(err, zip.ErrChecksum) {
-		return fail(err, fmt.Sprintf("Bad CRC-32 for file %s", pyRepr(name)))
+		return fail(err, fmt.Sprintf("Bad CRC-32 for file %s", pycompat.StrRepr(name)))
 	}
 	if err != nil {
 		return fail(err, err.Error())

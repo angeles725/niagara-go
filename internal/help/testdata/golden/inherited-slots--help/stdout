@@ -1,0 +1,8 @@
+usage: niagara_help inherited-slots [-h] [--json] name
+
+positional arguments:
+  name        Class name (e.g. BAlarmClass)
+
+options:
+  -h, --help  show this help message and exit
+  --json      Output as JSON

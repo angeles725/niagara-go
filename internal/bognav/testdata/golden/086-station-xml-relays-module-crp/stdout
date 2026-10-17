@@ -1,0 +1,3 @@
+NO  fb  Station/Drivers/ro2  <BooleanWritable>  <- Station/Logic/EvaporatorUnit_3.valveOut  writeOnUp=n/a (no proxy ext)
+yes fb  Station/Drivers/ro1  <BooleanWritable>  <- Station/Logic/EvaporatorUnit_3.valveOut  writeOnUp=n/a (no proxy ext)
+# 2 own-module->writable relay targets; 1 WITHOUT a fallback (hold last state on stop/reload — B810)

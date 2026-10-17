@@ -1,0 +1,2 @@
+usage: n4-type-catalog.py show [-h] catalog type
+n4-type-catalog.py show: error: the following arguments are required: type

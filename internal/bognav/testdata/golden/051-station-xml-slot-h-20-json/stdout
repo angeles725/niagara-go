@@ -1,0 +1,37 @@
+{
+  "path": "Station/Logic",
+  "handle": "20",
+  "type": "CRP:ColdRoom",
+  "slots": {
+    "setpoint": {
+      "type": "b:StatusNumeric",
+      "value": "3.0",
+      "flags": "",
+      "child": {
+        "value": "3.0"
+      }
+    },
+    "valveMode": {
+      "type": "",
+      "value": "auto",
+      "flags": ""
+    }
+  },
+  "actions": {},
+  "children": [
+    {
+      "name": "EvaporatorUnit_3",
+      "handle": "30",
+      "type": "CRP:EvaporatorUnit"
+    }
+  ],
+  "type_class": "com.angeles.ColdRoomPan.BColdRoom",
+  "defaults": {
+    "defrostEnabled": {
+      "default": "true",
+      "declared_by": "BColdRoom",
+      "flags": "",
+      "source": "ColdRoomPan/ColdRoomPan-rt/vineflower/com/angeles/ColdRoomPan/BColdRoom.java"
+    }
+  }
+}

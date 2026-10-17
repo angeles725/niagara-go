@@ -1,0 +1,8 @@
+usage: niagara_help snippet [-h] class_name method
+
+positional arguments:
+  class_name  Class name
+  method      Method name
+
+options:
+  -h, --help  show this help message and exit

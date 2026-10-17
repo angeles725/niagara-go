@@ -1,0 +1,2 @@
+usage: bog-nav.py [bog] tree [-h] [--json] [--csv] [--limit N] [--type TYPE] [--depth DEPTH]
+bog-nav.py [bog] tree: error: argument --depth: invalid int value: 'x'

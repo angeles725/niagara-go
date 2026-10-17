@@ -1,0 +1,23 @@
+[
+  {
+    "target": "Drivers/Net/points/ro2",
+    "type": "BooleanWritable",
+    "source": "Room.fanOut",
+    "fallback": "NO",
+    "writeOnUp": "false"
+  },
+  {
+    "target": "Drivers/Net/points/ro3",
+    "type": "BooleanWritable",
+    "source": "Room.lightOut",
+    "fallback": "NO",
+    "writeOnUp": "? (no tuning policy 'missingPolicy' under Drivers/Net/tuningPolicies)"
+  },
+  {
+    "target": "Drivers/Net/points/ro1",
+    "type": "BooleanWritable",
+    "source": "Room.valveOut",
+    "fallback": "yes",
+    "writeOnUp": "true (default)"
+  }
+]

@@ -1,0 +1,8 @@
+usage: niagara_help source-grep [-h] [-n MAX_RESULTS] pattern
+
+positional arguments:
+  pattern               Regex pattern (e.g. 'getSession\(\)')
+
+options:
+  -h, --help            show this help message and exit
+  -n, --max-results MAX_RESULTS

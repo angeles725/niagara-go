@@ -1,12 +1,16 @@
 package argparse
 
-import "strings"
+import (
+	"strings"
+
+	"github.com/angeles725/niagara-go/internal/pycompat"
+)
 
 // formatUsage is HelpFormatter._format_usage.
 func (f *formatter) formatUsage(usage string, actions []*Action, groups []*MutexGroup, prefix string) string {
 	switch {
 	case usage != "":
-		expanded, err := pyPercent(usage, map[string]any{"prog": f.prog})
+		expanded, err := pycompat.Percent(usage, map[string]any{"prog": f.prog})
 		if err != nil {
 			panic("argparse: badly formed usage: " + err.Error())
 		}

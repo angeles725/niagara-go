@@ -1,0 +1,10 @@
+usage: niagara_help find [-h] [-n MAX_PER_SOURCE] [--and | --or] query
+
+positional arguments:
+  query                 Search text
+
+options:
+  -h, --help            show this help message and exit
+  -n, --max-per-source MAX_PER_SOURCE
+  --and                 ALL terms must appear in each file (default)
+  --or                  ANY term in file

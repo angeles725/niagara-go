@@ -1,0 +1,16 @@
+[
+  {
+    "target": "Station/Drivers/ro2",
+    "type": "BooleanWritable",
+    "source": "Station/Logic/EvaporatorUnit_3.valveOut",
+    "fallback": "NO",
+    "writeOnUp": "n/a (no proxy ext)"
+  },
+  {
+    "target": "Station/Drivers/ro1",
+    "type": "BooleanWritable",
+    "source": "Station/Logic/EvaporatorUnit_3.valveOut",
+    "fallback": "yes",
+    "writeOnUp": "n/a (no proxy ext)"
+  }
+]

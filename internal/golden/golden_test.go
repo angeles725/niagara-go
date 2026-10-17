@@ -23,6 +23,9 @@ func toy(args []string, s cli.Stdio) int {
 	case "--crash":
 		fmt.Fprintln(s.Err, "toy: boom")
 		return cli.ExitCannotSearch
+	case "--tmp":
+		fmt.Fprintf(s.Out, "wrote %s\n", args[1])
+		return cli.ExitFound
 	case "--env":
 		wd, _ := os.Getwd()
 		fmt.Fprintf(s.Out, "COLUMNS=%s NO_COLOR=%s cwd=%s\n", os.Getenv("COLUMNS"), os.Getenv("NO_COLOR"), filepath.Base(wd))
@@ -162,4 +165,44 @@ func TestIntendedOverridesThePythonExpectation(t *testing.T) {
 		return
 	}
 	t.Fatal("intended-crash case missing")
+}
+
+func TestHostBoundCaseRunsOnlyOnItsHost(t *testing.T) {
+	f := filepath.Join(t.TempDir(), "machine-id")
+	write(t, f, "abc\n")
+	old := MachineIDFile
+	MachineIDFile = f
+	defer func() { MachineIDFile = old }()
+	c := Case{Requires: Requires{MachineIDSHA256: "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"}}
+	var skippedOwn bool
+	t.Run("matching", func(t *testing.T) {
+		defer func() { skippedOwn = t.Skipped() }()
+		skipUnlessHost(t, c)
+	})
+	if skippedOwn {
+		t.Fatal("case skipped on its own host")
+	}
+	var skipped bool
+	t.Run("other", func(t *testing.T) {
+		defer func() { skipped = t.Skipped() }()
+		skipUnlessHost(t, Case{Requires: Requires{MachineIDSHA256: "00"}})
+	})
+	if !skipped {
+		t.Fatal("host-bound case was not skipped on another host")
+	}
+}
+
+func TestTmpIsFoldedBackOnlyWhenUsed(t *testing.T) {
+	c, tmp := bind(t, Case{Args: []string{"x"}})
+	if tmp != "" || c.Args[0] != "x" {
+		t.Fatalf("bind without placeholder changed the case: %v %q", c.Args, tmp)
+	}
+	c, tmp = bind(t, Case{Args: []string{"{tmp}/a"}, Env: map[string]string{"D": "{tmp}"}})
+	if tmp == "" || c.Args[0] != tmp+"/a" || c.Env["D"] != tmp {
+		t.Fatalf("bind = %v %v %q", c.Args, c.Env, tmp)
+	}
+	r := unbind(result{stdout: []byte(tmp + "/a\n")}, tmp)
+	if string(r.stdout) != "{tmp}/a\n" {
+		t.Fatalf("unbind = %q", r.stdout)
+	}
 }

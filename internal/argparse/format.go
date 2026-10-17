@@ -4,6 +4,8 @@ import (
 	"os"
 	"regexp"
 	"strings"
+
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // A port of argparse.HelpFormatter (colour disabled): items are added in order and
@@ -32,8 +34,8 @@ type formatter struct {
 func terminalColumns() int {
 	cols := 0
 	if v, ok := os.LookupEnv("COLUMNS"); ok {
-		if n, err := ParseInt(v); err == nil {
-			cols = n
+		if n, err := pycompat.ParseInt(v); err == nil {
+			cols = int(n)
 		}
 	}
 	if cols <= 0 {
@@ -164,7 +166,7 @@ func (f *formatter) formatHelp() string {
 
 func (f *formatter) formatText(text string) string {
 	if strings.Contains(text, "%(prog)") {
-		expanded, err := pyPercent(text, map[string]any{"prog": f.prog})
+		expanded, err := pycompat.Percent(text, map[string]any{"prog": f.prog})
 		if err != nil {
 			panic("argparse: badly formed text: " + err.Error())
 		}
@@ -177,7 +179,7 @@ func (f *formatter) formatText(text string) string {
 func (f *formatter) fillText(text string, width int, indent string) string {
 	if f.kind == RawDescriptionHelpFormatter || f.kind == RawTextHelpFormatter {
 		var b strings.Builder
-		for _, line := range pySplitlines(text, true) {
+		for _, line := range pycompat.SplitLines(text, true) {
 			b.WriteString(indent + line)
 		}
 		return b.String()
@@ -187,7 +189,7 @@ func (f *formatter) fillText(text string, width int, indent string) string {
 
 func (f *formatter) splitLines(text string, width int) []string {
 	if f.kind == RawTextHelpFormatter {
-		return pySplitlines(text, false)
+		return pycompat.SplitLines(text, false)
 	}
 	return wrapText(normalizeSpace(text), width, "")
 }
@@ -208,7 +210,7 @@ func (f *formatter) formatAction(a *Action) string {
 		indentFirst = helpPosition
 	}
 	parts := []string{header}
-	if a.Help != "" && pyStrip(a.Help) != "" {
+	if a.Help != "" && pycompat.Strip(a.Help) != "" {
 		text, err := f.expandHelp(a)
 		if err != nil {
 			panic("argparse: badly formed help string: " + err.Error())
@@ -327,7 +329,11 @@ func (f *formatter) expandHelp(a *Action) (string, error) {
 		choices = joinStr(c, ", ")
 	}
 	if a.metavarTuple != nil {
-		metavar = pyTuple(a.metavarTuple)
+		tuple := make(pycompat.Tuple, len(a.metavarTuple))
+		for i, m := range a.metavarTuple {
+			tuple[i] = m
+		}
+		metavar = tuple
 	} else if a.Metavar != "" {
 		metavar = a.Metavar
 	}
@@ -343,19 +349,5 @@ func (f *formatter) expandHelp(a *Action) (string, error) {
 			delete(params, k)
 		}
 	}
-	return pyPercent(help, params)
-}
-
-// pyTuple is repr() of a tuple of strings.
-type pyTuple []string
-
-func (t pyTuple) String() string {
-	parts := make([]string, len(t))
-	for i, s := range t {
-		parts[i] = pyStrRepr(s)
-	}
-	if len(t) == 1 {
-		return "(" + parts[0] + ",)"
-	}
-	return "(" + strings.Join(parts, ", ") + ")"
+	return pycompat.Percent(help, params)
 }
