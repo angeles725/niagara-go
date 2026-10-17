@@ -3,6 +3,7 @@ package bogwrite
 import (
 	"encoding/hex"
 	"encoding/json"
+	"github.com/angeles725/niagara-go/internal/pycompat"
 	"os"
 	"testing"
 
@@ -61,7 +62,7 @@ func typed(v pyjson.Value) any {
 	case pyjson.Int:
 		return map[string]any{"int": v.I.String()}
 	case pyjson.Float:
-		return map[string]any{"float": pyjson.FloatRepr(v.F)}
+		return map[string]any{"float": pycompat.FloatRepr(v.F)}
 	case pyjson.Str:
 		return map[string]any{"str": hex.EncodeToString([]byte(v.S))}
 	case pyjson.Array:

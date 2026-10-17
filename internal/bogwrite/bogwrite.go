@@ -19,8 +19,6 @@ import (
 	"os"
 	"strings"
 	"syscall"
-	"unicode"
-	"unicode/utf8"
 
 	"github.com/angeles725/niagara-go/internal/argparse"
 	"github.com/angeles725/niagara-go/internal/cli"
@@ -143,28 +141,15 @@ func writeBog(plan pyjson.Value, path string, plain bool) error {
 	return writeZip(path, []byte(xml))
 }
 
-// osError renders an OS error as the Python OSError subclass and text open() raises.
-//
-// TODO(pycompat-format): replace with pycompat.OSErrorText once feat/pycompat-format lands
-// (its errno tables also cover Windows).
+// osError renders an OS error as the Python OSError subclass and text open() raises for path.
 func osError(err error, path string) error {
 	var errno syscall.Errno
 	if !errors.As(err, &errno) {
 		return raise("OSError", "%s", err)
 	}
-	typ := map[syscall.Errno]string{syscall.ENOENT: "FileNotFoundError", syscall.EISDIR: "IsADirectoryError",
-		syscall.ENOTDIR: "NotADirectoryError", syscall.EACCES: "PermissionError", syscall.EPERM: "PermissionError",
-		syscall.EEXIST: "FileExistsError"}[errno]
-	if typ == "" {
-		typ = "OSError"
-	}
-	msg := errno.Error()
-	if r, size := utf8.DecodeRuneInString(msg); size > 0 {
-		msg = string(unicode.ToUpper(r)) + msg[size:]
-	}
 	var pe *fs.PathError
-	if errors.As(err, &pe) {
-		path = pe.Path
+	if !errors.As(err, &pe) {
+		err = &fs.PathError{Op: "open", Path: path, Err: err}
 	}
-	return raise(typ, "[Errno %d] %s: %s", int(errno), msg, pycompat.StrRepr(path))
+	return raise(pycompat.OSErrorName(err), "%s", pycompat.OSErrorText(err))
 }
