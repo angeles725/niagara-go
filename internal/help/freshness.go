@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"sync"
 
 	"github.com/angeles725/niagara-go/internal/index"
 )
@@ -49,10 +50,18 @@ func fingerprintDir(path, ext string) *dirPrint {
 }
 
 // computeFingerprint is compute_fingerprint: every source dir of baseDir.
+// The directories are walked concurrently (the counts do not depend on
+// the order).
 func computeFingerprint(baseDir string) map[string]*dirPrint {
+	prints := make([]*dirPrint, len(freshnessDirs))
+	var wg sync.WaitGroup
+	for i, d := range freshnessDirs {
+		wg.Go(func() { prints[i] = fingerprintDir(filepath.Join(baseDir, d), freshnessExt[d]) })
+	}
+	wg.Wait()
 	out := map[string]*dirPrint{}
-	for _, d := range freshnessDirs {
-		out[d] = fingerprintDir(filepath.Join(baseDir, d), freshnessExt[d])
+	for i, d := range freshnessDirs {
+		out[d] = prints[i]
 	}
 	return out
 }
@@ -302,27 +311,41 @@ func (e *Env) freshnessAll() error {
 	fmt.Fprintln(e.Out, strings.Repeat("=", 60))
 	ids := reg.IDs()
 	sort.Strings(ids)
-	for _, vid := range ids {
+	// Each version's status is computed concurrently, then printed in order.
+	statuses := make([]string, len(ids))
+	errs := make([]error, len(ids))
+	var wg sync.WaitGroup
+	for i, vid := range ids {
+		wg.Go(func() { statuses[i], errs[i] = e.versionFreshness(reg, vid) })
+	}
+	wg.Wait()
+	for i, vid := range ids {
+		if errs[i] != nil {
+			return errs[i]
+		}
 		entry, _ := reg.Entry(vid)
-		root, err := index.DataRoot(e.RepoRoot, vid)
-		if err != nil {
-			return err
-		}
-		var status string
-		if !index.IsExtracted(root) {
-			status = fmt.Sprintf("NOT EXTRACTED (tools/extract_version.py %s)", vid)
-		} else {
-			idx, err := indexStatus(root)
-			if err != nil {
-				return err
-			}
-			inst, err := installStatus(e.RepoRoot, vid, getStr(entry.Raw, "install_dir", ""))
-			if err != nil {
-				return err
-			}
-			status = idx + "; " + inst
-		}
-		fmt.Fprintf(e.Out, "  %s %s %s\n", ljust(vid, 12), ljust(entry.DataRoot, 20), status)
+		fmt.Fprintf(e.Out, "  %s %s %s\n", ljust(vid, 12), ljust(entry.DataRoot, 20), statuses[i])
 	}
 	return nil
+}
+
+// versionFreshness is the status column of freshness --all for one version.
+func (e *Env) versionFreshness(reg *index.Registry, vid string) (string, error) {
+	entry, _ := reg.Entry(vid)
+	root, err := index.DataRoot(e.RepoRoot, vid)
+	if err != nil {
+		return "", err
+	}
+	if !index.IsExtracted(root) {
+		return fmt.Sprintf("NOT EXTRACTED (tools/extract_version.py %s)", vid), nil
+	}
+	idx, err := indexStatus(root)
+	if err != nil {
+		return "", err
+	}
+	inst, err := installStatus(e.RepoRoot, vid, getStr(entry.Raw, "install_dir", ""))
+	if err != nil {
+		return "", err
+	}
+	return idx + "; " + inst, nil
 }
