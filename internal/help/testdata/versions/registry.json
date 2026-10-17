@@ -1,0 +1,26 @@
+{
+  "default": "4.15.6.20",
+  "versions": {
+    "4.14.0.162": {
+      "label": "Honeywell OptimizerSupervisor N4.14.0.162",
+      "install_dir": "/mnt/c/Honeywell/OptimizerSupervisor-N4.14.0.162",
+      "data_root": "."
+    },
+    "4.15.6.20": {
+      "label": "Tridium Niagara 4.15.6.20 (developer course)",
+      "install_dir": "/mnt/c/Niagara/Niagara-4.15.6.20",
+      "data_root": "versions/4.15.6.20",
+      "course_dir": "../sources/n4-dev-course"
+    },
+    "4.13.2.18": {
+      "label": "iC-Niagara 4.13.2.18",
+      "install_dir": "/mnt/c/Niagara/iC-Niagara-4.13.2.18",
+      "data_root": "versions/4.13.2.18"
+    },
+    "4.3.58.18": {
+      "label": "EC-Net4 4.3.58.18",
+      "install_dir": "/mnt/c/Niagara/EC-Net4-4.3.58.18",
+      "data_root": "versions/4.3.58.18"
+    }
+  }
+}
