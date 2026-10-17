@@ -6,5 +6,9 @@
 {"name": "source-devguide-rc", "args": ["--niagara-version", "4.14.0.162", "source", "Example"], "exit": 0, "stderr": ""},
 {"name": "source-glob", "args": ["--niagara-version", "4.14.0.162", "source", "BUser*"], "exit": 0, "stderr": ""},
 {"name": "source-glob-fold", "args": ["--niagara-version", "4.14.0.162", "source", "buser0*"], "exit": 0, "stderr": ""},
-{"name": "source-miss", "args": ["--niagara-version", "4.14.0.162", "source", "BZzz"], "exit": 1, "stderr": ""}
+{"name": "source-miss", "args": ["--niagara-version", "4.14.0.162", "source", "BZzz"], "exit": 1, "stderr": ""},
+{"name": "class-jdk", "args": ["--niagara-version", "4.14.0.162", "class", "String", "--jdk"], "exit": 0, "stderr": ""},
+{"name": "class-jdk-sanitized", "args": ["--niagara-version", "4.14.0.162", "class", "Bad", "--jdk"], "exit": 0, "stderr": ""},
+{"name": "class-jdk-interface", "args": ["--niagara-version", "4.14.0.162", "class", "Other", "--jdk"], "exit": 0, "stderr": ""},
+{"name": "class-jdk-not-in-file", "args": ["--niagara-version", "4.14.0.162", "class", "Ghost", "--jdk"], "exit": 0, "stderr": ""}
 ]

@@ -1,0 +1,15 @@
+CLASS: Bad
+PACKAGE: java.lang
+TYPE: annotation
+MODULE: jdk-se
+XML: jdk/jdk-se/java/lang/Bad.bajadoc
+
+ANNOTATION TYPE: Bad
+PACKAGE: java.lang
+
+DESCRIPTION:
+default ? value
+
+FIELDS:
+  int F
+

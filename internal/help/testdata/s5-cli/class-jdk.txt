@@ -1,0 +1,32 @@
+CLASS: String
+PACKAGE: java.lang
+TYPE: class
+MODULE: jdk-se
+XML: jdk/jdk-se/java/lang/String.bajadoc
+
+CLASS: String
+PACKAGE: java.lang
+SINCE: JDK1.0
+EXTENDS: java.lang.Object
+IMPLEMENTS: java.io.Serializable, java.lang.Comparable<java.lang.String>, java.util.Map<? extends BObject, ?>
+
+DESCRIPTION:
+The String class represents character strings. All string literals in Java
+programs, such as &#x22;abc&#x22;, are implemented as instances of this class.
+Strings are constant;
+
+FIELDS:
+  abstract int abstractField
+  static java.util.Comparator<java.lang.String> CASE_INSENSITIVE_ORDER
+
+CONSTRUCTORS:
+  String()
+  String(char[] value, int offset)
+
+METHODS:
+  java.util.stream.IntStream chars()
+  int compareTo(T other)
+  static java.lang.String format(java.lang.String format, java.lang.Object... args)
+  abstract java.util.Map<javax.baja.sys.BValue, BThing> getPair()
+  static java.lang.String valueOf(BObject obj)
+

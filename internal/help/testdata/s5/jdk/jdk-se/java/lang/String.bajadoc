@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bajadoc>
+<class qualifiedName="java.lang.String" name="String" packageName="java.lang" module="jdk" runtimeProfile="se" public="true" final="true">
+<extends><type class="java.lang.Object"/></extends>
+<implements><type class="java.io.Serializable"/><parameterizedType class="java.lang.Comparable"><args><type class="java.lang.String"/></args></parameterizedType><parameterizedType class="java.util.Map"><args><wildcardType><bounds><type class="javax.baja.sys.BObject"/></bounds></wildcardType><wildcardType/></args></parameterizedType></implements>
+<description>The String class represents character strings. All string literals in Java programs, such as &amp;#x22;abc&amp;#x22;, are implemented as instances of this class.  Strings are   constant; <code>their</code> values cannot be changed after they are created, a sentence long enough to wrap twice over the seventy-eight column limit.</description>
+<tag name="@since">JDK1.0</tag>
+<field name="CASE_INSENSITIVE_ORDER" public="true" static="true" final="true"><parameterizedType class="java.util.Comparator"><args><type class="java.lang.String"/></args></parameterizedType></field>
+<field name="abstractField" public="true" abstract="true"><type class="int"/></field>
+<constructor name="String" public="true"></constructor>
+<constructor name="String" public="true"><parameter name="value"><type class="char" dimension="1"/></parameter><parameter name="offset"><type class="int"/></parameter></constructor>
+<method name="valueOf" public="true" static="true"><parameter name="obj"><type class="javax.baja.sys.BObject"/></parameter><return><type class="java.lang.String"/></return></method>
+<method name="chars" public="true"><return><typeVariable class="java.util.stream.IntStream" name="S"/></return></method>
+<method name="format" public="true" static="true"><parameter name="format"><type class="java.lang.String"/></parameter><parameter name="args" isVarargs="true"><type class="java.lang.Object" dimension="1"/></parameter><return><type class="java.lang.String"/></return></method>
+<method name="compareTo" public="true"><parameter name="other"><typeVariable name="T"/></parameter><return><type class="int"/></return></method>
+<method name="getPair" public="true" abstract="true"><return><parameterizedType class="java.util.Map"><args><type class="javax.baja.sys.BValue"/><type class="com.tridium.x.BThing"/></args></parameterizedType></return></method>
+</class>
+<class qualifiedName="java.lang.Other" name="Other" packageName="java.lang" module="jdk" interface="true"/>
+</bajadoc>

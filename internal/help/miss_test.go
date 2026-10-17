@@ -69,17 +69,6 @@ func TestMissingRequiredIndex(t *testing.T) {
 	}
 }
 
-func TestClassJDKIsNotPorted(t *testing.T) {
-	root, err := filepath.Abs("testdata")
-	if err != nil {
-		t.Fatal(err)
-	}
-	out, errs, code := run(t, root, "--niagara-version", "4.14.0.162", "class", "String", "--jdk")
-	if code != 2 || out != "" || errs != "nh: 'class --jdk' is not ported yet\n" {
-		t.Errorf("code %d out %q err %q", code, out, errs)
-	}
-}
-
 func TestCleanClassName(t *testing.T) {
 	for in, want := range map[string]string{"Cursor&lt;E&gt; ": "Cursor", "Map&lt;K, V&gt;.Entry": "Map.Entry", "BPlain": "BPlain"} {
 		if got := cleanClassName(in); got != want {

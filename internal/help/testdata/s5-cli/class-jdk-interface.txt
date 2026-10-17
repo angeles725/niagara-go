@@ -1,0 +1,9 @@
+CLASS: Other
+PACKAGE: java.lang
+TYPE: interface
+MODULE: jdk-se
+XML: jdk/jdk-se/java/lang/String.bajadoc
+
+INTERFACE: Other
+PACKAGE: java.lang
+

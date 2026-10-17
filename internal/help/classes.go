@@ -133,15 +133,12 @@ func classScope(jdk bool) string {
 type ClassParams struct {
 	Name    string
 	Verbose bool
-	JDK     bool // the JDK members come from .bajadoc XML: not ported yet
+	JDK     bool // the separate JDK index; members rendered from the .bajadoc XML
 }
 
 // Class looks up a class by simple, nested or qualified name (cmd_class):
 // every class sharing the name is listed and the first is shown in detail.
 func (e *Env) Class(p ClassParams) error {
-	if p.JDK {
-		return notPortedError("class --jdk")
-	}
 	idx, err := e.loadIndex(classIndexName(p.JDK), false)
 	if err != nil {
 		return err
@@ -175,6 +172,10 @@ func (e *Env) Class(p ClassParams) error {
 		fmt.Fprintf(e.Out, "MODULE: %s\n", pyStr(h.Module))
 	}
 	fmt.Fprintln(e.Out, sourceLabel(h.Path))
+	if p.JDK {
+		e.printJDKMembers(h)
+		return nil
+	}
 	clean, _, err := e.readCleanClass(h.Package, h.Name)
 	switch {
 	case err != nil:
@@ -185,4 +186,18 @@ func (e *Env) Class(p ClassParams) error {
 		fmt.Fprintln(e.Out, "\n(No bajadoc-clean text found)")
 	}
 	return nil
+}
+
+// printJDKMembers is _print_jdk_members: the members of a JDK class,
+// rendered on demand from its .bajadoc file (nothing when the file has no
+// class of that name or cannot be parsed).
+func (e *Env) printJDKMembers(h classEntry) {
+	rel, _ := strings.CutPrefix(h.Path, "../")
+	classes, _ := parseBajadocFile(pycompat.PosixJoin(e.BaseDir, rel))
+	for _, c := range classes {
+		if c.name == h.Name {
+			fmt.Fprintf(e.Out, "\n%s\n", formatCleanInfo(toCleanInfo(c)))
+			return
+		}
+	}
 }

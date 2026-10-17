@@ -1,0 +1,26 @@
+{
+ "String": {
+  "package": "java.lang",
+  "type": "class",
+  "module": "jdk-se",
+  "path": "../jdk/jdk-se/java/lang/String.bajadoc"
+ },
+ "Bad": {
+  "package": "java.lang",
+  "type": "annotation",
+  "module": "jdk-se",
+  "path": "../jdk/jdk-se/java/lang/Bad.bajadoc"
+ },
+ "Other": {
+  "package": "java.lang",
+  "type": "interface",
+  "module": "jdk-se",
+  "path": "../jdk/jdk-se/java/lang/String.bajadoc"
+ },
+ "Ghost": {
+  "package": "java.lang",
+  "type": "class",
+  "module": "jdk-se",
+  "path": "../jdk/jdk-se/java/lang/String.bajadoc"
+ }
+}

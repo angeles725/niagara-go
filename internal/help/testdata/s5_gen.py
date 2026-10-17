@@ -33,6 +33,10 @@ CLI = [
     ("source-glob", ["source", "BUser*"]),
     ("source-glob-fold", ["source", "buser0*"]),
     ("source-miss", ["source", "BZzz"]),
+    ("class-jdk", ["class", "String", "--jdk"]),
+    ("class-jdk-sanitized", ["class", "Bad", "--jdk"]),
+    ("class-jdk-interface", ["class", "Other", "--jdk"]),
+    ("class-jdk-not-in-file", ["class", "Ghost", "--jdk"]),
 ]
 
 

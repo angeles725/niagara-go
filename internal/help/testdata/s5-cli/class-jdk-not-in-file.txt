@@ -1,0 +1,5 @@
+CLASS: Ghost
+PACKAGE: java.lang
+TYPE: class
+MODULE: jdk-se
+XML: jdk/jdk-se/java/lang/String.bajadoc
