@@ -134,6 +134,7 @@ CLI = [
     ("pdf-category-miss", "1.0", ["pdf", "discovery", "--category", "hardware"]),
     ("pdf-shared", "2.0", ["pdf", "discovery"]),
     ("pdf-shared-miss", "2.0", ["pdf", "zzqq"]),
+    ("method-prominence", "1.0", ["method", "ackAlarm"]),
 ]
 
 

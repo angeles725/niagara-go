@@ -1,0 +1,8 @@
+2 member names matching '*a*' (3 total entries):
+
+  ackAlarm (2 classes)
+    e.g.: void ackAlarm()
+    in: BAlarmRecord, BIAlarmSource&lt;T&gt;
+  make (1 classes)
+    e.g.: BAckState make(int)
+    in: BAckState

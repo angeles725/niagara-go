@@ -1,0 +1,6 @@
+'ackAlarm' found in 2 classes:
+
+  [methods] javax.baja.alarm.BAlarmRecord
+    void ackAlarm()
+  [methods] javax.baja.alarm.BIAlarmSource&lt;T&gt;
+    void ackAlarm()

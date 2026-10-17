@@ -9,12 +9,14 @@ package fts
 // error names the Python command that rebuilds it.
 
 import (
+	"context"
 	"crypto/sha1"
 	"database/sql"
 	"encoding/hex"
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/index"
@@ -224,4 +226,59 @@ func (x *Index) groupIDs(groups []Group, srcs []string) ([]map[int64]bool, error
 		out[i] = set
 	}
 	return out, nil
+}
+
+// maxVars is fulltext_index.MAX_VARS: the terms bound per statement.
+const maxVars = 500
+
+// DocCounts is FtsIndex.doc_counts: for each distinct term the number of
+// indexed documents containing it (from an fts5vocab "row" table); a term
+// in no document is absent from the map.
+func (x *Index) DocCounts(terms []string) (map[string]int, error) {
+	ctx := context.Background()
+	conn, err := x.db.Conn(ctx) // the temp table lives on one connection
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close()
+	// The database file is opened mode=ro; query_only is lifted only to
+	// create the in-memory temp table, then restored.
+	for _, stmt := range []string{"PRAGMA query_only=0",
+		"CREATE VIRTUAL TABLE IF NOT EXISTS temp.vocab USING fts5vocab(main, fts, 'row')",
+		"PRAGMA query_only=1"} {
+		if _, err := conn.ExecContext(ctx, stmt); err != nil {
+			return nil, err
+		}
+	}
+	uniq := map[string]bool{}
+	var sorted []string
+	for _, t := range terms {
+		if !uniq[t] {
+			uniq[t] = true
+			sorted = append(sorted, t)
+		}
+	}
+	sort.Strings(sorted)
+	counts := map[string]int{}
+	for i := 0; i < len(sorted); i += maxVars {
+		chunk := sorted[i:min(i+maxVars, len(sorted))]
+		rs, err := conn.QueryContext(ctx, "SELECT term, doc FROM temp.vocab WHERE term IN ("+
+			marks(len(chunk))+")", args(nil, chunk)...)
+		if err != nil {
+			return nil, err
+		}
+		for rs.Next() {
+			var term string
+			var doc int
+			if err := rs.Scan(&term, &doc); err != nil {
+				rs.Close()
+				return nil, err
+			}
+			counts[term] = doc
+		}
+		if err := rs.Close(); err != nil {
+			return nil, err
+		}
+	}
+	return counts, nil
 }

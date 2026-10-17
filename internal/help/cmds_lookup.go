@@ -98,6 +98,9 @@ var memberCommands = []command{
 		args: func(p *argparse.Parser) {
 			positional(p, "name", "Method name or glob (e.g. 'doGet', 'set*')")
 			p.Add(argparse.Arg{Choices: choices("methods", "fields", "constructors")}, "--section")
+		},
+		run: func(e *Env, ns *argparse.Namespace) error {
+			return e.Method(MethodParams{Name: ns.String("name"), Section: ns.String("section")})
 		}},
 	{name: "method-sig", help: "Search methods by parameter/return type",
 		args: func(p *argparse.Parser) {

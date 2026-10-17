@@ -23,5 +23,6 @@
 {"name": "pdf-names-empty-query", "args": ["--niagara-version", "1.0", "pdf", "???", "--no-fulltext"], "exit": 0, "stderr": ""},
 {"name": "pdf-category-miss", "args": ["--niagara-version", "1.0", "pdf", "discovery", "--category", "hardware"], "exit": 1, "stderr": ""},
 {"name": "pdf-shared", "args": ["--niagara-version", "2.0", "pdf", "discovery"], "exit": 0, "stderr": ""},
-{"name": "pdf-shared-miss", "args": ["--niagara-version", "2.0", "pdf", "zzqq"], "exit": 1, "stderr": ""}
+{"name": "pdf-shared-miss", "args": ["--niagara-version", "2.0", "pdf", "zzqq"], "exit": 1, "stderr": ""},
+{"name": "method-prominence", "args": ["--niagara-version", "1.0", "method", "ackAlarm"], "exit": 0, "stderr": ""}
 ]
