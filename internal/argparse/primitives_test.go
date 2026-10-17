@@ -28,7 +28,7 @@ func TestPyRepr(t *testing.T) {
 }
 
 func TestParseIntLikePython(t *testing.T) {
-	ok := map[string]int{" 1_000 ": 1000, "+7": 7, "-0": 0, "٣٤": 34}
+	ok := map[string]int64{" 1_000 ": 1000, "+7": 7, "-0": 0, "٣٤": 34}
 	for in, want := range ok {
 		if got, err := ParseInt(in); err != nil || got != want {
 			t.Errorf("int(%q) = %d, %v; want %d", in, got, err, want)

@@ -33,7 +33,7 @@ func terminalColumns() int {
 	cols := 0
 	if v, ok := os.LookupEnv("COLUMNS"); ok {
 		if n, err := ParseInt(v); err == nil {
-			cols = n
+			cols = int(n)
 		}
 	}
 	if cols <= 0 {

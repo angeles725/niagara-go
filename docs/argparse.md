@@ -58,7 +58,8 @@ exit status and `repr()` of the namespace.
 | No colour: Python 3.15 colours help on a TTY without `NO_COLOR`; Go output equals Python's piped output | all, interactive use only |
 | Without `$COLUMNS`, the terminal width is read on Linux only (elsewhere 80) | Windows interactive help width |
 | `""` means Python `None` for `Prog`, `Usage`, `Description`, `Epilog`, `Help`, `Metavar`, group titles; use `SubparserConfig.Listed` for `add_parser(help="")` | none |
-| `int` values beyond int64 are rejected as invalid; `float` accepts ASCII digits only | none |
+| `type=int` beyond the range of `int` yields a `*big.Int` (`Namespace.Int` reads it as 0); `float` accepts ASCII digits only | none |
+| `action="extend"` on a non-string scalar appends it (Python raises TypeError) | none |
 | The `action.default is namespace value` identity test is approximated by "still the placed default" | none |
 | `parse_intermixed_args`, `REMAINDER`, `BooleanOptionalAction`, `fromfile_prefix_chars`, other `prefix_chars`, `conflict_handler="resolve"`, `exit_on_error=False`, `argument_default`, `deprecated` | none |
 | Custom `type=` callables are the porter's job (module-find `_regex` compiles a Python regex) | module-find |

@@ -109,15 +109,23 @@ func (p *Parser) setDefault(k string, v any) {
 	p.defaults[k] = v
 }
 
-// SetDefaults is parser.set_defaults(**kv): namespace values for dests no argument sets,
-// and the new default of the arguments that do.
-func (p *Parser) SetDefaults(kv map[string]any) {
-	for k, v := range kv {
-		p.setDefault(k, v)
+// SetDefaults is parser.set_defaults(**kv) with kv as key, value pairs in keyword order:
+// namespace values for dests no argument sets, and the new default of the arguments that
+// do. It panics on an odd count or a non-string key.
+func (p *Parser) SetDefaults(kv ...any) {
+	if len(kv)%2 != 0 {
+		panic("argparse: SetDefaults needs key, value pairs")
 	}
-	for _, a := range p.actions {
-		if v, ok := kv[a.Dest]; ok {
-			a.Default = v
+	for i := 0; i < len(kv); i += 2 {
+		k, ok := kv[i].(string)
+		if !ok {
+			panic(fmt.Sprintf("argparse: SetDefaults key %v is not a string", kv[i]))
+		}
+		p.setDefault(k, kv[i+1])
+		for _, a := range p.actions {
+			if a.Dest == k {
+				a.Default = kv[i+1]
+			}
 		}
 	}
 }
@@ -324,7 +332,7 @@ func inferDest(names []string) string {
 	dest, priority := "", 0
 	for _, s := range names {
 		switch {
-		case len(s) <= 2:
+		case runeLen(s) <= 2:
 			if priority < 1 {
 				dest, priority = strings.TrimLeft(s, "-"), 1
 			}

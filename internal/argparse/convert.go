@@ -3,6 +3,7 @@ package argparse
 import (
 	"errors"
 	"math"
+	"math/big"
 	"regexp"
 	"strconv"
 	"strings"
@@ -23,45 +24,62 @@ func digitValue(r rune) int {
 	return int(r-start) % 10
 }
 
-// ParseInt is Python int(text): surrounding whitespace, an optional sign, decimal digits
-// (any Unicode Nd) with single underscores between them. Values beyond int64 are rejected.
-func ParseInt(text string) (int, error) {
+// ParseBigInt is Python int(text): surrounding whitespace, an optional sign, decimal digits
+// (any Unicode Nd) with single underscores between them, any magnitude.
+func ParseBigInt(text string) (*big.Int, error) {
 	s := pyStrip(text)
-	neg := false
+	var digits strings.Builder
 	if s != "" && (s[0] == '+' || s[0] == '-') {
-		neg = s[0] == '-'
+		digits.WriteByte(s[0])
 		s = s[1:]
 	}
-	if s == "" {
-		return 0, errValue
-	}
-	var n int64
 	prevUnderscore, seen := true, false
 	for _, r := range s {
 		if r == '_' {
 			if prevUnderscore {
-				return 0, errValue
+				return nil, errValue
 			}
 			prevUnderscore = true
 			continue
 		}
 		if !unicode.IsDigit(r) {
-			return 0, errValue
+			return nil, errValue
 		}
-		d := int64(digitValue(r))
-		if n > (math.MaxInt64-d)/10 {
-			return 0, errValue
-		}
-		n = n*10 + d
+		digits.WriteByte(byte('0' + digitValue(r)))
 		prevUnderscore, seen = false, true
 	}
 	if prevUnderscore || !seen {
-		return 0, errValue
+		return nil, errValue
 	}
-	if neg {
-		n = -n
+	n, _ := new(big.Int).SetString(digits.String(), 10)
+	return n, nil
+}
+
+// ErrRange reports an int() literal that is valid but does not fit in an int64.
+var ErrRange = errors.New("int out of int64 range")
+
+// ParseInt is ParseBigInt for values that fit in an int64 (ErrRange otherwise).
+func ParseInt(text string) (int64, error) {
+	n, err := ParseBigInt(text)
+	if err != nil {
+		return 0, err
 	}
-	return int(n), nil
+	if !n.IsInt64() {
+		return 0, ErrRange
+	}
+	return n.Int64(), nil
+}
+
+// intValue is the namespace value of type=int: an int, or a *big.Int beyond int's range.
+func intValue(text string) (any, error) {
+	n, err := ParseBigInt(text)
+	if err != nil {
+		return nil, err
+	}
+	if n.IsInt64() && int64(int(n.Int64())) == n.Int64() {
+		return int(n.Int64()), nil
+	}
+	return n, nil
 }
 
 var floatSyntax = regexp.MustCompile(`^[+-]?(?:` +

@@ -3,6 +3,7 @@ package argparse
 import (
 	"errors"
 	"fmt"
+	"math/big"
 	"regexp"
 	"strings"
 	"sync"
@@ -224,6 +225,10 @@ func pyEqual(x, y any) bool {
 		}
 		return 0, false
 	}
+	if bx, ok := x.(*big.Int); ok {
+		by, ok := y.(*big.Int)
+		return ok && bx.Cmp(by) == 0
+	}
 	if a, ok := num(x); ok {
 		b, ok := num(y)
 		return ok && a == b
@@ -247,6 +252,22 @@ func copyItems(v any) []any {
 	return []any{v}
 }
 
+// iterItems is list(values) for extend: a list's items, a string's characters. Python
+// raises TypeError for any other scalar; it is appended as one item instead.
+func iterItems(v any) []any {
+	switch x := v.(type) {
+	case []any:
+		return x
+	case string:
+		var out []any
+		for _, r := range x {
+			out = append(out, string(r))
+		}
+		return out
+	}
+	return []any{v}
+}
+
 // callAction is Action.__call__.
 func (p *Parser) callAction(ctx *runCtx, a *Action, ns *Namespace, values any, option string) error {
 	switch a.kind {
@@ -259,7 +280,7 @@ func (p *Parser) callAction(ctx *runCtx, a *Action, ns *Namespace, values any, o
 	case AppendConst:
 		ns.Set(a.Dest, append(copyItems(ns.Get(a.Dest)), a.constant))
 	case Extend:
-		ns.Set(a.Dest, append(copyItems(ns.Get(a.Dest)), values.([]any)...))
+		ns.Set(a.Dest, append(copyItems(ns.Get(a.Dest)), iterItems(values)...))
 	case Count:
 		n, _ := ns.Get(a.Dest).(int)
 		ns.Set(a.Dest, n+1)
