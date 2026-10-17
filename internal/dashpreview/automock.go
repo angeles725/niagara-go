@@ -183,12 +183,3 @@ func findReaderJava(rcDir string) string {
 	}
 	return walk(filepath.Dir(rcDir))
 }
-
-// strList renders a Python list repr of strings.
-func strList(xs []string) string {
-	v := pyjson.Value{Kind: pyjson.Array}
-	for _, x := range xs {
-		v.A = append(v.A, pyjson.String(x))
-	}
-	return v.Repr()
-}

@@ -12,14 +12,10 @@ import (
 	"strings"
 	"syscall"
 	"time"
-	"unicode"
 
+	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 )
-
-func pyStripSpace(s string) string {
-	return strings.TrimFunc(s, func(r rune) bool { return unicode.IsSpace(r) || r >= 0x1C && r <= 0x1F })
-}
 
 // loadsOrEmpty mirrors `json.loads(body or "{}")` with ValueError -> {}. A
 // RecursionError is not a ValueError: it escapes the handler, returned here
@@ -115,7 +111,7 @@ func (h *Handler) doPOST(rp *reply) {
 	if length > 0 {
 		raw, _ = io.ReadAll(io.LimitReader(r.Body, int64(length)))
 	}
-	body := decodeReplace(raw)
+	body := pycompat.DecodeReplace(raw)
 	h.logf("  [POST %s] %s\n", p, body)
 	var row *pyjson.Value
 	if h.Login != nil && (p == "/api/config/login" || p == "/api/config/logout") {
@@ -192,7 +188,7 @@ func (h *Handler) login(rp *reply, p, body string) {
 		rp.drop(exc)
 		return
 	}
-	user := pyStripSpace(getOr(req, "user", pyjson.String("")).Str())
+	user := pycompat.Strip(getOr(req, "user", pyjson.String("")).Str())
 	if user == "" || getOr(req, "pass", pyjson.String("")).Str() != h.Login.Password {
 		h.mu.Unlock()
 		rp.json(errObj("auth"), 401, "")
