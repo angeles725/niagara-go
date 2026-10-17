@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/angeles725/niagara-go/internal/cli"
+	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 )
 
@@ -28,11 +29,6 @@ func finish(s cli.Stdio, code int, err error) int {
 		return cli.ExitCannotSearch
 	}
 	return code
-}
-
-// pyStrip mirrors str.strip() on ASCII text.
-func pyStrip(s string) string {
-	return strings.Trim(s, " \t\n\v\f\r\x1c\x1d\x1e\x1f")
 }
 
 func readASCII(path string) (string, error) {
@@ -82,7 +78,7 @@ func runVerify(o VerifyCmd, s cli.Stdio) (int, error) {
 	}
 	var blacklist *string
 	if o.Blacklist != nil {
-		if pyStrip(*o.Blacklist) == "" {
+		if pycompat.Strip(*o.Blacklist) == "" {
 			fmt.Fprintln(s.Err, "ERROR: --blacklist: empty path (omit the option for no blacklist)")
 			return 2, nil
 		}
@@ -182,7 +178,7 @@ func RunInspect(file string, s cli.Stdio) int {
 	if err != nil {
 		return finish(s, 0, err)
 	}
-	parts := strings.Split(pyStrip(text), ".")
+	parts := strings.Split(pycompat.Strip(text), ".")
 	if len(parts) != 3 || parts[0] != Scheme {
 		fmt.Fprintln(s.Out, "no es un artefacto REF1 valido")
 		return 1

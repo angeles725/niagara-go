@@ -7,6 +7,7 @@ import (
 	"errors"
 	"os"
 
+	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 )
 
@@ -23,7 +24,7 @@ func stableIdentifiers() ([]string, error) {
 		if err != nil {
 			return nil, errors.New(err.Error())
 		}
-		ids = append(ids, pyStrip(pyjson.WTF8(rs)))
+		ids = append(ids, pycompat.Strip(pyjson.WTF8(rs)))
 		break
 	}
 	return append(ids, nodeID()), nil

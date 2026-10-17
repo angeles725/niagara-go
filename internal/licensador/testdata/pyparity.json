@@ -278,6 +278,12 @@
 ["007", "7"],
 ["- 1", "ERR:invalid literal for int() with base 10: '- 1'"],
 ["+", "ERR:invalid literal for int() with base 10: '+'"],
-["\t7\n", "7"]
+["\t7\n", "7"],
+["\u0663", "3"],
+["\u00a07\u3000", "7"],
+["1\u0662", "12"],
+["\u0663_\u0663", "33"],
+["\u2163", "ERR:invalid literal for int() with base 10: '\u2163'"],
+["\u1680-4\u2028", "-4"]
 ]
 }
