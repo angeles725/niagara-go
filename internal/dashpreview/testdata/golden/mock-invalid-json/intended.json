@@ -1,0 +1,4 @@
+{
+ "reason": "Python dies with an uncaught exception (traceback, exit 1); Go prints only the final '<Type>: <message>' line, exit 1",
+ "stderr": "json.decoder.JSONDecodeError: Illegal trailing comma before end of object: line 1 column 8 (char 7)\n"
+}

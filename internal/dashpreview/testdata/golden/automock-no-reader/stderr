@@ -1,0 +1,1 @@
+ERROR: --auto-mock: no se encontro *Reader.java. Especifica --reader <path> o asegurate de que exista bajo el src/ del modulo.
