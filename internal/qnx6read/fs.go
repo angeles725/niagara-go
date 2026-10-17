@@ -42,6 +42,7 @@ type inode struct {
 // qnx6 mirrors the Python QNX6 class: the logical block b lives at part + (b+off)*1024.
 type qnx6 struct {
 	r          io.ReaderAt
+	image      string // the image name, for I/O error messages
 	part       int64
 	off        int64
 	blocksize  uint32
@@ -50,14 +51,28 @@ type qnx6 struct {
 	longRN     rootNode
 	inodeTable []byte
 	truncated  []string
+	visited    map[uint32]string // directory inode -> the path it was listed under
 }
+
+// ioError is a failed read of the image (not a short read at its end).
+type ioError struct {
+	image string
+	pos   int64
+	err   error
+}
+
+func (e *ioError) Error() string {
+	return fmt.Sprintf("cannot read %s at byte %d: %s", e.image, e.pos, strerror(e.err))
+}
+
+func (e *ioError) Unwrap() error { return e.err }
 
 // readAt reads up to n bytes at pos; like Python file.read it returns fewer at the end of the file.
 func (q *qnx6) readAt(pos int64, n int) ([]byte, error) {
 	buf := make([]byte, n)
 	k, err := q.r.ReadAt(buf, pos)
 	if err != nil && !errors.Is(err, io.EOF) {
-		return nil, err
+		return nil, &ioError{q.image, pos, err}
 	}
 	return buf[:k], nil
 }
@@ -80,7 +95,7 @@ func parseRoot(sb []byte, off int) rootNode {
 
 // open reads the superblock, detects the block offset and loads the inode and long-name files.
 func open(r io.ReaderAt, part int64, image string) (*qnx6, error) {
-	q := &qnx6{r: r, part: part}
+	q := &qnx6{r: r, image: image, part: part}
 	sb, err := q.readAt(part+sbOffset, sbSize)
 	if err != nil {
 		return nil, err
@@ -116,7 +131,8 @@ func open(r io.ReaderAt, part int64, image string) (*qnx6, error) {
 }
 
 // detectOff tries offsets 0..39 until logical block 0 of the inode file holds a directory
-// inode of a plausible size; it returns -1 when none does.
+// inode of a plausible size; it returns -1 when none does. A format error at one offset tries the
+// next (Python: any exception); a failed read of the image is returned.
 func (q *qnx6) detectOff() (int64, error) {
 	rn := q.inodeRN
 	for off := int64(0); off < maxProbeOff; off++ {
@@ -129,7 +145,11 @@ func (q *qnx6) detectOff() (int64, error) {
 		}
 		q.off = off
 		data0, err := q.logicalBlock(rn.ptr, rn.levels, 0)
-		if err != nil || len(data0) < 34 { // Python: any exception -> try the next offset
+		var ioErr *ioError
+		if errors.As(err, &ioErr) {
+			return 0, err
+		}
+		if err != nil || len(data0) < 34 {
 			continue
 		}
 		mode := binary.LittleEndian.Uint16(data0[32:])
@@ -193,12 +213,18 @@ func (q *qnx6) logicalBlock(ptrs []uint32, levels int, n int) ([]byte, error) {
 	return nil, fmt.Errorf("logical block %d is past the end of the file", n)
 }
 
+// readFile concatenates the data blocks of a file up to size. A block cut short by the end of the
+// image is an error unless the file needs no more bytes than it holds (Python returned the short
+// file silently).
 func (q *qnx6) readFile(size uint64, ptrs []uint32, levels int) ([]byte, error) {
 	var out []byte
 	err := q.leafBlocks(ptrs, levels, func(b uint32) error {
 		blk, err := q.rawBlock(b, q.off)
 		if err != nil {
 			return err
+		}
+		if len(blk) < blockSize && uint64(len(out)+len(blk)) < size {
+			return fmt.Errorf("data block %d is truncated: %d of %d bytes (the image ends)", b, len(blk), blockSize)
 		}
 		out = append(out, blk...)
 		if uint64(len(out)) >= size {
@@ -312,10 +338,13 @@ func (q *qnx6) resolve(path string) (ino uint32, ok bool, err error) {
 }
 
 // walk visits (path, inode, isdir) depth first in sorted name order. A directory deeper than
-// maxDepth (a loop guard) is not listed; its path goes to q.truncated.
+// maxDepth is not listed; its path goes to q.truncated. A directory inode reached a second time
+// (a loop, or two entries naming one directory) is an error: Python walked a loop down to
+// maxDepth, and two sibling entries for one inode doubled the walk at every level.
 func (q *qnx6) walk(ino uint32, path string, depth int, visit func(string, inode, bool)) error {
 	if depth == 0 {
 		q.truncated = nil
+		q.visited = map[uint32]string{ino: "/"}
 	}
 	if depth > maxDepth {
 		q.truncated = append(q.truncated, path)
@@ -338,6 +367,12 @@ func (q *qnx6) walk(ino uint32, path string, depth int, visit func(string, inode
 		}
 		p := path + "/" + e.name
 		isDir := i.mode&typeMask == dirMode
+		if isDir {
+			if prev, seen := q.visited[e.ino]; seen {
+				return fmt.Errorf("directory cycle: %s is inode %d, already listed as %s", p, e.ino, prev)
+			}
+			q.visited[e.ino] = p
+		}
 		visit(p, i, isDir)
 		if isDir {
 			if err := q.walk(e.ino, p, depth+1, visit); err != nil {

@@ -1,0 +1,6 @@
+{
+ "reason": "Intended difference (RDD finding B): /loop/again names the /loop directory inode again. Python walks the loop down to maxdepth 40 and reports a depth-limit INCOMPLETE (exit 1); with two sibling entries for one directory that walk would double at every level. Go keeps a visited-directory set and stops at the first directory inode reached twice with one 'directory cycle' error (exit 2, a corrupt partition), after the entries listed so far.",
+ "stdout": "-          3 /file\nd         32 /loop\n",
+ "stderr": "P2 OFF=3 blocksize=1024 inodes=3\nqnx6read: directory cycle: /loop/again is inode 2, already listed as /loop\n",
+ "exit": 2
+}
