@@ -1,0 +1,11 @@
+h:1        Station  <b:Station>
+h:10         Panel  <DPCD:RoomPanel>
+h:20         Logic  <CRP:ColdRoom>
+h:30           EvaporatorUnit_3  <CRP:EvaporatorUnit>
+h:40         Drivers  <c:BooleanWritable>
+h:41           ro1  <c:BooleanWritable>
+h:42           ro2  <c:BooleanWritable>
+h:50         DisplayService  <disp:BtDisplayService>
+h:51           pointCache  <disp:PointCache>
+h:52             bts:bacref:dopr=5_100_85_8_101  <disp:PointCacheObj>
+h:53             bts:bacref:dopr=2_50_85_8_101  <disp:PointCacheObj>

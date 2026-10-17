@@ -1,0 +1,22 @@
+{
+  "path": "Station/Panel",
+  "handle": "10",
+  "type": "DPCD:RoomPanel",
+  "slots": {
+    "setpoint": {
+      "type": "b:StatusNumeric",
+      "value": "3.0",
+      "flags": "",
+      "child": {
+        "value": "3.0"
+      }
+    },
+    "differentialUp": {
+      "type": "",
+      "value": "1.5",
+      "flags": ""
+    }
+  },
+  "actions": {},
+  "children": []
+}

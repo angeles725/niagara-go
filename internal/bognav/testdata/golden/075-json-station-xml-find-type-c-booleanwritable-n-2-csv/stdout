@@ -1,0 +1,14 @@
+[
+  {
+    "handle": "40",
+    "path": "Station/Drivers",
+    "type": "c:BooleanWritable",
+    "kind": "component"
+  },
+  {
+    "handle": "41",
+    "path": "Station/Drivers/ro1",
+    "type": "c:BooleanWritable",
+    "kind": "component"
+  }
+]

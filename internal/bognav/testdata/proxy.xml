@@ -1,0 +1,52 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<bajaObjectGraph version='4.0'>
+ <p h='1' t='b:Station' m='b=baja c=control d=driver nrio=nrio CRP=ColdRoomPan'>
+  <p n='Drivers' h='2' t='b:Folder'>
+   <p n='Net' h='3' t='b:Folder'>
+    <p n='tuningPolicies' h='4' t='d:TuningPolicyMap'>
+     <p n='defaultPolicy' h='5' t='d:TuningPolicy'/>
+     <p n='slowPolicy' h='6' t='d:TuningPolicy'>
+      <p n="writeOnUp" v="false"/>
+     </p>
+    </p>
+    <p n='points' h='7' t='b:Folder'>
+     <p n='ro1' h='8' t='c:BooleanWritable'>
+      <p n='fallback' t='b:StatusBoolean'>
+       <p n="value" v="false"/>
+      </p>
+      <p n='proxyExt' h='9' t='nrio:NrioRelayOutputProxyExt'/>
+      <p n='Link' t='b:Link'>
+       <p n="sourceOrd" v="h:20"/>
+       <p n="sourceSlotName" v="valveOut"/>
+       <p n="targetSlotName" v="in10"/>
+      </p>
+     </p>
+     <p n='ro2' h='10' t='c:BooleanWritable'>
+      <p n='proxyExt' h='11' t='nrio:NrioRelayOutputProxyExt'>
+       <p n="tuningPolicyName" v="slowPolicy"/>
+      </p>
+      <p n='Link' t='b:Link'>
+       <p n="sourceOrd" v="h:20"/>
+       <p n="sourceSlotName" v="fanOut"/>
+       <p n="targetSlotName" v="in10"/>
+      </p>
+     </p>
+     <p n='ro3' h='12' t='c:BooleanWritable'>
+      <p n='proxyExt' h='13' t='nrio:NrioRelayOutputProxyExt'>
+       <p n="tuningPolicyName" v="missingPolicy"/>
+      </p>
+      <p n='Link' t='b:Link'>
+       <p n="sourceOrd" v="h:20"/>
+       <p n="sourceSlotName" v="lightOut"/>
+       <p n="targetSlotName" v="in10"/>
+      </p>
+     </p>
+    </p>
+   </p>
+  </p>
+  <p n='Room' h='20' t='CRP:ColdRoom'>
+   <p n="valveMode" v="hand"/>
+  </p>
+  <p n='Panel' h='21' t='CRP:Unknown'/>
+ </p>
+</bajaObjectGraph>

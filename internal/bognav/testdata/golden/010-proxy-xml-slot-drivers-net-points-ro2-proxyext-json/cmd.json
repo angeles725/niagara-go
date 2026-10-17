@@ -1,0 +1,12 @@
+{
+ "args": [
+  "proxy.xml",
+  "slot",
+  "Drivers/Net/points/ro2/proxyExt",
+  "--json"
+ ],
+ "env": {
+  "NIAGARA_ORGANIZED": "organized-mini",
+  "NIAGARA_CACHE_DIR": "off"
+ }
+}

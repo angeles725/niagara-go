@@ -1,0 +1,23 @@
+{
+  "path": "Drivers/Net/points/ro2/proxyExt",
+  "handle": "11",
+  "type": "nrio:NrioRelayOutputProxyExt",
+  "slots": {
+    "tuningPolicyName": {
+      "type": "",
+      "value": "slowPolicy",
+      "flags": ""
+    }
+  },
+  "actions": {},
+  "children": [],
+  "type_class": "com.tridium.nrio.point.BNrioRelayOutputProxyExt",
+  "defaults": {
+    "enabled": {
+      "default": "true",
+      "declared_by": "BProxyExt",
+      "flags": "",
+      "source": "driver/driver-rt/vineflower/javax/baja/driver/point/BProxyExt.java"
+    }
+  }
+}

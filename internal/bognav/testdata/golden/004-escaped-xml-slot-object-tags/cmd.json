@@ -1,0 +1,11 @@
+{
+ "args": [
+  "escaped.xml",
+  "slot",
+  "object tags"
+ ],
+ "env": {
+  "NIAGARA_ORGANIZED": "organized-mini",
+  "NIAGARA_CACHE_DIR": "off"
+ }
+}

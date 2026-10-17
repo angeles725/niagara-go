@@ -1,0 +1,4 @@
+Drivers/Net/tuningPolicies/slowPolicy  h:6  <d:TuningPolicy>
+  slot  writeOnUp = false  <frozen simple (type in source)>  f=  [bare]
+  slot  minWriteTime = BRelTime.make(0L) (default)  <BTuningPolicy>  f=
+  slot  writeOnStart = true (default)  <BTuningPolicy>  f=

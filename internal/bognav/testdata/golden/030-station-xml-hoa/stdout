@@ -1,0 +1,2 @@
+config   Station/Logic.valveMode = auto
+# 1 HOA/mode slots; 0 AUTO/null; 1 persisted config-mode; 0 active priority-array override(s) [CHECK8]

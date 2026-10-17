@@ -1,0 +1,3 @@
+usage: bog-nav.py [bog] writable [-h] [--json] [--csv] [--limit N] [--module MODULE]
+                                 [--klass {simple,complex,bare,other}] [--src SRC]
+bog-nav.py [bog] writable: error: argument --klass: invalid choice: 'bogus' (choose from 'simple', 'complex', 'bare', 'other')

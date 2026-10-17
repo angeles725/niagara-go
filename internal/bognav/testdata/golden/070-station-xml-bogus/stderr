@@ -1,0 +1,4 @@
+usage: bog-nav.py [-h] [--json] [--csv] [--limit N] [--version]
+                  [bog]
+                  {tree,slot,links,handle,path,find,types,pointcache,writable,relays,hoa,tiles,grep,diff,selftest} ...
+bog-nav.py: error: argument cmd: invalid choice: 'bogus' (choose from 'tree', 'slot', 'links', 'handle', 'path', 'find', 'types', 'pointcache', 'writable', 'relays', 'hoa', 'tiles', 'grep', 'diff', 'selftest')

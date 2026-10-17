@@ -1,0 +1,6 @@
+h:1          <b:Station>
+h:2          Services  <b:ServiceContainer>
+h:c            JobService  <b:JobService>
+h:3            object tags  <b:Folder>
+h:4          A  <c:NumericWritable>
+h:5          B  <c:BooleanWritable>

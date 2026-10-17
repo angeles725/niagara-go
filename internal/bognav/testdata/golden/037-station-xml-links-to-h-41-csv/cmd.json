@@ -1,0 +1,13 @@
+{
+ "args": [
+  "station.xml",
+  "links",
+  "--to",
+  "h:41",
+  "--csv"
+ ],
+ "env": {
+  "NIAGARA_ORGANIZED": "organized-mini",
+  "NIAGARA_CACHE_DIR": "off"
+ }
+}

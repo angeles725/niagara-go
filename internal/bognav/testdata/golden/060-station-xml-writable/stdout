@@ -1,0 +1,7 @@
+complex  Station/Panel.setpoint=3.0  <b:StatusNumeric>  child-leaf ORD bare <real> preferred; parent wrapped-obj = silent-zero hazard
+bare     Station/Panel.differentialUp=1.5  <frozen simple (type in source)>  no type attr (untyped value/mode slot)
+complex  Station/Logic.setpoint=3.0  <b:StatusNumeric>  child-leaf ORD bare <real> preferred; parent wrapped-obj = silent-zero hazard
+bare     Station/Logic.valveMode=auto  <frozen simple (type in source)>  no type attr (untyped value/mode slot)
+complex  Station/Logic/EvaporatorUnit_3.valveOut=false  <b:StatusBoolean>  child-leaf ORD bare <real> preferred; parent wrapped-obj = silent-zero hazard
+simple   Station/DisplayService/pointCache/bts:bacref:dopr=5_100_85_8_101.polledTime=2022-04-18T12:12:54.046-05:00  <b:AbsTime>  plain simple value; carries writable="true" externally
+simple   Station/DisplayService/pointCache/bts:bacref:dopr=2_50_85_8_101.polledTime=2026-09-03T00:00:00.000-05:00  <b:AbsTime>  plain simple value; carries writable="true" externally

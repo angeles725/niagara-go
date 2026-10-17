@@ -1,0 +1,11 @@
+{
+ "args": [
+  "station.xml",
+  "pointcache",
+  "-h"
+ ],
+ "env": {
+  "NIAGARA_ORGANIZED": "organized-mini",
+  "NIAGARA_CACHE_DIR": "off"
+ }
+}
