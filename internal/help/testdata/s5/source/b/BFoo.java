@@ -1,0 +1,1 @@
+class BFoo { int b; }

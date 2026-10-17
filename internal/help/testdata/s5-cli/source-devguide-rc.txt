@@ -1,0 +1,5 @@
+SOURCE: Example
+MODULE: docDeveloper
+PACKAGE: 
+LINES: 1
+PATH: devguide-rc/Example.java

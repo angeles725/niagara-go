@@ -1,0 +1,10 @@
+SOURCE: BCrlf
+MODULE: x-rt
+PACKAGE: x
+LINES: 4
+PATH: source/x/BCrlf.java
+
+   1 | class BCrlf {
+   2 |   int a;
+   3 | �� bad
+   4 |  last line

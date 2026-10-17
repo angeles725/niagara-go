@@ -1,0 +1,12 @@
+SOURCE: BAlarmService
+MODULE: alarm-rt
+PACKAGE: javax.baja.alarm
+LINES: 6
+PATH: source/alarm-rt/javax/baja/alarm/BAlarmService.java
+
+   1 | package javax.baja.alarm;
+   2 | 
+   3 | public class BAlarmService
+   4 | {
+   5 |   void ackAlarm() {}
+   6 | }

@@ -77,6 +77,10 @@ var sourceCommands = []command{
 			positional(p, "name", "Class name or glob")
 			flag(p, "Show full source code", "--code")
 			p.Add(argparse.Arg{Dest: "grep_pattern", Help: "Grep pattern in source file"}, "--grep")
+		},
+		run: func(e *Env, ns *argparse.Namespace) error {
+			return e.Source(SourceParams{Name: ns.String("name"), Code: ns.Bool("code"),
+				Grep: ns.String("grep_pattern")})
 		}},
 	{name: "source-grep", help: "Full-text regex search across ALL source files",
 		args: func(p *argparse.Parser) {

@@ -1,0 +1,20 @@
+{
+ "default": "4.14.0.162",
+ "versions": {
+  "4.14.0.162": {
+   "label": "S5 fixture",
+   "install_dir": "install",
+   "data_root": "."
+  },
+  "4.15.0.1": {
+   "label": "S5 second root",
+   "install_dir": "install-b",
+   "data_root": "versions/4.15.0.1"
+  },
+  "9.0.0": {
+   "label": "S5 not extracted",
+   "install_dir": "",
+   "data_root": "versions/9.0.0"
+  }
+ }
+}
