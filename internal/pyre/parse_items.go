@@ -92,10 +92,7 @@ func parseSeq(t *tokenizer, st *state, verbose bool, nested int, first bool) []*
 		case this[0] == '[':
 			seq = append(seq, parseSet(t))
 		case containsRune(repeats, this[0]):
-			var ok bool
-			if seq, ok = parseRepeat(t, seq, this[0]); !ok {
-				continue
-			}
+			seq = parseRepeat(t, seq, this[0])
 		case this[0] == '.':
 			seq = append(seq, &node{kind: kAny})
 		case this[0] == '(':
@@ -169,9 +166,9 @@ func parseSet(t *tokenizer) *node {
 	return &node{kind: kIn, set: set, negate: negate}
 }
 
-// parseRepeat applies a quantifier to the last item; ok is false when "{" was a literal
-// (already appended to the returned sequence).
-func parseRepeat(t *tokenizer, seq []*node, this rune) ([]*node, bool) {
+// parseRepeat applies a quantifier to the last item; a "{" that does not start a
+// valid {m,n} is appended to the returned sequence as a literal.
+func parseRepeat(t *tokenizer, seq []*node, this rune) []*node {
 	here := t.tell()
 	lo, hi := 0, maxRepeat
 	switch this {
@@ -181,7 +178,7 @@ func parseRepeat(t *tokenizer, seq []*node, this rune) ([]*node, bool) {
 		lo = 1
 	case '{':
 		if t.is("}") {
-			return append(seq, &node{kind: kLiteral, r: '{'}), false
+			return append(seq, &node{kind: kLiteral, r: '{'})
 		}
 		los := t.getwhile(1<<30, digits)
 		his := los
@@ -191,7 +188,7 @@ func parseRepeat(t *tokenizer, seq []*node, this rune) ([]*node, bool) {
 		if !t.match("}") {
 			seq = append(seq, &node{kind: kLiteral, r: '{'})
 			t.seek(here)
-			return seq, false
+			return seq
 		}
 		if los != "" {
 			lo = atoiRepeat(t, los)
@@ -221,7 +218,7 @@ func parseRepeat(t *tokenizer, seq []*node, this rune) ([]*node, bool) {
 		mode = possessive
 	}
 	seq[len(seq)-1] = &node{kind: kRepeat, min: lo, max: hi, mode: mode, sub: item}
-	return seq, true
+	return seq
 }
 
 func atoiRepeat(t *tokenizer, s string) int {

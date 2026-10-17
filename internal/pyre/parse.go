@@ -328,10 +328,10 @@ func (t *tokenizer) escape(escape []rune, st *state) *node {
 		return &node{kind: kLiteral, r: rune(v)}
 	case containsRune(digits, c):
 		text := string(escape)
-		if t.next != nil && len(t.next) == 1 && containsRune(digits, t.next[0]) {
+		if len(t.next) == 1 && containsRune(digits, t.next[0]) {
 			text += string(t.get())
 			if containsRune(octdigits, rune(text[1])) && containsRune(octdigits, rune(text[2])) &&
-				t.next != nil && len(t.next) == 1 && containsRune(octdigits, t.next[0]) {
+				len(t.next) == 1 && containsRune(octdigits, t.next[0]) {
 				text += string(t.get())
 				v, _ := strconv.ParseInt(text[1:], 8, 32)
 				if v > 0o377 {
