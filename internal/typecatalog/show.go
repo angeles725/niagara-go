@@ -8,6 +8,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
+	"github.com/angeles725/niagara-go/internal/cli"
 	"github.com/angeles725/niagara-go/internal/slotomatic"
 	"github.com/angeles725/niagara-go/internal/textfold"
 )
@@ -35,12 +36,12 @@ func layoutModule(source string) (string, bool) {
 	return "", false
 }
 
-// inModule is _in_module: whether catalog entry key belongs to N4 module module (ignoring case).
-// The organized layout of the source path decides alone when present; otherwise a package segment
-// other than the first and the class equals the module.
-func inModule(key string, r *Record, module string) bool {
+// inModule is _in_module: whether catalog entry key, built from source, belongs to N4 module
+// module (ignoring case). The organized layout of the source path decides alone when present;
+// otherwise a package segment other than the first and the class equals the module.
+func inModule(key, source, module string) bool {
 	mod := textfold.Lower(module)
-	if layout, ok := layoutModule(r.Source); ok {
+	if layout, ok := layoutModule(source); ok {
 		return layout == mod
 	}
 	segs := strings.Split(key, ".")
@@ -57,8 +58,36 @@ func inModule(key string, r *Record, module string) bool {
 
 func lastSegment(key string) string { return key[strings.LastIndexByte(key, '.')+1:] }
 
-// show is _show: print every type matching pkg.BClass, BClass, module:Type or Type; exit 1 on a miss.
-func show(out, errw io.Writer, cat *Catalog, name string) int {
+// source is the entry's source path for module scoping.
+func (c *Catalog) source(key string) (string, error) {
+	if r := c.m[key]; r != nil {
+		return r.Source, nil
+	}
+	return sourceOf(key, c.raw[key])
+}
+
+// view is what show prints of an entry.
+func (c *Catalog) view(key string) (entryView, error) {
+	r := c.m[key]
+	if r == nil {
+		return viewLoaded(key, c.raw[key])
+	}
+	ev := entryView{extends: r.Extends, source: r.Source}
+	for g, ds := range [3][]slotomatic.Decl{r.Properties, r.Actions, r.Topics} {
+		for _, d := range ds {
+			ev.groups[g] = append(ev.groups[g], declView{d.Name, d.Flags.String(), d.FlagLetters, d.Default, d.Facets})
+		}
+	}
+	return ev, nil
+}
+
+// show is _show: print every type matching pkg.BClass, BClass, module:Type or Type; exit 1 on a
+// miss, 2 on an entry Python could not print (intended difference: Python raised a traceback).
+func show(out, errw io.Writer, cat *Catalog, path, name string) int {
+	malformed := func(err error) int {
+		fmt.Fprintf(errw, "%s: malformed catalog %s: %v\n", tool, path, err)
+		return cli.ExitCannotSearch
+	}
 	module, simple := "", name
 	if i := strings.LastIndexByte(name, ':'); i >= 0 {
 		module, simple = name[:i], name[i+1:]
@@ -73,7 +102,11 @@ func show(out, errw io.Writer, cat *Catalog, name string) int {
 	if module != "" {
 		var inside, outside []string
 		for _, k := range hits {
-			if inModule(k, cat.Get(k), module) {
+			src, err := cat.source(k)
+			if err != nil {
+				return malformed(err)
+			}
+			if inModule(k, src, module) {
 				inside = append(inside, k)
 			} else {
 				outside = append(outside, k)
@@ -97,15 +130,20 @@ func show(out, errw io.Writer, cat *Catalog, name string) int {
 			name, strings.Join(tried, ", "), cat.Len())
 		return 1
 	}
-	for _, k := range hits {
-		r := cat.Get(k)
-		fmt.Fprintf(out, "%s  extends %s   (%s)\n", k, r.Extends, r.Source)
-		for _, group := range []struct {
-			label string
-			decls []declView
-		}{{"property", view(r.Properties)}, {"action", view(r.Actions)}, {"topic", view(r.Topics)}} {
-			for _, d := range group.decls {
-				fmt.Fprintf(out, "  %s %s flags=%s %s default=%s facets=%s\n", ljust(group.label, 8),
+	views := make([]entryView, len(hits))
+	for i, k := range hits {
+		v, err := cat.view(k)
+		if err != nil {
+			return malformed(err)
+		}
+		views[i] = v
+	}
+	labels := [3]string{"property", "action", "topic"}
+	for i, k := range hits {
+		fmt.Fprintf(out, "%s  extends %s   (%s)\n", k, views[i].extends, views[i].source)
+		for g, decls := range views[i].groups {
+			for _, d := range decls {
+				fmt.Fprintf(out, "  %s %s flags=%s %s default=%s facets=%s\n", ljust(labels[g], 8),
 					ljust(d.name, 24), ljust(d.flags, 6), ljust(d.letters, 8), d.def, d.facets)
 			}
 		}
@@ -114,14 +152,6 @@ func show(out, errw io.Writer, cat *Catalog, name string) int {
 }
 
 type declView struct{ name, flags, letters, def, facets string }
-
-func view(ds []slotomatic.Decl) []declView {
-	out := make([]declView, len(ds))
-	for i, d := range ds {
-		out[i] = declView{d.Name, fmt.Sprint(d.Flags), d.FlagLetters, d.Default, d.Facets}
-	}
-	return out
-}
 
 // ljust is Python's "%-Ns": s padded with spaces to n code points.
 func ljust(s string, n int) string {

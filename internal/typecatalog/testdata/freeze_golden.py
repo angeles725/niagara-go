@@ -6,7 +6,8 @@ niagara-research has no golden suite for tools/n4-type-catalog.py, so the cases 
 from the Python tool itself (the specification): stdout, stderr and exit code as exact bytes, with
 cwd = this directory. Inputs are the synthetic Java trees next to this script (javasrc/ in the
 organized/<module>/<module>-<part>/ layout, loose/ and plain/ without it) and catalog.json, which
-this script writes from `build loose javasrc`. `selftest` is not frozen: it prints unittest timings.
+this script writes from `build loose javasrc`. odd.json is hand-written (values of other
+JSON types than build writes; its BNoFlags/BNoExt entries crash the Python tool and are unit tests). `selftest` is not frozen: it prints unittest timings.
 A `show <dir>` case never has two hits: their order is os.walk's, i.e. the directory order of the
 file system the checkout lives on (catalog.json cases cover several hits in file order).
 """
@@ -34,6 +35,8 @@ CASES = [
     "show loose BBytes", "show loose BCrlf", "show loose b:Multi", "show loose a:Multi",
     "show catalog.json BMulti", "show catalog.json NumericWritable", "show catalog.json control:NumericWritable",
     "show catalog.json Nope", "build loose --out",
+    # a catalog with non-string flags, lists, null, dicts and a big int: show prints str() of each
+    "show odd.json BX", "show odd.json control:BX",
 ]
 
 

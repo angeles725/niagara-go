@@ -10,11 +10,13 @@ import (
 func TestWalkSortedPrunesAndSkipsDirSymlinks(t *testing.T) {
 	root := t.TempDir()
 	for _, d := range []string{"b/x", "a", ".hidden"} {
-		os.MkdirAll(filepath.Join(root, d), 0o755)
+		must(t, os.MkdirAll(filepath.Join(root, d), 0o755))
 	}
-	os.WriteFile(filepath.Join(root, "b", "x", "F.java"), nil, 0o644)
-	os.WriteFile(filepath.Join(root, "z.txt"), nil, 0o644)
-	os.Symlink(filepath.Join(root, "b"), filepath.Join(root, "link"))
+	must(t, os.WriteFile(filepath.Join(root, "b", "x", "F.java"), nil, 0o644))
+	must(t, os.WriteFile(filepath.Join(root, "z.txt"), nil, 0o644))
+	if err := os.Symlink(filepath.Join(root, "b"), filepath.Join(root, "link")); err != nil {
+		t.Skipf("no directory symlinks here: %v", err) // Windows without the privilege
+	}
 	var seen []string
 	Walk(root+string(filepath.Separator), true, func(dir string, dirs *[]string, files []string) {
 		seen = append(seen, strings.TrimPrefix(dir, root)+"|"+strings.Join(*dirs, ",")+"|"+strings.Join(files, ","))
@@ -49,14 +51,26 @@ func TestOrganizedRoot(t *testing.T) {
 	if got := OrganizedRoot(); got != dir {
 		t.Errorf("env dir -> %q", got)
 	}
+	// Python strips only for the off test; the path itself is used as given (" dir " is no dir).
+	t.Setenv("NIAGARA_ORGANIZED", " "+dir+" ")
+	if got := OrganizedRoot(); got != "" {
+		t.Errorf("padded dir -> %q, want none (os.path.isdir of the untrimmed value)", got)
+	}
 	os.Unsetenv("NIAGARA_ORGANIZED")
 	repo := filepath.Join(dir, "repo")
 	deep := filepath.Join(repo, "clients", "x")
 	for _, d := range []string{filepath.Join(repo, ".git"), filepath.Join(repo, "organized"), deep, filepath.Join(dir, "organized")} {
-		os.MkdirAll(d, 0o755)
+		must(t, os.MkdirAll(d, 0o755))
 	}
 	t.Chdir(deep)
 	if got := OrganizedRoot(); got != filepath.Join(repo, "organized") {
 		t.Errorf("checkout discovery -> %q", got)
+	}
+}
+
+func must(t *testing.T, err error) {
+	t.Helper()
+	if err != nil {
+		t.Fatal(err)
 	}
 }

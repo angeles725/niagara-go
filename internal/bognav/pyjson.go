@@ -8,17 +8,32 @@ import (
 	"github.com/angeles725/niagara-go/internal/bog"
 )
 
-// The json.dumps subset bog-nav prints (pending: internal/pyjson, decision D26).
+// The json.dumps subset bog-nav prints; local until internal/pyjson lands (decision D26).
 
 // dumps is json.dumps(v, indent=indent) with ensure_ascii; indent < 0 is indent=None (one line,
 // ", " and ": " separators).
-func dumps(v any, indent int) string {
+// Any other value type is an error, never a panic.
+func dumps(v any, indent int) (string, error) {
 	var b strings.Builder
-	encode(&b, v, indent, 0)
-	return b.String()
+	if err := encode(&b, v, indent, 0); err != nil {
+		return "", err
+	}
+	return b.String(), nil
 }
 
-func encode(b *strings.Builder, v any, indent, level int) {
+// printJSON prints dumps(v, indent) and a newline; on an encoder error it prints one stderr
+// line instead and marks the run failed (Main exits 2).
+func (e *env) printJSON(v any, indent int) {
+	s, err := dumps(v, indent)
+	if err != nil {
+		fmt.Fprintf(e.err, "bog-nav: %v\n", err)
+		e.failed = true
+		return
+	}
+	e.println(s)
+}
+
+func encode(b *strings.Builder, v any, indent, level int) error {
 	sep := func(first bool, l int) {
 		if !first {
 			b.WriteByte(',')
@@ -55,42 +70,47 @@ func encode(b *strings.Builder, v any, indent, level int) {
 		for i, s := range x {
 			items[i] = s
 		}
-		encode(b, items, indent, level)
+		return encode(b, items, indent, level)
 	case []row:
 		items := make([]any, len(x))
 		for i, r := range x {
 			items[i] = r
 		}
-		encode(b, items, indent, level)
+		return encode(b, items, indent, level)
 	case []any:
 		if len(x) == 0 {
 			b.WriteString("[]")
-			return
+			return nil
 		}
 		b.WriteByte('[')
 		for i, it := range x {
 			sep(i == 0, level+1)
-			encode(b, it, indent, level+1)
+			if err := encode(b, it, indent, level+1); err != nil {
+				return err
+			}
 		}
 		end()
 		b.WriteByte(']')
 	case row:
 		if len(x) == 0 {
 			b.WriteString("{}")
-			return
+			return nil
 		}
 		b.WriteByte('{')
 		for i, m := range x {
 			sep(i == 0, level+1)
 			quote(b, m.K)
 			b.WriteString(": ")
-			encode(b, m.V, indent, level+1)
+			if err := encode(b, m.V, indent, level+1); err != nil {
+				return err
+			}
 		}
 		end()
 		b.WriteByte('}')
 	default:
-		panic(fmt.Sprintf("dumps: unsupported %T", v))
+		return fmt.Errorf("json: unsupported value of type %T", v)
 	}
+	return nil
 }
 
 // quote is json's ensure_ascii string encoder: every character outside ' '..'~' is escaped.

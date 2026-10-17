@@ -152,7 +152,7 @@ func cmdHandle(e *env) (int, int) {
 		}
 	}
 	if e.flag("json") {
-		e.println(dumps(row{{"path", c.Path}, {"type", c.Type}, {"fed_by", orEmpty(fedBy)}, {"feeds", orEmpty(feeds)}}, 2))
+		e.printJSON(row{{"path", c.Path}, {"type", c.Type}, {"fed_by", orEmpty(fedBy)}, {"feeds", orEmpty(feeds)}}, 2)
 		return 0, -1
 	}
 	e.println(fmt.Sprintf("h:%s  %s  <%s>  parent=h:%s", h, c.Path, c.Type, pyStr(c.ParentH)))
@@ -178,7 +178,7 @@ func cmdPath(e *env) (int, int) {
 		return 0, cli.ExitNoMatch
 	}
 	if e.flag("json") {
-		e.println(dumps(row{{"handle", h}, {"path", c.Path}, {"type", c.Type}}, -1))
+		e.printJSON(row{{"handle", h}, {"path", c.Path}, {"type", c.Type}}, -1)
 		return 0, -1
 	}
 	e.println(c.Path)

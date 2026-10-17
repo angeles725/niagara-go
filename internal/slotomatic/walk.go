@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/pycompat"
+	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
 // WalkFunc receives one directory of a Walk: its path, its subdirectories (the callback may
@@ -57,14 +58,16 @@ func Join(dir, name string) string {
 }
 
 // OrganizedRoot is the organized/ tree of decompiled module sources, or "" when there is none:
-// $NIAGARA_ORGANIZED ("", "off" and "0" disable it; a path that is not a directory gives none),
+// $NIAGARA_ORGANIZED ("", "off" and "0", after strip() and lower(), disable it; otherwise the
+// value is used as given, untrimmed like Python's os.path.isdir(env), and a path that is not a
+// directory gives none),
 // else the organized/ directory of the first checkout (a directory holding .git and organized/)
 // found walking up from the working directory, then from the executable's directory. The Python
 // tools used <their checkout>/organized; a binary has no checkout (the module-navigator rule of
 // decision D24).
 func OrganizedRoot() string {
 	if env, ok := os.LookupEnv("NIAGARA_ORGANIZED"); ok {
-		switch strings.ToLower(pycompat.Strip(env)) {
+		switch textfold.Lower(pycompat.Strip(env)) {
 		case "", "off", "0":
 			return ""
 		}

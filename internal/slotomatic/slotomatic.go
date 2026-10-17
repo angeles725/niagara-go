@@ -13,6 +13,7 @@
 package slotomatic
 
 import (
+	"math/big"
 	"regexp"
 	"strings"
 	"unicode/utf8"
@@ -23,7 +24,7 @@ import (
 // Decl is one declared slot.
 type Decl struct {
 	Name        string
-	Flags       int64
+	Flags       *big.Int // Python int: no bound
 	FlagLetters string   // the letters of the known flag bits, in bit order
 	Args        []string // every call argument, cleaned
 	Default     string   // the default value expression ("" when the call has none)

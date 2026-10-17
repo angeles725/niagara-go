@@ -88,26 +88,26 @@ func checks() []check {
 	return []check{
 		{"FlagsTest.test_numeric_flags_decode", func() error {
 			v, l := slotomatic.DecodeFlags("(int)1026")
-			return expect(v == 1026 && strings.Contains(strings.Join(l, ""), "f") && strings.Contains(strings.Join(l, ""), "t"), "(int)1026 -> %d %v", v, l)
+			return expect(v.Int64() == 1026 && strings.Contains(strings.Join(l, ""), "f") && strings.Contains(strings.Join(l, ""), "t"), "(int)1026 -> %d %v", v, l)
 		}},
 		{"FlagsTest.test_symbolic_flags_to_int_and_letters", func() error {
 			v, l := slotomatic.DecodeFlags("Flags.SUMMARY | Flags.TRANSIENT")
-			return expect(v == 0x0A && strings.Join(l, "") == "ts", "-> %d %v", v, l)
+			return expect(v.Int64() == 0x0A && strings.Join(l, "") == "ts", "-> %d %v", v, l)
 		}},
 		{"FlagsTest.test_zero_flags", func() error {
 			v1, l1 := slotomatic.DecodeFlags("0")
 			v2, l2 := slotomatic.DecodeFlags("(int)0")
-			return expect(v1 == 0 && v2 == 0 && len(l1)+len(l2) == 0, "zero flags decoded as %d %d", v1, v2)
+			return expect(v1.Sign() == 0 && v2.Sign() == 0 && len(l1)+len(l2) == 0, "zero flags decoded as %d %d", v1, v2)
 		}},
 		{"ParseTest.test_cfr_decompiled_style", func() error {
 			t := slotomatic.ParseSource(cfrSrc)
 			p, a := flagsOf(t.Properties), flagsOf(t.Actions)
-			return expect(p["delay"].Flags == 0 && p["delay"].Default == "BRelTime.DEFAULT" && p["master"].Flags == 1026 &&
-				strings.HasPrefix(p["master"].Facets, "BFacets.make(") && a["reset"].Flags == 256, "%+v", t)
+			return expect(p["delay"].Flags.Int64() == 0 && p["delay"].Default == "BRelTime.DEFAULT" && p["master"].Flags.Int64() == 1026 &&
+				strings.HasPrefix(p["master"].Facets, "BFacets.make(") && a["reset"].Flags.Int64() == 256, "%+v", t)
 		}},
 		{"ParseTest.test_nested_parentheses_and_multiline", func() error {
 			p := flagsOf(slotomatic.ParseSource(multilineSrc).Properties)
-			return expect(strings.Contains(p["conversion"].Facets, "FIELD_EDITOR") && p["wrapped"].Flags == 4 &&
+			return expect(strings.Contains(p["conversion"].Facets, "FIELD_EDITOR") && p["wrapped"].Flags.Int64() == 4 &&
 				p["wrapped"].Default == `"x"`, "%+v", p)
 		}},
 		{"ParseTest.test_no_declarations_returns_empty_lists", func() error {
@@ -119,9 +119,9 @@ func checks() []check {
 			p, a := flagsOf(t.Properties), flagsOf(t.Actions)
 			return firstErr(
 				expect(t.Class == "BNumericWritable" && t.Package == "javax.baja.control" && t.Extends == "BNumericPoint", "header %+v", t),
-				expect(p["in1"].Flags == 1 && p["in10"].Flags == 0x0A && p["fallback"].Flags == 0 && p["overrideExpiration"].Flags == 0x101, "flags %+v", p),
+				expect(p["in1"].Flags.Int64() == 1 && p["in10"].Flags.Int64() == 0x0A && p["fallback"].Flags.Int64() == 0 && p["overrideExpiration"].Flags.Int64() == 0x101, "flags %+v", p),
 				expect(p["in1"].Default == "new BStatusNumeric(0, BStatus.nullStatus)", "in1 default %q", p["in1"].Default),
-				expect(a["emergencyAuto"].Flags == 0 && a["set"].Flags == 0x100 && a["set"].Default == "BDouble.DEFAULT", "actions %+v", a),
+				expect(a["emergencyAuto"].Flags.Int64() == 0 && a["set"].Flags.Int64() == 0x100 && a["set"].Default == "BDouble.DEFAULT", "actions %+v", a),
 				expect(len(t.Topics) == 1 && t.Topics[0].Name == "fired", "topics %+v", t.Topics))
 		}},
 		{"RealDataTest.test_bnumericwritable_in_docsource", realData},
@@ -159,8 +159,8 @@ func realData() error {
 	}
 	t := slotomatic.ParseSource(text)
 	p, a := flagsOf(t.Properties), flagsOf(t.Actions)
-	return expect(p["in1"].Flags == 0x01 && p["in8"].Flags == 0x01 && p["in2"].Flags == 0x02 && p["in10"].Flags == 0x0A &&
-		p["in16"].Flags == 0x0A && p["fallback"].Flags == 0 && a["emergencyOverride"].Flags == 0 && a["set"].Flags == 0x100,
+	return expect(p["in1"].Flags.Int64() == 0x01 && p["in8"].Flags.Int64() == 0x01 && p["in2"].Flags.Int64() == 0x02 && p["in10"].Flags.Int64() == 0x0A &&
+		p["in16"].Flags.Int64() == 0x0A && p["fallback"].Flags.Int64() == 0 && a["emergencyOverride"].Flags.Int64() == 0 && a["set"].Flags.Int64() == 0x100,
 		"%s: InN flags differ from B1174", path)
 }
 

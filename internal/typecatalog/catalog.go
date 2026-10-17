@@ -22,10 +22,11 @@ type Record struct {
 // a built catalog, file order for a loaded one), like the Python dict.
 type Catalog struct {
 	Keys []string
-	m    map[string]*Record
+	m    map[string]*Record // a built catalog
+	raw  map[string]any     // a loaded catalog file: the json.load value of each entry
 }
 
-// Get returns the record of key, nil when absent.
+// Get returns the record of a built catalog's key, nil when absent or loaded from a file.
 func (c *Catalog) Get(key string) *Record { return c.m[key] }
 
 // Len is the number of types.
@@ -39,16 +40,6 @@ func (c *Catalog) setDefault(key string, r *Record) {
 		c.Keys = append(c.Keys, key)
 		c.m[key] = r
 	}
-}
-
-func (c *Catalog) set(key string, r *Record) {
-	if c.m == nil {
-		c.m = map[string]*Record{}
-	}
-	if _, ok := c.m[key]; !ok {
-		c.Keys = append(c.Keys, key)
-	}
-	c.m[key] = r
 }
 
 // Build is build_catalog: every type with at least one declaration under roots (the first file
@@ -88,7 +79,7 @@ func Key(t slotomatic.Type) string {
 }
 
 // JSON is json.dumps(cat, indent=1, sort_keys=True).
-func (c *Catalog) JSON() string {
+func (c *Catalog) JSON() (string, error) {
 	keys := append([]string(nil), c.Keys...)
 	sort.Strings(keys)
 	top := make([]kv, len(keys))
@@ -120,45 +111,26 @@ func decls(ds []slotomatic.Decl) []any {
 	return out
 }
 
-// loadJSON reads a catalog file written by build, keeping its key order. Only the fields show
-// prints are kept.
+// loadJSON reads a catalog file as json.load does, keeping its key order (a repeated key keeps
+// its first position and its last value). Entries stay Python values (see pyvalue.go).
 func loadJSON(r io.Reader) (*Catalog, error) {
 	dec := json.NewDecoder(bufio.NewReader(r))
 	dec.UseNumber()
-	if tok, err := dec.Token(); err != nil || tok != json.Delim('{') {
+	v, err := decodeValue(dec)
+	if err != nil {
+		return nil, err
+	}
+	if _, err := dec.Token(); err != io.EOF {
+		return nil, fmt.Errorf("extra data after the JSON value")
+	}
+	d, ok := v.(*pyDict)
+	if !ok {
 		return nil, fmt.Errorf("not a JSON object")
 	}
-	cat := &Catalog{}
-	for dec.More() {
-		tok, err := dec.Token()
-		if err != nil {
-			return nil, err
-		}
-		var raw struct {
-			Package, Class, Extends, Source string
-			Properties, Actions, Topics     []struct {
-				Name, FlagLetters, Default, Facets string
-				Flags                              json.Number
-			}
-		}
-		if err := dec.Decode(&raw); err != nil {
-			return nil, err
-		}
-		rec := &Record{Source: raw.Source}
-		rec.Package, rec.Class, rec.Extends = raw.Package, raw.Class, raw.Extends
-		conv := func(in []struct {
-			Name, FlagLetters, Default, Facets string
-			Flags                              json.Number
-		}) []slotomatic.Decl {
-			out := make([]slotomatic.Decl, len(in))
-			for i, d := range in {
-				f, _ := d.Flags.Int64()
-				out[i] = slotomatic.Decl{Name: d.Name, Flags: f, FlagLetters: d.FlagLetters, Default: d.Default, Facets: d.Facets}
-			}
-			return out
-		}
-		rec.Properties, rec.Actions, rec.Topics = conv(raw.Properties), conv(raw.Actions), conv(raw.Topics)
-		cat.set(tok.(string), rec)
+	cat := &Catalog{raw: map[string]any{}}
+	for _, k := range d.keys {
+		cat.Keys = append(cat.Keys, k)
+		cat.raw[k] = d.m[k]
 	}
 	return cat, nil
 }

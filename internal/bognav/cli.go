@@ -174,6 +174,9 @@ func Main(args []string, s cli.Stdio) int {
 	}
 	e := &env{ns: ns, out: s.Out, err: s.Err, bog: b, scope: scope(b)}
 	found, code := commands[cmd](e)
+	if e.failed {
+		return cli.ExitCannotSearch
+	}
 	if code >= 0 {
 		return code
 	}

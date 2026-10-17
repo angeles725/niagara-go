@@ -1,7 +1,7 @@
 package slotomatic
 
 import (
-	"strconv"
+	"math/big"
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/pycompat"
@@ -45,9 +45,10 @@ var (
 )
 
 // DecodeFlags is decode_flags: the value and letters of `Flags.A | Flags.B`, `(int)1026`, `0`
-// or `0x10`. Unknown terms are ignored.
-func DecodeFlags(expr string) (int64, []string) {
-	var total int64
+// or `0x10`. Unknown terms are ignored. Like Python's int the value has no bound: a literal
+// beyond int64 keeps every bit (negative values OR as two's complement).
+func DecodeFlags(expr string) (*big.Int, []string) {
+	total := new(big.Int)
 	for _, part := range strings.Split(expr, "|") {
 		tok := pycompat.Strip(intCastRE.ReplaceAllLiteralString(pycompat.Strip(part), ""))
 		if tok == "" {
@@ -55,22 +56,24 @@ func DecodeFlags(expr string) (int64, []string) {
 		}
 		if m := flagRE.FindStringSubmatch(tok); m != nil {
 			if bit, ok := flagBit(m[1]); ok {
-				total |= bit
+				total.Or(total, big.NewInt(bit))
 				continue
 			}
 		}
 		switch {
 		case decRE.MatchString(tok):
-			v, _ := pycompat.ParseInt(tok) // int(tok); beyond int64 it adds nothing
-			total |= v
+			if v, err := pycompat.ParseBigInt(tok); err == nil { // int(tok)
+				total.Or(total, v)
+			}
 		case hexRE.MatchString(tok):
-			v, _ := strconv.ParseInt(tok[2:], 16, 64)
-			total |= v
+			if v, ok := new(big.Int).SetString(tok[2:], 16); ok { // int(tok, 16)
+				total.Or(total, v)
+			}
 		}
 	}
 	letters := []string{}
 	for _, f := range Flags {
-		if total&f.Bit != 0 {
+		if new(big.Int).And(total, big.NewInt(f.Bit)).Sign() != 0 {
 			letters = append(letters, f.Letter)
 		}
 	}

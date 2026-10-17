@@ -1,0 +1,7 @@
+{"a.BX": {"class": "BX", "extends": "BY", "source": "s.java",
+  "properties": [{"name": "p1", "flags": "abc", "flagLetters": "", "default": "d", "facets": "null"},
+                 {"name": "p2", "flags": 1026.0, "flagLetters": ["t"], "default": null, "facets": true},
+                 {"name": "p3", "flags": 1e3, "flagLetters": "", "default": {"k": [1, "x"]}, "facets": 12345678901234567890123}],
+  "actions": [], "topics": []},
+ "a.BNoFlags": {"class": "BNoFlags", "extends": "BY", "properties": [{"name": "q"}], "actions": [], "topics": []},
+ "a.BNoExt": {"class": "BNoExt", "properties": [], "actions": [], "topics": []}}

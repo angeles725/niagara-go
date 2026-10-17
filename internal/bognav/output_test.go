@@ -18,7 +18,7 @@ func TestCSVQuotingAndJSONEscaping(t *testing.T) {
 	if b.String() != "\"\"\r\n" {
 		t.Errorf("single empty field %q", b.String())
 	}
-	got := dumps(row{{"s", "é\"\\\n\x7f😀"}, {"n", nil}, {"b", true}, {"l", []any{}}, {"o", row{}}}, -1)
+	got, _ := dumps(row{{"s", "é\"\\\n\x7f😀"}, {"n", nil}, {"b", true}, {"l", []any{}}, {"o", row{}}}, -1)
 	if want := `{"s": "\u00e9\"\\\n\u007f\ud83d\ude00", "n": null, "b": true, "l": [], "o": {}}`; got != want {
 		t.Errorf("dumps %q\nwant  %q", got, want)
 	}
@@ -29,6 +29,27 @@ func TestPyRepr(t *testing.T) {
 	for in, want := range cases {
 		if got := pycompat.StrRepr(in); got != want {
 			t.Errorf("StrRepr(%q) = %s, want %s", in, got, want)
+		}
+	}
+}
+
+// An unsupported value is an error, never a panic (until internal/pyjson replaces this encoder).
+func TestDumpsRejectsUnsupportedTypes(t *testing.T) {
+	if _, err := dumps(row{{"x", 1.5}}, 2); err == nil || err.Error() != "json: unsupported value of type float64" {
+		t.Errorf("err = %v", err)
+	}
+	if got, err := dumps([]any{"a", 1}, -1); err != nil || got != `["a", 1]` {
+		t.Errorf("got %q err %v", got, err)
+	}
+}
+
+// Parity with classify.py writability: only a simple type name starting with "Status" is
+// complex; a B-class spelling (BStatusNumeric) ends in Numeric and is simple, as in Python.
+func TestWritabilityStatusParity(t *testing.T) {
+	for typ, want := range map[string]string{"b:StatusNumeric": "complex", "StatusBoolean": "complex",
+		"BStatusNumeric": "simple", "b:BStatusEnum": "simple", "x:BStatusFoo": "other"} {
+		if got, _ := writability(typ); got != want {
+			t.Errorf("%s -> %s, want %s", typ, got, want)
 		}
 	}
 }

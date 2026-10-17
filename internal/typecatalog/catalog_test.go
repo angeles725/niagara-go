@@ -39,12 +39,14 @@ func TestBuildOutWritesTheCatalog(t *testing.T) {
 func TestLoadJSONKeepsFileOrderAndLastDuplicate(t *testing.T) {
 	cat, err := loadJSON(strings.NewReader(`{"z.BZ": {"class": "BZ", "extends": "A", "properties": [], "actions": [], "topics": []},
 		"a.BA": {"class": "BA", "extends": "old"}, "a.BA": {"class": "BA", "extends": "new",
-		"properties": [{"name": "p", "flags": 1026, "flagLetters": "tf", "default": "x", "facets": "null"}]}}`))
+		"properties": [{"name": "p", "flags": 1026, "flagLetters": "tf", "default": "x", "facets": "null"}],
+		"actions": {}, "topics": ""}}`))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if strings.Join(cat.Keys, ",") != "z.BZ,a.BA" || cat.Get("a.BA").Extends != "new" || cat.Get("a.BA").Properties[0].Flags != 1026 {
-		t.Errorf("keys %v rec %+v", cat.Keys, cat.Get("a.BA"))
+	v, err := cat.view("a.BA")
+	if err != nil || strings.Join(cat.Keys, ",") != "z.BZ,a.BA" || v.extends != "new" || v.groups[0][0].flags != "1026" {
+		t.Errorf("keys %v view %+v err %v", cat.Keys, v, err)
 	}
 	if _, err := loadJSON(strings.NewReader(`[1]`)); err == nil {
 		t.Error("a JSON list was accepted as a catalog")
@@ -78,5 +80,41 @@ func TestSelftestReportsSkipOrPass(t *testing.T) {
 	if code := selftest(&errb); code != 0 || !strings.Contains(errb.String(), "OK (skipped=1)") ||
 		!strings.Contains(errb.String(), "RealDataTest.test_bnumericwritable_in_docsource skipped") {
 		t.Errorf("code %d\n%s", code, errb.String())
+	}
+}
+
+// A catalog entry Python's _show cannot print (KeyError/TypeError traceback, exit 1) is one
+// "malformed catalog" line and exit 2 (intended difference); nothing is printed for it.
+func TestShowMalformedCatalogEntry(t *testing.T) {
+	cases := map[string]string{
+		"BNoFlags": `a.BNoFlags: properties[0] has no "flags"`,
+		"BNoExt":   `a.BNoExt: no "extends"`,
+	}
+	for name, want := range cases {
+		out, errOut, code := run("show", "testdata/odd.json", name)
+		if code != cli.ExitCannotSearch || out != "" || errOut != "n4-type-catalog: malformed catalog testdata/odd.json: "+want+"\n" {
+			t.Errorf("%s: code %d out %q err %q", name, code, out, errOut)
+		}
+	}
+	bad := filepath.Join(t.TempDir(), "bad.json")
+	os.WriteFile(bad, []byte(`{"a.BX": {"extends": "B", "source": 3, "properties": {"p": 1}, "actions": [], "topics": []}}`), 0o644)
+	for _, name := range []string{"BX", "acme:BX"} {
+		_, errOut, code := run("show", bad, name)
+		if code != cli.ExitCannotSearch || !strings.HasPrefix(errOut, "n4-type-catalog: malformed catalog "+bad+": a.BX: ") {
+			t.Errorf("%s: code %d err %q", name, code, errOut)
+		}
+	}
+}
+
+// A flag literal beyond int64 is printed in full, as Python's json.dumps prints its int.
+func TestBuildKeepsBigFlagValues(t *testing.T) {
+	dir := t.TempDir()
+	src := "package p;\npublic class BBig {\n  public static final Property x = newProperty(0x1FFFFFFFFFFFFFFFF0, 1, null);\n}\n"
+	if err := os.WriteFile(filepath.Join(dir, "BBig.java"), []byte(src), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	out, _, code := run("build", dir)
+	if code != 0 || !strings.Contains(out, `"flags": 590295810358705651696,`) || !strings.Contains(out, `"flagLetters": "andcoxfApRmLN1",`) {
+		t.Errorf("code %d\n%s", code, out)
 	}
 }

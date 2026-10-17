@@ -48,6 +48,8 @@ EXTRA = [
     "proxy.xml writable --module CRP", "proxy.xml hoa --module CRP --json",
     "station.xml relays --module CRP", "station.xml tiles --json",
     "x.bog selftest",
+    # the silent-zero sentence prints as text even under --json/--csv, exit 1 (parity with Python)
+    "station.xml find --type bac:BacnetBinaryPv --json", "station.xml find --type bac:BacnetBinaryPv --csv",
 ]
 
 

@@ -54,7 +54,7 @@ func Main(args []string, s cli.Stdio) int {
 			fmt.Fprintf(s.Err, "%s: cannot read catalog %s: %v\n", tool, ns.String("catalog"), err)
 			return cli.ExitCannotSearch
 		}
-		return show(s.Out, s.Err, cat, ns.String("type"))
+		return show(s.Out, s.Err, cat, ns.String("catalog"), ns.String("type"))
 	default:
 		return selftest(s.Err)
 	}
@@ -77,7 +77,11 @@ func build(s cli.Stdio, dirs []string, out string) int {
 			tool, nfiles, strings.Join(dirs, ", "))
 		return cli.ExitNoMatch
 	}
-	data := cat.JSON()
+	data, err := cat.JSON()
+	if err != nil {
+		fmt.Fprintf(s.Err, "%s: %v\n", tool, err)
+		return cli.ExitCannotSearch
+	}
 	if out == "" { // Python: `if args.out:`
 		io.WriteString(s.Out, data+"\n")
 		return cli.ExitFound

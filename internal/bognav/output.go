@@ -49,6 +49,7 @@ type env struct {
 	out, err io.Writer
 	bog      *bog.Bog
 	scope    string // honest scope of the bog ("" in selftest, like args without _scope)
+	failed   bool   // a --json encoding error was reported: Main exits 2
 }
 
 func (e *env) flag(k string) bool  { return e.ns.Bool(k) }
@@ -71,7 +72,7 @@ func (e *env) render(rows []row, line func(row) string, empty string, cols []str
 		for i, r := range rows {
 			items[i] = r
 		}
-		e.println(dumps(items, 2))
+		e.printJSON(items, 2)
 	case e.flag("csv"):
 		if len(rows) > 0 {
 			keys := cols

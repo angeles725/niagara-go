@@ -3,6 +3,7 @@ package slotomatic
 import (
 	"reflect"
 	"sort"
+	"strings"
 	"testing"
 )
 
@@ -52,24 +53,26 @@ func byName(ds []Decl) map[string]Decl {
 }
 
 func TestDecodeFlags(t *testing.T) {
-	v, letters := DecodeFlags("Flags.SUMMARY | Flags.TRANSIENT")
+	b, letters := DecodeFlags("Flags.SUMMARY | Flags.TRANSIENT")
+	v := b.Int64()
 	sort.Strings(letters)
 	if v != 0x0A || !reflect.DeepEqual(letters, []string{"s", "t"}) {
 		t.Errorf("symbolic: %d %v", v, letters)
 	}
-	v, letters = DecodeFlags("(int)1026")
+	b, letters = DecodeFlags("(int)1026")
+	v = b.Int64()
 	if v != 1026 || !reflect.DeepEqual(letters, []string{"t", "f"}) {
 		t.Errorf("numeric: %d %v", v, letters)
 	}
 	for _, zero := range []string{"0", "(int)0", "", "Flags.NOPE"} {
-		if v, letters := DecodeFlags(zero); v != 0 || len(letters) != 0 {
+		if v, letters := DecodeFlags(zero); v.Sign() != 0 || len(letters) != 0 {
 			t.Errorf("%q: %d %v", zero, v, letters)
 		}
 	}
-	if v, _ := DecodeFlags("0x10 | javax.baja.sys.Flags.OPERATOR | ١٢"); v != 0x10|0x100|12 {
+	if v, _ := DecodeFlags("0x10 | javax.baja.sys.Flags.OPERATOR | ١٢"); v.Int64() != 0x10|0x100|12 {
 		t.Errorf("hex + qualified + Arabic-Indic digits: %d", v)
 	}
-	if v, letters := DecodeFlags("-1"); v != -1 || len(letters) != len(Flags) {
+	if v, letters := DecodeFlags("-1"); v.Int64() != -1 || len(letters) != len(Flags) {
 		t.Errorf("-1: %d %v", v, letters)
 	}
 }
@@ -81,15 +84,15 @@ func TestParseOriginalSource(t *testing.T) {
 	}
 	props := byName(ty.Properties)
 	for name, want := range map[string]int64{"in1": 1, "in10": 0x0A, "fallback": 0, "overrideExpiration": 0x101} {
-		if props[name].Flags != want {
-			t.Errorf("%s flags = %d, want %d", name, props[name].Flags, want)
+		if props[name].Flags.Int64() != want {
+			t.Errorf("%s flags = %d, want %d", name, props[name].Flags.Int64(), want)
 		}
 	}
 	if got := props["in1"].Default; got != "new BStatusNumeric(0, BStatus.nullStatus)" {
 		t.Errorf("in1 default %q", got)
 	}
 	acts := byName(ty.Actions)
-	if acts["emergencyAuto"].Flags != 0 || acts["set"].Flags != 0x100 || acts["set"].Default != "BDouble.DEFAULT" {
+	if acts["emergencyAuto"].Flags.Int64() != 0 || acts["set"].Flags.Int64() != 0x100 || acts["set"].Default != "BDouble.DEFAULT" {
 		t.Errorf("actions: %+v", ty.Actions)
 	}
 	if acts["emergencyAuto"].Default != "" || acts["emergencyAuto"].Facets != "null" {
@@ -103,13 +106,13 @@ func TestParseOriginalSource(t *testing.T) {
 func TestParseCFRStyle(t *testing.T) {
 	ty := ParseSource(cfrSrc)
 	props := byName(ty.Properties)
-	if props["delay"].Flags != 0 || props["delay"].Default != "BRelTime.DEFAULT" {
+	if props["delay"].Flags.Int64() != 0 || props["delay"].Default != "BRelTime.DEFAULT" {
 		t.Errorf("delay: %+v", props["delay"])
 	}
-	if props["master"].Flags != 1026 || props["master"].Facets != `BFacets.make((String)"a", (String)"b")` {
+	if props["master"].Flags.Int64() != 1026 || props["master"].Facets != `BFacets.make((String)"a", (String)"b")` {
 		t.Errorf("master: %+v", props["master"])
 	}
-	if byName(ty.Actions)["reset"].Flags != 256 {
+	if byName(ty.Actions)["reset"].Flags.Int64() != 256 {
 		t.Errorf("reset: %+v", ty.Actions)
 	}
 }
@@ -119,7 +122,7 @@ func TestParseNestedAndMultiline(t *testing.T) {
 	if want := `BFacets.make(BFacets.make(BFacets.FIELD_EDITOR, "driver:ProxyConversionFE"), BFacets.make(BFacets.UX_FIELD_EDITOR, "driver:ProxyConversionEditor"))`; props["conversion"].Facets != want {
 		t.Errorf("conversion facets %q", props["conversion"].Facets)
 	}
-	if props["wrapped"].Flags != 4 || props["wrapped"].Default != `"x"` {
+	if props["wrapped"].Flags.Int64() != 4 || props["wrapped"].Default != `"x"` {
 		t.Errorf("wrapped: %+v", props["wrapped"])
 	}
 }
@@ -170,5 +173,21 @@ func TestSplitArgsAndClean(t *testing.T) {
 func TestUniversalNewlines(t *testing.T) {
 	if got := UniversalNewlines("a\r\nb\rc\n"); got != "a\nb\nc\n" {
 		t.Errorf("newlines %q", got)
+	}
+}
+
+// Python's int has no bound: hex and decimal flag literals beyond int64 keep every bit
+// (values from tools/n4-type-catalog.py decode_flags).
+func TestDecodeFlagsBigValues(t *testing.T) {
+	cases := []struct{ expr, value, letters string }{
+		{"0x1FFFFFFFFFFFFFFFF0 | 1", "590295810358705651697", "randcoxfApRmLN1"},
+		{"99999999999999999999 | Flags.HIDDEN", "99999999999999999999", "rthsandcoxfApRmLN"},
+		{"-1 | 0x100000000000000000", "-1", "rthsandcoxfApRmLN1"},
+	}
+	for _, c := range cases {
+		v, letters := DecodeFlags(c.expr)
+		if v.String() != c.value || strings.Join(letters, "") != c.letters {
+			t.Errorf("%s -> %s %v, want %s %s", c.expr, v, letters, c.value, c.letters)
+		}
 	}
 }

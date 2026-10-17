@@ -44,7 +44,7 @@ func cmdTree(e *env) (int, int) {
 		walk(r, 0)
 	}
 	if e.flag("json") {
-		e.println(dumps(rowsAny(rows), 2))
+		e.printJSON(rowsAny(rows), 2)
 		return 0, -1
 	}
 	if len(rows) == 0 {
@@ -159,7 +159,7 @@ func cmdSlot(e *env) (int, int) {
 		}
 		switch {
 		case e.flag("json"):
-			e.println(dumps(out, 2))
+			e.printJSON(out, 2)
 		case ok:
 			k, note := slotWritability(s, name, src)
 			e.println(c.Path, ".", name, "  type=", typeDisplay(s.Type, name, src), "  value=", pyStr(s.Value),
@@ -196,7 +196,7 @@ func cmdSlot(e *env) (int, int) {
 			}
 			out = append(out, kv{"type_class", tc}, kv{"defaults", defs})
 		}
-		e.println(dumps(out, 2))
+		e.printJSON(out, 2)
 		return 0, -1
 	}
 	e.println(c.Path, "  h:", c.Handle, "  <", c.Type, ">")
@@ -427,7 +427,7 @@ func cmdDiff(e *env) (int, int) {
 		}
 	}
 	if e.flag("json") {
-		e.println(dumps(row{{"added", nonNil(added)}, {"removed", nonNil(removed)}, {"changed", rowsAny(changed)}}, 2))
+		e.printJSON(row{{"added", nonNil(added)}, {"removed", nonNil(removed)}, {"changed", rowsAny(changed)}}, 2)
 		return 0, -1
 	}
 	for _, p := range added {
