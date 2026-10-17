@@ -5,14 +5,15 @@
 package nav
 
 import (
+	"bufio"
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/argparse"
 	"github.com/angeles725/niagara-go/internal/cli"
 	_ "github.com/angeles725/niagara-go/internal/nav/architecture" // registers its commands
 	_ "github.com/angeles725/niagara-go/internal/nav/audits"
+	"github.com/angeles725/niagara-go/internal/nav/core"
 	_ "github.com/angeles725/niagara-go/internal/nav/domain"
 	_ "github.com/angeles725/niagara-go/internal/nav/flow"
 	_ "github.com/angeles725/niagara-go/internal/nav/inventory"
@@ -57,7 +58,14 @@ func Main(args []string, s cli.Stdio) int {
 		fmt.Fprintf(s.Err, "mnav: '%s' is not ported yet\n", name)
 		return cli.ExitCannotSearch
 	}
-	return c.Run(&registry.Env{BaseDir: baseDir, Stdio: s}, ns)
+	out := bufio.NewWriter(s.Out)
+	rt := core.New(baseDir, out, s.Err)
+	defer rt.Close()
+	status := c.Run(&registry.Env{Stdio: cli.Stdio{In: s.In, Out: out, Err: s.Err}, Runtime: rt}, ns)
+	if err := out.Flush(); err != nil && status == cli.ExitFound {
+		return cli.ExitCannotSearch
+	}
+	return status
 }
 
 // BuildParser is build_parser(): the module-nav parser with every registered command.
@@ -114,6 +122,3 @@ func groupedCommands() (string, error) {
 	}
 	return strings.Join(out, "\n"), nil
 }
-
-// executable is os.Executable, replaceable in tests.
-var executable = os.Executable

@@ -9,12 +9,15 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/argparse"
 	"github.com/angeles725/niagara-go/internal/cli"
+	"github.com/angeles725/niagara-go/internal/nav/core"
 )
 
-// Env is what a running command receives besides its parsed arguments.
+// Env is what a running command receives besides its parsed arguments: its
+// stdio (stdout buffered until the command returns) and the runtime with the
+// base directory, outcomes and loaded indexes.
 type Env struct {
-	BaseDir string // the module-navigator directory holding indexes/
-	Stdio   cli.Stdio
+	Stdio cli.Stdio
+	*core.Runtime
 }
 
 // Run executes a parsed command and returns its exit code.
