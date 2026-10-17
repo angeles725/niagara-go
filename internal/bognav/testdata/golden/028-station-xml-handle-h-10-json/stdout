@@ -1,0 +1,26 @@
+{
+  "path": "Station/Panel",
+  "type": "DPCD:RoomPanel",
+  "fed_by": [
+    {
+      "link": "Link",
+      "source": "Station/Logic/EvaporatorUnit_3.valveOut",
+      "target": "Station/Panel.evap1ValveState",
+      "src_resolved": true
+    }
+  ],
+  "feeds": [
+    {
+      "link": "Link",
+      "source": "Station/Panel.setpoint",
+      "target": "Station/Logic.setpoint",
+      "src_resolved": true
+    },
+    {
+      "link": "Link1",
+      "source": "Station/Panel.evap1FanMode",
+      "target": "Station/Logic.fanMode",
+      "src_resolved": true
+    }
+  ]
+}

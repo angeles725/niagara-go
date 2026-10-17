@@ -509,6 +509,28 @@
    "columns": 100,
    "exit": 0,
    "ns": null,
+   "parser": "review",
+   "stderr": "",
+   "stdout": "usage: rv [-h] [-n N] [--ex EX] [-é BAR]\n\noptions:\n  -h, --help    show this help message and exit\n  -n N          any size\n  --ex EX       one string\n  -é, -bar BAR  short then single-dash long\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 80,
+   "exit": 0,
+   "ns": null,
+   "parser": "review",
+   "stderr": "",
+   "stdout": "usage: rv [-h] [-n N] [--ex EX] [-é BAR]\n\noptions:\n  -h, --help    show this help message and exit\n  -n N          any size\n  --ex EX       one string\n  -é, -bar BAR  short then single-dash long\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 100,
+   "exit": 0,
+   "ns": null,
    "parser": "subnodest",
    "stderr": "",
    "stdout": "usage: nodest [-h] {alpha,beta} ...\n\npositional arguments:\n  {alpha,beta}\n    alpha       first\n    beta        second\n\noptions:\n  -h, --help    show this help message and exit\n"
@@ -3222,6 +3244,50 @@
    "stdout": ""
   },
   {
+   "argv": [
+    "-n",
+    "-9223372036854775808",
+    "--ex",
+    "abc",
+    "--ex",
+    "dé"
+   ],
+   "columns": 100,
+   "exit": null,
+   "ns": "{'alpha': 2, 'bar': None, 'ex': ['a', 'b', 'c', 'd', 'é'], 'n': -9223372036854775808, 'zeta': 1}",
+   "parser": "review",
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "-n",
+    "99999999999999999999",
+    "-bar",
+    "x"
+   ],
+   "columns": 100,
+   "exit": null,
+   "ns": "{'alpha': 2, 'bar': 'x', 'ex': None, 'n': 99999999999999999999, 'zeta': 1}",
+   "parser": "review",
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "-é",
+    "y",
+    "-n",
+    "1_0"
+   ],
+   "columns": 100,
+   "exit": null,
+   "ns": "{'alpha': 2, 'bar': 'y', 'ex': None, 'n': 10, 'zeta': 1}",
+   "parser": "review",
+   "stderr": "",
+   "stdout": ""
+  },
+  {
    "argv": [],
    "columns": 100,
    "exit": 2,
@@ -4873,6 +4939,50 @@
       "required": true
      },
      "op": "arg"
+    }
+   ]
+  },
+  "review": {
+   "kw": {
+    "prog": "rv"
+   },
+   "ops": [
+    {
+     "args": [
+      "-n"
+     ],
+     "kw": {
+      "help": "any size",
+      "type": "int"
+     },
+     "op": "arg"
+    },
+    {
+     "args": [
+      "--ex"
+     ],
+     "kw": {
+      "action": "extend",
+      "help": "one string"
+     },
+     "op": "arg"
+    },
+    {
+     "args": [
+      "-é",
+      "-bar"
+     ],
+     "kw": {
+      "help": "short then single-dash long"
+     },
+     "op": "arg"
+    },
+    {
+     "kw": {
+      "alpha": 2,
+      "zeta": 1
+     },
+     "op": "defaults"
     }
    ]
   },

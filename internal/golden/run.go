@@ -46,13 +46,15 @@ func Run(t *testing.T, testdata string, m cli.Main) {
 			if c.Intended != nil {
 				t.Logf("intended difference: %s", c.Intended.Reason)
 			}
+			skipUnlessHost(t, c)
+			bound, tmp := bind(t, c)
 			var got result
 			if bin != "" {
-				got = execCase(t, testdata, bin, c)
+				got = execCase(t, testdata, bin, bound)
 			} else {
-				got = inProcess(t, testdata, m, c)
+				got = inProcess(t, testdata, m, bound)
 			}
-			compare(t, c, got)
+			compare(t, c, unbind(got, tmp))
 		})
 	}
 }

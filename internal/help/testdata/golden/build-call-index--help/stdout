@@ -1,0 +1,4 @@
+usage: niagara_help build-call-index [-h]
+
+options:
+  -h, --help  show this help message and exit

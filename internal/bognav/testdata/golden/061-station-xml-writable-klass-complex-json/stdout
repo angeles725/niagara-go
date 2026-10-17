@@ -1,0 +1,26 @@
+[
+  {
+    "path": "Station/Panel",
+    "slot": "setpoint",
+    "type": "b:StatusNumeric",
+    "value": "3.0",
+    "class": "complex",
+    "note": "child-leaf ORD bare <real> preferred; parent wrapped-obj = silent-zero hazard"
+  },
+  {
+    "path": "Station/Logic",
+    "slot": "setpoint",
+    "type": "b:StatusNumeric",
+    "value": "3.0",
+    "class": "complex",
+    "note": "child-leaf ORD bare <real> preferred; parent wrapped-obj = silent-zero hazard"
+  },
+  {
+    "path": "Station/Logic/EvaporatorUnit_3",
+    "slot": "valveOut",
+    "type": "b:StatusBoolean",
+    "value": "false",
+    "class": "complex",
+    "note": "child-leaf ORD bare <real> preferred; parent wrapped-obj = silent-zero hazard"
+  }
+]

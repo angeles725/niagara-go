@@ -1,0 +1,65 @@
+usage: bog-nav.py [-h] [--json] [--csv] [--limit N] [--version]
+                  [bog]
+                  {tree,slot,links,handle,path,find,types,pointcache,writable,relays,hoa,tiles,grep,diff,selftest} ...
+
+bog-nav: read-only navigator for a Niagara N4 station config.bog (or a bare file.xml).
+
+WHY: the four session research tools (corpus-nav, module-navigator, niagara-help, hdbread)
+navigate the CORPUS; this one navigates a live STATION's saved graph. A config.bog is a ZIP
+whose file.xml is a BOG-XML tree of <p> component nodes (h='handle', t='pfx:Type') plus
+<p t='b:Link'> link records that live on the TARGET component and point back at a source via
+sourceOrd='h:xxxx'. Grep cannot resolve h:xxxx -> a component path, cannot walk the tree, and
+cannot answer "which link feeds Cuarto1.setpoint?". This does.
+
+Grammar + handle-graph parser REUSED from build-n4-module-kit/toolbelt/bog-audit.sh
+(kit main 3f666a0): TAG_RE, ga(), the Comp class, prefix_map/handle_map/handle_count,
+the link_list (container_h/src_h/src_slot/tgt_slot), stack, nearest_comp(). This tool adds
+parent/child tracking for tree walks and the query subcommands; it never writes.
+
+Subcommands:
+  tree [--type PFX:Type] [--depth N]      component tree (optionally filtered by type)
+  types [--slots] [--grep S]              histogram of component types (characterise an unknown bog)
+  slot <path|h:handle> [slotName]         a component's value slots + child components
+  find --type PFX:Type [--slots]          flat list of a type; --slots also finds handle-less value wrappers
+  pointcache [--device N] [--stale]       Alerton Compass DisplayService PointCache: decode ORD + freshness
+  links [--to P] [--from P] [--slot NAME] links, sourceOrd h:xxxx resolved to a path
+  handle <h:xxxx>                         the component at a handle + its links
+  writable [--module PFX]                 classify direct value slots by external writability
+  grep <regex>                            regex over component paths, types, and slot names
+  diff <bogB>                             component/slot/link delta vs another bog
+
+Alerton Compass note: Compass is a DERIVED-but-distinct Niagara. Its point universe is NOT the
+Tridium control:ControlPoint model -- it lives in the DisplayService PointCache (disp:PointCacheObj,
+keyed by a bacref ORD) with the value as a handle-LESS `bac:*` wrapper. `pointcache` decodes it;
+`find --slots` / `types --slots` stop those wrappers reading as a silent zero.
+
+Read-only. Prints rows; pass --json for machine output. stdlib only.
+Exit codes: 0 found, 1 searched and no match (find/links/grep/writable print the searched bog
++ counts) or a named component/handle not found, 2 usage error, 3 unreadable input (missing, empty, non-BOG, corrupt/unsupported ZIP,
+nesting or size over the bogio limits) or python2.
+
+positional arguments:
+  bog                   config.bog (ZIP) or a bare file.xml (omit for selftest)
+  {tree,slot,links,handle,path,find,types,pointcache,writable,relays,hoa,tiles,grep,diff,selftest}
+    tree                component tree
+    slot                a component's slots + children
+    links               links, sourceOrd resolved to paths
+    handle              component at a handle + its links
+    path                reverse: handle -> component path
+    find                flat list of components of a type
+    types               histogram of component types (characterise an unknown bog)
+    pointcache          Alerton Compass DisplayService PointCache: decode bacref ORDs + freshness
+    writable            classify direct value slots by external write shape
+    relays              CHECK11: own-module output -> writable proxy, fallback + writeOnUp
+    hoa                 CHECK8: HOA/mode slots + values, flag non-auto leftovers
+    tiles               CHECK18: per-RoomPanel evapN tile -> unit wiring, flag crossed
+    grep                regex over component paths, types, slot names
+    diff                delta vs another bog
+    selftest            run in-memory parser/query assertions (no file needed)
+
+options:
+  -h, --help            show this help message and exit
+  --json                machine JSON output
+  --csv                 CSV output (header + rows)
+  --limit, -n N         print at most N rows (default: all); the cut is reported
+  --version             print the tools version and exit

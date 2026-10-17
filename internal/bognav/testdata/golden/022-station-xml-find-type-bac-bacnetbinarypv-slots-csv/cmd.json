@@ -1,0 +1,14 @@
+{
+ "args": [
+  "station.xml",
+  "find",
+  "--type",
+  "bac:BacnetBinaryPv",
+  "--slots",
+  "--csv"
+ ],
+ "env": {
+  "NIAGARA_ORGANIZED": "organized-mini",
+  "NIAGARA_CACHE_DIR": "off"
+ }
+}

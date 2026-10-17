@@ -1,0 +1,3 @@
+a.b.BBytes  extends BObject   (loose/a/b/BBytes.java)
+  property label                    flags=0               default="café � x��" facets=null
+  property ñame                     flags=32768  L        default=BString.DEFAULT facets=null

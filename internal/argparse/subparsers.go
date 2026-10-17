@@ -1,6 +1,10 @@
 package argparse
 
-import "strings"
+import (
+	"strings"
+
+	"github.com/angeles725/niagara-go/internal/pycompat"
+)
 
 // Subparsers is the action add_subparsers returns (_SubParsersAction).
 type Subparsers struct {
@@ -40,7 +44,7 @@ func (p *Parser) AddSubparsers(c SubparsersConfig) *Subparsers {
 		}
 		f := newFormatter(p)
 		f.addUsage("", acts, p.mutexGroups, "")
-		prog = pyStrip(f.formatHelp())
+		prog = pycompat.Strip(f.formatHelp())
 	}
 	dest := c.Dest
 	if dest == "" {

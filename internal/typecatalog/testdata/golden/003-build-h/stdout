@@ -1,0 +1,8 @@
+usage: n4-type-catalog.py build [-h] [--out OUT] dirs [dirs ...]
+
+positional arguments:
+  dirs
+
+options:
+  -h, --help  show this help message and exit
+  --out OUT

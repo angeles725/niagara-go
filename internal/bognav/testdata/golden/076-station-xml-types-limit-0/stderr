@@ -1,0 +1,2 @@
+usage: bog-nav.py [bog] types [-h] [--json] [--csv] [--limit N] [--slots] [--grep TYPE_FILTER]
+bog-nav.py [bog] types: error: argument --limit/-n: must be at least 1, not 0

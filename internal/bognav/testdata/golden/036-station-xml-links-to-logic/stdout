@@ -1,0 +1,2 @@
+Station/Panel.setpoint  -->  Station/Logic.setpoint
+Station/Panel.evap1FanMode  -->  Station/Logic.fanMode

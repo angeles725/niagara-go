@@ -1,0 +1,7 @@
+usage: niagara_help rebuild-all [-h] [--only ONLY] [--dry-run] [--stamp-only]
+
+options:
+  -h, --help    show this help message and exit
+  --only ONLY   Only run builders whose script starts with this
+  --dry-run     Print the build plan without executing
+  --stamp-only  Record current corpus as the baseline without rebuilding

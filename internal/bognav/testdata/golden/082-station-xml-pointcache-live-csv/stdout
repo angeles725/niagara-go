@@ -1,0 +1,2 @@
+coordinate,device,obj_type,obj_inst,property,value,polled,fresh
+analog-value:50@dev101,101,analog-value,50,present-value,72.5,2026-09-03T00:00:00.000-05:00,live

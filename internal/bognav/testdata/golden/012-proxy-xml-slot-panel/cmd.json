@@ -1,0 +1,11 @@
+{
+ "args": [
+  "proxy.xml",
+  "slot",
+  "Panel"
+ ],
+ "env": {
+  "NIAGARA_ORGANIZED": "organized-mini",
+  "NIAGARA_CACHE_DIR": "off"
+ }
+}

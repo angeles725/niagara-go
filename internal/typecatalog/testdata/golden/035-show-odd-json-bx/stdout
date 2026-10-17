@@ -1,0 +1,4 @@
+a.BX  extends BY   (s.java)
+  property p1                       flags=abc             default=d facets=null
+  property p2                       flags=1026.0 ['t']    default=None facets=True
+  property p3                       flags=1000.0          default={'k': [1, 'x']} facets=12345678901234567890123

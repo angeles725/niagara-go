@@ -1,0 +1,3 @@
+a.b.BMulti  extends BComponent   (loose/a/b/BMulti.java)
+  property conversion               flags=0               default=BDefaultProxyConversion.DEFAULT facets=BFacets.make(BFacets.make(BFacets.FIELD_EDITOR, "driver:ProxyConversionFE"), BFacets.make(BFacets.UX_FIELD_EDITOR, "driver:ProxyConversionEditor"))
+  property wrapped                  flags=4      h        default="x" facets=null

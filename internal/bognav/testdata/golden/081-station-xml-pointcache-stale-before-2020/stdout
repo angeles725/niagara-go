@@ -1,0 +1,2 @@
+analog-value:50@dev101   present-value    = 72.5           polled 2026-09-03  live
+binary-value:100@dev101  present-value    = inactive       polled 2022-04-18  live

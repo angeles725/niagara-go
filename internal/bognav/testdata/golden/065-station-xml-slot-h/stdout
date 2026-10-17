@@ -1,0 +1,15 @@
+usage: bog-nav.py [bog] slot [-h] [--json] [--csv] [--limit N] [--src SRC] [--no-defaults]
+                             ref [slotname]
+
+positional arguments:
+  ref            path or h:handle
+  slotname       a specific slot
+
+options:
+  -h, --help     show this help message and exit
+  --json         machine JSON output
+  --csv          CSV output (header + rows)
+  --limit, -n N  print at most N rows (default: all); the cut is reported
+  --src SRC      module src root: fill a bog-absent type from @NiagaraProperty
+  --no-defaults  do not list the type defaults of the slots absent from the bog (organized/
+                 catalog)

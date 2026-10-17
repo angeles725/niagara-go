@@ -3,7 +3,8 @@
 //
 // Layout, one directory per case under <testdata>/golden/<case>/:
 //
-//	cmd.json  {"args": [...], "stdin_file": "...", "env": {...}, "cwd_fixture": "..."}
+//	cmd.json  {"args": [...], "stdin_file": "...", "env": {...}, "cwd_fixture": "...",
+//	           "requires": {"machine_id_sha256": "..."}}
 //	stdout    expected standard output (exact bytes)
 //	stderr    expected standard error (exact bytes; missing file = empty)
 //	exit      expected exit code as decimal text
@@ -16,7 +17,9 @@
 //
 // stdin_file and cwd_fixture are relative to <testdata>; the command runs with
 // <testdata> (or <testdata>/<cwd_fixture>) as its working directory. Every case
-// gets COLUMNS=100 and NO_COLOR=1 unless its env overrides them.
+// gets COLUMNS=100 and NO_COLOR=1 unless its env overrides them. "{tmp}" in
+// args or env values is a fresh temporary directory (see bind.go); a case with
+// "requires" is skipped, with a reason, on any other host.
 package golden
 
 import (
@@ -39,6 +42,7 @@ type Case struct {
 	StdinFile  string            `json:"stdin_file,omitempty"`
 	Env        map[string]string `json:"env,omitempty"`
 	CwdFixture string            `json:"cwd_fixture,omitempty"`
+	Requires   Requires          `json:"requires,omitempty"`
 
 	Stdout []byte `json:"-"`
 	Stderr []byte `json:"-"`

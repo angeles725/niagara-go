@@ -1,0 +1,15 @@
+{
+ "args": [
+  "station.xml",
+  "find",
+  "--type",
+  "c:BooleanWritable",
+  "--limit",
+  "1",
+  "--json"
+ ],
+ "env": {
+  "NIAGARA_ORGANIZED": "organized-mini",
+  "NIAGARA_CACHE_DIR": "off"
+ }
+}

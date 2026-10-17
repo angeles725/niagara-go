@@ -1,0 +1,8 @@
+{
+  "path": "Room",
+  "slot": "defrostEnabled",
+  "default": "true",
+  "declared_by": "BColdRoom",
+  "flags": "",
+  "source": "ColdRoomPan/ColdRoomPan-rt/vineflower/com/angeles/ColdRoomPan/BColdRoom.java"
+}

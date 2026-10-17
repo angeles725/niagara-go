@@ -1,0 +1,16 @@
+[
+  {
+    "link": "Link",
+    "source": "Station/Panel.setpoint",
+    "target": "Station/Logic.setpoint",
+    "src_resolved": true,
+    "dangling": false
+  },
+  {
+    "link": "Link1",
+    "source": "Station/Panel.evap1FanMode",
+    "target": "Station/Logic.fanMode",
+    "src_resolved": true,
+    "dangling": false
+  }
+]

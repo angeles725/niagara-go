@@ -1,0 +1,8 @@
+usage: niagara_help method [-h] [--section {methods,fields,constructors}] name
+
+positional arguments:
+  name                  Method name or glob (e.g. 'doGet', 'set*')
+
+options:
+  -h, --help            show this help message and exit
+  --section {methods,fields,constructors}

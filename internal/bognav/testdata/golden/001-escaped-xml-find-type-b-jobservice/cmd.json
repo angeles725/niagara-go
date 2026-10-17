@@ -1,0 +1,12 @@
+{
+ "args": [
+  "escaped.xml",
+  "find",
+  "--type",
+  "b:JobService"
+ ],
+ "env": {
+  "NIAGARA_ORGANIZED": "organized-mini",
+  "NIAGARA_CACHE_DIR": "off"
+ }
+}

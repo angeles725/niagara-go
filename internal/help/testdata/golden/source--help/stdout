@@ -1,0 +1,9 @@
+usage: niagara_help source [-h] [--code] [--grep GREP_PATTERN] name
+
+positional arguments:
+  name                 Class name or glob
+
+options:
+  -h, --help           show this help message and exit
+  --code               Show full source code
+  --grep GREP_PATTERN  Grep pattern in source file

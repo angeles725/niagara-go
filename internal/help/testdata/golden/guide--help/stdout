@@ -1,0 +1,7 @@
+usage: niagara_help guide [-h] query
+
+positional arguments:
+  query       Search term (e.g. 'bacnet')
+
+options:
+  -h, --help  show this help message and exit

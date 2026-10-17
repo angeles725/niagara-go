@@ -1,0 +1,11 @@
+usage: niagara_help hierarchy [-h] [--depth DEPTH] [--chain] [--interface] name
+
+positional arguments:
+  name           Class name (e.g. BComponent)
+
+options:
+  -h, --help     show this help message and exit
+  --depth DEPTH  Max depth for subclass tree (default: 2; 3 with --interface)
+  --chain        Show inheritance chain upward
+  --interface    Interface hierarchy: extends chain, sub-interfaces and implementors (replaces
+                 interface-hierarchy)

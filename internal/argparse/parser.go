@@ -5,7 +5,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"unicode"
+
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // Action is one added argument (argparse.Action). It is shared, like in Python, between a
@@ -109,15 +110,23 @@ func (p *Parser) setDefault(k string, v any) {
 	p.defaults[k] = v
 }
 
-// SetDefaults is parser.set_defaults(**kv): namespace values for dests no argument sets,
-// and the new default of the arguments that do.
-func (p *Parser) SetDefaults(kv map[string]any) {
-	for k, v := range kv {
-		p.setDefault(k, v)
+// SetDefaults is parser.set_defaults(**kv) with kv as key, value pairs in keyword order:
+// namespace values for dests no argument sets, and the new default of the arguments that
+// do. It panics on an odd count or a non-string key.
+func (p *Parser) SetDefaults(kv ...any) {
+	if len(kv)%2 != 0 {
+		panic("argparse: SetDefaults needs key, value pairs")
 	}
-	for _, a := range p.actions {
-		if v, ok := kv[a.Dest]; ok {
-			a.Default = v
+	for i := 0; i < len(kv); i += 2 {
+		k, ok := kv[i].(string)
+		if !ok {
+			panic(fmt.Sprintf("argparse: SetDefaults key %v is not a string", kv[i]))
+		}
+		p.setDefault(k, kv[i+1])
+		for _, a := range p.actions {
+			if a.Dest == k {
+				a.Default = kv[i+1]
+			}
 		}
 	}
 }
@@ -213,7 +222,7 @@ func (p *Parser) addContainerActions(parent *Parser) {
 	}
 	for _, g := range p.groups {
 		if _, dup := titleGroup[key(g)]; dup {
-			panic(fmt.Sprintf("argparse: cannot merge actions - two groups are named %s", pyRepr(g.title)))
+			panic(fmt.Sprintf("argparse: cannot merge actions - two groups are named %s", pycompat.Repr(g.title)))
 		}
 		titleGroup[key(g)] = g
 	}
@@ -324,7 +333,7 @@ func inferDest(names []string) string {
 	dest, priority := "", 0
 	for _, s := range names {
 		switch {
-		case len(s) <= 2:
+		case runeLen(s) <= 2:
 			if priority < 1 {
 				dest, priority = strings.TrimLeft(s, "-"), 1
 			}
@@ -363,9 +372,9 @@ func negativeNumber(s string) bool {
 		return false
 	}
 	if r[1] == '.' {
-		return len(r) > 2 && isUnicodeDigit(r[2])
+		return len(r) > 2 && pycompat.IsDecimal(r[2])
 	}
-	return isUnicodeDigit(r[1])
+	return pycompat.IsDecimal(r[1])
 }
 
 // actionName is _get_action_name.
@@ -402,12 +411,10 @@ func (a *Action) choiceValues() []any {
 func joinStr(vals []any, sep string) string {
 	parts := make([]string, len(vals))
 	for i, v := range vals {
-		parts[i] = pyStr(v)
+		parts[i] = pycompat.Str(v)
 	}
 	return strings.Join(parts, sep)
 }
-
-func isUnicodeDigit(r rune) bool { return unicode.IsDigit(r) }
 
 func isSuppress(v any) bool {
 	s, ok := v.(string)
