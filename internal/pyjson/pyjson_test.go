@@ -100,3 +100,13 @@ func TestLoneSurrogatesRoundTrip(t *testing.T) {
 		t.Errorf("Repr: got %s", got)
 	}
 }
+
+// TestStrReprSurrogateFallback pins the WTF-8 path of StrRepr (pycompat.StrRepr only
+// takes valid UTF-8): quote choice, escapes and printability next to a lone surrogate.
+// Expected text from Python 3.15: repr('\ud800\'é\x01\x7f\xa0\u0378\t\\').
+func TestStrReprSurrogateFallback(t *testing.T) {
+	v := mustLoads(t, `"\ud800'\u00e9\u0001\u007f\u00a0\u0378\t\\"`)
+	if got, want := StrRepr(v.S), `"\ud800'é\x01\x7f\xa0\u0378\t\\"`; got != want {
+		t.Errorf("StrRepr: got %s want %s", got, want)
+	}
+}
