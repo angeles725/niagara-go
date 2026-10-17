@@ -1,0 +1,27 @@
+usage: bog-cycles.py [-h] [--json] bog
+
+bog-cycles: potential feedback loops in a station config.bog link graph (B1189-G3 / B1191-G3).
+
+N4 logic is event-driven (no execution order): a link cycle can oscillate or storm actions (B6/B538). This tool
+reads the bog with the bog-nav model (tools/bognav: the same parser, SlotPath name decoding and parse cache),
+builds the COMPONENT-level directed graph from the saved links (`b:Link` / `b:ConversionLink` are children of
+the TARGET; `sourceOrd = h:<source handle>`) and reports strongly connected components of size > 1 and
+self-loops. Each cycle lists the slot-level link edges that form it (`/A.out -> /B.in`): the links whose
+source and target components are both in the cycle. It is a conservative CANDIDATE list for a human:
+legitimate feedback (PID, hysteresis) also appears. Dangling `h:` references are reported (a link with an
+unresolvable source creates no knob and no fault, B1115); a non-handle sourceOrd (`station:|slot:/...`)
+is not an edge.
+Usage: bog-cycles.py <config.bog|backup.dist|file.xml> [--json]
+Paths always start with `/` at the station root: `/Services/X`; an unnamed root (every station bog) is `/`,
+a named root R renders as `/R` and its children as `/R/A`.
+`links` counts the links whose source resolves (or is not a handle); a dangling link is counted in
+`dangling` only. A missing slot name prints as `-` (null in --json).
+Exit 1 if cycles found, 0 otherwise, 2 on a missing/unreadable/non-BOG or not well-formed XML input or
+bad usage. Read-only, stdlib.
+
+positional arguments:
+  bog         config.bog, a .dist station backup or a plain BOG file.xml
+
+options:
+  -h, --help  show this help message and exit
+  --json      machine JSON output

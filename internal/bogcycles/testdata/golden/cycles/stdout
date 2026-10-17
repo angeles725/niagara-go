@@ -1,0 +1,7 @@
+components=5 links=4 cycles=2 dangling=1
+  CYCLE(2): /Logic/Pid <-> /Logic/Valve Out
+      /Logic/Pid.out -> /Logic/Valve Out.inA
+      /Logic/Valve Out.out -> /Logic/Pid.controlledVariable
+  CYCLE(1): /Logic/Latch
+      /Logic/Latch.out -> /Logic/Latch.inB
+  DANGLING: h:99 -> /Logic/Latch.inA

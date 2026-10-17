@@ -1,0 +1,2 @@
+usage: bog-cycles.py [-h] [--json] bog
+bog-cycles.py: error: unrecognized arguments: --bogus

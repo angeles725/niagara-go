@@ -1,0 +1,2 @@
+usage: bog-cycles.py [-h] [--json] bog
+bog-cycles.py: error: the following arguments are required: bog

@@ -1,0 +1,7 @@
+components=5 links=5 cycles=2 dangling=0
+  CYCLE(2): /R/A <-> /R/B
+      /R/A.out -> /R/B.in
+      /R/B.out -> /R/A.in
+      /R/B.x -> /R/A.y
+  CYCLE(1): /R/Room 1
+      /R/Room 1.out a -> /R/Room 1.in
