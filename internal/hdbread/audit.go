@@ -114,10 +114,27 @@ type framedRecord struct {
 	fields [auditFields][2]int
 }
 
+// declaredEnd is where the auditFields writeUTF strings starting at i end by their length
+// prefixes alone (modified UTF-8 is not checked), or len(buf) when a prefix or a string runs past
+// buf: the byte range a record candidate that failed to frame claims.
+func declaredEnd(buf []byte, i int) int {
+	for k := 0; k < auditFields; k++ {
+		if i+2 > len(buf) {
+			return len(buf)
+		}
+		i += 2 + int(binary.BigEndian.Uint16(buf[i:i+2]))
+		if i > len(buf) {
+			return len(buf)
+		}
+	}
+	return i
+}
+
 // frameRecords returns the audit records in operation position: a name of vocab (plus the
 // AuditEvent constants) written as writeUTF heads a full six-string record that does not lie
-// inside an earlier accepted record. Candidates are tried by offset, then name.
-func frameRecords(rec []byte, vocab map[string]bool) []framedRecord {
+// inside an earlier accepted record. Candidates are tried by offset, then name. It also returns
+// the range [pos, declaredEnd) of every tried candidate that failed to frame.
+func frameRecords(rec []byte, vocab map[string]bool) ([]framedRecord, [][2]int) {
 	all := map[string]bool{}
 	for op := range vocab {
 		all[op] = true
@@ -149,6 +166,7 @@ func frameRecords(rec []byte, vocab map[string]bool) []framedRecord {
 		return cands[a].op < cands[b].op
 	})
 	var out []framedRecord
+	var failed [][2]int
 	coveredTo := -1
 	for _, c := range cands {
 		if c.pos < coveredTo {
@@ -156,12 +174,13 @@ func frameRecords(rec []byte, vocab map[string]bool) []framedRecord {
 		}
 		f, ok := fieldBounds(rec, c.pos)
 		if !ok {
+			failed = append(failed, [2]int{c.pos, declaredEnd(rec, c.pos)})
 			continue
 		}
 		coveredTo = f[auditFields-1][1]
 		out = append(out, framedRecord{c.pos, c.op, f})
 	}
-	return out
+	return out, failed
 }
 
 // unanchoredOps counts operations in operation position that countOps did not count: the name
@@ -172,7 +191,8 @@ func unanchoredOps(rec []byte, ops map[string]int, anchored map[int]bool) map[st
 		vocab[op] = true
 	}
 	extra := map[string]int{}
-	for _, r := range frameRecords(rec, vocab) {
+	framed, _ := frameRecords(rec, vocab)
+	for _, r := range framed {
 		if !anchored[r.pos] {
 			extra[r.op]++
 		}

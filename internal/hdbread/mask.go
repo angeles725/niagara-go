@@ -1,15 +1,10 @@
 package hdbread
 
-import (
-	"bytes"
-	"regexp"
-	"strings"
-)
-
 // userMasked replaces a printable run that carries a user identity under --strings --mask.
 const userMasked = "<USER-MASKED>"
 
-// valueMasked replaces a run that looks like a credential value (Python mask()).
+// valueMasked replaces every other printable run under --strings --mask that is not an
+// operation constant at a framed operation field.
 const valueMasked = "<VALUE-MASKED>"
 
 // loginOps are the AuditEvent operations whose other fields describe the session's user.
@@ -23,33 +18,8 @@ const (
 
 // maskPlan is what --mask needs to know about a record section.
 type maskPlan struct {
-	audit    bool         // an audit section (auditSchema or hasAuditOperation)
-	ids      [][2]int     // identity field contents [start, end) of the framed records
-	idValues []string     // the ASCII-lowercased identity field values
-	paths    [][2]int     // framed target contents [start, end) that start with '/'
-	opStarts map[int]bool // first content byte of each framed record's operation field
-}
-
-// auditSchema reports whether the file schema names an audit history: an 'operation' field
-// (what --ops requires) or an AuditRecord record type.
-func auditSchema(recordType string, fields []string) bool {
-	for _, f := range fields {
-		if f == "operation" {
-			return true
-		}
-	}
-	return strings.HasSuffix(recordType, "AuditRecord")
-}
-
-// hasAuditOperation reports whether rec holds an auditOperations name anywhere, as a plain byte
-// substring (rule v4: damaged length prefixes must not turn an audit section into a plain one).
-func hasAuditOperation(rec []byte) bool {
-	for _, op := range auditOperations {
-		if bytes.Contains(rec, []byte(op)) {
-			return true
-		}
-	}
-	return false
+	ids      [][2]int       // identity field contents [start, end) of the framed records
+	opStarts map[int]string // first content byte -> operation of each trusted framed record
 }
 
 // isAuditOperation reports whether s is one of the auditOperations constants.
@@ -62,36 +32,33 @@ func isAuditOperation(s string) bool {
 	return false
 }
 
-// asciiLower lowercases A-Z only (Python bytes.lower()).
-func asciiLower(s string) string {
-	b := []byte(s)
-	for i, c := range b {
-		if c >= 'A' && c <= 'Z' {
-			b[i] = c + ('a' - 'A')
-		}
-	}
-	return string(b)
-}
-
 // planMask frames the audit records of rec exactly as unanchoredOps does (countOps names stay
 // in the framing vocabulary). Identity fields (intended difference from Python, whose mask()
 // let user names through) are:
-//   - the userName (6th string) of every record;
+//   - the userName (6th string) of every framed record;
 //   - in a login-family record (loginOps), also slotName, oldValue and value, and the target
-//     unless it is a slot path (starts with '/').
+//     unless it starts with '/'.
 //
-// Empty fields are skipped.
-func planMask(rec []byte, schemaIsAudit bool) maskPlan {
+// Empty fields are skipped. A framed record's operation field is trusted (opStarts) unless the
+// record starts strictly inside the range [pos, declaredEnd) of an earlier candidate that failed
+// to frame: a damaged record must not turn its own userName into an operation position.
+func planMask(rec []byte) maskPlan {
 	ops, _, _ := countOps(rec)
 	vocab := map[string]bool{}
 	for op := range ops {
 		vocab[op] = true
 	}
-	p := maskPlan{audit: schemaIsAudit || hasAuditOperation(rec), opStarts: map[int]bool{}}
-	for _, r := range frameRecords(rec, vocab) {
-		p.opStarts[r.fields[0][0]] = true
-		if t := r.fields[fieldTarget]; t[0] < t[1] && rec[t[0]] == '/' {
-			p.paths = append(p.paths, t)
+	framed, failed := frameRecords(rec, vocab)
+	p := maskPlan{opStarts: map[int]string{}}
+	for _, r := range framed {
+		trusted := true
+		for _, f := range failed {
+			if f[0] < r.pos && r.pos < f[1] {
+				trusted = false
+			}
+		}
+		if trusted {
+			p.opStarts[r.fields[0][0]] = r.op
 		}
 		for k := fieldTarget; k <= fieldUserName; k++ {
 			f := r.fields[k]
@@ -104,29 +71,10 @@ func planMask(rec []byte, schemaIsAudit bool) maskPlan {
 			}
 			if isID {
 				p.ids = append(p.ids, f)
-				p.idValues = append(p.idValues, asciiLower(string(rec[f[0]:f[1]])))
 			}
 		}
 	}
 	return p
-}
-
-// pathNamesIdentity reports whether the slot path s must not print (rule v4): one of its
-// '/'-separated segments equals an identity value (ASCII case-insensitive), or a "UserService"
-// segment (ASCII case-insensitive) has any segment after it.
-func pathNamesIdentity(p maskPlan, s string) bool {
-	segs := strings.Split(asciiLower(s), "/")
-	for k, seg := range segs {
-		if seg == "userservice" && k < len(segs)-1 {
-			return true
-		}
-		for _, id := range p.idValues {
-			if seg == id {
-				return true
-			}
-		}
-	}
-	return false
 }
 
 // printableRun is one run of 3+ printable ASCII bytes at rec[start:end].
@@ -151,23 +99,11 @@ func printableRuns(b []byte) []printableRun {
 	return runs
 }
 
-// stringsLines is the --strings output: every printable run. With doMask, a section that is not
-// an audit section keeps Python's mask(). In an audit section (rule v4, an allowlist) a run
-//   - overlapping an identity field of a framed record prints userMasked;
-//   - else prints verbatim only if it equals an auditOperations constant and starts at the
-//     first content byte of a framed record's operation field, or it starts at the first byte
-//     of a framed record's slot-path target, ends inside that target and no segment of it names
-//     an identity (pathNamesIdentity);
-//   - else prints valueMasked.
-//
-// No role-account exception applies in an audit section. Names decoded by countOps only frame
-// records (and feed --ops); they are never allowlisted, since any capitalised writeUTF string
-// followed by a '/' string decodes as one. A slot path must start at a framed target because a
-// writeUTF length byte 0x2f reads as '/' in front of any 47-byte string.
-func stringsLines(rec []byte, doMask, schemaIsAudit bool) []string {
+// stringsLines is the --strings output: every printable run, or with doMask its maskRun form.
+func stringsLines(rec []byte, doMask bool) []string {
 	var p maskPlan
 	if doMask {
-		p = planMask(rec, schemaIsAudit)
+		p = planMask(rec)
 	}
 	var lines []string
 	for _, r := range printableRuns(rec) {
@@ -180,42 +116,22 @@ func stringsLines(rec []byte, doMask, schemaIsAudit bool) []string {
 	return lines
 }
 
-// maskRun applies the --mask rule of stringsLines to the run r whose text is s.
+// maskRun is the --mask rule v5 (fail-closed, every section, no audit detection) for the run r
+// whose text is s:
+//  1. a run overlapping an identity field of a framed record prints userMasked;
+//  2. else a run that equals an auditOperations constant, starts at the first content byte of a
+//     trusted framed record's operation field (planMask) and equals that operation prints verbatim;
+//  3. else the run prints valueMasked.
+//
+// No role-account exception, no slot paths: nothing else can print verbatim.
 func maskRun(p maskPlan, r printableRun, s string) string {
-	if !p.audit {
-		return mask(s)
-	}
 	for _, id := range p.ids {
 		if r.start < id[1] && id[0] < r.end {
 			return userMasked
 		}
 	}
-	if p.opStarts[r.start] && isAuditOperation(s) {
+	if op, ok := p.opStarts[r.start]; ok && s == op && isAuditOperation(s) {
 		return s
-	}
-	for _, t := range p.paths {
-		if r.start == t[0] && r.end <= t[1] {
-			if pathNamesIdentity(p, s) {
-				return valueMasked
-			}
-			return s
-		}
 	}
 	return valueMasked
-}
-
-var (
-	roleRE  = regexp.MustCompile(`^(admin|guest|root|niagarad|station|daemon|sshd)$`)
-	valueRE = regexp.MustCompile(`[A-Za-z0-9+/]{16,}`)
-)
-
-// mask redacts anything that looks like a credential value; role logins stay (Python mask()).
-func mask(s string) string {
-	if roleRE.MatchString(s) {
-		return s
-	}
-	if valueRE.MatchString(s) {
-		return valueMasked
-	}
-	return s
 }

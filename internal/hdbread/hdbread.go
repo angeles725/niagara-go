@@ -138,7 +138,7 @@ func Run(o Options, s cli.Stdio) int {
 		}
 	}
 	if o.Strings {
-		for _, line := range stringsLines(f.section, o.Mask, auditSchema(rt, fields)) {
+		for _, line := range stringsLines(f.section, o.Mask) {
 			fmt.Fprintln(s.Out, line)
 		}
 	}
