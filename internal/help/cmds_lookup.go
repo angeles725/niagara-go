@@ -64,15 +64,30 @@ var classCommands = []command{
 			positional(p, "name", "Interface name (e.g. BIAlarmSource)")
 			intOpt(p, 3, "Max depth for subtree (default: 3)", "--depth")
 			flag(p, "Show extends chain upward", "--chain")
+		},
+		run: func(e *Env, ns *argparse.Namespace) error {
+			return e.InterfaceHierarchy(InterfaceHierarchyParams{Name: ns.String("name"),
+				Depth: ns.Int("depth"), Chain: ns.Bool("chain")})
 		}},
 	{name: "archetypes", help: "List Niagara architectural patterns (services, points, etc.)",
 		args: func(p *argparse.Parser) {
 			optionalPositional(p, "type", nil,
 				"Archetype type (services, points, extensions, converters, etc.)")
+		},
+		run: func(e *Env, ns *argparse.Namespace) error {
+			var typ *string
+			if ns.Get("type") != nil {
+				t := ns.String("type")
+				typ = &t
+			}
+			return e.Archetypes(ArchetypesParams{Type: typ})
 		}},
 	{name: "orphans", help: "Find classes with zero used_by references",
 		args: func(p *argparse.Parser) {
 			intOpt(p, 30, "Max results to show (default: 30)", "-n", "--top")
+		},
+		run: func(e *Env, ns *argparse.Namespace) error {
+			return e.Orphans(OrphansParams{Top: ns.Int("top")})
 		}},
 }
 

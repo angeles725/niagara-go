@@ -1,0 +1,25 @@
+INTERFACE HIERARCHY: BIAlarmSource (depth=3)
+
+Package: javax.baja.alarm
+Extends: BInterface
+
+SUB-INTERFACES (2):
+
+  BIPingable (12 children)
+    BDevice
+    BDeviceNetwork
+    BP00
+    BP01
+    BP02
+    BP03
+    BP04
+    BP05
+    BP06
+    BP07
+    ... +2 more
+  BIRemoteAlarmSource
+
+IMPLEMENTING CLASSES (2):
+
+  BAlarmRecipient (javax.baja.alarm)
+  BDevice (javax.baja.driver)

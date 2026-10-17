@@ -181,7 +181,11 @@ type HierarchyParams struct {
 // with Interface the interface hierarchy (cmd_hierarchy).
 func (e *Env) Hierarchy(p HierarchyParams) error {
 	if p.Interface {
-		return notPortedError("hierarchy --interface")
+		depth := 3
+		if p.Depth != nil {
+			depth = *p.Depth
+		}
+		return e.InterfaceHierarchy(InterfaceHierarchyParams{Name: p.Name, Depth: depth, Chain: p.Chain})
 	}
 	maxDepth := 2
 	if p.Depth != nil {

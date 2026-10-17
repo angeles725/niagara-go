@@ -27,6 +27,7 @@ func TestMisses(t *testing.T) {
 		{"hierarchy", []string{"hierarchy", "BZzz"}},
 		{"implementors", []string{"implementors", "BIZzz"}},
 		{"xref", []string{"xref", "BZzz"}},
+		{"interface-hierarchy", []string{"interface-hierarchy", "Zzz"}},
 	}
 	for _, c := range cases {
 		t.Run(c.file, func(t *testing.T) {
@@ -73,6 +74,32 @@ func TestCleanClassName(t *testing.T) {
 	for in, want := range map[string]string{"Cursor&lt;E&gt; ": "Cursor", "Map&lt;K, V&gt;.Entry": "Map.Entry", "BPlain": "BPlain"} {
 		if got := cleanClassName(in); got != want {
 			t.Errorf("cleanClassName(%q) = %q, want %q", in, got, want)
+		}
+	}
+}
+
+// TestEmptyIndexMisses covers the archetypes and orphans misses, which need
+// an empty (but present) inheritance or xref index.
+func TestEmptyIndexMisses(t *testing.T) {
+	dir := t.TempDir()
+	for _, name := range []string{"inheritance.json", "class-index.json", "xref-index.json"} {
+		write(t, filepath.Join(dir, "indexes", name), "{}")
+	}
+	for _, c := range []struct {
+		run  func(e *Env) error
+		want string
+	}{
+		{func(e *Env) error { return e.Archetypes(ArchetypesParams{}) },
+			"No match for '' (archetypes) in this scope.\n  searched: Niagara unregistered (" + dir +
+				") -- inheritance.json: 0 entries\n"},
+		{func(e *Env) error { return e.Orphans(OrphansParams{Top: 30}) },
+			"No match for '' (orphans) in this scope.\n  searched: Niagara unregistered (" + dir +
+				") -- xref-index.json: 0 entries\n"},
+	} {
+		var out strings.Builder
+		e := &Env{Out: &out, BaseDir: dir}
+		if err := c.run(e); err != nil || e.misses != 1 || !strings.HasPrefix(out.String(), c.want) {
+			t.Errorf("err %v misses %d out:\n%s", err, e.misses, out.String())
 		}
 	}
 }

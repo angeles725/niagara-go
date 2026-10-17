@@ -51,7 +51,7 @@ func truthy(v any) bool {
 	case []any:
 		return len(x) > 0
 	case *index.Object:
-		return x.Len() > 0
+		return x != nil && x.Len() > 0
 	}
 	return true
 }
