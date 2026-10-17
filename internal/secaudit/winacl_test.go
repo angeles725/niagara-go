@@ -122,3 +122,55 @@ func TestDecodeConsole(t *testing.T) {
 		t.Errorf("utf-16 BE odd: %q", got)
 	}
 }
+
+// Lines holding ":(" that are not a well-formed ACE come back as unparsed (SEC-03 then SKIPs);
+// other lines (the summary, blank lines) are ignored. Same result as winacl.parse_listing.
+func TestParseListingUnparsedLines(t *testing.T) {
+	listing := testWinpath + " NT AUTHORITY\\SYSTEM:(OI)(CI)(F)\r\n" +
+		"   Everyone:(OI)(CI)(special access:)\r\n" +
+		" odd:(F) junk\r\n" +
+		":(F)\r\n" +
+		"BUILTIN\\Users:(oi)(ci)(rx,w)\r\n" +
+		"\r\n" +
+		"Successfully processed 1 files; Failed processing 0 files\r\n"
+	aces, unparsed := parseListing(listing, testWinpath)
+	wantACEs := []ace{{`NT AUTHORITY\SYSTEM`, []string{"OI", "CI", "F"}}, {`BUILTIN\Users`, []string{"OI", "CI", "RX,W"}}}
+	if !reflect.DeepEqual(aces, wantACEs) {
+		t.Errorf("aces = %q, want %q", aces, wantACEs)
+	}
+	wantUnparsed := []string{"Everyone:(OI)(CI)(special access:)", "odd:(F) junk", ":(F)"}
+	if !reflect.DeepEqual(unparsed, wantUnparsed) {
+		t.Errorf("unparsed = %q, want %q", unparsed, wantUnparsed)
+	}
+}
+
+// Every code page table covers the 128 bytes 0x80-0xff (a short table would panic or shift every
+// later byte); spot checks pin a few well-known positions.
+func TestCodepageTablesCoverTheUpperHalf(t *testing.T) {
+	spots := map[string]map[byte]rune{
+		"cp850":  {0x80: 'Ç', 0xa4: 'ñ', 0xb5: 'Á', 0xe0: 'Ó', 0xff: 0xa0},
+		"cp437":  {0x80: 'Ç', 0x9e: '₧', 0xa4: 'ñ', 0xe1: 'ß', 0xff: 0xa0},
+		"cp1252": {0x80: '€', 0x81: 0x81, 0x9f: 'Ÿ', 0xa0: 0xa0, 0xff: 'ÿ'},
+	}
+	if len(codepages) != len(spots) {
+		t.Fatalf("%d code pages, want %d", len(codepages), len(spots))
+	}
+	all := make([]byte, 256)
+	for i := range all {
+		all[i] = byte(i)
+	}
+	for _, cp := range codepages {
+		if len(cp.upper) != 128 {
+			t.Errorf("%s has %d runes, want 128", cp.name, len(cp.upper))
+			continue
+		}
+		for b, want := range spots[cp.name] {
+			if got := cp.upper[b-0x80]; got != want {
+				t.Errorf("%s 0x%02x = %U, want %U", cp.name, b, got, want)
+			}
+		}
+		if got := []rune(decodeCodepage(all, cp.upper)); len(got) != 256 || got[0x7f] != 0x7f || got[0x80] != cp.upper[0] {
+			t.Errorf("%s decodes 256 bytes to %d runes", cp.name, len(got))
+		}
+	}
+}
