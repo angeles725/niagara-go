@@ -1,0 +1,12 @@
+usage: module-nav lifecycle [-h] [--pattern LC_PATTERN] [--module LC_MODULE] [-n N] [class_name]
+
+positional arguments:
+  class_name            Class name (e.g. BAlarmService)
+
+options:
+  -h, --help            show this help message and exit
+  --pattern, -p LC_PATTERN
+                        Show classes implementing a specific lifecycle (e.g. started)
+  --module, -m LC_MODULE
+                        Filter by module
+  -n N                  Limit results (default 50)
