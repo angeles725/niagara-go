@@ -1,0 +1,4 @@
+TITLE: docModbus
+
+Modbus TCP configuration
+Set the Modbus timeout.

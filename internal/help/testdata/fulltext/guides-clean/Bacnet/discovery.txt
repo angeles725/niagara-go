@@ -1,0 +1,8 @@
+TITLE: Device discovery
+SOURCE: docBacnet/discovery.html
+
+Index | Prev | Next
+Device discovery
+Discovery finds the devices on the network.
+Set the discovery timeout before a discovery job starts.
+Timeout values are in seconds.

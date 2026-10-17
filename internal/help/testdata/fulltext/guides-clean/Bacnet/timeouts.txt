@@ -1,0 +1,5 @@
+TITLE: Network timeouts
+
+Prev  |  Next
+A timeout ends a request that gets no answer.
+The default timeout is 72 °F? No: 3 seconds.

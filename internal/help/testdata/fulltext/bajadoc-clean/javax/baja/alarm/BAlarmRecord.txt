@@ -1,0 +1,5 @@
+CLASS: BAlarmRecord
+PACKAGE: javax.baja.alarm
+
+BAlarmRecord holds one alarm and its ack state.
+ackTime - when the alarm was acknowledged.

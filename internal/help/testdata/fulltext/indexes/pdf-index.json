@@ -1,0 +1,20 @@
+{
+ "docBacnet": {
+  "pages": 3,
+  "size_kb": 120.5,
+  "category": "software",
+  "source_pdf": "docBacnet/docBacnet.pdf"
+ },
+ "docModbus": {
+  "pages": 1,
+  "size_kb": 2.5,
+  "category": "hardware",
+  "source_pdf": "docModbus/Modbus Guide.pdf"
+ },
+ "Modbus_TCP_Sheet": {
+  "pages": 2,
+  "size_kb": 3,
+  "category": "software",
+  "source_pdf": "sheets/modbus.pdf"
+ }
+}

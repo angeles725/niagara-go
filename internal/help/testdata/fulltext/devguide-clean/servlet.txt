@@ -1,0 +1,4 @@
+TITLE: Web servlets
+
+A web servlet answers HTTP requests.
+Register the servlet with a servlet name.
