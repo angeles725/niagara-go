@@ -1,0 +1,336 @@
+{
+ "a.b.BBytes": {
+  "actions": [],
+  "class": "BBytes",
+  "extends": "BObject",
+  "package": "a.b",
+  "properties": [
+   {
+    "args": [
+     "0",
+     "\"caf\u00e9 \ufffd x\ufffd\ufffd\"",
+     "null"
+    ],
+    "default": "\"caf\u00e9 \ufffd x\ufffd\ufffd\"",
+    "facets": "null",
+    "flagLetters": "",
+    "flags": 0,
+    "name": "label"
+   },
+   {
+    "args": [
+     "0x8000",
+     "BString.DEFAULT",
+     "null"
+    ],
+    "default": "BString.DEFAULT",
+    "facets": "null",
+    "flagLetters": "L",
+    "flags": 32768,
+    "name": "\u00f1ame"
+   }
+  ],
+  "source": "loose/a/b/BBytes.java",
+  "topics": []
+ },
+ "a.b.BCrlf": {
+  "actions": [],
+  "class": "BCrlf",
+  "extends": "BMulti",
+  "package": "a.b",
+  "properties": [
+   {
+    "args": [
+     "Flags.SUMMARY",
+     "true",
+     "null"
+    ],
+    "default": "true",
+    "facets": "null",
+    "flagLetters": "s",
+    "flags": 8,
+    "name": "flag"
+   }
+  ],
+  "source": "loose/a/b/BCrlf.java",
+  "topics": []
+ },
+ "a.b.BMulti": {
+  "actions": [],
+  "class": "BMulti",
+  "extends": "BComponent",
+  "package": "a.b",
+  "properties": [
+   {
+    "args": [
+     "0",
+     "BDefaultProxyConversion.DEFAULT",
+     "BFacets.make(BFacets.make(BFacets.FIELD_EDITOR, \"driver:ProxyConversionFE\"), BFacets.make(BFacets.UX_FIELD_EDITOR, \"driver:ProxyConversionEditor\"))"
+    ],
+    "default": "BDefaultProxyConversion.DEFAULT",
+    "facets": "BFacets.make(BFacets.make(BFacets.FIELD_EDITOR, \"driver:ProxyConversionFE\"), BFacets.make(BFacets.UX_FIELD_EDITOR, \"driver:ProxyConversionEditor\"))",
+    "flagLetters": "",
+    "flags": 0,
+    "name": "conversion"
+   },
+   {
+    "args": [
+     "Flags.HIDDEN",
+     "\"x\"",
+     "null"
+    ],
+    "default": "\"x\"",
+    "facets": "null",
+    "flagLetters": "h",
+    "flags": 4,
+    "name": "wrapped"
+   }
+  ],
+  "source": "loose/a/b/BMulti.java",
+  "topics": []
+ },
+ "com.acme.model.BNumericWritable": {
+  "actions": [
+   {
+    "args": [
+     "0x20",
+     "null"
+    ],
+    "default": "",
+    "facets": "null",
+    "flagLetters": "n",
+    "flags": 32,
+    "name": "stop"
+   }
+  ],
+  "class": "BNumericWritable",
+  "extends": "BComponent",
+  "package": "com.acme.model",
+  "properties": [
+   {
+    "args": [
+     "Flags.OPERATOR",
+     "BDouble.make(1.5)",
+     "null"
+    ],
+    "default": "BDouble.make(1.5)",
+    "facets": "null",
+    "flagLetters": "o",
+    "flags": 256,
+    "name": "speed"
+   }
+  ],
+  "source": "javasrc/acme-extras/acme-extras-rt/procyon/com/acme/model/BNumericWritable.java",
+  "topics": []
+ },
+ "com.tridium.kitControl.BInterstartDelayControl": {
+  "actions": [
+   {
+    "args": [
+     "256",
+     "null"
+    ],
+    "default": "",
+    "facets": "null",
+    "flagLetters": "o",
+    "flags": 256,
+    "name": "reset"
+   },
+   {
+    "args": [
+     "Flags.ASYNC | Flags.CONFIRM_REQUIRED",
+     "BBoolean.TRUE",
+     "BFacets.NULL"
+    ],
+    "default": "BBoolean.TRUE",
+    "facets": "BFacets.NULL",
+    "flagLetters": "ac",
+    "flags": 144,
+    "name": "pulse"
+   }
+  ],
+  "class": "BInterstartDelayControl",
+  "extends": "BComponent",
+  "package": "com.tridium.kitControl",
+  "properties": [
+   {
+    "args": [
+     "0",
+     "BRelTime.DEFAULT",
+     "null"
+    ],
+    "default": "BRelTime.DEFAULT",
+    "facets": "null",
+    "flagLetters": "",
+    "flags": 0,
+    "name": "delay"
+   },
+   {
+    "args": [
+     "1026",
+     "BOrd.NULL",
+     "BFacets.make((String)\"a\", (String)\"b\")"
+    ],
+    "default": "BOrd.NULL",
+    "facets": "BFacets.make((String)\"a\", (String)\"b\")",
+    "flagLetters": "tf",
+    "flags": 1026,
+    "name": "master"
+   }
+  ],
+  "source": "javasrc/kitControl/kitControl-rt/cfr/com/tridium/kitControl/BInterstartDelayControl.java",
+  "topics": []
+ },
+ "javax.baja.control.BNumericPoint": {
+  "actions": [],
+  "class": "BNumericPoint",
+  "extends": "BControlPoint",
+  "package": "javax.baja.control",
+  "properties": [
+   {
+    "args": [
+     "1026",
+     "new BStatusNumeric()",
+     "null"
+    ],
+    "default": "new BStatusNumeric()",
+    "facets": "null",
+    "flagLetters": "tf",
+    "flags": 1026,
+    "name": "out"
+   },
+   {
+    "args": [
+     "javax.baja.sys.Flags.SUMMARY|Flags.BOGUS",
+     "BFacets.DEFAULT",
+     "BFacets.make(BFacets.make(BFacets.FIELD_EDITOR, \"driver:ProxyConversionFE\"), BFacets.make(BFacets.UX_FIELD_EDITOR, \"driver:ProxyConversionEditor\"))"
+    ],
+    "default": "BFacets.DEFAULT",
+    "facets": "BFacets.make(BFacets.make(BFacets.FIELD_EDITOR, \"driver:ProxyConversionFE\"), BFacets.make(BFacets.UX_FIELD_EDITOR, \"driver:ProxyConversionEditor\"))",
+    "flagLetters": "s",
+    "flags": 8,
+    "name": "facets"
+   }
+  ],
+  "source": "javasrc/control/control-rt/vineflower/javax/baja/control/BNumericPoint.java",
+  "topics": []
+ },
+ "javax.baja.control.BNumericWritable": {
+  "actions": [
+   {
+    "args": [
+     "0",
+     "null"
+    ],
+    "default": "",
+    "facets": "null",
+    "flagLetters": "",
+    "flags": 0,
+    "name": "emergencyAuto"
+   },
+   {
+    "args": [
+     "Flags.OPERATOR",
+     "BDouble.DEFAULT",
+     "null"
+    ],
+    "default": "BDouble.DEFAULT",
+    "facets": "null",
+    "flagLetters": "o",
+    "flags": 256,
+    "name": "set"
+   }
+  ],
+  "class": "BNumericWritable",
+  "extends": "BNumericPoint",
+  "package": "javax.baja.control",
+  "properties": [
+   {
+    "args": [
+     "Flags.READONLY",
+     "new BStatusNumeric(0, BStatus.nullStatus)",
+     "null"
+    ],
+    "default": "new BStatusNumeric(0, BStatus.nullStatus)",
+    "facets": "null",
+    "flagLetters": "r",
+    "flags": 1,
+    "name": "in1"
+   },
+   {
+    "args": [
+     "Flags.SUMMARY | Flags.TRANSIENT",
+     "new BStatusNumeric(0, BStatus.nullStatus)",
+     "null"
+    ],
+    "default": "new BStatusNumeric(0, BStatus.nullStatus)",
+    "facets": "null",
+    "flagLetters": "ts",
+    "flags": 10,
+    "name": "in10"
+   },
+   {
+    "args": [
+     "0",
+     "new BStatusNumeric(0, BStatus.nullStatus)",
+     "null"
+    ],
+    "default": "new BStatusNumeric(0, BStatus.nullStatus)",
+    "facets": "null",
+    "flagLetters": "",
+    "flags": 0,
+    "name": "fallback"
+   },
+   {
+    "args": [
+     "Flags.OPERATOR | Flags.READONLY",
+     "BAbsTime.NULL",
+     "null"
+    ],
+    "default": "BAbsTime.NULL",
+    "facets": "null",
+    "flagLetters": "ro",
+    "flags": 257,
+    "name": "overrideExpiration"
+   },
+   {
+    "args": [
+     "Flags.HIDDEN | 0x10000000",
+     "\"Grados \u00b0C \\\"x\\\"\\t;\"",
+     "BFacets.make(\"a\", \"b,c\")"
+    ],
+    "default": "\"Grados \u00b0C \\\"x\\\"\\t;\"",
+    "facets": "BFacets.make(\"a\", \"b,c\")",
+    "flagLetters": "h1",
+    "flags": 268435460,
+    "name": "units"
+   }
+  ],
+  "source": "javasrc/control/control-rt/vineflower/javax/baja/control/BNumericWritable.java",
+  "topics": [
+   {
+    "args": [
+     "Flags.SUMMARY",
+     "null"
+    ],
+    "default": "",
+    "facets": "null",
+    "flagLetters": "s",
+    "flags": 8,
+    "name": "fired"
+   },
+   {
+    "args": [
+     "Flags.SUMMARY",
+     "BString.DEFAULT",
+     "BFacets.NULL"
+    ],
+    "default": "BString.DEFAULT",
+    "facets": "BFacets.NULL",
+    "flagLetters": "s",
+    "flags": 8,
+    "name": "alarm"
+   }
+  ]
+ }
+}

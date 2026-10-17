@@ -1,0 +1,3 @@
+com.acme.model.BNumericWritable  extends BComponent   (javasrc/acme-extras/acme-extras-rt/procyon/com/acme/model/BNumericWritable.java)
+  property speed                    flags=256    o        default=BDouble.make(1.5) facets=null
+  action   stop                     flags=32     n        default= facets=null

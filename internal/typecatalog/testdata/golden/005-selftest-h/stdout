@@ -1,0 +1,4 @@
+usage: n4-type-catalog.py selftest [-h]
+
+options:
+  -h, --help  show this help message and exit

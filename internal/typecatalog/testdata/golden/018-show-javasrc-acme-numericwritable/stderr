@@ -1,0 +1,1 @@
+no type matching acme:NumericWritable; 2 type(s) named NumericWritable exist outside module 'acme': com.acme.model.BNumericWritable, javax.baja.control.BNumericWritable
