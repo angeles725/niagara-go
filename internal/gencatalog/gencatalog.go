@@ -16,6 +16,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/angeles725/niagara-go/internal/argparse"
+	"github.com/angeles725/niagara-go/internal/blockfiles"
 	"github.com/angeles725/niagara-go/internal/cli"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyre"
@@ -179,13 +180,13 @@ func readText(path string) (string, error) {
 
 func collect(root string) ([]entry, error) {
 	var out []entry
-	for _, b := range mainBlocks(root) {
-		h1, err := extractH1(b.path)
+	for _, b := range blockfiles.MainBlocks(root) {
+		h1, err := extractH1(b.Path)
 		if err != nil {
-			return nil, fmt.Errorf("cannot read %s: %v", b.path, err)
+			return nil, fmt.Errorf("cannot read %s: %v", b.Path, err)
 		}
 		title := normalizeTitle(h1)
-		if t, ok := titleOverrides[b.label]; ok {
+		if t, ok := titleOverrides[b.Label]; ok {
 			title = t
 		}
 		if title == "" && h1 != "" {
@@ -194,7 +195,7 @@ func collect(root string) ([]entry, error) {
 		if title == "" {
 			title = "(no title)"
 		}
-		out = append(out, entry{b.label, filepath.Base(b.path), title})
+		out = append(out, entry{b.Label, filepath.Base(b.Path), title})
 	}
 	return out, nil
 }
