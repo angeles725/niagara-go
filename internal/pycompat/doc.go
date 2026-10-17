@@ -5,7 +5,7 @@
 // splitlines, bytes.decode("utf-8", "replace"), html.escape/unescape and posixpath helpers,
 // the case methods (isupper, islower, istitle, upper, lower, title, capitalize, swapcase),
 // ljust/rjust/center and s[:n] by code points, and format(value, spec) (the format-spec
-// mini-language of str.format and f-strings) for str and int.
+// mini-language of str.format and f-strings) for str, int and float.
 //
 // testdata/gen.py (run with python3 -I) writes unicode.txt, testdata/fixtures.json and the
 // testdata/golden/format_*.golden cases; the tests replay every fixture and golden and hash

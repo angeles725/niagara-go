@@ -72,6 +72,8 @@ func replayFormatGolden(t *testing.T, name string) {
 
 func TestFormatStrInt(t *testing.T) { replayFormatGolden(t, "format_str_int.golden") }
 
+func TestFormatFloat(t *testing.T) { replayFormatGolden(t, "format_float.golden") }
+
 func TestFormatGoIntegerKinds(t *testing.T) {
 	for _, c := range []struct {
 		v    any
@@ -79,6 +81,7 @@ func TestFormatGoIntegerKinds(t *testing.T) {
 	}{
 		{int8(-5), "-5"}, {int16(-5), "-5"}, {int32(-5), "-5"}, {int64(-5), "-5"}, {big.NewInt(-5), "-5"},
 		{uint(5), "+5"}, {uint8(5), "+5"}, {uint16(5), "+5"}, {uint32(5), "+5"}, {uint64(1 << 63), "+9223372036854775808"},
+		{float32(0.5), "+0.5"},
 	} {
 		if got, err := Format(c.v, "+"); err != nil || got != c.want {
 			t.Errorf("Format(%T, \"+\") = %q, %v; want %q", c.v, got, err, c.want)

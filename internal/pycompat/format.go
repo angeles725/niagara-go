@@ -29,11 +29,10 @@ type fspec struct {
 }
 
 // Format is Python's format(v, spec) — what str.format and f-string fields do — for nil
-// (None), bool, the Go integer kinds, *big.Int and string, following the
+// (None), bool, the Go integer kinds, *big.Int, float64, float32 and string, following the
 // Python 3.15 format-spec mini-language: [[fill]align][sign][z][#][0][width][grouping]
 // [.precision[grouping]][type]. Widths and precisions count code points. Errors are
-// *FormatError with Python's exception class and message. Floats and the float presentation
-// types (e, E, f, F, g, G, %) are not supported yet and fail with a TypeError.
+// *FormatError with Python's exception class and message.
 func Format(v any, spec string) (string, error) {
 	switch x := v.(type) {
 	case nil:
@@ -52,6 +51,10 @@ func Format(v any, spec string) (string, error) {
 			n.SetInt64(1)
 		}
 		return formatInt(n, "bool", spec)
+	case float64:
+		return formatFloat(x, "float", spec)
+	case float32:
+		return formatFloat(float64(x), "float", spec)
 	case *big.Int:
 		return formatInt(x, "int", spec)
 	}
@@ -276,7 +279,11 @@ func formatInt(n *big.Int, typeName, spec string) (string, error) {
 	case 'b', 'c', 'd', 'o', 'x', 'X', 'n':
 		return formatLong(n, f)
 	case 'e', 'E', 'f', 'F', 'g', 'G', '%':
-		return "", &FormatError{"TypeError", "pycompat.Format: float presentation types are not supported yet"}
+		v, acc := new(big.Float).SetInt(n).Float64()
+		if math.IsInf(v, 0) && acc != big.Exact {
+			return "", &FormatError{"OverflowError", "int too large to convert to float"}
+		}
+		return formatFloatSpec(v, f)
 	}
 	return "", unknownCode(f.typ, typeName)
 }

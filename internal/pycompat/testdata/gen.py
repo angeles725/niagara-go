@@ -195,6 +195,9 @@ FORMAT_SPECS = sorted(set([""] + SURVEY_SPECS + MINI_SPECS))
 FORMAT_VALUES = ["", "a", "ab", "h\u00e9llo", "\u65e5\u672c\u8a9e", "e\u0301", "\U0001f600x", "a longer string value",
                  0, 1, -1, 5, 42, -42, 65, 255, 1234, -1234567, 1000000007, 2 ** 63, 2 ** 70, -(2 ** 70), 0x10FFFF,
                  0x110000, True, False, None, 10 ** 400]
+FORMAT_FLOATS = [0.0, -0.0, 0.1, 0.5, 1.0, -1.5, 2.5, 1 / 3, 0.125, 1234.5678, -1234.5678, 999.9996, 0.0001234, 1e-5,
+                 1e-7, 1e15, 9999999999999998.0, 1e16, 1.2345678901234568e17, 123456789.0, 1e100, 5e-324,
+                 1.7976931348623157e308, -0.0004, float("inf"), float("-inf"), float("nan"), -float("nan")]
 
 
 def py_format(v, spec):
@@ -309,6 +312,8 @@ def main():
     os.makedirs(os.path.join(HERE, "golden"), exist_ok=True)
     write_json(os.path.join(HERE, "golden", "format_str_int.golden"),
                format_golden(FORMAT_VALUES, lambda v, spec: not float_path(v, spec)))
+    write_json(os.path.join(HERE, "golden", "format_float.golden"),
+               format_golden(FORMAT_FLOATS + [v for v in FORMAT_VALUES if isinstance(v, int)], float_path))
     print("unicode.txt and fixtures.json written", file=sys.stderr)
 
 
