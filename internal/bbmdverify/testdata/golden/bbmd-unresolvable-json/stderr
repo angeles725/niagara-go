@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/home/cristian/niagara-research/tools/bacnet-bbmd-verify.py", line 428, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "/home/cristian/niagara-research/tools/bacnet-bbmd-verify.py", line 361, in main
+    sock.sendto(build_read_bdt(), (tgt, args.port))
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+socket.gaierror: [Errno -2] Name or service not known

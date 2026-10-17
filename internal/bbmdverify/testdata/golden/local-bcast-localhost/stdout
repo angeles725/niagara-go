@@ -1,0 +1,14 @@
+[96m
+  BACnet/IP BBMD & Who-Is reachability verifier (read-only) — corpus B444
+[0m
+  1) Directed UNICAST Who-Is -> 127.0.0.4:0xBB3B
+[93m     no I-Am. Device unreachable even by unicast.[0m
+
+  2) Local BROADCAST Who-Is -> localhost:0xBB3B
+[93m     no responders at all.[0m
+
+  3) BBMD probe (Read-BDT / Read-FDT)
+[90m     127.0.0.4 did not answer Read-BDT (not a BBMD, or blocked).[0m
+
+  [96mVERDICT:[0m [93mINCONCLUSIVE — the device did not answer even the directed unicast Who-Is. Check --device-ip, --port, firewall, and that you run this on a routed host.[0m
+

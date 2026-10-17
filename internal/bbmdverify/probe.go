@@ -2,6 +2,7 @@ package bbmdverify
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"sort"
@@ -144,12 +145,22 @@ func Run(o Options, s cli.Stdio) int {
 		fmt.Fprintln(s.Out, color("\n  BACnet/IP BBMD & Who-Is reachability verifier (read-only) — corpus B444\n", "hdr"))
 	}
 	window := time.Duration(o.Timeout * float64(time.Second))
-	send := func(pkt []byte, ip string) error {
-		_, err := conn.WriteToUDP(pkt, &net.UDPAddr{IP: net.ParseIP(ip), Port: o.Port})
+	// send resolves host on every call, like Python's sock.sendto((host, port)).
+	send := func(pkt []byte, host string) error {
+		ip, err := resolveHost(host)
+		if err != nil {
+			return err
+		}
+		_, err = conn.WriteToUDP(pkt, &net.UDPAddr{IP: ip, Port: o.Port})
 		return err
 	}
 	err = r.probe(conn, send, window)
 	conn.Close()
+	var gai *gaiError
+	if errors.As(err, &gai) {
+		fmt.Fprintf(s.Err, "socket.gaierror: %s\n", gai)
+		return 1
+	}
 	if err != nil {
 		fmt.Fprintf(s.Err, "OSError: %s\n", pyOSError(err))
 		return 1
