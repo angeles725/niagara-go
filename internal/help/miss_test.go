@@ -36,6 +36,8 @@ func TestMisses(t *testing.T) {
 		{"overrides", []string{"overrides", "Zzz"}},
 		{"api", []string{"api", "Zzz"}},
 		{"contract", []string{"contract", "Zzz"}},
+		{"slots-inherited", []string{"slots", "BZzz", "--inherited"}},
+		{"overrides-generic", []string{"overrides", "AbstractCursor"}},
 	}
 	for _, c := range cases {
 		t.Run(c.file, func(t *testing.T) {

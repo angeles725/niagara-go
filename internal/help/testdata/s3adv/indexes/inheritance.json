@@ -1,0 +1,8 @@
+{
+  "BChild": {"extends": "BBase", "package": "x"},
+  "BBase": {"package": "x", "subclasses": ["BChild"]},
+  "BLoopA": {"extends": "BLoopB", "package": "x"},
+  "BLoopB": {"extends": "BLoopA", "package": "x"},
+  "BSelf": {"extends": "BSelf", "package": "x"},
+  "BMode": {"extends": "BFrozenEnum", "package": "x"}
+}

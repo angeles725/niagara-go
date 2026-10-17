@@ -1,0 +1,22 @@
+OVERRIDES: AbstractCursor&lt;E&gt;
+CHAIN: java.lang.Object > BObject > BValue > BComplex > BComponent > AbstractCursor&lt;E&gt;
+
+
+NEW METHODS (1):
+
+  public E get()
+
+INHERITED (not overridden) (5):
+
+  -- from BValue --
+    public boolean equivalent(Object o)
+  -- from BComplex --
+    public Slot getSlot(String name)
+  -- from BObject --
+    public Type getType()
+  -- from BComponent --
+    public void started() throws Exception
+  -- from BObject --
+    public String toString(Context cx)
+
+Summary: 0 overridden, 1 new, 5 inherited

@@ -34,3 +34,7 @@ devguide miss scopes. Its cases run with `"cwd_fixture": "s4"`, captured with
 `NIAGARA_HELP_DIR=<testdata>/s4`; misses and `stats` print the absolute data root, so they
 live in `misses/s4-*.txt` and are checked by `s4miss_test.go`. `pyset.json` holds `hash()`
 values and a `set()` iteration order printed by Python 3.15 with `PYTHONHASHSEED=0`.
+
+`s3adv/` (no method-index.json; cyclic and self-extending chains, an untyped property, a
+class named `B`) and `s3adv-enum/` (an enum for `contract`) are two more checkouts for the
+S3 review advisories, captured the same way with their own `NIAGARA_HELP_DIR`.

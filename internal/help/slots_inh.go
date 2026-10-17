@@ -120,7 +120,11 @@ func (e *Env) InheritedSlots(p InheritedSlotsParams) error {
 	for i, k := range inheritedKinds {
 		seen := map[string]bool{}
 		for _, ancestor := range chain {
-			for _, s := range objects(slots.Object(ancestor), k.section) {
+			list, err := objects(ancestor, slots.Object(ancestor), k.section)
+			if err != nil {
+				return err
+			}
+			for _, s := range list {
 				n := get(s, "name", "")
 				if key := pyStr(n); !seen[key] {
 					seen[key] = true

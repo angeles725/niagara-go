@@ -1,0 +1,9 @@
+INHERITED SLOTS: BChild
+CHAIN: BBase > BChild
+TOTAL: 2 properties, 0 actions, 0 topics
+
+PROPERTIES (2):
+
+  -- from BBase --
+    untyped: ?
+    count: int

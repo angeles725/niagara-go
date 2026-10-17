@@ -94,7 +94,11 @@ func (e *Env) API(p APIParams) error {
 		fmt.Fprintf(e.Out, "  implements %s\n", strings.Join(impl, ", "))
 	}
 	data := slots.Object(name)
-	props, actions, topics := objects(data, "properties"), objects(data, "actions"), objects(data, "topics")
+	lists, err := slotLists(name, data, slotSections...)
+	if err != nil {
+		return err
+	}
+	props, actions, topics := lists[0], lists[1], lists[2]
 	totalSlots := len(props) + len(actions) + len(topics)
 	if totalSlots > 0 {
 		fmt.Fprintf(e.Out, "\nSLOTS (%d props, %d actions, %d topics):\n", len(props), len(actions), len(topics))

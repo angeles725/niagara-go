@@ -1,0 +1,8 @@
+{
+  "BBase": {"path": "x/BBase.html", "package": "x", "type": "class", "module": "x-rt"},
+  "BChild": {"path": "x/BChild.html", "package": "x", "type": "class", "module": "x-rt"},
+  "BLoopA": {"path": "x/BLoopA.html", "package": "x", "type": "class", "module": "x-rt"},
+  "BSelf": {"path": "x/BSelf.html", "package": "x", "type": "class", "module": "x-rt"},
+  "BMode": {"path": "x/BMode.html", "package": "x", "type": "enum", "module": "x-rt"},
+  "B": {"path": "x/B.html", "package": "x", "type": "class", "module": "x-rt"}
+}

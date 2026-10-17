@@ -1,0 +1,7 @@
+{
+  "BBase": {"package": "x", "module": "x-rt", "properties": [{"name": "untyped"}, {"name": "count", "type": "int"}]},
+  "BLoopA": {"package": "x", "module": "x-rt", "properties": [{"name": "a", "type": "BStatusNumeric"}]},
+  "BLoopB": {"package": "x", "module": "x-rt", "properties": [{"name": "b", "type": "BStatusBoolean"}]},
+  "BSelf": {"package": "x", "module": "x-rt", "actions": [{"name": "poke"}]},
+  "B": {"package": "x", "module": "x-rt", "properties": [{"name": "self", "type": "B"}]}
+}

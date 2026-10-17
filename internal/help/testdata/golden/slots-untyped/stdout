@@ -1,0 +1,6 @@
+SLOTS: BBase (x, x-rt)
+
+PROPERTIES (2):
+
+  untyped: ?
+  count: int
