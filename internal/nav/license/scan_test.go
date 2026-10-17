@@ -106,3 +106,30 @@ func show(calls [][4]*string) string {
 	}
 	return b.String()
 }
+
+// TestIsLicenseCallReceiverEndingInDot: a receiver ending in "." leaves an
+// empty variable name, which the Python regexes still search (\b\s*=...). The
+// expected values come from license_features._is_license_call.
+func TestIsLicenseCallReceiverEndingInDot(t *testing.T) {
+	cases := []struct {
+		recv, text string
+		want       bool
+	}{
+		{"a.", "x.getFeature(a, b); int y = 2;", false},
+		{"a.", "m = getLicenseManager(); x.getFeature(a, b);", true},
+		{"a..", "no manager here", false},
+	}
+	for _, c := range cases {
+		if got := isLicenseCall("getFeature", c.recv, c.text, "p/X.java"); got != c.want {
+			t.Errorf("isLicenseCall(%q, %q) = %v, want %v", c.recv, c.text, got, c.want)
+		}
+	}
+}
+
+func TestOccurrencesEmptyWordVisitsEveryOffset(t *testing.T) {
+	var got []int
+	occurrences("ab", "", func(i int) bool { got = append(got, i); return false })
+	if want := []int{0, 1, 2}; !reflect.DeepEqual(got, want) {
+		t.Fatalf("occurrences(\"ab\", \"\") visited %v, want %v", got, want)
+	}
+}

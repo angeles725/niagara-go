@@ -205,7 +205,7 @@ func stringBody(s string, i int) (content string, end int, ok bool) {
 // occurrences calls f with every offset of word in s, in order, until f
 // returns true.
 func occurrences(s, word string, f func(i int) bool) {
-	for i := 0; ; {
+	for i := 0; i <= len(s); { // an empty word matches at every offset, len(s) included
 		k := strings.Index(s[i:], word)
 		if k < 0 {
 			return
