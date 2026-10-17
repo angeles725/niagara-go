@@ -1,7 +1,6 @@
 package obixnav
 
 import (
-	"bytes"
 	"encoding/json"
 	"io"
 	"net"
@@ -12,7 +11,6 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/angeles725/niagara-go/internal/cli"
 	"github.com/angeles725/niagara-go/internal/golden"
 )
 
@@ -93,54 +91,12 @@ func startStation(t *testing.T) *replayStation {
 	return rs
 }
 
-// intended lists the cases where Python ends in a traceback; Go prints one line instead.
-var intended = map[string]struct {
-	exit   int
-	stderr string
-}{
-	"map-room-7-unknown":         {2, "obix-nav: map: no room 7 (rooms 1-5)\n"},
-	"config-room-5-no-air-entry": {2, "obix-nav: config: no room 5 (rooms 1-4)\n"},
-	"dump-room-x":                {2, "obix-nav: dump: invalid literal for int() with base 10: 'x'\n"},
-}
-
-// TestGolden runs every parity case (usage errors included) through Main against the replayed
-// station.
+// TestGolden runs every case (usage errors included) through Main against the replayed station;
+// intended differences come from each case's intended.json.
 func TestGolden(t *testing.T) {
 	station := startStation(t)
 	golden.Run(t, "testdata", Main)
 	if u := station.takeUnexpected(); len(u) > 0 {
 		t.Errorf("requests not in the recording:\n%s", strings.Join(u, "\n---\n"))
-	}
-}
-
-// TestIntendedDiffs runs testdata/intended/golden: stdout must match Python; stderr and exit are Go's.
-func TestIntendedDiffs(t *testing.T) {
-	cases, err := golden.Load("testdata/intended")
-	if err != nil {
-		t.Fatal(err)
-	}
-	station := startStation(t)
-	t.Chdir("testdata")
-	for _, c := range cases {
-		t.Run(c.Name, func(t *testing.T) {
-			d, ok := intended[c.Name]
-			if !ok {
-				t.Fatalf("no intended result recorded for %s", c.Name)
-			}
-			var out, errb bytes.Buffer
-			code := Main(c.Args, cli.Stdio{In: strings.NewReader(""), Out: &out, Err: &errb})
-			if u := station.takeUnexpected(); len(u) > 0 {
-				t.Errorf("requests not in the recording:\n%s", strings.Join(u, "\n---\n"))
-			}
-			if code != d.exit {
-				t.Errorf("exit = %d, want %d", code, d.exit)
-			}
-			if !bytes.Equal(out.Bytes(), c.Stdout) {
-				t.Errorf("stdout: %s", golden.Diff(c.Stdout, out.Bytes()))
-			}
-			if errb.String() != d.stderr {
-				t.Errorf("stderr: %s", golden.Diff([]byte(d.stderr), errb.Bytes()))
-			}
-		})
 	}
 }

@@ -1,0 +1,5 @@
+{
+ "reason": "Python indexes its room table with the unknown room and ends in a KeyError traceback (exit 1); Go names the valid rooms in one line with exit 2.",
+ "stderr": "obix-nav: map: no room 7 (rooms 1-5)\n",
+ "exit": 2
+}
