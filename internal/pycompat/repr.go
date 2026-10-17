@@ -12,12 +12,18 @@ import (
 // Tuple is a Python tuple for Repr and Str: "(a,)" for one item.
 type Tuple []any
 
-// Repr is Python repr(v) for nil (None), bool, the Go integer kinds, *big.Int, float64,
-// float32, string, []string, []any, Tuple, *string (Optional[str]) and fmt.Stringer.
+// Reprer is a value that knows its Python repr(); Repr and Str use PyRepr for it, also
+// inside []any and Tuple, ahead of every other rule (fmt.Stringer included).
+type Reprer interface{ PyRepr() string }
+
+// Repr is Python repr(v) for nil (None), a Reprer, bool, the Go integer kinds, *big.Int,
+// float64, float32, string, []string, []any, Tuple, *string (Optional[str]) and fmt.Stringer.
 func Repr(v any) string {
 	switch x := v.(type) {
 	case nil:
 		return "None"
+	case Reprer:
+		return x.PyRepr()
 	case bool:
 		if x {
 			return "True"
