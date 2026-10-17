@@ -7,6 +7,8 @@ import (
 	"io"
 	"sort"
 	"strings"
+
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 const (
@@ -62,7 +64,7 @@ type ioError struct {
 }
 
 func (e *ioError) Error() string {
-	return fmt.Sprintf("cannot read %s at byte %d: %s", e.image, e.pos, strerror(e.err))
+	return fmt.Sprintf("cannot read %s at byte %d: %s", e.image, e.pos, pycompat.StrerrorOf(e.err))
 }
 
 func (e *ioError) Unwrap() error { return e.err }

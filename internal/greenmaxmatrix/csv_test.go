@@ -36,10 +36,3 @@ func TestCSVMatchesPython(t *testing.T) {
 		}
 	}
 }
-
-func TestCSVRowQuoting(t *testing.T) {
-	got := csvRow([]string{"a", `b "c"`, "d,e", "", " f", "g\nh"})
-	if want := "a,\"b \"\"c\"\"\",\"d,e\",, f,\"g\nh\"\r\n"; got != want {
-		t.Errorf("csvRow = %q, want %q", got, want)
-	}
-}

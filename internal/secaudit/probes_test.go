@@ -9,6 +9,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // probeEnv answers keytool and openssl from canned output and reports the given ports open;
@@ -151,8 +153,8 @@ func TestKeytoolFailureIsNeverAPass(t *testing.T) {
 			"custom password", "PASS",
 			"key sizes not read (keytool exit 1: " + strings.TrimSpace(p12Wrong) + "); FIPS keystore absent", "SKIP"},
 		{"not a keystore", result{stdout: []byte(badFmt), code: 1},
-			"not verified (keytool exit 1: " + head(strings.TrimSpace(badFmt), 120) + ")", "SKIP",
-			"key sizes not read (keytool exit 1: " + head(strings.TrimSpace(badFmt), 120) + "); FIPS keystore absent", "SKIP"},
+			"not verified (keytool exit 1: " + pycompat.Cut(strings.TrimSpace(badFmt), 120) + ")", "SKIP",
+			"key sizes not read (keytool exit 1: " + pycompat.Cut(strings.TrimSpace(badFmt), 120) + "); FIPS keystore absent", "SKIP"},
 		{"stack trace after the error line", result{stdout: []byte(p12Wrong + "java.io.IOException: keystore password was incorrect\n\tat x\n"), code: 1},
 			"custom password", "PASS",
 			"key sizes not read (keytool exit 1: " + strings.TrimSpace(p12Wrong) + "); FIPS keystore absent", "SKIP"},

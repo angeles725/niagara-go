@@ -17,15 +17,15 @@ import (
 const imgNormal = "file:^Imagenes/The Harbor/Buttons/BotonNormal.png"
 
 var (
-	pillRE = regexp.MustCompile(pyRe(`<Picture layout="([0-9.]+),([0-9.]+),60\.0,30\.0"[^>]*>\s*` +
+	pillRE = regexp.MustCompile(pycompat.RE2Space(`<Picture layout="([0-9.]+),([0-9.]+),60\.0,30\.0"[^>]*>\s*` +
 		`<ValueBinding ord="slot:Relay\$5b([0-9]+)\$5d\$2eBO">\s*<IBooleanToSimple`))
 	hoaRx    = `Relay\$5b[0-9]+\$5d\$2eBO/(?:active|inactive|auto)"`
 	popRx    = `PopupBinding\b[^>]*\bord="slot:R[0-9]+"`
 	hoaRE    = regexp.MustCompile(hoaRx)
 	popRE    = regexp.MustCompile(popRx)
-	hoaBtnRE = regexp.MustCompile(pyRe(`(?s)\s*<ImageButton\b[^>]*>\s*<ActionBinding\b[^>]*\bord="slot:` + hoaRx +
+	hoaBtnRE = regexp.MustCompile(pycompat.RE2Space(`(?s)\s*<ImageButton\b[^>]*>\s*<ActionBinding\b[^>]*\bord="slot:` + hoaRx +
 		`[^>]*>.*?</ActionBinding>\s*</ImageButton>`))
-	popPicRE   = regexp.MustCompile(pyRe(`(?s)\s*<Picture\b[^>]*>\s*<` + popRx + `[^>]*/>\s*</Picture>`))
+	popPicRE   = regexp.MustCompile(pycompat.RE2Space(`(?s)\s*<Picture\b[^>]*>\s*<` + popRx + `[^>]*/>\s*</Picture>`))
 	viewSizeRE = regexp.MustCompile(`viewSize="([0-9.]+),([0-9.]+)"`)
 )
 
@@ -314,7 +314,7 @@ func checkExpatRules(text string) error {
 			}
 		case xml.Directive:
 			if elements > 0 || doctype || !strings.HasPrefix(string(t), "DOCTYPE") {
-				return fail("misplaced or invalid <!%s> declaration", head(string(t), 20))
+				return fail("misplaced or invalid <!%s> declaration", pycompat.Cut(string(t), 20))
 			}
 			doctype = true
 		case xml.StartElement:

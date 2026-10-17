@@ -72,7 +72,7 @@ func run(src, gm, out, tab string, legend, toStdout bool, s cli.Stdio) int {
 	} else {
 		if err := os.WriteFile(out, []byte(doc), 0o666); err != nil {
 			// Python ends in a traceback when --out cannot be opened.
-			fmt.Fprintf(s.Err, "greenmax-tablero-gen: %s\n", pyOSError(err))
+			fmt.Fprintf(s.Err, "greenmax-tablero-gen: %s\n", pycompat.OSErrorText(err))
 			return cli.ExitCannotSearch
 		}
 		fmt.Fprintf(s.Err, "written %s\n", out)
@@ -85,7 +85,7 @@ func run(src, gm, out, tab string, legend, toStdout bool, s cli.Stdio) int {
 func readSource(src string) (string, error) {
 	data, err := os.ReadFile(src)
 	if err != nil {
-		return "", errors.New(pyOSError(err))
+		return "", errors.New(pycompat.OSErrorText(err))
 	}
 	if !utf8.Valid(data) {
 		i := 0

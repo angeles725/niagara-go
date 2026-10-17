@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/angeles725/niagara-go/internal/cli"
+	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 )
 
@@ -39,7 +40,7 @@ func RunSelftest(tmp string, bits int, s cli.Stdio) (exit int) {
 		}
 	}()
 	if err := os.MkdirAll(tmp, 0o777); err != nil {
-		return finish(s, 0, fmt.Errorf("%s", pyOSError(err, tmp)))
+		return finish(s, 0, fmt.Errorf("%s", pycompat.OSErrorText(err)))
 	}
 	key, err := generateKey(bits)
 	if err != nil {

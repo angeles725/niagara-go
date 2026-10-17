@@ -240,7 +240,7 @@ func render(o Options) (string, *result, error) {
 	}
 	data, err := os.ReadFile(o.Px)
 	if err != nil {
-		return "", nil, fmt.Errorf("cannot read %s: %s", o.Px, strerror(err))
+		return "", nil, fmt.Errorf("cannot read %s: %s", o.Px, pycompat.StrerrorOf(err))
 	}
 	root, err := parseXML(data)
 	if err != nil {

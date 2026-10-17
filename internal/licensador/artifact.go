@@ -67,7 +67,7 @@ func pemBlocks(data []byte) ([]*pem.Block, error) {
 func LoadPublicKey(path string) (crypto.PublicKey, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return nil, errors.New(pyOSError(err, path))
+		return nil, errors.New(pycompat.OSErrorText(err))
 	}
 	blocks, err := pemBlocks(data)
 	if err != nil {
@@ -97,7 +97,7 @@ func LoadPublicKey(path string) (crypto.PublicKey, error) {
 func LoadPrivateKey(path string) (crypto.Signer, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return nil, errors.New(pyOSError(err, path))
+		return nil, errors.New(pycompat.OSErrorText(err))
 	}
 	blocks, err := pemBlocks(data)
 	if err != nil {
@@ -337,7 +337,7 @@ func checkClock(path string, now pyTime) (string, error) {
 	}
 	data := `{"lastSeen": ` + pyjson.EncodeString(keep.dropMicros().isoformat(), true) + `}`
 	if err := os.WriteFile(path, []byte(data), 0o666); err != nil {
-		return "", errors.New(pyOSError(err, path))
+		return "", errors.New(pycompat.OSErrorText(err))
 	}
 	return OK, nil
 }

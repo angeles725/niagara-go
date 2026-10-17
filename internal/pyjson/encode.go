@@ -8,9 +8,6 @@ import (
 	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
-// FloatRepr mirrors float.__repr__; it is pycompat.FloatRepr.
-func FloatRepr(f float64) string { return pycompat.FloatRepr(f) }
-
 // EncodeString mirrors json's py_encode_basestring(_ascii).
 func EncodeString(s string, ensureASCII bool) string {
 	var b strings.Builder
@@ -180,7 +177,7 @@ func (v Value) Repr() string {
 	case Int:
 		return v.I.String()
 	case Float:
-		return FloatRepr(v.F)
+		return pycompat.FloatRepr(v.F)
 	case Str:
 		return StrRepr(v.S)
 	case Array:

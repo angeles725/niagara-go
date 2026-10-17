@@ -3,10 +3,8 @@ package licensador
 import (
 	"errors"
 	"fmt"
-	"io/fs"
 	"math/big"
 	"strings"
-	"syscall"
 
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyjson"
@@ -261,30 +259,6 @@ func b64u(data []byte) string {
 		}
 	}
 	return sb.String()
-}
-
-// pyOSError renders the str() of the OSError Python's open() raises.
-func pyOSError(err error, name string) string {
-	code, msg := 0, ""
-	var errno syscall.Errno
-	switch {
-	case errors.Is(err, fs.ErrNotExist):
-		code, msg = 2, "No such file or directory"
-	case errors.Is(err, fs.ErrPermission):
-		code, msg = 13, "Permission denied"
-	case errors.As(err, &errno):
-		code = int(errno)
-		msg = errno.Error()
-		if msg != "" {
-			msg = strings.ToUpper(msg[:1]) + msg[1:]
-		}
-	default:
-		return err.Error()
-	}
-	if errors.Is(err, syscall.EISDIR) {
-		code, msg = 21, "Is a directory"
-	}
-	return fmt.Sprintf("[Errno %d] %s: %s", code, msg, pyjson.String(name).Repr())
 }
 
 // pyInt mirrors int(str) (pycompat.ParseBigInt) with CPython's ValueError text.

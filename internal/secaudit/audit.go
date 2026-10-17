@@ -12,7 +12,7 @@ import (
 	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
-var propRE = regexp.MustCompile(pyRe(`^\s*(#?)\s*(niagara\.[\p{L}\p{N}_.]+|program\.[\p{L}\p{N}_.]+)\s*=\s*(.*)`))
+var propRE = regexp.MustCompile(pycompat.RE2Space(`^\s*(#?)\s*(niagara\.[\p{L}\p{N}_.]+|program\.[\p{L}\p{N}_.]+)\s*=\s*(.*)`))
 
 // prop is one system.properties value and whether its line was commented out.
 type prop struct {
@@ -25,14 +25,14 @@ func readProps(home string) map[string]prop {
 	props := map[string]prop{}
 	for _, rel := range []string{"defaults/system.properties", "system.properties"} {
 		p := filepath.Join(home, rel)
-		if !isFile(p) {
+		if !pycompat.IsFile(p) {
 			continue
 		}
 		data, err := os.ReadFile(p)
 		if err != nil {
 			continue
 		}
-		for _, line := range splitLines(pycompat.DecodeReplace(data)) {
+		for _, line := range pycompat.Lines(pycompat.DecodeReplace(data)) {
 			if m := propRE.FindStringSubmatch(line); m != nil {
 				props[m[2]] = prop{pycompat.Strip(m[3]), m[1] == "#"}
 			}
@@ -53,7 +53,7 @@ func getProp(props map[string]prop, key string) (value string, set, commented bo
 // sec12Window is the SEC-12 search span, in raw bytes and in unpacked XML characters.
 const sec12Window = 4096
 
-var sec12RE = regexp.MustCompile(pyRe(`(?i)EncryptionKeySource\s*["']?\s*[=:.]\s*["']?\s*(none|external|keyring)` +
+var sec12RE = regexp.MustCompile(pycompat.RE2Space(`(?i)EncryptionKeySource\s*["']?\s*[=:.]\s*["']?\s*(none|external|keyring)` +
 	`(?:[^\p{L}\p{N}_]|$)`))
 
 var (
@@ -189,7 +189,7 @@ func (e *env) audit(home, stationXML, host string, rawHead []byte, rep *report) 
 
 func (e *env) sec06(home string, rep *report) {
 	licdir := filepath.Join(home, "security", "licenses")
-	if !isDir(licdir) {
+	if !pycompat.IsDir(licdir) {
 		return
 	}
 	hits := map[string]bool{}
@@ -205,7 +205,7 @@ func (e *env) sec06(home string, rep *report) {
 		}
 		t := pycompat.DecodeReplace(data)
 		for _, attr := range licAttrs {
-			re := regexp.MustCompile(pyRe(attr + `\s*=\s*"?true`))
+			re := regexp.MustCompile(pycompat.RE2Space(attr + `\s*=\s*"?true`))
 			if re.MatchString(t) || strings.Contains(t, attr) && strings.Contains(t, "developer") {
 				hits[f+":"+attr] = true
 			}
@@ -223,8 +223,8 @@ func (e *env) sec06(home string, rep *report) {
 }
 
 func (e *env) sec11(home, ts string, rep *report) error {
-	fips := isFile(filepath.Join(home, "jre", "lib", "security", "cacerts.bcfks"))
-	if !isFile(ts) { // no key was read: the check did not run, which is not a PASS (Python passes)
+	fips := pycompat.IsFile(filepath.Join(home, "jre", "lib", "security", "cacerts.bcfks"))
+	if !pycompat.IsFile(ts) { // no key was read: the check did not run, which is not a PASS (Python passes)
 		rep.add("SEC-11", "med", "weak signing keys / FIPS",
 			"not checked (no security/truststore.jks); FIPS keystore "+pick(fips, "present", "absent"),
 			"all keys >= 2048; FIPS suppresses RSA-1024 option", "SKIP", "B113/B392",
@@ -281,7 +281,7 @@ func sec12(stationXML string, rawHead []byte, rep *report) {
 	var found []place
 	all := map[string]bool{}
 	for _, p := range []struct{ name, text string }{{"raw header", string(raw)},
-		{"XML prologue", head(stationXML, sec12Window)}} {
+		{"XML prologue", pycompat.Cut(stationXML, sec12Window)}} {
 		seen := map[string]bool{}
 		for _, m := range sec12RE.FindAllStringSubmatch(p.text, -1) {
 			seen[strings.ToLower(m[1])] = true
