@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	args := os.Args[1:]
+	args := append(os.Args[1:], "")
 	switch args[0] {
 	case "--stdin":
 		data, _ := io.ReadAll(os.Stdin)
@@ -21,5 +21,5 @@ func main() {
 		fmt.Printf("COLUMNS=%s NO_COLOR=%s cwd=%s\n", os.Getenv("COLUMNS"), os.Getenv("NO_COLOR"), filepath.Base(wd))
 		return
 	}
-	fmt.Println(strings.Join(args, " "))
+	fmt.Println(strings.Join(args[:len(args)-1], " "))
 }

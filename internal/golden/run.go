@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -33,8 +34,9 @@ func Run(t *testing.T, testdata string, m cli.Main) {
 		t.Fatal(err)
 	}
 	bin := os.Getenv(BinEnv)
-	if bin != "" {
-		// os/exec resolves a relative path against Cmd.Dir (the case fixture dir).
+	if strings.ContainsRune(bin, os.PathSeparator) || strings.ContainsRune(bin, '/') {
+		// os/exec resolves a relative path against Cmd.Dir (the case fixture
+		// dir); a bare command name keeps its PATH lookup.
 		if bin, err = filepath.Abs(bin); err != nil {
 			t.Fatal(err)
 		}
@@ -98,6 +100,8 @@ func execCase(t *testing.T, testdata, bin string, c Case) result {
 	cmd.Stdin = stdin(t, testdata, c)
 	var out, errb bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &out, &errb
+	// A grandchild holding stdout open must not outlive the deadline.
+	cmd.WaitDelay = time.Second
 	err := cmd.Run()
 	if ctx.Err() != nil {
 		t.Fatalf("run %s: no exit after %s", bin, CaseTimeout)
