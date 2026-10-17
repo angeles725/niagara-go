@@ -77,8 +77,8 @@ var presets = map[string]Options{
 func TestTableMatchesFixturePython(t *testing.T) {
 	f := load(t)
 	want := "Python " + f.Python + ", Unicode " + f.Unicode + ";"
-	if !strings.Contains(UnicodeHeader(), want) {
-		t.Fatalf("unicode.txt header %q, fixtures made with %q: rerun testdata/gen.py", UnicodeHeader(), want)
+	if !strings.Contains(data().header, want) {
+		t.Fatalf("unicode.txt header %q, fixtures made with %q: rerun testdata/gen.py", data().header, want)
 	}
 }
 

@@ -28,9 +28,6 @@ type tables struct {
 
 var data = sync.OnceValue(func() *tables { return parseTables(unicodeData) })
 
-// UnicodeHeader is the first line of the embedded table (Python and Unicode version).
-func UnicodeHeader() string { return data().header }
-
 // parseTables reads unicode.txt: per line a record kind and its entries,
 // "lo-hi" ranges (e, C, I), "cp:cp.cp" mappings (d, l) or code points (s).
 func parseTables(text string) *tables {
@@ -137,6 +134,7 @@ func decompose(r rune) (string, bool) {
 }
 
 // IsSpace reports Python's str.isspace() for one rune: the separators of str.split().
+// It is the one isspace table of the module; pycompat.IsSpace and pycompat.Fields use it.
 func IsSpace(r rune) bool {
 	switch r {
 	case ' ', '\t', '\n', '\v', '\f', '\r', 0x1c, 0x1d, 0x1e, 0x1f:

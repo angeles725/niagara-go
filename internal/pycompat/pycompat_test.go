@@ -114,8 +114,8 @@ func typed(t *testing.T, raw json.RawMessage) any {
 
 func TestHeaderNamesFixtureVersions(t *testing.T) {
 	f := load(t)
-	if !strings.Contains(UnicodeHeader(), "Python "+f.Python+", Unicode "+f.Unicode) {
-		t.Errorf("unicode.txt %q is not from Python %s / Unicode %s", UnicodeHeader(), f.Python, f.Unicode)
+	if !strings.Contains(data().header, "Python "+f.Python+", Unicode "+f.Unicode) {
+		t.Errorf("unicode.txt %q is not from Python %s / Unicode %s", data().header, f.Python, f.Unicode)
 	}
 }
 

@@ -6,7 +6,8 @@ unicode.txt holds the per-code-point str predicates the Go package cannot take f
 stdlib tables (a different Unicode version may ship with Go). Each line is a record kind and
 space-separated hex ranges lo-hi:
   A str.isalpha   D str.isdecimal   G str.isdigit   N str.isnumeric
-  P str.isprintable   S str.isspace
+  P str.isprintable
+str.isspace is internal/textfold's IsSpace (its unicode.txt "s" record).
 isalnum is A|D|G|N and re's \\w on str patterns is isalnum or '_' (checked by a digest).
 The case records are CPython's per-character flags, probed through the str methods:
   U upper (ch.isupper())   L lower (ch.islower())
@@ -74,7 +75,7 @@ def pack(kind, entries, width=200):
 
 
 PREDICATES = {"A": str.isalpha, "D": str.isdecimal, "G": str.isdigit, "N": str.isnumeric,
-              "P": str.isprintable, "S": str.isspace}
+              "P": str.isprintable}
 
 
 SIGMA, FINAL = "\u03a3", "\u03c2"
