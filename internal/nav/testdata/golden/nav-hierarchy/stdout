@@ -1,0 +1,30 @@
+
+  Hierarchy: BAlarmRecipient (16 direct children, 24 total descendants)
+  Depth limit: 2
+
+  BAlarmRecipient
+      |-- BBacnetDestination
+      |-- BCloudAlarmRecipient
+      |-- BCloudLinkAlarmRecipient
+      |-- BConsoleRecipient
+      |   |-- BEasyHealthyBuildingAlarmsRecipient
+      |   |-- BHMIAlarmConsoleRecipient
+      |   |-- BHmiAlarmConsoleRecipient
+      |   |-- BHonConsoleRecipient
+      |   |-- BOpcUaAlarmRecipient
+      |   |-- BPortalConsoleRecipient
+      |   |-- BProtectedConsoleRecipient
+      |   `-- BVideoAlarmRecipient
+      |-- BEmailRecipient
+      |-- BEventSaver
+      |-- BHMIDestination
+      |-- BHMIEventSaver
+      |-- BJsonAlarmRecipient
+      |-- BLinePrinterRecipient
+      |-- BOnCallRecipient
+      |-- BPrinterRecipient
+      |-- BRecoverableRecipient
+      |-- BSmsRecipient
+      |-- BSnmpRecipient
+      `-- BStationRecipient
+

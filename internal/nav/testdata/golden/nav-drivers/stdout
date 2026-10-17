@@ -1,0 +1,14 @@
+
+  DRIVER NETWORKS: 5 driver networks (BDeviceNetwork subclasses) in 4 rt submodules of 21 class entries, index built 2026-02-03T04:05:06
+
+  NETWORK                        MODULE                   FAMILY      DEVICE                         LICENSE                  DOC
+  --------------------------------------------------------------------------------------------------------------------------------------------
+  BAcmeNetwork                   acme-rt                  DDF         BAcmeDevice                    acme:acmeDriver          docAcme (missing)
+  BAcmeTcpNetwork                acmeTcp-rt               DDF         BAcmeDevice                    ?:acmeTcp (+1)           docAcme-doc (by name)
+  BAcmeTcpNetwork                acmeTcp-rt               DDF         BAcmeDevice                    ?:acmeTcp (+1)           docAcme-doc (by name)
+  BNnNetwork                     nn-rt                    NDriver     -                              -                        docNn-doc
+  BSoloNetwork *                 solo-rt                  standalone  BOther$Device (+1)             -                        docMissing (missing)
+
+  * abstract. DOC: the doc module help.guide.base names, else the one named like
+  the module directory (by name). Full anatomy: drivers <module>   (e.g. drivers modbusTcp-rt)
+

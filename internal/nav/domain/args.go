@@ -9,7 +9,7 @@ import (
 
 func init() {
 	registry.Register("domain", []registry.Command{
-		{Name: "drivers", Help: "Driver networks and their anatomy (device, extensions, managers, license)", Description: "One row per driver network (a BDeviceNetwork subclass in an -rt module): family, device, license feature, doc module. With a module: the full anatomy of its networks (devices, point-device-ext, proxy-ext, managers, discovery jobs, license features, doc module).", Epilog: "examples: drivers | drivers modbusTcp-rt | drivers niagaraDriver --json", Args: argsDrivers},
+		{Name: "drivers", Help: "Driver networks and their anatomy (device, extensions, managers, license)", Description: "One row per driver network (a BDeviceNetwork subclass in an -rt module): family, device, license feature, doc module. With a module: the full anatomy of its networks (devices, point-device-ext, proxy-ext, managers, discovery jobs, license features, doc module).", Epilog: "examples: drivers | drivers modbusTcp-rt | drivers niagaraDriver --json", Args: argsDrivers, Run: runDrivers},
 		{Name: "bog-trace", Help: "Trace BOG component to Java class with profile", Args: argsBogTrace},
 		{Name: "bog-classes", Help: "List unique Niagara types in BOG + Java resolution", Args: argsBogClasses},
 		{Name: "bog-coverage", Help: "Code-base vs BOG coverage analysis", Args: argsBogCoverage},

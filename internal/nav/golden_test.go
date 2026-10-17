@@ -1,7 +1,10 @@
 package nav
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/angeles725/niagara-go/internal/golden"
 )
@@ -13,5 +16,13 @@ import (
 // regenerates both). The module-navigator golden suite (tests/golden_cli.py with
 // GOLDEN_BIN) covers every command against the real corpus.
 func TestGolden(t *testing.T) {
+	// A checkout gives the drivers class index and its corpus the same mtime;
+	// dated ahead, the index is never "older than the corpus" (no staleness
+	// warning), as when the cases were captured.
+	future := time.Now().Add(time.Hour)
+	ci := filepath.Join("testdata", "fixture", "drivers", "indexes", "class-index.json")
+	if err := os.Chtimes(ci, future, future); err != nil {
+		t.Fatal(err)
+	}
 	golden.Run(t, "testdata", Main)
 }

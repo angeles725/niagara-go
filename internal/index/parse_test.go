@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -116,5 +117,27 @@ func TestOSErrorText(t *testing.T) {
 	want := "[Errno 2] No such file or directory: '" + filepath.Join(dir, "missing.json") + "'"
 	if err == nil || err.Error() != want {
 		t.Errorf("got %v, want %q", err, want)
+	}
+}
+
+// TestDecodeNestingLimit: a document nested deeper than MaxDepth stops with a
+// RecursionError naming the container, without exhausting the stack; MaxDepth
+// itself still decodes.
+func TestDecodeNestingLimit(t *testing.T) {
+	for _, c := range []struct{ open, close, container string }{{"[", "]", "array"}, {`{"a":`, "}", "object"}} {
+		ok := strings.Repeat(c.open, MaxDepth) + "1" + strings.Repeat(c.close, MaxDepth)
+		if _, err := Decode([]byte(ok)); err != nil {
+			t.Errorf("depth %d %s: %v", MaxDepth, c.container, err)
+		}
+		deep := strings.Repeat(c.open, MaxDepth+1) + "1" + strings.Repeat(c.close, MaxDepth+1)
+		_, err := Decode([]byte(deep))
+		want := "maximum nesting depth (10000) exceeded while decoding a JSON " + c.container +
+			" from a unicode string"
+		if err == nil || err.Error() != want {
+			t.Errorf("depth %d %s: err %v, want %q", MaxDepth+1, c.container, err, want)
+		}
+	}
+	if _, err := Decode([]byte(strings.Repeat("[", 1_000_000))); err == nil {
+		t.Error("a million open brackets decoded")
 	}
 }

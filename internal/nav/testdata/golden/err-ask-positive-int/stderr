@@ -1,0 +1,2 @@
+usage: module-nav ask [-h] [-n LIMIT] question [question ...]
+module-nav ask: error: argument -n/--limit: must be a positive integer, got '-3'

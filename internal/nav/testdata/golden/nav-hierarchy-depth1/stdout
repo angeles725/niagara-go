@@ -1,0 +1,20 @@
+
+  Hierarchy: BComponent (8 direct children, 40 total descendants)
+  Module: baja (+doc source)  Package: javax.baja.sys
+  Depth limit: 1
+
+  BComponent  (baja (+doc source))
+      |-- BAbstractService
+      |   ... 1 descendants (use --depth 2 to expand)
+      |-- BAlarmAcknowledger  (alarm-rt)
+      |-- BAlarmClass  (alarm-rt (+doc source))
+      |-- BAlarmRecipient
+      |   ... 24 descendants (use --depth 2 to expand)
+      |-- BAlarmSourceInfo  (alarm-rt (+doc source))
+      |-- BNanoFunctionBlock
+      |   ... 1 descendants (use --depth 2 to expand)
+      |-- BTagInfo
+      |   ... 1 descendants (use --depth 2 to expand)
+      `-- BWidget
+          ... 5 descendants (use --depth 2 to expand)
+

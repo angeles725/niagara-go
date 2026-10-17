@@ -1,0 +1,1 @@
+{"args": ["--base-dir", "fixture/nav", "hierarchy", "BAlarmRecipient", "--depth", "0"], "env": {"NAV_CORPUS_BASE": "fixture/no-corpus"}}

@@ -1,0 +1,1 @@
+{"args": ["--base-dir", "fixture/nav", "implementors", "BIService", "-n", "0"], "env": {"NAV_CORPUS_BASE": "fixture/no-corpus"}}

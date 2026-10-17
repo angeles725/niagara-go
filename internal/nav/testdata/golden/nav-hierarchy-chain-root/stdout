@@ -1,0 +1,12 @@
+
+  Inheritance chain for BAlarmAcknowledger (depth 4):
+
+  BAlarmAcknowledger  (alarm-rt, com.tridium.alarm.ack)
+    ^-- BComponent  (baja (+doc source), javax.baja.sys)
+      ^-- BComplex  (?, ?)
+        ^-- BValue  (?, ?)
+          ^-- BObject  (?, ?)
+
+  Implements: BIStatus
+  Siblings under BComponent: 7
+

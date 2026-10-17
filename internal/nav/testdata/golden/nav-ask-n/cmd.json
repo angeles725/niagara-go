@@ -1,0 +1,1 @@
+{"args": ["--base-dir", "fixture/nav", "ask", "-n", "2", "como funciona el ack de alarmas"], "env": {"NAV_CORPUS_BASE": "fixture/no-corpus"}}
