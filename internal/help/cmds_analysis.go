@@ -46,11 +46,15 @@ var analysisCommands = []command{
 		args: func(p *argparse.Parser) {
 			positional(p, "name", "Class name")
 			intOpt(p, 15, "", "-n", "--max-nodes")
+		},
+		run: func(e *Env, ns *argparse.Namespace) error {
+			return e.Graph(GraphParams{Name: ns.String("name"), MaxNodes: ns.Int("max_nodes")})
 		}},
 	{name: "hotspots", help: "Most referenced/complex classes and most used types",
 		args: func(p *argparse.Parser) {
 			intOpt(p, 20, "Number of top entries to show (default: 20)", "-n", "--top")
-		}},
+		},
+		run: func(e *Env, ns *argparse.Namespace) error { return e.Hotspots(ns.Int("top")) }},
 	{name: "module-summary", help: "Full module overview: classes, deps, slots, API summary",
 		args: func(p *argparse.Parser) { positional(p, "name", "Module name (e.g. alarm-rt)") },
 		run:  func(e *Env, ns *argparse.Namespace) error { return e.ModuleSummary(ns.String("name")) }},

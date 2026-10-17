@@ -1,0 +1,28 @@
+HOTSPOTS ANALYSIS
+============================================================
+
+MOST DEPENDED ON (top 3 by used_by count):
+
+   refs  class                                     package
+   ----  -----                                     -------
+      7  BAlarmRecord                              javax.baja.alarm
+      5  BComponent                                javax.baja.sys
+      4  BAlarmService                             javax.baja.alarm
+
+MOST COMPLEX (top 3 by uses count):
+
+   deps  class                                     package
+   ----  -----                                     -------
+     11  BAlarmService                             javax.baja.alarm
+      4  BBacnetDevice                             javax.baja.bacnet
+      3  BAlarmExt                                 javax.baja.alarm.ext
+
+MOST USED SLOT TYPES (top 3):
+
+  count  type
+  -----  ----
+      3  BStatusNumeric
+      1  BAlarmDbConfig
+      1  BAlarmClass
+
+TOTALS: 41 classes, 47 import edges, 9 slot types

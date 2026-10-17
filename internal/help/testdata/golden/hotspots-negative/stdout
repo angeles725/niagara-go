@@ -1,0 +1,19 @@
+HOTSPOTS ANALYSIS
+============================================================
+
+MOST DEPENDED ON (top -30 by used_by count):
+
+   refs  class                                     package
+   ----  -----                                     -------
+
+MOST COMPLEX (top -30 by uses count):
+
+   deps  class                                     package
+   ----  -----                                     -------
+
+MOST USED SLOT TYPES (top -30):
+
+  count  type
+  -----  ----
+
+TOTALS: 41 classes, 47 import edges, 9 slot types

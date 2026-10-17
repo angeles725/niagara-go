@@ -1,0 +1,22 @@
+
+DEPENDENCY GRAPH: BAlarmService
+============================================================
+
+HIERARCHY:
+  BAbstractService <-- extends
+    |
+    [ BAlarmService ]
+    |   implements --> BIAlarmSource
+    |   implements --> BIRestrictedComponent
+    `--  BOrionAlarmService
+
+IMPORTS:
+         USES (11)    [ BAlarmService ]    USED BY (4)
+  ----------------    -----------------    ------------------------------
+  BAbstractService  --> [ BAlarmService ] <--  BBacnetDevice
+         BAckState  -->                   <--  BBacnetNetwork
+       BAlarmClass  -->                   <--  BOrionAlarmService
+                        ... +8 more
+                                             ... +1 more
+
+Total: 11 uses, 4 used-by
