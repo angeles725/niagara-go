@@ -928,5 +928,56 @@
   ["é😀x", ["", "", "", "", "", "e", "é", "é😀", "", "e", "é", "é😀", "é😀x", "é😀x", "é😀x", "é😀x", "é😀x"]],
   ["日本語テキスト", ["", "", "日", "日本", "日本語", "日本語テ", "日本語テキ", "日本語テキス", "", "日", "日本", "日本語", "日本語テ", "日本語テキ", "日本語テキス", "日本語テキスト", "日本語テキスト"]]
  ],
+ "os_errors": [
+  [2, "No such file or directory", "2f6e6f6e6578697374656e742d7079636f6d7061742f78", null, "[Errno 2] No such file or directory: '/nonexistent-pycompat/x'", "FileNotFoundError"],
+  [2, "No such file or directory", "2f6e6f6e6578697374656e742d7079636f6d7061742f61", "2f6e6f6e6578697374656e742d7079636f6d7061742f62", "[Errno 2] No such file or directory: '/nonexistent-pycompat/a' -> '/nonexistent-pycompat/b'", "FileNotFoundError"],
+  [20, "Not a directory", "2f70726f632f73656c662f66642f302f78", null, "[Errno 20] Not a directory: '/proc/self/fd/0/x'", "NotADirectoryError"],
+  [21, "Is a directory", "2f", null, "[Errno 21] Is a directory: '/'", "IsADirectoryError"],
+  [13, "Permission denied", "2f70726f63", null, "[Errno 13] Permission denied: '/proc'", "PermissionError"],
+  [1, "Operation not permitted", "70", null, "[Errno 1] Operation not permitted: 'p'", "PermissionError"],
+  [2, "No such file or directory", "69742773", null, "[Errno 2] No such file or directory: \"it's\"", "FileNotFoundError"],
+  [13, "Permission denied", "7361792022686922", null, "[Errno 13] Permission denied: 'say \"hi\"'", "PermissionError"],
+  [17, "File exists", "74616209", null, "[Errno 17] File exists: 'tab\\t'", "FileExistsError"],
+  [20, "Not a directory", "c3a9", null, "[Errno 20] Not a directory: 'é'", "NotADirectoryError"],
+  [21, "Is a directory", "626164fffe", null, "[Errno 21] Is a directory: 'bad\\udcff\\udcfe'", "IsADirectoryError"],
+  [39, "Directory not empty", "70", null, "[Errno 39] Directory not empty: 'p'", "OSError"],
+  [84, "Invalid or incomplete multibyte or wide character", "69742773", null, "[Errno 84] Invalid or incomplete multibyte or wide character: \"it's\"", "OSError"],
+  [104, "Connection reset by peer", "7361792022686922", null, "[Errno 104] Connection reset by peer: 'say \"hi\"'", "ConnectionResetError"],
+  [110, "Connection timed out", "74616209", null, "[Errno 110] Connection timed out: 'tab\\t'", "TimeoutError"],
+  [200, "Unknown error 200", "c3a9", null, "[Errno 200] Unknown error 200: 'é'", "OSError"],
+  [2, "No such file or directory", "61", "622763", "[Errno 2] No such file or directory: 'a' -> \"b'c\"", "FileNotFoundError"],
+  [5, "Input/output error", null, null, "[Errno 5] Input/output error", "OSError"]
+ ],
+ "strerror": [
+  [-1, "Unknown error -1"],
+  [0, "Success"],
+  [1, "Operation not permitted"],
+  [2, "No such file or directory"],
+  [13, "Permission denied"],
+  [84, "Invalid or incomplete multibyte or wide character"],
+  [133, "Memory page has hardware error"],
+  [134, "Unknown error 134"],
+  [200, "Unknown error 200"],
+  [255, "Unknown error 255"],
+  [256, "Unknown error 256"],
+  [4000, "Unknown error 4000"]
+ ],
+ "newlines": [
+  ["", "", []],
+  ["a", "a", ["a"]],
+  ["a\n", "a\n", ["a\n"]],
+  ["a\r\nb", "a\nb", ["a\n", "b"]],
+  ["a\rb", "a\nb", ["a\n", "b"]],
+  ["a\n\rb", "a\n\nb", ["a\n", "\n", "b"]],
+  ["a\r\r\nb", "a\n\nb", ["a\n", "\n", "b"]],
+  ["\r", "\n", ["\n"]],
+  ["\r\n", "\n", ["\n"]],
+  ["\n\n", "\n\n", ["\n", "\n"]],
+  ["trailing\r", "trailing\n", ["trailing\n"]],
+  ["x\u000by\fz\u001cw", "x\u000by\fz\u001cw", ["x\u000by\fz\u001cw"]],
+  ["ab c d\n", "ab c d\n", ["ab c d\n"]],
+  ["mixed\r\nlines\rand\nmore", "mixed\nlines\nand\nmore", ["mixed\n", "lines\n", "and\n", "more"]],
+  ["\r\r\n\n\r", "\n\n\n\n", ["\n", "\n", "\n", "\n"]]
+ ],
  "digests": {"alnum": "17557a8c628d8e3096c29480796d0943f7d26dfb18b63f4b84dfcfa9b86ef1a4", "alpha": "0bf779545d7da5be1f864dc8eca194a251eabde4b8149a4337194fbce59f7632", "capitalize": "776385ce5403e62a325fcfecc6b7b5084c003d455b2409290c1215e3462a287d", "case_context": "d40abdbe051a0ecc097185f224b9b3ffb151a6cd2b31efb63698cb0ad7f5e8f9", "decimal": "ff052d724698e4775e375d6a17eb009753d360151462e91443bf1ddbac65c0f7", "decimal_value": "5bd2dea568453eb96f9fdcd5f4c7edb88c9765845e3d077d65f10652cdf54c38", "digit": "3db5e6acc4b10ba6cd494c0d3baac1380a4dc6f84c34380d7917a7f263927e7c", "islower": "23e7d554eb6a7228efeacac5391d303fd4354a1f8ceb1698970b4f1b42401e18", "istitle": "7dca8906e7001c4be3fc0dbcc8def7d4cc9d1e286a3560c3da8ac5238502a472", "isupper": "ee2680ad313b0e06f5fb903165adbc57d54b53885433269026c03e9c03a111bb", "linebreak": "f76bf556e750e17d129bb4b826641bd737114bff647222beb37a57ce02a037cd", "numeric": "9a996d37838d16d892de2a302a727defbba689af6510887d9764564b2f0f3150", "printable": "aaa957a326bee4d4386258b035f0fc6ebcdb3744e3cda9941d70678dfa1dc0fb", "repr": "448b5f3df2e6dd30faf7ef899288d37b5fb85843d2ffffe97b96f46b6925426f", "space": "d49cb51be56d97d803b31fa3346a48c61873a6f737c7c98688e6922fef987df4", "swapcase": "490160c7002b7da32ae4ce3dad4e039c15621ccc3370c574811345a4868088c5", "title": "776385ce5403e62a325fcfecc6b7b5084c003d455b2409290c1215e3462a287d", "upper": "3d3b1f3df9c856a43716ed7db92ae63c9d35938092700ac5b3e31cd3209b9b24", "word": "2a6a40c05acc8ceea5976f84c6687a1845db44974f510d10e98aa206eeaa5de8"}
 }
