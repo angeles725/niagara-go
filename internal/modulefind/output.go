@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"io"
 	"strings"
-	"unicode/utf8"
 
 	"github.com/angeles725/niagara-go/internal/pycompat"
+	"github.com/angeles725/niagara-go/internal/pyjson"
 )
 
 // opts holds the parsed command line a command reads (module-find's argparse namespace).
@@ -50,7 +50,7 @@ func render(rows []row, o *opts, line func(row) string, empty string) int {
 		for i, r := range rows {
 			items[i] = r
 		}
-		fmt.Fprintln(o.out, jsonDumps(items, 0))
+		fmt.Fprintln(o.out, jsonDumps(items))
 	case o.csv:
 		if len(rows) > 0 {
 			keys := make([]string, len(rows[0]))
@@ -136,107 +136,47 @@ func writeCSV(w io.Writer, fields []string) {
 	fmt.Fprint(w, strings.Join(out, ",")+"\r\n")
 }
 
-// jsonDumps is json.dumps(v, indent=2) (ensure_ascii): rows, ordered dicts ([]field),
-// lists, strings, ints, bools, floats and None.
-func jsonDumps(v any, level int) string {
-	pad := strings.Repeat("  ", level+1)
-	end := strings.Repeat("  ", level)
+// jsonDumps is json.dumps(v, indent=2) (ensure_ascii); jsonValue lists the types.
+func jsonDumps(v any) string {
+	return pyjson.Dumps(jsonValue(v), pyjson.DumpOpts{EnsureASCII: true, Indent: 2, ItemSep: ",", KeySep: ": "})
+}
+
+// jsonValue is v as a pyjson value: rows (ordered dicts), lists, strings, ints, bools,
+// *float64 and None. A string passes through []rune first: pyjson reads WTF-8, and this
+// keeps an undecodable byte one U+FFFD.
+func jsonValue(v any) pyjson.Value {
 	switch x := v.(type) {
 	case nil:
-		return "null"
+		return pyjson.Value{Kind: pyjson.Null}
 	case string:
-		return jsonString(x)
+		return pyjson.String(string([]rune(x)))
 	case bool:
-		if x {
-			return "true"
-		}
-		return "false"
+		return pyjson.Value{Kind: pyjson.Bool, B: x}
 	case int:
-		return fmt.Sprint(x)
+		return pyjson.IntValue(int64(x))
 	case *float64:
 		if x == nil {
-			return "null"
+			return pyjson.Value{Kind: pyjson.Null}
 		}
-		return pycompat.JSONFloat(*x)
+		return pyjson.Value{Kind: pyjson.Float, F: *x}
 	case []string:
-		items := make([]any, len(x))
-		for i, s := range x {
-			items[i] = s
-		}
-		return jsonDumps(items, level)
-	case []any:
-		if len(x) == 0 {
-			return "[]"
-		}
-		parts := make([]string, len(x))
+		items := make([]pyjson.Value, len(x))
 		for i, it := range x {
-			parts[i] = pad + jsonDumps(it, level+1)
+			items[i] = jsonValue(it)
 		}
-		return "[\n" + strings.Join(parts, ",\n") + "\n" + end + "]"
+		return pyjson.Value{Kind: pyjson.Array, A: items}
+	case []any:
+		items := make([]pyjson.Value, len(x))
+		for i, it := range x {
+			items[i] = jsonValue(it)
+		}
+		return pyjson.Value{Kind: pyjson.Array, A: items}
 	case row:
-		if len(x) == 0 {
-			return "{}"
+		o := pyjson.NewObject()
+		for _, f := range x {
+			o.Set(string([]rune(f.key)), jsonValue(f.val))
 		}
-		parts := make([]string, len(x))
-		for i, f := range x {
-			parts[i] = pad + jsonString(f.key) + ": " + jsonDumps(f.val, level+1)
-		}
-		return "{\n" + strings.Join(parts, ",\n") + "\n" + end + "}"
+		return o
 	}
-	panic(fmt.Sprintf("jsonDumps: unsupported %T", v))
-}
-
-// jsonString is a JSON string with ensure_ascii: everything outside space..~ escaped.
-func jsonString(s string) string {
-	var b strings.Builder
-	b.WriteByte('"')
-	for _, r := range s {
-		switch {
-		case r == '"' || r == '\\':
-			b.WriteByte('\\')
-			b.WriteRune(r)
-		case r == '\n':
-			b.WriteString(`\n`)
-		case r == '\r':
-			b.WriteString(`\r`)
-		case r == '\t':
-			b.WriteString(`\t`)
-		case r == '\b':
-			b.WriteString(`\b`)
-		case r == '\f':
-			b.WriteString(`\f`)
-		case r >= 0x20 && r <= 0x7e:
-			b.WriteRune(r)
-		case r > 0xffff:
-			r -= 0x10000
-			fmt.Fprintf(&b, `\u%04x\u%04x`, 0xd800+(r>>10), 0xdc00+(r&0x3ff))
-		default:
-			fmt.Fprintf(&b, `\u%04x`, r)
-		}
-	}
-	b.WriteByte('"')
-	return b.String()
-}
-
-// padRight / padLeft are f"{s:<n}" / f"{s:>n}" (code points).
-func padRight(s string, n int) string {
-	if c := utf8.RuneCountInString(s); c < n {
-		return s + strings.Repeat(" ", n-c)
-	}
-	return s
-}
-
-func padLeft(s string, n int) string {
-	if c := utf8.RuneCountInString(s); c < n {
-		return strings.Repeat(" ", n-c) + s
-	}
-	return s
-}
-
-// truncate is s[:n] in code points.
-func truncate(s string, n int) string {
-	if utf8.RuneCountInString(s) <= n {
-		return s
-	}
-	return string([]rune(s)[:n])
+	panic(fmt.Sprintf("jsonValue: unsupported %T", v))
 }

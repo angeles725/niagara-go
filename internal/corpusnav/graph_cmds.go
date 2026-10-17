@@ -2,9 +2,9 @@ package corpusnav
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/angeles725/niagara-go/internal/blockfiles"
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // The connections, graph, path and lint-refs commands of corpusnav/graph.py.
@@ -146,7 +146,7 @@ func (c *corpus) cmdGraph(asJSON bool, top int, bare bool) int {
 	order := append([]string(nil), g.reverseIDs...) // label order, then a stable sort by count
 	sortStable(order, func(a, b string) bool { return len(g.reverse[a]) > len(g.reverse[b]) })
 	for _, label := range order[:min(max(top, 0), len(order))] {
-		fmt.Fprintf(c.out, "  %s  %s\n", padLeft(fmt.Sprint(len(g.reverse[label])), 5), c.titled(label, catalog, byFile))
+		fmt.Fprintf(c.out, "  %s  %s\n", pycompat.RJust(fmt.Sprint(len(g.reverse[label])), 5, ' '), c.titled(label, catalog, byFile))
 	}
 	return rc
 }
@@ -201,7 +201,7 @@ func (c *corpus) cmdLintRefs(files []string, warn bool, limit int) int {
 		if blockfiles.MainLabel(baseName(f.path)) != "" {
 			where = displayID(f.block)
 		}
-		fmt.Fprintf(c.out, "%s:%d: %s %s  -> %s\n", where, f.line, padRight(f.form, 14), f.text, f.canonical)
+		fmt.Fprintf(c.out, "%s:%d: %s %s  -> %s\n", where, f.line, pycompat.LJust(f.form, 14, ' '), f.text, f.canonical)
 	}
 	if len(found) > limit {
 		fmt.Fprintf(c.out, "... (%d more; use --limit to see more)\n", len(found)-limit)
@@ -224,7 +224,7 @@ func (c *corpus) cmdLintRefs(files []string, warn bool, limit int) int {
 		return a < b
 	})
 	for _, form := range forms {
-		fmt.Fprintf(c.out, "  %s %s\n", padRight(form, 14), padLeft(fmt.Sprint(counts[form]), 6))
+		fmt.Fprintf(c.out, "  %s %s\n", pycompat.LJust(form, 14, ' '), pycompat.RJust(fmt.Sprint(counts[form]), 6, ' '))
 	}
 	if len(unreadable) > 0 {
 		c.reportUnreadable(unreadable)
@@ -234,19 +234,4 @@ func (c *corpus) cmdLintRefs(files []string, warn bool, limit int) int {
 		return 1
 	}
 	return 0
-}
-
-// padRight / padLeft are f"{s:<n}" / f"{s:>n}" (code points).
-func padRight(s string, n int) string {
-	if c := len([]rune(s)); c < n {
-		return s + strings.Repeat(" ", n-c)
-	}
-	return s
-}
-
-func padLeft(s string, n int) string {
-	if c := len([]rune(s)); c < n {
-		return strings.Repeat(" ", n-c) + s
-	}
-	return s
 }

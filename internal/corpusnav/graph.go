@@ -33,8 +33,8 @@ func parseLabel(raw string) string {
 	if (strings.HasPrefix(s, "B") || strings.HasPrefix(s, "b")) && len(s) > 1 {
 		s = s[1:]
 	}
-	if isDigits(s) {
-		return pyInt(s)
+	if blockfiles.IsDigit(s) {
+		return blockfiles.PyInt(s)
 	}
 	if strings.ToUpper(s) == "TI" {
 		return "TI"
@@ -56,13 +56,13 @@ func refsInText(text string, bare bool) map[string]bool {
 	for _, m := range refRe.FindIter([]rune(text)) {
 		for g := 1; g <= 3; g++ {
 			if s := m.Group(g); s != "" {
-				nums[pyInt(s)] = true
+				nums[blockfiles.PyInt(s)] = true
 			}
 		}
 	}
 	if bare {
 		for _, n := range bareRefRe.FindAll(subSpans(text, codeRe, " ")) {
-			nums[pyInt(n)] = true
+			nums[blockfiles.PyInt(n)] = true
 		}
 	}
 	return nums
@@ -90,24 +90,6 @@ type graph struct {
 	reverseIDs []string // reverse keys in label order
 	dangling   []string
 	unreadable []string
-}
-
-// pyInt is str(int(digits)) for the Unicode decimal digits re's \d matched.
-func pyInt(digits string) string {
-	n, err := pycompat.ParseBigInt(digits)
-	if err != nil {
-		return "0"
-	}
-	return n.String()
-}
-
-func isDigits(s string) bool {
-	for _, r := range s {
-		if !pycompat.IsDigit(r) {
-			return false
-		}
-	}
-	return s != ""
 }
 
 func setKeys(set map[string]bool) []string {
@@ -242,7 +224,7 @@ func classifyRef(m *pyre.Match, text []rune) string {
 		return "[Bloque N]"
 	}
 	if g := m.Group(2); g != "" {
-		n := pyInt(g)
+		n := blockfiles.PyInt(g)
 		if s == "[B"+n+"]" || s == "[B"+n+" §" {
 			return ""
 		}
@@ -279,9 +261,9 @@ func lintRefs(files []blockFile) (found []lintFinding, unreadable []string) {
 			for g := 1; g <= 3 && num == ""; g++ {
 				num = m.Group(g)
 			}
-			canonical := "[B" + pyInt(num) + "]"
+			canonical := "[B" + blockfiles.PyInt(num) + "]"
 			if strings.HasSuffix(m.Group(0), "§") {
-				canonical = "[B" + pyInt(num) + " §…]"
+				canonical = "[B" + blockfiles.PyInt(num) + " §…]"
 			}
 			found = append(found, lintFinding{f.label, f.path, form, m.Group(0), canonical, line})
 		}

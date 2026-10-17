@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // cmdSlotTypes is cmd_slot_types: per Java type, how many slots, OPERATOR, complex and
@@ -50,8 +52,8 @@ func cmdSlotTypes(m *module, o *opts) {
 			{"transient", a.transient}})
 	}
 	render(rows, o, func(r row) string {
-		return fmt.Sprintf("%sx  %s %s OPERATOR=%d TRANSIENT=%d", padLeft(fmt.Sprint(r.get("count")), 3),
-			padRight(r.str("type"), 20), padRight(r.str("shape"), 8), r.get("operator"), r.get("transient"))
+		return fmt.Sprintf("%sx  %s %s OPERATOR=%d TRANSIENT=%d", pycompat.RJust(fmt.Sprint(r.get("count")), 3, ' '),
+			pycompat.LJust(r.str("type"), 20, ' '), pycompat.LJust(r.str("shape"), 8, ' '), r.get("operator"), r.get("transient"))
 	}, "(no @NiagaraProperty)")
 }
 
@@ -79,7 +81,7 @@ func cmdExtWritable(m *module, o *opts) {
 		}
 	}
 	render(rows, o, func(r row) string {
-		return fmt.Sprintf("%s %s.%s  <%s>  %s", padRight(r.str("verdict"), 14), r.str("class"), r.str("slot"),
+		return fmt.Sprintf("%s %s.%s  <%s>  %s", pycompat.LJust(r.str("verdict"), 14, ' '), r.str("class"), r.str("slot"),
 			r.str("type"), r.str("note"))
 	}, "(no OPERATOR complex properties)")
 	if !o.json && !o.csv {
@@ -136,7 +138,7 @@ func cmdCompare(a *module, o *opts, srcB string) {
 		}
 	}
 	render(rows, o, func(r row) string {
-		return fmt.Sprintf("%s %s  %s", padRight(r.str("change"), 15), r.str("ref"), r.str("detail"))
+		return fmt.Sprintf("%s %s  %s", pycompat.LJust(r.str("change"), 15, ' '), r.str("ref"), r.str("detail"))
 	}, "(no schema changes)")
 	if !o.json && !o.csv {
 		risky := 0

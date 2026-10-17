@@ -58,19 +58,19 @@ func MainLabel(name string) string {
 		return "TI"
 	}
 	if m := mainRe.Search(name); m != nil {
-		return pyInt(m.Group(1))
+		return PyInt(m.Group(1))
 	}
 	return ""
 }
 
 // IsMainLabel is is_main_label: a number, "1-3" or "TI".
-func IsMainLabel(label string) bool { return isDigit(label) || label == "1-3" || label == "TI" }
+func IsMainLabel(label string) bool { return IsDigit(label) || label == "1-3" || label == "TI" }
 
 // IsSnapshot reports a dated niagara-mental-model.<YYYY-MM-DD>.md snapshot.
 func IsSnapshot(name string) bool { return snapshotRe.MatchString(name) }
 
-// pyInt is str(int(digits)) for the Unicode decimal digits re's \d matched.
-func pyInt(digits string) string {
+// PyInt is str(int(digits)) for the Unicode decimal digits re's \d matched ("0" if none parse).
+func PyInt(digits string) string {
 	n, err := pycompat.ParseBigInt(digits)
 	if err != nil {
 		return "0"
@@ -78,8 +78,8 @@ func pyInt(digits string) string {
 	return n.String()
 }
 
-// isDigit is str.isdigit.
-func isDigit(s string) bool {
+// IsDigit is str.isdigit.
+func IsDigit(s string) bool {
 	for _, r := range s {
 		if !pycompat.IsDigit(r) {
 			return false
@@ -99,13 +99,13 @@ func sortKey(label string) key {
 	switch {
 	case label == "1-3":
 		return key{0, "0", ""}
-	case isDigit(label):
-		return key{1, pyInt(label), ""}
+	case IsDigit(label):
+		return key{1, PyInt(label), ""}
 	case label == "TI":
 		return key{2, "0", ""}
 	}
 	if m := trailingRe.Search(label); m != nil {
-		return key{3, pyInt(m.Group(2)), textfold.Lower(m.Group(1))}
+		return key{3, PyInt(m.Group(2)), textfold.Lower(m.Group(1))}
 	}
 	return key{3, "0", textfold.Lower(label)}
 }
@@ -182,14 +182,14 @@ func subLabel(root, path string) (corpus, label string, ok bool) {
 			stem, _ := m.Named("stem")
 			if p, known := subPrefix[stem]; known {
 				n, _ := m.Named("n")
-				return p[0], p[1] + pyInt(n), true
+				return p[0], p[1] + PyInt(n), true
 			}
 		}
 	}
 	if m := subBlockRe.Search(name); m != nil {
 		stem, _ := m.Named("stem")
 		n, _ := m.Named("n")
-		return stem, stem + "-B" + pyInt(n), true
+		return stem, stem + "-B" + PyInt(n), true
 	}
 	if strings.Contains(name, "bloque") {
 		rel, err := filepath.Rel(root, path)

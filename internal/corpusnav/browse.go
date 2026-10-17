@@ -241,7 +241,7 @@ func (c *corpus) cmdByMarker(marker string) int {
 	}
 	total := 0
 	for _, r := range rows {
-		fmt.Fprintf(c.out, "%s · %s · %s\n", displayID(r.b.label), padLeft(fmt.Sprint(r.cnt), 4), titleFor(r.b.label, catalog, r.b.path))
+		fmt.Fprintf(c.out, "%s · %s · %s\n", displayID(r.b.label), pycompat.RJust(fmt.Sprint(r.cnt), 4, ' '), titleFor(r.b.label, catalog, r.b.path))
 		total += r.cnt
 	}
 	tail := "."
@@ -308,7 +308,7 @@ func (c *corpus) cmdStats() int {
 		return a < b
 	})
 	for _, m := range markers {
-		fmt.Fprintf(c.out, "  %s %s\n", padRight(m, 18), padLeft(fmt.Sprint(counts[m]), 6))
+		fmt.Fprintf(c.out, "  %s %s\n", pycompat.LJust(m, 18, ' '), pycompat.RJust(fmt.Sprint(counts[m]), 6, ' '))
 	}
 	c.reportUnreadable(unreadable)
 	if len(unreadable) > 0 {

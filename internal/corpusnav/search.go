@@ -51,7 +51,7 @@ func (c *corpus) printHits(next func() (group, bool), limit int, catalog map[str
 				fmt.Fprintf(c.out, "    ... (limit %d reached; use --limit to see more)\n", limit)
 				break
 			}
-			fmt.Fprintf(c.out, "  %s: %s\n", padLeft(fmt.Sprint(h.n), 6), pycompat.Strip(h.text))
+			fmt.Fprintf(c.out, "  %s: %s\n", pycompat.RJust(fmt.Sprint(h.n), 6, ' '), pycompat.Strip(h.text))
 			shown++
 		}
 	}

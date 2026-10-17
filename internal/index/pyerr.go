@@ -87,28 +87,15 @@ func utf8Error(data []byte, i int) error {
 	return nil // unreachable for data rejected by utf8.DecodeRune
 }
 
-// OSError formats a file error as Python's str(OSError): "[Errno 13]
-// Permission denied: '<path>'". Errors without an errno keep their Go text.
+// OSError formats a file error as Python's str(OSError) for path: "[Errno 13]
+// Permission denied: '<path>'", as pycompat.OSErrorText renders it. Errors without an
+// errno keep their Go text.
 func OSError(err error, path string) string {
 	var errno syscall.Errno
 	if !errors.As(err, &errno) {
 		return err.Error()
 	}
-	text, ok := strerror[errno]
-	if !ok {
-		text = errno.Error()
-	}
-	return fmt.Sprintf("[Errno %d] %s: %s", int(errno), text, pycompat.StrRepr(path))
-}
-
-// strerror holds glibc's texts for the errors a read can meet.
-var strerror = map[syscall.Errno]string{
-	syscall.ENOENT:  "No such file or directory",
-	syscall.EACCES:  "Permission denied",
-	syscall.EISDIR:  "Is a directory",
-	syscall.EIO:     "Input/output error",
-	syscall.ENOTDIR: "Not a directory",
-	syscall.ELOOP:   "Too many levels of symbolic links",
+	return pycompat.OSErrorText(&fs.PathError{Path: path, Err: errno})
 }
 
 // LoadPython reads a JSON index the way `json.load(open(path, encoding="utf-8"))`

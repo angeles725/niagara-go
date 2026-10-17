@@ -48,10 +48,7 @@ func TestModuleScan(t *testing.T) {
 	}
 }
 
-func TestPyJoinAndFloat(t *testing.T) {
-	if pyJoin("srcA/", "com") != "srcA/com" || pyJoin("./srcA", "x") != "./srcA/x" {
-		t.Error("pyJoin cleans paths")
-	}
+func TestPyFloat(t *testing.T) {
 	for in, ok := range map[string]bool{"-40.0": true, "1.": true, ".5": true, "1.2.3": false, ".": false} {
 		if _, got := pyFloat(in); got != ok {
 			t.Errorf("pyFloat(%q) ok = %v", in, got)

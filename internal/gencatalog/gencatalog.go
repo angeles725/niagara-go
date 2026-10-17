@@ -11,14 +11,10 @@
 package gencatalog
 
 import (
-	"errors"
 	"fmt"
-	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
-	"syscall"
-	"unicode/utf8"
 
 	"github.com/angeles725/niagara-go/internal/argparse"
 	"github.com/angeles725/niagara-go/internal/blockfiles"
@@ -44,7 +40,7 @@ var (
 
 // repoRoot locates the repository; tests replace it.
 var repoRoot = func() (string, error) {
-	exe, err := invokedPath()
+	exe, err := cli.InvokedPath()
 	if err != nil {
 		return "", err
 	}
@@ -52,33 +48,6 @@ var repoRoot = func() (string, error) {
 		return "", err
 	}
 	return filepath.Dir(filepath.Dir(exe)), nil
-}
-
-// invokedPath is the executable as it was started (Python's __file__): argv[0] made
-// absolute, or looked up on $PATH when it has no separator; else os.Executable.
-func invokedPath() (string, error) {
-	arg0 := os.Args[0]
-	if !strings.ContainsRune(arg0, filepath.Separator) && !strings.ContainsRune(arg0, '/') {
-		if found, err := lookPath(arg0); err == nil {
-			arg0 = found
-		} else {
-			return os.Executable()
-		}
-	}
-	return filepath.Abs(arg0)
-}
-
-func lookPath(name string) (string, error) {
-	for _, dir := range filepath.SplitList(os.Getenv("PATH")) {
-		if dir == "" {
-			dir = "."
-		}
-		p := filepath.Join(dir, name)
-		if st, err := os.Stat(p); err == nil && !st.IsDir() && st.Mode()&0o111 != 0 {
-			return p, nil
-		}
-	}
-	return "", fs.ErrNotExist
 }
 
 type entry struct{ label, filename, title string }
@@ -118,7 +87,7 @@ func Main(args []string, s cli.Stdio) int {
 	}
 	fmt.Fprintf(s.Out, "Generated %s — %d blocks listed.\n", catalogName, len(entries))
 	for _, e := range entries {
-		fmt.Fprintf(s.Out, "  Bloque %s  %s\n", padLeft(e.label, 4), e.filename)
+		fmt.Fprintf(s.Out, "  Bloque %s  %s\n", pycompat.RJust(e.label, 4, ' '), e.filename)
 	}
 	return 0
 }
@@ -126,7 +95,7 @@ func Main(args []string, s cli.Stdio) int {
 func check(s cli.Stdio, catalog, content string, entries []entry) int {
 	current, present, err := readCatalog(catalog)
 	if err != nil {
-		fmt.Fprintf(s.Err, "gen-catalog: cannot read %s: %s\n", catalog, strerror(err))
+		fmt.Fprintf(s.Err, "gen-catalog: cannot read %s: %s\n", catalog, blockfiles.Strerror(err))
 		return 2 // could not check: not the exit 1 of a stale catalog (Python: traceback)
 	}
 	if present && current == content {
@@ -167,32 +136,8 @@ func readCatalog(path string) (text string, present bool, err error) {
 	if err != nil || !st.Mode().IsRegular() {
 		return "", false, nil
 	}
-	text, err = readText(path)
+	text, err = blockfiles.ReadText(path)
 	return text, err == nil, err
-}
-
-// readText is open(path, encoding="utf-8").read(): strict UTF-8, universal newlines.
-func readText(path string) (string, error) {
-	raw, err := os.ReadFile(path)
-	if err != nil {
-		return "", err
-	}
-	if !utf8.Valid(raw) {
-		return "", errors.New("not valid UTF-8")
-	}
-	return strings.ReplaceAll(strings.ReplaceAll(string(raw), "\r\n", "\n"), "\r", "\n"), nil
-}
-
-// strerror renders a read error the way Python's OSError.strerror does ("Is a
-// directory"); a decoding error keeps its own text.
-func strerror(err error) string {
-	var errno syscall.Errno
-	if errors.As(err, &errno) {
-		if msg := errno.Error(); msg != "" {
-			return strings.ToUpper(msg[:1]) + msg[1:]
-		}
-	}
-	return err.Error()
 }
 
 func collect(root string) ([]entry, error) {
@@ -200,7 +145,7 @@ func collect(root string) ([]entry, error) {
 	for _, b := range blockfiles.MainBlocks(root) {
 		h1, err := extractH1(b.Path)
 		if err != nil {
-			return nil, fmt.Errorf("cannot read %s: %s", b.Path, strerror(err))
+			return nil, fmt.Errorf("cannot read %s: %s", b.Path, blockfiles.Strerror(err))
 		}
 		title := normalizeTitle(h1)
 		if t, ok := titleOverrides[b.Label]; ok {
@@ -219,7 +164,7 @@ func collect(root string) ([]entry, error) {
 
 // extractH1 is gen-catalog.extract_h1: the first stripped line starting with "# ".
 func extractH1(path string) (string, error) {
-	text, err := readText(path)
+	text, err := blockfiles.ReadText(path)
 	if err != nil {
 		return "", err
 	}
@@ -263,12 +208,4 @@ func render(entries []entry) string {
 	}
 	lines = append(lines, "")
 	return strings.Join(lines, "\n")
-}
-
-// padLeft is f"{s:>n}": right-aligned in n code points.
-func padLeft(s string, n int) string {
-	if c := utf8.RuneCountInString(s); c < n {
-		return strings.Repeat(" ", n-c) + s
-	}
-	return s
 }
