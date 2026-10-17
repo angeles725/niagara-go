@@ -50,6 +50,14 @@ def main():
         b = rand_str(rnd, "aaaaabbbc d", 200, 320)
         a = rand_str(rnd, "abcd x", 20, 80)
         cases.append(case("str", "none", rnd.choice([True, False]), a, b))
+    # autojunk boundaries (no rnd use, so later cases keep their values): len(b) 199 vs 200,
+    # and element counts exactly ntest (kept) and ntest + 1 (popular) for ntest = 200 // 100 + 1.
+    filler = [chr(0x100 + i) for i in range(200)]
+    for n in (199, 200):
+        b = "".join(filler[:n - 7]) + "x" * 4 + "y" * 3  # popular run not at the start, so no extension reaches it
+        for auto in (True, False):
+            for a in ("xxxx", "yyy", "xy" + "".join(filler[:5]) + "yx"):
+                cases.append(case("str", "none", auto, a, b))
     words = ["alpha", "beta", "", "  ", "gamma", "beta", "delta", "\t"]
     for _ in range(40):
         a = [rnd.choice(words) for _ in range(rnd.randint(0, 12))]
