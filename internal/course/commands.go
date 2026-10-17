@@ -122,7 +122,7 @@ func cmdShow(c *Corpus, s cli.Stdio, ids []string, asJSON bool) int {
 	return code
 }
 
-// groupKeys resolves a --lab / text spelling to group keys: 3 and L3, B and LB, A and LA,
+// groupKeys resolves a --lab / text spelling to group keys: 3, 03 and L3, B and LB, A and LA,
 // RA (RA1, RA2 and RAX together) or a key in any case.
 func (c *Corpus) groupKeys(name string) []string {
 	n := strings.ToUpper(strings.TrimSpace(name))
@@ -130,7 +130,9 @@ func (c *Corpus) groupKeys(name string) []string {
 	case n == "B" || n == "A":
 		n = "L" + n
 	case n != "" && strings.Trim(n, "0123456789") == "":
-		n = "L" + n
+		n = "L" + strings.TrimLeft(n, "0")
+	case len(n) > 1 && n[0] == 'L' && strings.Trim(n[1:], "0123456789") == "":
+		n = "L" + strings.TrimLeft(n[1:], "0") // L03 is L3
 	case n == "RA":
 		var keys []string
 		for _, g := range c.Groups {
@@ -194,7 +196,8 @@ func cmdText(c *Corpus, s cli.Stdio, root, target string) int {
 		}
 		fmt.Fprintf(s.Out, "%s:%s (%s)\n", file, r, label)
 		for n := r.A; n <= r.B; n++ {
-			fmt.Fprintf(s.Out, "%5d  %s\n", n, lines[n-1])
+			// A blank text line prints only its number: no trailing whitespace.
+			fmt.Fprintln(s.Out, strings.TrimRight(fmt.Sprintf("%5d  %s", n, lines[n-1]), " \t"))
 		}
 	}
 	return cli.ExitFound

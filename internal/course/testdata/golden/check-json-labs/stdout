@@ -1,0 +1,123 @@
+[
+  {
+    "id": "C4.1",
+    "lab": "4",
+    "keys": [
+      "L4.6"
+    ],
+    "kind": "type",
+    "description": "a training Tstat (My Tstat)",
+    "verdict": "PASS",
+    "evidence": "found 1: Lab4/My Tstat"
+  },
+  {
+    "id": "C4.2",
+    "lab": "4",
+    "keys": [
+      "L4.6"
+    ],
+    "kind": "type",
+    "description": "a kitControl Tstat (Reference Tstat)",
+    "verdict": "PASS",
+    "evidence": "found 1: Lab4/Reference Tstat"
+  },
+  {
+    "id": "C4.3",
+    "lab": "4",
+    "keys": [
+      "L4.10"
+    ],
+    "kind": "link",
+    "description": "NumericWritable.out -> Tstat.cv",
+    "verdict": "PASS",
+    "evidence": "found 1: Lab4/SpaceTemp.out -> Lab4/My Tstat.cv"
+  },
+  {
+    "id": "C4.4",
+    "lab": "4",
+    "keys": [
+      "L4.10"
+    ],
+    "kind": "link",
+    "description": "NumericWritable.out -> Tstat.sp",
+    "verdict": "PASS",
+    "evidence": "found 1: Lab4/Setpoint.out -> Lab4/My Tstat.sp"
+  },
+  {
+    "id": "C4.5",
+    "lab": "4",
+    "keys": [
+      "L4.13"
+    ],
+    "kind": "slot",
+    "description": "training Tstat diff = 2",
+    "verdict": "PASS",
+    "evidence": "Lab4/My Tstat.diff = 2.0 (stored)"
+  },
+  {
+    "id": "C4.6",
+    "lab": "4",
+    "keys": [
+      "L4.15"
+    ],
+    "kind": "slot",
+    "description": "training Tstat action = reverse",
+    "verdict": "PASS",
+    "evidence": "Lab4/My Tstat.action = reverse (stored)"
+  },
+  {
+    "id": "C4.7",
+    "lab": "4",
+    "keys": [
+      "L4.7"
+    ],
+    "kind": "slot",
+    "description": "Reference Tstat nullOnInControl = false",
+    "verdict": "PASS",
+    "evidence": "Lab4/Reference Tstat.nullOnInControl = false (stored)"
+  },
+  {
+    "id": "CB.1",
+    "lab": "B",
+    "keys": [
+      "LB.18"
+    ],
+    "kind": "slot",
+    "description": "devices added by discovery (distinct intersection ids)",
+    "verdict": "PASS",
+    "evidence": "3 distinct intersectionId over 3 components: A, b, c"
+  },
+  {
+    "id": "CB.2",
+    "lab": "B",
+    "keys": [
+      "LB.16"
+    ],
+    "kind": "jar-entry",
+    "description": "device discovery leaf in trafficLightDriver-rt",
+    "verdict": "PASS",
+    "evidence": "modules/trafficLightDriver-rt.jar: 1 entry matches com/tridiumuniversity/trafficLightDriver/learn/BTrafficLightDriverDeviceDiscoveryLeaf.class"
+  },
+  {
+    "id": "CB.3",
+    "lab": "B",
+    "keys": [
+      "LB.19"
+    ],
+    "kind": "jar-entry",
+    "description": "point discovery leaf in trafficLightDriver-rt",
+    "verdict": "PASS",
+    "evidence": "modules/trafficLightDriver-rt.jar: 1 entry matches com/tridiumuniversity/trafficLightDriver/point/BTrafficLightDriverPointDiscoveryLeaf.class"
+  },
+  {
+    "id": "CB.4",
+    "lab": "B",
+    "keys": [
+      "LB.8"
+    ],
+    "kind": "jar-entry",
+    "description": "point manager in trafficLightDriver-wb",
+    "verdict": "PASS",
+    "evidence": "modules/trafficLightDriver-wb.jar: 1 entry matches **/BTrafficLightDriverPointManager*.class"
+  }
+]

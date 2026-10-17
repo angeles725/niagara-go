@@ -17,7 +17,8 @@ import (
 
 const description = `Look up the N4 developer-course answer keys of a niagara-research checkout
 (labs, review assignments, certification exam) by item ID, count them by
-verification status, and print the course text an item points at.
+verification status, print the course text an item points at, and check what
+the labs leave in a station.
 
 root: --root DIR, else NIAGARA_RESEARCH_DIR, else the first directory above the
 working directory (then above this executable) that holds
@@ -25,12 +26,15 @@ docs/n4-dev-course-solutions/labs.md.
 
 exit: 0 found; 1 searched, no match (show: any unknown ID, even when the
 others were printed); 2 cannot search (no root, a missing or ambiguous answer
-key, a missing text file).
+key, a missing text file). check: 0 no FAIL (SKIPs are counted, never passed);
+1 at least one FAIL; 2 the station cannot be read, or every check was skipped.
 
 examples:
   course show L1.9 RA1.R6 P2
   course status --lab 6 --status predicted
-  course text L5.16`
+  course text L5.16
+  course check --station ~/Niagara4.15/tridium/stations/TrainingStation \
+    --install /opt/Niagara/Niagara-4.15.6.20 --lab 4 --lab 10`
 
 // rootParent holds --root: None on the main parser, SUPPRESS on the subcommands, so the
 // flag works before or after the subcommand.
@@ -72,6 +76,11 @@ func buildParser() *argparse.Parser {
 	st.Add(jsonHelp, "--json")
 	t := add("text", "print the course text lines an item (or a lab) points at")
 	t.Add(argparse.Arg{Metavar: "ID|GROUP", Help: "item ID or group (L3, 3, B, A)"}, "target")
+	ck := add("check", "check what each lab leaves in a station (and the built jars): PASS/FAIL/SKIP per check")
+	ck.Add(argparse.Arg{Required: true, Metavar: "PATH", Help: "station directory, or its config.bog (zipped or plain XML)"}, "--station")
+	ck.Add(argparse.Arg{Metavar: "DIR", Help: "Niagara install whose modules/ holds the built jars (jar checks SKIP without it)"}, "--install")
+	ck.Add(argparse.Arg{Action: argparse.Append, Metavar: "N", Help: "only this lab (1-11, B); repeatable"}, "--lab")
+	ck.Add(jsonHelp, "--json")
 	return p
 }
 
@@ -81,6 +90,9 @@ func Main(args []string, s cli.Stdio) int {
 	ns, code, done := p.Parse(args, s)
 	if done {
 		return code
+	}
+	if ns.String("cmd") == "check" { // reads a station, not the answer keys
+		return cmdCheck(s, ns.String("station"), ns.String("install"), ns.Strings("lab"), ns.Bool("json"))
 	}
 	root, err := findRoot(ns.String("root"), ns.Get("root") != nil)
 	if err != nil {

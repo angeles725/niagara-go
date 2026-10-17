@@ -1,4 +1,4 @@
 group  items  predicted  unverified  corrected  identical  verified  written
-LA         1          0           0          0          0         0        1
-total      1          0           0          0          0         0        1
+LA         2          0           0          0          0         1        1
+total      2          0           0          0          0         1        1
 an item counts under every status it carries; written = none of them

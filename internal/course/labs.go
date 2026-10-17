@@ -47,7 +47,11 @@ func parseLabs(c *Corpus, lines []string) {
 	for _, r := range p.refs {
 		ids := []string{r.id}
 		if strings.ContainsAny(r.id, "–-") {
-			ids, _ = expandRange(r.id)
+			var ok bool
+			if ids, ok = expandRange(r.id); !ok {
+				c.errorf(labsFile, r.line, "live-run range %s is reversed or crosses groups", r.id)
+				continue
+			}
 		}
 		for _, id := range ids {
 			it := c.lookup(id)

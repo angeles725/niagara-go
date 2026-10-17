@@ -1,0 +1,1 @@
+{"args": ["check", "--station", "stations/good/config.bog", "--install", "install", "--lab", "4", "--lab", "B", "--json"]}

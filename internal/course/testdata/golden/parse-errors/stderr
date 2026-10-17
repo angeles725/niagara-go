@@ -2,6 +2,9 @@ course: docs/n4-dev-course-solutions/labs.md:6: malformed item ID L1.x
 course: docs/n4-dev-course-solutions/labs.md:7: item L2.1 is outside its group L1
 course: docs/n4-dev-course-solutions/labs.md:8: duplicate ID L1.1 (first at docs/n4-dev-course-solutions/labs.md:5)
 course: docs/n4-dev-course-solutions/labs.md:12: live-run ID L1.9 is not an item
+course: docs/n4-dev-course-solutions/labs.md:12: live-run range L1.4–L1.2 is reversed or crosses groups
 course: docs/n4-dev-course-solutions/review-assignments.md:10: duplicate ID D1.1 (first at docs/n4-dev-course-solutions/review-assignments.md:9)
-course: docs/n4-dev-course-solutions/review-assignments.md:16: traceability ID RA1.R9 is not a requirement
-course: 6 parse errors; nothing searched
+course: docs/n4-dev-course-solutions/review-assignments.md:11: table row has 2 cells, want 3
+course: docs/n4-dev-course-solutions/review-assignments.md:17: traceability ID RA1.R9 is not a requirement
+course: docs/n4-dev-course-solutions/review-assignments.md:19: traceability row FOO is not a requirement ID
+course: 9 parse errors; nothing searched

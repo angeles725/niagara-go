@@ -17,6 +17,8 @@ var (
 	srcLineRe  = regexp.MustCompile(`:(\d+)(?:-(\d+))?`)
 	problemRe  = regexp.MustCompile(`^## \d+\. (Problem (\d+) — .*)$`)
 	fileStatRe = regexp.MustCompile(`\*\*Status: ([^*]+)\*\*`)
+	// labelCellRe is a traceability row that names no requirement: "(robustness)".
+	labelCellRe = regexp.MustCompile(`^\([^()]+\)$`)
 )
 
 type tableKind int
@@ -117,12 +119,21 @@ func parseReview(c *Corpus, lines []string) {
 				inTable, kind = true, classify(cells)
 				continue
 			}
-			if strings.HasPrefix(line, "|---") || kind == noTable || len(cells) < 3 {
+			if strings.HasPrefix(line, "|---") || kind == noTable {
+				continue
+			}
+			if len(cells) < 3 {
+				c.errorf(reviewFile, n, "table row has %d cells, want 3", len(cells))
 				continue
 			}
 			if kind == traceTable {
-				if strings.HasPrefix(cells[0], "RA") {
+				switch {
+				case strings.HasPrefix(cells[0], "RA"):
 					traces = append(traces, traceRow{cells[0], cells[1], cells[2], n})
+				case labelCellRe.MatchString(cells[0]):
+					// A parenthesised label row such as "(robustness)" traces no requirement.
+				default:
+					c.errorf(reviewFile, n, "traceability row %s is not a requirement ID", cells[0])
 				}
 				continue
 			}

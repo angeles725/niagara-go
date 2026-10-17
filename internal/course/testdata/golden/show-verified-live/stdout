@@ -1,0 +1,8 @@
+LA.2 (lab item)
+  section:  Appendix A — Debugging (`LI:25-26`)
+  step:     Count the output files (`LI:26`)
+  text:     sources/n4-dev-course/text/Lab Instructions.txt:26
+  status:   verified
+  source:   docs/n4-dev-course-solutions/labs.md:48
+  answer:
+    *(verified live 2026-10-15)* two files, as predicted.

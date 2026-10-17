@@ -27,7 +27,7 @@ func TestParseLabsFixture(t *testing.T) {
 	for _, it := range c.Items {
 		ids = append(ids, it.ID)
 	}
-	want := []string{"L1.1", "L1.2", "L1.3", "L1.4", "L1.5", "L1.6", "L2.1", "L2.2–L2.4", "L2.5", "L2.6", "LB.1", "LA.1"}
+	want := []string{"L1.1", "L1.2", "L1.3", "L1.4", "L1.5", "L1.6", "L2.1", "L2.2–L2.4", "L2.5", "L2.6", "LB.1", "LA.1", "LA.2"}
 	if !reflect.DeepEqual(ids, want) {
 		t.Errorf("ids = %v, want %v", ids, want)
 	}
@@ -43,6 +43,7 @@ func TestParseLabsFixture(t *testing.T) {
 		{"l2.3", nil, false, []Range{{15, 16}}},
 		{"L2.5", []string{"unverified", "corrected", "identical"}, true, []Range{{17, 18}}},
 		{"L2.6", []string{"predicted"}, true, []Range{{19, 20}}},
+		{"LA.2", []string{"verified"}, false, []Range{{26, 26}}},
 	}
 	for _, ck := range checks {
 		it := c.lookup(ck.id)
@@ -55,8 +56,12 @@ func TestParseLabsFixture(t *testing.T) {
 				ck.status, ck.live, ck.ranges)
 		}
 	}
-	if g := c.group("LB"); g == nil || g.Ranges[0] != (Range{21, 24}) || c.lookup("LB.1").Subsection != "Customising the manager" {
-		t.Errorf("Bonus lab group or subsection wrong: %+v", g)
+	g, lb := c.group("LB"), c.lookup("LB.1")
+	switch {
+	case g == nil || len(g.Ranges) != 1 || g.Ranges[0] != (Range{21, 24}):
+		t.Errorf("Bonus lab group wrong: %+v", g)
+	case lb == nil || lb.Subsection != "Customising the manager":
+		t.Errorf("LB.1 missing or subsection wrong: %+v", lb)
 	}
 }
 
@@ -67,7 +72,8 @@ func TestParseLabsErrors(t *testing.T) {
 		got = append(got, e.msg)
 	}
 	want := []string{"malformed item ID L1.x", "item L2.1 is outside its group L1",
-		"duplicate ID L1.1 (first at " + labsFile + ":5)", "live-run ID L1.9 is not an item"}
+		"duplicate ID L1.1 (first at " + labsFile + ":5)", "live-run ID L1.9 is not an item",
+		"live-run range L1.4–L1.2 is reversed or crosses groups"}
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("errors:\n%s\nwant:\n%s", strings.Join(got, "\n"), strings.Join(want, "\n"))
 	}

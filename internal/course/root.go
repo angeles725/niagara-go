@@ -10,6 +10,9 @@ import (
 // RootEnv names the variable that points at a niagara-research checkout.
 const RootEnv = "NIAGARA_RESEARCH_DIR"
 
+// executable is os.Executable; tests stub it so the walk from the binary is hermetic.
+var executable = os.Executable
+
 func hasMarker(dir string) bool {
 	st, err := os.Stat(filepath.Join(dir, filepath.FromSlash(labsFile)))
 	return err == nil && st.Mode().IsRegular()
@@ -43,7 +46,7 @@ func findRoot(flag string, hasFlag bool) (string, error) {
 		}
 		return flag, nil
 	}
-	if env := os.Getenv(RootEnv); strings.TrimSpace(env) != "" {
+	if env := strings.TrimSpace(os.Getenv(RootEnv)); env != "" {
 		if !hasMarker(env) {
 			return "", fmt.Errorf("%s=%s has no %s", RootEnv, env, labsFile)
 		}
@@ -54,7 +57,7 @@ func findRoot(flag string, hasFlag bool) (string, error) {
 			return dir, nil
 		}
 	}
-	if exe, err := os.Executable(); err == nil {
+	if exe, err := executable(); err == nil {
 		if real, err := filepath.EvalSymlinks(exe); err == nil {
 			exe = real
 		}
