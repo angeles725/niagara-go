@@ -40,6 +40,7 @@ type assets struct {
 	shared, organized string
 	cache             map[string]string
 	missing           map[string]bool
+	notImages         []string // refs that resolved to a directory, reported and skipped
 }
 
 func newAssets(shared, organized string) *assets {
@@ -63,9 +64,10 @@ func (a *assets) moduleCandidates(mod, rel string) []string {
 	}
 	matches, _ := filepath.Glob(pyJoin(a.organized, mod, "*", "extracted", rel))
 	sort.Strings(matches)
-	prefix := pyJoin(a.organized, mod) + "/"
+	// filepath.Glob returns cleaned paths, so compare against the cleaned module directory.
+	prefix := filepath.Clean(pyJoin(a.organized, mod)) + string(filepath.Separator)
 	for _, m := range matches {
-		if rest, ok := strings.CutPrefix(m, prefix); !ok || !strings.HasPrefix(rest, ".") {
+		if rest, ok := strings.CutPrefix(filepath.Clean(m), prefix); !ok || !strings.HasPrefix(rest, ".") {
 			c = append(c, m) // like Python glob, '*' does not match a hidden artifact directory
 		}
 	}
@@ -95,6 +97,8 @@ func (a *assets) resolve(ref string) string {
 }
 
 // dataURI returns the embedded image of ref, "" when it does not resolve (recorded as missing).
+// A ref that resolves to a directory is recorded as missing and reported in notImages; Python
+// aborted the whole render with IsADirectoryError there.
 func (a *assets) dataURI(ref string) (string, error) {
 	p := a.resolve(ref)
 	if p == "" {
@@ -105,6 +109,13 @@ func (a *assets) dataURI(ref string) (string, error) {
 	}
 	if uri, ok := a.cache[p]; ok {
 		return uri, nil
+	}
+	if st, err := os.Stat(p); err == nil && st.IsDir() {
+		if !a.missing[ref] {
+			a.missing[ref] = true
+			a.notImages = append(a.notImages, ref+": "+p+" is a directory, not an image (skipped)")
+		}
+		return "", nil
 	}
 	b, err := os.ReadFile(p)
 	if err != nil {

@@ -103,6 +103,9 @@ func Run(o Options, s cli.Stdio) int {
 	} else {
 		io.WriteString(s.Out, page)
 	}
+	for _, n := range res.notImages {
+		fmt.Fprintf(s.Err, "px-render: %s\n", n)
+	}
 	writeDropped(s.Err, res.dropped)
 	return cli.ExitFound
 }

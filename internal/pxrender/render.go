@@ -18,6 +18,7 @@ type result struct {
 	widgets          int
 	shared           string
 	missing          []string
+	notImages        []string // refs that resolved to a directory, skipped
 	assets           int
 	dropped          map[string]int
 }
@@ -266,7 +267,7 @@ func render(o Options) (string, *result, error) {
 	}
 	page := pageHTML(o, pySplitextRoot(pyBasename(o.Px)), cw, ch, strings.Join(r.parts, "\n"))
 	return page, &result{canvasW: cw, canvasH: ch, widgets: len(r.parts), shared: shared,
-		missing: r.a.missingSorted(), assets: len(r.a.cache), dropped: dropped}, nil
+		missing: r.a.missingSorted(), notImages: r.a.notImages, assets: len(r.a.cache), dropped: dropped}, nil
 }
 
 // viewSize is int(float(v)) of each half of viewSize="W,H" (default 1370.0,780.0).

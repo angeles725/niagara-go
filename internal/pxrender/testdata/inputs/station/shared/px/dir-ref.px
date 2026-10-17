@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<px version="1.0">
+<content>
+<CanvasPane name="content" viewSize="200.0,100.0">
+<Picture layout="0.0,0.0,8.0,8.0" image="file:^Imagenes/On.png"/>
+<Picture layout="10.0,0.0,8.0,8.0" image="file:^Imagenes"/>
+<Picture layout="20.0,0.0,8.0,8.0" image="module://mymod/icons"/>
+<Picture layout="30.0,0.0,8.0,8.0" image="file:^Imagenes/missing.png"/>
+<Label layout="0.0,20.0,100.0,20.0" text="after the directory refs"/>
+</CanvasPane>
+</content>
+</px>
