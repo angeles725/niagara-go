@@ -1,0 +1,26 @@
+
+License: 'zzqq' resolved as a feature   docs/blocks query='license zzqq'
+
+========================================================================
+CODE · call sites of feature zzqq   (module_nav license-feature zzqq)
+========================================================================
+  note: 'zzqq' is not one of 4 module names, so it is treated as a feature
+  0 matches for license feature 'zzqq'
+  0 results (searched; see the scope line above -- not proof of absence)
+
+========================================================================
+OFFICIAL DOCS · license pages   (niagara_help find)
+========================================================================
+  No match for 'license zzqq' in this scope.
+  (searched 31 files of docs 4.14.0.162)
+  0 results (searched; see the scope line above -- not proof of absence)
+
+========================================================================
+OUR BLOCKS · licensing research   (corpus-nav find)
+========================================================================
+  (no matches; searched 9 blocks for 'license zzqq')
+  0 results (searched; see the scope line above -- not proof of absence)
+
+Summary: code 0 (searched) · docs 0 (searched) · blocks 0 (searched)
+All 3 sources searched and returned no rows. NOTE: still not proof of absence --
+check each source's scope line above; try the module name (bacnet-rt) or the license feature name (bacnet) instead.

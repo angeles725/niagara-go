@@ -1,0 +1,56 @@
+
+Query: '¿qué drivers hay?'   mode=backend default   docs=niagara-help default
+
+========================================================================
+SOURCE 1 · OUR BLOCKS   (corpus-nav find)
+========================================================================
+   1. B101 · Block 101 — ¿qué research (default mode, --limit 2000)
+        12: > a line about ¿qué in block 101
+   2. B102 · Block 102 — drivers research (default mode, --limit 2000)
+        13: > a line about drivers in block 102
+   3. B103 · Block 103 — hay? research (default mode, --limit 2000)
+        14: > a line about hay? in block 103
+   4. B104 · Block 104 — ¿qué research (default mode, --limit 2000)
+        15: > a line about ¿qué in block 104
+
+========================================================================
+SOURCE 2 · OFFICIAL DOCS   (niagara_help find)
+========================================================================
+  6 files matching '¿qué drivers hay?' (docs default, default mode):
+  by source: guides-clean 3, devguide-clean 2
+   1. guides-clean/¿Qué/page1.html  [guides-clean] ¿Qué guide, page 1
+        L10: how the ¿qué setting works
+   2. guides-clean/Drivers/page2.html  [guides-clean] Drivers guide, page 2
+        L11: how the drivers setting works
+   3. guides-clean/Hay?/page3.html  [guides-clean] Hay? guide, page 3
+        L12: how the hay? setting works
+   4. guides-clean/¿Qué/page4.html  [guides-clean] ¿Qué guide, page 4
+        L13: how the ¿qué setting works
+   5. Drivers guide, page 5  [guides-clean] Drivers guide, page 5
+        L14: how the drivers setting works
+
+========================================================================
+SOURCE 3 · CODE   (module_nav rank)
+========================================================================
+  -- structure · driver anatomy   (module_nav drivers) --
+     1. Drivers (all modules):
+     2. bacnet-rt BBacnetNetwork BBacnetDevice BBacnetPointDeviceExt
+     3. modbus-rt BModbusNetwork BModbusDevice BModbusPointDeviceExt
+  -- ranked   (module_nav rank) --
+  Rank '¿qué drivers hay?': 6 matching classes (terms: ¿qué, drivers, hay?)
+   1. BQuéService  [demo-rt]  score 9.250
+        com/demo/BQuéService.java
+   2. BQuéExt  [demo-rt]  score 9.000
+        com/demo/BQuéExt.java
+   3. BDriversService  [demo-rt]  score 8.750
+        com/demo/BDriversService.java
+   4. BDriversExt  [demo-rt]  score 8.500
+        com/demo/BDriversExt.java
+   5. BHayService  [demo-rt]  score 8.250
+        com/demo/BHayService.java
+  ... 1 more ranked (raise --limit)
+  -- course code   (BM25 over course/{course,solutions,niagara-4.15.6.20/dev}/**/*.java) --
+    0 matches for '¿qué drivers hay?'; searched 4 .java files of the N4 developer course (course 2, verified solution 1, dev kit example 1)
+    0 rows in this sub-scope (searched; see its scope line)
+
+Summary: blocks 4 ranked · docs 5 ranked · code 6 ranked + structure 3 listed + course code 0 (searched)

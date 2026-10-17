@@ -1,0 +1,30 @@
+
+Query: 'alarm history'   mode=backend default   docs=niagara-help default
+
+========================================================================
+SOURCE 1 · OUR BLOCKS   (corpus-nav find)
+========================================================================
+  [!] unavailable: tool not found at missing/corpus-nav.py   (unavailable: not a zero)
+
+========================================================================
+SOURCE 2 · OFFICIAL DOCS   (niagara_help find)
+========================================================================
+  [!] unavailable: tool not found at missing/niagara_help.py   (unavailable: not a zero)
+
+========================================================================
+SOURCE 3 · CODE   (module_nav rank)
+========================================================================
+  Rank 'alarm history': 4 matching classes (terms: alarm, history)
+   1. BAlarmService  [demo-rt]  score 9.250
+        com/demo/BAlarmService.java
+   2. BAlarmExt  [demo-rt]  score 9.000
+        com/demo/BAlarmExt.java
+   3. BHistoryService  [demo-rt]  score 8.750
+        com/demo/BHistoryService.java
+   4. BHistoryExt  [demo-rt]  score 8.500
+        com/demo/BHistoryExt.java
+  -- course code   (BM25 over empty-course/{course,solutions,niagara-4.15.6.20/dev}/**/*.java) --
+    [!] unavailable: no .java file under empty-course (course, solutions, niagara-4.15.6.20/dev)   (unavailable: not a zero)
+    searched 0 .java files of the N4 developer course (course 0, verified solution 0, dev kit example 0)
+
+Summary: blocks UNAVAILABLE · docs UNAVAILABLE · code 4 ranked + course code UNAVAILABLE

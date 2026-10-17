@@ -1,0 +1,54 @@
+
+Query: 'BStatusNumeric alarm'   mode=backend default   docs=niagara-help default
+
+========================================================================
+SOURCE 1 · OUR BLOCKS   (corpus-nav find)
+========================================================================
+   1. B101 · Block 101 — bstatusnumeric research (default mode, --limit 2000)
+        12: > a line about bstatusnumeric in block 101
+   2. B102 · Block 102 — alarm research (default mode, --limit 2000)
+        13: > a line about alarm in block 102
+   3. B103 · Block 103 — bstatusnumeric research (default mode, --limit 2000)
+        14: > a line about bstatusnumeric in block 103
+   4. B104 · Block 104 — alarm research (default mode, --limit 2000)
+        15: > a line about alarm in block 104
+
+========================================================================
+SOURCE 2 · OFFICIAL DOCS   (niagara_help find)
+========================================================================
+  5 files matching 'BStatusNumeric alarm' (docs default, default mode):
+  by source: guides-clean 3, devguide-clean 2
+   1. guides-clean/Bstatusnumeric/page1.html  [guides-clean] Bstatusnumeric guide, page 1
+        L10: how the bstatusnumeric setting works
+   2. guides-clean/Alarm/page2.html  [guides-clean] Alarm guide, page 2
+        L11: how the alarm setting works
+   3. guides-clean/Bstatusnumeric/page3.html  [guides-clean] Bstatusnumeric guide, page 3
+        L12: how the bstatusnumeric setting works
+   4. guides-clean/Alarm/page4.html  [guides-clean] Alarm guide, page 4
+        L13: how the alarm setting works
+   5. Bstatusnumeric guide, page 5  [guides-clean] Bstatusnumeric guide, page 5
+        L14: how the bstatusnumeric setting works
+
+========================================================================
+SOURCE 3 · CODE   (module_nav token BStatusNumeric + module_nav grep '(?i)bstatusnumeric|alarm' (DEGRADED))
+========================================================================
+  note: DEGRADED: module_nav rank cannot search (error: module_nav: argument command: invalid choice: 'rank' (exit 2)); fell back to module_nav grep, which keeps only the first 30 matching lines and does not rank the whole tree
+  TOKEN: 'BStatusNumeric' (8 occurrences in 3 classes)
+  Grep /(?i)bstatusnumeric|alarm/: matching lines in 40 .java files
+   1. BStatusNumeric  [baja, docSource-doc]  2 occurrences
+   2. com.demo.BBstatusnumericHelper  [alarm-rt]  1/2 terms, 1 lines
+        uses bstatusnumeric here
+   3. com.demo.BAlarmHelper  [alarm-rt]  1/2 terms, 1 lines
+        uses alarm here
+   4. com.demo.BShared  [alarm-rt]  2/2 terms, 2 lines
+        shared bstatusnumeric and bstatusnumeric
+   5. BNumericPoint  [control-rt, bacnet-rt, alarm-rt, …]  5 occurrences
+  ... 1 more ranked (raise --limit)
+  -- course code   (BM25 over course/{course,solutions,niagara-4.15.6.20/dev}/**/*.java) --
+    searched 4 .java files of the N4 developer course (course 2, verified solution 1, dev kit example 1)
+     1. BAlarmCounter  [course]  score 1.497
+          course/lab3/BAlarmCounter.java
+     2. BRoomPanel  [verified solution]  score 0.700
+          solutions/exam/BRoomPanel.java
+
+Summary: blocks 4 ranked · docs 5 ranked · code 6 ranked + course code 2 ranked

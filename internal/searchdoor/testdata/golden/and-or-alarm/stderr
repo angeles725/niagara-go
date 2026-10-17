@@ -1,0 +1,4 @@
+usage: nsearch [-h] [--version] [--limit LIMIT] [--timeout TIMEOUT]
+               [--doc-version VERSION] [--and | --or]
+               query [query ...]
+nsearch: error: argument --or: not allowed with argument --and

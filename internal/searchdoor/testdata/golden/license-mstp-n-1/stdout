@@ -1,0 +1,28 @@
+
+License: 'mstp' resolved as a feature   docs/blocks query='license mstp'
+
+========================================================================
+CODE · call sites of feature mstp   (module_nav license-feature mstp)
+========================================================================
+  note: 'mstp' is not one of 4 module names, so it is treated as a feature
+  Call sites of license feature 'mstp': 2
+   1. BBacnetNetwork bacnet-rt checkFeature
+  ... 1 more ranked (raise --limit)
+
+========================================================================
+OFFICIAL DOCS · license pages   (niagara_help find)
+========================================================================
+  5 files matching 'license mstp' (docs default, default mode):
+  by source: guides-clean 3, devguide-clean 2
+   1. guides-clean/License/page1.html  [guides-clean] License guide, page 1
+        L10: how the license setting works
+  ... 4 more ranked (raise --limit)
+
+========================================================================
+OUR BLOCKS · licensing research   (corpus-nav find)
+========================================================================
+   1. B101 · Block 101 — license research (and mode, --limit 2000)
+        12: > a line about license in block 101
+  ... 1 more ranked (raise --limit)
+
+Summary: code 2 ranked · docs 5 ranked · blocks 2 ranked

@@ -1,0 +1,55 @@
+
+Query: 'historia de alarmas'   mode=backend default   docs=niagara-help default
+Spanish terms: alarmas→alarm   (blocks and course code also search these English terms; the docs and the module_nav code ranking apply their own glossary copies)
+
+========================================================================
+SOURCE 1 · OUR BLOCKS   (corpus-nav find)
+========================================================================
+   1. B101 · Block 101 — historia research (default mode, --limit 2000)
+        12: > a line about historia in block 101
+   2. B102 · Block 102 — de research (default mode, --limit 2000)
+        13: > a line about de in block 102
+   3. B103 · Block 103 — alarmas research (default mode, --limit 2000)
+        14: > a line about alarmas in block 103
+   4. B104 · Block 104 — historia research (default mode, --limit 2000)
+        15: > a line about historia in block 104
+
+========================================================================
+SOURCE 2 · OFFICIAL DOCS   (niagara_help find)
+========================================================================
+  6 files matching 'historia de alarmas' (docs default, default mode):
+  by source: guides-clean 3, devguide-clean 2
+   1. guides-clean/Historia/page1.html  [guides-clean] Historia guide, page 1
+        L10: how the historia setting works
+   2. guides-clean/De/page2.html  [guides-clean] De guide, page 2
+        L11: how the de setting works
+   3. guides-clean/Alarmas/page3.html  [guides-clean] Alarmas guide, page 3
+        L12: how the alarmas setting works
+   4. guides-clean/Historia/page4.html  [guides-clean] Historia guide, page 4
+        L13: how the historia setting works
+   5. De guide, page 5  [guides-clean] De guide, page 5
+        L14: how the de setting works
+
+========================================================================
+SOURCE 3 · CODE   (module_nav rank)
+========================================================================
+  Rank 'historia de alarmas': 6 matching classes (terms: historia, de, alarmas)
+   1. BHistoriaService  [demo-rt]  score 9.250
+        com/demo/BHistoriaService.java
+   2. BHistoriaExt  [demo-rt]  score 9.000
+        com/demo/BHistoriaExt.java
+   3. BDeService  [demo-rt]  score 8.750
+        com/demo/BDeService.java
+   4. BDeExt  [demo-rt]  score 8.500
+        com/demo/BDeExt.java
+   5. BAlarmasService  [demo-rt]  score 8.250
+        com/demo/BAlarmasService.java
+  ... 1 more ranked (raise --limit)
+  -- course code   (BM25 over course/{course,solutions,niagara-4.15.6.20/dev}/**/*.java) --
+    searched 4 .java files of the N4 developer course (course 2, verified solution 1, dev kit example 1)
+     1. BAlarmCounter  [course]  score 0.748
+          course/lab3/BAlarmCounter.java
+     2. BRoomPanel  [verified solution]  score 0.350
+          solutions/exam/BRoomPanel.java
+
+Summary: blocks 4 ranked · docs 5 ranked · code 6 ranked + course code 2 ranked

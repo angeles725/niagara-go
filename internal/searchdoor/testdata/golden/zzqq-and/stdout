@@ -1,0 +1,28 @@
+
+Query: 'zzqq'   mode=and   docs=niagara-help default
+
+========================================================================
+SOURCE 1 · OUR BLOCKS   (corpus-nav find)
+========================================================================
+  (no matches; searched 9 blocks for 'zzqq')
+  0 results (searched; see the scope line above -- not proof of absence)
+
+========================================================================
+SOURCE 2 · OFFICIAL DOCS   (niagara_help find)
+========================================================================
+  No match for 'zzqq' in this scope.
+  (searched 31 files of docs 4.14.0.162)
+  0 results (searched; see the scope line above -- not proof of absence)
+
+========================================================================
+SOURCE 3 · CODE   (module_nav rank)
+========================================================================
+  0 matches for rank 'zzqq' (searched 120 classes)
+  0 results (searched; see the scope line above -- not proof of absence)
+  -- course code   (BM25 over course/{course,solutions,niagara-4.15.6.20/dev}/**/*.java) --
+    0 matches for 'zzqq'; searched 4 .java files of the N4 developer course (course 2, verified solution 1, dev kit example 1)
+    0 rows in this sub-scope (searched; see its scope line)
+
+Summary: blocks 0 (searched) · docs 0 (searched) · code 0 (searched) + course code 0 (searched)
+All 3 sources searched and returned no rows. NOTE: still not proof of absence --
+check each source's scope line above and retry with --or or other terms.

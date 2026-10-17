@@ -1,0 +1,49 @@
+
+Query: 'export history'   mode=backend default   docs=niagara-help default
+
+========================================================================
+SOURCE 1 · OUR BLOCKS   (corpus-nav find)
+========================================================================
+   1. B101 · Block 101 — export research (default mode, --limit 2000)
+        12: > a line about export in block 101
+   2. B102 · Block 102 — history research (default mode, --limit 2000)
+        13: > a line about history in block 102
+   3. B103 · Block 103 — export research (default mode, --limit 2000)
+        14: > a line about export in block 103
+   4. B104 · Block 104 — history research (default mode, --limit 2000)
+        15: > a line about history in block 104
+
+========================================================================
+SOURCE 2 · OFFICIAL DOCS   (niagara_help find)
+========================================================================
+  5 files matching 'export history' (docs default, default mode):
+  by source: guides-clean 3, devguide-clean 2
+   1. guides-clean/Export/page1.html  [guides-clean] Export guide, page 1
+        L10: how the export setting works
+   2. guides-clean/History/page2.html  [guides-clean] History guide, page 2
+        L11: how the history setting works
+   3. guides-clean/Export/page3.html  [guides-clean] Export guide, page 3
+        L12: how the export setting works
+   4. guides-clean/History/page4.html  [guides-clean] History guide, page 4
+        L13: how the history setting works
+   5. Export guide, page 5  [guides-clean] Export guide, page 5
+        L14: how the export setting works
+
+========================================================================
+SOURCE 3 · CODE   (module_nav rank)
+========================================================================
+  Rank 'export history': 4 matching classes (terms: export, history)
+   1. BExportService  [demo-rt]  score 9.250
+        com/demo/BExportService.java
+   2. BExportExt  [demo-rt]  score 9.000
+        com/demo/BExportExt.java
+   3. BHistoryService  [demo-rt]  score 8.750
+        com/demo/BHistoryService.java
+   4. BHistoryExt  [demo-rt]  score 8.500
+        com/demo/BHistoryExt.java
+  -- course code   (BM25 over course/{course,solutions,niagara-4.15.6.20/dev}/**/*.java) --
+    searched 4 .java files of the N4 developer course (course 2, verified solution 1, dev kit example 1)
+     1. BHistoryExportService  [course]  score 5.271
+          course/slides/BHistoryExportService.java
+
+Summary: blocks 4 ranked · docs 5 ranked · code 4 ranked + course code 1 ranked

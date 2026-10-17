@@ -1,0 +1,56 @@
+
+Query: 'list drivers'   mode=backend default   docs=niagara-help default
+
+========================================================================
+SOURCE 1 · OUR BLOCKS   (corpus-nav find)
+========================================================================
+   1. B101 · Block 101 — list research (default mode, --limit 2000)
+        12: > a line about list in block 101
+   2. B102 · Block 102 — drivers research (default mode, --limit 2000)
+        13: > a line about drivers in block 102
+   3. B103 · Block 103 — list research (default mode, --limit 2000)
+        14: > a line about list in block 103
+   4. B104 · Block 104 — drivers research (default mode, --limit 2000)
+        15: > a line about drivers in block 104
+
+========================================================================
+SOURCE 2 · OFFICIAL DOCS   (niagara_help find)
+========================================================================
+  5 files matching 'list drivers' (docs default, default mode):
+  by source: guides-clean 3, devguide-clean 2
+   1. guides-clean/List/page1.html  [guides-clean] List guide, page 1
+        L10: how the list setting works
+   2. guides-clean/Drivers/page2.html  [guides-clean] Drivers guide, page 2
+        L11: how the drivers setting works
+   3. guides-clean/List/page3.html  [guides-clean] List guide, page 3
+        L12: how the list setting works
+   4. guides-clean/Drivers/page4.html  [guides-clean] Drivers guide, page 4
+        L13: how the drivers setting works
+   5. List guide, page 5  [guides-clean] List guide, page 5
+        L14: how the list setting works
+
+========================================================================
+SOURCE 3 · CODE   (module_nav grep '(?i)list|driver' (DEGRADED))
+========================================================================
+  -- structure · driver anatomy   (module_nav drivers) --
+    note: this module_nav has no `drivers` command yet (`drivers --help` is not exit 0); structure skipped -- try `hierarchy BDeviceNetwork` instead
+    0 rows in this sub-scope (searched; see its scope line)
+  -- ranked   (module_nav grep '(?i)list|driver' (DEGRADED)) --
+  note: DEGRADED: module_nav rank cannot search (error: module_nav: argument command: invalid choice: 'rank' (exit 2)); fell back to module_nav grep, which keeps only the first 30 matching lines and does not rank the whole tree
+  Grep /(?i)list|driver/: matching lines in 40 .java files
+   1. com.demo.BListHelper  [alarm-rt]  1/2 terms, 1 lines
+        uses list here
+   2. com.demo.BDriverHelper  [alarm-rt]  1/2 terms, 1 lines
+        uses driver here
+   3. com.demo.BListHelper  [history-rt]  1/2 terms, 1 lines
+        uses list here
+   4. com.demo.BDriverHelper  [history-rt]  1/2 terms, 1 lines
+        uses driver here
+   5. com.demo.BShared  [alarm-rt]  2/2 terms, 2 lines
+        shared list and list
+  ... 1 more ranked (raise --limit)
+  -- course code   (BM25 over course/{course,solutions,niagara-4.15.6.20/dev}/**/*.java) --
+    0 matches for 'list drivers'; searched 4 .java files of the N4 developer course (course 2, verified solution 1, dev kit example 1)
+    0 rows in this sub-scope (searched; see its scope line)
+
+Summary: blocks 4 ranked · docs 5 ranked · code 6 ranked + structure 0 (searched) + course code 0 (searched)

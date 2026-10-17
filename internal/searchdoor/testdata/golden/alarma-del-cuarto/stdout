@@ -1,0 +1,55 @@
+
+Query: 'alarma del cuarto'   mode=backend default   docs=niagara-help default
+Spanish terms: alarma→alarm, cuarto→room   (blocks and course code also search these English terms; the docs and the module_nav code ranking apply their own glossary copies)
+
+========================================================================
+SOURCE 1 · OUR BLOCKS   (corpus-nav find)
+========================================================================
+   1. B101 · Block 101 — alarma research (default mode, --limit 2000)
+        12: > a line about alarma in block 101
+   2. B102 · Block 102 — del research (default mode, --limit 2000)
+        13: > a line about del in block 102
+   3. B103 · Block 103 — cuarto research (default mode, --limit 2000)
+        14: > a line about cuarto in block 103
+   4. B104 · Block 104 — alarma research (default mode, --limit 2000)
+        15: > a line about alarma in block 104
+
+========================================================================
+SOURCE 2 · OFFICIAL DOCS   (niagara_help find)
+========================================================================
+  6 files matching 'alarma del cuarto' (docs default, default mode):
+  by source: guides-clean 3, devguide-clean 2
+   1. guides-clean/Alarma/page1.html  [guides-clean] Alarma guide, page 1
+        L10: how the alarma setting works
+   2. guides-clean/Del/page2.html  [guides-clean] Del guide, page 2
+        L11: how the del setting works
+   3. guides-clean/Cuarto/page3.html  [guides-clean] Cuarto guide, page 3
+        L12: how the cuarto setting works
+   4. guides-clean/Alarma/page4.html  [guides-clean] Alarma guide, page 4
+        L13: how the alarma setting works
+   5. Del guide, page 5  [guides-clean] Del guide, page 5
+        L14: how the del setting works
+
+========================================================================
+SOURCE 3 · CODE   (module_nav rank)
+========================================================================
+  Rank 'alarma del cuarto': 6 matching classes (terms: alarma, del, cuarto)
+   1. BAlarmaService  [demo-rt]  score 9.250
+        com/demo/BAlarmaService.java
+   2. BAlarmaExt  [demo-rt]  score 9.000
+        com/demo/BAlarmaExt.java
+   3. BDelService  [demo-rt]  score 8.750
+        com/demo/BDelService.java
+   4. BDelExt  [demo-rt]  score 8.500
+        com/demo/BDelExt.java
+   5. BCuartoService  [demo-rt]  score 8.250
+        com/demo/BCuartoService.java
+  ... 1 more ranked (raise --limit)
+  -- course code   (BM25 over course/{course,solutions,niagara-4.15.6.20/dev}/**/*.java) --
+    searched 4 .java files of the N4 developer course (course 2, verified solution 1, dev kit example 1)
+     1. BRoomPanel  [verified solution]  score 1.643
+          solutions/exam/BRoomPanel.java
+     2. BAlarmCounter  [course]  score 0.748
+          course/lab3/BAlarmCounter.java
+
+Summary: blocks 4 ranked · docs 5 ranked · code 6 ranked + course code 2 ranked

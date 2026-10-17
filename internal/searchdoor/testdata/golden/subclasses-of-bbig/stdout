@@ -1,0 +1,118 @@
+
+Query: 'subclasses of BBig'   mode=backend default   docs=niagara-help default
+
+========================================================================
+SOURCE 1 · OUR BLOCKS   (corpus-nav find)
+========================================================================
+   1. B101 · Block 101 — subclasses research (default mode, --limit 2000)
+        12: > a line about subclasses in block 101
+   2. B102 · Block 102 — of research (default mode, --limit 2000)
+        13: > a line about of in block 102
+   3. B103 · Block 103 — bbig research (default mode, --limit 2000)
+        14: > a line about bbig in block 103
+   4. B104 · Block 104 — subclasses research (default mode, --limit 2000)
+        15: > a line about subclasses in block 104
+
+========================================================================
+SOURCE 2 · OFFICIAL DOCS   (niagara_help find)
+========================================================================
+  6 files matching 'subclasses of BBig' (docs default, default mode):
+  by source: guides-clean 3, devguide-clean 2
+   1. guides-clean/Subclasses/page1.html  [guides-clean] Subclasses guide, page 1
+        L10: how the subclasses setting works
+   2. guides-clean/Of/page2.html  [guides-clean] Of guide, page 2
+        L11: how the of setting works
+   3. guides-clean/Bbig/page3.html  [guides-clean] Bbig guide, page 3
+        L12: how the bbig setting works
+   4. guides-clean/Subclasses/page4.html  [guides-clean] Subclasses guide, page 4
+        L13: how the subclasses setting works
+   5. Of guide, page 5  [guides-clean] Of guide, page 5
+        L14: how the of setting works
+
+========================================================================
+SOURCE 3 · CODE   (module_nav rank)
+========================================================================
+  -- structure · subclasses of BBig   (module_nav hierarchy BBig --depth 3) --
+    Hierarchy: BBig (65 direct children, 70 total descendants)
+    Depth limit: 3
+    4 deeper descendants not expanded (module_nav hierarchy --depth 4+)
+     1. BChild00  [demo-rt]
+     2. BChild01  [demo-rt]
+     3. BChild02  [demo-rt]
+     4. BChild03  [demo-rt]
+     5. BChild04  [demo-rt]
+     6. BChild05  [demo-rt]
+     7. BChild06  [demo-rt]
+     8. BChild07  [demo-rt]
+     9. BChild08  [demo-rt]
+    10. BChild09  [demo-rt]
+    11. BChild10  [demo-rt]
+    12. BChild11  [demo-rt]
+    13. BChild12  [demo-rt]
+    14. BChild13  [demo-rt]
+    15. BChild14  [demo-rt]
+    16. BChild15  [demo-rt]
+    17. BChild16  [demo-rt]
+    18. BChild17  [demo-rt]
+    19. BChild18  [demo-rt]
+    20. BChild19  [demo-rt]
+    21. BChild20  [demo-rt]
+    22. BChild21  [demo-rt]
+    23. BChild22  [demo-rt]
+    24. BChild23  [demo-rt]
+    25. BChild24  [demo-rt]
+    26. BChild25  [demo-rt]
+    27. BChild26  [demo-rt]
+    28. BChild27  [demo-rt]
+    29. BChild28  [demo-rt]
+    30. BChild29  [demo-rt]
+    31. BChild30  [demo-rt]
+    32. BChild31  [demo-rt]
+    33. BChild32  [demo-rt]
+    34. BChild33  [demo-rt]
+    35. BChild34  [demo-rt]
+    36. BChild35  [demo-rt]
+    37. BChild36  [demo-rt]
+    38. BChild37  [demo-rt]
+    39. BChild38  [demo-rt]
+    40. BChild39  [demo-rt]
+    41. BChild40  [demo-rt]
+    42. BChild41  [demo-rt]
+    43. BChild42  [demo-rt]
+    44. BChild43  [demo-rt]
+    45. BChild44  [demo-rt]
+    46. BChild45  [demo-rt]
+    47. BChild46  [demo-rt]
+    48. BChild47  [demo-rt]
+    49. BChild48  [demo-rt]
+    50. BChild49  [demo-rt]
+    51. BChild50  [demo-rt]
+    52. BChild51  [demo-rt]
+    53. BChild52  [demo-rt]
+    54. BChild53  [demo-rt]
+    55. BChild54  [demo-rt]
+    56. BChild55  [demo-rt]
+    57. BChild56  [demo-rt]
+    58. BChild57  [demo-rt]
+    59. BChild58  [demo-rt]
+    60. BChild59  [demo-rt]
+    ... 6 more listed (module_nav shows all)
+  -- ranked   (module_nav rank) --
+  note: token BBig: not in the token index; ranking the question
+  Rank 'subclasses of BBig': 6 matching classes (terms: subclasses, of, bbig)
+   1. BSubclassesService  [demo-rt]  score 9.250
+        com/demo/BSubclassesService.java
+   2. BSubclassesExt  [demo-rt]  score 9.000
+        com/demo/BSubclassesExt.java
+   3. BOfService  [demo-rt]  score 8.750
+        com/demo/BOfService.java
+   4. BOfExt  [demo-rt]  score 8.500
+        com/demo/BOfExt.java
+   5. BBbigService  [demo-rt]  score 8.250
+        com/demo/BBbigService.java
+  ... 1 more ranked (raise --limit)
+  -- course code   (BM25 over course/{course,solutions,niagara-4.15.6.20/dev}/**/*.java) --
+    0 matches for 'subclasses of BBig'; searched 4 .java files of the N4 developer course (course 2, verified solution 1, dev kit example 1)
+    0 rows in this sub-scope (searched; see its scope line)
+
+Summary: blocks 4 ranked · docs 5 ranked · code 6 ranked + structure 66 listed + course code 0 (searched)

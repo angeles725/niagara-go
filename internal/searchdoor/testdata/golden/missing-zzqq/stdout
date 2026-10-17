@@ -1,0 +1,24 @@
+
+Query: 'zzqq'   mode=backend default   docs=niagara-help default
+
+========================================================================
+SOURCE 1 · OUR BLOCKS   (corpus-nav find)
+========================================================================
+  [!] unavailable: tool not found at missing/corpus-nav.py   (unavailable: not a zero)
+
+========================================================================
+SOURCE 2 · OFFICIAL DOCS   (niagara_help find)
+========================================================================
+  [!] unavailable: tool not found at missing/niagara_help.py   (unavailable: not a zero)
+
+========================================================================
+SOURCE 3 · CODE   (module_nav rank)
+========================================================================
+  0 matches for rank 'zzqq' (searched 120 classes)
+  0 results (searched; see the scope line above -- not proof of absence)
+  -- course code   (BM25 over empty-course/{course,solutions,niagara-4.15.6.20/dev}/**/*.java) --
+    [!] unavailable: no .java file under empty-course (course, solutions, niagara-4.15.6.20/dev)   (unavailable: not a zero)
+    searched 0 .java files of the N4 developer course (course 0, verified solution 0, dev kit example 0)
+
+Summary: blocks UNAVAILABLE · docs UNAVAILABLE · code 0 (searched) + course code UNAVAILABLE
+No rows, and at least one source was UNAVAILABLE ([!] above): no negative finding is possible.

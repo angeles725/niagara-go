@@ -1,0 +1,20 @@
+usage: find3 [-h] [--version] [--limit LIMIT] [--timeout TIMEOUT]
+             [--doc-version VERSION] [--and | --or]
+             query [query ...]
+
+One query across our blocks, official docs and code.
+
+positional arguments:
+  query                 free-text query (`license <name>` for licensing)
+
+options:
+  -h, --help            show this help message and exit
+  --version             print the tools version and exit
+  --limit, -n LIMIT     ranked results per source (default 5)
+  --timeout TIMEOUT     timeout budget per source in seconds, shared by all
+                        its backend calls (default 60)
+  --doc-version VERSION
+                        niagara-help documentation version for the docs source
+                        (default: niagara-help's own)
+  --and                 every term (blocks, docs)
+  --or                  any term (blocks, docs)

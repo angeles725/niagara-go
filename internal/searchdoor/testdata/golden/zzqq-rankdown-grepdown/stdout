@@ -1,0 +1,27 @@
+
+Query: 'zzqq rankdown grepdown'   mode=backend default   docs=niagara-help default
+
+========================================================================
+SOURCE 1 · OUR BLOCKS   (corpus-nav find)
+========================================================================
+  (no matches; searched 9 blocks for 'zzqq rankdown grepdown')
+  0 results (searched; see the scope line above -- not proof of absence)
+
+========================================================================
+SOURCE 2 · OFFICIAL DOCS   (niagara_help find)
+========================================================================
+  No match for 'zzqq rankdown grepdown' in this scope.
+  (searched 31 files of docs 4.14.0.162)
+  0 results (searched; see the scope line above -- not proof of absence)
+
+========================================================================
+SOURCE 3 · CODE   (module_nav grep '(?i)zzqq|rankdown|grepdown' (DEGRADED))
+========================================================================
+  note: DEGRADED: module_nav rank cannot search (error: module_nav: no class index (run module_nav index first) (exit 2)); fell back to module_nav grep, which keeps only the first 30 matching lines and does not rank the whole tree
+  [!] error: module_nav: grep index unreadable (exit 2)   (unavailable: not a zero)
+  -- course code   (BM25 over course/{course,solutions,niagara-4.15.6.20/dev}/**/*.java) --
+    0 matches for 'zzqq rankdown grepdown'; searched 4 .java files of the N4 developer course (course 2, verified solution 1, dev kit example 1)
+    0 rows in this sub-scope (searched; see its scope line)
+
+Summary: blocks 0 (searched) · docs 0 (searched) · code UNAVAILABLE + course code 0 (searched)
+No rows, and at least one source was UNAVAILABLE ([!] above): no negative finding is possible.

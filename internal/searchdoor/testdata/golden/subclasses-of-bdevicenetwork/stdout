@@ -1,0 +1,60 @@
+
+Query: 'subclasses of BDeviceNetwork'   mode=backend default   docs=niagara-help default
+
+========================================================================
+SOURCE 1 · OUR BLOCKS   (corpus-nav find)
+========================================================================
+   1. B101 · Block 101 — subclasses research (default mode, --limit 2000)
+        12: > a line about subclasses in block 101
+   2. B102 · Block 102 — of research (default mode, --limit 2000)
+        13: > a line about of in block 102
+   3. B103 · Block 103 — bdevicenetwork research (default mode, --limit 2000)
+        14: > a line about bdevicenetwork in block 103
+   4. B104 · Block 104 — subclasses research (default mode, --limit 2000)
+        15: > a line about subclasses in block 104
+
+========================================================================
+SOURCE 2 · OFFICIAL DOCS   (niagara_help find)
+========================================================================
+  6 files matching 'subclasses of BDeviceNetwork' (docs default, default mode):
+  by source: guides-clean 3, devguide-clean 2
+   1. guides-clean/Subclasses/page1.html  [guides-clean] Subclasses guide, page 1
+        L10: how the subclasses setting works
+   2. guides-clean/Of/page2.html  [guides-clean] Of guide, page 2
+        L11: how the of setting works
+   3. guides-clean/Bdevicenetwork/page3.html  [guides-clean] Bdevicenetwork guide, page 3
+        L12: how the bdevicenetwork setting works
+   4. guides-clean/Subclasses/page4.html  [guides-clean] Subclasses guide, page 4
+        L13: how the subclasses setting works
+   5. Of guide, page 5  [guides-clean] Of guide, page 5
+        L14: how the of setting works
+
+========================================================================
+SOURCE 3 · CODE   (module_nav token BDeviceNetwork + module_nav rank)
+========================================================================
+  -- structure · subclasses of BDeviceNetwork   (module_nav hierarchy BDeviceNetwork --depth 3) --
+    Hierarchy: BDeviceNetwork (2 direct children, 7 total descendants)
+    Depth limit: 3
+    4 deeper descendants not expanded (module_nav hierarchy --depth 4+)
+     1. BChildA  [demo-rt]
+     2. BChildB  [demo-rt]
+     3. BGrandChild  [demo-rt]
+  -- ranked   (module_nav token BDeviceNetwork + module_nav rank) --
+  TOKEN: 'BDeviceNetwork' (2 occurrences in 2 classes)
+  Rank 'subclasses of BDeviceNetwork': 6 matching classes (terms: subclasses, of, bdevicenetwork)
+   1. BDeviceNetwork  [driver-rt]  1 occurrences
+   2. BSubclassesService  [demo-rt]  score 9.250
+        com/demo/BSubclassesService.java
+   3. BSubclassesExt  [demo-rt]  score 9.000
+        com/demo/BSubclassesExt.java
+   4. BOfService  [demo-rt]  score 8.750
+        com/demo/BOfService.java
+   5. BOfExt  [demo-rt]  score 8.500
+        com/demo/BOfExt.java
+  ... 3 more ranked (raise --limit)
+  -- course code   (BM25 over course/{course,solutions,niagara-4.15.6.20/dev}/**/*.java) --
+    searched 4 .java files of the N4 developer course (course 2, verified solution 1, dev kit example 1)
+     1. BEnvCtrlDeviceNetwork  [dev kit example]  score 1.151
+          niagara-4.15.6.20/dev/envCtrlDriver/BEnvCtrlDeviceNetwork.java
+
+Summary: blocks 4 ranked · docs 5 ranked · code 8 ranked + structure 3 listed + course code 1 ranked

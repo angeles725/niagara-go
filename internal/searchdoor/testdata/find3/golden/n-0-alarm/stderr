@@ -1,0 +1,4 @@
+usage: find3 [-h] [--version] [--limit LIMIT] [--timeout TIMEOUT]
+             [--doc-version VERSION] [--and | --or]
+             query [query ...]
+find3: error: --limit and --timeout must be at least 1

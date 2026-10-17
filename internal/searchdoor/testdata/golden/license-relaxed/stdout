@@ -1,0 +1,28 @@
+
+License: 'relaxed' resolved as a feature   docs/blocks query='license relaxed'
+
+========================================================================
+CODE · call sites of feature relaxed   (module_nav license-feature relaxed)
+========================================================================
+  note: 'relaxed' is not one of 4 module names, so it is treated as a feature
+  0 matches for license feature 'relaxed'
+  0 results (searched; see the scope line above -- not proof of absence)
+
+========================================================================
+OFFICIAL DOCS · license pages   (niagara_help find)
+========================================================================
+  note: no page names every term; the backend's any-term matches are not shown
+  5 files matching 'license relaxed' (docs default, default mode):
+  (no file has every term; showing files with any term)
+  by source: guides-clean 3, devguide-clean 2
+  0 results (searched; see the scope line above -- not proof of absence)
+
+========================================================================
+OUR BLOCKS · licensing research   (corpus-nav find)
+========================================================================
+   1. B101 · Block 101 — license research (and mode, --limit 2000)
+        12: > a line about license in block 101
+   2. B102 · Block 102 — relaxed research (and mode, --limit 2000)
+        13: > a line about relaxed in block 102
+
+Summary: code 0 (searched) · docs 0 (searched) · blocks 2 ranked

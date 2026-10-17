@@ -1,0 +1,22 @@
+
+License: 'bacnet' resolved as a feature   docs/blocks query='license bacnet'
+
+========================================================================
+CODE · call sites of feature bacnet   (module_nav license-feature bacnet)
+========================================================================
+  note: 'bacnet' is not one of 4 module names, so it is treated as a feature
+  Call sites of license feature 'bacnet': 2
+   1. BBacnetNetwork bacnet-rt checkFeature
+   2. BMstpNetwork bacnet-rt getFeature
+
+========================================================================
+OFFICIAL DOCS · license pages   (niagara_help find)
+========================================================================
+  [!] unavailable: tool not found at missing/niagara_help.py   (unavailable: not a zero)
+
+========================================================================
+OUR BLOCKS · licensing research   (corpus-nav find)
+========================================================================
+  [!] unavailable: tool not found at missing/corpus-nav.py   (unavailable: not a zero)
+
+Summary: code 2 ranked · docs UNAVAILABLE · blocks UNAVAILABLE
