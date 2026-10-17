@@ -1,7 +1,10 @@
 package hdbread
 
 import (
+	"bytes"
+	"encoding/binary"
 	"regexp"
+	"strings"
 )
 
 // userMasked replaces a printable run that carries a user identity under --strings --mask.
@@ -19,11 +22,34 @@ const (
 	fieldUserName = 5
 )
 
-// maskPlan is what --mask needs from the framed audit records of a record section.
+// maskPlan is what --mask needs to know about a record section.
 type maskPlan struct {
-	ids     [][2]int        // identity field contents [start, end)
-	records [][2]int        // framed record extents [start, end)
-	vocab   map[string]bool // candidate operation names: countOps-decoded plus auditOperations
+	audit bool            // an audit section (auditSchema or hasAuditOperation)
+	ids   [][2]int        // identity field contents [start, end) of the framed records
+	paths [][2]int        // framed target contents [start, end) that start with '/'
+	ops   map[string]bool // operation names: auditOperations plus countOps-decoded
+}
+
+// auditSchema reports whether the file schema names an audit history: an 'operation' field
+// (what --ops requires) or an AuditRecord record type.
+func auditSchema(recordType string, fields []string) bool {
+	for _, f := range fields {
+		if f == "operation" {
+			return true
+		}
+	}
+	return strings.HasSuffix(recordType, "AuditRecord")
+}
+
+// hasAuditOperation reports whether rec holds an auditOperations name written as writeUTF (a
+// 2-byte big-endian length, then the name), framed or not.
+func hasAuditOperation(rec []byte) bool {
+	for _, op := range auditOperations {
+		if bytes.Contains(rec, append(binary.BigEndian.AppendUint16(nil, uint16(len(op))), op...)) {
+			return true
+		}
+	}
+	return false
 }
 
 // planMask frames the audit records of rec exactly as unanchoredOps does. Identity fields
@@ -33,14 +59,16 @@ type maskPlan struct {
 //     unless it is a slot path (starts with '/').
 //
 // Empty fields are skipped.
-func planMask(rec []byte) maskPlan {
+func planMask(rec []byte, schemaIsAudit bool) maskPlan {
 	ops, _, _ := countOps(rec)
-	p := maskPlan{vocab: map[string]bool{}}
+	p := maskPlan{audit: schemaIsAudit || hasAuditOperation(rec), ops: map[string]bool{}}
 	for op := range ops {
-		p.vocab[op] = true
+		p.ops[op] = true
 	}
-	for _, r := range frameRecords(rec, p.vocab) {
-		p.records = append(p.records, [2]int{r.pos, r.fields[auditFields-1][1]})
+	for _, r := range frameRecords(rec, p.ops) {
+		if t := r.fields[fieldTarget]; t[0] < t[1] && rec[t[0]] == '/' {
+			p.paths = append(p.paths, t)
+		}
 		for k := fieldTarget; k <= fieldUserName; k++ {
 			f := r.fields[k]
 			if f[0] == f[1] {
@@ -56,7 +84,7 @@ func planMask(rec []byte) maskPlan {
 		}
 	}
 	for _, op := range auditOperations {
-		p.vocab[op] = true
+		p.ops[op] = true
 	}
 	return p
 }
@@ -83,17 +111,19 @@ func printableRuns(b []byte) []printableRun {
 	return runs
 }
 
-// stringsLines is the --strings output: every printable run. With doMask (rule v2, fail-closed):
-//   - a run overlapping a user-identity field prints userMasked;
-//   - in a section with no framed audit record, any other run goes through mask (old rule);
-//   - otherwise a run lying entirely inside a framed record goes through mask, and a run that
-//     does not prints valueMasked unless it is exactly a candidate operation name (planMask
-//     vocab) or exactly a role account (roleRE), so a record the framing rejected (truncated,
-//     invalid modified UTF-8, operation outside the vocabulary) cannot leak its user name.
-func stringsLines(rec []byte, doMask bool) []string {
+// stringsLines is the --strings output: every printable run. With doMask, a section that is not
+// an audit section keeps Python's mask(). In an audit section (rule v3, an allowlist) a run
+//   - overlapping an identity field of a framed record prints userMasked;
+//   - else prints verbatim only if it is exactly an operation name (maskPlan ops) or it starts
+//     at the first byte of a framed record's slot-path target and ends inside that target;
+//   - else prints valueMasked.
+//
+// No role-account exception applies in an audit section. A slot path must start at a framed
+// target because a writeUTF length byte 0x2f reads as '/' in front of any 47-byte string.
+func stringsLines(rec []byte, doMask, schemaIsAudit bool) []string {
 	var p maskPlan
 	if doMask {
-		p = planMask(rec)
+		p = planMask(rec, schemaIsAudit)
 	}
 	var lines []string
 	for _, r := range printableRuns(rec) {
@@ -106,23 +136,23 @@ func stringsLines(rec []byte, doMask bool) []string {
 	return lines
 }
 
-// maskRun applies the --mask rule v2 of stringsLines to the run r whose text is s.
+// maskRun applies the --mask rule of stringsLines to the run r whose text is s.
 func maskRun(p maskPlan, r printableRun, s string) string {
+	if !p.audit {
+		return mask(s)
+	}
 	for _, id := range p.ids {
 		if r.start < id[1] && id[0] < r.end {
 			return userMasked
 		}
 	}
-	if len(p.records) == 0 {
-		return mask(s)
-	}
-	for _, rr := range p.records {
-		if rr[0] <= r.start && r.end <= rr[1] {
-			return mask(s)
-		}
-	}
-	if p.vocab[s] || roleRE.MatchString(s) {
+	if p.ops[s] {
 		return s
+	}
+	for _, t := range p.paths {
+		if r.start == t[0] && r.end <= t[1] {
+			return s
+		}
 	}
 	return valueMasked
 }

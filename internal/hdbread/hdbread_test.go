@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"encoding/binary"
 	"math"
+	"math/rand"
+	"os"
 	"strings"
 	"testing"
 
@@ -124,6 +126,15 @@ func TestRunMissingFileIsExit2(t *testing.T) {
 	}
 }
 
+// utf is a Java writeUTF string: a 2-byte big-endian length and the bytes.
+func utf(s string) string { return string([]byte{byte(len(s) >> 8), byte(len(s))}) + s }
+
+// maskedStrings is the --strings --mask output for the record section rec; auditSchema says
+// the file schema names an audit history.
+func maskedStrings(rec []byte, auditSchema bool) []string {
+	return stringsLines(rec, true, auditSchema)
+}
+
 // --strings --mask must not print any user identity: the userName of every framed audit record
 // and the identity fields of a login-family record (here jdoe, admin, guest, station, root and the
 // "bad" login attempt), role accounts included. Python's mask() let all of them through.
@@ -145,19 +156,21 @@ func TestStringsMaskHidesUserIdentities(t *testing.T) {
 	if n := strings.Count(out.String(), userMasked+"\n"); n != 11 {
 		t.Errorf("want 11 %s lines (one per identity field), got %d:\n%s", userMasked, n, out.String())
 	}
-	// Non-identity strings stay readable: operation names and slot names.
-	for _, keep := range []string{"Login Failure\n", "Logout (Timeout)\n", "setpoint\n"} {
+	// Only operation names and slot-path targets stay readable (rule v3 allowlist).
+	for _, keep := range []string{"Login Failure\n", "Logout (Timeout)\n", "/Config/Rooms/R1\n"} {
 		if !strings.Contains(out.String(), keep) {
-			t.Errorf("%q was masked but is not an identity", keep)
+			t.Errorf("%q was masked but is allowlisted", keep)
 		}
+	}
+	if strings.Contains(out.String(), "setpoint") {
+		t.Errorf("a slotName is not allowlisted:\n%s", out.String())
 	}
 }
 
 func TestIdentityRangesFraming(t *testing.T) {
-	utf := func(s string) string { return string([]byte{byte(len(s) >> 8), byte(len(s))}) + s }
 	rec := utf("Login Failure") + utf("x") + utf("") + utf("") + utf("eve") + utf("root") +
 		utf("Changed") + utf("/a") + utf("out") + utf("1") + utf("2") + utf("ann")
-	got := planMask([]byte(rec)).ids
+	got := planMask([]byte(rec), true).ids
 	var names []string
 	for _, r := range got {
 		names = append(names, rec[r[0]:r[1]])
@@ -167,50 +180,104 @@ func TestIdentityRangesFraming(t *testing.T) {
 	}
 }
 
-// Rule v2 (fail-closed): once a file has framed audit records, --mask must not let a user name
-// through an audit record the framing rejected. Each case pairs one valid record with a damaged
-// one whose userName is "mallory".
-func TestStringsMaskFailsClosedOnUnframedRecords(t *testing.T) {
-	utf := func(s string) string { return string([]byte{byte(len(s) >> 8), byte(len(s))}) + s }
+// Rule v3 closes the inputs that leaked a user name through rule v2 (independent review), plus
+// a writeUTF length byte 0x2f ('/') that makes a 47-byte userName read as a slot path.
+func TestStringsMaskV2Leaks(t *testing.T) {
 	valid := utf("Changed") + utf("/a/b") + utf("out") + utf("1.0") + utf("2.0") + utf("ann")
-	cases := map[string]string{
-		"truncated trailing record": utf("Changed") + utf("/a/c") + utf("out") + utf("1.0") + utf("2.0") +
-			"\x00\x10mallory",
-		"bad modified UTF-8": utf("Changed") + utf("/a/c") + utf("o\xffut") + utf("1.0") + utf("2.0") +
-			utf("mallory"),
-		"unknown operation": utf("Frobnicated") + utf("xyz") + utf("out") + utf("1.0") + utf("2.0") +
-			utf("mallory"),
+	valid2 := utf("Changed") + utf("/a/d") + utf("out") + utf("1.0") + utf("2.0") + utf("bob")
+	head := utf("Changed") + utf("/a/c")
+	slash47 := "mallory" + strings.Repeat("-x", 20)
+	cases := []struct{ name, rec, user string }{
+		{"false record framed at an oldValue operation name",
+			valid + head + utf("o\xffut") + utf("Removed") + utf("x") + utf("mallory") + valid2, "mallory"},
+		{"no framed record", head + utf("out") + utf("1.0") + utf("2.0") + "\x00\x10mallory", "mallory"},
+		{"every record has bad modified UTF-8",
+			head + utf("o\xffut") + utf("1.0") + utf("2.0") + utf("mallory") +
+				head + utf("o\xffut") + utf("1.0") + utf("2.0") + utf("trudy"), "mallory"},
+		{"role account in a truncated record", valid + head + utf("out") + utf("1.0") + utf("2.0") + "\x00\x10admin",
+			"admin"},
+		{"length byte reads as a slot path", valid + head + utf("o\xffut") + utf("1.0") + utf("2.0") + utf(slash47),
+			"mallory"},
 	}
-	for name, damaged := range cases {
-		lines := stringsLines([]byte(valid+damaged), true)
-		joined := strings.Join(lines, "\n")
-		for _, id := range []string{"mallory", "ann"} {
-			if strings.Contains(joined, id) {
-				t.Errorf("%s: %q leaks under --mask:\n%s", name, id, joined)
+	for _, c := range cases {
+		for _, schema := range []bool{false, true} {
+			out := strings.Join(maskedStrings([]byte(c.rec), schema), "|")
+			if strings.Contains(out, c.user) || strings.Contains(out, "trudy") {
+				t.Errorf("%s (audit schema %v): user leaks under --mask: %s", c.name, schema, out)
 			}
-		}
-		if !strings.Contains(joined, valueMasked) {
-			t.Errorf("%s: want the unframed text as %s:\n%s", name, valueMasked, joined)
-		}
-		// Text inside the framed record keeps the old rule.
-		if lines[0] != "Changed" || lines[1] != "/a/b" || lines[2] != "out" {
-			t.Errorf("%s: framed record text changed: %q", name, lines[:3])
 		}
 	}
 }
 
-// Outside framed records, an exact operation name of the vocabulary or an exact role account
-// still prints; with no framed record at all the old rule applies unchanged.
-func TestStringsMaskUnframedExceptions(t *testing.T) {
-	utf := func(s string) string { return string([]byte{byte(len(s) >> 8), byte(len(s))}) + s }
+// In an audit section only operation names and framed slot-path targets print; text inside a
+// framed record (slotName, values) is masked too, and there is no role-account exception.
+func TestStringsMaskAuditAllowlist(t *testing.T) {
 	valid := utf("Changed") + utf("/a/b") + utf("out") + utf("1.0") + utf("2.0") + utf("ann")
-	tail := "\x00\x01Logout\x00\x01admin\x00\x01Removed\x00\x01Changedx\x00\x01admins"
-	got := strings.Join(stringsLines([]byte(valid+tail), true)[6:], ",")
-	if want := "Logout,admin,Removed,<VALUE-MASKED>,<VALUE-MASKED>"; got != want {
-		t.Errorf("unframed runs = %q, want %q", got, want)
+	tail := "\x00\x01Logout\x00\x01admin\x00\x01Removed\x00\x01Changedx\x00\x01admins\x00\x01/a/b"
+	got := strings.Join(maskedStrings([]byte(valid+tail), false), ",")
+	want := "Changed,/a/b,<VALUE-MASKED>,<VALUE-MASKED>,<VALUE-MASKED>,<USER-MASKED>," +
+		"Logout,<VALUE-MASKED>,Removed,<VALUE-MASKED>,<VALUE-MASKED>,<VALUE-MASKED>"
+	if got != want {
+		t.Errorf("audit section = %q, want %q", got, want)
 	}
-	got = strings.Join(stringsLines([]byte("\x00\x01mallory\x00\x01QWxhZGRpbjpvcGVuIHNlc2FtZQ=="), true), ",")
-	if want := "mallory,<VALUE-MASKED>"; got != want {
-		t.Errorf("no framed record: %q, want the old rule %q", got, want)
+}
+
+// A section with no length-prefixed operation name keeps the old Python mask() rule, unless the
+// schema names an audit history.
+func TestStringsMaskNonAuditSection(t *testing.T) {
+	rec := []byte("\x00\x01mallory\x00\x01QWxhZGRpbjpvcGVuIHNlc2FtZQ==\x00\x01Changed")
+	if got, want := strings.Join(maskedStrings(rec, false), ","), "mallory,<VALUE-MASKED>,Changed"; got != want {
+		t.Errorf("non-audit section = %q, want the old rule %q", got, want)
+	}
+	if got, want := strings.Join(maskedStrings(rec, true), ","),
+		"<VALUE-MASKED>,<VALUE-MASKED>,Changed"; got != want {
+		t.Errorf("audit schema = %q, want %q", got, want)
+	}
+}
+
+// Property: no byte mutation of the audit fixture (overwrite, insert, delete, truncate; fixed
+// seed) makes --mask print one of its user names.
+func TestStringsMaskNeverPrintsAUserOfAMutatedFixture(t *testing.T) {
+	data, err := os.ReadFile("testdata/inputs/audit.hdb")
+	if err != nil {
+		t.Fatal(err)
+	}
+	f, err := parse(data)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, rt, fields := schemaOf(f.xml)
+	users := []string{"admin", "jdoe", "guest", "station", "root", "bad", "abcdefghijklmnopqrstu"}
+	for _, u := range users {
+		if !bytes.Contains(f.section, []byte(u)) {
+			t.Fatalf("fixture has no planted user %q", u)
+		}
+	}
+	rng := rand.New(rand.NewSource(20261017))
+	special := []byte{0x00, 0x01, '/', '.', ' ', 'A', 0x7f, 0x80, 0xc0, 0xff}
+	for i := 0; i < 2000; i++ {
+		rec := append([]byte(nil), f.section...)
+		for n := 1 + rng.Intn(4); n > 0 && len(rec) > 0; n-- {
+			pos, b := rng.Intn(len(rec)), byte(rng.Intn(256))
+			if rng.Intn(2) == 0 {
+				b = special[rng.Intn(len(special))]
+			}
+			switch rng.Intn(8) {
+			case 0:
+				rec = rec[:pos]
+			case 1, 2:
+				rec = append(rec[:pos:pos], rec[pos+1:]...)
+			case 3, 4:
+				rec = append(rec[:pos:pos], append([]byte{b}, rec[pos:]...)...)
+			default:
+				rec[pos] = b
+			}
+		}
+		out := strings.Join(maskedStrings(rec, auditSchema(rt, fields)), "\n")
+		for _, u := range users {
+			if strings.Contains(out, u) {
+				t.Fatalf("iteration %d: %q leaks under --mask for section %q:\n%s", i, u, rec, out)
+			}
+		}
 	}
 }
