@@ -18,6 +18,7 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/argparse"
 	"github.com/angeles725/niagara-go/internal/cli"
+	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 )
 
@@ -127,7 +128,7 @@ func Run(ctx context.Context, o Options, s cli.Stdio) int {
 			fmt.Fprintf(s.Err, "OSError: %v\n", err)
 			return 1
 		}
-		ents, nums, labels, err := classifyReaderArrays(parseStringArrays(decodeReplace(src)))
+		ents, nums, labels, err := classifyReaderArrays(parseStringArrays(pycompat.DecodeReplace(src)))
 		if err != nil {
 			fmt.Fprintln(s.Err, err)
 			return 1
@@ -139,9 +140,9 @@ func Run(ctx context.Context, o Options, s cli.Stdio) int {
 		h.Mock = generateAutoMock(ents, nums, labels)
 		label = fmt.Sprintf("auto-mock desde %s (%d entidades, %d slots numericos, %d label slots)",
 			filepath.Base(reader), len(ents), len(nums), len(labels))
-		fmt.Fprintf(s.Err, "  [auto-mock] entidades: %s\n", strList(ents))
-		fmt.Fprintf(s.Err, "  [auto-mock] num_slots:  %s\n", strList(nums))
-		fmt.Fprintf(s.Err, "  [auto-mock] label_slots:%s\n", strList(labels))
+		fmt.Fprintf(s.Err, "  [auto-mock] entidades: %s\n", pycompat.Repr(ents))
+		fmt.Fprintf(s.Err, "  [auto-mock] num_slots:  %s\n", pycompat.Repr(nums))
+		fmt.Fprintf(s.Err, "  [auto-mock] label_slots:%s\n", pycompat.Repr(labels))
 		fmt.Fprintf(s.Err, "  [auto-mock] keys generadas: %d\n", len(h.Mock.Keys))
 	case o.Live != "":
 		h.LiveBaseURL = strings.TrimRight(o.Live, "/")
@@ -192,8 +193,8 @@ func loadMock(path string) (pyjson.Value, error) {
 		}
 		return pyjson.Value{}, fmt.Errorf("%s: %s: %s", name, osErrorText(err), pyjson.StrRepr(path))
 	}
-	text := []rune(decodeReplace(data))
-	if decodeReplace(data) != string(data) {
+	text := []rune(pycompat.DecodeReplace(data))
+	if pycompat.DecodeReplace(data) != string(data) {
 		return pyjson.Value{}, errors.New("UnicodeDecodeError: 'utf-8' codec can't decode the mock file")
 	}
 	v, err := pyjson.Loads(text)

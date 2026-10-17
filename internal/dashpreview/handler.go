@@ -12,6 +12,7 @@ import (
 	"time"
 	"unicode"
 
+	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 )
 
@@ -148,7 +149,7 @@ func (h *Handler) now() float64 {
 
 func (h *Handler) cookieToken(r *http.Request) (string, bool) {
 	for _, part := range strings.Split(r.Header.Get("Cookie"), ";") {
-		k, v, _ := strings.Cut(strings.TrimSpace(part), "=")
+		k, v, _ := strings.Cut(pycompat.Strip(part), "=")
 		if k == "dp_config_session" {
 			return v, true
 		}
@@ -171,84 +172,6 @@ func (h *Handler) strip(path string) string {
 		return "/"
 	}
 	return path
-}
-
-// decodeReplace mirrors bytes.decode("utf-8", "replace"): one U+FFFD per
-// maximal invalid subsequence.
-func decodeReplace(b []byte) string {
-	var sb strings.Builder
-	for i := 0; i < len(b); {
-		n := validPrefix(b[i:])
-		if n > 0 {
-			sb.Write(b[i : i+n])
-			i += n
-			continue
-		}
-		sb.WriteRune(unicode.ReplacementChar)
-		i += invalidRun(b[i:])
-	}
-	return sb.String()
-}
-
-// validPrefix is the length of the first well-formed UTF-8 sequence (0 if none).
-func validPrefix(b []byte) int {
-	c := b[0]
-	if c < 0x80 {
-		return 1
-	}
-	n, lo, hi := seqShape(c)
-	if n == 0 || len(b) < n {
-		return 0
-	}
-	for k := 1; k < n; k++ {
-		l, h := byte(0x80), byte(0xBF)
-		if k == 1 {
-			l, h = lo, hi
-		}
-		if b[k] < l || b[k] > h {
-			return 0
-		}
-	}
-	return n
-}
-
-// invalidRun is how many bytes CPython's decoder consumes for one U+FFFD.
-func invalidRun(b []byte) int {
-	n, lo, hi := seqShape(b[0])
-	if n == 0 {
-		return 1
-	}
-	k := 1
-	for ; k < n && k < len(b); k++ {
-		l, h := byte(0x80), byte(0xBF)
-		if k == 1 {
-			l, h = lo, hi
-		}
-		if b[k] < l || b[k] > h {
-			break
-		}
-	}
-	return k
-}
-
-func seqShape(c byte) (n int, lo, hi byte) {
-	switch {
-	case c >= 0xC2 && c <= 0xDF:
-		return 2, 0x80, 0xBF
-	case c == 0xE0:
-		return 3, 0xA0, 0xBF
-	case c == 0xED:
-		return 3, 0x80, 0x9F
-	case c >= 0xE1 && c <= 0xEF:
-		return 3, 0x80, 0xBF
-	case c == 0xF0:
-		return 4, 0x90, 0xBF
-	case c >= 0xF1 && c <= 0xF3:
-		return 4, 0x80, 0xBF
-	case c == 0xF4:
-		return 4, 0x80, 0x8F
-	}
-	return 0, 0, 0
 }
 
 // serveFile mirrors _serve_file.
@@ -291,7 +214,7 @@ func (h *Handler) serveFile(rp *reply, rel string) {
 
 // inject inserts the snippets before the last </body> (case-insensitive), or appends them.
 func (h *Handler) inject(data []byte) []byte {
-	txt := []rune(decodeReplace(data))
+	txt := []rune(pycompat.DecodeReplace(data))
 	snip := ""
 	if h.Editor {
 		snip += editorSnippet

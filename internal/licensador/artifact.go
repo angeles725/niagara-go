@@ -15,6 +15,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 )
 
@@ -182,7 +183,7 @@ func Verify(pub crypto.PublicKey, artifact string, o VerifyOpts) (string, *pyjso
 	if o.Now.IsZero() {
 		now = awareUTC(time.Now())
 	}
-	parts := strings.Split(strings.TrimSpace(artifact), ".")
+	parts := strings.Split(pycompat.Strip(artifact), ".")
 	if len(parts) != 3 || parts[0] != Scheme {
 		return EParse, nil, nil
 	}

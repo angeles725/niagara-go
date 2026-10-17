@@ -8,6 +8,7 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 )
 
@@ -285,20 +286,11 @@ func pyOSError(err error, name string) string {
 	return fmt.Sprintf("[Errno %d] %s: %s", code, msg, pyjson.String(name).Repr())
 }
 
-// pyInt mirrors int(str) for ASCII input.
+// pyInt mirrors int(str) (pycompat.ParseBigInt) with CPython's ValueError text.
 func pyInt(s string) (*big.Int, error) {
-	bad := fmt.Errorf("invalid literal for int() with base 10: %s", pyjson.StrRepr(s))
-	t := strings.Trim(s, " \t\n\v\f\r\x1c\x1d\x1e\x1f")
-	sign := ""
-	if t != "" && (t[0] == '+' || t[0] == '-') {
-		sign, t = t[:1], t[1:]
-	}
-	if t == "" || t[0] == '_' || t[len(t)-1] == '_' || strings.Contains(t, "__") {
-		return nil, bad
-	}
-	n, ok := new(big.Int).SetString(sign+strings.ReplaceAll(t, "_", ""), 10)
-	if !ok {
-		return nil, bad
+	n, err := pycompat.ParseBigInt(s)
+	if err != nil {
+		return nil, fmt.Errorf("invalid literal for int() with base 10: %s", pyjson.StrRepr(s))
 	}
 	return n, nil
 }

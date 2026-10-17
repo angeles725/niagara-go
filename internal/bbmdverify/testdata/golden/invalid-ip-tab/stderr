@@ -1,0 +1,1 @@
+bacnet-bbmd-verify: invalid --device-ip/--device-prefix (Only decimal digits permitted in '\t4' in '1.2.3.\t4'); give an IPv4 literal and a prefix 0-32

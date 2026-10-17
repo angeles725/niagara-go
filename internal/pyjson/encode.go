@@ -2,46 +2,14 @@ package pyjson
 
 import (
 	"fmt"
-	"math"
-	"strconv"
 	"strings"
-	"unicode"
+	"unicode/utf8"
+
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
-// FloatRepr mirrors float.__repr__ (shortest round-trip, exponent when the
-// decimal exponent is < -4 or >= 16).
-func FloatRepr(f float64) string {
-	switch {
-	case math.IsNaN(f):
-		return "nan"
-	case math.IsInf(f, 1):
-		return "inf"
-	case math.IsInf(f, -1):
-		return "-inf"
-	}
-	e := strconv.FormatFloat(f, 'e', -1, 64)
-	exp, _ := strconv.Atoi(e[strings.IndexByte(e, 'e')+1:])
-	if exp < -4 || exp >= 16 {
-		return e
-	}
-	s := strconv.FormatFloat(f, 'f', -1, 64)
-	if !strings.ContainsAny(s, ".") {
-		s += ".0"
-	}
-	return s
-}
-
-func jsonFloat(f float64) string {
-	switch {
-	case math.IsNaN(f):
-		return "NaN"
-	case math.IsInf(f, 1):
-		return "Infinity"
-	case math.IsInf(f, -1):
-		return "-Infinity"
-	}
-	return FloatRepr(f)
-}
+// FloatRepr mirrors float.__repr__; it is pycompat.FloatRepr.
+func FloatRepr(f float64) string { return pycompat.FloatRepr(f) }
 
 // EncodeString mirrors json's py_encode_basestring(_ascii).
 func EncodeString(s string, ensureASCII bool) string {
@@ -122,7 +90,7 @@ func dumpTo(b *strings.Builder, v Value, o DumpOpts, level int) {
 	case Int:
 		b.WriteString(v.I.String())
 	case Float:
-		b.WriteString(jsonFloat(v.F))
+		b.WriteString(pycompat.JSONFloat(v.F))
 	case Str:
 		b.WriteString(EncodeString(v.S, o.EnsureASCII))
 	case Array:
@@ -162,16 +130,13 @@ func dumpTo(b *strings.Builder, v Value, o DumpOpts, level int) {
 	}
 }
 
-// isPyPrintable mirrors str.isprintable for one code point.
-func isPyPrintable(r rune) bool {
-	if r >= 0xD800 && r <= 0xDFFF {
-		return false
-	}
-	return unicode.IsPrint(r)
-}
-
-// StrRepr mirrors repr(str).
+// StrRepr mirrors repr(str). Valid UTF-8 is pycompat.StrRepr; a WTF-8 string holding
+// lone surrogates (which pycompat.StrRepr would read as U+FFFD) is quoted rune by rune
+// with the same rules, each surrogate as \udXXX.
 func StrRepr(s string) string {
+	if utf8.ValidString(s) {
+		return pycompat.StrRepr(s)
+	}
 	quote := byte('\'')
 	if strings.Contains(s, "'") && !strings.Contains(s, `"`) {
 		quote = '"'
@@ -189,10 +154,10 @@ func StrRepr(s string) string {
 			b.WriteString(`\n`)
 		case r == '\r':
 			b.WriteString(`\r`)
-		case r < 0x20 || r == 0x7F:
-			fmt.Fprintf(&b, `\x%02x`, r)
-		case r < 0x7F || isPyPrintable(r):
-			b.WriteString(WTF8([]rune{r}))
+		case r >= 0xD800 && r <= 0xDFFF:
+			fmt.Fprintf(&b, `\u%04x`, r)
+		case pycompat.IsPrintable(r):
+			b.WriteRune(r)
 		case r <= 0xFF:
 			fmt.Fprintf(&b, `\x%02x`, r)
 		case r <= 0xFFFF:
