@@ -157,12 +157,60 @@ func TestIdentityRangesFraming(t *testing.T) {
 	utf := func(s string) string { return string([]byte{byte(len(s) >> 8), byte(len(s))}) + s }
 	rec := utf("Login Failure") + utf("x") + utf("") + utf("") + utf("eve") + utf("root") +
 		utf("Changed") + utf("/a") + utf("out") + utf("1") + utf("2") + utf("ann")
-	got := identityRanges([]byte(rec))
+	got := planMask([]byte(rec)).ids
 	var names []string
 	for _, r := range got {
 		names = append(names, rec[r[0]:r[1]])
 	}
 	if want := "x,eve,root,ann"; strings.Join(names, ",") != want {
 		t.Fatalf("identity fields = %q, want %q", strings.Join(names, ","), want)
+	}
+}
+
+// Rule v2 (fail-closed): once a file has framed audit records, --mask must not let a user name
+// through an audit record the framing rejected. Each case pairs one valid record with a damaged
+// one whose userName is "mallory".
+func TestStringsMaskFailsClosedOnUnframedRecords(t *testing.T) {
+	utf := func(s string) string { return string([]byte{byte(len(s) >> 8), byte(len(s))}) + s }
+	valid := utf("Changed") + utf("/a/b") + utf("out") + utf("1.0") + utf("2.0") + utf("ann")
+	cases := map[string]string{
+		"truncated trailing record": utf("Changed") + utf("/a/c") + utf("out") + utf("1.0") + utf("2.0") +
+			"\x00\x10mallory",
+		"bad modified UTF-8": utf("Changed") + utf("/a/c") + utf("o\xffut") + utf("1.0") + utf("2.0") +
+			utf("mallory"),
+		"unknown operation": utf("Frobnicated") + utf("xyz") + utf("out") + utf("1.0") + utf("2.0") +
+			utf("mallory"),
+	}
+	for name, damaged := range cases {
+		lines := stringsLines([]byte(valid+damaged), true)
+		joined := strings.Join(lines, "\n")
+		for _, id := range []string{"mallory", "ann"} {
+			if strings.Contains(joined, id) {
+				t.Errorf("%s: %q leaks under --mask:\n%s", name, id, joined)
+			}
+		}
+		if !strings.Contains(joined, valueMasked) {
+			t.Errorf("%s: want the unframed text as %s:\n%s", name, valueMasked, joined)
+		}
+		// Text inside the framed record keeps the old rule.
+		if lines[0] != "Changed" || lines[1] != "/a/b" || lines[2] != "out" {
+			t.Errorf("%s: framed record text changed: %q", name, lines[:3])
+		}
+	}
+}
+
+// Outside framed records, an exact operation name of the vocabulary or an exact role account
+// still prints; with no framed record at all the old rule applies unchanged.
+func TestStringsMaskUnframedExceptions(t *testing.T) {
+	utf := func(s string) string { return string([]byte{byte(len(s) >> 8), byte(len(s))}) + s }
+	valid := utf("Changed") + utf("/a/b") + utf("out") + utf("1.0") + utf("2.0") + utf("ann")
+	tail := "\x00\x01Logout\x00\x01admin\x00\x01Removed\x00\x01Changedx\x00\x01admins"
+	got := strings.Join(stringsLines([]byte(valid+tail), true)[6:], ",")
+	if want := "Logout,admin,Removed,<VALUE-MASKED>,<VALUE-MASKED>"; got != want {
+		t.Errorf("unframed runs = %q, want %q", got, want)
+	}
+	got = strings.Join(stringsLines([]byte("\x00\x01mallory\x00\x01QWxhZGRpbjpvcGVuIHNlc2FtZQ=="), true), ",")
+	if want := "mallory,<VALUE-MASKED>"; got != want {
+		t.Errorf("no framed record: %q, want the old rule %q", got, want)
 	}
 }

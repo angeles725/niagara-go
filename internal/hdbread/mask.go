@@ -19,21 +19,28 @@ const (
 	fieldUserName = 5
 )
 
-// identityRanges returns the content [start, end) of every user-identity field of the framed
-// audit records in rec (intended difference from Python, whose mask() let user names through):
+// maskPlan is what --mask needs from the framed audit records of a record section.
+type maskPlan struct {
+	ids     [][2]int        // identity field contents [start, end)
+	records [][2]int        // framed record extents [start, end)
+	vocab   map[string]bool // candidate operation names: countOps-decoded plus auditOperations
+}
+
+// planMask frames the audit records of rec exactly as unanchoredOps does. Identity fields
+// (intended difference from Python, whose mask() let user names through) are:
 //   - the userName (6th string) of every record;
 //   - in a login-family record (loginOps), also slotName, oldValue and value, and the target
 //     unless it is a slot path (starts with '/').
 //
-// Empty fields are skipped. Records are framed exactly as unanchoredOps frames them.
-func identityRanges(rec []byte) [][2]int {
+// Empty fields are skipped.
+func planMask(rec []byte) maskPlan {
 	ops, _, _ := countOps(rec)
-	vocab := map[string]bool{}
+	p := maskPlan{vocab: map[string]bool{}}
 	for op := range ops {
-		vocab[op] = true
+		p.vocab[op] = true
 	}
-	var out [][2]int
-	for _, r := range frameRecords(rec, vocab) {
+	for _, r := range frameRecords(rec, p.vocab) {
+		p.records = append(p.records, [2]int{r.pos, r.fields[auditFields-1][1]})
 		for k := fieldTarget; k <= fieldUserName; k++ {
 			f := r.fields[k]
 			if f[0] == f[1] {
@@ -44,11 +51,14 @@ func identityRanges(rec []byte) [][2]int {
 				isID = k != fieldTarget || rec[f[0]] != '/'
 			}
 			if isID {
-				out = append(out, f)
+				p.ids = append(p.ids, f)
 			}
 		}
 	}
-	return out
+	for _, op := range auditOperations {
+		p.vocab[op] = true
+	}
+	return p
 }
 
 // printableRun is one run of 3+ printable ASCII bytes at rec[start:end].
@@ -73,28 +83,48 @@ func printableRuns(b []byte) []printableRun {
 	return runs
 }
 
-// stringsLines is the --strings output: every printable run; with doMask a run overlapping a
-// user-identity field prints userMasked, any other run goes through mask.
+// stringsLines is the --strings output: every printable run. With doMask (rule v2, fail-closed):
+//   - a run overlapping a user-identity field prints userMasked;
+//   - in a section with no framed audit record, any other run goes through mask (old rule);
+//   - otherwise a run lying entirely inside a framed record goes through mask, and a run that
+//     does not prints valueMasked unless it is exactly a candidate operation name (planMask
+//     vocab) or exactly a role account (roleRE), so a record the framing rejected (truncated,
+//     invalid modified UTF-8, operation outside the vocabulary) cannot leak its user name.
 func stringsLines(rec []byte, doMask bool) []string {
-	var ids [][2]int
+	var p maskPlan
 	if doMask {
-		ids = identityRanges(rec)
+		p = planMask(rec)
 	}
 	var lines []string
 	for _, r := range printableRuns(rec) {
 		s := string(rec[r.start:r.end])
 		if doMask {
-			s = mask(s)
-			for _, id := range ids {
-				if r.start < id[1] && id[0] < r.end {
-					s = userMasked
-					break
-				}
-			}
+			s = maskRun(p, r, s)
 		}
 		lines = append(lines, s)
 	}
 	return lines
+}
+
+// maskRun applies the --mask rule v2 of stringsLines to the run r whose text is s.
+func maskRun(p maskPlan, r printableRun, s string) string {
+	for _, id := range p.ids {
+		if r.start < id[1] && id[0] < r.end {
+			return userMasked
+		}
+	}
+	if len(p.records) == 0 {
+		return mask(s)
+	}
+	for _, rr := range p.records {
+		if rr[0] <= r.start && r.end <= rr[1] {
+			return mask(s)
+		}
+	}
+	if p.vocab[s] || roleRE.MatchString(s) {
+		return s
+	}
+	return valueMasked
 }
 
 var (
