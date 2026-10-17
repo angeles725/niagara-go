@@ -69,6 +69,13 @@ func Classify(rc int, stdout, stderr string, ms int) Raw {
 // formatG3 is Python's f"{x:.3g}".
 func formatG3(x float64) string { return strconv.FormatFloat(x, 'g', 3, 64) }
 
+// textOf decodes like subprocess text mode: UTF-8 with errors="replace" and
+// universal newlines ("\r\n" and "\r" read as "\n").
+func textOf(b []byte) string {
+	s := pycompat.DecodeReplace(b)
+	return strings.ReplaceAll(strings.ReplaceAll(s, "\r\n", "\n"), "\r", "\n")
+}
+
 // pyPath is str(pathlib.PurePosixPath(p)): repeated slashes and "." parts
 // dropped, no trailing slash, ".." kept.
 func pyPath(p string) string {
