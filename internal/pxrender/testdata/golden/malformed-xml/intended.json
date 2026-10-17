@@ -1,0 +1,5 @@
+{
+ "reason": "Python's ElementTree.parse raises ParseError and ends in a traceback (exit 1, the 'no CanvasPane' code); Go reports the malformed .px in one line with exit 2 (unreadable or malformed input). Go's encoding/xml words the syntax error differently from expat.",
+ "stderr": "px-render: cannot parse inputs/station/shared/px/malformed.px: XML syntax error on line 1: element <CanvasPane> closed by </px>\n",
+ "exit": 2
+}

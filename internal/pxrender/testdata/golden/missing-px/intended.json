@@ -1,0 +1,5 @@
+{
+ "reason": "Python's open() raises FileNotFoundError and ends in a traceback (exit 1, the 'no CanvasPane' code); Go reports the unreadable .px in one line with exit 2.",
+ "stderr": "px-render: cannot read inputs/station/shared/px/nope.px: No such file or directory\n",
+ "exit": 2
+}
