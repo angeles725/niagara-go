@@ -74,7 +74,7 @@ func CloseNames(query string, names []string, limit int) []string {
 			}
 		}
 		sort.SliceStable(idx, func(x, y int) bool { return less(idx[x], idx[y]) })
-		k := min(len(idx), limit+len(picked))
+		k := max(0, min(len(idx), limit+len(picked))) // nsmallest(n <= 0) is []
 		ranked := make([]string, k)
 		for j := range k {
 			ranked[j] = names[idx[j]]
@@ -125,6 +125,9 @@ func (r *Runtime) LoadClassIndex() *index.Object { return r.Load("class-index.js
 func ClassScope(data *index.Object) string {
 	meta := data.Object("_meta")
 	classes := data.Object("classes")
+	if classes == nil { // Python raises KeyError; the port counts an empty table
+		classes = index.NewObject()
+	}
 	entries := 0
 	mods := map[string]bool{}
 	for _, v := range classes.Values() {
@@ -162,8 +165,11 @@ func (r *Runtime) ClassMiss(name string, data *index.Object, what, hint string) 
 	if what == "" {
 		what = "class"
 	}
-	return r.Report(fmt.Sprintf("%s '%s'", what, name), ClassScope(data), name,
-		data.Object("classes").Keys(), hint)
+	var names []string
+	if classes := data.Object("classes"); classes != nil {
+		names = classes.Keys()
+	}
+	return r.Report(fmt.Sprintf("%s '%s'", what, name), ClassScope(data), name, names, hint)
 }
 
 // ModuleMiss is suggest.module_miss: the miss of a submodule lookup over the

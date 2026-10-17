@@ -7,6 +7,7 @@ package nav
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/argparse"
@@ -59,13 +60,29 @@ func Main(args []string, s cli.Stdio) int {
 		return cli.ExitCannotSearch
 	}
 	out := bufio.NewWriter(s.Out)
-	rt := core.New(baseDir, out, s.Err)
+	errw := orderedErr{out, s.Err}
+	rt := core.New(baseDir, out, errw)
 	defer rt.Close()
-	status := c.Run(&registry.Env{Stdio: cli.Stdio{In: s.In, Out: out, Err: s.Err}, Runtime: rt}, ns)
-	if err := out.Flush(); err != nil && status == cli.ExitFound {
+	status := c.Run(&registry.Env{Stdio: cli.Stdio{In: s.In, Out: out, Err: errw}, Runtime: rt}, ns)
+	if err := out.Flush(); err != nil {
+		fmt.Fprintf(s.Err, "mnav: cannot write to stdout: %v\n", err)
 		return cli.ExitCannotSearch
 	}
 	return status
+}
+
+// orderedErr is a command's stderr: it flushes the buffered stdout before each
+// write, so a terminal showing both streams sees them in the order the command
+// wrote them, as with Python's line-buffered stdout. A failed flush is sticky
+// in the bufio.Writer and reported when Main flushes at the end.
+type orderedErr struct {
+	out *bufio.Writer
+	err io.Writer
+}
+
+func (w orderedErr) Write(p []byte) (int, error) {
+	w.out.Flush()
+	return w.err.Write(p)
 }
 
 // BuildParser is build_parser(): the module-nav parser with every registered command.

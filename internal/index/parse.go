@@ -27,6 +27,25 @@ type parser struct {
 	hotK [hotSize]string
 	hotV [hotSize]any
 	hotN [hotSize]any
+
+	// depth is the number of objects and arrays open; past MaxDepth the parse
+	// stops with a RecursionError instead of growing the Go stack.
+	depth int
+	deep  *RecursionError
+}
+
+// MaxDepth is the deepest nesting of objects and arrays a document may have
+// (encoding/json's limit). CPython stops with a RecursionError ("Stack
+// overflow (used N kB) while decoding a JSON array ...") at a depth that
+// depends on its C stack; the port reports the fixed limit instead.
+const MaxDepth = 10000
+
+// RecursionError is the error of a document nested deeper than MaxDepth.
+type RecursionError struct{ Container string }
+
+func (e *RecursionError) Error() string {
+	return "maximum nesting depth (" + strconv.Itoa(MaxDepth) + ") exceeded while decoding a JSON " +
+		e.Container + " from a unicode string"
 }
 
 // internMax is the longest string value that is shared through the hot cache.
@@ -64,6 +83,9 @@ func (p *parser) document() (any, error) {
 	}
 	i := p.ws(0)
 	v, end, ok := p.value(i)
+	if p.deep != nil {
+		return nil, p.deep
+	}
 	if !ok {
 		if p.err == nil {
 			p.fail("Expecting value", i)
@@ -88,10 +110,24 @@ func (p *parser) value(i int) (any, int, bool) {
 	case '"':
 		s, end, ok := p.str(i, false)
 		return s, end, ok
-	case '{':
-		return p.object(i + 1)
-	case '[':
-		return p.array(i + 1)
+	case '{', '[':
+		if p.depth >= MaxDepth {
+			container := map[byte]string{'{': "object", '[': "array"}[c]
+			p.deep = &RecursionError{container}
+			p.fail("nesting too deep", i) // stops every enclosing container
+			return nil, i, false
+		}
+		p.depth++
+		var v any
+		var end int
+		var ok bool
+		if c == '{' {
+			v, end, ok = p.object(i + 1)
+		} else {
+			v, end, ok = p.array(i + 1)
+		}
+		p.depth--
+		return v, end, ok
 	case 'n':
 		if p.lit(i, "null") {
 			return nil, i + 4, true
