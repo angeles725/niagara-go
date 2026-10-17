@@ -1,0 +1,15 @@
+L1.3 (lab item)
+  section:  Lab 1 — First component (`LI:1-12`)
+  step:     Write `BFirst` (`LI:4-6`)
+  text:     sources/n4-dev-course/text/Lab Instructions.txt:4-6
+  status:   unverified, identical
+  source:   docs/n4-dev-course-solutions/labs.md:13
+  answer:
+    **Identical** to shipped `LAB/BFirst.java:1-9` *(unverified — not compiled)*:
+
+    ```java
+    public class BFirst extends BComponent
+    {
+    }
+    ```
+    The setter error before Slot-o-Matic is expected.

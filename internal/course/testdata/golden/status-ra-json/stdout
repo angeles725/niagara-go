@@ -1,0 +1,51 @@
+{
+  "groups": [
+    {
+      "group": "RA1",
+      "items": 7,
+      "predicted": 0,
+      "unverified": 0,
+      "corrected": 0,
+      "identical": 0,
+      "verified": 0,
+      "written": 7
+    },
+    {
+      "group": "RA2",
+      "items": 1,
+      "predicted": 0,
+      "unverified": 0,
+      "corrected": 0,
+      "identical": 0,
+      "verified": 0,
+      "written": 1
+    },
+    {
+      "group": "RAX",
+      "items": 1,
+      "predicted": 0,
+      "unverified": 1,
+      "corrected": 0,
+      "identical": 0,
+      "verified": 0,
+      "written": 0
+    }
+  ],
+  "total": {
+    "group": "total",
+    "items": 9,
+    "predicted": 0,
+    "unverified": 1,
+    "corrected": 0,
+    "identical": 0,
+    "verified": 0,
+    "written": 8
+  },
+  "status": "unverified",
+  "matches": [
+    {
+      "id": "X1",
+      "step": "The listings compile"
+    }
+  ]
+}

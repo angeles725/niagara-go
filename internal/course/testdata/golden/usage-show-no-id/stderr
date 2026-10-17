@@ -1,0 +1,2 @@
+usage: course show [-h] [--root DIR] [--json] ID [ID ...]
+course show: error: the following arguments are required: ID

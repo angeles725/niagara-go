@@ -1,0 +1,8 @@
+L1.1 (lab item)
+  section:  Lab 1 — First component (`LI:1-12`)
+  step:     Start the console (`LI:2-3`)
+  text:     sources/n4-dev-course/text/Lab Instructions.txt:2-3
+  status:   written
+  source:   docs/n4-dev-course-solutions/labs.md:11
+  answer:
+    *Why the console?* It keeps the log.

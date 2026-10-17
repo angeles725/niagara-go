@@ -1,0 +1,16 @@
+group  items  predicted  unverified  corrected  identical  verified  written
+L1         6          1           1          0          1         0        4
+L2         4          1           1          1          1         0        2
+LB         1          1           0          0          0         0        0
+LA         1          0           0          0          0         0        1
+RA1        7          0           0          0          0         0        7
+RA2        1          0           0          0          0         0        1
+RAX        1          0           1          0          0         0        0
+EXAM       2          0           0          0          0         2        0
+total     23          3           3          1          2         2       15
+an item counts under every status it carries; written = none of them
+
+predicted: 3 items
+L1.4  *Observe* the jar (`LI:7`)
+L2.6  *Observe* the second post (`LI:19-20`)
+LB.1  Add a column (`LI:21-22`)

@@ -1,0 +1,1 @@
+{"args": ["show", "L1.1"], "env": {"NIAGARA_RESEARCH_DIR": ""}, "cwd_fixture": "norelated/sub"}

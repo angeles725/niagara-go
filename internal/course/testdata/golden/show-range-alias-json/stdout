@@ -1,0 +1,26 @@
+[
+  {
+    "id": "L2.2–L2.4",
+    "covers": [
+      "L2.2",
+      "L2.3",
+      "L2.4"
+    ],
+    "kind": "lab item",
+    "group": "L2",
+    "section": "Lab 2 — Executors (`LI:13-20`)",
+    "subsection": "",
+    "step": "Three properties (`LI:15-16`)",
+    "text_file": "sources/n4-dev-course/text/Lab Instructions.txt",
+    "ranges": [
+      "15-16"
+    ],
+    "status": [
+      "written"
+    ],
+    "live_run": false,
+    "file": "docs/n4-dev-course-solutions/labs.md",
+    "line": 34,
+    "answer": "Flags `SUMMARY | READONLY`."
+  }
+]

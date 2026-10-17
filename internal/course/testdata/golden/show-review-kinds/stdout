@@ -1,0 +1,68 @@
+RA1.M1 (requirement)
+  section:  1. Review Assignment 1 — BWithId / 1.1 Requirements (from `sources/n4-dev-course/text/Review Assignment 1.txt`)
+  step:     Folder `Review`
+  text:     sources/n4-dev-course/text/Review Assignment 1.txt:2-3
+  status:   written
+  source:   docs/n4-dev-course-solutions/review-assignments.md:11
+  answer:
+    Satisfied by: wizard output
+    Verified by: build (§3)
+
+RA1.R3a (requirement)
+  section:  1. Review Assignment 1 — BWithId / 1.1 Requirements (from `sources/n4-dev-course/text/Review Assignment 1.txt`)
+  step:     `id` flags `SUMMARY | READONLY`
+  text:     sources/n4-dev-course/text/Review Assignment 1.txt:5, 7
+  status:   written
+  source:   docs/n4-dev-course-solutions/review-assignments.md:14
+  answer:
+    (no traceability row)
+
+RA1.V9–V11 (requirement)
+  section:  1. Review Assignment 1 — BWithId / 1.1 Requirements (from `sources/n4-dev-course/text/Review Assignment 1.txt`)
+  covers:   RA1.V9, RA1.V10, RA1.V11
+  step:     Station steps
+  text:     sources/n4-dev-course/text/Review Assignment 1.txt:8-9
+  status:   written
+  source:   docs/n4-dev-course-solutions/review-assignments.md:15
+  answer:
+    Satisfied by: station steps
+    Verified by: §3
+
+D1.1 (decision)
+  section:  1. Review Assignment 1 — BWithId / 1.2 Design
+  step:     Runtime only
+  text:     (none)
+  status:   written
+  source:   docs/n4-dev-course-solutions/review-assignments.md:21
+  answer:
+    Lab 1 shows it.
+
+T1.1 (trap)
+  section:  1. Review Assignment 1 — BWithId / 1.5 Known traps
+  step:     TRANSIENT on `id`
+  text:     (none)
+  status:   written
+  source:   docs/n4-dev-course-solutions/review-assignments.md:43
+  answer:
+    What goes wrong: Id is not saved
+    This solution: `id` is persisted
+
+X1 (check)
+  section:  3. Needs a run (requires execution)
+  step:     The listings compile
+  text:     (none)
+  status:   unverified
+  source:   docs/n4-dev-course-solutions/review-assignments.md:57
+  answer:
+    Cheapest check: `gradlew jar`
+
+P1 (exam problem)
+  section:  1. Problem 1 — BLimiter
+  step:     Problem 1 — BLimiter
+  text:     (none)
+  status:   verified
+  source:   docs/n4-dev-course-solutions/certification-exam.md:5
+  answer:
+    **Requirement.** Clamp `in` between `min` and `max`.
+
+    **Verified.** `out` stayed between 25 and 75.
