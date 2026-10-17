@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"strconv"
 	"strings"
 	"sync"
 	"testing"
@@ -94,55 +93,6 @@ func startStation(t *testing.T) *replayStation {
 	return rs
 }
 
-// optionsFromArgs maps the argv of a non-usage golden case onto Options (a test fixture, not a
-// parser: usage, help and error text belong to internal/argparse).
-func optionsFromArgs(t *testing.T, args []string) Options {
-	t.Helper()
-	var o Options
-	var pos []string
-	for i := 0; i < len(args); i++ {
-		switch a := args[i]; {
-		case a == "--base" || a == "--pass-file" || a == "--room":
-			if i+1 >= len(args) {
-				t.Fatalf("golden argv %q", args)
-			}
-			v := args[i+1]
-			i++
-			switch a {
-			case "--base":
-				o.Base = v
-			case "--pass-file":
-				o.PassFile = v
-			default:
-				n, err := strconv.Atoi(v)
-				if err != nil {
-					t.Fatalf("golden --room %q", v)
-				}
-				o.Room = n
-			}
-		case a == "--json":
-			o.JSON = true
-		case strings.HasPrefix(a, "-"):
-			t.Fatalf("golden argv %q is not a plain case; name it usage-*", args)
-		default:
-			pos = append(pos, a)
-		}
-	}
-	if len(pos) == 0 {
-		t.Fatalf("golden argv %q has no command", args)
-	}
-	o.Command = pos[0]
-	switch {
-	case o.Command == "read" && len(pos) == 2:
-		o.Ord = pos[1]
-	case o.Command == "dump" && len(pos) == 2:
-		o.DumpRoom = pos[1]
-	case len(pos) != 1:
-		t.Fatalf("golden argv %q", args)
-	}
-	return o
-}
-
 // intended lists the cases where Python ends in a traceback; Go prints one line instead.
 var intended = map[string]struct {
 	exit   int
@@ -153,11 +103,19 @@ var intended = map[string]struct {
 	"dump-room-x":                {2, "obix-nav: dump: invalid literal for int() with base 10: 'x'\n"},
 }
 
-// TestGolden checks Run against the frozen Python cases at the logic level (options already
-// parsed). Once Main exists (internal/argparse), golden.Run(t, "testdata", Main) replaces it,
-// with the same fake station running.
+// TestGolden runs every parity case (usage errors included) through Main against the replayed
+// station.
 func TestGolden(t *testing.T) {
-	cases, err := golden.Load("testdata")
+	station := startStation(t)
+	golden.Run(t, "testdata", Main)
+	if u := station.takeUnexpected(); len(u) > 0 {
+		t.Errorf("requests not in the recording:\n%s", strings.Join(u, "\n---\n"))
+	}
+}
+
+// TestIntendedDiffs runs testdata/intended/golden: stdout must match Python; stderr and exit are Go's.
+func TestIntendedDiffs(t *testing.T) {
+	cases, err := golden.Load("testdata/intended")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -165,28 +123,24 @@ func TestGolden(t *testing.T) {
 	t.Chdir("testdata")
 	for _, c := range cases {
 		t.Run(c.Name, func(t *testing.T) {
-			if strings.HasPrefix(c.Name, "usage-") {
-				t.Skip("awaiting internal/argparse")
+			d, ok := intended[c.Name]
+			if !ok {
+				t.Fatalf("no intended result recorded for %s", c.Name)
 			}
 			var out, errb bytes.Buffer
-			code := Run(optionsFromArgs(t, c.Args), cli.Stdio{In: strings.NewReader(""), Out: &out, Err: &errb})
+			code := Main(c.Args, cli.Stdio{In: strings.NewReader(""), Out: &out, Err: &errb})
 			if u := station.takeUnexpected(); len(u) > 0 {
 				t.Errorf("requests not in the recording:\n%s", strings.Join(u, "\n---\n"))
 			}
-			wantExit, wantErr := c.Exit, c.Stderr
-			if d, ok := intended[c.Name]; ok {
-				wantExit, wantErr = d.exit, []byte(d.stderr)
-			}
-			if code != wantExit {
-				t.Errorf("exit = %d, want %d", code, wantExit)
+			if code != d.exit {
+				t.Errorf("exit = %d, want %d", code, d.exit)
 			}
 			if !bytes.Equal(out.Bytes(), c.Stdout) {
 				t.Errorf("stdout: %s", golden.Diff(c.Stdout, out.Bytes()))
 			}
-			if !bytes.Equal(errb.Bytes(), wantErr) {
-				t.Errorf("stderr: %s", golden.Diff(wantErr, errb.Bytes()))
+			if errb.String() != d.stderr {
+				t.Errorf("stderr: %s", golden.Diff([]byte(d.stderr), errb.Bytes()))
 			}
 		})
 	}
-
 }
