@@ -98,6 +98,20 @@ CASES = [
     ("rank-miss", ["rank", "zzzqqq", "xxyyzz"], NO_CORPUS),
     ("rank-no-terms", ["rank", "the a of"], NO_CORPUS),
     ("rank-skips", ["rank", "alarm service"], NO_CORPUS, "fixture/rank-skips"),
+    ("hierarchy", ["hierarchy", "BAlarmRecipient"], NO_CORPUS),
+    ("hierarchy-depth1", ["hierarchy", "BComponent", "--depth", "1"], NO_CORPUS),
+    ("hierarchy-depth0", ["hierarchy", "BAlarmRecipient", "--depth", "0"], NO_CORPUS),
+    ("hierarchy-negative", ["hierarchy", "BAlarmRecipient", "--depth", "-1"], NO_CORPUS),
+    ("hierarchy-leaf", ["hierarchy", "BAlarmService"], NO_CORPUS),
+    ("hierarchy-miss", ["hierarchy", "BAlarmServce"], NO_CORPUS),
+    ("hierarchy-chain", ["hierarchy", "BAlarmService", "--chain"], NO_CORPUS),
+    ("hierarchy-chain-root", ["hierarchy", "BAlarmAcknowledger", "--chain"], NO_CORPUS),
+    ("hierarchy-chain-miss", ["hierarchy", "BNoSuchThing", "--chain"], NO_CORPUS),
+    ("implementors", ["implementors", "BIAlarmSource", "-n", "2"], NO_CORPUS),
+    ("implementors-case", ["implementors", "biservice"], NO_CORPUS),
+    ("implementors-zero", ["implementors", "BIService", "-n", "0"], NO_CORPUS),
+    ("implementors-class", ["implementors", "BComponent"], NO_CORPUS),
+    ("implementors-miss", ["implementors", "BIAlarmSorce"], NO_CORPUS),
     ("ask", ["ask", "who calls ackAlarm"], NO_CORPUS),
     ("ask-n", ["ask", "-n", "2", "como funciona el ack de alarmas"], NO_CORPUS),
 ]
@@ -148,6 +162,31 @@ def cut_xref(names):
     return {"_meta": {"timestamp": xref["_meta"]["timestamp"]}, "class_imported_by": out}
 
 
+def cut_inheritance(names):
+    """inheritance.json restricted to `names` plus the descendants of
+    BAlarmRecipient and the chains of `names`: children and implementors
+    lists keep only kept classes (a small tree with real shapes)."""
+    with open(os.path.join(NAV, "indexes", "inheritance.json"), encoding="utf-8") as f:
+        inh = json.load(f)
+    p2c, c2c, i2i = inh["parent_to_children"], inh["class_to_chain"], inh["interface_to_implementors"]
+    keep, todo = set(names), ["BAlarmRecipient"]
+    while todo:
+        n = todo.pop()
+        if n not in keep or n == "BAlarmRecipient":
+            keep.add(n)
+            todo += [c for c in p2c.get(n, []) if c not in keep]
+    for n in list(keep):
+        keep.update(c2c.get(n, []))
+    cut = lambda d: {k: [x for x in v if x in keep] for k, v in d.items()
+                     if k in keep and any(x in keep for x in v)}
+    i2i_keep = {k: v for k, v in cut(i2i).items() if k in ("BIAlarmSource", "BIService", "BIAlarmClassFolder")}
+    for k in ("BIAlarmSource", "BIService", "BIAlarmClassFolder"):
+        i2i_keep.setdefault(k, [x for x in i2i.get(k, []) if x in keep] or i2i.get(k, [])[:12])
+    return {"_meta": {"timestamp": inh["_meta"]["timestamp"]}, "parent_to_children": cut(p2c),
+            "interface_to_implementors": i2i_keep,
+            "class_to_chain": {k: v for k, v in c2c.items() if k in keep}}
+
+
 def build_fixture():
     fx = os.path.join(HERE, "fixture")
     shutil.rmtree(fx, ignore_errors=True)
@@ -166,6 +205,8 @@ def build_fixture():
         json.dump({"_meta": inv["_meta"], "modules": mods}, f)
     with open(os.path.join(idx, "xref-index.json"), "w", encoding="utf-8") as f:
         json.dump(cut_xref(CLASS_NAMES), f)
+    with open(os.path.join(idx, "inheritance.json"), "w", encoding="utf-8") as f:
+        json.dump(cut_inheritance(CLASS_NAMES), f)
     skips = os.path.join(fx, "rank-skips", "indexes")
     os.makedirs(skips)
     with open(os.path.join(skips, "class-index.json"), "w", encoding="utf-8") as f:

@@ -9,8 +9,8 @@ import (
 
 func init() {
 	registry.Register("structure", []registry.Command{
-		{Name: "hierarchy", Help: "Show subclass tree or inheritance chain", Args: argsHierarchy},
-		{Name: "implementors", Help: "Show classes implementing an interface", Args: argsImplementors},
+		{Name: "hierarchy", Help: "Show subclass tree or inheritance chain", Args: argsHierarchy, Run: runHierarchy},
+		{Name: "implementors", Help: "Show classes implementing an interface", Args: argsImplementors, Run: runImplementors},
 		{Name: "xref", Help: "Show cross-references (imports/importers) for a class", Args: argsXref},
 		{Name: "deps", Help: "Show module-level dependencies", Args: argsDeps},
 		{Name: "method", Help: "Show classes that define a given method", Args: argsMethod},
