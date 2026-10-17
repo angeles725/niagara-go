@@ -92,15 +92,15 @@ func (e *env) audit(home, stationXML, host string, rawHead []byte, rep *report) 
 	if err != nil {
 		return fmt.Errorf("keytool: %w", err)
 	}
-	switch {
-	case d == nil:
-	case d.opened || d.wrongPass:
-		rep.add("SEC-02", "crit", "truststore.jks default password",
-			pick(d.opened, "opens with 'changeit'", "custom password"), "non-default store password",
-			verdict(d.opened), "B392/B397", "FS/daemon access -> trust-anchor injection")
-	default: // keytool failed for another reason: the password was not checked
-		rep.add("SEC-02", "crit", "truststore.jks default password", "not verified (keytool "+d.failure+")",
-			"non-default store password", "SKIP", "B392/B397", "run: keytool -list -keystore <home>/security/truststore.jks")
+	if d != nil {
+		observed, verd, note := pick(d.opened, "opens with 'changeit'", "custom password"), verdict(d.opened),
+			"FS/daemon access -> trust-anchor injection"
+		if !d.opened && !d.wrongPass { // keytool failed for another reason: the password was not checked
+			observed, verd, note = "not verified (keytool "+d.failure+")", "SKIP",
+				"run: keytool -list -keystore <home>/security/truststore.jks"
+		}
+		rep.add("SEC-02", "crit", "truststore.jks default password", observed, "non-default store password",
+			verd, "B392/B397", note)
 	}
 
 	e.sec03(home, rep)
