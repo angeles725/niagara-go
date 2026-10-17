@@ -1,0 +1,2 @@
+usage: module-nav selftest [-h] [--recall] [--sample SAMPLE]
+module-nav selftest: error: argument --sample: must be a positive integer, got 'x'

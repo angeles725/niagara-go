@@ -1,0 +1,2 @@
+usage: module-nav session export [-h] [--as {md,json}] [--out EXPORT_OUT] name
+module-nav session export: error: argument --as: invalid choice: 'yaml' (choose from 'md', 'json')

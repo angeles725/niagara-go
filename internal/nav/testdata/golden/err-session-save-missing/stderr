@@ -1,0 +1,2 @@
+usage: module-nav session save [-h] name
+module-nav session save: error: the following arguments are required: name

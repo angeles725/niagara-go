@@ -70,3 +70,37 @@ func TestModuleSMANotPortedYet(t *testing.T) {
 		t.Fatalf("code=%d stdout=%q stderr=%q", code, out.String(), errb.String())
 	}
 }
+
+// TestTokenContextParse pins `token --context [N]` (nargs="?", const 2,
+// default 0) against the namespaces Python's parser builds.
+func TestTokenContextParse(t *testing.T) {
+	parser, err := BuildParser()
+	if err != nil {
+		t.Fatal(err)
+	}
+	tests := []struct {
+		args          []string
+		context, n    int
+		word          string
+		wantUsageExit bool
+	}{
+		{args: []string{"token", "w", "--context"}, context: 2, n: 50, word: "w"},
+		{args: []string{"token", "w", "--context", "5"}, context: 5, n: 50, word: "w"},
+		{args: []string{"token", "w"}, context: 0, n: 50, word: "w"},
+		{args: []string{"token", "w", "--context", "-n", "3"}, context: 2, n: 3, word: "w"},
+		{args: []string{"token", "--context", "w"}, wantUsageExit: true},
+	}
+	for _, tt := range tests {
+		var out, errb bytes.Buffer
+		ns, code, done := parser.Parse(tt.args, cli.Stdio{Out: &out, Err: &errb})
+		if tt.wantUsageExit {
+			if !done || code != 2 || !strings.Contains(errb.String(), "argument --context: invalid int value: 'w'") {
+				t.Errorf("%q: done=%v code=%d stderr=%q", tt.args, done, code, errb.String())
+			}
+			continue
+		}
+		if done || ns.Int("token_context") != tt.context || ns.Int("n") != tt.n || ns.String("word") != tt.word {
+			t.Errorf("%q: context=%d n=%d word=%q done=%v", tt.args, ns.Int("token_context"), ns.Int("n"), ns.String("word"), done)
+		}
+	}
+}

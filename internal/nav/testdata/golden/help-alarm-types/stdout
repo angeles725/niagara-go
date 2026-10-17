@@ -1,0 +1,4 @@
+usage: module-nav alarm-types [-h]
+
+options:
+  -h, --help  show this help message and exit

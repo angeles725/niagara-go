@@ -5,7 +5,8 @@
 --fixture first rebuilds fixture/ (a small class index and module inventory cut
 from the real module-navigator indexes, plus a synthetic module.xml); then
 every case below is run through Python module_nav.py from this directory
-(COLUMNS=100, NO_COLOR=1) and written to golden/<case>/.
+(COLUMNS=100, NO_COLOR=1) and written to golden/<case>/: the nav-<case>
+command runs on the fixture, and the parser-only PARSE_CASES.
 """
 
 import json
@@ -89,6 +90,21 @@ CASES = [
 ]
 
 
+# Parser-only cases (usage errors and help) against a base directory that does
+# not exist, like the S0 cases frozen with them.
+PARSE_CASES = [
+    ("err-ask-positive-int", ["ask", "q", "-n", "-3"]),
+    ("err-selftest-sample", ["selftest", "--sample", "x"]),
+    ("err-token-context-int", ["token", "foo", "--context", "abc"]),
+    ("err-token-context-float", ["token", "foo", "--context", "1.5"]),
+    ("err-session-bad-sub", ["session", "bogus"]),
+    ("err-session-save-missing", ["session", "save"]),
+    ("err-session-export-bad-as", ["session", "export", "x", "--as", "yaml"]),
+    ("help-repl", ["repl", "--help"]),
+    ("help-alarm-types", ["alarm-types", "--help"]),
+]
+
+
 def build_fixture():
     fx = os.path.join(HERE, "fixture")
     shutil.rmtree(fx, ignore_errors=True)
@@ -111,8 +127,8 @@ def build_fixture():
         f.write(MODULE_XML)
 
 
-def capture(cid, args, env):
-    argv = args if args[0] == "--base-dir" else ["--base-dir", BASE] + args
+def capture(cid, args, env, base=BASE):
+    argv = ["--base-dir", base] + args
     full_env = dict(os.environ, COLUMNS="100", NO_COLOR="1", **env)
     p = subprocess.run([sys.executable, CLI] + argv, cwd=HERE, env=full_env,
                        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -120,7 +136,7 @@ def capture(cid, args, env):
     shutil.rmtree(d, ignore_errors=True)
     os.makedirs(d)
     with open(os.path.join(d, "cmd.json"), "w", encoding="utf-8") as f:
-        json.dump({"args": argv, "env": env}, f)
+        json.dump({"args": argv, "env": env} if env else {"args": argv}, f)
         f.write("\n")
     for name, data in (("stdout", p.stdout), ("stderr", p.stderr)):
         if data or name == "stdout":
@@ -139,6 +155,8 @@ def main():
         build_fixture()
     for cid, args, env in CASES:
         capture("nav-" + cid, args, env)
+    for cid, args in PARSE_CASES:
+        capture(cid, args, {}, base="/nonexistent-base")
 
 
 if __name__ == "__main__":
