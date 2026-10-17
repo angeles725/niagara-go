@@ -28,7 +28,8 @@ type command func(e *env) (found, code int)
 
 var commands = map[string]command{
 	"tree": cmdTree, "slot": cmdSlot, "links": cmdLinks, "handle": cmdHandle, "path": cmdPath,
-	"find": cmdFind, "types": cmdTypes, "grep": cmdGrep, "diff": cmdDiff,
+	"find": cmdFind, "types": cmdTypes, "pointcache": cmdPointcache, "writable": cmdWritable,
+	"relays": cmdRelays, "hoa": cmdHoa, "tiles": cmdTiles, "grep": cmdGrep, "diff": cmdDiff,
 }
 
 // searchCommands exit 1 when they match nothing (principle 2 of docs/TOOLING-GUIDELINES.md).
@@ -153,9 +154,8 @@ func Main(args []string, s cli.Stdio) int {
 		sort.Strings(sorted)
 		return p.Error(s.Err, fmt.Sprintf("--limit does not apply to `%s` (it caps the rows of: %s)", cmd, strings.Join(sorted, ", ")))
 	}
-	if commands[cmd] == nil { // the kit checks, pointcache and selftest land in the next commit
-		fmt.Fprintf(s.Err, "bog-nav: %s is not ported yet\n", cmd)
-		return cli.ExitCannotSearch
+	if cmd == "selftest" {
+		return selftest(s.Out)
 	}
 	path := ns.String("bog")
 	if path == "" {
