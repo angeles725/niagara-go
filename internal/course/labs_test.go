@@ -27,7 +27,7 @@ func TestParseLabsFixture(t *testing.T) {
 	for _, it := range c.Items {
 		ids = append(ids, it.ID)
 	}
-	want := []string{"L1.1", "L1.2", "L1.3", "L1.4", "L1.5", "L1.6", "L2.1", "L2.2–L2.4", "L2.5", "L2.6", "LB.1", "LA.1"}
+	want := []string{"L1.1", "L1.2", "L1.3", "L1.4", "L1.5", "L1.6", "L2.1", "L2.2–L2.4", "L2.5", "L2.6", "LB.1", "LA.1", "LA.2"}
 	if !reflect.DeepEqual(ids, want) {
 		t.Errorf("ids = %v, want %v", ids, want)
 	}
@@ -43,6 +43,7 @@ func TestParseLabsFixture(t *testing.T) {
 		{"l2.3", nil, false, []Range{{15, 16}}},
 		{"L2.5", []string{"unverified", "corrected", "identical"}, true, []Range{{17, 18}}},
 		{"L2.6", []string{"predicted"}, true, []Range{{19, 20}}},
+		{"LA.2", []string{"verified"}, false, []Range{{26, 26}}},
 	}
 	for _, ck := range checks {
 		it := c.lookup(ck.id)

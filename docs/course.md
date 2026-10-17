@@ -105,7 +105,7 @@ unverified). `written` means none of the others.
 | `unverified` | `*(unverified — not compiled)*`; a heading containing `unverified`; the `Needs a run` section |
 | `corrected` | `**Corrected**` (any case) |
 | `identical` | `**Identical**` (any case) |
-| `verified` | a file-level `**Status: verified ...**` line (certification-exam.md) |
+| `verified` | `*(verified live <YYYY-MM-DD>)*` (an item confirmed on a live station); a file-level `**Status: verified ...**` line (certification-exam.md) |
 | `written` | none of the above |
 
 A file-level note such as `Status of every code listing: unverified` describes code listings,

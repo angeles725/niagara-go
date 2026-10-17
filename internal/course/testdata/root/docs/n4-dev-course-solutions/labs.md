@@ -45,6 +45,7 @@
 ## Appendix A — Debugging (`LI:25-26`)
 
 - **LA.1** · Attach the debugger (`LI:25-26`) · `suspend=n` lets it run.
+- **LA.2** · Count the output files (`LI:26`) · *(verified live 2026-10-15)* two files, as predicted.
 
 ---
 

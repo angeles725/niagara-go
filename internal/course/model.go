@@ -188,6 +188,8 @@ var (
 	unverifiedRe = regexp.MustCompile(`\*\(unverified — not compiled\)\*`)
 	correctedRe  = regexp.MustCompile(`(?i)\*\*corrected\*\*`)
 	identicalRe  = regexp.MustCompile(`(?i)\*\*identical\*\*`)
+	// verifiedRe is an item confirmed on a live station after the key was written.
+	verifiedRe = regexp.MustCompile(`\*\(verified live \d{4}-\d{2}-\d{2}\)\*`)
 )
 
 // markers returns the statuses whose marker occurs in text, plus the inherited ones.
@@ -200,6 +202,7 @@ func markers(text string, inherited ...string) []string {
 	found["unverified"] = found["unverified"] || unverifiedRe.MatchString(text)
 	found["corrected"] = found["corrected"] || correctedRe.MatchString(text)
 	found["identical"] = found["identical"] || identicalRe.MatchString(text)
+	found["verified"] = found["verified"] || verifiedRe.MatchString(text)
 	var out []string
 	for _, s := range statuses {
 		if found[s] {

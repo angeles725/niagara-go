@@ -136,8 +136,8 @@ func checkRecall(t *testing.T, root string) *Corpus {
 
 func TestRecallFixture(t *testing.T) {
 	c := checkRecall(t, "testdata/root")
-	if got := len(c.Items); got != 23 {
-		t.Errorf("fixture items = %d, want 23", got)
+	if got := len(c.Items); got != 24 {
+		t.Errorf("fixture items = %d, want 24", got)
 	}
 }
 
@@ -181,7 +181,7 @@ func TestRecallReal(t *testing.T) {
 	}
 	got := *rows["total"]
 	pinned := countRow{Group: "total", Items: 370, Predicted: 40, Unverified: 20, Corrected: 10, Identical: 50,
-		Verified: 3, Written: 259}
+		Verified: 4, Written: 258}
 	if got != pinned {
 		t.Errorf("totals = %+v, want %+v", got, pinned)
 	}
