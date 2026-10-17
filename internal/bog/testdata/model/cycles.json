@@ -1,0 +1,350 @@
+{
+ "comps": [
+  {
+   "key": "1",
+   "name": "",
+   "handle": "1",
+   "type": "b:Station",
+   "pfx": "b",
+   "module": "baja",
+   "path": "",
+   "parent_h": null,
+   "children": [
+    "2"
+   ],
+   "slots": [],
+   "actions": [],
+   "has_fallback": false,
+   "is_writable": false,
+   "value_type": null,
+   "value_val": null,
+   "present": [
+    "Logic"
+   ],
+   "simple_type": "Station"
+  },
+  {
+   "key": "2",
+   "name": "Logic",
+   "handle": "2",
+   "type": "b:Folder",
+   "pfx": "b",
+   "module": "baja",
+   "path": "Logic",
+   "parent_h": "1",
+   "children": [
+    "3",
+    "4",
+    "5"
+   ],
+   "slots": [],
+   "actions": [],
+   "has_fallback": false,
+   "is_writable": false,
+   "value_type": null,
+   "value_val": null,
+   "present": [
+    "Latch",
+    "Pid",
+    "Valve Out"
+   ],
+   "simple_type": "Folder"
+  },
+  {
+   "key": "3",
+   "name": "Pid",
+   "handle": "3",
+   "type": "kitControl:LoopPoint",
+   "pfx": "kitControl",
+   "module": "kitControl",
+   "path": "Logic/Pid",
+   "parent_h": "2",
+   "children": [],
+   "slots": [],
+   "actions": [],
+   "has_fallback": false,
+   "is_writable": false,
+   "value_type": null,
+   "value_val": null,
+   "present": [
+    "Link"
+   ],
+   "simple_type": "LoopPoint"
+  },
+  {
+   "key": "4",
+   "name": "Valve Out",
+   "handle": "4",
+   "type": "kitControl:Multiply",
+   "pfx": "kitControl",
+   "module": "kitControl",
+   "path": "Logic/Valve Out",
+   "parent_h": "2",
+   "children": [],
+   "slots": [],
+   "actions": [],
+   "has_fallback": false,
+   "is_writable": false,
+   "value_type": null,
+   "value_val": null,
+   "present": [
+    "Link"
+   ],
+   "simple_type": "Multiply"
+  },
+  {
+   "key": "5",
+   "name": "Latch",
+   "handle": "5",
+   "type": "kitControl:Or",
+   "pfx": "kitControl",
+   "module": "kitControl",
+   "path": "Logic/Latch",
+   "parent_h": "2",
+   "children": [],
+   "slots": [],
+   "actions": [],
+   "has_fallback": false,
+   "is_writable": false,
+   "value_type": null,
+   "value_val": null,
+   "present": [
+    "Link",
+    "Link1",
+    "Link2"
+   ],
+   "simple_type": "Or"
+  }
+ ],
+ "handle_count": [
+  [
+   "1",
+   1
+  ],
+  [
+   "2",
+   1
+  ],
+  [
+   "3",
+   1
+  ],
+  [
+   "4",
+   1
+  ],
+  [
+   "5",
+   1
+  ]
+ ],
+ "prefix_map": [
+  [
+   "b",
+   "baja"
+  ],
+  [
+   "kitControl",
+   "kitControl"
+  ]
+ ],
+ "roots": [
+  "1"
+ ],
+ "links": [
+  {
+   "container_h": "3",
+   "container_path": "Logic/Pid",
+   "link_name": "Link",
+   "src_h": "4",
+   "src_ord": null,
+   "src_slot": "out",
+   "tgt_slot": "controlledVariable"
+  },
+  {
+   "container_h": "4",
+   "container_path": "Logic/Valve Out",
+   "link_name": "Link",
+   "src_h": "3",
+   "src_ord": null,
+   "src_slot": "out",
+   "tgt_slot": "inA"
+  },
+  {
+   "container_h": "5",
+   "container_path": "Logic/Latch",
+   "link_name": "Link",
+   "src_h": "5",
+   "src_ord": null,
+   "src_slot": "out",
+   "tgt_slot": "inB"
+  },
+  {
+   "container_h": "5",
+   "container_path": "Logic/Latch",
+   "link_name": "Link1",
+   "src_h": "99",
+   "src_ord": null,
+   "src_slot": "out",
+   "tgt_slot": "inA"
+  },
+  {
+   "container_h": "5",
+   "container_path": "Logic/Latch",
+   "link_name": "Link2",
+   "src_h": null,
+   "src_ord": "station:|slot:/Logic/Pid",
+   "src_slot": "out",
+   "tgt_slot": "inC"
+  }
+ ],
+ "link_rows": [
+  {
+   "link": "Link",
+   "source": "Logic/Valve Out.out",
+   "target": "Logic/Pid.controlledVariable",
+   "src_resolved": true
+  },
+  {
+   "link": "Link",
+   "source": "Logic/Pid.out",
+   "target": "Logic/Valve Out.inA",
+   "src_resolved": true
+  },
+  {
+   "link": "Link",
+   "source": "Logic/Latch.out",
+   "target": "Logic/Latch.inB",
+   "src_resolved": true
+  },
+  {
+   "link": "Link1",
+   "source": "h:99.out",
+   "target": "Logic/Latch.inA",
+   "src_resolved": false
+  },
+  {
+   "link": "Link2",
+   "source": "station:|slot:/Logic/Pid.out",
+   "target": "Logic/Latch.inC",
+   "src_resolved": false
+  }
+ ],
+ "resolve": [
+  [
+   "",
+   "1",
+   ""
+  ],
+  [
+   "/",
+   "1",
+   ""
+  ],
+  [
+   "nope",
+   null,
+   null
+  ],
+  [
+   "h:nope",
+   null,
+   null
+  ],
+  [
+   "h:",
+   null,
+   null
+  ],
+  [
+   "h:1",
+   "1",
+   ""
+  ],
+  [
+   "//",
+   "1",
+   ""
+  ],
+  [
+   "Logic",
+   "2",
+   "Logic"
+  ],
+  [
+   "/Logic/",
+   "2",
+   "Logic"
+  ],
+  [
+   "h:2",
+   "2",
+   "Logic"
+  ],
+  [
+   "Logic/Pid",
+   "3",
+   "Logic/Pid"
+  ],
+  [
+   "/Logic/Pid/",
+   "3",
+   "Logic/Pid"
+  ],
+  [
+   "Pid",
+   "3",
+   "Logic/Pid"
+  ],
+  [
+   "h:3",
+   "3",
+   "Logic/Pid"
+  ],
+  [
+   "Logic/Valve Out",
+   "4",
+   "Logic/Valve Out"
+  ],
+  [
+   "/Logic/Valve Out/",
+   "4",
+   "Logic/Valve Out"
+  ],
+  [
+   "Valve Out",
+   "4",
+   "Logic/Valve Out"
+  ],
+  [
+   "h:4",
+   "4",
+   "Logic/Valve Out"
+  ],
+  [
+   "Logic/Valve$20Out",
+   "4",
+   "Logic/Valve Out"
+  ],
+  [
+   "Logic/Latch",
+   "5",
+   "Logic/Latch"
+  ],
+  [
+   "/Logic/Latch/",
+   "5",
+   "Logic/Latch"
+  ],
+  [
+   "Latch",
+   "5",
+   "Logic/Latch"
+  ],
+  [
+   "h:5",
+   "5",
+   "Logic/Latch"
+  ]
+ ]
+}

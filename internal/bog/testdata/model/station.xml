@@ -1,0 +1,68 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<bajaObjectGraph version='4.0'>
+ <p n='Station' h='1' t='b:Station' m='b=baja CRP=ColdRoomPan DPCD=DashboardPan c=control'>
+  <p n='Panel' h='10' t='DPCD:RoomPanel'>
+   <p n='setpoint' t='b:StatusNumeric'>
+    <p n="value" v="3.0"/>
+   </p>
+   <p n="differentialUp" v="1.5"/>
+   <p n='Link' t='b:Link'>
+    <p n="sourceOrd" v="h:30"/>
+    <p n="sourceSlotName" v="valveOut"/>
+    <p n="targetSlotName" v="evap1ValveState"/>
+   </p>
+  </p>
+  <p n='Logic' h='20' t='CRP:ColdRoom'>
+   <p n='setpoint' t='b:StatusNumeric'>
+    <p n="value" v="3.0"/>
+   </p>
+   <p n="valveMode" v="auto"/>
+   <p n='EvaporatorUnit_3' h='30' t='CRP:EvaporatorUnit'>
+    <p n='valveOut' t='b:StatusBoolean'>
+     <p n="value" v="false"/>
+    </p>
+   </p>
+   <p n='Link' t='b:Link'>
+    <p n="sourceOrd" v="h:10"/>
+    <p n="sourceSlotName" v="setpoint"/>
+    <p n="targetSlotName" v="setpoint"/>
+   </p>
+   <p n='Link1' t='b:Link'>
+    <p n="sourceOrd" v="h:10"/>
+    <p n="sourceSlotName" v="evap1FanMode"/>
+    <p n="targetSlotName" v="fanMode"/>
+   </p>
+  </p>
+  <p n='Drivers' h='40' t='c:BooleanWritable'>
+   <p n='ro1' h='41' t='c:BooleanWritable'>
+    <p n='fallback' t='b:StatusBoolean'>
+     <p n="value" v="false"/>
+    </p>
+    <p n='Link' t='b:Link'>
+     <p n="sourceOrd" v="h:30"/>
+     <p n="sourceSlotName" v="valveOut"/>
+     <p n="targetSlotName" v="in10"/>
+    </p>
+   </p>
+   <p n='ro2' h='42' t='c:BooleanWritable'>
+    <p n='Link' t='b:Link'>
+     <p n="sourceOrd" v="h:30"/>
+     <p n="sourceSlotName" v="valveOut"/>
+     <p n="targetSlotName" v="in10"/>
+    </p>
+   </p>
+  </p>
+  <p n='DisplayService' h='50' t='disp:BtDisplayService' m='disp=btsDisp bac=bacnet'>
+   <p n='pointCache' h='51' t='disp:PointCache'>
+    <p n='bts$3abacref$3adopr$3d5_100_85_8_101' h='52' t='disp:PointCacheObj'>
+     <p n="value" m="bac=bacnet" t="bac:BacnetBinaryPv" v="inactive"/>
+     <p n="polledTime" t="b:AbsTime" v="2022-04-18T12:12:54.046-05:00"/>
+    </p>
+    <p n='bts$3abacref$3adopr$3d2_50_85_8_101' h='53' t='disp:PointCacheObj'>
+     <p n="value" t="b:Float" v="72.5"/>
+     <p n="polledTime" t="b:AbsTime" v="2026-09-03T00:00:00.000-05:00"/>
+    </p>
+   </p>
+  </p>
+ </p>
+</bajaObjectGraph>

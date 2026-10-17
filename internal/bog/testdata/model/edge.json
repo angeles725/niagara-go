@@ -1,0 +1,1092 @@
+{
+ "comps": [
+  {
+   "key": "1",
+   "name": "",
+   "handle": "1",
+   "type": "b:Station",
+   "pfx": "b",
+   "module": "baja",
+   "path": "",
+   "parent_h": null,
+   "children": [
+    "5",
+    "s6",
+    "s8",
+    "s11",
+    "8",
+    "21",
+    "22",
+    "23",
+    "24",
+    "60",
+    "25",
+    "26",
+    "27",
+    "28",
+    "31"
+   ],
+   "slots": [
+    [
+     "facets",
+     {
+      "type": "",
+      "value": null,
+      "flags": "r"
+     }
+    ],
+    [
+     "setpoint",
+     {
+      "type": "b:StatusNumeric2",
+      "value": null,
+      "flags": "s"
+     }
+    ],
+    [
+     "plain",
+     {
+      "type": "",
+      "value": "2",
+      "flags": "x"
+     }
+    ],
+    [
+     "out",
+     {
+      "type": "b:StatusNumeric",
+      "value": "4",
+      "flags": "",
+      "child": [
+       [
+        "value",
+        "4"
+       ]
+      ]
+     }
+    ]
+   ],
+   "actions": [
+    [
+     "doIt",
+     "d"
+    ],
+    [
+     "",
+     ""
+    ]
+   ],
+   "has_fallback": true,
+   "is_writable": false,
+   "value_type": "b:Float",
+   "value_val": "1.5",
+   "present": [
+    "A bé$zz$$4",
+    "Bad��X",
+    "CRLF",
+    "Dup",
+    "InComment",
+    "Span11",
+    "Span6",
+    "Span8",
+    "W1",
+    "W2",
+    "W3",
+    "W4",
+    "dq",
+    "facets",
+    "fallback",
+    "good",
+    "noattrs",
+    "out",
+    "plain",
+    "setpoint",
+    "status",
+    "unclosed h=",
+    "value",
+    "wsAnnotation"
+   ],
+   "simple_type": "Station"
+  },
+  {
+   "key": "5",
+   "name": "Inner",
+   "handle": "5",
+   "type": "c:NumericWritable",
+   "pfx": "c",
+   "module": "control",
+   "path": "Dup/Inner",
+   "parent_h": "5",
+   "children": [
+    "5",
+    "6"
+   ],
+   "slots": [],
+   "actions": [],
+   "has_fallback": false,
+   "is_writable": true,
+   "value_type": null,
+   "value_val": null,
+   "present": [],
+   "simple_type": "NumericWritable"
+  },
+  {
+   "key": "6",
+   "name": "Kid",
+   "handle": "6",
+   "type": "b:Folder",
+   "pfx": "b",
+   "module": "baja",
+   "path": "Dup/Kid",
+   "parent_h": "5",
+   "children": [],
+   "slots": [],
+   "actions": [],
+   "has_fallback": false,
+   "is_writable": false,
+   "value_type": null,
+   "value_val": null,
+   "present": [],
+   "simple_type": "Folder"
+  },
+  {
+   "key": "s6",
+   "name": "Span6",
+   "handle": "s6",
+   "type": "b:Folder",
+   "pfx": "b",
+   "module": "baja",
+   "path": "Span6",
+   "parent_h": "1",
+   "children": [],
+   "slots": [],
+   "actions": [],
+   "has_fallback": false,
+   "is_writable": false,
+   "value_type": null,
+   "value_val": null,
+   "present": [],
+   "simple_type": "Folder"
+  },
+  {
+   "key": "s8",
+   "name": "Span8",
+   "handle": "s8",
+   "type": "b:Folder",
+   "pfx": "b",
+   "module": "baja",
+   "path": "Span8",
+   "parent_h": "1",
+   "children": [],
+   "slots": [],
+   "actions": [],
+   "has_fallback": false,
+   "is_writable": false,
+   "value_type": null,
+   "value_val": null,
+   "present": [],
+   "simple_type": "Folder"
+  },
+  {
+   "key": "s11",
+   "name": "Span11",
+   "handle": "s11",
+   "type": "b:Folder",
+   "pfx": "b",
+   "module": "baja",
+   "path": "Span11",
+   "parent_h": "1",
+   "children": [],
+   "slots": [],
+   "actions": [],
+   "has_fallback": false,
+   "is_writable": false,
+   "value_type": null,
+   "value_val": null,
+   "present": [],
+   "simple_type": "Folder"
+  },
+  {
+   "key": "8",
+   "name": "CRLF",
+   "handle": "8",
+   "type": "b:Folder",
+   "pfx": "b",
+   "module": "baja",
+   "path": "CRLF",
+   "parent_h": "1",
+   "children": [],
+   "slots": [],
+   "actions": [],
+   "has_fallback": false,
+   "is_writable": false,
+   "value_type": null,
+   "value_val": null,
+   "present": [],
+   "simple_type": "Folder"
+  },
+  {
+   "key": "21",
+   "name": "good",
+   "handle": "21",
+   "type": "b:Folder",
+   "pfx": "b",
+   "module": "baja",
+   "path": "good",
+   "parent_h": "1",
+   "children": [],
+   "slots": [],
+   "actions": [],
+   "has_fallback": false,
+   "is_writable": false,
+   "value_type": null,
+   "value_val": null,
+   "present": [],
+   "simple_type": "Folder"
+  },
+  {
+   "key": "22",
+   "name": "dq",
+   "handle": "22",
+   "type": "b:Folder",
+   "pfx": "b",
+   "module": "baja",
+   "path": "dq",
+   "parent_h": "1",
+   "children": [],
+   "slots": [],
+   "actions": [],
+   "has_fallback": false,
+   "is_writable": false,
+   "value_type": null,
+   "value_val": null,
+   "present": [],
+   "simple_type": "Folder"
+  },
+  {
+   "key": "23",
+   "name": "unclosed h=",
+   "handle": "23",
+   "type": "b:Folder",
+   "pfx": "b",
+   "module": "baja",
+   "path": "unclosed h=",
+   "parent_h": "1",
+   "children": [],
+   "slots": [],
+   "actions": [],
+   "has_fallback": false,
+   "is_writable": false,
+   "value_type": null,
+   "value_val": null,
+   "present": [],
+   "simple_type": "Folder"
+  },
+  {
+   "key": "24",
+   "name": "A bé$zz$$4",
+   "handle": "24",
+   "type": "b:Folder",
+   "pfx": "b",
+   "module": "baja",
+   "path": "A bé$zz$$4",
+   "parent_h": "1",
+   "children": [],
+   "slots": [],
+   "actions": [],
+   "has_fallback": false,
+   "is_writable": false,
+   "value_type": null,
+   "value_val": null,
+   "present": [],
+   "simple_type": "Folder"
+  },
+  {
+   "key": "60",
+   "name": "Bad��X",
+   "handle": "60",
+   "type": "b:Folder",
+   "pfx": "b",
+   "module": "baja",
+   "path": "Bad��X",
+   "parent_h": "1",
+   "children": [],
+   "slots": [],
+   "actions": [],
+   "has_fallback": false,
+   "is_writable": false,
+   "value_type": null,
+   "value_val": null,
+   "present": [],
+   "simple_type": "Folder"
+  },
+  {
+   "key": "25",
+   "name": "W1",
+   "handle": "25",
+   "type": "control:BooleanWritable",
+   "pfx": "control",
+   "module": "",
+   "path": "W1",
+   "parent_h": "1",
+   "children": [],
+   "slots": [],
+   "actions": [],
+   "has_fallback": false,
+   "is_writable": true,
+   "value_type": null,
+   "value_val": null,
+   "present": [],
+   "simple_type": "BooleanWritable"
+  },
+  {
+   "key": "26",
+   "name": "W2",
+   "handle": "26",
+   "type": "NumericWritableX",
+   "pfx": "",
+   "module": "",
+   "path": "W2",
+   "parent_h": "1",
+   "children": [],
+   "slots": [],
+   "actions": [],
+   "has_fallback": false,
+   "is_writable": false,
+   "value_type": null,
+   "value_val": null,
+   "present": [],
+   "simple_type": "NumericWritableX"
+  },
+  {
+   "key": "27",
+   "name": "W3",
+   "handle": "27",
+   "type": "IntegerWritable",
+   "pfx": "",
+   "module": "",
+   "path": "W3",
+   "parent_h": "1",
+   "children": [],
+   "slots": [],
+   "actions": [],
+   "has_fallback": false,
+   "is_writable": true,
+   "value_type": null,
+   "value_val": null,
+   "present": [],
+   "simple_type": "IntegerWritable"
+  },
+  {
+   "key": "28",
+   "name": "W4",
+   "handle": "28",
+   "type": "a:b:FloatWritable",
+   "pfx": "a",
+   "module": "",
+   "path": "W4",
+   "parent_h": "1",
+   "children": [],
+   "slots": [],
+   "actions": [],
+   "has_fallback": false,
+   "is_writable": true,
+   "value_type": null,
+   "value_val": null,
+   "present": [],
+   "simple_type": "FloatWritable"
+  },
+  {
+   "key": "31",
+   "name": "InComment",
+   "handle": "31",
+   "type": "b:Folder",
+   "pfx": "b",
+   "module": "baja",
+   "path": "InComment",
+   "parent_h": "1",
+   "children": [],
+   "slots": [],
+   "actions": [],
+   "has_fallback": false,
+   "is_writable": false,
+   "value_type": null,
+   "value_val": null,
+   "present": [],
+   "simple_type": "Folder"
+  },
+  {
+   "key": "40",
+   "name": "Links",
+   "handle": "40",
+   "type": "b:Folder",
+   "pfx": "b",
+   "module": "baja",
+   "path": "Links",
+   "parent_h": null,
+   "children": [],
+   "slots": [],
+   "actions": [],
+   "has_fallback": false,
+   "is_writable": false,
+   "value_type": null,
+   "value_val": null,
+   "present": [
+    "L1",
+    "L2",
+    "L3"
+   ],
+   "simple_type": "Folder"
+  },
+  {
+   "key": "",
+   "name": "",
+   "handle": "",
+   "type": "b:Folder",
+   "pfx": "b",
+   "module": "baja",
+   "path": "",
+   "parent_h": null,
+   "children": [],
+   "slots": [],
+   "actions": [],
+   "has_fallback": false,
+   "is_writable": false,
+   "value_type": null,
+   "value_val": null,
+   "present": [],
+   "simple_type": "Folder"
+  },
+  {
+   "key": "50",
+   "name": "Empty",
+   "handle": "50",
+   "type": "nopfx",
+   "pfx": "",
+   "module": "",
+   "path": "Empty",
+   "parent_h": null,
+   "children": [],
+   "slots": [],
+   "actions": [],
+   "has_fallback": false,
+   "is_writable": false,
+   "value_type": null,
+   "value_val": null,
+   "present": [],
+   "simple_type": "nopfx"
+  },
+  {
+   "key": "51",
+   "name": "Hdup",
+   "handle": "51",
+   "type": "b:Folder",
+   "pfx": "b",
+   "module": "baja",
+   "path": "Hdup",
+   "parent_h": null,
+   "children": [],
+   "slots": [],
+   "actions": [],
+   "has_fallback": false,
+   "is_writable": false,
+   "value_type": null,
+   "value_val": null,
+   "present": [],
+   "simple_type": "Folder"
+  },
+  {
+   "key": "52",
+   "name": "Act",
+   "handle": "52",
+   "type": "b:Folder",
+   "pfx": "b",
+   "module": "baja",
+   "path": "Act",
+   "parent_h": null,
+   "children": [],
+   "slots": [],
+   "actions": [
+    [
+     "x",
+     ""
+    ]
+   ],
+   "has_fallback": false,
+   "is_writable": false,
+   "value_type": null,
+   "value_val": null,
+   "present": [],
+   "simple_type": "Folder"
+  },
+  {
+   "key": "53",
+   "name": "Last",
+   "handle": "53",
+   "type": "b:Folder",
+   "pfx": "b",
+   "module": "baja",
+   "path": "Last",
+   "parent_h": null,
+   "children": [],
+   "slots": [],
+   "actions": [],
+   "has_fallback": false,
+   "is_writable": false,
+   "value_type": null,
+   "value_val": null,
+   "present": [],
+   "simple_type": "Folder"
+  }
+ ],
+ "handle_count": [
+  [
+   "1",
+   1
+  ],
+  [
+   "5",
+   2
+  ],
+  [
+   "6",
+   1
+  ],
+  [
+   "s6",
+   1
+  ],
+  [
+   "s8",
+   1
+  ],
+  [
+   "s11",
+   1
+  ],
+  [
+   "8",
+   1
+  ],
+  [
+   "21",
+   1
+  ],
+  [
+   "22",
+   1
+  ],
+  [
+   "23",
+   1
+  ],
+  [
+   "24",
+   1
+  ],
+  [
+   "60",
+   1
+  ],
+  [
+   "25",
+   1
+  ],
+  [
+   "26",
+   1
+  ],
+  [
+   "27",
+   1
+  ],
+  [
+   "28",
+   1
+  ],
+  [
+   "31",
+   1
+  ],
+  [
+   "40",
+   1
+  ],
+  [
+   "",
+   1
+  ],
+  [
+   "50",
+   1
+  ],
+  [
+   "51",
+   2
+  ],
+  [
+   "52",
+   1
+  ],
+  [
+   "53",
+   1
+  ]
+ ],
+ "prefix_map": [
+  [
+   "b",
+   "baja"
+  ],
+  [
+   "c",
+   "late"
+  ]
+ ],
+ "roots": [
+  "1",
+  "40",
+  "",
+  "50",
+  "51",
+  "51",
+  "52",
+  "53"
+ ],
+ "links": [
+  {
+   "container_h": "40",
+   "container_path": "Links",
+   "link_name": "L1",
+   "src_h": "",
+   "src_ord": null,
+   "src_slot": "a b",
+   "tgt_slot": null
+  },
+  {
+   "container_h": "40",
+   "container_path": "Links",
+   "link_name": "L2",
+   "src_h": null,
+   "src_ord": "station:|slot:/X",
+   "src_slot": null,
+   "tgt_slot": "in"
+  },
+  {
+   "container_h": "40",
+   "container_path": "Links",
+   "link_name": "L3",
+   "src_h": "24",
+   "src_ord": null,
+   "src_slot": null,
+   "tgt_slot": null
+  },
+  {
+   "container_h": null,
+   "container_path": "",
+   "link_name": "L6",
+   "src_h": null,
+   "src_ord": null,
+   "src_slot": null,
+   "tgt_slot": null
+  }
+ ],
+ "link_rows": [
+  {
+   "link": "L1",
+   "source": ".a b",
+   "target": "Links.None",
+   "src_resolved": true
+  },
+  {
+   "link": "L2",
+   "source": "station:|slot:/X.None",
+   "target": "Links.in",
+   "src_resolved": false
+  },
+  {
+   "link": "L3",
+   "source": "A bé$zz$$4.None",
+   "target": "Links.None",
+   "src_resolved": true
+  },
+  {
+   "link": "L6",
+   "source": "?.None",
+   "target": ".None",
+   "src_resolved": false
+  }
+ ],
+ "resolve": [
+  [
+   "",
+   "1",
+   ""
+  ],
+  [
+   "/",
+   "1",
+   ""
+  ],
+  [
+   "nope",
+   null,
+   null
+  ],
+  [
+   "h:nope",
+   null,
+   null
+  ],
+  [
+   "h:",
+   "",
+   ""
+  ],
+  [
+   "h:1",
+   "1",
+   ""
+  ],
+  [
+   "//",
+   "1",
+   ""
+  ],
+  [
+   "Dup/Inner",
+   "5",
+   "Dup/Inner"
+  ],
+  [
+   "/Dup/Inner/",
+   "5",
+   "Dup/Inner"
+  ],
+  [
+   "Inner",
+   "5",
+   "Dup/Inner"
+  ],
+  [
+   "h:5",
+   "5",
+   "Dup/Inner"
+  ],
+  [
+   "Dup/Kid",
+   "6",
+   "Dup/Kid"
+  ],
+  [
+   "/Dup/Kid/",
+   "6",
+   "Dup/Kid"
+  ],
+  [
+   "Kid",
+   "6",
+   "Dup/Kid"
+  ],
+  [
+   "h:6",
+   "6",
+   "Dup/Kid"
+  ],
+  [
+   "Span6",
+   "s6",
+   "Span6"
+  ],
+  [
+   "/Span6/",
+   "s6",
+   "Span6"
+  ],
+  [
+   "h:s6",
+   "s6",
+   "Span6"
+  ],
+  [
+   "Span8",
+   "s8",
+   "Span8"
+  ],
+  [
+   "/Span8/",
+   "s8",
+   "Span8"
+  ],
+  [
+   "h:s8",
+   "s8",
+   "Span8"
+  ],
+  [
+   "Span11",
+   "s11",
+   "Span11"
+  ],
+  [
+   "/Span11/",
+   "s11",
+   "Span11"
+  ],
+  [
+   "h:s11",
+   "s11",
+   "Span11"
+  ],
+  [
+   "CRLF",
+   "8",
+   "CRLF"
+  ],
+  [
+   "/CRLF/",
+   "8",
+   "CRLF"
+  ],
+  [
+   "h:8",
+   "8",
+   "CRLF"
+  ],
+  [
+   "good",
+   "21",
+   "good"
+  ],
+  [
+   "/good/",
+   "21",
+   "good"
+  ],
+  [
+   "h:21",
+   "21",
+   "good"
+  ],
+  [
+   "dq",
+   "22",
+   "dq"
+  ],
+  [
+   "/dq/",
+   "22",
+   "dq"
+  ],
+  [
+   "h:22",
+   "22",
+   "dq"
+  ],
+  [
+   "unclosed h=",
+   "23",
+   "unclosed h="
+  ],
+  [
+   "/unclosed h=/",
+   "23",
+   "unclosed h="
+  ],
+  [
+   "h:23",
+   "23",
+   "unclosed h="
+  ],
+  [
+   "unclosed$20h=",
+   "23",
+   "unclosed h="
+  ],
+  [
+   "A bé$zz$$4",
+   "24",
+   "A bé$zz$$4"
+  ],
+  [
+   "/A bé$zz$$4/",
+   "24",
+   "A bé$zz$$4"
+  ],
+  [
+   "h:24",
+   "24",
+   "A bé$zz$$4"
+  ],
+  [
+   "A$20bé$zz$$4",
+   "24",
+   "A bé$zz$$4"
+  ],
+  [
+   "Bad��X",
+   "60",
+   "Bad��X"
+  ],
+  [
+   "/Bad��X/",
+   "60",
+   "Bad��X"
+  ],
+  [
+   "h:60",
+   "60",
+   "Bad��X"
+  ],
+  [
+   "W1",
+   "25",
+   "W1"
+  ],
+  [
+   "/W1/",
+   "25",
+   "W1"
+  ],
+  [
+   "h:25",
+   "25",
+   "W1"
+  ],
+  [
+   "W2",
+   "26",
+   "W2"
+  ],
+  [
+   "/W2/",
+   "26",
+   "W2"
+  ],
+  [
+   "h:26",
+   "26",
+   "W2"
+  ],
+  [
+   "W3",
+   "27",
+   "W3"
+  ],
+  [
+   "/W3/",
+   "27",
+   "W3"
+  ],
+  [
+   "h:27",
+   "27",
+   "W3"
+  ],
+  [
+   "W4",
+   "28",
+   "W4"
+  ],
+  [
+   "/W4/",
+   "28",
+   "W4"
+  ],
+  [
+   "h:28",
+   "28",
+   "W4"
+  ],
+  [
+   "InComment",
+   "31",
+   "InComment"
+  ],
+  [
+   "/InComment/",
+   "31",
+   "InComment"
+  ],
+  [
+   "h:31",
+   "31",
+   "InComment"
+  ],
+  [
+   "Links",
+   "40",
+   "Links"
+  ],
+  [
+   "/Links/",
+   "40",
+   "Links"
+  ],
+  [
+   "h:40",
+   "40",
+   "Links"
+  ],
+  [
+   "Empty",
+   "50",
+   "Empty"
+  ],
+  [
+   "/Empty/",
+   "50",
+   "Empty"
+  ],
+  [
+   "h:50",
+   "50",
+   "Empty"
+  ],
+  [
+   "Hdup",
+   "51",
+   "Hdup"
+  ],
+  [
+   "/Hdup/",
+   "51",
+   "Hdup"
+  ],
+  [
+   "h:51",
+   "51",
+   "Hdup"
+  ],
+  [
+   "Act",
+   "52",
+   "Act"
+  ],
+  [
+   "/Act/",
+   "52",
+   "Act"
+  ],
+  [
+   "h:52",
+   "52",
+   "Act"
+  ],
+  [
+   "Last",
+   "53",
+   "Last"
+  ],
+  [
+   "/Last/",
+   "53",
+   "Last"
+  ],
+  [
+   "h:53",
+   "53",
+   "Last"
+  ]
+ ]
+}
