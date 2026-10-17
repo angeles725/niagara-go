@@ -3,64 +3,13 @@ package hdbread
 import (
 	"fmt"
 	"io"
-	"math"
 	"strconv"
 	"strings"
+
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 func formatG(v float64, digits int) string { return strconv.FormatFloat(v, 'g', digits, 64) }
-
-func parseFloat(s string) float64 {
-	f, _ := strconv.ParseFloat(s, 64)
-	return f
-}
-
-// pyRepr renders a float64 exactly like Python repr(): shortest round-trip digits, positional
-// notation for exponents -4..15 (with ".0" when integral), otherwise d.ddde+XX.
-func pyRepr(v float64) string {
-	switch {
-	case math.IsNaN(v):
-		return "nan"
-	case math.IsInf(v, 1):
-		return "inf"
-	case math.IsInf(v, -1):
-		return "-inf"
-	}
-	sign := ""
-	if math.Signbit(v) {
-		sign = "-"
-	}
-	mant, expPart, _ := strings.Cut(strconv.FormatFloat(math.Abs(v), 'e', -1, 64), "e")
-	exp, _ := strconv.Atoi(expPart)
-	digits := strings.Replace(mant, ".", "", 1)
-	switch {
-	case exp < -4 || exp >= 16:
-		m := digits[:1]
-		if len(digits) > 1 {
-			m += "." + digits[1:]
-		}
-		return fmt.Sprintf("%s%se%+03d", sign, m, exp)
-	case exp < 0:
-		return sign + "0." + strings.Repeat("0", -exp-1) + digits
-	case len(digits) <= exp+1:
-		return sign + digits + strings.Repeat("0", exp+1-len(digits)) + ".0"
-	default:
-		return sign + digits[:exp+1] + "." + digits[exp+1:]
-	}
-}
-
-// jsonFloat is Python json.dumps of a float: repr, with NaN/Infinity/-Infinity spelled out.
-func jsonFloat(v float64) string {
-	switch {
-	case math.IsNaN(v):
-		return "NaN"
-	case math.IsInf(v, 1):
-		return "Infinity"
-	case math.IsInf(v, -1):
-		return "-Infinity"
-	}
-	return pyRepr(v)
-}
 
 // csvField quotes a field the way Python csv.writer (QUOTE_MINIMAL) does.
 func csvField(s string) string {
@@ -73,7 +22,7 @@ func csvField(s string) string {
 func (v value) csv() string {
 	switch v.kind {
 	case 'f':
-		return pyRepr(v.f)
+		return pycompat.FloatRepr(v.f)
 	case 'b':
 		return strconv.FormatBool(v.b)
 	}
@@ -82,7 +31,7 @@ func (v value) csv() string {
 
 func (v value) json() string {
 	if v.kind == 'f' {
-		return jsonFloat(v.f)
+		return pycompat.JSONFloat(v.f)
 	}
 	return v.csv()
 }
@@ -117,50 +66,4 @@ func printJSON(w io.Writer, recs []record) {
 	}
 	b.WriteString("]\n")
 	io.WriteString(w, b.String())
-}
-
-// decodeReplace is Python bytes.decode("utf-8", "replace"): each maximal invalid subpart of a
-// sequence becomes one U+FFFD.
-func decodeReplace(b []byte) string {
-	var sb strings.Builder
-	for i := 0; i < len(b); {
-		c := b[i]
-		if c < 0x80 {
-			sb.WriteByte(c)
-			i++
-			continue
-		}
-		need, lo, hi := 0, byte(0x80), byte(0xbf)
-		switch {
-		case c >= 0xc2 && c <= 0xdf:
-			need = 1
-		case c == 0xe0:
-			need, lo = 2, 0xa0
-		case c >= 0xe1 && c <= 0xef && c != 0xed:
-			need = 2
-		case c == 0xed:
-			need, hi = 2, 0x9f
-		case c == 0xf0:
-			need, lo = 3, 0x90
-		case c >= 0xf1 && c <= 0xf3:
-			need = 3
-		case c == 0xf4:
-			need, hi = 3, 0x8f
-		}
-		j := i + 1
-		for k := 0; k < need; k++ {
-			if j >= len(b) || b[j] < lo || b[j] > hi {
-				break
-			}
-			j++
-			lo, hi = 0x80, 0xbf
-		}
-		if need > 0 && j == i+1+need {
-			sb.Write(b[i:j])
-		} else {
-			sb.WriteRune('�')
-		}
-		i = j
-	}
-	return sb.String()
 }

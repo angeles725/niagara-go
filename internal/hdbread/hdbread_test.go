@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/angeles725/niagara-go/internal/cli"
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // Expected strings are Python 3 repr() output.
@@ -18,15 +19,15 @@ func TestPyRepr(t *testing.T) {
 		5e-324: "5e-324", 2.5e-10: "2.5e-10", 100: "100.0", -12345.678: "-12345.678", 0.1: "0.1",
 		1.0 / 3: "0.3333333333333333", math.Inf(1): "inf", math.Inf(-1): "-inf"}
 	for v, want := range cases {
-		if got := pyRepr(v); got != want {
-			t.Errorf("pyRepr(%v) = %q, want %q", v, got, want)
+		if got := pycompat.FloatRepr(v); got != want {
+			t.Errorf("pycompat.FloatRepr(%v) = %q, want %q", v, got, want)
 		}
 	}
-	if got := pyRepr(math.Copysign(0, -1)); got != "-0.0" {
-		t.Errorf("pyRepr(-0) = %q", got)
+	if got := pycompat.FloatRepr(math.Copysign(0, -1)); got != "-0.0" {
+		t.Errorf("pycompat.FloatRepr(-0) = %q", got)
 	}
-	if got := jsonFloat(math.NaN()); got != "NaN" {
-		t.Errorf("jsonFloat(NaN) = %q", got)
+	if got := pycompat.JSONFloat(math.NaN()); got != "NaN" {
+		t.Errorf("pycompat.JSONFloat(NaN) = %q", got)
 	}
 }
 
@@ -35,8 +36,8 @@ func TestDecodeReplaceMaximalSubpart(t *testing.T) {
 		"\xf4\x90\x80\x80": "����", "ok\xffz": "ok�z", "\xe0\x80\x80": "���",
 		"caf\xc3\xa9": "café"}
 	for in, want := range cases {
-		if got := decodeReplace([]byte(in)); got != want {
-			t.Errorf("decodeReplace(%q) = %q, want %q", in, got, want)
+		if got := pycompat.DecodeReplace([]byte(in)); got != want {
+			t.Errorf("pycompat.DecodeReplace(%q) = %q, want %q", in, got, want)
 		}
 	}
 }

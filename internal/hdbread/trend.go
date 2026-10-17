@@ -8,6 +8,8 @@ import (
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // FormatError is a .hdb whose trend data --records cannot decode (Python HdbFormatError): a record
@@ -241,7 +243,7 @@ func shortFloat32(bits uint32) float64 {
 		return v
 	}
 	for digits := 6; digits < 10; digits++ {
-		short := parseFloat(formatG(v, digits))
+		short, _ := pycompat.ParseFloat(formatG(v, digits))
 		if math.Float32bits(float32(short)) == bits {
 			return short
 		}

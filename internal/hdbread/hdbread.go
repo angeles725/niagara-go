@@ -15,6 +15,7 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/cli"
 	"github.com/angeles725/niagara-go/internal/honest"
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // Options is the parsed command line. The caller validates it (JSON needs Records).
@@ -61,7 +62,7 @@ func parse(d []byte) (*file, error) {
 	if off < 12 || uint64(off) > uint64(len(d)) {
 		return nil, exitError(fmt.Sprintf("not a .hdb (data offset %d outside the %d-byte file)", off, len(d)))
 	}
-	xml := decodeReplace(d[12:off])
+	xml := pycompat.DecodeReplace(d[12:off])
 	const closing = "</bajaObjectGraph>"
 	if end := strings.Index(xml, closing); end >= 0 {
 		xml = xml[:end+len(closing)]
