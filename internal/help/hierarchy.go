@@ -153,7 +153,7 @@ func inheritanceChain(inh *index.Object, lookup map[string]string, name string) 
 		if !ok || !inh.Has(key) {
 			break
 		}
-		parent := getStr(inh.Object(key), "extends", "")
+		parent := truthyStr(inh.Object(key), "extends")
 		if parent == "" || strings.HasPrefix(parent, "java.lang.") {
 			if parent != "" {
 				chain = append(chain, parent)

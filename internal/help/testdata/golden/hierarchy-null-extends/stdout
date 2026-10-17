@@ -1,0 +1,7 @@
+BIObject (javax.baja.sys)
+  extends: None
+  direct subclasses: 1
+
+BIObject
+`-- BInterface
+    `-- BIAlarmSource (+)

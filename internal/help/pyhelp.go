@@ -79,6 +79,10 @@ func orStr(o *index.Object, k, def, alt string) string {
 	return pyStr(v)
 }
 
+// truthyStr is str(o.get(k)) when that value is truthy, else "": the
+// `if not value` tests Python makes before using a value that may be null.
+func truthyStr(o *index.Object, k string) string { return orStr(o, k, "", "") }
+
 // getObj is o.get(k, {}) when the value is an object (nil means empty).
 func getObj(o *index.Object, k string) *index.Object {
 	if o == nil {

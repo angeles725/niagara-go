@@ -14,7 +14,7 @@
   "BStatusToNumeric": {"extends": "BConverter", "implements": [], "package": "javax.baja.converters", "subclasses": []},
   "AbstractCursor&lt;E&gt;": {"extends": "BComponent", "implements": ["Cursor&lt;E&gt;"], "package": "javax.baja.collection", "subclasses": ["BAlarmCursor"]},
   "BAlarmCursor": {"extends": "AbstractCursor", "implements": [], "package": "javax.baja.alarm", "subclasses": []},
-  "BIObject": {"extends": "", "implements": [], "package": "javax.baja.sys", "subclasses": ["BInterface"]},
+  "BIObject": {"extends": null, "implements": [], "package": "javax.baja.sys", "subclasses": ["BInterface"]},
   "BInterface": {"extends": "BIObject", "implements": [], "package": "javax.baja.sys", "subclasses": ["BIAlarmSource"]},
   "BIAlarmSource": {"extends": "BInterface", "implements": [], "package": "javax.baja.alarm", "subclasses": ["BIPingable", "BAlarmRecipient", "BDevice", "BIRemoteAlarmSource"]},
   "BIRemoteAlarmSource": {"extends": "BIAlarmSource", "implements": [], "package": "javax.baja.alarm", "subclasses": []},

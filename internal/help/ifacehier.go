@@ -31,7 +31,7 @@ func interfaceChain(inh *index.Object, name string) []string {
 	seen := map[string]bool{}
 	for cur := name; cur != "" && !seen[cur]; {
 		seen[cur] = true
-		parent := getStr(getObj(inh, cur), "extends", "")
+		parent := truthyStr(getObj(inh, cur), "extends")
 		if parent == "" {
 			break
 		}
