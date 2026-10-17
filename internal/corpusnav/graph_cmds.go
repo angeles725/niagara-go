@@ -107,7 +107,7 @@ func (c *corpus) cmdConnections(n string, bare bool) int {
 func (c *corpus) cmdGraph(asJSON bool, top int, bare bool) int {
 	g := buildGraph(c.blocks(), bare)
 	edges := 0
-	for _, label := range uniq(g.nodes) {
+	for _, label := range g.nodes { // one node per label (buildGraph)
 		edges += len(g.forward[label])
 	}
 	rc := c.checkUnreadable(g)
@@ -120,7 +120,7 @@ func (c *corpus) cmdGraph(asJSON bool, top int, bare bool) int {
 			return out
 		}
 		fwd, rev := obj{}, obj{}
-		for _, k := range uniq(g.nodes) {
+		for _, k := range g.nodes {
 			fwd = append(fwd, kv{displayID(k), ids(g.forward[k])})
 		}
 		for _, k := range g.reverseIDs {
@@ -149,18 +149,6 @@ func (c *corpus) cmdGraph(asJSON bool, top int, bare bool) int {
 		fmt.Fprintf(c.out, "  %s  %s\n", padLeft(fmt.Sprint(len(g.reverse[label])), 5), c.titled(label, catalog, byFile))
 	}
 	return rc
-}
-
-func uniq(xs []string) []string {
-	seen := map[string]bool{}
-	var out []string
-	for _, x := range xs {
-		if !seen[x] {
-			seen[x] = true
-			out = append(out, x)
-		}
-	}
-	return out
 }
 
 func (c *corpus) cmdPath(a, b string, directed, bare bool) int {
