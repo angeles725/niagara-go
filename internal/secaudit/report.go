@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"io"
 	"sort"
-	"strings"
+
+	"github.com/angeles725/niagara-go/internal/pyjson"
 )
 
 // sevRank orders severities (SEV in the Python tool).
@@ -29,14 +30,13 @@ func (r *report) add(id, sev, title, observed, secure, verdict, block, note stri
 // dump prints the rows as JSON (in check order) or as the sorted text report.
 func (r *report) dump(w io.Writer, asJSON bool) {
 	if asJSON {
-		var objs []string
-		for _, x := range r.rows {
-			objs = append(objs, jsonObject([][2]string{{"id", pyJSONString(x.id)}, {"sev", pyJSONString(x.sev)},
-				{"title", pyJSONString(x.title)}, {"observed", pyJSONString(x.observed)},
-				{"secure", pyJSONString(x.secure)}, {"verdict", pyJSONString(x.verdict)},
-				{"block", pyJSONString(x.block)}, {"note", pyJSONString(x.note)}}))
+		keys := []string{"id", "sev", "title", "observed", "secure", "verdict", "block", "note"}
+		objs := make([]pyjson.Value, len(r.rows))
+		for i, x := range r.rows {
+			objs[i] = jsonRecord(keys, jsonStr(x.id), jsonStr(x.sev), jsonStr(x.title), jsonStr(x.observed),
+				jsonStr(x.secure), jsonStr(x.verdict), jsonStr(x.block), jsonStr(x.note))
 		}
-		fmt.Fprintln(w, jsonList(objs))
+		fmt.Fprintln(w, jsonDumps(objs))
 		return
 	}
 	sort.SliceStable(r.rows, func(i, j int) bool {
@@ -89,20 +89,21 @@ func (r *report) dump(w io.Writer, asJSON bool) {
 		count("crit"), count("high"), count("med"), len(fails))
 }
 
-// jsonObject renders ordered key/value pairs (values already JSON) like json.dumps(indent=2)
-// at nesting level 1.
-func jsonObject(kv [][2]string) string {
-	parts := make([]string, len(kv))
-	for i, p := range kv {
-		parts[i] = "    " + pyJSONString(p[0]) + ": " + p[1]
-	}
-	return "  {\n" + strings.Join(parts, ",\n") + "\n  }"
+// jsonDumps is json.dumps(objs, indent=2) with the default ensure_ascii=True.
+func jsonDumps(objs []pyjson.Value) string {
+	return pyjson.Dumps(pyjson.Value{Kind: pyjson.Array, A: objs},
+		pyjson.DumpOpts{EnsureASCII: true, Indent: 2, ItemSep: ",", KeySep: ": "})
 }
 
-// jsonList renders already-indented objects as a json.dumps(indent=2) list.
-func jsonList(objs []string) string {
-	if len(objs) == 0 {
-		return "[]"
+// jsonRecord is a JSON object with keys[i] mapped to vals[i], in that order.
+func jsonRecord(keys []string, vals ...pyjson.Value) pyjson.Value {
+	o := pyjson.NewObject()
+	for i, k := range keys {
+		o.Set(k, vals[i])
 	}
-	return "[\n" + strings.Join(objs, ",\n") + "\n]"
+	return o
 }
+
+// jsonStr is a JSON string. Text that is not valid UTF-8 (a file name) reads as one U+FFFD per
+// invalid byte, as the audit has always printed it (Python would show \udcXX surrogates).
+func jsonStr(s string) pyjson.Value { return pyjson.String(string([]rune(s))) }
