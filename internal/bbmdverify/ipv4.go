@@ -6,15 +6,9 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
-)
 
-// pyQuote mirrors repr() of an ASCII-ish str (the ipaddress messages use %r).
-func pyQuote(s string) string {
-	if strings.Contains(s, "'") && !strings.Contains(s, `"`) {
-		return `"` + s + `"`
-	}
-	return "'" + strings.ReplaceAll(strings.ReplaceAll(s, `\`, `\\`), "'", `\'`) + "'"
-}
+	"github.com/angeles725/niagara-go/internal/pycompat"
+)
 
 func isASCIIDigits(s string) bool {
 	if s == "" {
@@ -35,7 +29,7 @@ func parseIPv4(s string) (uint32, error) {
 	}
 	octets := strings.Split(s, ".")
 	if len(octets) != 4 {
-		return 0, fmt.Errorf("Expected 4 octets in %s", pyQuote(s))
+		return 0, fmt.Errorf("Expected 4 octets in %s", pycompat.StrRepr(s))
 	}
 	var v uint32
 	for _, o := range octets {
@@ -44,18 +38,18 @@ func parseIPv4(s string) (uint32, error) {
 		case o == "":
 			msg = "Empty octet not permitted"
 		case !isASCIIDigits(o):
-			msg = "Only decimal digits permitted in " + pyQuote(o)
+			msg = "Only decimal digits permitted in " + pycompat.StrRepr(o)
 		case len(o) > 3:
-			msg = "At most 3 characters permitted in " + pyQuote(o)
+			msg = "At most 3 characters permitted in " + pycompat.StrRepr(o)
 		case o != "0" && o[0] == '0':
-			msg = "Leading zeros are not permitted in " + pyQuote(o)
+			msg = "Leading zeros are not permitted in " + pycompat.StrRepr(o)
 		}
 		n, _ := strconv.Atoi(o)
 		if msg == "" && n > 255 {
 			msg = fmt.Sprintf("Octet %d (> 255) not permitted", n)
 		}
 		if msg != "" {
-			return 0, fmt.Errorf("%s in %s", msg, pyQuote(s))
+			return 0, fmt.Errorf("%s in %s", msg, pycompat.StrRepr(s))
 		}
 		v = v<<8 | uint32(n)
 	}
@@ -66,7 +60,7 @@ func parseIPv4(s string) (uint32, error) {
 func checkNetwork(ip string, prefix int) error {
 	full := fmt.Sprintf("%s/%d", ip, prefix)
 	if strings.Count(full, "/") > 1 {
-		return fmt.Errorf("Only one '/' permitted in %s", pyQuote(full))
+		return fmt.Errorf("Only one '/' permitted in %s", pycompat.StrRepr(full))
 	}
 	if _, err := parseIPv4(ip); err != nil {
 		return err
