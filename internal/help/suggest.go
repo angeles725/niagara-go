@@ -1,37 +1,14 @@
 package help
 
 // "Did you mean" suggestions (fuzzy_search.py suggest, typo_similarity,
-// edit_distance) and the difflib.SequenceMatcher.quick_ratio they use.
-// Lengths and edits count code points like Python str.
-//
-// TODO(difflib): use the shared internal/difflib package once it is on main.
+// edit_distance), with difflib.SequenceMatcher.quick_ratio as the cheap
+// first filter. Lengths and edits count code points like Python str.
 
-import "sort"
+import (
+	"sort"
 
-// quickRatio is difflib.SequenceMatcher(None, a, b).quick_ratio(): an upper
-// bound on ratio() from the multiset intersection of the characters.
-func quickRatio(a, b []rune) float64 {
-	full := map[rune]int{}
-	for _, c := range b {
-		full[c]++
-	}
-	avail := map[rune]int{}
-	matches := 0
-	for _, c := range a {
-		n, ok := avail[c]
-		if !ok {
-			n = full[c]
-		}
-		avail[c] = n - 1
-		if n > 0 {
-			matches++
-		}
-	}
-	if total := len(a) + len(b); total > 0 {
-		return 2.0 * float64(matches) / float64(total)
-	}
-	return 1.0
-}
+	"github.com/angeles725/niagara-go/internal/difflib"
+)
 
 // editDistance is the Levenshtein distance of a and b, or limit+1 once it
 // exceeds limit.
@@ -79,7 +56,7 @@ func typoSimilarity(word, name string) float64 {
 	if abs(len(w)-len(n)) > limit {
 		return 0
 	}
-	if quickRatio(w, n) < 0.75 {
+	if difflib.New(nil, w, n, true).QuickRatio() < 0.75 {
 		return 0
 	}
 	d := editDistance(w, n, limit)

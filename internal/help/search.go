@@ -6,7 +6,12 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+
+	"github.com/angeles725/niagara-go/internal/fnmatch"
 )
+
+// lowerGlob is fnmatch(name.lower(), pat.lower()).
+func lowerGlob(name, pat string) bool { return fnmatch.Fnmatch(lowerStr(name), lowerStr(pat)) }
 
 // SearchParams are the arguments of `search`.
 type SearchParams struct {
@@ -22,11 +27,11 @@ func (e *Env) Search(p SearchParams) error {
 		return err
 	}
 	tries := []func(key string) bool{
-		func(k string) bool { return fnmatch(k, p.Pattern) },
+		func(k string) bool { return fnmatch.Fnmatch(k, p.Pattern) },
 		func(k string) bool { return lowerGlob(k, p.Pattern) },
 		func(k string) bool {
 			for _, c := range expand(k, idx.Object(k)) {
-				if fnmatch(c.qualified(), p.Pattern) {
+				if fnmatch.Fnmatch(c.qualified(), p.Pattern) {
 					return true
 				}
 			}

@@ -2,10 +2,9 @@ package help
 
 // Python built-in behaviours the lookups print through: str() and bool() of
 // decoded JSON values, dict.get, "{:,}", code-point padding and slicing,
-// str.strip and text-mode reads.
-//
-// TODO(pycompat): move the generic helpers to internal/pycompat once it is
-// on main (it is planned to own Repr, IsSpace, SplitLines and friends).
+// str.lower and text-mode reads. They cover decoded JSON values and print
+// formats internal/pycompat does not (its Percent has no width or flags);
+// str.strip and html.unescape come from pycompat.
 
 import (
 	"encoding/json"
@@ -157,9 +156,6 @@ func headRunes(s string, n int) string {
 
 // lowerStr is str.lower().
 func lowerStr(s string) string { return textfold.Lower(s) }
-
-// strip is str.strip(): Python whitespace, which includes \x1c-\x1f.
-func strip(s string) string { return strings.TrimFunc(s, textfold.IsSpace) }
 
 // readText is open(path, encoding="utf-8").read(): universal newlines turn
 // \r\n and \r into \n. ok is false when path is not a regular file.
