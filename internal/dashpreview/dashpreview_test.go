@@ -72,9 +72,27 @@ func TestStartupBanners(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
 			done2 := make(chan int)
 			go func() { done2 <- Run(ctx, o, s) }()
-			time.Sleep(200 * time.Millisecond)
+			// Run prints the "Ctrl+C" banner right before Serve; stop it once the
+			// banner is out (Serve then returns ErrServerClosed), or take an early exit.
+			var code int
+			deadline := time.After(10 * time.Second)
+		wait:
+			for {
+				select {
+				case code = <-done2:
+					break wait
+				case <-deadline:
+					cancel()
+					t.Fatalf("no startup banner within 10s: stdout %q stderr %q", out.String(), errb.String())
+				case <-time.After(time.Millisecond):
+					if strings.Contains(out.String(), "  Ctrl+C para detener.") {
+						cancel()
+						code = <-done2
+						break wait
+					}
+				}
+			}
 			cancel()
-			code := <-done2
 			norm := func(x string) string { return strings.ReplaceAll(x, td, "{TD}") }
 			if code != c.Exit || norm(out.String()) != c.Stdout || norm(errb.String()) != c.Stderr {
 				t.Errorf("exit %d stdout %q stderr %q\nwant %d %q %q", code, norm(out.String()), norm(errb.String()), c.Exit, c.Stdout, c.Stderr)
@@ -193,8 +211,22 @@ func runHTTPConfig(t *testing.T, rc string, c httpConfig) {
 		h.LiveBaseURL = "http://" + ln.Addr().String()
 		ln.Close()
 	}
-	srv := httptest.NewServer(h)
+	// handled receives once per request after ServeHTTP has returned (also
+	// when it aborts a dropped connection), so the request's log lines are
+	// complete before a step checks them or advances the clock.
+	handled := make(chan struct{}, len(c.Steps)+1) // never blocks a handler, even after a failed step
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer func() { handled <- struct{}{} }()
+		h.ServeHTTP(w, r)
+	}))
 	defer srv.Close()
+	waitHandled := func(label string) {
+		select {
+		case <-handled:
+		case <-time.After(10 * time.Second):
+			t.Fatalf("%s: handler did not return within 10s", label)
+		}
+	}
 	for i, st := range c.Steps {
 		if st.Advance != nil {
 			clock += *st.Advance
@@ -222,7 +254,7 @@ func runHTTPConfig(t *testing.T, rc string, c httpConfig) {
 				resp.Body.Close()
 				t.Errorf("step %d %s: got %d, want a dropped connection", i, label, resp.StatusCode)
 			}
-			time.Sleep(20 * time.Millisecond)
+			waitHandled(label)
 			if got := strings.SplitN(logBuf.String()[before:], strings.Repeat("-", 40), 2)[0]; got != st.Stderr {
 				t.Errorf("step %d %s log %q, want %q", i, label, got, st.Stderr)
 			}
@@ -233,7 +265,7 @@ func runHTTPConfig(t *testing.T, rc string, c httpConfig) {
 		}
 		got, _ := io.ReadAll(resp.Body)
 		resp.Body.Close()
-		time.Sleep(5 * time.Millisecond)
+		waitHandled(label)
 		checkStep(t, i, label, st, resp, got, logBuf.String()[before:])
 		seenMu.Lock()
 		gotSeen := seen[n0:]
