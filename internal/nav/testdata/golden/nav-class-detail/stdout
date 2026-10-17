@@ -1,0 +1,17 @@
+
+  Class:       BAlarmConsole
+  Package:     com.tridium.alarm.ui
+  Module:      alarm-wb
+  Kind:        class
+  Modifiers:   public
+  Extends:     BWbComponentView
+  Implements:  IAudioPlayer.MediaPlayerListener, BIExportableTableView, BIAlarmServiceView
+  Lines:       1,862
+  Path:        alarm/alarm-wb/vineflower/com/tridium/alarm/ui/BAlarmConsole.java
+  ZKM:         no
+  Inner classes (4):
+    AlarmTableCellRenderer
+    Controller
+    LoadThread
+    RadioGroup
+

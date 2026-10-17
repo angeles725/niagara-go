@@ -10,9 +10,9 @@ import (
 
 func init() {
 	registry.Register("lookup", []registry.Command{
-		{Name: "class", Help: "Look up a class by exact name", Args: argsClass},
-		{Name: "search", Help: "Search classes by glob pattern", Args: argsSearch},
-		{Name: "package", Help: "List classes in a package", Args: argsPackage},
+		{Name: "class", Help: "Look up a class by exact name", Args: argsClass, Run: runClass},
+		{Name: "search", Help: "Search classes by glob pattern", Args: argsSearch, Run: runSearch},
+		{Name: "package", Help: "List classes in a package", Args: argsPackage, Run: runPackage},
 		{Name: "profile", Help: "Combined class + source + UI view", Args: argsProfile},
 		{Name: "full-profile", Help: "Combined view from BOTH navigators", Args: argsFullProfile},
 		{Name: "cross-ref", Help: "Docs + implementation + who uses it", Args: argsCrossRef},
