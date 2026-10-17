@@ -1,0 +1,9 @@
+{
+  "BAlarmService": {"package": "javax.baja.alarm", "uses": ["BComponent", "BAlarmDbChannel", "BAbstractService"], "used_by": ["BOrionAlarmService", "BWebServlet"]},
+  "BOrionAlarmService": {"package": "javax.baja.alarmOrion", "uses": ["BAlarmService"], "used_by": []},
+  "BComponent": {"package": "javax.baja.sys", "uses": [], "used_by": ["BAlarmService"]},
+  "BAbstractService": {"package": null, "uses": [], "used_by": ["BAlarmService"]},
+  "BWebServlet": {"package": "javax.baja.web", "uses": ["BAlarmService"], "used_by": []},
+  "AVeryLongClassNameThatIsDefinitelyLongerThanForty": {"package": "com.acme", "uses": ["BComponent"], "used_by": []},
+  "BDevice": {"package": "", "used_by": []}
+}

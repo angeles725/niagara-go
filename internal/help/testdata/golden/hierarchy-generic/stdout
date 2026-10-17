@@ -1,0 +1,7 @@
+AbstractCursor (javax.baja.collection)
+  extends: BComponent
+  implements: Cursor&lt;E&gt;
+  direct subclasses: 1
+
+AbstractCursor
+`-- BAlarmCursor

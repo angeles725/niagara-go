@@ -24,6 +24,9 @@ func TestMisses(t *testing.T) {
 		{"search", []string{"search", "Zz*"}},
 		{"search-jdk", []string{"search", "Zz*", "--jdk"}},
 		{"package", []string{"package", "zzz"}},
+		{"hierarchy", []string{"hierarchy", "BZzz"}},
+		{"implementors", []string{"implementors", "BIZzz"}},
+		{"xref", []string{"xref", "BZzz"}},
 	}
 	for _, c := range cases {
 		t.Run(c.file, func(t *testing.T) {

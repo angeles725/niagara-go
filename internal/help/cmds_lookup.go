@@ -29,6 +29,15 @@ var classCommands = []command{
 			flag(p, "Show inheritance chain upward", "--chain")
 			flag(p, "Interface hierarchy: extends chain, sub-interfaces and "+
 				"implementors (replaces interface-hierarchy)", "--interface")
+		},
+		run: func(e *Env, ns *argparse.Namespace) error {
+			var depth *int
+			if ns.Get("depth") != nil {
+				d := ns.Int("depth")
+				depth = &d
+			}
+			return e.Hierarchy(HierarchyParams{Name: ns.String("name"), Depth: depth,
+				Chain: ns.Bool("chain"), Interface: ns.Bool("interface")})
 		}},
 	{name: "package", help: "Browse classes by package",
 		args: func(p *argparse.Parser) {
@@ -41,6 +50,9 @@ var classCommands = []command{
 	{name: "implementors", help: "Find classes implementing an interface",
 		args: func(p *argparse.Parser) {
 			positional(p, "name", "Interface name (e.g. BIAlarmSource)")
+		},
+		run: func(e *Env, ns *argparse.Namespace) error {
+			return e.Implementors(ImplementorsParams{Name: ns.String("name")})
 		}},
 	{name: "enum", help: "Show enum/frozen values and ordinals",
 		args: func(p *argparse.Parser) {

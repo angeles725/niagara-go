@@ -1,0 +1,18 @@
+BComponent (javax.baja.sys)
+  extends: BComplex
+  implements: BIEntity, BIProtected
+  direct subclasses: 7
+
+BComponent
+|-- AbstractCursor&lt;E&gt;
+|   `-- BAlarmCursor
+|-- BAbstractService
+|   |-- BAlarmService (+)
+|   `-- BWebServlet
+|-- BAlarmRecipient
+|-- BConverter
+|   `-- BStatusToNumeric
+|-- BDevice
+|-- BDeviceNetwork
+|   `-- BDevice
+`-- BOdd
