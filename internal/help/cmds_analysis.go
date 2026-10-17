@@ -7,7 +7,8 @@ import "github.com/angeles725/niagara-go/internal/argparse"
 // module-summary.
 var analysisCommands = []command{
 	{name: "module", help: "Cross-reference summary: classes + guides + PDFs",
-		args: func(p *argparse.Parser) { positional(p, "name", "Module name (e.g. 'alarm')") }},
+		args: func(p *argparse.Parser) { positional(p, "name", "Module name (e.g. 'alarm')") },
+		run:  func(e *Env, ns *argparse.Namespace) error { return e.Module(ns.String("name")) }},
 	{name: "xref", help: "Show import cross-references",
 		args: func(p *argparse.Parser) {
 			positional(p, "name", "Class name")

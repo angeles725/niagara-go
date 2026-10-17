@@ -32,6 +32,7 @@ func TestS4Misses(t *testing.T) {
 		file string
 		args []string
 	}{
+		{"module", []string{"module", "zzqq"}},
 		{"guide", []string{"guide", "zzqq"}},
 		{"devguide", []string{"devguide", "zzqq"}},
 	}
