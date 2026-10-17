@@ -1,8 +1,9 @@
-usage: course [-h] [--root DIR] [--version] {show,status,text} ...
+usage: course [-h] [--root DIR] [--version] {show,status,text,check} ...
 
 Look up the N4 developer-course answer keys of a niagara-research checkout
 (labs, review assignments, certification exam) by item ID, count them by
-verification status, and print the course text an item points at.
+verification status, print the course text an item points at, and check what
+the labs leave in a station.
 
 root: --root DIR, else NIAGARA_RESEARCH_DIR, else the first directory above the
 working directory (then above this executable) that holds
@@ -10,21 +11,26 @@ docs/n4-dev-course-solutions/labs.md.
 
 exit: 0 found; 1 searched, no match (show: any unknown ID, even when the
 others were printed); 2 cannot search (no root, a missing or ambiguous answer
-key, a missing text file).
+key, a missing text file). check: 0 no FAIL (SKIPs are counted, never passed);
+1 at least one FAIL; 2 the station cannot be read, or every check was skipped.
 
 examples:
   course show L1.9 RA1.R6 P2
   course status --lab 6 --status predicted
   course text L5.16
+  course check --station ~/Niagara4.15/tridium/stations/TrainingStation \
+    --install /opt/Niagara/Niagara-4.15.6.20 --lab 4 --lab 10
 
 positional arguments:
-  {show,status,text}
-    show              print items by ID (any case; L2.3 also finds the range item L2.2–L2.4)
-    status            items per group and status; --status lists the matching items
-    text              print the course text lines an item (or a lab) points at
+  {show,status,text,check}
+    show                print items by ID (any case; L2.3 also finds the range item L2.2–L2.4)
+    status              items per group and status; --status lists the matching items
+    text                print the course text lines an item (or a lab) points at
+    check               check what each lab leaves in a station (and the built jars):
+                        PASS/FAIL/SKIP per check
 
 options:
-  -h, --help          show this help message and exit
-  --root DIR          niagara-research checkout (default: $NIAGARA_RESEARCH_DIR, then found from
-                      cwd)
-  --version           print the tools version and exit
+  -h, --help            show this help message and exit
+  --root DIR            niagara-research checkout (default: $NIAGARA_RESEARCH_DIR, then found from
+                        cwd)
+  --version             print the tools version and exit

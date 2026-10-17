@@ -1,0 +1,2 @@
+usage: course check [-h] [--root DIR] --station PATH [--install DIR] [--lab N] [--json]
+course check: error: the following arguments are required: --station
