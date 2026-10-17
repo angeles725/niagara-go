@@ -1,0 +1,4 @@
+usage: px-render.py [-h] [--shared SHARED] [--organized ORGANIZED] [--out OUT]
+                    [--on-ratio ON_RATIO] [--seed SEED] [--title TITLE] [--subtitle SUBTITLE]
+                    px
+px-render.py: error: argument --on-ratio: invalid float value: 'abc'

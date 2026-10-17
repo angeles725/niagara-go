@@ -1,0 +1,11 @@
+{
+ "args": [
+  "inputs/station/shared/px/sub/deeper/nested.px",
+  "--shared",
+  "inputs/station/shared",
+  "--out",
+  "/dev/null",
+  "--organized",
+  "inputs/organized"
+ ]
+}

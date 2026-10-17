@@ -1,0 +1,9 @@
+{
+ "args": [
+  "inputs/station/shared/px/main.px",
+  "--shared",
+  "inputs/station/shared",
+  "--organized",
+  "inputs/organized"
+ ]
+}

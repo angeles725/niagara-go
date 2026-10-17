@@ -1,0 +1,13 @@
+{
+ "args": [
+  "inputs/station/shared/px/main.px",
+  "--title",
+  "",
+  "--seed",
+  "",
+  "--shared",
+  "",
+  "--organized",
+  "inputs/organized"
+ ]
+}

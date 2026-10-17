@@ -1,0 +1,1 @@
+<px xmlns:n="urn:x"><n:CanvasPane viewSize="5,5"/><CanvasPane viewSize="6,6"><n:Label layout="1,1,1,1" text="ns"/><Label n:layout="1,1,1,1" layout="2,2,2,2" text="plain"/></CanvasPane></px>

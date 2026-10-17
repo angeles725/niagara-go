@@ -1,0 +1,11 @@
+{
+ "args": [
+  "inputs/station/shared/px/main.px",
+  "--title",
+  "Tab <AL7> & \"x\" 'y'",
+  "--subtitle",
+  "<i>raw</i> & html",
+  "--organized",
+  "inputs/organized"
+ ]
+}
