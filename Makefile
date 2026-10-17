@@ -48,7 +48,8 @@ deadcode:
 cover:
 	@mkdir -p $(BIN)
 	$(GO) test -short -coverpkg=./internal/... -coverprofile=$(COVERPROFILE) ./...
-	@$(GO) tool cover -func=$(COVERPROFILE) | tail -n 1
+	@$(GO) tool cover -func=$(COVERPROFILE) > $(COVERPROFILE).func
+	@tail -n 1 $(COVERPROFILE).func
 
 ci: check lint cross
 

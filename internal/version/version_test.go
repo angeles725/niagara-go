@@ -79,9 +79,12 @@ func withDescribe(t *testing.T, d string) {
 	t.Cleanup(func() { gitDescribe = old })
 }
 
-// stampRe is what Describe returns from the toolchain stamp: empty (no VCS
-// stamp, e.g. go test) or a 9-character revision with an optional "-dirty".
-var stampRe = regexp.MustCompile(`^([0-9a-f]{1,9}(-dirty)?)?$`)
+// stamp is what Describe returns from a toolchain VCS stamp: the git revision
+// (always longer than 9) cut to 9 characters, with an optional "-dirty".
+const stamp = `[0-9a-f]{9}(-dirty)?`
+
+// stampRe also accepts empty: no VCS stamp, e.g. under go test.
+var stampRe = regexp.MustCompile(`^(` + stamp + `)?$`)
 
 func TestDescribe(t *testing.T) {
 	t.Run("link-time value is printed as is", func(t *testing.T) {
@@ -107,7 +110,7 @@ func TestLine(t *testing.T) {
 	})
 	t.Run("matches Describe when only the build stamp is known", func(t *testing.T) {
 		withDescribe(t, "")
-		re := regexp.MustCompile(`^bog-nav ` + regexp.QuoteMeta(ToolsVersion) + `( \(git [0-9a-f]{1,9}(-dirty)?\))?$`)
+		re := regexp.MustCompile(`^bog-nav ` + regexp.QuoteMeta(ToolsVersion) + `( \(git ` + stamp + `\))?$`)
 		got := Line("bog-nav")
 		if !re.MatchString(got) {
 			t.Fatalf("Line = %q, want %s", got, re)
