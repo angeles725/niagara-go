@@ -6,7 +6,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"io/fs"
 	"net"
 	"net/http"
 	"os"
@@ -187,11 +186,7 @@ func Run(ctx context.Context, o Options, s cli.Stdio) int {
 func loadMock(path string) (pyjson.Value, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
-		name := "OSError"
-		if errors.Is(err, fs.ErrNotExist) {
-			name = "FileNotFoundError"
-		}
-		return pyjson.Value{}, fmt.Errorf("%s: %s: %s", name, osErrorText(err), pyjson.StrRepr(path))
+		return pyjson.Value{}, fmt.Errorf("%s: %s", pycompat.OSErrorName(err), pycompat.OSErrorText(err))
 	}
 	text := []rune(pycompat.DecodeReplace(data))
 	if pycompat.DecodeReplace(data) != string(data) {
@@ -208,13 +203,12 @@ func loadMock(path string) (pyjson.Value, error) {
 	return v, nil
 }
 
-// osErrorText renders "[Errno N] Text" for an OS error.
+// osErrorText renders "[Errno N] Text" for a socket error (net.Listen). It stays local:
+// pycompat.OSErrorText maps Windows codes through the C runtime's errno table, which has no
+// text for the WSA socket codes (Python prints "[WinError N] <system message>" there).
 func osErrorText(err error) string {
 	var errno syscall.Errno
 	if !errors.As(err, &errno) {
-		if errors.Is(err, fs.ErrNotExist) {
-			return "[Errno 2] No such file or directory"
-		}
 		return err.Error()
 	}
 	msg := errno.Error()
