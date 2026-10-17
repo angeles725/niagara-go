@@ -1,6 +1,7 @@
 {
  "args": [
   "--image",
-  "testdata/images/p2.img"
- ]
+  "images/p2.img"
+ ],
+ "cwd_fixture": "run"
 }

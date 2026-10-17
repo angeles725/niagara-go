@@ -1,6 +1,7 @@
 {
  "args": [
   "--image",
-  "testdata/images/no-offset.img"
- ]
+  "images/no-offset.img"
+ ],
+ "cwd_fixture": "run"
 }

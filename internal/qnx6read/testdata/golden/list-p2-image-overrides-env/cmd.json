@@ -1,9 +1,10 @@
 {
  "args": [
   "--image",
-  "testdata/images/p2.img"
+  "images/p2.img"
  ],
  "env": {
-  "QNX6_IMG": "testdata/images/missing.img"
- }
+  "QNX6_IMG": "images/missing.img"
+ },
+ "cwd_fixture": "run"
 }

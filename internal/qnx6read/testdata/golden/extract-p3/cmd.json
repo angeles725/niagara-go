@@ -1,10 +1,11 @@
 {
  "args": [
   "--image",
-  "testdata/images/p3.img",
+  "images/p3.img",
   "P3",
   "extract",
   "/readme.txt",
   "out-readme.bin"
- ]
+ ],
+ "cwd_fixture": "run"
 }

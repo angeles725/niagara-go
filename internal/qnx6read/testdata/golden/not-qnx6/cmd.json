@@ -1,6 +1,7 @@
 {
  "args": [
   "--image",
-  "testdata/images/not-qnx6.img"
- ]
+  "images/not-qnx6.img"
+ ],
+ "cwd_fixture": "run"
 }

@@ -8,16 +8,21 @@ import (
 	"testing"
 
 	"github.com/angeles725/niagara-go/internal/cli"
+	"github.com/angeles725/niagara-go/internal/golden"
 )
 
 // The image checks are argparse errors in Python ("qnx6read.py: error: <message>"); the message
 // part is ours to match before internal/argparse lands.
 func TestValidateImageMatchesGoldenUsageMessages(t *testing.T) {
-	cases := map[string]string{"usage-no-image": "", "usage-missing-image": "testdata/images/missing.img",
-		"usage-directory-image": "testdata/images", "usage-char-device": "/dev/null"}
-	golden := map[string][]byte{}
-	for _, c := range loadGolden(t) {
-		golden[c.name] = c.stderr
+	cases := map[string]string{"usage-no-image": "", "usage-missing-image": "images/missing.img",
+		"usage-directory-image": "images", "usage-char-device": "/dev/null"}
+	frozen, err := golden.Load("testdata")
+	if err != nil {
+		t.Fatal(err)
+	}
+	stderr := map[string][]byte{}
+	for _, c := range frozen {
+		stderr[c.Name] = c.Stderr
 	}
 	t.Chdir(runDir)
 	for name, image := range cases {
@@ -27,11 +32,11 @@ func TestValidateImageMatchesGoldenUsageMessages(t *testing.T) {
 			}
 		}
 		msg := ValidateImage(image, false)
-		if want := "qnx6read.py: error: " + msg + "\n"; msg == "" || !bytes.HasSuffix(golden[name], []byte(want)) {
-			t.Errorf("%s: ValidateImage = %q; golden stderr %q", name, msg, golden[name])
+		if want := "qnx6read.py: error: " + msg + "\n"; msg == "" || !bytes.HasSuffix(stderr[name], []byte(want)) {
+			t.Errorf("%s: ValidateImage = %q; golden stderr %q", name, msg, stderr[name])
 		}
 	}
-	if msg := ValidateImage("testdata/images/p2.img", false); msg != "" {
+	if msg := ValidateImage("images/p2.img", false); msg != "" {
 		t.Errorf("a regular image is refused: %s", msg)
 	}
 	if st, err := os.Stat("/dev/null"); err == nil && st.Mode()&os.ModeCharDevice != 0 {
@@ -72,7 +77,7 @@ func TestCorruptInodeIsExit2(t *testing.T) {
 	}
 	var out, errb bytes.Buffer
 	t.Chdir(runDir)
-	code := Run(Options{Image: "testdata/images/absent.img", Part: "P2"}, cli.Stdio{Out: &out, Err: &errb})
+	code := Run(Options{Image: "images/absent.img", Part: "P2"}, cli.Stdio{Out: &out, Err: &errb})
 	if code != cli.ExitCannotSearch || !strings.Contains(errb.String(), "No such file or directory") {
 		t.Errorf("code %d stderr %q", code, errb.String())
 	}

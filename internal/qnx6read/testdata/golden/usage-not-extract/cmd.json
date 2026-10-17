@@ -1,10 +1,11 @@
 {
  "args": [
   "--image",
-  "testdata/images/p2.img",
+  "images/p2.img",
   "P2",
   "copy",
   "a",
   "b"
- ]
+ ],
+ "cwd_fixture": "run"
 }

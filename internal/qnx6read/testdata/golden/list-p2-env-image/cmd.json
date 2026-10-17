@@ -1,6 +1,7 @@
 {
  "args": [],
  "env": {
-  "QNX6_IMG": "testdata/images/p2.img"
- }
+  "QNX6_IMG": "images/p2.img"
+ },
+ "cwd_fixture": "run"
 }

@@ -1,5 +1,6 @@
 {
  "args": [
   "--help"
- ]
+ ],
+ "cwd_fixture": "run"
 }

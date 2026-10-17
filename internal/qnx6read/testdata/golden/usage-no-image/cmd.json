@@ -2,5 +2,6 @@
  "args": [],
  "env": {
   "QNX6_IMG": ""
- }
+ },
+ "cwd_fixture": "run"
 }

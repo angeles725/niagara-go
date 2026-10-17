@@ -5,18 +5,19 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"testing"
 
 	"github.com/angeles725/niagara-go/internal/cli"
+	"github.com/angeles725/niagara-go/internal/golden"
 )
 
-// runDir holds the sparse disk images of testdata/inputs/images.txt; golden cases run there.
+// runDir is testdata/run: the cwd_fixture of every case. TestMain writes the sparse disk images
+// of testdata/inputs/images.txt into it (the real P2/P3 offsets are 129 MiB and 3.5 GiB) and
+// removes it afterwards, extract outputs included.
 var runDir string
 
 func TestMain(m *testing.M) {
@@ -29,12 +30,15 @@ func TestMain(m *testing.M) {
 }
 
 func withImages(m *testing.M) (int, error) {
-	dir, err := os.MkdirTemp("", "qnx6read-golden-")
+	dir, err := filepath.Abs(filepath.Join("testdata", "run"))
 	if err != nil {
 		return 0, err
 	}
+	if err := os.RemoveAll(dir); err != nil {
+		return 0, err
+	}
 	defer os.RemoveAll(dir)
-	if err := materializeImages(dir); err != nil {
+	if err := materializeImages("testdata"); err != nil {
 		return 0, err
 	}
 	runDir = dir
@@ -42,9 +46,9 @@ func withImages(m *testing.M) (int, error) {
 }
 
 // materializeImages writes each manifest image as a sparse file: zeros up to the partition
-// offset, then the committed partition bytes (the real offsets are 129 MiB and 3.5 GiB).
-func materializeImages(dir string) error {
-	f, err := os.Open(filepath.Join("testdata", "inputs", "images.txt"))
+// offset, then the committed partition bytes. Manifest paths are relative to testdata.
+func materializeImages(testdata string) error {
+	f, err := os.Open(filepath.Join(testdata, "inputs", "images.txt"))
 	if err != nil {
 		return err
 	}
@@ -60,11 +64,11 @@ func materializeImages(dir string) error {
 		if _, err := fmt.Sscan(line, &img, &off, &part); err != nil {
 			return fmt.Errorf("images.txt %q: %v", line, err)
 		}
-		data, err := os.ReadFile(part)
+		data, err := os.ReadFile(filepath.Join(testdata, part))
 		if err != nil {
 			return err
 		}
-		dst := filepath.Join(dir, img)
+		dst := filepath.Join(testdata, img)
 		if err := os.MkdirAll(filepath.Dir(dst), 0o755); err != nil {
 			return err
 		}
@@ -83,66 +87,19 @@ func materializeImages(dir string) error {
 	return sc.Err()
 }
 
-type goldenCase struct {
-	name           string
-	args           []string
-	env            map[string]string
-	stdout, stderr []byte
-	exit           int
-}
-
-func loadGolden(t *testing.T) []goldenCase {
-	t.Helper()
-	dirs, err := filepath.Glob(filepath.Join("testdata", "golden", "*"))
-	if err != nil || len(dirs) == 0 {
-		t.Fatalf("no golden cases (%v)", err)
-	}
-	var cases []goldenCase
-	for _, d := range dirs {
-		var cmd struct {
-			Args []string          `json:"args"`
-			Env  map[string]string `json:"env"`
-		}
-		c := goldenCase{name: filepath.Base(d)}
-		raw, err := os.ReadFile(filepath.Join(d, "cmd.json"))
-		if err == nil {
-			err = json.Unmarshal(raw, &cmd)
-		}
-		if err == nil {
-			c.stdout, err = os.ReadFile(filepath.Join(d, "stdout"))
-		}
-		if err == nil {
-			c.stderr, err = os.ReadFile(filepath.Join(d, "stderr"))
-		}
-		var code []byte
-		if err == nil {
-			code, err = os.ReadFile(filepath.Join(d, "exit"))
-		}
-		if err == nil {
-			c.exit, err = strconv.Atoi(strings.TrimSpace(string(code)))
-		}
-		if err != nil {
-			t.Fatalf("%s: %v", d, err)
-		}
-		c.args, c.env = cmd.Args, cmd.Env
-		cases = append(cases, c)
-	}
-	return cases
-}
-
 // optionsFromArgs maps the argv of a non-usage golden case onto Options (a test fixture, not a
 // parser: usage and error text belong to internal/argparse).
-func optionsFromArgs(t *testing.T, c goldenCase) Options {
+func optionsFromArgs(t *testing.T, c golden.Case) Options {
 	t.Helper()
-	o := Options{Image: c.env["QNX6_IMG"], Part: "P2"}
+	o := Options{Image: c.Env["QNX6_IMG"], Part: "P2"}
 	var pos []string
-	for i := 0; i < len(c.args); i++ {
-		if c.args[i] == "--image" && i+1 < len(c.args) {
-			o.Image = c.args[i+1]
+	for i := 0; i < len(c.Args); i++ {
+		if c.Args[i] == "--image" && i+1 < len(c.Args) {
+			o.Image = c.Args[i+1]
 			i++
 			continue
 		}
-		pos = append(pos, c.args[i])
+		pos = append(pos, c.Args[i])
 	}
 	if len(pos) > 0 {
 		o.Part, pos = pos[0], pos[1:]
@@ -150,7 +107,7 @@ func optionsFromArgs(t *testing.T, c goldenCase) Options {
 	if len(pos) == 3 && pos[0] == "extract" {
 		o.Extract = &Extract{Src: pos[1], Dst: pos[2]}
 	} else if len(pos) != 0 {
-		t.Fatalf("golden argv %q is not a plain case; name it usage-*", c.args)
+		t.Fatalf("golden argv %q is not a plain case; name it usage-*", c.Args)
 	}
 	return o
 }
@@ -164,12 +121,12 @@ var intended = map[string]struct {
 	"extract-missing": {1, "P2 OFF=3 blocksize=1024 inodes=12\nqnx6read: /etc/nope: not found in the image\n"},
 	"extract-bad-dst": {2, "P2 OFF=3 blocksize=1024 inodes=12\n" +
 		"qnx6read: cannot write no-such-dir/out.bin: No such file or directory\n"},
-	"not-qnx6": {2, "qnx6read: not a QNX6 partition at byte 135266304 of testdata/images/not-qnx6.img " +
+	"not-qnx6": {2, "qnx6read: not a QNX6 partition at byte 135266304 of images/not-qnx6.img " +
 		"(superblock magic 0x12345678)\n"},
 	"list-p3-image-wrong-partition": {2, "qnx6read: not a QNX6 partition at byte 135266304 of " +
-		"testdata/images/p3.img (superblock magic 0x00000000)\n"},
-	"no-offset": {2, "qnx6read: could not detect block offset in testdata/images/no-offset.img\n"},
-	"tiny-image": {2, "qnx6read: not a QNX6 partition at byte 135266304 of testdata/images/tiny.img " +
+		"images/p3.img (superblock magic 0x00000000)\n"},
+	"no-offset": {2, "qnx6read: could not detect block offset in images/no-offset.img\n"},
+	"tiny-image": {2, "qnx6read: not a QNX6 partition at byte 135266304 of images/tiny.img " +
 		"(superblock truncated: 0 of 4096 bytes)\n"},
 }
 
@@ -186,29 +143,37 @@ var extracted = map[string]string{
 	"out-root.bin":   "671bcd4339a4d5f52e3aa8c84becf0616b6ef5fee8df280b91b5026d002cb69a",
 }
 
+// TestGolden checks Run against the frozen Python cases at the logic level (options already
+// parsed). Once Main exists (internal/argparse), golden.Run(t, "testdata", Main) replaces it.
 func TestGolden(t *testing.T) {
-	cases := loadGolden(t)
-	t.Chdir(runDir)
+	cases, err := golden.Load("testdata")
+	if err != nil {
+		t.Fatal(err)
+	}
 	for _, c := range cases {
-		t.Run(c.name, func(t *testing.T) {
-			if strings.HasPrefix(c.name, "usage-") {
+		t.Run(c.Name, func(t *testing.T) {
+			if strings.HasPrefix(c.Name, "usage-") {
 				t.Skip("awaiting internal/argparse")
 			}
+			if c.CwdFixture != "run" {
+				t.Fatalf("cwd_fixture %q, want run", c.CwdFixture)
+			}
+			t.Chdir(runDir)
 			o := optionsFromArgs(t, c)
 			var out, errb bytes.Buffer
 			code := Run(o, cli.Stdio{In: strings.NewReader(""), Out: &out, Err: &errb})
-			wantExit, wantErr := c.exit, string(c.stderr)
-			if d, ok := intended[c.name]; ok {
+			wantExit, wantErr := c.Exit, string(c.Stderr)
+			if d, ok := intended[c.Name]; ok {
 				wantExit, wantErr = d.exit, d.stderr
 			}
 			if code != wantExit {
 				t.Errorf("exit = %d, want %d", code, wantExit)
 			}
-			if !bytes.Equal(out.Bytes(), c.stdout) {
-				t.Errorf("stdout differs\n got: %q\nwant: %q", out.String(), c.stdout)
+			if !bytes.Equal(out.Bytes(), c.Stdout) {
+				t.Errorf("stdout: %s", golden.Diff(c.Stdout, out.Bytes()))
 			}
 			if errb.String() != wantErr {
-				t.Errorf("stderr differs\n got: %q\nwant: %q", errb.String(), wantErr)
+				t.Errorf("stderr: %s", golden.Diff([]byte(wantErr), errb.Bytes()))
 			}
 			if o.Extract != nil && code == 0 {
 				data, err := os.ReadFile(o.Extract.Dst)
