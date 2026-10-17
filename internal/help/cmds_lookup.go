@@ -133,14 +133,20 @@ var memberCommands = []command{
 			return e.InheritedSlots(InheritedSlotsParams{Name: ns.String("name"), JSON: ns.Bool("islots_json")})
 		}},
 	{name: "inherited-methods", help: "Show all methods including inherited from parents",
-		args: func(p *argparse.Parser) { positional(p, "name", "Class name") }},
+		args: func(p *argparse.Parser) { positional(p, "name", "Class name") },
+		run: func(e *Env, ns *argparse.Namespace) error {
+			return e.InheritedMethods(InheritedMethodsParams{Name: ns.String("name")})
+		}},
 	{name: "api", help: "Public API surface (own methods + overrides, no framework noise)",
 		args: func(p *argparse.Parser) {
 			positional(p, "name", "Class name (e.g. BAlarmService)")
 			flag(p, "Also show inherited methods from non-framework parents", "--inherited")
 		}},
 	{name: "overrides", help: "Show which methods a class overrides from parents",
-		args: func(p *argparse.Parser) { positional(p, "name", "Class name") }},
+		args: func(p *argparse.Parser) { positional(p, "name", "Class name") },
+		run: func(e *Env, ns *argparse.Namespace) error {
+			return e.Overrides(OverridesParams{Name: ns.String("name")})
+		}},
 	{name: "contract", help: "Show interface contract: methods + implementors",
 		args: func(p *argparse.Parser) {
 			positional(p, "name", "Interface name (e.g. BIAlarmSource)")

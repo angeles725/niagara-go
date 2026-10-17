@@ -31,6 +31,8 @@ func TestMisses(t *testing.T) {
 		{"slots", []string{"slots", "Zzz"}},
 		{"slots-by-type", []string{"slots", "--by-type", "BZzz"}},
 		{"inherited-slots", []string{"inherited-slots", "Zzz"}},
+		{"inherited-methods", []string{"inherited-methods", "Zzz"}},
+		{"overrides", []string{"overrides", "Zzz"}},
 	}
 	for _, c := range cases {
 		t.Run(c.file, func(t *testing.T) {

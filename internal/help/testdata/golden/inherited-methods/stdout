@@ -1,0 +1,22 @@
+INHERITED METHODS: BOrionAlarmService
+CHAIN: java.lang.Object > BObject > BValue > BComplex > BComponent > BAbstractService > BAlarmService > BOrionAlarmService
+TOTAL: 9 methods
+
+  -- from BValue (1) --
+    public boolean equivalent(Object o)
+
+  -- from BComplex (1) --
+    public Slot getSlot(String name)
+
+  -- from BAbstractService (1) --
+    public Type[] getServiceTypes()
+
+  -- from BAlarmService (3) --
+    public void routeAlarm(BAlarmRecord record, Context cx)
+    public void serviceStarted() throws Exception
+    public String toString(Context cx)
+
+  -- from BOrionAlarmService (this) (3) --
+    public void doRouteAlarm(BAlarmRecord record)
+    public Type getType()
+    public void started()

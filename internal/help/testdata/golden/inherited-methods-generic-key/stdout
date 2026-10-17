@@ -1,0 +1,19 @@
+INHERITED METHODS: AbstractCursor&lt;E&gt;
+CHAIN: java.lang.Object > BObject > BValue > BComplex > BComponent > AbstractCursor&lt;E&gt;
+TOTAL: 6 methods
+
+  -- from BObject (2) --
+    public Type getType()
+    public String toString(Context cx)
+
+  -- from BValue (1) --
+    public boolean equivalent(Object o)
+
+  -- from BComplex (1) --
+    public Slot getSlot(String name)
+
+  -- from BComponent (1) --
+    public void started() throws Exception
+
+  -- from AbstractCursor&lt;E&gt; (this) (1) --
+    public E get()
