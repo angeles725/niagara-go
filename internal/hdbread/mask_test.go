@@ -411,16 +411,31 @@ func hostileSection(n int) []byte {
 	return []byte(b.String())
 }
 
-// --mask stays near-linear in the record count: 20k hostile records finish in well under 1 s.
+// --mask stays near-linear in the record count: four times the hostile records may cost about four
+// times as long, not sixteen (the quadratic planMask took 14 s for 20k). A ratio of two sizes, best of
+// three runs each, instead of a wall-clock cap, so a slow or -race build does not flake.
 func TestMaskScalesToManyRecords(t *testing.T) {
-	rec := hostileSection(20000)
-	start := time.Now()
-	lines := maskedStrings(rec)
-	if d := time.Since(start); d > time.Second {
-		t.Errorf("--strings --mask of 20k records took %s", d)
+	if testing.Short() {
+		t.Skip("timing ratio test; run without -short")
 	}
-	if l, bad := verbatimNotOp(lines); bad {
-		t.Errorf("rule v5: %q printed verbatim", l)
+	best := func(n int) time.Duration {
+		rec := hostileSection(n)
+		var min time.Duration
+		for i := 0; i < 3; i++ {
+			start := time.Now()
+			lines := maskedStrings(rec)
+			if d := time.Since(start); i == 0 || d < min {
+				min = d
+			}
+			if l, bad := verbatimNotOp(lines); bad {
+				t.Fatalf("rule v5: %q printed verbatim", l)
+			}
+		}
+		return min
+	}
+	small, large := best(5000), best(20000)
+	if ratio := float64(large) / float64(small); ratio > 8 {
+		t.Errorf("--strings --mask: 5k records %s, 20k records %s (ratio %.1f > 8: not near-linear)", small, large, ratio)
 	}
 }
 
