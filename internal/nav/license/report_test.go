@@ -1,15 +1,10 @@
 package license
 
 import (
-	"bytes"
 	"database/sql"
 	"os"
 	"path/filepath"
 	"testing"
-
-	"github.com/angeles725/niagara-go/internal/cli"
-	"github.com/angeles725/niagara-go/internal/nav/core"
-	"github.com/angeles725/niagara-go/internal/nav/registry"
 )
 
 // tokenBase writes a token index listing files (path -> source; "" = not on
@@ -46,13 +41,23 @@ func tokenBase(t *testing.T, files map[string]string) (base, corpus string) {
 	return base, corpus
 }
 
+// scan runs Scan and renders its outcome the way the CLI reports it: the
+// stderr text and the exit status.
 func scan(t *testing.T, base, corpus string) (*Report, string, int) {
 	t.Helper()
 	t.Setenv("NAV_CORPUS_BASE", corpus)
-	var out, errb bytes.Buffer
-	env := &registry.Env{Stdio: cli.Stdio{Out: &out, Err: &errb}, Runtime: core.New(base, &out, &errb)}
-	defer env.Close()
-	return Scan(env), errb.String(), env.ExitCode()
+	rep, f := Scan(base)
+	switch {
+	case f != nil:
+		stderr := "ERROR: " + f.Message + "\n"
+		if f.Hint != "" {
+			stderr += "  " + f.Hint + "\n"
+		}
+		return rep, stderr, 2
+	case rep.Warning != "":
+		return rep, "WARNING: " + rep.Warning + "\n", 0
+	}
+	return rep, "", 0
 }
 
 // TestScan pins license_report's outcomes: calls with the candidate counts,

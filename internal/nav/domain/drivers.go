@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"fmt"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -217,9 +218,13 @@ func networkRows(env *registry.Env) (rows []*DriverRow, scope string, ok bool) {
 	if organized == "" {
 		return nil, "", false
 	}
-	report := license.Scan(env)
-	if report == nil {
+	report, failure := license.Scan(env.BaseDir)
+	if failure != nil {
+		env.Error(failure.Message, failure.Hint)
 		return nil, "", false
+	}
+	if report.Warning != "" {
+		fmt.Fprintf(env.Err, "WARNING: %s\n", report.Warning)
 	}
 	rows, scope = Drivers(DriverInputs{ClassIndex: ci, Inheritance: inh, Inventory: inv,
 		Organized: organized, Features: FeaturesByModule(report.Calls)})
