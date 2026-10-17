@@ -106,7 +106,7 @@ func decls(ds []slotomatic.Decl) []any {
 			args = []string{}
 		}
 		out[i] = []kv{{"args", args}, {"default", d.Default}, {"facets", d.Facets},
-			{"flagLetters", d.FlagLetters}, {"flags", d.Flags}, {"name", d.Name}}
+			{"flagLetters", d.FlagLetters}, {"flags", d.FlagValue()}, {"name", d.Name}}
 	}
 	return out
 }

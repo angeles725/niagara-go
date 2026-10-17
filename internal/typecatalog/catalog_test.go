@@ -2,12 +2,14 @@ package typecatalog
 
 import (
 	"bytes"
+	"math/big"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/angeles725/niagara-go/internal/cli"
+	"github.com/angeles725/niagara-go/internal/slotomatic"
 )
 
 func run(args ...string) (string, string, int) {
@@ -116,5 +118,24 @@ func TestBuildKeepsBigFlagValues(t *testing.T) {
 	out, _, code := run("build", dir)
 	if code != 0 || !strings.Contains(out, `"flags": 590295810358705651696,`) || !strings.Contains(out, `"flagLetters": "andcoxfApRmLN1",`) {
 		t.Errorf("code %d\n%s", code, out)
+	}
+}
+
+// A zero Decl (nil Flags) is flags 0 everywhere, never "<nil>", an invalid JSON token or a panic.
+func TestZeroDeclIsFlagsZero(t *testing.T) {
+	cat := &Catalog{}
+	cat.setDefault("p.BZ", &Record{Type: slotomatic.Type{Package: "p", Class: "BZ", Properties: []slotomatic.Decl{{Name: "z"}}}})
+	data, err := cat.JSON()
+	if err != nil || !strings.Contains(data, `"flags": 0,`) {
+		t.Errorf("JSON err %v\n%s", err, data)
+	}
+	if v, err := cat.view("p.BZ"); err != nil || v.groups[0][0].flags != "0" {
+		t.Errorf("view %+v err %v", v, err)
+	}
+	if _, err := dumps([]any{(*big.Int)(nil)}, 1); err == nil {
+		t.Error("a nil *big.Int was encoded")
+	}
+	if got := (slotomatic.Decl{}).FlagValue().Int64(); got != 0 {
+		t.Errorf("FlagValue = %d", got)
 	}
 }

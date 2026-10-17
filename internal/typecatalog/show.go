@@ -75,7 +75,7 @@ func (c *Catalog) view(key string) (entryView, error) {
 	ev := entryView{extends: r.Extends, source: r.Source}
 	for g, ds := range [3][]slotomatic.Decl{r.Properties, r.Actions, r.Topics} {
 		for _, d := range ds {
-			ev.groups[g] = append(ev.groups[g], declView{d.Name, d.Flags.String(), d.FlagLetters, d.Default, d.Facets})
+			ev.groups[g] = append(ev.groups[g], declView{d.Name, d.FlagValue().String(), d.FlagLetters, d.Default, d.Facets})
 		}
 	}
 	return ev, nil

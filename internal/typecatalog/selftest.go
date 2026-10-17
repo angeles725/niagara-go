@@ -102,12 +102,12 @@ func checks() []check {
 		{"ParseTest.test_cfr_decompiled_style", func() error {
 			t := slotomatic.ParseSource(cfrSrc)
 			p, a := flagsOf(t.Properties), flagsOf(t.Actions)
-			return expect(p["delay"].Flags.Int64() == 0 && p["delay"].Default == "BRelTime.DEFAULT" && p["master"].Flags.Int64() == 1026 &&
-				strings.HasPrefix(p["master"].Facets, "BFacets.make(") && a["reset"].Flags.Int64() == 256, "%+v", t)
+			return expect(p["delay"].FlagValue().Int64() == 0 && p["delay"].Default == "BRelTime.DEFAULT" && p["master"].FlagValue().Int64() == 1026 &&
+				strings.HasPrefix(p["master"].Facets, "BFacets.make(") && a["reset"].FlagValue().Int64() == 256, "%+v", t)
 		}},
 		{"ParseTest.test_nested_parentheses_and_multiline", func() error {
 			p := flagsOf(slotomatic.ParseSource(multilineSrc).Properties)
-			return expect(strings.Contains(p["conversion"].Facets, "FIELD_EDITOR") && p["wrapped"].Flags.Int64() == 4 &&
+			return expect(strings.Contains(p["conversion"].Facets, "FIELD_EDITOR") && p["wrapped"].FlagValue().Int64() == 4 &&
 				p["wrapped"].Default == `"x"`, "%+v", p)
 		}},
 		{"ParseTest.test_no_declarations_returns_empty_lists", func() error {
@@ -119,9 +119,9 @@ func checks() []check {
 			p, a := flagsOf(t.Properties), flagsOf(t.Actions)
 			return firstErr(
 				expect(t.Class == "BNumericWritable" && t.Package == "javax.baja.control" && t.Extends == "BNumericPoint", "header %+v", t),
-				expect(p["in1"].Flags.Int64() == 1 && p["in10"].Flags.Int64() == 0x0A && p["fallback"].Flags.Int64() == 0 && p["overrideExpiration"].Flags.Int64() == 0x101, "flags %+v", p),
+				expect(p["in1"].FlagValue().Int64() == 1 && p["in10"].FlagValue().Int64() == 0x0A && p["fallback"].FlagValue().Int64() == 0 && p["overrideExpiration"].FlagValue().Int64() == 0x101, "flags %+v", p),
 				expect(p["in1"].Default == "new BStatusNumeric(0, BStatus.nullStatus)", "in1 default %q", p["in1"].Default),
-				expect(a["emergencyAuto"].Flags.Int64() == 0 && a["set"].Flags.Int64() == 0x100 && a["set"].Default == "BDouble.DEFAULT", "actions %+v", a),
+				expect(a["emergencyAuto"].FlagValue().Int64() == 0 && a["set"].FlagValue().Int64() == 0x100 && a["set"].Default == "BDouble.DEFAULT", "actions %+v", a),
 				expect(len(t.Topics) == 1 && t.Topics[0].Name == "fired", "topics %+v", t.Topics))
 		}},
 		{"RealDataTest.test_bnumericwritable_in_docsource", realData},
@@ -159,8 +159,8 @@ func realData() error {
 	}
 	t := slotomatic.ParseSource(text)
 	p, a := flagsOf(t.Properties), flagsOf(t.Actions)
-	return expect(p["in1"].Flags.Int64() == 0x01 && p["in8"].Flags.Int64() == 0x01 && p["in2"].Flags.Int64() == 0x02 && p["in10"].Flags.Int64() == 0x0A &&
-		p["in16"].Flags.Int64() == 0x0A && p["fallback"].Flags.Int64() == 0 && a["emergencyOverride"].Flags.Int64() == 0 && a["set"].Flags.Int64() == 0x100,
+	return expect(p["in1"].FlagValue().Int64() == 0x01 && p["in8"].FlagValue().Int64() == 0x01 && p["in2"].FlagValue().Int64() == 0x02 && p["in10"].FlagValue().Int64() == 0x0A &&
+		p["in16"].FlagValue().Int64() == 0x0A && p["fallback"].FlagValue().Int64() == 0 && a["emergencyOverride"].FlagValue().Int64() == 0 && a["set"].FlagValue().Int64() == 0x100,
 		"%s: InN flags differ from B1174", path)
 }
 

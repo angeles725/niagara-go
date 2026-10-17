@@ -24,11 +24,19 @@ import (
 // Decl is one declared slot.
 type Decl struct {
 	Name        string
-	Flags       *big.Int // Python int: no bound
+	Flags       *big.Int // Python int: no bound; nil (a zero Decl) means 0, read it with FlagValue
 	FlagLetters string   // the letters of the known flag bits, in bit order
 	Args        []string // every call argument, cleaned
 	Default     string   // the default value expression ("" when the call has none)
 	Facets      string   // the facets expression ("null" when absent)
+}
+
+// FlagValue is Flags, or 0 for a zero Decl (nil Flags).
+func (d Decl) FlagValue() *big.Int {
+	if d.Flags == nil {
+		return new(big.Int)
+	}
+	return d.Flags
 }
 
 // Type is the declarations of one source file's public class.

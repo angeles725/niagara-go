@@ -36,6 +36,9 @@ func encode(b *strings.Builder, v any, indent, level int) error {
 	case int64:
 		b.WriteString(strconv.FormatInt(x, 10))
 	case *big.Int:
+		if x == nil {
+			return fmt.Errorf("json: nil *big.Int")
+		}
 		b.WriteString(x.String())
 	case string:
 		quote(b, x)

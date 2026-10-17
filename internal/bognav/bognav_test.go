@@ -214,3 +214,18 @@ func TestGrepInvalidRegexIsAUsageError(t *testing.T) {
 		t.Errorf("code %d out %q err %q", code, out, errOut)
 	}
 }
+
+// An encoder error in a --json command is one stderr line and exit 2, with nothing on stdout:
+// every --json path builds the whole document before writing it, like print(json.dumps(...)).
+func TestJSONEncoderErrorExits2WithEmptyStdout(t *testing.T) {
+	orig := commands["path"]
+	t.Cleanup(func() { commands["path"] = orig })
+	commands["path"] = func(e *env) (int, int) {
+		e.printJSON(row{{"ok", "x"}, {"bad", 1.5}}, 2)
+		return 0, -1
+	}
+	out, errOut, code := runMain(t, writeFile(t, "x.xml", []byte(testXML)), "path", "h:1", "--json")
+	if code != cli.ExitCannotSearch || out != "" || errOut != "bog-nav: json: unsupported value of type float64\n" {
+		t.Errorf("code %d out %q err %q", code, out, errOut)
+	}
+}
