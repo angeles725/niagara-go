@@ -57,7 +57,7 @@ func TestParityFloatRepr(t *testing.T) {
 		if err != nil {
 			t.Fatalf("hex float %s: %v", row[0], err)
 		}
-		if got := FloatRepr(f); got != row[1] {
+		if got := (Value{Kind: Float, F: f}).Repr(); got != row[1] {
 			t.Errorf("repr(%s): got %s want %s", row[0], got, row[1])
 		}
 	}
