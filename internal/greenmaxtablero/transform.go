@@ -10,6 +10,8 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 const imgNormal = "file:^Imagenes/The Harbor/Buttons/BotonNormal.png"
@@ -36,9 +38,9 @@ type point struct{ x, y float64 }
 
 // pyFloat is float() of a "[\d.]+" match: a digit string past float64 is inf, as in Python.
 func pyFloat(s string) (float64, error) {
-	v, err := strconv.ParseFloat(s, 64)
-	if err != nil && !errors.Is(err, strconv.ErrRange) || strings.Count(s, ".") > 1 {
-		return 0, &exitError{"greenmax-tablero-gen: could not convert string to float: " + pyStrRepr(s)}
+	v, err := pycompat.ParseFloat(s)
+	if err != nil {
+		return 0, &exitError{"greenmax-tablero-gen: could not convert string to float: " + pycompat.StrRepr(s)}
 	}
 	return v, nil
 }
@@ -52,17 +54,14 @@ func pyInt(v float64) (string, error) {
 	case math.IsNaN(v):
 		return "", &exitError{"greenmax-tablero-gen: cannot convert float NaN to integer"}
 	}
-	t := math.Trunc(v)
-	if math.Abs(t) < 1<<63 {
-		return strconv.FormatInt(int64(t), 10), nil
-	}
-	return strconv.FormatFloat(t, 'f', 0, 64), nil // an integral float64 prints exactly
+	s, _ := pycompat.IntOfFloat(v)
+	return s, nil
 }
 
 // pyFixed1 is f"{v:.1f}": "inf" (not Go's "+Inf") for an infinite v.
 func pyFixed1(v float64) string {
 	if math.IsInf(v, 0) || math.IsNaN(v) {
-		return pyRepr(v)
+		return pycompat.FloatRepr(v)
 	}
 	return strconv.FormatFloat(v, 'f', 1, 64)
 }
@@ -114,7 +113,7 @@ func (s stats) String() string {
 	}
 	bumped := "None"
 	if s.bumped != nil {
-		bumped = "(" + pyRepr(s.bumped[0]) + ", " + strconv.FormatFloat(s.bumped[1], 'f', 0, 64) + ")"
+		bumped = "(" + pycompat.FloatRepr(s.bumped[0]) + ", " + strconv.FormatFloat(s.bumped[1], 'f', 0, 64) + ")"
 	}
 	return fmt.Sprintf("circuits=%d missing=[%s] hoa_removed=%d popups_removed=%d pills=%d leds=%d namemux=%d "+
 		"selrset=%d view_bumped=%s", s.circuits, strings.Join(miss, ", "), s.hoaRemoved, s.popupsRemoved,
