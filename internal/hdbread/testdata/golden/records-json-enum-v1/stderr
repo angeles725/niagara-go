@@ -1,0 +1,2 @@
+# inputs/enum-v1.hdb
+# records=3 (pages declare 3) record_type=history:EnumTrendRecord version=1 first=2018-09-26T17:30:00.008Z last=1969-12-30T23:59:59.999Z monotonic=no (2 steps back) median_interval_ms=-1537983001008 (config interval 900000)

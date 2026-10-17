@@ -1,0 +1,5 @@
+{
+ "reason": "Python's int('x') raises ValueError and ends in a traceback (exit 1); Go prints the same ValueError message as one line with exit 2.",
+ "stderr": "obix-nav: dump: invalid literal for int() with base 10: 'x'\n",
+ "exit": 2
+}

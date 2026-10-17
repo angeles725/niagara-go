@@ -1,0 +1,8 @@
+wrote /dev/null  (55 widgets, 11 assets, 0.01 MB, canvas 1370x780)
+shared root: inputs/station/shared
+missing assets (5):
+   file:^Imagenes/missing.png
+   file:^Imagenes/nope.png
+   module://nomodpath
+   module://other/img/secret.gif
+   station:|slot:/x

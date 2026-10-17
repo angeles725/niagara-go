@@ -1,0 +1,5 @@
+{
+ "reason": "Python raises FileNotFoundError(path) out of QNX6.extract and ends in a traceback (exit 1); Go prints one 'not found in the image' line with the same exit 1.",
+ "stderr": "P2 OFF=3 blocksize=1024 inodes=12\nqnx6read: /etc/nope: not found in the image\n",
+ "exit": 1
+}

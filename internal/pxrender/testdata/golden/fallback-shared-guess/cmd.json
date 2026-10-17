@@ -1,0 +1,7 @@
+{
+ "args": [
+  "inputs/loose/plain.px",
+  "--organized",
+  "inputs/organized"
+ ]
+}

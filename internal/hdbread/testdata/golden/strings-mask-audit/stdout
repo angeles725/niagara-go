@@ -1,0 +1,36 @@
+# inputs/audit.hdb
+magic=A106F11E version=2 data_offset=1600 data_section=800 bytes
+Changed
+<VALUE-MASKED>
+out
+1.0
+2.0
+admin
+Changed
+<VALUE-MASKED>
+setpoint
+jdoe
+Added
+<VALUE-MASKED>
+Login
+<VALUE-MASKED>
+admin
+Login
+jdoe
+Changed
+guest
+Logout (Timeout)
+<VALUE-MASKED>
+station
+Invoked
+<VALUE-MASKED>
+reset
+<VALUE-MASKED>
+Flags Changed
+<VALUE-MASKED>
+admin
+Login Failure
+bad
+root
+Logout
+jdoe

@@ -1,0 +1,8 @@
+{
+ "args": [
+  "--image",
+  "images/p3.img",
+  "P2"
+ ],
+ "cwd_fixture": "run"
+}

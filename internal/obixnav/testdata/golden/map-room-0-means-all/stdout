@@ -1,0 +1,29 @@
+
+=== Cuarto1 (ColdRoom_1) — 2 evaporador(es) — mapeo: CRUZADO ===
+  dash evap1  ->  EvaporatorUnit_2
+  dash evap2  ->  EvaporatorUnit_1
+  defrost: room-level DefrostController=PRESENTE | per-evap=2/2 ['EvaporatorUnit_1', 'EvaporatorUnit_2']
+ Diferencias/faltantes:
+  MISSING fac  evap1TerminateOnResistanceTemp
+  MISSING fac  evap1ResistanceTempThreshold
+  DIFF  evap2 evap2Setpoint=4.0  !=  rt evapSetpoint=4.5
+  DIFF  evap2 evap2DifferentialUp=1.5  !=  rt evapDifferentialUp=0.0
+  DIFF  evap2 evap2FreezeActive=false  !=  rt freezeActive=true
+  MISSING fac  evap2FreezeDiffRestart
+  DIFF  evap2 evap2DefrostInterval=PT6H0S  !=  rt DefrostController/interval=PT20M0S
+  DIFF  evap2 evap2DefrostDuration=PT20M0S  !=  rt DefrostController/duration=PT30M0S
+  DIFF  evap2 evap2TerminateOnResistanceTemp=false  !=  rt DefrostController/terminateOnResistanceTemp=true
+  MISSING fac  evap2ResistanceTempThreshold
+
+=== Cuarto2 (ColdRoom_2) — 1 evaporador(es) — mapeo: directo ===
+  dash evap1  ->  EvaporatorUnit
+  defrost: room-level DefrostController=no | per-evap=0/1 []
+ Diferencias/faltantes:
+  DIFF  evap1 evap1DifferentialUp=1  !=  rt evapDifferentialUp=abc
+
+=== Cuarto3 (ColdRoom_3) — 1 evaporador(es) — mapeo: directo ===
+  dash evap1  ->  ??
+  defrost: room-level DefrostController=no | per-evap=1/1 ['EvaporatorUnit_1']
+ Todos los slots de control/defrost COINCIDEN facade<->rt.
+Cuarto4 (ColdRoom_4): sin EvaporatorUnit legibles
+Cuarto5 (ColdRoom_5): sin EvaporatorUnit legibles

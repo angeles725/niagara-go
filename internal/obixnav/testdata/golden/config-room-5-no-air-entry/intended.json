@@ -1,0 +1,5 @@
+{
+ "reason": "Room 5 has no entry in Python's config table, so it ends in a KeyError traceback (exit 1); Go names the rooms config covers in one line with exit 2.",
+ "stderr": "obix-nav: config: no room 5 (rooms 1-4)\n",
+ "exit": 2
+}

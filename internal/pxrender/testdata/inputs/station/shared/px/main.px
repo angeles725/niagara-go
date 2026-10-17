@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<px version="1.0">
+<import/>
+<content>
+<ScrollPane>
+<CanvasPane name="content" viewSize="1370.0,780.5">
+<!-- a comment --><?pi data?>
+<Picture layout="0.0,0.0,1370.0,780.0" image="file:^Imagenes/plano.JPEG"/>
+<Picture layout="5.0,5.0,64.0,32.0" image="file:^Imagenes/logo.svg"/>
+<Picture layout="5.0,40.0,8.0,8.0" image="file:^Imagenes/anim.gif"/>
+<Picture layout="5.0,50.0,8.0,8.0" image="file:^Imagenes/noext"/>
+<Picture layout="5.0,60.0,8.0,8.0" image="file:^Imagenes/Plano Planta.jpg"/>
+<Picture layout="5.0,70.0,8.0,8.0" image="file:^Imagenes/plano.JPEG"/>
+<Picture layout="5.0,80.0,8.0,8.0" image="file:^Imagenes/missing.png"/>
+<Picture layout="5.0,90.0,8.0,8.0" image="module://mymod/icons/fan.png"/>
+<Picture layout="5.0,100.0,8.0,8.0" image="module://mymod/icons/pump.png"/>
+<Picture layout="5.0,110.0,8.0,8.0" image="module://other/img/valve.gif"/>
+<Picture layout="5.0,120.0,8.0,8.0" image="module://other/img/secret.gif"/>
+<Picture layout="5.0,130.0,8.0,8.0" image="module://nomodpath"/>
+<Picture layout="5.0,140.0,8.0,8.0" image="station:|slot:/x"/>
+<Picture layout="5.0,150.0,8.0,8.0" image=""/>
+<Picture layout="5.0,160.0,8.0,8.0"/>
+<Label layout="100.0,10.0,300.0,40.0" text="Cuarto 1 &amp;amp; Planta &lt;B&gt; &quot;q&quot; it&apos;s &amp;eacute; &amp;#169;" font="bold 26.0pt Arial"/>
+<Label layout="100.0,60.0,300.0,40.0" text="multi&#10;line&#9;tab" font="11.0pt Tahoma"/>
+<Label layout="100.0,110.0,300.0,40.0" text="literal
+newline	in attr" font="italic 9.5pt"/>
+<Label layout="100.0,160.0,300.0,40.0" font="Verdana"/>
+<Label layout="100.0,210.0,300.0,40.0" text="no font"/>
+<Label layout="100.0,260.0,300.0,40.0" text="pts" font="bold 12pt 14.25pt Courier New"/>
+<Label layout="1e2,1.5e+2,0.000123,1234567.0" text="g format"/>
+<Label layout=" 7.5 , -0.0 ,10,10" text="spaces"/>
+<Label layout="1,2,3" text="three numbers"/>
+<Label layout="a,b,c,d" text="not numbers"/>
+<Label text="no layout at all"/>
+<ImageButton layout="10.0,500.0,60.0,20.0" text="  Auto  "/>
+<ImageButton layout="80.0,500.0,60.0,20.0" text="   "/>
+<ImageButton layout="150.0,500.0,60.0,20.0"/>
+<BackButton layout="220.0,500.0,30.0,30.0"/>
+<Picture layout="35.0,400.0,20.0,20.0"><ValueBinding ord="slot:Relay$5b1$5d$2eBO"><IBooleanToSimple name="image"><Image name="trueValue" value="file:^Imagenes/On.png"/><Image name="falseValue" value="file:^Imagenes/Off.png"/></IBooleanToSimple></ValueBinding></Picture><Picture layout="60.0,400.0,20.0,20.0"><ValueBinding ord="slot:Relay$5b2$5d$2eBO"><IBooleanToSimple name="image"><Image name="trueValue" value="file:^Imagenes/On.png"/><Image name="falseValue" value="file:^Imagenes/Off.png"/></IBooleanToSimple></ValueBinding></Picture><Picture layout="85.0,400.0,20.0,20.0"><ValueBinding ord="slot:Relay$5b3$5d$2eBO"><IBooleanToSimple name="image"><Image name="trueValue" value="file:^Imagenes/On.png"/><Image name="falseValue" value="file:^Imagenes/Off.png"/></IBooleanToSimple></ValueBinding></Picture><Picture layout="110.0,400.0,20.0,20.0"><ValueBinding ord="slot:Relay$5b4$5d$2eBO"><IBooleanToSimple name="image"><Image name="trueValue" value="file:^Imagenes/On.png"/><Image name="falseValue" value="file:^Imagenes/Off.png"/></IBooleanToSimple></ValueBinding></Picture><Picture layout="135.0,400.0,20.0,20.0"><ValueBinding ord="slot:Relay$5b5$5d$2eBO"><IBooleanToSimple name="image"><Image name="trueValue" value="file:^Imagenes/On.png"/><Image name="falseValue" value="file:^Imagenes/Off.png"/></IBooleanToSimple></ValueBinding></Picture><Picture layout="160.0,400.0,20.0,20.0"><ValueBinding ord="slot:Relay$5b6$5d$2eBO"><IBooleanToSimple name="image"><Image name="trueValue" value="file:^Imagenes/On.png"/><Image name="falseValue" value="file:^Imagenes/Off.png"/></IBooleanToSimple></ValueBinding></Picture><Picture layout="185.0,400.0,20.0,20.0"><ValueBinding ord="slot:Relay$5b7$5d$2eBO"><IBooleanToSimple name="image"><Image name="trueValue" value="file:^Imagenes/On.png"/><Image name="falseValue" value="file:^Imagenes/Off.png"/></IBooleanToSimple></ValueBinding></Picture><Picture layout="210.0,400.0,20.0,20.0"><ValueBinding ord="slot:Relay$5b8$5d$2eBO"><IBooleanToSimple name="image"><Image name="trueValue" value="file:^Imagenes/On.png"/><Image name="falseValue" value="file:^Imagenes/Off.png"/></IBooleanToSimple></ValueBinding></Picture><Picture layout="235.0,400.0,20.0,20.0"><ValueBinding ord="slot:Relay$5b9$5d$2eBO"><IBooleanToSimple name="image"><Image name="trueValue" value="file:^Imagenes/On.png"/><Image name="falseValue" value="file:^Imagenes/Off.png"/></IBooleanToSimple></ValueBinding></Picture><Picture layout="260.0,400.0,20.0,20.0"><ValueBinding ord="slot:Relay$5b10$5d$2eBO"><IBooleanToSimple name="image"><Image name="trueValue" value="file:^Imagenes/On.png"/><Image name="falseValue" value="file:^Imagenes/Off.png"/></IBooleanToSimple></ValueBinding></Picture><Picture layout="285.0,400.0,20.0,20.0"><ValueBinding ord="slot:Relay$5b11$5d$2eBO"><IBooleanToSimple name="image"><Image name="trueValue" value="file:^Imagenes/On.png"/><Image name="falseValue" value="file:^Imagenes/Off.png"/></IBooleanToSimple></ValueBinding></Picture><Picture layout="310.0,400.0,20.0,20.0"><ValueBinding ord="slot:Relay$5b12$5d$2eBO"><IBooleanToSimple name="image"><Image name="trueValue" value="file:^Imagenes/On.png"/><Image name="falseValue" value="file:^Imagenes/Off.png"/></IBooleanToSimple></ValueBinding></Picture>
+<Picture layout="35.0,430.0,16.0,16.0"><ValueBinding ord="slot:Relay$5b1$5d$2eBO"><IStatusToSimple name="image"><Image name="ok" value="file:^Imagenes/led-ok.PNG"/></IStatusToSimple></ValueBinding></Picture><Picture layout="60.0,430.0,16.0,16.0"><ValueBinding ord="slot:Relay$5b2$5d$2eBO"><IStatusToSimple name="image"><Image name="ok" value="file:^Imagenes/led-ok.PNG"/></IStatusToSimple></ValueBinding></Picture><Picture layout="85.0,430.0,16.0,16.0"><ValueBinding ord="slot:Relay$5b3$5d$2eBO"><IStatusToSimple name="image"><Image name="ok" value="file:^Imagenes/led-ok.PNG"/></IStatusToSimple></ValueBinding></Picture><Picture layout="110.0,430.0,16.0,16.0"><ValueBinding ord="slot:Relay$5b4$5d$2eBO"><IStatusToSimple name="image"><Image name="ok" value="file:^Imagenes/led-ok.PNG"/></IStatusToSimple></ValueBinding></Picture><Picture layout="135.0,430.0,16.0,16.0"><ValueBinding ord="slot:Relay$5b5$5d$2eBO"><IStatusToSimple name="image"><Image name="ok" value="file:^Imagenes/led-ok.PNG"/></IStatusToSimple></ValueBinding></Picture><Picture layout="160.0,430.0,16.0,16.0"><ValueBinding ord="slot:Relay$5b6$5d$2eBO"><IStatusToSimple name="image"><Image name="ok" value="file:^Imagenes/led-ok.PNG"/></IStatusToSimple></ValueBinding></Picture><Picture layout="185.0,430.0,16.0,16.0"><ValueBinding ord="slot:Relay$5b7$5d$2eBO"><IStatusToSimple name="image"><Image name="ok" value="file:^Imagenes/led-ok.PNG"/></IStatusToSimple></ValueBinding></Picture><Picture layout="210.0,430.0,16.0,16.0"><ValueBinding ord="slot:Relay$5b8$5d$2eBO"><IStatusToSimple name="image"><Image name="ok" value="file:^Imagenes/led-ok.PNG"/></IStatusToSimple></ValueBinding></Picture>
+<Picture layout="10.0,460.0,20.0,20.0"><ValueBinding ord="slot:Fan"><IBooleanToSimple name="image"><Image name="trueValue" value="file:^Imagenes/On.png"/><Image name="falseValue" value="file:^Imagenes/Off.png"/></IBooleanToSimple></ValueBinding></Picture>
+<Picture layout="40.0,460.0,20.0,20.0"><ValueBinding ord="slot:Fan"><IStatusToSimple name="image"><Image name="ok" value="file:^Imagenes/led-ok.PNG"/></IStatusToSimple></ValueBinding></Picture>
+<Picture layout="70.0,460.0,20.0,20.0"><ValueBinding ord="slot:Relay$5b007$5d"><IBooleanToSimple name="image"><Image name="trueValue" value=""/><Image name="falseValue" value=""/></IBooleanToSimple></ValueBinding></Picture>
+<Picture layout="100.0,460.0,20.0,20.0"><ValueBinding ord="slot:Relay[3]"><IBooleanToSimple><Image name="trueValue" value="file:^Imagenes/On.png"/></IBooleanToSimple></ValueBinding></Picture>
+<Picture layout="130.0,460.0,20.0,20.0"><ValueBinding ord="slot:Relay$5b2$5d"><IStatusToSimple name="image"><Image name="ok" value="file:^Imagenes/nope.png"/></IStatusToSimple></ValueBinding></Picture>
+<Picture layout="160.0,460.0,20.0,20.0"><ValueBinding ord="slot:Relay$5b4$5d"><IStatusToSimple/></ValueBinding></Picture>
+<Picture layout="190.0,460.0,20.0,20.0"><ValueBinding ord="slot:x"><IToSimple/></ValueBinding></Picture>
+<BoundLabel layout="10.0,600.0,80.0,20.0"><ValueBinding ord="slot:Relay$5b5$5d$2eBO"><IBooleanToSimple name="image"><Image name="trueValue" value="file:^Imagenes/On.png"/><Image name="falseValue" value="file:^Imagenes/Off.png"/></IBooleanToSimple></ValueBinding></BoundLabel>
+<BoundLabel layout="100.0,600.0,80.0,20.0"><ValueBinding ord="slot:Relay$5b6$5d"><IStatusToSimple name="image"><Image name="ok" value="file:^Imagenes/led-ok.PNG"/></IStatusToSimple></ValueBinding></BoundLabel>
+<BoundLabel layout="190.0,600.0,80.0,20.0"><BoundLabelBinding ord="station:|slot:/Drivers/Net/Dev/points/Temp&lt;1&gt;/"/></BoundLabel>
+<BoundLabel layout="280.0,600.0,80.0,20.0"><BoundLabelBinding ord="h:a1b2"/></BoundLabel>
+<BoundLabel layout="370.0,600.0,80.0,20.0"/>
+<CanvasPane layout="400.0,300.0,200.0,100.0"><Label layout="5.0,5.0,50.0,10.0" text="Inner"/><BorderPane layout="10.0,10.0,100.0,100.0"><Label layout="1.0,1.0,20.0,10.0" text="Deep"/></BorderPane></CanvasPane>
+<GridPane><Label layout="3.0,4.0,20.0,10.0" text="Layoutless pane"/></GridPane>
+<OptionCardWidget layout="20.0,30.0,100.0,100.0"><Label layout="1.0,2.0,20.0,10.0" text="InCard"/></OptionCardWidget>
+<Group><Label layout="3.0,4.0,20.0,10.0" text="InWrapper"/></Group>
+<Slider layout="1.0,50.0,50.0,10.0"><ValueBinding ord="slot:x"><IToSimple/></ValueBinding></Slider>
+<Slider layout="1.0,60.0,50.0,10.0"/><Chart layout="1,2,3,4"/><Zeta layout="x"/>
+<Empty/>
+</CanvasPane>
+<CanvasPane viewSize="1.0,1.0"><Label layout="0,0,1,1" text="second canvas ignored"/></CanvasPane>
+</ScrollPane>
+</content>
+</px>

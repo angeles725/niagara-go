@@ -1,0 +1,5 @@
+# inputs/numeric-v2.hdb
+magic=A106F11E version=2 data_offset=1600 data_section=192 bytes
+history_id=/S/Test
+record_type=history:NumericTrendRecord
+schema (4 fields): timestamp, trendFlags, status, value

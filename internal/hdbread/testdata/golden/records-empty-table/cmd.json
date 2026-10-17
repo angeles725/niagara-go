@@ -1,0 +1,6 @@
+{
+ "args": [
+  "inputs/empty-table.hdb",
+  "--records"
+ ]
+}

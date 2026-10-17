@@ -1,0 +1,11 @@
+{
+ "args": [
+  "inputs/station/shared/px/dir-ref.px",
+  "--shared",
+  "inputs/station/shared",
+  "--out",
+  "/dev/null",
+  "--organized",
+  "inputs/organized"
+ ]
+}

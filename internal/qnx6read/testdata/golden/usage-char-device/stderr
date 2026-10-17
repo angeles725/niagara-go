@@ -1,0 +1,2 @@
+usage: qnx6read.py [-h] [--image IMAGE] [--char-device] [{P2,P3}] [extract SRC DST ...]
+qnx6read.py: error: image is a character device (a terminal? /dev/null?): /dev/null; pass --char-device for a raw disk that is one

@@ -1,0 +1,8 @@
+# <image path relative to testdata> <partition byte offset> <partition bytes, relative to testdata>
+# The test materialises each image as a sparse file: zeros up to the offset, then the bytes.
+run/images/p2.img 135266304 inputs/p2.part
+run/images/p3.img 3711959040 inputs/p3.part
+run/images/loop.img 135266304 inputs/loop.part
+run/images/not-qnx6.img 135266304 inputs/not-qnx6.part
+run/images/no-offset.img 135266304 inputs/no-offset.part
+run/images/tiny.img 0 inputs/tiny.part

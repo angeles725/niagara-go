@@ -1,0 +1,65 @@
+[
+ {
+  "timestamp": "2018-09-26T17:30:00.008Z",
+  "millis": 1537983000008,
+  "status": "{ok}",
+  "trendFlags": "{ }",
+  "value": NaN
+ },
+ {
+  "timestamp": "2018-09-26T17:30:00.013Z",
+  "millis": 1537983000013,
+  "status": "{fault}",
+  "trendFlags": "{outOfOrder,hidden,interpolated}",
+  "value": Infinity
+ },
+ {
+  "timestamp": "2018-09-26T17:30:00.011Z",
+  "millis": 1537983000011,
+  "status": "{disabled,fault,down,alarm,stale,overridden,null,unackedAlarm}",
+  "trendFlags": "{start,outOfOrder,hidden,modified,interpolated,reserved0,reserved1,reserved2}",
+  "value": -Infinity
+ },
+ {
+  "timestamp": "2018-09-26T17:30:00.017Z",
+  "millis": 1537983000017,
+  "status": "{ok}",
+  "trendFlags": "{ }",
+  "value": 1e-07
+ },
+ {
+  "timestamp": "2018-09-26T17:30:00.028Z",
+  "millis": 1537983000028,
+  "status": "{ok}",
+  "trendFlags": "{ }",
+  "value": 3.4e+38
+ },
+ {
+  "timestamp": "2018-09-26T17:30:00.029Z",
+  "millis": 1537983000029,
+  "status": "{ok}",
+  "trendFlags": "{ }",
+  "value": -0.0
+ },
+ {
+  "timestamp": "2018-09-26T17:30:00.030Z",
+  "millis": 1537983000030,
+  "status": "{ok}",
+  "trendFlags": "{ }",
+  "value": 36.081306
+ },
+ {
+  "timestamp": "2018-09-26T17:30:00.031Z",
+  "millis": 1537983000031,
+  "status": "{ok}",
+  "trendFlags": "{ }",
+  "value": 1e+16
+ },
+ {
+  "timestamp": "2018-09-26T17:30:00.032Z",
+  "millis": 1537983000032,
+  "status": "{ok}",
+  "trendFlags": "{ }",
+  "value": 123456790.0
+ }
+]

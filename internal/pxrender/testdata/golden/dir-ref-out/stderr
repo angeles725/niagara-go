@@ -1,0 +1,17 @@
+Traceback (most recent call last):
+  File "/home/cristian/niagara-research/tools/px-render.py", line 399, in <module>
+    main()
+    ~~~~^^
+  File "/home/cristian/niagara-research/tools/px-render.py", line 377, in main
+    out, meta = render(args.px, shared=args.shared, on_ratio=args.on_ratio,
+                ~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                       seed=args.seed, title=args.title, subtitle=args.subtitle,
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                       organized=args.organized)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cristian/niagara-research/tools/px-render.py", line 221, in render
+    uri = A.datauri(img)
+  File "/home/cristian/niagara-research/tools/px-render.py", line 107, in datauri
+    with open(p, "rb") as f:
+         ~~~~^^^^^^^^^
+IsADirectoryError: [Errno 21] Is a directory: 'inputs/station/shared/Imagenes'

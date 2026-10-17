@@ -1,0 +1,23 @@
+[
+ {
+  "timestamp": "2018-09-26T17:30:00.008Z",
+  "millis": 1537983000008,
+  "status": "{ok}",
+  "trendFlags": "{ }",
+  "value": true
+ },
+ {
+  "timestamp": "2018-09-26T17:30:00.009Z",
+  "millis": 1537983000009,
+  "status": "{null}",
+  "trendFlags": "{ }",
+  "value": false
+ },
+ {
+  "timestamp": "2018-09-27T14:29:48.680Z",
+  "millis": 1538058588680,
+  "status": "{ok}",
+  "trendFlags": "{ }",
+  "value": true
+ }
+]

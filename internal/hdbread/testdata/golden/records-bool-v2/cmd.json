@@ -1,0 +1,6 @@
+{
+ "args": [
+  "inputs/bool-v2.hdb",
+  "--records"
+ ]
+}

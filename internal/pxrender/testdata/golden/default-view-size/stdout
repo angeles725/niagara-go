@@ -1,0 +1,18 @@
+<title>Px · default-size</title>
+<style>
+:root{color-scheme:light}
+body{margin:0;background:#0b1220;font-family:Arial,Helvetica,sans-serif;}
+.bar{background:#001D68;color:#fff;padding:10px 18px;font-size:13px;display:flex;gap:12px;align-items:center;}
+.bar b{font-weight:700}.bar .tag{margin-left:auto;font-size:11px;background:#76B900;color:#0c1207;font-weight:700;border-radius:4px;padding:3px 8px;}
+.note{background:#e9edf3;color:#3a4453;font-size:12px;padding:8px 18px;border-bottom:1px solid #d2d8e2;}
+.stage{width:100%;overflow:auto;background:#f4f2ec;}
+.canvas{position:relative;width:1370px;height:780px;transform-origin:top left;background:#fff;}
+.canvas img{-webkit-user-drag:none;user-select:none;}
+</style>
+<div class="bar"><b>Px actual</b> (Niagara Workbench Px Editor) <span class="tag">RÉPLICA</span></div>
+<div class="note">Pantalla Px real reproducida desde el config.bog: <b>default-size</b>. Plano, botones On/Off, LEDs de estado y etiquetas en las mismas posiciones.</div>
+<div class="stage"><div class="canvas" id="cv">
+<div style="position:absolute;left:1px;top:1px;width:5px;height:5px;display:flex;align-items:center;font-family:Arial,Arial,sans-serif;font-weight:normal;font-size:13px;color:#16233a;line-height:1.05;overflow:hidden;white-space:pre-wrap;">x</div>
+</div></div>
+<script>function fit(){var cv=document.getElementById("cv");var w=cv.parentElement.clientWidth;var s=Math.min(1,w/1370);cv.style.transform="scale("+s+")";cv.parentElement.style.height=(780*s)+"px";}
+window.addEventListener("resize",fit);fit();</script>

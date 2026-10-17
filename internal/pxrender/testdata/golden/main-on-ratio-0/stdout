@@ -1,0 +1,73 @@
+<title>Px · main</title>
+<style>
+:root{color-scheme:light}
+body{margin:0;background:#0b1220;font-family:Arial,Helvetica,sans-serif;}
+.bar{background:#001D68;color:#fff;padding:10px 18px;font-size:13px;display:flex;gap:12px;align-items:center;}
+.bar b{font-weight:700}.bar .tag{margin-left:auto;font-size:11px;background:#76B900;color:#0c1207;font-weight:700;border-radius:4px;padding:3px 8px;}
+.note{background:#e9edf3;color:#3a4453;font-size:12px;padding:8px 18px;border-bottom:1px solid #d2d8e2;}
+.stage{width:100%;overflow:auto;background:#f4f2ec;}
+.canvas{position:relative;width:1370px;height:780px;transform-origin:top left;background:#fff;}
+.canvas img{-webkit-user-drag:none;user-select:none;}
+</style>
+<div class="bar"><b>Px actual</b> (Niagara Workbench Px Editor) <span class="tag">RÉPLICA</span></div>
+<div class="note">Pantalla Px real reproducida desde el config.bog: <b>main</b>. Plano, botones On/Off, LEDs de estado y etiquetas en las mismas posiciones.</div>
+<div class="stage"><div class="canvas" id="cv">
+<img src="data:image/jpeg;base64,/9j/4GZha2UtanBlZw==" style="position:absolute;left:0px;top:0px;width:1370px;height:780px;object-fit:contain;" alt="">
+<img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiLz4=" style="position:absolute;left:5px;top:5px;width:64px;height:32px;object-fit:contain;" alt="">
+<img src="data:image/gif;base64,R0lGODlhLWZha2U=" style="position:absolute;left:5px;top:40px;width:8px;height:8px;object-fit:contain;" alt="">
+<img src="data:image/png;base64,cmF3LWJ5dGVz" style="position:absolute;left:5px;top:50px;width:8px;height:8px;object-fit:contain;" alt="">
+<img src="data:image/jpeg;base64,/9hzcGFjZS1uYW1l" style="position:absolute;left:5px;top:60px;width:8px;height:8px;object-fit:contain;" alt="">
+<img src="data:image/jpeg;base64,/9j/4GZha2UtanBlZw==" style="position:absolute;left:5px;top:70px;width:8px;height:8px;object-fit:contain;" alt="">
+<img src="data:image/png;base64,YnVuZGxlZC1mYW4=" style="position:absolute;left:5px;top:90px;width:8px;height:8px;object-fit:contain;" alt="">
+<img src="data:image/png;base64,Y29ycHVzLXB1bXAtd2I=" style="position:absolute;left:5px;top:100px;width:8px;height:8px;object-fit:contain;" alt="">
+<img src="data:image/gif;base64,Y29ycHVzLXZhbHZlLWdsb2I=" style="position:absolute;left:5px;top:110px;width:8px;height:8px;object-fit:contain;" alt="">
+<div style="position:absolute;left:100px;top:10px;width:300px;height:40px;display:flex;align-items:center;font-family:Arial,Arial,sans-serif;font-weight:bold;font-size:26px;color:#16233a;line-height:1.05;overflow:hidden;white-space:pre-wrap;">Cuarto 1 &amp; Planta &lt;B&gt; &quot;q&quot; it&#x27;s é ©</div>
+<div style="position:absolute;left:100px;top:60px;width:300px;height:40px;display:flex;align-items:center;font-family:Tahoma,Arial,sans-serif;font-weight:normal;font-size:11px;color:#16233a;line-height:1.05;overflow:hidden;white-space:pre-wrap;">multi
+line	tab</div>
+<div style="position:absolute;left:100px;top:110px;width:300px;height:40px;display:flex;align-items:center;font-family:Arial,Arial,sans-serif;font-weight:italic;font-size:9px;color:#16233a;line-height:1.05;overflow:hidden;white-space:pre-wrap;">literal newline in attr</div>
+<div style="position:absolute;left:100px;top:160px;width:300px;height:40px;display:flex;align-items:center;font-family:Verdana,Arial,sans-serif;font-weight:normal;font-size:13px;color:#16233a;line-height:1.05;overflow:hidden;white-space:pre-wrap;"></div>
+<div style="position:absolute;left:100px;top:210px;width:300px;height:40px;display:flex;align-items:center;font-family:Arial,Arial,sans-serif;font-weight:normal;font-size:13px;color:#16233a;line-height:1.05;overflow:hidden;white-space:pre-wrap;">no font</div>
+<div style="position:absolute;left:100px;top:260px;width:300px;height:40px;display:flex;align-items:center;font-family:New,Arial,sans-serif;font-weight:bold;font-size:14px;color:#16233a;line-height:1.05;overflow:hidden;white-space:pre-wrap;">pts</div>
+<div style="position:absolute;left:100px;top:150px;width:0.000123px;height:1.23457e+06px;display:flex;align-items:center;font-family:Arial,Arial,sans-serif;font-weight:normal;font-size:13px;color:#16233a;line-height:1.05;overflow:hidden;white-space:pre-wrap;">g format</div>
+<div style="position:absolute;left:7.5px;top:0px;width:10px;height:10px;display:flex;align-items:center;font-family:Arial,Arial,sans-serif;font-weight:normal;font-size:13px;color:#16233a;line-height:1.05;overflow:hidden;white-space:pre-wrap;">spaces</div>
+<div style="position:absolute;left:10px;top:500px;width:60px;height:20px;display:flex;align-items:center;justify-content:center;font-family:Arial,sans-serif;font-size:11px;font-weight:600;color:#00123F;background:#eef1f5;border:1px solid #cdd4de;border-radius:4px;">Auto</div>
+<div style="position:absolute;left:80px;top:500px;width:60px;height:20px;" title="control"></div>
+<div style="position:absolute;left:150px;top:500px;width:60px;height:20px;" title="control"></div>
+<div style="position:absolute;left:220px;top:500px;width:30px;height:30px;display:grid;place-items:center;color:#00123F;font-size:20px;">&lsaquo;</div>
+<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ET0ZGIQ==" style="position:absolute;left:35px;top:400px;width:20px;height:20px;object-fit:contain;" alt="">
+<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ET0ZGIQ==" style="position:absolute;left:60px;top:400px;width:20px;height:20px;object-fit:contain;" alt="">
+<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ET0ZGIQ==" style="position:absolute;left:85px;top:400px;width:20px;height:20px;object-fit:contain;" alt="">
+<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ET0ZGIQ==" style="position:absolute;left:110px;top:400px;width:20px;height:20px;object-fit:contain;" alt="">
+<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ET0ZGIQ==" style="position:absolute;left:135px;top:400px;width:20px;height:20px;object-fit:contain;" alt="">
+<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ET0ZGIQ==" style="position:absolute;left:160px;top:400px;width:20px;height:20px;object-fit:contain;" alt="">
+<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ET0ZGIQ==" style="position:absolute;left:185px;top:400px;width:20px;height:20px;object-fit:contain;" alt="">
+<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ET0ZGIQ==" style="position:absolute;left:210px;top:400px;width:20px;height:20px;object-fit:contain;" alt="">
+<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ET0ZGIQ==" style="position:absolute;left:235px;top:400px;width:20px;height:20px;object-fit:contain;" alt="">
+<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ET0ZGIQ==" style="position:absolute;left:260px;top:400px;width:20px;height:20px;object-fit:contain;" alt="">
+<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ET0ZGIQ==" style="position:absolute;left:285px;top:400px;width:20px;height:20px;object-fit:contain;" alt="">
+<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ET0ZGIQ==" style="position:absolute;left:310px;top:400px;width:20px;height:20px;object-fit:contain;" alt="">
+<div style="position:absolute;left:35px;top:430px;width:16px;height:16px;display:grid;place-items:center;"><span style="width:60%;height:60%;max-width:16px;max-height:16px;border-radius:50%;background:#9aa4ac;"></span></div>
+<div style="position:absolute;left:60px;top:430px;width:16px;height:16px;display:grid;place-items:center;"><span style="width:60%;height:60%;max-width:16px;max-height:16px;border-radius:50%;background:#9aa4ac;"></span></div>
+<div style="position:absolute;left:85px;top:430px;width:16px;height:16px;display:grid;place-items:center;"><span style="width:60%;height:60%;max-width:16px;max-height:16px;border-radius:50%;background:#9aa4ac;"></span></div>
+<div style="position:absolute;left:110px;top:430px;width:16px;height:16px;display:grid;place-items:center;"><span style="width:60%;height:60%;max-width:16px;max-height:16px;border-radius:50%;background:#9aa4ac;"></span></div>
+<div style="position:absolute;left:135px;top:430px;width:16px;height:16px;display:grid;place-items:center;"><span style="width:60%;height:60%;max-width:16px;max-height:16px;border-radius:50%;background:#9aa4ac;"></span></div>
+<div style="position:absolute;left:160px;top:430px;width:16px;height:16px;display:grid;place-items:center;"><span style="width:60%;height:60%;max-width:16px;max-height:16px;border-radius:50%;background:#9aa4ac;"></span></div>
+<div style="position:absolute;left:185px;top:430px;width:16px;height:16px;display:grid;place-items:center;"><span style="width:60%;height:60%;max-width:16px;max-height:16px;border-radius:50%;background:#9aa4ac;"></span></div>
+<div style="position:absolute;left:210px;top:430px;width:16px;height:16px;display:grid;place-items:center;"><span style="width:60%;height:60%;max-width:16px;max-height:16px;border-radius:50%;background:#9aa4ac;"></span></div>
+<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==" style="position:absolute;left:10px;top:460px;width:20px;height:20px;object-fit:contain;" alt="">
+<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggmxlZA==" style="position:absolute;left:40px;top:460px;width:20px;height:20px;object-fit:contain;" alt="">
+<div style="position:absolute;left:130px;top:460px;width:20px;height:20px;display:grid;place-items:center;"><span style="width:60%;height:60%;max-width:16px;max-height:16px;border-radius:50%;background:#9aa4ac;"></span></div>
+<div style="position:absolute;left:160px;top:460px;width:20px;height:20px;display:grid;place-items:center;"><span style="width:60%;height:60%;max-width:16px;max-height:16px;border-radius:50%;background:#9aa4ac;"></span></div>
+<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ET0ZGIQ==" style="position:absolute;left:10px;top:600px;width:80px;height:20px;object-fit:contain;" alt="">
+<div style="position:absolute;left:100px;top:600px;width:80px;height:20px;display:grid;place-items:center;"><span style="width:60%;height:60%;max-width:16px;max-height:16px;border-radius:50%;background:#9aa4ac;"></span></div>
+<div style="position:absolute;left:190px;top:600px;width:80px;height:20px;display:flex;align-items:center;justify-content:center;font-family:Arial,sans-serif;font-size:12px;color:#16233a;background:#eef1f5;border:1px solid #cdd4de;border-radius:4px;text-align:center;padding:2px;">Temp&lt;1&gt;</div>
+<div style="position:absolute;left:280px;top:600px;width:80px;height:20px;display:flex;align-items:center;justify-content:center;font-family:Arial,sans-serif;font-size:12px;color:#16233a;background:#eef1f5;border:1px solid #cdd4de;border-radius:4px;text-align:center;padding:2px;">a1b2</div>
+<div style="position:absolute;left:370px;top:600px;width:80px;height:20px;display:flex;align-items:center;justify-content:center;font-family:Arial,sans-serif;font-size:12px;color:#16233a;background:#eef1f5;border:1px solid #cdd4de;border-radius:4px;text-align:center;padding:2px;"></div>
+<div style="position:absolute;left:405px;top:305px;width:50px;height:10px;display:flex;align-items:center;font-family:Arial,Arial,sans-serif;font-weight:normal;font-size:13px;color:#16233a;line-height:1.05;overflow:hidden;white-space:pre-wrap;">Inner</div>
+<div style="position:absolute;left:411px;top:311px;width:20px;height:10px;display:flex;align-items:center;font-family:Arial,Arial,sans-serif;font-weight:normal;font-size:13px;color:#16233a;line-height:1.05;overflow:hidden;white-space:pre-wrap;">Deep</div>
+<div style="position:absolute;left:3px;top:4px;width:20px;height:10px;display:flex;align-items:center;font-family:Arial,Arial,sans-serif;font-weight:normal;font-size:13px;color:#16233a;line-height:1.05;overflow:hidden;white-space:pre-wrap;">Layoutless pane</div>
+<div style="position:absolute;left:21px;top:32px;width:20px;height:10px;display:flex;align-items:center;font-family:Arial,Arial,sans-serif;font-weight:normal;font-size:13px;color:#16233a;line-height:1.05;overflow:hidden;white-space:pre-wrap;">InCard</div>
+<div style="position:absolute;left:3px;top:4px;width:20px;height:10px;display:flex;align-items:center;font-family:Arial,Arial,sans-serif;font-weight:normal;font-size:13px;color:#16233a;line-height:1.05;overflow:hidden;white-space:pre-wrap;">InWrapper</div>
+</div></div>
+<script>function fit(){var cv=document.getElementById("cv");var w=cv.parentElement.clientWidth;var s=Math.min(1,w/1370);cv.style.transform="scale("+s+")";cv.parentElement.style.height=(780*s)+"px";}
+window.addEventListener("resize",fit);fit();</script>

@@ -1,0 +1,6 @@
+{
+ "args": [
+  "inputs/first-out.hdb",
+  "--records"
+ ]
+}

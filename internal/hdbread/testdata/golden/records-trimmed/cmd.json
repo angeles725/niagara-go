@@ -1,0 +1,6 @@
+{
+ "args": [
+  "inputs/trimmed.hdb",
+  "--records"
+ ]
+}

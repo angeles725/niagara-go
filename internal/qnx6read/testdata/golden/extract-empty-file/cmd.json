@@ -1,0 +1,11 @@
+{
+ "args": [
+  "--image",
+  "images/p2.img",
+  "P2",
+  "extract",
+  "/zero-length",
+  "out-zero.bin"
+ ],
+ "cwd_fixture": "run"
+}

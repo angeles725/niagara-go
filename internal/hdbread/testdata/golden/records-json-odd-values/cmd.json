@@ -1,0 +1,7 @@
+{
+ "args": [
+  "inputs/odd-values.hdb",
+  "--records",
+  "--json"
+ ]
+}

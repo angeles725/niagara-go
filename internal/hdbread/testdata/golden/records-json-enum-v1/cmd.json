@@ -1,0 +1,7 @@
+{
+ "args": [
+  "inputs/enum-v1.hdb",
+  "--records",
+  "--json"
+ ]
+}

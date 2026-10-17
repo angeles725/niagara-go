@@ -1,0 +1,11 @@
+{
+ "args": [
+  "--image",
+  "images/p2.img",
+  "P2",
+  "extract",
+  "/etc",
+  "out-etc.bin"
+ ],
+ "cwd_fixture": "run"
+}

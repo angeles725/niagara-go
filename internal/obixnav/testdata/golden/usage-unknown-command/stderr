@@ -1,0 +1,3 @@
+usage: obix-nav.py [-h] [--base BASE] [--pass-file PASS_FILE]
+                   {map,cond,wiring,config,read,dump} ...
+obix-nav.py: error: argument cmd: invalid choice: 'audit' (choose from 'map', 'cond', 'wiring', 'config', 'read', 'dump')

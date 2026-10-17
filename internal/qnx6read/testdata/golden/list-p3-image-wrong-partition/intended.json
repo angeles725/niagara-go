@@ -1,0 +1,5 @@
+{
+ "reason": "Python's assert magic == 0x68191122 ends in an AssertionError traceback (exit 1); Go names the partition offset and the magic it found, exit 2.",
+ "stderr": "qnx6read: not a QNX6 partition at byte 135266304 of images/p3.img (superblock magic 0x00000000)\n",
+ "exit": 2
+}

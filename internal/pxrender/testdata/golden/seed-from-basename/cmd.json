@@ -1,0 +1,7 @@
+{
+ "args": [
+  "inputs/loose/Tab GM07.px",
+  "--organized",
+  "inputs/organized"
+ ]
+}

@@ -1,0 +1,7 @@
+{
+ "args": [
+  "inputs/station/shared/px/latin1.px",
+  "--organized",
+  "inputs/organized"
+ ]
+}

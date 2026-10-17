@@ -1,0 +1,2 @@
+usage: qnx6read.py [-h] [--image IMAGE] [--char-device] [{P2,P3}] [extract SRC DST ...]
+qnx6read.py: error: no image: pass --image <disk.img> or set QNX6_IMG

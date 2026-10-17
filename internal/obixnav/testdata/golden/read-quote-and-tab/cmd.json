@@ -1,0 +1,10 @@
+{
+ "args": [
+  "--base",
+  "http://127.0.0.1:47913/obix",
+  "--pass-file",
+  "inputs/pass.txt",
+  "read",
+  "/Programacion/Odd/quote"
+ ]
+}

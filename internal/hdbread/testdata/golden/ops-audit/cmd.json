@@ -1,0 +1,6 @@
+{
+ "args": [
+  "inputs/audit.hdb",
+  "--ops"
+ ]
+}

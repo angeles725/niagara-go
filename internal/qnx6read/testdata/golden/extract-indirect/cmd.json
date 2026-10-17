@@ -1,0 +1,11 @@
+{
+ "args": [
+  "--image",
+  "images/p2.img",
+  "P2",
+  "extract",
+  "big.dat",
+  "out-big.bin"
+ ],
+ "cwd_fixture": "run"
+}

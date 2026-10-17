@@ -1,0 +1,2 @@
+usage: obix-nav.py read [-h] ord
+obix-nav.py read: error: the following arguments are required: ord

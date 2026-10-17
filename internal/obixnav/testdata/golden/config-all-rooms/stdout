@@ -1,0 +1,25 @@
+
+=== Cuarto1 (ColdRoom_1) — AIRE ===
+  -- EvaporatorUnit_1 --  sp=4.5 diffUp=0.0 diffDn=0.5 cool=false | freeze prot=None sp=-2.0 stop=1.0 rest=3.0 | hasDef=false air=false fan=cycle startDelay=PT30S
+      defrost: mode=None interval=PT20M0S duration=PT30M0S term=true thr=0.0 stagger=None
+      ⚠ hasDefrost=false (debe true)
+      ⚠ airDefrost=false (debe True)
+      ⚠ evapDifferentialUp=0 (sin histéresis)
+      ⚠ interval(PT20M0S) <= duration(PT30M0S) — deshiela más seguido que su propia duración
+      ⚠ terminateOnResistanceTemp=true (aire no lleva)
+  -- EvaporatorUnit_2 --  sp=2.0000001 diffUp=1.0 diffDn=1.0 cool=true | freeze prot=false sp=-2.0 stop=1.0 rest=2.0 | hasDef=true air=true fan=continuous startDelay=PT30S
+      defrost: mode=time interval=PT4H0S duration=PT30M0S term=false thr=10.0 stagger=PT0S
+
+=== Cuarto2 (ColdRoom_2) — AIRE ===
+  -- EvaporatorUnit --  sp=1.0 diffUp=abc diffDn=None cool=None | freeze prot=None sp=None stop=None rest=None | hasDef=true air=true fan=None startDelay=None
+      ⚠ SIN DefrostController per-evap
+
+=== Cuarto3 (ColdRoom_3) — RESISTENCIA (−20) ===
+  -- EvaporatorUnit_1 --  sp=None diffUp=2.0 diffDn=-1.0 cool=None | freeze prot=None sp=None stop=None rest=None | hasDef=true air=true fan=None startDelay=None
+      defrost: mode=resistance interval=PT8H duration=PT45M term=false thr=0.0 stagger=None
+      ⚠ airDefrost=true (debe False)
+      ⚠ evapDifferentialDown=0 (sin histéresis)
+      ⚠ terminateOnResistanceTemp=false (Cuarto3 debe true)
+      ⚠ resistanceTempThreshold=0 (Cuarto3 lo necesita)
+
+=== Cuarto4 (ColdRoom_4) — AIRE ===

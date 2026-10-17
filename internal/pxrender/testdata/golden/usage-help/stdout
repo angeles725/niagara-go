@@ -1,0 +1,19 @@
+usage: px-render.py [-h] [--shared SHARED] [--organized ORGANIZED] [--out OUT]
+                    [--on-ratio ON_RATIO] [--seed SEED] [--title TITLE] [--subtitle SUBTITLE]
+                    px
+
+Render a Niagara Px as a self-contained HTML page.
+
+positional arguments:
+  px                    path to .px file (or 'selftest')
+
+options:
+  -h, --help            show this help message and exit
+  --shared SHARED       station shared/ root (auto-detected if omitted)
+  --organized ORGANIZED
+                        organized/ corpus root for module:// resources (repo default)
+  --out OUT             output .html path (default: stdout)
+  --on-ratio ON_RATIO   demo fraction of relays ON (0..1)
+  --seed SEED           demo-state seed tag (default: px basename)
+  --title TITLE         page <title>
+  --subtitle SUBTITLE   note line under the header

@@ -1,0 +1,1 @@
+hdbread: --records: record type history:AuditRecord is not a fixed-length trend record (decoded: history:BooleanTrendRecord, history:EnumTrendRecord, history:NumericTrendRecord)

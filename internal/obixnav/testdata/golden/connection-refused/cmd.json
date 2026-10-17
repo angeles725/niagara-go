@@ -1,0 +1,9 @@
+{
+ "args": [
+  "--base",
+  "http://127.0.0.1:47914/obix",
+  "--pass-file",
+  "inputs/pass.txt",
+  "cond"
+ ]
+}

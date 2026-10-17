@@ -1,0 +1,6 @@
+{
+ "args": [
+  "inputs/hist-v3.hdb",
+  "--records"
+ ]
+}

@@ -1,0 +1,44 @@
+[
+ {
+  "timestamp": "2018-09-26T17:30:00.008Z",
+  "millis": 1537983000008,
+  "status": "{alarm,unackedAlarm}",
+  "trendFlags": "{start}",
+  "value": 20.5
+ },
+ {
+  "timestamp": "2018-09-26T17:45:00.008Z",
+  "millis": 1537983900008,
+  "status": "{ok}",
+  "trendFlags": "{ }",
+  "value": 21.6
+ },
+ {
+  "timestamp": "2018-09-26T18:00:00.008Z",
+  "millis": 1537984800008,
+  "status": "{ok}",
+  "trendFlags": "{ }",
+  "value": 22.7
+ },
+ {
+  "timestamp": "2018-09-26T18:15:00.008Z",
+  "millis": 1537985700008,
+  "status": "{ok}",
+  "trendFlags": "{ }",
+  "value": 23.8
+ },
+ {
+  "timestamp": "2018-09-26T18:30:00.008Z",
+  "millis": 1537986600008,
+  "status": "{ok}",
+  "trendFlags": "{ }",
+  "value": 24.9
+ },
+ {
+  "timestamp": "2018-09-26T18:45:00.008Z",
+  "millis": 1537987500008,
+  "status": "{ok}",
+  "trendFlags": "{ }",
+  "value": 26.0
+ }
+]

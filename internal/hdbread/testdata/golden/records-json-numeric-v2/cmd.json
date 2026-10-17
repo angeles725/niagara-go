@@ -1,0 +1,7 @@
+{
+ "args": [
+  "inputs/numeric-v2.hdb",
+  "--records",
+  "--json"
+ ]
+}

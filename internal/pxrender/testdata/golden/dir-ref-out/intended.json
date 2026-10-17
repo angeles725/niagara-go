@@ -1,0 +1,6 @@
+{
+ "reason": "Intended difference (RDD finding C): file:^Imagenes and module://mymod/icons resolve to directories. Python's os.path.exists accepts them, then open() raises IsADirectoryError and the whole render ends in a traceback (exit 1). Go reports each such ref on stderr, lists it under missing assets and renders the rest (exit 0).",
+ "stdout": "wrote /dev/null  (2 widgets, 1 assets, 0.00 MB, canvas 200x100)\nshared root: inputs/station/shared\nmissing assets (3):\n   file:^Imagenes\n   file:^Imagenes/missing.png\n   module://mymod/icons\n",
+ "stderr": "px-render: file:^Imagenes: inputs/station/shared/Imagenes is a directory, not an image (skipped)\npx-render: module://mymod/icons: inputs/station/shared/px/mymod/icons is a directory, not an image (skipped)\n",
+ "exit": 0
+}

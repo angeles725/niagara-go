@@ -1,0 +1,5 @@
+
+=== Cuarto1 (ColdRoom_1) — mapeo CRUZADO: evap1->EvaporatorUnit_2  evap2->EvaporatorUnit_1 ===
+  defrost: room-level=SÍ  per-evap=2/2
+  -- EvaporatorUnit_1 (dash evap2) -- FALTAN: evapDifferentialDown, startDelay, fanMode, DefrostController.duration
+  -- EvaporatorUnit_2 (dash evap1) -- completo

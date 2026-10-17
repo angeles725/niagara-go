@@ -1,0 +1,7 @@
+{
+ "args": [
+  "--image",
+  "images/missing.img"
+ ],
+ "cwd_fixture": "run"
+}
