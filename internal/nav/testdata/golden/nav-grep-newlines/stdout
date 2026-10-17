@@ -1,0 +1,13 @@
+
+  grep /;\s$|\\r|line\d$/ — 8 matches in 4 files (5 files searched)
+
+  [alarm-rt]
+    Entry:1 package com.x;
+    Entry:3   Entry e;
+    BAckState:1 package javax.baja.alarm;
+    BAlarmService:1 package javax.baja.alarm;
+    BAlarmService:7 line7
+    BAlarmService:8   String s = "caf�";
+    Entry:1 package javax.baja.alarm;
+    Entry:3   Entry e;
+

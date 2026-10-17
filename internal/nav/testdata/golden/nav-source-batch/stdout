@@ -1,0 +1,26 @@
+
+=== BAckState ===
+
+  SOURCE: BAckState (alarm-rt, 4 lines)
+  PATH:   alarm/alarm-rt/vineflower/javax/baja/alarm/BAckState.java
+
+   1 | package javax.baja.alarm;
+   2 | 
+   3 | public final class BAckState { // Ñandú
+   4 | }
+
+
+=== BNope ===
+  0 matches for class 'BNope' in 7 class entries (6 names) from 3 modules, index built 2026-03-04T05:06:07.
+  Try: search '*BNope*'
+
+=== Entry ===
+
+  SOURCE: Entry (alarm-rt, 4 lines)
+  PATH:   alarm/alarm-rt/vineflower/com/x/Entry.java
+
+   1 | package com.x;
+   2 | class Y {
+   3 |   Entry e;
+   4 | }
+

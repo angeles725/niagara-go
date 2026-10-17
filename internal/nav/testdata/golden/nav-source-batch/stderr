@@ -1,0 +1,1 @@
+  WARN: --batch with --code can emit large output; redirect to a file (e.g. `> out.txt`) if needed.

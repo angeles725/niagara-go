@@ -1,0 +1,1 @@
+{"args": ["--base-dir", "fixture/search", "grep", "class", "-n", "0"], "env": {"NAV_CORPUS_BASE": "fixture/search-organized"}}

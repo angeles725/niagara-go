@@ -1,0 +1,2 @@
+  Usage: source <class> [--code] [--grep pat]
+         source --batch A,B,C [--code] [--grep pat]

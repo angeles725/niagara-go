@@ -1,0 +1,1 @@
+{"args": ["--base-dir", "fixture/search", "source", "BAlarmService", "--code"], "env": {"NAV_CORPUS_BASE": "fixture/search-organized"}}

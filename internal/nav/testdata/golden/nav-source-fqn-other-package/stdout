@@ -1,0 +1,9 @@
+
+  SOURCE: Entry (alarm-rt, 4 lines)
+  PATH:   alarm/alarm-rt/vineflower/com/x/Entry.java
+
+   1 | package com.x;
+   2 | class Y {
+   3 |   Entry e;
+   4 | }
+

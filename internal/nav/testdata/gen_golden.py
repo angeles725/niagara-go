@@ -1,9 +1,10 @@
 """Regenerate the fixture-backed golden cases of the ported mnav commands.
 
-    python3 -I internal/nav/testdata/gen_golden.py [--fixture]
+    python3 -I internal/nav/testdata/gen_golden.py [--fixture | --search]
 
 --fixture first rebuilds fixture/ (a small class index and module inventory cut
-from the real module-navigator indexes, plus a synthetic module.xml); then
+from the real module-navigator indexes, plus a synthetic module.xml), and
+--search rebuilds only the synthetic grep/source/token corpus; then
 every case below is run through Python module_nav.py from this directory
 (COLUMNS=100, NO_COLOR=1) and written to golden/<case>/: the nav-<case>
 command runs on the fixture, and the parser-only PARSE_CASES.
@@ -26,6 +27,8 @@ NO_CORPUS = {"NAV_CORPUS_BASE": "fixture/no-corpus"}
 DRV = {"NAV_CORPUS_BASE": "fixture/drivers-organized"}
 DRV_BASE = "fixture/drivers"
 CORPUS = {"NAV_CORPUS_BASE": "fixture/organized"}
+SRC = {"NAV_CORPUS_BASE": "fixture/search-organized"}
+SRC_BASE = "fixture/search"
 
 CLASS_NAMES = ["BAlarmService", "BAlarmClass", "BAlarmRecord", "AlarmDbConnection", "BAckState",
                "AlarmSupport", "BAlarmArchive", "BAlarmablePointMarkerTag", "BAlarm", "Entry",
@@ -125,6 +128,45 @@ CASES = [
     ("drivers-miss-unknown", ["drivers", "acme-r"], DRV, DRV_BASE),
     ("drivers-miss-json", ["drivers", "alarm", "--json"], DRV, DRV_BASE),
     ("drivers-no-corpus", ["drivers"], NO_CORPUS, DRV_BASE),
+    ("grep", ["grep", "ackAlarm", "-n", "3"], SRC, SRC_BASE),
+    ("grep-all", ["grep", "ackAlarm|Ñandú"], SRC, SRC_BASE),
+    ("grep-module", ["grep", "class", "-m", "alarm-se"], SRC, SRC_BASE),
+    ("grep-type-other", ["grep", ".", "--type", "other"], SRC, SRC_BASE),
+    ("grep-type-standalone", ["grep", "class", "-t", "standalone"], SRC, SRC_BASE),
+    ("grep-newlines", ["grep", r";\s$|\\r|line\d$", "-m", "alarm-rt"], SRC, SRC_BASE),
+    ("grep-long-line", ["grep", "veryLong", "-n", "1"], SRC, SRC_BASE),
+    ("grep-miss", ["grep", "zzNothing", "-t", "rt"], SRC, SRC_BASE),
+    ("grep-zero-n", ["grep", "class", "-n", "0"], SRC, SRC_BASE),
+    ("grep-bad-regex", ["grep", "ack(Alarm"], SRC, SRC_BASE),
+    ("grep-no-corpus", ["grep", "ackAlarm"], NO_CORPUS, SRC_BASE),
+    ("source", ["source", "BAlarmService"], SRC, SRC_BASE),
+    ("source-fqn-inner", ["source", "javax.baja.alarm.Inner"], SRC, SRC_BASE),
+    ("source-fqn-other-package", ["source", "com.x.Entry", "--code"], SRC, SRC_BASE),
+    ("source-case", ["source", "backstate", "--code"], SRC, SRC_BASE),
+    ("source-miss", ["source", "BAckStat"], SRC, SRC_BASE),
+    ("source-fqn-miss", ["source", "com.y.Entry"], SRC, SRC_BASE),
+    ("source-code", ["source", "BAlarmService", "--code"], SRC, SRC_BASE),
+    ("source-grep", ["source", "BAlarmService", "--grep", r"ack\w+\(|\s$", "--code"], SRC, SRC_BASE),
+    ("source-grep-none", ["source", "BAckState", "--grep", "zz"], SRC, SRC_BASE),
+    ("source-grep-bad", ["source", "BAckState", "--grep", "[z"], SRC, SRC_BASE),
+    ("source-ghost", ["source", "BGhost"], SRC, SRC_BASE),
+    ("source-ghost-code", ["source", "BGhost", "--code"], SRC, SRC_BASE),
+    ("source-batch", ["source", "--batch", " BAckState,,BNope , Entry", "--code"], SRC, SRC_BASE),
+    ("source-batch-empty", ["source", "--batch", " , "], SRC, SRC_BASE),
+    ("source-usage", ["source"], SRC, SRC_BASE),
+    ("source-no-corpus", ["source", "BAlarmService"], NO_CORPUS, SRC_BASE),
+    ("source-no-corpus-code", ["source", "BAlarmService", "--code"], NO_CORPUS, SRC_BASE),
+    ("token", ["token", "ackAlarm"], SRC, SRC_BASE),
+    ("token-limit", ["token", "ackAlarm", "-n", "4"], SRC, SRC_BASE),
+    ("token-module", ["token", "ackAlarm", "-m", "alarm-rt"], SRC, SRC_BASE),
+    ("token-tie", ["token", "Entry"], SRC, SRC_BASE),
+    ("token-module-miss", ["token", "ackAlarm", "-m", "nope-rt"], SRC, SRC_BASE),
+    ("token-similar", ["token", "ackalar"], SRC, SRC_BASE),
+    ("token-miss", ["token", "zzNothing"], SRC, SRC_BASE),
+    ("token-context", ["token", "ackAlarm", "--context", "-n", "9"], SRC, SRC_BASE),
+    ("token-context-wide", ["token", "ackAlarm", "--context", "5", "-m", "alarm-rt"], SRC, SRC_BASE),
+    ("token-context-zero", ["token", "ackAlarm", "--context", "0", "-n", "2"], SRC, SRC_BASE),
+    ("token-context-no-corpus", ["token", "ackAlarm", "--context", "1", "-n", "2"], NO_CORPUS, SRC_BASE),
     ("ask", ["ask", "who calls ackAlarm"], NO_CORPUS),
     ("ask-n", ["ask", "-n", "2", "como funciona el ack de alarmas"], NO_CORPUS),
 ]
@@ -322,13 +364,95 @@ def build_drivers():
     fresh_class_index()
 
 
+# search: a corpus for grep, source and token. BAlarmService mixes CRLF, a
+# lone CR, an invalid UTF-8 byte, trailing blanks and a long line; Entry
+# exists in two packages of one submodule (a token tie on module, class and
+# line); BGhost is indexed but not on disk; twelve modules hold ackAlarm
+# postings of files absent from the corpus.
+SRC_FILES = {
+    "alarm/alarm-rt/vineflower/javax/baja/alarm/BAlarmService.java":
+        b"package javax.baja.alarm;\r\n\r\npublic class BAlarmService {\r\n"
+        b"  public void ackAlarm(BAlarmRecord r) { this.ackAlarm(r, null); }\r\n"
+        b"  void line5() {}   \r\n  // lone cr\rline7\n  String s = \"caf\xe9\";\n"
+        b"  void veryLong() { ackAlarm(" + b"x" * 140 + b"); }\n"
+        b"  class Inner {}\n  void ackAlarm(BAlarmRecord r, Object o) {\n    // ackAlarm twice\n  }\n}",
+    "alarm/alarm-rt/vineflower/javax/baja/alarm/BAckState.java":
+        b"package javax.baja.alarm;\n\npublic final class BAckState { // \xc3\x91and\xc3\xba\n}\n",
+    "alarm/alarm-rt/vineflower/javax/baja/alarm/Entry.java": b"package javax.baja.alarm;\nclass X {\n  Entry e;\n}\n",
+    "alarm/alarm-rt/vineflower/com/x/Entry.java": b"package com.x;\nclass Y {\n  Entry e;\n}\n",
+    "alarm/alarm-rt/vineflower/javax/baja/alarm/package-info.java": b"package javax.baja.alarm; // ackAlarm\n",
+    "alarm/alarm-se/vineflower/com/x/BPrinter.java":
+        b"package com.x;\npublic class BPrinter {\n  void p() { ackAlarm(); }\n  void ackAlarm() {}\n}\n",
+    "alarm/alarm/vineflower/Standalone.java": b"class Standalone {}\n",
+    "other/other-zz/vineflower/Odd.java": b"// odd\n",
+}
+
+
+def src_entry(sub, pkg, name, lines, kind="class", outer=None, path=None):
+    module = sub.split("-")[0]
+    return {"package": pkg, "module": sub, "kind": kind, "lines": lines, "outer_class": outer,
+            "path": path or "{}/{}/vineflower/{}/{}.java".format(module, sub, pkg.replace(".", "/"), name)}
+
+
+def build_search():
+    import re
+    fx = os.path.join(HERE, "fixture")
+    idx = os.path.join(fx, "search", "indexes")
+    org = os.path.join(fx, "search-organized")
+    for d in (os.path.join(fx, "search"), org):
+        shutil.rmtree(d, ignore_errors=True)
+    os.makedirs(idx)
+    for rel, data in SRC_FILES.items():
+        os.makedirs(os.path.dirname(os.path.join(org, rel)), exist_ok=True)
+        with open(os.path.join(org, rel), "wb") as f:
+            f.write(data)
+    svc = src_entry("alarm-rt", "javax.baja.alarm", "BAlarmService", 1234)
+    classes = {
+        "BAlarmService": [svc],
+        "Inner": [dict(svc, outer_class="BAlarmService", kind="class", lines=1)],
+        "BAckState": [src_entry("alarm-rt", "javax.baja.alarm", "BAckState", 4)],
+        "Entry": [src_entry("alarm-rt", "javax.baja.alarm", "Entry", 4, outer="X"),
+                  src_entry("alarm-rt", "com.x", "Entry", 4)],
+        "BPrinter": [src_entry("alarm-se", "com.x", "BPrinter", 5)],
+        "BGhost": [src_entry("alarm-rt", "javax.baja.alarm", "BGhost", 9)],
+    }
+    with open(os.path.join(idx, "class-index.json"), "w", encoding="utf-8") as f:
+        json.dump({"_meta": {"timestamp": "2026-03-04T05:06:07", "modules": 3}, "classes": classes}, f)
+    conn = sqlite3.connect(os.path.join(idx, "token-index.db"))
+    conn.executescript("CREATE TABLE files (id INTEGER PRIMARY KEY, path TEXT NOT NULL, module TEXT NOT NULL, "
+                       "class_name TEXT NOT NULL); CREATE TABLE postings (token TEXT NOT NULL, file_id INTEGER "
+                       "NOT NULL, line_no INTEGER NOT NULL); CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT "
+                       "NOT NULL); CREATE INDEX idx_token ON postings(token); "
+                       "INSERT INTO meta VALUES ('timestamp', '2026-03-04T05:06:07'), "
+                       "('source_root', '/nonexistent/organized');")
+    for rel, data in SRC_FILES.items():
+        sub = rel.split("/")[1]
+        cur = conn.execute("INSERT INTO files (path, module, class_name) VALUES (?, ?, ?)",
+                           (rel, sub, os.path.splitext(os.path.basename(rel))[0]))
+        text = data.decode("utf-8", "replace").replace("\r\n", "\n").replace("\r", "\n")
+        for n, line in enumerate(text.split("\n"), 1):
+            for tok in sorted(set(re.findall(r"[A-Za-z_]\w+", line))):
+                conn.execute("INSERT INTO postings VALUES (?, ?, ?)", (tok, cur.lastrowid, n))
+    for i in range(12):
+        sub = "m{:02d}-rt".format(11 - i)
+        for j in range(i % 3 + 1):
+            cur = conn.execute("INSERT INTO files (path, module, class_name) VALUES (?, ?, ?)",
+                               ("m/{}/vineflower/C{}.java".format(sub, j), sub, "BAVeryLongClassNameThatIsCutAt35Chars{}".format(j)))
+            conn.execute("INSERT INTO postings VALUES ('ackAlarm', ?, ?)", (cur.lastrowid, 10 + j))
+    conn.execute("INSERT INTO postings VALUES ('AckAlarmRequest', 1, 99), ('xackalarmy', 1, 98)")
+    conn.commit()
+    conn.execute("VACUUM")
+    conn.close()
+
+
 def fresh_class_index():
-    """Date the drivers class index an hour ahead so that it is never older than
-    the corpus (no staleness warning); golden_test.go does the same after a
-    checkout, which gives every file the same mtime."""
-    path = os.path.join(HERE, "fixture", "drivers", "indexes", "class-index.json")
+    """Date the drivers and search class indexes an hour ahead so that they are
+    never older than their corpus (no staleness warning); golden_test.go does
+    the same after a checkout, which gives every file the same mtime."""
     future = time.time() + 3600
-    os.utime(path, (future, future))
+    for base in ("drivers", "search"):
+        path = os.path.join(HERE, "fixture", base, "indexes", "class-index.json")
+        os.utime(path, (future, future))
 
 
 def build_fixture():
@@ -390,6 +514,8 @@ def main():
     if "--fixture" in sys.argv:
         build_fixture()
         build_drivers()
+    if "--fixture" in sys.argv or "--search" in sys.argv:
+        build_search()
     fresh_class_index()
     for cid, args, env, *base in CASES:
         capture("nav-" + cid, args, env, *base)

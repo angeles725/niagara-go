@@ -1,0 +1,23 @@
+
+  TOKEN: 'ackAlarm' (31 occurrences in 27 classes, 14 modules)
+
+  ERROR: Source root not available. Falling back to compact view.
+  CLASS                                 LINE  MODULE
+  -----------------------------------------------------------------
+  BAlarmService                            4  alarm-rt
+  BAlarmService                            9  alarm-rt
+  ... and 29 more (use -n 31 to see all)
+
+  Top modules:
+    alarm-rt                                 5 hits,    2 classes
+    m00-rt                                   3 hits,    3 classes
+    m03-rt                                   3 hits,    3 classes
+    m06-rt                                   3 hits,    3 classes
+    m09-rt                                   3 hits,    3 classes
+    alarm-se                                 2 hits,    1 classes
+    m01-rt                                   2 hits,    2 classes
+    m04-rt                                   2 hits,    2 classes
+    m07-rt                                   2 hits,    2 classes
+    m10-rt                                   2 hits,    2 classes
+    ... and 4 more modules
+

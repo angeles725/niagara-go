@@ -1,0 +1,14 @@
+
+  TOKEN: 'ackAlarm' in alarm-rt (5 occurrences in 2 classes, 1 modules)
+
+  CLASS                                 LINE  MODULE
+  -----------------------------------------------------------------
+  BAlarmService                            4  alarm-rt
+  BAlarmService                            9  alarm-rt
+  BAlarmService                           11  alarm-rt
+  BAlarmService                           12  alarm-rt
+  package-info                             1  alarm-rt
+
+  Top modules:
+    alarm-rt                                 5 hits,    2 classes
+
