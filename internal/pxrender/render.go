@@ -1,0 +1,293 @@
+package pxrender
+
+import (
+	"crypto/md5"
+	"fmt"
+	"os"
+	"regexp"
+	"strings"
+)
+
+var widgets = map[string]bool{"Label": true, "Picture": true, "BoundLabel": true, "ImageButton": true,
+	"BackButton": true}
+
+// result is what render reports besides the page: canvas size, counts, the shared root used,
+// unresolved image refs and the positioned elements it did not render.
+type result struct {
+	canvasW, canvasH string
+	widgets          int
+	shared           string
+	missing          []string
+	assets           int
+	dropped          map[string]int
+}
+
+type layout struct{ x, y, w, h float64 }
+
+// parseLayout reads layout="x,y,w,h"; ok is false for a missing or malformed value.
+func parseLayout(s string) (layout, bool) {
+	parts := strings.Split(s, ",")
+	if s == "" || len(parts) != 4 {
+		return layout{}, false
+	}
+	var v [4]float64
+	for i, p := range parts {
+		f, ok := pyFloat(p)
+		if !ok {
+			return layout{}, false
+		}
+		v[i] = f
+	}
+	return layout{v[0], v[1], v[2], v[3]}, true
+}
+
+// parseFont: 'bold 26.0pt Arial' -> (bold, 26, Arial); '11.0pt Arial' -> (normal, 11, Arial).
+func parseFont(s string) (weight, size, family string) {
+	weight, size, family = "normal", "13", "Arial"
+	if s == "" {
+		return
+	}
+	toks := pySplit(s)
+	if len(toks) > 0 && (toks[0] == "bold" || toks[0] == "italic") {
+		weight, toks = toks[0], toks[1:]
+	}
+	for _, tk := range toks {
+		if strings.Contains(tk, "pt") {
+			size, _, _ = strings.Cut(strings.ReplaceAll(tk, "pt", ""), ".")
+		} else {
+			family = tk
+		}
+	}
+	return
+}
+
+var relayRE = regexp.MustCompile(`\[([0-9]+)\]`)
+
+// relayNum: slot:Relay$5b7$5d$2eBO -> "7" (as Python int() prints it); "" when absent.
+func relayNum(ord string) string {
+	if ord == "" {
+		return ""
+	}
+	m := relayRE.FindStringSubmatch(strings.ReplaceAll(strings.ReplaceAll(ord, "$5b", "["), "$5d", "]"))
+	if m == nil {
+		return ""
+	}
+	if n := strings.TrimLeft(m[1], "0"); n != "" {
+		return n
+	}
+	return "0"
+}
+
+func holdsWidgets(e *element) bool {
+	for _, c := range e.children {
+		if widgets[c.tag] || holdsWidgets(c) {
+			return true
+		}
+	}
+	return false
+}
+
+type placed struct {
+	e      *element
+	ox, oy float64
+}
+
+// flatten lists every known widget under container with its offset, descending into any *Pane
+// and into positioned elements that hold widgets; other positioned elements are counted in dropped.
+func flatten(container *element, ox, oy float64, dropped map[string]int, out []placed) []placed {
+	for _, e := range container.children {
+		switch {
+		case widgets[e.tag]:
+			out = append(out, placed{e, ox, oy})
+		case strings.HasSuffix(e.tag, "Pane") || e.attr("layout") != "" && holdsWidgets(e):
+			lay, ok := parseLayout(e.attr("layout"))
+			if !ok {
+				lay = layout{}
+			}
+			out = flatten(e, ox+lay.x, oy+lay.y, dropped, out)
+		case e.attr("layout") != "":
+			dropped[e.tag]++
+		case len(e.children) > 0:
+			out = flatten(e, ox, oy, dropped, out)
+		}
+	}
+	return out
+}
+
+const ledDiv = `<div style="%sdisplay:grid;place-items:center;"><span style="width:60%%;height:60%%;` +
+	`max-width:16px;max-height:16px;border-radius:50%%;background:#9aa4ac;"></span></div>`
+
+type renderer struct {
+	a       *assets
+	seed    string
+	onRatio float64
+	parts   []string
+}
+
+func (r *renderer) relayOn(k string) bool {
+	if k == "" {
+		return true
+	}
+	h := md5.Sum([]byte(r.seed + ":r" + k))
+	mod := 0
+	for _, b := range h {
+		mod = (mod*256 + int(b)) % 1000
+	}
+	return float64(mod)/1000.0 < r.onRatio
+}
+
+func (r *renderer) img(uri, base string) {
+	r.parts = append(r.parts, fmt.Sprintf(`<img src="%s" style="%sobject-fit:contain;" alt="">`, uri, base))
+}
+
+// binding renders a ValueBinding image toggle: IBooleanToSimple picks the on/off image from the
+// demo state; IStatusToSimple shows the ok image when on, else a grey LED.
+func (r *renderer) binding(vb *element, base string) error {
+	on := r.relayOn(relayNum(vb.attr("ord")))
+	if ib := vb.find("IBooleanToSimple"); ib != nil {
+		tv, fv := ib.findImage("trueValue"), ib.findImage("falseValue")
+		ref := ""
+		if tv != nil && fv != nil {
+			if ref = fv.attr("value"); on {
+				ref = tv.attr("value")
+			}
+		}
+		if ref == "" {
+			return nil
+		}
+		uri, err := r.a.dataURI(ref)
+		if uri != "" {
+			r.img(uri, base)
+		}
+		return err
+	}
+	if st := vb.find("IStatusToSimple"); st != nil {
+		uri := ""
+		if ok := st.findImage("ok"); ok != nil {
+			var err error
+			if uri, err = r.a.dataURI(ok.attr("value")); err != nil {
+				return err
+			}
+		}
+		if on && uri != "" {
+			r.img(uri, base)
+		} else {
+			r.parts = append(r.parts, fmt.Sprintf(ledDiv, base))
+		}
+	}
+	return nil
+}
+
+func (r *renderer) widget(e *element, base string) error {
+	switch e.tag {
+	case "Label":
+		wt, sz, fam := parseFont(e.attr("font"))
+		r.parts = append(r.parts, fmt.Sprintf(`<div style="%sdisplay:flex;align-items:center;font-family:%s,Arial,`+
+			`sans-serif;font-weight:%s;font-size:%spx;color:#16233a;line-height:1.05;overflow:hidden;`+
+			`white-space:pre-wrap;">%s</div>`, base, fam, wt, sz, htmlEscape(pyUnescape(e.attr("text")))))
+	case "Picture":
+		if img := e.attr("image"); img != "" {
+			uri, err := r.a.dataURI(img)
+			if uri != "" {
+				r.img(uri, base)
+			}
+			return err
+		}
+		if vb := e.find("ValueBinding"); vb != nil {
+			return r.binding(vb, base)
+		}
+	case "BoundLabel":
+		if vb := e.find("ValueBinding"); vb != nil {
+			return r.binding(vb, base)
+		}
+		leaf := ""
+		if blb := e.find("BoundLabelBinding"); blb != nil {
+			segs := strings.Split(strings.TrimRight(blb.attr("ord"), "/"), "/")
+			leaf = segs[len(segs)-1]
+			leaf = leaf[strings.LastIndex(leaf, ":")+1:]
+		}
+		r.parts = append(r.parts, fmt.Sprintf(`<div style="%sdisplay:flex;align-items:center;justify-content:center;`+
+			`font-family:Arial,sans-serif;font-size:12px;color:#16233a;background:#eef1f5;border:1px solid #cdd4de;`+
+			`border-radius:4px;text-align:center;padding:2px;">%s</div>`, base, htmlEscape(leaf)))
+	case "ImageButton":
+		if txt := pyStrip(e.attr("text")); txt != "" {
+			r.parts = append(r.parts, fmt.Sprintf(`<div style="%sdisplay:flex;align-items:center;`+
+				`justify-content:center;font-family:Arial,sans-serif;font-size:11px;font-weight:600;color:#00123F;`+
+				`background:#eef1f5;border:1px solid #cdd4de;border-radius:4px;">%s</div>`, base, htmlEscape(txt)))
+		} else {
+			r.parts = append(r.parts, fmt.Sprintf(`<div style="%s" title="control"></div>`, base))
+		}
+	case "BackButton":
+		r.parts = append(r.parts, fmt.Sprintf(`<div style="%sdisplay:grid;place-items:center;color:#00123F;`+
+			`font-size:20px;">&lsaquo;</div>`, base))
+	}
+	return nil
+}
+
+// errNoCanvas is the Python SystemExit("no CanvasPane found in <px>"): exit 1.
+type errNoCanvas string
+
+func (e errNoCanvas) Error() string { return "no CanvasPane found in " + string(e) }
+
+func render(o Options) (string, *result, error) {
+	shared := findShared(o.Px, o.Shared)
+	r := &renderer{a: newAssets(shared, o.Organized), seed: o.Seed, onRatio: o.OnRatio}
+	if r.seed == "" {
+		r.seed = pySplitextRoot(pyBasename(o.Px))
+	}
+	data, err := os.ReadFile(o.Px)
+	if err != nil {
+		return "", nil, fmt.Errorf("cannot read %s: %s", o.Px, strerror(err))
+	}
+	root, err := parseXML(data)
+	if err != nil {
+		return "", nil, fmt.Errorf("cannot parse %s: %v", o.Px, err)
+	}
+	canvas := root.first("CanvasPane")
+	if canvas == nil {
+		return "", nil, errNoCanvas(o.Px)
+	}
+	cw, ch, err := viewSize(canvas)
+	if err != nil {
+		return "", nil, fmt.Errorf("%s: %v", o.Px, err)
+	}
+	dropped := map[string]int{}
+	for _, p := range flatten(canvas, 0, 0, dropped, nil) {
+		lay, ok := parseLayout(p.e.attr("layout"))
+		if !ok {
+			dropped[p.e.tag+" (no layout)"]++
+			continue
+		}
+		base := fmt.Sprintf("position:absolute;left:%spx;top:%spx;width:%spx;height:%spx;",
+			pyG(lay.x+p.ox), pyG(lay.y+p.oy), pyG(lay.w), pyG(lay.h))
+		if err := r.widget(p.e, base); err != nil {
+			return "", nil, err
+		}
+	}
+	page := pageHTML(o, pySplitextRoot(pyBasename(o.Px)), cw, ch, strings.Join(r.parts, "\n"))
+	return page, &result{canvasW: cw, canvasH: ch, widgets: len(r.parts), shared: shared,
+		missing: r.a.missingSorted(), assets: len(r.a.cache), dropped: dropped}, nil
+}
+
+// viewSize is int(float(v)) of each half of viewSize="W,H" (default 1370.0,780.0).
+func viewSize(canvas *element) (string, string, error) {
+	vs, ok := canvas.get("viewSize")
+	if !ok {
+		vs = "1370.0,780.0"
+	}
+	wh := strings.Split(vs, ",")
+	if len(wh) != 2 {
+		return "", "", fmt.Errorf("viewSize %q is not W,H", vs)
+	}
+	var out [2]string
+	for i, s := range wh {
+		f, ok := pyFloat(s)
+		if ok {
+			out[i], ok = pyInt(f)
+		}
+		if !ok {
+			return "", "", fmt.Errorf("viewSize %q is not W,H", vs)
+		}
+	}
+	return out[0], out[1], nil
+}
