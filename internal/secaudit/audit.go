@@ -223,11 +223,18 @@ func (e *env) sec06(home string, rep *report) {
 }
 
 func (e *env) sec11(home, ts string, rep *report) error {
+	fips := isFile(filepath.Join(home, "jre", "lib", "security", "cacerts.bcfks"))
+	if !isFile(ts) { // no key was read: the check did not run, which is not a PASS (Python passes)
+		rep.add("SEC-11", "med", "weak signing keys / FIPS",
+			"not checked (no security/truststore.jks); FIPS keystore "+pick(fips, "present", "absent"),
+			"all keys >= 2048; FIPS suppresses RSA-1024 option", "SKIP", "B113/B392",
+			"run: keytool -list -v -keystore <home>/security/truststore.jks with the store password")
+		return nil
+	}
 	sizes, failure, err := e.keytoolKeysizes(ts)
 	if err != nil {
 		return fmt.Errorf("keytool: %w", err)
 	}
-	fips := isFile(filepath.Join(home, "jre", "lib", "security", "cacerts.bcfks"))
 	if failure != "" { // the store did not open with "changeit": its key sizes are unknown, not absent
 		rep.add("SEC-11", "med", "weak signing keys / FIPS",
 			"key sizes not read (keytool "+failure+"); FIPS keystore "+pick(fips, "present", "absent"),
