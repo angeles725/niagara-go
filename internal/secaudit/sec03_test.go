@@ -12,7 +12,7 @@ import (
 // fakeEnv runs a fake icacls that prints out/errOut and exits with code (or fails with err).
 func fakeEnv(out, errOut []byte, code int, err error) *env {
 	return &env{
-		run: func(argv []string, _ []byte, _ time.Duration) (result, error) {
+		run: func(argv []string, _ []byte, _ time.Duration, _ ...string) (result, error) {
 			if err != nil {
 				return result{}, err
 			}

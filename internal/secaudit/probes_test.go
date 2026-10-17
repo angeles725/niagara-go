@@ -3,6 +3,7 @@ package secaudit
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -12,7 +13,7 @@ import (
 // keytoolErr "" means the store opens with "changeit".
 func probeEnv(keytoolErr, keytoolOut, subject string, open map[int]bool) *env {
 	return &env{
-		run: func(argv []string, stdin []byte, _ time.Duration) (result, error) {
+		run: func(argv []string, stdin []byte, _ time.Duration, _ ...string) (result, error) {
 			switch {
 			case argv[0] == "keytool" && argv[2] == "-v":
 				return result{stdout: []byte(keytoolOut)}, nil
@@ -103,7 +104,7 @@ func TestToWinpath(t *testing.T) {
 // keytoolEnv answers both keytool runs with one canned result.
 func keytoolEnv(r result) *env {
 	e := probeEnv("", "", "", nil)
-	e.run = func(argv []string, _ []byte, _ time.Duration) (result, error) {
+	e.run = func(argv []string, _ []byte, _ time.Duration, _ ...string) (result, error) {
 		if argv[0] != "keytool" {
 			return result{}, &startError{"unexpected " + strings.Join(argv, " ")}
 		}
@@ -168,5 +169,43 @@ func TestKeytoolFailureIsNeverAPass(t *testing.T) {
 				t.Errorf("SEC-11 = %s %q, want %s %q", r.verdict, r.observed, tc.sec11v, tc.sec11)
 			}
 		})
+	}
+}
+
+// The default store password reaches keytool through its environment (-storepass:env), never
+// its argv: a command line is readable by every local user in the process list.
+func TestKeytoolPasswordStaysOffTheCommandLine(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("the fake keytool is a shell script")
+	}
+	bin, log := t.TempDir(), filepath.Join(t.TempDir(), "argv")
+	script := "#!/bin/sh\nfor a in \"$@\"; do printf '%s\\n' \"$a\"; done >>" + log + "\n" +
+		"printf 'env=%s\\n' \"$" + storepassVar + "\" >>" + log + "\n"
+	if err := os.WriteFile(filepath.Join(bin, "keytool"), []byte(script), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("PATH", bin)
+	home := homeWithTruststore(t)
+	e := defaultEnv()
+	e.dial = func(string, int) bool { return false }
+	rows := rowsByID(t, e, home, "")
+	if r := rows["SEC-02"]; r.verdict != "FAIL" || r.observed != "opens with 'changeit'" {
+		t.Errorf("SEC-02 = %s %q", r.verdict, r.observed)
+	}
+	data, err := os.ReadFile(log)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ts := filepath.Join(home, "security", "truststore.jks")
+	want := "-list\n-keystore\n" + ts + "\n-storepass:env\n" + storepassVar + "\nenv=changeit\n" +
+		"-list\n-v\n-keystore\n" + ts + "\n-storepass:env\n" + storepassVar + "\nenv=changeit\n"
+	if string(data) != want {
+		t.Errorf("keytool saw:\n%s\nwant:\n%s", data, want)
+	}
+	if strings.Contains(strings.ReplaceAll(string(data), "env=changeit", ""), "changeit") {
+		t.Error("the password is on the keytool command line")
+	}
+	if v, ok := os.LookupEnv(storepassVar); ok {
+		t.Errorf("%s=%q leaked into the auditor's own environment", storepassVar, v)
 	}
 }

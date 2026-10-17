@@ -36,7 +36,8 @@ func (e *timeoutError) Error() string { return e.msg }
 
 // env holds the probes and file tests one audit uses.
 type env struct {
-	run      func(argv []string, stdin []byte, timeout time.Duration) (result, error)
+	// run starts argv with stdin; extraEnv ("KEY=value") is added to this child's environment only.
+	run      func(argv []string, stdin []byte, timeout time.Duration, extraEnv ...string) (result, error)
 	dial     func(host string, port int) bool
 	lookPath func(name string) string // "" when not found
 	winpath  func(path string) string // the Windows form of a WSL path, "" for none
@@ -46,8 +47,9 @@ func defaultEnv() *env {
 	return &env{run: runProgram, dial: dialTCP, lookPath: lookPath, winpath: toWinpath}
 }
 
-// runProgram is subprocess.run(argv, input=stdin, capture_output=True, timeout=timeout).
-func runProgram(argv []string, stdin []byte, timeout time.Duration) (result, error) {
+// runProgram is subprocess.run(argv, input=stdin, capture_output=True, timeout=timeout), with
+// extraEnv appended to the inherited environment of the child.
+func runProgram(argv []string, stdin []byte, timeout time.Duration, extraEnv ...string) (result, error) {
 	ctx := context.Background()
 	if timeout > 0 {
 		var cancel context.CancelFunc
@@ -56,6 +58,9 @@ func runProgram(argv []string, stdin []byte, timeout time.Duration) (result, err
 	}
 	cmd := exec.CommandContext(ctx, argv[0], argv[1:]...)
 	cmd.Stdin = bytes.NewReader(stdin)
+	if len(extraEnv) > 0 {
+		cmd.Env = append(os.Environ(), extraEnv...)
+	}
 	var out, errb bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &out, &errb
 	cmd.WaitDelay = time.Second
@@ -117,6 +122,10 @@ type keytoolOutcome struct {
 	stdout    string
 }
 
+// storepassVar carries the default store password to keytool ("-storepass:env"): a password on
+// the command line is visible to every local user in the process list.
+const storepassVar = "NIAGARA_SECAUDIT_STOREPASS"
+
 // wrongPassMarker is how keytool (JDK 8 and later, JKS and PKCS12) reports a wrong store password.
 // keytool prints its errors on stdout, so both streams are searched.
 const wrongPassMarker = "password was incorrect"
@@ -127,7 +136,7 @@ func (e *env) keytoolList(path string, verbose bool) (keytoolOutcome, error) {
 	if verbose {
 		argv = append(argv, "-v")
 	}
-	r, err := e.run(append(argv, "-keystore", path, "-storepass", "changeit"), nil, 0)
+	r, err := e.run(append(argv, "-keystore", path, "-storepass:env", storepassVar), nil, 0, storepassVar+"=changeit")
 	if err != nil {
 		return keytoolOutcome{}, err
 	}
