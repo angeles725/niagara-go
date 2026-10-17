@@ -15,5 +15,13 @@
 {"name": "devguide-search", "args": ["--niagara-version", "1.0", "devguide-search", "servlet"], "exit": 0, "stderr": ""},
 {"name": "devguide-search-fallback", "args": ["--niagara-version", "1.0", "devguide-search", "servlet registration"], "exit": 0, "stderr": ""},
 {"name": "devguide-search-miss", "args": ["--niagara-version", "1.0", "devguide-search", "zzqq"], "exit": 1, "stderr": ""},
-{"name": "devguide-search-absent", "args": ["--niagara-version", "2.0", "devguide-search", "servlet"], "exit": 1, "stderr": ""}
+{"name": "devguide-search-absent", "args": ["--niagara-version", "2.0", "devguide-search", "servlet"], "exit": 1, "stderr": ""},
+{"name": "pdf", "args": ["--niagara-version", "1.0", "pdf", "discovery timeout"], "exit": 0, "stderr": ""},
+{"name": "pdf-fallback", "args": ["--niagara-version", "1.0", "pdf", "modbus wiring"], "exit": 0, "stderr": ""},
+{"name": "pdf-names", "args": ["--niagara-version", "1.0", "pdf", "modbus", "--no-fulltext"], "exit": 0, "stderr": ""},
+{"name": "pdf-names-category", "args": ["--niagara-version", "1.0", "pdf", "modbus", "--no-fulltext", "--category", "hardware"], "exit": 0, "stderr": ""},
+{"name": "pdf-names-empty-query", "args": ["--niagara-version", "1.0", "pdf", "???", "--no-fulltext"], "exit": 0, "stderr": ""},
+{"name": "pdf-category-miss", "args": ["--niagara-version", "1.0", "pdf", "discovery", "--category", "hardware"], "exit": 1, "stderr": ""},
+{"name": "pdf-shared", "args": ["--niagara-version", "2.0", "pdf", "discovery"], "exit": 0, "stderr": ""},
+{"name": "pdf-shared-miss", "args": ["--niagara-version", "2.0", "pdf", "zzqq"], "exit": 1, "stderr": ""}
 ]

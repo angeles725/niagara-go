@@ -1,0 +1,10 @@
+2 PDF manuals matching 'modbus':
+
+  Modbus TCP Sheet (2 pages, 3 KB, software)
+    source: sheets/modbus.pdf
+    path: docs-text/Modbus_TCP_Sheet.txt
+
+  docModbus (1 pages, 2 KB, hardware)
+    source: docModbus/Modbus Guide.pdf
+    path: docs-text/docModbus.txt
+

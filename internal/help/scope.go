@@ -52,6 +52,8 @@ var scopes = map[string]scopeDef{
 	"modules": {[]string{"source-index.json"},
 		"modules shipped without source (module names come from the source files)",
 		[]string{"module", "find", "search"}},
+	"pdf": {[]string{"pdf-index.json"}, "manual pages without a text layer (scanned images)",
+		[]string{"find", "guide-search", "pdf --no-fulltext"}},
 	"fulltext": {nil, "JDK API (class --jdk); " + docTypesExcluded,
 		[]string{"find --or", "fuzzy", "class --jdk", "source-grep"}},
 }
@@ -60,6 +62,7 @@ var scopes = map[string]scopeDef{
 var scopeDirs = map[string][]string{
 	"guides":   {"guides-clean"},
 	"devguide": {"devguide-clean", "devguide-examples"},
+	"pdf":      {"docs-text"},
 	"fulltext": fts.Labels,
 }
 
@@ -107,8 +110,14 @@ func (e *Env) scopeLine(def scopeDef, dirs []string) (string, error) {
 }
 
 // indexCount is scope._index_count: "<name>: absent", "<name>: N entries",
-// or names / classes for the two class indexes.
+// or names / classes for the two class indexes. pdf-index.json is counted in
+// the data root that owns the (maybe shared) manuals.
 func (e *Env) indexCount(name string) (string, error) {
+	if name == "pdf-index.json" {
+		if root, _ := fts.DocsTextRoot(e.BaseDir); root != e.BaseDir {
+			return sharedIndexCount(root, name)
+		}
+	}
 	if st, err := os.Stat(index.Path(e.BaseDir, name)); err != nil || !st.Mode().IsRegular() {
 		return name + ": absent", nil
 	}
@@ -124,6 +133,20 @@ func (e *Env) indexCount(name string) (string, error) {
 		return fmt.Sprintf("%s: %s names / %s classes", name, thousands(data.Len()), thousands(total)), nil
 	}
 	return fmt.Sprintf("%s: %s entries", name, thousands(data.Len())), nil
+}
+
+// sharedIndexCount is scope._index_count for an index of another version's
+// data root, read without the Env cache that belongs to e.BaseDir.
+func sharedIndexCount(root, name string) (string, error) {
+	path := index.Path(root, name)
+	if st, err := os.Stat(path); err != nil || !st.Mode().IsRegular() {
+		return name + ": absent", nil
+	}
+	o, err := index.LoadObject(path)
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%s: %s entries", name, thousands(o.Len())), nil
 }
 
 // dirCount is scope._dir_count: "<name>/: absent" or "<name>/: N files"

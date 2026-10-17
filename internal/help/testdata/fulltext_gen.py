@@ -126,6 +126,14 @@ CLI = [
     ("devguide-search-fallback", "1.0", ["devguide-search", "servlet registration"]),
     ("devguide-search-miss", "1.0", ["devguide-search", "zzqq"]),
     ("devguide-search-absent", "2.0", ["devguide-search", "servlet"]),
+    ("pdf", "1.0", ["pdf", "discovery timeout"]),
+    ("pdf-fallback", "1.0", ["pdf", "modbus wiring"]),
+    ("pdf-names", "1.0", ["pdf", "modbus", "--no-fulltext"]),
+    ("pdf-names-category", "1.0", ["pdf", "modbus", "--no-fulltext", "--category", "hardware"]),
+    ("pdf-names-empty-query", "1.0", ["pdf", "???", "--no-fulltext"]),
+    ("pdf-category-miss", "1.0", ["pdf", "discovery", "--category", "hardware"]),
+    ("pdf-shared", "2.0", ["pdf", "discovery"]),
+    ("pdf-shared-miss", "2.0", ["pdf", "zzqq"]),
 ]
 
 

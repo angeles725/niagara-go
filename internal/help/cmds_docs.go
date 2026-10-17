@@ -44,6 +44,14 @@ var docCommands = []command{
 			positional(p, "query", "Search term")
 			flag(p, "", "--no-fulltext")
 			p.Add(argparse.Arg{Choices: choices("software", "hardware")}, "--category")
+		},
+		run: func(e *Env, ns *argparse.Namespace) error {
+			var category *string
+			if ns.Get("category") != nil {
+				c := ns.String("category")
+				category = &c
+			}
+			return e.PDF(PDFParams{Query: ns.String("query"), NoFulltext: ns.Bool("no_fulltext"), Category: category})
 		}},
 	{name: "find", help: "Unified full-text search across ALL sources with relevance ranking",
 		args: func(p *argparse.Parser) {

@@ -1,0 +1,6 @@
+1 PDF manuals matching 'modbus':
+
+  docModbus (1 pages, 2 KB, hardware)
+    source: docModbus/Modbus Guide.pdf
+    path: docs-text/docModbus.txt
+
