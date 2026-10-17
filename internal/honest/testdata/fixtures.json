@@ -1,0 +1,52 @@
+{
+"exit_input": 2,
+"scope": [
+["config.bog", [], "searched config.bog"],
+["config.bog", [["components", 12]], "searched config.bog: 12 components"],
+["config.bog", [["components", 12], ["links", 3]], "searched config.bog: 12 components, 3 links"],
+["config.bog", [["java_files", 0], ["unreadable", 2]], "searched config.bog: 0 java files, 2 unreadable"],
+["config.bog", [["blocks", 1234567], ["files_read", 1], ["x", -1]], "searched config.bog: 1234567 blocks, 1 files read, -1 x"],
+["organized/ (3 modules)", [], "searched organized/ (3 modules)"],
+["organized/ (3 modules)", [["components", 12]], "searched organized/ (3 modules): 12 components"],
+["organized/ (3 modules)", [["components", 12], ["links", 3]], "searched organized/ (3 modules): 12 components, 3 links"],
+["organized/ (3 modules)", [["java_files", 0], ["unreadable", 2]], "searched organized/ (3 modules): 0 java files, 2 unreadable"],
+["organized/ (3 modules)", [["blocks", 1234567], ["files_read", 1], ["x", -1]], "searched organized/ (3 modules): 1234567 blocks, 1 files read, -1 x"],
+["", [], "searched "],
+["", [["components", 12]], "searched : 12 components"],
+["", [["components", 12], ["links", 3]], "searched : 12 components, 3 links"],
+["", [["java_files", 0], ["unreadable", 2]], "searched : 0 java files, 2 unreadable"],
+["", [["blocks", 1234567], ["files_read", 1], ["x", -1]], "searched : 1234567 blocks, 1 files read, -1 x"],
+["C:\\stations\\PANCCADIA\\config.bog", [], "searched C:\\stations\\PANCCADIA\\config.bog"],
+["C:\\stations\\PANCCADIA\\config.bog", [["components", 12]], "searched C:\\stations\\PANCCADIA\\config.bog: 12 components"],
+["C:\\stations\\PANCCADIA\\config.bog", [["components", 12], ["links", 3]], "searched C:\\stations\\PANCCADIA\\config.bog: 12 components, 3 links"],
+["C:\\stations\\PANCCADIA\\config.bog", [["java_files", 0], ["unreadable", 2]], "searched C:\\stations\\PANCCADIA\\config.bog: 0 java files, 2 unreadable"],
+["C:\\stations\\PANCCADIA\\config.bog", [["blocks", 1234567], ["files_read", 1], ["x", -1]], "searched C:\\stations\\PANCCADIA\\config.bog: 1234567 blocks, 1 files read, -1 x"]
+],
+"miss": [
+["matches", "config.bog", [], "(no matches; searched config.bog)"],
+["matches", "config.bog", [["components", 12]], "(no matches; searched config.bog: 12 components)"],
+["matches", "config.bog", [["components", 12], ["links", 3]], "(no matches; searched config.bog: 12 components, 3 links)"],
+["matches", "config.bog", [["java_files", 0], ["unreadable", 2]], "(no matches; searched config.bog: 0 java files, 2 unreadable)"],
+["matches", "config.bog", [["blocks", 1234567], ["files_read", 1], ["x", -1]], "(no matches; searched config.bog: 1234567 blocks, 1 files read, -1 x)"],
+["matches", "organized/ (3 modules)", [], "(no matches; searched organized/ (3 modules))"],
+["matches", "organized/ (3 modules)", [["components", 12]], "(no matches; searched organized/ (3 modules): 12 components)"],
+["matches", "organized/ (3 modules)", [["components", 12], ["links", 3]], "(no matches; searched organized/ (3 modules): 12 components, 3 links)"],
+["matches", "organized/ (3 modules)", [["java_files", 0], ["unreadable", 2]], "(no matches; searched organized/ (3 modules): 0 java files, 2 unreadable)"],
+["matches", "organized/ (3 modules)", [["blocks", 1234567], ["files_read", 1], ["x", -1]], "(no matches; searched organized/ (3 modules): 1234567 blocks, 1 files read, -1 x)"],
+["semantic matches", "config.bog", [], "(no semantic matches; searched config.bog)"],
+["semantic matches", "config.bog", [["components", 12]], "(no semantic matches; searched config.bog: 12 components)"],
+["semantic matches", "config.bog", [["components", 12], ["links", 3]], "(no semantic matches; searched config.bog: 12 components, 3 links)"],
+["semantic matches", "config.bog", [["java_files", 0], ["unreadable", 2]], "(no semantic matches; searched config.bog: 0 java files, 2 unreadable)"],
+["semantic matches", "config.bog", [["blocks", 1234567], ["files_read", 1], ["x", -1]], "(no semantic matches; searched config.bog: 1234567 blocks, 1 files read, -1 x)"],
+["semantic matches", "organized/ (3 modules)", [], "(no semantic matches; searched organized/ (3 modules))"],
+["semantic matches", "organized/ (3 modules)", [["components", 12]], "(no semantic matches; searched organized/ (3 modules): 12 components)"],
+["semantic matches", "organized/ (3 modules)", [["components", 12], ["links", 3]], "(no semantic matches; searched organized/ (3 modules): 12 components, 3 links)"],
+["semantic matches", "organized/ (3 modules)", [["java_files", 0], ["unreadable", 2]], "(no semantic matches; searched organized/ (3 modules): 0 java files, 2 unreadable)"],
+["semantic matches", "organized/ (3 modules)", [["blocks", 1234567], ["files_read", 1], ["x", -1]], "(no semantic matches; searched organized/ (3 modules): 1234567 blocks, 1 files read, -1 x)"]
+],
+"fail": [
+["bog-nav", "cannot read x.bog", 2, "bog-nav: cannot read x.bog\n", 2],
+["module-find", "no .java files under r", 3, "module-find: no .java files under r\n", 3],
+["t", "", 2, "t: \n", 2]
+]
+}
