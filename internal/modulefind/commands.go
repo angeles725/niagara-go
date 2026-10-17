@@ -109,7 +109,7 @@ func cmdWriters(m *module, o *opts, slot string) {
 	}
 	dyn := sortedSet(all)
 	if o.json {
-		fmt.Fprintln(o.out, jsonDumps(row{{"slot", slot}, {"writers", w}, {"dynamic", dyn}}, 0))
+		fmt.Fprintln(o.out, jsonDumps(row{{"slot", slot}, {"writers", w}, {"dynamic", dyn}}))
 		return
 	}
 	for _, line := range w {
@@ -134,7 +134,7 @@ func cmdExtends(m *module, o *opts, of string, hasOf bool) {
 	if hasOf && of != "" {
 		chain := m.resolveChain(of)
 		if o.json {
-			fmt.Fprintln(o.out, jsonDumps(row{{"class", of}, {"chain", chain}}, 0))
+			fmt.Fprintln(o.out, jsonDumps(row{{"class", of}, {"chain", chain}}))
 			return
 		}
 		fmt.Fprintln(o.out, strings.Join(chain, " -> "))
@@ -145,7 +145,7 @@ func cmdExtends(m *module, o *opts, of string, hasOf bool) {
 		for _, cls := range m.extends.keys {
 			r = append(r, field{cls, m.extends.m[cls]})
 		}
-		fmt.Fprintln(o.out, jsonDumps(r, 0))
+		fmt.Fprintln(o.out, jsonDumps(r))
 		return
 	}
 	for _, cls := range m.extends.sortedKeys() {

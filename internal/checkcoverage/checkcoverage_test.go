@@ -40,9 +40,16 @@ func TestNoBlocksExits3(t *testing.T) {
 	}
 }
 
-func TestJSONString(t *testing.T) {
-	if got := jsonString("a\"b\\c\n\x01ñ "); got != `"a\"b\\c\n\u0001ñ`+" \"" {
-		t.Errorf("jsonString = %s", got)
+func TestJSONReportEscapes(t *testing.T) {
+	name := "a\"b\\c\n\x01ñ \xffabc"
+	results := map[string]*coverage{name: {body: []hit{{"B1", "ñ"}}}}
+	want := "{\n  \"scanned_blocks\": 1,\n  \"names\": {\n" +
+		"    \"a\\\"b\\\\c\\n\\u0001ñ �abc\": {\n" +
+		"      \"subject\": [],\n      \"body\": [\n        {\n" +
+		"          \"block\": \"B1\",\n          \"h1\": \"ñ\"\n        }\n      ]\n    }\n  },\n" +
+		"  \"verdict\": \"clear\"\n}"
+	if got := jsonReport(results, []string{name}, 1, 0, false); got != want {
+		t.Errorf("jsonReport =\n%s\nwant\n%s", got, want)
 	}
 }
 

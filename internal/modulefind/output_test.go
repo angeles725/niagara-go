@@ -39,9 +39,9 @@ func TestRenderFormats(t *testing.T) {
 	}
 }
 
-func TestJSONStringEnsureASCII(t *testing.T) {
-	if got := jsonString("a\"\\\n\x7fñ😀"); got != `"a\"\\\n\u007f\u00f1\ud83d\ude00"` {
-		t.Errorf("jsonString = %q", got)
+func TestJSONDumpsEnsureASCII(t *testing.T) {
+	if got := jsonDumps("a\"\\\n\x7fñ😀\xffabc"); got != `"a\"\\\n\u007f\u00f1\ud83d\ude00\ufffdabc"` {
+		t.Errorf("jsonDumps = %q", got)
 	}
 	var buf bytes.Buffer
 	writeCSV(&buf, []string{""})
