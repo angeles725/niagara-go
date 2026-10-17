@@ -38,13 +38,17 @@ func newBase(t *testing.T, files map[string][]byte) string {
 	return base
 }
 
+func envFor(base string) *registry.Env {
+	var out, errb bytes.Buffer
+	return &registry.Env{Stdio: cli.Stdio{Out: &out, Err: &errb}, Runtime: core.New(base, &out, &errb)}
+}
+
 func run(t *testing.T, base, question string, limit int) (stdout, stderr string, code int) {
 	t.Helper()
 	t.Setenv("NAV_CORPUS_BASE", filepath.Join(base, "no-corpus"))
-	var out, errb bytes.Buffer
-	env := &registry.Env{Stdio: cli.Stdio{Out: &out, Err: &errb}, Runtime: core.New(base, &out, &errb)}
+	env := envFor(base)
 	Cmd(env, question, limit)
-	return out.String(), errb.String(), env.ExitCode()
+	return env.Out.(*bytes.Buffer).String(), env.Err.(*bytes.Buffer).String(), env.ExitCode()
 }
 
 // TestRankErrorPaths pins the stderr and exit code of class_rank.py (captured
