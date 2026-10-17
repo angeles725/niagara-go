@@ -1,0 +1,15 @@
+{
+ "args": [
+  "station.xml",
+  "links",
+  "--from",
+  "Panel",
+  "--slot",
+  "fanMode",
+  "--slot-any"
+ ],
+ "env": {
+  "NIAGARA_ORGANIZED": "organized-mini",
+  "NIAGARA_CACHE_DIR": "off"
+ }
+}

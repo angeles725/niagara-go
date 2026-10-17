@@ -1,0 +1,12 @@
+[
+  {
+    "count": 2,
+    "type": "disp:PointCacheObj",
+    "kind": "component"
+  },
+  {
+    "count": 1,
+    "type": "disp:PointCache",
+    "kind": "component"
+  }
+]

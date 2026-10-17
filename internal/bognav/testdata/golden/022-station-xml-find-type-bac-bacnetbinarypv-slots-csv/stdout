@@ -1,0 +1,2 @@
+handle,path,type,kind
+52,Station/DisplayService/pointCache/bts:bacref:dopr=5_100_85_8_101.value,bac:BacnetBinaryPv,slot

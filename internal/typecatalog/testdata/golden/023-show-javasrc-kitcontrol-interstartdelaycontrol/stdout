@@ -1,0 +1,5 @@
+com.tridium.kitControl.BInterstartDelayControl  extends BComponent   (javasrc/kitControl/kitControl-rt/cfr/com/tridium/kitControl/BInterstartDelayControl.java)
+  property delay                    flags=0               default=BRelTime.DEFAULT facets=null
+  property master                   flags=1026   tf       default=BOrd.NULL facets=BFacets.make((String)"a", (String)"b")
+  action   reset                    flags=256    o        default= facets=null
+  action   pulse                    flags=144    ac       default=BBoolean.TRUE facets=BFacets.NULL

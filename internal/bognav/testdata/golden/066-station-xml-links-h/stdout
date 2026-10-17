@@ -1,0 +1,15 @@
+usage: bog-nav.py [bog] links [-h] [--json] [--csv] [--limit N] [--to TO] [--from FROM_]
+                              [--slot SLOT] [--slot-any] [--dangling] [--src SRC]
+
+options:
+  -h, --help     show this help message and exit
+  --json         machine JSON output
+  --csv          CSV output (header + rows)
+  --limit, -n N  print at most N rows (default: all); the cut is reported
+  --to TO        target path/component
+  --from FROM_   source path/component
+  --slot SLOT    exact slot name on the --from source end / the --to target end (either end when
+                 neither is given)
+  --slot-any     --slot matches either end regardless of --from/--to (pre-2026-09-06 behaviour)
+  --dangling     only links whose tgt slot is absent from source (needs --src)
+  --src SRC      module src root: resolve --dangling (CHECK7)

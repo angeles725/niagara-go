@@ -1,0 +1,92 @@
+{
+ "a.b.BBytes": {
+  "actions": [],
+  "class": "BBytes",
+  "extends": "BObject",
+  "package": "a.b",
+  "properties": [
+   {
+    "args": [
+     "0",
+     "\"caf\u00e9 \ufffd x\ufffd\ufffd\"",
+     "null"
+    ],
+    "default": "\"caf\u00e9 \ufffd x\ufffd\ufffd\"",
+    "facets": "null",
+    "flagLetters": "",
+    "flags": 0,
+    "name": "label"
+   },
+   {
+    "args": [
+     "0x8000",
+     "BString.DEFAULT",
+     "null"
+    ],
+    "default": "BString.DEFAULT",
+    "facets": "null",
+    "flagLetters": "L",
+    "flags": 32768,
+    "name": "\u00f1ame"
+   }
+  ],
+  "source": "loose/a/b/BBytes.java",
+  "topics": []
+ },
+ "a.b.BCrlf": {
+  "actions": [],
+  "class": "BCrlf",
+  "extends": "BMulti",
+  "package": "a.b",
+  "properties": [
+   {
+    "args": [
+     "Flags.SUMMARY",
+     "true",
+     "null"
+    ],
+    "default": "true",
+    "facets": "null",
+    "flagLetters": "s",
+    "flags": 8,
+    "name": "flag"
+   }
+  ],
+  "source": "loose/a/b/BCrlf.java",
+  "topics": []
+ },
+ "a.b.BMulti": {
+  "actions": [],
+  "class": "BMulti",
+  "extends": "BComponent",
+  "package": "a.b",
+  "properties": [
+   {
+    "args": [
+     "0",
+     "BDefaultProxyConversion.DEFAULT",
+     "BFacets.make(BFacets.make(BFacets.FIELD_EDITOR, \"driver:ProxyConversionFE\"), BFacets.make(BFacets.UX_FIELD_EDITOR, \"driver:ProxyConversionEditor\"))"
+    ],
+    "default": "BDefaultProxyConversion.DEFAULT",
+    "facets": "BFacets.make(BFacets.make(BFacets.FIELD_EDITOR, \"driver:ProxyConversionFE\"), BFacets.make(BFacets.UX_FIELD_EDITOR, \"driver:ProxyConversionEditor\"))",
+    "flagLetters": "",
+    "flags": 0,
+    "name": "conversion"
+   },
+   {
+    "args": [
+     "Flags.HIDDEN",
+     "\"x\"",
+     "null"
+    ],
+    "default": "\"x\"",
+    "facets": "null",
+    "flagLetters": "h",
+    "flags": 4,
+    "name": "wrapped"
+   }
+  ],
+  "source": "loose/a/b/BMulti.java",
+  "topics": []
+ }
+}

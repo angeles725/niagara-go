@@ -1,0 +1,4 @@
+Station/Panel  h:10  <DPCD:RoomPanel>
+  slot  setpoint = 3.0  child={value=3.0}  <b:StatusNumeric>  f=  [complex]
+  slot  differentialUp = 1.5  <frozen simple (type in source)>  f=  [bare]
+  (defaults: type DPCD:RoomPanel not found in organized/DashboardPan)

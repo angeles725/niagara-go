@@ -1,0 +1,5 @@
+Station/Logic/EvaporatorUnit_3.valveOut  -->  Station/Panel.evap1ValveState
+Station/Panel.setpoint  -->  Station/Logic.setpoint
+Station/Panel.evap1FanMode  -->  Station/Logic.fanMode
+Station/Logic/EvaporatorUnit_3.valveOut  -->  Station/Drivers/ro1.in10
+Station/Logic/EvaporatorUnit_3.valveOut  -->  Station/Drivers/ro2.in10

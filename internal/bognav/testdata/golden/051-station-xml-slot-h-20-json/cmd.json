@@ -1,0 +1,12 @@
+{
+ "args": [
+  "station.xml",
+  "slot",
+  "h:20",
+  "--json"
+ ],
+ "env": {
+  "NIAGARA_ORGANIZED": "organized-mini",
+  "NIAGARA_CACHE_DIR": "off"
+ }
+}

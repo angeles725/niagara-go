@@ -1,0 +1,13 @@
+{
+ "args": [
+  "station.xml",
+  "writable",
+  "--klass",
+  "complex",
+  "--json"
+ ],
+ "env": {
+  "NIAGARA_ORGANIZED": "organized-mini",
+  "NIAGARA_CACHE_DIR": "off"
+ }
+}

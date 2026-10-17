@@ -1,0 +1,17 @@
++   <b:Station>
++ A  <c:NumericWritable>
++ B  <c:BooleanWritable>
++ Services  <b:ServiceContainer>
++ Services/JobService  <b:JobService>
++ Services/object tags  <b:Folder>
+- Station  <b:Station>
+- Station/DisplayService  <disp:BtDisplayService>
+- Station/DisplayService/pointCache  <disp:PointCache>
+- Station/DisplayService/pointCache/bts:bacref:dopr=2_50_85_8_101  <disp:PointCacheObj>
+- Station/DisplayService/pointCache/bts:bacref:dopr=5_100_85_8_101  <disp:PointCacheObj>
+- Station/Drivers  <c:BooleanWritable>
+- Station/Drivers/ro1  <c:BooleanWritable>
+- Station/Drivers/ro2  <c:BooleanWritable>
+- Station/Logic  <CRP:ColdRoom>
+- Station/Logic/EvaporatorUnit_3  <CRP:EvaporatorUnit>
+- Station/Panel  <DPCD:RoomPanel>

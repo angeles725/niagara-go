@@ -1,0 +1,2 @@
+a.b.BCrlf  extends BMulti   (loose/a/b/BCrlf.java)
+  property flag                     flags=8      s        default=true facets=null

@@ -1,0 +1,6 @@
+Drivers/Net/points/ro1  h:8  <c:BooleanWritable>
+  slot  facets = BFacets.NULL (default)  <BControlPoint>  f=
+  slot  out = new BStatusBoolean() (default)  <BBooleanPoint>  f=rs
+  slot  in10 = new BStatusBoolean(false, BStatus.nullStatus) (default, transient)  <BBooleanWritable>  f=ts
+  slot  minActiveTime = BRelTime.make(0L) (default)  <BBooleanWritable>  f=
+  child  proxyExt  h:9  <nrio:NrioRelayOutputProxyExt>

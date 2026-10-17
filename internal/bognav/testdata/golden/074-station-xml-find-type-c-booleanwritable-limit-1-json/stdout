@@ -1,0 +1,8 @@
+[
+  {
+    "handle": "40",
+    "path": "Station/Drivers",
+    "type": "c:BooleanWritable",
+    "kind": "component"
+  }
+]

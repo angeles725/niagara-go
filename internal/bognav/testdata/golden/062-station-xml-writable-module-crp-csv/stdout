@@ -1,0 +1,4 @@
+path,slot,type,value,class,note
+Station/Logic,setpoint,b:StatusNumeric,3.0,complex,child-leaf ORD bare <real> preferred; parent wrapped-obj = silent-zero hazard
+Station/Logic,valveMode,frozen simple (type in source),auto,bare,no type attr (untyped value/mode slot)
+Station/Logic/EvaporatorUnit_3,valveOut,b:StatusBoolean,false,complex,child-leaf ORD bare <real> preferred; parent wrapped-obj = silent-zero hazard

@@ -1,0 +1,4 @@
+NO  fb  Drivers/Net/points/ro2  <BooleanWritable>  <- Room.fanOut  writeOnUp=false
+NO  fb  Drivers/Net/points/ro3  <BooleanWritable>  <- Room.lightOut  writeOnUp=? (no tuning policy 'missingPolicy' under Drivers/Net/tuningPolicies)
+yes fb  Drivers/Net/points/ro1  <BooleanWritable>  <- Room.valveOut  writeOnUp=true (default)
+# 3 own-module->writable relay targets; 2 WITHOUT a fallback (hold last state on stop/reload — B810)

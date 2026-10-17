@@ -1,0 +1,38 @@
+  ok   all handled components parsed
+  ok   path built from tree (Station/Panel)
+  ok   parent handle tracked
+  ok   nested EvaporatorUnit parent handle tracked
+  ok   composite property recorded as slot
+  ok   composite slot type
+  ok   nested StatusNumeric.value child surfaced on the slot (not None)
+  ok   nested child dict captured (the child-ORD write target)
+  ok   --src fills a bog-absent type from source
+  ok   bog-absent type without --src labelled frozen simple (not untyped)
+  ok   simple slot value
+  ok   module prefix decl parsed
+  ok   cross-component link sourceOrd h:10 resolved to a path
+  ok   --to/--from match an endpoint by h:handle exactly
+  ok   --to/--from still match by path when the needle is not a handle
+  ok   --from X --slot S filters the SOURCE slot (target named S is not a hit)
+  ok   --slot matches the source end with --from, the target end with --to, either end alone
+  ok   --slot-any restores either-end matching
+  ok   StatusNumeric classified as complex (child-leaf write)
+  ok   plain b:Double classified simple
+  ok   lowercase Java primitive double classified simple
+  ok   NumericPoint not false-matched as simple
+  ok   untyped value slot classified bare
+  ok   relay data: ro1 has a fallback, ro2 has none (CHECK11 view)
+  ok   relays: 2 targets, 1 without fallback
+  ok   tiles: evap1 tile flagged CROSSED (fed by EvaporatorUnit_3)
+  ok   hoa: 0 active overrides, mode slot auto (CHECK8)
+  ok   path: handle -> path reverse lookup
+  ok   find: flat list by type
+  ok   handle-less `value` wrapper type captured on the PointCacheObj (the bug fix)
+  ok   find: bac:BacnetBinaryPv with no --slots warns instead of a silent zero
+  ok   find --slots: the handle-less bac:BacnetBinaryPv value wrapper is now listed
+  ok   types --slots: component types AND handle-less slot types counted
+  ok   pointcache: bacref dopr ORD decoded to obj-type:inst@dev + property name
+  ok   pointcache: freshness classified (2022 STALE vs 2026 live)
+  ok   pointcache --stale --device: filters to the dead binding only
+
+SELFTEST OK

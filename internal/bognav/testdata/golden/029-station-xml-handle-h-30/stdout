@@ -1,0 +1,4 @@
+h:30  Station/Logic/EvaporatorUnit_3  <CRP:EvaporatorUnit>  parent=h:20
+  feeds    Station/Logic/EvaporatorUnit_3.valveOut  -->  Station/Panel.evap1ValveState
+  feeds    Station/Logic/EvaporatorUnit_3.valveOut  -->  Station/Drivers/ro1.in10
+  feeds    Station/Logic/EvaporatorUnit_3.valveOut  -->  Station/Drivers/ro2.in10

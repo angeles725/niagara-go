@@ -1,0 +1,13 @@
+com.acme.model.BNumericWritable  extends BComponent   (javasrc/acme-extras/acme-extras-rt/procyon/com/acme/model/BNumericWritable.java)
+  property speed                    flags=256    o        default=BDouble.make(1.5) facets=null
+  action   stop                     flags=32     n        default= facets=null
+javax.baja.control.BNumericWritable  extends BNumericPoint   (javasrc/control/control-rt/vineflower/javax/baja/control/BNumericWritable.java)
+  property in1                      flags=1      r        default=new BStatusNumeric(0, BStatus.nullStatus) facets=null
+  property in10                     flags=10     ts       default=new BStatusNumeric(0, BStatus.nullStatus) facets=null
+  property fallback                 flags=0               default=new BStatusNumeric(0, BStatus.nullStatus) facets=null
+  property overrideExpiration       flags=257    ro       default=BAbsTime.NULL facets=null
+  property units                    flags=268435460 h1       default="Grados °C \"x\"\t;" facets=BFacets.make("a", "b,c")
+  action   emergencyAuto            flags=0               default= facets=null
+  action   set                      flags=256    o        default=BDouble.DEFAULT facets=null
+  topic    fired                    flags=8      s        default= facets=null
+  topic    alarm                    flags=8      s        default=BString.DEFAULT facets=BFacets.NULL
