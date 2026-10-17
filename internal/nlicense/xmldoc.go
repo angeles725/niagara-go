@@ -69,7 +69,6 @@ func (e syntaxError) Error() string { return e.msg }
 type xmlParser struct {
 	s     string
 	i     int
-	line  int
 	depth int // open elements, the one being parsed included
 }
 
