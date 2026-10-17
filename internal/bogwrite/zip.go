@@ -35,8 +35,11 @@ func writeZip(path string, xml []byte) error {
 		system = 0
 	}
 	date, clock := dosTime(time.Now())
+	// The legacy MS-DOS fields are deliberate: Modified would add an extended-timestamp
+	// extra field that Python's zipfile never writes.
 	fh := &zip.FileHeader{
 		Name: "file.xml", Method: zip.Deflate, CreatorVersion: system<<8 | 20, ReaderVersion: 20,
+		//lint:ignore SA1019 Python zipfile parity (no extended-timestamp extra field)
 		ModifiedDate: date, ModifiedTime: clock, ExternalAttrs: 0o600 << 16,
 		CRC32: crc32.ChecksumIEEE(xml), CompressedSize64: uint64(deflated.Len()), UncompressedSize64: uint64(len(xml)),
 	}
