@@ -1,0 +1,10 @@
+CONTRACT: BIPingable (javax.baja.util)
+TYPE: interface
+============================================================
+EXTENDS: BIAlarmSource
+ALSO EXTENDS: BIObject
+
+IMPLEMENTORS (2):
+
+  BDevice (javax.baja.driver)
+  BDeviceNetwork (javax.baja.driver)

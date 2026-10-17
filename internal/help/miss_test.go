@@ -1,6 +1,7 @@
 package help
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -34,6 +35,7 @@ func TestMisses(t *testing.T) {
 		{"inherited-methods", []string{"inherited-methods", "Zzz"}},
 		{"overrides", []string{"overrides", "Zzz"}},
 		{"api", []string{"api", "Zzz"}},
+		{"contract", []string{"contract", "Zzz"}},
 	}
 	for _, c := range cases {
 		t.Run(c.file, func(t *testing.T) {
@@ -107,5 +109,17 @@ func TestEmptyIndexMisses(t *testing.T) {
 		if err := c.run(e); err != nil || e.misses != 1 || !strings.HasPrefix(out.String(), c.want) {
 			t.Errorf("err %v misses %d out:\n%s", err, e.misses, out.String())
 		}
+	}
+}
+
+func TestCompatibleNeedsEveryIndex(t *testing.T) {
+	dir := t.TempDir()
+	write(t, filepath.Join(dir, "indexes", "class-index.json"), "{}")
+	var out, errb strings.Builder
+	e := &Env{Out: &out, Err: &errb, BaseDir: dir}
+	err := e.Compatible(CompatibleParams{Type: "BStatusNumeric"})
+	var missing *MissingIndexError
+	if !errors.As(err, &missing) || missing.Name != "slots-index.json" || out.Len() != 0 {
+		t.Errorf("err %v, stdout %q; want the missing slots-index.json before any output", err, out.String())
 	}
 }

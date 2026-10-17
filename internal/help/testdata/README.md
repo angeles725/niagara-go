@@ -20,3 +20,8 @@ The Go runner (`internal/golden`) applies `COLUMNS=100` and `NO_COLOR=1` to ever
 case; `PYTHONHASHSEED=0` only fixes Python set order and has no Go counterpart.
 A lookup that misses prints the absolute data root, so miss outputs live in
 `misses/*.txt` with `<TESTDATA>` for that root and are checked by `miss_test.go`.
+
+`compat/` is a second checkout (same registry entry, `data_root` `.`) for the `compatible`
+cases, which run with `"cwd_fixture": "compat"` and were captured with
+`NIAGARA_HELP_DIR=<testdata>/compat`: its class names reach every branch of the name
+heuristics without changing the class-index counts the other cases print.

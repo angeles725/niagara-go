@@ -1,0 +1,24 @@
+{
+ "BStatusNumeric": {
+  "extends": "BStatusValue",
+  "implements": [],
+  "package": "javax.baja.status",
+  "subclasses": [
+   "BStatusNumericEx",
+   "BAnalogStatus"
+  ]
+ },
+ "BStatusValue": {
+  "extends": "BStruct",
+  "implements": [],
+  "package": "javax.baja.status",
+  "subclasses": [
+   "BStatusNumeric"
+  ]
+ },
+ "BNumeric": {
+  "extends": null,
+  "package": "com.acme",
+  "subclasses": []
+ }
+}

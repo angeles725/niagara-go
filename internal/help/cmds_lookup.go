@@ -153,9 +153,15 @@ var memberCommands = []command{
 	{name: "contract", help: "Show interface contract: methods + implementors",
 		args: func(p *argparse.Parser) {
 			positional(p, "name", "Interface name (e.g. BIAlarmSource)")
+		},
+		run: func(e *Env, ns *argparse.Namespace) error {
+			return e.Contract(ContractParams{Name: ns.String("name")})
 		}},
 	{name: "compatible", help: "Find converters, points, and extensions for a type",
 		args: func(p *argparse.Parser) {
 			positional(p, "type", "Type name (e.g. BStatusNumeric)")
+		},
+		run: func(e *Env, ns *argparse.Namespace) error {
+			return e.Compatible(CompatibleParams{Type: ns.String("type")})
 		}},
 }

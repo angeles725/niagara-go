@@ -1,0 +1,5 @@
+CLASS: BIPingable
+PACKAGE: javax.baja.util
+METHODS:
+  ping
+DESCRIPTION: after the methods is not shown

@@ -1,0 +1,102 @@
+{
+ "BStringToStatusNumeric": {
+  "package": "javax.baja.converters",
+  "type": "class",
+  "path": "javax/baja/converters/BStringToStatusNumeric.html"
+ },
+ "BStatusNumeric": {
+  "package": "javax.baja.status",
+  "type": "class",
+  "path": "javax/baja/status/BStatusNumeric.html"
+ },
+ "BNumericWritable": {
+  "package": "javax.baja.control",
+  "type": "class",
+  "path": "javax/baja/control/BNumericWritable.html"
+ },
+ "BStatusValue": {
+  "package": "javax.baja.status",
+  "type": "class",
+  "path": "javax/baja/status/BStatusValue.html"
+ },
+ "BStatus": {
+  "package": "javax.baja.status",
+  "type": "class",
+  "path": "javax/baja/status/BStatus.html"
+ },
+ "BStatusBoolean": {
+  "package": "javax.baja.status",
+  "type": "class",
+  "path": "javax/baja/status/BStatusBoolean.html"
+ },
+ "BStatusNumericToStatusBoolean": {
+  "package": "javax.baja.converters",
+  "type": "class",
+  "path": "javax/baja/converters/BStatusNumericToStatusBoolean.html"
+ },
+ "BStatusNumericConverter": {
+  "package": "javax.baja.converters",
+  "type": "class",
+  "path": "javax/baja/converters/BStatusNumericConverter.html"
+ },
+ "BStatusToString": {
+  "package": "javax.baja.converters",
+  "type": "class",
+  "path": "javax/baja/converters/BStatusToString.html"
+ },
+ "BFromStatus": {
+  "package": "javax.baja.converters",
+  "type": "class",
+  "path": "javax/baja/converters/BFromStatus.html"
+ },
+ "BNumericPoint": {
+  "package": "javax.baja.control",
+  "type": "class",
+  "path": "javax/baja/control/BNumericPoint.html"
+ },
+ "BNumericConst": {
+  "package": "javax.baja.control",
+  "type": "class",
+  "path": "javax/baja/control/BNumericConst.html"
+ },
+ "BBooleanWritable": {
+  "package": "javax.baja.control",
+  "type": "class",
+  "path": "javax/baja/control/BBooleanWritable.html"
+ },
+ "BNumericSchedule": {
+  "package": "javax.baja.schedule",
+  "type": "class",
+  "path": "javax/baja/schedule/BNumericSchedule.html"
+ },
+ "BNumericTotalizerExt": {
+  "package": "javax.baja.control.ext",
+  "type": "class",
+  "path": "javax/baja/control/ext/BNumericTotalizerExt.html"
+ },
+ "BNumericPointExt": {
+  "package": "javax.baja.control.ext",
+  "type": "class",
+  "path": "javax/baja/control/ext/BNumericPointExt.html"
+ },
+ "BNextNumericValue": {
+  "package": "javax.baja.control.ext",
+  "type": "class",
+  "path": "javax/baja/control/ext/BNextNumericValue.html"
+ },
+ "BDiscreteTotalizerExt": {
+  "package": "javax.baja.control.ext",
+  "type": "class",
+  "path": "javax/baja/control/ext/BDiscreteTotalizerExt.html"
+ },
+ "BNumeric": {
+  "package": "com.acme",
+  "type": "class",
+  "path": "com/acme/BNumeric.html"
+ },
+ "numericpointer": {
+  "package": "com.acme",
+  "type": "class",
+  "path": "com/acme/numericpointer.html"
+ }
+}

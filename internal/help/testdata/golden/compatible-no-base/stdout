@@ -1,0 +1,12 @@
+COMPATIBLE: BStatus
+============================================================
+
+TYPE: BStatus (javax.baja.status, class)
+
+CONVERTERS (5):
+
+  BFromStatus (javax.baja.converters)
+  BStatusNumericConverter (javax.baja.converters)
+  BStatusNumericToStatusBoolean (javax.baja.converters)
+  BStatusToString (javax.baja.converters)
+  BStringToStatusNumeric (javax.baja.converters)
