@@ -4,6 +4,8 @@ import (
 	"strconv"
 	"strings"
 	"unicode/utf8"
+
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // The BOG grammar of bognav/model.py (verbatim from the bog-audit.sh D10 engine), hand-compiled:
@@ -63,7 +65,7 @@ func matchTag(s string, i int) (tag, int, bool) {
 		if r >= utf8.RuneSelf {
 			r, size = utf8.DecodeRuneInString(s[k:])
 		}
-		if !isWordRune(r) {
+		if !pycompat.IsWordRune(r) {
 			break
 		}
 		k += size
@@ -71,7 +73,7 @@ func matchTag(s string, i int) (tag, int, bool) {
 	// [^>]*? then (/?)> : the first '>' on the same line closes the tag.
 	e := k
 	for {
-		if e >= len(s) || lineBreakAt(s, e) > 0 {
+		if e >= len(s) || pycompat.LineBreakLen(s, e) > 0 {
 			return tag{}, 0, false
 		}
 		if s[e] == '>' {
@@ -138,7 +140,7 @@ func wordBoundaryBefore(s string, i int) bool {
 		return true
 	}
 	r, _ := utf8.DecodeLastRuneInString(s[:i])
-	return !isWordRune(r)
+	return !pycompat.IsWordRune(r)
 }
 
 // UnescapeName decodes a Niagara SlotPath-escaped name: "$20" -> " ", "$u00e9" -> "é".
