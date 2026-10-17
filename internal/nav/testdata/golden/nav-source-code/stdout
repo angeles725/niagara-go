@@ -1,0 +1,19 @@
+
+  SOURCE: BAlarmService (alarm-rt, 14 lines)
+  PATH:   alarm/alarm-rt/vineflower/javax/baja/alarm/BAlarmService.java
+
+   1 | package javax.baja.alarm;
+   2 | 
+   3 | public class BAlarmService {
+   4 |   public void ackAlarm(BAlarmRecord r) { this.ackAlarm(r, null); }
+   5 |   void line5() {}
+   6 |   // lone cr
+   7 | line7
+   8 |   String s = "caf�";
+   9 |   void veryLong() { ackAlarm(xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx); }
+  10 |   class Inner {}
+  11 |   void ackAlarm(BAlarmRecord r, Object o) {
+  12 |     // ackAlarm twice
+  13 |   }
+  14 | }
+

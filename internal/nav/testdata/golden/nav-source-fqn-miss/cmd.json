@@ -1,0 +1,1 @@
+{"args": ["--base-dir", "fixture/search", "source", "com.y.Entry"], "env": {"NAV_CORPUS_BASE": "fixture/search-organized"}}

@@ -12,7 +12,7 @@ func init() {
 	registry.Register("source", []registry.Command{
 		{Name: "grep", Help: "Regex search across all decompiled sources", Args: argsGrep, Run: runGrep},
 		{Name: "rank", Help: "Classes most relevant to a free-text question (EN/ES), best first", Args: argsRank, Run: runRank},
-		{Name: "source", Help: "Show info or source code for a class", Args: argsSource},
+		{Name: "source", Help: "Show info or source code for a class", Args: argsSource, Run: runSource},
 		{Name: "snippet", Help: "Extract a specific method's source code", Args: argsSnippet},
 		{Name: "imports", Help: "Raw import statements from the .java header (includes externals)", Args: argsImports},
 		{Name: "strings", Help: "Search string literals across source; see also: grep", Description: "Search string literals across source. See also: `grep` for text in the sources.", Args: argsStrings},
