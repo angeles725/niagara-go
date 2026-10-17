@@ -1,0 +1,49 @@
+{
+  "device_ip": "127.0.0.2",
+  "device_subnet": "127.0.0.2/8",
+  "local_ip": "127.0.0.1",
+  "local_on_device_subnet": true,
+  "port": 47931,
+  "tests": {
+    "unicast_device": {
+      "reachable": true,
+      "instance": 1234
+    },
+    "broadcast": {
+      "responders": {
+        "127.0.0.2": [
+          1234
+        ]
+      },
+      "crossed_from_device_subnet": {
+        "127.0.0.2": [
+          1234
+        ]
+      },
+      "same_as_local": {}
+    },
+    "bbmd_probe": {
+      "127.0.0.2": {
+        "is_bbmd": true,
+        "bdt": [
+          [
+            "127.0.0.2:0xBAC0",
+            "255.255.255.255"
+          ],
+          [
+            "10.1.0.1:0xBAC0",
+            "255.255.255.0"
+          ]
+        ],
+        "fdt": [
+          [
+            "10.9.9.9:0xBAC0",
+            60,
+            45
+          ]
+        ]
+      }
+    }
+  },
+  "verdict": "INCONCLUSIVE \u2014 this host is ON the device subnet, so its broadcast never crossed a router. Run it from the supervisor's subnet, or fix --device-prefix."
+}

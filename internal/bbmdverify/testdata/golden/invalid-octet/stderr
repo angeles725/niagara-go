@@ -1,0 +1,1 @@
+bacnet-bbmd-verify: invalid --device-ip/--device-prefix (Octet 256 (> 255) not permitted in '10.0.0.256'); give an IPv4 literal and a prefix 0-32

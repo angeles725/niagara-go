@@ -1,0 +1,34 @@
+{
+  "device_ip": "127.0.0.4",
+  "device_subnet": "127.0.0.4/32",
+  "local_ip": "127.0.0.1",
+  "local_on_device_subnet": false,
+  "port": 47931,
+  "tests": {
+    "unicast_device": {
+      "reachable": false,
+      "instance": null
+    },
+    "broadcast": {
+      "responders": {
+        "127.0.0.2": [
+          1234
+        ]
+      },
+      "crossed_from_device_subnet": {},
+      "same_as_local": {
+        "127.0.0.2": [
+          1234
+        ]
+      }
+    },
+    "bbmd_probe": {
+      "127.0.0.4": {
+        "is_bbmd": false,
+        "bdt": null,
+        "fdt": null
+      }
+    }
+  },
+  "verdict": "INCONCLUSIVE \u2014 the device did not answer even the directed unicast Who-Is. Check --device-ip, --port, firewall, and that you run this on a routed host."
+}

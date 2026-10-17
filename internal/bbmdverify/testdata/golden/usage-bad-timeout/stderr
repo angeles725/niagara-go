@@ -1,0 +1,4 @@
+usage: bacnet-bbmd-verify.py [-h] --device-ip DEVICE_IP [--device-prefix DEVICE_PREFIX]
+                             [--local-bcast LOCAL_BCAST] [--bbmd BBMD] [--port PORT]
+                             [--src-port SRC_PORT] [--timeout TIMEOUT] [--json]
+bacnet-bbmd-verify.py: error: argument --timeout: invalid float value: 'soon'
