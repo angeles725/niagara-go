@@ -1,0 +1,50 @@
+
+  TOKEN: 'ackAlarm' (31 occurrences in 27 classes, 14 modules)
+
+  CLASS                                 LINE  MODULE
+  -----------------------------------------------------------------
+  BAlarmService                            4  alarm-rt
+  BAlarmService                            9  alarm-rt
+  BAlarmService                           11  alarm-rt
+  BAlarmService                           12  alarm-rt
+  package-info                             1  alarm-rt
+  BPrinter                                 3  alarm-se
+  BPrinter                                 4  alarm-se
+  BAVeryLongClassNameThatIsCutAt35...     10  m00-rt
+  BAVeryLongClassNameThatIsCutAt35...     11  m00-rt
+  BAVeryLongClassNameThatIsCutAt35...     12  m00-rt
+  BAVeryLongClassNameThatIsCutAt35...     10  m01-rt
+  BAVeryLongClassNameThatIsCutAt35...     11  m01-rt
+  BAVeryLongClassNameThatIsCutAt35...     10  m02-rt
+  BAVeryLongClassNameThatIsCutAt35...     10  m03-rt
+  BAVeryLongClassNameThatIsCutAt35...     11  m03-rt
+  BAVeryLongClassNameThatIsCutAt35...     12  m03-rt
+  BAVeryLongClassNameThatIsCutAt35...     10  m04-rt
+  BAVeryLongClassNameThatIsCutAt35...     11  m04-rt
+  BAVeryLongClassNameThatIsCutAt35...     10  m05-rt
+  BAVeryLongClassNameThatIsCutAt35...     10  m06-rt
+  BAVeryLongClassNameThatIsCutAt35...     11  m06-rt
+  BAVeryLongClassNameThatIsCutAt35...     12  m06-rt
+  BAVeryLongClassNameThatIsCutAt35...     10  m07-rt
+  BAVeryLongClassNameThatIsCutAt35...     11  m07-rt
+  BAVeryLongClassNameThatIsCutAt35...     10  m08-rt
+  BAVeryLongClassNameThatIsCutAt35...     10  m09-rt
+  BAVeryLongClassNameThatIsCutAt35...     11  m09-rt
+  BAVeryLongClassNameThatIsCutAt35...     12  m09-rt
+  BAVeryLongClassNameThatIsCutAt35...     10  m10-rt
+  BAVeryLongClassNameThatIsCutAt35...     11  m10-rt
+  BAVeryLongClassNameThatIsCutAt35...     10  m11-rt
+
+  Top modules:
+    alarm-rt                                 5 hits,    2 classes
+    m00-rt                                   3 hits,    3 classes
+    m03-rt                                   3 hits,    3 classes
+    m06-rt                                   3 hits,    3 classes
+    m09-rt                                   3 hits,    3 classes
+    alarm-se                                 2 hits,    1 classes
+    m01-rt                                   2 hits,    2 classes
+    m04-rt                                   2 hits,    2 classes
+    m07-rt                                   2 hits,    2 classes
+    m10-rt                                   2 hits,    2 classes
+    ... and 4 more modules
+

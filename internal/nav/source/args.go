@@ -17,7 +17,7 @@ func init() {
 		{Name: "imports", Help: "Raw import statements from the .java header (includes externals)", Args: argsImports},
 		{Name: "strings", Help: "Search string literals across source; see also: grep", Description: "Search string literals across source. See also: `grep` for text in the sources.", Args: argsStrings},
 		{Name: "resources", Help: "List non-Java resources in module JAR", Args: argsResources},
-		{Name: "token", Help: "Exact token search (instant via SQLite index)", Args: argsToken},
+		{Name: "token", Help: "Exact token search (instant via SQLite index)", Args: argsToken, Run: runToken},
 		{Name: "resources-usage", Help: "How resources of a module are used", Args: argsResourcesUsage},
 		{Name: "string-search", Help: "Regex search in indexed string literals (instant via SQLite); see also: grep", Description: "Regex search in indexed string literals (instant via SQLite). See also: `grep` for text in the sources.", Args: argsStringSearch},
 		{Name: "string-constants", Help: "All string literals in a class (categorized)", Args: argsStringConstants},

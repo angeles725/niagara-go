@@ -1,0 +1,49 @@
+
+  TOKEN: 'ackAlarm' (31 occurrences in 27 classes, 14 modules)
+
+  --- BAlarmService (alarm-rt) ---
+          2: 
+          3: public class BAlarmService {
+   >>     4:   public void ackAlarm(BAlarmRecord r) { this.ackAlarm(r, null); }
+          5:   void line5() {}
+          6:   // lone cr
+          7: line7
+          8:   String s = "caf�";
+   >>     9:   void veryLong() { ackAlarm(xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx...
+         10:   class Inner {}
+         11:   void ackAlarm(BAlarmRecord r, Object o) {
+          9:   void veryLong() { ackAlarm(xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx...
+         10:   class Inner {}
+   >>    11:   void ackAlarm(BAlarmRecord r, Object o) {
+         12:     // ackAlarm twice
+         13:   }
+         10:   class Inner {}
+         11:   void ackAlarm(BAlarmRecord r, Object o) {
+   >>    12:     // ackAlarm twice
+         13:   }
+         14: }
+
+
+  --- package-info (alarm-rt) ---
+   >>     1: package javax.baja.alarm; // ackAlarm
+
+
+  --- BPrinter (alarm-se) ---
+          1: package com.x;
+          2: public class BPrinter {
+   >>     3:   void p() { ackAlarm(); }
+          4:   void ackAlarm() {}
+          5: }
+          2: public class BPrinter {
+          3:   void p() { ackAlarm(); }
+   >>     4:   void ackAlarm() {}
+          5: }
+
+
+  --- BAVeryLongClassNameThatIsCutAt35Chars0 (m00-rt) ---
+       10: (source not available)
+
+  --- BAVeryLongClassNameThatIsCutAt35Chars1 (m00-rt) ---
+       11: (source not available)
+  ... and 22 more (use -n 31 to see all)
+

@@ -1,0 +1,11 @@
+
+  TOKEN: 'Entry' (2 occurrences in 1 classes, 1 modules)
+
+  CLASS                                 LINE  MODULE
+  -----------------------------------------------------------------
+  Entry                                    3  alarm-rt
+  Entry                                    3  alarm-rt
+
+  Top modules:
+    alarm-rt                                 2 hits,    1 classes
+
