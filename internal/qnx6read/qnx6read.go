@@ -13,6 +13,7 @@ import (
 	"syscall"
 
 	"github.com/angeles725/niagara-go/internal/cli"
+	"github.com/angeles725/niagara-go/internal/honest"
 )
 
 // Extract names one file to copy out of the image.
@@ -72,10 +73,9 @@ func strerror(err error) string {
 	return err.Error()
 }
 
-// fail writes "qnx6read: <message>" to stderr and returns code.
+// fail writes "qnx6read: <message>" to stderr and returns code (honest.Fail with a format).
 func fail(s cli.Stdio, code int, format string, a ...any) int {
-	fmt.Fprintf(s.Err, "qnx6read: "+format+"\n", a...)
-	return code
+	return honest.Fail(s.Err, "qnx6read", fmt.Sprintf(format, a...), code)
 }
 
 // Run executes one qnx6read invocation and returns its exit code: 0 ok, 1 listing incomplete

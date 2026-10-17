@@ -14,6 +14,7 @@ import (
 	"syscall"
 
 	"github.com/angeles725/niagara-go/internal/cli"
+	"github.com/angeles725/niagara-go/internal/honest"
 )
 
 // Options is the parsed command line. Empty strings mean "not given" (Python None).
@@ -83,13 +84,11 @@ func Run(o Options, s cli.Stdio) int {
 		fmt.Fprintln(s.Err, err)
 		return cli.ExitNoMatch
 	case err != nil:
-		fmt.Fprintf(s.Err, "px-render: %v\n", err)
-		return cli.ExitCannotSearch
+		return honest.Fail(s.Err, "px-render", err.Error(), honest.ExitInput)
 	}
 	if o.Out != "" {
 		if err := os.WriteFile(o.Out, []byte(page), 0o666); err != nil {
-			fmt.Fprintf(s.Err, "px-render: cannot write %s: %s\n", o.Out, strerror(err))
-			return cli.ExitCannotSearch
+			return honest.Fail(s.Err, "px-render", fmt.Sprintf("cannot write %s: %s", o.Out, strerror(err)), honest.ExitInput)
 		}
 		fmt.Fprintf(s.Out, "wrote %s  (%d widgets, %d assets, %.2f MB, canvas %sx%s)\n", o.Out, res.widgets,
 			res.assets, float64(len(page))/1048576, res.canvasW, res.canvasH)
@@ -104,7 +103,7 @@ func Run(o Options, s cli.Stdio) int {
 		io.WriteString(s.Out, page)
 	}
 	for _, n := range res.notImages {
-		fmt.Fprintf(s.Err, "px-render: %s\n", n)
+		fmt.Fprintf(s.Err, "px-render: %s\n", n) // a warning: the render goes on
 	}
 	writeDropped(s.Err, res.dropped)
 	return cli.ExitFound

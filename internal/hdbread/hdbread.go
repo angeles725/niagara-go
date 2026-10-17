@@ -14,6 +14,7 @@ import (
 	"syscall"
 
 	"github.com/angeles725/niagara-go/internal/cli"
+	"github.com/angeles725/niagara-go/internal/honest"
 )
 
 // Options is the parsed command line. The caller validates it (JSON needs Records).
@@ -111,8 +112,7 @@ func strerror(err error) string {
 func Run(o Options, s cli.Stdio) int {
 	data, err := os.ReadFile(o.Path)
 	if err != nil {
-		fmt.Fprintf(s.Err, "hdbread: cannot read %s: %s\n", o.Path, strerror(err))
-		return cli.ExitCannotSearch
+		return honest.Fail(s.Err, "hdbread", fmt.Sprintf("cannot read %s: %s", o.Path, strerror(err)), honest.ExitInput)
 	}
 	if o.Records {
 		return runRecords(o, data, s)
@@ -152,7 +152,7 @@ func runRecords(o Options, data []byte, s cli.Stdio) int {
 		if errors.As(err, &exit) {
 			fmt.Fprintln(s.Err, err)
 		} else {
-			fmt.Fprintf(s.Err, "hdbread: --records: %s\n", err)
+			honest.Fail(s.Err, "hdbread", "--records: "+err.Error(), cli.ExitNoMatch)
 		}
 		return cli.ExitNoMatch
 	}

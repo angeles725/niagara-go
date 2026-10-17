@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/cli"
+	"github.com/angeles725/niagara-go/internal/honest"
 )
 
 const selftestPx = `<?xml version="1.0" encoding="UTF-8"?>
@@ -26,8 +27,7 @@ const onePixelPNG = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP
 // root (missing images must not crash). Unlike the Python selftest it removes its temp dirs.
 func selftest(s cli.Stdio) int {
 	if err := runSelftest(); err != nil {
-		fmt.Fprintf(s.Err, "px-render: selftest failed: %v\n", err)
-		return cli.ExitNoMatch
+		return honest.Fail(s.Err, "px-render", "selftest failed: "+err.Error(), cli.ExitNoMatch)
 	}
 	fmt.Fprintln(s.Out, "selftest OK — canvas 400x300, 3 widgets embedded; missing-asset path safe")
 	return cli.ExitFound

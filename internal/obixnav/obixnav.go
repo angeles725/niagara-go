@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/cli"
+	"github.com/angeles725/niagara-go/internal/honest"
 )
 
 // Options is the parsed command line.
@@ -39,8 +40,7 @@ func Run(o Options, s cli.Stdio) int {
 	}
 	raw, err := os.ReadFile(o.PassFile)
 	if err != nil {
-		fmt.Fprintf(s.Err, "obix-nav: cannot read %s: %v\n", o.PassFile, err)
-		return cli.ExitCannotSearch
+		return honest.Fail(s.Err, "obix-nav", fmt.Sprintf("cannot read %s: %v", o.PassFile, err), honest.ExitInput)
 	}
 	base := strings.TrimRight(o.Base, "/")
 	r := &runner{o: o, c: newClient(base, pyStrip(string(raw))), s: s}
@@ -48,8 +48,7 @@ func Run(o Options, s cli.Stdio) int {
 		"config": r.cmdConfig, "read": r.cmdRead, "dump": r.cmdDump}
 	cmd, ok := cmds[o.Command]
 	if !ok {
-		fmt.Fprintf(s.Err, "obix-nav: unknown command %q\n", o.Command)
-		return cli.ExitCannotSearch
+		return honest.Fail(s.Err, "obix-nav", fmt.Sprintf("unknown command %q", o.Command), honest.ExitInput)
 	}
 	err = cmd()
 	var ve valueError
@@ -57,11 +56,9 @@ func Run(o Options, s cli.Stdio) int {
 	case err == nil:
 		return cli.ExitFound
 	case errors.As(err, &ve):
-		fmt.Fprintf(s.Err, "obix-nav: %s: %s\n", o.Command, err)
-	default:
-		fmt.Fprintf(s.Err, "obix-nav: %s failed against %s: %s\n", o.Command, base, err)
+		return honest.Fail(s.Err, "obix-nav", o.Command+": "+err.Error(), honest.ExitInput)
 	}
-	return cli.ExitCannotSearch
+	return honest.Fail(s.Err, "obix-nav", fmt.Sprintf("%s failed against %s: %s", o.Command, base, err), honest.ExitInput)
 }
 
 func (r *runner) cmdRead() error {
