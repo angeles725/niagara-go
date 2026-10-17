@@ -31,6 +31,15 @@ func TestLoadsErrorsMirrorJSONDecodeError(t *testing.T) {
 		"-":            "Expecting value: line 1 column 1 (char 0)",
 		"[1 2]":        "Expecting ',' delimiter: line 1 column 4 (char 3)",
 		`{"k": "v" x}`: "Expecting ',' delimiter: line 1 column 11 (char 10)",
+		// A \uXXXX escape (or a surrogate pair) that ends the input is complete: the
+		// string is then unterminated (CPython 3.15 checks end > len, not end >= len).
+		`"x\u00e9`:      "Unterminated string starting at: line 1 column 1 (char 0)",
+		`"\ud83d\ude00`: "Unterminated string starting at: line 1 column 1 (char 0)",
+		`"\ud83d`:       "Unterminated string starting at: line 1 column 1 (char 0)",
+		`"x\u00e`:       "Invalid \\uXXXX escape: line 1 column 4 (char 3)",
+		`"\ud83d\ude0`:  "Invalid \\uXXXX escape: line 1 column 9 (char 8)",
+		`"\ud83d\u`:     "Invalid \\uXXXX escape: line 1 column 9 (char 8)",
+		`"\ud83d\uzz00`: "Invalid \\uXXXX escape: line 1 column 9 (char 8)",
 	}
 	for in, want := range cases {
 		if _, err := Loads([]rune(in)); err == nil || err.Error() != want {

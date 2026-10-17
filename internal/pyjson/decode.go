@@ -388,12 +388,12 @@ func (p *jsonScanner) scanString(end int) (string, int) {
 		}
 		next++
 		end = next + 4
-		if end >= len(s) {
+		if end > len(s) {
 			p.fail("Invalid \\uXXXX escape", next-1)
 		}
 		u := p.hex4(next, end)
 		next = end
-		if u >= 0xD800 && u <= 0xDBFF && end+6 < len(s) && s[next] == '\\' && s[next+1] == 'u' {
+		if u >= 0xD800 && u <= 0xDBFF && end+6 <= len(s) && s[next] == '\\' && s[next+1] == 'u' {
 			end += 6
 			u2 := p.hex4(next+2, end)
 			if u2 >= 0xDC00 && u2 <= 0xDFFF {
