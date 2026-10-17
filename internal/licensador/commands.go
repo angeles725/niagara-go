@@ -34,14 +34,14 @@ func finish(s cli.Stdio, code int, err error) int {
 func readASCII(path string) (string, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return "", errors.New(pyOSError(err, path))
+		return "", errors.New(pycompat.OSErrorText(err))
 	}
 	return decodeASCII(data)
 }
 
 func writeText(path, text string) error {
 	if err := os.WriteFile(path, []byte(text), 0o666); err != nil {
-		return errors.New(pyOSError(err, path))
+		return errors.New(pycompat.OSErrorText(err))
 	}
 	return nil
 }
@@ -310,7 +310,7 @@ func RunRevoke(key, serial, out string, s cli.Stdio) int {
 // RunGenkeys mirrors cmd_genkeys (unencrypted PKCS#8 + SubjectPublicKeyInfo).
 func RunGenkeys(outDir string, bits int, s cli.Stdio) int {
 	if err := os.MkdirAll(outDir, 0o777); err != nil {
-		return finish(s, 0, errors.New(pyOSError(err, outDir)))
+		return finish(s, 0, errors.New(pycompat.OSErrorText(err)))
 	}
 	key, err := generateKey(bits)
 	if err != nil {
