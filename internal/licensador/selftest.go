@@ -1,6 +1,7 @@
 package licensador
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -10,6 +11,20 @@ import (
 	"github.com/angeles725/niagara-go/internal/cli"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 )
+
+// selftestFeature is the selftest's check_feature(cl, name, qty)[0]. A failed
+// A5 verify leaves cl nil, where Python raises AttributeError on None.get; it
+// panics with that error (or CheckFeature's) for RunSelftest to report.
+func selftestFeature(cl *pyjson.Value, name string, qty int64) string {
+	if cl == nil {
+		panic(errors.New("AttributeError: 'NoneType' object has no attribute 'get'"))
+	}
+	code, _, err := CheckFeature(*cl, name, qty)
+	if err != nil {
+		panic(err)
+	}
+	return code
+}
 
 // RunSelftest mirrors cmd_selftest: the A1..A10 acceptance matrix with a
 // fresh key, a fixed clock and a state file under tmp. Exit 0 when all pass.
@@ -89,18 +104,14 @@ func RunSelftest(tmp string, bits int, s cli.Stdio) (exit int) {
 	bad[1] = b64u(payload)
 	expect("A3 tamper payload", ESignature, v(strings.Join(bad, "."), VerifyOpts{}))
 	expect("A4 expirada", ETimeExpired, v(art(claims(map[string]pyjson.Value{"expires": pyjson.String("2026-01-01T00:00:00+00:00")})), VerifyOpts{}))
-	_, cl, _ := Verify(pub, art(claims(nil)), VerifyOpts{Product: &product, Host: &host, Now: now})
-	feature := func(name string, qty int64) string {
-		code, _, err := CheckFeature(*cl, name, qty)
-		if err != nil {
-			panic(err)
-		}
-		return code
+	_, cl, err := Verify(pub, art(claims(nil)), VerifyOpts{Product: &product, Host: &host, Now: now})
+	if err != nil {
+		panic(err)
 	}
-	expect("A5 feature faltante", EFeatureLocked, feature("nope", 1))
-	expect("A6 qty insuficiente", EFeatureQty, feature("pid", 9))
-	expect("A6b qty justa", OK, feature("pid", 4))
-	expect("A6c qty ilimitada", OK, feature("logging", 999))
+	expect("A5 feature faltante", EFeatureLocked, selftestFeature(cl, "nope", 1))
+	expect("A6 qty insuficiente", EFeatureQty, selftestFeature(cl, "pid", 9))
+	expect("A6b qty justa", OK, selftestFeature(cl, "pid", 4))
+	expect("A6c qty ilimitada", OK, selftestFeature(cl, "logging", 999))
 	rev := claims(map[string]pyjson.Value{"serial": pyjson.String("DEADBEEF001")})
 	bl := art(revocation([]string{"DEADBEEF001"}, "2026-08-01T00:00:00+00:00"))
 	if err := writeText(filepath.Join(tmp, "bl.refl"), bl+"\n"); err != nil {
