@@ -1,0 +1,2 @@
+usage: obix-nav.py map [-h] [--room ROOM] [--json]
+obix-nav.py map: error: argument --room: invalid int value: 'x'

@@ -1,0 +1,3 @@
+usage: obix-nav.py [-h] [--base BASE] [--pass-file PASS_FILE]
+                   {map,cond,wiring,config,read,dump} ...
+obix-nav.py: error: the following arguments are required: cmd

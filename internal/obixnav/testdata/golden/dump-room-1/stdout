@@ -1,0 +1,7 @@
+=== Cuarto1 facade (5 slots) ===
+  evapTemp1                  ('real', '3.5')
+  evap1Setpoint              ('real', '2.0')
+  modo                       ('enum', 'auto')
+  nombre                     ('str', 'Cámara 1 &amp; ')
+  evap9Gone                  ('err', None)
+  units rt: ['EvaporatorUnit_1', 'EvaporatorUnit_2']

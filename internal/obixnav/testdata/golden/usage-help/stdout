@@ -1,0 +1,10 @@
+usage: obix-nav.py [-h] [--base BASE] [--pass-file PASS_FILE]
+                   {map,cond,wiring,config,read,dump} ...
+
+positional arguments:
+  {map,cond,wiring,config,read,dump}
+
+options:
+  -h, --help            show this help message and exit
+  --base BASE
+  --pass-file PASS_FILE

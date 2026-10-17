@@ -1,0 +1,6 @@
+
+=== Cuarto2 (ColdRoom_2) — 1 evaporador(es) — mapeo: directo ===
+  dash evap1  ->  EvaporatorUnit
+  defrost: room-level DefrostController=no | per-evap=0/1 []
+ Diferencias/faltantes:
+  DIFF  evap1 evap1DifferentialUp=1  !=  rt evapDifferentialUp=abc

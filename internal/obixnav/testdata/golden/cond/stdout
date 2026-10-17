@@ -1,0 +1,13 @@
+=== Condensadoras facade vs CompressorControl ===
+  OK       highPressure   facade=250.0  rt=250.0  [dischargePressure]
+  OK       lowPressure1   facade=20.5  rt=20.5  [suctionPressure]
+  DIFF     lowPressure2   facade=21.0  rt=20.9  [suctionPressure2]
+  OK       amps1          facade=12.1  rt=12.1  [amps1]
+  OK       amps2          facade=13.0  rt=13.0  [amps2]
+  MISSING  amps3          facade=None  rt=11.0  [amps3]
+  OK       hours1         facade=65  rt=65  [condenser1Hours]
+  OK       hours2         facade=66  rt=66  [condenser2Hours]
+  MISSING  hours3         facade=64  rt=None  [condenser3Hours]
+  OK       comp1State     facade=true  rt=true  [condenser1]
+  OK       comp2State     facade=false  rt=false  [condenser2]
+  OK       comp3State     facade=true  rt=true  [condenser3]

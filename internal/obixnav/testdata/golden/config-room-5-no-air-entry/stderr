@@ -1,0 +1,13 @@
+Traceback (most recent call last):
+  File "/home/cristian/niagara-research/tools/obix-nav.py", line 443, in <module>
+    main()
+    ~~~~^^
+  File "/home/cristian/niagara-research/tools/obix-nav.py", line 435, in main
+    {"map": cmd_map, "cond": cmd_cond, "wiring": cmd_wiring, "config": cmd_config, "read": cmd_read,
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     "dump": cmd_dump}[a.cmd](a, base, pw)
+     ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/home/cristian/niagara-research/tools/obix-nav.py", line 337, in cmd_config
+    cr = ROOMS[ri]; air = ROOM_AIR[ri]
+                          ~~~~~~~~^^^^
+KeyError: 5

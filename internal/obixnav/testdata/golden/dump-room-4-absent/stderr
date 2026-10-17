@@ -1,0 +1,2 @@
+obix-nav: 404 http://127.0.0.1:47913/obix/config/Programacion/ColdRoom_4/ (component absent; read as empty)
+obix-nav: dump failed against http://127.0.0.1:47913/obix: HTTP Error 404: Not Found

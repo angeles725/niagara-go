@@ -1,0 +1,8 @@
+
+=== Cuarto3 (ColdRoom_3) — RESISTENCIA (−20) ===
+  -- EvaporatorUnit_1 --  sp=None diffUp=2.0 diffDn=-1.0 cool=None | freeze prot=None sp=None stop=None rest=None | hasDef=true air=true fan=None startDelay=None
+      defrost: mode=resistance interval=PT8H duration=PT45M term=false thr=0.0 stagger=None
+      ⚠ airDefrost=true (debe False)
+      ⚠ evapDifferentialDown=0 (sin histéresis)
+      ⚠ terminateOnResistanceTemp=false (Cuarto3 debe true)
+      ⚠ resistanceTempThreshold=0 (Cuarto3 lo necesita)
