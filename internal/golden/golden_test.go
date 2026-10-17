@@ -20,6 +20,9 @@ func toy(args []string, s cli.Stdio) int {
 		data, _ := io.ReadAll(s.In)
 		fmt.Fprintf(s.Err, "no match in %d bytes\n", len(data))
 		return cli.ExitNoMatch
+	case "--crash":
+		fmt.Fprintln(s.Err, "toy: boom")
+		return cli.ExitCannotSearch
 	case "--env":
 		wd, _ := os.Getwd()
 		fmt.Fprintf(s.Out, "COLUMNS=%s NO_COLOR=%s cwd=%s\n", os.Getenv("COLUMNS"), os.Getenv("NO_COLOR"), filepath.Base(wd))
@@ -118,4 +121,45 @@ func TestExecModeRunsBinary(t *testing.T) {
 	}
 	t.Setenv(BinEnv, rel)
 	Run(t, "testdata", nil)
+}
+
+func TestIntendedRequiresReasonAndAnOverride(t *testing.T) {
+	for name, body := range map[string]string{
+		"no-reason": `{"exit": 2}`,
+		"blank":     `{"reason": "  ", "exit": 2}`,
+		"no-change": `{"reason": "x"}`,
+		"bad-field": `{"reason": "x", "code": 2}`,
+	} {
+		t.Run(name, func(t *testing.T) {
+			dir := t.TempDir()
+			c := filepath.Join(dir, "golden", "case")
+			if err := os.MkdirAll(c, 0o755); err != nil {
+				t.Fatal(err)
+			}
+			write(t, filepath.Join(c, "cmd.json"), `{"args":[]}`)
+			write(t, filepath.Join(c, "stdout"), "")
+			write(t, filepath.Join(c, "exit"), "1")
+			write(t, filepath.Join(c, "intended.json"), body)
+			if _, err := Load(dir); err == nil {
+				t.Fatalf("intended.json %s accepted", body)
+			}
+		})
+	}
+}
+
+func TestIntendedOverridesThePythonExpectation(t *testing.T) {
+	cases, err := Load("testdata")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, c := range cases {
+		if c.Name != "intended-crash" {
+			continue
+		}
+		if c.Intended == nil || c.Exit != 2 || string(c.Stderr) != "toy: boom\n" {
+			t.Fatalf("override not applied: %+v", c)
+		}
+		return
+	}
+	t.Fatal("intended-crash case missing")
 }
