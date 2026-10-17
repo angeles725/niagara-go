@@ -274,21 +274,7 @@ func TestKeytoolTimeoutIsASkip(t *testing.T) {
 
 // The real runner kills a keytool that outlives keytoolTimeout instead of waiting for it.
 func TestStalledKeytoolIsKilled(t *testing.T) {
-	if runtime.GOOS == "windows" {
-		t.Skip("the fake keytool is a shell script")
-	}
-	sleep, err := exec.LookPath("sleep")
-	if err != nil {
-		t.Skip("no sleep on PATH")
-	}
-	bin := t.TempDir()
-	if err := os.WriteFile(filepath.Join(bin, "keytool"), []byte("#!/bin/sh\nexec "+sleep+" 30\n"), 0o755); err != nil {
-		t.Fatal(err)
-	}
-	t.Setenv("PATH", bin)
-	saved := keytoolTimeout
-	keytoolTimeout = 200 * time.Millisecond
-	defer func() { keytoolTimeout = saved }()
+	fakeKeytool(t, 200*time.Millisecond, func(sleep, _ string) string { return "exec " + sleep + " 30\n" })
 	start := time.Now()
 	o, err := defaultEnv().keytoolList("ts.jks", false)
 	if err != nil || o.opened || o.wrongPass || o.failure != "timed out after 0.2 s" {
@@ -297,4 +283,27 @@ func TestStalledKeytoolIsKilled(t *testing.T) {
 	if d := time.Since(start); d > 10*time.Second {
 		t.Errorf("keytoolList took %s", d)
 	}
+}
+
+// fakeKeytool makes a shell script the only keytool on PATH and keytoolTimeout timeout for the
+// test. body gets the path of sleep and the script's directory and returns the script after the
+// shebang line. It skips where the fake cannot run: Windows, or no sleep on PATH.
+func fakeKeytool(t *testing.T, timeout time.Duration, body func(sleep, dir string) string) string {
+	t.Helper()
+	if runtime.GOOS == "windows" {
+		t.Skip("the fake keytool is a shell script")
+	}
+	sleep, err := exec.LookPath("sleep")
+	if err != nil {
+		t.Skip("no sleep on PATH")
+	}
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "keytool"), []byte("#!/bin/sh\n"+body(sleep, dir)), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("PATH", dir)
+	saved := keytoolTimeout
+	keytoolTimeout = timeout
+	t.Cleanup(func() { keytoolTimeout = saved })
+	return dir
 }
