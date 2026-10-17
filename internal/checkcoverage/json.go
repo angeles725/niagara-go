@@ -38,7 +38,9 @@ func jsonString(s string) string {
 }
 
 // jsonReport is the --json document, json.dumps(..., indent=2, ensure_ascii=False).
-func jsonReport(results map[string]*coverage, order []string, nfiles int, covered bool) string {
+// With unreadable block files it adds "unreadable_blocks" and an uncovered run is
+// "incomplete" rather than "clear" (intended difference: Python skips them silently).
+func jsonReport(results map[string]*coverage, order []string, nfiles, unreadable int, covered bool) string {
 	var b strings.Builder
 	hits := func(name string, hs []hit, last bool) {
 		fmt.Fprintf(&b, "      %s: ", jsonString(name))
@@ -73,9 +75,16 @@ func jsonReport(results map[string]*coverage, order []string, nfiles int, covere
 		b.WriteString("\n")
 	}
 	verdict := "clear"
-	if covered {
+	switch {
+	case covered:
 		verdict = "prior-coverage-found"
+	case unreadable > 0:
+		verdict = "incomplete"
 	}
-	fmt.Fprintf(&b, "  },\n  \"verdict\": %s\n}", jsonString(verdict))
+	b.WriteString("  },\n")
+	if unreadable > 0 {
+		fmt.Fprintf(&b, "  \"unreadable_blocks\": %d,\n", unreadable)
+	}
+	fmt.Fprintf(&b, "  \"verdict\": %s\n}", jsonString(verdict))
 	return b.String()
 }

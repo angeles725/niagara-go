@@ -121,33 +121,44 @@ func setKeys(set map[string]bool) []string {
 
 // buildGraph is graph.build_graph: block A -> B when A's text cites B; unreadable blocks
 // are left out; citations of B1-B3 land on "1-3"; bare mentions only reach existing blocks.
+// Intended difference: block files sharing a label (bloque4.md, bloque4-extra.md) are one
+// node citing the union of their files (Python lists the node twice, keeps the last
+// file's citations only and doubles the reverse entries); a label with any unreadable
+// file is unreadable, once.
 func buildGraph(blocks []blockFile, bare bool) *graph {
 	g := &graph{forward: map[string][]string{}, reverse: map[string][]string{}}
-	texts := map[string]string{}
+	texts := map[string][]string{}
+	known, bad := map[string]bool{}, map[string]bool{}
+	var labels []string // distinct labels in block order
 	for _, b := range blocks {
+		if !known[b.label] {
+			known[b.label] = true
+			labels = append(labels, b.label)
+		}
 		if text, ok := readText(b.path); ok {
-			texts[b.label] = text
-		} else {
+			texts[b.label] = append(texts[b.label], text)
+		} else if !bad[b.label] {
+			bad[b.label] = true
 			g.unreadable = append(g.unreadable, b.label)
 		}
 	}
-	known := map[string]bool{}
-	for _, b := range blocks {
-		if _, ok := texts[b.label]; ok {
-			g.nodes = append(g.nodes, b.label)
-			g.reverse[b.label] = []string{}
+	for _, label := range labels {
+		if !bad[label] {
+			g.nodes = append(g.nodes, label)
+			g.reverse[label] = []string{}
 		}
-		known[b.label] = true
 	}
 	for _, label := range g.nodes {
 		cited := map[string]bool{}
-		for n := range refsInText(texts[label], false) {
-			cited[resolveLabel(n, known)] = true
-		}
-		if bare {
-			for n := range refsInText(texts[label], true) {
-				if t := resolveLabel(n, known); known[t] {
-					cited[t] = true
+		for _, text := range texts[label] {
+			for n := range refsInText(text, false) {
+				cited[resolveLabel(n, known)] = true
+			}
+			if bare {
+				for n := range refsInText(text, true) {
+					if t := resolveLabel(n, known); known[t] {
+						cited[t] = true
+					}
 				}
 			}
 		}

@@ -8,6 +8,7 @@ package modulefind
 
 import (
 	"fmt"
+	"math"
 	"os"
 	"sort"
 	"strings"
@@ -29,14 +30,17 @@ var (
 
 // positiveInt is cliflags.positive_int: a whole number >= 1.
 var positiveInt = &argparse.Type{Name: "positive_int", Convert: func(s string) (any, error) {
-	n, err := pycompat.ParseInt(s)
+	n, err := pycompat.ParseBigInt(s)
 	if err != nil {
 		return nil, argparse.NewTypeError("invalid int value: %s", pycompat.StrRepr(s))
 	}
-	if n < 1 {
-		return nil, argparse.NewTypeError("must be at least 1, not %d", n)
+	if n.Sign() < 1 {
+		return nil, argparse.NewTypeError("must be at least 1, not %s", n)
 	}
-	return int(n), nil
+	if !n.IsInt64() || n.Int64() > math.MaxInt {
+		return math.MaxInt, nil // Python's int has no bound: a huge --limit caps nothing
+	}
+	return int(n.Int64()), nil
 }}
 
 // regexType is modulefind.sources.regex_type: a Python regex that compiles (IGNORECASE).

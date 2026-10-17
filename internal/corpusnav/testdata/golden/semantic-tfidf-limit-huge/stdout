@@ -1,0 +1,5 @@
+[backend: tfidf (forced by --tfidf)]
+B4 · Enrutamiento de alarmas   (score 0.351)
+  » # Niagara N4 — Bloque 4: Alarm routing
+B6 · Security incident review   (score 0.195)
+  » The incident touched alarm recipients and user accounts [CERT+INFER] [CERT*].

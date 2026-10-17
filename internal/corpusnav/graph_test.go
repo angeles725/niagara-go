@@ -1,6 +1,10 @@
 package corpusnav
 
-import "testing"
+import (
+	"os"
+	"strings"
+	"testing"
+)
 
 // Expected outputs: corpus-nav.json of the Python golden.
 
@@ -41,5 +45,37 @@ func TestParseLabel(t *testing.T) {
 		if got := parseLabel(in); got != want {
 			t.Errorf("parseLabel(%q) = %q, want %q", in, got, want)
 		}
+	}
+}
+
+// TestSharedLabelIsOneNode: two block files with one label (bloque4.md and
+// bloque4-extra.md). Python lists the node twice, keeps only the last file's citations
+// (a false negative) and doubles every reverse entry. Intended difference: one node
+// whose citations are the union of its files.
+func TestSharedLabelIsOneNode(t *testing.T) {
+	c, out, errb, root := copyCorpus(t)
+	extra := "# Niagara N4 — Bloque 4: extra\nSee [B6] and [B9].\n"
+	if err := os.WriteFile(root+"/niagara-mental-model-bloque4-extra.md", []byte(extra), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	want := `{"nodes": ["B1-3", "B4", "B5", "B6", "BTI"], ` +
+		`"forward": {"B1-3": [], "B4": ["B5", "B6", "B9"], "B5": ["B1-3", "B4", "B77"], "B6": [], "BTI": []}, ` +
+		`"reverse": {"B1-3": ["B5"], "B4": ["B5"], "B5": ["B4"], "B6": ["B4"], "B9": ["B4"], "B77": ["B5"], "BTI": []}, ` +
+		`"dangling": ["B9", "B77"], "unreadable": [], "stats": {"nodes": 5, "edges": 6, "dangling": 2, "unreadable": 0}}` + "\n"
+	if code := c.cmdGraph(true, 10, false); code != 0 || out.String() != want || errb.Len() != 0 {
+		t.Errorf("graph --json: exit %d\n%s\nwant\n%s\nstderr %q", code, out.String(), want, errb.String())
+	}
+}
+
+// TestSharedLabelUnreadableFile: a label with one unreadable file has unknown edges, so
+// it is reported once and left out of the nodes, like any unreadable block.
+func TestSharedLabelUnreadableFile(t *testing.T) {
+	c, out, _, root := copyCorpus(t)
+	if err := os.Mkdir(root+"/niagara-mental-model-bloque4-extra.md", 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if code := c.cmdGraph(true, 10, false); code != 2 || !strings.HasPrefix(out.String(), `{"nodes": ["B1-3", "B5", "B6", "BTI"], `) ||
+		!strings.Contains(out.String(), `"unreadable": ["B4"], `) {
+		t.Errorf("graph --json: exit %d, %s", code, out.String())
 	}
 }

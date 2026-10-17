@@ -1,6 +1,7 @@
 package pyre
 
 import (
+	"fmt"
 	"reflect"
 	"strings"
 	"testing"
@@ -11,6 +12,7 @@ type matchFixture struct {
 	Cases    []struct {
 		Pattern string     `json:"pattern"`
 		Flags   Flags      `json:"flags"`
+		Error   string     `json:"error"`
 		Search  [][][]int  `json:"search"`
 		FindAll [][]string `json:"findall"`
 	} `json:"cases"`
@@ -18,13 +20,38 @@ type matchFixture struct {
 
 // TestMatches compares the search spans and findall of every valid pattern with what
 // CPython's re produced (testdata/gen.py).
-func TestMatches(t *testing.T) {
+func TestMatches(t *testing.T) { checkMatches(t, "testdata/matches.json", nil) }
+
+// TestFlagMatches pins IGNORECASE, re.ASCII, ASCII|IGNORECASE and the \b / \B
+// boundaries on the characters whose folding or word class differs between Unicode and
+// ASCII matching (testdata/flags.json). knownFolding lists the documented IGNORECASE
+// differences (package doc); a listed case that starts to agree fails too.
+func TestFlagMatches(t *testing.T) { checkMatches(t, "testdata/flags.json", knownFolding) }
+
+// knownFolding is "pattern|flags|subject" for the Unicode IGNORECASE folds Python makes
+// and .NET's simple lower-casing does not (package doc, Known differences).
+var knownFolding = map[string]bool{
+	"i|2|\u0131": true, "I|2|\u0131": true, "[a-z]+|2|\u0131": true, "[A-Z]+|2|\u0131": true, "[^a-z]|2|\u0131": true,
+	"s|2|\u017f": true, "S|2|\u017f": true, "[a-z]+|2|\u017f": true, "[A-Z]+|2|\u017f": true, "[^a-z]|2|\u017f": true,
+	"[s-t]|2|\u017f":                true,
+	"\u00b5|2|\u00b5 \u03bc \u039c": true, "\u03bc|2|\u00b5 \u03bc \u039c": true,
+	"\u03c3|2|\u03a3\u0391\u03a3 \u03c3\u03b1\u03c2": true,
+}
+
+func checkMatches(t *testing.T, path string, known map[string]bool) {
+	t.Helper()
 	var f matchFixture
-	loadJSON(t, "testdata/matches.json", &f)
+	loadJSON(t, path, &f)
+	if len(f.Cases) == 0 {
+		t.Fatalf("%s: no cases", path)
+	}
+	seen := map[string]bool{}
 	for _, c := range f.Cases {
 		re, err := Compile(c.Pattern, c.Flags)
-		if err != nil {
-			t.Errorf("Compile(%q, %d): %v", c.Pattern, c.Flags, err)
+		if c.Error != "" || err != nil {
+			if err == nil || err.Error() != c.Error {
+				t.Errorf("Compile(%q, %d) error = %v, want %q", c.Pattern, c.Flags, err, c.Error)
+			}
 			continue
 		}
 		for i, s := range f.Subjects {
@@ -38,17 +65,32 @@ func TestMatches(t *testing.T) {
 					}
 				}
 			}
+			key := fmt.Sprintf("%s|%d|%s", c.Pattern, c.Flags, s)
+			var diffs []string
 			if !reflect.DeepEqual(got, c.Search[i]) {
-				t.Errorf("%q (flags %d).search(%q) = %v, want %v", c.Pattern, c.Flags, s, got, c.Search[i])
+				diffs = append(diffs, fmt.Sprintf("%q (flags %d).search(%q) = %v, want %v", c.Pattern, c.Flags, s, got, c.Search[i]))
 			}
 			if c.FindAll != nil {
 				want, all := c.FindAll[i], re.FindAll(s)
-				if len(want) != 0 || len(all) != 0 {
-					if !reflect.DeepEqual(all, want) {
-						t.Errorf("%q.findall(%q) = %q, want %q", c.Pattern, s, all, want)
-					}
+				if (len(want) != 0 || len(all) != 0) && !reflect.DeepEqual(all, want) {
+					diffs = append(diffs, fmt.Sprintf("%q (flags %d).findall(%q) = %q, want %q", c.Pattern, c.Flags, s, all, want))
 				}
 			}
+			if known[key] {
+				seen[key] = true
+				if len(diffs) == 0 {
+					t.Errorf("known difference %q now matches Python: drop it from the list", key)
+				}
+				continue
+			}
+			for _, d := range diffs {
+				t.Error(d)
+			}
+		}
+	}
+	for key := range known {
+		if !seen[key] {
+			t.Errorf("known difference %q is not a case of %s", key, path)
 		}
 	}
 }

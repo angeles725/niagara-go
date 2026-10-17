@@ -22,8 +22,16 @@ func (e *emitter) node(n *node, fl Flags) {
 	b := &e.b
 	switch n.kind {
 	case kLiteral:
+		if asciiFolds(fl) {
+			b.WriteString("(?-i:" + foldedLiteral(n.r, false) + ")")
+			return
+		}
 		b.WriteString(escapeRune(n.r))
 	case kNotLiteral:
+		if asciiFolds(fl) {
+			b.WriteString("(?-i:" + foldedLiteral(n.r, true) + ")")
+			return
+		}
 		b.WriteString("[^" + escapeRune(n.r) + "]")
 	case kAny:
 		b.WriteString(".")
@@ -32,7 +40,13 @@ func (e *emitter) node(n *node, fl Flags) {
 			b.WriteString(categoryAtom(n.set[0].cat, fl&ASCII != 0))
 			return
 		}
-		e.set(n, fl&ASCII != 0)
+		if asciiFolds(fl) {
+			b.WriteString("(?-i:")
+			e.set(n, true, true)
+			b.WriteString(")")
+			return
+		}
+		e.set(n, fl&ASCII != 0, false)
 	case kAt:
 		b.WriteString(anchor(n.at, fl&ASCII != 0))
 	case kBranch:
@@ -78,7 +92,9 @@ func (e *emitter) node(n *node, fl Flags) {
 // set writes a character set. A .NET class cannot hold the complement of a Python
 // category whose set differs from the .NET one ([\W], [\S], [\D] under re.ASCII), so
 // those become alternatives: [x\W] is (?:[x]|[^word]) and [^x\W] is (?![x])[word].
-func (e *emitter) set(n *node, ascii bool) {
+// With fold (re.ASCII|IGNORECASE, matched case-sensitively by the caller) every ASCII
+// letter of a literal or range is spelled in both cases.
+func (e *emitter) set(n *node, ascii, fold bool) {
 	var lits strings.Builder
 	var caseless, comps []string // ASCII category classes; complements of \D \S \W
 	for _, it := range n.set {
@@ -93,8 +109,14 @@ func (e *emitter) set(n *node, ascii bool) {
 			}
 		case it.isRange:
 			lits.WriteString(escapeRune(it.lo) + "-" + escapeRune(it.hi))
+			if fold {
+				lits.WriteString(swappedRange(it.lo, it.hi, 'a', 'z', 'A'-'a') + swappedRange(it.lo, it.hi, 'A', 'Z', 'a'-'A'))
+			}
 		default:
 			lits.WriteString(escapeRune(it.lo))
+			if sw, ok := swapASCIICase(it.lo); ok && fold {
+				lits.WriteString(escapeRune(sw))
+			}
 		}
 	}
 	b := &e.b
@@ -143,6 +165,46 @@ func (e *emitter) set(n *node, ascii bool) {
 		b.WriteString("(?=" + cls(c, false) + ")")
 	}
 	b.WriteString(cls(comps[len(comps)-1], false) + ")")
+}
+
+// asciiFolds is re.ASCII with IGNORECASE: Python folds the ASCII letters only, so a
+// literal or set is matched case-sensitively with both ASCII cases spelled out; .NET's
+// IgnoreCase would also fold U+212A KELVIN SIGN to "k" and U+0130 to "i".
+func asciiFolds(fl Flags) bool { return fl&ASCII != 0 && fl&IGNORECASE != 0 }
+
+// swapASCIICase is the other case of an ASCII letter.
+func swapASCIICase(r rune) (rune, bool) {
+	switch {
+	case 'a' <= r && r <= 'z':
+		return r - 'a' + 'A', true
+	case 'A' <= r && r <= 'Z':
+		return r - 'A' + 'a', true
+	}
+	return 0, false
+}
+
+// foldedLiteral is an ASCII-folded literal (or, negated, its complement) as a class.
+func foldedLiteral(r rune, negate bool) string {
+	body := escapeRune(r)
+	if sw, ok := swapASCIICase(r); ok {
+		body += escapeRune(sw)
+	} else if !negate {
+		return body
+	}
+	if negate {
+		return "[^" + body + "]"
+	}
+	return "[" + body + "]"
+}
+
+// swappedRange is the part of lo-hi inside first-last, shifted by delta to the other
+// case, as a class range; "" when they do not overlap.
+func swappedRange(lo, hi, first, last, delta rune) string {
+	lo, hi = max(lo, first), min(hi, last)
+	if lo > hi {
+		return ""
+	}
+	return escapeRune(lo+delta) + "-" + escapeRune(hi+delta)
 }
 
 // asciiOnly keeps an re.ASCII class out of IGNORECASE: .NET would lower-case the input

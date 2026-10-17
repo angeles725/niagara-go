@@ -22,6 +22,7 @@ func parse(pattern string, flags Flags) (seq []*node, st *state, err error) {
 	st = &state{flags: flags, groupdict: map[string]int{}, groupwidths: [][2]int{{}}, closed: []bool{false},
 		groupnames: []string{""}, lookbehindgroups: -1, grouprefpos: map[int]int{}}
 	seq = parseSub(t, st, flags&VERBOSE != 0, 0)
+	fixFlags(st)
 	if t.next != nil {
 		panic(t.error("unbalanced parenthesis", 0))
 	}
@@ -31,6 +32,16 @@ func parse(pattern string, flags Flags) (seq []*node, st *state, err error) {
 		}
 	}
 	return seq, st, nil
+}
+
+// fixFlags is _parser.fix_flags for a str pattern (its ValueError carries no position).
+func fixFlags(st *state) {
+	switch {
+	case st.flags&LOCALE != 0:
+		panic(newError("cannot use LOCALE flag with a str pattern", "", -1))
+	case st.flags&ASCII != 0 && st.flags&UNICODE != 0:
+		panic(newError("ASCII and UNICODE flags are incompatible", "", -1))
+	}
 }
 
 func parseSub(t *tokenizer, st *state, verbose bool, nested int) []*node {
