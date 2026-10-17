@@ -64,11 +64,10 @@ type Result struct {
 }
 
 type doc struct {
-	score       float64
-	cov         int
-	title       string
-	line, page  int
-	source, key string
+	score      float64
+	cov        int
+	title      string
+	line, page int
 }
 
 // rank is fulltext._rank: one Hit per file, best first. A document scores
