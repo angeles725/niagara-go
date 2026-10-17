@@ -12,6 +12,9 @@ import (
 )
 
 func TestEveryOrderedCommandIsRegistered(t *testing.T) {
+	if len(Order) != 134 {
+		t.Fatalf("Order has %d commands, want 134", len(Order))
+	}
 	if got := registry.Names(); len(got) != len(Order) {
 		t.Fatalf("%d commands registered, want %d", len(got), len(Order))
 	}

@@ -1,0 +1,8 @@
+usage: module-nav bql [-h] [--module BQL_MODULE] [--type BQL_TYPE] [-n N]
+
+options:
+  -h, --help            show this help message and exit
+  --module, -m BQL_MODULE
+                        Filter to a specific module
+  --type, -t BQL_TYPE   Filter by kind: bql or sql
+  -n N                  Max results to show (default 50)
