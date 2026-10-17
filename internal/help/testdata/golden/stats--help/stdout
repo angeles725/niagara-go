@@ -1,0 +1,5 @@
+usage: niagara_help stats [-h] [--json]
+
+options:
+  -h, --help  show this help message and exit
+  --json      Output as JSON

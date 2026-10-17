@@ -1,0 +1,7 @@
+usage: niagara_help checklist [-h] base_class
+
+positional arguments:
+  base_class  Base class (e.g. BAbstractService)
+
+options:
+  -h, --help  show this help message and exit

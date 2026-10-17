@@ -1,0 +1,14 @@
+usage: niagara_help slots [-h] [--type {properties,actions,topics}] [--by-type BY_TYPE] [--json]
+                          [--inherited]
+                          [query]
+
+positional arguments:
+  query                 Class name or slot name/pattern
+
+options:
+  -h, --help            show this help message and exit
+  --type {properties,actions,topics}
+  --by-type BY_TYPE     Search by property TYPE (e.g. BStatusNumeric)
+  --json                Output as JSON
+  --inherited           All slots of the class QUERY including those inherited from its parents
+                        (replaces inherited-slots; no --type / --by-type)
