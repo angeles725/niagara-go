@@ -120,7 +120,7 @@ func listingOf(v pyjson.Value) (l *Listing, ok bool) {
 	}
 	entries, _ := v.Get("entries")
 	classes, _ := v.Get("classes")
-	if entries.Kind != pyjson.Array || classes.Kind != pyjson.Int || !classes.I.IsInt64() {
+	if entries.Kind != pyjson.Array || classes.Kind != pyjson.Int || !classes.I.IsInt64() || classes.I.Sign() < 0 {
 		return nil, false
 	}
 	l = &Listing{Entries: make([]Entry, 0, len(entries.A)), Classes: int(classes.I.Int64())}

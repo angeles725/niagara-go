@@ -144,3 +144,52 @@ func zip64Size(n uint64) []byte {
 	_ = binary.Write(&d, binary.LittleEndian, n)
 	return extraField(0x0001, d.Bytes())
 }
+
+// zip64Zip is rawZip(prefix, entries, "") with a zip64 end record and its
+// locator before the end record, whose own size and offset fields are
+// 0xFFFFFFFF. disks is the locator's disk count, reloffShift moves the
+// locator's record offset away from the record (0 = where it is, counted
+// without the prefix, as a zip written before the prefix was added says).
+func zip64Zip(prefix string, entries []rawEntry, disks uint32, reloffShift int64) []byte {
+	plain := rawZip("", entries, "")
+	le := binary.LittleEndian
+	eocd := plain[len(plain)-sizeEndCentDir:]
+	cdSize, cdOff, n := uint64(le.Uint32(eocd[12:])), uint64(le.Uint32(eocd[16:])), uint64(le.Uint16(eocd[10:]))
+	var out bytes.Buffer
+	w := func(v any) { _ = binary.Write(&out, binary.LittleEndian, v) }
+	out.WriteString(prefix)
+	out.Write(plain[:len(plain)-sizeEndCentDir])
+	out.WriteString("PK\x06\x06")
+	w(uint64(sizeEndCentDir64 - 12))
+	w(uint16(45))
+	w(uint16(45))
+	w(uint32(0))
+	w(uint32(0))
+	w(n)
+	w(n)
+	w(cdSize)
+	w(cdOff)
+	out.WriteString("PK\x06\x07")
+	w(uint32(0))
+	w(uint64(int64(cdOff+cdSize) + reloffShift))
+	w(disks)
+	out.WriteString("PK\x05\x06")
+	w(uint16(0xFFFF))
+	w(uint16(0xFFFF))
+	w(uint16(0xFFFF))
+	w(uint16(0xFFFF))
+	w(uint32(0xFFFFFFFF))
+	w(uint32(0xFFFFFFFF))
+	w(uint16(0))
+	return out.Bytes()
+}
+
+// withEntryCount sets both entry counts of a zip's end record to n: the
+// directory is walked by its byte size, never by these counts.
+func withEntryCount(zip []byte, n uint16) []byte {
+	out := append([]byte(nil), zip...)
+	eocd := out[len(out)-sizeEndCentDir:]
+	binary.LittleEndian.PutUint16(eocd[8:], n)
+	binary.LittleEndian.PutUint16(eocd[10:], n)
+	return out
+}

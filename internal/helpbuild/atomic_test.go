@@ -307,6 +307,48 @@ func TestRebuiltDirFailedRestoreNamesWhereTheOldTreeIs(t *testing.T) {
 	}
 }
 
+// Renaming the old tree aside fails (the first rename): the error comes
+// back, the old tree is untouched and the temp tree is removed.
+func TestRebuiltDirFailedRenameAsideKeepsTheOldTree(t *testing.T) {
+	root, final := rebuiltFixture(t)
+	injected := failRename(t, 1)
+	if err := RebuiltDir(final, buildNew); !errors.Is(err, injected) {
+		t.Fatalf("err %v, want the rename-aside failure", err)
+	}
+	if got := treeFiles(t, final); strings.Join(got, ",") != "G/old.txt" {
+		t.Fatalf("tree %q, want the old tree", got)
+	}
+	noDotEntries(t, root)
+}
+
+// Removing the old tree after a good swap fails: like atomic.py's
+// shutil.rmtree(old, ignore_errors=True) the rebuild still succeeds, the new
+// tree is in place and the aside is left behind.
+func TestRebuiltDirIgnoresAFailedRemovalOfTheOldTree(t *testing.T) {
+	root, final := rebuiltFixture(t)
+	real := removeOld
+	var removed []string
+	removeOld = func(p string) error {
+		removed = append(removed, p)
+		return errors.New("injected removal failure")
+	}
+	t.Cleanup(func() { removeOld = real })
+	if err := RebuiltDir(final, buildNew); err != nil {
+		t.Fatalf("err %v, want nil (the removal error is ignored)", err)
+	}
+	if got := treeFiles(t, final); strings.Join(got, ",") != "G/new.txt" {
+		t.Fatalf("tree %q, want the new tree", got)
+	}
+	if len(removed) != 1 || !strings.Contains(filepath.Base(removed[0]), ".old-") {
+		t.Fatalf("removed %q, want the one aside tree", removed)
+	}
+	if got := treeFiles(t, removed[0]); strings.Join(got, ",") != "G/old.txt" {
+		t.Fatalf("aside %q, want the old tree left behind", got)
+	}
+	_ = os.RemoveAll(removed[0])
+	noDotEntries(t, root)
+}
+
 func writeFile(t *testing.T, path string, data []byte) {
 	t.Helper()
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {

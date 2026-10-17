@@ -27,8 +27,12 @@ var (
 	DumpCompact = pyjson.DumpOpts{EnsureASCII: true, Indent: -1, ItemSep: ",", KeySep: ":"}
 )
 
-// rename is os.Rename, replaceable by the tests to inject a failed swap.
-var rename = os.Rename
+// rename is os.Rename and removeOld os.RemoveAll, replaceable by the tests
+// to inject a failed swap or a failed removal of the old tree.
+var (
+	rename    = os.Rename
+	removeOld = os.RemoveAll
+)
 
 // tempPattern is a CreateTemp/MkdirTemp pattern: prefix, random part,
 // suffix. A "*" in the suffix would move the random part, so it is
@@ -112,7 +116,10 @@ func (e *RestoreError) Unwrap() error { return e.Swap }
 // the new tree replaces final (the old tree is renamed aside, then
 // removed). When build fails or panics, or the swap fails, the temp tree is
 // removed and final is left exactly as it was (the aside is renamed back);
-// when that restore fails too the error is a *RestoreError.
+// when that restore fails too the error is a *RestoreError. Removing the
+// old tree after a good swap ignores errors, as atomic.py's
+// shutil.rmtree(old, ignore_errors=True) does: the new tree is in place, so
+// the rebuild succeeded; a leftover <tmp>.old-<pid> tree is not reported.
 //
 // One intended difference: atomic.py leaves the temp tree behind when the
 // chmod or the rename of the old tree aside fails; here it is removed too.
@@ -162,7 +169,7 @@ func RebuiltDir(final string, build func(tmp string) error) (err error) {
 	}
 	swapped = true
 	if old != "" {
-		_ = os.RemoveAll(old)
+		_ = removeOld(old) // ignore_errors=True, like atomic.py
 	}
 	return nil
 }

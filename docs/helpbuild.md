@@ -31,7 +31,7 @@ document disagree, the code wins and this document is corrected.
 
 | File | Ports | Notes |
 |---|---|---|
-| `atomic.go` | `atomic.write_bytes/write_text/write_json/rebuilt_dir` | temp file + rename in the same directory; no fsync (atomic.py has none: the guarantee is against an interrupted builder, not power loss); modes 0644 / 0755 like the explicit `chmod` calls |
+| `atomic.go` | `atomic.write_bytes/write_text/write_json/rebuilt_dir` | temp file + rename in the same directory; no fsync (atomic.py has none: the guarantee is against an interrupted builder, not power loss); modes 0644 / 0755 like the explicit `chmod` calls; removing the old tree after a good swap ignores errors like `shutil.rmtree(old, ignore_errors=True)` (the rebuild succeeded; a leftover `.old-<pid>` tree is not reported) |
 | `zipdir.go` | `zipfile.ZipFile(path).infolist()` (3.15) | `_EndRecData`, `_EndRecData64`, `_RealGetContents`, `ZipInfo._decodeExtra` ported, see below |
 | `jarlisting.go` | `jar_listing.cache_path/read_listing/Listings` | the cache file is byte-identical to Python's |
 | `rules.go` | `install_rules.glob_re/Rule/Rules/load/default` | `install_docs.json` embedded with `//go:embed` |
@@ -69,9 +69,12 @@ copy. When the data file changes upstream: copy it, run `go test ./internal/help
 
 `testdata/parity/driver.py` imports the real niagara-help modules (`python3 -I -B`: isolated, no `__pycache__` written into the checkout; the tools
 directory put on `sys.path` explicitly) and prints JSON lines; `parity_test.go` rebuilds
-every line from this package and requires an empty diff. It needs `python3` and the
-niagara-help checkout (`$NIAGARA_RESEARCH/niagara-help`, default
-`/home/cristian/niagara-research/niagara-help`) and skips visibly without them.
+every line from this package and requires an empty diff. It needs `python3` and a
+niagara-help checkout — `$NIAGARA_HELP_DIR`, else the first one met walking up from the
+test directory as `<dir>/niagara-help` or `<dir>/niagara-research/niagara-help` (a worktree
+under `~/niagara-go-worktrees` finds `~/niagara-research/niagara-help`) — and skips visibly
+only when there is none. The drift test `TestEmbeddedRulesMatchCanonical` uses the same
+lookup; `$NIAGARA_HELP_DIR` pointing at a folder without the data file fails it.
 
 | Test | Driver mode | Compares |
 |---|---|---|
@@ -85,8 +88,10 @@ The synthetic jars mirror the `test_doc_jar_completeness` and `test_install_swee
 fixtures and add the central-directory corners: duplicate names, directory entries, empty
 entries, odd UTF-8 names (İ ı K ſ Σ, CJK, emoji, tab, newline), a raw cp437 name holding
 all 128 high bytes, a NUL in a name, Unicode-path extra fields (matching CRC, other CRC,
-empty, not UTF-8), a zip64 size, corrupt extra fields, prepended data, an archive comment,
-and unreadable files (not a zip, empty, truncated, a directory).
+empty, not UTF-8), a zip64 size, zip64 end records (plain, after prepended data, on
+several disks, a record offset past or short of the record), a directory walked by its
+byte size whatever the entry count says, corrupt extra fields, prepended data, an archive
+comment, and unreadable files (not a zip, empty, truncated, a directory).
 
 ## Intended differences
 
@@ -103,6 +108,12 @@ produces.
   rename of the old tree aside fails; `RebuiltDir` removes it.
 - **A non-list `unless`, `globs` or `course` value**: Python iterates the characters of a
   string; Go returns an error.
+- **A non-list `skip_dirs`, a truthy non-dict `globs` or `course`**: Python fails with
+  `TypeError`/`AttributeError` (or, for `globs`, only once an `@name` is looked up); Go
+  returns an error when parsing. A falsy value of any type is no data on both sides
+  (`data.get(...) or {}`).
+- **A negative `classes` count in a cached listing**: Python returns it; Go treats the
+  record as damaged and lists the jar again.
 - **Empty Unicode-path field**: Python emits a `warnings.warn` on stderr; the library
   prints nothing (it keeps the raw name, as Python does).
 - **Interrupts**: Python's `except BaseException` also cleans up on Ctrl-C; a Go process

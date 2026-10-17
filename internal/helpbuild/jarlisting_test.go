@@ -7,6 +7,7 @@ import (
 	"hash/crc32"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -114,20 +115,64 @@ func TestSecondReadOpensNoJarAndChangedJarIsRelisted(t *testing.T) {
 	}
 }
 
-// test_damaged_cache_is_rebuilt.
+// test_damaged_cache_is_rebuilt, telling a rejected cache from an empty
+// one: a good cache of jars[0] is damaged one way at a time. A whole-file
+// rejection starts empty (Len 0), a rejected record keeps its key (Len 1);
+// either way the jar is opened again (Reads 1), while the undamaged control
+// is a hit (Reads 0).
 func TestDamagedCacheIsRebuilt(t *testing.T) {
 	dir, jars := listingFixture(t)
-	for _, bad := range []string{"{not json", "[1, 2]", `{"version": 2, "jars": {"x": {}}}`, "\xef\xbb\xbf{}"} {
+	good := filepath.Join(dir, "good.json")
+	ls := NewListings(good)
+	ls.Listing(jars[0])
+	if err := ls.Save(); err != nil {
+		t.Fatal(err)
+	}
+	text := readText(t, good)
+	const listing = `"listing":{"entries":[["doc/About-Help.html",33,`
+	if !strings.Contains(text, listing) || !strings.Contains(text, `"classes":1}`) {
+		t.Fatalf("unexpected cache text %s", text)
+	}
+	cases := []struct {
+		name, data string
+		len        int // jars kept after loading
+	}{
+		{"undamaged control", text, 1},
+		{"not JSON", "{not json", 0},
+		{"a list", "[1, 2]", 0},
+		{"other version", strings.Replace(text, `"version":1`, `"version":2`, 1), 0},
+		{"BOM", "\xef\xbb\xbf" + text, 0},
+		{"jars not a dict", `{"version":1,"jars":[1]}`, 0},
+		{"negative classes", strings.Replace(text, `"classes":1}`, `"classes":-1}`, 1), 1},
+		{"classes not an int", strings.Replace(text, `"classes":1}`, `"classes":1.0}`, 1), 1},
+		{"entry of two fields", strings.Replace(text, `,33,`, `,`, 1), 1},
+		{"CRC above 32 bits", crcTooBig(text), 1},
+	}
+	for _, c := range cases {
 		path := filepath.Join(dir, "bad.json")
-		writeFile(t, path, []byte(bad))
+		writeFile(t, path, []byte(c.data))
 		ls := NewListings(path)
-		if ls.Len() != 0 {
-			t.Fatalf("%q: %d cached jars, want 0", bad, ls.Len())
+		if ls.Len() != c.len {
+			t.Fatalf("%s: %d cached jars, want %d", c.name, ls.Len(), c.len)
 		}
 		if ls.Listing(jars[0]) == nil {
-			t.Fatalf("%q: no listing", bad)
+			t.Fatalf("%s: no listing", c.name)
+		}
+		want := 1
+		if c.name == "undamaged control" {
+			want = 0
+		}
+		if ls.Reads != want {
+			t.Fatalf("%s: %d jars opened, want %d", c.name, ls.Reads, want)
 		}
 	}
+}
+
+// crcTooBig replaces the CRC of the cached entry with 2**32.
+func crcTooBig(text string) string {
+	i := strings.Index(text, `,33,`) + len(`,33,`)
+	j := i + strings.Index(text[i:], "]")
+	return text[:i] + "4294967296" + text[j:]
 }
 
 // The cache file is Python's compact json.dumps, byte for byte.
@@ -186,5 +231,37 @@ func TestSaveWritesOnlyWhenSomethingWasListed(t *testing.T) {
 	mem.Listing(jars[0])
 	if err := mem.Save(); err != nil {
 		t.Fatal(err)
+	}
+}
+
+// pyAbspath is os.path.abspath: posixpath keeps exactly two leading slashes
+// ("//" is implementation-defined in POSIX), folds three or more to one, and
+// joins a relative path (also "" and "..") to the working directory.
+func TestPyAbspathFollowsPosixpath(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("posixpath rules")
+	}
+	wd, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	cases := map[string]string{
+		"//net/share":    "//net/share",
+		"//a//b/../c/":   "//a/c",
+		"//":             "//",
+		"//..":           "//",
+		"///a/b":         "/a/b",
+		"////a":          "/a",
+		"/a//b/./c/":     "/a/b/c",
+		"rel/../install": filepath.Join(wd, "install"),
+		"":               wd,
+		".":              wd,
+		"..":             filepath.Dir(wd),
+		"x/y/":           filepath.Join(wd, "x", "y"),
+	}
+	for in, want := range cases {
+		if got, err := pyAbspath(in); err != nil || got != want {
+			t.Errorf("pyAbspath(%q) = %q, %v; want %q", in, got, err, want)
+		}
 	}
 }
