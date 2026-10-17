@@ -13,6 +13,7 @@ import (
 	"os/exec"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 	"unicode/utf8"
 )
@@ -108,42 +109,73 @@ func isDir(p string) bool {
 	return err == nil && st.IsDir()
 }
 
-// keytoolDefault reports whether the store at path opens with "changeit"; nil when it is no file.
-func (e *env) keytoolDefault(path string) (*bool, error) {
+// keytoolOutcome is one "keytool -list" run against the default store password.
+type keytoolOutcome struct {
+	opened    bool   // exit 0: the store opened with "changeit"
+	wrongPass bool   // keytool refused the password ("... password was incorrect")
+	failure   string // "exit N: <first output line, 120 characters at most>" for any non-zero exit
+	stdout    string
+}
+
+// wrongPassMarker is how keytool (JDK 8 and later, JKS and PKCS12) reports a wrong store password.
+// keytool prints its errors on stdout, so both streams are searched.
+const wrongPassMarker = "password was incorrect"
+
+// keytoolList runs "keytool -list [-v]" on the store at path with the default password.
+func (e *env) keytoolList(path string, verbose bool) (keytoolOutcome, error) {
+	argv := []string{"keytool", "-list"}
+	if verbose {
+		argv = append(argv, "-v")
+	}
+	r, err := e.run(append(argv, "-keystore", path, "-storepass", "changeit"), nil, 0)
+	if err != nil {
+		return keytoolOutcome{}, err
+	}
+	out := keytoolOutcome{stdout: decodeReplace(r.stdout)}
+	if r.code == 0 {
+		out.opened = true
+		return out, nil
+	}
+	errText := decodeReplace(r.stderr)
+	out.wrongPass = strings.Contains(strings.ToLower(out.stdout+"\n"+errText), wrongPassMarker)
+	text := pyStrip(out.stdout)
+	if text == "" {
+		text = pyStrip(errText)
+	}
+	first, _, _ := strings.Cut(text, "\n") // -v adds a stack trace after the error line
+	out.failure = fmt.Sprintf("exit %d: %s", r.code, head(pyStrip(first), 120))
+	return out, nil
+}
+
+// keytoolDefault is the SEC-02 probe of the store at path; nil when it is no file.
+func (e *env) keytoolDefault(path string) (*keytoolOutcome, error) {
 	if !isFile(path) {
 		return nil, nil
 	}
-	r, err := e.run([]string{"keytool", "-list", "-keystore", path, "-storepass", "changeit"}, nil, 0)
-	if err != nil {
-		return nil, err
-	}
-	stderr := bytes.ToLower([]byte(decodeReplace(r.stderr)))
-	ok := true
-	for _, x := range []string{"tampered", "incorrect", "invalid keystore"} {
-		if bytes.Contains(stderr, []byte(x)) {
-			ok = false
-		}
-	}
-	return &ok, nil
+	o, err := e.keytoolList(path, false)
+	return &o, err
 }
 
 var bitsRE = regexp.MustCompile(`([0-9]+)-bit`)
 
-// keytoolKeysizes are the key sizes "keytool -list -v" prints for the store at path.
-func (e *env) keytoolKeysizes(path string) ([]int, error) {
+// keytoolKeysizes are the key sizes "keytool -list -v" prints for the store at path. failure is
+// set (and sizes nil) when keytool did not exit 0: the sizes were not read, which is not "none".
+func (e *env) keytoolKeysizes(path string) (sizes []int, failure string, err error) {
 	if !isFile(path) {
-		return nil, nil
+		return nil, "", nil
 	}
-	r, err := e.run([]string{"keytool", "-list", "-v", "-keystore", path, "-storepass", "changeit"}, nil, 0)
+	o, err := e.keytoolList(path, true)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
-	var sizes []int
-	for _, m := range bitsRE.FindAllStringSubmatch(decodeReplace(r.stdout), -1) {
+	if !o.opened {
+		return nil, o.failure, nil
+	}
+	for _, m := range bitsRE.FindAllStringSubmatch(o.stdout, -1) {
 		n, _ := strconv.Atoi(m[1])
 		sizes = append(sizes, n)
 	}
-	return sizes, nil
+	return sizes, "", nil
 }
 
 // tlsSubject is the "subject=..." line of the certificate host:port serves; "" on any failure.

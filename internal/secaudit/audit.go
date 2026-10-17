@@ -90,10 +90,15 @@ func (e *env) audit(home, stationXML, host string, rawHead []byte, rep *report) 
 	if err != nil {
 		return fmt.Errorf("keytool: %w", err)
 	}
-	if d != nil {
+	switch {
+	case d == nil:
+	case d.opened || d.wrongPass:
 		rep.add("SEC-02", "crit", "truststore.jks default password",
-			pick(*d, "opens with 'changeit'", "custom password"), "non-default store password",
-			verdict(*d), "B392/B397", "FS/daemon access -> trust-anchor injection")
+			pick(d.opened, "opens with 'changeit'", "custom password"), "non-default store password",
+			verdict(d.opened), "B392/B397", "FS/daemon access -> trust-anchor injection")
+	default: // keytool failed for another reason: the password was not checked
+		rep.add("SEC-02", "crit", "truststore.jks default password", "not verified (keytool "+d.failure+")",
+			"non-default store password", "SKIP", "B392/B397", "run: keytool -list -keystore <home>/security/truststore.jks")
 	}
 
 	e.sec03(home, rep)
@@ -210,12 +215,17 @@ func (e *env) sec06(home string, rep *report) {
 }
 
 func (e *env) sec11(home, ts string, rep *report) error {
-	var sizes []int
-	if isFile(ts) {
-		var err error
-		if sizes, err = e.keytoolKeysizes(ts); err != nil {
-			return fmt.Errorf("keytool: %w", err)
-		}
+	sizes, failure, err := e.keytoolKeysizes(ts)
+	if err != nil {
+		return fmt.Errorf("keytool: %w", err)
+	}
+	fips := isFile(filepath.Join(home, "jre", "lib", "security", "cacerts.bcfks"))
+	if failure != "" { // the store did not open with "changeit": its key sizes are unknown, not absent
+		rep.add("SEC-11", "med", "weak signing keys / FIPS",
+			"key sizes not read (keytool "+failure+"); FIPS keystore "+pick(fips, "present", "absent"),
+			"all keys >= 2048; FIPS suppresses RSA-1024 option", "SKIP", "B113/B392",
+			"run: keytool -list -v -keystore <home>/security/truststore.jks with the store password")
+		return nil
 	}
 	uniq := map[int]bool{}
 	weak := false
@@ -236,7 +246,6 @@ func (e *env) sec11(home, ts string, rep *report) error {
 		}
 		shown = "[" + strings.Join(parts, ", ") + "]"
 	}
-	fips := isFile(filepath.Join(home, "jre", "lib", "security", "cacerts.bcfks"))
 	rep.add("SEC-11", "med", "weak signing keys / FIPS",
 		"key sizes "+shown+"; FIPS keystore "+pick(fips, "present", "absent"),
 		"all keys >= 2048; FIPS suppresses RSA-1024 option", verdict(weak), "B113/B392",

@@ -8,15 +8,18 @@ import (
 	"time"
 )
 
-// probeEnv answers keytool and openssl from canned output and reports the given ports open.
+// probeEnv answers keytool and openssl from canned output and reports the given ports open;
+// keytoolErr "" means the store opens with "changeit".
 func probeEnv(keytoolErr, keytoolOut, subject string, open map[int]bool) *env {
 	return &env{
 		run: func(argv []string, stdin []byte, _ time.Duration) (result, error) {
 			switch {
 			case argv[0] == "keytool" && argv[2] == "-v":
 				return result{stdout: []byte(keytoolOut)}, nil
+			case argv[0] == "keytool" && keytoolErr == "":
+				return result{}, nil // the store opened with "changeit"
 			case argv[0] == "keytool":
-				return result{stderr: []byte(keytoolErr), code: 1}, nil
+				return result{stdout: []byte(keytoolErr), code: 1}, nil // keytool prints errors on stdout
 			case argv[0] == "openssl" && argv[1] == "s_client":
 				return result{stdout: []byte("-----BEGIN CERTIFICATE-----\n")}, nil
 			case argv[0] == "openssl":
@@ -58,7 +61,7 @@ func TestKeytoolChecks(t *testing.T) {
 	if r := rows["SEC-11"]; r.verdict != "FAIL" || r.observed != "key sizes [1024, 2048]; FIPS keystore absent" {
 		t.Errorf("SEC-11 = %+v", r)
 	}
-	rows = rowsByID(t, probeEnv("keytool error: java.io.IOException: Keystore was tampered with", "", "", nil), home, "")
+	rows = rowsByID(t, probeEnv("keytool error: java.io.IOException: Keystore was tampered with, or password was incorrect", "", "", nil), home, "")
 	if r := rows["SEC-02"]; r.verdict != "PASS" || r.observed != "custom password" {
 		t.Errorf("SEC-02 custom = %+v", r)
 	}
@@ -94,5 +97,76 @@ func TestToWinpath(t *testing.T) {
 		if got := toWinpath(in); got != want {
 			t.Errorf("toWinpath(%q) = %q, want %q", in, got, want)
 		}
+	}
+}
+
+// keytoolEnv answers both keytool runs with one canned result.
+func keytoolEnv(r result) *env {
+	e := probeEnv("", "", "", nil)
+	e.run = func(argv []string, _ []byte, _ time.Duration) (result, error) {
+		if argv[0] != "keytool" {
+			return result{}, &startError{"unexpected " + strings.Join(argv, " ")}
+		}
+		return r, nil
+	}
+	return e
+}
+
+// homeWithTruststore is a Niagara home holding only security/truststore.jks.
+func homeWithTruststore(t *testing.T) string {
+	t.Helper()
+	home := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(home, "security"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(home, "security", "truststore.jks"), []byte("x"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	return home
+}
+
+// A keytool that fails never yields a PASS: SEC-02 says "custom password" only for keytool's
+// wrong-password refusal (printed on stdout, as the real keytool does), SEC-11 reads key sizes
+// only from a run that exited 0, and any other failure is a SKIP naming the keytool error.
+func TestKeytoolFailureIsNeverAPass(t *testing.T) {
+	home := homeWithTruststore(t)
+	const (
+		jksWrong = "keytool error: java.io.IOException: Keystore was tampered with, or password was incorrect\n"
+		p12Wrong = "keytool error: java.io.IOException: keystore password was incorrect\n"
+		badFmt   = "keytool error: java.security.KeyStoreException: Unrecognized keystore format. Please load it with a specified type\n"
+	)
+	for _, tc := range []struct {
+		name          string
+		r             result
+		sec02, sec02v string
+		sec11, sec11v string
+	}{
+		{"jks wrong password", result{stdout: []byte(jksWrong), code: 1},
+			"custom password", "PASS",
+			"key sizes not read (keytool exit 1: " + strings.TrimSpace(jksWrong) + "); FIPS keystore absent", "SKIP"},
+		{"pkcs12 wrong password", result{stdout: []byte(p12Wrong), code: 1},
+			"custom password", "PASS",
+			"key sizes not read (keytool exit 1: " + strings.TrimSpace(p12Wrong) + "); FIPS keystore absent", "SKIP"},
+		{"not a keystore", result{stdout: []byte(badFmt), code: 1},
+			"not verified (keytool exit 1: " + head(strings.TrimSpace(badFmt), 120) + ")", "SKIP",
+			"key sizes not read (keytool exit 1: " + head(strings.TrimSpace(badFmt), 120) + "); FIPS keystore absent", "SKIP"},
+		{"stack trace after the error line", result{stdout: []byte(p12Wrong + "java.io.IOException: keystore password was incorrect\n\tat x\n"), code: 1},
+			"custom password", "PASS",
+			"key sizes not read (keytool exit 1: " + strings.TrimSpace(p12Wrong) + "); FIPS keystore absent", "SKIP"},
+		{"silent failure", result{stderr: []byte("  \n"), code: 3},
+			"not verified (keytool exit 3: )", "SKIP",
+			"key sizes not read (keytool exit 3: ); FIPS keystore absent", "SKIP"},
+		{"wrong-password words with exit 0", result{stdout: []byte("Keystore type: JKS\nalias: password was incorrect\n")},
+			"opens with 'changeit'", "FAIL", "key sizes n/a; FIPS keystore absent", "PASS"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			rows := rowsByID(t, keytoolEnv(tc.r), home, "")
+			if r := rows["SEC-02"]; r.observed != tc.sec02 || r.verdict != tc.sec02v {
+				t.Errorf("SEC-02 = %s %q, want %s %q", r.verdict, r.observed, tc.sec02v, tc.sec02)
+			}
+			if r := rows["SEC-11"]; r.observed != tc.sec11 || r.verdict != tc.sec11v {
+				t.Errorf("SEC-11 = %s %q, want %s %q", r.verdict, r.observed, tc.sec11v, tc.sec11)
+			}
+		})
 	}
 }
