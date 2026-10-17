@@ -66,6 +66,7 @@ func runProgram(argv []string, stdin []byte, timeout time.Duration, extraEnv ...
 	var out, errb bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &out, &errb
 	cmd.WaitDelay = time.Second
+	killTreeOnCancel(cmd)
 	err := cmd.Run()
 	if ctx.Err() != nil {
 		return result{}, &timeoutError{fmt.Sprintf("Command %s timed out after %s seconds",
