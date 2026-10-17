@@ -7,6 +7,12 @@
 //	stdout    expected standard output (exact bytes)
 //	stderr    expected standard error (exact bytes; missing file = empty)
 //	exit      expected exit code as decimal text
+//	intended.json  optional: {"reason": "...", "stdout"?: "...", "stderr"?: "...", "exit"?: N}
+//
+// stdout/stderr/exit always hold what the Python tool printed. An intended
+// difference (e.g. one error line where Python crashed with a traceback) is
+// declared in intended.json: its fields replace the expectation, and its
+// reason is mandatory so every divergence is explained next to the fixture.
 //
 // stdin_file and cwd_fixture are relative to <testdata>; the command runs with
 // <testdata> (or <testdata>/<cwd_fixture>) as its working directory. Every case
@@ -37,6 +43,17 @@ type Case struct {
 	Stdout []byte `json:"-"`
 	Stderr []byte `json:"-"`
 	Exit   int    `json:"-"`
+
+	// Intended is non-nil when the case declares an intended difference.
+	Intended *Intended `json:"-"`
+}
+
+// Intended overrides parts of the Python expectation, with a reason.
+type Intended struct {
+	Reason string  `json:"reason"`
+	Stdout *string `json:"stdout,omitempty"`
+	Stderr *string `json:"stderr,omitempty"`
+	Exit   *int    `json:"exit,omitempty"`
 }
 
 // Environ returns DefaultEnv merged with the case's env.
@@ -101,5 +118,38 @@ func loadCase(dir string) (Case, error) {
 	if c.Exit, err = strconv.Atoi(strings.TrimSpace(string(exit))); err != nil {
 		return c, fmt.Errorf("exit: %w", err)
 	}
-	return c, nil
+	return c, applyIntended(dir, &c)
+}
+
+func applyIntended(dir string, c *Case) error {
+	raw, err := os.ReadFile(filepath.Join(dir, "intended.json"))
+	if os.IsNotExist(err) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	var in Intended
+	dec := json.NewDecoder(strings.NewReader(string(raw)))
+	dec.DisallowUnknownFields()
+	if err := dec.Decode(&in); err != nil {
+		return fmt.Errorf("intended.json: %w", err)
+	}
+	if strings.TrimSpace(in.Reason) == "" {
+		return fmt.Errorf("intended.json: reason is required")
+	}
+	if in.Stdout == nil && in.Stderr == nil && in.Exit == nil {
+		return fmt.Errorf("intended.json: overrides nothing")
+	}
+	if in.Stdout != nil {
+		c.Stdout = []byte(*in.Stdout)
+	}
+	if in.Stderr != nil {
+		c.Stderr = []byte(*in.Stderr)
+	}
+	if in.Exit != nil {
+		c.Exit = *in.Exit
+	}
+	c.Intended = &in
+	return nil
 }
