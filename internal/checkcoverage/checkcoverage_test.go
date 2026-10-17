@@ -45,3 +45,54 @@ func TestJSONString(t *testing.T) {
 		t.Errorf("jsonString = %s", got)
 	}
 }
+
+// unreadableCorpus is a root with one readable block and one block path that cannot be
+// read (a directory named like a block: EISDIR, even for root).
+func unreadableCorpus(t *testing.T, body string) (root, bad string) {
+	t.Helper()
+	root = t.TempDir()
+	if err := os.WriteFile(root+"/niagara-mental-model-bloque4.md", []byte("# Alarms\n"+body+"\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	bad = root + "/niagara-mental-model-bloque9.md"
+	if err := os.Mkdir(bad, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	useRoot(t, func() (string, error) { return root, nil })
+	return root, bad
+}
+
+// TestUnreadableBlockIsNamedAndNeverClear: Python skips a block it cannot read and may
+// then print "clear" (exit 0). Intended difference: each unreadable block is named on
+// stderr, and a run that would otherwise be clear is incomplete (exit 3, the
+// gate-not-run code) instead; coverage found elsewhere still exits 2.
+func TestUnreadableBlockIsNamedAndNeverClear(t *testing.T) {
+	_, bad := unreadableCorpus(t, "nothing here")
+	warn := "check-coverage: cannot read " + bad + ": Is a directory\n"
+	var out, errb bytes.Buffer
+	code := Main([]string{"zzqq"}, cli.Stdio{In: strings.NewReader(""), Out: &out, Err: &errb})
+	wantOut := "prior-coverage gate — scanned 2 block(s), 1 unreadable\n\n" +
+		"  [CLEAR]   zzqq — no prior block mentions it. Safe to open as net-new.\n" +
+		"VERDICT: incomplete. 1 block file(s) could not be read (named on stderr), so \"clear\" is not proven.\n"
+	if code != 3 || out.String() != wantOut || errb.String() != warn {
+		t.Errorf("text: exit %d\nstdout %q\nstderr %q", code, out.String(), errb.String())
+	}
+	out.Reset()
+	errb.Reset()
+	code = Main([]string{"--json", "zzqq"}, cli.Stdio{In: strings.NewReader(""), Out: &out, Err: &errb})
+	wantJSON := "{\n  \"scanned_blocks\": 2,\n  \"names\": {\n    \"zzqq\": {\n      \"subject\": [],\n" +
+		"      \"body\": []\n    }\n  },\n  \"unreadable_blocks\": 1,\n  \"verdict\": \"incomplete\"\n}\n"
+	if code != 3 || out.String() != wantJSON || errb.String() != warn {
+		t.Errorf("json: exit %d\nstdout %q\nstderr %q", code, out.String(), errb.String())
+	}
+}
+
+func TestUnreadableBlockKeepsCoverageVerdict(t *testing.T) {
+	_, bad := unreadableCorpus(t, "honeywellSpyderTool")
+	var out, errb bytes.Buffer
+	code := Main([]string{"honeywellSpyderTool"}, cli.Stdio{In: strings.NewReader(""), Out: &out, Err: &errb})
+	if code != 2 || !strings.Contains(out.String(), "VERDICT: prior coverage found.") ||
+		errb.String() != "check-coverage: cannot read "+bad+": Is a directory\n" {
+		t.Errorf("exit %d\nstdout %q\nstderr %q", code, out.String(), errb.String())
+	}
+}

@@ -99,3 +99,38 @@ func TestNormalizeTitle(t *testing.T) {
 		}
 	}
 }
+
+// TestUnreadableIsCannotCheck: Python dies with a traceback (exit 1, the same code as a
+// stale catalog under --check). Intended difference: an unreadable block or CATALOG.md
+// is one stderr line in the OSError.strerror form and exit 2, "could not check".
+func TestUnreadableIsCannotCheck(t *testing.T) {
+	useCwdAsRoot(t)
+	root := t.TempDir()
+	if err := os.CopyFS(root, os.DirFS(filepath.Join("testdata", "corpus"))); err != nil {
+		t.Fatal(err)
+	}
+	t.Chdir(root)
+	bad := filepath.Join(root, "niagara-mental-model-bloque77.md")
+	if err := os.Mkdir(bad, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	for _, args := range [][]string{{"--check"}, {"--stdout"}, {}} {
+		var out, errb bytes.Buffer
+		code := Main(args, cli.Stdio{In: strings.NewReader(""), Out: &out, Err: &errb})
+		if want := "gen-catalog: cannot read " + bad + ": Is a directory\n"; code != 2 || out.Len() != 0 || errb.String() != want {
+			t.Errorf("%v: exit %d, stdout %q, stderr %q", args, code, out.String(), errb.String())
+		}
+	}
+	if err := os.Remove(bad); err != nil {
+		t.Fatal(err)
+	}
+	catalog := filepath.Join(root, catalogName)
+	if err := os.WriteFile(catalog, []byte("\xff\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	var out, errb bytes.Buffer
+	code := Main([]string{"--check"}, cli.Stdio{In: strings.NewReader(""), Out: &out, Err: &errb})
+	if want := "gen-catalog: cannot read " + catalog + ": not valid UTF-8\n"; code != 2 || out.Len() != 0 || errb.String() != want {
+		t.Errorf("catalog: exit %d, stdout %q, stderr %q", code, out.String(), errb.String())
+	}
+}
