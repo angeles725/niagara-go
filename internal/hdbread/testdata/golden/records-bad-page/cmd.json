@@ -1,0 +1,6 @@
+{
+ "args": [
+  "testdata/inputs/bad-page.hdb",
+  "--records"
+ ]
+}

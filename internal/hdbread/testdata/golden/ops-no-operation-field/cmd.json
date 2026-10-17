@@ -1,0 +1,6 @@
+{
+ "args": [
+  "testdata/inputs/numeric-v2.hdb",
+  "--ops"
+ ]
+}

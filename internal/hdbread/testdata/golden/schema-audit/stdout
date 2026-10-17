@@ -1,0 +1,5 @@
+# testdata/inputs/audit.hdb
+magic=A106F11E version=2 data_offset=1600 data_section=800 bytes
+history_id=/S/Test
+record_type=history:AuditRecord
+schema (7 fields): timestamp, operation, target, slotName, oldValue, value, userName

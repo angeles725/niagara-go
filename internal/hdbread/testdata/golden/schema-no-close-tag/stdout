@@ -1,0 +1,5 @@
+# testdata/inputs/no-close-tag.hdb
+magic=A106F11E version=2 data_offset=60 data_section=1 bytes
+history_id=/a/b�
+record_type=x:Y
+schema (0 fields): 

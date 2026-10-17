@@ -1,0 +1,2 @@
+# testdata/inputs/empty-table.hdb
+# records=0 (pages declare 0) record_type=history:NumericTrendRecord version=2

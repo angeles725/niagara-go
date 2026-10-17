@@ -1,0 +1,6 @@
+{
+ "args": [
+  "testdata/inputs/bad-magic.hdb",
+  "--records"
+ ]
+}

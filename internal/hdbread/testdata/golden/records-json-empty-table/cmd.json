@@ -1,0 +1,7 @@
+{
+ "args": [
+  "testdata/inputs/empty-table.hdb",
+  "--records",
+  "--json"
+ ]
+}

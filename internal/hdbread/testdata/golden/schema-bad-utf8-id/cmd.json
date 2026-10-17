@@ -1,0 +1,5 @@
+{
+ "args": [
+  "testdata/inputs/bad-utf8-id.hdb"
+ ]
+}

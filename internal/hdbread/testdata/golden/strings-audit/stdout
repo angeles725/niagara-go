@@ -1,0 +1,36 @@
+# testdata/inputs/audit.hdb
+magic=A106F11E version=2 data_offset=1600 data_section=800 bytes
+Changed
+/Drivers/BacnetNetwork/dev1
+out
+1.0
+2.0
+admin
+Changed
+/Config/Rooms/R1
+setpoint
+jdoe
+Added
+/Config/Rooms/R2
+Login
+QWxhZGRpbjpvcGVuIHNlc2FtZQ==
+admin
+Login
+jdoe
+Changed
+guest
+Logout (Timeout)
+/Services/UserService
+station
+Invoked
+/Config/Rooms/R1/reset
+reset
+abcdefghijklmnopqrstu
+Flags Changed
+./abbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+admin
+Login Failure
+bad
+root
+Logout
+jdoe

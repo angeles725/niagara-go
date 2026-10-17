@@ -1,0 +1,6 @@
+{
+ "args": [
+  "testdata/inputs/not-monotonic.hdb",
+  "--records"
+ ]
+}

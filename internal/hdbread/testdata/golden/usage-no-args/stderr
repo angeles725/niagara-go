@@ -1,0 +1,2 @@
+usage: hdbread.py [-h] [--schema] [--ops] [--strings] [--mask] [--records] [--json] hdb
+hdbread.py: error: the following arguments are required: hdb

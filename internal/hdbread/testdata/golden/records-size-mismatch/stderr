@@ -1,0 +1,1 @@
+hdbread: --records: header record size 16, but a version-2 history:NumericTrendRecord is 12 bytes

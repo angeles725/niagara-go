@@ -1,0 +1,6 @@
+{
+ "args": [
+  "testdata/inputs/hv2.hdb",
+  "--records"
+ ]
+}

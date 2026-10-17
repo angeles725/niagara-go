@@ -1,0 +1,8 @@
+{
+ "args": [
+  "testdata/inputs/audit.hdb",
+  "--ops",
+  "--strings",
+  "--mask"
+ ]
+}

@@ -1,0 +1,10 @@
+# testdata/inputs/audit.hdb
+magic=A106F11E version=2 data_offset=1600 data_section=800 bytes
+op Changed        = 2  (+1 with an empty, non-slot or 4096+ byte target, not counted)
+op Added          = 1
+op Flags Changed  = 1
+op Invoked        = 1
+op Logout (Timeout) = 1
+op Login          = 0  (+1 with an empty, non-slot or 4096+ byte target, not counted)
+op Login Failure  = 0  (+1 with an empty, non-slot or 4096+ byte target, not counted)
+op Logout         = 0  (+1 with an empty, non-slot or 4096+ byte target, not counted)

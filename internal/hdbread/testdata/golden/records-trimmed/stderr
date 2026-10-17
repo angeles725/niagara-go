@@ -1,0 +1,2 @@
+# testdata/inputs/trimmed.hdb
+# records=2 (pages declare 2) record_type=history:NumericTrendRecord version=2 first=2018-09-26T17:30:00.010Z last=2018-09-26T17:30:00.011Z monotonic=yes median_interval_ms=1 (config interval 900000)
