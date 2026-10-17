@@ -9,13 +9,20 @@ import (
 	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
-// Call is one licensing call (a _scan_file call record without its args).
+// Call is one licensing call (a _scan_file call record).
 type Call struct {
 	Path, Module, Class string
-	Form                string  // checkFeature or getFeature
-	Receiver            string  // getLicenseManager(), a dotted receiver or this
-	Vendor, Feature     *string // resolved arguments; nil when unresolvable
+	Line                int      // 1-based line of the method name
+	Form                string   // checkFeature or getFeature
+	Receiver            string   // getLicenseManager(), a dotted receiver or this
+	Vendor, Feature     *string  // resolved arguments; nil when unresolvable
+	Args                []string // the two call arguments as written
+
+	pos int // byte offset of the method name (site classification only)
 }
+
+// Resolved is `if c["feature"]`: the feature argument resolved to a non-empty name.
+func (c Call) Resolved() bool { return c.Feature != nil && *c.Feature != "" }
 
 // keywordsBeforeCall is _KEYWORDS_BEFORE_CALL.
 var keywordsBeforeCall = map[string]bool{"return": true, "throw": true, "else": true, "case": true,
@@ -168,15 +175,15 @@ func assignedManagerVar(text, v string) bool {
 	return found
 }
 
-// scanFile is the call half of _scan_file: the licensing calls of one source
-// file (the getLicenseManager() site classification is not needed by drivers).
-func scanFile(text, rel, module, cls string, res *resolver) []Call {
+// scanFile is _scan_file: the licensing calls of one source file and the
+// classification of its getLicenseManager() sites.
+func scanFile(text, rel, module, cls string, res *resolver) ([]Call, []Site) {
 	comments := commentSpans(text)
 	var calls []Call
 	for i := 0; ; {
 		start, method, paren, ok := nextCall(text, i)
 		if !ok {
-			return calls
+			break
 		}
 		i = paren + 1
 		if inSpans(start, comments) {
@@ -187,7 +194,12 @@ func scanFile(text, rel, module, cls string, res *resolver) []Call {
 		if !ok || !balanced || len(args) != 2 || !isLicenseCall(method, recv, text, rel) {
 			continue
 		}
-		calls = append(calls, Call{Path: rel, Module: module, Class: cls, Form: method, Receiver: recv,
-			Vendor: res.resolve(args[0], rel), Feature: res.resolve(args[1], rel)})
+		calls = append(calls, Call{Path: rel, Line: lineOf(text, start), Module: module, Class: cls,
+			Form: method, Receiver: recv, Vendor: res.resolve(args[0], rel),
+			Feature: res.resolve(args[1], rel), Args: args, pos: start})
 	}
+	return calls, classifySites(text, rel, module, cls, comments, calls)
 }
+
+// lineOf is java_text.line_of: the 1-based line of byte pos.
+func lineOf(text string, pos int) int { return strings.Count(text[:pos], "\n") + 1 }

@@ -18,10 +18,11 @@ import (
 // candidateTokens are the tokens whose files may hold a licensing call.
 var candidateTokens = []string{"getLicenseManager", "checkFeature", "getFeature"}
 
-// Report is license_report: every licensing call of the candidate files of
-// the token index.
+// Report is license_report: every licensing call and getLicenseManager() site
+// of the candidate files of the token index.
 type Report struct {
 	Calls      []Call
+	Sites      []Site
 	Files      int      // candidate files
 	Modules    int      // distinct modules of the candidate files
 	Unreadable []string // candidate files that could not be read
@@ -98,7 +99,9 @@ func Scan(baseDir string) (*Report, *Failure) {
 			rep.Unreadable = append(rep.Unreadable, c.path)
 			continue
 		}
-		rep.Calls = append(rep.Calls, scanFile(text, c.path, c.module, c.class, res)...)
+		calls, sites := scanFile(text, c.path, c.module, c.class, res)
+		rep.Calls = append(rep.Calls, calls...)
+		rep.Sites = append(rep.Sites, sites...)
 	}
 	if res.err != nil {
 		return nil, unreadableIndex(res.err)
