@@ -1,0 +1,2 @@
+  PASS  find index (warm) ranks 'BStatus overridden' like memory → 0 block(s)
+  PASS  ranking: titled block outranks a long mention ['about', 'mention']

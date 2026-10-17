@@ -1,0 +1,17 @@
+usage: corpus-nav.py semantic [-h] [--limit LIMIT] [--build-index]
+                              [--model MODEL] [--tfidf] [--threads THREADS]
+                              [query]
+
+positional arguments:
+  query              natural-language query string
+
+options:
+  -h, --help         show this help message and exit
+  --limit, -n LIMIT  number of top results to show (default: 15)
+  --build-index      embed changed blocks into tools/.corpus-index/ (needs
+                     fastembed)
+  --model MODEL      fastembed model (default: $CORPUS_NAV_MODEL or BAAI/bge-
+                     small-en-v1.5)
+  --tfidf            force the stdlib TF-IDF ranking
+  --threads THREADS  ONNX/OMP threads (default: $CORPUS_NAV_THREADS, else
+                     $OMP_NUM_THREADS, else min(4, CPUs))

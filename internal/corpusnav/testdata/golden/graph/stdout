@@ -1,0 +1,13 @@
+Citation graph
+  nodes   : 5
+  edges   : 5
+  dangling: 1 cited block(s) with no file
+  isolated: 1 block(s) citing and cited by nothing
+
+Most cited
+      1  B1-3 · Bloques 1-3 consolidados
+      1  B4 · Enrutamiento de alarmas
+      1  B5 · Histories and trend logs
+      1  B6 · Security incident review
+      1  B77 · (not in corpus)
+      0  BTI · test infrastructure
