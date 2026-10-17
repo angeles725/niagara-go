@@ -7,9 +7,10 @@ import (
 	"unicode/utf8"
 )
 
-// TestRE2SpaceClassIsIsSpace matches the class against every code point (surrogates have no
-// UTF-8 form; IsSpace must reject them) and requires exactly the IsSpace set.
-func TestRE2SpaceClassIsIsSpace(t *testing.T) {
+// TestRE2SpaceIsIsSpace matches the class RE2Space writes for \s (built on SpaceClass), bare
+// and inside a class, against every code point (surrogates have no UTF-8 form; IsSpace must
+// reject them) and requires exactly the IsSpace set.
+func TestRE2SpaceIsIsSpace(t *testing.T) {
 	var all strings.Builder
 	var want []rune
 	for r := rune(0); r <= utf8.MaxRune; r++ {
@@ -24,18 +25,20 @@ func TestRE2SpaceClassIsIsSpace(t *testing.T) {
 			want = append(want, r)
 		}
 	}
-	var got []rune
-	for _, m := range regexp.MustCompile("["+RE2SpaceClass+"]").FindAllString(all.String(), -1) {
-		r, _ := utf8.DecodeRuneInString(m)
-		got = append(got, r)
-	}
-	if string(got) != string(want) {
-		t.Fatalf("RE2SpaceClass matches %U, IsSpace accepts %U", got, want)
+	for _, pat := range []string{`\s`, `[\s]`} {
+		var got []rune
+		for _, m := range regexp.MustCompile(RE2Space(pat)).FindAllString(all.String(), -1) {
+			r, _ := utf8.DecodeRuneInString(m)
+			got = append(got, r)
+		}
+		if string(got) != string(want) {
+			t.Fatalf("RE2Space(%q) matches %U, IsSpace accepts %U", pat, got, want)
+		}
 	}
 }
 
 func TestRE2SpaceRewrites(t *testing.T) {
-	cls := RE2SpaceClass
+	cls := SpaceClass()
 	for _, tc := range []struct{ in, want string }{
 		{`a\sb`, `a[` + cls + `]b`},
 		{`\s*=\s*`, `[` + cls + `]*=[` + cls + `]*`},

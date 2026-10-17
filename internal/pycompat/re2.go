@@ -2,18 +2,15 @@ package pycompat
 
 import "strings"
 
-// RE2SpaceClass is the body of an RE2 character class that matches Python's Unicode \s of a
-// str pattern: exactly the code points IsSpace accepts (Go's \s is ASCII only). The test
-// checks it against IsSpace over every code point.
-const RE2SpaceClass = `\t\n\v\f\r \x{1c}-\x{1f}\x{85}\x{a0}\x{1680}\x{2000}-\x{200a}\x{2028}\x{2029}\x{202f}\x{205f}\x{3000}`
-
-// RE2Space rewrites a fixed Go regexp pattern so that its \s means Python's: `\s` becomes
-// `[RE2SpaceClass]` outside a character class and RE2SpaceClass inside one. Every other
+// RE2Space rewrites a fixed Go regexp pattern so that its \s means Python's (Go's \s is ASCII
+// only): `\s` becomes `[` + SpaceClass() + `]` outside a character class and SpaceClass()
+// inside one, so it matches exactly the IsSpace code points. Every other
 // escape (`\\s` is an escaped backslash and an "s") and POSIX `[:name:]` classes are copied
 // unchanged. `\S` panics: none of the ported patterns uses it, and inside a class it has no
 // RE2 spelling as a union; a pattern needing it must be written out by hand. \Q...\E is not
 // recognised.
 func RE2Space(pattern string) string {
+	cls := SpaceClass()
 	var b strings.Builder
 	b.Grow(len(pattern))
 	inClass := false
@@ -25,9 +22,9 @@ func RE2Space(pattern string) string {
 			switch pattern[i] {
 			case 's':
 				if inClass {
-					b.WriteString(RE2SpaceClass)
+					b.WriteString(cls)
 				} else {
-					b.WriteString("[" + RE2SpaceClass + "]")
+					b.WriteString("[" + cls + "]")
 				}
 				continue
 			case 'S':
