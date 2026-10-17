@@ -1,0 +1,323 @@
+{
+ "comps": [
+  {
+   "key": "1",
+   "name": "",
+   "handle": "1",
+   "type": "b:Station",
+   "pfx": "b",
+   "module": "baja",
+   "path": "",
+   "parent_h": null,
+   "children": [
+    "2",
+    "4",
+    "5"
+   ],
+   "slots": [],
+   "actions": [],
+   "has_fallback": false,
+   "is_writable": false,
+   "value_type": null,
+   "value_val": null,
+   "present": [
+    "A",
+    "B",
+    "Services"
+   ],
+   "simple_type": "Station"
+  },
+  {
+   "key": "2",
+   "name": "Services",
+   "handle": "2",
+   "type": "b:ServiceContainer",
+   "pfx": "b",
+   "module": "baja",
+   "path": "Services",
+   "parent_h": "1",
+   "children": [
+    "c",
+    "3"
+   ],
+   "slots": [],
+   "actions": [],
+   "has_fallback": false,
+   "is_writable": false,
+   "value_type": null,
+   "value_val": null,
+   "present": [
+    "JobService",
+    "object tags"
+   ],
+   "simple_type": "ServiceContainer"
+  },
+  {
+   "key": "c",
+   "name": "JobService",
+   "handle": "c",
+   "type": "b:JobService",
+   "pfx": "b",
+   "module": "baja",
+   "path": "Services/JobService",
+   "parent_h": "2",
+   "children": [],
+   "slots": [],
+   "actions": [],
+   "has_fallback": false,
+   "is_writable": false,
+   "value_type": null,
+   "value_val": null,
+   "present": [],
+   "simple_type": "JobService"
+  },
+  {
+   "key": "3",
+   "name": "object tags",
+   "handle": "3",
+   "type": "b:Folder",
+   "pfx": "b",
+   "module": "baja",
+   "path": "Services/object tags",
+   "parent_h": "2",
+   "children": [],
+   "slots": [],
+   "actions": [],
+   "has_fallback": false,
+   "is_writable": false,
+   "value_type": null,
+   "value_val": null,
+   "present": [],
+   "simple_type": "Folder"
+  },
+  {
+   "key": "4",
+   "name": "A",
+   "handle": "4",
+   "type": "c:NumericWritable",
+   "pfx": "c",
+   "module": "control",
+   "path": "A",
+   "parent_h": "1",
+   "children": [],
+   "slots": [],
+   "actions": [],
+   "has_fallback": false,
+   "is_writable": true,
+   "value_type": null,
+   "value_val": null,
+   "present": [],
+   "simple_type": "NumericWritable"
+  },
+  {
+   "key": "5",
+   "name": "B",
+   "handle": "5",
+   "type": "c:BooleanWritable",
+   "pfx": "c",
+   "module": "control",
+   "path": "B",
+   "parent_h": "1",
+   "children": [],
+   "slots": [],
+   "actions": [],
+   "has_fallback": false,
+   "is_writable": true,
+   "value_type": null,
+   "value_val": null,
+   "present": [
+    "Link20"
+   ],
+   "simple_type": "BooleanWritable"
+  }
+ ],
+ "handle_count": [
+  [
+   "1",
+   1
+  ],
+  [
+   "2",
+   1
+  ],
+  [
+   "c",
+   1
+  ],
+  [
+   "3",
+   1
+  ],
+  [
+   "4",
+   1
+  ],
+  [
+   "5",
+   1
+  ]
+ ],
+ "prefix_map": [
+  [
+   "b",
+   "baja"
+  ],
+  [
+   "c",
+   "control"
+  ],
+  [
+   "conv",
+   "converters"
+  ]
+ ],
+ "roots": [
+  "1"
+ ],
+ "links": [
+  {
+   "container_h": "5",
+   "container_path": "B",
+   "link_name": "Link20",
+   "src_h": "4",
+   "src_ord": null,
+   "src_slot": "out",
+   "tgt_slot": "in 10"
+  }
+ ],
+ "link_rows": [
+  {
+   "link": "Link20",
+   "source": "A.out",
+   "target": "B.in 10",
+   "src_resolved": true
+  }
+ ],
+ "resolve": [
+  [
+   "",
+   "1",
+   ""
+  ],
+  [
+   "/",
+   "1",
+   ""
+  ],
+  [
+   "nope",
+   null,
+   null
+  ],
+  [
+   "h:nope",
+   null,
+   null
+  ],
+  [
+   "h:",
+   null,
+   null
+  ],
+  [
+   "h:1",
+   "1",
+   ""
+  ],
+  [
+   "//",
+   "1",
+   ""
+  ],
+  [
+   "Services",
+   "2",
+   "Services"
+  ],
+  [
+   "/Services/",
+   "2",
+   "Services"
+  ],
+  [
+   "h:2",
+   "2",
+   "Services"
+  ],
+  [
+   "Services/JobService",
+   "c",
+   "Services/JobService"
+  ],
+  [
+   "/Services/JobService/",
+   "c",
+   "Services/JobService"
+  ],
+  [
+   "JobService",
+   "c",
+   "Services/JobService"
+  ],
+  [
+   "h:c",
+   "c",
+   "Services/JobService"
+  ],
+  [
+   "Services/object tags",
+   "3",
+   "Services/object tags"
+  ],
+  [
+   "/Services/object tags/",
+   "3",
+   "Services/object tags"
+  ],
+  [
+   "object tags",
+   "3",
+   "Services/object tags"
+  ],
+  [
+   "h:3",
+   "3",
+   "Services/object tags"
+  ],
+  [
+   "Services/object$20tags",
+   "3",
+   "Services/object tags"
+  ],
+  [
+   "A",
+   "4",
+   "A"
+  ],
+  [
+   "/A/",
+   "4",
+   "A"
+  ],
+  [
+   "h:4",
+   "4",
+   "A"
+  ],
+  [
+   "B",
+   "5",
+   "B"
+  ],
+  [
+   "/B/",
+   "5",
+   "B"
+  ],
+  [
+   "h:5",
+   "5",
+   "B"
+  ]
+ ]
+}
