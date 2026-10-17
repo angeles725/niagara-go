@@ -3,6 +3,8 @@ package bbmdverify
 import (
 	"fmt"
 	"strings"
+
+	"github.com/angeles725/niagara-go/internal/pyjson"
 )
 
 // A minimal ordered value tree written like json.dumps(obj, indent=2)
@@ -15,32 +17,8 @@ type member struct {
 
 type object []member
 
-func jsonStr(s string) string {
-	var b strings.Builder
-	b.WriteByte('"')
-	for _, r := range s {
-		switch {
-		case r == '"' || r == '\\':
-			b.WriteByte('\\')
-			b.WriteRune(r)
-		case r == '\n':
-			b.WriteString(`\n`)
-		case r == '\r':
-			b.WriteString(`\r`)
-		case r == '\t':
-			b.WriteString(`\t`)
-		case r < 0x20 || r > 0x7E && r <= 0xFFFF:
-			fmt.Fprintf(&b, `\u%04x`, r)
-		case r > 0xFFFF:
-			r -= 0x10000
-			fmt.Fprintf(&b, `\u%04x\u%04x`, 0xD800|r>>10, 0xDC00|r&0x3FF)
-		default:
-			b.WriteRune(r)
-		}
-	}
-	b.WriteByte('"')
-	return b.String()
-}
+// jsonStr is json.dumps(s) with ensure_ascii, i.e. py_encode_basestring_ascii.
+func jsonStr(s string) string { return pyjson.EncodeString(s, true) }
 
 func writeJSON(b *strings.Builder, v any, level int) {
 	pad := func(l int) string { return "\n" + strings.Repeat("  ", l) }
