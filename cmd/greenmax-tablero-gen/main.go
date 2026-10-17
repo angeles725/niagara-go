@@ -1,3 +1,4 @@
+// Command greenmax-tablero-gen generates a redesigned GreenMAX tablero Px (Go port of tools/greenmax-tablero-gen.py).
 package main
 
 import (
