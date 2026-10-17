@@ -6,6 +6,8 @@ import (
 	"os"
 	"regexp"
 	"strings"
+
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 var widgets = map[string]bool{"Label": true, "Picture": true, "BoundLabel": true, "ImageButton": true,
@@ -33,8 +35,8 @@ func parseLayout(s string) (layout, bool) {
 	}
 	var v [4]float64
 	for i, p := range parts {
-		f, ok := pyFloat(p)
-		if !ok {
+		f, err := pycompat.ParseFloat(p)
+		if err != nil {
 			return layout{}, false
 		}
 		v[i] = f
@@ -48,7 +50,7 @@ func parseFont(s string) (weight, size, family string) {
 	if s == "" {
 		return
 	}
-	toks := pySplit(s)
+	toks := pycompat.Fields(s)
 	if len(toks) > 0 && (toks[0] == "bold" || toks[0] == "italic") {
 		weight, toks = toks[0], toks[1:]
 	}
@@ -185,7 +187,7 @@ func (r *renderer) widget(e *element, base string) error {
 		wt, sz, fam := parseFont(e.attr("font"))
 		r.parts = append(r.parts, fmt.Sprintf(`<div style="%sdisplay:flex;align-items:center;font-family:%s,Arial,`+
 			`sans-serif;font-weight:%s;font-size:%spx;color:#16233a;line-height:1.05;overflow:hidden;`+
-			`white-space:pre-wrap;">%s</div>`, base, fam, wt, sz, htmlEscape(pyUnescape(e.attr("text")))))
+			`white-space:pre-wrap;">%s</div>`, base, fam, wt, sz, pycompat.HTMLEscape(pycompat.HTMLUnescape(e.attr("text")))))
 	case "Picture":
 		if img := e.attr("image"); img != "" {
 			uri, err := r.a.dataURI(img)
@@ -209,12 +211,12 @@ func (r *renderer) widget(e *element, base string) error {
 		}
 		r.parts = append(r.parts, fmt.Sprintf(`<div style="%sdisplay:flex;align-items:center;justify-content:center;`+
 			`font-family:Arial,sans-serif;font-size:12px;color:#16233a;background:#eef1f5;border:1px solid #cdd4de;`+
-			`border-radius:4px;text-align:center;padding:2px;">%s</div>`, base, htmlEscape(leaf)))
+			`border-radius:4px;text-align:center;padding:2px;">%s</div>`, base, pycompat.HTMLEscape(leaf)))
 	case "ImageButton":
-		if txt := pyStrip(e.attr("text")); txt != "" {
+		if txt := pycompat.Strip(e.attr("text")); txt != "" {
 			r.parts = append(r.parts, fmt.Sprintf(`<div style="%sdisplay:flex;align-items:center;`+
 				`justify-content:center;font-family:Arial,sans-serif;font-size:11px;font-weight:600;color:#00123F;`+
-				`background:#eef1f5;border:1px solid #cdd4de;border-radius:4px;">%s</div>`, base, htmlEscape(txt)))
+				`background:#eef1f5;border:1px solid #cdd4de;border-radius:4px;">%s</div>`, base, pycompat.HTMLEscape(txt)))
 		} else {
 			r.parts = append(r.parts, fmt.Sprintf(`<div style="%s" title="control"></div>`, base))
 		}
@@ -234,7 +236,7 @@ func render(o Options) (string, *result, error) {
 	shared := findShared(o.Px, o.Shared)
 	r := &renderer{a: newAssets(shared, o.Organized), seed: o.Seed, onRatio: o.OnRatio}
 	if r.seed == "" {
-		r.seed = pySplitextRoot(pyBasename(o.Px))
+		r.seed, _ = pycompat.PosixSplitext(pycompat.PosixBasename(o.Px))
 	}
 	data, err := os.ReadFile(o.Px)
 	if err != nil {
@@ -260,12 +262,13 @@ func render(o Options) (string, *result, error) {
 			continue
 		}
 		base := fmt.Sprintf("position:absolute;left:%spx;top:%spx;width:%spx;height:%spx;",
-			pyG(lay.x+p.ox), pyG(lay.y+p.oy), pyG(lay.w), pyG(lay.h))
+			pycompat.FormatG(lay.x+p.ox), pycompat.FormatG(lay.y+p.oy), pycompat.FormatG(lay.w), pycompat.FormatG(lay.h))
 		if err := r.widget(p.e, base); err != nil {
 			return "", nil, err
 		}
 	}
-	page := pageHTML(o, pySplitextRoot(pyBasename(o.Px)), cw, ch, strings.Join(r.parts, "\n"))
+	title, _ := pycompat.PosixSplitext(pycompat.PosixBasename(o.Px))
+	page := pageHTML(o, title, cw, ch, strings.Join(r.parts, "\n"))
 	return page, &result{canvasW: cw, canvasH: ch, widgets: len(r.parts), shared: shared,
 		missing: r.a.missingSorted(), notImages: r.a.notImages, assets: len(r.a.cache), dropped: dropped}, nil
 }
@@ -282,9 +285,10 @@ func viewSize(canvas *element) (string, string, error) {
 	}
 	var out [2]string
 	for i, s := range wh {
-		f, ok := pyFloat(s)
+		f, err := pycompat.ParseFloat(s)
+		ok := err == nil
 		if ok {
-			out[i], ok = pyInt(f)
+			out[i], ok = pycompat.IntOfFloat(f)
 		}
 		if !ok {
 			return "", "", fmt.Errorf("viewSize %q is not W,H", vs)

@@ -15,6 +15,7 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/cli"
 	"github.com/angeles725/niagara-go/internal/honest"
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // Options is the parsed command line. Empty strings mean "not given" (Python None).
@@ -48,7 +49,7 @@ func pageHTML(o Options, name, cw, ch, body string) string {
 	sub := o.Subtitle
 	if sub == "" {
 		sub = fmt.Sprintf("Pantalla Px real reproducida desde el config.bog: <b>%s</b>. Plano, botones On/Off, "+
-			"LEDs de estado y etiquetas en las mismas posiciones.", htmlEscape(name))
+			"LEDs de estado y etiquetas en las mismas posiciones.", pycompat.HTMLEscape(name))
 	}
 	return fmt.Sprintf("<title>%s</title>\n"+
 		"<style>\n"+
@@ -68,7 +69,7 @@ func pageHTML(o Options, name, cw, ch, body string) string {
 		"<script>function fit(){var cv=document.getElementById(\"cv\");var w=cv.parentElement.clientWidth;"+
 		"var s=Math.min(1,w/%s);cv.style.transform=\"scale(\"+s+\")\";cv.parentElement.style.height=(%s*s)+\"px\";}\n"+
 		"window.addEventListener(\"resize\",fit);fit();</script>\n",
-		htmlEscape(title), cw, ch, sub, body, cw, ch)
+		pycompat.HTMLEscape(title), cw, ch, sub, body, cw, ch)
 }
 
 // Run executes one px-render invocation: 0 rendered, 1 no CanvasPane (or a selftest failure),
