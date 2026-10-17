@@ -1,0 +1,11 @@
+usage: module-find.py [root] slots [-h] [--json] [--csv] [--limit N]
+                                   [--type TYPE] [--flags FLAGS] [--name NAME]
+
+options:
+  -h, --help     show this help message and exit
+  --json         machine JSON output
+  --csv          CSV output (header + rows)
+  --limit, -n N  print at most N rows (default: all); the cut is reported
+  --type TYPE    substring of the slot type
+  --flags FLAGS  require these flags (o/s/h/r/t or OPERATOR..)
+  --name NAME    regex on slot name

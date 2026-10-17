@@ -1,0 +1,18 @@
+[
+  {
+    "class": "BColdRoom",
+    "slot": "setpoint",
+    "type": "baja:StatusNumeric",
+    "flags": "Flags.SUMMARY | Flags.OPERATOR",
+    "min": -40.0,
+    "complex": true
+  },
+  {
+    "class": "BColdRoom",
+    "slot": "mode",
+    "type": "baja:String",
+    "flags": "Flags.OPERATOR",
+    "min": null,
+    "complex": false
+  }
+]

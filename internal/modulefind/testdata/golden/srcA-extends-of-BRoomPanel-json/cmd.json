@@ -1,0 +1,1 @@
+{"args": ["srcA", "extends", "--of", "BRoomPanel", "--json"], "env": {"COLUMNS": "80", "GIT_DIR": "/nonexistent"}}

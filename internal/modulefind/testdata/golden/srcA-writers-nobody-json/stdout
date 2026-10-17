@@ -1,0 +1,7 @@
+{
+  "slot": "nobody",
+  "writers": [],
+  "dynamic": [
+    "BDashServlet: comp.set(prop, ...)  [slot resolved at runtime]"
+  ]
+}

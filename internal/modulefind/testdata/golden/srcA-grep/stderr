@@ -1,0 +1,3 @@
+usage: module-find.py [root] grep [-h] [--json] [--csv] [--limit N] [--source]
+                                  regex
+module-find.py [root] grep: error: argument regex: invalid regex '[': unterminated character set at position 0

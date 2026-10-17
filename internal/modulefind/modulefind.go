@@ -1,0 +1,189 @@
+// Package modulefind is tools/module-find.py: a read-only finder over a Niagara N4
+// module's Java source tree (slots, actions, writers, extends chains, ORD literals,
+// grep, slot-type summary, the S19 ext-writable lint, schema compare, callers).
+//
+// Exit: 0 found, 1 a search command (slots, actions, ords, grep, callers) matched
+// nothing, 2 usage, 3 unreadable root or no .java file.
+package modulefind
+
+import (
+	"fmt"
+	"os"
+	"sort"
+	"strings"
+
+	"github.com/angeles725/niagara-go/internal/argparse"
+	"github.com/angeles725/niagara-go/internal/cli"
+	"github.com/angeles725/niagara-go/internal/honest"
+	"github.com/angeles725/niagara-go/internal/pycompat"
+	"github.com/angeles725/niagara-go/internal/pyre"
+	"github.com/angeles725/niagara-go/internal/version"
+)
+
+var (
+	// searchCommands exit 1 when they match nothing.
+	searchCommands = []string{"slots", "actions", "ords", "grep", "callers"}
+	// limitCommands list rows, so --limit caps them; any other command rejects it.
+	limitCommands = append(append([]string(nil), searchCommands...), "slot-types", "ext-writable", "compare")
+)
+
+// positiveInt is cliflags.positive_int: a whole number >= 1.
+var positiveInt = &argparse.Type{Name: "positive_int", Convert: func(s string) (any, error) {
+	n, err := pycompat.ParseInt(s)
+	if err != nil {
+		return nil, argparse.NewTypeError("invalid int value: %s", pycompat.StrRepr(s))
+	}
+	if n < 1 {
+		return nil, argparse.NewTypeError("must be at least 1, not %d", n)
+	}
+	return int(n), nil
+}}
+
+// regexType is modulefind.sources.regex_type: a Python regex that compiles (IGNORECASE).
+var regexType = &argparse.Type{Name: "regex_type", Convert: func(s string) (any, error) {
+	re, err := pyre.Compile(s, pyre.IGNORECASE)
+	if err != nil {
+		return nil, argparse.NewTypeError("invalid regex %s: %s", pycompat.StrRepr(s), err)
+	}
+	return re, nil
+}}
+
+// outputParent is one of cliflags.output_parents: --json/--csv/--limit, with None
+// defaults on the main parser and SUPPRESS on the subcommands.
+func outputParent(suppress bool) *argparse.Parser {
+	var flag, limit any = false, nil
+	if suppress {
+		flag, limit = argparse.Suppress, argparse.Suppress
+	}
+	p := argparse.New(argparse.Config{NoHelp: true})
+	p.Add(argparse.Arg{Action: argparse.StoreTrue, Default: flag, Help: "machine JSON output"}, "--json")
+	p.Add(argparse.Arg{Action: argparse.StoreTrue, Default: flag, Help: "CSV output (header + rows)"}, "--csv")
+	p.Add(argparse.Arg{Type: positiveInt, Default: limit, Metavar: "N",
+		Help: "print at most N rows (default: all); the cut is reported"}, "--limit", "-n")
+	return p
+}
+
+func buildParser() *argparse.Parser {
+	top, common := outputParent(false), outputParent(true)
+	p := argparse.New(argparse.Config{Prog: "module-find.py", Description: description,
+		Formatter: argparse.RawDescriptionHelpFormatter, Parents: []*argparse.Parser{top}})
+	p.Add(argparse.Arg{Action: argparse.Custom, Nargs: argparse.NoArgs, Default: argparse.Suppress,
+		Dest: argparse.Suppress, Help: "print the tools version and exit", Call: func(c *argparse.Call) error {
+			fmt.Fprintln(c.Out, version.Line("module-find"))
+			return &argparse.ExitError{Code: 0}
+		}}, "--version")
+	p.Add(argparse.Arg{Nargs: argparse.Optional, Help: "module src root (omit for selftest)"}, "root")
+	sub := p.AddSubparsers(argparse.SubparsersConfig{Dest: "cmd", Required: true})
+	add := func(name, help string) *argparse.Parser {
+		return sub.AddParser(name, argparse.SubparserConfig{Config: argparse.Config{Parents: []*argparse.Parser{common}},
+			Help: help})
+	}
+	s := add("slots", "@NiagaraProperty declarations")
+	s.Add(argparse.Arg{Help: "substring of the slot type"}, "--type")
+	s.Add(argparse.Arg{Help: "require these flags (o/s/h/r/t or OPERATOR..)"}, "--flags")
+	s.Add(argparse.Arg{Type: regexType, Help: "regex on slot name"}, "--name")
+	add("actions", "@NiagaraAction declarations").Add(argparse.Arg{Type: regexType, Help: "regex on action name"}, "--name")
+	add("writers", "who writes a slot").Add(argparse.Arg{}, "slot")
+	add("extends", "class -> superclass map").Add(argparse.Arg{Help: "resolve the full chain of one class"}, "--of")
+	add("ords", "ORD-shaped string literals").Add(argparse.Arg{Type: regexType, Help: "regex on the ORD"}, "--name")
+	g := add("grep", "regex over class/slot/action names (--source: over the code)")
+	g.Add(argparse.Arg{Type: regexType, Help: "Python regex, case-insensitive"}, "regex")
+	g.Add(argparse.Arg{Action: argparse.StoreTrue, Help: "search every line of every .java file (file:line text)"}, "--source")
+	add("slot-types", "per-type summary (count/OPERATOR/complex/TRANSIENT)").Add(
+		argparse.Arg{Help: "(reserved) filter marker"}, "--module")
+	add("ext-writable", "S19 lint preview: OPERATOR complex property without action")
+	add("compare", "schema diff <root>(A,older) vs <srcB>(newer)").Add(
+		argparse.Arg{Help: "source root B (newer) — <root> is A (older)"}, "srcB")
+	add("callers", "who calls a method across the tree").Add(
+		argparse.Arg{Help: "method name, e.g. setSetpoint / forceDefrost"}, "method")
+	add("selftest", "in-memory assertions (no tree needed)")
+	return p
+}
+
+func contains(xs []string, x string) bool {
+	for _, y := range xs {
+		if y == x {
+			return true
+		}
+	}
+	return false
+}
+
+// Main runs module-find with argv (without the program name).
+func Main(args []string, s cli.Stdio) int {
+	p := buildParser()
+	ns, code, done := p.Parse(args, s)
+	if done {
+		return code
+	}
+	cmd := ns.String("cmd")
+	if ns.Get("limit") != nil && !contains(limitCommands, cmd) {
+		sorted := append([]string(nil), limitCommands...)
+		sort.Strings(sorted)
+		return p.Error(s.Err, fmt.Sprintf("--limit does not apply to `%s` (it caps the rows of: %s)", cmd,
+			strings.Join(sorted, ", ")))
+	}
+	o := &opts{json: ns.Bool("json"), csv: ns.Bool("csv"), limit: ns.Int("limit"), out: s.Out, err: s.Err}
+	if cmd == "selftest" {
+		return selftest(s.Out)
+	}
+	root := ns.String("root")
+	if root == "" {
+		fmt.Fprintln(s.Err, "module-find: a src root is required for this command")
+		return 2
+	}
+	if st, err := os.Stat(root); err != nil || !st.IsDir() {
+		fmt.Fprintf(s.Err, "module-find: not a directory: %s\n", root)
+		return 3
+	}
+	m := newModule(root)
+	if m.files == 0 {
+		return honest.Fail(s.Err, "module-find", fmt.Sprintf("no .java files under %s (dot-dirs pruned)", root), 3)
+	}
+	o.scope = scope(m, root)
+	found := run(m, o, cmd, ns)
+	paths := make([]string, 0, len(m.unreadable))
+	for path := range m.unreadable {
+		paths = append(paths, path)
+	}
+	sort.Strings(paths)
+	for _, path := range paths {
+		fmt.Fprintf(s.Err, "module-find: unreadable, not searched: %s: %s\n", path, m.unreadable[path])
+	}
+	if found == 0 && contains(searchCommands, cmd) {
+		return 1
+	}
+	return 0
+}
+
+func regexArg(ns *argparse.Namespace, dest string) *pyre.Regexp {
+	re, _ := ns.Get(dest).(*pyre.Regexp)
+	return re
+}
+
+func run(m *module, o *opts, cmd string, ns *argparse.Namespace) int {
+	switch cmd {
+	case "slots":
+		return cmdSlots(m, o, slotFilter{typ: ns.String("type"), hasType: ns.Get("type") != nil,
+			flags: ns.String("flags"), hasFlag: ns.Get("flags") != nil, name: regexArg(ns, "name")})
+	case "actions":
+		return cmdActions(m, o, regexArg(ns, "name"))
+	case "writers":
+		cmdWriters(m, o, ns.String("slot"))
+	case "extends":
+		cmdExtends(m, o, ns.String("of"), ns.Get("of") != nil)
+	case "ords":
+		return cmdOrds(m, o, regexArg(ns, "name"))
+	case "grep":
+		return cmdGrep(m, o, regexArg(ns, "regex"), ns.Bool("source"))
+	case "slot-types":
+		cmdSlotTypes(m, o)
+	case "ext-writable":
+		cmdExtWritable(m, o)
+	case "compare":
+		cmdCompare(m, o, ns.String("srcB"))
+	case "callers":
+		return cmdCallers(m, o, ns.String("method"))
+	}
+	return -1
+}

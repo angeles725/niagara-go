@@ -1,0 +1,1 @@
+{"args": ["srcA", "slots", "-n", "x"], "env": {"COLUMNS": "80", "GIT_DIR": "/nonexistent"}}
