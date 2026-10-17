@@ -49,11 +49,10 @@ type Type struct {
 	Topics     []Decl
 }
 
-// Python re classes, as RE2 class bodies.
-const (
-	pySpace = `\t\n\v\f\r \x{1c}-\x{1f}\x{85}\x{a0}\x{1680}\x{2000}-\x{200a}\x{2028}\x{2029}\x{202f}\x{205f}\x{3000}`
-	pyWord  = `\p{L}\p{N}_`
-)
+// Python re classes, as RE2 class bodies; \s is str.isspace() from the shared pycompat table.
+var pySpace = pycompat.SpaceClass()
+
+const pyWord = `\p{L}\p{N}_`
 
 // Compile compiles a pattern written with Python's \s, \w and \d (inside or outside a
 // bracket class); the rest of the syntax must already be RE2's.

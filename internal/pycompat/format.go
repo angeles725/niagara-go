@@ -14,6 +14,12 @@ type FormatError struct{ Type, Msg string }
 
 func (e *FormatError) Error() string { return e.Msg }
 
+// maxFormatLen caps the padding width and the written float digits of one Format; see Format.
+const maxFormatLen = 1 << 28
+
+// memoryError is Python's MemoryError(), whose str() is empty.
+func memoryError() error { return &FormatError{Type: "MemoryError"} }
+
 func valueError(format string, a ...any) error {
 	return &FormatError{"ValueError", fmt.Sprintf(format, a...)}
 }
@@ -33,6 +39,12 @@ type fspec struct {
 // Python 3.15 format-spec mini-language: [[fill]align][sign][z][#][0][width][grouping]
 // [.precision[grouping]][type]. Widths and precisions count code points. Errors are
 // *FormatError with Python's exception class and message.
+//
+// One difference is intended: when the result would need a width above 2**28 code points of
+// padding, or a precision above 2**28 of written digits (e, f, % and alternate g), Format
+// returns a *FormatError of Type "MemoryError" with an empty Msg, Python's
+// str(MemoryError()). Python instead tries to allocate it and raises MemoryError only when
+// memory runs out, so such specs can still format there on a large enough machine.
 func Format(v any, spec string) (string, error) {
 	switch x := v.(type) {
 	case nil:
@@ -255,6 +267,9 @@ func formatStr(s, spec string) (string, error) {
 	if f.width <= n {
 		return s, nil
 	}
+	if f.width > maxFormatLen {
+		return "", memoryError()
+	}
 	pad := int(f.width - n)
 	left := 0
 	switch f.align {
@@ -309,7 +324,7 @@ func formatLong(n *big.Int, f *fspec) (string, error) {
 			return "", &FormatError{"OverflowError", "%c arg not in range(0x110000)"}
 		}
 		num.neg, num.remainder = false, string(rune(n.Int64()))
-		return layout(num, f), nil
+		return layout(num, f)
 	}
 	base, prefix := 10, ""
 	switch f.typ {
@@ -329,5 +344,5 @@ func formatLong(n *big.Int, f *fspec) (string, error) {
 	if f.typ == 'X' {
 		num.digits = strings.ToUpper(num.digits)
 	}
-	return layout(num, f), nil
+	return layout(num, f)
 }

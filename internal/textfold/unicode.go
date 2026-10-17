@@ -2,6 +2,7 @@ package textfold
 
 import (
 	_ "embed"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -22,14 +23,12 @@ type tables struct {
 	base      map[rune]string // NFKD without combining marks, when it differs from the rune
 	lower     map[rune]string // str.lower() of the single rune, when it differs
 	space     map[rune]bool   // str.isspace()
+	spaces    []rune          // the same code points, ascending
 	cased     []runeRange     // cased and not case-ignorable
 	ignorable []runeRange     // case-ignorable
 }
 
 var data = sync.OnceValue(func() *tables { return parseTables(unicodeData) })
-
-// UnicodeHeader is the first line of the embedded table (Python and Unicode version).
-func UnicodeHeader() string { return data().header }
 
 // parseTables reads unicode.txt: per line a record kind and its entries,
 // "lo-hi" ranges (e, C, I), "cp:cp.cp" mappings (d, l) or code points (s).
@@ -63,7 +62,9 @@ func parseTables(text string) *tables {
 				}
 				m[parseRune(from)] = string(parseSeq(to))
 			case "s":
-				t.space[parseRune(e)] = true
+				r := parseRune(e)
+				t.space[r] = true
+				t.spaces = append(t.spaces, r)
 			default:
 				corrupt(line)
 			}
@@ -137,6 +138,7 @@ func decompose(r rune) (string, bool) {
 }
 
 // IsSpace reports Python's str.isspace() for one rune: the separators of str.split().
+// It is the one isspace table of the module; pycompat.IsSpace and pycompat.Fields use it.
 func IsSpace(r rune) bool {
 	switch r {
 	case ' ', '\t', '\n', '\v', '\f', '\r', 0x1c, 0x1d, 0x1e, 0x1f:
@@ -144,3 +146,6 @@ func IsSpace(r rune) bool {
 	}
 	return r >= 0x80 && data().space[r]
 }
+
+// Spaces returns every str.isspace() code point, ascending.
+func Spaces() []rune { return slices.Clone(data().spaces) }

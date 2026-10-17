@@ -7,6 +7,7 @@ import (
 	"math"
 	"math/big"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"testing"
@@ -114,8 +115,8 @@ func typed(t *testing.T, raw json.RawMessage) any {
 
 func TestHeaderNamesFixtureVersions(t *testing.T) {
 	f := load(t)
-	if !strings.Contains(UnicodeHeader(), "Python "+f.Python+", Unicode "+f.Unicode) {
-		t.Errorf("unicode.txt %q is not from Python %s / Unicode %s", UnicodeHeader(), f.Python, f.Unicode)
+	if !strings.Contains(data().header, "Python "+f.Python+", Unicode "+f.Unicode) {
+		t.Errorf("unicode.txt %q is not from Python %s / Unicode %s", data().header, f.Python, f.Unicode)
 	}
 }
 
@@ -298,6 +299,21 @@ func TestLineBreakLenCountsCRLFOnce(t *testing.T) {
 		if got := LineBreakLen(s, 0); got != want {
 			t.Errorf("LineBreakLen(%q) = %d, want %d", s, got, want)
 		}
+	}
+}
+
+func TestSpaceClassMatchesIsSpace(t *testing.T) {
+	re := regexp.MustCompile(`^[` + SpaceClass() + `]$`)
+	for r := rune(0); r < 0x110000; r++ {
+		if r >= 0xD800 && r <= 0xDFFF {
+			continue
+		}
+		if got, want := re.MatchString(string(r)), IsSpace(r); got != want {
+			t.Fatalf("[SpaceClass()] on U+%04X = %v, str.isspace() %v", r, got, want)
+		}
+	}
+	if !regexp.MustCompile(`^[^` + SpaceClass() + `]$`).MatchString("x") {
+		t.Error("a negated SpaceClass() does not match a letter")
 	}
 }
 
