@@ -2,9 +2,14 @@
 GO      ?= go
 BIN     ?= bin
 LDFLAGS := -s -w
+# Analysis tools run through `go run` at an exact release; they are not module
+# dependencies (go.mod stays free of them).
+STATICCHECK ?= honnef.co/go/tools/cmd/staticcheck@v0.8.2
+DEADCODE    ?= golang.org/x/tools/cmd/deadcode@v0.50.0
+COVERPROFILE ?= $(BIN)/cover.out
 export CGO_ENABLED=0
 
-.PHONY: all build cross test test-short vet fmt-check check hooks clean
+.PHONY: all build cross test test-short vet fmt-check check lint deadcode cover ci hooks clean
 
 all: check build
 
@@ -28,6 +33,24 @@ fmt-check:
 	@out=$$(gofmt -l $$(git ls-files '*.go')); if [ -n "$$out" ]; then echo "$$out"; exit 1; fi
 
 check: fmt-check vet test
+
+lint:
+	$(GO) run $(STATICCHECK) ./...
+
+# Report-only: lists functions unreachable from any cmd/ main (deadcode exits 0
+# on findings; only a load error fails). Test-only helpers such as internal/golden
+# are listed too.
+deadcode:
+	$(GO) run $(DEADCODE) ./...
+
+# Packages are mostly exercised from other packages' tests, so coverage is
+# measured across ./internal/... rather than per package.
+cover:
+	@mkdir -p $(BIN)
+	$(GO) test -short -coverpkg=./internal/... -coverprofile=$(COVERPROFILE) ./...
+	@$(GO) tool cover -func=$(COVERPROFILE) | tail -n 1
+
+ci: check lint cross
 
 hooks:
 	git config core.hooksPath scripts/git-hooks
