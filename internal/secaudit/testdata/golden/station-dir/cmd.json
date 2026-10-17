@@ -1,0 +1,7 @@
+{
+ "args": [
+  "inputs/home-empty",
+  "--station",
+  "inputs/logs"
+ ]
+}

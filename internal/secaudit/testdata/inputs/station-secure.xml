@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- EncryptionKeySource = "keyring" -->
+<bajaObjectGraph version="4.0">
+<p t="b:Station" m="b=baja">
+<p n="SyslogService" t="syslog:SyslogService" m="syslog=syslog">
+<p n="enabled" v="true"/>
+</p>
+</p>
+</bajaObjectGraph>

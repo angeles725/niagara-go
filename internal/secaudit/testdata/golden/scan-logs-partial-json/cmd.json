@@ -1,0 +1,8 @@
+{
+ "args": [
+  "inputs/home-empty",
+  "--scan-logs",
+  "inputs/logs-partial",
+  "--json"
+ ]
+}

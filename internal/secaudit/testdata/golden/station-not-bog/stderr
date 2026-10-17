@@ -1,0 +1,1 @@
+ERROR: --station: inputs/not-a-bog.txt is not a BOG document (no <bajaObjectGraph root element)

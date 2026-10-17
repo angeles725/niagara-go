@@ -1,0 +1,32 @@
+
+  Niagara N4 security posture — 5 finding(s) / 9 checks
+
+  [91m[FAIL  ][0m SEC-01 (crit) moduleVerificationMode  [B75/B397]
+           observed: high [commented]
+           secure  : high
+           note    : low lets an UNSIGNED module requesting NETWORK_COMMUNICATION load (the 443 incident)
+  [90m[MANUAL][0m SEC-03 (crit) security/ filesystem ACLs  [B316/B113]
+           observed: not checked (need icacls)
+           note    : run: icacls <home>\security
+  [93m[FAIL  ][0m SEC-05 (high) commandLinePropertyBlacklist covers skip levers  [B113]
+           observed: partial
+           secure  : includes skipModuleValidation + commissioning.ignoreVerificationMode
+           note    : -Dniagara.classLoader.skipModuleValidation can disable chain validation at launch
+  [92m[PASS  ][0m SEC-07 (high) program.requireSigning (BProgram bytecode)  [B75]
+  [92m[PASS  ][0m SEC-08 (high) allowProgramRuntimeExec  [B75]
+  [93m[FAIL  ][0m SEC-10 (high) syslog offload to external SIEM  [B75/B393/B396]
+           observed: disabled/absent
+           secure  : enabled + serverHost + TLS transport
+           note    : the ONLY tamper-resistance for the (unsigned) local audit/history record
+  [92m[PASS  ][0m SEC-11 (med) weak signing keys / FIPS  [B113/B392]
+  [96m[FAIL  ][0m SEC-12 (med) config.bog at-rest encryption  [B114]
+           observed: EncryptionKeySource=external/none in raw header; EncryptionKeySource=external/none in XML prologue (none = plaintext)
+           secure  : keyring
+           note    : EncryptionKeySource=none leaves reversible passwords in the clear
+  [96m[FAIL  ][0m SEC-16 (med) local data record integrity (audit/history/backup/.bog)  [B393/B396]
+           observed: unsigned by design (architectural)
+           secure  : syslog offload (SEC-10) = resistance, not evidence
+           note    : Niagara signs code, not data; no toggle fixes this - audit via SEC-10
+
+  summary: 1 critical · 2 high · 2 med · 5 findings
+

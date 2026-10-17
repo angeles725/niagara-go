@@ -1,0 +1,3 @@
+ok
+ERROR Invalid signature in x
+CERT_PATH_VALIDATION_FAILURE

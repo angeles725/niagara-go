@@ -1,0 +1,46 @@
+
+  Niagara N4 security posture — 9 finding(s) / 11 checks
+
+  [91m[FAIL  ][0m SEC-01 (crit) moduleVerificationMode  [B75/B397]
+           observed: low
+           secure  : high
+           note    : low lets an UNSIGNED module requesting NETWORK_COMMUNICATION load (the 443 incident)
+  [90m[MANUAL][0m SEC-03 (crit) security/ filesystem ACLs  [B316/B113]
+           observed: not checked (need icacls)
+           note    : run: icacls <home>\security
+  [93m[FAIL  ][0m SEC-05 (high) commandLinePropertyBlacklist covers skip levers  [B113]
+           observed: disabled/absent
+           secure  : includes skipModuleValidation + commissioning.ignoreVerificationMode
+           note    : -Dniagara.classLoader.skipModuleValidation can disable chain validation at launch
+  [93m[FAIL  ][0m SEC-06 (high) license attributes relaxing signature  [B75/B113]
+           observed: beta.license:unreleasedSoftware, dev.license:skipModuleValidation
+           secure  : no developer/unreleased/smDeveloper flags
+           note    : developer{skipModuleValidation}/unreleasedSoftware accept self-signed / disable validation
+  [93m[FAIL  ][0m SEC-07 (high) program.requireSigning (BProgram bytecode)  [B75]
+           observed: false/default
+           secure  : true
+           note    : superuser BProgram runs arbitrary bytecode unsigned
+  [93m[FAIL  ][0m SEC-08 (high) allowProgramRuntimeExec  [B75]
+           observed: true
+           secure  : false
+           note    : Runtime.exec() from programs
+  [93m[FAIL  ][0m SEC-10 (high) syslog offload to external SIEM  [B75/B393/B396]
+           observed: disabled/absent
+           secure  : enabled + serverHost + TLS transport
+           note    : the ONLY tamper-resistance for the (unsigned) local audit/history record
+  [92m[PASS  ][0m SEC-11 (med) weak signing keys / FIPS  [B113/B392]
+  [96m[FAIL  ][0m SEC-12 (med) config.bog at-rest encryption  [B114]
+           observed: EncryptionKeySource=none in raw header; EncryptionKeySource=none in XML prologue (none = plaintext)
+           secure  : keyring
+           note    : EncryptionKeySource=none leaves reversible passwords in the clear
+  [96m[FAIL  ][0m SEC-15 (med) KeyRingPermission wildcard in unsigned module  [B114]
+           observed: 3 modules declare it, 2 wildcard(name=*), 1 of those UNSIGNED
+           secure  : no wildcard KeyRingPermission in an unsigned/attacker module
+           note    : unsigned wildcard holders: wildOpen-rt.jar
+  [96m[FAIL  ][0m SEC-16 (med) local data record integrity (audit/history/backup/.bog)  [B393/B396]
+           observed: unsigned by design (architectural)
+           secure  : syslog offload (SEC-10) = resistance, not evidence
+           note    : Niagara signs code, not data; no toggle fixes this - audit via SEC-10
+
+  summary: 1 critical · 5 high · 3 med · 9 findings
+

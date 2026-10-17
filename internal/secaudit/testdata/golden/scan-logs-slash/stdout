@@ -1,0 +1,6 @@
+
+  Log-IOC harvest — 1 indicator(s) in 1 log file(s) under inputs/logs/sub/
+
+  [96m[med][0m self-signed cert not permitted  inputs/logs/sub/app.log.1:1
+         Self signed signing certificate not permitted é
+

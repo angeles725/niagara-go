@@ -1,0 +1,7 @@
+{
+ "args": [
+  "inputs/home-partial",
+  "--station",
+  "inputs/station-zip.bog"
+ ]
+}

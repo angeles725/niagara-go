@@ -1,0 +1,7 @@
+{
+ "args": [
+  "inputs/home-secure",
+  "--station",
+  "inputs/station-secure.xml"
+ ]
+}

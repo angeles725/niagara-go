@@ -1,0 +1,102 @@
+[
+  {
+    "id": "SEC-01",
+    "sev": "crit",
+    "title": "moduleVerificationMode",
+    "observed": "low",
+    "secure": "high",
+    "verdict": "FAIL",
+    "block": "B75/B397",
+    "note": "low lets an UNSIGNED module requesting NETWORK_COMMUNICATION load (the 443 incident)"
+  },
+  {
+    "id": "SEC-03",
+    "sev": "crit",
+    "title": "security/ filesystem ACLs",
+    "observed": "not checked (need icacls)",
+    "secure": "Admin/SYSTEM only",
+    "verdict": "MANUAL",
+    "block": "B316/B113",
+    "note": "run: icacls <home>\\security"
+  },
+  {
+    "id": "SEC-05",
+    "sev": "high",
+    "title": "commandLinePropertyBlacklist covers skip levers",
+    "observed": "disabled/absent",
+    "secure": "includes skipModuleValidation + commissioning.ignoreVerificationMode",
+    "verdict": "FAIL",
+    "block": "B113",
+    "note": "-Dniagara.classLoader.skipModuleValidation can disable chain validation at launch"
+  },
+  {
+    "id": "SEC-06",
+    "sev": "high",
+    "title": "license attributes relaxing signature",
+    "observed": "beta.license:unreleasedSoftware, dev.license:skipModuleValidation",
+    "secure": "no developer/unreleased/smDeveloper flags",
+    "verdict": "FAIL",
+    "block": "B75/B113",
+    "note": "developer{skipModuleValidation}/unreleasedSoftware accept self-signed / disable validation"
+  },
+  {
+    "id": "SEC-07",
+    "sev": "high",
+    "title": "program.requireSigning (BProgram bytecode)",
+    "observed": "false/default",
+    "secure": "true",
+    "verdict": "FAIL",
+    "block": "B75",
+    "note": "superuser BProgram runs arbitrary bytecode unsigned"
+  },
+  {
+    "id": "SEC-08",
+    "sev": "high",
+    "title": "allowProgramRuntimeExec",
+    "observed": "not checked (no --station config.bog)",
+    "secure": "-",
+    "verdict": "MANUAL",
+    "block": "B75/B396",
+    "note": "pass --station <config.bog>"
+  },
+  {
+    "id": "SEC-10",
+    "sev": "high",
+    "title": "syslog offload to SIEM",
+    "observed": "not checked (no --station config.bog)",
+    "secure": "-",
+    "verdict": "MANUAL",
+    "block": "B75/B396",
+    "note": "pass --station <config.bog>"
+  },
+  {
+    "id": "SEC-11",
+    "sev": "med",
+    "title": "weak signing keys / FIPS",
+    "observed": "key sizes n/a; FIPS keystore absent",
+    "secure": "all keys >= 2048; FIPS suppresses RSA-1024 option",
+    "verdict": "PASS",
+    "block": "B113/B392",
+    "note": "RSA-1024 allowed with click-through warning"
+  },
+  {
+    "id": "SEC-15",
+    "sev": "med",
+    "title": "KeyRingPermission wildcard in unsigned module",
+    "observed": "3 modules declare it, 2 wildcard(name=*), 1 of those UNSIGNED",
+    "secure": "no wildcard KeyRingPermission in an unsigned/attacker module",
+    "verdict": "FAIL",
+    "block": "B114",
+    "note": "unsigned wildcard holders: wildOpen-rt.jar"
+  },
+  {
+    "id": "SEC-16",
+    "sev": "med",
+    "title": "local data record integrity (audit/history/backup/.bog)",
+    "observed": "unsigned by design (architectural)",
+    "secure": "syslog offload (SEC-10) = resistance, not evidence",
+    "verdict": "FAIL",
+    "block": "B393/B396",
+    "note": "Niagara signs code, not data; no toggle fixes this - audit via SEC-10"
+  }
+]

@@ -1,0 +1,2 @@
+WARNING: --scan-logs: 1 unreadable log file(s) not scanned:
+  inputs/logs-partial/station.log: No such file or directory

@@ -1,0 +1,5 @@
+INFO boot
+SEVERE Module validation has been DISABLED for this run
+WARNING No code signers for entry com/x/Y.class in bad-rt.jar
+program.notSigned: Program1
+   ERROR is not signed; module validation is disabled   

@@ -1,0 +1,20 @@
+
+  Log-IOC harvest — 8 indicator(s) in 3 log file(s) under inputs/logs
+
+  [91m[crit][0m module-validation-disabled banner  inputs/logs/console.log:2
+         SEVERE Module validation has been DISABLED for this run
+  [91m[crit][0m module validation is disabled  inputs/logs/console.log:5
+         ERROR is not signed; module validation is disabled
+  [93m[high][0m unsigned module loaded (No code signers)  inputs/logs/console.log:3
+         WARNING No code signers for entry com/x/Y.class in bad-rt.jar
+  [93m[high][0m unsigned BProgram executed  inputs/logs/console.log:4
+         program.notSigned: Program1
+  [93m[high][0m unsigned BProgram executed  inputs/logs/console.log:5
+         ERROR is not signed; module validation is disabled
+  [96m[med][0m signature validation failure  inputs/logs/station.txt:2
+         ERROR Invalid signature in x
+  [96m[med][0m cert path validation failure  inputs/logs/station.txt:3
+         CERT_PATH_VALIDATION_FAILURE
+  [96m[med][0m self-signed cert not permitted  inputs/logs/sub/app.log.1:1
+         Self signed signing certificate not permitted é
+

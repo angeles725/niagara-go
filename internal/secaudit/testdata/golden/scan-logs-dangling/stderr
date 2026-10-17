@@ -1,0 +1,3 @@
+WARNING: --scan-logs: 1 unreadable log file(s) not scanned:
+  inputs/logs-dangling/nre.log: No such file or directory
+ERROR: --scan-logs: 0 readable log files (*.log, console/station/nre/daemon *.txt) under inputs/logs-dangling (1 unreadable)

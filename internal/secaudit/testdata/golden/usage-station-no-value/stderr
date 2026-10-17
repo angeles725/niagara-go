@@ -1,0 +1,3 @@
+usage: niagara-security-audit.py [-h] [--station STATION] [--host HOST] [--scan-logs DIR] [--json]
+                                 niagara_home
+niagara-security-audit.py: error: argument --station: expected one argument
