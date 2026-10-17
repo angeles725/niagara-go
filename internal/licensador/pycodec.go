@@ -234,6 +234,7 @@ func b64uDecode(s string) ([]byte, error) {
 		}
 	}
 	if quad == 1 {
+		//lint:ignore ST1005 parity with the Python message
 		return nil, fmt.Errorf("Invalid base64-encoded string: number of data characters (%d) cannot be 1 more than a multiple of 4", len(out)/3*4+1)
 	}
 	return out, nil
