@@ -136,7 +136,7 @@ func scanLogs(root string) (hits []hit, nfiles int, bad, badDirs []unreadable) {
 	walk = func(dir string) {
 		entries, err := os.ReadDir(dir)
 		if err != nil {
-			badDirs = append(badDirs, unreadable{dir, strerror(err)})
+			badDirs = append(badDirs, unreadable{dir, pycompat.StrerrorOf(err)})
 		}
 		var subdirs []string
 		for _, ent := range entries {
@@ -152,7 +152,7 @@ func scanLogs(root string) (hits []hit, nfiles int, bad, badDirs []unreadable) {
 			}
 			found, err := scanFile(p)
 			if err != nil {
-				bad = append(bad, unreadable{p, strerror(err)})
+				bad = append(bad, unreadable{p, pycompat.StrerrorOf(err)})
 				continue
 			}
 			nfiles++

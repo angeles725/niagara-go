@@ -7,6 +7,7 @@ import (
 	"syscall"
 	"testing"
 
+	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 )
 
@@ -32,13 +33,13 @@ func TestOSErrorTexts(t *testing.T) {
 		t.Skip("the expected texts are the Linux errno numbers and strerror messages")
 	}
 	_, err := os.Open("/nonexistent/x")
-	if got, want := strerror(err), "No such file or directory"; got != want {
+	if got, want := pycompat.StrerrorOf(err), "No such file or directory"; got != want {
 		t.Errorf("strerror = %q, want %q", got, want)
 	}
-	if got, want := strerror(syscall.EACCES), "Permission denied"; got != want {
-		t.Errorf("strerror(EACCES) = %q, want %q", got, want)
+	if got, want := pycompat.StrerrorOf(syscall.EACCES), "Permission denied"; got != want {
+		t.Errorf("pycompat.StrerrorOf(EACCES) = %q, want %q", got, want)
 	}
-	if got := strerror(errors.New("plain")); got != "plain" {
-		t.Errorf("strerror(non-OS error) = %q", got)
+	if got := pycompat.StrerrorOf(errors.New("plain")); got != "plain" {
+		t.Errorf("pycompat.StrerrorOf(non-OS error) = %q", got)
 	}
 }

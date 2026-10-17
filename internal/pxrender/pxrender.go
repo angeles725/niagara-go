@@ -11,7 +11,6 @@ import (
 	"os"
 	"sort"
 	"strings"
-	"syscall"
 
 	"github.com/angeles725/niagara-go/internal/cli"
 	"github.com/angeles725/niagara-go/internal/honest"
@@ -28,17 +27,6 @@ type Options struct {
 	Seed      string  // demo-state seed tag (default: px basename)
 	Title     string  // page <title>
 	Subtitle  string  // note line under the header (raw HTML)
-}
-
-// strerror renders an I/O error the way Python's OSError.strerror does.
-func strerror(err error) string {
-	var errno syscall.Errno
-	if errors.As(err, &errno) {
-		if msg := errno.Error(); msg != "" {
-			return strings.ToUpper(msg[:1]) + msg[1:]
-		}
-	}
-	return err.Error()
 }
 
 func pageHTML(o Options, name, cw, ch, body string) string {
@@ -89,7 +77,7 @@ func Run(o Options, s cli.Stdio) int {
 	}
 	if o.Out != "" {
 		if err := os.WriteFile(o.Out, []byte(page), 0o666); err != nil {
-			return honest.Fail(s.Err, "px-render", fmt.Sprintf("cannot write %s: %s", o.Out, strerror(err)), honest.ExitInput)
+			return honest.Fail(s.Err, "px-render", fmt.Sprintf("cannot write %s: %s", o.Out, pycompat.StrerrorOf(err)), honest.ExitInput)
 		}
 		fmt.Fprintf(s.Out, "wrote %s  (%d widgets, %d assets, %.2f MB, canvas %sx%s)\n", o.Out, res.widgets,
 			res.assets, float64(len(page))/1048576, res.canvasW, res.canvasH)

@@ -4,16 +4,15 @@
 package qnx6read
 
 import (
-	"errors"
 	"fmt"
 	"io/fs"
 	"os"
 	"sort"
 	"strings"
-	"syscall"
 
 	"github.com/angeles725/niagara-go/internal/cli"
 	"github.com/angeles725/niagara-go/internal/honest"
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // Extract names one file to copy out of the image.
@@ -56,21 +55,10 @@ func ValidateImage(image string, charDevice bool) string {
 	}
 	f, err := os.Open(image)
 	if err != nil {
-		return fmt.Sprintf("cannot read image %s: %s", image, strerror(err))
+		return fmt.Sprintf("cannot read image %s: %s", image, pycompat.StrerrorOf(err))
 	}
 	f.Close()
 	return ""
-}
-
-// strerror renders an I/O error the way Python's OSError.strerror does.
-func strerror(err error) string {
-	var errno syscall.Errno
-	if errors.As(err, &errno) {
-		if msg := errno.Error(); msg != "" {
-			return strings.ToUpper(msg[:1]) + msg[1:]
-		}
-	}
-	return err.Error()
 }
 
 // fail writes "qnx6read: <message>" to stderr and returns code (honest.Fail with a format).
@@ -93,7 +81,7 @@ func Run(o Options, s cli.Stdio) int {
 	}
 	f, err := os.Open(o.Image)
 	if err != nil {
-		return fail(s, cli.ExitCannotSearch, "cannot read image %s: %s", o.Image, strerror(err))
+		return fail(s, cli.ExitCannotSearch, "cannot read image %s: %s", o.Image, pycompat.StrerrorOf(err))
 	}
 	defer f.Close()
 	q, err := open(f, part, o.Image)
@@ -145,7 +133,7 @@ func extract(q *qnx6, x *Extract, s cli.Stdio) int {
 		return fail(s, cli.ExitCannotSearch, "%s", err)
 	}
 	if err := os.WriteFile(x.Dst, data, 0o666); err != nil {
-		return fail(s, cli.ExitCannotSearch, "cannot write %s: %s", x.Dst, strerror(err))
+		return fail(s, cli.ExitCannotSearch, "cannot write %s: %s", x.Dst, pycompat.StrerrorOf(err))
 	}
 	fmt.Fprintf(s.Err, "extracted %s -> %s (%d bytes)\n", x.Src, x.Dst, len(data))
 	return cli.ExitFound

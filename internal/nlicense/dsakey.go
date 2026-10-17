@@ -13,6 +13,8 @@ import (
 	"fmt"
 	"math/big"
 	"os"
+
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // b64decode mirrors base64.b64decode(s) (non-strict, Python 3.15): bytes
@@ -120,7 +122,7 @@ var oidDSA = asn1.ObjectIdentifier{1, 2, 840, 10040, 4, 1}
 func loadDSAPrivateKey(path string) (*dsa.PrivateKey, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return nil, fmt.Errorf("cannot read the DSA private key %s: %s", path, strerror(err))
+		return nil, fmt.Errorf("cannot read the DSA private key %s: %s", path, pycompat.StrerrorOf(err))
 	}
 	for {
 		var b *pem.Block

@@ -70,7 +70,7 @@ func sysExit(msg string) error { return exitError{msg, 1} }
 func readXML(path string) (*document, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return nil, fmt.Errorf("OSError: Error reading file '%s': failed to load \"%s\": %s", path, path, strerror(err))
+		return nil, fmt.Errorf("OSError: Error reading file '%s': failed to load \"%s\": %s", path, path, pycompat.StrerrorOf(err))
 	}
 	doc, err := parseXML(data)
 	if err != nil {
@@ -368,7 +368,7 @@ func pyOpenError(err error, path string) error {
 	var errno syscall.Errno
 	switch {
 	case runtime.GOOS != "windows" && errors.As(err, &errno):
-		code, msg = int(errno), strerror(errno)
+		code, msg = int(errno), pycompat.StrerrorOf(errno)
 		switch errno {
 		case syscall.ENOENT:
 			cls = "FileNotFoundError"
@@ -400,16 +400,4 @@ func dirOpenErrno() error {
 		return fs.ErrPermission
 	}
 	return syscall.EISDIR
-}
-
-// strerror is the C strerror text of an OS error ("No such file or directory").
-func strerror(err error) string {
-	var errno syscall.Errno
-	if errors.As(err, &errno) {
-		msg := errno.Error()
-		if msg != "" {
-			return strings.ToUpper(msg[:1]) + msg[1:]
-		}
-	}
-	return err.Error()
 }

@@ -11,7 +11,6 @@ import (
 	"os"
 	"regexp"
 	"strings"
-	"syscall"
 
 	"github.com/angeles725/niagara-go/internal/cli"
 	"github.com/angeles725/niagara-go/internal/honest"
@@ -97,23 +96,11 @@ func schemaOf(xml string) (id, recordType string, fields []string) {
 	return firstGroup(idRE, xml, "?"), firstGroup(recordTypeRE, xml, "?"), fields
 }
 
-// strerror renders an I/O error the way Python's OSError.strerror does.
-func strerror(err error) string {
-	var errno syscall.Errno
-	if errors.As(err, &errno) {
-		msg := errno.Error()
-		if msg != "" {
-			return strings.ToUpper(msg[:1]) + msg[1:]
-		}
-	}
-	return err.Error()
-}
-
 // Run executes one hdbread invocation and returns its exit code.
 func Run(o Options, s cli.Stdio) int {
 	data, err := os.ReadFile(o.Path)
 	if err != nil {
-		return honest.Fail(s.Err, "hdbread", fmt.Sprintf("cannot read %s: %s", o.Path, strerror(err)), honest.ExitInput)
+		return honest.Fail(s.Err, "hdbread", fmt.Sprintf("cannot read %s: %s", o.Path, pycompat.StrerrorOf(err)), honest.ExitInput)
 	}
 	if o.Records {
 		return runRecords(o, data, s)
