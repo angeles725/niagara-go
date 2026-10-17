@@ -2,6 +2,7 @@ package secaudit
 
 import (
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -240,5 +241,60 @@ func TestKeytoolFailureTextIsCutAt120CodePoints(t *testing.T) {
 		if err != nil || o.failure != tc.want {
 			t.Errorf("failure = %q, %v; want %q", o.failure, err, tc.want)
 		}
+	}
+}
+
+// A keytool that stalls is cut off after keytoolTimeout (60 s) and both keytool rows become a
+// SKIP that says so, with each row's usual note; the audit itself carries on.
+func TestKeytoolTimeoutIsASkip(t *testing.T) {
+	home := homeWithTruststore(t)
+	var timeouts []time.Duration
+	e := probeEnv("", "", "", nil)
+	e.run = func(argv []string, _ []byte, timeout time.Duration, _ ...string) (result, error) {
+		if argv[0] != "keytool" {
+			return result{}, &startError{"unexpected " + strings.Join(argv, " ")}
+		}
+		timeouts = append(timeouts, timeout)
+		return result{}, &timeoutError{"Command ['keytool'] timed out after 60 seconds"}
+	}
+	rows := rowsByID(t, e, home, "")
+	if r := rows["SEC-02"]; r.verdict != "SKIP" || r.observed != "not verified (keytool timed out after 60 s)" ||
+		r.note != "run: keytool -list -keystore <home>/security/truststore.jks" {
+		t.Errorf("SEC-02 = %s %q (%q)", r.verdict, r.observed, r.note)
+	}
+	if r := rows["SEC-11"]; r.verdict != "SKIP" ||
+		r.observed != "key sizes not read (keytool timed out after 60 s); FIPS keystore absent" ||
+		r.note != "run: keytool -list -v -keystore <home>/security/truststore.jks with the store password" {
+		t.Errorf("SEC-11 = %s %q (%q)", r.verdict, r.observed, r.note)
+	}
+	if len(timeouts) != 2 || timeouts[0] != 60*time.Second || timeouts[1] != 60*time.Second {
+		t.Errorf("keytool timeouts = %v, want [1m0s 1m0s]", timeouts)
+	}
+}
+
+// The real runner kills a keytool that outlives keytoolTimeout instead of waiting for it.
+func TestStalledKeytoolIsKilled(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("the fake keytool is a shell script")
+	}
+	sleep, err := exec.LookPath("sleep")
+	if err != nil {
+		t.Skip("no sleep on PATH")
+	}
+	bin := t.TempDir()
+	if err := os.WriteFile(filepath.Join(bin, "keytool"), []byte("#!/bin/sh\nexec "+sleep+" 30\n"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("PATH", bin)
+	saved := keytoolTimeout
+	keytoolTimeout = 200 * time.Millisecond
+	defer func() { keytoolTimeout = saved }()
+	start := time.Now()
+	o, err := defaultEnv().keytoolList("ts.jks", false)
+	if err != nil || o.opened || o.wrongPass || o.failure != "timed out after 0.2 s" {
+		t.Errorf("keytoolList = %+v, %v", o, err)
+	}
+	if d := time.Since(start); d > 10*time.Second {
+		t.Errorf("keytoolList took %s", d)
 	}
 }

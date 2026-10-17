@@ -66,6 +66,7 @@ func runProgram(argv []string, stdin []byte, timeout time.Duration, extraEnv ...
 	var out, errb bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &out, &errb
 	cmd.WaitDelay = time.Second
+	killTreeOnCancel(cmd)
 	err := cmd.Run()
 	if ctx.Err() != nil {
 		return result{}, &timeoutError{fmt.Sprintf("Command %s timed out after %s seconds",
@@ -120,7 +121,7 @@ func isDir(p string) bool {
 type keytoolOutcome struct {
 	opened    bool   // exit 0: the store opened with "changeit"
 	wrongPass bool   // keytool refused the password ("... password was incorrect")
-	failure   string // "exit N: <first output line, 120 characters at most>" for any non-zero exit
+	failure   string // "exit N: <first line, 120 characters at most>" on a non-zero exit; "timed out after N s"
 	stdout    string
 }
 
@@ -132,13 +133,22 @@ const storepassVar = "NIAGARA_SECAUDIT_STOREPASS"
 // keytool prints its errors on stdout, so both streams are searched.
 const wrongPassMarker = "password was incorrect"
 
+// keytoolTimeout bounds every keytool run: a stalled keytool must not hang the audit.
+var keytoolTimeout = 60 * time.Second
+
 // keytoolList runs "keytool -list [-v]" on the store at path with the default password.
 func (e *env) keytoolList(path string, verbose bool) (keytoolOutcome, error) {
 	argv := []string{"keytool", "-list"}
 	if verbose {
 		argv = append(argv, "-v")
 	}
-	r, err := e.run(append(argv, "-keystore", path, "-storepass:env", storepassVar), nil, 0, storepassVar+"=changeit")
+	r, err := e.run(append(argv, "-keystore", path, "-storepass:env", storepassVar), nil, keytoolTimeout,
+		storepassVar+"=changeit")
+	var timedOut *timeoutError
+	if errors.As(err, &timedOut) { // not opened, not refused: the rows say the store was not checked
+		return keytoolOutcome{failure: "timed out after " +
+			strconv.FormatFloat(keytoolTimeout.Seconds(), 'f', -1, 64) + " s"}, nil
+	}
 	if err != nil {
 		return keytoolOutcome{}, err
 	}
