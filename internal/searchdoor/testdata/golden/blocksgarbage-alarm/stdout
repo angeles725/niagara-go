@@ -1,0 +1,45 @@
+
+Query: 'blocksgarbage alarm'   mode=backend default   docs=niagara-help default
+
+========================================================================
+SOURCE 1 · OUR BLOCKS   (corpus-nav find)
+========================================================================
+   1. block index v0 dump
+   2. row one without a header
+
+========================================================================
+SOURCE 2 · OFFICIAL DOCS   (niagara_help find)
+========================================================================
+  5 files matching 'blocksgarbage alarm' (docs default, default mode):
+  by source: guides-clean 3, devguide-clean 2
+   1. guides-clean/Blocksgarbage/page1.html  [guides-clean] Blocksgarbage guide, page 1
+        L10: how the blocksgarbage setting works
+   2. guides-clean/Alarm/page2.html  [guides-clean] Alarm guide, page 2
+        L11: how the alarm setting works
+   3. guides-clean/Blocksgarbage/page3.html  [guides-clean] Blocksgarbage guide, page 3
+        L12: how the blocksgarbage setting works
+   4. guides-clean/Alarm/page4.html  [guides-clean] Alarm guide, page 4
+        L13: how the alarm setting works
+   5. Blocksgarbage guide, page 5  [guides-clean] Blocksgarbage guide, page 5
+        L14: how the blocksgarbage setting works
+
+========================================================================
+SOURCE 3 · CODE   (module_nav rank)
+========================================================================
+  Rank 'blocksgarbage alarm': 4 matching classes (terms: blocksgarbage, alarm)
+   1. BBlocksgarbageService  [demo-rt]  score 9.250
+        com/demo/BBlocksgarbageService.java
+   2. BBlocksgarbageExt  [demo-rt]  score 9.000
+        com/demo/BBlocksgarbageExt.java
+   3. BAlarmService  [demo-rt]  score 8.750
+        com/demo/BAlarmService.java
+   4. BAlarmExt  [demo-rt]  score 8.500
+        com/demo/BAlarmExt.java
+  -- course code   (BM25 over course/{course,solutions,niagara-4.15.6.20/dev}/**/*.java) --
+    searched 4 .java files of the N4 developer course (course 2, verified solution 1, dev kit example 1)
+     1. BAlarmCounter  [course]  score 1.497
+          course/lab3/BAlarmCounter.java
+     2. BRoomPanel  [verified solution]  score 0.700
+          solutions/exam/BRoomPanel.java
+
+Summary: blocks 2 ranked · docs 5 ranked · code 4 ranked + course code 2 ranked

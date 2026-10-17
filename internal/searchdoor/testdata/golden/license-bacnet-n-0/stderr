@@ -1,0 +1,4 @@
+usage: nsearch license [-h] [--version] [--limit LIMIT] [--timeout TIMEOUT]
+                       [--doc-version VERSION]
+                       name
+nsearch license: error: --limit and --timeout must be at least 1

@@ -1,0 +1,4 @@
+usage: find3 [-h] [--version] [--limit LIMIT] [--timeout TIMEOUT]
+             [--doc-version VERSION] [--and | --or]
+             query [query ...]
+find3: error: the following arguments are required: query

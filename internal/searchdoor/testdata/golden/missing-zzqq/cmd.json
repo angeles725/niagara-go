@@ -1,0 +1,1 @@
+{"args": ["zzqq"], "env": {"COLUMNS": "80", "GIT_DIR": "/nonexistent", "NSEARCH_CORPUS_NAV": "missing/corpus-nav.py", "NSEARCH_COURSE_ROOT": "empty-course", "NSEARCH_MODULE_NAV": "fake/module_nav.py", "NSEARCH_NIAGARA_HELP": "missing/niagara_help.py", "PYTHONHASHSEED": "0", "PYTHONIOENCODING": "utf-8", "PYTHON_COLORS": "0"}}

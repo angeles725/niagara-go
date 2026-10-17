@@ -1,0 +1,24 @@
+
+License: 'docsdown' resolved as a feature   docs/blocks query='license docsdown'
+
+========================================================================
+CODE · call sites of feature docsdown   (module_nav license-feature docsdown)
+========================================================================
+  note: 'docsdown' is not one of 4 module names, so it is treated as a feature
+  0 matches for license feature 'docsdown'
+  0 results (searched; see the scope line above -- not proof of absence)
+
+========================================================================
+OFFICIAL DOCS · license pages   (niagara_help find)
+========================================================================
+  [!] error: niagara_help: no search index for this version (exit 2)   (unavailable: not a zero)
+
+========================================================================
+OUR BLOCKS · licensing research   (corpus-nav find)
+========================================================================
+   1. B101 · Block 101 — license research (and mode, --limit 2000)
+        12: > a line about license in block 101
+   2. B102 · Block 102 — docsdown research (and mode, --limit 2000)
+        13: > a line about docsdown in block 102
+
+Summary: code 0 (searched) · docs UNAVAILABLE · blocks 2 ranked

@@ -1,0 +1,44 @@
+
+Query: 'alarm blocksdown'   mode=backend default   docs=niagara-help default
+
+========================================================================
+SOURCE 1 · OUR BLOCKS   (corpus-nav find)
+========================================================================
+  [!] error: RuntimeError: block index is corrupt (exit 2)   (unavailable: not a zero)
+
+========================================================================
+SOURCE 2 · OFFICIAL DOCS   (niagara_help find)
+========================================================================
+  5 files matching 'alarm blocksdown' (docs default, default mode):
+  by source: guides-clean 3, devguide-clean 2
+   1. guides-clean/Alarm/page1.html  [guides-clean] Alarm guide, page 1
+        L10: how the alarm setting works
+   2. guides-clean/Blocksdown/page2.html  [guides-clean] Blocksdown guide, page 2
+        L11: how the blocksdown setting works
+   3. guides-clean/Alarm/page3.html  [guides-clean] Alarm guide, page 3
+        L12: how the alarm setting works
+   4. guides-clean/Blocksdown/page4.html  [guides-clean] Blocksdown guide, page 4
+        L13: how the blocksdown setting works
+   5. Alarm guide, page 5  [guides-clean] Alarm guide, page 5
+        L14: how the alarm setting works
+
+========================================================================
+SOURCE 3 · CODE   (module_nav rank)
+========================================================================
+  Rank 'alarm blocksdown': 4 matching classes (terms: alarm, blocksdown)
+   1. BAlarmService  [demo-rt]  score 9.250
+        com/demo/BAlarmService.java
+   2. BAlarmExt  [demo-rt]  score 9.000
+        com/demo/BAlarmExt.java
+   3. BBlocksdownService  [demo-rt]  score 8.750
+        com/demo/BBlocksdownService.java
+   4. BBlocksdownExt  [demo-rt]  score 8.500
+        com/demo/BBlocksdownExt.java
+  -- course code   (BM25 over course/{course,solutions,niagara-4.15.6.20/dev}/**/*.java) --
+    searched 4 .java files of the N4 developer course (course 2, verified solution 1, dev kit example 1)
+     1. BAlarmCounter  [course]  score 1.497
+          course/lab3/BAlarmCounter.java
+     2. BRoomPanel  [verified solution]  score 0.700
+          solutions/exam/BRoomPanel.java
+
+Summary: blocks UNAVAILABLE · docs 5 ranked · code 4 ranked + course code 2 ranked

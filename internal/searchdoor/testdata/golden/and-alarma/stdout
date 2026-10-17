@@ -1,0 +1,42 @@
+
+Query: 'alarma'   mode=and   docs=niagara-help default
+Spanish terms: alarma→alarm   (course code also search these English terms; the docs and the module_nav code ranking apply their own glossary copies)
+
+========================================================================
+SOURCE 1 · OUR BLOCKS   (corpus-nav find)
+========================================================================
+   1. B101 · Block 101 — alarma research (and mode, --limit 2000)
+        12: > a line about alarma in block 101
+   2. B102 · Block 102 — alarma research (and mode, --limit 2000)
+        13: > a line about alarma in block 102
+
+========================================================================
+SOURCE 2 · OFFICIAL DOCS   (niagara_help find)
+========================================================================
+  4 files matching 'alarma' (docs default, and mode):
+  by source: guides-clean 3, devguide-clean 2
+   1. guides-clean/Alarma/page1.html  [guides-clean] Alarma guide, page 1
+        L10: how the alarma setting works
+   2. guides-clean/Alarma/page2.html  [guides-clean] Alarma guide, page 2
+        L11: how the alarma setting works
+   3. guides-clean/Alarma/page3.html  [guides-clean] Alarma guide, page 3
+        L12: how the alarma setting works
+   4. Alarma guide, page 4  [guides-clean] Alarma guide, page 4
+        L13: how the alarma setting works
+
+========================================================================
+SOURCE 3 · CODE   (module_nav rank)
+========================================================================
+  Rank 'alarma': 2 matching classes (terms: alarma)
+   1. BAlarmaService  [demo-rt]  score 9.250
+        com/demo/BAlarmaService.java
+   2. BAlarmaExt  [demo-rt]  score 9.000
+        com/demo/BAlarmaExt.java
+  -- course code   (BM25 over course/{course,solutions,niagara-4.15.6.20/dev}/**/*.java) --
+    searched 4 .java files of the N4 developer course (course 2, verified solution 1, dev kit example 1)
+     1. BAlarmCounter  [course]  score 0.748
+          course/lab3/BAlarmCounter.java
+     2. BRoomPanel  [verified solution]  score 0.350
+          solutions/exam/BRoomPanel.java
+
+Summary: blocks 2 ranked · docs 4 ranked · code 2 ranked + course code 2 ranked

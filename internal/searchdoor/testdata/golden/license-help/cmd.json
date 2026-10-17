@@ -1,0 +1,1 @@
+{"args": ["license", "--help"], "env": {"COLUMNS": "80", "GIT_DIR": "/nonexistent", "NSEARCH_CORPUS_NAV": "fake/corpus-nav.py", "NSEARCH_COURSE_ROOT": "course", "NSEARCH_MODULE_NAV": "fake/module_nav.py", "NSEARCH_NIAGARA_HELP": "fake/niagara_help.py", "PYTHONHASHSEED": "0", "PYTHONIOENCODING": "utf-8", "PYTHON_COLORS": "0"}}

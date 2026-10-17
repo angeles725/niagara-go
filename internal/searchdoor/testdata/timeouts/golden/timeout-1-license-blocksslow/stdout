@@ -1,0 +1,32 @@
+
+License: 'blocksslow' resolved as a feature   docs/blocks query='license blocksslow'
+
+========================================================================
+CODE · call sites of feature blocksslow   (module_nav license-feature blocksslow)
+========================================================================
+  note: 'blocksslow' is not one of 4 module names, so it is treated as a feature
+  0 matches for license feature 'blocksslow'
+  0 results (searched; see the scope line above -- not proof of absence)
+
+========================================================================
+OFFICIAL DOCS · license pages   (niagara_help find)
+========================================================================
+  5 files matching 'license blocksslow' (docs default, default mode):
+  by source: guides-clean 3, devguide-clean 2
+   1. guides-clean/License/page1.html  [guides-clean] License guide, page 1
+        L10: how the license setting works
+   2. guides-clean/Blocksslow/page2.html  [guides-clean] Blocksslow guide, page 2
+        L11: how the blocksslow setting works
+   3. guides-clean/License/page3.html  [guides-clean] License guide, page 3
+        L12: how the license setting works
+   4. guides-clean/Blocksslow/page4.html  [guides-clean] Blocksslow guide, page 4
+        L13: how the blocksslow setting works
+   5. License guide, page 5  [guides-clean] License guide, page 5
+        L14: how the license setting works
+
+========================================================================
+OUR BLOCKS · licensing research   (corpus-nav find)
+========================================================================
+  [!] unavailable: timed out after 1s   (unavailable: not a zero)
+
+Summary: code 0 (searched) · docs 5 ranked · blocks UNAVAILABLE

@@ -1,0 +1,4 @@
+usage: find3 license [-h] [--version] [--limit LIMIT] [--timeout TIMEOUT]
+                     [--doc-version VERSION]
+                     name
+find3 license: error: unrecognized arguments: extra

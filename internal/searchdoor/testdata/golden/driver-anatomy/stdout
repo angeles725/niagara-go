@@ -1,0 +1,53 @@
+
+Query: 'driver anatomy'   mode=backend default   docs=niagara-help default
+
+========================================================================
+SOURCE 1 · OUR BLOCKS   (corpus-nav find)
+========================================================================
+   1. B101 · Block 101 — driver research (default mode, --limit 2000)
+        12: > a line about driver in block 101
+   2. B102 · Block 102 — anatomy research (default mode, --limit 2000)
+        13: > a line about anatomy in block 102
+   3. B103 · Block 103 — driver research (default mode, --limit 2000)
+        14: > a line about driver in block 103
+   4. B104 · Block 104 — anatomy research (default mode, --limit 2000)
+        15: > a line about anatomy in block 104
+
+========================================================================
+SOURCE 2 · OFFICIAL DOCS   (niagara_help find)
+========================================================================
+  5 files matching 'driver anatomy' (docs default, default mode):
+  by source: guides-clean 3, devguide-clean 2
+   1. guides-clean/Driver/page1.html  [guides-clean] Driver guide, page 1
+        L10: how the driver setting works
+   2. guides-clean/Anatomy/page2.html  [guides-clean] Anatomy guide, page 2
+        L11: how the anatomy setting works
+   3. guides-clean/Driver/page3.html  [guides-clean] Driver guide, page 3
+        L12: how the driver setting works
+   4. guides-clean/Anatomy/page4.html  [guides-clean] Anatomy guide, page 4
+        L13: how the anatomy setting works
+   5. Driver guide, page 5  [guides-clean] Driver guide, page 5
+        L14: how the driver setting works
+
+========================================================================
+SOURCE 3 · CODE   (module_nav rank)
+========================================================================
+  -- structure · driver anatomy   (module_nav drivers) --
+     1. Drivers (all modules):
+     2. bacnet-rt BBacnetNetwork BBacnetDevice BBacnetPointDeviceExt
+     3. modbus-rt BModbusNetwork BModbusDevice BModbusPointDeviceExt
+  -- ranked   (module_nav rank) --
+  Rank 'driver anatomy': 4 matching classes (terms: driver, anatomy)
+   1. BDriverService  [demo-rt]  score 9.250
+        com/demo/BDriverService.java
+   2. BDriverExt  [demo-rt]  score 9.000
+        com/demo/BDriverExt.java
+   3. BAnatomyService  [demo-rt]  score 8.750
+        com/demo/BAnatomyService.java
+   4. BAnatomyExt  [demo-rt]  score 8.500
+        com/demo/BAnatomyExt.java
+  -- course code   (BM25 over course/{course,solutions,niagara-4.15.6.20/dev}/**/*.java) --
+    0 matches for 'driver anatomy'; searched 4 .java files of the N4 developer course (course 2, verified solution 1, dev kit example 1)
+    0 rows in this sub-scope (searched; see its scope line)
+
+Summary: blocks 4 ranked · docs 5 ranked · code 4 ranked + structure 3 listed + course code 0 (searched)

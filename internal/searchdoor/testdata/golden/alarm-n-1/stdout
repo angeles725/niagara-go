@@ -1,0 +1,33 @@
+
+Query: 'alarm'   mode=backend default   docs=niagara-help default
+
+========================================================================
+SOURCE 1 · OUR BLOCKS   (corpus-nav find)
+========================================================================
+   1. B101 · Block 101 — alarm research (default mode, --limit 2000)
+        12: > a line about alarm in block 101
+  ... 3 more ranked (raise --limit)
+
+========================================================================
+SOURCE 2 · OFFICIAL DOCS   (niagara_help find)
+========================================================================
+  4 files matching 'alarm' (docs default, default mode):
+  by source: guides-clean 3, devguide-clean 2
+   1. guides-clean/Alarm/page1.html  [guides-clean] Alarm guide, page 1
+        L10: how the alarm setting works
+  ... 3 more ranked (raise --limit)
+
+========================================================================
+SOURCE 3 · CODE   (module_nav rank)
+========================================================================
+  Rank 'alarm': 2 matching classes (terms: alarm)
+   1. BAlarmService  [demo-rt]  score 9.250
+        com/demo/BAlarmService.java
+  ... 1 more ranked (raise --limit)
+  -- course code   (BM25 over course/{course,solutions,niagara-4.15.6.20/dev}/**/*.java) --
+    searched 4 .java files of the N4 developer course (course 2, verified solution 1, dev kit example 1)
+     1. BAlarmCounter  [course]  score 1.497
+          course/lab3/BAlarmCounter.java
+    ... 1 more ranked (raise --limit)
+
+Summary: blocks 4 ranked · docs 4 ranked · code 2 ranked + course code 2 ranked

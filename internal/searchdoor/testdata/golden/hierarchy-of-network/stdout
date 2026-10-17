@@ -1,0 +1,52 @@
+
+Query: 'hierarchy of network'   mode=backend default   docs=niagara-help default
+
+========================================================================
+SOURCE 1 · OUR BLOCKS   (corpus-nav find)
+========================================================================
+   1. B101 · Block 101 — hierarchy research (default mode, --limit 2000)
+        12: > a line about hierarchy in block 101
+   2. B102 · Block 102 — of research (default mode, --limit 2000)
+        13: > a line about of in block 102
+   3. B103 · Block 103 — network research (default mode, --limit 2000)
+        14: > a line about network in block 103
+   4. B104 · Block 104 — hierarchy research (default mode, --limit 2000)
+        15: > a line about hierarchy in block 104
+
+========================================================================
+SOURCE 2 · OFFICIAL DOCS   (niagara_help find)
+========================================================================
+  6 files matching 'hierarchy of network' (docs default, default mode):
+  by source: guides-clean 3, devguide-clean 2
+   1. guides-clean/Hierarchy/page1.html  [guides-clean] Hierarchy guide, page 1
+        L10: how the hierarchy setting works
+   2. guides-clean/Of/page2.html  [guides-clean] Of guide, page 2
+        L11: how the of setting works
+   3. guides-clean/Network/page3.html  [guides-clean] Network guide, page 3
+        L12: how the network setting works
+   4. guides-clean/Hierarchy/page4.html  [guides-clean] Hierarchy guide, page 4
+        L13: how the hierarchy setting works
+   5. Of guide, page 5  [guides-clean] Of guide, page 5
+        L14: how the of setting works
+
+========================================================================
+SOURCE 3 · CODE   (module_nav rank)
+========================================================================
+  Rank 'hierarchy of network': 6 matching classes (terms: hierarchy, of, network)
+   1. BHierarchyService  [demo-rt]  score 9.250
+        com/demo/BHierarchyService.java
+   2. BHierarchyExt  [demo-rt]  score 9.000
+        com/demo/BHierarchyExt.java
+   3. BOfService  [demo-rt]  score 8.750
+        com/demo/BOfService.java
+   4. BOfExt  [demo-rt]  score 8.500
+        com/demo/BOfExt.java
+   5. BNetworkService  [demo-rt]  score 8.250
+        com/demo/BNetworkService.java
+  ... 1 more ranked (raise --limit)
+  -- course code   (BM25 over course/{course,solutions,niagara-4.15.6.20/dev}/**/*.java) --
+    searched 4 .java files of the N4 developer course (course 2, verified solution 1, dev kit example 1)
+     1. BEnvCtrlDeviceNetwork  [dev kit example]  score 2.591
+          niagara-4.15.6.20/dev/envCtrlDriver/BEnvCtrlDeviceNetwork.java
+
+Summary: blocks 4 ranked · docs 5 ranked · code 6 ranked + course code 1 ranked

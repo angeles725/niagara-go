@@ -1,0 +1,3 @@
+nsearch: unavailable source: blocks (corpus-nav find): unavailable: tool not found at missing/corpus-nav.py
+nsearch: unavailable source: docs (niagara_help find): unavailable: tool not found at missing/niagara_help.py
+nsearch: unavailable source: code/course code (BM25 over empty-course/{course,solutions,niagara-4.15.6.20/dev}/**/*.java): unavailable: no .java file under empty-course (course, solutions, niagara-4.15.6.20/dev)

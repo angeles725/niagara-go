@@ -1,0 +1,57 @@
+
+Query: 'implementors of BIPollable'   mode=backend default   docs=niagara-help default
+
+========================================================================
+SOURCE 1 · OUR BLOCKS   (corpus-nav find)
+========================================================================
+   1. B101 · Block 101 — implementors research (default mode, --limit 2000)
+        12: > a line about implementors in block 101
+   2. B102 · Block 102 — of research (default mode, --limit 2000)
+        13: > a line about of in block 102
+   3. B103 · Block 103 — bipollable research (default mode, --limit 2000)
+        14: > a line about bipollable in block 103
+   4. B104 · Block 104 — implementors research (default mode, --limit 2000)
+        15: > a line about implementors in block 104
+
+========================================================================
+SOURCE 2 · OFFICIAL DOCS   (niagara_help find)
+========================================================================
+  6 files matching 'implementors of BIPollable' (docs default, default mode):
+  by source: guides-clean 3, devguide-clean 2
+   1. guides-clean/Implementors/page1.html  [guides-clean] Implementors guide, page 1
+        L10: how the implementors setting works
+   2. guides-clean/Of/page2.html  [guides-clean] Of guide, page 2
+        L11: how the of setting works
+   3. guides-clean/Bipollable/page3.html  [guides-clean] Bipollable guide, page 3
+        L12: how the bipollable setting works
+   4. guides-clean/Implementors/page4.html  [guides-clean] Implementors guide, page 4
+        L13: how the implementors setting works
+   5. Of guide, page 5  [guides-clean] Of guide, page 5
+        L14: how the of setting works
+
+========================================================================
+SOURCE 3 · CODE   (module_nav rank)
+========================================================================
+  -- structure · implementors of BIPollable   (module_nav implementors BIPollable -n 200) --
+    Implementors of BIPollable: 3 classes
+     1. BPollScheduler  [driver-rt]  com.demo.driver
+     2. BBacnetPoller  [bacnet-rt]  com.demo.bacnet
+     3. BModbusPoller  [modbus-rt]  com.demo.modbus
+  -- ranked   (module_nav rank) --
+  Rank 'implementors of BIPollable': 6 matching classes (terms: implementors, of, bipollable)
+   1. BImplementorsService  [demo-rt]  score 9.250
+        com/demo/BImplementorsService.java
+   2. BImplementorsExt  [demo-rt]  score 9.000
+        com/demo/BImplementorsExt.java
+   3. BOfService  [demo-rt]  score 8.750
+        com/demo/BOfService.java
+   4. BOfExt  [demo-rt]  score 8.500
+        com/demo/BOfExt.java
+   5. BBipollableService  [demo-rt]  score 8.250
+        com/demo/BBipollableService.java
+  ... 1 more ranked (raise --limit)
+  -- course code   (BM25 over course/{course,solutions,niagara-4.15.6.20/dev}/**/*.java) --
+    0 matches for 'implementors of BIPollable'; searched 4 .java files of the N4 developer course (course 2, verified solution 1, dev kit example 1)
+    0 rows in this sub-scope (searched; see its scope line)
+
+Summary: blocks 4 ranked · docs 5 ranked · code 6 ranked + structure 3 listed + course code 0 (searched)

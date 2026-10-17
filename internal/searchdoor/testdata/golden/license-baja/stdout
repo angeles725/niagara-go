@@ -1,0 +1,36 @@
+
+License: 'baja' resolved as a module   docs/blocks query='license baja'
+
+========================================================================
+CODE · features module baja requires   (module_nav license-features --module baja)
+========================================================================
+  note: 'baja' is listed by module_nav modules
+  License features required by baja: 2
+   1. bacnet 4
+   2. mstp 1
+
+========================================================================
+OFFICIAL DOCS · license pages   (niagara_help find)
+========================================================================
+  5 files matching 'license baja' (docs default, default mode):
+  by source: guides-clean 3, devguide-clean 2
+   1. guides-clean/License/page1.html  [guides-clean] License guide, page 1
+        L10: how the license setting works
+   2. guides-clean/Baja/page2.html  [guides-clean] Baja guide, page 2
+        L11: how the baja setting works
+   3. guides-clean/License/page3.html  [guides-clean] License guide, page 3
+        L12: how the license setting works
+   4. guides-clean/Baja/page4.html  [guides-clean] Baja guide, page 4
+        L13: how the baja setting works
+   5. License guide, page 5  [guides-clean] License guide, page 5
+        L14: how the license setting works
+
+========================================================================
+OUR BLOCKS · licensing research   (corpus-nav find)
+========================================================================
+   1. B101 · Block 101 — license research (and mode, --limit 2000)
+        12: > a line about license in block 101
+   2. B102 · Block 102 — baja research (and mode, --limit 2000)
+        13: > a line about baja in block 102
+
+Summary: code 2 ranked · docs 5 ranked · blocks 2 ranked
