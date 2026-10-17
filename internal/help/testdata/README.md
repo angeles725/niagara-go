@@ -54,6 +54,7 @@ temporary folder, sets every file's mtime to `FIXED_NS` and runs the Python niag
 |---|---|
 | `fulltext-db/<version>.sqlite` | the index `fulltext_index.build` writes, with the temporary folder in the stored fingerprint replaced by `<ROOT>` |
 | `fulltext-search.json` | `fulltext.search` results (scores as `float.hex`), each hit's snippet, and `fulltext.clip` cases |
+| `fulltext-cli/` | the stdout of each CLI case (`<case>.txt`, `<ROOT>` for the checkout) and `cases.json` with its arguments, exit status and stderr |
 
 The Go tests (`fts/ftsfixture`) copy `fulltext/` to a temporary folder with the same mtimes and
 install the databases with `<ROOT>` replaced by that folder; the fingerprint test then proves

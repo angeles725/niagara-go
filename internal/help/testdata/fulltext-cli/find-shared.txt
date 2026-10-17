@@ -1,0 +1,12 @@
+2 files matching 'discovery' (all terms):
+by source: docs-text 1, guides-clean 1
+  (docs-text: the PDF manuals of Niagara 1.0 (this version ships none))
+
+  [docs-text] docBacnet
+    L7: Chapter 1 Discovery
+    path: docs-text/docBacnet.txt
+
+  [guides-clean] Other page
+    L3: Discovery in version 2.
+    path: guides-clean/Other/page.txt
+

@@ -1,0 +1,27 @@
+6 files matching 'como funciona el ack de alarmas' (no file has every term; showing files with any term, ranked by how many terms match):
+by source: guides-clean 3, bajadoc-clean 1, source 1, devguide-clean 1
+
+  [guides-clean] Alarm acknowledgement
+    L4: To acknowledge an alarm, select it and click Ack.
+    path: guides-clean/Alarm/ack.txt
+
+  [bajadoc-clean] BAlarmRecord (javax.baja.alarm)
+    L4: BAlarmRecord holds one alarm and its ack state.
+    path: bajadoc-clean/javax/baja/alarm/BAlarmRecord.txt
+
+  [source] BAlarmService
+    L3: /** Routes alarms and records each ack. */
+    path: source/alarm-rt/javax/baja/alarm/BAlarmService.java
+
+  [devguide-clean] Changes in 3.3
+    L4: 10200 alarm ack console refresh
+    path: devguide-clean/changes33.txt
+
+  [guides-clean] Alarm routing
+    L3: The alarm class routes each alarm to its recipients.
+    path: guides-clean/Alarm/routing.txt
+
+  [guides-clean] index
+    L1: Guides overview: alarm, discovery and wiretap pages.
+    path: guides-clean/index.txt
+

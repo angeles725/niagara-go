@@ -1,0 +1,18 @@
+4 devguide files matching 'servlet registration' (only 1 file has every term; showing files with any term, ranked by how many terms match):
+
+  [devguide] Changes in 3.3
+    L3: 10194 servlet registration fixed
+    path: devguide-clean/changes33.txt
+
+  [devguide] Web servlets
+    L3: A web servlet answers HTTP requests.
+    path: devguide-clean/servlet.txt
+
+  [example] app
+    L1: // servlet client
+    path: devguide-examples/web/app.js
+
+  [example] page
+    L1: <p>The servlet page.</p>
+    path: devguide-examples/web/page.html
+
