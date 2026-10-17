@@ -1,0 +1,1 @@
+{"args": ["--mock", "mock.json", "--auto-mock", "--live", "http://x"]}

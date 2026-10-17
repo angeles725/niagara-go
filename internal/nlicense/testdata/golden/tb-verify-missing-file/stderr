@@ -1,0 +1,18 @@
+Traceback (most recent call last):
+  File "/home/cristian/niagara-research/tools/niagara-license-tool.py", line 267, in <module>
+    raise SystemExit(cmd_verify(*rest))
+                     ~~~~~~~~~~^^^^^^^
+  File "/home/cristian/niagara-research/tools/niagara-license-tool.py", line 107, in cmd_verify
+    root = load_license_xml(license_path)
+  File "/home/cristian/niagara-research/tools/niagara-license-tool.py", line 78, in load_license_xml
+    root = etree.parse(path, parser).getroot()
+           ~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "src/lxml/etree.pyx", line 3717, in lxml.etree.parse
+  File "src/lxml/parser.pxi", line 2045, in lxml.etree._parseDocument
+  File "src/lxml/parser.pxi", line 2071, in lxml.etree._parseDocumentFromURL
+  File "src/lxml/parser.pxi", line 1962, in lxml.etree._parseDocFromFile
+  File "src/lxml/parser.pxi", line 1231, in lxml.etree._BaseParser._parseDocFromFile
+  File "src/lxml/parser.pxi", line 647, in lxml.etree._ParserContext._handleParseResultDoc
+  File "src/lxml/parser.pxi", line 765, in lxml.etree._handleParseResult
+  File "src/lxml/parser.pxi", line 687, in lxml.etree._raiseParseError
+OSError: Error reading file 'nope.license': failed to load "nope.license": No such file or directory

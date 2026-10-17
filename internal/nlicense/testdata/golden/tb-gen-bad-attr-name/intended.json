@@ -1,0 +1,4 @@
+{
+ "reason": "Python lets lxml's ValueError escape (traceback, exit 1); Go prints only its final line, same text, exit 1",
+ "stderr": "ValueError: Invalid attribute name 'b '\n"
+}

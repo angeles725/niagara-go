@@ -1,0 +1,5 @@
+<license vendor="Ac&amp;me &quot;q&quot;" note="a&#10;b c d  &lt;&gt;é" hostId="Qnx-NEW-&amp;&quot;&lt;1&gt;">
+  <feature name="café" limit="10"/>
+  <feature name="cdata">raw &lt;x&gt; &amp; y</feature>
+  <feature name="n"><sub a="1">t&amp;x</sub>tail &gt; "q"</feature>
+<signature>MCwCFDK3AsUzC+bYodZ9I3AyX5i+NQHuAhRmCwHaDOOwiC6fFkFqzQcZ9U34Bg==</signature></license>

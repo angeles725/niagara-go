@@ -1,0 +1,12 @@
+usage: licensador.py issue [-h] --key KEY --product PRODUCT --host HOST [--licensee LICENSEE]
+                           [--expires EXPIRES] --out OUT [--feature FEATURE]
+
+options:
+  -h, --help           show this help message and exit
+  --key KEY
+  --product PRODUCT
+  --host HOST
+  --licensee LICENSEE
+  --expires EXPIRES
+  --out OUT
+  --feature FEATURE    NAME o NAME:QTY (repetible)

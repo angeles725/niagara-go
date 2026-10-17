@@ -1,0 +1,19 @@
+usage: bacnet-bbmd-verify.py [-h] --device-ip DEVICE_IP [--device-prefix DEVICE_PREFIX]
+                             [--local-bcast LOCAL_BCAST] [--bbmd BBMD] [--port PORT]
+                             [--src-port SRC_PORT] [--timeout TIMEOUT] [--json]
+
+Verify BACnet/IP BBMD + Who-Is/I-Am cross-subnet reachability (read-only).
+
+options:
+  -h, --help            show this help message and exit
+  --device-ip DEVICE_IP
+                        a known field device on the OTHER subnet (e.g. 192.168.0.50)
+  --device-prefix DEVICE_PREFIX
+                        prefix length of the device subnet (default 24)
+  --local-bcast LOCAL_BCAST
+                        broadcast address of THIS host's interface (default limited broadcast)
+  --bbmd BBMD           IP to probe as a BBMD (Read-BDT/Read-FDT)
+  --port PORT           BACnet/IP UDP port (default 47808)
+  --src-port SRC_PORT   local UDP bind port (use 0 if Niagara holds 47808 on this host)
+  --timeout TIMEOUT     per-probe listen window (s)
+  --json                machine-readable output

@@ -1,0 +1,4 @@
+{
+ "reason": "Python's sendto lets getaddrinfo's socket.gaierror escape (traceback, exit 1) after the probes before it; Go prints only its final line, same text, exit 1",
+ "stderr": "socket.gaierror: [Errno -9] Address family for hostname not supported\n"
+}

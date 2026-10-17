@@ -1,0 +1,14 @@
+[96m
+  BACnet/IP BBMD & Who-Is reachability verifier (read-only) — corpus B444
+[0m
+  1) Directed UNICAST Who-Is -> 127.0.0.5:0xBB3B
+[92m     I-Am received (instance 77). Unicast/routing works — same as ICMP.[0m
+
+  2) Local BROADCAST Who-Is -> 127.0.0.5:0xBB3B
+[93m     no responders at all.[0m
+
+  3) BBMD probe (Read-BDT / Read-FDT)
+[90m     127.0.0.5 did not answer Read-BDT (not a BBMD, or blocked).[0m
+
+  [96mVERDICT:[0m [91mREBIND WILL FAIL — the device answers UNICAST (pinned IP:port works, like ICMP) but NOT the broadcast Who-Is, and no BBMD answered. On an IP change Niagara cannot re-resolve it. Add a BBMD/Foreign-Device path or use a static IP / DHCP reservation.[0m
+

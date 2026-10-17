@@ -1,0 +1,4 @@
+{
+ "reason": "Python shells out to openssl and dies with CalledProcessError (traceback naming a random temp file); Go signs in process and reports the unreadable key in one line, exit 1",
+ "stderr": "cannot read the DSA private key no-such.key: No such file or directory\n"
+}

@@ -1,0 +1,1 @@
+{"args": ["--rc", "ux/src/rc", "--auto-mock", "--reader", "nope/DemoReader.java"]}

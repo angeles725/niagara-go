@@ -1,0 +1,2 @@
+usage: licensador.py genkeys [-h] --out-dir OUT_DIR [--bits BITS]
+licensador.py genkeys: error: argument --bits: invalid int value: 'many'

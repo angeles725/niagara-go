@@ -1,0 +1,4 @@
+<!-- top comment --><?top-pi data?><!DOCTYPE license>
+<license vendor="Acme" hostId="H1">
+  <feature name="x"/>
+<signature>MCwCFHc2WXGrpyKFudezYm70rxb/lL+PAhQuypeSwTsgimrAsvhPwaP5D37TPg==</signature></license><!-- after -->

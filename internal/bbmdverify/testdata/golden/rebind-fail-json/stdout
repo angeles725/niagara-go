@@ -1,0 +1,26 @@
+{
+  "device_ip": "127.0.0.5",
+  "device_subnet": "127.0.0.5/32",
+  "local_ip": "127.0.0.1",
+  "local_on_device_subnet": false,
+  "port": 47931,
+  "tests": {
+    "unicast_device": {
+      "reachable": true,
+      "instance": 77
+    },
+    "broadcast": {
+      "responders": {},
+      "crossed_from_device_subnet": {},
+      "same_as_local": {}
+    },
+    "bbmd_probe": {
+      "127.0.0.5": {
+        "is_bbmd": false,
+        "bdt": null,
+        "fdt": null
+      }
+    }
+  },
+  "verdict": "REBIND WILL FAIL \u2014 the device answers UNICAST (pinned IP:port works, like ICMP) but NOT the broadcast Who-Is, and no BBMD answered. On an IP change Niagara cannot re-resolve it. Add a BBMD/Foreign-Device path or use a static IP / DHCP reservation."
+}

@@ -1,0 +1,19 @@
+[96m
+  BACnet/IP BBMD & Who-Is reachability verifier (read-only) — corpus B444
+[0m
+  1) Directed UNICAST Who-Is -> 127.0.0.2:0xBB3B
+[92m     I-Am received (instance 1234). Unicast/routing works — same as ICMP.[0m
+
+  2) Local BROADCAST Who-Is -> 127.0.0.2:0xBB3B
+     127.0.0.2        instances {1234} [92m[device subnet — CROSSED][0m
+
+  3) BBMD probe (Read-BDT / Read-FDT)
+[92m     127.0.0.2 IS a BBMD.[0m
+       BDT (subnets it distributes broadcasts to):
+         peer 127.0.0.2:0xBAC0  mask 255.255.255.255
+         peer 10.1.0.1:0xBAC0  mask 255.255.255.0
+       FDT (registered foreign devices):
+         10.9.9.9:0xBAC0  ttl 60s  remaining 45s
+
+  [96mVERDICT:[0m [92mREBIND OK — a broadcast Who-Is reaches the device subnet (BBMD confirmed). Instance-based re-binding will work on IP change.[0m
+

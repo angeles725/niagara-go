@@ -1,0 +1,16 @@
+test                  esperado          obtenido            ok
+A1 valida             OK                OK                  PASS
+A2 host ajeno         E_HOST            E_HOST              PASS
+A3 tamper payload     E_SIGNATURE       E_SIGNATURE         PASS
+A4 expirada           E_TIME_EXPIRED    E_TIME_EXPIRED      PASS
+A5 feature faltante   E_FEATURE_LOCKED  E_FEATURE_LOCKED    PASS
+A6 qty insuficiente   E_FEATURE_QTY     E_FEATURE_QTY       PASS
+A6b qty justa         OK                OK                  PASS
+A6c qty ilimitada     OK                OK                  PASS
+A7 revocada           E_REVOKED         E_REVOKED           PASS
+A8 rollback reloj     E_CLOCK           E_CLOCK             PASS
+A9 producto ajeno     E_PRODUCT         E_PRODUCT           PASS
+A10 corrupto          E_PARSE           E_PARSE             PASS
+A10b formato          E_PARSE           E_PARSE             PASS
+
+13/13 PASS

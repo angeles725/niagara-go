@@ -1,0 +1,1 @@
+bacnet-bbmd-verify: invalid --device-ip/--device-prefix (Leading zeros are not permitted in '05' in '10.0.0.05'); give an IPv4 literal and a prefix 0-32

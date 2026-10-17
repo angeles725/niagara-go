@@ -1,0 +1,5 @@
+usage: dashboard-preview.py [-h] [--rc RC] [--prefix PREFIX] [--port PORT] [--mock MOCK]
+                            [--auto-mock] [--reader Reader.java] [--live BASE_URL]
+                            [--config-login] [--config-password CONFIG_PASSWORD]
+                            [--config-ttl CONFIG_TTL] [--editor]
+dashboard-preview.py: error: --mock, --auto-mock, and --live are mutually exclusive; pick one

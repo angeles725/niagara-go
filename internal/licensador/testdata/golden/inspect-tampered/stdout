@@ -1,0 +1,19 @@
+{
+  "exqires": null,
+  "features": {
+    "logging": {
+      "opts": {},
+      "qty": null
+    },
+    "pid": {
+      "opts": {},
+      "qty": 4
+    }
+  },
+  "hostId": "REF-0123456789AB",
+  "issued": "2026-08-01T00:00:00+00:00",
+  "licensee": "lab",
+  "product": "reflow-oven",
+  "serial": "0F1E2D3C4B5A69788796A5B4C3D2E1F0",
+  "ver": 1
+}

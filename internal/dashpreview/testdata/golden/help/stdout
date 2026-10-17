@@ -1,0 +1,30 @@
+usage: dashboard-preview.py [-h] [--rc RC] [--prefix PREFIX] [--port PORT] [--mock MOCK]
+                            [--auto-mock] [--reader Reader.java] [--live BASE_URL]
+                            [--config-login] [--config-password CONFIG_PASSWORD]
+                            [--config-ttl CONFIG_TTL] [--editor]
+
+Local preview server for a Niagara dashboard -ux module.
+
+options:
+  -h, --help            show this help message and exit
+  --rc RC               path to the module's rc/ folder (default ./src/rc)
+  --prefix PREFIX       servlet mount prefix (default /dashboardpan)
+  --port PORT           port (default 8080)
+  --mock MOCK           JSON file served for every GET /api/<name> (default: empty {})
+  --auto-mock           generate equipment mock by parsing the module's *Reader.java; mutually
+                        exclusive with --mock and --live
+  --reader Reader.java  path to the *Reader.java when using --auto-mock; if omitted the file is
+                        auto-located under the sibling src/ of --rc
+  --live BASE_URL       proxy /api/* GETs AND POSTs (writes) to BASE_URL/<prefix>/api/* (real
+                        station), relaying the station status code; mutually exclusive with --mock
+                        and --auto-mock
+  --config-login        preview the R14 'second login before any write' flow: injects a native
+                        modal + session chip + change_log strip and adds stateful
+                        /config/login|logout|session mock endpoints; writes need a session
+  --config-password CONFIG_PASSWORD
+                        demo password accepted by the mock login (default 1234)
+  --config-ttl CONFIG_TTL
+                        mock config-session TTL in seconds, sliding (default 300 = the HMI product
+                        default, lead 2026-09-06)
+  --editor              inject a preview-only label editor (drag points/labels, export
+                        rx/ry/rlx/rly/rside); never touches the module rc/

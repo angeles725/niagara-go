@@ -1,0 +1,11 @@
+Traceback (most recent call last):
+  File "/home/cristian/niagara-research/tools/niagara-license-tool.py", line 273, in <module>
+    cmd_gen(*rest)
+    ~~~~~~~^^^^^^^
+  File "/home/cristian/niagara-research/tools/niagara-license-tool.py", line 250, in cmd_gen
+    feat.set(k, v)
+    ~~~~~~~~^^^^^^
+  File "src/lxml/etree.pyx", line 955, in lxml.etree._Element.set
+  File "src/lxml/apihelpers.pxi", line 601, in lxml.etree._setAttributeValue
+  File "src/lxml/apihelpers.pxi", line 1758, in lxml.etree._attributeValidOrRaise
+ValueError: Invalid attribute name 'b '

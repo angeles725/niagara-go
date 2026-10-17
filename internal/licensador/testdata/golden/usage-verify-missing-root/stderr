@@ -1,0 +1,3 @@
+usage: licensador.py verify [-h] --root ROOT --file FILE [--product PRODUCT] [--host HOST]
+                            [--state STATE] [--blacklist BLACKLIST]
+licensador.py verify: error: the following arguments are required: --root

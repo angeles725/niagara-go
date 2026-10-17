@@ -1,0 +1,16 @@
+usage: licensador.py [-h] {genkeys,issue,verify,inspect,hostid,revoke,selftest} ...
+
+REF-License — licenciamiento firmado propio (referencia)
+
+positional arguments:
+  {genkeys,issue,verify,inspect,hostid,revoke,selftest}
+    genkeys             genera raiz privada + publica
+    issue               emite una licencia .refl
+    verify              verifica una licencia (pipeline completo)
+    inspect             muestra los claims sin verificar
+    hostid              calcula el REF-... de esta maquina
+    revoke              firma una blacklist de seriales
+    selftest            matriz de aceptacion A1..A10
+
+options:
+  -h, --help            show this help message and exit

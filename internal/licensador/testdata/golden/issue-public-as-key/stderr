@@ -1,0 +1,1 @@
+error: Valid PEM but no BEGIN/END delimiters for a private key found. Are you sure this is a private key?

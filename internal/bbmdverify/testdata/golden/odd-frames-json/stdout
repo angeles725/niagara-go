@@ -1,0 +1,38 @@
+{
+  "device_ip": "127.0.0.6",
+  "device_subnet": "127.0.0.6/32",
+  "local_ip": "127.0.0.1",
+  "local_on_device_subnet": false,
+  "port": 47931,
+  "tests": {
+    "unicast_device": {
+      "reachable": true,
+      "instance": 4194303
+    },
+    "broadcast": {
+      "responders": {
+        "127.0.0.6": [
+          5,
+          6,
+          4194303
+        ]
+      },
+      "crossed_from_device_subnet": {
+        "127.0.0.6": [
+          5,
+          6,
+          4194303
+        ]
+      },
+      "same_as_local": {}
+    },
+    "bbmd_probe": {
+      "127.0.0.6": {
+        "is_bbmd": true,
+        "bdt": [],
+        "fdt": null
+      }
+    }
+  },
+  "verdict": "REBIND OK \u2014 a broadcast Who-Is reaches the device subnet (BBMD confirmed). Instance-based re-binding will work on IP change."
+}

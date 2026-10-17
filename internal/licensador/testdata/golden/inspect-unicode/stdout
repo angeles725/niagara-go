@@ -1,0 +1,29 @@
+{
+  "expires": null,
+  "features": {
+    "Zeta": {
+      "opts": {
+        "big": 123456789012345678901234567890,
+        "w": 0.1,
+        "x": 1e-07,
+        "y": 1e+16,
+        "z": 100.0
+      },
+      "qty": 1
+    },
+    "café": {
+      "opts": {},
+      "qty": 2
+    },
+    "it's": {
+      "opts": {},
+      "qty": null
+    }
+  },
+  "hostId": "REF-0123456789AB",
+  "issued": "2026-08-01T00:00:00+00:00",
+  "licensee": "Señor Ünïcode ✓ 😀 \"q\" 'a' \\ \t",
+  "product": "reflow-oven",
+  "serial": "0F1E2D3C4B5A69788796A5B4C3D2E1F0",
+  "ver": 1
+}

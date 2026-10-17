@@ -1,0 +1,1 @@
+bacnet-bbmd-verify: invalid --device-ip/--device-prefix (Expected 4 octets in 'not-an-ip'); give an IPv4 literal and a prefix 0-32

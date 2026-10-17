@@ -1,0 +1,1 @@
+{"args": ["verify", "py-out/gen-out.license", "Acme.certificate"]}

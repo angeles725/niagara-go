@@ -1,0 +1,1 @@
+{"args": ["verify", "--root", "root-public.pem", "--file", "valid.refl", "--host", "REF-0123456789AB", "--blacklist", "bl-empty.refl"]}

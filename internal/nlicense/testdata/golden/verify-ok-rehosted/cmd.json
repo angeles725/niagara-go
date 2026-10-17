@@ -1,0 +1,1 @@
+{"args": ["verify", "py-out/crlf-rehosted.license", "Acme.certificate"]}
