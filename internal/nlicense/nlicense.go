@@ -18,6 +18,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/angeles725/niagara-go/internal/cli"
+	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 )
 
@@ -97,7 +98,7 @@ func loadCertPublicKey(path string) (any, error) {
 	if pk == nil || elemText(pk) == nil || *elemText(pk) == "" {
 		return nil, sysExit("ERROR: no <publicKey> in certificate")
 	}
-	der, err := b64decode(strings.Join(strings.Fields(*elemText(pk)), ""))
+	der, err := b64decode(strings.Join(pycompat.Fields(*elemText(pk)), ""))
 	if err != nil {
 		return nil, err
 	}
@@ -121,7 +122,7 @@ func cmdVerify(licensePath, certPath string, s cli.Stdio) (int, error) {
 	if sigEl == nil || elemText(sigEl) == nil || *elemText(sigEl) == "" {
 		return 0, sysExit("ERROR: no <signature> element")
 	}
-	sig, err := b64decode(strings.Join(strings.Fields(*elemText(sigEl)), ""))
+	sig, err := b64decode(strings.Join(pycompat.Fields(*elemText(sigEl)), ""))
 	if err != nil {
 		return 0, err
 	}
@@ -274,13 +275,13 @@ func readFeaturesCSV(path string) ([]feature, error) {
 		if err != nil {
 			return nil, fmt.Errorf("_csv.Error: %v", err)
 		}
-		if len(row) == 0 || strings.TrimSpace(row[0]) == "" {
+		if len(row) == 0 || pycompat.Strip(row[0]) == "" {
 			continue
 		}
-		ft := feature{name: strings.TrimSpace(row[0])}
+		ft := feature{name: pycompat.Strip(row[0])}
 		for _, cell := range row[1:] {
 			for _, pair := range strings.Split(cell, ";") {
-				k, v, _ := strings.Cut(strings.TrimSpace(pair), "=")
+				k, v, _ := strings.Cut(pycompat.Strip(pair), "=")
 				if k == "" {
 					continue
 				}

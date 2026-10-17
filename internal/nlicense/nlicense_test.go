@@ -268,6 +268,31 @@ func TestReadFeaturesCSV(t *testing.T) {
 	}
 }
 
+// TestReadFeaturesCSVStripsLikePython pins str.strip() on the U+001C..U+001F separators,
+// which Python treats as whitespace and strings.TrimSpace does not. Python 3.15 skips the
+// first row and reads ('bacnet', {'device.limit': '5', 'a': '1'}).
+func TestReadFeaturesCSVStripsLikePython(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "f.csv")
+	if err := os.WriteFile(path, []byte("\x1c\x1d\n\x1fbacnet\x1e,\x1c device.limit=5\x1f;\x1ca=1\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	feats, err := readFeaturesCSV(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var got []string
+	for _, f := range feats {
+		parts := []string{f.name}
+		for _, a := range f.attrs {
+			parts = append(parts, a.name+"="+a.value)
+		}
+		got = append(got, strings.Join(parts, "|"))
+	}
+	if want := "bacnet|device.limit=5|a=1"; strings.Join(got, " ") != want {
+		t.Errorf("got %q, want %q", strings.Join(got, " "), want)
+	}
+}
+
 // TestPKCS8Key signs with the same key re-encoded as PKCS#8 ("PRIVATE KEY").
 func TestPKCS8Key(t *testing.T) {
 	keyPath, cert := testKey(t)
