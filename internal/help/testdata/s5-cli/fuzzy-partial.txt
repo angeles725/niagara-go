@@ -1,0 +1,16 @@
+FUZZY SEARCH: 'xxalarxx' (5 total matches)
+============================================================
+
+CLASSES (3 matches, showing top 3):
+
+  0.8  BAlarmRecord (javax.baja.alarm, class)
+  0.8  BAlarmService (javax.baja.alarm, class)
+  0.5  BAckState (javax.baja.alarm, enum)
+
+METHODS (1 matches, showing top 1):
+
+  0.5  ackAlarm (2 classes, e.g. BAlarmRecord)
+
+GUIDES (1 matches, showing top 1):
+
+  0.5  Alarm

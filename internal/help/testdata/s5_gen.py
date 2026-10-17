@@ -46,6 +46,14 @@ CLI = [
     ("class-jdk-interface", ["class", "Other", "--jdk"]),
     ("class-jdk-not-in-file", ["class", "Ghost", "--jdk"]),
     ("selftest-recall", ["selftest", "--recall", "--no-samples"]),
+    # fuzzy is retired in Go; selftest --recall samples it, so its output
+    # is recorded here and checked through the internal function.
+    ("fuzzy-alarm", ["fuzzy", "alarm"]),
+    ("fuzzy-top1", ["fuzzy", "ack rec", "-n", "1"]),
+    ("fuzzy-typo", ["fuzzy", "alarmrecrod"]),
+    ("fuzzy-partial", ["fuzzy", "xxalarxx"]),
+    ("fuzzy-miss", ["fuzzy", "zzqq"]),
+    ("fuzzy-no-word", ["fuzzy", "a b"]),
 ]
 
 

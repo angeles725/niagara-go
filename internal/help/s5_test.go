@@ -1,7 +1,9 @@
 package help
 
 import (
+	"bytes"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -40,7 +42,13 @@ func TestS5CommandsMatchPython(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			out, errs, code := run(t, root, c.Args...)
+			var out, errs string
+			var code int
+			if strings.HasPrefix(c.Name, "fuzzy-") {
+				out, errs, code = runFuzzy(t, root, c.Args)
+			} else {
+				out, errs, code = run(t, root, c.Args...)
+			}
 			wantOut := strings.ReplaceAll(string(want), "<ROOT>", root)
 			// The recall header prints the parse time, rounded to seconds.
 			out = strings.Replace(out, "parsed in 1s)", "parsed in 0s)", 1)
@@ -57,4 +65,31 @@ func TestS5CommandsMatchPython(t *testing.T) {
 			}
 		})
 	}
+}
+
+// runFuzzy runs the fuzzy search the recall oracle samples (the `fuzzy`
+// command is retired in Go) for the arguments of a recorded `fuzzy QUERY
+// [-n N]` case, mapping its outcome to the exit status the CLI would give.
+func runFuzzy(t *testing.T, root string, args []string) (stdout, stderr string, code int) {
+	t.Helper()
+	i := 0
+	for args[i] != "fuzzy" {
+		i++
+	}
+	query, top := args[i+1], 15
+	if len(args) > i+3 && args[i+2] == "-n" {
+		if _, err := fmt.Sscan(args[i+3], &top); err != nil {
+			t.Fatal(err)
+		}
+	}
+	var out, errb bytes.Buffer
+	e := &Env{Out: &out, Err: &errb, RepoRoot: root, BaseDir: root, VersionID: "4.14.0.162"}
+	switch err := e.fuzzy(query, top); {
+	case err != nil:
+		fmt.Fprintf(&errb, "ERROR: %v\n", err)
+		code = 2
+	case e.misses > 0:
+		code = 1
+	}
+	return out.String(), errb.String(), code
 }

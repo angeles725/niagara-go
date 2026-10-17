@@ -19,5 +19,11 @@
 {"name": "class-jdk-sanitized", "args": ["--niagara-version", "4.14.0.162", "class", "Bad", "--jdk"], "exit": 0, "stderr": ""},
 {"name": "class-jdk-interface", "args": ["--niagara-version", "4.14.0.162", "class", "Other", "--jdk"], "exit": 0, "stderr": ""},
 {"name": "class-jdk-not-in-file", "args": ["--niagara-version", "4.14.0.162", "class", "Ghost", "--jdk"], "exit": 0, "stderr": ""},
-{"name": "selftest-recall", "args": ["--niagara-version", "4.14.0.162", "selftest", "--recall", "--no-samples"], "exit": 1, "stderr": ""}
+{"name": "selftest-recall", "args": ["--niagara-version", "4.14.0.162", "selftest", "--recall", "--no-samples"], "exit": 1, "stderr": ""},
+{"name": "fuzzy-alarm", "args": ["--niagara-version", "4.14.0.162", "fuzzy", "alarm"], "exit": 0, "stderr": ""},
+{"name": "fuzzy-top1", "args": ["--niagara-version", "4.14.0.162", "fuzzy", "ack rec", "-n", "1"], "exit": 0, "stderr": ""},
+{"name": "fuzzy-typo", "args": ["--niagara-version", "4.14.0.162", "fuzzy", "alarmrecrod"], "exit": 0, "stderr": ""},
+{"name": "fuzzy-partial", "args": ["--niagara-version", "4.14.0.162", "fuzzy", "xxalarxx"], "exit": 0, "stderr": ""},
+{"name": "fuzzy-miss", "args": ["--niagara-version", "4.14.0.162", "fuzzy", "zzqq"], "exit": 1, "stderr": ""},
+{"name": "fuzzy-no-word", "args": ["--niagara-version", "4.14.0.162", "fuzzy", "a b"], "exit": 2, "stderr": "ERROR: fuzzy needs a word of 2+ characters (got 'a b')\n"}
 ]

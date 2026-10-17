@@ -73,8 +73,7 @@ func classQName(k classKey) string { return k.pkg + "." + k.name }
 
 func memberLabel(m memberKey) string { return m.pkg + "." + m.class + "#" + m.member }
 
-// checkAll is recall.check_all. The sampled find / fuzzy rows (samples)
-// are not ported yet: both forms print the --no-samples table.
+// checkAll is recall.check_all.
 func (e *Env) checkAll(samples bool) ([]recallRow, float64, error) {
 	truth := groundTruth(e.BaseDir)
 	load := func(name string) (*index.Object, error) { return e.loadIndex(name, false) }
@@ -329,6 +328,36 @@ func (e *Env) checkAll(samples bool) ([]recallRow, float64, error) {
 		return isRegularFile(filepath.Join(dclean, filepath.FromSlash(cleanTextName(rel, dsrc))))
 	}, ""))
 
+	if samples {
+		var named []classKey
+		for _, k := range keys {
+			if !strings.HasPrefix(k.name, "_") {
+				named = append(named, k)
+			}
+		}
+		sample := recallSampleOf(named, recallSample)
+		var sampleErr error
+		in := func(fn func(sub *Env) error, k classKey) bool {
+			if sampleErr != nil {
+				return false
+			}
+			out, err := e.captured(fn)
+			if err != nil {
+				sampleErr = err
+				return false
+			}
+			return strings.Contains(out, k.name)
+		}
+		rows = append(rows, newRow("find", sample, classQName, func(k classKey) bool {
+			return in(func(sub *Env) error { return sub.Find(FulltextParams{Query: k.name, Max: 500}) }, k)
+		}, fmt.Sprintf("sample %d of %d classes (full corpus scan per query)", len(sample), len(keys))))
+		rows = append(rows, newRow("fuzzy", sample, classQName, func(k classKey) bool {
+			return in(func(sub *Env) error { return sub.fuzzy(k.name, 15) }, k)
+		}, fmt.Sprintf("sample %d of %d classes", len(sample), len(keys))))
+		if sampleErr != nil {
+			return nil, 0, sampleErr
+		}
+	}
 	if firstErr != nil {
 		return nil, 0, firstErr
 	}
