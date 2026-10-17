@@ -1,0 +1,1 @@
+# Snapshot (never a block)

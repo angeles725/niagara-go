@@ -1,0 +1,1 @@
+CATALOG.md is stale: 1 block file(s) missing, 1 row(s) without a file. Regenerate: python3 tools/gen-catalog.py
