@@ -1,0 +1,18 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<bajaObjectGraph version='4.0'>
+ <p h='1' m='b=baja c=control conv=converters' t='b:Station'>
+  <p n='Services' h='2' t='b:ServiceContainer'>
+   <p n="Jobÿ|â‚|í €|ðŸ˜|À¯|ô€€|øˆ€€€|à€¯|Ã|€€|ð€€€|Ã©â‚¬ðŸ˜€" h="c" t="b:JobService"/>
+   <p n='object$20tags' h='3' t='b:Folder'/>
+  </p>
+  <p n='A' h='4' t='c:NumericWritable'/>
+  <p n='B' h='5' t='c:BooleanWritable'>
+   <p n='Link20' t='b:ConversionLink'>
+    <p n="sourceOrd" t="b:Ord" v="h:4"/>
+    <p n="sourceSlotName" v="out"/>
+    <p n="targetSlotName" v="in10"/>
+    <p n="converter" t="conv:NumericToStatusBoolean"/>
+   </p>
+  </p>
+ </p>
+</bajaObjectGraph>
