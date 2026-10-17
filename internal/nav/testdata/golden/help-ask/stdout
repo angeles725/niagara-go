@@ -1,0 +1,11 @@
+usage: module-nav ask [-h] [-n LIMIT] question [question ...]
+
+Answers with `rank`: the classes most relevant to the question, best first. Use `grep` for literal
+text in the sources.
+
+positional arguments:
+  question           Question in natural language (e.g. 'how does alarm routing work')
+
+options:
+  -h, --help         show this help message and exit
+  -n, --limit LIMIT  Max classes to show (default 20)

@@ -1,0 +1,6 @@
+usage: module-nav selftest [-h] [--recall] [--sample SAMPLE]
+
+options:
+  -h, --help       show this help message and exit
+  --recall         Run the class-lookup recall oracle
+  --sample SAMPLE  Check only N randomly chosen files (fast)

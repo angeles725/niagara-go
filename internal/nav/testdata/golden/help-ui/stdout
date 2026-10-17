@@ -1,0 +1,14 @@
+usage: module-nav ui [-h] {dialogs,sizes,colors,fonts,class,customizable} ...
+
+positional arguments:
+  {dialogs,sizes,colors,fonts,class,customizable}
+                        UI sub-commands
+    dialogs             List all dialog classes
+    sizes               List all hardcoded dimensions
+    colors              List all hardcoded colors
+    fonts               List all hardcoded fonts
+    class               Full UI details for a specific class
+    customizable        Summary of all patcheable UI elements
+
+options:
+  -h, --help            show this help message and exit
