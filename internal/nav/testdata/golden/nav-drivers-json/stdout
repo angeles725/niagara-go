@@ -1,0 +1,34 @@
+{
+  "module": "solo",
+  "scope": "5 driver networks (BDeviceNetwork subclasses) in 4 rt submodules of 21 class entries, index built 2026-02-03T04:05:06",
+  "networks": [
+    {
+      "network": "BSoloNetwork",
+      "module": "solo-rt",
+      "package": "com.x",
+      "abstract": true,
+      "extends": "BDeviceNetwork",
+      "family": "standalone",
+      "devices": [
+        "BOther$Device",
+        "BSoloDevice"
+      ],
+      "devices_from": "solo-rt",
+      "devices_resolved_via": "getDeviceType()",
+      "point_device_exts": [],
+      "point_device_exts_from": "solo-rt",
+      "proxy_exts": [],
+      "proxy_exts_from": "solo-rt",
+      "managers": [],
+      "discovery_jobs": [],
+      "license_features": [],
+      "help_guide_base": "module://docMissing/doc",
+      "help_guide_base_others": [],
+      "help_doc_module": "docMissing",
+      "help_doc_module_exists": false,
+      "doc_module": null,
+      "doc_module_via": "help.guide.base",
+      "path": "solo/solo-rt/vineflower/com/x/BSoloNetwork.java"
+    }
+  ]
+}

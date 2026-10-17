@@ -1,0 +1,1 @@
+{"args": ["--base-dir", "fixture/drivers", "drivers", "alarm-rt"], "env": {"NAV_CORPUS_BASE": "fixture/drivers-organized"}}

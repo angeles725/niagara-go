@@ -1,0 +1,13 @@
+
+  DRIVER BAcmeNetwork  (acme-rt, com.x)
+  ======================================================================
+  family             DDF (extends BDdfNetwork)
+  devices            BAcmeDevice  [from getDeviceType()]
+  point-device-ext   BAcmePointDeviceExt
+  proxy-ext          BAcmeOtherProxyExt, BAcmeProxyExt
+  managers           BAcmeDeviceManager, BAcmeFolderManager, BAcmeUxManager
+  discovery jobs     BAcmeDiscoverJob, BAcmeLearnJob
+  license            acme:acmeDriver
+  doc module         -  [help.guide.base=module://docAcme/doc; docAcme is not in organized/; other submodule lexicons: second value, module://ignored/doc]
+  source             acme/acme-rt/vineflower/com/x/BAcmeNetwork.java
+

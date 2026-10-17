@@ -1,0 +1,1 @@
+{"args": ["--base-dir", "fixture/drivers", "drivers", "acmeTcp"], "env": {"NAV_CORPUS_BASE": "fixture/drivers-organized"}}
