@@ -1,0 +1,16 @@
+6 files matching 'discovery timeout' (any term, ranked by how many terms match):
+by source: guides-clean 3, docs-text 2, devguide-rc 1
+
+  [docs-text] docBacnet
+    L8: The discovery timeout limits how long the station waits.
+    path: docs-text/docBacnet.txt
+
+  [guides-clean] Device discovery
+    L7: Set the discovery timeout before a discovery job starts.
+    path: guides-clean/Bacnet/discovery.txt
+
+  [devguide-rc] Example
+    L1: public class Example { /* servlet discovery example */ }
+    path: devguide-rc/Example.java
+
+  ... and 3 more files

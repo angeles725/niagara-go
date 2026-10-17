@@ -1,0 +1,4 @@
+No match for 'zzqq' (guide-search) in this scope.
+  searched: Niagara 2.0 (<ROOT>/versions/2.0) -- guides-index.json: absent; guides-clean/: 1 files
+  excluded from this scope: images, fonts/css, JavaHelp .dat search indexes, bajadoc.index, raw js next to rendered jsdoc, META-INF, licence texts (see coverage --doc-jars)
+  not proof of absence; try: guide-search 'zzqq', find 'zzqq', devguide-search 'zzqq'

@@ -1,0 +1,4 @@
+No match for 'servlet' (devguide-search) in this scope.
+  searched: Niagara 2.0 (<ROOT>/versions/2.0) -- devguide-toc.json: absent; devguide-clean/: absent; devguide-examples/: absent
+  excluded from this scope: images, fonts/css, JavaHelp .dat search indexes, bajadoc.index, raw js next to rendered jsdoc, META-INF, licence texts (see coverage --doc-jars)
+  not proof of absence; try: devguide-search 'servlet', find 'servlet', guide-search 'servlet'

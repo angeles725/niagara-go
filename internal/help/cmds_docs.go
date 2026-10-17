@@ -23,6 +23,9 @@ var docCommands = []command{
 			positional(p, "query", "Search text (e.g. 'discovery timeout')")
 			intOpt(p, 10, "", "-n", "--max-results")
 			andOr(p, "gs_mode")
+		},
+		run: func(e *Env, ns *argparse.Namespace) error {
+			return e.GuideSearch(FulltextParams{Query: ns.String("query"), Max: ns.Int("max_results"), Or: ns.Bool("gs_mode_or")})
 		}},
 	{name: "devguide", help: "Search Developer Guide TOC",
 		args: func(p *argparse.Parser) { positional(p, "query", "Search term (e.g. 'component model')") },
@@ -32,18 +35,32 @@ var docCommands = []command{
 			positional(p, "query", "Search text")
 			intOpt(p, 10, "", "-n", "--max-results")
 			andOr(p, "ds_mode")
+		},
+		run: func(e *Env, ns *argparse.Namespace) error {
+			return e.DevguideSearch(FulltextParams{Query: ns.String("query"), Max: ns.Int("max_results"), Or: ns.Bool("ds_mode_or")})
 		}},
 	{name: "pdf", help: "Search PDFs by name and full-text",
 		args: func(p *argparse.Parser) {
 			positional(p, "query", "Search term")
 			flag(p, "", "--no-fulltext")
 			p.Add(argparse.Arg{Choices: choices("software", "hardware")}, "--category")
+		},
+		run: func(e *Env, ns *argparse.Namespace) error {
+			var category *string
+			if ns.Get("category") != nil {
+				c := ns.String("category")
+				category = &c
+			}
+			return e.PDF(PDFParams{Query: ns.String("query"), NoFulltext: ns.Bool("no_fulltext"), Category: category})
 		}},
 	{name: "find", help: "Unified full-text search across ALL sources with relevance ranking",
 		args: func(p *argparse.Parser) {
 			positional(p, "query", "Search text")
 			intOpt(p, 5, "", "-n", "--max-per-source")
 			andOr(p, "find_mode")
+		},
+		run: func(e *Env, ns *argparse.Namespace) error {
+			return e.Find(FulltextParams{Query: ns.String("query"), Max: ns.Int("max_per_source"), Or: ns.Bool("find_mode_or")})
 		}},
 	{name: "fuzzy", help: "Approximate search across classes, methods, slots, guides",
 		args: func(p *argparse.Parser) {

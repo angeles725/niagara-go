@@ -1,0 +1,18 @@
+4 guides files matching 'alarm wiretap' (any term, ranked by how many terms match):
+
+  [guides-clean] index
+    L1: Guides overview: alarm, discovery and wiretap pages.
+    path: guides-clean/index.txt
+
+  [Bacnet] Setting up a wiretap
+    L3: Wiretaps evaluate (sniff) messages after they have been processed by a network port, and you add each wiretap as a child of the NetworkPorts container in the sa...
+    path: guides-clean/Bacnet/wiretap.txt
+
+  [Alarm] Alarm acknowledgement
+    L4: To acknowledge an alarm, select it and click Ack.
+    path: guides-clean/Alarm/ack.txt
+
+  [Alarm] Alarm routing
+    L3: The alarm class routes each alarm to its recipients.
+    path: guides-clean/Alarm/routing.txt
+

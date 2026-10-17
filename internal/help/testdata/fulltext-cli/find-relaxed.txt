@@ -1,0 +1,7 @@
+1 files matching 'LeadLag' (all terms):
+by source: devguide-clean 1
+
+  [devguide-clean] Component model
+    L4: The LeadLag example cycles lead and lag pumps.
+    path: devguide-clean/components.txt
+

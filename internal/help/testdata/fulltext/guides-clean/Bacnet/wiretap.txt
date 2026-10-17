@@ -1,0 +1,4 @@
+TITLE: Setting up a wiretap
+
+Wiretaps evaluate (sniff) messages after they have been processed by a network port, and you add each wiretap as a child of the NetworkPorts container in the same way as other components, then set its address filter.
+A wiretap never changes a message.

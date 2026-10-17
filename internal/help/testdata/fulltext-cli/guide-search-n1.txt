@@ -1,0 +1,7 @@
+3 guides files matching 'discovery timeout' (only 1 file has every term; showing files with any term, ranked by how many terms match):
+
+  [Bacnet] Device discovery
+    L7: Set the discovery timeout before a discovery job starts.
+    path: guides-clean/Bacnet/discovery.txt
+
+  ... and 2 more files

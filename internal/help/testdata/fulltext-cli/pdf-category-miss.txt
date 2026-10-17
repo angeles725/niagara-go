@@ -1,0 +1,4 @@
+No match for 'discovery' (pdf) in this scope.
+  searched: Niagara 1.0 (<ROOT>) -- pdf-index.json: 3 entries; docs-text/: 3 files
+  excluded from this scope: manual pages without a text layer (scanned images)
+  not proof of absence; try: find 'discovery', guide-search 'discovery', pdf --no-fulltext 'discovery'

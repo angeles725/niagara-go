@@ -1,0 +1,4 @@
+TITLE: Component model
+
+Every component has slots.
+The LeadLag example cycles lead and lag pumps.

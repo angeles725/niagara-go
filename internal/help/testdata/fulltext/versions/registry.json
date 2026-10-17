@@ -1,0 +1,13 @@
+{
+  "default": "1.0",
+  "versions": {
+    "1.0": {
+      "label": "Fixture 1.0",
+      "data_root": "."
+    },
+    "2.0": {
+      "label": "Fixture 2.0 (no manuals)",
+      "data_root": "versions/2.0"
+    }
+  }
+}

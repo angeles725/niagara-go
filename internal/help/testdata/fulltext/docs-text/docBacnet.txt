@@ -1,0 +1,12 @@
+TITLE: docBacnet
+SOURCE: docBacnet/docBacnet.pdf
+
+BACnet Guide
+Contents
+Discovery timeout ............ 2
+Chapter 1 Discovery
+The discovery timeout limits how long the station waits.
+A long discovery timeout finds slow devices.
+Chapter 2 Wiretaps
+A wiretap sniffs messages.
+Discovery and timeout settings are described in chapter 1.

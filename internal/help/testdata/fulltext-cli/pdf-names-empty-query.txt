@@ -1,0 +1,14 @@
+3 PDF manuals matching '???':
+
+  Modbus TCP Sheet (2 pages, 3 KB, software)
+    source: sheets/modbus.pdf
+    path: docs-text/Modbus_TCP_Sheet.txt
+
+  docBacnet (3 pages, 120 KB, software)
+    source: docBacnet/docBacnet.pdf
+    path: docs-text/docBacnet.txt
+
+  docModbus (1 pages, 2 KB, hardware)
+    source: docModbus/Modbus Guide.pdf
+    path: docs-text/docModbus.txt
+

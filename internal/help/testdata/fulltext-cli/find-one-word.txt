@@ -1,0 +1,19 @@
+4 files matching 'discovery' (all terms):
+by source: guides-clean 2, docs-text 1, devguide-rc 1
+
+  [docs-text] docBacnet
+    L7: Chapter 1 Discovery
+    path: docs-text/docBacnet.txt
+
+  [guides-clean] Device discovery
+    L6: Discovery finds the devices on the network.
+    path: guides-clean/Bacnet/discovery.txt
+
+  [guides-clean] index
+    L1: Guides overview: alarm, discovery and wiretap pages.
+    path: guides-clean/index.txt
+
+  [devguide-rc] Example
+    L1: public class Example { /* servlet discovery example */ }
+    path: devguide-rc/Example.java
+

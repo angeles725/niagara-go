@@ -1,0 +1,4 @@
+TITLE: Alarm routing
+
+The alarm class routes each alarm to its recipients.
+Configuración de la clase de alarma: the alarm class has a priority.

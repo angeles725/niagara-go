@@ -1,0 +1,5 @@
+TITLE: Alarm acknowledgement
+
+Alarm ack ........................ 12
+To acknowledge an alarm, select it and click Ack.
+An acknowledged alarm leaves the console.
