@@ -21,6 +21,9 @@ func TestMisses(t *testing.T) {
 	}{
 		{"class-suggest", []string{"class", "BWebServlte"}},
 		{"class-qualified-miss", []string{"class", "nope.BZzz"}},
+		{"search", []string{"search", "Zz*"}},
+		{"search-jdk", []string{"search", "Zz*", "--jdk"}},
+		{"package", []string{"package", "zzz"}},
 	}
 	for _, c := range cases {
 		t.Run(c.file, func(t *testing.T) {

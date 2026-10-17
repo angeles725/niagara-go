@@ -18,6 +18,9 @@ var classCommands = []command{
 		args: func(p *argparse.Parser) {
 			positional(p, "pattern", "Glob pattern (e.g. 'BAlarm*')")
 			flag(p, "Search the JDK API index instead of Niagara classes", "--jdk")
+		},
+		run: func(e *Env, ns *argparse.Namespace) error {
+			return e.Search(SearchParams{Pattern: ns.String("pattern"), JDK: ns.Bool("jdk")})
 		}},
 	{name: "hierarchy", help: "Show subclass tree or inheritance chain",
 		args: func(p *argparse.Parser) {
@@ -31,6 +34,9 @@ var classCommands = []command{
 		args: func(p *argparse.Parser) {
 			optionalPositional(p, "name", "", "Package name or partial (omit to list all)")
 			flag(p, "List all packages", "--all")
+		},
+		run: func(e *Env, ns *argparse.Namespace) error {
+			return e.Package(PackageParams{Name: ns.String("name"), All: ns.Bool("all")})
 		}},
 	{name: "implementors", help: "Find classes implementing an interface",
 		args: func(p *argparse.Parser) {
