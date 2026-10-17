@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"sync"
 	"unicode"
 )
 
@@ -78,44 +79,79 @@ func (e *emitter) node(n *node, fl Flags) {
 // category whose set differs from the .NET one ([\W], [\S], [\D] under re.ASCII), so
 // those become alternatives: [x\W] is (?:[x]|[^word]) and [^x\W] is (?![x])[word].
 func (e *emitter) set(n *node, ascii bool) {
-	var pos strings.Builder
-	var comps []string
+	var lits strings.Builder
+	var caseless, comps []string // ASCII category classes; complements of \D \S \W
 	for _, it := range n.set {
 		switch {
 		case it.isCat:
 			if body, neg := complemented(it.cat, ascii); neg {
 				comps = append(comps, body)
+			} else if ascii {
+				caseless = append(caseless, categoryInClass(it.cat, ascii))
 			} else {
-				pos.WriteString(categoryInClass(it.cat, ascii))
+				lits.WriteString(categoryInClass(it.cat, ascii))
 			}
 		case it.isRange:
-			pos.WriteString(escapeRune(it.lo) + "-" + escapeRune(it.hi))
+			lits.WriteString(escapeRune(it.lo) + "-" + escapeRune(it.hi))
 		default:
-			pos.WriteString(escapeRune(it.lo))
+			lits.WriteString(escapeRune(it.lo))
 		}
 	}
 	b := &e.b
-	switch {
-	case len(comps) == 0 && n.negate:
-		b.WriteString("[^" + pos.String() + "]")
-	case len(comps) == 0:
-		b.WriteString("[" + pos.String() + "]")
-	case !n.negate:
-		b.WriteString("(?:")
-		if pos.Len() > 0 {
-			b.WriteString("[" + pos.String() + "]|")
+	if len(caseless) == 0 && len(comps) == 0 {
+		if n.negate {
+			b.WriteString("[^" + lits.String() + "]")
+		} else {
+			b.WriteString("[" + lits.String() + "]")
 		}
-		b.WriteString("[^" + strings.Join(comps, "]|[^") + "])")
-	default:
-		b.WriteString("(?:")
-		if pos.Len() > 0 {
-			b.WriteString("(?![" + pos.String() + "])")
-		}
-		for _, c := range comps[:len(comps)-1] {
-			b.WriteString("(?=[" + c + "])")
-		}
-		b.WriteString("[" + comps[len(comps)-1] + "])")
+		return
 	}
+	cls := func(body string, neg bool) string {
+		c := "[" + body + "]"
+		if neg {
+			c = "[^" + body + "]"
+		}
+		return asciiOnly(c, ascii)
+	}
+	b.WriteString("(?:")
+	if !n.negate { // any member: the literals, a category, a complement
+		var alts []string
+		if lits.Len() > 0 {
+			alts = append(alts, "["+lits.String()+"]")
+		}
+		for _, c := range caseless {
+			alts = append(alts, cls(c, false))
+		}
+		for _, c := range comps {
+			alts = append(alts, cls(c, true))
+		}
+		b.WriteString(strings.Join(alts, "|") + ")")
+		return
+	}
+	// no member: not a literal, not in a category, in every complemented set
+	if lits.Len() > 0 {
+		b.WriteString("(?![" + lits.String() + "])")
+	}
+	for _, c := range caseless {
+		b.WriteString("(?!" + cls(c, false) + ")")
+	}
+	if len(comps) == 0 {
+		b.WriteString(`[\s\S])`)
+		return
+	}
+	for _, c := range comps[:len(comps)-1] {
+		b.WriteString("(?=" + cls(c, false) + ")")
+	}
+	b.WriteString(cls(comps[len(comps)-1], false) + ")")
+}
+
+// asciiOnly keeps an re.ASCII class out of IGNORECASE: .NET would lower-case the input
+// first (U+212A KELVIN SIGN to "k"), Python folds ASCII letters only.
+func asciiOnly(class string, ascii bool) string {
+	if ascii {
+		return "(?-i:" + class + ")"
+	}
+	return class
 }
 
 func (e *emitter) wrap(open string, sub []*node, fl Flags) {
@@ -175,64 +211,121 @@ func inlineFlags(add, del Flags) string {
 	return on
 }
 
-// Python str patterns: \d is Unicode Nd (as .NET), \s is str.isspace (.NET \s lacks
-// \x1c-\x1f), \w is str.isalnum() or "_" (letters and every number category). With
-// re.ASCII the three are the ASCII sets.
+// Python str patterns: \s is sre's Unicode whitespace (str.isspace: .NET \s lacks
+// \x1c-\x1f), \d is Unicode Nd and \w is str.isalnum() or "_", all in Python's Unicode
+// version; they are written as explicit classes from classes_gen.go (generated from
+// Python's re), since regexp2's classes follow .NET definitions and Go's Unicode tables.
+// With re.ASCII the three are the ASCII sets.
 const (
-	pySpace     = `\s\u001c-\u001f`
-	pyWord      = `\p{L}\p{N}_`
-	asciiDigit  = `0-9`
-	asciiSpace  = ` \t\n\r\f\v`
-	asciiWord   = `a-zA-Z0-9_`
-	asciiWordCl = `[a-zA-Z0-9_]`
+	asciiDigit = `0-9`
+	asciiSpace = ` \t\n\r\f\v`
+	asciiWord  = `a-zA-Z0-9_`
 )
 
-func categoryAtom(c category, ascii bool) string {
-	if ascii {
-		return map[category]string{catDigit: "[" + asciiDigit + "]", catNotDigit: "[^" + asciiDigit + "]",
-			catSpace: "[" + asciiSpace + "]", catNotSpace: "[^" + asciiSpace + "]",
-			catWord: asciiWordCl, catNotWord: "[^" + asciiWord + "]"}[c]
+// classBody writes inclusive (lo, hi) pairs as a .NET class body.
+func classBody(pairs []rune) string {
+	var b strings.Builder
+	for i := 0; i < len(pairs); i += 2 {
+		b.WriteString(escapeRune(pairs[i]))
+		if pairs[i+1] != pairs[i] {
+			b.WriteString("-" + escapeRune(pairs[i+1]))
+		}
 	}
-	return map[category]string{catDigit: `\d`, catNotDigit: `\D`, catSpace: "[" + pySpace + "]",
-		catNotSpace: "[^" + pySpace + "]", catWord: "[" + pyWord + "]", catNotWord: "[^" + pyWord + "]"}[c]
+	return b.String()
 }
 
-// categoryInClass is the class body of a category that a .NET class can hold.
-func categoryInClass(c category, ascii bool) string {
-	if ascii {
-		return map[category]string{catDigit: asciiDigit, catSpace: asciiSpace, catWord: asciiWord}[c]
+// nonASCII keeps the pairs at or above U+0080.
+func nonASCII(pairs []rune) []rune {
+	var out []rune
+	for i := 0; i < len(pairs); i += 2 {
+		if pairs[i+1] >= 0x80 {
+			out = append(out, max(pairs[i], 0x80), pairs[i+1])
+		}
 	}
-	return map[category]string{catDigit: `\d`, catNotDigit: `\D`, catSpace: pySpace, catWord: pyWord}[c]
+	return out
 }
 
-// complemented reports the categories a class cannot hold (their complement differs
-// from .NET's) and the body of the set they complement.
-func complemented(c category, ascii bool) (string, bool) {
+var (
+	pySpace = sync.OnceValue(func() string { return classBody(pySpaceRanges) })
+	pyDigit = sync.OnceValue(func() string { return classBody(pyDigitRanges) })
+	pyWord  = sync.OnceValue(func() string { return classBody(pyWordRanges) })
+	// regexp2 scans a class's ranges one by one, so the \d and \w atoms test ASCII
+	// first and reach the long non-ASCII range list only for a non-ASCII character.
+	pyDigitHigh = sync.OnceValue(func() string { return classBody(nonASCII(pyDigitRanges)) })
+	pyWordHigh  = sync.OnceValue(func() string { return classBody(nonASCII(pyWordRanges)) })
+)
+
+const isHigh = `(?![\u0000-\u007F])`
+
+// fastAtom is the \d / \D / \w / \W atom as an ASCII test, then the non-ASCII ranges.
+func fastAtom(c category) (string, bool) {
+	var low, high string
+	switch c {
+	case catDigit, catNotDigit:
+		low, high = asciiDigit, pyDigitHigh()
+	case catWord, catNotWord:
+		low, high = asciiWord, pyWordHigh()
+	default:
+		return "", false
+	}
+	if isNegated(c) {
+		return "(?:(?![" + low + `])[\u0000-\u007F]|` + isHigh + "[^" + high + "])", true
+	}
+	return "(?:[" + low + "]|" + isHigh + "[" + high + "])", true
+}
+
+// positiveBody is the class body of \d, \s or \w.
+func positiveBody(c category, ascii bool) string {
 	switch {
-	case c == catNotWord && ascii:
-		return asciiWord, true
-	case c == catNotWord:
-		return pyWord, true
-	case c == catNotSpace && ascii:
-		return asciiSpace, true
-	case c == catNotSpace:
-		return pySpace, true
-	case c == catNotDigit && ascii:
-		return asciiDigit, true
+	case ascii && (c == catDigit || c == catNotDigit):
+		return asciiDigit
+	case ascii && (c == catSpace || c == catNotSpace):
+		return asciiSpace
+	case ascii:
+		return asciiWord
+	case c == catDigit || c == catNotDigit:
+		return pyDigit()
+	case c == catSpace || c == catNotSpace:
+		return pySpace()
+	}
+	return pyWord()
+}
+
+func isNegated(c category) bool { return c == catNotDigit || c == catNotSpace || c == catNotWord }
+
+func categoryAtom(c category, ascii bool) string {
+	if atom, ok := fastAtom(c); ok && !ascii {
+		return atom
+	}
+	if isNegated(c) {
+		return asciiOnly("[^"+positiveBody(c, ascii)+"]", ascii)
+	}
+	return asciiOnly("["+positiveBody(c, ascii)+"]", ascii)
+}
+
+// categoryInClass is the class body of a positive category (\d, \s, \w).
+func categoryInClass(c category, ascii bool) string { return positiveBody(c, ascii) }
+
+// complemented reports the negated categories (\D, \S, \W), which a .NET class cannot
+// hold as a union member, and the body of the set they complement.
+func complemented(c category, ascii bool) (string, bool) {
+	if isNegated(c) {
+		return positiveBody(c, ascii), true
 	}
 	return "", false
 }
 
+// anchor writes ^ $ \A \z and the word boundaries; \b and \B are lookarounds on
+// Python's \w (ASCII's under re.ASCII), not the .NET word definition.
 func anchor(a atKind, ascii bool) string {
-	if ascii && (a == atBoundary || a == atNonBoundary) {
-		w := asciiWordCl
+	if a == atBoundary || a == atNonBoundary {
+		w := categoryAtom(catWord, ascii)
 		if a == atBoundary {
 			return "(?:(?<=" + w + ")(?!" + w + ")|(?<!" + w + ")(?=" + w + "))"
 		}
 		return "(?:(?<=" + w + ")(?=" + w + ")|(?<!" + w + ")(?!" + w + "))"
 	}
-	return map[atKind]string{atBeginning: "^", atEnd: "$", atBeginningString: `\A`, atEndString: `\z`,
-		atBoundary: `\b`, atNonBoundary: `\B`}[a]
+	return map[atKind]string{atBeginning: "^", atEnd: "$", atBeginningString: `\A`, atEndString: `\z`}[a]
 }
 
 // escapeRune writes one literal character so .NET reads it as itself, in or out of a set.
