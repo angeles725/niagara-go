@@ -7,14 +7,16 @@
 // numbered ones (Python numbering), \Z is the absolute end, {,n} is {0,n}, \s, \d
 // and \w (in and out of sets, and the \b / \B boundaries) are explicit classes
 // generated from Python's re over every code point (classes_gen.go), (?x) comments
-// and whitespace are dropped, re.ASCII is applied by the rewrite. $ without MULTILINE
-// matches at the end or before a final newline, with it before every newline, as in
-// Python. Positions are code-point (rune) indices, as in Python.
+// and whitespace are dropped, re.ASCII is applied by the rewrite (with IGNORECASE it
+// folds the ASCII letters only, as Python does). $ without MULTILINE matches at the
+// end or before a final newline, with it before every newline, as in Python.
+// Positions are code-point (rune) indices, as in Python.
 //
-// Known differences, none hit by the ported tools: IGNORECASE folds with .NET's
-// simple lower-casing (Python also folds ſ/s and a few others); \N{name} escapes are
-// rejected; an iteration resumes one character after an empty match (Python 3.7+
-// may then match a non-empty string at the same position); FutureWarnings for
-// nested sets are not printed. A pattern Python accepts but regexp2 rejects fails
-// with "unsupported by the Go regex engine: ...".
+// Known differences, none hit by the ported tools: Unicode IGNORECASE folds with
+// .NET's simple lower-casing (Python also folds ı/i, ſ/s, µ/μ and ς/σ; pinned in
+// testdata/flags.json); \N{name} escapes are rejected; an iteration resumes one
+// character after an empty match (Python 3.7+ may then match a non-empty string at
+// the same position); FutureWarnings for nested sets are not printed. A pattern
+// Python accepts but regexp2 rejects fails with "unsupported by the Go regex engine:
+// ...".
 package pyre

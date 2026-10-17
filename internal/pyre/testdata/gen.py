@@ -1,9 +1,13 @@
-"""Regenerate errors.json and matches.json from the real Python re module:
+"""Regenerate errors.json, matches.json and flags.json from the real Python re module:
 python3 -I internal/pyre/testdata/gen.py
 
 errors.json: every pattern that does not compile, with its re.error text. matches.json: the subjects and, per compiling pattern, the search result
 (spans of the match and of each group, None when a group did not take part) on every subject,
-plus findall for the patterns whose findall is a list of strings. One case per line."""
+plus findall for the patterns whose findall is a list of strings. flags.json: the same for
+FLAG_PATTERNS under 0, IGNORECASE, ASCII and ASCII|IGNORECASE over FLAG_SUBJECTS, the
+characters whose case folding or word class differs between Unicode and ASCII matching
+(KELVIN SIGN, dotted/dotless i, long s, micro sign, title-case digraphs, ...), so
+re.ASCII with IGNORECASE and the \\b / \\B boundaries are pinned. One case per line."""
 import json
 import os
 import re
@@ -33,20 +37,30 @@ PATTERNS = [
     "[^\\W\\d]+", "[\\W\\d]+", "(?a)[\\W]+", "(?a)[^\\D]+", "[\\S]+", "[x\\W\\S]", "(?s:.)", "a(?=b)|ab", "(?:a|b)*c", "(?x)a\\ b", "\\u2028", "[\\u2028]", "(?m)$", "\\Bb\\B",
 ]
 
+# Case folding and word boundaries where Unicode and ASCII matching differ.
+FLAG_SUBJECTS = ["", "\u212a", "\u0130", "\u0131", "\u017f", "\u00df", "K k", "\u00e9 \u00c9", "\u00b5 \u03bc \u039c",
+                 "\u01c5 \u01c6 \u01c4", "x\u00b2 y", "a\u00f1o", "k\u212a", "word_1", "\ufb00 ff", "\u03a3\u0391\u03a3 \u03c3\u03b1\u03c2",
+                 "\u2167 \u2177", "r\u00e9sum\u00e9 caf\u00e9"]
+FLAG_PATTERNS = ["k", "K", "[k]", "[a-z]+", "[A-Z]+", "[^a-z]", "i", "I", "s", "S", "[s-t]", "ss", "\u00e9", "\u00c9",
+                 "[\u00e0-\u00ff]+", "\u00b5", "\u03bc", "\u03c3", "\u01c5", "\u2177", "\ufb00", "FF", "\\w+", "[\\w]+", "\\W",
+                 "\\bk\\b", "\\b\u00e9", "x\\b", "\\B\u00b2", "\\b\\w+\\b", "\\B\\w", "\\w\\b", "(?-i:k)K", "(?i)k",
+                 "(?a)k", "(?a:[k])", "[^\\W\\d]+", "(?u)k", "(?L)k"]
 
-def run():
+
+def cases_for(patterns, subjects, flag_sets):
+    """One case per (flags, pattern): the re.error text, or the search spans and findall."""
     cases = []
-    for flags in (0, I):
-        for p in PATTERNS:
+    for flags in flag_sets:
+        for p in patterns:
             case = {"pattern": p, "flags": flags}
             try:
                 rx = re.compile(p, flags)
-            except (re.error, OverflowError) as e:
+            except (re.error, OverflowError, ValueError) as e:
                 case["error"] = str(e)
                 cases.append(case)
                 continue
             out = []
-            for s in SUBJECTS:
+            for s in subjects:
                 m = rx.search(s)
                 if m is None:
                     out.append(None)
@@ -55,11 +69,15 @@ def run():
                                                    for g in range(1, rx.groups + 1)])
             case["search"] = out
             # findall after an empty match differs by design (see the package doc): not pinned.
-            empty = any(m.start() == m.end() for s in SUBJECTS for m in rx.finditer(s))
+            empty = any(m.start() == m.end() for s in subjects for m in rx.finditer(s))
             if rx.groups <= 1 and not empty:
-                case["findall"] = [rx.findall(s) for s in SUBJECTS]
+                case["findall"] = [rx.findall(s) for s in subjects]
             cases.append(case)
-    return {"subjects": SUBJECTS, "cases": cases}
+    return cases
+
+
+def run():
+    return {"subjects": SUBJECTS, "cases": cases_for(PATTERNS, SUBJECTS, (0, I))}
 
 
 def dump(path, head, items):
@@ -76,3 +94,5 @@ if __name__ == "__main__":
          [c for c in data["cases"] if "error" in c])
     dump(os.path.join(here, "matches.json"), {"subjects": data["subjects"]},
          [c for c in data["cases"] if "error" not in c])
+    dump(os.path.join(here, "flags.json"), {"subjects": FLAG_SUBJECTS},
+         cases_for(FLAG_PATTERNS, FLAG_SUBJECTS, (0, I, A, I | A)))
