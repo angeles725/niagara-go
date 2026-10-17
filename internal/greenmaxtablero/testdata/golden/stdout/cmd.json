@@ -1,0 +1,8 @@
+{
+ "args": [
+  "inputs/tablero.px",
+  "--gm",
+  "GM8",
+  "--stdout"
+ ]
+}

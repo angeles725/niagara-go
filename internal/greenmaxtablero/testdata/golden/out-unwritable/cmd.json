@@ -1,0 +1,9 @@
+{
+ "args": [
+  "inputs/tablero.px",
+  "--gm",
+  "GM1",
+  "--out",
+  "inputs/nodir/x.md"
+ ]
+}

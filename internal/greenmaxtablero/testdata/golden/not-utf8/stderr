@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/home/cristian/niagara-research/tools/greenmax-tablero-gen.py", line 150, in <module>
+    main()
+    ~~~~^^
+  File "/home/cristian/niagara-research/tools/greenmax-tablero-gen.py", line 131, in main
+    src = f.read()
+  File "<frozen codecs>", line 325, in decode
+UnicodeDecodeError: 'utf-8' codec can't decode byte 0xe9 in position 225: invalid continuation byte

@@ -1,0 +1,14 @@
+usage: greenmax-tablero-gen.py [-h] --gm GM [--out OUT] [--tab TAB] [--legend] [--stdout] src
+
+Generate a redesigned GreenMAX tablero Px.
+
+positional arguments:
+  src         original tablero .px from the station backup
+
+options:
+  -h, --help  show this help message and exit
+  --gm GM     control-folder tag, e.g. GM08 (plain number, no leading zero)
+  --out OUT   output .md path (fenced Px). Omit with --stdout.
+  --tab TAB   PxView/tablero display name for the doc header
+  --legend    also add the read-only 'Horarios' legend
+  --stdout    print the .md to stdout instead of a file

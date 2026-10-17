@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Niagara Presentation XML -->
+<PxView version="1.0">
+  <import>
+    <module name="bajaui" />
+  </import>
+  <content>
+  <CanvasPane viewSize="10.0,10.0">
+    <Label layout="10.0,5.0,200.0,20.0" text="Tablero AL3 &amp; AL4" />
+    <ImageButton layout="1,1,20.0,20.0" image="file:^Imagenes/auto.png">
+      <ActionBinding ord="slot:Relay$5b1$5d$2eBO/auto" widgetEvent="actionPerformed">
+        <Note text="auto" />
+      </ActionBinding>
+    </ImageButton>
+  </CanvasPane>
+  </content>
+</PxView>

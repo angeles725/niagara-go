@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Niagara Presentation XML -->
+<PxView version="1.0">
+  <import>
+    <module name="bajaui" />
+  </import>
+  <content>
+  <Pane>
+    <Label layout="10.0,5.0,200.0,20.0" text="Tablero AL3 &amp; AL4" />
+    <Picture layout="1.0,1.0,60.0,30.0" image="file:^Imagenes/GreenMax On.png">
+      <ValueBinding ord="slot:Relay$5b1$5d$2eBO">
+        <IBooleanToSimple name="image" trueValue="file:^Imagenes/GreenMax On.png" falseValue="file:^Imagenes/GreenMax Off.png" />
+      </ValueBinding>
+    </Picture>
+    <Picture layout="1.0,1.0,10.0,10.0">
+      <ValueBinding ord="slot:Relay$5b1$5d$2eBO">
+        <IStatusToSimple name="background" />
+      </ValueBinding>
+    </Picture>
+  </Pane>
+  </content>
+</PxView>

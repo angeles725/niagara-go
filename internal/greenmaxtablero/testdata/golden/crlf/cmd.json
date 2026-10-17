@@ -1,0 +1,8 @@
+{
+ "args": [
+  "inputs/tablero-crlf.px",
+  "--gm",
+  "GM3",
+  "--stdout"
+ ]
+}
