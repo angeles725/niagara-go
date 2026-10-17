@@ -118,6 +118,24 @@ func platformErrno() *errnoTable {
 // runtime's on Windows.
 func Strerror(n int) string { return platformErrno().strerror(n) }
 
+// StrerrorOf is e.strerror of the OSError Python raises where the Go os package returned
+// err: Strerror of the errno in err, found through *fs.PathError, *os.LinkError,
+// *os.SyscallError and any other wrapping; on Windows the Win32 code first becomes an errno
+// as in OSErrorText. An error that holds no syscall.Errno is returned as err.Error(), and
+// nil as "".
+func StrerrorOf(err error) string { return strerrorOf(err, platformErrno()) }
+
+func strerrorOf(err error, t *errnoTable) string {
+	if err == nil {
+		return ""
+	}
+	n, ok := t.errnoOf(err)
+	if !ok {
+		return err.Error()
+	}
+	return t.strerror(n)
+}
+
 // OSErrorText is str() of the OSError Python raises where the Go os package returned err:
 // "[Errno 2] No such file or directory: 'p'", "... : 'a' -> 'b'" for an *os.LinkError, and
 // "[Errno 5] Input/output error" without a path. Names are shown as FSRepr. On Windows the

@@ -2,6 +2,8 @@ package pycompat
 
 import (
 	"encoding/hex"
+	"errors"
+	"fmt"
 	"io/fs"
 	"os"
 	"runtime"
@@ -95,6 +97,61 @@ func TestOSErrorTextWindows(t *testing.T) {
 	}
 	if samples < 20 {
 		t.Fatalf("only %d X samples in errno_windows.txt", samples)
+	}
+}
+
+func TestStrerrorOf(t *testing.T) {
+	f := load(t)
+	checked := 0
+	for _, c := range f.OSErrors {
+		var n int
+		var strerror string
+		decode(t, c[0], &n)
+		decode(t, c[1], &strerror)
+		for _, err := range []error{
+			syscall.Errno(n),
+			&fs.PathError{Op: "open", Path: "p", Err: syscall.Errno(n)},
+			&os.LinkError{Op: "rename", Old: "a", New: "b", Err: syscall.Errno(n)},
+			os.NewSyscallError("read", syscall.Errno(n)),
+			fmt.Errorf("wrapped: %w", &fs.PathError{Op: "stat", Path: "q", Err: syscall.Errno(n)}),
+		} {
+			checked++
+			if got := strerrorOf(err, linuxErrno()); got != strerror {
+				t.Errorf("Linux strerrorOf(%#v) = %q, want %q", err, got, strerror)
+			}
+		}
+	}
+	if checked == 0 {
+		t.Fatal("no OSErrors fixtures")
+	}
+	// Windows: the Win32 code goes through winerror_to_errno first; the X samples hold
+	// str(OSError) "[Errno n] <strerror>: 'p'" for each sampled winerror.
+	for _, line := range strings.Split(errnoWindows, "\n") {
+		x := strings.SplitN(line, " ", 4)
+		if x[0] != "X" {
+			continue
+		}
+		w, _ := strconv.Atoi(x[1])
+		_, text, _ := strings.Cut(x[3], "] ")
+		want := strings.TrimSuffix(text, ": 'p'")
+		err := &fs.PathError{Op: "open", Path: "p", Err: syscall.Errno(w)}
+		if got := strerrorOf(err, windowsErrno()); got != want {
+			t.Errorf("Windows strerrorOf(winerror %d) = %q, want %q", w, got, want)
+		}
+	}
+	for _, err := range []error{fs.ErrClosed, errors.New("plain"), &fs.PathError{Op: "open", Path: "p", Err: fs.ErrNotExist}} {
+		if got := StrerrorOf(err); got != err.Error() {
+			t.Errorf("StrerrorOf(%v) = %q, want err.Error()", err, got)
+		}
+	}
+	if got := StrerrorOf(nil); got != "" {
+		t.Errorf("StrerrorOf(nil) = %q, want empty", got)
+	}
+	if runtime.GOOS == "linux" {
+		_, err := os.Open("/nonexistent-pycompat/x")
+		if got := StrerrorOf(err); got != "No such file or directory" {
+			t.Errorf("StrerrorOf(%v) = %q", err, got)
+		}
 	}
 }
 
