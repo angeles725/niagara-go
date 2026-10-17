@@ -1,0 +1,13 @@
+usage: course status [-h] [--root DIR] [--lab GROUP]
+                     [--status {predicted,unverified,corrected,identical,verified,written}]
+                     [--json]
+
+options:
+  -h, --help            show this help message and exit
+  --root DIR            niagara-research checkout (default: $NIAGARA_RESEARCH_DIR, then found from
+                        cwd)
+  --lab GROUP           one group: a lab number (3 or L3), B, A, RA1, RA2, RAX, RA (all three),
+                        EXAM
+  --status {predicted,unverified,corrected,identical,verified,written}
+                        list the items carrying this status (written = no marker)
+  --json                machine JSON output

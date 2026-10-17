@@ -1,0 +1,4 @@
+usage: course status [-h] [--root DIR] [--lab GROUP]
+                     [--status {predicted,unverified,corrected,identical,verified,written}]
+                     [--json]
+course status: error: argument --status: invalid choice: 'bogus' (choose from 'predicted', 'unverified', 'corrected', 'identical', 'verified', 'written')

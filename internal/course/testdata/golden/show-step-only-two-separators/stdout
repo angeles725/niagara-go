@@ -1,0 +1,17 @@
+L1.6 (lab item)
+  section:  Lab 1 — First component (`LI:1-12`)
+  step:     `gradlew jar` (`LI:10`).
+  text:     sources/n4-dev-course/text/Lab Instructions.txt:10
+  status:   written
+  source:   docs/n4-dev-course-solutions/labs.md:25
+  answer:
+    (step only)
+
+L2.1 (lab item)
+  section:  Lab 2 — Executors (`LI:13-20`)
+  step:     `gradlew jar`, restart · *Why reuse it?* (`LI:13-14`)
+  text:     sources/n4-dev-course/text/Lab Instructions.txt:13-14
+  status:   written
+  source:   docs/n4-dev-course-solutions/labs.md:33
+  answer:
+    Instances are stored by `a · b` type spec.

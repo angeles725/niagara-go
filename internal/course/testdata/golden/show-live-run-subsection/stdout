@@ -1,0 +1,18 @@
+L1.4 (lab item)
+  section:  Lab 1 — First component (`LI:1-12`)
+  step:     *Observe* the jar (`LI:7`)
+  text:     sources/n4-dev-course/text/Lab Instructions.txt:7
+  status:   predicted
+  live run: needed
+  source:   docs/n4-dev-course-solutions/labs.md:22
+  answer:
+    *(predicted)* one jar per part, `first-rt.jar` and `first-wb.jar`.
+
+LB.1 (lab item)
+  section:  Bonus lab — Discovery (`LI:21-24`) / Customising the manager
+  step:     Add a column (`LI:21-22`)
+  text:     sources/n4-dev-course/text/Lab Instructions.txt:21-22
+  status:   predicted
+  source:   docs/n4-dev-course-solutions/labs.md:43
+  answer:
+    *(predicted)* a new column.

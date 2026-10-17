@@ -1,0 +1,8 @@
+L1.5 (lab item)
+  section:  Lab 1 — First component (`LI:1-12`)
+  step:     *Why restart?*
+  text:     sources/n4-dev-course/text/Lab Instructions.txt:8-9, 11-12
+  status:   written
+  source:   docs/n4-dev-course-solutions/labs.md:24
+  answer:
+    The registry is rebuilt at start-up (`LI:8-9`, `LI:11-12`).

@@ -1,0 +1,8 @@
+X1 (check)
+  section:  3. Needs a run (requires execution)
+  step:     The listings compile
+  text:     (none)
+  status:   unverified
+  source:   docs/n4-dev-course-solutions/review-assignments.md:57
+  answer:
+    Cheapest check: `gradlew jar`
