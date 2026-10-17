@@ -20,6 +20,10 @@ type runeRange struct{ lo, hi rune }
 type tables struct {
 	header                                           string
 	alpha, decimal, digit, numeric, printable, space []runeRange
+	// CPython's case flags (see gen.py): upper, lower, title (or upper and lower), cased and
+	// case-ignorable; upperMap and titleMap hold the full single-character mappings.
+	upper, lower, title, cased, ignorable []runeRange
+	upperMap, titleMap                    map[rune]string
 }
 
 var data = sync.OnceValue(func() *tables { return parseTables(unicodeData) })
@@ -28,7 +32,7 @@ var data = sync.OnceValue(func() *tables { return parseTables(unicodeData) })
 func UnicodeHeader() string { return data().header }
 
 func parseTables(text string) *tables {
-	t := &tables{}
+	t := &tables{upperMap: map[rune]string{}, titleMap: map[rune]string{}}
 	for _, line := range strings.Split(text, "\n") {
 		if line == "" {
 			continue
@@ -39,6 +43,7 @@ func parseTables(text string) *tables {
 		}
 		f := strings.Fields(line)
 		var dst *[]runeRange
+		var maps map[rune]string
 		switch f[0] {
 		case "A":
 			dst = &t.alpha
@@ -52,10 +57,28 @@ func parseTables(text string) *tables {
 			dst = &t.printable
 		case "S":
 			dst = &t.space
+		case "U":
+			dst = &t.upper
+		case "L":
+			dst = &t.lower
+		case "T":
+			dst = &t.title
+		case "C":
+			dst = &t.cased
+		case "I":
+			dst = &t.ignorable
+		case "u":
+			maps = t.upperMap
+		case "t":
+			maps = t.titleMap
 		default:
 			panic("pycompat: corrupt unicode.txt line " + strconv.Quote(line))
 		}
 		for _, e := range f[1:] {
+			if maps != nil {
+				parseMapping(maps, e)
+				continue
+			}
 			lo, hi, ok := strings.Cut(e, "-")
 			if !ok {
 				panic("pycompat: corrupt unicode.txt entry " + strconv.Quote(e))
@@ -64,6 +87,19 @@ func parseTables(text string) *tables {
 		}
 	}
 	return t
+}
+
+// parseMapping reads one "cp:cp.cp" entry into m.
+func parseMapping(m map[rune]string, e string) {
+	cp, to, ok := strings.Cut(e, ":")
+	if !ok {
+		panic("pycompat: corrupt unicode.txt mapping " + strconv.Quote(e))
+	}
+	var b strings.Builder
+	for _, h := range strings.Split(to, ".") {
+		b.WriteRune(parseHex(h))
+	}
+	m[parseHex(cp)] = b.String()
 }
 
 func parseHex(h string) rune {
