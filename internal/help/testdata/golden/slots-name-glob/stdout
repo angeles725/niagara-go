@@ -1,0 +1,8 @@
+2 slots matching '*CAUSE*':
+
+  [propertie] BAbstractService.faultCause: BString
+    default: ""
+    flags: Flags.READONLY
+  [propertie] BAlarmClass.faultCause: BString
+    default: ""
+    flags: Flags.READONLY | Flags.TRANSIENT

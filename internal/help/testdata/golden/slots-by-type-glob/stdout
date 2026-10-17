@@ -1,0 +1,8 @@
+7 slots of type 'BStatus*' across 6 classes:
+
+  AbstractCursor (javax.baja.collection) — cursorFault
+  BAbstractService (javax.baja.sys) — status
+  BAlarmClass (javax.baja.alarm) — priority
+  BAlarmCursor (javax.baja.alarm) — ?, faultSeen
+  BAlarmService (javax.baja.alarm) — status
+  BOrionAlarmService (javax.baja.alarmOrion) — cleanupDays

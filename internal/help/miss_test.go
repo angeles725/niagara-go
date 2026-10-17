@@ -28,6 +28,8 @@ func TestMisses(t *testing.T) {
 		{"implementors", []string{"implementors", "BIZzz"}},
 		{"xref", []string{"xref", "BZzz"}},
 		{"interface-hierarchy", []string{"interface-hierarchy", "Zzz"}},
+		{"slots", []string{"slots", "Zzz"}},
+		{"slots-by-type", []string{"slots", "--by-type", "BZzz"}},
 	}
 	for _, c := range cases {
 		t.Run(c.file, func(t *testing.T) {

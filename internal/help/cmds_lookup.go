@@ -117,6 +117,10 @@ var memberCommands = []command{
 				"--json")
 			flag(p, "All slots of the class QUERY including those inherited from "+
 				"its parents (replaces inherited-slots; no --type / --by-type)", "--inherited")
+		},
+		run: func(e *Env, ns *argparse.Namespace) error {
+			return e.Slots(SlotsParams{Query: ns.String("query"), SlotType: ns.String("slot_type"),
+				ByType: ns.String("by_type"), JSON: ns.Bool("slots_json"), Inherited: ns.Bool("inherited")})
 		}},
 	{name: "inherited-slots", help: "Show all slots including inherited from parents",
 		aliasOf: "slots --inherited",

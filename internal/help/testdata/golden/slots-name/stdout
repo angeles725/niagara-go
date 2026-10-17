@@ -1,0 +1,11 @@
+5 slots matching 'fault':
+
+  [propertie] AbstractCursor.cursorFault: BStatus*
+  [propertie] BAbstractService.faultCause: BString
+    default: ""
+    flags: Flags.READONLY
+  [propertie] BAlarmClass.faultCause: BString
+    default: ""
+    flags: Flags.READONLY | Flags.TRANSIENT
+  [topic] BAlarmClass.faultCauseChanged: BString
+  [topic] BAlarmCursor.faultSeen: BStatusNumeric

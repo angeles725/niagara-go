@@ -1,0 +1,20 @@
+SLOTS: BAlarmClass (javax.baja.alarm, alarm-rt)
+
+PROPERTIES (3):
+
+  ackRequired: BAlarmTransitionBits = BAlarmTransitionBits.make(BAlarmTransitionBits.TO_OFFNORM...
+  faultCause: BString = "" [Flags.READONLY | Flags.TRANSIENT]
+  priority: bstatusnumeric
+
+ACTIONS (1):
+
+  ackAlarms (BAlarmRecord)
+
+TOPICS (1):
+
+  faultCauseChanged -> BString
+SLOTS: BAlarmClass (alarm-wb) (com.tridium.alarm.ui, alarm-wb)
+
+PROPERTIES (1):
+
+  label: BFormat
