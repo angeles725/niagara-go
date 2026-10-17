@@ -1,0 +1,8 @@
+usage: niagara_help package [-h] [--all] [name]
+
+positional arguments:
+  name        Package name or partial (omit to list all)
+
+options:
+  -h, --help  show this help message and exit
+  --all       List all packages

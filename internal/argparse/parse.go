@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/cli"
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // runCtx carries the output streams through one parse (Python's sys.stdout/sys.stderr).
@@ -182,7 +183,7 @@ func (p *Parser) parseKnownArgs(ctx *runCtx, argStrings []string, ns *Namespace)
 			if count == 0 && t.option[1] != '-' && t.arg != "" {
 				// a single-dash flag taking no value: the rest of the string is more flags
 				if (t.hasSep && t.sep != "") || t.arg[0] == '-' {
-					return 0, newArgError(t.action, "ignored explicit argument "+pyRepr(t.arg))
+					return 0, newArgError(t.action, "ignored explicit argument "+pycompat.Repr(t.arg))
 				}
 				todo = append(todo, taken{t.action, nil, t.option})
 				first, rest := splitFirstRune(t.arg)
@@ -208,7 +209,7 @@ func (p *Parser) parseKnownArgs(ctx *runCtx, argStrings []string, ns *Namespace)
 				todo = append(todo, taken{t.action, []string{t.arg}, t.option})
 				break
 			}
-			return 0, newArgError(t.action, "ignored explicit argument "+pyRepr(t.arg))
+			return 0, newArgError(t.action, "ignored explicit argument "+pycompat.Repr(t.arg))
 		}
 		for _, x := range todo {
 			if err := takeAction(x.a, x.args, x.opt); err != nil {
@@ -415,10 +416,10 @@ func (p *Parser) optionTuples(s string) []optTuple {
 // call is _SubParsersAction.__call__: run the command's parser on the remaining strings
 // and copy its namespace over the caller's.
 func (s *Subparsers) call(ctx *runCtx, ns *Namespace, values []any) error {
-	name := pyStr(values[0])
+	name := pycompat.Str(values[0])
 	rest := make([]string, 0, len(values)-1)
 	for _, v := range values[1:] {
-		rest = append(rest, pyStr(v))
+		rest = append(rest, pycompat.Str(v))
 	}
 	if s.action.Dest != Suppress {
 		ns.Set(s.action.Dest, name)

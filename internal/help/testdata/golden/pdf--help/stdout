@@ -1,0 +1,9 @@
+usage: niagara_help pdf [-h] [--no-fulltext] [--category {software,hardware}] query
+
+positional arguments:
+  query                 Search term
+
+options:
+  -h, --help            show this help message and exit
+  --no-fulltext
+  --category {software,hardware}

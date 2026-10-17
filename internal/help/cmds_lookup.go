@@ -1,0 +1,109 @@
+package help
+
+import "github.com/angeles725/niagara-go/internal/argparse"
+
+// Class lookup commands (cli/cmd_classes.py): class, search, hierarchy,
+// package, implementors, enum, interface-hierarchy, archetypes, orphans.
+var classCommands = []command{
+	{name: "class", help: "Look up a class by name (package, inheritance, methods)",
+		args: func(p *argparse.Parser) {
+			positional(p, "name", "Class name (e.g. BWebServlet)")
+			flag(p, "", "-v", "--verbose")
+			flag(p, "Look up the JDK API (separate opt-in index) instead of Niagara", "--jdk")
+		}},
+	{name: "search", help: "Search classes by glob pattern",
+		args: func(p *argparse.Parser) {
+			positional(p, "pattern", "Glob pattern (e.g. 'BAlarm*')")
+			flag(p, "Search the JDK API index instead of Niagara classes", "--jdk")
+		}},
+	{name: "hierarchy", help: "Show subclass tree or inheritance chain",
+		args: func(p *argparse.Parser) {
+			positional(p, "name", "Class name (e.g. BComponent)")
+			intOpt(p, nil, "Max depth for subclass tree (default: 2; 3 with --interface)", "--depth")
+			flag(p, "Show inheritance chain upward", "--chain")
+			flag(p, "Interface hierarchy: extends chain, sub-interfaces and "+
+				"implementors (replaces interface-hierarchy)", "--interface")
+		}},
+	{name: "package", help: "Browse classes by package",
+		args: func(p *argparse.Parser) {
+			optionalPositional(p, "name", "", "Package name or partial (omit to list all)")
+			flag(p, "List all packages", "--all")
+		}},
+	{name: "implementors", help: "Find classes implementing an interface",
+		args: func(p *argparse.Parser) {
+			positional(p, "name", "Interface name (e.g. BIAlarmSource)")
+		}},
+	{name: "enum", help: "Show enum/frozen values and ordinals",
+		args: func(p *argparse.Parser) {
+			positional(p, "name", "Enum class name (e.g. BAckState)")
+		}},
+	{name: "interface-hierarchy", help: "Show interface inheritance hierarchy",
+		aliasOf: "hierarchy --interface",
+		args: func(p *argparse.Parser) {
+			positional(p, "name", "Interface name (e.g. BIAlarmSource)")
+			intOpt(p, 3, "Max depth for subtree (default: 3)", "--depth")
+			flag(p, "Show extends chain upward", "--chain")
+		}},
+	{name: "archetypes", help: "List Niagara architectural patterns (services, points, etc.)",
+		args: func(p *argparse.Parser) {
+			optionalPositional(p, "type", nil,
+				"Archetype type (services, points, extensions, converters, etc.)")
+		}},
+	{name: "orphans", help: "Find classes with zero used_by references",
+		args: func(p *argparse.Parser) {
+			intOpt(p, 30, "Max results to show (default: 30)", "-n", "--top")
+		}},
+}
+
+// Member and API commands (cli/cmd_members.py): method, method-sig, slots,
+// inherited-slots, inherited-methods, api, overrides, contract, compatible.
+var memberCommands = []command{
+	{name: "method", help: "Search methods/fields/constructors by name",
+		args: func(p *argparse.Parser) {
+			positional(p, "name", "Method name or glob (e.g. 'doGet', 'set*')")
+			p.Add(argparse.Arg{Choices: choices("methods", "fields", "constructors")}, "--section")
+		}},
+	{name: "method-sig", help: "Search methods by parameter/return type",
+		args: func(p *argparse.Parser) {
+			positional(p, "type", "Type to search (e.g. BAlarmRecord, WebOp)")
+			p.Add(argparse.Arg{Choices: choices("param", "return", "any"), Default: "any",
+				Help: "Search in params, return type, or both"}, "--direction")
+			intOpt(p, 30, "", "-n", "--max-results")
+		}},
+	{name: "slots", help: "Search/view @NiagaraProperty, @NiagaraAction, @NiagaraTopic",
+		args: func(p *argparse.Parser) {
+			optionalPositional(p, "query", "", "Class name or slot name/pattern")
+			p.Add(argparse.Arg{Dest: "slot_type", Choices: choices("properties", "actions", "topics")},
+				"--type")
+			p.Add(argparse.Arg{Dest: "by_type", Help: "Search by property TYPE (e.g. BStatusNumeric)"},
+				"--by-type")
+			p.Add(argparse.Arg{Dest: "slots_json", Action: argparse.StoreTrue, Help: "Output as JSON"},
+				"--json")
+			flag(p, "All slots of the class QUERY including those inherited from "+
+				"its parents (replaces inherited-slots; no --type / --by-type)", "--inherited")
+		}},
+	{name: "inherited-slots", help: "Show all slots including inherited from parents",
+		aliasOf: "slots --inherited",
+		args: func(p *argparse.Parser) {
+			positional(p, "name", "Class name (e.g. BAlarmClass)")
+			p.Add(argparse.Arg{Dest: "islots_json", Action: argparse.StoreTrue, Help: "Output as JSON"},
+				"--json")
+		}},
+	{name: "inherited-methods", help: "Show all methods including inherited from parents",
+		args: func(p *argparse.Parser) { positional(p, "name", "Class name") }},
+	{name: "api", help: "Public API surface (own methods + overrides, no framework noise)",
+		args: func(p *argparse.Parser) {
+			positional(p, "name", "Class name (e.g. BAlarmService)")
+			flag(p, "Also show inherited methods from non-framework parents", "--inherited")
+		}},
+	{name: "overrides", help: "Show which methods a class overrides from parents",
+		args: func(p *argparse.Parser) { positional(p, "name", "Class name") }},
+	{name: "contract", help: "Show interface contract: methods + implementors",
+		args: func(p *argparse.Parser) {
+			positional(p, "name", "Interface name (e.g. BIAlarmSource)")
+		}},
+	{name: "compatible", help: "Find converters, points, and extensions for a type",
+		args: func(p *argparse.Parser) {
+			positional(p, "type", "Type name (e.g. BStatusNumeric)")
+		}},
+}

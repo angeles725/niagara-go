@@ -1,0 +1,10 @@
+usage: niagara_help method-sig [-h] [--direction {param,return,any}] [-n MAX_RESULTS] type
+
+positional arguments:
+  type                  Type to search (e.g. BAlarmRecord, WebOp)
+
+options:
+  -h, --help            show this help message and exit
+  --direction {param,return,any}
+                        Search in params, return type, or both
+  -n, --max-results MAX_RESULTS

@@ -1,0 +1,8 @@
+usage: niagara_help search [-h] [--jdk] pattern
+
+positional arguments:
+  pattern     Glob pattern (e.g. 'BAlarm*')
+
+options:
+  -h, --help  show this help message and exit
+  --jdk       Search the JDK API index instead of Niagara classes

@@ -1,0 +1,8 @@
+usage: niagara_help fuzzy [-h] [-n TOP] query
+
+positional arguments:
+  query          Search query (multiple words OK)
+
+options:
+  -h, --help     show this help message and exit
+  -n, --top TOP  Number of top results per category (default: 15)

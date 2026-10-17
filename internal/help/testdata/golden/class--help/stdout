@@ -1,0 +1,9 @@
+usage: niagara_help class [-h] [-v] [--jdk] name
+
+positional arguments:
+  name           Class name (e.g. BWebServlet)
+
+options:
+  -h, --help     show this help message and exit
+  -v, --verbose
+  --jdk          Look up the JDK API (separate opt-in index) instead of Niagara
