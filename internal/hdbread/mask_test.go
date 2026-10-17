@@ -6,8 +6,10 @@ import (
 	"math/rand"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/angeles725/niagara-go/internal/cli"
 )
@@ -394,5 +396,54 @@ func TestSchemaMaskHidesHistoryID(t *testing.T) {
 	}
 	if out, _, _ := runOut(t, Options{Path: path, Schema: true}); !strings.Contains(out, "history_id=/S/JDoe\n") {
 		t.Errorf("unmasked --schema lost the history id:\n%s", out)
+	}
+}
+
+// hostileSection is n framed login records, each followed by a Login candidate that fails to
+// frame (its sixth string is not modified UTF-8): every framed record is checked against every
+// failed range, and every printable run against every identity field.
+func hostileSection(n int) []byte {
+	var b strings.Builder
+	for i := 0; i < n; i++ {
+		b.WriteString(utf("Login") + utf("u"+strconv.Itoa(i)) + utf("slot") + utf("old") + utf("new") + utf("user"))
+		b.WriteString(utf("Login") + utf("a") + utf("b") + utf("c") + utf("d") + "\x00\x01\xff")
+	}
+	return []byte(b.String())
+}
+
+// --mask stays near-linear in the record count: 20k hostile records finish in well under 1 s.
+func TestMaskScalesToManyRecords(t *testing.T) {
+	rec := hostileSection(20000)
+	start := time.Now()
+	lines := maskedStrings(rec)
+	if d := time.Since(start); d > time.Second {
+		t.Errorf("--strings --mask of 20k records took %s", d)
+	}
+	if l, bad := verbatimNotOp(lines); bad {
+		t.Errorf("rule v5: %q printed verbatim", l)
+	}
+}
+
+// spans.any answers exactly what the quadratic scans of planMask and maskRun answered.
+func TestSpansMatchesTheLinearScan(t *testing.T) {
+	rng := rand.New(rand.NewSource(17))
+	for round := 0; round < 200; round++ {
+		ranges := make([][2]int, rng.Intn(12))
+		for i := range ranges {
+			a := rng.Intn(40)
+			ranges[i] = [2]int{a, a + rng.Intn(10)}
+		}
+		sp := newSpans(ranges)
+		for lo := -1; lo < 52; lo++ {
+			for hi := lo; hi < lo+6; hi++ {
+				want := false
+				for _, r := range ranges {
+					want = want || r[0] < hi && lo < r[1]
+				}
+				if got := sp.any(lo, hi); got != want {
+					t.Fatalf("ranges %v: any(%d, %d) = %v, want %v", ranges, lo, hi, got, want)
+				}
+			}
+		}
 	}
 }
