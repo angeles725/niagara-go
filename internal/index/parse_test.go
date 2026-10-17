@@ -3,9 +3,11 @@ package index
 import (
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"os"
 	"path/filepath"
 	"reflect"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -117,6 +119,15 @@ func TestOSErrorText(t *testing.T) {
 	want := "[Errno 2] No such file or directory: '" + filepath.Join(dir, "missing.json") + "'"
 	if err == nil || err.Error() != want {
 		t.Errorf("got %v, want %q", err, want)
+	}
+	if runtime.GOOS != "windows" {
+		_, err = LoadPython(dir)
+		if want := "[Errno 21] Is a directory: '" + dir + "'"; err == nil || err.Error() != want {
+			t.Errorf("directory: got %v, want %q", err, want)
+		}
+	}
+	if got := OSError(errors.New("plain"), "p"); got != "plain" {
+		t.Errorf("an error without errno: got %q", got)
 	}
 }
 
