@@ -1,0 +1,135 @@
+{
+ "files": {
+  "drv/drv-rt/vineflower/a/BDrvNetwork.java": "package a;\npublic class BDrvNetwork extends BDeviceNetwork {\n  static final String VENDOR = \"acme\";\n  private static final String FEATURE= \"drv\" ;\n  public void started() {\n    Sys.getLicenseManager().checkFeature(\"tridium\", \"drvTcp\");\n    Sys.getLicenseManager() . getFeature ( VENDOR , FEATURE );\n    // Sys.getLicenseManager().checkFeature(\"no\", \"comment\");\n    /* Sys.getLicenseManager().checkFeature(\"no\", \"block\") */\n    String s = \"Sys.getLicenseManager().checkFeature(\\\"no\\\", \\\"string\\\")\";\n    LicenseManager lm = Sys.getLicenseManager();\n    lm.checkFeature(Consts.VENDOR, \"lm\");\n    lm.getFeature(this.VENDOR, TYPE.getModule().getModuleName());\n    doc.getFeature(feature, version);\n    Helper.checkFeature(vendorVar, featureVar);\n    FooManager.INSTANCE.getFeature(\"inst\", \"ance\");\n    x.checkFeature(\"three\", \"args\", 3);\n    y.checkFeature();\n    Sys.getLicenseManager().checkFeature(\"a\\\"b\", \"c\\\\d\");\n    getLicenseManager().getFeature(Other.NAME, \"x\");\n  }\n  public Feature getFeature(String vendor, String feature) { return null; }\n  int f() { return checkFeature(\"kw\", \"this\"); }\n}\n",
+  "drv/drv-rt/vineflower/a/Consts.java": "class Consts { public static final String VENDOR = \"consts-vendor\"; }\n",
+  "other/other-rt/vineflower/b/Other.java": "class Other { String NAME = \"other-in-other-module\"; }\n",
+  "drv/drv-wb/vineflower/b/Other.java": "class Other { String NAME = \"other-in-same-module\"; }\n",
+  "drv/drv-rt/vineflower/a/BDrvLicenseManager.java": "class BDrvLicenseManager<T extends X> extends BBase {\n  void go() { this.checkFeature(vendor(), name()); getFeature(\"v\", label()); }\n}\n",
+  "drv/drv-rt/vineflower/a/BBase.java": "class BBase<T>\n  extends BRoot { String vendor() { return \"base-vendor\"; } }\n",
+  "drv/drv-rt/vineflower/a/BRoot.java": "class BRoot { public String name ( ) {\n return  \"root-name\" ; } }\n",
+  "uni/uni-rt/vineflower/c/BÉtat.java": "class BÉtat {\n  BLicenseManager élm;\n  void go() { élm.getFeature(\"uni\", \"code\"); xélm.getFeature(\"not\", \"typed\"); ñ$lm.getFeature(\"a\", \"b\"); }\n  Object ñ$lm = Sys.getLicenseManager();\n}\n"
+ },
+ "raw": {
+  "crlf/crlf-rt/vineflower/d/BCrlf.java": "636c617373204243726c66207b0d0a20202f2f206120636f6d6d656e7420fffe0d20205379732e6765744c6963656e73654d616e6167657228292e636865636b4665617475726528226372222c20226c6622293b0d0a2020537472696e672073203d2022e9ff223b0d0a20206d67722e67657446656174757265284b45592c20227822293b0d0a2020424d794c6963656e73654d616e61676572206d67723b0d0a202073746174696320537472696e67204b4559203d20226b5c0d223b0d0a7d0d0a"
+ },
+ "scans": [
+  [
+   "drv/drv-rt/vineflower/a/BDrvNetwork.java",
+   "drv-rt",
+   "BDrvNetwork",
+   [
+    [
+     "checkFeature",
+     "getLicenseManager()",
+     "tridium",
+     "drvTcp"
+    ],
+    [
+     "getFeature",
+     "getLicenseManager()",
+     "acme",
+     "drv"
+    ],
+    [
+     "checkFeature",
+     "lm",
+     "consts-vendor",
+     "lm"
+    ],
+    [
+     "getFeature",
+     "lm",
+     "acme",
+     "drv"
+    ],
+    [
+     "checkFeature",
+     "Helper",
+     null,
+     null
+    ],
+    [
+     "getFeature",
+     "FooManager.INSTANCE",
+     "inst",
+     "ance"
+    ],
+    [
+     "checkFeature",
+     "getLicenseManager()",
+     "a\\\"b",
+     "c\\\\d"
+    ],
+    [
+     "getFeature",
+     "getLicenseManager()",
+     "other-in-same-module",
+     "x"
+    ],
+    [
+     "checkFeature",
+     "this",
+     "kw",
+     "this"
+    ]
+   ]
+  ],
+  [
+   "drv/drv-rt/vineflower/a/BDrvLicenseManager.java",
+   "drv-rt",
+   "BDrvLicenseManager",
+   [
+    [
+     "checkFeature",
+     "this",
+     "base-vendor",
+     "root-name"
+    ],
+    [
+     "getFeature",
+     "this",
+     "v",
+     null
+    ]
+   ]
+  ],
+  [
+   "uni/uni-rt/vineflower/c/BÉtat.java",
+   "uni-rt",
+   "BÉtat",
+   [
+    [
+     "getFeature",
+     "élm",
+     "uni",
+     "code"
+    ],
+    [
+     "getFeature",
+     "ñ$lm",
+     "a",
+     "b"
+    ]
+   ]
+  ],
+  [
+   "crlf/crlf-rt/vineflower/d/BCrlf.java",
+   "crlf-rt",
+   "BCrlf",
+   [
+    [
+     "checkFeature",
+     "getLicenseManager()",
+     "cr",
+     "lf"
+    ],
+    [
+     "getFeature",
+     "mgr",
+     null,
+     "x"
+    ]
+   ]
+  ]
+ ]
+}
