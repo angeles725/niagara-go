@@ -5,9 +5,11 @@
 // splitlines, bytes.decode("utf-8", "replace"), html.escape/unescape and posixpath helpers,
 // the case methods (isupper, islower, istitle, upper, lower, title, capitalize, swapcase),
 // ljust/rjust/center and s[:n] by code points, and format(value, spec) (the format-spec
-// mini-language of str.format and f-strings) for str, int and float.
+// mini-language of str.format and f-strings) for str, int and float, str(OSError) and
+// os.strerror for Go os errors (Linux and Windows tables), and text-file universal newlines.
 //
-// testdata/gen.py (run with python3 -I) writes unicode.txt, testdata/fixtures.json and the
-// testdata/golden/format_*.golden cases; the tests replay every fixture and golden and hash
-// every code point against Python's digests.
+// testdata/gen.py (run with python3 -I) writes unicode.txt, errno_linux.txt,
+// testdata/fixtures.json and the testdata/golden/format_*.golden cases, and
+// testdata/gen_windows.py (a Windows Python) errno_windows.txt; the tests replay every
+// fixture and golden and hash every code point against Python's digests.
 package pycompat

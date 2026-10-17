@@ -6,6 +6,7 @@ import (
 	"math/big"
 	"strconv"
 	"strings"
+	"unicode/utf8"
 )
 
 // Tuple is a Python tuple for Repr and Str: "(a,)" for one item.
@@ -96,7 +97,13 @@ func OptStr(s *string) string {
 
 // StrRepr is repr(str): single quotes unless the text has a single quote and no double
 // quote; backslash, the quote, \t \n \r and non-printable characters escaped.
-func StrRepr(s string) string {
+func StrRepr(s string) string { return strRepr(s, false) }
+
+// FSRepr is repr(os.fsdecode(p)) for a file name: StrRepr, with each byte that is not
+// valid UTF-8 shown as the \udcXX surrogate escape Python's file-system decoding gives it.
+func FSRepr(p string) string { return strRepr(p, true) }
+
+func strRepr(s string, surrogates bool) string {
 	quote := byte('\'')
 	if strings.IndexByte(s, '\'') >= 0 && strings.IndexByte(s, '"') < 0 {
 		quote = '"'
@@ -104,8 +111,11 @@ func StrRepr(s string) string {
 	var b strings.Builder
 	b.Grow(len(s) + 2)
 	b.WriteByte(quote)
-	for _, r := range s {
+	for i := 0; i < len(s); {
+		r, n := utf8.DecodeRuneInString(s[i:])
 		switch {
+		case surrogates && r == utf8.RuneError && n == 1:
+			fmt.Fprintf(&b, `\udc%02x`, s[i])
 		case r == rune(quote) || r == '\\':
 			b.WriteByte('\\')
 			b.WriteRune(r)
@@ -124,6 +134,7 @@ func StrRepr(s string) string {
 		default:
 			fmt.Fprintf(&b, `\U%08x`, r)
 		}
+		i += n
 	}
 	b.WriteByte(quote)
 	return b.String()

@@ -31,6 +31,9 @@ type fixtures struct {
 	Case     [][]json.RawMessage `json:"case"`
 	Just     [][]json.RawMessage `json:"just"`
 	Cut      [][]json.RawMessage `json:"cut"`
+	OSErrors [][]json.RawMessage `json:"os_errors"`
+	Strerror [][]json.RawMessage `json:"strerror"`
+	Newlines [][]json.RawMessage `json:"newlines"`
 	Digests  map[string]string   `json:"digests"`
 }
 
