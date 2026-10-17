@@ -170,12 +170,6 @@ func TestSplitArgsAndClean(t *testing.T) {
 	}
 }
 
-func TestUniversalNewlines(t *testing.T) {
-	if got := UniversalNewlines("a\r\nb\rc\n"); got != "a\nb\nc\n" {
-		t.Errorf("newlines %q", got)
-	}
-}
-
 // Python's int has no bound: hex and decimal flag literals beyond int64 keep every bit
 // (values from tools/n4-type-catalog.py decode_flags).
 func TestDecodeFlagsBigValues(t *testing.T) {

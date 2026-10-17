@@ -58,6 +58,31 @@ func SplitLines(s string, keepends bool) []string {
 	return lines
 }
 
+// UniversalNewlines is what reading a text file opened with newline=None (the default)
+// returns: "\r\n" and a lone "\r" become "\n"; no other line boundary is touched.
+func UniversalNewlines(s string) string {
+	if !strings.ContainsRune(s, '\r') {
+		return s
+	}
+	return strings.ReplaceAll(strings.ReplaceAll(s, "\r\n", "\n"), "\r", "\n")
+}
+
+// Lines is list(f) of such a file: UniversalNewlines(s) cut after each "\n", ends kept.
+// Unlike SplitLines, "\v", "\f", "\x1c", "\x85", U+2028 and U+2029 are not boundaries.
+func Lines(s string) []string {
+	s = UniversalNewlines(s)
+	lines := []string{}
+	for s != "" {
+		i := strings.IndexByte(s, '\n') + 1
+		if i == 0 {
+			i = len(s)
+		}
+		lines = append(lines, s[:i])
+		s = s[i:]
+	}
+	return lines
+}
+
 // DecodeReplace is bytes.decode("utf-8", "replace"): one U+FFFD per maximal subpart of an
 // ill-formed sequence (Go's own decoder yields one per byte).
 func DecodeReplace(b []byte) string {
