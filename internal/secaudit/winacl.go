@@ -26,9 +26,11 @@ var broadGroupRE = regexp.MustCompile(pyRe(`(?i)(?:^|[\s\\])(Authenticated Users
 	`|Utenti autenticati|Utenti)\n?$`))
 
 // writeRights are the rights that let their holder change what security/ holds: F, M, W, D,
-// generic GA/GW and the specific WD/AD/WEA/WA/DE/DC/WDAC/WO.
+// generic GA/GW, the specific WD/AD/WEA/WA/DE/DC/WDAC/WO and MA (maximum allowed: every right the
+// object allows, writes included; winacl.py leaves it out, an intended difference).
 var writeRights = map[string]bool{"F": true, "M": true, "W": true, "D": true, "GA": true, "GW": true,
-	"WD": true, "AD": true, "WEA": true, "WA": true, "DE": true, "DC": true, "WDAC": true, "WO": true}
+	"WD": true, "AD": true, "WEA": true, "WA": true, "DE": true, "DC": true, "WDAC": true, "WO": true,
+	"MA": true}
 
 // ace is one parsed ACE: the principal and its upper-cased parenthesised groups.
 type ace struct {
@@ -70,11 +72,12 @@ func normalizeNewlines(s string) string {
 	}, s)
 }
 
-// looseACEs are the principals naming a broad group that hold a write right.
+// looseACEs are the principals naming a broad group that hold a write right. A deny ACE
+// (a (DENY) group) grants nothing; winacl.py read its rights as a grant, an intended difference.
 func looseACEs(aces []ace) []string {
 	var out []string
 	for _, a := range aces {
-		if !broadGroupRE.MatchString(a.who) {
+		if !broadGroupRE.MatchString(a.who) || isDeny(a) {
 			continue
 		}
 		for _, g := range a.rights {
@@ -87,6 +90,15 @@ func looseACEs(aces []ace) []string {
 	return out
 }
 
+func isDeny(a ace) bool {
+	for _, g := range a.rights {
+		if g == "DENY" {
+			return true
+		}
+	}
+	return false
+}
+
 func anyWrite(group string) bool {
 	for _, r := range strings.Split(group, ",") {
 		if writeRights[r] {
@@ -97,15 +109,16 @@ func anyWrite(group string) bool {
 }
 
 // The upper halves (0x80-0xff) of the console code pages icacls may print in, in tie order:
-// cp850 (Spanish console), cp437 (English console), cp1252 (ANSI, a redirected console). Bytes a
-// code page does not define decode to U+FFFD.
+// cp850 (Spanish console), cp437 (English console), cp1252 (ANSI, a redirected console). Every
+// byte decodes: the five bytes cp1252 leaves undefined map to the C1 controls of the same value,
+// as Windows decodes them (winacl.py replaced them with U+FFFD, an intended difference).
 var codepages = []struct {
 	name  string
 	upper []rune
 }{
 	{"cp850", []rune("ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜø£Ø×ƒáíóúñÑªº¿®¬½¼¡«»░▒▓│┤ÁÂÀ©╣║╗╝¢¥┐└┴┬├─┼ãÃ╚╔╩╦╠═╬¤ðÐÊËÈıÍÎÏ┘┌█▄¦Ì▀ÓßÔÒõÕµþÞÚÛÙýÝ¯´­±‗¾¶§÷¸°¨·¹³²■ ")},
 	{"cp437", []rune("ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜ¢£¥₧ƒáíóúñÑªº¿⌐¬½¼¡«»░▒▓│┤╡╢╖╕╣║╗╝╜╛┐└┴┬├─┼╞╟╚╔╩╦╠═╬╧╨╤╥╙╘╒╓╫╪┘┌█▄▌▐▀αßΓπΣσµτΦΘΩδ∞φε∩≡±≥≤⌠⌡÷≈°∙·√ⁿ²■ ")},
-	{"cp1252", []rune("€\ufffd‚ƒ„…†‡ˆ‰Š‹Œ\ufffdŽ\ufffd\ufffd‘’“”•–—˜™š›œ\ufffdžŸ" +
+	{"cp1252", []rune("€\u0081‚ƒ„…†‡ˆ‰Š‹Œ\u008dŽ\u008f\u0090‘’“”•–—˜™š›œ\u009džŸ" +
 		" ¡¢£¤¥¦§¨©ª«¬­®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿ")},
 }
 

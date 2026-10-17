@@ -1,0 +1,51 @@
+package secaudit
+
+import (
+	"fmt"
+	"strings"
+)
+
+const sec03Run = `run: icacls <home>\security`
+
+// sec03 checks the security/ ACLs with icacls (a home under a WSL /mnt/<drive> mount only).
+// Any listing that is missing, empty or only partly understood is a SKIP, never a PASS.
+func (e *env) sec03(home string, rep *report) {
+	secdir := pyJoin(home, "security")
+	if !isDir(secdir) {
+		return
+	}
+	skip := func(observed string) {
+		rep.add("SEC-03", "crit", "security/ filesystem ACLs", observed, "Admin/SYSTEM only", "SKIP", "B316/B113", sec03Run)
+	}
+	winpath := e.winpath(secdir)
+	icacls := ""
+	if winpath != "" {
+		icacls = e.findIcacls()
+	}
+	switch {
+	case winpath != "" && icacls == "":
+		skip("not checked: icacls.exe not on PATH nor at " + strings.Join(icaclsPaths, " / "))
+	case icacls != "":
+		listing, why := e.runIcacls(icacls, winpath)
+		if why != "" {
+			skip(fmt.Sprintf("not checked: %s %s", icacls, why))
+			return
+		}
+		aces, unparsed := parseListing(listing, winpath)
+		switch {
+		case len(aces) == 0:
+			skip(fmt.Sprintf("not checked: %s printed no ACE lines: %s", icacls, pyStrRepr(head(pyStrip(listing), 80))))
+		case len(unparsed) > 0:
+			skip(fmt.Sprintf("not checked: %d ACE line(s) not understood: %s", len(unparsed), pyStrRepr(head(unparsed[0], 80))))
+		default:
+			loose := looseACEs(aces)
+			rep.add("SEC-03", "crit", "security/ filesystem ACLs",
+				pick(len(loose) > 0, "Modify/Write for "+strings.Join(loose, ", "), "restricted"),
+				"Admin/SYSTEM only", verdict(len(loose) > 0), "B316/B113",
+				"any authenticated user can plant a trust anchor / license")
+		}
+	default:
+		rep.add("SEC-03", "crit", "security/ filesystem ACLs", "not checked (need icacls)",
+			"Admin/SYSTEM only", "MANUAL", "B316/B113", sec03Run)
+	}
+}
