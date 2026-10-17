@@ -1,0 +1,337 @@
+{
+  "comment": "Rules of the whole-install documentation sweep (coverage --sweep) and of the extraction of documentation outside doc/ in module jars. Read by tools/niagara_help_lib/install_rules.py; its docstring explains every key and the glob syntax.",
+  "doc_like": {
+    "extensions": [
+      ".html",
+      ".htm",
+      ".xhtml",
+      ".md",
+      ".markdown",
+      ".txt",
+      ".text",
+      ".pdf",
+      ".rtf",
+      ".doc",
+      ".docx",
+      ".odt",
+      ".rst",
+      ".adoc",
+      ".bajadoc"
+    ],
+    "names": [
+      "toc.xml"
+    ],
+    "dirs": [
+      "doc",
+      "docs",
+      "help",
+      "jsdoc",
+      "examples"
+    ]
+  },
+  "globs": {
+    "vendored-web": [
+      "**/node_modules/**",
+      "rc/vendor/**",
+      "rc/ext/**"
+    ]
+  },
+  "skip_dirs": [
+    {
+      "dir": "jre",
+      "reason": "bundled Java runtime (third-party; its API is the separate jdk/ index)"
+    },
+    {
+      "dir": "JxBrowser",
+      "reason": "embedded Chromium browser runtime (third-party binaries, no jars)"
+    },
+    {
+      "dir": "niagara-help",
+      "reason": "a copy of this tool's own extracted corpus placed in the install, not shipped documentation"
+    }
+  ],
+  "extract": [
+    {
+      "id": "rc-markdown",
+      "entry": [
+        "rc/**.md",
+        "rc/readme*.txt",
+        "rc/**/readme*.txt"
+      ],
+      "unless": [
+        "@vendored-web"
+      ],
+      "reason": "Markdown page or readme in a module's rc/ web resources (bajaScript-ux rc/env/bajaScriptCommunications.md: the BajaScript communications guide)"
+    },
+    {
+      "id": "jsdoc",
+      "entry": "jsdoc/**.html",
+      "reason": "JSDoc API pages shipped in a module jar (EC-Net 4.3 batchJob-ux jsdoc/)"
+    },
+    {
+      "id": "workbench-media",
+      "jar": "workbench-wb.jar",
+      "entry": "com/tridium/workbench/media/*.html",
+      "reason": "Workbench built-in pages: Help Contents, About and the error page"
+    },
+    {
+      "id": "oem-home",
+      "jar": "*-wb.jar",
+      "entry": "res/**home.html",
+      "reason": "OEM Workbench home pages (galileoSupervisor-wb, clProfile-wb)"
+    },
+    {
+      "id": "help-page",
+      "entry": [
+        "help.html",
+        "rc/**help*.html"
+      ],
+      "unless": [
+        "@vendored-web"
+      ],
+      "reason": "module help page outside doc/ (micros-wb help.html, micros-ux rc/html/altHelp.html)"
+    }
+  ],
+  "exclude": [
+    {
+      "id": "course-solutions",
+      "jar": "(course)",
+      "entry": "solutions/**",
+      "reason": "user-authored exam and review solutions, not official course material (reachable through research block B1354)"
+    },
+    {
+      "id": "course-pdf",
+      "jar": "(course)",
+      "entry": "course/**.pdf",
+      "reason": "course slide / lab / reference PDF: its text is indexed from text/<same name>.txt (paired in the COURSE row)"
+    },
+    {
+      "id": "course-key-material",
+      "jar": "(course)",
+      "entry": [
+        "**.pem",
+        "**.jks",
+        "**.p12",
+        "**.pfx",
+        "**.keystore",
+        "**.cer",
+        "**.crt",
+        "**.key"
+      ],
+      "reason": "certificate or key material of the code-signing labs: never indexed"
+    },
+    {
+      "id": "course-config",
+      "jar": "(course)",
+      "entry": [
+        "**.properties",
+        "**.properties.example",
+        "**.cfg",
+        "**/signing_configuration.kts"
+      ],
+      "reason": "build, HSM or signing configuration (keystore paths, jarsigner password placeholders): never indexed"
+    },
+    {
+      "id": "course-build",
+      "jar": "(course)",
+      "entry": [
+        "**.kts",
+        "**/gradlew",
+        "**.bat",
+        "**.jar",
+        "**.xml",
+        "**.lexicon",
+        "**.palette",
+        "**.zip",
+        "**.json",
+        "**.bog",
+        "**.example",
+        "**/Gruntfile.js",
+        "**.js",
+        "**.css"
+      ],
+      "reason": "Gradle build scripts and wrappers, module descriptors and permissions, lexicons, palettes, station and data files and build-tool scripts of the lab projects (the Java sources are indexed)"
+    },
+    {
+      "id": "course-archive-manifests",
+      "jar": "(course)",
+      "entry": [
+        "*.sha256",
+        "*-zip-listing.txt"
+      ],
+      "reason": "integrity manifests and zip listing of the course archive"
+    },
+    {
+      "id": "meta-inf",
+      "entry": "META-INF/**",
+      "reason": "jar metadata (META-INF/): manifests and the licence/notice texts of bundled libraries"
+    },
+    {
+      "id": "licence",
+      "entry": [
+        "**/*license*",
+        "**/*licence*",
+        "**/license/**",
+        "**/notice*",
+        "**/copying*",
+        "**/*terms_and_conditions*",
+        "**/ofl.txt",
+        "**/mpl-v*.txt",
+        "about.html",
+        "about_files/**"
+      ],
+      "reason": "licence, notice or copyright text (of the module or a bundled library)"
+    },
+    {
+      "id": "node-modules",
+      "entry": "**/node_modules/**",
+      "reason": "bundled npm package (READMEs, changelogs and test pages of third-party JavaScript libraries)"
+    },
+    {
+      "id": "vendor-bundle",
+      "entry": [
+        "rc/vendor/**",
+        "rc/ext/**",
+        "ext/**",
+        "lib/ace/**"
+      ],
+      "reason": "bundled third-party library or SDK copied into a module's web resources"
+    },
+    {
+      "id": "third-party-java",
+      "entry": [
+        "org/**",
+        "net/**",
+        "io/**",
+        "edu/**",
+        "mozilla/**",
+        "jakarta/**",
+        "bsh/**",
+        "com/sun/**",
+        "com/teamdev/**",
+        "javax/**"
+      ],
+      "unless": [
+        "javax/baja/**"
+      ],
+      "reason": "resource inside the Java package tree of a bundled third-party library (word lists, syntax help, package.html), not Niagara documentation"
+    },
+    {
+      "id": "package-html",
+      "entry": "**/package.html",
+      "reason": "javadoc package description bundled with library classes (the Niagara API is indexed from the javadoc and .bajadoc)"
+    },
+    {
+      "id": "gradle-templates",
+      "jar": [
+        "devkit-wb.jar"
+      ],
+      "entry": "gradle/**",
+      "reason": "Gradle templates of the new-module wizard (a 115-byte placeholder doc page, its toc.xml and repository settings), not documentation"
+    },
+    {
+      "id": "gradle-templates-m2",
+      "jar": "niagara-gradle-templates-*.jar",
+      "entry": "gradle/**",
+      "reason": "Gradle templates of the new-module wizard in the local Maven repository (same placeholder pages as devkit-wb.jar)"
+    },
+    {
+      "id": "kitControl-examples",
+      "jar": "kitControl-rt.jar",
+      "entry": "rc/examples/**",
+      "reason": "example chart data, Px views and images of the kitControl palette (data files, no prose)"
+    },
+    {
+      "id": "haystack-data",
+      "jar": "haystack-rt.jar",
+      "entry": "com/tridium/haystack/data/**",
+      "reason": "Haystack tag dictionary data tables (tag lists per equipment type), not prose"
+    },
+    {
+      "id": "http-client-data",
+      "jar": "httpClient-wb.jar",
+      "entry": [
+        "Headers.txt",
+        "MediaTypes.txt"
+      ],
+      "reason": "name lists for the HTTP client UI (HTTP header and media type names)"
+    },
+    {
+      "id": "opc-ua-units",
+      "jar": "opcUaCore-rt.jar",
+      "entry": "rc/QUDTUnitVocab*.txt",
+      "reason": "QUDT unit vocabulary data table used for OPC UA unit mapping"
+    },
+    {
+      "id": "version-stamp",
+      "entry": "version.txt",
+      "reason": "build version stamp of a bundled library"
+    },
+    {
+      "id": "theme-test-page",
+      "jar": "web-rt.jar",
+      "entry": "rc/theme/test.html",
+      "reason": "theme rendering test fixture (sample widgets, no prose)"
+    },
+    {
+      "id": "web-ui-page",
+      "entry": [
+        "rc/**.html",
+        "rc/**.htm",
+        "com/sejofa/**/web/*.html"
+      ],
+      "reason": "HTML page of a module's web user interface (rc/ application markup that loads scripts), not documentation; a page named like help is never excluded by this rule",
+      "unless": [
+        "**/*help*.htm*"
+      ]
+    },
+    {
+      "id": "doc-assets",
+      "entry": [
+        "**.js",
+        "**.css",
+        "**.map",
+        "**.png",
+        "**.gif",
+        "**.jpg",
+        "**.jpeg",
+        "**.svg",
+        "**.ico",
+        "**.woff",
+        "**.woff2",
+        "**.ttf",
+        "**.eot",
+        "**.otf"
+      ],
+      "reason": "page asset (script, stylesheet, source map, image or font) of documentation-like folders; the pages that use it are indexed"
+    },
+    {
+      "id": "docs-menu",
+      "jar": "(docs)",
+      "entry": [
+        "index.html",
+        "zTree/**"
+      ],
+      "reason": "frame and tree menu of the PDF documentation library (links to PDFs; this install ships none of them: welcome text only)"
+    }
+  ],
+  "course": {
+    "comment": "The developer course bound to a version (registry course_dir): text/*.txt pages -> course-text/ (indexed page by page), example code -> devguide-examples/course/; every other course file needs an exclude rule with jar \"(course)\".",
+    "text": [
+      "text/*.txt",
+      "niagara-*/dev/**readme*.txt",
+      "niagara-*/dev/**readme.md"
+    ],
+    "code": [
+      "course/Labs/**.java",
+      "course/Slide Code/**.java",
+      "course/Slide Code/**/src/doc/*.html",
+      "niagara-*/dev/**.java",
+      "niagara-*/dev/**/src/**.js",
+      "niagara-*/dev/**/src/doc/*.html"
+    ],
+    "pdf": [
+      "course/**.pdf"
+    ]
+  }
+}
