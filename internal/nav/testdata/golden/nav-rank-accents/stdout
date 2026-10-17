@@ -1,0 +1,6 @@
+
+  Rank 'configuración de la consola': 1 matching classes (terms: config, configuration, console)
+  Classes named in the question first, then BM25 x importer prior; columns: rank, score, class, module, path
+
+1	8.684	BAlarmConsole	alarm-wb	alarm/alarm-wb/vineflower/com/tridium/alarm/ui/BAlarmConsole.java
+

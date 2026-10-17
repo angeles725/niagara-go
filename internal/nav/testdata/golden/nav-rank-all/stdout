@@ -1,0 +1,16 @@
+
+  Rank 'alarm': 11 matching classes (terms: alarm)
+  Classes named in the question first, then BM25 x importer prior; columns: rank, score, class, module, path
+
+1	1.256	AlarmSupport	alarm-rt	alarm/alarm-rt/vineflower/javax/baja/alarm/AlarmSupport.java
+2	1.255	AlarmDbConnection	alarm-rt	alarm/alarm-rt/vineflower/javax/baja/alarm/AlarmDbConnection.java
+3	1.242	BAlarmClass	alarm-rt	alarm/alarm-rt/vineflower/javax/baja/alarm/BAlarmClass.java
+4	1.242	BAlarmRecord	alarm-rt	alarm/alarm-rt/vineflower/javax/baja/alarm/BAlarmRecord.java
+5	1.240	BAlarmArchive	alarm-rt	alarm/alarm-rt/vineflower/javax/baja/alarm/BAlarmArchive.java
+6	1.239	BAlarmService	alarm-rt	alarm/alarm-rt/vineflower/javax/baja/alarm/BAlarmService.java
+7	1.230	BAlarmSourceInfo	alarm-rt	alarm/alarm-rt/vineflower/javax/baja/alarm/BAlarmSourceInfo.java
+8	1.081	BAlarm	honIrmControl-rt	honIrmControl/honIrmControl-rt/vineflower/com/honeywell/irm/vav/BAlarm.java
+9	1.055	BAlarmConsole	alarm-wb	alarm/alarm-wb/vineflower/com/tridium/alarm/ui/BAlarmConsole.java
+10	0.886	BAlarmAcknowledger	alarm-rt	alarm/alarm-rt/vineflower/com/tridium/alarm/ack/BAlarmAcknowledger.java
+11	0.820	BAckState	alarm-rt	alarm/alarm-rt/vineflower/javax/baja/alarm/BAckState.java
+

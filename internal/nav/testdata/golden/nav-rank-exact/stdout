@@ -1,0 +1,11 @@
+
+  Rank 'que es un AlarmService y un BAckState': 11 matching classes (terms: alarm, service, alarmservice, ack, state, ackstate, backstate)
+  Classes named in the question first, then BM25 x importer prior; columns: rank, score, class, module, path
+
+1	17.746	BAlarmService	alarm-rt	alarm/alarm-rt/vineflower/javax/baja/alarm/BAlarmService.java
+2	40.206	BAckState	alarm-rt	alarm/alarm-rt/vineflower/javax/baja/alarm/BAckState.java
+3	7.290	BAlarmConsole	alarm-wb	alarm/alarm-wb/vineflower/com/tridium/alarm/ui/BAlarmConsole.java
+4	3.688	BAlarmAcknowledger	alarm-rt	alarm/alarm-rt/vineflower/com/tridium/alarm/ack/BAlarmAcknowledger.java
+
+  ... and 7 more (use -n to show more)
+

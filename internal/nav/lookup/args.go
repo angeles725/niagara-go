@@ -17,7 +17,7 @@ func init() {
 		{Name: "full-profile", Help: "Combined view from BOTH navigators", Args: argsFullProfile},
 		{Name: "cross-ref", Help: "Docs + implementation + who uses it", Args: argsCrossRef},
 		{Name: "find", Help: "Fuzzy search in class names (camelCase-aware); see also: rank", Description: "Fuzzy search in class names (camelCase-aware). See also: `rank` for a ranked class lookup.", Args: argsFind},
-		{Name: "ask", Help: "Same as `rank` (ranked classes for a question); see also: grep", Description: "Answers with `rank`: the classes most relevant to the question, best first. Use `grep` for literal text in the sources.", Args: argsAsk},
+		{Name: "ask", Help: "Same as `rank` (ranked classes for a question); see also: grep", Description: "Answers with `rank`: the classes most relevant to the question, best first. Use `grep` for literal text in the sources.", Args: argsAsk, Run: runAsk},
 		{Name: "explain", Help: "Cross-reference a concept across devguide/guides/bajadoc + code; see also: rank, grep", Description: "Cross-reference a concept across devguide/guides/bajadoc + code. See also: `rank` for a ranked class lookup, `grep` for text in the sources.", Args: argsExplain},
 		{Name: "unified", Help: "Search Help + Module + BOG simultaneously; see also: rank, grep", Description: "Search Help + Module + BOG simultaneously. See also: `rank` for a ranked class lookup, `grep` for text in the sources.", Args: argsUnified},
 		{Name: "compare", Help: "Docs vs implementation vs station usage", Args: argsCompare},

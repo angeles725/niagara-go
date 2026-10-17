@@ -1,0 +1,1 @@
+{"args": ["--base-dir", "fixture/nav", "ask", "who calls ackAlarm"], "env": {"NAV_CORPUS_BASE": "fixture/no-corpus"}}

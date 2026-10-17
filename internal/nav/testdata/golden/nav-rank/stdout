@@ -1,0 +1,10 @@
+
+  Rank 'como funciona el ack de alarmas': 11 matching classes (terms: ack, alarm)
+  Classes named in the question first, then BM25 x importer prior; columns: rank, score, class, module, path
+
+1	9.066	BAckState	alarm-rt	alarm/alarm-rt/vineflower/javax/baja/alarm/BAckState.java
+2	3.688	BAlarmAcknowledger	alarm-rt	alarm/alarm-rt/vineflower/com/tridium/alarm/ack/BAlarmAcknowledger.java
+3	1.256	AlarmSupport	alarm-rt	alarm/alarm-rt/vineflower/javax/baja/alarm/AlarmSupport.java
+
+  ... and 8 more (use -n to show more)
+

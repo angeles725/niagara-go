@@ -1,0 +1,8 @@
+
+  Rank 'alarm service': 3 matching classes (terms: alarm, service)
+  Classes named in the question first, then BM25 x importer prior; columns: rank, score, class, module, path
+
+1	0.452	ServiceAlarm	None	None
+2	0.452	BAlarmService	alarm-rt	alarm/alarm-rt/BAlarmService.java
+3	0.447	BServiceAlarm	b-rt	None
+

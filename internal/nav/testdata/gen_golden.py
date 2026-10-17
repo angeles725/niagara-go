@@ -9,6 +9,7 @@ every case below is run through Python module_nav.py from this directory
 command runs on the fixture, and the parser-only PARSE_CASES.
 """
 
+import glob
 import json
 import os
 import shutil
@@ -87,6 +88,15 @@ CASES = [
     ("modules-zkm-top", ["modules", "--zkm", "--top", "2"], CORPUS),
     ("modules-bytecode", ["modules", "-b", "52", "--has-code"], CORPUS),
     ("module-null-bytecode", ["module", "lonNico-rt"], CORPUS),
+    ("rank", ["rank", "como", "funciona el ack de alarmas", "-n", "3"], NO_CORPUS),
+    ("rank-exact", ["rank", "que es un AlarmService y un BAckState", "-n", "4"], NO_CORPUS),
+    ("rank-all", ["rank", "alarm"], NO_CORPUS),
+    ("rank-accents", ["rank", "configuración de la consola", "--limit", "2"], NO_CORPUS),
+    ("rank-miss", ["rank", "zzzqqq", "xxyyzz"], NO_CORPUS),
+    ("rank-no-terms", ["rank", "the a of"], NO_CORPUS),
+    ("rank-skips", ["rank", "alarm service"], NO_CORPUS, "fixture/rank-skips"),
+    ("ask", ["ask", "who calls ackAlarm"], NO_CORPUS),
+    ("ask-n", ["ask", "-n", "2", "como funciona el ack de alarmas"], NO_CORPUS),
 ]
 
 
@@ -105,6 +115,36 @@ PARSE_CASES = [
 ]
 
 
+# rank-skips: the cases class_rank skips or tolerates (a mirror copy, an inner
+# class, a null module and path, empty interfaces) and an xref index without
+# class_imported_by (every prior is 1).
+SKIPS_INDEX = {
+    "_meta": {"timestamp": "2026-01-02T03:04:05"},
+    "classes": {
+        "BAlarmService": [
+            {"module": "docSource-doc", "package": "javax.baja.alarm", "path": "doc/BAlarmService.java"},
+            {"module": "alarm-rt", "package": "javax.baja.alarm", "extends": "BAbstractService",
+             "implements": ["BIAlarmClassFolder", None, ""], "path": "alarm/alarm-rt/BAlarmService.java"}],
+        "Inner": [{"module": "alarm-rt", "outer_class": "BAlarmService", "path": "x"}],
+        "ServiceAlarm": [{"module": None, "package": "", "path": None}],
+        "BServiceAlarm": [{"module": "b-rt", "package": "b.alarm"}, {"module": "a-rt", "package": "b.alarm"}],
+    },
+}
+
+
+def cut_xref(names):
+    """class_imported_by of `names` from the real xref index, each list cut to
+    25 importers plus one repeat (class_rank counts distinct importers)."""
+    with open(os.path.join(NAV, "indexes", "xref-index.json"), encoding="utf-8") as f:
+        xref = json.load(f)
+    out = {}
+    for n in names:
+        importers = xref["class_imported_by"].get(n)
+        if importers:
+            out[n] = importers[:25] + importers[:1]
+    return {"_meta": {"timestamp": xref["_meta"]["timestamp"]}, "class_imported_by": out}
+
+
 def build_fixture():
     fx = os.path.join(HERE, "fixture")
     shutil.rmtree(fx, ignore_errors=True)
@@ -121,6 +161,14 @@ def build_fixture():
     mods = {n: inv["modules"][n] for n in MODULES}
     with open(os.path.join(idx, "module-inventory.json"), "w", encoding="utf-8") as f:
         json.dump({"_meta": inv["_meta"], "modules": mods}, f)
+    with open(os.path.join(idx, "xref-index.json"), "w", encoding="utf-8") as f:
+        json.dump(cut_xref(CLASS_NAMES), f)
+    skips = os.path.join(fx, "rank-skips", "indexes")
+    os.makedirs(skips)
+    with open(os.path.join(skips, "class-index.json"), "w", encoding="utf-8") as f:
+        json.dump(SKIPS_INDEX, f)
+    with open(os.path.join(skips, "xref-index.json"), "w", encoding="utf-8") as f:
+        json.dump({"_meta": {}}, f)
     xml = os.path.join(fx, "organized", "alarm", "alarm-rt", "extracted", "META-INF")
     os.makedirs(xml)
     with open(os.path.join(xml, "module.xml"), "w", encoding="utf-8") as f:
@@ -153,8 +201,10 @@ def capture(cid, args, env, base=BASE):
 def main():
     if "--fixture" in sys.argv:
         build_fixture()
-    for cid, args, env in CASES:
-        capture("nav-" + cid, args, env)
+    for cid, args, env, *base in CASES:
+        capture("nav-" + cid, args, env, *base)
+    for cache in glob.glob(os.path.join(HERE, "fixture", "*", "indexes", "class-rank.cache")):
+        os.remove(cache)  # Python's rank cache; the Go port keeps its own
     for cid, args in PARSE_CASES:
         capture(cid, args, {}, base="/nonexistent-base")
 

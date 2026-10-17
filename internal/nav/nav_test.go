@@ -27,8 +27,8 @@ func TestEveryOrderedCommandIsRegistered(t *testing.T) {
 func TestUnportedCommandExitsTwo(t *testing.T) {
 	t.Setenv("COLUMNS", "100")
 	var out, errb bytes.Buffer
-	code := Main([]string{"--base-dir", t.TempDir(), "rank", "BFoo"}, cli.Stdio{Out: &out, Err: &errb})
-	if code != cli.ExitCannotSearch || out.Len() != 0 || errb.String() != "mnav: 'rank' is not ported yet\n" {
+	code := Main([]string{"--base-dir", t.TempDir(), "xref", "BFoo"}, cli.Stdio{Out: &out, Err: &errb})
+	if code != cli.ExitCannotSearch || out.Len() != 0 || errb.String() != "mnav: 'xref' is not ported yet\n" {
 		t.Fatalf("code=%d stdout=%q stderr=%q", code, out.String(), errb.String())
 	}
 }
