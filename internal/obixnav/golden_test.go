@@ -10,6 +10,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/angeles725/niagara-go/internal/golden"
 )
@@ -79,7 +80,7 @@ func startStation(t *testing.T) *replayStation {
 	for _, ex := range exs {
 		rs.byKey[key(ex.Method, ex.Path, ex.Auth, ex.Body)] = ex
 	}
-	ln, err := net.Listen("tcp", stationAddr)
+	ln, err := listenWhenFree(stationAddr, 2*time.Minute)
 	if err != nil {
 		t.Fatalf("the golden cases need %s free for the fake station: %v", stationAddr, err)
 	}
@@ -89,6 +90,19 @@ func startStation(t *testing.T) *replayStation {
 	srv.Start()
 	t.Cleanup(srv.Close)
 	return rs
+}
+
+// listenWhenFree binds addr, waiting while another test process (a parallel `go test ./...` in
+// another worktree) holds the fixed port, so concurrent runs queue instead of failing.
+func listenWhenFree(addr string, wait time.Duration) (net.Listener, error) {
+	deadline := time.Now().Add(wait)
+	for {
+		ln, err := net.Listen("tcp", addr)
+		if err == nil || time.Now().After(deadline) {
+			return ln, err
+		}
+		time.Sleep(200 * time.Millisecond)
+	}
 }
 
 // TestGolden runs every case (usage errors included) through Main against the replayed station;
