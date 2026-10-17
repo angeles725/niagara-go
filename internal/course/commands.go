@@ -194,7 +194,8 @@ func cmdText(c *Corpus, s cli.Stdio, root, target string) int {
 		}
 		fmt.Fprintf(s.Out, "%s:%s (%s)\n", file, r, label)
 		for n := r.A; n <= r.B; n++ {
-			fmt.Fprintf(s.Out, "%5d  %s\n", n, lines[n-1])
+			// A blank text line prints only its number: no trailing whitespace.
+			fmt.Fprintln(s.Out, strings.TrimRight(fmt.Sprintf("%5d  %s", n, lines[n-1]), " \t"))
 		}
 	}
 	return cli.ExitFound

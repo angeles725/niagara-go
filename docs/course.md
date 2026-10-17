@@ -127,7 +127,8 @@ exits 2: an answer key that cannot be read without ambiguity is not searched.
 - `course status [--lab G] [--status S] [--json]`: items per group and status (columns
   overlap), then with `--status` the matching IDs and steps (truncated to 80 characters).
   No match is exit 1 with the scope and counts.
-- `course text ID|GROUP`: the text-file lines of the item's (or the lab's) ranges, numbered.
+- `course text ID|GROUP`: the text-file lines of the item's (or the lab's) ranges, numbered,
+  with no trailing whitespace (a blank line prints only its number).
   No range is exit 1; a missing text file or a range past its end is exit 2. Requirements
   print their `Review Assignment <k>.txt` lines.
 
