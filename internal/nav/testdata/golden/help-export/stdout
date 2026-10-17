@@ -1,0 +1,13 @@
+usage: module-nav export [-h] [--html] [--mermaid] [--dot] [-o EXPORT_OUTPUT] name [method]
+
+positional arguments:
+  name                  Class name or module name
+  method                Method name (for call-chain with --dot)
+
+options:
+  -h, --help            show this help message and exit
+  --html                Generate standalone HTML class report
+  --mermaid             Generate Mermaid class diagram for a module
+  --dot                 Generate DOT graph (call-chain if method given, module if not)
+  -o, --output EXPORT_OUTPUT
+                        Output file path (default: exports/<name>.html|.md|.dot)

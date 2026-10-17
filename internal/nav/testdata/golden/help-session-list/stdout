@@ -1,0 +1,5 @@
+usage: module-nav session list [-h] [-n N]
+
+options:
+  -h, --help  show this help message and exit
+  -n N        Limit results

@@ -1,0 +1,16 @@
+usage: module-nav slots [-h] [--properties] [--actions] [--topics] [--by-type BY_TYPE]
+                        [--module SLOTS_MODULE] [-n N]
+                        [name]
+
+positional arguments:
+  name                  Class name (e.g. BAlarmRecord)
+
+options:
+  -h, --help            show this help message and exit
+  --properties          Show only properties
+  --actions             Show only actions
+  --topics              Show only topics
+  --by-type BY_TYPE     Find classes with properties of this type (e.g. BStatusNumeric)
+  --module, -m SLOTS_MODULE
+                        Filter by module
+  -n N                  Max results to show (default 50)

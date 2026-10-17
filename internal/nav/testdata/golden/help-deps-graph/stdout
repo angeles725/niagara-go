@@ -1,0 +1,11 @@
+usage: module-nav deps-graph [-h] [--depth DEPTH] [--format {mermaid,dot,text}] [--reverse] name
+
+positional arguments:
+  name                  Module name (e.g. workbench-wb)
+
+options:
+  -h, --help            show this help message and exit
+  --depth DEPTH         Traversal depth (default 1)
+  --format {mermaid,dot,text}
+                        Output format (default: mermaid)
+  --reverse             Show dependents instead of dependencies

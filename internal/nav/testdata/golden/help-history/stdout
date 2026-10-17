@@ -1,0 +1,7 @@
+usage: module-nav history [-h] [-n N] [--all] [--grep HIST_GREP]
+
+options:
+  -h, --help        show this help message and exit
+  -n N              Limit results (default 50)
+  --all             Show all history (up to 500)
+  --grep HIST_GREP  Filter by pattern

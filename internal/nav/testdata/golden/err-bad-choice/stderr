@@ -1,0 +1,2 @@
+usage: module-nav deps-graph [-h] [--depth DEPTH] [--format {mermaid,dot,text}] [--reverse] name
+module-nav deps-graph: error: argument --format: invalid choice: 'png' (choose from 'mermaid', 'dot', 'text')

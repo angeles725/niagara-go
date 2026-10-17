@@ -1,0 +1,2 @@
+usage: module-nav rank [-h] [-n LIMIT] question [question ...]
+module-nav rank: error: argument -n/--limit: must be a positive integer, got '0'

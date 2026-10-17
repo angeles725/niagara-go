@@ -1,0 +1,8 @@
+usage: module-nav rank [-h] [-n LIMIT] question [question ...]
+
+positional arguments:
+  question           Question or keywords (e.g. 'como funciona el ack de alarmas', BWebServlet)
+
+options:
+  -h, --help         show this help message and exit
+  -n, --limit LIMIT  Max classes to show (default 20)

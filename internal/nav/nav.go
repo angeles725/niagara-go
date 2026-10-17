@@ -13,7 +13,11 @@ import (
 	"github.com/angeles725/niagara-go/internal/cli"
 	_ "github.com/angeles725/niagara-go/internal/nav/inventory" // registers its commands
 	_ "github.com/angeles725/niagara-go/internal/nav/lookup"
+	_ "github.com/angeles725/niagara-go/internal/nav/patching"
 	"github.com/angeles725/niagara-go/internal/nav/registry"
+	_ "github.com/angeles725/niagara-go/internal/nav/session"
+	_ "github.com/angeles725/niagara-go/internal/nav/source"
+	_ "github.com/angeles725/niagara-go/internal/nav/structure"
 	_ "github.com/angeles725/niagara-go/internal/nav/ui"
 )
 
