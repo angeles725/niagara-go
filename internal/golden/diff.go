@@ -25,10 +25,10 @@ func Diff(want, got []byte) string {
 		}
 		if wl != gl || (i >= len(w)) != (i >= len(g)) {
 			var b bytes.Buffer
-			fmt.Fprintf(&b, "line %d (want %d lines, got %d)\n", i+1, len(w), len(g))
+			fmt.Fprintf(&b, "first difference at line %d (want has %d lines, got has %d)\n", i+1, len(w), len(g))
 			fmt.Fprintf(&b, "  want: %q\n  got:  %q", wl, gl)
 			return b.String()
 		}
 	}
-	return "identical lines; byte difference (trailing newline or encoding)"
+	return "no line differs" // unreachable when want != got; kept for completeness
 }

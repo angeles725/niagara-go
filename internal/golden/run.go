@@ -2,11 +2,13 @@ package golden
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/angeles725/niagara-go/internal/cli"
 )
@@ -14,6 +16,9 @@ import (
 // BinEnv names the variable that switches Run to exec mode: when set, every
 // case runs the binary at that path instead of the in-process Main.
 const BinEnv = "GOLDEN_BIN"
+
+// CaseTimeout bounds one exec-mode case so a hung binary fails with its name.
+var CaseTimeout = 60 * time.Second
 
 // Run checks every case under testdata/golden against m (or GOLDEN_BIN).
 // Cases run sequentially because they change the working directory and env.
@@ -28,6 +33,12 @@ func Run(t *testing.T, testdata string, m cli.Main) {
 		t.Fatal(err)
 	}
 	bin := os.Getenv(BinEnv)
+	if bin != "" {
+		// os/exec resolves a relative path against Cmd.Dir (the case fixture dir).
+		if bin, err = filepath.Abs(bin); err != nil {
+			t.Fatal(err)
+		}
+	}
 	for _, c := range cases {
 		t.Run(c.Name, func(t *testing.T) {
 			var got result
@@ -76,7 +87,9 @@ func inProcess(t *testing.T, testdata string, m cli.Main, c Case) result {
 }
 
 func execCase(t *testing.T, testdata, bin string, c Case) result {
-	cmd := exec.Command(bin, c.Args...)
+	ctx, cancel := context.WithTimeout(context.Background(), CaseTimeout)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, bin, c.Args...)
 	cmd.Dir = workdir(testdata, c)
 	cmd.Env = os.Environ()
 	for k, v := range c.Environ() {
@@ -86,6 +99,9 @@ func execCase(t *testing.T, testdata, bin string, c Case) result {
 	var out, errb bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &out, &errb
 	err := cmd.Run()
+	if ctx.Err() != nil {
+		t.Fatalf("run %s: no exit after %s", bin, CaseTimeout)
+	}
 	code := 0
 	var exitErr *exec.ExitError
 	switch {
