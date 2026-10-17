@@ -1,0 +1,2 @@
+  PASS  single-word coverage: 'alarm'=0 >= 'alarm fault'=0
+  PASS  'alarma' does not match inside 'alarmAck'

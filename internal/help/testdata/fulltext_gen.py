@@ -135,6 +135,8 @@ CLI = [
     ("pdf-shared", "2.0", ["pdf", "discovery"]),
     ("pdf-shared-miss", "2.0", ["pdf", "zzqq"]),
     ("method-prominence", "1.0", ["method", "ackAlarm"]),
+    ("selftest", "1.0", ["selftest"]),
+    ("selftest-fail", "2.0", ["selftest"]),
 ]
 
 

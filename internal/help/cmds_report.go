@@ -66,6 +66,9 @@ var adminCommands = []command{
 			flag(p, "Recall oracle: every class/method/slot/java file/page in the "+
 				"raw sources must be found by its lookup command", "--recall")
 			flag(p, "With --recall: skip the sampled find/fuzzy rows", "--no-samples")
+		},
+		run: func(e *Env, ns *argparse.Namespace) error {
+			return e.Selftest(SelftestParams{Recall: ns.Bool("recall"), NoSamples: ns.Bool("no_samples")})
 		}},
 	{name: "repl", help: "Interactive mode (keeps indexes in memory)"},
 }

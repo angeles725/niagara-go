@@ -24,5 +24,7 @@
 {"name": "pdf-category-miss", "args": ["--niagara-version", "1.0", "pdf", "discovery", "--category", "hardware"], "exit": 1, "stderr": ""},
 {"name": "pdf-shared", "args": ["--niagara-version", "2.0", "pdf", "discovery"], "exit": 0, "stderr": ""},
 {"name": "pdf-shared-miss", "args": ["--niagara-version", "2.0", "pdf", "zzqq"], "exit": 1, "stderr": ""},
-{"name": "method-prominence", "args": ["--niagara-version", "1.0", "method", "ackAlarm"], "exit": 0, "stderr": ""}
+{"name": "method-prominence", "args": ["--niagara-version", "1.0", "method", "ackAlarm"], "exit": 0, "stderr": ""},
+{"name": "selftest", "args": ["--niagara-version", "1.0", "selftest"], "exit": 0, "stderr": ""},
+{"name": "selftest-fail", "args": ["--niagara-version", "2.0", "selftest"], "exit": 1, "stderr": "  FAIL  guide-search 'alarm' (single word, AND) \u2192 0 files; expected > 0\n  FAIL  guide-search 'alarm fault' (AND) \u2192 0 files; expected > 0\n  FAIL  devguide-search 'servlet override' (AND) \u2192 0 files; expected > 0\n"}
 ]
