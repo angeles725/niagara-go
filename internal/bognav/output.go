@@ -33,16 +33,6 @@ func (r row) get(k string) any {
 // s is f"{r[k]}".
 func (r row) s(k string) string { return pyStr(r.get(k)) }
 
-func (r *row) set(k string, v any) {
-	for i, m := range *r {
-		if m.K == k {
-			(*r)[i].V = v
-			return
-		}
-	}
-	*r = append(*r, kv{k, v})
-}
-
 // env is one command run: the parsed arguments, the output streams and the searched bog.
 type env struct {
 	ns       *argparse.Namespace
