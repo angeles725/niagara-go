@@ -1,0 +1,16 @@
+{
+ "jars": [
+  {
+   "jar": "modules/alarm-doc.jar",
+   "bytes": 5
+  },
+  {
+   "jar": "modules/docGone.jar",
+   "bytes": 3
+  },
+  {
+   "jar": "javadoc/niagaraJavadoc.jar",
+   "bytes": 999
+  }
+ ]
+}

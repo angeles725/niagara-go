@@ -53,7 +53,8 @@ var adminCommands = []command{
 		args: func(p *argparse.Parser) {
 			p.Add(argparse.Arg{Dest: "fresh_all", Action: argparse.StoreTrue,
 				Help: "One line per registered Niagara version (index + install drift)"}, "--all")
-		}},
+		},
+		run: func(e *Env, ns *argparse.Namespace) error { return e.Freshness(ns.Bool("fresh_all")) }},
 	{name: "rebuild-all", help: "Rebuild all indexes in dependency order, then stamp the manifest",
 		args: func(p *argparse.Parser) {
 			p.Add(argparse.Arg{Help: "Only run builders whose script starts with this"}, "--only")

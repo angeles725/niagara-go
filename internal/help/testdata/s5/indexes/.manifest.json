@@ -1,0 +1,22 @@
+{
+ "stamped_utc": "2026-01-02T03:04:05.000006+00:00",
+ "sources": {
+  "bajadoc": {
+   "files": 8,
+   "bytes": 193
+  },
+  "source": {
+   "files": 1,
+   "bytes": 2
+  },
+  "guides": null,
+  "devguide": {
+   "files": 6,
+   "bytes": 2285
+  },
+  "docs": {
+   "files": 1,
+   "bytes": 10
+  }
+ }
+}
