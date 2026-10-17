@@ -2,6 +2,7 @@ package textfold
 
 import (
 	_ "embed"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -22,6 +23,7 @@ type tables struct {
 	base      map[rune]string // NFKD without combining marks, when it differs from the rune
 	lower     map[rune]string // str.lower() of the single rune, when it differs
 	space     map[rune]bool   // str.isspace()
+	spaces    []rune          // the same code points, ascending
 	cased     []runeRange     // cased and not case-ignorable
 	ignorable []runeRange     // case-ignorable
 }
@@ -60,7 +62,9 @@ func parseTables(text string) *tables {
 				}
 				m[parseRune(from)] = string(parseSeq(to))
 			case "s":
-				t.space[parseRune(e)] = true
+				r := parseRune(e)
+				t.space[r] = true
+				t.spaces = append(t.spaces, r)
 			default:
 				corrupt(line)
 			}
@@ -142,3 +146,6 @@ func IsSpace(r rune) bool {
 	}
 	return r >= 0x80 && data().space[r]
 }
+
+// Spaces returns every str.isspace() code point, ascending.
+func Spaces() []rune { return slices.Clone(data().spaces) }

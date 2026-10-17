@@ -173,6 +173,27 @@ func IsPrintable(r rune) bool {
 // The table lives in internal/textfold (this package already imports it for Lower).
 func IsSpace(r rune) bool { return textfold.IsSpace(r) }
 
+// SpaceClass is the body of an RE2 character class (no brackets) that matches exactly the
+// str.isspace() code points: Python re's \s on str patterns, for "[" + SpaceClass() + "]".
+func SpaceClass() string { return spaceClass() }
+
+var spaceClass = sync.OnceValue(func() string {
+	rs := textfold.Spaces()
+	var b strings.Builder
+	for i := 0; i < len(rs); {
+		j := i
+		for j+1 < len(rs) && rs[j+1] == rs[j]+1 {
+			j++
+		}
+		b.WriteString(`\x{` + strconv.FormatInt(int64(rs[i]), 16) + `}`)
+		if j > i {
+			b.WriteString(`-\x{` + strconv.FormatInt(int64(rs[j]), 16) + `}`)
+		}
+		i = j + 1
+	}
+	return b.String()
+})
+
 // IsLineBreak reports a str.splitlines() boundary character.
 func IsLineBreak(r rune) bool {
 	switch r {
