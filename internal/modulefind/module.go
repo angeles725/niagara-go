@@ -9,7 +9,6 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"github.com/angeles725/niagara-go/internal/blockfiles"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyre"
 )
@@ -79,9 +78,9 @@ func newModule(root string) *module {
 		extends: newOmap[string](), writers: map[string]map[string]bool{},
 		dynWriters: map[string]map[string]bool{}, unreadable: map[string]string{}}
 	walkJava(root, func(path, name string) {
-		content, err := blockfiles.ReadTextReplace(path)
+		content, err := pycompat.ReadTextReplace(path)
 		if err != nil {
-			m.unreadable[path] = blockfiles.Strerror(err)
+			m.unreadable[path] = pycompat.StrerrorOf(err)
 			return
 		}
 		m.files++
@@ -275,9 +274,9 @@ type srcLine struct {
 func javaLines(root string, unreadable map[string]string) []srcLine {
 	var out []srcLine
 	walkJava(root, func(path, _ string) {
-		text, err := blockfiles.ReadTextReplace(path)
+		text, err := pycompat.ReadTextReplace(path)
 		if err != nil {
-			unreadable[path] = blockfiles.Strerror(err)
+			unreadable[path] = pycompat.StrerrorOf(err)
 			return
 		}
 		for i, line := range strings.SplitAfter(text, "\n") {

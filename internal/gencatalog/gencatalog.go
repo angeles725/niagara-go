@@ -95,7 +95,7 @@ func Main(args []string, s cli.Stdio) int {
 func check(s cli.Stdio, catalog, content string, entries []entry) int {
 	current, present, err := readCatalog(catalog)
 	if err != nil {
-		fmt.Fprintf(s.Err, "gen-catalog: cannot read %s: %s\n", catalog, blockfiles.Strerror(err))
+		fmt.Fprintf(s.Err, "gen-catalog: cannot read %s: %s\n", catalog, pycompat.StrerrorOf(err))
 		return 2 // could not check: not the exit 1 of a stale catalog (Python: traceback)
 	}
 	if present && current == content {
@@ -136,7 +136,7 @@ func readCatalog(path string) (text string, present bool, err error) {
 	if err != nil || !st.Mode().IsRegular() {
 		return "", false, nil
 	}
-	text, err = blockfiles.ReadText(path)
+	text, err = pycompat.ReadText(path)
 	return text, err == nil, err
 }
 
@@ -145,7 +145,7 @@ func collect(root string) ([]entry, error) {
 	for _, b := range blockfiles.MainBlocks(root) {
 		h1, err := extractH1(b.Path)
 		if err != nil {
-			return nil, fmt.Errorf("cannot read %s: %s", b.Path, blockfiles.Strerror(err))
+			return nil, fmt.Errorf("cannot read %s: %s", b.Path, pycompat.StrerrorOf(err))
 		}
 		title := normalizeTitle(h1)
 		if t, ok := titleOverrides[b.Label]; ok {
@@ -164,7 +164,7 @@ func collect(root string) ([]entry, error) {
 
 // extractH1 is gen-catalog.extract_h1: the first stripped line starting with "# ".
 func extractH1(path string) (string, error) {
-	text, err := blockfiles.ReadText(path)
+	text, err := pycompat.ReadText(path)
 	if err != nil {
 		return "", err
 	}

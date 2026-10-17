@@ -152,9 +152,9 @@ func scan(root string, names []string) (map[string]*coverage, []string, int, []u
 				ident = rel
 			}
 		}
-		text, err := blockfiles.ReadTextReplace(b.Path)
+		text, err := pycompat.ReadTextReplace(b.Path)
 		if err != nil {
-			unreadable = append(unreadable, unreadableFile{b.Path, blockfiles.Strerror(err)})
+			unreadable = append(unreadable, unreadableFile{b.Path, pycompat.StrerrorOf(err)})
 			continue
 		}
 		low := textfold.Lower(text)
