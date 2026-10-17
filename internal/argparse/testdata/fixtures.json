@@ -1,0 +1,5204 @@
+{
+ "cases": [
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 100,
+   "exit": 0,
+   "ns": null,
+   "parser": "basic",
+   "stderr": "",
+   "stdout": "usage: basic.py [-h] [-n LIMIT] [--ratio RATIO] [-v] [-q] [--mode {fast,slow,auto}] [--tag TAG]\n                [--level {1,2,3}] [-c] [--const] [--names NAMES [NAMES ...]] [--pair KEY VALUE]\n                [--opt [OPT ...]] [--maybe [MAYBE]] [-x] [-y] [-z Z]\n                [--extend EXTEND [EXTEND ...]] [--ac] [--version]\n                src [dst]\n\nRead a station bog and print what it holds. The auto-detected root is used when --root is omitted;\nvalues are re-read on every run (no cache).\n\npositional arguments:\n  src                   input file (config.bog or a bare .xml)\n  dst                   output file (default: out.txt)\n\noptions:\n  -h, --help            show this help message and exit\n  -n, --limit LIMIT     max rows (default 20)\n  --ratio RATIO         sampling ratio\n  -v, --verbose         say more\n  -q, --quiet           say less\n  --mode {fast,slow,auto}\n                        scan mode: fast, slow, auto\n  --tag TAG             tag (repeatable)\n  --level {1,2,3}       detail level\n  -c, --count           count flag\n  --const               store a constant\n  --names NAMES [NAMES ...]\n                        one or more names\n  --pair KEY VALUE      a key and a value\n  --opt [OPT ...]       zero or more\n  --maybe [MAYBE]       optional value\n  -x                    flag x\n  -y                    flag y\n  -z Z                  checked value\n  --extend EXTEND [EXTEND ...]\n                        extend a list\n  --ac                  append a constant\n  --version             show program's version number and exit\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 80,
+   "exit": 0,
+   "ns": null,
+   "parser": "basic",
+   "stderr": "",
+   "stdout": "usage: basic.py [-h] [-n LIMIT] [--ratio RATIO] [-v] [-q]\n                [--mode {fast,slow,auto}] [--tag TAG] [--level {1,2,3}] [-c]\n                [--const] [--names NAMES [NAMES ...]] [--pair KEY VALUE]\n                [--opt [OPT ...]] [--maybe [MAYBE]] [-x] [-y] [-z Z]\n                [--extend EXTEND [EXTEND ...]] [--ac] [--version]\n                src [dst]\n\nRead a station bog and print what it holds. The auto-detected root is used\nwhen --root is omitted; values are re-read on every run (no cache).\n\npositional arguments:\n  src                   input file (config.bog or a bare .xml)\n  dst                   output file (default: out.txt)\n\noptions:\n  -h, --help            show this help message and exit\n  -n, --limit LIMIT     max rows (default 20)\n  --ratio RATIO         sampling ratio\n  -v, --verbose         say more\n  -q, --quiet           say less\n  --mode {fast,slow,auto}\n                        scan mode: fast, slow, auto\n  --tag TAG             tag (repeatable)\n  --level {1,2,3}       detail level\n  -c, --count           count flag\n  --const               store a constant\n  --names NAMES [NAMES ...]\n                        one or more names\n  --pair KEY VALUE      a key and a value\n  --opt [OPT ...]       zero or more\n  --maybe [MAYBE]       optional value\n  -x                    flag x\n  -y                    flag y\n  -z Z                  checked value\n  --extend EXTEND [EXTEND ...]\n                        extend a list\n  --ac                  append a constant\n  --version             show program's version number and exit\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 100,
+   "exit": 0,
+   "ns": null,
+   "parser": "required",
+   "stderr": "",
+   "stdout": "usage: req [-h] --out OUT --fmt {md,json} FILE [FILE ...]\n\npositional arguments:\n  FILE             input files\n\noptions:\n  -h, --help       show this help message and exit\n  --out, -o OUT    output directory\n  --fmt {md,json}\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 80,
+   "exit": 0,
+   "ns": null,
+   "parser": "required",
+   "stderr": "",
+   "stdout": "usage: req [-h] --out OUT --fmt {md,json} FILE [FILE ...]\n\npositional arguments:\n  FILE             input files\n\noptions:\n  -h, --help       show this help message and exit\n  --out, -o OUT    output directory\n  --fmt {md,json}\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 100,
+   "exit": 0,
+   "ns": null,
+   "parser": "mutex",
+   "stderr": "",
+   "stdout": "usage: mx [-h] [--and | --or] (--json | --csv) query [query ...]\n\nMutually exclusive groups.\n\npositional arguments:\n  query       free-text query\n\noptions:\n  -h, --help  show this help message and exit\n  --and       every term\n  --or        any term\n  --json      JSON\n  --csv       CSV\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 80,
+   "exit": 0,
+   "ns": null,
+   "parser": "mutex",
+   "stderr": "",
+   "stdout": "usage: mx [-h] [--and | --or] (--json | --csv) query [query ...]\n\nMutually exclusive groups.\n\npositional arguments:\n  query       free-text query\n\noptions:\n  -h, --help  show this help message and exit\n  --and       every term\n  --or        any term\n  --json      JSON\n  --csv       CSV\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 100,
+   "exit": 0,
+   "ns": null,
+   "parser": "mutex_pos",
+   "stderr": "",
+   "stdout": "usage: mxp [-h] [--first] [--last LAST] [--name NAME | target]\n\npositional arguments:\n  target       by position\n\noptions:\n  -h, --help   show this help message and exit\n  --first\n  --name NAME  by name\n  --last LAST\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 80,
+   "exit": 0,
+   "ns": null,
+   "parser": "mutex_pos",
+   "stderr": "",
+   "stdout": "usage: mxp [-h] [--first] [--last LAST] [--name NAME | target]\n\npositional arguments:\n  target       by position\n\noptions:\n  -h, --help   show this help message and exit\n  --first\n  --name NAME  by name\n  --last LAST\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 100,
+   "exit": 0,
+   "ns": null,
+   "parser": "groups",
+   "stderr": "",
+   "stdout": "usage: grp [-h] [--json] [--wide | --narrow] [--min N] input [pattern ...]\n\npositional arguments:\n  input\n\noptions:\n  -h, --help  show this help message and exit\n\noutput:\n  How results are printed.\n\n  --json      JSON output\n  --wide\n  --narrow\n\nfilters:\n  --min N     minimum\n  pattern     patterns\n\nSee also: grp --help.\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 80,
+   "exit": 0,
+   "ns": null,
+   "parser": "groups",
+   "stderr": "",
+   "stdout": "usage: grp [-h] [--json] [--wide | --narrow] [--min N] input [pattern ...]\n\npositional arguments:\n  input\n\noptions:\n  -h, --help  show this help message and exit\n\noutput:\n  How results are printed.\n\n  --json      JSON output\n  --wide\n  --narrow\n\nfilters:\n  --min N     minimum\n  pattern     patterns\n\nSee also: grp --help.\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 100,
+   "exit": 0,
+   "ns": null,
+   "parser": "rawdesc",
+   "stderr": "",
+   "stdout": "usage: raw.py [-h] [--flag] thing\n\nRaw description.\n\n  indented line kept\n    deeper   spaced   line\n\nlast paragraph\n\npositional arguments:\n  thing       the help text is still wrapped and normalised by the formatter\n\noptions:\n  -h, --help  show this help message and exit\n  --flag      a flag\n\nExamples:\n  raw.py one\n  raw.py two --flag\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 80,
+   "exit": 0,
+   "ns": null,
+   "parser": "rawdesc",
+   "stderr": "",
+   "stdout": "usage: raw.py [-h] [--flag] thing\n\nRaw description.\n\n  indented line kept\n    deeper   spaced   line\n\nlast paragraph\n\npositional arguments:\n  thing       the help text is still wrapped and normalised by the formatter\n\noptions:\n  -h, --help  show this help message and exit\n  --flag      a flag\n\nExamples:\n  raw.py one\n  raw.py two --flag\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 100,
+   "exit": 0,
+   "ns": null,
+   "parser": "rawtext",
+   "stderr": "",
+   "stdout": "usage: rawtext [-h] [--a A] [--b B]\n\nLine one\n  line two\n\noptions:\n  -h, --help  show this help message and exit\n  --a A       first line\n                second line indented\n              third\n  --b B       value is x\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 80,
+   "exit": 0,
+   "ns": null,
+   "parser": "rawtext",
+   "stderr": "",
+   "stdout": "usage: rawtext [-h] [--a A] [--b B]\n\nLine one\n  line two\n\noptions:\n  -h, --help  show this help message and exit\n  --a A       first line\n                second line indented\n              third\n  --b B       value is x\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 100,
+   "exit": 0,
+   "ns": null,
+   "parser": "argdefaults",
+   "stderr": "",
+   "stdout": "usage: argdef [-h] [--num NUM] [--name NAME] [--flag] --req REQ [--nohelp NOHELP] [--sup SUP]\n              [--explicit EXPLICIT]\n              pos [rest ...]\n\npositional arguments:\n  pos                  a positional\n  rest                 the rest (default: None)\n\noptions:\n  -h, --help           show this help message and exit\n  --num NUM            a number (default: 3)\n  --name NAME          a name (default: None)\n  --flag               a flag (default: False)\n  --req REQ            required\n  --nohelp NOHELP\n  --sup SUP            suppressed default\n  --explicit EXPLICIT  explicit 1\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 80,
+   "exit": 0,
+   "ns": null,
+   "parser": "argdefaults",
+   "stderr": "",
+   "stdout": "usage: argdef [-h] [--num NUM] [--name NAME] [--flag] --req REQ\n              [--nohelp NOHELP] [--sup SUP] [--explicit EXPLICIT]\n              pos [rest ...]\n\npositional arguments:\n  pos                  a positional\n  rest                 the rest (default: None)\n\noptions:\n  -h, --help           show this help message and exit\n  --num NUM            a number (default: 3)\n  --name NAME          a name (default: None)\n  --flag               a flag (default: False)\n  --req REQ            required\n  --nohelp NOHELP\n  --sup SUP            suppressed default\n  --explicit EXPLICIT  explicit 1\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 100,
+   "exit": 0,
+   "ns": null,
+   "parser": "searchdoor",
+   "stderr": "",
+   "stdout": "usage: nsearch [-h] [--version] [--limit LIMIT] [--timeout TIMEOUT] [--doc-version VERSION]\n               [--and | --or]\n               query [query ...]\n\nOne query across our blocks, official docs and code.\n\npositional arguments:\n  query                 free-text query (`license <name>` for licensing)\n\noptions:\n  -h, --help            show this help message and exit\n  --version             print the tools version and exit\n  --limit, -n LIMIT     ranked results per source (default 5)\n  --timeout TIMEOUT     timeout budget per source in seconds, shared by all its backend calls\n                        (default 60)\n  --doc-version VERSION\n                        niagara-help documentation version for the docs source (default: niagara-\n                        help's own)\n  --and                 every term (blocks, docs)\n  --or                  any term (blocks, docs)\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 80,
+   "exit": 0,
+   "ns": null,
+   "parser": "searchdoor",
+   "stderr": "",
+   "stdout": "usage: nsearch [-h] [--version] [--limit LIMIT] [--timeout TIMEOUT]\n               [--doc-version VERSION] [--and | --or]\n               query [query ...]\n\nOne query across our blocks, official docs and code.\n\npositional arguments:\n  query                 free-text query (`license <name>` for licensing)\n\noptions:\n  -h, --help            show this help message and exit\n  --version             print the tools version and exit\n  --limit, -n LIMIT     ranked results per source (default 5)\n  --timeout TIMEOUT     timeout budget per source in seconds, shared by all\n                        its backend calls (default 60)\n  --doc-version VERSION\n                        niagara-help documentation version for the docs source\n                        (default: niagara-help's own)\n  --and                 every term (blocks, docs)\n  --or                  any term (blocks, docs)\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 100,
+   "exit": 0,
+   "ns": null,
+   "parser": "usage",
+   "stderr": "",
+   "stdout": "usage: custom [-h] [--base-dir DIR] <command> [<args>]\n\noptions:\n  -h, --help            show this help message and exit\n  --base-dir, -d BASE_DIR\n                        base\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 80,
+   "exit": 0,
+   "ns": null,
+   "parser": "usage",
+   "stderr": "",
+   "stdout": "usage: custom [-h] [--base-dir DIR] <command> [<args>]\n\noptions:\n  -h, --help            show this help message and exit\n  --base-dir, -d BASE_DIR\n                        base\n"
+  },
+  {
+   "argv": [],
+   "columns": 100,
+   "exit": null,
+   "ns": "{}",
+   "parser": "noargs",
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [],
+   "columns": 80,
+   "exit": null,
+   "ns": "{}",
+   "parser": "noargs",
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 100,
+   "exit": 0,
+   "ns": null,
+   "parser": "longprog",
+   "stderr": "",
+   "stdout": "usage: a-very-long-program-name-that-takes-most-of-the-line-by-itself.py [-h] [--alpha ALPHA]\n                                                                         [--beta-option-with-long-name SOME_LONG_VALUE]\n                                                                         [--gamma]\n                                                                         first second [second ...]\n\npositional arguments:\n  first\n  second\n\noptions:\n  -h, --help            show this help message and exit\n  --alpha ALPHA         a\n  --beta-option-with-long-name SOME_LONG_VALUE\n  --gamma\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 80,
+   "exit": 0,
+   "ns": null,
+   "parser": "longprog",
+   "stderr": "",
+   "stdout": "usage: a-very-long-program-name-that-takes-most-of-the-line-by-itself.py\n       [-h] [--alpha ALPHA] [--beta-option-with-long-name SOME_LONG_VALUE]\n       [--gamma]\n       first second [second ...]\n\npositional arguments:\n  first\n  second\n\noptions:\n  -h, --help            show this help message and exit\n  --alpha ALPHA         a\n  --beta-option-with-long-name SOME_LONG_VALUE\n  --gamma\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 100,
+   "exit": 0,
+   "ns": null,
+   "parser": "wrap",
+   "stderr": "",
+   "stdout": "usage: wrap [-h] [--opt-0 VALUE0] [--opt-1 VALUE1] [--opt-2 VALUE2] [--opt-3 VALUE3]\n            [--opt-4 VALUE4] [--opt-5 VALUE5] [--opt-6 VALUE6] [--opt-7 VALUE7]\n            [--a-really-long-option-name-to-force-a-break A_REALLY_LONG_OPTION_NAME_TO_FORCE_A_BREAK]\n            [positional_with_long_name]\n\nxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\nxxxxxxxxxxxxxxxxxxxxxx\n\npositional arguments:\n  positional_with_long_name\n                        pos\n\noptions:\n  -h, --help            show this help message and exit\n  --opt-0 VALUE0        option number 0\n  --opt-1 VALUE1        option number 1\n  --opt-2 VALUE2        option number 2\n  --opt-3 VALUE3        option number 3\n  --opt-4 VALUE4        option number 4\n  --opt-5 VALUE5        option number 5\n  --opt-6 VALUE6        option number 6\n  --opt-7 VALUE7        option number 7\n  --a-really-long-option-name-to-force-a-break A_REALLY_LONG_OPTION_NAME_TO_FORCE_A_BREAK\n                        help text that is long enough to wrap over several lines, with hyphenated-\n                        words, em--dashes and supercalifragilisticexpialidocious-unbreakable-ish\n                        tokens\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 80,
+   "exit": 0,
+   "ns": null,
+   "parser": "wrap",
+   "stderr": "",
+   "stdout": "usage: wrap [-h] [--opt-0 VALUE0] [--opt-1 VALUE1] [--opt-2 VALUE2]\n            [--opt-3 VALUE3] [--opt-4 VALUE4] [--opt-5 VALUE5]\n            [--opt-6 VALUE6] [--opt-7 VALUE7]\n            [--a-really-long-option-name-to-force-a-break A_REALLY_LONG_OPTION_NAME_TO_FORCE_A_BREAK]\n            [positional_with_long_name]\n\nxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\nxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n\npositional arguments:\n  positional_with_long_name\n                        pos\n\noptions:\n  -h, --help            show this help message and exit\n  --opt-0 VALUE0        option number 0\n  --opt-1 VALUE1        option number 1\n  --opt-2 VALUE2        option number 2\n  --opt-3 VALUE3        option number 3\n  --opt-4 VALUE4        option number 4\n  --opt-5 VALUE5        option number 5\n  --opt-6 VALUE6        option number 6\n  --opt-7 VALUE7        option number 7\n  --a-really-long-option-name-to-force-a-break A_REALLY_LONG_OPTION_NAME_TO_FORCE_A_BREAK\n                        help text that is long enough to wrap over several\n                        lines, with hyphenated-words, em--dashes and\n                        supercalifragilisticexpialidocious-unbreakable-ish\n                        tokens\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 100,
+   "exit": 0,
+   "ns": null,
+   "parser": "negnum",
+   "stderr": "",
+   "stdout": "usage: neg [-h] [--x X] [-f] [value]\n\npositional arguments:\n  value\n\noptions:\n  -h, --help  show this help message and exit\n  --x X\n  -f\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 80,
+   "exit": 0,
+   "ns": null,
+   "parser": "negnum",
+   "stderr": "",
+   "stdout": "usage: neg [-h] [--x X] [-f] [value]\n\npositional arguments:\n  value\n\noptions:\n  -h, --help  show this help message and exit\n  --x X\n  -f\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 100,
+   "exit": 0,
+   "ns": null,
+   "parser": "negopt",
+   "stderr": "",
+   "stdout": "usage: negopt [-h] [-1] [value]\n\npositional arguments:\n  value\n\noptions:\n  -h, --help  show this help message and exit\n  -1\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 80,
+   "exit": 0,
+   "ns": null,
+   "parser": "negopt",
+   "stderr": "",
+   "stdout": "usage: negopt [-h] [-1] [value]\n\npositional arguments:\n  value\n\noptions:\n  -h, --help  show this help message and exit\n  -1\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 100,
+   "exit": 0,
+   "ns": null,
+   "parser": "abbrev",
+   "stderr": "",
+   "stdout": "usage: abbr [-h] [--foo FOO] [--foobar] [--fob FOB] [-n N] [-v] [-w] [--zeta ZETA] [items ...]\n\npositional arguments:\n  items\n\noptions:\n  -h, --help   show this help message and exit\n  --foo FOO\n  --foobar\n  --fob FOB\n  -n N\n  -v\n  -w\n  --zeta ZETA\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 80,
+   "exit": 0,
+   "ns": null,
+   "parser": "abbrev",
+   "stderr": "",
+   "stdout": "usage: abbr [-h] [--foo FOO] [--foobar] [--fob FOB] [-n N] [-v] [-w]\n            [--zeta ZETA]\n            [items ...]\n\npositional arguments:\n  items\n\noptions:\n  -h, --help   show this help message and exit\n  --foo FOO\n  --foobar\n  --fob FOB\n  -n N\n  -v\n  -w\n  --zeta ZETA\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 100,
+   "exit": 0,
+   "ns": null,
+   "parser": "unicode",
+   "stderr": "",
+   "stdout": "usage: licensador [-h] [--feature FEATURE] [--dueño DUEÑO]\n\nGenera y verifica licencias de módulos Niagara: año, señal, cañón.\n\noptions:\n  -h, --help         show this help message and exit\n  --feature FEATURE  NAME o NAME:QTY (repetible)\n  --dueño DUEÑO      nombre del dueño de la licencia, con acentos áéíóú y eñes\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 80,
+   "exit": 0,
+   "ns": null,
+   "parser": "unicode",
+   "stderr": "",
+   "stdout": "usage: licensador [-h] [--feature FEATURE] [--dueño DUEÑO]\n\nGenera y verifica licencias de módulos Niagara: año, señal, cañón.\n\noptions:\n  -h, --help         show this help message and exit\n  --feature FEATURE  NAME o NAME:QTY (repetible)\n  --dueño DUEÑO      nombre del dueño de la licencia, con acentos áéíóú y eñes\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 100,
+   "exit": 0,
+   "ns": null,
+   "parser": "qnx",
+   "stderr": "",
+   "stdout": "usage: qnx6read.py [-h] [{P1,P2,P3}] [extract SRC DST ...]\n\nRead a QNX6 image.\n  part   partition name\n\npositional arguments:\n  {P1,P2,P3}       partition (default P2)\n  extract SRC DST  extract one file instead of listing\n\noptions:\n  -h, --help       show this help message and exit\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 80,
+   "exit": 0,
+   "ns": null,
+   "parser": "qnx",
+   "stderr": "",
+   "stdout": "usage: qnx6read.py [-h] [{P1,P2,P3}] [extract SRC DST ...]\n\nRead a QNX6 image.\n  part   partition name\n\npositional arguments:\n  {P1,P2,P3}       partition (default P2)\n  extract SRC DST  extract one file instead of listing\n\noptions:\n  -h, --help       show this help message and exit\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 100,
+   "exit": 0,
+   "ns": null,
+   "parser": "bognav",
+   "stderr": "",
+   "stdout": "usage: bog-nav.py [-h] [--json] [--csv] [--limit N] [--version]\n                  [bog] {tree,find,grep,selftest} ...\n\nbog-nav -- navigate a Niagara station bog.\n\nCommands below.\n\npositional arguments:\n  bog                   config.bog (ZIP) or a bare file.xml (omit for selftest)\n  {tree,find,grep,selftest}\n    tree                component tree\n    find                flat list of components of a type\n    grep                regex over component paths, types, slot names\n    selftest            run in-memory parser/query assertions (no file needed)\n\noptions:\n  -h, --help            show this help message and exit\n  --json                machine JSON output\n  --csv                 CSV output (header + rows)\n  --limit, -n N         print at most N rows (default: all); the cut is reported\n  --version             print the tools version and exit\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 80,
+   "exit": 0,
+   "ns": null,
+   "parser": "bognav",
+   "stderr": "",
+   "stdout": "usage: bog-nav.py [-h] [--json] [--csv] [--limit N] [--version]\n                  [bog] {tree,find,grep,selftest} ...\n\nbog-nav -- navigate a Niagara station bog.\n\nCommands below.\n\npositional arguments:\n  bog                   config.bog (ZIP) or a bare file.xml (omit for\n                        selftest)\n  {tree,find,grep,selftest}\n    tree                component tree\n    find                flat list of components of a type\n    grep                regex over component paths, types, slot names\n    selftest            run in-memory parser/query assertions (no file needed)\n\noptions:\n  -h, --help            show this help message and exit\n  --json                machine JSON output\n  --csv                 CSV output (header + rows)\n  --limit, -n N         print at most N rows (default: all); the cut is\n                        reported\n  --version             print the tools version and exit\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 100,
+   "exit": 0,
+   "ns": null,
+   "parser": "modnav",
+   "stderr": "",
+   "stdout": "usage: module-nav [-h] [--base-dir DIR] <command> [<args>]\n\nModule Navigator - CLI for Niagara N4 decompiled modules\n\noptions:\n  -h, --help            show this help message and exit\n  --base-dir, -d BASE_DIR\n                        Base directory (auto-detected if omitted)\n\ncommands (module-nav <command> --help for its options):\n\n  lookup:\n    class  Show a class\n    find   Rank classes for a question\n    ask    Alias\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 80,
+   "exit": 0,
+   "ns": null,
+   "parser": "modnav",
+   "stderr": "",
+   "stdout": "usage: module-nav [-h] [--base-dir DIR] <command> [<args>]\n\nModule Navigator - CLI for Niagara N4 decompiled modules\n\noptions:\n  -h, --help            show this help message and exit\n  --base-dir, -d BASE_DIR\n                        Base directory (auto-detected if omitted)\n\ncommands (module-nav <command> --help for its options):\n\n  lookup:\n    class  Show a class\n    find   Rank classes for a question\n    ask    Alias\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 100,
+   "exit": 0,
+   "ns": null,
+   "parser": "nhelp",
+   "stderr": "",
+   "stdout": "usage: niagara_help [-h] [--niagara-version VERSION] {class,guide-search,versions} ...\n\nNiagara N4 Documentation Navigator\n\npositional arguments:\n  {class,guide-search,versions}\n                        Available commands\n    class               Show class documentation\n    guide-search        Full-text search of the guides\n    versions            Manage Niagara versions\n\noptions:\n  -h, --help            show this help message and exit\n  --niagara-version VERSION\n                        Niagara version to query (default from versions/registry.json; env\n                        NIAGARA_HELP_VERSION). Accepted anywhere on the command line.\n\nExamples:\n  niagara_help class BWebServlet\n  niagara_help guide-search \"discovery timeout\"\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 80,
+   "exit": 0,
+   "ns": null,
+   "parser": "nhelp",
+   "stderr": "",
+   "stdout": "usage: niagara_help [-h] [--niagara-version VERSION]\n                    {class,guide-search,versions} ...\n\nNiagara N4 Documentation Navigator\n\npositional arguments:\n  {class,guide-search,versions}\n                        Available commands\n    class               Show class documentation\n    guide-search        Full-text search of the guides\n    versions            Manage Niagara versions\n\noptions:\n  -h, --help            show this help message and exit\n  --niagara-version VERSION\n                        Niagara version to query (default from\n                        versions/registry.json; env NIAGARA_HELP_VERSION).\n                        Accepted anywhere on the command line.\n\nExamples:\n  niagara_help class BWebServlet\n  niagara_help guide-search \"discovery timeout\"\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 100,
+   "exit": 0,
+   "ns": null,
+   "parser": "corpus",
+   "stderr": "",
+   "stdout": "usage: corpus-nav.py [-h] [--version] <command> ...\n\nNavigate the niagara-research knowledge corpus (blocks, docs, retros).\n\npositional arguments:\n  <command>\n    show             print one block\n    path             citation path A -> B\n    lint             lint blocks\n    semantic (rank)  semantic ranking (alias: rank)\n\noptions:\n  -h, --help         show this help message and exit\n  --version          print the tools version and exit\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 80,
+   "exit": 0,
+   "ns": null,
+   "parser": "corpus",
+   "stderr": "",
+   "stdout": "usage: corpus-nav.py [-h] [--version] <command> ...\n\nNavigate the niagara-research knowledge corpus (blocks, docs, retros).\n\npositional arguments:\n  <command>\n    show             print one block\n    path             citation path A -> B\n    lint             lint blocks\n    semantic (rank)  semantic ranking (alias: rank)\n\noptions:\n  -h, --help         show this help message and exit\n  --version          print the tools version and exit\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 100,
+   "exit": 0,
+   "ns": null,
+   "parser": "hyphens",
+   "stderr": "",
+   "stdout": "usage: hy [-h] [--pick {abcx,abcy,zzzz}]\n\na x-ray b-c-d e-mail re-read co-op self-contained up-to-date 3-d x-y-z ab-c a-bc mid-sentence-\nhyphen --flag-like -- dash-- --lead well-known.\n\noptions:\n  -h, --help            show this help message and exit\n  --pick {abcx,abcy,zzzz}\n                        x-ray a-b ab-cd abc-d e-mail-x\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 80,
+   "exit": 0,
+   "ns": null,
+   "parser": "hyphens",
+   "stderr": "",
+   "stdout": "usage: hy [-h] [--pick {abcx,abcy,zzzz}]\n\na x-ray b-c-d e-mail re-read co-op self-contained up-to-date 3-d x-y-z ab-c\na-bc mid-sentence-hyphen --flag-like -- dash-- --lead well-known.\n\noptions:\n  -h, --help            show this help message and exit\n  --pick {abcx,abcy,zzzz}\n                        x-ray a-b ab-cd abc-d e-mail-x\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 100,
+   "exit": 0,
+   "ns": null,
+   "parser": "subnodest",
+   "stderr": "",
+   "stdout": "usage: nodest [-h] {alpha,beta} ...\n\npositional arguments:\n  {alpha,beta}\n    alpha       first\n    beta        second\n\noptions:\n  -h, --help    show this help message and exit\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 80,
+   "exit": 0,
+   "ns": null,
+   "parser": "subnodest",
+   "stderr": "",
+   "stdout": "usage: nodest [-h] {alpha,beta} ...\n\npositional arguments:\n  {alpha,beta}\n    alpha       first\n    beta        second\n\noptions:\n  -h, --help    show this help message and exit\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 100,
+   "exit": 0,
+   "ns": null,
+   "parser": "subtitle",
+   "stderr": "",
+   "stdout": "usage: titled [-h] [--verbose] {run,stop} ...\n\noptions:\n  -h, --help  show this help message and exit\n  --verbose\n\ncommands:\n  Available commands.\n\n  {run,stop}\n    run       run it\n    stop      stop it\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 80,
+   "exit": 0,
+   "ns": null,
+   "parser": "subtitle",
+   "stderr": "",
+   "stdout": "usage: titled [-h] [--verbose] {run,stop} ...\n\noptions:\n  -h, --help  show this help message and exit\n  --verbose\n\ncommands:\n  Available commands.\n\n  {run,stop}\n    run       run it\n    stop      stop it\n"
+  },
+  {
+   "argv": [
+    "--help"
+   ],
+   "columns": 200,
+   "exit": 0,
+   "ns": null,
+   "parser": "basic",
+   "stderr": "",
+   "stdout": "usage: basic.py [-h] [-n LIMIT] [--ratio RATIO] [-v] [-q] [--mode {fast,slow,auto}] [--tag TAG] [--level {1,2,3}] [-c] [--const] [--names NAMES [NAMES ...]] [--pair KEY VALUE] [--opt [OPT ...]]\n                [--maybe [MAYBE]] [-x] [-y] [-z Z] [--extend EXTEND [EXTEND ...]] [--ac] [--version]\n                src [dst]\n\nRead a station bog and print what it holds. The auto-detected root is used when --root is omitted; values are re-read on every run (no cache).\n\npositional arguments:\n  src                   input file (config.bog or a bare .xml)\n  dst                   output file (default: out.txt)\n\noptions:\n  -h, --help            show this help message and exit\n  -n, --limit LIMIT     max rows (default 20)\n  --ratio RATIO         sampling ratio\n  -v, --verbose         say more\n  -q, --quiet           say less\n  --mode {fast,slow,auto}\n                        scan mode: fast, slow, auto\n  --tag TAG             tag (repeatable)\n  --level {1,2,3}       detail level\n  -c, --count           count flag\n  --const               store a constant\n  --names NAMES [NAMES ...]\n                        one or more names\n  --pair KEY VALUE      a key and a value\n  --opt [OPT ...]       zero or more\n  --maybe [MAYBE]       optional value\n  -x                    flag x\n  -y                    flag y\n  -z Z                  checked value\n  --extend EXTEND [EXTEND ...]\n                        extend a list\n  --ac                  append a constant\n  --version             show program's version number and exit\n"
+  },
+  {
+   "argv": [
+    "--help"
+   ],
+   "columns": 60,
+   "exit": 0,
+   "ns": null,
+   "parser": "basic",
+   "stderr": "",
+   "stdout": "usage: basic.py [-h] [-n LIMIT] [--ratio RATIO] [-v] [-q]\n                [--mode {fast,slow,auto}] [--tag TAG]\n                [--level {1,2,3}] [-c] [--const]\n                [--names NAMES [NAMES ...]]\n                [--pair KEY VALUE] [--opt [OPT ...]]\n                [--maybe [MAYBE]] [-x] [-y] [-z Z]\n                [--extend EXTEND [EXTEND ...]] [--ac]\n                [--version]\n                src [dst]\n\nRead a station bog and print what it holds. The auto-\ndetected root is used when --root is omitted; values are\nre-read on every run (no cache).\n\npositional arguments:\n  src                   input file (config.bog or a bare\n                        .xml)\n  dst                   output file (default: out.txt)\n\noptions:\n  -h, --help            show this help message and exit\n  -n, --limit LIMIT     max rows (default 20)\n  --ratio RATIO         sampling ratio\n  -v, --verbose         say more\n  -q, --quiet           say less\n  --mode {fast,slow,auto}\n                        scan mode: fast, slow, auto\n  --tag TAG             tag (repeatable)\n  --level {1,2,3}       detail level\n  -c, --count           count flag\n  --const               store a constant\n  --names NAMES [NAMES ...]\n                        one or more names\n  --pair KEY VALUE      a key and a value\n  --opt [OPT ...]       zero or more\n  --maybe [MAYBE]       optional value\n  -x                    flag x\n  -y                    flag y\n  -z Z                  checked value\n  --extend EXTEND [EXTEND ...]\n                        extend a list\n  --ac                  append a constant\n  --version             show program's version number and\n                        exit\n"
+  },
+  {
+   "argv": [
+    "--help"
+   ],
+   "columns": 40,
+   "exit": 0,
+   "ns": null,
+   "parser": "basic",
+   "stderr": "",
+   "stdout": "usage: basic.py [-h] [-n LIMIT]\n                [--ratio RATIO] [-v]\n                [-q]\n                [--mode {fast,slow,auto}]\n                [--tag TAG]\n                [--level {1,2,3}] [-c]\n                [--const]\n                [--names NAMES [NAMES ...]]\n                [--pair KEY VALUE]\n                [--opt [OPT ...]]\n                [--maybe [MAYBE]] [-x]\n                [-y] [-z Z]\n                [--extend EXTEND [EXTEND ...]]\n                [--ac] [--version]\n                src [dst]\n\nRead a station bog and print what it\nholds. The auto-detected root is used\nwhen --root is omitted; values are re-\nread on every run (no cache).\n\npositional arguments:\n  src             input file\n                  (config.bog or a\n                  bare .xml)\n  dst             output file\n                  (default: out.txt)\n\noptions:\n  -h, --help      show this help\n                  message and exit\n  -n, --limit LIMIT\n                  max rows (default\n                  20)\n  --ratio RATIO   sampling ratio\n  -v, --verbose   say more\n  -q, --quiet     say less\n  --mode {fast,slow,auto}\n                  scan mode: fast,\n                  slow, auto\n  --tag TAG       tag (repeatable)\n  --level {1,2,3}\n                  detail level\n  -c, --count     count flag\n  --const         store a constant\n  --names NAMES [NAMES ...]\n                  one or more names\n  --pair KEY VALUE\n                  a key and a value\n  --opt [OPT ...]\n                  zero or more\n  --maybe [MAYBE]\n                  optional value\n  -x              flag x\n  -y              flag y\n  -z Z            checked value\n  --extend EXTEND [EXTEND ...]\n                  extend a list\n  --ac            append a constant\n  --version       show program's\n                  version number and\n                  exit\n"
+  },
+  {
+   "argv": [
+    "--help"
+   ],
+   "columns": 30,
+   "exit": 0,
+   "ns": null,
+   "parser": "basic",
+   "stderr": "",
+   "stdout": "usage: basic.py [-h]\n                [-n LIMIT]\n                [--ratio RATIO]\n                [-v] [-q]\n                [--mode {fast,slow,auto}]\n                [--tag TAG]\n                [--level {1,2,3}]\n                [-c]\n                [--const]\n                [--names NAMES [NAMES ...]]\n                [--pair KEY VALUE]\n                [--opt [OPT ...]]\n                [--maybe [MAYBE]]\n                [-x] [-y]\n                [-z Z]\n                [--extend EXTEND [EXTEND ...]]\n                [--ac]\n                [--version]\n                src [dst]\n\nRead a station bog and print\nwhat it holds. The auto-\ndetected root is used when\n--root is omitted; values\nare re-read on every run (no\ncache).\n\npositional arguments:\n  src   input file\n        (config.bog or a\n        bare .xml)\n  dst   output file\n        (default: out.txt)\n\noptions:\n  -h, --help\n        show this help\n        message and exit\n  -n, --limit LIMIT\n        max rows (default\n        20)\n  --ratio RATIO\n        sampling ratio\n  -v, --verbose\n        say more\n  -q, --quiet\n        say less\n  --mode {fast,slow,auto}\n        scan mode: fast,\n        slow, auto\n  --tag TAG\n        tag (repeatable)\n  --level {1,2,3}\n        detail level\n  -c, --count\n        count flag\n  --const\n        store a constant\n  --names NAMES [NAMES ...]\n        one or more names\n  --pair KEY VALUE\n        a key and a value\n  --opt [OPT ...]\n        zero or more\n  --maybe [MAYBE]\n        optional value\n  -x    flag x\n  -y    flag y\n  -z Z  checked value\n  --extend EXTEND [EXTEND ...]\n        extend a list\n  --ac  append a constant\n  --version\n        show program's\n        version number and\n        exit\n"
+  },
+  {
+   "argv": [
+    "--help"
+   ],
+   "columns": 20,
+   "exit": 0,
+   "ns": null,
+   "parser": "basic",
+   "stderr": "",
+   "stdout": "usage: basic.py\n       [-h]\n       [-n LIMIT]\n       [--ratio RATIO]\n       [-v] [-q]\n       [--mode {fast,slow,auto}]\n       [--tag TAG]\n       [--level {1,2,3}]\n       [-c]\n       [--const]\n       [--names NAMES [NAMES ...]]\n       [--pair KEY VALUE]\n       [--opt [OPT ...]]\n       [--maybe [MAYBE]]\n       [-x] [-y]\n       [-z Z]\n       [--extend EXTEND [EXTEND ...]]\n       [--ac]\n       [--version]\n       src [dst]\n\nRead a station bog\nand print what it\nholds. The auto-\ndetected root is\nused when --root\nis omitted; values\nare re-read on\nevery run (no\ncache).\n\npositional arguments:\n  src\n    input file\n    (config.bog or\n    a bare .xml)\n  dst\n    output file\n    (default:\n    out.txt)\n\noptions:\n  -h, --help\n    show this help\n    message and\n    exit\n  -n, --limit LIMIT\n    max rows\n    (default 20)\n  --ratio RATIO\n    sampling ratio\n  -v, --verbose\n    say more\n  -q, --quiet\n    say less\n  --mode {fast,slow,auto}\n    scan mode:\n    fast, slow,\n    auto\n  --tag TAG\n    tag\n    (repeatable)\n  --level {1,2,3}\n    detail level\n  -c, --count\n    count flag\n  --const\n    store a\n    constant\n  --names NAMES [NAMES ...]\n    one or more\n    names\n  --pair KEY VALUE\n    a key and a\n    value\n  --opt [OPT ...]\n    zero or more\n  --maybe [MAYBE]\n    optional value\n  -x\n    flag x\n  -y\n    flag y\n  -z Z\n    checked value\n  --extend EXTEND [EXTEND ...]\n    extend a list\n  --ac\n    append a\n    constant\n  --version\n    show program's\n    version number\n    and exit\n"
+  },
+  {
+   "argv": [
+    "--help"
+   ],
+   "columns": 200,
+   "exit": 0,
+   "ns": null,
+   "parser": "wrap",
+   "stderr": "",
+   "stdout": "usage: wrap [-h] [--opt-0 VALUE0] [--opt-1 VALUE1] [--opt-2 VALUE2] [--opt-3 VALUE3] [--opt-4 VALUE4] [--opt-5 VALUE5] [--opt-6 VALUE6] [--opt-7 VALUE7]\n            [--a-really-long-option-name-to-force-a-break A_REALLY_LONG_OPTION_NAME_TO_FORCE_A_BREAK]\n            [positional_with_long_name]\n\nxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n\npositional arguments:\n  positional_with_long_name\n                        pos\n\noptions:\n  -h, --help            show this help message and exit\n  --opt-0 VALUE0        option number 0\n  --opt-1 VALUE1        option number 1\n  --opt-2 VALUE2        option number 2\n  --opt-3 VALUE3        option number 3\n  --opt-4 VALUE4        option number 4\n  --opt-5 VALUE5        option number 5\n  --opt-6 VALUE6        option number 6\n  --opt-7 VALUE7        option number 7\n  --a-really-long-option-name-to-force-a-break A_REALLY_LONG_OPTION_NAME_TO_FORCE_A_BREAK\n                        help text that is long enough to wrap over several lines, with hyphenated-words, em--dashes and supercalifragilisticexpialidocious-unbreakable-ish tokens\n"
+  },
+  {
+   "argv": [
+    "--help"
+   ],
+   "columns": 60,
+   "exit": 0,
+   "ns": null,
+   "parser": "wrap",
+   "stderr": "",
+   "stdout": "usage: wrap [-h] [--opt-0 VALUE0] [--opt-1 VALUE1]\n            [--opt-2 VALUE2] [--opt-3 VALUE3]\n            [--opt-4 VALUE4] [--opt-5 VALUE5]\n            [--opt-6 VALUE6] [--opt-7 VALUE7]\n            [--a-really-long-option-name-to-force-a-break A_REALLY_LONG_OPTION_NAME_TO_FORCE_A_BREAK]\n            [positional_with_long_name]\n\nxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\nxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\nxxxx\n\npositional arguments:\n  positional_with_long_name\n                        pos\n\noptions:\n  -h, --help            show this help message and exit\n  --opt-0 VALUE0        option number 0\n  --opt-1 VALUE1        option number 1\n  --opt-2 VALUE2        option number 2\n  --opt-3 VALUE3        option number 3\n  --opt-4 VALUE4        option number 4\n  --opt-5 VALUE5        option number 5\n  --opt-6 VALUE6        option number 6\n  --opt-7 VALUE7        option number 7\n  --a-really-long-option-name-to-force-a-break A_REALLY_LONG_OPTION_NAME_TO_FORCE_A_BREAK\n                        help text that is long enough to\n                        wrap over several lines, with\n                        hyphenated-words, em--dashes and s\n                        upercalifragilisticexpialidocious-\n                        unbreakable-ish tokens\n"
+  },
+  {
+   "argv": [
+    "--help"
+   ],
+   "columns": 40,
+   "exit": 0,
+   "ns": null,
+   "parser": "wrap",
+   "stderr": "",
+   "stdout": "usage: wrap [-h] [--opt-0 VALUE0]\n            [--opt-1 VALUE1]\n            [--opt-2 VALUE2]\n            [--opt-3 VALUE3]\n            [--opt-4 VALUE4]\n            [--opt-5 VALUE5]\n            [--opt-6 VALUE6]\n            [--opt-7 VALUE7]\n            [--a-really-long-option-name-to-force-a-break A_REALLY_LONG_OPTION_NAME_TO_FORCE_A_BREAK]\n            [positional_with_long_name]\n\nxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\nxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\nxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\nxxxxxx\n\npositional arguments:\n  positional_with_long_name\n                  pos\n\noptions:\n  -h, --help      show this help\n                  message and exit\n  --opt-0 VALUE0  option number 0\n  --opt-1 VALUE1  option number 1\n  --opt-2 VALUE2  option number 2\n  --opt-3 VALUE3  option number 3\n  --opt-4 VALUE4  option number 4\n  --opt-5 VALUE5  option number 5\n  --opt-6 VALUE6  option number 6\n  --opt-7 VALUE7  option number 7\n  --a-really-long-option-name-to-force-a-break A_REALLY_LONG_OPTION_NAME_TO_FORCE_A_BREAK\n                  help text that is\n                  long enough to wrap\n                  over several lines,\n                  with hyphenated-\n                  words, em--dashes\n                  and supercalifragili\n                  sticexpialidocious-\n                  unbreakable-ish\n                  tokens\n"
+  },
+  {
+   "argv": [
+    "--help"
+   ],
+   "columns": 30,
+   "exit": 0,
+   "ns": null,
+   "parser": "wrap",
+   "stderr": "",
+   "stdout": "usage: wrap [-h]\n            [--opt-0 VALUE0]\n            [--opt-1 VALUE1]\n            [--opt-2 VALUE2]\n            [--opt-3 VALUE3]\n            [--opt-4 VALUE4]\n            [--opt-5 VALUE5]\n            [--opt-6 VALUE6]\n            [--opt-7 VALUE7]\n            [--a-really-long-option-name-to-force-a-break A_REALLY_LONG_OPTION_NAME_TO_FORCE_A_BREAK]\n            [positional_with_long_name]\n\nxxxxxxxxxxxxxxxxxxxxxxxxxxxx\nxxxxxxxxxxxxxxxxxxxxxxxxxxxx\nxxxxxxxxxxxxxxxxxxxxxxxxxxxx\nxxxxxxxxxxxxxxxxxxxxxxxxxxxx\nxxxxxxxx\n\npositional arguments:\n  positional_with_long_name\n        pos\n\noptions:\n  -h, --help\n        show this help\n        message and exit\n  --opt-0 VALUE0\n        option number 0\n  --opt-1 VALUE1\n        option number 1\n  --opt-2 VALUE2\n        option number 2\n  --opt-3 VALUE3\n        option number 3\n  --opt-4 VALUE4\n        option number 4\n  --opt-5 VALUE5\n        option number 5\n  --opt-6 VALUE6\n        option number 6\n  --opt-7 VALUE7\n        option number 7\n  --a-really-long-option-name-to-force-a-break A_REALLY_LONG_OPTION_NAME_TO_FORCE_A_BREAK\n        help text that is\n        long enough to wrap\n        over several lines,\n        with hyphenated-\n        words, em--dashes\n        and supercalifragili\n        sticexpialidocious-\n        unbreakable-ish\n        tokens\n"
+  },
+  {
+   "argv": [
+    "--help"
+   ],
+   "columns": 20,
+   "exit": 0,
+   "ns": null,
+   "parser": "wrap",
+   "stderr": "",
+   "stdout": "usage: wrap [-h]\n            [--opt-0 VALUE0]\n            [--opt-1 VALUE1]\n            [--opt-2 VALUE2]\n            [--opt-3 VALUE3]\n            [--opt-4 VALUE4]\n            [--opt-5 VALUE5]\n            [--opt-6 VALUE6]\n            [--opt-7 VALUE7]\n            [--a-really-long-option-name-to-force-a-break A_REALLY_LONG_OPTION_NAME_TO_FORCE_A_BREAK]\n            [positional_with_long_name]\n\nxxxxxxxxxxxxxxxxxx\nxxxxxxxxxxxxxxxxxx\nxxxxxxxxxxxxxxxxxx\nxxxxxxxxxxxxxxxxxx\nxxxxxxxxxxxxxxxxxx\nxxxxxxxxxxxxxxxxxx\nxxxxxxxxxxxx\n\npositional arguments:\n  positional_with_long_name\n    pos\n\noptions:\n  -h, --help\n    show this help\n    message and\n    exit\n  --opt-0 VALUE0\n    option number\n    0\n  --opt-1 VALUE1\n    option number\n    1\n  --opt-2 VALUE2\n    option number\n    2\n  --opt-3 VALUE3\n    option number\n    3\n  --opt-4 VALUE4\n    option number\n    4\n  --opt-5 VALUE5\n    option number\n    5\n  --opt-6 VALUE6\n    option number\n    6\n  --opt-7 VALUE7\n    option number\n    7\n  --a-really-long-option-name-to-force-a-break A_REALLY_LONG_OPTION_NAME_TO_FORCE_A_BREAK\n    help text that\n    is long enough\n    to wrap over\n    several lines,\n    with\n    hyphenated-\n    words, em--\n    dashes and sup\n    ercalifragilis\n    ticexpialidoci\n    ous-\n    unbreakable-\n    ish tokens\n"
+  },
+  {
+   "argv": [
+    "--help"
+   ],
+   "columns": 200,
+   "exit": 0,
+   "ns": null,
+   "parser": "longprog",
+   "stderr": "",
+   "stdout": "usage: a-very-long-program-name-that-takes-most-of-the-line-by-itself.py [-h] [--alpha ALPHA] [--beta-option-with-long-name SOME_LONG_VALUE] [--gamma] first second [second ...]\n\npositional arguments:\n  first\n  second\n\noptions:\n  -h, --help            show this help message and exit\n  --alpha ALPHA         a\n  --beta-option-with-long-name SOME_LONG_VALUE\n  --gamma\n"
+  },
+  {
+   "argv": [
+    "--help"
+   ],
+   "columns": 60,
+   "exit": 0,
+   "ns": null,
+   "parser": "longprog",
+   "stderr": "",
+   "stdout": "usage: a-very-long-program-name-that-takes-most-of-the-line-by-itself.py\n       [-h] [--alpha ALPHA]\n       [--beta-option-with-long-name SOME_LONG_VALUE]\n       [--gamma]\n       first second [second ...]\n\npositional arguments:\n  first\n  second\n\noptions:\n  -h, --help            show this help message and exit\n  --alpha ALPHA         a\n  --beta-option-with-long-name SOME_LONG_VALUE\n  --gamma\n"
+  },
+  {
+   "argv": [
+    "--help"
+   ],
+   "columns": 40,
+   "exit": 0,
+   "ns": null,
+   "parser": "longprog",
+   "stderr": "",
+   "stdout": "usage: a-very-long-program-name-that-takes-most-of-the-line-by-itself.py\n       [-h] [--alpha ALPHA]\n       [--beta-option-with-long-name SOME_LONG_VALUE]\n       [--gamma]\n       first second [second ...]\n\npositional arguments:\n  first\n  second\n\noptions:\n  -h, --help      show this help\n                  message and exit\n  --alpha ALPHA   a\n  --beta-option-with-long-name SOME_LONG_VALUE\n  --gamma\n"
+  },
+  {
+   "argv": [
+    "--help"
+   ],
+   "columns": 30,
+   "exit": 0,
+   "ns": null,
+   "parser": "longprog",
+   "stderr": "",
+   "stdout": "usage: a-very-long-program-name-that-takes-most-of-the-line-by-itself.py\n       [-h] [--alpha ALPHA]\n       [--beta-option-with-long-name SOME_LONG_VALUE]\n       [--gamma]\n       first\n       second [second ...]\n\npositional arguments:\n  first\n  second\n\noptions:\n  -h, --help\n        show this help\n        message and exit\n  --alpha ALPHA\n        a\n  --beta-option-with-long-name SOME_LONG_VALUE\n  --gamma\n"
+  },
+  {
+   "argv": [
+    "--help"
+   ],
+   "columns": 20,
+   "exit": 0,
+   "ns": null,
+   "parser": "longprog",
+   "stderr": "",
+   "stdout": "usage: a-very-long-program-name-that-takes-most-of-the-line-by-itself.py\n       [-h]\n       [--alpha ALPHA]\n       [--beta-option-with-long-name SOME_LONG_VALUE]\n       [--gamma]\n       first\n       second [second ...]\n\npositional arguments:\n  first\n  second\n\noptions:\n  -h, --help\n    show this help\n    message and\n    exit\n  --alpha ALPHA\n    a\n  --beta-option-with-long-name SOME_LONG_VALUE\n  --gamma\n"
+  },
+  {
+   "argv": [
+    "--help"
+   ],
+   "columns": 200,
+   "exit": 0,
+   "ns": null,
+   "parser": "mutex",
+   "stderr": "",
+   "stdout": "usage: mx [-h] [--and | --or] (--json | --csv) query [query ...]\n\nMutually exclusive groups.\n\npositional arguments:\n  query       free-text query\n\noptions:\n  -h, --help  show this help message and exit\n  --and       every term\n  --or        any term\n  --json      JSON\n  --csv       CSV\n"
+  },
+  {
+   "argv": [
+    "--help"
+   ],
+   "columns": 60,
+   "exit": 0,
+   "ns": null,
+   "parser": "mutex",
+   "stderr": "",
+   "stdout": "usage: mx [-h] [--and | --or] (--json | --csv)\n          query [query ...]\n\nMutually exclusive groups.\n\npositional arguments:\n  query       free-text query\n\noptions:\n  -h, --help  show this help message and exit\n  --and       every term\n  --or        any term\n  --json      JSON\n  --csv       CSV\n"
+  },
+  {
+   "argv": [
+    "--help"
+   ],
+   "columns": 40,
+   "exit": 0,
+   "ns": null,
+   "parser": "mutex",
+   "stderr": "",
+   "stdout": "usage: mx [-h] [--and | --or]\n          (--json | --csv)\n          query [query ...]\n\nMutually exclusive groups.\n\npositional arguments:\n  query       free-text query\n\noptions:\n  -h, --help  show this help message\n              and exit\n  --and       every term\n  --or        any term\n  --json      JSON\n  --csv       CSV\n"
+  },
+  {
+   "argv": [
+    "--help"
+   ],
+   "columns": 30,
+   "exit": 0,
+   "ns": null,
+   "parser": "mutex",
+   "stderr": "",
+   "stdout": "usage: mx [-h] [--and |\n          --or] (--json |\n          --csv)\n          query [query ...]\n\nMutually exclusive groups.\n\npositional arguments:\n  query\n        free-text query\n\noptions:\n  -h, --help\n        show this help\n        message and exit\n  --and\n        every term\n  --or  any term\n  --json\n        JSON\n  --csv\n        CSV\n"
+  },
+  {
+   "argv": [
+    "--help"
+   ],
+   "columns": 20,
+   "exit": 0,
+   "ns": null,
+   "parser": "mutex",
+   "stderr": "",
+   "stdout": "usage: mx [-h]\n          [--and |\n          --or]\n          (--json |\n          --csv)\n          query [query ...]\n\nMutually exclusive\ngroups.\n\npositional arguments:\n  query\n    free-text\n    query\n\noptions:\n  -h, --help\n    show this help\n    message and\n    exit\n  --and\n    every term\n  --or\n    any term\n  --json\n    JSON\n  --csv\n    CSV\n"
+  },
+  {
+   "argv": [
+    "--help"
+   ],
+   "columns": 200,
+   "exit": 0,
+   "ns": null,
+   "parser": "groups",
+   "stderr": "",
+   "stdout": "usage: grp [-h] [--json] [--wide | --narrow] [--min N] input [pattern ...]\n\npositional arguments:\n  input\n\noptions:\n  -h, --help  show this help message and exit\n\noutput:\n  How results are printed.\n\n  --json      JSON output\n  --wide\n  --narrow\n\nfilters:\n  --min N     minimum\n  pattern     patterns\n\nSee also: grp --help.\n"
+  },
+  {
+   "argv": [
+    "--help"
+   ],
+   "columns": 60,
+   "exit": 0,
+   "ns": null,
+   "parser": "groups",
+   "stderr": "",
+   "stdout": "usage: grp [-h] [--json] [--wide | --narrow] [--min N]\n           input [pattern ...]\n\npositional arguments:\n  input\n\noptions:\n  -h, --help  show this help message and exit\n\noutput:\n  How results are printed.\n\n  --json      JSON output\n  --wide\n  --narrow\n\nfilters:\n  --min N     minimum\n  pattern     patterns\n\nSee also: grp --help.\n"
+  },
+  {
+   "argv": [
+    "--help"
+   ],
+   "columns": 40,
+   "exit": 0,
+   "ns": null,
+   "parser": "groups",
+   "stderr": "",
+   "stdout": "usage: grp [-h] [--json] [--wide |\n           --narrow] [--min N]\n           input [pattern ...]\n\npositional arguments:\n  input\n\noptions:\n  -h, --help  show this help message\n              and exit\n\noutput:\n  How results are printed.\n\n  --json      JSON output\n  --wide\n  --narrow\n\nfilters:\n  --min N     minimum\n  pattern     patterns\n\nSee also: grp --help.\n"
+  },
+  {
+   "argv": [
+    "--help"
+   ],
+   "columns": 30,
+   "exit": 0,
+   "ns": null,
+   "parser": "groups",
+   "stderr": "",
+   "stdout": "usage: grp [-h] [--json]\n           [--wide |\n           --narrow]\n           [--min N]\n           input\n           [pattern ...]\n\npositional arguments:\n  input\n\noptions:\n  -h, --help\n        show this help\n        message and exit\n\noutput:\n  How results are printed.\n\n  --json\n        JSON output\n  --wide\n  --narrow\n\nfilters:\n  --min N\n        minimum\n  pattern\n        patterns\n\nSee also: grp --help.\n"
+  },
+  {
+   "argv": [
+    "--help"
+   ],
+   "columns": 20,
+   "exit": 0,
+   "ns": null,
+   "parser": "groups",
+   "stderr": "",
+   "stdout": "usage: grp [-h]\n           [--json]\n           [--wide |\n           --narrow]\n           [--min N]\n           input\n           [pattern ...]\n\npositional arguments:\n  input\n\noptions:\n  -h, --help\n    show this help\n    message and\n    exit\n\noutput:\n  How results\n  are printed.\n\n  --json\n    JSON output\n  --wide\n  --narrow\n\nfilters:\n  --min N\n    minimum\n  pattern\n    patterns\n\nSee also: grp\n--help.\n"
+  },
+  {
+   "argv": [
+    "--help"
+   ],
+   "columns": 200,
+   "exit": 0,
+   "ns": null,
+   "parser": "bognav",
+   "stderr": "",
+   "stdout": "usage: bog-nav.py [-h] [--json] [--csv] [--limit N] [--version] [bog] {tree,find,grep,selftest} ...\n\nbog-nav -- navigate a Niagara station bog.\n\nCommands below.\n\npositional arguments:\n  bog                   config.bog (ZIP) or a bare file.xml (omit for selftest)\n  {tree,find,grep,selftest}\n    tree                component tree\n    find                flat list of components of a type\n    grep                regex over component paths, types, slot names\n    selftest            run in-memory parser/query assertions (no file needed)\n\noptions:\n  -h, --help            show this help message and exit\n  --json                machine JSON output\n  --csv                 CSV output (header + rows)\n  --limit, -n N         print at most N rows (default: all); the cut is reported\n  --version             print the tools version and exit\n"
+  },
+  {
+   "argv": [
+    "--help"
+   ],
+   "columns": 60,
+   "exit": 0,
+   "ns": null,
+   "parser": "bognav",
+   "stderr": "",
+   "stdout": "usage: bog-nav.py [-h] [--json] [--csv] [--limit N]\n                  [--version]\n                  [bog] {tree,find,grep,selftest} ...\n\nbog-nav -- navigate a Niagara station bog.\n\nCommands below.\n\npositional arguments:\n  bog                   config.bog (ZIP) or a bare\n                        file.xml (omit for selftest)\n  {tree,find,grep,selftest}\n    tree                component tree\n    find                flat list of components of a type\n    grep                regex over component paths, types,\n                        slot names\n    selftest            run in-memory parser/query\n                        assertions (no file needed)\n\noptions:\n  -h, --help            show this help message and exit\n  --json                machine JSON output\n  --csv                 CSV output (header + rows)\n  --limit, -n N         print at most N rows (default:\n                        all); the cut is reported\n  --version             print the tools version and exit\n"
+  },
+  {
+   "argv": [
+    "--help"
+   ],
+   "columns": 40,
+   "exit": 0,
+   "ns": null,
+   "parser": "bognav",
+   "stderr": "",
+   "stdout": "usage: bog-nav.py [-h] [--json]\n                  [--csv] [--limit N]\n                  [--version]\n                  [bog]\n                  {tree,find,grep,selftest} ...\n\nbog-nav -- navigate a Niagara station bog.\n\nCommands below.\n\npositional arguments:\n  bog             config.bog (ZIP) or\n                  a bare file.xml\n                  (omit for selftest)\n  {tree,find,grep,selftest}\n    tree          component tree\n    find          flat list of\n                  components of a type\n    grep          regex over component\n                  paths, types, slot\n                  names\n    selftest      run in-memory\n                  parser/query\n                  assertions (no file\n                  needed)\n\noptions:\n  -h, --help      show this help\n                  message and exit\n  --json          machine JSON output\n  --csv           CSV output (header +\n                  rows)\n  --limit, -n N   print at most N rows\n                  (default: all); the\n                  cut is reported\n  --version       print the tools\n                  version and exit\n"
+  },
+  {
+   "argv": [
+    "--help"
+   ],
+   "columns": 30,
+   "exit": 0,
+   "ns": null,
+   "parser": "bognav",
+   "stderr": "",
+   "stdout": "usage: bog-nav.py [-h]\n                  [--json]\n                  [--csv]\n                  [--limit N]\n                  [--version]\n                  [bog]\n                  {tree,find,grep,selftest} ...\n\nbog-nav -- navigate a Niagara station bog.\n\nCommands below.\n\npositional arguments:\n  bog   config.bog (ZIP) or\n        a bare file.xml\n        (omit for selftest)\n  {tree,find,grep,selftest}\n    tree\n        component tree\n    find\n        flat list of\n        components of a type\n    grep\n        regex over component\n        paths, types, slot\n        names\n    selftest\n        run in-memory\n        parser/query\n        assertions (no file\n        needed)\n\noptions:\n  -h, --help\n        show this help\n        message and exit\n  --json\n        machine JSON output\n  --csv\n        CSV output (header +\n        rows)\n  --limit, -n N\n        print at most N rows\n        (default: all); the\n        cut is reported\n  --version\n        print the tools\n        version and exit\n"
+  },
+  {
+   "argv": [
+    "--help"
+   ],
+   "columns": 20,
+   "exit": 0,
+   "ns": null,
+   "parser": "bognav",
+   "stderr": "",
+   "stdout": "usage: bog-nav.py\n       [-h]\n       [--json]\n       [--csv]\n       [--limit N]\n       [--version]\n       [bog]\n       {tree,find,grep,selftest} ...\n\nbog-nav -- navigate a Niagara station bog.\n\nCommands below.\n\npositional arguments:\n  bog\n    config.bog\n    (ZIP) or a\n    bare file.xml\n    (omit for\n    selftest)\n  {tree,find,grep,selftest}\n    tree\n    component tree\n    find\n    flat list of\n    components of\n    a type\n    grep\n    regex over\n    component\n    paths, types,\n    slot names\n    selftest\n    run in-memory\n    parser/query\n    assertions (no\n    file needed)\n\noptions:\n  -h, --help\n    show this help\n    message and\n    exit\n  --json\n    machine JSON\n    output\n  --csv\n    CSV output\n    (header +\n    rows)\n  --limit, -n N\n    print at most\n    N rows\n    (default:\n    all); the cut\n    is reported\n  --version\n    print the\n    tools version\n    and exit\n"
+  },
+  {
+   "argv": [
+    "--help"
+   ],
+   "columns": 200,
+   "exit": 0,
+   "ns": null,
+   "parser": "nhelp",
+   "stderr": "",
+   "stdout": "usage: niagara_help [-h] [--niagara-version VERSION] {class,guide-search,versions} ...\n\nNiagara N4 Documentation Navigator\n\npositional arguments:\n  {class,guide-search,versions}\n                        Available commands\n    class               Show class documentation\n    guide-search        Full-text search of the guides\n    versions            Manage Niagara versions\n\noptions:\n  -h, --help            show this help message and exit\n  --niagara-version VERSION\n                        Niagara version to query (default from versions/registry.json; env NIAGARA_HELP_VERSION). Accepted anywhere on the command line.\n\nExamples:\n  niagara_help class BWebServlet\n  niagara_help guide-search \"discovery timeout\"\n"
+  },
+  {
+   "argv": [
+    "--help"
+   ],
+   "columns": 60,
+   "exit": 0,
+   "ns": null,
+   "parser": "nhelp",
+   "stderr": "",
+   "stdout": "usage: niagara_help [-h] [--niagara-version VERSION]\n                    {class,guide-search,versions} ...\n\nNiagara N4 Documentation Navigator\n\npositional arguments:\n  {class,guide-search,versions}\n                        Available commands\n    class               Show class documentation\n    guide-search        Full-text search of the guides\n    versions            Manage Niagara versions\n\noptions:\n  -h, --help            show this help message and exit\n  --niagara-version VERSION\n                        Niagara version to query (default\n                        from versions/registry.json; env\n                        NIAGARA_HELP_VERSION). Accepted\n                        anywhere on the command line.\n\nExamples:\n  niagara_help class BWebServlet\n  niagara_help guide-search \"discovery timeout\"\n"
+  },
+  {
+   "argv": [
+    "--help"
+   ],
+   "columns": 40,
+   "exit": 0,
+   "ns": null,
+   "parser": "nhelp",
+   "stderr": "",
+   "stdout": "usage: niagara_help [-h]\n                    [--niagara-version VERSION]\n                    {class,guide-search,versions} ...\n\nNiagara N4 Documentation Navigator\n\npositional arguments:\n  {class,guide-search,versions}\n                  Available commands\n    class         Show class\n                  documentation\n    guide-search  Full-text search of\n                  the guides\n    versions      Manage Niagara\n                  versions\n\noptions:\n  -h, --help      show this help\n                  message and exit\n  --niagara-version VERSION\n                  Niagara version to\n                  query (default from\n                  versions/registry.js\n                  on; env NIAGARA_HELP\n                  _VERSION). Accepted\n                  anywhere on the\n                  command line.\n\nExamples:\n  niagara_help class BWebServlet\n  niagara_help guide-search \"discovery timeout\"\n"
+  },
+  {
+   "argv": [
+    "--help"
+   ],
+   "columns": 30,
+   "exit": 0,
+   "ns": null,
+   "parser": "nhelp",
+   "stderr": "",
+   "stdout": "usage: niagara_help [-h]\n                    [--niagara-version VERSION]\n                    {class,guide-search,versions} ...\n\nNiagara N4 Documentation Navigator\n\npositional arguments:\n  {class,guide-search,versions}\n        Available commands\n    class\n        Show class\n        documentation\n    guide-search\n        Full-text search of\n        the guides\n    versions\n        Manage Niagara\n        versions\n\noptions:\n  -h, --help\n        show this help\n        message and exit\n  --niagara-version VERSION\n        Niagara version to\n        query (default from\n        versions/registry.js\n        on; env NIAGARA_HELP\n        _VERSION). Accepted\n        anywhere on the\n        command line.\n\nExamples:\n  niagara_help class BWebServlet\n  niagara_help guide-search \"discovery timeout\"\n"
+  },
+  {
+   "argv": [
+    "--help"
+   ],
+   "columns": 20,
+   "exit": 0,
+   "ns": null,
+   "parser": "nhelp",
+   "stderr": "",
+   "stdout": "usage: niagara_help\n       [-h]\n       [--niagara-version VERSION]\n       {class,guide-search,versions} ...\n\nNiagara N4 Documentation Navigator\n\npositional arguments:\n  {class,guide-search,versions}\n    Available\n    commands\n    class\n    Show class\n    documentation\n    guide-search\n    Full-text\n    search of the\n    guides\n    versions\n    Manage Niagara\n    versions\n\noptions:\n  -h, --help\n    show this help\n    message and\n    exit\n  --niagara-version VERSION\n    Niagara\n    version to\n    query (default\n    from versions/\n    registry.json;\n    env NIAGARA_HE\n    LP_VERSION).\n    Accepted\n    anywhere on\n    the command\n    line.\n\nExamples:\n  niagara_help class BWebServlet\n  niagara_help guide-search \"discovery timeout\"\n"
+  },
+  {
+   "argv": [
+    "--help"
+   ],
+   "columns": 200,
+   "exit": 0,
+   "ns": null,
+   "parser": "unicode",
+   "stderr": "",
+   "stdout": "usage: licensador [-h] [--feature FEATURE] [--dueño DUEÑO]\n\nGenera y verifica licencias de módulos Niagara: año, señal, cañón.\n\noptions:\n  -h, --help         show this help message and exit\n  --feature FEATURE  NAME o NAME:QTY (repetible)\n  --dueño DUEÑO      nombre del dueño de la licencia, con acentos áéíóú y eñes\n"
+  },
+  {
+   "argv": [
+    "--help"
+   ],
+   "columns": 60,
+   "exit": 0,
+   "ns": null,
+   "parser": "unicode",
+   "stderr": "",
+   "stdout": "usage: licensador [-h] [--feature FEATURE] [--dueño DUEÑO]\n\nGenera y verifica licencias de módulos Niagara: año,\nseñal, cañón.\n\noptions:\n  -h, --help         show this help message and exit\n  --feature FEATURE  NAME o NAME:QTY (repetible)\n  --dueño DUEÑO      nombre del dueño de la licencia, con\n                     acentos áéíóú y eñes\n"
+  },
+  {
+   "argv": [
+    "--help"
+   ],
+   "columns": 40,
+   "exit": 0,
+   "ns": null,
+   "parser": "unicode",
+   "stderr": "",
+   "stdout": "usage: licensador [-h]\n                  [--feature FEATURE]\n                  [--dueño DUEÑO]\n\nGenera y verifica licencias de módulos\nNiagara: año, señal, cañón.\n\noptions:\n  -h, --help      show this help\n                  message and exit\n  --feature FEATURE\n                  NAME o NAME:QTY\n                  (repetible)\n  --dueño DUEÑO   nombre del dueño de\n                  la licencia, con\n                  acentos áéíóú y eñes\n"
+  },
+  {
+   "argv": [
+    "--help"
+   ],
+   "columns": 30,
+   "exit": 0,
+   "ns": null,
+   "parser": "unicode",
+   "stderr": "",
+   "stdout": "usage: licensador [-h]\n                  [--feature FEATURE]\n                  [--dueño DUEÑO]\n\nGenera y verifica licencias\nde módulos Niagara: año,\nseñal, cañón.\n\noptions:\n  -h, --help\n        show this help\n        message and exit\n  --feature FEATURE\n        NAME o NAME:QTY\n        (repetible)\n  --dueño DUEÑO\n        nombre del dueño de\n        la licencia, con\n        acentos áéíóú y eñes\n"
+  },
+  {
+   "argv": [
+    "--help"
+   ],
+   "columns": 20,
+   "exit": 0,
+   "ns": null,
+   "parser": "unicode",
+   "stderr": "",
+   "stdout": "usage: licensador\n       [-h]\n       [--feature FEATURE]\n       [--dueño DUEÑO]\n\nGenera y verifica\nlicencias de\nmódulos Niagara:\naño, señal, cañón.\n\noptions:\n  -h, --help\n    show this help\n    message and\n    exit\n  --feature FEATURE\n    NAME o\n    NAME:QTY\n    (repetible)\n  --dueño DUEÑO\n    nombre del\n    dueño de la\n    licencia, con\n    acentos áéíóú\n    y eñes\n"
+  },
+  {
+   "argv": [
+    "--help"
+   ],
+   "columns": 200,
+   "exit": 0,
+   "ns": null,
+   "parser": "hyphens",
+   "stderr": "",
+   "stdout": "usage: hy [-h] [--pick {abcx,abcy,zzzz}]\n\na x-ray b-c-d e-mail re-read co-op self-contained up-to-date 3-d x-y-z ab-c a-bc mid-sentence-hyphen --flag-like -- dash-- --lead well-known.\n\noptions:\n  -h, --help            show this help message and exit\n  --pick {abcx,abcy,zzzz}\n                        x-ray a-b ab-cd abc-d e-mail-x\n"
+  },
+  {
+   "argv": [
+    "--help"
+   ],
+   "columns": 60,
+   "exit": 0,
+   "ns": null,
+   "parser": "hyphens",
+   "stderr": "",
+   "stdout": "usage: hy [-h] [--pick {abcx,abcy,zzzz}]\n\na x-ray b-c-d e-mail re-read co-op self-contained up-to-\ndate 3-d x-y-z ab-c a-bc mid-sentence-hyphen --flag-like\n-- dash-- --lead well-known.\n\noptions:\n  -h, --help            show this help message and exit\n  --pick {abcx,abcy,zzzz}\n                        x-ray a-b ab-cd abc-d e-mail-x\n"
+  },
+  {
+   "argv": [
+    "--help"
+   ],
+   "columns": 40,
+   "exit": 0,
+   "ns": null,
+   "parser": "hyphens",
+   "stderr": "",
+   "stdout": "usage: hy [-h]\n          [--pick {abcx,abcy,zzzz}]\n\na x-ray b-c-d e-mail re-read co-op\nself-contained up-to-date 3-d x-y-z\nab-c a-bc mid-sentence-hyphen --flag-\nlike -- dash-- --lead well-known.\n\noptions:\n  -h, --help      show this help\n                  message and exit\n  --pick {abcx,abcy,zzzz}\n                  x-ray a-b ab-cd\n                  abc-d e-mail-x\n"
+  },
+  {
+   "argv": [
+    "--help"
+   ],
+   "columns": 30,
+   "exit": 0,
+   "ns": null,
+   "parser": "hyphens",
+   "stderr": "",
+   "stdout": "usage: hy [-h]\n          [--pick {abcx,abcy,zzzz}]\n\na x-ray b-c-d e-mail re-read\nco-op self-contained up-to-\ndate 3-d x-y-z ab-c a-bc\nmid-sentence-hyphen --flag-\nlike -- dash-- --lead well-\nknown.\n\noptions:\n  -h, --help\n        show this help\n        message and exit\n  --pick {abcx,abcy,zzzz}\n        x-ray a-b ab-cd\n        abc-d e-mail-x\n"
+  },
+  {
+   "argv": [
+    "--help"
+   ],
+   "columns": 20,
+   "exit": 0,
+   "ns": null,
+   "parser": "hyphens",
+   "stderr": "",
+   "stdout": "usage: hy [-h]\n          [--pick {abcx,abcy,zzzz}]\n\na x-ray b-c-d\ne-mail re-read co-\nop self-contained\nup-to-date 3-d\nx-y-z ab-c a-bc\nmid-sentence-\nhyphen --flag-like\n-- dash-- --lead\nwell-known.\n\noptions:\n  -h, --help\n    show this help\n    message and\n    exit\n  --pick {abcx,abcy,zzzz}\n    x-ray a-b ab-\n    cd abc-d\n    e-mail-x\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 14,
+   "exit": 0,
+   "ns": null,
+   "parser": "hyphens",
+   "stderr": "",
+   "stdout": "usage: hy\n          [-h]\n          [--pick {abcx,abcy,zzzz}]\n\na x-ray\nb-c-d e-mail\nre-read co-\nop self-\ncontained\nup-to-date\n3-d x-y-z\nab-c a-bc\nmid-\nsentence-\nhyphen\n--flag-like\n-- dash--\n--lead well-\nknown.\n\noptions:\n  -h, --help\n    show this\n    help\n    message and\n    exit\n  --pick {abcx,abcy,zzzz}\n    x-ray a-b\n    ab-cd abc-d\n    e-mail-x\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 15,
+   "exit": 0,
+   "ns": null,
+   "parser": "hyphens",
+   "stderr": "",
+   "stdout": "usage: hy\n          [-h]\n          [--pick {abcx,abcy,zzzz}]\n\na x-ray b-c-d\ne-mail re-\nread co-op\nself-\ncontained up-\nto-date 3-d\nx-y-z ab-c\na-bc mid-\nsentence-\nhyphen\n--flag-like\n-- dash--\n--lead well-\nknown.\n\noptions:\n  -h, --help\n    show this\n    help\n    message and\n    exit\n  --pick {abcx,abcy,zzzz}\n    x-ray a-b\n    ab-cd abc-d\n    e-mail-x\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 16,
+   "exit": 0,
+   "ns": null,
+   "parser": "hyphens",
+   "stderr": "",
+   "stdout": "usage: hy [-h]\n          [--pick {abcx,abcy,zzzz}]\n\na x-ray b-c-d\ne-mail re-read\nco-op self-\ncontained up-\nto-date 3-d\nx-y-z ab-c\na-bc mid-\nsentence-\nhyphen --flag-\nlike -- dash--\n--lead well-\nknown.\n\noptions:\n  -h, --help\n    show this\n    help\n    message and\n    exit\n  --pick {abcx,abcy,zzzz}\n    x-ray a-b\n    ab-cd abc-d\n    e-mail-x\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 17,
+   "exit": 0,
+   "ns": null,
+   "parser": "hyphens",
+   "stderr": "",
+   "stdout": "usage: hy [-h]\n          [--pick {abcx,abcy,zzzz}]\n\na x-ray b-c-d\ne-mail re-read\nco-op self-\ncontained up-\nto-date 3-d\nx-y-z ab-c a-bc\nmid-sentence-\nhyphen --flag-\nlike -- dash--\n--lead well-\nknown.\n\noptions:\n  -h, --help\n    show this\n    help\n    message and\n    exit\n  --pick {abcx,abcy,zzzz}\n    x-ray a-b\n    ab-cd abc-d\n    e-mail-x\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 18,
+   "exit": 0,
+   "ns": null,
+   "parser": "hyphens",
+   "stderr": "",
+   "stdout": "usage: hy [-h]\n          [--pick {abcx,abcy,zzzz}]\n\na x-ray b-c-d\ne-mail re-read\nco-op self-\ncontained up-to-\ndate 3-d x-y-z\nab-c a-bc mid-\nsentence-hyphen\n--flag-like --\ndash-- --lead\nwell-known.\n\noptions:\n  -h, --help\n    show this\n    help message\n    and exit\n  --pick {abcx,abcy,zzzz}\n    x-ray a-b\n    ab-cd abc-d\n    e-mail-x\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 19,
+   "exit": 0,
+   "ns": null,
+   "parser": "hyphens",
+   "stderr": "",
+   "stdout": "usage: hy [-h]\n          [--pick {abcx,abcy,zzzz}]\n\na x-ray b-c-d\ne-mail re-read\nco-op self-\ncontained up-to-\ndate 3-d x-y-z\nab-c a-bc mid-\nsentence-hyphen\n--flag-like --\ndash-- --lead\nwell-known.\n\noptions:\n  -h, --help\n    show this\n    help message\n    and exit\n  --pick {abcx,abcy,zzzz}\n    x-ray a-b ab-\n    cd abc-d\n    e-mail-x\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 20,
+   "exit": 0,
+   "ns": null,
+   "parser": "hyphens",
+   "stderr": "",
+   "stdout": "usage: hy [-h]\n          [--pick {abcx,abcy,zzzz}]\n\na x-ray b-c-d\ne-mail re-read co-\nop self-contained\nup-to-date 3-d\nx-y-z ab-c a-bc\nmid-sentence-\nhyphen --flag-like\n-- dash-- --lead\nwell-known.\n\noptions:\n  -h, --help\n    show this help\n    message and\n    exit\n  --pick {abcx,abcy,zzzz}\n    x-ray a-b ab-\n    cd abc-d\n    e-mail-x\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 21,
+   "exit": 0,
+   "ns": null,
+   "parser": "hyphens",
+   "stderr": "",
+   "stdout": "usage: hy [-h]\n          [--pick {abcx,abcy,zzzz}]\n\na x-ray b-c-d\ne-mail re-read co-\nop self-contained\nup-to-date 3-d\nx-y-z ab-c a-bc\nmid-sentence-hyphen\n--flag-like --\ndash-- --lead well-\nknown.\n\noptions:\n  -h, --help\n    show this help\n    message and\n    exit\n  --pick {abcx,abcy,zzzz}\n    x-ray a-b ab-cd\n    abc-d e-mail-x\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 22,
+   "exit": 0,
+   "ns": null,
+   "parser": "hyphens",
+   "stderr": "",
+   "stdout": "usage: hy [-h]\n          [--pick {abcx,abcy,zzzz}]\n\na x-ray b-c-d e-mail\nre-read co-op self-\ncontained up-to-date\n3-d x-y-z ab-c a-bc\nmid-sentence-hyphen\n--flag-like --\ndash-- --lead well-\nknown.\n\noptions:\n  -h, --help\n    show this help\n    message and exit\n  --pick {abcx,abcy,zzzz}\n    x-ray a-b ab-cd\n    abc-d e-mail-x\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 23,
+   "exit": 0,
+   "ns": null,
+   "parser": "hyphens",
+   "stderr": "",
+   "stdout": "usage: hy [-h]\n          [--pick {abcx,abcy,zzzz}]\n\na x-ray b-c-d e-mail\nre-read co-op self-\ncontained up-to-date\n3-d x-y-z ab-c a-bc\nmid-sentence-hyphen\n--flag-like -- dash--\n--lead well-known.\n\noptions:\n  -h, --help\n    show this help\n    message and exit\n  --pick {abcx,abcy,zzzz}\n    x-ray a-b ab-cd\n    abc-d e-mail-x\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 24,
+   "exit": 0,
+   "ns": null,
+   "parser": "hyphens",
+   "stderr": "",
+   "stdout": "usage: hy [-h]\n          [--pick {abcx,abcy,zzzz}]\n\na x-ray b-c-d e-mail\nre-read co-op self-\ncontained up-to-date\n3-d x-y-z ab-c a-bc\nmid-sentence-hyphen\n--flag-like -- dash--\n--lead well-known.\n\noptions:\n  -h, --help\n    show this help\n    message and exit\n  --pick {abcx,abcy,zzzz}\n    x-ray a-b ab-cd\n    abc-d e-mail-x\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 25,
+   "exit": 0,
+   "ns": null,
+   "parser": "hyphens",
+   "stderr": "",
+   "stdout": "usage: hy [-h]\n          [--pick {abcx,abcy,zzzz}]\n\na x-ray b-c-d e-mail\nre-read co-op self-\ncontained up-to-date\n3-d x-y-z ab-c a-bc\nmid-sentence-hyphen\n--flag-like -- dash--\n--lead well-known.\n\noptions:\n  -h, --help\n    show this help\n    message and exit\n  --pick {abcx,abcy,zzzz}\n    x-ray a-b ab-cd\n    abc-d e-mail-x\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 26,
+   "exit": 0,
+   "ns": null,
+   "parser": "hyphens",
+   "stderr": "",
+   "stdout": "usage: hy [-h]\n          [--pick {abcx,abcy,zzzz}]\n\na x-ray b-c-d e-mail re-\nread co-op self-\ncontained up-to-date 3-d\nx-y-z ab-c a-bc mid-\nsentence-hyphen --flag-\nlike -- dash-- --lead\nwell-known.\n\noptions:\n  -h, --help\n    show this help\n    message and exit\n  --pick {abcx,abcy,zzzz}\n    x-ray a-b ab-cd\n    abc-d e-mail-x\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 27,
+   "exit": 0,
+   "ns": null,
+   "parser": "hyphens",
+   "stderr": "",
+   "stdout": "usage: hy [-h]\n          [--pick {abcx,abcy,zzzz}]\n\na x-ray b-c-d e-mail re-\nread co-op self-contained\nup-to-date 3-d x-y-z ab-c\na-bc mid-sentence-hyphen\n--flag-like -- dash--\n--lead well-known.\n\noptions:\n  -h, --help\n     show this help\n     message and exit\n  --pick {abcx,abcy,zzzz}\n     x-ray a-b ab-cd\n     abc-d e-mail-x\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 28,
+   "exit": 0,
+   "ns": null,
+   "parser": "hyphens",
+   "stderr": "",
+   "stdout": "usage: hy [-h]\n          [--pick {abcx,abcy,zzzz}]\n\na x-ray b-c-d e-mail re-\nread co-op self-contained\nup-to-date 3-d x-y-z ab-c\na-bc mid-sentence-hyphen\n--flag-like -- dash--\n--lead well-known.\n\noptions:\n  -h, --help\n      show this help\n      message and exit\n  --pick {abcx,abcy,zzzz}\n      x-ray a-b ab-cd\n      abc-d e-mail-x\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 29,
+   "exit": 0,
+   "ns": null,
+   "parser": "hyphens",
+   "stderr": "",
+   "stdout": "usage: hy [-h]\n          [--pick {abcx,abcy,zzzz}]\n\na x-ray b-c-d e-mail re-\nread co-op self-contained\nup-to-date 3-d x-y-z ab-c\na-bc mid-sentence-hyphen\n--flag-like -- dash--\n--lead well-known.\n\noptions:\n  -h, --help\n       show this help\n       message and exit\n  --pick {abcx,abcy,zzzz}\n       x-ray a-b ab-cd\n       abc-d e-mail-x\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 30,
+   "exit": 0,
+   "ns": null,
+   "parser": "hyphens",
+   "stderr": "",
+   "stdout": "usage: hy [-h]\n          [--pick {abcx,abcy,zzzz}]\n\na x-ray b-c-d e-mail re-read\nco-op self-contained up-to-\ndate 3-d x-y-z ab-c a-bc\nmid-sentence-hyphen --flag-\nlike -- dash-- --lead well-\nknown.\n\noptions:\n  -h, --help\n        show this help\n        message and exit\n  --pick {abcx,abcy,zzzz}\n        x-ray a-b ab-cd\n        abc-d e-mail-x\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 31,
+   "exit": 0,
+   "ns": null,
+   "parser": "hyphens",
+   "stderr": "",
+   "stdout": "usage: hy [-h]\n          [--pick {abcx,abcy,zzzz}]\n\na x-ray b-c-d e-mail re-read\nco-op self-contained up-to-\ndate 3-d x-y-z ab-c a-bc mid-\nsentence-hyphen --flag-like\n-- dash-- --lead well-known.\n\noptions:\n  -h, --help\n         show this help\n         message and exit\n  --pick {abcx,abcy,zzzz}\n         x-ray a-b ab-cd\n         abc-d e-mail-x\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 32,
+   "exit": 0,
+   "ns": null,
+   "parser": "hyphens",
+   "stderr": "",
+   "stdout": "usage: hy [-h]\n          [--pick {abcx,abcy,zzzz}]\n\na x-ray b-c-d e-mail re-read\nco-op self-contained up-to-\ndate 3-d x-y-z ab-c a-bc mid-\nsentence-hyphen --flag-like --\ndash-- --lead well-known.\n\noptions:\n  -h, --help\n          show this help\n          message and exit\n  --pick {abcx,abcy,zzzz}\n          x-ray a-b ab-cd\n          abc-d e-mail-x\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 33,
+   "exit": 0,
+   "ns": null,
+   "parser": "hyphens",
+   "stderr": "",
+   "stdout": "usage: hy [-h]\n          [--pick {abcx,abcy,zzzz}]\n\na x-ray b-c-d e-mail re-read\nco-op self-contained up-to-date\n3-d x-y-z ab-c a-bc mid-\nsentence-hyphen --flag-like --\ndash-- --lead well-known.\n\noptions:\n  -h, --help\n           show this help\n           message and exit\n  --pick {abcx,abcy,zzzz}\n           x-ray a-b ab-cd\n           abc-d e-mail-x\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 34,
+   "exit": 0,
+   "ns": null,
+   "parser": "hyphens",
+   "stderr": "",
+   "stdout": "usage: hy [-h]\n          [--pick {abcx,abcy,zzzz}]\n\na x-ray b-c-d e-mail re-read co-\nop self-contained up-to-date 3-d\nx-y-z ab-c a-bc mid-sentence-\nhyphen --flag-like -- dash--\n--lead well-known.\n\noptions:\n  -h, --help\n            show this help\n            message and exit\n  --pick {abcx,abcy,zzzz}\n            x-ray a-b ab-cd\n            abc-d e-mail-x\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 35,
+   "exit": 0,
+   "ns": null,
+   "parser": "hyphens",
+   "stderr": "",
+   "stdout": "usage: hy [-h]\n          [--pick {abcx,abcy,zzzz}]\n\na x-ray b-c-d e-mail re-read co-\nop self-contained up-to-date 3-d\nx-y-z ab-c a-bc mid-sentence-\nhyphen --flag-like -- dash--\n--lead well-known.\n\noptions:\n  -h, --help\n             show this help\n             message and exit\n  --pick {abcx,abcy,zzzz}\n             x-ray a-b ab-cd\n             abc-d e-mail-x\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 36,
+   "exit": 0,
+   "ns": null,
+   "parser": "hyphens",
+   "stderr": "",
+   "stdout": "usage: hy [-h]\n          [--pick {abcx,abcy,zzzz}]\n\na x-ray b-c-d e-mail re-read co-op\nself-contained up-to-date 3-d\nx-y-z ab-c a-bc mid-sentence-\nhyphen --flag-like -- dash--\n--lead well-known.\n\noptions:\n  -h, --help  show this help\n              message and exit\n  --pick {abcx,abcy,zzzz}\n              x-ray a-b ab-cd\n              abc-d e-mail-x\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 37,
+   "exit": 0,
+   "ns": null,
+   "parser": "hyphens",
+   "stderr": "",
+   "stdout": "usage: hy [-h]\n          [--pick {abcx,abcy,zzzz}]\n\na x-ray b-c-d e-mail re-read co-op\nself-contained up-to-date 3-d x-y-z\nab-c a-bc mid-sentence-hyphen\n--flag-like -- dash-- --lead well-\nknown.\n\noptions:\n  -h, --help   show this help\n               message and exit\n  --pick {abcx,abcy,zzzz}\n               x-ray a-b ab-cd\n               abc-d e-mail-x\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 38,
+   "exit": 0,
+   "ns": null,
+   "parser": "hyphens",
+   "stderr": "",
+   "stdout": "usage: hy [-h]\n          [--pick {abcx,abcy,zzzz}]\n\na x-ray b-c-d e-mail re-read co-op\nself-contained up-to-date 3-d x-y-z\nab-c a-bc mid-sentence-hyphen\n--flag-like -- dash-- --lead well-\nknown.\n\noptions:\n  -h, --help    show this help\n                message and exit\n  --pick {abcx,abcy,zzzz}\n                x-ray a-b ab-cd\n                abc-d e-mail-x\n"
+  },
+  {
+   "argv": [
+    "-h"
+   ],
+   "columns": 39,
+   "exit": 0,
+   "ns": null,
+   "parser": "hyphens",
+   "stderr": "",
+   "stdout": "usage: hy [-h]\n          [--pick {abcx,abcy,zzzz}]\n\na x-ray b-c-d e-mail re-read co-op\nself-contained up-to-date 3-d x-y-z\nab-c a-bc mid-sentence-hyphen --flag-\nlike -- dash-- --lead well-known.\n\noptions:\n  -h, --help     show this help\n                 message and exit\n  --pick {abcx,abcy,zzzz}\n                 x-ray a-b ab-cd\n                 abc-d e-mail-x\n"
+  },
+  {
+   "argv": [
+    "in.bog"
+   ],
+   "columns": 100,
+   "exit": null,
+   "ns": "{'const': None, 'consts': None, 'count': None, 'dst': 'out.txt', 'extend': None, 'hidden': None, 'level': None, 'limit': 20, 'loud': True, 'maybe': 'D', 'mode': 'auto', 'names': None, 'opt': None, 'pair': None, 'ratio': 0.5, 'src': 'in.bog', 'tag': [], 'verbose': False, 'x': False, 'y': False, 'z': None}",
+   "parser": "basic",
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "in.bog",
+    "x.txt",
+    "-n",
+    "5",
+    "--ratio",
+    "1e3",
+    "-v",
+    "-q",
+    "--mode",
+    "fast",
+    "--tag",
+    "a",
+    "--tag=b",
+    "--level",
+    "2",
+    "-ccc",
+    "--const",
+    "--names",
+    "a",
+    "b",
+    "--pair",
+    "k",
+    "v",
+    "--opt",
+    "--maybe",
+    "-xy",
+    "-z",
+    "low",
+    "--extend",
+    "p",
+    "q",
+    "--extend",
+    "r",
+    "--ac",
+    "--ac"
+   ],
+   "columns": 100,
+   "exit": null,
+   "ns": "{'const': 'K', 'consts': [7, 7], 'count': 3, 'dst': 'x.txt', 'extend': ['p', 'q', 'r'], 'hidden': None, 'level': 2, 'limit': 5, 'loud': False, 'maybe': 'C', 'mode': 'fast', 'names': ['a', 'b'], 'opt': [], 'pair': ['k', 'v'], 'ratio': 1000.0, 'src': 'in.bog', 'tag': ['a', 'b'], 'verbose': True, 'x': True, 'y': True, 'z': 'LOW'}",
+   "parser": "basic",
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "in.bog",
+    "--maybe",
+    "val",
+    "--opt",
+    "1",
+    "2",
+    "-n=7",
+    "-n8",
+    "--ratio=-2.5"
+   ],
+   "columns": 100,
+   "exit": null,
+   "ns": "{'const': None, 'consts': None, 'count': None, 'dst': 'out.txt', 'extend': None, 'hidden': None, 'level': None, 'limit': 8, 'loud': True, 'maybe': 'val', 'mode': 'auto', 'names': None, 'opt': ['1', '2'], 'pair': None, 'ratio': -2.5, 'src': 'in.bog', 'tag': [], 'verbose': False, 'x': False, 'y': False, 'z': None}",
+   "parser": "basic",
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "in.bog",
+    "--ratio",
+    "inf",
+    "-n",
+    " 1_000 "
+   ],
+   "columns": 100,
+   "exit": null,
+   "ns": "{'const': None, 'consts': None, 'count': None, 'dst': 'out.txt', 'extend': None, 'hidden': None, 'level': None, 'limit': 1000, 'loud': True, 'maybe': 'D', 'mode': 'auto', 'names': None, 'opt': None, 'pair': None, 'ratio': inf, 'src': 'in.bog', 'tag': [], 'verbose': False, 'x': False, 'y': False, 'z': None}",
+   "parser": "basic",
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "in.bog",
+    "--ratio",
+    "nan",
+    "--hidden",
+    "h"
+   ],
+   "columns": 100,
+   "exit": null,
+   "ns": "{'const': None, 'consts': None, 'count': None, 'dst': 'out.txt', 'extend': None, 'hidden': 'h', 'level': None, 'limit': 20, 'loud': True, 'maybe': 'D', 'mode': 'auto', 'names': None, 'opt': None, 'pair': None, 'ratio': nan, 'src': 'in.bog', 'tag': [], 'verbose': False, 'x': False, 'y': False, 'z': None}",
+   "parser": "basic",
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "--version"
+   ],
+   "columns": 100,
+   "exit": 0,
+   "ns": null,
+   "parser": "basic",
+   "stderr": "",
+   "stdout": "basic.py 1.2.3\n"
+  },
+  {
+   "argv": [
+    "in.bog",
+    "--version",
+    "-n",
+    "x"
+   ],
+   "columns": 100,
+   "exit": 0,
+   "ns": null,
+   "parser": "basic",
+   "stderr": "",
+   "stdout": "basic.py 1.2.3\n"
+  },
+  {
+   "argv": [],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "basic",
+   "stderr": "usage: basic.py [-h] [-n LIMIT] [--ratio RATIO] [-v] [-q] [--mode {fast,slow,auto}] [--tag TAG]\n                [--level {1,2,3}] [-c] [--const] [--names NAMES [NAMES ...]] [--pair KEY VALUE]\n                [--opt [OPT ...]] [--maybe [MAYBE]] [-x] [-y] [-z Z]\n                [--extend EXTEND [EXTEND ...]] [--ac] [--version]\n                src [dst]\nbasic.py: error: the following arguments are required: src\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "in.bog",
+    "-n",
+    "x"
+   ],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "basic",
+   "stderr": "usage: basic.py [-h] [-n LIMIT] [--ratio RATIO] [-v] [-q] [--mode {fast,slow,auto}] [--tag TAG]\n                [--level {1,2,3}] [-c] [--const] [--names NAMES [NAMES ...]] [--pair KEY VALUE]\n                [--opt [OPT ...]] [--maybe [MAYBE]] [-x] [-y] [-z Z]\n                [--extend EXTEND [EXTEND ...]] [--ac] [--version]\n                src [dst]\nbasic.py: error: argument -n/--limit: invalid int value: 'x'\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "in.bog",
+    "-n",
+    "1.5"
+   ],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "basic",
+   "stderr": "usage: basic.py [-h] [-n LIMIT] [--ratio RATIO] [-v] [-q] [--mode {fast,slow,auto}] [--tag TAG]\n                [--level {1,2,3}] [-c] [--const] [--names NAMES [NAMES ...]] [--pair KEY VALUE]\n                [--opt [OPT ...]] [--maybe [MAYBE]] [-x] [-y] [-z Z]\n                [--extend EXTEND [EXTEND ...]] [--ac] [--version]\n                src [dst]\nbasic.py: error: argument -n/--limit: invalid int value: '1.5'\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "in.bog",
+    "--ratio",
+    "abc"
+   ],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "basic",
+   "stderr": "usage: basic.py [-h] [-n LIMIT] [--ratio RATIO] [-v] [-q] [--mode {fast,slow,auto}] [--tag TAG]\n                [--level {1,2,3}] [-c] [--const] [--names NAMES [NAMES ...]] [--pair KEY VALUE]\n                [--opt [OPT ...]] [--maybe [MAYBE]] [-x] [-y] [-z Z]\n                [--extend EXTEND [EXTEND ...]] [--ac] [--version]\n                src [dst]\nbasic.py: error: argument --ratio: invalid float value: 'abc'\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "in.bog",
+    "--ratio",
+    "1_e3"
+   ],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "basic",
+   "stderr": "usage: basic.py [-h] [-n LIMIT] [--ratio RATIO] [-v] [-q] [--mode {fast,slow,auto}] [--tag TAG]\n                [--level {1,2,3}] [-c] [--const] [--names NAMES [NAMES ...]] [--pair KEY VALUE]\n                [--opt [OPT ...]] [--maybe [MAYBE]] [-x] [-y] [-z Z]\n                [--extend EXTEND [EXTEND ...]] [--ac] [--version]\n                src [dst]\nbasic.py: error: argument --ratio: invalid float value: '1_e3'\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "in.bog",
+    "--mode",
+    "fats"
+   ],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "basic",
+   "stderr": "usage: basic.py [-h] [-n LIMIT] [--ratio RATIO] [-v] [-q] [--mode {fast,slow,auto}] [--tag TAG]\n                [--level {1,2,3}] [-c] [--const] [--names NAMES [NAMES ...]] [--pair KEY VALUE]\n                [--opt [OPT ...]] [--maybe [MAYBE]] [-x] [-y] [-z Z]\n                [--extend EXTEND [EXTEND ...]] [--ac] [--version]\n                src [dst]\nbasic.py: error: argument --mode: invalid choice: 'fats', maybe you meant 'fast'? (choose from 'fast', 'slow', 'auto')\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "in.bog",
+    "--mode",
+    "zzz"
+   ],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "basic",
+   "stderr": "usage: basic.py [-h] [-n LIMIT] [--ratio RATIO] [-v] [-q] [--mode {fast,slow,auto}] [--tag TAG]\n                [--level {1,2,3}] [-c] [--const] [--names NAMES [NAMES ...]] [--pair KEY VALUE]\n                [--opt [OPT ...]] [--maybe [MAYBE]] [-x] [-y] [-z Z]\n                [--extend EXTEND [EXTEND ...]] [--ac] [--version]\n                src [dst]\nbasic.py: error: argument --mode: invalid choice: 'zzz' (choose from 'fast', 'slow', 'auto')\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "in.bog",
+    "--level",
+    "4"
+   ],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "basic",
+   "stderr": "usage: basic.py [-h] [-n LIMIT] [--ratio RATIO] [-v] [-q] [--mode {fast,slow,auto}] [--tag TAG]\n                [--level {1,2,3}] [-c] [--const] [--names NAMES [NAMES ...]] [--pair KEY VALUE]\n                [--opt [OPT ...]] [--maybe [MAYBE]] [-x] [-y] [-z Z]\n                [--extend EXTEND [EXTEND ...]] [--ac] [--version]\n                src [dst]\nbasic.py: error: argument --level: invalid choice: '4' (choose from '1', '2', '3')\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "in.bog",
+    "--level",
+    "x"
+   ],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "basic",
+   "stderr": "usage: basic.py [-h] [-n LIMIT] [--ratio RATIO] [-v] [-q] [--mode {fast,slow,auto}] [--tag TAG]\n                [--level {1,2,3}] [-c] [--const] [--names NAMES [NAMES ...]] [--pair KEY VALUE]\n                [--opt [OPT ...]] [--maybe [MAYBE]] [-x] [-y] [-z Z]\n                [--extend EXTEND [EXTEND ...]] [--ac] [--version]\n                src [dst]\nbasic.py: error: argument --level: invalid int value: 'x'\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "in.bog",
+    "-z",
+    "bad"
+   ],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "basic",
+   "stderr": "usage: basic.py [-h] [-n LIMIT] [--ratio RATIO] [-v] [-q] [--mode {fast,slow,auto}] [--tag TAG]\n                [--level {1,2,3}] [-c] [--const] [--names NAMES [NAMES ...]] [--pair KEY VALUE]\n                [--opt [OPT ...]] [--maybe [MAYBE]] [-x] [-y] [-z Z]\n                [--extend EXTEND [EXTEND ...]] [--ac] [--version]\n                src [dst]\nbasic.py: error: argument -z: invalid checked value: 'bad'\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "in.bog",
+    "-z",
+    "bad'q\"\n\\"
+   ],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "basic",
+   "stderr": "usage: basic.py [-h] [-n LIMIT] [--ratio RATIO] [-v] [-q] [--mode {fast,slow,auto}] [--tag TAG]\n                [--level {1,2,3}] [-c] [--const] [--names NAMES [NAMES ...]] [--pair KEY VALUE]\n                [--opt [OPT ...]] [--maybe [MAYBE]] [-x] [-y] [-z Z]\n                [--extend EXTEND [EXTEND ...]] [--ac] [--version]\n                src [dst]\nbasic.py: error: argument -z: invalid checked value: 'bad\\'q\"\\n\\\\'\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "in.bog",
+    "out",
+    "extra1",
+    "extra2"
+   ],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "basic",
+   "stderr": "usage: basic.py [-h] [-n LIMIT] [--ratio RATIO] [-v] [-q] [--mode {fast,slow,auto}] [--tag TAG]\n                [--level {1,2,3}] [-c] [--const] [--names NAMES [NAMES ...]] [--pair KEY VALUE]\n                [--opt [OPT ...]] [--maybe [MAYBE]] [-x] [-y] [-z Z]\n                [--extend EXTEND [EXTEND ...]] [--ac] [--version]\n                src [dst]\nbasic.py: error: unrecognized arguments: extra1 extra2\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "in.bog",
+    "--nope"
+   ],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "basic",
+   "stderr": "usage: basic.py [-h] [-n LIMIT] [--ratio RATIO] [-v] [-q] [--mode {fast,slow,auto}] [--tag TAG]\n                [--level {1,2,3}] [-c] [--const] [--names NAMES [NAMES ...]] [--pair KEY VALUE]\n                [--opt [OPT ...]] [--maybe [MAYBE]] [-x] [-y] [-z Z]\n                [--extend EXTEND [EXTEND ...]] [--ac] [--version]\n                src [dst]\nbasic.py: error: unrecognized arguments: --nope\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "in.bog",
+    "--names"
+   ],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "basic",
+   "stderr": "usage: basic.py [-h] [-n LIMIT] [--ratio RATIO] [-v] [-q] [--mode {fast,slow,auto}] [--tag TAG]\n                [--level {1,2,3}] [-c] [--const] [--names NAMES [NAMES ...]] [--pair KEY VALUE]\n                [--opt [OPT ...]] [--maybe [MAYBE]] [-x] [-y] [-z Z]\n                [--extend EXTEND [EXTEND ...]] [--ac] [--version]\n                src [dst]\nbasic.py: error: argument --names: expected at least one argument\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "in.bog",
+    "--pair",
+    "k"
+   ],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "basic",
+   "stderr": "usage: basic.py [-h] [-n LIMIT] [--ratio RATIO] [-v] [-q] [--mode {fast,slow,auto}] [--tag TAG]\n                [--level {1,2,3}] [-c] [--const] [--names NAMES [NAMES ...]] [--pair KEY VALUE]\n                [--opt [OPT ...]] [--maybe [MAYBE]] [-x] [-y] [-z Z]\n                [--extend EXTEND [EXTEND ...]] [--ac] [--version]\n                src [dst]\nbasic.py: error: argument --pair: expected 2 arguments\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "in.bog",
+    "-n"
+   ],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "basic",
+   "stderr": "usage: basic.py [-h] [-n LIMIT] [--ratio RATIO] [-v] [-q] [--mode {fast,slow,auto}] [--tag TAG]\n                [--level {1,2,3}] [-c] [--const] [--names NAMES [NAMES ...]] [--pair KEY VALUE]\n                [--opt [OPT ...]] [--maybe [MAYBE]] [-x] [-y] [-z Z]\n                [--extend EXTEND [EXTEND ...]] [--ac] [--version]\n                src [dst]\nbasic.py: error: argument -n/--limit: expected one argument\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "in.bog",
+    "-vx=1"
+   ],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "basic",
+   "stderr": "usage: basic.py [-h] [-n LIMIT] [--ratio RATIO] [-v] [-q] [--mode {fast,slow,auto}] [--tag TAG]\n                [--level {1,2,3}] [-c] [--const] [--names NAMES [NAMES ...]] [--pair KEY VALUE]\n                [--opt [OPT ...]] [--maybe [MAYBE]] [-x] [-y] [-z Z]\n                [--extend EXTEND [EXTEND ...]] [--ac] [--version]\n                src [dst]\nbasic.py: error: argument -x: ignored explicit argument '1'\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "in.bog",
+    "-vq1"
+   ],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "basic",
+   "stderr": "usage: basic.py [-h] [-n LIMIT] [--ratio RATIO] [-v] [-q] [--mode {fast,slow,auto}] [--tag TAG]\n                [--level {1,2,3}] [-c] [--const] [--names NAMES [NAMES ...]] [--pair KEY VALUE]\n                [--opt [OPT ...]] [--maybe [MAYBE]] [-x] [-y] [-z Z]\n                [--extend EXTEND [EXTEND ...]] [--ac] [--version]\n                src [dst]\nbasic.py: error: unrecognized arguments: -1\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "in.bog",
+    "--verbose=yes"
+   ],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "basic",
+   "stderr": "usage: basic.py [-h] [-n LIMIT] [--ratio RATIO] [-v] [-q] [--mode {fast,slow,auto}] [--tag TAG]\n                [--level {1,2,3}] [-c] [--const] [--names NAMES [NAMES ...]] [--pair KEY VALUE]\n                [--opt [OPT ...]] [--maybe [MAYBE]] [-x] [-y] [-z Z]\n                [--extend EXTEND [EXTEND ...]] [--ac] [--version]\n                src [dst]\nbasic.py: error: argument -v/--verbose: ignored explicit argument 'yes'\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "in.bog",
+    "--li",
+    "4",
+    "--ver"
+   ],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "basic",
+   "stderr": "usage: basic.py [-h] [-n LIMIT] [--ratio RATIO] [-v] [-q] [--mode {fast,slow,auto}] [--tag TAG]\n                [--level {1,2,3}] [-c] [--const] [--names NAMES [NAMES ...]] [--pair KEY VALUE]\n                [--opt [OPT ...]] [--maybe [MAYBE]] [-x] [-y] [-z Z]\n                [--extend EXTEND [EXTEND ...]] [--ac] [--version]\n                src [dst]\nbasic.py: error: ambiguous option: --ver could match --verbose, --version\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "in.bog",
+    "--na",
+    "a",
+    "--r",
+    "2"
+   ],
+   "columns": 100,
+   "exit": null,
+   "ns": "{'const': None, 'consts': None, 'count': None, 'dst': 'out.txt', 'extend': None, 'hidden': None, 'level': None, 'limit': 20, 'loud': True, 'maybe': 'D', 'mode': 'auto', 'names': ['a'], 'opt': None, 'pair': None, 'ratio': 2.0, 'src': 'in.bog', 'tag': [], 'verbose': False, 'x': False, 'y': False, 'z': None}",
+   "parser": "basic",
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "--",
+    "-in.bog",
+    "-x"
+   ],
+   "columns": 100,
+   "exit": null,
+   "ns": "{'const': None, 'consts': None, 'count': None, 'dst': '-x', 'extend': None, 'hidden': None, 'level': None, 'limit': 20, 'loud': True, 'maybe': 'D', 'mode': 'auto', 'names': None, 'opt': None, 'pair': None, 'ratio': 0.5, 'src': '-in.bog', 'tag': [], 'verbose': False, 'x': False, 'y': False, 'z': None}",
+   "parser": "basic",
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "in.bog",
+    "--",
+    "--"
+   ],
+   "columns": 100,
+   "exit": null,
+   "ns": "{'const': None, 'consts': None, 'count': None, 'dst': '--', 'extend': None, 'hidden': None, 'level': None, 'limit': 20, 'loud': True, 'maybe': 'D', 'mode': 'auto', 'names': None, 'opt': None, 'pair': None, 'ratio': 0.5, 'src': 'in.bog', 'tag': [], 'verbose': False, 'x': False, 'y': False, 'z': None}",
+   "parser": "basic",
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "-x",
+    "--",
+    "-n",
+    "5"
+   ],
+   "columns": 100,
+   "exit": null,
+   "ns": "{'const': None, 'consts': None, 'count': None, 'dst': '5', 'extend': None, 'hidden': None, 'level': None, 'limit': 20, 'loud': True, 'maybe': 'D', 'mode': 'auto', 'names': None, 'opt': None, 'pair': None, 'ratio': 0.5, 'src': '-n', 'tag': [], 'verbose': False, 'x': True, 'y': False, 'z': None}",
+   "parser": "basic",
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "in.bog",
+    "--tag",
+    "-x"
+   ],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "basic",
+   "stderr": "usage: basic.py [-h] [-n LIMIT] [--ratio RATIO] [-v] [-q] [--mode {fast,slow,auto}] [--tag TAG]\n                [--level {1,2,3}] [-c] [--const] [--names NAMES [NAMES ...]] [--pair KEY VALUE]\n                [--opt [OPT ...]] [--maybe [MAYBE]] [-x] [-y] [-z Z]\n                [--extend EXTEND [EXTEND ...]] [--ac] [--version]\n                src [dst]\nbasic.py: error: argument --tag: expected one argument\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "in.bog",
+    "--tag",
+    "-5"
+   ],
+   "columns": 100,
+   "exit": null,
+   "ns": "{'const': None, 'consts': None, 'count': None, 'dst': 'out.txt', 'extend': None, 'hidden': None, 'level': None, 'limit': 20, 'loud': True, 'maybe': 'D', 'mode': 'auto', 'names': None, 'opt': None, 'pair': None, 'ratio': 0.5, 'src': 'in.bog', 'tag': ['-5'], 'verbose': False, 'x': False, 'y': False, 'z': None}",
+   "parser": "basic",
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "-",
+    "-"
+   ],
+   "columns": 100,
+   "exit": null,
+   "ns": "{'const': None, 'consts': None, 'count': None, 'dst': '-', 'extend': None, 'hidden': None, 'level': None, 'limit': 20, 'loud': True, 'maybe': 'D', 'mode': 'auto', 'names': None, 'opt': None, 'pair': None, 'ratio': 0.5, 'src': '-', 'tag': [], 'verbose': False, 'x': False, 'y': False, 'z': None}",
+   "parser": "basic",
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "in.bog",
+    "-h",
+    "--nope"
+   ],
+   "columns": 100,
+   "exit": 0,
+   "ns": null,
+   "parser": "basic",
+   "stderr": "",
+   "stdout": "usage: basic.py [-h] [-n LIMIT] [--ratio RATIO] [-v] [-q] [--mode {fast,slow,auto}] [--tag TAG]\n                [--level {1,2,3}] [-c] [--const] [--names NAMES [NAMES ...]] [--pair KEY VALUE]\n                [--opt [OPT ...]] [--maybe [MAYBE]] [-x] [-y] [-z Z]\n                [--extend EXTEND [EXTEND ...]] [--ac] [--version]\n                src [dst]\n\nRead a station bog and print what it holds. The auto-detected root is used when --root is omitted;\nvalues are re-read on every run (no cache).\n\npositional arguments:\n  src                   input file (config.bog or a bare .xml)\n  dst                   output file (default: out.txt)\n\noptions:\n  -h, --help            show this help message and exit\n  -n, --limit LIMIT     max rows (default 20)\n  --ratio RATIO         sampling ratio\n  -v, --verbose         say more\n  -q, --quiet           say less\n  --mode {fast,slow,auto}\n                        scan mode: fast, slow, auto\n  --tag TAG             tag (repeatable)\n  --level {1,2,3}       detail level\n  -c, --count           count flag\n  --const               store a constant\n  --names NAMES [NAMES ...]\n                        one or more names\n  --pair KEY VALUE      a key and a value\n  --opt [OPT ...]       zero or more\n  --maybe [MAYBE]       optional value\n  -x                    flag x\n  -y                    flag y\n  -z Z                  checked value\n  --extend EXTEND [EXTEND ...]\n                        extend a list\n  --ac                  append a constant\n  --version             show program's version number and exit\n"
+  },
+  {
+   "argv": [
+    "in.bog",
+    "--nope",
+    "-h"
+   ],
+   "columns": 100,
+   "exit": 0,
+   "ns": null,
+   "parser": "basic",
+   "stderr": "",
+   "stdout": "usage: basic.py [-h] [-n LIMIT] [--ratio RATIO] [-v] [-q] [--mode {fast,slow,auto}] [--tag TAG]\n                [--level {1,2,3}] [-c] [--const] [--names NAMES [NAMES ...]] [--pair KEY VALUE]\n                [--opt [OPT ...]] [--maybe [MAYBE]] [-x] [-y] [-z Z]\n                [--extend EXTEND [EXTEND ...]] [--ac] [--version]\n                src [dst]\n\nRead a station bog and print what it holds. The auto-detected root is used when --root is omitted;\nvalues are re-read on every run (no cache).\n\npositional arguments:\n  src                   input file (config.bog or a bare .xml)\n  dst                   output file (default: out.txt)\n\noptions:\n  -h, --help            show this help message and exit\n  -n, --limit LIMIT     max rows (default 20)\n  --ratio RATIO         sampling ratio\n  -v, --verbose         say more\n  -q, --quiet           say less\n  --mode {fast,slow,auto}\n                        scan mode: fast, slow, auto\n  --tag TAG             tag (repeatable)\n  --level {1,2,3}       detail level\n  -c, --count           count flag\n  --const               store a constant\n  --names NAMES [NAMES ...]\n                        one or more names\n  --pair KEY VALUE      a key and a value\n  --opt [OPT ...]       zero or more\n  --maybe [MAYBE]       optional value\n  -x                    flag x\n  -y                    flag y\n  -z Z                  checked value\n  --extend EXTEND [EXTEND ...]\n                        extend a list\n  --ac                  append a constant\n  --version             show program's version number and exit\n"
+  },
+  {
+   "argv": [
+    "in.bog",
+    "-n",
+    "x",
+    "-h"
+   ],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "basic",
+   "stderr": "usage: basic.py [-h] [-n LIMIT] [--ratio RATIO] [-v] [-q] [--mode {fast,slow,auto}] [--tag TAG]\n                [--level {1,2,3}] [-c] [--const] [--names NAMES [NAMES ...]] [--pair KEY VALUE]\n                [--opt [OPT ...]] [--maybe [MAYBE]] [-x] [-y] [-z Z]\n                [--extend EXTEND [EXTEND ...]] [--ac] [--version]\n                src [dst]\nbasic.py: error: argument -n/--limit: invalid int value: 'x'\n",
+   "stdout": ""
+  },
+  {
+   "argv": [],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "required",
+   "stderr": "usage: req [-h] --out OUT --fmt {md,json} FILE [FILE ...]\nreq: error: the following arguments are required: FILE, --out/-o, --fmt\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "a"
+   ],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "required",
+   "stderr": "usage: req [-h] --out OUT --fmt {md,json} FILE [FILE ...]\nreq: error: the following arguments are required: --out/-o, --fmt\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "a",
+    "-o",
+    "d"
+   ],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "required",
+   "stderr": "usage: req [-h] --out OUT --fmt {md,json} FILE [FILE ...]\nreq: error: the following arguments are required: --fmt\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "-o",
+    "d",
+    "--fmt",
+    "md",
+    "a",
+    "b"
+   ],
+   "columns": 100,
+   "exit": null,
+   "ns": "{'files': ['a', 'b'], 'fmt': 'md', 'out': 'd'}",
+   "parser": "required",
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "--fmt",
+    "xml",
+    "a"
+   ],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "required",
+   "stderr": "usage: req [-h] --out OUT --fmt {md,json} FILE [FILE ...]\nreq: error: argument --fmt: invalid choice: 'xml' (choose from 'md', 'json')\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "q"
+   ],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "mutex",
+   "stderr": "usage: mx [-h] [--and | --or] (--json | --csv) query [query ...]\nmx: error: one of the arguments --json --csv is required\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "q",
+    "--json"
+   ],
+   "columns": 100,
+   "exit": null,
+   "ns": "{'csv': False, 'json': True, 'mode': None, 'query': ['q'], 'tsv': False}",
+   "parser": "mutex",
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "q",
+    "--json",
+    "--csv"
+   ],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "mutex",
+   "stderr": "usage: mx [-h] [--and | --or] (--json | --csv) query [query ...]\nmx: error: argument --csv: not allowed with argument --json\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "q",
+    "--and",
+    "--or",
+    "--json"
+   ],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "mutex",
+   "stderr": "usage: mx [-h] [--and | --or] (--json | --csv) query [query ...]\nmx: error: argument --or: not allowed with argument --and\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "q",
+    "--and",
+    "--and",
+    "--csv"
+   ],
+   "columns": 100,
+   "exit": null,
+   "ns": "{'csv': True, 'json': False, 'mode': 'and', 'query': ['q'], 'tsv': False}",
+   "parser": "mutex",
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "--json"
+   ],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "mutex",
+   "stderr": "usage: mx [-h] [--and | --or] (--json | --csv) query [query ...]\nmx: error: the following arguments are required: query\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "q",
+    "--tsv"
+   ],
+   "columns": 100,
+   "exit": null,
+   "ns": "{'csv': False, 'json': False, 'mode': None, 'query': ['q'], 'tsv': True}",
+   "parser": "mutex",
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "q",
+    "--js"
+   ],
+   "columns": 100,
+   "exit": null,
+   "ns": "{'csv': False, 'json': True, 'mode': None, 'query': ['q'], 'tsv': False}",
+   "parser": "mutex",
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [],
+   "columns": 100,
+   "exit": null,
+   "ns": "{'first': False, 'last': None, 'name': None, 'target': None}",
+   "parser": "mutex_pos",
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "t"
+   ],
+   "columns": 100,
+   "exit": null,
+   "ns": "{'first': False, 'last': None, 'name': None, 'target': 't'}",
+   "parser": "mutex_pos",
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "--name",
+    "n",
+    "t"
+   ],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "mutex_pos",
+   "stderr": "usage: mxp [-h] [--first] [--last LAST] [--name NAME | target]\nmxp: error: argument target: not allowed with argument --name\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "in",
+    "--wide",
+    "--narrow"
+   ],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "groups",
+   "stderr": "usage: grp [-h] [--json] [--wide | --narrow] [--min N] input [pattern ...]\ngrp: error: argument --narrow: not allowed with argument --wide\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "in",
+    "p1",
+    "p2",
+    "--min",
+    "3"
+   ],
+   "columns": 100,
+   "exit": null,
+   "ns": "{'input': 'in', 'json': False, 'min': 3, 'narrow': False, 'pattern': ['p1', 'p2'], 'wide': False}",
+   "parser": "groups",
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "--b",
+    "y"
+   ],
+   "columns": 100,
+   "exit": null,
+   "ns": "{'a': None, 'b': 'y'}",
+   "parser": "rawtext",
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "p",
+    "--req",
+    "r"
+   ],
+   "columns": 100,
+   "exit": null,
+   "ns": "{'explicit': 1, 'flag': False, 'name': None, 'nohelp': 'v', 'num': 3, 'pos': 'p', 'req': 'r', 'rest': []}",
+   "parser": "argdefaults",
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "alarm",
+    "routing"
+   ],
+   "columns": 100,
+   "exit": null,
+   "ns": "{'doc_version': None, 'limit': 5, 'mode': None, 'query': ['alarm', 'routing'], 'timeout': 60}",
+   "parser": "searchdoor",
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "q",
+    "--lim",
+    "3"
+   ],
+   "columns": 100,
+   "exit": 3,
+   "ns": null,
+   "parser": "searchdoor",
+   "stderr": "usage: nsearch [-h] [--version] [--limit LIMIT] [--timeout TIMEOUT] [--doc-version VERSION]\n               [--and | --or]\n               query [query ...]\nnsearch: error: unrecognized arguments: --lim 3\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "q",
+    "-n",
+    "x"
+   ],
+   "columns": 100,
+   "exit": 3,
+   "ns": null,
+   "parser": "searchdoor",
+   "stderr": "usage: nsearch [-h] [--version] [--limit LIMIT] [--timeout TIMEOUT] [--doc-version VERSION]\n               [--and | --or]\n               query [query ...]\nnsearch: error: argument --limit/-n: invalid int value: 'x'\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "--version"
+   ],
+   "columns": 100,
+   "exit": 0,
+   "ns": null,
+   "parser": "searchdoor",
+   "stderr": "",
+   "stdout": "nsearch 0.42.0\n"
+  },
+  {
+   "argv": [
+    "q",
+    "--and",
+    "--or"
+   ],
+   "columns": 100,
+   "exit": 3,
+   "ns": null,
+   "parser": "searchdoor",
+   "stderr": "usage: nsearch [-h] [--version] [--limit LIMIT] [--timeout TIMEOUT] [--doc-version VERSION]\n               [--and | --or]\n               query [query ...]\nnsearch: error: argument --or: not allowed with argument --and\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "q",
+    "-n3",
+    "--doc-version=4.15"
+   ],
+   "columns": 100,
+   "exit": null,
+   "ns": "{'doc_version': '4.15', 'limit': 3, 'mode': None, 'query': ['q'], 'timeout': 60}",
+   "parser": "searchdoor",
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "--bogus"
+   ],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "usage",
+   "stderr": "usage: custom [-h] [--base-dir DIR] <command> [<args>]\ncustom: error: unrecognized arguments: --bogus\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "x"
+   ],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "noargs",
+   "stderr": "usage: bare\nbare: error: unrecognized arguments: x\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "only"
+   ],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "longprog",
+   "stderr": "usage: a-very-long-program-name-that-takes-most-of-the-line-by-itself.py [-h] [--alpha ALPHA]\n                                                                         [--beta-option-with-long-name SOME_LONG_VALUE]\n                                                                         [--gamma]\n                                                                         first second [second ...]\na-very-long-program-name-that-takes-most-of-the-line-by-itself.py: error: the following arguments are required: second\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "--opt-1"
+   ],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "wrap",
+   "stderr": "usage: wrap [-h] [--opt-0 VALUE0] [--opt-1 VALUE1] [--opt-2 VALUE2] [--opt-3 VALUE3]\n            [--opt-4 VALUE4] [--opt-5 VALUE5] [--opt-6 VALUE6] [--opt-7 VALUE7]\n            [--a-really-long-option-name-to-force-a-break A_REALLY_LONG_OPTION_NAME_TO_FORCE_A_BREAK]\n            [positional_with_long_name]\nwrap: error: argument --opt-1: expected one argument\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "-5"
+   ],
+   "columns": 100,
+   "exit": null,
+   "ns": "{'f': False, 'value': -5, 'x': None}",
+   "parser": "negnum",
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "-5",
+    "--x",
+    "-1.5",
+    "-f"
+   ],
+   "columns": 100,
+   "exit": null,
+   "ns": "{'f': True, 'value': -5, 'x': -1.5}",
+   "parser": "negnum",
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "--x",
+    "-.5"
+   ],
+   "columns": 100,
+   "exit": null,
+   "ns": "{'f': False, 'value': None, 'x': -0.5}",
+   "parser": "negnum",
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "-f",
+    "-7"
+   ],
+   "columns": 100,
+   "exit": null,
+   "ns": "{'f': True, 'value': -7, 'x': None}",
+   "parser": "negnum",
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "- 5"
+   ],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "negnum",
+   "stderr": "usage: neg [-h] [--x X] [-f] [value]\nneg: error: argument value: invalid int value: '- 5'\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "-5"
+   ],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "negopt",
+   "stderr": "usage: negopt [-h] [-1] [value]\nnegopt: error: unrecognized arguments: -5\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "-1"
+   ],
+   "columns": 100,
+   "exit": null,
+   "ns": "{'one': True, 'value': None}",
+   "parser": "negopt",
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "--",
+    "-5"
+   ],
+   "columns": 100,
+   "exit": null,
+   "ns": "{'one': False, 'value': '-5'}",
+   "parser": "negopt",
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "--fo",
+    "1"
+   ],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "abbrev",
+   "stderr": "usage: abbr [-h] [--foo FOO] [--foobar] [--fob FOB] [-n N] [-v] [-w] [--zeta ZETA] [items ...]\nabbr: error: ambiguous option: --fo could match --foo, --foobar, --fob\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "--foo",
+    "1"
+   ],
+   "columns": 100,
+   "exit": null,
+   "ns": "{'fob': None, 'foo': 1, 'foobar': False, 'items': [], 'n': None, 'v': False, 'w': False, 'zeta': None}",
+   "parser": "abbrev",
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "--foob"
+   ],
+   "columns": 100,
+   "exit": null,
+   "ns": "{'fob': None, 'foo': None, 'foobar': True, 'items': [], 'n': None, 'v': False, 'w': False, 'zeta': None}",
+   "parser": "abbrev",
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "--z",
+    "q"
+   ],
+   "columns": 100,
+   "exit": null,
+   "ns": "{'fob': None, 'foo': None, 'foobar': False, 'items': [], 'n': None, 'v': False, 'w': False, 'zeta': 'q'}",
+   "parser": "abbrev",
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "--z=q",
+    "i1",
+    "i2"
+   ],
+   "columns": 100,
+   "exit": null,
+   "ns": "{'fob': None, 'foo': None, 'foobar': False, 'items': ['i1', 'i2'], 'n': None, 'v': False, 'w': False, 'zeta': 'q'}",
+   "parser": "abbrev",
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "--fo=3"
+   ],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "abbrev",
+   "stderr": "usage: abbr [-h] [--foo FOO] [--foobar] [--fob FOB] [-n N] [-v] [-w] [--zeta ZETA] [items ...]\nabbr: error: ambiguous option: --fo=3 could match --foo, --foobar, --fob\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "-n5",
+    "-vw"
+   ],
+   "columns": 100,
+   "exit": null,
+   "ns": "{'fob': None, 'foo': None, 'foobar': False, 'items': [], 'n': 5, 'v': True, 'w': True, 'zeta': None}",
+   "parser": "abbrev",
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "-vn5"
+   ],
+   "columns": 100,
+   "exit": null,
+   "ns": "{'fob': None, 'foo': None, 'foobar': False, 'items': [], 'n': 5, 'v': True, 'w': False, 'zeta': None}",
+   "parser": "abbrev",
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "-wvn",
+    "5"
+   ],
+   "columns": 100,
+   "exit": null,
+   "ns": "{'fob': None, 'foo': None, 'foobar': False, 'items': [], 'n': 5, 'v': True, 'w': True, 'zeta': None}",
+   "parser": "abbrev",
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "-n",
+    "-5"
+   ],
+   "columns": 100,
+   "exit": null,
+   "ns": "{'fob': None, 'foo': None, 'foobar': False, 'items': [], 'n': -5, 'v': False, 'w': False, 'zeta': None}",
+   "parser": "abbrev",
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "-vx"
+   ],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "abbrev",
+   "stderr": "usage: abbr [-h] [--foo FOO] [--foobar] [--fob FOB] [-n N] [-v] [-w] [--zeta ZETA] [items ...]\nabbr: error: unrecognized arguments: -x\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "i",
+    "--",
+    "-v",
+    "--foo"
+   ],
+   "columns": 100,
+   "exit": null,
+   "ns": "{'fob': None, 'foo': None, 'foobar': False, 'items': ['i', '-v', '--foo'], 'n': None, 'v': False, 'w': False, 'zeta': None}",
+   "parser": "abbrev",
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "--foo",
+    "1",
+    "--foo",
+    "2"
+   ],
+   "columns": 100,
+   "exit": null,
+   "ns": "{'fob': None, 'foo': 2, 'foobar': False, 'items': [], 'n': None, 'v': False, 'w': False, 'zeta': None}",
+   "parser": "abbrev",
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "-n="
+   ],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "abbrev",
+   "stderr": "usage: abbr [-h] [--foo FOO] [--foobar] [--fob FOB] [-n N] [-v] [-w] [--zeta ZETA] [items ...]\nabbr: error: argument -n: invalid int value: ''\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "--zeta="
+   ],
+   "columns": 100,
+   "exit": null,
+   "ns": "{'fob': None, 'foo': None, 'foobar': False, 'items': [], 'n': None, 'v': False, 'w': False, 'zeta': ''}",
+   "parser": "abbrev",
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "-x"
+   ],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "abbrev",
+   "stderr": "usage: abbr [-h] [--foo FOO] [--foobar] [--fob FOB] [-n N] [-v] [-w] [--zeta ZETA] [items ...]\nabbr: error: unrecognized arguments: -x\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "--x y"
+   ],
+   "columns": 100,
+   "exit": null,
+   "ns": "{'fob': None, 'foo': None, 'foobar': False, 'items': ['--x y'], 'n': None, 'v': False, 'w': False, 'zeta': None}",
+   "parser": "abbrev",
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "--feature",
+    "bacnet:2",
+    "--dueño",
+    "Ñandú"
+   ],
+   "columns": 100,
+   "exit": null,
+   "ns": "{'dueño': 'Ñandú', 'feature': ['bacnet:2']}",
+   "parser": "unicode",
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "--due",
+    "x"
+   ],
+   "columns": 100,
+   "exit": null,
+   "ns": "{'dueño': 'x', 'feature': []}",
+   "parser": "unicode",
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [],
+   "columns": 100,
+   "exit": null,
+   "ns": "{'action': [], 'part': 'P2'}",
+   "parser": "qnx",
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "P1",
+    "extract",
+    "a",
+    "b"
+   ],
+   "columns": 100,
+   "exit": null,
+   "ns": "{'action': ['extract', 'a', 'b'], 'part': 'P1'}",
+   "parser": "qnx",
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "P9"
+   ],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "qnx",
+   "stderr": "usage: qnx6read.py [-h] [{P1,P2,P3}] [extract SRC DST ...]\nqnx6read.py: error: argument part: invalid choice: 'P9' (choose from 'P1', 'P2', 'P3')\n",
+   "stdout": ""
+  },
+  {
+   "argv": [],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "bognav",
+   "stderr": "usage: bog-nav.py [-h] [--json] [--csv] [--limit N] [--version]\n                  [bog] {tree,find,grep,selftest} ...\nbog-nav.py: error: the following arguments are required: cmd\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "x.bog"
+   ],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "bognav",
+   "stderr": "usage: bog-nav.py [-h] [--json] [--csv] [--limit N] [--version]\n                  [bog] {tree,find,grep,selftest} ...\nbog-nav.py: error: argument cmd: invalid choice: 'x.bog' (choose from 'tree', 'find', 'grep', 'selftest')\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "x.bog",
+    "tree"
+   ],
+   "columns": 100,
+   "exit": null,
+   "ns": "{'bog': 'x.bog', 'cmd': 'tree', 'csv': False, 'depth': 3, 'json': False, 'limit': None, 'root': '/', 'run': 'tree'}",
+   "parser": "bognav",
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "x.bog",
+    "tree",
+    "--depth",
+    "2",
+    "--json"
+   ],
+   "columns": 100,
+   "exit": null,
+   "ns": "{'bog': 'x.bog', 'cmd': 'tree', 'csv': False, 'depth': 2, 'json': True, 'limit': None, 'root': '/', 'run': 'tree'}",
+   "parser": "bognav",
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "--json",
+    "x.bog",
+    "find",
+    "control:NumericWritable",
+    "-n",
+    "3"
+   ],
+   "columns": 100,
+   "exit": null,
+   "ns": "{'bog': 'x.bog', 'cmd': 'find', 'csv': False, 'json': True, 'limit': 3, 'run': 'find', 'type': 'control:NumericWritable'}",
+   "parser": "bognav",
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "x.bog",
+    "find",
+    "T",
+    "--csv",
+    "--limit",
+    "0"
+   ],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "bognav",
+   "stderr": "usage: bog-nav.py [bog] find [-h] [--json] [--csv] [--limit N] type\nbog-nav.py [bog] find: error: argument --limit/-n: must be at least 1, not 0\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "x.bog",
+    "tre"
+   ],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "bognav",
+   "stderr": "usage: bog-nav.py [-h] [--json] [--csv] [--limit N] [--version]\n                  [bog] {tree,find,grep,selftest} ...\nbog-nav.py: error: argument cmd: invalid choice: 'tre', maybe you meant 'tree'? (choose from 'tree', 'find', 'grep', 'selftest')\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "x.bog",
+    "zzz"
+   ],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "bognav",
+   "stderr": "usage: bog-nav.py [-h] [--json] [--csv] [--limit N] [--version]\n                  [bog] {tree,find,grep,selftest} ...\nbog-nav.py: error: argument cmd: invalid choice: 'zzz' (choose from 'tree', 'find', 'grep', 'selftest')\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "x.bog",
+    "find"
+   ],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "bognav",
+   "stderr": "usage: bog-nav.py [bog] find [-h] [--json] [--csv] [--limit N] type\nbog-nav.py [bog] find: error: the following arguments are required: type\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "x.bog",
+    "tree",
+    "-h"
+   ],
+   "columns": 100,
+   "exit": 0,
+   "ns": null,
+   "parser": "bognav",
+   "stderr": "",
+   "stdout": "usage: bog-nav.py [bog] tree [-h] [--json] [--csv] [--limit N] [--depth DEPTH] [--root ROOT]\n\noptions:\n  -h, --help     show this help message and exit\n  --json         machine JSON output\n  --csv          CSV output (header + rows)\n  --limit, -n N  print at most N rows (default: all); the cut is reported\n  --depth DEPTH  max depth\n  --root ROOT    start path\n"
+  },
+  {
+   "argv": [
+    "x.bog",
+    "find",
+    "--help"
+   ],
+   "columns": 100,
+   "exit": 0,
+   "ns": null,
+   "parser": "bognav",
+   "stderr": "",
+   "stdout": "usage: bog-nav.py [bog] find [-h] [--json] [--csv] [--limit N] type\n\npositional arguments:\n  type           type name, e.g. control:NumericWritable\n\noptions:\n  -h, --help     show this help message and exit\n  --json         machine JSON output\n  --csv          CSV output (header + rows)\n  --limit, -n N  print at most N rows (default: all); the cut is reported\n"
+  },
+  {
+   "argv": [
+    "x.bog",
+    "grep",
+    "-h"
+   ],
+   "columns": 100,
+   "exit": 0,
+   "ns": null,
+   "parser": "bognav",
+   "stderr": "",
+   "stdout": "usage: bog-nav.py [bog] grep [-h] [--json] [--csv] [--limit N] [--in {path,type,slot}] regex\n\npositional arguments:\n  regex\n\noptions:\n  -h, --help            show this help message and exit\n  --json                machine JSON output\n  --csv                 CSV output (header + rows)\n  --limit, -n N         print at most N rows (default: all); the cut is reported\n  --in {path,type,slot}\n"
+  },
+  {
+   "argv": [
+    "x.bog",
+    "tree",
+    "--bogus"
+   ],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "bognav",
+   "stderr": "usage: bog-nav.py [-h] [--json] [--csv] [--limit N] [--version]\n                  [bog] {tree,find,grep,selftest} ...\nbog-nav.py: error: unrecognized arguments: --bogus\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "x.bog",
+    "grep",
+    "re",
+    "--in",
+    "slots"
+   ],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "bognav",
+   "stderr": "usage: bog-nav.py [bog] grep [-h] [--json] [--csv] [--limit N] [--in {path,type,slot}] regex\nbog-nav.py [bog] grep: error: argument --in: invalid choice: 'slots', maybe you meant 'slot'? (choose from 'path', 'type', 'slot')\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "--version"
+   ],
+   "columns": 100,
+   "exit": 0,
+   "ns": null,
+   "parser": "bognav",
+   "stderr": "",
+   "stdout": "bog-nav 0.42.0\n"
+  },
+  {
+   "argv": [
+    "x.bog",
+    "tree",
+    "--depth",
+    "x"
+   ],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "bognav",
+   "stderr": "usage: bog-nav.py [bog] tree [-h] [--json] [--csv] [--limit N] [--depth DEPTH] [--root ROOT]\nbog-nav.py [bog] tree: error: argument --depth: invalid int value: 'x'\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "x.bog",
+    "selftest",
+    "extra"
+   ],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "bognav",
+   "stderr": "usage: bog-nav.py [-h] [--json] [--csv] [--limit N] [--version]\n                  [bog] {tree,find,grep,selftest} ...\nbog-nav.py: error: unrecognized arguments: extra\n",
+   "stdout": ""
+  },
+  {
+   "argv": [],
+   "columns": 100,
+   "exit": null,
+   "ns": "{'base_dir': None, 'command': None}",
+   "parser": "modnav",
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "class",
+    "BComponent"
+   ],
+   "columns": 100,
+   "exit": null,
+   "ns": "{'base_dir': None, 'command': 'class', 'members': False, 'name': 'BComponent', 'run': 'class'}",
+   "parser": "modnav",
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "find",
+    "-h"
+   ],
+   "columns": 100,
+   "exit": 0,
+   "ns": null,
+   "parser": "modnav",
+   "stderr": "",
+   "stdout": "usage: module-nav find [-h] [-n LIMIT] [--depth {quick,full}] query [query ...]\n\nRank classes by BM25 over names, members and strings.\n\npositional arguments:\n  query                 Free text\n\noptions:\n  -h, --help            show this help message and exit\n  -n, --limit LIMIT     Max classes to show (default 20)\n  --depth {quick,full}  audit depth\n\nexamples: find alarm routing | find --depth full servlet\n"
+  },
+  {
+   "argv": [
+    "find",
+    "alarm",
+    "routing",
+    "-n",
+    "0"
+   ],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "modnav",
+   "stderr": "usage: module-nav find [-h] [-n LIMIT] [--depth {quick,full}] query [query ...]\nmodule-nav find: error: argument -n/--limit: must be a positive integer, got '0'\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "find",
+    "a",
+    "-n",
+    "x"
+   ],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "modnav",
+   "stderr": "usage: module-nav find [-h] [-n LIMIT] [--depth {quick,full}] query [query ...]\nmodule-nav find: error: argument -n/--limit: must be a positive integer, got 'x'\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "find",
+    "a",
+    "--depth",
+    "ful"
+   ],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "modnav",
+   "stderr": "usage: module-nav find [-h] [-n LIMIT] [--depth {quick,full}] query [query ...]\nmodule-nav find: error: argument --depth: invalid choice: 'ful', maybe you meant 'full'? (choose from 'quick', 'full')\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "bogus"
+   ],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "modnav",
+   "stderr": "usage: module-nav [-h] [--base-dir DIR] <command> [<args>]\nmodule-nav: error: argument <command>: invalid choice: 'bogus' (choose from 'class', 'find', 'ask')\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "class"
+   ],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "modnav",
+   "stderr": "usage: module-nav class [-h] [--members] name\nmodule-nav class: error: the following arguments are required: name\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "-d",
+    "/x",
+    "ask",
+    "why",
+    "not"
+   ],
+   "columns": 100,
+   "exit": null,
+   "ns": "{'base_dir': '/x', 'command': 'ask', 'question': ['why', 'not']}",
+   "parser": "modnav",
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "ask",
+    "-h"
+   ],
+   "columns": 100,
+   "exit": 0,
+   "ns": null,
+   "parser": "modnav",
+   "stderr": "",
+   "stdout": "usage: module-nav ask [-h] question [question ...]\n\npositional arguments:\n  question\n\noptions:\n  -h, --help  show this help message and exit\n"
+  },
+  {
+   "argv": [],
+   "columns": 100,
+   "exit": null,
+   "ns": "{'_niagara_version_help': None, 'command': None}",
+   "parser": "nhelp",
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "class",
+    "-h"
+   ],
+   "columns": 100,
+   "exit": 0,
+   "ns": null,
+   "parser": "nhelp",
+   "stderr": "",
+   "stdout": "usage: niagara_help class [-h] name\n\npositional arguments:\n  name        Class name\n\noptions:\n  -h, --help  show this help message and exit\n"
+  },
+  {
+   "argv": [
+    "guide-search",
+    "-h"
+   ],
+   "columns": 100,
+   "exit": 0,
+   "ns": null,
+   "parser": "nhelp",
+   "stderr": "",
+   "stdout": "usage: niagara_help guide-search [-h] [-n MAX_RESULTS] [--and | --or] query\n\npositional arguments:\n  query                 Search text (e.g. 'discovery timeout')\n\noptions:\n  -h, --help            show this help message and exit\n  -n, --max-results MAX_RESULTS\n  --and                 ALL terms must appear in each file (default)\n  --or                  ANY term in file\n"
+  },
+  {
+   "argv": [
+    "guide-search",
+    "q",
+    "--and",
+    "--or"
+   ],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "nhelp",
+   "stderr": "usage: niagara_help guide-search [-h] [-n MAX_RESULTS] [--and | --or] query\nniagara_help guide-search: error: argument --or: not allowed with argument --and\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "guide-search",
+    "q",
+    "--or"
+   ],
+   "columns": 100,
+   "exit": null,
+   "ns": "{'_niagara_version_help': None, 'command': 'guide-search', 'gs_mode_and': False, 'gs_mode_or': True, 'max_results': 10, 'query': 'q'}",
+   "parser": "nhelp",
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "versions"
+   ],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "nhelp",
+   "stderr": "usage: niagara_help versions [-h] {add,list} ...\nniagara_help versions: error: the following arguments are required: {add,list}\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "versions",
+    "-h"
+   ],
+   "columns": 100,
+   "exit": 0,
+   "ns": null,
+   "parser": "nhelp",
+   "stderr": "",
+   "stdout": "usage: niagara_help versions [-h] {add,list} ...\n\npositional arguments:\n  {add,list}\n    add       Register a Niagara install, extract and index all of its documentation, run both\n              gates and print a summary\n    list      List registered versions\n\noptions:\n  -h, --help  show this help message and exit\n"
+  },
+  {
+   "argv": [
+    "versions",
+    "add",
+    "-h"
+   ],
+   "columns": 100,
+   "exit": 0,
+   "ns": null,
+   "parser": "nhelp",
+   "stderr": "",
+   "stdout": "usage: niagara_help versions add [-h] [--label LABEL] [--default] install\n\npositional arguments:\n  install        Path of the Niagara install (the folder with modules/)\n\noptions:\n  -h, --help     show this help message and exit\n  --label LABEL  Human name (default: the install folder name)\n  --default      Make it the default version\n"
+  },
+  {
+   "argv": [
+    "versions",
+    "add",
+    "/opt/n4",
+    "--default"
+   ],
+   "columns": 100,
+   "exit": null,
+   "ns": "{'_niagara_version_help': None, 'action': 'add', 'command': 'versions', 'default': True, 'install': '/opt/n4', 'label': None}",
+   "parser": "nhelp",
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "versions",
+    "bogus"
+   ],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "nhelp",
+   "stderr": "usage: niagara_help versions [-h] {add,list} ...\nniagara_help versions: error: argument {add,list}: invalid choice: 'bogus' (choose from 'add', 'list')\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "--niagara-version",
+    "4.15",
+    "class",
+    "X"
+   ],
+   "columns": 100,
+   "exit": null,
+   "ns": "{'_niagara_version_help': '4.15', 'command': 'class', 'name': 'X'}",
+   "parser": "nhelp",
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "clas",
+    "X"
+   ],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "nhelp",
+   "stderr": "usage: niagara_help [-h] [--niagara-version VERSION] {class,guide-search,versions} ...\nniagara_help: error: argument command: invalid choice: 'clas', maybe you meant 'class'? (choose from 'class', 'guide-search', 'versions')\n",
+   "stdout": ""
+  },
+  {
+   "argv": [],
+   "columns": 100,
+   "exit": null,
+   "ns": "{'command': None}",
+   "parser": "corpus",
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "show",
+    "12"
+   ],
+   "columns": 100,
+   "exit": null,
+   "ns": "{'command': 'show', 'n': 12}",
+   "parser": "corpus",
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "show",
+    "x"
+   ],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "corpus",
+   "stderr": "usage: corpus-nav.py show [-h] N\ncorpus-nav.py show: error: argument N: invalid int value: 'x'\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "rank",
+    "a",
+    "b"
+   ],
+   "columns": 100,
+   "exit": null,
+   "ns": "{'command': 'rank', 'query': ['a', 'b'], 'top': 10}",
+   "parser": "corpus",
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "semantic",
+    "-h"
+   ],
+   "columns": 100,
+   "exit": 0,
+   "ns": null,
+   "parser": "corpus",
+   "stderr": "",
+   "stdout": "usage: corpus-nav.py semantic [-h] [--top TOP] query [query ...]\n\npositional arguments:\n  query\n\noptions:\n  -h, --help  show this help message and exit\n  --top TOP\n"
+  },
+  {
+   "argv": [
+    "lint"
+   ],
+   "columns": 100,
+   "exit": null,
+   "ns": "{'command': 'lint', 'files': []}",
+   "parser": "corpus",
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "path",
+    "1"
+   ],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "corpus",
+   "stderr": "usage: corpus-nav.py path [-h] A B\ncorpus-nav.py path: error: the following arguments are required: B\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "quiet"
+   ],
+   "columns": 100,
+   "exit": null,
+   "ns": "{'command': 'quiet'}",
+   "parser": "corpus",
+   "stderr": "",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "semantik",
+    "q"
+   ],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "corpus",
+   "stderr": "usage: corpus-nav.py [-h] [--version] <command> ...\ncorpus-nav.py: error: argument <command>: invalid choice: 'semantik', maybe you meant 'semantic'? (choose from 'show', 'path', 'lint', 'semantic', 'rank', 'quiet')\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "--version"
+   ],
+   "columns": 100,
+   "exit": 0,
+   "ns": null,
+   "parser": "corpus",
+   "stderr": "",
+   "stdout": "corpus-nav 0.42.0\n"
+  },
+  {
+   "argv": [
+    "rank",
+    "q",
+    "--top",
+    "0"
+   ],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "corpus",
+   "stderr": "usage: corpus-nav.py semantic [-h] [--top TOP] query [query ...]\ncorpus-nav.py semantic: error: argument --top: must be at least 1, not 0\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "--pick",
+    "abcz"
+   ],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "hyphens",
+   "stderr": "usage: hy [-h] [--pick {abcx,abcy,zzzz}]\nhy: error: argument --pick: invalid choice: 'abcz', maybe you meant 'abcy'? (choose from 'abcx', 'abcy', 'zzzz')\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "--pick",
+    "abc"
+   ],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "hyphens",
+   "stderr": "usage: hy [-h] [--pick {abcx,abcy,zzzz}]\nhy: error: argument --pick: invalid choice: 'abc', maybe you meant 'abcy'? (choose from 'abcx', 'abcy', 'zzzz')\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "--pick",
+    "zz"
+   ],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "hyphens",
+   "stderr": "usage: hy [-h] [--pick {abcx,abcy,zzzz}]\nhy: error: argument --pick: invalid choice: 'zz', maybe you meant 'zzzz'? (choose from 'abcx', 'abcy', 'zzzz')\n",
+   "stdout": ""
+  },
+  {
+   "argv": [],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "subnodest",
+   "stderr": "usage: nodest [-h] {alpha,beta} ...\nnodest: error: the following arguments are required: {alpha,beta}\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "gamma"
+   ],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "subnodest",
+   "stderr": "usage: nodest [-h] {alpha,beta} ...\nnodest: error: argument {alpha,beta}: invalid choice: 'gamma' (choose from 'alpha', 'beta')\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "alpha",
+    "-h"
+   ],
+   "columns": 100,
+   "exit": 0,
+   "ns": null,
+   "parser": "subnodest",
+   "stderr": "",
+   "stdout": "usage: nodest alpha [-h]\n\noptions:\n  -h, --help  show this help message and exit\n"
+  },
+  {
+   "argv": [
+    "run"
+   ],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "subtitle",
+   "stderr": "usage: titled run [-h] target\ntitled run: error: the following arguments are required: target\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "run",
+    "t",
+    "--verbose"
+   ],
+   "columns": 100,
+   "exit": 2,
+   "ns": null,
+   "parser": "subtitle",
+   "stderr": "usage: titled [-h] [--verbose] {run,stop} ...\ntitled: error: unrecognized arguments: --verbose\n",
+   "stdout": ""
+  },
+  {
+   "argv": [
+    "--verbose",
+    "stop"
+   ],
+   "columns": 100,
+   "exit": null,
+   "ns": "{'cmd': 'stop', 'verbose': True}",
+   "parser": "subtitle",
+   "stderr": "",
+   "stdout": ""
+  }
+ ],
+ "parents": {
+  "common": {
+   "kw": {
+    "add_help": false
+   },
+   "ops": [
+    {
+     "args": [
+      "--json"
+     ],
+     "kw": {
+      "action": "store_true",
+      "default": "$SUPPRESS",
+      "help": "machine JSON output"
+     },
+     "op": "arg"
+    },
+    {
+     "args": [
+      "--csv"
+     ],
+     "kw": {
+      "action": "store_true",
+      "default": "$SUPPRESS",
+      "help": "CSV output (header + rows)"
+     },
+     "op": "arg"
+    },
+    {
+     "args": [
+      "--limit",
+      "-n"
+     ],
+     "kw": {
+      "default": "$SUPPRESS",
+      "help": "print at most N rows (default: all); the cut is reported",
+      "metavar": "N",
+      "type": "positive_int"
+     },
+     "op": "arg"
+    }
+   ]
+  },
+  "top": {
+   "kw": {
+    "add_help": false
+   },
+   "ops": [
+    {
+     "args": [
+      "--json"
+     ],
+     "kw": {
+      "action": "store_true",
+      "default": false,
+      "help": "machine JSON output"
+     },
+     "op": "arg"
+    },
+    {
+     "args": [
+      "--csv"
+     ],
+     "kw": {
+      "action": "store_true",
+      "default": false,
+      "help": "CSV output (header + rows)"
+     },
+     "op": "arg"
+    },
+    {
+     "args": [
+      "--limit",
+      "-n"
+     ],
+     "kw": {
+      "default": null,
+      "help": "print at most N rows (default: all); the cut is reported",
+      "metavar": "N",
+      "type": "positive_int"
+     },
+     "op": "arg"
+    }
+   ]
+  }
+ },
+ "parsers": {
+  "abbrev": {
+   "kw": {
+    "prog": "abbr"
+   },
+   "ops": [
+    {
+     "args": [
+      "--foo"
+     ],
+     "kw": {
+      "type": "int"
+     },
+     "op": "arg"
+    },
+    {
+     "args": [
+      "--foobar"
+     ],
+     "kw": {
+      "action": "store_true"
+     },
+     "op": "arg"
+    },
+    {
+     "args": [
+      "--fob"
+     ],
+     "kw": {},
+     "op": "arg"
+    },
+    {
+     "args": [
+      "-n"
+     ],
+     "kw": {
+      "type": "int"
+     },
+     "op": "arg"
+    },
+    {
+     "args": [
+      "-v"
+     ],
+     "kw": {
+      "action": "store_true"
+     },
+     "op": "arg"
+    },
+    {
+     "args": [
+      "-w"
+     ],
+     "kw": {
+      "action": "store_true"
+     },
+     "op": "arg"
+    },
+    {
+     "args": [
+      "--zeta"
+     ],
+     "kw": {},
+     "op": "arg"
+    },
+    {
+     "args": [
+      "items"
+     ],
+     "kw": {
+      "nargs": "*"
+     },
+     "op": "arg"
+    }
+   ]
+  },
+  "argdefaults": {
+   "kw": {
+    "formatter_class": "ArgumentDefaultsHelpFormatter",
+    "prog": "argdef"
+   },
+   "ops": [
+    {
+     "args": [
+      "pos"
+     ],
+     "kw": {
+      "help": "a positional"
+     },
+     "op": "arg"
+    },
+    {
+     "args": [
+      "rest"
+     ],
+     "kw": {
+      "help": "the rest",
+      "nargs": "*"
+     },
+     "op": "arg"
+    },
+    {
+     "args": [
+      "--num"
+     ],
+     "kw": {
+      "default": 3,
+      "help": "a number",
+      "type": "int"
+     },
+     "op": "arg"
+    },
+    {
+     "args": [
+      "--name"
+     ],
+     "kw": {
+      "help": "a name"
+     },
+     "op": "arg"
+    },
+    {
+     "args": [
+      "--flag"
+     ],
+     "kw": {
+      "action": "store_true",
+      "help": "a flag"
+     },
+     "op": "arg"
+    },
+    {
+     "args": [
+      "--req"
+     ],
+     "kw": {
+      "help": "required",
+      "required": true
+     },
+     "op": "arg"
+    },
+    {
+     "args": [
+      "--nohelp"
+     ],
+     "kw": {
+      "default": "v"
+     },
+     "op": "arg"
+    },
+    {
+     "args": [
+      "--sup"
+     ],
+     "kw": {
+      "default": "$SUPPRESS",
+      "help": "suppressed default"
+     },
+     "op": "arg"
+    },
+    {
+     "args": [
+      "--explicit"
+     ],
+     "kw": {
+      "default": 1,
+      "help": "explicit %(default)s"
+     },
+     "op": "arg"
+    }
+   ]
+  },
+  "basic": {
+   "kw": {
+    "description": "Read a station bog and print what it holds. The auto-detected root is used when --root is omitted; values are re-read on every run (no cache).",
+    "prog": "basic.py"
+   },
+   "ops": [
+    {
+     "args": [
+      "src"
+     ],
+     "kw": {
+      "help": "input file (config.bog or a bare .xml)"
+     },
+     "op": "arg"
+    },
+    {
+     "args": [
+      "dst"
+     ],
+     "kw": {
+      "default": "out.txt",
+      "help": "output file (default: %(default)s)",
+      "nargs": "?"
+     },
+     "op": "arg"
+    },
+    {
+     "args": [
+      "-n",
+      "--limit"
+     ],
+     "kw": {
+      "default": 20,
+      "help": "max rows (default %(default)s)",
+      "type": "int"
+     },
+     "op": "arg"
+    },
+    {
+     "args": [
+      "--ratio"
+     ],
+     "kw": {
+      "default": 0.5,
+      "help": "sampling ratio",
+      "type": "float"
+     },
+     "op": "arg"
+    },
+    {
+     "args": [
+      "-v",
+      "--verbose"
+     ],
+     "kw": {
+      "action": "store_true",
+      "help": "say more"
+     },
+     "op": "arg"
+    },
+    {
+     "args": [
+      "-q",
+      "--quiet"
+     ],
+     "kw": {
+      "action": "store_false",
+      "dest": "loud",
+      "help": "say less"
+     },
+     "op": "arg"
+    },
+    {
+     "args": [
+      "--mode"
+     ],
+     "kw": {
+      "choices": [
+       "fast",
+       "slow",
+       "auto"
+      ],
+      "default": "auto",
+      "help": "scan mode: %(choices)s"
+     },
+     "op": "arg"
+    },
+    {
+     "args": [
+      "--tag"
+     ],
+     "kw": {
+      "action": "append",
+      "default": [],
+      "help": "tag (repeatable)",
+      "metavar": "TAG"
+     },
+     "op": "arg"
+    },
+    {
+     "args": [
+      "--level"
+     ],
+     "kw": {
+      "choices": [
+       1,
+       2,
+       3
+      ],
+      "help": "detail level",
+      "type": "int"
+     },
+     "op": "arg"
+    },
+    {
+     "args": [
+      "-c",
+      "--count"
+     ],
+     "kw": {
+      "action": "count",
+      "help": "count flag"
+     },
+     "op": "arg"
+    },
+    {
+     "args": [
+      "--const"
+     ],
+     "kw": {
+      "action": "store_const",
+      "const": "K",
+      "help": "store a constant"
+     },
+     "op": "arg"
+    },
+    {
+     "args": [
+      "--hidden"
+     ],
+     "kw": {
+      "help": "$SUPPRESS"
+     },
+     "op": "arg"
+    },
+    {
+     "args": [
+      "--names"
+     ],
+     "kw": {
+      "help": "one or more names",
+      "nargs": "+"
+     },
+     "op": "arg"
+    },
+    {
+     "args": [
+      "--pair"
+     ],
+     "kw": {
+      "help": "a key and a value",
+      "metavar": [
+       "KEY",
+       "VALUE"
+      ],
+      "nargs": 2
+     },
+     "op": "arg"
+    },
+    {
+     "args": [
+      "--opt"
+     ],
+     "kw": {
+      "help": "zero or more",
+      "nargs": "*"
+     },
+     "op": "arg"
+    },
+    {
+     "args": [
+      "--maybe"
+     ],
+     "kw": {
+      "const": "C",
+      "default": "D",
+      "help": "optional value",
+      "nargs": "?"
+     },
+     "op": "arg"
+    },
+    {
+     "args": [
+      "-x"
+     ],
+     "kw": {
+      "action": "store_true",
+      "help": "flag x"
+     },
+     "op": "arg"
+    },
+    {
+     "args": [
+      "-y"
+     ],
+     "kw": {
+      "action": "store_true",
+      "help": "flag y"
+     },
+     "op": "arg"
+    },
+    {
+     "args": [
+      "-z"
+     ],
+     "kw": {
+      "help": "checked value",
+      "type": "checked"
+     },
+     "op": "arg"
+    },
+    {
+     "args": [
+      "--extend"
+     ],
+     "kw": {
+      "action": "extend",
+      "help": "extend a list",
+      "nargs": "+"
+     },
+     "op": "arg"
+    },
+    {
+     "args": [
+      "--ac"
+     ],
+     "kw": {
+      "action": "append_const",
+      "const": 7,
+      "dest": "consts",
+      "help": "append a constant"
+     },
+     "op": "arg"
+    },
+    {
+     "args": [
+      "--version"
+     ],
+     "kw": {
+      "action": "version",
+      "version": "%(prog)s 1.2.3"
+     },
+     "op": "arg"
+    }
+   ]
+  },
+  "bognav": {
+   "kw": {
+    "description": "bog-nav -- navigate a Niagara station bog.\n\nCommands below.",
+    "formatter_class": "RawDescriptionHelpFormatter",
+    "parents": [
+     "top"
+    ],
+    "prog": "bog-nav.py"
+   },
+   "ops": [
+    {
+     "args": [
+      "--version"
+     ],
+     "kw": {
+      "action": "tools_version",
+      "tool": "bog-nav"
+     },
+     "op": "arg"
+    },
+    {
+     "args": [
+      "bog"
+     ],
+     "kw": {
+      "help": "config.bog (ZIP) or a bare file.xml (omit for selftest)",
+      "nargs": "?"
+     },
+     "op": "arg"
+    },
+    {
+     "kw": {
+      "dest": "cmd"
+     },
+     "op": "subparsers",
+     "parsers": [
+      {
+       "kw": {
+        "help": "component tree",
+        "parents": [
+         "common"
+        ]
+       },
+       "name": "tree",
+       "ops": [
+        {
+         "args": [
+          "--depth"
+         ],
+         "kw": {
+          "default": 3,
+          "help": "max depth",
+          "type": "int"
+         },
+         "op": "arg"
+        },
+        {
+         "args": [
+          "--root"
+         ],
+         "kw": {
+          "default": "/",
+          "help": "start path"
+         },
+         "op": "arg"
+        },
+        {
+         "kw": {
+          "run": "tree"
+         },
+         "op": "defaults"
+        }
+       ]
+      },
+      {
+       "kw": {
+        "help": "flat list of components of a type",
+        "parents": [
+         "common"
+        ]
+       },
+       "name": "find",
+       "ops": [
+        {
+         "args": [
+          "type"
+         ],
+         "kw": {
+          "help": "type name, e.g. control:NumericWritable"
+         },
+         "op": "arg"
+        },
+        {
+         "kw": {
+          "run": "find"
+         },
+         "op": "defaults"
+        }
+       ]
+      },
+      {
+       "kw": {
+        "help": "regex over component paths, types, slot names",
+        "parents": [
+         "common"
+        ]
+       },
+       "name": "grep",
+       "ops": [
+        {
+         "args": [
+          "regex"
+         ],
+         "kw": {},
+         "op": "arg"
+        },
+        {
+         "args": [
+          "--in"
+         ],
+         "kw": {
+          "choices": [
+           "path",
+           "type",
+           "slot"
+          ],
+          "default": "path",
+          "dest": "scope"
+         },
+         "op": "arg"
+        }
+       ]
+      },
+      {
+       "kw": {
+        "help": "run in-memory parser/query assertions (no file needed)",
+        "parents": [
+         "common"
+        ]
+       },
+       "name": "selftest",
+       "ops": [
+        {
+         "kw": {
+          "run": "selftest"
+         },
+         "op": "defaults"
+        }
+       ]
+      }
+     ],
+     "required": true
+    }
+   ]
+  },
+  "corpus": {
+   "kw": {
+    "description": "Navigate the niagara-research knowledge corpus (blocks, docs, retros).",
+    "formatter_class": "RawDescriptionHelpFormatter",
+    "prog": "corpus-nav.py"
+   },
+   "ops": [
+    {
+     "args": [
+      "--version"
+     ],
+     "kw": {
+      "action": "tools_version",
+      "tool": "corpus-nav"
+     },
+     "op": "arg"
+    },
+    {
+     "kw": {
+      "dest": "command",
+      "metavar": "<command>"
+     },
+     "op": "subparsers",
+     "parsers": [
+      {
+       "kw": {
+        "help": "print one block"
+       },
+       "name": "show",
+       "ops": [
+        {
+         "args": [
+          "n"
+         ],
+         "kw": {
+          "metavar": "N",
+          "type": "int"
+         },
+         "op": "arg"
+        }
+       ]
+      },
+      {
+       "kw": {
+        "help": "citation path A -> B"
+       },
+       "name": "path",
+       "ops": [
+        {
+         "args": [
+          "a"
+         ],
+         "kw": {
+          "metavar": "A"
+         },
+         "op": "arg"
+        },
+        {
+         "args": [
+          "b"
+         ],
+         "kw": {
+          "metavar": "B"
+         },
+         "op": "arg"
+        }
+       ]
+      },
+      {
+       "kw": {
+        "help": "lint blocks"
+       },
+       "name": "lint",
+       "ops": [
+        {
+         "args": [
+          "files"
+         ],
+         "kw": {
+          "help": "files to lint (default: all)",
+          "metavar": "FILE",
+          "nargs": "*"
+         },
+         "op": "arg"
+        }
+       ]
+      },
+      {
+       "kw": {
+        "aliases": [
+         "rank"
+        ],
+        "help": "semantic ranking (alias: rank)"
+       },
+       "name": "semantic",
+       "ops": [
+        {
+         "args": [
+          "query"
+         ],
+         "kw": {
+          "nargs": "+"
+         },
+         "op": "arg"
+        },
+        {
+         "args": [
+          "--top"
+         ],
+         "kw": {
+          "default": 10,
+          "type": "positive_int"
+         },
+         "op": "arg"
+        }
+       ]
+      },
+      {
+       "kw": {},
+       "name": "quiet",
+       "ops": []
+      }
+     ]
+    }
+   ]
+  },
+  "groups": {
+   "kw": {
+    "epilog": "See also: grp --help.",
+    "prog": "grp"
+   },
+   "ops": [
+    {
+     "args": [
+      "input"
+     ],
+     "kw": {},
+     "op": "arg"
+    },
+    {
+     "description": "How results are printed.",
+     "op": "group",
+     "ops": [
+      {
+       "args": [
+        "--json"
+       ],
+       "kw": {
+        "action": "store_true",
+        "help": "JSON output"
+       },
+       "op": "arg"
+      },
+      {
+       "op": "mutex",
+       "ops": [
+        {
+         "args": [
+          "--wide"
+         ],
+         "kw": {
+          "action": "store_true"
+         },
+         "op": "arg"
+        },
+        {
+         "args": [
+          "--narrow"
+         ],
+         "kw": {
+          "action": "store_true"
+         },
+         "op": "arg"
+        }
+       ],
+       "required": false
+      }
+     ],
+     "title": "output"
+    },
+    {
+     "description": null,
+     "op": "group",
+     "ops": [
+      {
+       "args": [
+        "--min"
+       ],
+       "kw": {
+        "default": 0,
+        "help": "minimum",
+        "metavar": "N",
+        "type": "int"
+       },
+       "op": "arg"
+      },
+      {
+       "args": [
+        "pattern"
+       ],
+       "kw": {
+        "help": "patterns",
+        "nargs": "*"
+       },
+       "op": "arg"
+      }
+     ],
+     "title": "filters"
+    }
+   ]
+  },
+  "hyphens": {
+   "kw": {
+    "description": "a x-ray b-c-d e-mail re-read co-op self-contained up-to-date 3-d x-y-z ab-c a-bc mid-sentence-hyphen --flag-like -- dash-- --lead well-known.",
+    "prog": "hy"
+   },
+   "ops": [
+    {
+     "args": [
+      "--pick"
+     ],
+     "kw": {
+      "choices": [
+       "abcx",
+       "abcy",
+       "zzzz"
+      ],
+      "help": "x-ray a-b ab-cd abc-d e-mail-x"
+     },
+     "op": "arg"
+    }
+   ]
+  },
+  "longprog": {
+   "kw": {
+    "prog": "a-very-long-program-name-that-takes-most-of-the-line-by-itself.py"
+   },
+   "ops": [
+    {
+     "args": [
+      "--alpha"
+     ],
+     "kw": {
+      "help": "a"
+     },
+     "op": "arg"
+    },
+    {
+     "args": [
+      "--beta-option-with-long-name"
+     ],
+     "kw": {
+      "metavar": "SOME_LONG_VALUE"
+     },
+     "op": "arg"
+    },
+    {
+     "args": [
+      "--gamma"
+     ],
+     "kw": {
+      "action": "store_true"
+     },
+     "op": "arg"
+    },
+    {
+     "args": [
+      "first"
+     ],
+     "kw": {},
+     "op": "arg"
+    },
+    {
+     "args": [
+      "second"
+     ],
+     "kw": {
+      "nargs": "+"
+     },
+     "op": "arg"
+    }
+   ]
+  },
+  "modnav": {
+   "kw": {
+    "description": "Module Navigator - CLI for Niagara N4 decompiled modules",
+    "formatter_class": "RawDescriptionHelpFormatter",
+    "prog": "module-nav",
+    "usage": "module-nav [-h] [--base-dir DIR] <command> [<args>]"
+   },
+   "ops": [
+    {
+     "args": [
+      "--base-dir",
+      "-d"
+     ],
+     "kw": {
+      "help": "Base directory (auto-detected if omitted)"
+     },
+     "op": "arg"
+    },
+    {
+     "kw": {
+      "dest": "command",
+      "help": "$SUPPRESS",
+      "metavar": "<command>"
+     },
+     "op": "subparsers",
+     "parsers": [
+      {
+       "kw": {
+        "help": "Show a class"
+       },
+       "name": "class",
+       "ops": [
+        {
+         "args": [
+          "name"
+         ],
+         "kw": {
+          "help": "Class name (simple or FQN)"
+         },
+         "op": "arg"
+        },
+        {
+         "args": [
+          "--members"
+         ],
+         "kw": {
+          "action": "store_true",
+          "help": "also list members"
+         },
+         "op": "arg"
+        },
+        {
+         "kw": {
+          "run": "class"
+         },
+         "op": "defaults"
+        }
+       ]
+      },
+      {
+       "kw": {
+        "description": "Rank classes by BM25 over names, members and strings.",
+        "epilog": "examples: find alarm routing | find --depth full servlet",
+        "help": "Rank classes for a question"
+       },
+       "name": "find",
+       "ops": [
+        {
+         "args": [
+          "query"
+         ],
+         "kw": {
+          "help": "Free text",
+          "nargs": "+"
+         },
+         "op": "arg"
+        },
+        {
+         "args": [
+          "-n",
+          "--limit"
+         ],
+         "kw": {
+          "default": 20,
+          "help": "Max classes to show (default 20)",
+          "type": "nav_positive_int"
+         },
+         "op": "arg"
+        },
+        {
+         "args": [
+          "--depth"
+         ],
+         "kw": {
+          "choices": [
+           "quick",
+           "full"
+          ],
+          "default": "quick",
+          "help": "audit depth"
+         },
+         "op": "arg"
+        }
+       ]
+      },
+      {
+       "kw": {
+        "help": "Alias of find for questions"
+       },
+       "name": "ask",
+       "ops": [
+        {
+         "args": [
+          "question"
+         ],
+         "kw": {
+          "nargs": "+"
+         },
+         "op": "arg"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "attr": "epilog",
+     "op": "set",
+     "value": "commands (module-nav <command> --help for its options):\n\n  lookup:\n    class  Show a class\n    find   Rank classes for a question\n    ask    Alias"
+    }
+   ]
+  },
+  "mutex": {
+   "kw": {
+    "description": "Mutually exclusive groups.",
+    "prog": "mx"
+   },
+   "ops": [
+    {
+     "args": [
+      "query"
+     ],
+     "kw": {
+      "help": "free-text query",
+      "nargs": "+"
+     },
+     "op": "arg"
+    },
+    {
+     "op": "mutex",
+     "ops": [
+      {
+       "args": [
+        "--and"
+       ],
+       "kw": {
+        "action": "store_const",
+        "const": "and",
+        "dest": "mode",
+        "help": "every term"
+       },
+       "op": "arg"
+      },
+      {
+       "args": [
+        "--or"
+       ],
+       "kw": {
+        "action": "store_const",
+        "const": "or",
+        "dest": "mode",
+        "help": "any term"
+       },
+       "op": "arg"
+      }
+     ],
+     "required": false
+    },
+    {
+     "op": "mutex",
+     "ops": [
+      {
+       "args": [
+        "--json"
+       ],
+       "kw": {
+        "action": "store_true",
+        "help": "JSON"
+       },
+       "op": "arg"
+      },
+      {
+       "args": [
+        "--csv"
+       ],
+       "kw": {
+        "action": "store_true",
+        "help": "CSV"
+       },
+       "op": "arg"
+      },
+      {
+       "args": [
+        "--tsv"
+       ],
+       "kw": {
+        "action": "store_true",
+        "help": "$SUPPRESS"
+       },
+       "op": "arg"
+      }
+     ],
+     "required": true
+    }
+   ]
+  },
+  "mutex_pos": {
+   "kw": {
+    "prog": "mxp"
+   },
+   "ops": [
+    {
+     "args": [
+      "--first"
+     ],
+     "kw": {
+      "action": "store_true"
+     },
+     "op": "arg"
+    },
+    {
+     "op": "mutex",
+     "ops": [
+      {
+       "args": [
+        "--name"
+       ],
+       "kw": {
+        "help": "by name"
+       },
+       "op": "arg"
+      },
+      {
+       "args": [
+        "target"
+       ],
+       "kw": {
+        "help": "by position",
+        "nargs": "?"
+       },
+       "op": "arg"
+      }
+     ],
+     "required": false
+    },
+    {
+     "args": [
+      "--last"
+     ],
+     "kw": {
+      "type": "int"
+     },
+     "op": "arg"
+    }
+   ]
+  },
+  "negnum": {
+   "kw": {
+    "prog": "neg"
+   },
+   "ops": [
+    {
+     "args": [
+      "value"
+     ],
+     "kw": {
+      "nargs": "?",
+      "type": "int"
+     },
+     "op": "arg"
+    },
+    {
+     "args": [
+      "--x"
+     ],
+     "kw": {
+      "type": "float"
+     },
+     "op": "arg"
+    },
+    {
+     "args": [
+      "-f"
+     ],
+     "kw": {
+      "action": "store_true"
+     },
+     "op": "arg"
+    }
+   ]
+  },
+  "negopt": {
+   "kw": {
+    "prog": "negopt"
+   },
+   "ops": [
+    {
+     "args": [
+      "value"
+     ],
+     "kw": {
+      "nargs": "?"
+     },
+     "op": "arg"
+    },
+    {
+     "args": [
+      "-1"
+     ],
+     "kw": {
+      "action": "store_true",
+      "dest": "one"
+     },
+     "op": "arg"
+    }
+   ]
+  },
+  "nhelp": {
+   "kw": {
+    "description": "Niagara N4 Documentation Navigator",
+    "epilog": "Examples:\n  %(prog)s class BWebServlet\n  %(prog)s guide-search \"discovery timeout\"\n",
+    "formatter_class": "RawDescriptionHelpFormatter",
+    "prog": "niagara_help"
+   },
+   "ops": [
+    {
+     "kw": {
+      "dest": "command",
+      "help": "Available commands"
+     },
+     "op": "subparsers",
+     "parsers": [
+      {
+       "kw": {
+        "help": "Show class documentation"
+       },
+       "name": "class",
+       "ops": [
+        {
+         "args": [
+          "name"
+         ],
+         "kw": {
+          "help": "Class name"
+         },
+         "op": "arg"
+        }
+       ]
+      },
+      {
+       "kw": {
+        "help": "Full-text search of the guides"
+       },
+       "name": "guide-search",
+       "ops": [
+        {
+         "args": [
+          "query"
+         ],
+         "kw": {
+          "help": "Search text (e.g. 'discovery timeout')"
+         },
+         "op": "arg"
+        },
+        {
+         "args": [
+          "-n",
+          "--max-results"
+         ],
+         "kw": {
+          "default": 10,
+          "type": "int"
+         },
+         "op": "arg"
+        },
+        {
+         "op": "mutex",
+         "ops": [
+          {
+           "args": [
+            "--and"
+           ],
+           "kw": {
+            "action": "store_true",
+            "default": false,
+            "dest": "gs_mode_and",
+            "help": "ALL terms must appear in each file (default)"
+           },
+           "op": "arg"
+          },
+          {
+           "args": [
+            "--or"
+           ],
+           "kw": {
+            "action": "store_true",
+            "default": false,
+            "dest": "gs_mode_or",
+            "help": "ANY term in file"
+           },
+           "op": "arg"
+          }
+         ],
+         "required": false
+        }
+       ]
+      },
+      {
+       "kw": {
+        "help": "Manage Niagara versions"
+       },
+       "name": "versions",
+       "ops": [
+        {
+         "kw": {
+          "dest": "action",
+          "metavar": "{add,list}"
+         },
+         "op": "subparsers",
+         "parsers": [
+          {
+           "kw": {
+            "help": "Register a Niagara install, extract and index all of its documentation, run both gates and print a summary"
+           },
+           "name": "add",
+           "ops": [
+            {
+             "args": [
+              "install"
+             ],
+             "kw": {
+              "help": "Path of the Niagara install (the folder with modules/)"
+             },
+             "op": "arg"
+            },
+            {
+             "args": [
+              "--label"
+             ],
+             "kw": {
+              "help": "Human name (default: the install folder name)"
+             },
+             "op": "arg"
+            },
+            {
+             "args": [
+              "--default"
+             ],
+             "kw": {
+              "action": "store_true",
+              "help": "Make it the default version"
+             },
+             "op": "arg"
+            }
+           ]
+          },
+          {
+           "kw": {
+            "help": "List registered versions"
+           },
+           "name": "list",
+           "ops": []
+          }
+         ],
+         "required": true
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "args": [
+      "--niagara-version"
+     ],
+     "kw": {
+      "dest": "_niagara_version_help",
+      "help": "Niagara version to query (default from versions/registry.json; env NIAGARA_HELP_VERSION). Accepted anywhere on the command line.",
+      "metavar": "VERSION"
+     },
+     "op": "arg"
+    }
+   ]
+  },
+  "noargs": {
+   "kw": {
+    "add_help": false,
+    "prog": "bare"
+   },
+   "ops": []
+  },
+  "qnx": {
+   "kw": {
+    "description": "Read a QNX6 image.\n  part   partition name",
+    "formatter_class": "RawDescriptionHelpFormatter",
+    "prog": "qnx6read.py"
+   },
+   "ops": [
+    {
+     "args": [
+      "part"
+     ],
+     "kw": {
+      "choices": [
+       "P1",
+       "P2",
+       "P3"
+      ],
+      "default": "P2",
+      "help": "partition (default P2)",
+      "nargs": "?"
+     },
+     "op": "arg"
+    },
+    {
+     "args": [
+      "action"
+     ],
+     "kw": {
+      "help": "extract one file instead of listing",
+      "metavar": "extract SRC DST",
+      "nargs": "*"
+     },
+     "op": "arg"
+    }
+   ]
+  },
+  "rawdesc": {
+   "kw": {
+    "description": "Raw description.\n\n  indented line kept\n    deeper   spaced   line\n\nlast paragraph",
+    "epilog": "Examples:\n  %(prog)s one\n  %(prog)s two --flag\n",
+    "formatter_class": "RawDescriptionHelpFormatter",
+    "prog": "raw.py"
+   },
+   "ops": [
+    {
+     "args": [
+      "thing"
+     ],
+     "kw": {
+      "help": "the help text is still wrapped and   normalised   by the formatter"
+     },
+     "op": "arg"
+    },
+    {
+     "args": [
+      "--flag"
+     ],
+     "kw": {
+      "action": "store_true",
+      "help": "a flag"
+     },
+     "op": "arg"
+    }
+   ]
+  },
+  "rawtext": {
+   "kw": {
+    "description": "Line one\n  line two",
+    "formatter_class": "RawTextHelpFormatter",
+    "prog": "rawtext"
+   },
+   "ops": [
+    {
+     "args": [
+      "--a"
+     ],
+     "kw": {
+      "help": "first line\n  second line indented\nthird"
+     },
+     "op": "arg"
+    },
+    {
+     "args": [
+      "--b"
+     ],
+     "kw": {
+      "default": "x",
+      "help": "value is %(default)s"
+     },
+     "op": "arg"
+    }
+   ]
+  },
+  "required": {
+   "kw": {
+    "prog": "req"
+   },
+   "ops": [
+    {
+     "args": [
+      "files"
+     ],
+     "kw": {
+      "help": "input files",
+      "metavar": "FILE",
+      "nargs": "+"
+     },
+     "op": "arg"
+    },
+    {
+     "args": [
+      "--out",
+      "-o"
+     ],
+     "kw": {
+      "help": "output directory",
+      "required": true
+     },
+     "op": "arg"
+    },
+    {
+     "args": [
+      "--fmt"
+     ],
+     "kw": {
+      "choices": [
+       "md",
+       "json"
+      ],
+      "required": true
+     },
+     "op": "arg"
+    }
+   ]
+  },
+  "searchdoor": {
+   "kw": {
+    "_error_exit": 3,
+    "allow_abbrev": false,
+    "description": "One query across our blocks, official docs and code.",
+    "prog": "nsearch"
+   },
+   "ops": [
+    {
+     "args": [
+      "query"
+     ],
+     "kw": {
+      "help": "free-text query (`license <name>` for licensing)",
+      "nargs": "+"
+     },
+     "op": "arg"
+    },
+    {
+     "args": [
+      "--version"
+     ],
+     "kw": {
+      "action": "tools_version",
+      "tool": "nsearch"
+     },
+     "op": "arg"
+    },
+    {
+     "args": [
+      "--limit",
+      "-n"
+     ],
+     "kw": {
+      "default": 5,
+      "help": "ranked results per source (default 5)",
+      "type": "int"
+     },
+     "op": "arg"
+    },
+    {
+     "args": [
+      "--timeout"
+     ],
+     "kw": {
+      "default": 60,
+      "help": "timeout budget per source in seconds, shared by all its backend calls (default 60)",
+      "type": "int"
+     },
+     "op": "arg"
+    },
+    {
+     "args": [
+      "--doc-version"
+     ],
+     "kw": {
+      "help": "niagara-help documentation version for the docs source (default: niagara-help's own)",
+      "metavar": "VERSION"
+     },
+     "op": "arg"
+    },
+    {
+     "op": "mutex",
+     "ops": [
+      {
+       "args": [
+        "--and"
+       ],
+       "kw": {
+        "action": "store_const",
+        "const": "and",
+        "dest": "mode",
+        "help": "every term (blocks, docs)"
+       },
+       "op": "arg"
+      },
+      {
+       "args": [
+        "--or"
+       ],
+       "kw": {
+        "action": "store_const",
+        "const": "or",
+        "dest": "mode",
+        "help": "any term (blocks, docs)"
+       },
+       "op": "arg"
+      }
+     ],
+     "required": false
+    }
+   ]
+  },
+  "subnodest": {
+   "kw": {
+    "prog": "nodest"
+   },
+   "ops": [
+    {
+     "kw": {},
+     "op": "subparsers",
+     "parsers": [
+      {
+       "kw": {
+        "help": "first"
+       },
+       "name": "alpha",
+       "ops": []
+      },
+      {
+       "kw": {
+        "help": "second"
+       },
+       "name": "beta",
+       "ops": []
+      }
+     ],
+     "required": true
+    }
+   ]
+  },
+  "subtitle": {
+   "kw": {
+    "prog": "titled"
+   },
+   "ops": [
+    {
+     "args": [
+      "--verbose"
+     ],
+     "kw": {
+      "action": "store_true"
+     },
+     "op": "arg"
+    },
+    {
+     "kw": {
+      "description": "Available commands.",
+      "dest": "cmd",
+      "title": "commands"
+     },
+     "op": "subparsers",
+     "parsers": [
+      {
+       "kw": {
+        "help": "run it"
+       },
+       "name": "run",
+       "ops": [
+        {
+         "args": [
+          "target"
+         ],
+         "kw": {},
+         "op": "arg"
+        }
+       ]
+      },
+      {
+       "kw": {
+        "help": "stop it"
+       },
+       "name": "stop",
+       "ops": []
+      }
+     ]
+    }
+   ]
+  },
+  "unicode": {
+   "kw": {
+    "description": "Genera y verifica licencias de módulos Niagara: año, señal, cañón.",
+    "prog": "licensador"
+   },
+   "ops": [
+    {
+     "args": [
+      "--feature"
+     ],
+     "kw": {
+      "action": "append",
+      "default": [],
+      "help": "NAME o NAME:QTY (repetible)"
+     },
+     "op": "arg"
+    },
+    {
+     "args": [
+      "--dueño"
+     ],
+     "kw": {
+      "help": "nombre del dueño de la licencia, con acentos áéíóú y eñes"
+     },
+     "op": "arg"
+    }
+   ]
+  },
+  "usage": {
+   "kw": {
+    "add_help": true,
+    "prog": "custom",
+    "usage": "%(prog)s [-h] [--base-dir DIR] <command> [<args>]"
+   },
+   "ops": [
+    {
+     "args": [
+      "--base-dir",
+      "-d"
+     ],
+     "kw": {
+      "help": "base"
+     },
+     "op": "arg"
+    }
+   ]
+  },
+  "wrap": {
+   "kw": {
+    "description": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "prog": "wrap"
+   },
+   "ops": [
+    {
+     "args": [
+      "--opt-0"
+     ],
+     "kw": {
+      "help": "option number 0",
+      "metavar": "VALUE0"
+     },
+     "op": "arg"
+    },
+    {
+     "args": [
+      "--opt-1"
+     ],
+     "kw": {
+      "help": "option number 1",
+      "metavar": "VALUE1"
+     },
+     "op": "arg"
+    },
+    {
+     "args": [
+      "--opt-2"
+     ],
+     "kw": {
+      "help": "option number 2",
+      "metavar": "VALUE2"
+     },
+     "op": "arg"
+    },
+    {
+     "args": [
+      "--opt-3"
+     ],
+     "kw": {
+      "help": "option number 3",
+      "metavar": "VALUE3"
+     },
+     "op": "arg"
+    },
+    {
+     "args": [
+      "--opt-4"
+     ],
+     "kw": {
+      "help": "option number 4",
+      "metavar": "VALUE4"
+     },
+     "op": "arg"
+    },
+    {
+     "args": [
+      "--opt-5"
+     ],
+     "kw": {
+      "help": "option number 5",
+      "metavar": "VALUE5"
+     },
+     "op": "arg"
+    },
+    {
+     "args": [
+      "--opt-6"
+     ],
+     "kw": {
+      "help": "option number 6",
+      "metavar": "VALUE6"
+     },
+     "op": "arg"
+    },
+    {
+     "args": [
+      "--opt-7"
+     ],
+     "kw": {
+      "help": "option number 7",
+      "metavar": "VALUE7"
+     },
+     "op": "arg"
+    },
+    {
+     "args": [
+      "--a-really-long-option-name-to-force-a-break"
+     ],
+     "kw": {
+      "help": "help text that is long enough to wrap over several lines, with hyphenated-words, em--dashes and supercalifragilisticexpialidocious-unbreakable-ish tokens"
+     },
+     "op": "arg"
+    },
+    {
+     "args": [
+      "positional_with_long_name"
+     ],
+     "kw": {
+      "help": "pos",
+      "nargs": "?"
+     },
+     "op": "arg"
+    }
+   ]
+  }
+ },
+ "python": "3.15.0"
+}
