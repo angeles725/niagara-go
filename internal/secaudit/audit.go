@@ -103,14 +103,20 @@ func (e *env) audit(home, stationXML, host string, rawHead []byte, rep *report) 
 			verd, "B392/B397", note)
 	}
 
-	e.sec03(home, rep)
+	if err := e.sec03(home, rep); err != nil {
+		return fmt.Errorf("icacls: %w", err)
+	}
 
 	if host != "" {
 		for _, p := range []struct {
 			port int
 			name string
 		}{{443, "station HTTPS"}, {5011, "platform TLS"}} {
-			if s := e.tlsSubject(host, p.port); s != "" {
+			s, err := e.tlsSubject(host, p.port)
+			if err != nil {
+				return fmt.Errorf("openssl: %w", err)
+			}
+			if s != "" {
 				def := strings.Contains(s, "ForRecoveryPurposes")
 				rep.add("SEC-04:"+strconv.Itoa(p.port), "crit", p.name+" certificate",
 					pick(def, "default self-signed (ForRecoveryPurposes)", s), "CA-issued cert, replaced",
