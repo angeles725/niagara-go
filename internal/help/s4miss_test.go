@@ -45,3 +45,9 @@ func TestS4Misses(t *testing.T) {
 		t.Run(c.file, func(t *testing.T) { s4Case(t, c.file, 1, c.args...) })
 	}
 }
+
+// TestS4Stats checks stats, which prints the absolute data root.
+func TestS4Stats(t *testing.T) {
+	t.Run("text", func(t *testing.T) { s4Case(t, "stats", 0, "stats") })
+	t.Run("json", func(t *testing.T) { s4Case(t, "stats-json", 0, "stats", "--json") })
+}

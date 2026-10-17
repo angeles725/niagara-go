@@ -1,0 +1,56 @@
+{
+  "niagara_version": "4.14.0.162",
+  "base_dir": "<TESTDATA>",
+  "indexes": {
+    "class-index": 29,
+    "devguide-toc": 7,
+    "guides-index": 5,
+    "inheritance": 21,
+    "pdf-index": 19,
+    "method-index": {
+      "names": 5,
+      "entries": 8
+    },
+    "source-index": {
+      "classes": 39,
+      "lines": 5029
+    },
+    "xref-index": {
+      "classes": 41,
+      "edges": 47
+    },
+    "slots-index": {
+      "classes": 6,
+      "properties": 13,
+      "actions": 4,
+      "topics": 3
+    },
+    "call-index": {
+      "methods": 2,
+      "entries": 3
+    }
+  },
+  "text_dirs": {
+    "bajadoc-clean": {
+      "files": 3,
+      "bytes": 42
+    },
+    "devguide-clean": {
+      "files": 1,
+      "bytes": 16
+    },
+    "guides-clean": {
+      "files": 1,
+      "bytes": 16
+    },
+    "docs-text": {
+      "files": 1,
+      "bytes": 760
+    },
+    "source": {
+      "files": 1,
+      "bytes": 23
+    }
+  },
+  "packages": 7
+}

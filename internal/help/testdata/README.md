@@ -25,3 +25,12 @@ A lookup that misses prints the absolute data root, so miss outputs live in
 cases, which run with `"cwd_fixture": "compat"` and were captured with
 `NIAGARA_HELP_DIR=<testdata>/compat`: its class names reach every branch of the name
 heuristics without changing the class-index counts the other cases print.
+
+`s4/` is a third checkout (same registry entry) for the S4 commands (module, module-deps,
+module-summary, related, profile, graph, hotspots, stats, guide, devguide): its indexes
+add source-index, guides-index, devguide-toc, pdf-index and call-index, and its text
+directories (with a dangling link and a link to a directory) feed `stats` and the guides /
+devguide miss scopes. Its cases run with `"cwd_fixture": "s4"`, captured with
+`NIAGARA_HELP_DIR=<testdata>/s4`; misses and `stats` print the absolute data root, so they
+live in `misses/s4-*.txt` and are checked by `s4miss_test.go`. `pyset.json` holds `hash()`
+values and a `set()` iteration order printed by Python 3.15 with `PYTHONHASHSEED=0`.

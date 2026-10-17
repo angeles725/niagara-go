@@ -1,4 +1,4 @@
 No match for 'zzqq' (devguide) in this scope.
-  searched: Niagara 4.14.0.162 (<TESTDATA>) -- devguide-toc.json: 1 entries; devguide-clean/: absent; devguide-examples/: absent
+  searched: Niagara 4.14.0.162 (<TESTDATA>) -- devguide-toc.json: 1 entries; devguide-clean/: 1 files; devguide-examples/: absent
   excluded from this scope: images, fonts/css, JavaHelp .dat search indexes, bajadoc.index, raw js next to rendered jsdoc, META-INF, licence texts (see coverage --doc-jars)
   not proof of absence; try: devguide-search 'zzqq', find 'zzqq', guide-search 'zzqq'

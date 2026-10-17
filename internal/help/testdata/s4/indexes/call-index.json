@@ -1,0 +1,4 @@
+{
+  "doRouteAlarm": [["BAlarmService", "routeAlarm", 120], ["BOrionAlarmService", "routeAlarm", 88]],
+  "ackAlarm": [["BWebServlet", "doGet", 40]]
+}

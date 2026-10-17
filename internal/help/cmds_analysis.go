@@ -25,7 +25,8 @@ var analysisCommands = []command{
 		args: func(p *argparse.Parser) {
 			p.Add(argparse.Arg{Dest: "stats_json", Action: argparse.StoreTrue, Help: "Output as JSON"},
 				"--json")
-		}},
+		},
+		run: func(e *Env, ns *argparse.Namespace) error { return e.Stats(ns.Bool("stats_json")) }},
 	{name: "module-deps", help: "Show module dependency graph",
 		args: func(p *argparse.Parser) {
 			positional(p, "name", "Module name (e.g. alarm-rt)")
