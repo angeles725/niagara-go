@@ -1,0 +1,7 @@
+CLASS: BAlarmService
+PACKAGE: javax.baja.alarm
+TYPE: class
+MODULE: alarm-rt
+HTML: bajadoc/javax/baja/alarm/BAlarmService.html
+
+(No bajadoc-clean text found)

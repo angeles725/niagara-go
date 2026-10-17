@@ -149,14 +149,18 @@ func (e *Env) resolveVersion(requested string) (int, bool) {
 // error, else 1 when a lookup recorded a miss and 0 otherwise.
 func (e *Env) run(c *command, ns *argparse.Namespace) int {
 	if c.run == nil {
-		fmt.Fprintf(e.Err, "nh: '%s' is not ported yet\n", c.name)
+		fmt.Fprintln(e.Err, notPortedError(c.name).Error())
 		return cli.ExitCannotSearch
 	}
 	err := c.run(e, ns)
 	var code ExitCode
+	var np notPortedError
 	switch {
 	case errors.As(err, &code):
 		return int(code)
+	case errors.As(err, &np):
+		fmt.Fprintln(e.Err, np.Error())
+		return cli.ExitCannotSearch
 	case err != nil:
 		fmt.Fprintf(e.Err, "ERROR: %v\n", err)
 		return cli.ExitCannotSearch

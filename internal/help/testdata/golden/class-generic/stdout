@@ -1,0 +1,9 @@
+CLASS: AbstractCursor&lt;E&gt;
+PACKAGE: javax.baja.collection
+TYPE: class
+MODULE: baja
+HTML: bajadoc/javax/baja/collection/AbstractCursor.html
+
+CLASS: AbstractCursor<E>
+PACKAGE: javax.baja.collection
+

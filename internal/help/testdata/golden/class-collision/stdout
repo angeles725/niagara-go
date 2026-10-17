@@ -1,0 +1,10 @@
+2 classes named 'BAlarmRecipient':
+  javax.baja.alarm.BAlarmRecipient (class, alarm-rt)
+  com.tridium.event.recipients.BAlarmRecipient (class, event-rt)
+Showing the first; pass a qualified name for another.
+
+CLASS: BAlarmRecipient
+PACKAGE: javax.baja.alarm
+TYPE: class
+MODULE: alarm-rt
+HTML: bajadoc/javax/baja/alarm/BAlarmRecipient.html

@@ -1,0 +1,5 @@
+CLASS: BAlarmRecipient
+PACKAGE: com.tridium.event.recipients
+TYPE: class
+MODULE: event-rt
+XML: devguide/event-rt/com/tridium/event/recipients/BAlarmRecipient.bajadoc

@@ -1,0 +1,5 @@
+CLASS: BWebServlet
+PACKAGE: javax.baja.web
+EXTENDS: BAbstractService
+SUBCLASSES: BObixServerMETHODS:
+  doGet(WebOp)

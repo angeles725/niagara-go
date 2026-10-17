@@ -2,7 +2,8 @@
 
 `testdata/` is a minimal niagara-help checkout: `versions/registry.json` (the real
 registry) and, for version 4.14.0.162 whose `data_root` is `.`, a small fixture
-corpus under `indexes/`. The real indexes are megabytes; full parity is proven by
+corpus: hand-written `indexes/*.json` and `bajadoc-clean/` texts chosen to reach the
+edge cases (name collisions, generics, case-insensitive fallbacks, CRLF text). The real indexes are megabytes; full parity is proven by
 the repository golden suite (`niagara-help/tests/golden_cli.py` with `GOLDEN_BIN`).
 
 Every case under `golden/` holds what the Python CLI printed, captured with:
@@ -17,5 +18,5 @@ Every case under `golden/` holds what the Python CLI printed, captured with:
 
 The Go runner (`internal/golden`) applies `COLUMNS=100` and `NO_COLOR=1` to every
 case; `PYTHONHASHSEED=0` only fixes Python set order and has no Go counterpart.
-A lookup that misses prints the absolute data root, so miss cases are unit tests
-rather than goldens.
+A lookup that misses prints the absolute data root, so miss outputs live in
+`misses/*.txt` with `<TESTDATA>` for that root and are checked by `miss_test.go`.
