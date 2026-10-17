@@ -36,6 +36,15 @@ func folder(name string, h int, body string) string {
 
 func find(xml string) Result { return Find(bog.Parse("<xml>", xml)) }
 
+// only is the single cycle of res; it fails the test unless there is exactly one, with edges.
+func only(t *testing.T, res Result) Cycle {
+	t.Helper()
+	if len(res.Cycles) != 1 || len(res.Cycles[0].Edges) == 0 {
+		t.Fatalf("want one cycle with edges, got %+v", res.Cycles)
+	}
+	return res.Cycles[0]
+}
+
 func TestTwoComponentLoopDetected(t *testing.T) {
 	res := find(doc(folder("A", 2, link("Link", 3, "out", "in")) + folder("B", 3, link("Link", 2, "out", "in"))))
 	if len(res.Cycles) != 1 || strings.Join(res.Cycles[0].Components, ",") != "/R/A,/R/B" {
@@ -52,10 +61,11 @@ func TestChainHasNoCycle(t *testing.T) {
 
 func TestSelfLoopAndItsEdge(t *testing.T) {
 	res := find(doc(folder("A", 2, link("Link", 2, "out", "in"))))
-	if len(res.Cycles) != 1 || res.Cycles[0].Components[0] != "/R/A" {
+	c := only(t, res)
+	if c.Components[0] != "/R/A" {
 		t.Fatalf("cycles %+v", res.Cycles)
 	}
-	e := res.Cycles[0].Edges[0]
+	e := c.Edges[0]
 	if e.Source != "/R/A" || *e.SourceSlot != "out" || e.Target != "/R/A" || *e.TargetSlot != "in" {
 		t.Errorf("edge %+v", e)
 	}
@@ -80,7 +90,7 @@ func TestCycleListsItsSlotEdgesSorted(t *testing.T) {
 	res := find(doc(folder("A", 2, link("Link", 3, "out", "in")) +
 		folder("B", 3, link("Link", 2, "out", "in")+link("Link1", 2, "x", "y")) + folder("C", 4, link("Link", 2, "out", "in"))))
 	var got []string
-	for _, e := range res.Cycles[0].Edges {
+	for _, e := range only(t, res).Edges {
 		got = append(got, e.Source+"."+*e.SourceSlot+">"+e.Target+"."+*e.TargetSlot)
 	}
 	if strings.Join(got, " ") != "/R/A.out>/R/B.in /R/A.x>/R/B.y /R/B.out>/R/A.in" {
@@ -90,16 +100,16 @@ func TestCycleListsItsSlotEdgesSorted(t *testing.T) {
 
 func TestEscapedNamesAreDecoded(t *testing.T) {
 	res := find(doc("<p n='Room$201' h='2' t='b:Folder'>" + link("Link", 2, "out$20a", "in") + "</p>"))
-	if res.Cycles[0].Components[0] != "/R/Room 1" || *res.Cycles[0].Edges[0].SourceSlot != "out a" {
-		t.Errorf("cycle %+v", res.Cycles[0])
+	if c := only(t, res); c.Components[0] != "/R/Room 1" || *c.Edges[0].SourceSlot != "out a" {
+		t.Errorf("cycle %+v", c)
 	}
 }
 
 func TestUnnamedStationRootRendersAsSlash(t *testing.T) {
 	res := find("<?xml version='1.0'?><bajaObjectGraph version='4.0'><p h='1' m='b=baja' t='b:Station'>" +
 		"<p n='A' h='2' t='b:Folder'><p n='Link' t='b:Link'><p n='sourceOrd' v='h:2'/></p></p></p></bajaObjectGraph>")
-	if res.Cycles[0].Components[0] != "/A" {
-		t.Errorf("components %v", res.Cycles[0].Components)
+	if c := only(t, res); c.Components[0] != "/A" {
+		t.Errorf("components %v", c.Components)
 	}
 }
 
