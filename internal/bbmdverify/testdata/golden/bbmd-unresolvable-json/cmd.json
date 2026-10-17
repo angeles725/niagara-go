@@ -1,1 +1,1 @@
-{"args": ["--device-ip", "127.0.0.4", "--device-prefix", "32", "--port", "47931", "--src-port", "0", "--timeout", "0.3", "--json", "--bbmd", "no such host"]}
+{"args": ["--device-ip", "127.0.0.4", "--device-prefix", "32", "--port", "47931", "--src-port", "0", "--timeout", "0.3", "--json", "--local-bcast", "127.0.0.4", "--bbmd", "no such host"]}
