@@ -21,7 +21,8 @@ type number struct {
 
 // layout is CPython calc_number_widths + fill_number:
 // <lpadding><sign><prefix><spadding><grouped digits><decimal><remainder><rpadding>.
-func layout(n number, f *fspec) string {
+// Padding beyond maxFormatLen is a MemoryError (see Format).
+func layout(n number, f *fspec) (string, error) {
 	sign := ""
 	switch {
 	case n.neg:
@@ -36,16 +37,25 @@ func layout(n number, f *fspec) string {
 	if n.decimal {
 		nonDigits++
 	}
+	sep := ""
+	if f.thousands != 0 {
+		sep = string(f.thousands)
+	}
+	if f.width > maxFormatLen {
+		unpadded := nonDigits
+		if n.digits != "" {
+			unpadded += len(groupDigits(n.digits, 0, sep, f.groupLen))
+		}
+		if f.width > int64(unpadded) {
+			return "", memoryError()
+		}
+	}
 	minWidth := 0
 	if f.fill == '0' && f.align == '=' {
 		minWidth = int(f.width) - nonDigits
 	}
 	grouped := ""
 	if n.digits != "" {
-		sep := ""
-		if f.thousands != 0 {
-			sep = string(f.thousands)
-		}
 		grouped = groupDigits(n.digits, minWidth, sep, f.groupLen)
 	}
 	var lpad, spad, rpad int
@@ -74,7 +84,7 @@ func layout(n number, f *fspec) string {
 	}
 	b.WriteString(n.remainder)
 	b.WriteString(strings.Repeat(fill, rpad))
-	return b.String()
+	return b.String(), nil
 }
 
 // groupDigits is CPython _PyUnicode_InsertThousandsGrouping: groups of group digits from the
@@ -135,9 +145,13 @@ func formatFloat(v float64, typeName, spec string) (string, error) {
 	return "", unknownCode(f.typ, typeName)
 }
 
+// maxFloatPrecision is the largest float precision Python 3.15 accepts (INT_MAX - 1024,
+// measured); a larger one raises ValueError("precision too big") for every float type.
+const maxFloatPrecision = math.MaxInt32 - 1024
+
 // formatFloatSpec is CPython format_float_internal.
 func formatFloatSpec(v float64, f *fspec) (string, error) {
-	if f.precision > math.MaxInt32 {
+	if f.precision > maxFloatPrecision {
 		return "", valueError("precision too big")
 	}
 	typ, prec, defPrec, addDot0, pct := f.typ, int(f.precision), 6, false, false
@@ -154,6 +168,12 @@ func formatFloatSpec(v float64, f *fspec) (string, error) {
 		prec = defPrec
 	} else if typ == 'r' {
 		typ = 'g'
+	}
+	// e, f and alternate g write all prec digits (zeros included); g otherwise stops at the
+	// significant ones, and nan and inf have no digits.
+	padsDigits := strings.ContainsRune("eEfF", typ) || f.alternate && (typ == 'g' || typ == 'G')
+	if prec > maxFormatLen && padsDigits && !math.IsInf(v, 0) && !math.IsNaN(v) {
+		return "", memoryError()
 	}
 	s := doubleToString(v, byte(typ), prec, f.alternate, f.noNeg0, addDot0)
 	if pct {
@@ -172,7 +192,7 @@ func formatFloatSpec(v float64, f *fspec) (string, error) {
 		num.decimal, s = true, s[1:]
 	}
 	num.remainder = s
-	return layout(num, f), nil
+	return layout(num, f)
 }
 
 // doubleToString is CPython PyOS_double_to_string for the codes e E f F g G r, with the
@@ -216,12 +236,22 @@ func caseIf(upper bool, s string) string {
 	return s
 }
 
+// The longest exact decimal expansions of a float64: 767 significant digits and 1074
+// decimals (the smallest subnormal); the digit helpers never ask strconv for more.
+const (
+	maxExactDigits   = 767
+	maxExactDecimals = 1074
+)
+
 // sigDigits returns n significant digits of |v| (shortest round-trip when n < 0) without
 // trailing zeros, and the decimal point position; zero is "0" at 1, like dtoa.
 func sigDigits(v float64, n int) (string, int) {
 	if n > 0 {
 		n--
 	}
+	// A float64 has at most 767 significant decimal digits: asking strconv for more only
+	// adds zeros the trim below drops, so a huge precision costs no memory here.
+	n = min(n, maxExactDigits)
 	mant, exp, _ := strings.Cut(strconv.FormatFloat(math.Abs(v), 'e', n, 64), "e")
 	digits := strings.TrimRight(strings.Replace(mant, ".", "", 1), "0")
 	e, _ := strconv.Atoi(exp)
@@ -234,7 +264,8 @@ func sigDigits(v float64, n int) (string, int) {
 // fixedDigits returns the digits of |v| rounded to n decimals without leading or trailing
 // zeros, and the decimal point position; a result of zero is "0" at 1.
 func fixedDigits(v float64, n int) (string, int) {
-	s := strconv.FormatFloat(math.Abs(v), 'f', n, 64)
+	// A float64 has at most 1074 decimals; more are zeros the trim below drops.
+	s := strconv.FormatFloat(math.Abs(v), 'f', min(n, maxExactDecimals), 64)
 	intLen := strings.IndexByte(s, '.')
 	if intLen < 0 {
 		intLen = len(s)

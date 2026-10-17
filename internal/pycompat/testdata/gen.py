@@ -224,6 +224,8 @@ WIDTHS = [-1, 0, 1, 2, 3, 4, 5, 6, 7, 10]
 CUTS = ["", "a", "abc", "h\u00e9llo w\u00f6rld", "e\u0301\U0001f600x", "\u65e5\u672c\u8a9e\u30c6\u30ad\u30b9\u30c8"]
 # format(value, spec): every static spec the niagara-research tools use (an AST survey of
 # tools/, module-navigator/ and niagara-help/), then the rest of the mini-language and its errors.
+# The last MINI_SPECS line probes the float precision limit (2147482623 is the largest Python
+# accepts) with specs whose output stays short, so Python never allocates the padding.
 SURVEY_SPECS = """+d , ,d .0% .0f .1% .1f .2f .3f .3g 02d 04X 08X 10s 11 11s 12s 14 14s 15s 16 18s 19s 20s 22s 24
 24s 25s 26s 28s 2d 30s 32s 34 34s 35s 36s 3d 40s 42s 45s 4d 4s 5.1% 50s 55s 5s 6 60s 6s 7 7s 8 8s 9s <10s
 <12 <14 <14s <15 <15s <16 <18 <19s <1d <20 <20s <22 <24 <25 <25s <28s <3 <30s <33 <35 <35s <40s <45s <5 <52s
@@ -237,7 +239,8 @@ _x _X ,x ,.2f _.3e ,g ,% ,n ,c ,s ,, __ ,_ _, ,e 012,d 015,.5_f 09_x #012_b ,b .
 .3e .3E .0g .1g .10g .17g .3G .2% .3s .0s .1s 10.3s ^10.2s .,f .4,f ._f ,.4_f .,e .,% .10,g ., ._ .,_f ._,f
 .__f .,,f .,n ._n ,._n .,s .,d .,c .,x .,b d n b o x X c e E f F g G % r a i u \u00e9 \x01 \x7f \U0001f600 .
 1. xx << 99999999999999999999999 .99999999999999999999 .3000000000 08.3d =s +s -s \x20s #s zs +c #c \x20c
--c =c 5c ,.2s 8.3 .2d .0d <8.3e >10.4g ^12.3% =+12.2f \x20.3f \x20d \x20 \x20x""".split()
+-c =c 5c ,.2s 8.3 .2d .0d <8.3e >10.4g ^12.3% =+12.2f \x20.3f \x20d \x20 \x20x
+.2147482623 .2147482623g .2147482623n .2147482624 .2147482624f .2147482624g .2147483647e .2147483648%""".split()
 MINI_SPECS = [x.encode().decode("unicode_escape") if "\\" in x else x for x in MINI_SPECS]
 FORMAT_SPECS = sorted(set([""] + SURVEY_SPECS + MINI_SPECS))
 FORMAT_VALUES = ["", "a", "ab", "h\u00e9llo", "\u65e5\u672c\u8a9e", "e\u0301", "\U0001f600x", "a longer string value",
