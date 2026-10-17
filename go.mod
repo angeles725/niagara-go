@@ -2,7 +2,10 @@ module github.com/angeles725/niagara-go
 
 go 1.27.2
 
-require modernc.org/sqlite v1.60.1
+require (
+	github.com/dlclark/regexp2 v1.12.0
+	modernc.org/sqlite v1.60.1
+)
 
 require (
 	github.com/dustin/go-humanize v1.0.1 // indirect
