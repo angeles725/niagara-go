@@ -25,8 +25,9 @@ func killTreeOnCancel(cmd *exec.Cmd) {
 // relayInterrupts covers the time a probe child runs: its own process group does not get the
 // terminal's Ctrl-C, so SIGINT or SIGTERM to the audit cancels the run with an *interruptError
 // cause instead, and the cancel kills the child group. The returned stop must be called once the
-// child has been waited for; it restores the default handling of both signals. Signals the audit
-// was started with ignored stay ignored.
+// child has been waited for; it restores the default handling of both signals only while no other
+// signal.Notify for SIGINT or SIGTERM is active in the process (the audit registers none). Signals
+// the audit was started with ignored stay ignored.
 func relayInterrupts(cancel context.CancelCauseFunc) (stop func()) {
 	var sigs []os.Signal
 	for _, s := range []os.Signal{syscall.SIGINT, syscall.SIGTERM} {
@@ -60,9 +61,10 @@ func relayInterrupts(cancel context.CancelCauseFunc) (stop func()) {
 	}
 }
 
-// reraise sends sig, now back to its default handling, to the audit itself so it dies of the
-// signal as it would have without the relay (the shell sees 130 or 143). The wait only lets the
-// runtime deliver it; the caller reports the interrupt if the process somehow lives on.
+// reraise sends sig, back to its default handling once stop ran (see relayInterrupts), to the
+// audit itself so it dies of the signal as it would have without the relay (the shell sees 130 or
+// 143). The wait only lets the runtime deliver it; the caller reports the interrupt if the process
+// lives on, as it does when another signal.Notify still catches sig.
 func reraise(sig os.Signal) {
 	if s, ok := sig.(syscall.Signal); ok && syscall.Kill(os.Getpid(), s) == nil {
 		time.Sleep(time.Second)
