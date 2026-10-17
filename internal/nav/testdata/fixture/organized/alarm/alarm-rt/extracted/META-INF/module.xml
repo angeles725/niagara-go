@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module name="alarm-rt" vendor="Tridium" preferredSymbol="alarm" moduleName="alarm">
+  <dependencies>
+    <dependency name="baja" vendor="Tridium" vendorVersion="4.14.0"/>
+    <dependency name="aVeryLongDependencyModuleNameThatIsCut-rt" vendor="TridiumVendorLong" vendorVersion="4.14.0"/>
+    <dependency name="control-rt" vendor="Tridium"/>
+  </dependencies>
+  <permissions>
+    <niagara-permission-groups type="station"/>
+    <java-permissions type="workbench">
+      <java-permission class="java.lang.RuntimePermission" name="loadLibrary.alarmDialog"/>
+      <java-permission class="com.tridium.nre.security.NiagaraSocketPermission" name="*:1-100000" action="connect,resolve"/>
+    </java-permissions>
+    <java-permissions type="station">
+      <java-permission class="java.io.FilePermission" name="${protected.station.home}/-" action="read"/>
+    </java-permissions>
+  </permissions>
+</module>

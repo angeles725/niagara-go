@@ -1,0 +1,2 @@
+usage: module-nav search [-h] [-n N] pattern
+module-nav search: error: argument -n: invalid int value: 'x'

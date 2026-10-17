@@ -1,0 +1,1 @@
+{"args": ["--base-dir", "fixture/nav", "package", "javax.baja.alarm", "-n", "3"], "env": {"NAV_CORPUS_BASE": "fixture/no-corpus"}}

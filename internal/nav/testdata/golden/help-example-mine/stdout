@@ -1,0 +1,16 @@
+usage: module-nav example-mine [-h] [--pattern EM_PATTERN] [--top EM_TOP] [--exclude-tridium]
+                               [--include-docsource] [--min-lines EM_MIN_LINES] [--json]
+                               class_name
+
+positional arguments:
+  class_name            Class name (e.g. BAlarmService)
+
+options:
+  -h, --help            show this help message and exit
+  --pattern EM_PATTERN  Filter method bodies by substring (case-insensitive)
+  --top EM_TOP          Max examples to return (default 3)
+  --exclude-tridium     Skip com/tridium/* files
+  --include-docsource   Include docSource-doc module (mirror copy; excluded by default)
+  --min-lines EM_MIN_LINES
+                        Minimum method body lines (default 5)
+  --json                Structured JSON output

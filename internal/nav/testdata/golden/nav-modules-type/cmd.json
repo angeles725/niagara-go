@@ -1,0 +1,1 @@
+{"args": ["--base-dir", "fixture/nav", "modules", "--type", "rt"], "env": {"NAV_CORPUS_BASE": "fixture/organized"}}

@@ -1,0 +1,9 @@
+usage: module-nav session export [-h] [--as {md,json}] [--out EXPORT_OUT] name
+
+positional arguments:
+  name              Session name
+
+options:
+  -h, --help        show this help message and exit
+  --as {md,json}    Export format (default: md)
+  --out EXPORT_OUT  Output file path

@@ -1,0 +1,15 @@
+usage: module-nav explain [-h] [--help-root EXPLAIN_HELP_ROOT] [--no-content] [-n EXPLAIN_N]
+                          concept
+
+Cross-reference a concept across devguide/guides/bajadoc + code. See also: `rank` for a ranked
+class lookup, `grep` for text in the sources.
+
+positional arguments:
+  concept               Concept to explain (e.g. 'SMA', 'skipModuleValidation')
+
+options:
+  -h, --help            show this help message and exit
+  --help-root EXPLAIN_HELP_ROOT
+                        Override niagara-help root (default: $NIAGARA_HOME/niagara-help)
+  --no-content          Only do filename matching (skip content grep — faster)
+  -n EXPLAIN_N          Max hits per doc tree (default 15)

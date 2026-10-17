@@ -1,0 +1,10 @@
+usage: module-nav catches [-h] [-n N] [--module CATCHES_MODULE] name
+
+positional arguments:
+  name                  Exception type (e.g. IOException)
+
+options:
+  -h, --help            show this help message and exit
+  -n N                  Max results to show (default 50)
+  --module, -m CATCHES_MODULE
+                        Filter to a specific module

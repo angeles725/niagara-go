@@ -1,0 +1,14 @@
+usage: module-nav session [-h] {save,load,list,note,export,delete} ...
+
+positional arguments:
+  {save,load,list,note,export,delete}
+                        Session sub-commands
+    save                Save current bookmarks + history + notes as a session
+    load                Restore a saved session as active
+    list                List all saved sessions
+    note                Add a note to the active session
+    export              Export session to file or stdout
+    delete              Delete a saved session
+
+options:
+  -h, --help            show this help message and exit

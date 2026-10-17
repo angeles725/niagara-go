@@ -1,0 +1,13 @@
+usage: module-nav permissions [-h] [--module PERM_MODULE] [-n N] [--declared]
+                              [--type {station,all,workbench}] [--summary]
+
+options:
+  -h, --help            show this help message and exit
+  --module, -m PERM_MODULE
+                        Filter to a specific module
+  -n N                  Max results to show (default 200)
+  --declared            Scan META-INF/module.xml <permissions> blocks instead of callsites
+  --type {station,all,workbench}
+                        Restrict --declared results to one permission type
+  --summary             With --declared: show aggregate counts (per module/type/class) instead of
+                        rows

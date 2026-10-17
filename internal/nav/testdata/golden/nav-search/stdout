@@ -1,0 +1,13 @@
+
+  Search 'BAlarm*': 17 results
+  (class=17)
+
+                                CLASS  KIND       LINES  MODULE               PACKAGE
+  ----------------------------------------------------------------------------------------------------
+                               BAlarm  class        320  honIrmControl-rt     com.honeywell.irm.vav
+                               BAlarm  class        188  honeywellSpyderTool  com.honeywell.honeywellXL10NextGen.functionalBlocks.blocks.dataFunction  ZKM
+                               BAlarm  class         46  lonhoneywellAXWizard com.honeywell.lonHoneywellXl15c.datatypes
+             BAlarmablePointMarkerTag  class         74  cloudLink-rt         com.tridium.cloudLink.tag
+
+  ... and 13 more (use -n to show more)
+

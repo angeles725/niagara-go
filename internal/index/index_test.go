@@ -40,7 +40,7 @@ func TestDecodeErrors(t *testing.T) {
 		"extra data": `{} {}`,
 		"truncated":  `{"a": [1,`,
 		"empty":      ``,
-		"nan":        `NaN`,
+		"bare word":  `nan`,
 	} {
 		t.Run(name, func(t *testing.T) {
 			if _, err := Decode([]byte(text)); err == nil {

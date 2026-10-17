@@ -1,0 +1,12 @@
+usage: module-nav find [-h] [--source] [--module FIND_MODULE] [-n N] query [query ...]
+
+Fuzzy search in class names (camelCase-aware). See also: `rank` for a ranked class lookup.
+
+positional arguments:
+  query                 Search query words (e.g. 'alarm service')
+
+options:
+  -h, --help            show this help message and exit
+  --source              Also search in source tokens (slower)
+  --module FIND_MODULE  Filter by module
+  -n N                  Limit results (default 50)

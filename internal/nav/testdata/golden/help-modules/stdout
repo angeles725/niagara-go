@@ -1,0 +1,12 @@
+usage: module-nav modules [-h] [--type MOD_TYPE] [--zkm] [--no-code] [--has-code]
+                          [--bytecode BYTECODE] [--top TOP]
+
+options:
+  -h, --help            show this help message and exit
+  --type, -t MOD_TYPE   Filter by type: rt, wb, ux, doc, se, standalone
+  --zkm                 Show only ZKM-obfuscated modules
+  --no-code             Show only modules without Java code
+  --has-code            Show only modules with Java code
+  --bytecode, -b BYTECODE
+                        Filter by bytecode version (e.g. 52 for Java 8)
+  --top TOP             Show top N modules by java_files count

@@ -1,0 +1,24 @@
+Traceback (most recent call last):
+  File "/home/cristian/niagara-research/module-navigator/tools/module_nav.py", line 328, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "/home/cristian/niagara-research/module-navigator/tools/module_nav_lib/commands/__init__.py", line 140, in main
+    args.run(base_dir, args)
+    ~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/home/cristian/niagara-research/module-navigator/tools/module_nav_lib/commands/inventory.py", line 54, in run_module
+    cmd_module(
+    ~~~~~~~~~~^
+        base_dir,
+        ^^^^^^^^^
+    ...<3 lines>...
+        show_sma=args.mod_show_sma,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/cristian/niagara-research/module-navigator/tools/module_nav_lib/inventory/modules.py", line 135, in cmd_module
+    _print_module_detail(resolved, inv[resolved])
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cristian/niagara-research/module-navigator/tools/module_nav_lib/inventory/modules.py", line 287, in _print_module_detail
+    v["bytecode"], v["bytecode"] - 44 if v["bytecode"] >= 45 else "?"))
+                                         ^^^^^^^^^^^^^^^^^^^
+TypeError: '>=' not supported between instances of 'NoneType' and 'int'

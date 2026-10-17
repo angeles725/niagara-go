@@ -1,0 +1,7 @@
+usage: module-nav ui class [-h] name
+
+positional arguments:
+  name        Class name (e.g. BLinkPad)
+
+options:
+  -h, --help  show this help message and exit

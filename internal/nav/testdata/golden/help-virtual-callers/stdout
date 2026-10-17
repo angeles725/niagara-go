@@ -1,0 +1,12 @@
+usage: module-nav virtual-callers [-h] [--depth VC_DEPTH] [--no-self] [--json]
+                                  class_name method_name
+
+positional arguments:
+  class_name        Base class (e.g. BControlPoint)
+  method_name       Method name (e.g. execute)
+
+options:
+  -h, --help        show this help message and exit
+  --depth VC_DEPTH  Max subclass depth (0=unlimited, default 0)
+  --no-self         Exclude direct callers of the base class
+  --json            Structured JSON output

@@ -1,0 +1,13 @@
+usage: module-nav string-search [-h] [-n N] [--module SS_MODULE] pattern
+
+Regex search in indexed string literals (instant via SQLite). See also: `grep` for text in the
+sources.
+
+positional arguments:
+  pattern               Pattern to search (substring or regex)
+
+options:
+  -h, --help            show this help message and exit
+  -n N                  Max results to show (default 50)
+  --module, -m SS_MODULE
+                        Filter to a specific module

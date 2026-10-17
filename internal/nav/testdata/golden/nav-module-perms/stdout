@@ -1,0 +1,20 @@
+
+  Module:      alarm-rt
+  module.xml:  fixture/organized/alarm/alarm-rt/extracted/META-INF/module.xml
+
+  DEPENDENCIES (3)
+  NAME                           VENDOR       VERSION
+  ----------------------------------------------------------------
+  baja                           Tridium      4.14.0
+  aVeryLongDependencyModuleNameT TridiumVendo 4.14.0
+  control-rt                     Tridium      
+
+  DECLARED PERMISSIONS
+    type=workbench  (2 entries)
+      java.lang.RuntimePermission                   loadLibrary.alarmDialog   
+      com.tridium.nre.security.NiagaraSocketPermiss *:1-100000                connect,resolve
+    type=station  (1 entries)
+      java.io.FilePermission                        ${protected.station.home} read
+
+  Total java-permission entries: 3
+

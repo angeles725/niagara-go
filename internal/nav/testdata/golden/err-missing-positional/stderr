@@ -1,0 +1,2 @@
+usage: module-nav grep [-h] [-n N] [--module GREP_MODULE] [--type GREP_TYPE] pattern
+module-nav grep: error: the following arguments are required: pattern

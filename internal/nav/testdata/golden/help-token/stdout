@@ -1,0 +1,12 @@
+usage: module-nav token [-h] [-n N] [--context [N]] [--module TOKEN_MODULE] word
+
+positional arguments:
+  word                  Token to search (e.g. setPreferredSize)
+
+options:
+  -h, --help            show this help message and exit
+  -n N                  Max results to show (default 50)
+  --context [N]         Show N surrounding source lines per match (bare flag = 2, omitted = 0
+                        compact, N = custom window)
+  --module, -m TOKEN_MODULE
+                        Filter to a specific module

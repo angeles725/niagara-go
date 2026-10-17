@@ -1,0 +1,7 @@
+usage: module-nav license-inspect [-h] [--dir LIC_DIR] [--critical-features] [--md]
+
+options:
+  -h, --help           show this help message and exit
+  --dir LIC_DIR        Directory with .license files (default: $NIAGARA_HOME/security/licenses)
+  --critical-features  Only show critical (bypass-enabling) features — skip headers and summary
+  --md                 Emit markdown with YAML frontmatter instead of ASCII table
