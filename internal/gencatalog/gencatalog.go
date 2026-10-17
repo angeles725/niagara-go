@@ -13,7 +13,6 @@ package gencatalog
 import (
 	"errors"
 	"fmt"
-	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -44,7 +43,7 @@ var (
 
 // repoRoot locates the repository; tests replace it.
 var repoRoot = func() (string, error) {
-	exe, err := invokedPath()
+	exe, err := cli.InvokedPath()
 	if err != nil {
 		return "", err
 	}
@@ -52,33 +51,6 @@ var repoRoot = func() (string, error) {
 		return "", err
 	}
 	return filepath.Dir(filepath.Dir(exe)), nil
-}
-
-// invokedPath is the executable as it was started (Python's __file__): argv[0] made
-// absolute, or looked up on $PATH when it has no separator; else os.Executable.
-func invokedPath() (string, error) {
-	arg0 := os.Args[0]
-	if !strings.ContainsRune(arg0, filepath.Separator) && !strings.ContainsRune(arg0, '/') {
-		if found, err := lookPath(arg0); err == nil {
-			arg0 = found
-		} else {
-			return os.Executable()
-		}
-	}
-	return filepath.Abs(arg0)
-}
-
-func lookPath(name string) (string, error) {
-	for _, dir := range filepath.SplitList(os.Getenv("PATH")) {
-		if dir == "" {
-			dir = "."
-		}
-		p := filepath.Join(dir, name)
-		if st, err := os.Stat(p); err == nil && !st.IsDir() && st.Mode()&0o111 != 0 {
-			return p, nil
-		}
-	}
-	return "", fs.ErrNotExist
 }
 
 type entry struct{ label, filename, title string }
