@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Synthetic station for course check tests; hand-written, no real station content. -->
+<bajaObjectGraph version="4.0">
+<p h="1" m="b=baja" t="b:Station">
+ <p n="stationName" v="GoodStation"/>
+ <p n="Services" h="2" t="b:ServiceContainer">
+  <p n="WorkOrderService" h="101" m="t=training" t="t:WorkOrderService">
+   <p n="lastSuccess" t="b:AbsTime" v="2026-10-14T11:31:12.108-06:00"/>
+  </p>
+  <p n="HistoriesToCsvService" h="102" t="t:HistoriesToCsvService"/>
+ </p>
+ <p n="Drivers" h="3" m="d=driver" t="d:DriverContainer">
+  <p n="TrafficLightServerNetwork" h="103" m="tls=trafficLightServer" t="tls:TrafficLightServerNetwork">
+   <p n="A" h="104" t="tls:TrafficLightServerDevice"><p n="points" h="105" t="tls:TrafficLightServerPointDeviceExt">
+    <p n="N" h="106" m="c=control" t="c:EnumWritable"><p n="proxyExt" h="107" t="tls:TrafficLightServerProxyExt"/></p>
+    <p n="S" h="108" m="c=control" t="c:EnumWritable"><p n="proxyExt" h="109" t="tls:TrafficLightServerProxyExt"/></p>
+    <p n="E" h="10a" m="c=control" t="c:EnumWritable"><p n="proxyExt" h="10b" t="tls:TrafficLightServerProxyExt"/></p>
+    <p n="W" h="10c" m="c=control" t="c:EnumWritable"><p n="proxyExt" h="10d" t="tls:TrafficLightServerProxyExt"/></p>
+   </p></p>
+   <p n="B" h="10e" t="tls:TrafficLightServerDevice"><p n="points" h="10f" t="tls:TrafficLightServerPointDeviceExt">
+    <p n="N" h="110" m="c=control" t="c:EnumWritable"><p n="proxyExt" h="111" t="tls:TrafficLightServerProxyExt"/></p>
+    <p n="S" h="112" m="c=control" t="c:EnumWritable"><p n="proxyExt" h="113" t="tls:TrafficLightServerProxyExt"/></p>
+    <p n="E" h="114" m="c=control" t="c:EnumWritable"><p n="proxyExt" h="115" t="tls:TrafficLightServerProxyExt"/></p>
+    <p n="W" h="116" m="c=control" t="c:EnumWritable"><p n="proxyExt" h="117" t="tls:TrafficLightServerProxyExt"/></p>
+   </p></p>
+   <p n="C" h="118" t="tls:TrafficLightServerDevice"><p n="points" h="119" t="tls:TrafficLightServerPointDeviceExt">
+    <p n="N" h="11a" m="c=control" t="c:EnumWritable"><p n="proxyExt" h="11b" t="tls:TrafficLightServerProxyExt"/></p>
+    <p n="S" h="11c" m="c=control" t="c:EnumWritable"><p n="proxyExt" h="11d" t="tls:TrafficLightServerProxyExt"/></p>
+    <p n="E" h="11e" m="c=control" t="c:EnumWritable"><p n="proxyExt" h="11f" t="tls:TrafficLightServerProxyExt"/></p>
+    <p n="W" h="120" m="c=control" t="c:EnumWritable"><p n="proxyExt" h="121" t="tls:TrafficLightServerProxyExt"/></p>
+   </p></p>
+   <p n="D" h="122" t="tls:TrafficLightServerDevice"><p n="points" h="123" t="tls:TrafficLightServerPointDeviceExt">
+    <p n="N" h="124" m="c=control" t="c:EnumWritable"><p n="proxyExt" h="125" t="tls:TrafficLightServerProxyExt"/></p>
+    <p n="S" h="126" m="c=control" t="c:EnumWritable"><p n="proxyExt" h="127" t="tls:TrafficLightServerProxyExt"/></p>
+    <p n="E" h="128" m="c=control" t="c:EnumWritable"><p n="proxyExt" h="129" t="tls:TrafficLightServerProxyExt"/></p>
+    <p n="W" h="12a" m="c=control" t="c:EnumWritable"><p n="proxyExt" h="12b" t="tls:TrafficLightServerProxyExt"/></p>
+   </p></p>
+   <p n="E" h="12c" t="tls:TrafficLightServerDevice"><p n="points" h="12d" t="tls:TrafficLightServerPointDeviceExt">
+    <p n="N" h="12e" m="c=control" t="c:EnumWritable"><p n="proxyExt" h="12f" t="tls:TrafficLightServerProxyExt"/></p>
+    <p n="S" h="130" m="c=control" t="c:EnumWritable"><p n="proxyExt" h="131" t="tls:TrafficLightServerProxyExt"/></p>
+    <p n="E" h="132" m="c=control" t="c:EnumWritable"><p n="proxyExt" h="133" t="tls:TrafficLightServerProxyExt"/></p>
+    <p n="W" h="134" m="c=control" t="c:EnumWritable"><p n="proxyExt" h="135" t="tls:TrafficLightServerProxyExt"/></p>
+   </p></p>
+   <p n="F" h="136" t="tls:TrafficLightServerDevice"><p n="points" h="137" t="tls:TrafficLightServerPointDeviceExt">
+    <p n="N" h="138" m="c=control" t="c:EnumWritable"><p n="proxyExt" h="139" t="tls:TrafficLightServerProxyExt"/></p>
+    <p n="S" h="13a" m="c=control" t="c:EnumWritable"><p n="proxyExt" h="13b" t="tls:TrafficLightServerProxyExt"/></p>
+    <p n="E" h="13c" m="c=control" t="c:EnumWritable"><p n="proxyExt" h="13d" t="tls:TrafficLightServerProxyExt"/></p>
+    <p n="W" h="13e" m="c=control" t="c:EnumWritable"><p n="proxyExt" h="13f" t="tls:TrafficLightServerProxyExt"/></p>
+   </p></p>
+   <p n="G" h="140" t="tls:TrafficLightServerDevice"><p n="points" h="141" t="tls:TrafficLightServerPointDeviceExt">
+    <p n="N" h="142" m="c=control" t="c:EnumWritable"><p n="proxyExt" h="143" t="tls:TrafficLightServerProxyExt"/></p>
+    <p n="S" h="144" m="c=control" t="c:EnumWritable"><p n="proxyExt" h="145" t="tls:TrafficLightServerProxyExt"/></p>
+    <p n="E" h="146" m="c=control" t="c:EnumWritable"><p n="proxyExt" h="147" t="tls:TrafficLightServerProxyExt"/></p>
+    <p n="W" h="148" m="c=control" t="c:EnumWritable"><p n="proxyExt" h="149" t="tls:TrafficLightServerProxyExt"/></p>
+   </p></p>
+   <p n="H" h="14a" t="tls:TrafficLightServerDevice"><p n="points" h="14b" t="tls:TrafficLightServerPointDeviceExt">
+    <p n="N" h="14c" m="c=control" t="c:EnumWritable"><p n="proxyExt" h="14d" t="tls:TrafficLightServerProxyExt"/></p>
+    <p n="S" h="14e" m="c=control" t="c:EnumWritable"><p n="proxyExt" h="14f" t="tls:TrafficLightServerProxyExt"/></p>
+    <p n="E" h="150" m="c=control" t="c:EnumWritable"><p n="proxyExt" h="151" t="tls:TrafficLightServerProxyExt"/></p>
+    <p n="W" h="152" m="c=control" t="c:EnumWritable"><p n="proxyExt" h="153" t="tls:TrafficLightServerProxyExt"/></p>
+   </p></p>
+   <p n="I" h="154" t="tls:TrafficLightServerDevice"><p n="points" h="155" t="tls:TrafficLightServerPointDeviceExt">
+    <p n="N" h="156" m="c=control" t="c:EnumWritable"><p n="proxyExt" h="157" t="tls:TrafficLightServerProxyExt"/></p>
+    <p n="S" h="158" m="c=control" t="c:EnumWritable"><p n="proxyExt" h="159" t="tls:TrafficLightServerProxyExt"/></p>
+    <p n="E" h="15a" m="c=control" t="c:EnumWritable"><p n="proxyExt" h="15b" t="tls:TrafficLightServerProxyExt"/></p>
+    <p n="W" h="15c" m="c=control" t="c:EnumWritable"><p n="proxyExt" h="15d" t="tls:TrafficLightServerProxyExt"/></p>
+   </p></p>
+   <p n="J" h="15e" t="tls:TrafficLightServerDevice"><p n="points" h="15f" t="tls:TrafficLightServerPointDeviceExt">
+    <p n="N" h="160" m="c=control" t="c:EnumWritable"><p n="proxyExt" h="161" t="tls:TrafficLightServerProxyExt"/></p>
+    <p n="S" h="162" m="c=control" t="c:EnumWritable"><p n="proxyExt" h="163" t="tls:TrafficLightServerProxyExt"/></p>
+    <p n="E" h="164" m="c=control" t="c:EnumWritable"><p n="proxyExt" h="165" t="tls:TrafficLightServerProxyExt"/></p>
+    <p n="W" h="166" m="c=control" t="c:EnumWritable"><p n="proxyExt" h="167" t="tls:TrafficLightServerProxyExt"/></p>
+   </p></p>
+   <p n="K" h="168" t="tls:TrafficLightServerDevice"><p n="points" h="169" t="tls:TrafficLightServerPointDeviceExt">
+    <p n="N" h="16a" m="c=control" t="c:EnumWritable"><p n="proxyExt" h="16b" t="tls:TrafficLightServerProxyExt"/></p>
+    <p n="S" h="16c" m="c=control" t="c:EnumWritable"><p n="proxyExt" h="16d" t="tls:TrafficLightServerProxyExt"/></p>
+    <p n="E" h="16e" m="c=control" t="c:EnumWritable"><p n="proxyExt" h="16f" t="tls:TrafficLightServerProxyExt"/></p>
+    <p n="W" h="170" m="c=control" t="c:EnumWritable"><p n="proxyExt" h="171" t="tls:TrafficLightServerProxyExt"/></p>
+   </p></p>
+   <p n="L" h="172" t="tls:TrafficLightServerDevice"><p n="points" h="173" t="tls:TrafficLightServerPointDeviceExt">
+    <p n="N" h="174" m="c=control" t="c:EnumWritable"><p n="proxyExt" h="175" t="tls:TrafficLightServerProxyExt"/></p>
+    <p n="S" h="176" m="c=control" t="c:EnumWritable"><p n="proxyExt" h="177" t="tls:TrafficLightServerProxyExt"/></p>
+    <p n="E" h="178" m="c=control" t="c:EnumWritable"><p n="proxyExt" h="179" t="tls:TrafficLightServerProxyExt"/></p>
+    <p n="W" h="17a" m="c=control" t="c:EnumWritable"><p n="proxyExt" h="17b" t="tls:TrafficLightServerProxyExt"/></p>
+   </p></p>
+   <p n="M" h="17c" t="tls:TrafficLightServerDevice"><p n="points" h="17d" t="tls:TrafficLightServerPointDeviceExt">
+    <p n="N" h="17e" m="c=control" t="c:EnumWritable"><p n="proxyExt" h="17f" t="tls:TrafficLightServerProxyExt"/></p>
+    <p n="S" h="180" m="c=control" t="c:EnumWritable"><p n="proxyExt" h="181" t="tls:TrafficLightServerProxyExt"/></p>
+    <p n="E" h="182" m="c=control" t="c:EnumWritable"><p n="proxyExt" h="183" t="tls:TrafficLightServerProxyExt"/></p>
+    <p n="W" h="184" m="c=control" t="c:EnumWritable"><p n="proxyExt" h="185" t="tls:TrafficLightServerProxyExt"/></p>
+   </p></p>
+   <p n="N" h="186" t="tls:TrafficLightServerDevice"><p n="points" h="187" t="tls:TrafficLightServerPointDeviceExt">
+    <p n="N" h="188" m="c=control" t="c:EnumWritable"><p n="proxyExt" h="189" t="tls:TrafficLightServerProxyExt"/></p>
+    <p n="S" h="18a" m="c=control" t="c:EnumWritable"><p n="proxyExt" h="18b" t="tls:TrafficLightServerProxyExt"/></p>
+    <p n="E" h="18c" m="c=control" t="c:EnumWritable"><p n="proxyExt" h="18d" t="tls:TrafficLightServerProxyExt"/></p>
+    <p n="W" h="18e" m="c=control" t="c:EnumWritable"><p n="proxyExt" h="18f" t="tls:TrafficLightServerProxyExt"/></p>
+   </p></p>
+   <p n="O" h="190" t="tls:TrafficLightServerDevice"><p n="points" h="191" t="tls:TrafficLightServerPointDeviceExt">
+    <p n="N" h="192" m="c=control" t="c:EnumWritable"><p n="proxyExt" h="193" t="tls:TrafficLightServerProxyExt"/></p>
+    <p n="S" h="194" m="c=control" t="c:EnumWritable"><p n="proxyExt" h="195" t="tls:TrafficLightServerProxyExt"/></p>
+    <p n="E" h="196" m="c=control" t="c:EnumWritable"><p n="proxyExt" h="197" t="tls:TrafficLightServerProxyExt"/></p>
+    <p n="W" h="198" m="c=control" t="c:EnumWritable"><p n="proxyExt" h="199" t="tls:TrafficLightServerProxyExt"/></p>
+   </p></p>
+   <p n="P" h="19a" t="tls:TrafficLightServerDevice"><p n="points" h="19b" t="tls:TrafficLightServerPointDeviceExt">
+    <p n="N" h="19c" m="c=control" t="c:EnumWritable"><p n="proxyExt" h="19d" t="tls:TrafficLightServerProxyExt"/></p>
+    <p n="S" h="19e" m="c=control" t="c:EnumWritable"><p n="proxyExt" h="19f" t="tls:TrafficLightServerProxyExt"/></p>
+    <p n="E" h="1a0" m="c=control" t="c:EnumWritable"><p n="proxyExt" h="1a1" t="tls:TrafficLightServerProxyExt"/></p>
+    <p n="W" h="1a2" m="c=control" t="c:EnumWritable"><p n="proxyExt" h="1a3" t="tls:TrafficLightServerProxyExt"/></p>
+   </p></p>
+   <p n="Q" h="1a4" t="tls:TrafficLightServerDevice"><p n="points" h="1a5" t="tls:TrafficLightServerPointDeviceExt">
+    <p n="N" h="1a6" m="c=control" t="c:EnumWritable"><p n="proxyExt" h="1a7" t="tls:TrafficLightServerProxyExt"/></p>
+    <p n="S" h="1a8" m="c=control" t="c:EnumWritable"><p n="proxyExt" h="1a9" t="tls:TrafficLightServerProxyExt"/></p>
+    <p n="E" h="1aa" m="c=control" t="c:EnumWritable"><p n="proxyExt" h="1ab" t="tls:TrafficLightServerProxyExt"/></p>
+    <p n="W" h="1ac" m="c=control" t="c:EnumWritable"><p n="proxyExt" h="1ad" t="tls:TrafficLightServerProxyExt"/></p>
+   </p></p>
+  </p>
+  <p n="TrafficLightDriverNetwork" h="1ae" m="tld=trafficLightDriver" t="tld:TrafficLightDriverNetwork">
+   <p n="Intersection$20A" h="1af" t="tld:TrafficLightDriverDevice"><p n="points" h="1b0" t="tld:TrafficLightDriverPointDeviceExt">
+    <p n="N" h="1b1" t="c:EnumWritable"><p n="proxyExt" h="1b2" t="tld:TrafficLightDriverProxyExt"/></p>
+   </p></p>
+   <p n="Device$20b" h="1b3" t="tld:TrafficLightDriverDevice"><p n="intersectionId" v="b"/></p>
+   <p n="Device$20c" h="1b4" t="tld:TrafficLightDriverDevice"><p n="intersectionId" v="c"/></p>
+  </p>
+ </p>
+ <p n="Lab1" h="10" t="b:Folder">
+  <p n="FirstComponent" h="11" t="t:FirstComponent">
+   <p n="timeExecuted" t="b:AbsTime" v="2026-10-12T08:38:42.774-06:00"/>
+  </p>
+ </p>
+ <p n="Lab2" h="20" t="b:Folder">
+  <p n="Add" h="21" t="t:Add">
+   <p n="out" t="b:StatusNumeric"><p n="value" v="6.0"/></p>
+   <p n="Link1" t="b:Link"><p n="sourceOrd" v="h:22"/><p n="sourceSlotName" v="out"/><p n="targetSlotName" v="in1"/></p>
+   <p n="Link2" t="b:Link"><p n="sourceOrd" v="h:23"/><p n="sourceSlotName" v="out"/><p n="targetSlotName" v="in2"/></p>
+   <p n="Link3" t="b:Link"><p n="sourceOrd" v="h:24"/><p n="sourceSlotName" v="out"/><p n="targetSlotName" v="in3"/></p>
+  </p>
+  <p n="Point1" h="22" t="c:NumericWritable"/>
+  <p n="Point2" h="23" t="c:NumericWritable"/>
+  <p n="Point3" h="24" t="c:NumericWritable"/>
+  <p n="Output" h="25" t="c:NumericWritable">
+   <p n="Link" t="b:Link"><p n="sourceOrd" v="slot:/Lab2/Add"/><p n="sourceSlotName" v="out"/><p n="targetSlotName" v="in10"/></p>
+  </p>
+ </p>
+ <p n="Lab4" h="40" t="b:Folder">
+  <p n="My$20Tstat" h="41" t="t:Tstat">
+   <p n="diff" t="b:StatusNumeric"><p n="value" v="2.0"/></p>
+   <p n="action" t="t:LoopAction" v="reverse"/>
+   <p n="Link" t="b:Link"><p n="sourceOrd" v="h:43"/><p n="sourceSlotName" v="out"/><p n="targetSlotName" v="cv"/></p>
+   <p n="Link1" t="b:Link"><p n="sourceOrd" v="h:44"/><p n="sourceSlotName" v="out"/><p n="targetSlotName" v="sp"/></p>
+  </p>
+  <p n="Reference$20Tstat" h="42" m="kitControl=kitControl" t="kitControl:Tstat">
+   <p n="nullOnInControl" v="false"/>
+  </p>
+  <p n="SpaceTemp" h="43" t="c:NumericWritable"/>
+  <p n="Setpoint" h="44" t="c:NumericWritable"/>
+ </p>
+ <p n="Lab9" h="90" t="b:Folder">
+  <p n="ClientThreadExecutor" h="91" t="t:ClientThreadExecutor"/>
+  <p n="DedicatedThreadExecutor" h="92" t="t:DedicatedThreadExecutor"/>
+  <p n="EngineThreadExecutor" h="93" t="t:EngineThreadExecutor"/>
+  <p n="ExecutorServiceExecutor" h="94" t="t:ExecutorServiceExecutor"/>
+  <p n="WorkerThreadExecutor" h="95" t="t:WorkerThreadExecutor">
+   <p n="worker" h="96" t="t:TrainingWorker"/>
+  </p>
+  <p n="CurrentTime" h="97" t="kitControl:CurrentTime"/>
+ </p>
+ <p n="Lab10" h="a0" m="h=history" t="b:Folder">
+  <p n="NumericWritable" h="b0" t="c:NumericWritable">
+   <p n="Link" t="b:Link"><p n="sourceOrd" v="h:c0"/><p n="sourceSlotName" v="out"/><p n="targetSlotName" v="in16"/></p>
+   <p n="NumericCov" h="d0" t="h:NumericCovHistoryExt"><p n="enabled" v="true"/></p>
+  </p>
+  <p n="Ramp" h="c0" t="kitControl:Ramp"/>
+  <p n="NumericWritable1" h="b1" t="c:NumericWritable">
+   <p n="Link" t="b:Link"><p n="sourceOrd" v="h:c1"/><p n="sourceSlotName" v="out"/><p n="targetSlotName" v="in16"/></p>
+   <p n="NumericCov" h="d1" t="h:NumericCovHistoryExt"><p n="enabled" v="true"/></p>
+  </p>
+  <p n="Ramp1" h="c1" t="kitControl:Ramp"/>
+  <p n="NumericWritable2" h="b2" t="c:NumericWritable">
+   <p n="Link" t="b:Link"><p n="sourceOrd" v="h:c2"/><p n="sourceSlotName" v="out"/><p n="targetSlotName" v="in16"/></p>
+   <p n="NumericCov" h="d2" t="h:NumericCovHistoryExt"><p n="enabled" v="true"/></p>
+  </p>
+  <p n="Ramp2" h="c2" t="kitControl:Ramp"/>
+  <p n="NumericWritable3" h="b3" t="c:NumericWritable">
+   <p n="Link" t="b:Link"><p n="sourceOrd" v="h:c3"/><p n="sourceSlotName" v="out"/><p n="targetSlotName" v="in16"/></p>
+   <p n="NumericCov" h="d3" t="h:NumericCovHistoryExt"><p n="enabled" v="true"/></p>
+  </p>
+  <p n="Ramp3" h="c3" t="kitControl:Ramp"/>
+  <p n="NumericWritable4" h="b4" t="c:NumericWritable">
+   <p n="Link" t="b:Link"><p n="sourceOrd" v="h:c4"/><p n="sourceSlotName" v="out"/><p n="targetSlotName" v="in16"/></p>
+   <p n="NumericCov" h="d4" t="h:NumericCovHistoryExt"><p n="enabled" v="true"/></p>
+  </p>
+  <p n="Ramp4" h="c4" t="kitControl:Ramp"/>
+  <p n="NumericWritable5" h="b5" t="c:NumericWritable">
+   <p n="Link" t="b:Link"><p n="sourceOrd" v="h:c5"/><p n="sourceSlotName" v="out"/><p n="targetSlotName" v="in16"/></p>
+   <p n="NumericCov" h="d5" t="h:NumericCovHistoryExt"><p n="enabled" v="true"/></p>
+  </p>
+  <p n="Ramp5" h="c5" t="kitControl:Ramp"/>
+  <p n="NumericWritable6" h="b6" t="c:NumericWritable">
+   <p n="Link" t="b:Link"><p n="sourceOrd" v="h:c6"/><p n="sourceSlotName" v="out"/><p n="targetSlotName" v="in16"/></p>
+   <p n="NumericCov" h="d6" t="h:NumericCovHistoryExt"><p n="enabled" v="true"/></p>
+  </p>
+  <p n="Ramp6" h="c6" t="kitControl:Ramp"/>
+  <p n="NumericWritable7" h="b7" t="c:NumericWritable">
+   <p n="Link" t="b:Link"><p n="sourceOrd" v="h:c7"/><p n="sourceSlotName" v="out"/><p n="targetSlotName" v="in16"/></p>
+   <p n="NumericCov" h="d7" t="h:NumericCovHistoryExt"><p n="enabled" v="true"/></p>
+  </p>
+  <p n="Ramp7" h="c7" t="kitControl:Ramp"/>
+  <p n="NumericWritable8" h="b8" t="c:NumericWritable">
+   <p n="Link" t="b:Link"><p n="sourceOrd" v="h:c8"/><p n="sourceSlotName" v="out"/><p n="targetSlotName" v="in16"/></p>
+   <p n="NumericCov" h="d8" t="h:NumericCovHistoryExt"><p n="enabled" v="true"/></p>
+  </p>
+  <p n="Ramp8" h="c8" t="kitControl:Ramp"/>
+  <p n="NumericWritable9" h="b9" t="c:NumericWritable">
+   <p n="Link" t="b:Link"><p n="sourceOrd" v="h:c9"/><p n="sourceSlotName" v="out"/><p n="targetSlotName" v="in16"/></p>
+   <p n="NumericCov" h="d9" t="h:NumericCovHistoryExt"><p n="enabled" v="true"/></p>
+  </p>
+  <p n="Ramp9" h="c9" t="kitControl:Ramp"/>
+ </p>
+</p>
+</bajaObjectGraph>
