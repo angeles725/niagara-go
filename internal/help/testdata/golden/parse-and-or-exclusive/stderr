@@ -1,0 +1,2 @@
+usage: niagara_help find [-h] [-n MAX_PER_SOURCE] [--and | --or] query
+niagara_help find: error: argument --or: not allowed with argument --and

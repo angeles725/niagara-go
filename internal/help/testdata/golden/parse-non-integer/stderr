@@ -1,0 +1,2 @@
+usage: niagara_help orphans [-h] [-n TOP]
+niagara_help orphans: error: argument -n/--top: invalid int value: 'x'
