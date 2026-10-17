@@ -215,28 +215,74 @@ func TestStringsMaskAuditAllowlist(t *testing.T) {
 	valid := utf("Changed") + utf("/a/b") + utf("out") + utf("1.0") + utf("2.0") + utf("ann")
 	tail := "\x00\x01Logout\x00\x01admin\x00\x01Removed\x00\x01Changedx\x00\x01admins\x00\x01/a/b"
 	got := strings.Join(maskedStrings([]byte(valid+tail), false), ",")
+	// Rule v4: an operation name prints only at a framed record's operation field.
 	want := "Changed,/a/b,<VALUE-MASKED>,<VALUE-MASKED>,<VALUE-MASKED>,<USER-MASKED>," +
-		"Logout,<VALUE-MASKED>,Removed,<VALUE-MASKED>,<VALUE-MASKED>,<VALUE-MASKED>"
+		"<VALUE-MASKED>,<VALUE-MASKED>,<VALUE-MASKED>,<VALUE-MASKED>,<VALUE-MASKED>,<VALUE-MASKED>"
 	if got != want {
 		t.Errorf("audit section = %q, want %q", got, want)
 	}
 }
 
-// A section with no length-prefixed operation name keeps the old Python mask() rule, unless the
-// schema names an audit history.
+// A section with no operation name anywhere keeps the old Python mask() rule, unless the schema
+// names an audit history. Any operation name, even without a length prefix, makes it an audit
+// section (rule v4).
 func TestStringsMaskNonAuditSection(t *testing.T) {
-	rec := []byte("\x00\x01mallory\x00\x01QWxhZGRpbjpvcGVuIHNlc2FtZQ==\x00\x01Changed")
-	if got, want := strings.Join(maskedStrings(rec, false), ","), "mallory,<VALUE-MASKED>,Changed"; got != want {
+	rec := []byte("\x00\x01mallory\x00\x01QWxhZGRpbjpvcGVuIHNlc2FtZQ==\x00\x01Change")
+	if got, want := strings.Join(maskedStrings(rec, false), ","), "mallory,<VALUE-MASKED>,Change"; got != want {
 		t.Errorf("non-audit section = %q, want the old rule %q", got, want)
 	}
 	if got, want := strings.Join(maskedStrings(rec, true), ","),
-		"<VALUE-MASKED>,<VALUE-MASKED>,Changed"; got != want {
+		"<VALUE-MASKED>,<VALUE-MASKED>,<VALUE-MASKED>"; got != want {
 		t.Errorf("audit schema = %q, want %q", got, want)
+	}
+	rec = append(rec, "\x00\x01xLogins"...)
+	if got, want := strings.Join(maskedStrings(rec, false), ","),
+		"<VALUE-MASKED>,<VALUE-MASKED>,<VALUE-MASKED>,<VALUE-MASKED>"; got != want {
+		t.Errorf("plain operation name = %q, want an audit section %q", got, want)
 	}
 }
 
-// Property: no byte mutation of the audit fixture (overwrite, insert, delete, truncate; fixed
-// seed) makes --mask print one of its user names.
+// Rule v4 closes the inputs that leaked a user name through rule v3 (adversarial verifier).
+func TestStringsMaskV3Leaks(t *testing.T) {
+	valid := utf("Changed") + utf("/a/b") + utf("out") + utf("1.0") + utf("2.0") + utf("ann")
+	cases := []struct{ name, rec, user string }{
+		{"A1 framed slotName decodes as an operation",
+			utf("Changed") + utf("/a") + utf("Mallory") + utf("/x") + utf("2") + utf("ann"), "Mallory"},
+		{"A1b unframed tail decodes as an operation", valid + "\x00\x07Mallory\x00\x02/x", "Mallory"},
+		{"A1c framed userName with an operation-shaped copy",
+			valid[:len(valid)-5] + utf("Admin") + "\x00\x05Admin\x00\x02/q", "Admin"},
+		{"A1d login slotName decodes as an operation",
+			utf("Login") + utf("x") + utf("JDoe") + utf("/x") + utf("") + utf("JDoe"), "JDoe"},
+		{"A2 truncated record whose userName is Login",
+			valid + utf("Changed") + utf("/a/c") + utf("out") + utf("1") + utf("2") + "\x00\x10Login", "Login"},
+		{"A3 user under a UserService path",
+			utf("Logout") + utf("/Services/UserService/jdoe") + utf("") + utf("") + utf("") + utf("jdoe"), "jdoe"},
+		{"A3c any segment under UserService",
+			utf("Changed") + utf("/Services/UserService/x") + utf("") + utf("") + utf("") + utf("ann"), "UserService/"},
+		{"A3b user as a slot-path segment", utf("Login") + utf("/JDOE") + utf("") + utf("") + utf("") + utf("jdoe"),
+			"JDOE"},
+		{"A4 damaged lengths and no audit schema", "\x00\x09Login\x00\x04jdoe\x00\x01admin", "jdoe"},
+		{"A4b damaged lengths, role account", "\x00\x09Logout\x00\x01admin", "admin"},
+	}
+	for _, c := range cases {
+		for _, schema := range []bool{false, true} {
+			out := maskedStrings([]byte(c.rec), schema)
+			for _, l := range out {
+				if strings.Contains(l, c.user) {
+					t.Errorf("%s (audit schema %v): %q leaks under --mask: %q", c.name, schema, c.user, out)
+				}
+			}
+		}
+	}
+	// A framed operation field still prints, and a slot path free of identities too.
+	rec := utf("Login") + utf("/Config/R1") + utf("") + utf("") + utf("") + utf("jdoe")
+	if got, want := strings.Join(maskedStrings([]byte(rec), false), ","), "Login,/Config/R1,<USER-MASKED>"; got != want {
+		t.Errorf("framed login = %q, want %q", got, want)
+	}
+}
+
+// Property: no byte mutation of the audit fixture plus planted capitalized users (overwrite,
+// insert, delete, truncate, a '/x' string after a user; fixed seed) makes --mask print a user.
 func TestStringsMaskNeverPrintsAUserOfAMutatedFixture(t *testing.T) {
 	data, err := os.ReadFile("testdata/inputs/audit.hdb")
 	if err != nil {
@@ -247,17 +293,42 @@ func TestStringsMaskNeverPrintsAUserOfAMutatedFixture(t *testing.T) {
 		t.Fatal(err)
 	}
 	_, rt, fields := schemaOf(f.xml)
-	users := []string{"admin", "jdoe", "guest", "station", "root", "bad", "abcdefghijklmnopqrstu"}
+	// Capitalized users (rule v3 leaks A1-A3): a slotName followed by a '/' value, a user as a
+	// UserService path segment, and a last userName "Login" that can never head a framed record.
+	section := string(f.section) +
+		utf("Changed") + utf("/Config/Rooms/R1") + utf("Mallory") + utf("/x") + utf("2") + utf("Admin") +
+		utf("Login") + utf("/Services/UserService/JDoe") + utf("") + utf("") + utf("") + utf("JDoe") +
+		utf("Changed") + utf("/a") + utf("out") + utf("1") + utf("2") + utf("Login")
+	users := []string{"admin", "jdoe", "guest", "station", "root", "bad", "abcdefghijklmnopqrstu",
+		"Admin", "JDoe", "Mallory"}
 	for _, u := range users {
-		if !bytes.Contains(f.section, []byte(u)) {
+		if !strings.Contains(section, u) {
 			t.Fatalf("fixture has no planted user %q", u)
 		}
 	}
+	// "Login" is also an operation: the userName leaks when more "Login" lines print than the
+	// unmutated section prints (one per framed Login record).
+	logins := func(out []string) (n int) {
+		for _, l := range out {
+			if l == "Login" {
+				n++
+			}
+		}
+		return n
+	}
+	baseLogins := logins(maskedStrings([]byte(section), auditSchema(rt, fields)))
 	rng := rand.New(rand.NewSource(20261017))
 	special := []byte{0x00, 0x01, '/', '.', ' ', 'A', 0x7f, 0x80, 0xc0, 0xff}
-	for i := 0; i < 2000; i++ {
-		rec := append([]byte(nil), f.section...)
-		for n := 1 + rng.Intn(4); n > 0 && len(rec) > 0; n-- {
+	for i := 0; i < 5000; i++ {
+		rec := []byte(section)
+		if rng.Intn(2) == 0 { // a '/x' string after a user makes it read as a countOps operation
+			u := users[rng.Intn(len(users))]
+			if k := bytes.Index(rec, []byte(u)); k >= 0 {
+				k += len(u)
+				rec = append(rec[:k:k], append([]byte("\x00\x02/x"), rec[k:]...)...)
+			}
+		}
+		for n := rng.Intn(5); n > 0 && len(rec) > 0; n-- {
 			pos, b := rng.Intn(len(rec)), byte(rng.Intn(256))
 			if rng.Intn(2) == 0 {
 				b = special[rng.Intn(len(special))]
@@ -273,11 +344,16 @@ func TestStringsMaskNeverPrintsAUserOfAMutatedFixture(t *testing.T) {
 				rec[pos] = b
 			}
 		}
-		out := strings.Join(maskedStrings(rec, auditSchema(rt, fields)), "\n")
+		lines := maskedStrings(rec, auditSchema(rt, fields))
+		out := strings.Join(lines, "\n")
 		for _, u := range users {
 			if strings.Contains(out, u) {
 				t.Fatalf("iteration %d: %q leaks under --mask for section %q:\n%s", i, u, rec, out)
 			}
+		}
+		if n := logins(lines); n > baseLogins {
+			t.Fatalf("iteration %d: userName \"Login\" leaks (%d > %d Login lines) for section %q:\n%s",
+				i, n, baseLogins, rec, out)
 		}
 	}
 }
