@@ -6,10 +6,10 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"syscall"
 	"unicode"
 	"unicode/utf8"
 
+	"github.com/angeles725/niagara-go/internal/blockfiles"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyre"
 )
@@ -79,9 +79,9 @@ func newModule(root string) *module {
 		extends: newOmap[string](), writers: map[string]map[string]bool{},
 		dynWriters: map[string]map[string]bool{}, unreadable: map[string]string{}}
 	walkJava(root, func(path, name string) {
-		content, err := readText(path)
+		content, err := blockfiles.ReadTextReplace(path)
 		if err != nil {
-			m.unreadable[path] = errText(err)
+			m.unreadable[path] = blockfiles.Strerror(err)
 			return
 		}
 		m.files++
@@ -126,27 +126,6 @@ func pyJoin(a, b string) string {
 		return a + b
 	}
 	return a + "/" + b
-}
-
-// readText is open(path, encoding="utf-8", errors="replace").read(): universal newlines.
-func readText(path string) (string, error) {
-	raw, err := os.ReadFile(path)
-	if err != nil {
-		return "", err
-	}
-	text := pycompat.DecodeReplace(raw)
-	return strings.ReplaceAll(strings.ReplaceAll(text, "\r\n", "\n"), "\r", "\n"), nil
-}
-
-// errText is OSError.strerror: the C library message ("Permission denied").
-func errText(err error) string {
-	var errno syscall.Errno
-	if errors.As(err, &errno) {
-		msg := errno.Error()
-		r, size := utf8.DecodeRuneInString(msg)
-		return string(unicode.ToUpper(r)) + msg[size:]
-	}
-	return err.Error()
 }
 
 // sortedSet is sorted(a Python set).
@@ -304,9 +283,9 @@ type srcLine struct {
 func javaLines(root string, unreadable map[string]string) []srcLine {
 	var out []srcLine
 	walkJava(root, func(path, _ string) {
-		text, err := readText(path)
+		text, err := blockfiles.ReadTextReplace(path)
 		if err != nil {
-			unreadable[path] = errText(err)
+			unreadable[path] = blockfiles.Strerror(err)
 			return
 		}
 		for i, line := range strings.SplitAfter(text, "\n") {

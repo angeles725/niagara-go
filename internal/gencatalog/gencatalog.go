@@ -11,12 +11,10 @@
 package gencatalog
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
-	"syscall"
 	"unicode/utf8"
 
 	"github.com/angeles725/niagara-go/internal/argparse"
@@ -98,7 +96,7 @@ func Main(args []string, s cli.Stdio) int {
 func check(s cli.Stdio, catalog, content string, entries []entry) int {
 	current, present, err := readCatalog(catalog)
 	if err != nil {
-		fmt.Fprintf(s.Err, "gen-catalog: cannot read %s: %s\n", catalog, strerror(err))
+		fmt.Fprintf(s.Err, "gen-catalog: cannot read %s: %s\n", catalog, blockfiles.Strerror(err))
 		return 2 // could not check: not the exit 1 of a stale catalog (Python: traceback)
 	}
 	if present && current == content {
@@ -139,32 +137,8 @@ func readCatalog(path string) (text string, present bool, err error) {
 	if err != nil || !st.Mode().IsRegular() {
 		return "", false, nil
 	}
-	text, err = readText(path)
+	text, err = blockfiles.ReadText(path)
 	return text, err == nil, err
-}
-
-// readText is open(path, encoding="utf-8").read(): strict UTF-8, universal newlines.
-func readText(path string) (string, error) {
-	raw, err := os.ReadFile(path)
-	if err != nil {
-		return "", err
-	}
-	if !utf8.Valid(raw) {
-		return "", errors.New("not valid UTF-8")
-	}
-	return strings.ReplaceAll(strings.ReplaceAll(string(raw), "\r\n", "\n"), "\r", "\n"), nil
-}
-
-// strerror renders a read error the way Python's OSError.strerror does ("Is a
-// directory"); a decoding error keeps its own text.
-func strerror(err error) string {
-	var errno syscall.Errno
-	if errors.As(err, &errno) {
-		if msg := errno.Error(); msg != "" {
-			return strings.ToUpper(msg[:1]) + msg[1:]
-		}
-	}
-	return err.Error()
 }
 
 func collect(root string) ([]entry, error) {
@@ -172,7 +146,7 @@ func collect(root string) ([]entry, error) {
 	for _, b := range blockfiles.MainBlocks(root) {
 		h1, err := extractH1(b.Path)
 		if err != nil {
-			return nil, fmt.Errorf("cannot read %s: %s", b.Path, strerror(err))
+			return nil, fmt.Errorf("cannot read %s: %s", b.Path, blockfiles.Strerror(err))
 		}
 		title := normalizeTitle(h1)
 		if t, ok := titleOverrides[b.Label]; ok {
@@ -191,7 +165,7 @@ func collect(root string) ([]entry, error) {
 
 // extractH1 is gen-catalog.extract_h1: the first stripped line starting with "# ".
 func extractH1(path string) (string, error) {
-	text, err := readText(path)
+	text, err := blockfiles.ReadText(path)
 	if err != nil {
 		return "", err
 	}

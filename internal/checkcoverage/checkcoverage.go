@@ -11,12 +11,9 @@
 package checkcoverage
 
 import (
-	"errors"
 	"fmt"
-	"os"
 	"path/filepath"
 	"strings"
-	"syscall"
 
 	"github.com/angeles725/niagara-go/internal/blockfiles"
 	"github.com/angeles725/niagara-go/internal/cli"
@@ -155,12 +152,11 @@ func scan(root string, names []string) (map[string]*coverage, []string, int, []u
 				ident = rel
 			}
 		}
-		raw, err := os.ReadFile(b.Path)
+		text, err := blockfiles.ReadTextReplace(b.Path)
 		if err != nil {
-			unreadable = append(unreadable, unreadableFile{b.Path, strerror(err)})
+			unreadable = append(unreadable, unreadableFile{b.Path, blockfiles.Strerror(err)})
 			continue
 		}
-		text := universalNewlines(pycompat.DecodeReplace(raw))
 		low := textfold.Lower(text)
 		h1, h1Done := "", false
 		for _, n := range names {
@@ -185,17 +181,6 @@ func scan(root string, names []string) (map[string]*coverage, []string, int, []u
 // unreadableFile is a block file the scan could not read and the OS error text.
 type unreadableFile struct{ path, reason string }
 
-// strerror renders an I/O error the way Python's OSError.strerror does.
-func strerror(err error) string {
-	var errno syscall.Errno
-	if errors.As(err, &errno) {
-		if msg := errno.Error(); msg != "" {
-			return strings.ToUpper(msg[:1]) + msg[1:]
-		}
-	}
-	return err.Error()
-}
-
 // firstH1 is check-coverage.first_h1: the first stripped "# " line without its marker.
 func firstH1(text string) string {
 	for _, line := range strings.SplitAfter(text, "\n") {
@@ -204,8 +189,4 @@ func firstH1(text string) string {
 		}
 	}
 	return ""
-}
-
-func universalNewlines(s string) string {
-	return strings.ReplaceAll(strings.ReplaceAll(s, "\r\n", "\n"), "\r", "\n")
 }

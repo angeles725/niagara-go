@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
-	"unicode/utf8"
 
 	"github.com/angeles725/niagara-go/internal/blockfiles"
 	"github.com/angeles725/niagara-go/internal/pycompat"
@@ -169,11 +168,8 @@ func (c *corpus) loadCatalog() map[string]string {
 // readText is corpus.read_text_or_none: strict UTF-8 with universal newlines; false
 // when the file is missing, unreadable or not UTF-8.
 func readText(path string) (string, bool) {
-	raw, err := os.ReadFile(path)
-	if err != nil || !utf8.Valid(raw) {
-		return "", false
-	}
-	return strings.ReplaceAll(strings.ReplaceAll(string(raw), "\r\n", "\n"), "\r", "\n"), true
+	text, err := blockfiles.ReadText(path)
+	return text, err == nil
 }
 
 // readH1 is corpus.read_h1: the first stripped "# " line without its marker.
