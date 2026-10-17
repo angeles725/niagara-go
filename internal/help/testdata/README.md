@@ -38,3 +38,23 @@ values and a `set()` iteration order printed by Python 3.15 with `PYTHONHASHSEED
 `s3adv/` (no method-index.json; cyclic and self-extending chains, an untyped property, a
 class named `B`) and `s3adv-enum/` (an enum for `contract`) are two more checkouts for the
 S3 review advisories, captured the same way with their own `NIAGARA_HELP_DIR`.
+
+## Full-text fixture
+
+`fulltext/` is another checkout for the full-text commands (find, guide-search,
+devguide-search, pdf): version 1.0 at `.` with every text source, and 2.0 under
+`versions/2.0` with guides only, so it borrows 1.0's PDF manuals (`docs-text/`). Its files are
+hand-written to reach the edge cases: paged PDF text, change logs, code, skipped example files
+(`ext/`, `*.min.js`), CRLF text, navigation and table-of-contents lines, a line long enough to clip.
+
+`fulltext_gen.py` (`python3 -I internal/help/testdata/fulltext_gen.py`) copies `fulltext/` to a
+temporary folder, sets every file's mtime to `FIXED_NS` and runs the Python niagara-help there:
+
+| Output | What Python wrote |
+|---|---|
+| `fulltext-db/<version>.sqlite` | the index `fulltext_index.build` writes, with the temporary folder in the stored fingerprint replaced by `<ROOT>` |
+
+The Go tests (`fts/ftsfixture`) copy `fulltext/` to a temporary folder with the same mtimes and
+install the databases with `<ROOT>` replaced by that folder; the fingerprint test then proves
+that Go computes exactly the fingerprint Python stored. Regenerate everything after changing
+`fulltext/`.
