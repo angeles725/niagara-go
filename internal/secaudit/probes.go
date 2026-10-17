@@ -16,6 +16,8 @@ import (
 	"strings"
 	"time"
 	"unicode/utf8"
+
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // result is a finished subprocess: its output bytes and exit status.
@@ -67,7 +69,7 @@ func runProgram(argv []string, stdin []byte, timeout time.Duration, extraEnv ...
 	err := cmd.Run()
 	if ctx.Err() != nil {
 		return result{}, &timeoutError{fmt.Sprintf("Command %s timed out after %s seconds",
-			pyListRepr(argv), strconv.FormatFloat(timeout.Seconds(), 'f', -1, 64))}
+			pycompat.Repr(argv), strconv.FormatFloat(timeout.Seconds(), 'f', -1, 64))}
 	}
 	var exitErr *exec.ExitError
 	switch {
@@ -82,7 +84,7 @@ func runProgram(argv []string, stdin []byte, timeout time.Duration, extraEnv ...
 // startMessage is str(OSError) of a program that did not start.
 func startMessage(name string, err error) string {
 	if errors.Is(err, exec.ErrNotFound) {
-		return fmt.Sprintf("[Errno 2] No such file or directory: %s", pyStrRepr(name))
+		return fmt.Sprintf("[Errno 2] No such file or directory: %s", pycompat.StrRepr(name))
 	}
 	return pyOSError(err)
 }
@@ -140,19 +142,19 @@ func (e *env) keytoolList(path string, verbose bool) (keytoolOutcome, error) {
 	if err != nil {
 		return keytoolOutcome{}, err
 	}
-	out := keytoolOutcome{stdout: decodeReplace(r.stdout)}
+	out := keytoolOutcome{stdout: pycompat.DecodeReplace(r.stdout)}
 	if r.code == 0 {
 		out.opened = true
 		return out, nil
 	}
-	errText := decodeReplace(r.stderr)
+	errText := pycompat.DecodeReplace(r.stderr)
 	out.wrongPass = strings.Contains(strings.ToLower(out.stdout+"\n"+errText), wrongPassMarker)
-	text := pyStrip(out.stdout)
+	text := pycompat.Strip(out.stdout)
 	if text == "" {
-		text = pyStrip(errText)
+		text = pycompat.Strip(errText)
 	}
 	first, _, _ := strings.Cut(text, "\n") // -v adds a stack trace after the error line
-	out.failure = fmt.Sprintf("exit %d: %s", r.code, head(pyStrip(first), 120))
+	out.failure = fmt.Sprintf("exit %d: %s", r.code, head(pycompat.Strip(first), 120))
 	return out, nil
 }
 
@@ -197,7 +199,7 @@ func (e *env) tlsSubject(host string, port int) string {
 	if err != nil || !utf8.Valid(c.stdout) {
 		return ""
 	}
-	return pyStrip(string(c.stdout))
+	return pycompat.Strip(string(c.stdout))
 }
 
 // icaclsPaths is where WSL keeps icacls when System32 is not on PATH.
@@ -229,7 +231,7 @@ func (e *env) runIcacls(exe, winpath string) (string, string) {
 		if text == "" {
 			text = stdout
 		}
-		return "", fmt.Sprintf("exit %d: %s", r.code, head(pyStrip(text), 120))
+		return "", fmt.Sprintf("exit %d: %s", r.code, head(pycompat.Strip(text), 120))
 	}
 	return stdout, ""
 }

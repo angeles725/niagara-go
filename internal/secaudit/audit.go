@@ -8,6 +8,8 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 var propRE = regexp.MustCompile(pyRe(`^\s*(#?)\s*(niagara\.[\p{L}\p{N}_.]+|program\.[\p{L}\p{N}_.]+)\s*=\s*(.*)`))
@@ -30,9 +32,9 @@ func readProps(home string) map[string]prop {
 		if err != nil {
 			continue
 		}
-		for _, line := range splitLines(decodeReplace(data)) {
+		for _, line := range splitLines(pycompat.DecodeReplace(data)) {
 			if m := propRE.FindStringSubmatch(line); m != nil {
-				props[m[2]] = prop{pyStrip(m[3]), m[1] == "#"}
+				props[m[2]] = prop{pycompat.Strip(m[3]), m[1] == "#"}
 			}
 		}
 	}
@@ -85,7 +87,7 @@ func (e *env) audit(home, stationXML, host string, rawHead []byte, rep *report) 
 		"high", verdict(bad), "B75/B397",
 		"low lets an UNSIGNED module requesting NETWORK_COMMUNICATION load (the 443 incident)")
 
-	ts := pyJoin(pyJoin(home, "security"), "truststore.jks")
+	ts := pycompat.PosixJoin(home, "security", "truststore.jks")
 	d, err := e.keytoolDefault(ts)
 	if err != nil {
 		return fmt.Errorf("keytool: %w", err)
@@ -195,7 +197,7 @@ func (e *env) sec06(home string, rep *report) {
 		if err != nil {
 			continue
 		}
-		t := decodeReplace(data)
+		t := pycompat.DecodeReplace(data)
 		for _, attr := range licAttrs {
 			re := regexp.MustCompile(pyRe(attr + `\s*=\s*"?true`))
 			if re.MatchString(t) || strings.Contains(t, attr) && strings.Contains(t, "developer") {

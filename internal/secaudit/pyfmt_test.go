@@ -23,20 +23,6 @@ func TestPyReMatchesUnicodeWhitespace(t *testing.T) {
 	}
 }
 
-func TestPyStripAndIsPySpace(t *testing.T) {
-	if got := pyStrip(" \x1c\x1fx\u00a0\u3000"); got != "x" {
-		t.Errorf("pyStrip = %q, want \"x\"", got)
-	}
-	for _, r := range []rune{0x1c, 0x1d, 0x1e, 0x1f, 0x85, 0xa0} {
-		if !isPySpace(r) {
-			t.Errorf("isPySpace(%U) = false", r)
-		}
-	}
-	if isPySpace(0x200b) {
-		t.Error("isPySpace(U+200B) = true")
-	}
-}
-
 func TestHeadCountsCodePoints(t *testing.T) {
 	for _, tc := range []struct {
 		in   string
@@ -49,57 +35,12 @@ func TestHeadCountsCodePoints(t *testing.T) {
 	}
 }
 
-// decodeReplace replaces each maximal invalid subpart with one U+FFFD, as bytes.decode does.
-func TestDecodeReplaceMatchesPython(t *testing.T) {
-	for in, want := range map[string]string{
-		"abc":              "abc",
-		"\xff":             "\ufffd",
-		"\xe2\x82":         "\ufffd",
-		"\xe2\x82\xac":     "\u20ac",
-		"\xed\xa0\x80":     "\ufffd\ufffd\ufffd", // an encoded surrogate
-		"\xf0\x9f\x98":     "\ufffd",
-		"\xf4\x90\x80\x80": "\ufffd\ufffd\ufffd\ufffd", // past U+10FFFF
-		"a\xc0\xafb":       "a\ufffd\ufffdb",           // an overlong form
-		"\xe0\x80\x80":     "\ufffd\ufffd\ufffd",
-	} {
-		if got := decodeReplace([]byte(in)); got != want {
-			t.Errorf("decodeReplace(%q) = %q, want %q", in, got, want)
-		}
-	}
-}
-
 func TestSplitLinesUniversalNewlines(t *testing.T) {
 	if got, want := splitLines("a\r\nb\rc\nd"), []string{"a\n", "b\n", "c\n", "d"}; !reflect.DeepEqual(got, want) {
 		t.Errorf("splitLines = %q, want %q", got, want)
 	}
 	if got := splitLines(""); len(got) != 0 {
 		t.Errorf("splitLines(\"\") = %q", got)
-	}
-}
-
-func TestPyJoin(t *testing.T) {
-	for _, tc := range [][3]string{{"a", "b", "a/b"}, {"a/", "b", "a/b"}, {"", "b", "b"}} {
-		if got := pyJoin(tc[0], tc[1]); got != tc[2] {
-			t.Errorf("pyJoin(%q, %q) = %q, want %q", tc[0], tc[1], got, tc[2])
-		}
-	}
-}
-
-func TestPyStrRepr(t *testing.T) {
-	for in, want := range map[string]string{
-		"a\u00a0":                              `'a\xa0'`,
-		"it's":                                 `"it's"`,
-		`say "hi"`:                             `'say "hi"'`,
-		`both '"`:                              `'both \'"'`,
-		"tab\tnl\n\\":                          `'tab\tnl\n\\'`,
-		"\x00\x7f\u0085\u200b\U0001F600\u00e9": `'\x00\x7f\x85\u200b` + "\U0001F600\u00e9'",
-	} {
-		if got := pyStrRepr(in); got != want {
-			t.Errorf("pyStrRepr(%q) = %s, want %s", in, got, want)
-		}
-	}
-	if got, want := pyListRepr([]string{"a", "b'c"}), `['a', "b'c"]`; got != want {
-		t.Errorf("pyListRepr = %s, want %s", got, want)
 	}
 }
 

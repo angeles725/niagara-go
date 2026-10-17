@@ -9,6 +9,8 @@ import (
 	"unicode"
 	"unicode/utf16"
 	"unicode/utf8"
+
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // aceRE is one ACE line: `[<path> ]<principal>:(<inheritance>)...(<rights>)`. The rights letters
@@ -42,9 +44,9 @@ type ace struct {
 // it did not understand. The queried path is cut from the line that starts with it.
 func parseListing(text, winpath string) (aces []ace, unparsed []string) {
 	for _, line := range strings.Split(normalizeNewlines(text), "\n") {
-		line = pyStrip(line)
+		line = pycompat.Strip(line)
 		if winpath != "" && strings.HasPrefix(strings.ToLower(line), strings.ToLower(winpath)) {
-			line = pyStrip(string([]rune(line)[utf8.RuneCountInString(winpath):]))
+			line = pycompat.Strip(string([]rune(line)[utf8.RuneCountInString(winpath):]))
 		}
 		m := aceRE.FindStringSubmatch(line)
 		if m != nil && m[1] != "" {
@@ -52,7 +54,7 @@ func parseListing(text, winpath string) (aces []ace, unparsed []string) {
 			for _, g := range groupRE.FindAllStringSubmatch(m[2], -1) {
 				groups = append(groups, strings.ToUpper(g[1]))
 			}
-			aces = append(aces, ace{pyStrip(m[1]), groups})
+			aces = append(aces, ace{pycompat.Strip(m[1]), groups})
 		} else if strings.Contains(line, ":(") {
 			unparsed = append(unparsed, line)
 		}

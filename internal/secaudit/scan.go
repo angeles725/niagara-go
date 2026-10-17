@@ -10,6 +10,8 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 var keyRingRE = regexp.MustCompile(`KeyRingPermission"[^>]*?(?:name|target)="([^"]*)"`)
@@ -94,7 +96,7 @@ func readModuleXML(path string) (names []string, xml string, ok bool) {
 	if err != nil {
 		return nil, "", false
 	}
-	return names, decodeReplace(data), true
+	return names, pycompat.DecodeReplace(data), true
 }
 
 // logIOC is one forensic indicator (B112 / B75).
@@ -138,7 +140,7 @@ func scanLogs(root string) (hits []hit, nfiles int, bad, badDirs []unreadable) {
 		}
 		var subdirs []string
 		for _, ent := range entries {
-			p := pyJoin(dir, ent.Name())
+			p := pycompat.PosixJoin(dir, ent.Name())
 			if isDirEntry(p, ent) {
 				if ent.Type()&os.ModeSymlink == 0 {
 					subdirs = append(subdirs, p)
@@ -178,10 +180,10 @@ func scanFile(p string) ([]hit, error) {
 		return nil, err
 	}
 	var found []hit
-	for i, line := range splitLines(decodeReplace(data)) {
+	for i, line := range splitLines(pycompat.DecodeReplace(data)) {
 		for _, ioc := range logIOCs {
 			if ioc.re.MatchString(line) {
-				found = append(found, hit{ioc.sev, ioc.label, p, i + 1, head(pyStrip(line), 160)})
+				found = append(found, hit{ioc.sev, ioc.label, p, i + 1, head(pycompat.Strip(line), 160)})
 			}
 		}
 	}

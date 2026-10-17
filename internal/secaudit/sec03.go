@@ -3,6 +3,8 @@ package secaudit
 import (
 	"fmt"
 	"strings"
+
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 const sec03Run = `run: icacls <home>\security`
@@ -10,7 +12,7 @@ const sec03Run = `run: icacls <home>\security`
 // sec03 checks the security/ ACLs with icacls (a home under a WSL /mnt/<drive> mount only).
 // Any listing that is missing, empty or only partly understood is a SKIP, never a PASS.
 func (e *env) sec03(home string, rep *report) {
-	secdir := pyJoin(home, "security")
+	secdir := pycompat.PosixJoin(home, "security")
 	if !isDir(secdir) {
 		return
 	}
@@ -34,9 +36,9 @@ func (e *env) sec03(home string, rep *report) {
 		aces, unparsed := parseListing(listing, winpath)
 		switch {
 		case len(aces) == 0:
-			skip(fmt.Sprintf("not checked: %s printed no ACE lines: %s", icacls, pyStrRepr(head(pyStrip(listing), 80))))
+			skip(fmt.Sprintf("not checked: %s printed no ACE lines: %s", icacls, pycompat.StrRepr(head(pycompat.Strip(listing), 80))))
 		case len(unparsed) > 0:
-			skip(fmt.Sprintf("not checked: %d ACE line(s) not understood: %s", len(unparsed), pyStrRepr(head(unparsed[0], 80))))
+			skip(fmt.Sprintf("not checked: %d ACE line(s) not understood: %s", len(unparsed), pycompat.StrRepr(head(unparsed[0], 80))))
 		default:
 			loose := looseACEs(aces)
 			rep.add("SEC-03", "crit", "security/ filesystem ACLs",
