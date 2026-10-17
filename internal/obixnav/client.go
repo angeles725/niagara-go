@@ -2,6 +2,7 @@ package obixnav
 
 import (
 	"bytes"
+	"context"
 	"crypto/tls"
 	"encoding/base64"
 	"errors"
@@ -59,15 +60,59 @@ func netReason(err error) string {
 type client struct {
 	base      string
 	auth      string
-	hc        *http.Client
+	clients   map[time.Duration]*http.Client // one per timeout, see httpClient
 	anchorsOK map[string]bool
 }
 
 func newClient(base, password string) *client {
-	tr := &http.Transport{Proxy: http.ProxyFromEnvironment,
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true}} // #nosec G402 -- self-signed station cert, read-only
 	return &client{base: base, auth: "Basic " + base64.StdEncoding.EncodeToString([]byte("API:"+password)),
-		hc: &http.Client{Transport: tr}, anchorsOK: map[string]bool{}}
+		clients: map[time.Duration]*http.Client{}, anchorsOK: map[string]bool{}}
+}
+
+// deadlineConn re-arms the deadline before every read and write: like a Python socket timeout it
+// bounds each operation, so a slow response that keeps arriving never times out.
+type deadlineConn struct {
+	net.Conn
+	timeout time.Duration
+}
+
+func (c *deadlineConn) Read(p []byte) (int, error) {
+	if err := c.Conn.SetReadDeadline(time.Now().Add(c.timeout)); err != nil {
+		return 0, err
+	}
+	return c.Conn.Read(p)
+}
+
+func (c *deadlineConn) Write(p []byte) (int, error) {
+	if err := c.Conn.SetWriteDeadline(time.Now().Add(c.timeout)); err != nil {
+		return 0, err
+	}
+	return c.Conn.Write(p)
+}
+
+// httpClient returns the client for one urlopen timeout. urllib applies its timeout to every
+// socket operation (connect, TLS handshake, each send and recv), never to the whole request, so
+// there is no http.Client.Timeout: the dialer, the handshake and the wait for the headers are
+// bounded by timeout, and deadlineConn bounds every read of the body.
+func (c *client) httpClient(timeout time.Duration) *http.Client {
+	if hc, ok := c.clients[timeout]; ok {
+		return hc
+	}
+	dialer := &net.Dialer{Timeout: timeout}
+	tr := &http.Transport{Proxy: http.ProxyFromEnvironment,
+		TLSClientConfig:       &tls.Config{InsecureSkipVerify: true}, // #nosec G402 -- self-signed station cert, read-only
+		TLSHandshakeTimeout:   timeout,
+		ResponseHeaderTimeout: timeout,
+		DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
+			conn, err := dialer.DialContext(ctx, network, addr)
+			if err != nil {
+				return nil, err
+			}
+			return &deadlineConn{Conn: conn, timeout: timeout}, nil
+		}}
+	hc := &http.Client{Transport: tr}
+	c.clients[timeout] = hc
+	return hc
 }
 
 // fetch performs one request; a non-2xx status is an *httpError, a transport failure a *urlError.
@@ -84,8 +129,7 @@ func (c *client) fetch(method, url string, body []byte, timeout time.Duration) (
 	if body != nil {
 		req.Header.Set("Content-Type", "text/xml")
 	}
-	c.hc.Timeout = timeout
-	resp, err := c.hc.Do(req)
+	resp, err := c.httpClient(timeout).Do(req)
 	if err != nil {
 		return "", &urlError{netReason(err)}
 	}
