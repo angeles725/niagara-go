@@ -181,6 +181,13 @@ CASES = [
     ("license-features-module-miss", ["license-features", "-m", "nope"], LIC, LIC_BASE),
     ("license-features-unresolved", ["license-features", "--unresolved", "-n", "2"], LIC, LIC_BASE),
     ("license-features-no-corpus", ["license-features"], NO_CORPUS, LIC_BASE),
+    ("resources", ["resources", "lic-rt"], LIC, LIC_BASE),
+    ("resources-type", ["resources", "lic-rt.jar", "--type", "PNG", "-n", "1"], LIC, LIC_BASE),
+    ("resources-type-none", ["resources", "lic-rt", "--type", "xml"], LIC, LIC_BASE),
+    ("resources-n", ["resources", "lic-rt", "-n", "2"], LIC, LIC_BASE),
+    ("resources-miss", ["resources", "lic"], LIC, LIC_BASE),
+    ("resources-bad-jar", ["resources", "lic-wb"], LIC, LIC_BASE),
+    ("resources-no-corpus", ["resources", "lic-rt"], NO_CORPUS, LIC_BASE),
 ]
 
 
