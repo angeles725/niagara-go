@@ -16,7 +16,7 @@ import (
 func TestValidateImageMatchesGoldenUsageMessages(t *testing.T) {
 	cases := map[string]string{"usage-no-image": "", "usage-missing-image": "images/missing.img",
 		"usage-directory-image": "images", "usage-char-device": "/dev/null"}
-	frozen, err := golden.Load("testdata")
+	frozen, err := golden.Load(root)
 	if err != nil {
 		t.Fatal(err)
 	}

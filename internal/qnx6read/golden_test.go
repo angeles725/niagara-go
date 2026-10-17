@@ -2,7 +2,6 @@ package qnx6read
 
 import (
 	"bufio"
-	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
@@ -11,14 +10,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/angeles725/niagara-go/internal/cli"
 	"github.com/angeles725/niagara-go/internal/golden"
 )
 
-// runDir is testdata/run: the cwd_fixture of every case. TestMain writes the sparse disk images
-// of testdata/inputs/images.txt into it (the real P2/P3 offsets are 129 MiB and 3.5 GiB) and
-// removes it afterwards, extract outputs included.
-var runDir string
+// root is a fresh directory per test process, so concurrent `go test` runs of this package never
+// share files: root/golden links to testdata/golden and root/run (the cwd_fixture of every case)
+// holds the sparse disk images of testdata/inputs/images.txt (the real P2/P3 offsets are 129 MiB
+// and 3.5 GiB) and the extract outputs. TestMain removes it afterwards.
+var root, runDir string
 
 func TestMain(m *testing.M) {
 	code, err := withImages(m)
@@ -30,24 +29,29 @@ func TestMain(m *testing.M) {
 }
 
 func withImages(m *testing.M) (int, error) {
-	dir, err := filepath.Abs(filepath.Join("testdata", "run"))
+	testdata, err := filepath.Abs("testdata")
 	if err != nil {
 		return 0, err
 	}
-	if err := os.RemoveAll(dir); err != nil {
+	dir, err := os.MkdirTemp("", "qnx6read-golden-")
+	if err != nil {
 		return 0, err
 	}
 	defer os.RemoveAll(dir)
-	if err := materializeImages("testdata"); err != nil {
+	if err := os.Symlink(filepath.Join(testdata, "golden"), filepath.Join(dir, "golden")); err != nil {
 		return 0, err
 	}
-	runDir = dir
+	if err := materializeImages(testdata, dir); err != nil {
+		return 0, err
+	}
+	root, runDir = dir, filepath.Join(dir, "run")
 	return m.Run(), nil
 }
 
-// materializeImages writes each manifest image as a sparse file: zeros up to the partition
-// offset, then the committed partition bytes. Manifest paths are relative to testdata.
-func materializeImages(testdata string) error {
+// materializeImages writes each manifest image under dst as a sparse file: zeros up to the
+// partition offset, then the committed partition bytes. Image paths are relative to dst, partition
+// paths to testdata.
+func materializeImages(testdata, dst string) error {
 	f, err := os.Open(filepath.Join(testdata, "inputs", "images.txt"))
 	if err != nil {
 		return err
@@ -68,11 +72,11 @@ func materializeImages(testdata string) error {
 		if err != nil {
 			return err
 		}
-		dst := filepath.Join(testdata, img)
-		if err := os.MkdirAll(filepath.Dir(dst), 0o755); err != nil {
+		path := filepath.Join(dst, img)
+		if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 			return err
 		}
-		out, err := os.Create(dst)
+		out, err := os.Create(path)
 		if err != nil {
 			return err
 		}
@@ -85,24 +89,6 @@ func materializeImages(testdata string) error {
 		}
 	}
 	return sc.Err()
-}
-
-// intended lists the cases where Python ends in a traceback; Go prints one line instead
-// (stdout still has to match the golden).
-var intended = map[string]struct {
-	exit   int
-	stderr string
-}{
-	"extract-missing": {1, "P2 OFF=3 blocksize=1024 inodes=12\nqnx6read: /etc/nope: not found in the image\n"},
-	"extract-bad-dst": {2, "P2 OFF=3 blocksize=1024 inodes=12\n" +
-		"qnx6read: cannot write no-such-dir/out.bin: No such file or directory\n"},
-	"not-qnx6": {2, "qnx6read: not a QNX6 partition at byte 135266304 of images/not-qnx6.img " +
-		"(superblock magic 0x12345678)\n"},
-	"list-p3-image-wrong-partition": {2, "qnx6read: not a QNX6 partition at byte 135266304 of " +
-		"images/p3.img (superblock magic 0x00000000)\n"},
-	"no-offset": {2, "qnx6read: could not detect block offset in images/no-offset.img\n"},
-	"tiny-image": {2, "qnx6read: not a QNX6 partition at byte 135266304 of images/tiny.img " +
-		"(superblock truncated: 0 of 4096 bytes)\n"},
 }
 
 // extracted is the sha256 of each extract case's output file (the Python run produced the same).
@@ -118,46 +104,28 @@ var extracted = map[string]string{
 	"out-root.bin":   "671bcd4339a4d5f52e3aa8c84becf0616b6ef5fee8df280b91b5026d002cb69a",
 }
 
-// TestGolden runs every parity case through Main, then checks the bytes each extract case wrote.
+// TestGolden runs every case through Main (intended differences come from each case's
+// intended.json), then checks the bytes every successful extract case wrote.
 func TestGolden(t *testing.T) {
-	golden.Run(t, "testdata", Main)
-	for name, want := range extracted {
-		data, err := os.ReadFile(filepath.Join(runDir, name))
-		sum := sha256.Sum256(data)
-		if err != nil || hex.EncodeToString(sum[:]) != want {
-			t.Errorf("%s: sha256 %x (%v), want %s", name, sum, err, want)
-		}
-	}
-}
-
-// TestIntendedDiffs runs the frozen cases where Python ends in a traceback
-// (testdata/intended/golden): stdout must still match Python; stderr and exit are the Go ones.
-func TestIntendedDiffs(t *testing.T) {
-	cases, err := golden.Load("testdata/intended")
+	golden.Run(t, root, Main)
+	cases, err := golden.Load(root)
 	if err != nil {
 		t.Fatal(err)
 	}
 	for _, c := range cases {
-		t.Run(c.Name, func(t *testing.T) {
-			d, ok := intended[c.Name]
-			if !ok {
-				t.Fatalf("no intended result recorded for %s", c.Name)
-			}
-			for k, v := range c.Environ() {
-				t.Setenv(k, v)
-			}
-			t.Chdir(filepath.Join(filepath.Dir(runDir), c.CwdFixture))
-			var out, errb bytes.Buffer
-			code := Main(c.Args, cli.Stdio{In: strings.NewReader(""), Out: &out, Err: &errb})
-			if code != d.exit {
-				t.Errorf("exit = %d, want %d", code, d.exit)
-			}
-			if !bytes.Equal(out.Bytes(), c.Stdout) {
-				t.Errorf("stdout: %s", golden.Diff(c.Stdout, out.Bytes()))
-			}
-			if errb.String() != d.stderr {
-				t.Errorf("stderr: %s", golden.Diff([]byte(d.stderr), errb.Bytes()))
-			}
-		})
+		if len(c.Args) < 3 || c.Args[len(c.Args)-3] != "extract" || c.Exit != 0 {
+			continue
+		}
+		dst := c.Args[len(c.Args)-1]
+		want, ok := extracted[dst]
+		if !ok {
+			t.Errorf("%s: no sha256 recorded for %s", c.Name, dst)
+			continue
+		}
+		data, err := os.ReadFile(filepath.Join(runDir, dst))
+		sum := sha256.Sum256(data)
+		if err != nil || hex.EncodeToString(sum[:]) != want {
+			t.Errorf("%s: %s sha256 %x (%v), want %s", c.Name, dst, sum, err, want)
+		}
 	}
 }

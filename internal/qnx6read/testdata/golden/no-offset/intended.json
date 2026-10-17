@@ -1,0 +1,5 @@
+{
+ "reason": "Python raises RuntimeError('could not detect block offset') and ends in a traceback (exit 1); Go prints that message as one line with exit 2.",
+ "stderr": "qnx6read: could not detect block offset in images/no-offset.img\n",
+ "exit": 2
+}

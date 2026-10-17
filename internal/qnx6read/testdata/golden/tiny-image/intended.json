@@ -1,0 +1,5 @@
+{
+ "reason": "Python's struct.unpack on an empty superblock raises struct.error and ends in a traceback (exit 1); Go reports the truncated superblock in one line with exit 2.",
+ "stderr": "qnx6read: not a QNX6 partition at byte 135266304 of images/tiny.img (superblock truncated: 0 of 4096 bytes)\n",
+ "exit": 2
+}
