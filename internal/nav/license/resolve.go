@@ -24,9 +24,9 @@ func newResolver(root string, db *sql.DB) *resolver {
 	return &resolver{root: root, db: db, files: map[string]*string{}, byClass: map[string][]string{}}
 }
 
-// readText is open(path, encoding="utf-8", errors="replace").read(): invalid
+// ReadText is open(path, encoding="utf-8", errors="replace").read(): invalid
 // bytes as U+FFFD, universal newlines.
-func readText(p string) (string, bool) {
+func ReadText(p string) (string, bool) {
 	b, err := os.ReadFile(p)
 	if err != nil {
 		return "", false
@@ -42,7 +42,7 @@ func readText(p string) (string, bool) {
 func (r *resolver) text(rel string) (string, bool) {
 	t, seen := r.files[rel]
 	if !seen {
-		if s, ok := readText(filepath.Join(r.root, rel)); ok {
+		if s, ok := ReadText(filepath.Join(r.root, rel)); ok {
 			t = &s
 		}
 		r.files[rel] = t
