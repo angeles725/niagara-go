@@ -8,7 +8,8 @@
 // A Go map is never iterated to produce output.
 //
 // LoadPython reads an index exactly as json.load(open(path, encoding="utf-8"))
-// does, and its errors print Python's exception text.
+// does, and its errors print Python's exception text. OpenSQLite opens a SQLite
+// index read-only with the pure-Go driver modernc.org/sqlite (no cgo).
 //
 // Numbers are kept as json.Number text (Int, Float and IsInt convert them), so
 // an integer literal stays distinct from a float like in Python. NaN, Infinity
