@@ -1,0 +1,50 @@
+{
+ "sections": [
+  {
+   "id": "framework",
+   "title": "Framework",
+   "items": [
+    {
+     "file": "overview.html",
+     "title": "Overview",
+     "description": "High level overview of the framework"
+    },
+    {
+     "file": "componentModel.html",
+     "title": "Component Model",
+     "description": "Explains the component model:\nslots, properties, actions and topics.  "
+    },
+    {
+     "file": "alarming.html",
+     "title": "Alarming",
+     "description": "How the alarm service routes alarms through alarm classes to recipients, with escalation, acknowledgement and the alarm database explained in detail for developers"
+    },
+    {
+     "file": "models.html",
+     "title": "Data models",
+     "description": ""
+    },
+    {
+     "file": "compModel2.html",
+     "title": "Components",
+     "description": "model of a component"
+    }
+   ]
+  },
+  {
+   "id": "misc",
+   "title": "Misc",
+   "items": [
+    {
+     "file": "componentAlarm.html",
+     "title": "Alarm components"
+    },
+    {
+     "file": "x.html",
+     "title": "Model views",
+     "description": "The model behind views"
+    }
+   ]
+  }
+ ]
+}

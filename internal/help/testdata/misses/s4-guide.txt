@@ -1,0 +1,4 @@
+No match for 'zzqq' (guide) in this scope.
+  searched: Niagara 4.14.0.162 (<TESTDATA>) -- guides-index.json: 5 entries; guides-clean/: 2 files
+  excluded from this scope: images, fonts/css, JavaHelp .dat search indexes, bajadoc.index, raw js next to rendered jsdoc, META-INF, licence texts (see coverage --doc-jars)
+  not proof of absence; try: guide-search 'zzqq', find 'zzqq', devguide-search 'zzqq'

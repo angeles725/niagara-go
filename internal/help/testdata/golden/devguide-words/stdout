@@ -1,0 +1,9 @@
+2 devguide entries matching '  alarm  of xy':
+
+  [Framework] Alarming
+    How the alarm service routes alarms through alarm classes to recipients, with escalation, acknowledgement and the alarm 
+    file: devguide/alarming.html
+
+  [Misc] Alarm components
+    file: devguide/componentAlarm.html
+

@@ -1,0 +1,14 @@
+3 guide folders matching 'bacnet':
+
+  Bacnet (14 topics, docBacnet-doc.jar)
+    matching topics: About BACnet (bacnetOverview), BacnetDiscovery, bacnetTrend, bacnetAlarm, bacnetSchedule
+    ... and 2 more
+    path: guides/Bacnet/
+
+  BacnetAws (3 topics, docBacnetAws-doc.jar)
+    path: guides/BacnetAws/
+
+  Drivers (0 topics, docDrivers-doc.jar)
+    matching topics: driverBacnetNotes
+    path: guides/Drivers/
+

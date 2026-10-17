@@ -1,0 +1,18 @@
+4 guide folders matching 'alarm':
+
+  docAlarms (7 topics, ?)
+    matching topics: alarmConsole, AlarmClass
+    path: guides/docAlarms/
+
+  Bacnet (14 topics, docBacnet-doc.jar)
+    matching topics: bacnetAlarm
+    path: guides/Bacnet/
+
+  Drivers (0 topics, docDrivers-doc.jar)
+    matching topics: pointsAlarm
+    path: guides/Drivers/
+
+  Platform (4 topics, docPlatform-doc.jar)
+    matching topics: Platform alarm services (platformAlarms)
+    path: guides/Platform/
+
