@@ -165,7 +165,7 @@ func (c *corpus) loadCatalog() map[string]string {
 // readText is corpus.read_text_or_none: strict UTF-8 with universal newlines; false
 // when the file is missing, unreadable or not UTF-8.
 func readText(path string) (string, bool) {
-	text, err := blockfiles.ReadText(path)
+	text, err := pycompat.ReadText(path)
 	return text, err == nil
 }
 
