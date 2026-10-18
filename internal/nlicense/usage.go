@@ -26,6 +26,4 @@ const usage = "\n" +
 	"The private key is the VENDOR's DSA private key matching {vendor}.certificate's\n" +
 	"public key (the OEM holds it). NEVER store/commit private keys — they stay on the\n" +
 	"operator's machine; this tool only reads them from the path you pass.\n" +
-	"\n" +
-	"Dependencies: python3 + cryptography (pip install cryptography).\n" +
 	""
