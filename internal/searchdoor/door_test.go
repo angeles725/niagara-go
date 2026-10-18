@@ -17,7 +17,7 @@ type fakeBackend struct {
 	calls    []string   // read once the search has returned
 }
 
-func (f *fakeBackend) Run(argv []string, timeout float64) Raw {
+func (f *fakeBackend) Run(_ source, argv []string, timeout float64) Raw {
 	f.mu.Lock()
 	f.calls = append(f.calls, strings.Join(argv[1:], " "))
 	f.mu.Unlock()

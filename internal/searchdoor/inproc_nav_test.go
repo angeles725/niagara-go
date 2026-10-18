@@ -66,10 +66,10 @@ func TestCodeSourceMatchesMnav(t *testing.T) {
 		{"search", "search-organized", [][]string{{"grep", "(unclosed", "-n", "30"}}},
 	} {
 		script, corpus := navCheckout(t, fx.indexes, fx.organized)
-		b := &inprocBackend{clock: time.Now, paths: Paths{Code: script}}
+		b := &inprocBackend{clock: time.Now}
 		for _, args := range fx.calls {
 			t.Run(fx.indexes+" "+strings.Join(args, " "), func(t *testing.T) {
-				got := b.Run(append([]string{script}, args...), 30)
+				got := b.Run(codeSource, append([]string{script}, args...), 30)
 				want := navOracle(t, script, corpus, args)
 				got.MS = 0
 				if got != want {
@@ -84,10 +84,10 @@ func TestCodeSourceMatchesMnav(t *testing.T) {
 // folder is module_nav's "Cannot detect base directory" (exit 1), in process.
 func TestCodeSourceWithoutIndexes(t *testing.T) {
 	script := stubScript(t, filepath.Join(t.TempDir(), "tools", "module_nav.py"))
-	b := &inprocBackend{clock: time.Now, paths: Paths{Code: script}}
+	b := &inprocBackend{clock: time.Now}
 	for _, args := range [][]string{{"rank", "-n", "20", "--", "alarm"}, {"token", "BAlarm", "-n", "100000"},
 		{"hierarchy", "BAlarm", "--depth", "3"}} {
-		raw := b.Run(append([]string{script}, args...), 5)
+		raw := b.Run(codeSource, append([]string{script}, args...), 5)
 		if raw.State != Unavailable || raw.RC != 1 || !strings.HasPrefix(raw.Out, "ERROR: Cannot detect base directory.") {
 			t.Errorf("%v: %+v", args, raw)
 		}

@@ -28,7 +28,7 @@ func (d *door) resolve(name, codePath string, timeout int) (string, string) {
 	if moduleSuffix.MatchString(name) {
 		return "module", "'" + name + "' ends in a module suffix"
 	}
-	raw := d.backend.Run([]string{codePath, "modules"}, float64(timeout))
+	raw := d.backend.Run(codeSource, []string{codePath, "modules"}, float64(timeout))
 	if raw.State != OK {
 		return "feature", fmt.Sprintf("module list unavailable (%s); '%s' has no module suffix, "+
 			"so it is treated as a feature", raw.Reason, name)
@@ -49,7 +49,7 @@ func (d *door) licenseCodeJob(name, kind, codePath string, timeout int, why stri
 	}
 	command := "module_nav " + strings.Join(argv[1:], " ")
 	return job{"code", title, command, func() *Outcome {
-		raw := d.backend.Run(argv, float64(timeout))
+		raw := d.backend.Run(codeSource, argv, float64(timeout))
 		o := newOutcome("code", title, command, raw.State)
 		o.Reason, o.MS = raw.Reason, raw.MS
 		o.Notes = append(o.Notes, why)

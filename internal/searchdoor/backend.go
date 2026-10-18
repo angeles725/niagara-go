@@ -9,10 +9,21 @@ import (
 	"github.com/angeles725/niagara-go/internal/pyre"
 )
 
-// Backend runs one backend tool and types its answer. argv[0] is the tool's
-// script path, the rest its arguments; timeout is in seconds.
+// source is the backend a call goes to: the blocks (corpus-nav), docs (niagara_help) or
+// code (module_nav) source.
+type source int
+
+const (
+	blocksSource source = iota + 1
+	docsSource
+	codeSource
+)
+
+// Backend runs one backend call and types its answer. src picks the backend; argv[0] is
+// its script path (it locates the backend's checkout and names it in messages), the rest
+// its arguments; timeout is in seconds.
 type Backend interface {
-	Run(argv []string, timeout float64) Raw
+	Run(src source, argv []string, timeout float64) Raw
 }
 
 // MissLine is a backend's miss/scope line at the start of a line: corpus-nav

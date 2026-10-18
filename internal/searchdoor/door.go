@@ -30,11 +30,11 @@ type door struct {
 	now     func() float64
 }
 
-// bind tells a backend that answers in process which scripts are the sources
-// and how to read the environment (the command's cli.Stdio.Env).
-func (d *door) bind(p Paths, getenv envFunc) {
-	if b, ok := d.backend.(pathBinder); ok {
-		b.bindPaths(p, getenv)
+// bind tells a backend that answers in process how to read the environment (the
+// command's cli.Stdio.Env).
+func (d *door) bind(getenv envFunc) {
+	if b, ok := d.backend.(envBinder); ok {
+		b.bindEnv(getenv)
 	}
 }
 
@@ -67,7 +67,7 @@ func (d *door) blocksJob(path, query string, limit int, mode string, timeout int
 	// corpus-nav --limit caps the printed LINES, not blocks: 400 lines per wanted block keeps the top N
 	argv := append([]string{path, "find", query, "--limit", strconv.Itoa(max(2000, 400*limit))}, modeArgs(mode)...)
 	return job{"blocks", title, "corpus-nav find", func() *Outcome {
-		return fromRaw("blocks", title, "corpus-nav find", d.backend.Run(argv, float64(timeout)), parseBlocks)
+		return fromRaw("blocks", title, "corpus-nav find", d.backend.Run(blocksSource, argv, float64(timeout)), parseBlocks)
 	}}
 }
 
@@ -82,7 +82,7 @@ func (d *door) docsJob(path, query string, limit int, mode string, timeout int, 
 	}
 	argv = append(append(argv, "find", query, "-n", strconv.Itoa(max(limit, 5))), modeArgs(mode)...)
 	return job{"docs", title, command, func() *Outcome {
-		o := fromRaw("docs", title, command, d.backend.Run(argv, float64(timeout)), parseDocs)
+		o := fromRaw("docs", title, command, d.backend.Run(docsSource, argv, float64(timeout)), parseDocs)
 		if strict && o.State == OK && relaxed(o.Scope) {
 			o.State, o.Items = Empty, nil
 			o.Notes = append(o.Notes, "no page names every term; the backend's any-term matches are not shown")
@@ -147,7 +147,7 @@ func (d *door) ranked(path, query string, deadline float64, timeout int, title s
 		return unavailable("code", title, "module_nav rank",
 			fmt.Sprintf("unavailable: the %ds budget was spent on token lookups before rank", timeout))
 	}
-	raw := d.backend.Run([]string{path, "rank", "-n", strconv.Itoa(rankRows), "--", query}, left)
+	raw := d.backend.Run(codeSource, []string{path, "rank", "-n", strconv.Itoa(rankRows), "--", query}, left)
 	if !(raw.HasRC && raw.RC == 2) {
 		return fromRaw("code", title, "module_nav rank", raw, parseRank)
 	}
@@ -161,7 +161,7 @@ func (d *door) ranked(path, query string, deadline float64, timeout int, title s
 		return unavailable("code", title, command,
 			fmt.Sprintf("unavailable: the %ds budget was spent before the degraded grep", timeout))
 	}
-	return fromRaw("code", title, command, d.backend.Run([]string{path, "grep", rx, "-n", strconv.Itoa(grepRows)}, left),
+	return fromRaw("code", title, command, d.backend.Run(codeSource, []string{path, "grep", rx, "-n", strconv.Itoa(grepRows)}, left),
 		func(out string) ([]string, []Item) { return parseGrep(out, terms) })
 }
 
@@ -208,7 +208,7 @@ func (d *door) rankedCode(path, query string, deadline float64, timeout int, tit
 			notes = append(notes, fmt.Sprintf("token %s: skipped, the %ds budget of this source is spent", word, timeout))
 			continue
 		}
-		raw := d.backend.Run([]string{path, "token", word, "-n", "100000"}, left)
+		raw := d.backend.Run(codeSource, []string{path, "token", word, "-n", "100000"}, left)
 		if raw.State == OK && strings.Contains(raw.Out, "TOKEN:") {
 			outs = append(outs, raw.Out)
 		} else {
