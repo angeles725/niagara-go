@@ -2,6 +2,7 @@ package helpbuild
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -122,6 +123,112 @@ func TestExtractAndIndexRefusesEverySpellingOfTheRepoRoot(t *testing.T) {
 				t.Fatalf("data_root %q removed %s: %v", spelling, k, err)
 			}
 		}
+	}
+}
+
+// Status 1 is a failed fidelity check: a mismatched file in any mode, a
+// missing one only outside verify-only (here fill-missing, which never
+// replaces a dangling symlink). The manifest is still written.
+func TestExtractAndIndexStatusOne(t *testing.T) {
+	repo, _ := setupFixture(t)
+	if res, err := ExtractAndIndex(repo, "1.0.0.0", SetupOptions{}); err != nil || res.Status != 0 {
+		t.Fatalf("%+v %v", res, err)
+	}
+	root := filepath.Join(repo, "versions", "1.0.0.0")
+	manifest := filepath.Join(repo, "versions", "1.0.0.0.manifest.json")
+	writeFile(t, filepath.Join(root, "guides", "Foo", "a.html"), []byte("tampered"))
+	res, err := ExtractAndIndex(repo, "1.0.0.0", SetupOptions{VerifyOnly: true})
+	if err != nil || res.Status != 1 || strings.Join(res.Fidelity.Mismatched, ",") != "guides/Foo/a.html" ||
+		!strings.Contains(readText(t, manifest), `"mismatched": [
+  "guides/Foo/a.html"
+ ]`) {
+		t.Fatalf("mismatched: %+v %v", res, err)
+	}
+	writeFile(t, filepath.Join(root, "guides", "Foo", "a.html"), []byte("<html>a</html>"))
+	gone := filepath.Join(root, "guides", "Foo", "sub", "b.html")
+	if err := os.Remove(gone); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink("nowhere", gone); err != nil {
+		t.Skipf("no symlinks here (%v): missing-file status not checked", err)
+	}
+	res, err = ExtractAndIndex(repo, "1.0.0.0", SetupOptions{FillMissing: true})
+	if err != nil || res.Status != 1 || len(res.Filled) != 0 || strings.Join(res.Fidelity.Missing, ",") != "guides/Foo/sub/b.html" {
+		t.Fatalf("missing after fill: %+v %v", res, err)
+	}
+	if res, _ := ExtractAndIndex(repo, "1.0.0.0", SetupOptions{VerifyOnly: true}); res.Status != 0 {
+		t.Fatalf("verify-only ignores missing: status %d", res.Status)
+	}
+}
+
+// Force re-extracts over an existing corpus: the raw and derived folders
+// are removed (a stray file in them goes), anything else in the data root
+// stays, and the result is verified.
+func TestExtractAndIndexForceReextracts(t *testing.T) {
+	repo, _ := setupFixture(t)
+	if _, err := ExtractAndIndex(repo, "1.0.0.0", SetupOptions{}); err != nil {
+		t.Fatal(err)
+	}
+	root := filepath.Join(repo, "versions", "1.0.0.0")
+	writeFile(t, filepath.Join(root, "guides", "Foo", "a.html"), []byte("tampered"))
+	writeFile(t, filepath.Join(root, "guides", "stray.txt"), []byte("x"))
+	writeFile(t, filepath.Join(root, "indexes", "old.json"), []byte("{}"))
+	writeFile(t, filepath.Join(root, "keep.txt"), []byte("kept"))
+	res, err := ExtractAndIndex(repo, "1.0.0.0", SetupOptions{Force: true})
+	if err != nil || res.Status != 0 || res.Error != "" || res.Extracted.Files != 3 || res.Fidelity.Matched != 3 {
+		t.Fatalf("%+v %v", res, err)
+	}
+	for _, gone := range []string{"guides/stray.txt", "indexes"} {
+		if _, err := os.Lstat(filepath.Join(root, filepath.FromSlash(gone))); !os.IsNotExist(err) {
+			t.Errorf("%s survived --force: %v", gone, err)
+		}
+	}
+	if readText(t, filepath.Join(root, "guides", "Foo", "a.html")) != "<html>a</html>" || readText(t, filepath.Join(root, "keep.txt")) != "kept" {
+		t.Fatal("force did not re-extract, or removed a file outside the raw and derived folders")
+	}
+}
+
+// Collisions across jars: the later jar overwrites, every collision is in
+// ExtractStats, the log shows only the first 20 (extract_and_index's
+// [:20]); a same-jar duplicate is skipped and recorded as (rel, jar, jar).
+func TestExtractAndIndexCollisions(t *testing.T) {
+	dir := t.TempDir()
+	install := filepath.Join(dir, "install")
+	var first, second [][2]string
+	for i := range 25 {
+		first = append(first, [2]string{fmt.Sprintf("doc/f%02d.html", i), "first"})
+		second = append(second, [2]string{fmt.Sprintf("doc/f%02d.html", i), "second"})
+	}
+	first = append(first, [2]string{"doc/f00.html", "same-jar duplicate"})
+	writeJar(t, filepath.Join(install, "modules", "docFoo-doc.jar"), first...)
+	writeJar(t, filepath.Join(install, "modules", "docFoo.jar"), second...)
+	repo := filepath.Join(dir, "repo")
+	writeRegistry(t, repo, map[string][3]string{"1.0.0.0": {"collide", install, "v"}})
+	res, err := ExtractAndIndex(repo, "1.0.0.0", SetupOptions{})
+	if err != nil || res.Extracted == nil {
+		t.Fatalf("%+v %v", res, err)
+	}
+	cs := res.Extracted.Collisions
+	if len(cs) != 26 || cs[0] != (Collision{"guides/Foo/f00.html", "docFoo-doc.jar", "docFoo-doc.jar"}) {
+		t.Fatalf("collisions %d %+v", len(cs), cs[:min(len(cs), 2)])
+	}
+	for i, c := range cs[1:] {
+		if c != (Collision{fmt.Sprintf("guides/Foo/f%02d.html", i), "docFoo-doc.jar", "docFoo.jar"}) {
+			t.Fatalf("collision %d: %+v", i+1, c)
+		}
+	}
+	var logged []string
+	for _, l := range res.Log {
+		if strings.HasPrefix(l, "  COLLISION ") {
+			logged = append(logged, l)
+		}
+	}
+	if len(logged) != 20 || logged[0] != "  COLLISION guides/Foo/f00.html (docFoo-doc.jar overwritten by docFoo-doc.jar)" ||
+		logged[19] != "  COLLISION guides/Foo/f18.html (docFoo-doc.jar overwritten by docFoo.jar)" {
+		t.Fatalf("logged %d: %q", len(logged), logged)
+	}
+	if got := readText(t, filepath.Join(repo, "v", "guides", "Foo", "f24.html")); got != "second" {
+		t.Fatalf("the later jar did not overwrite: %q", got)
 	}
 }
 

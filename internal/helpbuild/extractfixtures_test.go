@@ -54,7 +54,7 @@ func treeLines(t *testing.T, root string) []string {
 				line += " " + string(generatedUTC.ReplaceAll(data, []byte(`"generated_utc": "<utc>"`)))
 			} else {
 				sum := sha256.Sum256(data)
-				line += fmt.Sprintf(" %d %s", len(data), hex.EncodeToString(sum[:8]))
+				line += fmt.Sprintf(" %d %s", len(data), hex.EncodeToString(sum[:]))
 			}
 		}
 		out = append(out, line)

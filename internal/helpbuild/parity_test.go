@@ -27,7 +27,7 @@ func driver(t *testing.T) (python, tools string) {
 	}
 	tools = niagaraHelpTools()
 	if tools == "" {
-		t.Skip("no niagara-help checkout ($NIAGARA_HELP_DIR unset, none found walking up): parity not checked")
+		t.Skip("no niagara-help checkout ($NIAGARA_HELP_DIR unset, none under $NIAGARA_RESEARCH or walking up): parity not checked")
 	}
 	if _, err := os.Stat(filepath.Join(tools, "niagara_help_lib", "jar_listing.py")); err != nil {
 		t.Skipf("niagara-help tools not available (%v): parity not checked", err)

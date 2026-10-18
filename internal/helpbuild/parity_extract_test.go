@@ -185,9 +185,9 @@ func TestParityDocJarCorners(t *testing.T) {
 			pyRoot, goRoot := filepath.Join(dir, name, "py-"+op), filepath.Join(dir, name, "go-"+op)
 			py := pyRaise(t, runDriver(t, "", "docjars", op, install, pyRoot))
 			diffLines(t, name+" "+op, py, []string{goDocJars(op, install, goRoot)})
-			if _, err := os.Stat(pyRoot); err == nil {
-				diffLines(t, name+" "+op+" tree", treeLines(t, pyRoot), treeLines(t, goRoot))
-			}
+			// An absent root is part of the result: Go must not create
+			// one where Python did not.
+			diffLines(t, name+" "+op+" tree", treeOrAbsent(t, pyRoot), treeOrAbsent(t, goRoot))
 		}
 		// Fidelity over what extract left: an existing file makes it read
 		// the entry, so the reader's errors surface here too.
@@ -195,6 +195,16 @@ func TestParityDocJarCorners(t *testing.T) {
 		py := pyRaise(t, runDriver(t, "", "docjars", "fidelity", install, pyRoot))
 		diffLines(t, name+" fidelity after extract", py, []string{goDocJars("fidelity", install, goRoot)})
 	}
+}
+
+// treeOrAbsent is treeLines, or one "<absent>" line when root does not
+// exist.
+func treeOrAbsent(t *testing.T, root string) []string {
+	t.Helper()
+	if _, err := os.Lstat(root); os.IsNotExist(err) {
+		return []string{"<absent>"}
+	}
+	return treeLines(t, root)
 }
 
 func keysOfBytes(m map[string][]byte) []string {

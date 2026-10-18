@@ -3,7 +3,10 @@ package helpbuild
 import (
 	"archive/zip"
 	"bytes"
+	"compress/flate"
+	"encoding/binary"
 	"errors"
+	"hash/crc32"
 	"os"
 	"path/filepath"
 	"strings"
@@ -75,7 +78,7 @@ func TestReadEntryStoredAndDeflated(t *testing.T) {
 }
 
 // The ZipFile.open / ZipExtFile corners (each one checked against Python by
-// TestParityExtractErrors).
+// TestParityDocJarCorners).
 func TestReadEntryFollowsPythonZipfile(t *testing.T) {
 	cases := []struct {
 		name    string
@@ -119,5 +122,46 @@ func TestReadEntryAfterPrependedData(t *testing.T) {
 	}
 	if _, err := openZip(filepath.Join(t.TempDir(), "missing.jar")); !os.IsNotExist(err) {
 		t.Fatalf("missing jar: %v", err)
+	}
+}
+
+// A deflated entry whose compressed bytes stop before compress_size is
+// EOFError in Python (ZipExtFile._read2 reads nothing while bytes are
+// still owed), for read() and copyfileobj's bounded reads alike: the same
+// errTruncatedEntry as a short stored entry. The file ends inside the
+// entry's data; the zipInfo is built by hand.
+func TestReadEntryTruncatedDeflate(t *testing.T) {
+	data := bytes.Repeat([]byte("truncated deflate "), 2000)
+	var comp bytes.Buffer
+	fw, err := flate.NewWriter(&comp, 9)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, _ = fw.Write(data)
+	if err := fw.Close(); err != nil {
+		t.Fatal(err)
+	}
+	var hdr bytes.Buffer
+	for _, v := range []any{[]byte("PK\x03\x04"), uint16(20), uint16(0), uint16(zipDeflated), uint32(0),
+		crc32.ChecksumIEEE(data), uint32(comp.Len()), uint32(len(data)), uint16(5), uint16(0), []byte("a.txt")} {
+		_ = binary.Write(&hdr, binary.LittleEndian, v)
+	}
+	for _, cut := range []int{0, 1, comp.Len() / 2} {
+		path := filepath.Join(t.TempDir(), "t.bin")
+		writeFile(t, path, append(append([]byte{}, hdr.Bytes()...), comp.Bytes()[:cut]...))
+		f, err := os.Open(path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		st, _ := f.Stat()
+		z := &zipFile{f: f, size: st.Size()}
+		x := &zipInfo{name: "a.txt", origName: "a.txt", size: uint64(len(data)), crc: crc32.ChecksumIEEE(data),
+			method: zipDeflated, compressSize: uint64(comp.Len())}
+		for _, whole := range []bool{true, false} {
+			if _, err := z.readEntry(x, whole); !errors.Is(err, errTruncatedEntry) {
+				t.Errorf("cut %d whole=%v: %v, want errTruncatedEntry", cut, whole, err)
+			}
+		}
+		f.Close()
 	}
 }

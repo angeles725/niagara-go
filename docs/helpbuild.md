@@ -96,11 +96,14 @@ copy. When the data file changes upstream: copy it, run `go test ./internal/help
 `testdata/parity/driver.py` imports the real niagara-help modules (`python3 -I -B`: isolated, no `__pycache__` written into the checkout; the tools
 directory put on `sys.path` explicitly) and prints JSON lines; `parity_test.go` rebuilds
 every line from this package and requires an empty diff. It needs `python3` and a
-niagara-help checkout — `$NIAGARA_HELP_DIR`, else the first one met walking up from the
-test directory as `<dir>/niagara-help` or `<dir>/niagara-research/niagara-help` (a worktree
-under `~/niagara-go-worktrees` finds `~/niagara-research/niagara-help`) — and skips visibly
-only when there is none. The drift test `TestEmbeddedRulesMatchCanonical` uses the same
-lookup; `$NIAGARA_HELP_DIR` pointing at a folder without the data file fails it.
+niagara-help checkout — `$NIAGARA_HELP_DIR`; else `$NIAGARA_RESEARCH/niagara-help` when it
+holds the data file (the variable the glossary and version drift tests read); else the
+first one met walking up from the test directory as `<dir>/niagara-help` or
+`<dir>/niagara-research/niagara-help` (a worktree under `~/niagara-go-worktrees` finds
+`~/niagara-research/niagara-help`) — and skips visibly only when there is none. The drift
+test `TestEmbeddedRulesMatchCanonical` uses the same lookup; `$NIAGARA_HELP_DIR` pointing
+at a folder without the data file fails it, a `$NIAGARA_RESEARCH` without one falls
+through to the walk.
 
 | Test | Driver mode | Compares |
 |---|---|---|
@@ -116,7 +119,7 @@ Python exception becomes `["raise"]`, compared against a Go error):
 | Test | Compares |
 |---|---|
 | `TestParityExtractSynthetic` | `extract_and_index` result lines and both whole repo trees (path, kind, permission bits, size, sha256; manifests inline with `generated_utc` normalized) after each of: install not mounted, repo-root refusal, verify-only over the repo root, extract, already-extracted refusal, verify after mismatched / EOL-only / missing edits, fill-missing, force |
-| `TestParityDocJarCorners` | `extract`, `fill_missing`, `fidelity` (also over what extract left) and the trees on twelve one-jar installs: bad CRC, local name ≠ central name, encrypted, unknown method, overlapped entries, a shared local header, `file_size` shorter than the data, cp437 and NUL names, prepended data, a zip64 end record, not a zip, a folder named like a jar |
+| `TestParityDocJarCorners` | `extract`, `fill_missing`, `fidelity` (also over what extract left) and the trees (a root one side did not create counts as a difference) on twelve one-jar installs: bad CRC, local name ≠ central name, encrypted, unknown method, overlapped entries, a shared local header, `file_size` shorter than the data, cp437 and NUL names, prepended data, a zip64 end record, not a zip, a folder named like a jar |
 | `TestParityDocJarMapping` | `is_doc_jar` … `guide_folder`, `dest_path`, `is_help_entry`, `mapped_entries` over every synthetic jar plus a grid of 27 jar kinds × 32 entry shapes; `help_jars` / `list_doc_jars` of the synthetic install |
 | `TestParityExtractReal` | extract + verify of a copied EC-Net 4.3.58.18 subset (`docDeveloper-doc`, `docDeveloper-ux`, `docDeveloper-rt`, `docLinuxN4-doc`, `docObix-doc`, plus `workbench-wb`, `batchJob-ux`, `alarm-rt`); skipped with `-short` |
 | `TestParityHelpJarsFullInstall` | `help_jars` / `list_doc_jars` of the whole 4.3 install (578 module jars, ~25 s a side); only with `HELPBUILD_PARITY_FULL=1` |

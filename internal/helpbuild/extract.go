@@ -181,7 +181,10 @@ func Extract(installDir, root string, ls *Listings) (*ExtractStats, error) {
 // writeEntry is makedirs(dirname(out)); with z.open(info) as src,
 // open(out, "wb") as dst: copyfileobj(src, dst). The folder is made before
 // the entry is opened and the file created before it is read, so a failed
-// read leaves the empty file Python's single-chunk copy leaves.
+// read leaves the empty file Python's single-chunk copy leaves. The read is
+// copyfileobj's bounded one (readEntry whole=false), which is verified like
+// read(): a bad CRC-32 or a truncated entry is an error and nothing is
+// written to the file.
 func writeEntry(z *zipFile, x *zipInfo, out string) error {
 	if err := os.MkdirAll(filepath.Dir(out), 0o777); err != nil {
 		return err
@@ -193,7 +196,7 @@ func writeEntry(z *zipFile, x *zipInfo, out string) error {
 	if err != nil {
 		return err
 	}
-	data, err := z.readEntry(x, false)
+	data, err := z.readEntry(x, false) // bounded, CRC-checked
 	if err == nil {
 		_, err = f.Write(data)
 	}

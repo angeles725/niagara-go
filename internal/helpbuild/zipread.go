@@ -119,8 +119,12 @@ func (z *zipFile) readEntry(x *zipInfo, whole bool) ([]byte, error) {
 			out, err = io.ReadAll(io.LimitReader(r, int64(min(x.size, math.MaxInt64))))
 		}
 		// Input used up mid-stream: zlib's flush ends the read when every
-		// compressed byte was there; a short file is EOFError.
-		if errors.Is(err, io.ErrUnexpectedEOF) && got == x.compressSize {
+		// compressed byte was there; a short file is EOFError, as for a
+		// stored entry.
+		if errors.Is(err, io.ErrUnexpectedEOF) {
+			if got < x.compressSize {
+				return nil, fmt.Errorf("%w: %q", errTruncatedEntry, x.origName)
+			}
 			err = nil
 		}
 		if err != nil {

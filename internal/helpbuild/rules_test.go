@@ -76,7 +76,7 @@ func TestShippedRulesAreWellFormed(t *testing.T) {
 func TestEmbeddedRulesMatchCanonical(t *testing.T) {
 	tools := niagaraHelpTools()
 	if tools == "" {
-		t.Skip("no niagara-help checkout ($NIAGARA_HELP_DIR unset, none found walking up): drift not checked")
+		t.Skip("no niagara-help checkout ($NIAGARA_HELP_DIR unset, none under $NIAGARA_RESEARCH or walking up): drift not checked")
 	}
 	canon, err := os.ReadFile(filepath.Join(filepath.Dir(tools), canonicalRules))
 	if err != nil {
@@ -205,14 +205,21 @@ func TestBadRulesAreErrors(t *testing.T) {
 var canonicalRules = filepath.Join("tools", "niagara_help_lib", "install_docs.json")
 
 // niagaraHelpTools is niagara-help tools/: $NIAGARA_HELP_DIR/tools when the
-// variable is set, else the first checkout met walking up from the test
-// directory, at each level as <dir>/niagara-help or
+// variable is set; else $NIAGARA_RESEARCH/niagara-help/tools when that
+// checkout holds the data file; else the first checkout met walking up
+// from the test directory, at each level as <dir>/niagara-help or
 // <dir>/niagara-research/niagara-help (a worktree under
 // ~/niagara-go-worktrees finds ~/niagara-research/niagara-help). "" when
 // there is none.
 func niagaraHelpTools() string {
 	if env := os.Getenv("NIAGARA_HELP_DIR"); env != "" {
 		return filepath.Join(env, "tools")
+	}
+	if env := os.Getenv("NIAGARA_RESEARCH"); env != "" {
+		help := filepath.Join(env, "niagara-help")
+		if st, err := os.Stat(filepath.Join(help, canonicalRules)); err == nil && st.Mode().IsRegular() {
+			return filepath.Join(help, "tools")
+		}
 	}
 	dir, err := os.Getwd()
 	if err != nil {
@@ -229,5 +236,29 @@ func niagaraHelpTools() string {
 			return ""
 		}
 		dir = up
+	}
+}
+
+// The checkout lookup: $NIAGARA_HELP_DIR wins; $NIAGARA_RESEARCH (the
+// variable the glossary and version drift tests read) is used when
+// <it>/niagara-help holds the data file, else the walk up decides.
+func TestNiagaraHelpToolsLookup(t *testing.T) {
+	help := filepath.Join(t.TempDir(), "nh")
+	t.Setenv("NIAGARA_HELP_DIR", help)
+	t.Setenv("NIAGARA_RESEARCH", "")
+	if got := niagaraHelpTools(); got != filepath.Join(help, "tools") {
+		t.Fatalf("NIAGARA_HELP_DIR: %q", got)
+	}
+	research := t.TempDir()
+	writeFile(t, filepath.Join(research, "niagara-help", canonicalRules), []byte("{}"))
+	t.Setenv("NIAGARA_HELP_DIR", "")
+	t.Setenv("NIAGARA_RESEARCH", research)
+	if got := niagaraHelpTools(); got != filepath.Join(research, "niagara-help", "tools") {
+		t.Fatalf("NIAGARA_RESEARCH: %q", got)
+	}
+	empty := t.TempDir()
+	t.Setenv("NIAGARA_RESEARCH", empty)
+	if got := niagaraHelpTools(); strings.HasPrefix(got, empty) {
+		t.Fatalf("NIAGARA_RESEARCH without a checkout: %q", got)
 	}
 }
