@@ -40,6 +40,13 @@ func TestZoneCalls(t *testing.T) {
 		parent string
 		want   []string
 	}{
+		// super( and this( after a "." (spaces allowed between) are not constructor calls.
+		{"a.super( alone", []string{"a.super();"}, "Par", nil},
+		{"x. this( alone", []string{"x. this();"}, "Par", nil},
+		{"x .this( alone", []string{"x .this(1);"}, "Par", nil},
+		{"x.<tab>super ( alone", []string{"x.\tsuper ();"}, "Par", nil},
+		{"super ( is the parent constructor", []string{"super (1);"}, "Par", []string{"Par.<init>"}},
+		{"(this)( is no call", []string{"(this)(2);"}, "Par", nil},
 		{"with a parent", zone, "Par", []string{"After.yes", "B.c", "Bar.<init>", "Cur.<init>", "Cur.go", "Cur.run",
 			"Foo.<init>", "Par.<init>", "Par.up", "Util.café", "Vis.y", "Ünit.<init>"}},
 		{"super without a parent is the class itself", zone[:2], "", []string{"Cur.<init>", "Cur.go", "Cur.up"}},
@@ -75,8 +82,11 @@ func TestReadParentMap(t *testing.T) {
 	if m, found, err := readParentMap(base); err != nil || !found || !reflect.DeepEqual(m, map[string]string{"A": "P"}) {
 		t.Errorf("parents = %v %v %v", m, found, err)
 	}
-	mustWrite(t, IndexPath(base, InheritanceFile), `{"class_to_chain": {"A": [1]}}`)
-	if _, _, err := readParentMap(base); err == nil {
-		t.Error("a non-string parent is accepted")
+	for _, doc := range []string{`{"class_to_chain": {"A": [1]}}`, `{"class_to_chain": {"A": "P"}}`,
+		`{"class_to_chain": {"A": {"x": 1}}}`, `{"class_to_chain": []}`, `[]`} {
+		mustWrite(t, IndexPath(base, InheritanceFile), doc)
+		if _, _, err := readParentMap(base); err == nil {
+			t.Errorf("%s is accepted", doc)
+		}
 	}
 }

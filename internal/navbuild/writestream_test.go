@@ -33,8 +33,11 @@ func TestWriteIndexStream(t *testing.T) {
 		t.Fatal(err)
 	}
 	st, err := os.Stat(path)
-	if got, _ := os.ReadFile(path); err != nil || string(got) != "new" || st.Mode().Perm() != 0o644 {
-		t.Errorf("index %q, mode %v, err %v; want \"new\" with mode 0644", got, st.Mode().Perm(), err)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got, _ := os.ReadFile(path); string(got) != "new" || st.Mode().Perm() != 0o644 {
+		t.Errorf("index %q, mode %v; want \"new\" with mode 0644", got, st.Mode().Perm())
 	}
 }
 
