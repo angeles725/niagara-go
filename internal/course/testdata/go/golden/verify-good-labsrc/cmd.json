@@ -1,0 +1,1 @@
+{"args": ["--root", "predict-root", "verify-predictions", "--station", "stations/good", "--install", "install", "--labsrc", "labsrc", "--date", "2026-10-17"], "cwd_fixture": ".."}

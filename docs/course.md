@@ -166,15 +166,16 @@ exits 2: an answer key that cannot be read without ambiguity is not searched.
 
 ## course check
 
-`course check [--station <dir|config.bog>] [--install DIR] [--source DIR] [--labsrc DIR] [--lab N ...] [--json]`
+`course check [--station <dir|config.bog>] [--install DIR] [--source DIR] [--labsrc DIR] [--solutions DIR] [--lab N ...] [--json]`
 verifies what a correct solution of each lab leaves in a station and in the install, and prints one
 verdict per check. It reads the station, the jars and the source tree only; it needs no
 niagara-research root.
 
 - `--station`: the station directory (its `config.bog`, zipped or plain XML, and `shared/`), or
   the bog file itself (its directory is the station directory). Every selected check runs on it.
-- `--install`: a Niagara install; the jar checks read `<install>/modules/<part>.jar`. Without it
-  (and without `COURSE_NIAGARA_INSTALL`) every jar check is SKIP.
+- `--install`: a Niagara install; the jar checks read `<install>/modules/<part>.jar`, the install
+  rows (`Root: install`) its files (`defaults/system.properties`). Without it (and without
+  `COURSE_NIAGARA_INSTALL`) every jar check and install row is SKIP.
 - `--source`: a Niagara source tree, one directory per module part (`baja/javax/baja/sys/...`):
   the 4.15.6.20 sources a niagara-research checkout holds in
   `niagara-help/versions/4.15.6.20/source`. The `source-text` checks read it; without it (and
@@ -185,10 +186,15 @@ niagara-research root.
   tree, SKIP). The summary names the tree only when a selected check reads it.
 - `--labsrc`: the participant's lab module sources: the Niagara dev home that holds `training/`
   and `trafficLightDriver/` as the New Module Wizard lays them out
-  (`training/training-rt/src/com/tridiumuniversity/training/...`). The `annotation` checks read
-  it, with the rules of `--source` (no tree or an unreadable one: SKIP; a missing file: FAIL; the
-  flag wins over the variable, even empty; the summary says `labsrc (none: annotation checks
-  skipped)`).
+  (`training/training-rt/src/com/tridiumuniversity/training/...`). The `annotation` checks and
+  the lab-source rows (`Root: labsrc`) read it, with the rules of `--source` (no tree or an
+  unreadable one: SKIP; a missing file: FAIL; the flag wins over the variable, even empty; the
+  summary says `labsrc (none: lab-source checks skipped)`).
+- `--solutions`: the participant's own module sources as the niagara-research corpus keeps them,
+  `sources/n4-dev-course/solutions` (`review/`, `cert-exam/`). The review rows with `Root:
+  solutions` read it (annotation rows over `review/Cristian_Angeles_Review/...`), with the rules of
+  `--labsrc` (the summary says `solutions (none: solutions checks skipped)`); the lab sources are
+  never a fallback.
 - `--lab`: repeatable; `3`, `03`, `L3`, `B`, `LB`, `RA1`, `RA2`, `EXAM` (any case). A lab without
   checks (8) is exit 1. Without `--lab` only the labs run (1-11, B: the TrainingStation); `RA1`,
   `RA2` and `EXAM` run only when named, on their own station.
@@ -200,6 +206,7 @@ Defaults (explicit flags win; a blank variable counts as unset):
 | `--install` | `COURSE_NIAGARA_INSTALL` |
 | `--source` | `COURSE_NIAGARA_SOURCE` |
 | `--labsrc` | `COURSE_LAB_SOURCES` |
+| `--solutions` | `COURSE_SOLUTIONS` |
 | `--station` | per check, the variable of its station role: `COURSE_TRAINING_STATION` for the labs (1-11, B), `COURSE_REVIEW_STATION` for RA1 and RA2, `COURSE_CERT_STATION` for EXAM |
 
 Without `--station`, a run whose checks span several roles reads each role's station once, and
@@ -222,17 +229,68 @@ own prefixes (`t:`, `tld:`) are resolved through its `m=` declarations.
 | `type` | components of a type, optionally under an ancestor type (`Within`) or below a folder path (`Under`, `Review2`) | the count is at least / exactly N; with `Under`, a FAIL lists where the components are instead |
 | `slot` | a slot on every component of a type (filtered by `Within` and `Under` as for `type`); its effective value is the stored value (a composite's nested `value`), else the type default. A dotted slot (`address.port`, `health.lastOkTime`) is a value below a composite slot of the component | every value equals `Want`, and every `Stored` slot is stored (`health.down = false` is also the default of a device never pinged, so C11.12 and C11.14 need `health.lastOkTime` stored); or (`Set`) every slot is stored; or (`Distinct`) the distinct values reach N |
 | `link` | links `From.FromSlot -> Type.Slot`, source by handle or `slot:` ord | the count is at least / exactly N |
-| `files` | files matching a glob under the station dir, `{station}` = the `stationName` slot | the count is at least / exactly N |
+| `files` | files matching a glob under the row's root (below), `{station}` = the `stationName` slot (station root); `{a,b}` is one of the exact names a or b, a name ending in `/` a folder (printed with the `/`) | the count is at least / exactly N |
 | `jar` | `modules/<part>.jar` | it exists |
 | `jar-entry` | entries matching a glob (`**` crosses `/`; `{A,B}` is one of the exact names A or B) | the count reaches N |
 | `jar-text` | the first entry matching a glob | it holds every listed string |
 | `jar-signed` | `META-INF/*.SF` and `META-INF/*.RSA`, `.DSA` or `.EC` | both exist |
-| `file-text` | every file matching a glob under the station dir (`{station}` as for `files`), read as text: a UTF-8 BOM and CRLF line ends dropped; `Match` is a Go regexp (`{station}` = the station name, quoted) | `Line` > 0: that line matches; `Line` 0: the matching lines are at least / exactly N. No matching file is FAIL; a file over 16 MiB is SKIP (`cannot read`), never checked on its first part |
+| `jar-cert` | the signer certificate of the jar's first signature block (`META-INF/*.RSA`, `.DSA`, `.EC`: a PKCS#7 SignedData, below); `Fact` `subject`, `issuer` (the DN, RFC 2253 order, CN first), `chain`, `timestamp`, `same` (`CertOf`: another jar part), `pem` (`Glob` under `Root`) | `subject`/`issuer`: the DN matches `Match`; `chain`: the signer's path inside the block (each next certificate is the issuer by name and signed the one before, up to a self-signed root) has at least / exactly N certificates; `timestamp`: the signer carries an RFC 3161 token (`id-aa-timeStampToken`) whose signer's subject matches `Match`; `same`: both jars' signer certificates are the same DER; `pem`: the signer is the first `CERTIFICATE` of the PEM file. No jar or no block is FAIL; a block that cannot be read is SKIP |
+| `file-text` | every file matching a glob under the row's root (globs as for `files`), read as text: a UTF-8 BOM and CRLF line ends dropped; `Match` is a Go regexp (`{station}` = the station name, quoted, station root only) | `Line` > 0: that line matches; `Line` 0: the matching lines are at least / exactly N; `Whole`: the matches over the whole text (lines joined with `\n`, so `\s*` crosses them; `(?m)` for `^`/`$` per line) are at least / exactly N, the evidence gives the first one's line and text; with `Names`, the first match's group 1 is a comma-separated `NAME=value` list (a DN) whose names, sorted, equal `Names` (each once, none other); a comma escaped with a backslash (RFC 2253 `\,`) or inside a double-quoted value belongs to the value. No matching file is FAIL; a file over 16 MiB is SKIP (`cannot read`), never checked on its first part |
 | `audit` | the records of every history file matching a glob under the station dir (`history/*/*/AuditHistory.hdb`), decoded by `internal/hdbread`; `Hist` holds Go regexps on `operation`, `target`, `slotName`, `oldValue`, `value` (empty = any) | the matching records, summed over the files, are at least / exactly N |
 | `log` | as `audit`, over `history:LogRecord` files; regexps on `logName`, `level` (`INFO`, `SEVERE`, ...), `message` | as `audit` |
 | `trend` | every trend history matching the glob (`history/*/*/NumericWritable*.hdb`); a boolean value counts 0/1, an enum its ordinal; any other value type is SKIP | each file has at least / exactly N records (`Distinct`: N distinct values, NaN not counted), and every value lies in `Hist.Min..Max` (NaN never does; the evidence's min..max leaves it out) |
-| `annotation` | one Java file of the `--labsrc` tree (`Glob`), read by `internal/niagaraannot`: only the annotations before the top-level type, never the generated region. `Fact` renders `flags` (`out=rs in3=-`: each slot's Slot Sheet letters, `Flags.encodeToString` order), `enum` (`DIRECT=0 REVERSE=1 DEFAULT=direct`), `slots` (`property timeExecuted: BAbsTime, action submit(BWorkOrder = new BWorkOrder())`) or `facets`; `Slot` narrows it to one slot | the fact equals `Want`. No tree, an unreadable one, a file the parser refuses or a flags expression it cannot evaluate is SKIP; a missing file or slot FAIL |
+| `annotation` | one Java file (`Glob`) of the `--labsrc` tree, or of the `--solutions` tree with `Root: solutions`, read by `internal/niagaraannot`: only the annotations before the top-level type, never the generated region. `Fact` renders `flags` (`out=rs in3=-`: each slot's Slot Sheet letters, `Flags.encodeToString` order), `enum` (`DIRECT=0 REVERSE=1 DEFAULT=direct`), `slots` (`property timeExecuted: BAbsTime, action submit(BWorkOrder = new BWorkOrder())`), `facets`, `defaults` (`summaryFile: BOrd = BOrd.DEFAULT`; no or an empty `defaultValue` is `""`) or `extends` (the superclass of the class declaration, as written: `BAbstractService`, `BList<BObject>`; the one fact read past the annotations, from `class <Name>` to the body's brace with comments and string literals blanked, so a brace or an `extends` inside an annotation or a comment is not read); `Slot` narrows it to one slot | the fact equals `Want`. No tree, an unreadable one, a file the parser refuses or a flags expression it cannot evaluate is SKIP; a missing file or slot FAIL |
+| `listing` | one file under the station dir (`Glob`) that lists the components of `Type` (`Within`, `Under` as for `type`), one line each; `Match` is a Go regexp with a `(?P<name>...)` group, and with `Slot` also `(?P<value>...)` and `(?P<priority>...)` | the matching lines name exactly the components (none missing, none extra, none twice; two selected components sharing a short name are SKIP `ambiguous: <paths>`, since a line names one by its short name only); with `Slot`, every line is at priority `Want` and its value (a decimal comma is a point) equals the component's effective `Slot` (`Default` when not stored; a dotted slot needs nested values). Not one matching file is FAIL |
 | `source-text` | one file of the `--source` tree (`Glob` is its path, `/`-separated); `Match` is a Go regexp over the whole text (`(?s)` and `\s*` cross lines) | the matches are at least / exactly N; the evidence gives the first one's line. No `--source`, or a tree that cannot be read, is SKIP; a missing file FAIL |
+
+File roots. A `files` or `file-text` row reads the station directory unless it names a root
+(`Root`, `check/roots.go`): `install` (`--install`) or `labsrc` (`--labsrc`, the dev home; `..`
+reaches the `certificates/` folder beside it, where the course's `gradlew createProfile
+--profile-path ..\certificates\code_signing.xml` run from `niagara_dev_home` writes the signing
+profile, `LI:887-898`). A root the run was not given, or one that is not a readable directory, is
+SKIP. Install and lab-source rows are offline evidence (no station holds those files). A row's
+own `{a,b}` groups are expanded before `{station}` is replaced, so a station name holding braces,
+commas or glob characters matches only itself; `{station}` is valid only with the station root. A
+row whose fields contradict each other (a `Root` on a kind that does not read it, `Whole` with
+`Line`, `Names` without a `Whole` file-text row, `{station}` outside the station root) is SKIP
+`bad row: ...` (`Check.validate`; `TestRowValidation` holds every spec row valid). The rows
+(2026-10-18):
+
+| Row | Item | Root | Reads |
+|---|---|---|---|
+| C1.9-C1.11 | L1.4 (PARTIAL: the dev home is read after the later labs, not as the wizard left it) | labsrc | the root Gradle and wrapper files; `training-rt/` and `training-wb/`: `src/`, `srcTest/`, the part's `.gradle.kts`, `module.lexicon`, `module-permissions.xml`, (rt) `module.palette` |
+| C1.12 | L1.14 | labsrc | `training/training-rt/module-include.xml` holds the `<type>` of `BFirstComponent` (either attribute order: the 4.15 build writes `class` first) |
+| C5.4, C5.5 | L5.2 | install | `defaults/system.properties`: one uncommented `niagara.moduleVerificationMode`, and it is `high` |
+| C5.6 | L5.8, L5.9 | labsrc | `../certificates/code_signing.jceks` and `code_signing.xml` |
+| C5.7, C5.8 | L5.10 (PARTIAL: that C, ST, L, O are your own values) | labsrc | the `niagara.signing.dname` entry: C, ST, L, O and CN once each (no OU, no duplicate: `Names`), and `CN=${alias}` |
+| C5.9, C5.10 | L5.11 (PARTIAL: verification after the certificate expires is runtime) | labsrc | the `standardtsa` entry `http://timestamp.digicert.com` (its value on its own line, as `LI:927-929` writes it) and `profileType` `RestrictedSigningProfile` |
+
+The profile holds the keystore passwords in plain text (L5.12): the rows match only the entries
+named above, and their evidence prints only the matched text.
+
+Signature blocks. Go has no PKCS#7, so `check/pkcs7.go` walks the SignedData with `encoding/asn1`
+after `berToDER` rewrites BER indefinite lengths as definite ones (the 4.15 build's blocks open their
+ContentInfo, SignedData and certificate set with indefinite lengths; a primitive's contents, and so
+every DER certificate, are copied as they are). It keeps the certificates, the certificate the first
+SignerInfo names (issuer and serial number, or subject key identifier) and the timestamp token's
+SignedData; it verifies only the certificate chain (`CheckSignatureFrom`), never the jar signature.
+A malformed block is an error, never a panic (`FuzzParseSignedData`). The unsigned attributes hold
+only the timestamp: an attribute or a token that cannot be read costs the `timestamp` fact alone
+(SKIP `cannot read the timestamp token of ...`), never the signer, issuer, chain, `same` or `pem`
+facts; a token that carries a token of its own is such an error. The rows (2026-10-18):
+
+| Row | Item | Reads (`training-rt`, live) |
+|---|---|---|
+| C5.11 | L5.18 (PARTIAL: the Owner of the self-signed certificate, and the trust-store validation, are not in the jar) | issuer `CN=Tridium University Root Certification Authority,O=Tridium University,L=Richmond,ST=Virginia,C=US` |
+| C5.12 | L5.18 | the chain `CN=(CodeSigning),O=VeytrixControls,...` -> the root (self-signed): 2 of 2 certificates |
+| C5.13 | L5.11 (PARTIAL, with C5.9 and C5.10) | timestamped by `CN=DigiCert SHA256 RSA4096 Timestamp Responder 2026 1,O=DigiCert\, Inc.,C=US` |
+| C5.14 | L5.17, L5.25 (PARTIAL: the Module Info view) | the signer (serial `45e7056ff7ac1091bcfa953b`) is the first certificate of `../certificates/code_signing.pem`, the file L5.17 imports into the keystore |
+| CRA2.12 | RA2.R8 | `Cristian_Angeles_Review-rt`'s signer is `training-rt`'s (the same DER): the Code Signing lab's certificate |
+
+Not decided by the jar: L5.14 (the keystore listing of the self-signed certificate: the jar holds only
+the CA-issued one; its alias is in `code_signing.jceks`, which no row reads). The certificate's CN is
+`(CodeSigning)`, with the parentheses, though the dname is `CN=${alias}` and the alias `CodeSigning`
+(L5.10): no row asserts the CN.
 
 Nested slots: the bog reader keeps only a composite slot's direct `value` and `status`, so a
 dotted slot is read from `Comp.Nested`, which `bog.LoadOptions` fills only with
@@ -242,8 +300,9 @@ it is SKIP, never PASS on the type default. The path is from the component that 
 composite slot: the Tcp Config of a driver network is its own component (`tcpConfig`, with a
 handle), so its port is `address.port` on `trafficLightDriver:TrafficLightDriverTcpCommConfig`.
 
-Checks per lab: 1: 8, 2: 5, 3: 5, 4: 10 (C4.8 an `audit`, C4.9 and C4.10 `annotation`), 5: 3 (jars only: the station holds nothing of code
-signing), 6: 8, 7: 8 (C7.6-C7.8 `source-text`), 9: 7, 10: 14 (three of them `file-text` on the
+Checks per lab: 1: 12 (C1.9-C1.12 read the dev home), 2: 5, 3: 5, 4: 10 (C4.8 an `audit`, C4.9 and C4.10 `annotation`), 5: 14 (the station
+holds nothing of code signing: the jars and their signer certificate, the install's `system.properties`
+and the signing profile), 6: 8, 7: 8 (C7.6-C7.8 `source-text`), 9: 7, 10: 14 (three of them `file-text` on the
 exported CSVs, three on the history files, C10.14 the job's lexicon), 11: 17 (8 of them nested: C11.9-C11.16, the driver and server
 Tcp Config addresses and the ping health of the network and of every driver device; C11.17
 `serverEnabled` is a plain slot), B: 5. C1.8, C2.5, C4.9, C4.10, C6.7, C6.8 and CB.5 are `annotation` rows. Lab 8 (ORDs) writes no code and changes nothing, so it
@@ -342,10 +401,34 @@ signed).
 | CRA2.1-CRA2.5 | `control-rt` dependency, `BPointSummaryService.class`, palette entry, signed, built |
 | CRA2.6-CRA2.10 | NumericWritables in `Review2`, one PointSummaryService under Services, `summaryFile = file:^Review.txt`, `shared/Review.txt` with `name: value {status} @ priority` lines |
 | CRA2.11 | the `Review2` NumericWritables hold at least two distinct values (RA2.V11): the nested `fallback.value` (the value the set action writes; default 0.0), read with nested values |
+| CRA2.12 | the module's signer certificate is `training-rt`'s (RA2.R8, the Code Signing lab's certificate: `jar-cert` `same`) |
+| CRA2.13-CRA2.15 | the service's superclass, `summaryFile` default and `createSummaryFile` action, from the corpus solutions (below) |
+| CRA2.16 | `Review.txt` names exactly the station's NumericWritables, each `@ def` with its fallback (RA2.V15, RA2.R5a, RA2.R5b: `listing`) |
 
-What no row observes is an `Unobserved` note: flags, the confirmation dialog and other UI steps,
-superclasses, and that `Review.txt` lists every NumericWritable of the station (CRA2.10 counts two
-lines or more), so the range item RA2.V10–V15 stays PARTIAL.
+The rows `CRA1.11`-`CRA1.15` and `CRA2.13`-`CRA2.15` read the participant's sources in the corpus
+solutions (`--solutions`, `COURSE_SOLUTIONS`; annotation rows, offline) against the traceability of
+review-assignments.md:
+
+| Row | Item | Fact (`Want`) |
+|---|---|---|
+| CRA1.11 | RA1.R1 | `BComponentWithId` extends `BComponent` |
+| CRA1.12 | RA1.R2 | defaults `id: String = ""` |
+| CRA1.13 | RA1.R3a, RA1.R3b, RA1.R3c (PARTIAL: the Wire Sheet, the Property Sheet and a paste by hand) | flags `id=rsd` (SUMMARY, READONLY, DEFAULT_ON_CLONE) |
+| CRA1.14 | RA1.R4 | slot `action regenerateId()` |
+| CRA1.15 | RA1.R5 (PARTIAL: the dialog) | flags `regenerateId=c` (CONFIRM_REQUIRED) |
+| CRA2.13 | RA2.R2 (PARTIAL: the key's `implements BIRestrictedComponent` and `getServiceTypes()`, which the participant's class does not declare) | `BPointSummaryService` extends `BAbstractService` |
+| CRA2.14 | RA2.R3 | defaults `summaryFile: BOrd = BOrd.DEFAULT` |
+| CRA2.15 | RA2.R4 (PARTIAL: the key's `flags = Flags.ASYNC`; the participant's action declares none, and RA2.R6 leaves the technique free) | slot `action createSummaryFile()` |
+
+A requirement the participant meets in another way than the key's design is PARTIAL with the key's
+part as the note, never CONFIRMED and never weakened to pass.
+
+What no row observes is an `Unobserved` note: the confirmation dialog and other UI steps, the
+superclass of a jar's class (the solutions rows read it from the sources), and what of a requirement
+is runtime (an overwritten file, the BQL that produced the listing). CRA2.16 (`listing`) compares
+`Review.txt` with the bog: it names exactly the station's NumericWritables, each at `@ def` with its
+`fallback.value` as the value (RA2.V11's set writes the fallback), so the range item RA2.V10–V15 is
+CONFIRMED live (every linked check reads the station); RA2.R5a and RA2.R5b stay PARTIAL.
 
 On the live review station two rows FAIL, both real: CRA1.2 (the jar's description is
 `Cristian Angeles Niagara Reviw Assignments`) and CRA1.10 (the components sit in
@@ -371,7 +454,7 @@ not done.
 
 ## course verify
 
-`course verify --status S [--lab GROUP] [--station <dir|config.bog>] [--install DIR] [--source DIR] [--labsrc DIR] [--date YYYY-MM-DD] [--json]`
+`course verify --status S [--lab GROUP] [--station <dir|config.bog>] [--install DIR] [--source DIR] [--labsrc DIR] [--solutions DIR] [--date YYYY-MM-DD] [--json]`
 decides every item carrying status `S` (the vocabulary of `status`: `predicted`, `unverified`,
 `corrected`, `identical`, `verified`, `written`) in the group `--lab` (the spellings of `status
 --lab`: `3`, `L3`, `RA1`, `RA` for RA1, RA2 and RAX, `EXAM`; every group without it), with the
@@ -393,7 +476,7 @@ stdout, stderr and exit (`TestVerifyPredictionsIsVerifyStatusPredicted`).
 
 ## course verify-predictions
 
-`course verify-predictions [--station <dir|config.bog>] [--install DIR] [--source DIR] [--labsrc DIR] [--date YYYY-MM-DD] [--json]`
+`course verify-predictions [--station <dir|config.bog>] [--install DIR] [--source DIR] [--labsrc DIR] [--solutions DIR] [--date YYYY-MM-DD] [--json]`
 reads the answer keys (it needs the root, like `show`) and the station, and decides every item
 still marked `*(predicted)*` from the checks whose `Keys` resolve to it (`Corpus.Lookup`: the ID,
 a range ID or a covered ID, so key `L4.15` reaches the range item `L4.15–L4.16`). A check is
@@ -408,13 +491,28 @@ one of them has a dotted slot.
 | `CONTRADICTED` | at least one linked check FAIL | the FAIL checks and their evidence |
 | `UNDECIDED` | no linked check (`no check covers it`), or a SKIP and no FAIL | the reason: the SKIP checks |
 
+A linked check that is SKIP only because a tree it reads was not given (`--install`, `--source`,
+`--labsrc`, `--solutions`: `Result.Absent`, the flag; set only when the SKIP is that tree's own `no
+--X DIR` message, so a read or parse failure that comes first, such as an unreadable jar block, stays
+a plain SKIP) does not lower what the other checks decide,
+and never lets the item reach CONFIRMED either (never claim more than was checked): the item gets
+the verdict of the checks that ran, capped at PARTIAL, and the reason ends with `not run: C1.12, C5.6
+(--labsrc not given); C1.3 (--install not given)`. Such an item gets no marker line (`verify`) and no
+`mark` (`progress`). So L1.14 is PARTIAL without `--labsrc` and CONFIRMED with it, RA1.R1 likewise
+with `--solutions`, and an item with a passing station check and a jar check is PARTIAL without
+`--install`. CONTRADICTED (a FAIL among the checks that ran) and UNDECIDED (any other SKIP: a tree
+given but unreadable, a bad pattern; or no check that ran) are unchanged.
+
 A check proves what the station and the jars store, never a console line, a job log, a Px view
 or a runtime status. So a spec row may carry `Unobserved`, a map from a key to what of that
 item's answer the check does not observe (C1.2 -> L1.25: `the Hello, World! line in the station
 console`). `TestCheckKeysReal` fails on a link to an item the real key marks predicted that has
-no note, unless the link is audited into `fullyObserved` (2026-10-17: only C10.8-C10.10 ->
-L10.24, whose answer is the content of the exported CSV the checks read; every other predicted
-item a check links also predicts something no bog or jar holds).
+no note, unless the link is audited into `fullyObserved` (2026-10-17: C10.8-C10.10 ->
+L10.24, whose answer is the content of the exported CSV the checks read; 2026-10-18: C1.12 ->
+L1.14, whose answer is the `<type>` line of `module-include.xml` the check reads, written by the
+compilation as `LI:266` says; every other predicted item a check links also predicts something no
+bog, jar or file holds). L1.14 predicts `name` before `class`; the file has `class` first, which
+is not significant in XML but must be fixed when the marker is applied.
 
 L10.24 (open one CSV) is decided by the CSVs the live station exported
 (`shared/TrainingStation_NumericWritable1.csv`): a UTF-8 BOM, `history:TrainingStation/NumericWritable1`,
@@ -431,16 +529,19 @@ item is CONFIRMED, one ready-to-apply line per CONFIRMED item (never for PARTIAL
     L10.6–L10.7: *(verified offline 2026-10-17)* evidence: C10.7 modules/training-rt.jar!META-INF/module.xml has ...
 
 The marker's evidence comes from the kinds of the item's linked checks (`check.Evidence`, the map
-`evidenceOf` in `check/kinds.go`, which `TestEvidenceOfEveryKind` holds complete):
+`evidenceOf` in `check/kinds.go`, which `TestEvidenceOfEveryKind` holds complete, and the row's root:
+`checkEvidence` in `check/roots.go`):
 
 | Evidence | Kinds | Reads |
 |---|---|---|
 | live | `type`, `slot`, `link` | the station's bog |
-| live | `files`, `file-text` | files in the station directory (`shared/`; neither kind reads the install or the source tree) |
+| live | `files`, `file-text` | files in the station directory (`shared/`), the default root |
+| offline | `files`, `file-text` with `Root` `install` or `labsrc` | a file of the install or of the lab sources (`checkEvidence`) |
 | live | `audit`, `log`, `trend` | the station's histories |
-| offline | `jar`, `jar-entry`, `jar-text`, `jar-signed` | a jar of the install |
+| live | `listing` | a file in the station directory compared with the bog |
+| offline | `jar`, `jar-entry`, `jar-text`, `jar-signed`, `jar-cert` | a jar of the install |
 | offline | `source-text` | the Niagara source tree |
-| offline | `annotation` | the participant's lab sources |
+| offline | `annotation` | the participant's lab sources, or the corpus solutions (`Root: solutions`) |
 
 An item whose checks mix both is live only when every linked check is live; one offline check makes
 the whole line offline, since part of the evidence was not read from the station.
@@ -458,8 +559,9 @@ CONTRADICTED, or no item carries the status in the selected groups (the honest z
 station is read); 2 the answer keys or the station cannot be read, a bad `--date`, or every linked
 check was skipped (nothing could be checked, as in `course check`).
 
-On the live TrainingStation no predicted item is CONFIRMED or CONTRADICTED (the counts are in
-[Live run](#live-run)). L4.8 is PARTIAL from C4.8 (the audited set); L7.18, L10.19 and L10.22 are
+On the live TrainingStation no predicted item is CONTRADICTED, and one is CONFIRMED: L1.14, offline
+from the lab sources (C1.12) and the jar (C1.6) (the counts are in [Live run](#live-run)). L1.4 is
+PARTIAL from the dev home (C1.9-C1.11). L4.8 is PARTIAL from C4.8 (the audited set); L7.18, L10.19 and L10.22 are
 PARTIAL with evidence from the 4.15 source (C7.6-C7.8), the histories (C10.11-C10.12) and the
 lexicon (C10.14). L10.24, CONFIRMED before, is marked verified live in labs.md.
 
@@ -472,7 +574,7 @@ not observed.
 
 ## course progress
 
-`course progress [--lab GROUP] [--station <dir|config.bog>] [--install DIR] [--source DIR] [--labsrc DIR] [--date YYYY-MM-DD] [--json]`
+`course progress [--lab GROUP] [--station <dir|config.bog>] [--install DIR] [--source DIR] [--labsrc DIR] [--solutions DIR] [--date YYYY-MM-DD] [--json]`
 answers "how far am I, and what next?". It runs the `verify` loop over every item of the selected
 groups (every group without `--lab`; the spellings of `status --lab`), whatever its status, with
 the stations, flags and variables of `verify`, and prints one row per group and a total:
@@ -546,22 +648,23 @@ or a text file cannot be read, a drawn item's range lies outside its text file (
 Every count of a live run lives in this one table (dated; the prose above names only the items
 behind them). Inputs: the stations `TrainingStation`, `Cristian_Angeles_Review` and
 `Cristian_Angeles_Cert` (Niagara 4.15), the install `Niagara-4.15.6.20`, the 4.15.6.20 source tree of
-niagara-research, the participant's lab sources `N4_Labs/niagara_dev_home`, and the niagara-research
-answer keys at `8beb0eb78`.
+niagara-research, the participant's lab sources `N4_Labs/niagara_dev_home` (and `N4_Labs/certificates`
+beside it), the corpus solutions `sources/n4-dev-course/solutions`, and the niagara-research answer
+keys at `9e7c8a7eb`.
 
 | Command (2026-10-18) | Result |
 |---|---|
-| `course check` (the labs) | 90 checked: PASS 89, FAIL 1 (C3.4), SKIP 0 |
-| `course check --lab RA1 --lab RA2` | 21 checked: PASS 19, FAIL 2 (CRA1.2, CRA1.10) |
+| `course check` (the labs) | 105 checked: PASS 104, FAIL 1 (C3.4), SKIP 0 |
+| `course check --lab RA1 --lab RA2` | 31 checked: PASS 29, FAIL 2 (CRA1.2, CRA1.10) |
 | `course check --lab EXAM` | 19 checked: PASS 19 |
-| `course verify --status predicted` | 39: CONFIRMED 0, PARTIAL 14, CONTRADICTED 0, UNDECIDED 25; 26 checks run |
-| `course verify --status written` | 258: CONFIRMED 57 (27 live, 30 offline lines), PARTIAL 9, CONTRADICTED 3 (L3.7, RA1.M3, RA1.V9–V14), UNDECIDED 189; 76 checks run |
+| `course verify --status predicted` | 39: CONFIRMED 1 (L1.14, offline), PARTIAL 14, CONTRADICTED 0, UNDECIDED 24; 30 checks run |
+| `course verify --status written` | 201: CONFIRMED 10 (RA2.V10–V15 live; L5.2, L5.8, L5.9, L5.17, RA1.R1, RA1.R2, RA1.R4, RA2.R3, RA2.R8 offline), PARTIAL 15, CONTRADICTED 3 (L3.7, RA1.M3, RA1.V9–V14), UNDECIDED 173; 38 checks run |
 | `course verify --status identical` | 50: CONFIRMED 9 (offline), PARTIAL 7, CONTRADICTED 0, UNDECIDED 34; 16 checks run |
 | `course verify --status corrected` | 10: CONFIRMED 2 (offline), UNDECIDED 8; 2 checks run |
 | `course verify --status unverified` | 20: CONFIRMED 1 (live), PARTIAL 5, UNDECIDED 14; 7 checks run |
-| `course verify --status verified` | 5: CONFIRMED 5; 23 checks run |
-| `course progress` | 370 items: checked 108, CONFIRMED 72, PARTIAL 33, CONTRADICTED 3, UNDECIDED 262; 130 checks run; 3 `redo` (C3.4, CRA1.2, CRA1.10), 67 `mark` (28 live, 39 offline) |
-| `course status` | verified 5: live 5 (L10.23, L10.24, P1-P3), offline 0 |
+| `course verify --status verified` | 72: CONFIRMED 72 (30 live, 42 offline lines); 90 checks run |
+| `course progress` | 370 items: checked 125, CONFIRMED 83, PARTIAL 39, CONTRADICTED 3, UNDECIDED 245; 155 checks run; 3 `redo` (C3.4, CRA1.2, CRA1.10), 11 `mark` (live: RA2.V10–V15; offline: L1.14, L5.2, L5.8, L5.9, L5.17, RA1.R1, RA1.R2, RA1.R4, RA2.R3, RA2.R8) |
+| `course status` | verified 72: live 33, offline 39 |
 | `course quiz -n 500` | 89 questions: why 34, decision 29, trap 26 |
 
 To regenerate it, set the variables and run the commands of the table (zsh: run loops in `bash -c`):
@@ -573,6 +676,7 @@ export COURSE_CERT_STATION=/mnt/c/Users/<you>/Niagara4.15/tridium/stations/Crist
 export COURSE_NIAGARA_INSTALL=/mnt/c/Niagara/Niagara-4.15.6.20
 export COURSE_NIAGARA_SOURCE=~/niagara-research/niagara-help/versions/4.15.6.20/source
 export COURSE_LAB_SOURCES=/mnt/c/N4-Developer-Training/Core-Class/N4_Labs/niagara_dev_home
+export COURSE_SOLUTIONS=~/niagara-research/sources/n4-dev-course/solutions
 export NIAGARA_RESEARCH_DIR=~/niagara-research
 bash -c 'for st in predicted written identical corrected unverified verified; do
   course verify --status $st | tail -1; done'
@@ -624,6 +728,44 @@ FAILs, no CONTRADICTED prediction, the item and status counts), not this table.
   `internal/niagaraannot` has its own table tests and an oracle (`COURSE_NIAGARA_SOURCE`) that
   compares the parsed annotations with the generated code of a source tree (4.15.6.20: 1826
   files, 205 enums, 3699 slots).
+- `check/roots_test.go`: the roots over temporary trees: an install and a dev home with
+  `../certificates` beside it, `{a,b}` names, a folder name ending in `/` (and the same name without
+  it, which matches no folder), `Whole` across lines (the same regexp line by line FAILs), a root not
+  given or not a directory (SKIP), the offline evidence of both roots, and the Lab 5 rows over a
+  profile before the lab's edits (an OU, no TSA, a local profile; a second setting in
+  `system.properties`: FAIL). The fixtures `testdata/install/defaults/system.properties`,
+  `testdata/certificates/` (no real password) and the Gradle files of `testdata/labsrc/` are
+  synthetic; `testdata/` stands for `N4_Labs`.
+- `check/jarcert_test.go`: the PKCS#7 reader over blocks built by `check/fixturecert_test.go` (a
+  test-only generator: Ed25519 keys from fixed seeds, whose signatures are deterministic, so the
+  certificates, the blocks and `testdata/certificates/code_signing.pem` are the same on every run and
+  `TestFixtureCerts` and `TestFixtureJars` catch a drift; the SignerInfo's signature is a stand-in):
+  the signer, the timestamp token, the chain (a same-named root that did not sign is not the issuer),
+  a BER copy (`TestBERToDER`, and the fixture `training-rt` block is BER, as the live one), malformed
+  blocks (not DER, truncated, trailing data, another content type, the signer's certificate absent, a
+  token that is not a SignedData: the timestamp's error only), `TestTimestampIsolated` (a token
+  with no certificate and a malformed unsigned attribute leave the other facts reading; a signer
+  named by subject key identifier; a block with indefinite lengths at every level), and every fact
+  PASS and FAIL over an install built in the
+  test (a self-signed jar, an unsigned one, a block that is not DER: SKIP). `FuzzParseSignedData`
+  (`go test -run '^$' -fuzz=FuzzParseSignedData -fuzztime=30s -fuzzminimizetime=2s
+  ./internal/course/check/`; without the last flag the display stalls while a new input is minimised).
+- `check/solutions_test.go`: the solutions rows over the synthetic `testdata/solutions/` (the
+  annotations and class declarations of the two review classes, no body), no tree (SKIP naming
+  `--solutions`, the lab sources not a fallback), and the `extends` and `defaults` facts over
+  variants (another superclass, a generic one, no extends clause: SKIP, another default, a property
+  without one). `TestAnnotationReal` also runs the solutions rows when `COURSE_SOLUTIONS` is set,
+  and `TestCheckLiveStations` reads it. The `check-review` golden passes `--solutions solutions`.
+- `check/listing_test.go`: the `listing` kind over the mini station's one NumericWritable: CRLF and
+  decimal-comma lines, a header line that does not match, a missing, an extra and a twice-listed
+  name, another priority, another value, names only, no file, a nested slot read without nested
+  values (SKIP) and a regexp without the name group (SKIP). `check-review` runs CRA2.16 on the review
+  fixture.
+- `check/rowcheck_test.go`: `validate` over every spec row and over contradictory rows (SKIP `bad
+  row`), a station name with braces and glob characters (`TestStationNameBraces`), and C5.7's dname
+  names (two orders pass; a duplicate C, an OU, a missing O fail). `TestListingAmbiguous` (two
+  same-named NumericWritables in two folders: SKIP `ambiguous`, PASS once `Under` picks one; two
+  files; an unreadable file), `TestExtendsIgnoresBraces`.
 - `check/filetext_test.go`: the `file-text` kind over a BOM + CRLF trend CSV, an old-format CSV, a
   short file, a line count, no matching file, a bad regexp and a file over the read bound (SKIP).
 - `check/check_test.go` and the `check-*` goldens: synthetic stations under
@@ -657,7 +799,7 @@ FAILs, no CONTRADICTED prediction, the item and status counts), not this table.
   L11.32 CONTRADICTED), no `--install`, the `root`
   fixture (its one linked check is a jar check: exit 2), a bad `--date` and a broken bog.
   `TestVerifyPredictionsTrainingStation` (with `COURSE_TRAINING_STATION` and
-  `NIAGARA_RESEARCH_DIR`) pins only that no predicted item is CONTRADICTED, none is CONFIRMED (L10.24, the one that was, is now verified)
+  `NIAGARA_RESEARCH_DIR`) pins only that no predicted item is CONTRADICTED, none is CONFIRMED from the station and the jars (L10.24, the one that was, is now verified; L1.14 needs the lab sources, which the test does not read)
   and some are PARTIAL on the live station. `TestCheckKeysReal` resolves every linked key in the real labs.md.
 - `testdata/go/golden/` (D46, `TestGoldenGo` via `golden.RunGo`, regenerated with `GOLDEN_UPDATE=1`
   and reviewed in the diff): `verify-predictions-no-station` (the missing `--station` before a bad
@@ -668,7 +810,16 @@ FAILs, no CONTRADICTED prediction, the item and status counts), not this table.
   (a blank variable alone is the plain usage error, before a bad root and `--date`) and
   `verify-predictions-none` (no `--lab`: the honest zero over every group of the synthetic
   `testdata/nopredict-root/`, whose answer key carries no predicted item).
-- `progress_test.go` and the Go-only goldens `progress-good`, `progress-bad-json` (the `bad`
+- `check/verify_test.go` `TestDecideAbsentTree` (an absent tree beside a PASS, a passing station
+  check beside an unrun jar check: PARTIAL with `not run`, grouped by tree; alone: UNDECIDED; an
+  unreadable tree or a FAIL still decides) and
+  `TestRunMarksAbsent` (which SKIPs are absent). The goldens pin both sides: `verify-good` (no
+  `--labsrc`: L1.14 PARTIAL) and the Go-only `verify-good-labsrc` (L1.14 CONFIRMED), `progress-lab`
+  (no `--solutions`: RA1.R1 PARTIAL) and `progress-lab-solutions` (RA1.R1 CONFIRMED).
+  `TestAnnotationReal` runs the lab-source rows under `COURSE_LAB_SOURCES` and the solutions rows
+  under `COURSE_SOLUTIONS`, each gated by its own variable.
+- `progress_test.go` (with `--labsrc testdata/labsrc`: L1.14 gets a `mark` line, offline) and the
+  Go-only goldens `progress-good`, `progress-bad-json` (the `bad`
   station: `redo` lines, exit 1), `progress-lab` (`--lab RA` on the review fixture) and
   `progress-no-station` (the usage error before a bad `--date`).
 - `quiz_test.go` and the Go-only goldens `quiz-seed`, `quiz-answers`, `quiz-none` (the honest

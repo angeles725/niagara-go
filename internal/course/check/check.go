@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -24,6 +25,11 @@ type Result struct {
 	*Check
 	Verdict  string
 	Evidence string
+	// Absent names the flag of a tree the check reads (--install, --source, --labsrc,
+	// --solutions) when it is SKIP because that tree was not given, not because one was unreadable;
+	// "" otherwise. verify does not let such a check lower what the others decide, but caps the
+	// item at PARTIAL (Decide).
+	Absent string
 }
 
 // Station is the input of a check run: the parsed bog, its directory and the optional install.
@@ -35,7 +41,10 @@ type Station struct {
 	install string // "" when --install was not given
 	source  string // the source tree of the source-text kind; "" when --source was not given
 	labsrc  string // the lab module sources of the annotation kind; "" when --labsrc was not given
-	jars    map[string]*jarFile
+	// solutions is the corpus solutions tree of the rows with Root solutions; "" when --solutions
+	// was not given.
+	solutions string
+	jars      map[string]*jarFile
 }
 
 type jarFile struct {
@@ -69,7 +78,7 @@ func Open(path, install string, nested bool) (*Station, error) {
 // with bog.Options.NestedSlots.
 func NeedsNested(checks []*Check) bool {
 	for _, ck := range checks {
-		if ck.Kind == kindSlot && ck.dotted() {
+		if (ck.Kind == kindSlot || ck.Kind == kindListing) && ck.dotted() {
 			return true
 		}
 	}
@@ -164,6 +173,10 @@ func pathList(cs []*bog.Comp) string {
 // Run runs one check on the station.
 func (s *Station) Run(ck *Check) Result {
 	r := Result{Check: ck}
+	if err := ck.validate(); err != nil {
+		r.Verdict, r.Evidence = Skip, "bad row: "+err.Error()
+		return r
+	}
 	switch ck.Kind {
 	case kindType:
 		r.Verdict, r.Evidence = s.checkType(ck)
@@ -181,10 +194,47 @@ func (s *Station) Run(ck *Check) Result {
 		r.Verdict, r.Evidence = s.checkSourceText(ck)
 	case kindAnnotation:
 		r.Verdict, r.Evidence = s.checkAnnotation(ck)
+	case kindJarCert:
+		r.Verdict, r.Evidence = s.checkJarCert(ck)
+	case kindListing:
+		r.Verdict, r.Evidence = s.checkListing(ck)
 	default:
 		r.Verdict, r.Evidence = s.checkJar(ck)
 	}
+	// Absent only when the missing tree caused the SKIP (its "no --X DIR" message): a read or parse
+	// failure that happens first stays a plain SKIP, which leaves the item UNDECIDED.
+	if t := s.treeNotGiven(ck); r.Verdict == Skip && t != "" && strings.HasPrefix(r.Evidence, "no "+t+" DIR:") {
+		r.Absent = t
+	}
 	return r
+}
+
+// treeNotGiven is the flag of a tree the check reads that was not given to the run ("" when every
+// one was): the install for the jar kinds, the source tree for source-text, the root of an
+// annotation, files, file-text or jar-cert pem row.
+func (s *Station) treeNotGiven(ck *Check) string {
+	if strings.HasPrefix(ck.Kind, "jar") && s.install == "" {
+		return "--install"
+	}
+	if ck.Kind == kindSourceText {
+		if s.source == "" {
+			return "--source"
+		}
+		return ""
+	}
+	root := ck.Root
+	if ck.Kind == kindAnnotation && root == rootStation {
+		root = rootLabsrc
+	}
+	switch {
+	case root == rootInstall && s.install == "":
+		return "--install"
+	case root == rootLabsrc && s.labsrc == "":
+		return "--labsrc"
+	case root == rootSolutions && s.solutions == "":
+		return "--solutions"
+	}
+	return ""
 }
 
 func verdict(ok bool) string {
@@ -379,15 +429,15 @@ func (s *Station) checkLink(ck *Check) (string, string) {
 }
 
 func (s *Station) checkFiles(ck *Check) (string, string) {
-	pattern := strings.ReplaceAll(ck.Glob, "{station}", globEscape(s.Name))
-	matches, err := filepath.Glob(filepath.Join(globEscape(s.dir), filepath.FromSlash(pattern)))
-	if err != nil {
-		return Skip, fmt.Sprintf("bad pattern %s: %v", pattern, err)
+	pattern, rels, skip := s.rootFiles(ck)
+	if skip != "" {
+		return Skip, skip
 	}
-	var files []string
-	for _, m := range matches {
-		if st, err := os.Stat(m); err == nil && st.Mode().IsRegular() {
-			files = append(files, filepath.Base(m))
+	files := make([]string, len(rels))
+	for i, rel := range rels {
+		files[i] = path.Base(rel)
+		if strings.HasSuffix(rel, "/") {
+			files[i] += "/"
 		}
 	}
 	ok := countOK(ck.Op, len(files), ck.N)

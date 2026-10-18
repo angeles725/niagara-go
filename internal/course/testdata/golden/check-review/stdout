@@ -1,23 +1,33 @@
-ID       LAB  VERDICT  DESCRIPTION                                                          EVIDENCE
-CRA1.1   RA1  PASS     module name <First>_<Last>_Review [RA1.M2]                           modules/Cristian_Angeles_Review-rt.jar!META-INF/module.xml has moduleName="Cristian_Angeles_Review"
-CRA1.2   RA1  PASS     description <First> <Last> Niagara Review Assignments [RA1.M3]       modules/Cristian_Angeles_Review-rt.jar!META-INF/module.xml has description="Cristian Angeles Niagara Review Assignments"
-CRA1.3   RA1  PASS     vendor review [RA1.M4]                                               modules/Cristian_Angeles_Review-rt.jar!META-INF/module.xml has vendor="review"
-CRA1.4   RA1  PASS     runtime profile rt [RA1.M5]                                          modules/Cristian_Angeles_Review-rt.jar!META-INF/module.xml has runtimeProfile="rt"
-CRA1.5   RA1  PASS     palette lists ComponentWithId [RA1.M6 RA1.R8]                        modules/Cristian_Angeles_Review-rt.jar!module.palette has n="ComponentWithId"
-CRA1.6   RA1  PASS     module.xml registers ComponentWithId [RA1.R1]                        modules/Cristian_Angeles_Review-rt.jar!META-INF/module.xml has name="ComponentWithId"
-CRA1.7   RA1  PASS     BComponentWithId.class built [RA1.R1 X1]                             modules/Cristian_Angeles_Review-rt.jar: 1 entry matches **/BComponentWithId.class
-CRA1.8   RA1  PASS     two ComponentWithId (one added, one pasted) [RA1.V11]                found 2: Cristian_Angeles_Review/ComponentWithId, Cristian_Angeles_Review/ComponentWithId1
-CRA1.9   RA1  PASS     the ComponentWithId ids are distinct [RA1.V12 RA1.R6 X3]             2 distinct id over 2 components: 6e958344-8315-4541-b5bd-986d7357d791, bcb23dd3-6cf1-4d3e-89d0-24457bd93019
-CRA1.10  RA1  FAIL     ComponentWithId in the folder Config/Review [RA1.V10]                found 0 in Review (2 in total), want at least 1; elsewhere: Cristian_Angeles_Review/ComponentWithId, Cristian_Angeles_Review/ComponentWithId1
-CRA2.1   RA2  PASS     depends on control-rt [RA2.R1]                                       modules/Cristian_Angeles_Review-rt.jar!META-INF/module.xml has name="control-rt"
-CRA2.2   RA2  PASS     BPointSummaryService.class built [RA2.R2 X1]                         modules/Cristian_Angeles_Review-rt.jar: 1 entry matches **/BPointSummaryService.class
-CRA2.3   RA2  PASS     palette lists PointSummaryService [RA2.R7]                           modules/Cristian_Angeles_Review-rt.jar!module.palette has n="PointSummaryService"
-CRA2.4   RA2  PASS     Cristian_Angeles_Review-rt is signed [RA2.R8 X10]                    modules/Cristian_Angeles_Review-rt.jar: META-INF/CODESIGN.SF, META-INF/CODESIGN.RSA
-CRA2.5   RA2  PASS     Cristian_Angeles_Review-rt jar built [RA2.R9]                        modules/Cristian_Angeles_Review-rt.jar (6 entries)
-CRA2.6   RA2  PASS     NumericWritables in Config/Review2 [RA2.V10]                         found 2 in Review2: Review2/NumericWritable, Review2/NumericWritable1
-CRA2.7   RA2  PASS     one PointSummaryService, under Services [RA2.V12 RA2.R2]             found 1 under baja:ServiceContainer: Services/PointSummaryService
-CRA2.8   RA2  PASS     summaryFile = file:^Review.txt [RA2.V13 RA2.R3]                      Services/PointSummaryService.summaryFile = file:^Review.txt (stored)
-CRA2.9   RA2  PASS     Review.txt in the station's Files space [RA2.V15 X6]                 found 1 shared/Review.txt: Review.txt
-CRA2.10  RA2  PASS     Review.txt lines: name: value {status} @ priority [RA2.R5b RA2.V15]  shared/Review.txt: 2 lines match
-CRA2.11  RA2  PASS     distinct fallback values in Config/Review2 [RA2.V11]                 2 distinct fallback.value over 2 components: 33.0, 54.0
-checked 21: PASS 20, FAIL 1, SKIP 0; station ReviewStation (9 components, 0 links), install install
+ID       LAB  VERDICT  DESCRIPTION                                                                                EVIDENCE
+CRA1.1   RA1  PASS     module name <First>_<Last>_Review [RA1.M2]                                                 modules/Cristian_Angeles_Review-rt.jar!META-INF/module.xml has moduleName="Cristian_Angeles_Review"
+CRA1.2   RA1  PASS     description <First> <Last> Niagara Review Assignments [RA1.M3]                             modules/Cristian_Angeles_Review-rt.jar!META-INF/module.xml has description="Cristian Angeles Niagara Review Assignments"
+CRA1.3   RA1  PASS     vendor review [RA1.M4]                                                                     modules/Cristian_Angeles_Review-rt.jar!META-INF/module.xml has vendor="review"
+CRA1.4   RA1  PASS     runtime profile rt [RA1.M5]                                                                modules/Cristian_Angeles_Review-rt.jar!META-INF/module.xml has runtimeProfile="rt"
+CRA1.5   RA1  PASS     palette lists ComponentWithId [RA1.M6 RA1.R8]                                              modules/Cristian_Angeles_Review-rt.jar!module.palette has n="ComponentWithId"
+CRA1.6   RA1  PASS     module.xml registers ComponentWithId [RA1.R1]                                              modules/Cristian_Angeles_Review-rt.jar!META-INF/module.xml has name="ComponentWithId"
+CRA1.7   RA1  PASS     BComponentWithId.class built [RA1.R1 X1]                                                   modules/Cristian_Angeles_Review-rt.jar: 1 entry matches **/BComponentWithId.class
+CRA1.8   RA1  PASS     two ComponentWithId (one added, one pasted) [RA1.V11]                                      found 2: Cristian_Angeles_Review/ComponentWithId, Cristian_Angeles_Review/ComponentWithId1
+CRA1.9   RA1  PASS     the ComponentWithId ids are distinct [RA1.V12 RA1.R6 X3]                                   2 distinct id over 2 components: 6e958344-8315-4541-b5bd-986d7357d791, bcb23dd3-6cf1-4d3e-89d0-24457bd93019
+CRA1.10  RA1  FAIL     ComponentWithId in the folder Config/Review [RA1.V10]                                      found 0 in Review (2 in total), want at least 1; elsewhere: Cristian_Angeles_Review/ComponentWithId, Cristian_Angeles_Review/ComponentWithId1
+CRA1.11  RA1  PASS     BComponentWithId extends BComponent [RA1.R1]                                               review/Cristian_Angeles_Review/Cristian_Angeles_Review-rt/src/com/review/Cristian_Angeles_Review/BComponentWithId.java: BComponentWithId extends BComponent
+CRA1.12  RA1  PASS     frozen property id: String = "" [RA1.R2]                                                   review/Cristian_Angeles_Review/Cristian_Angeles_Review-rt/src/com/review/Cristian_Angeles_Review/BComponentWithId.java: BComponentWithId defaults id: String = ""
+CRA1.13  RA1  PASS     id flags: SUMMARY, READONLY, DEFAULT_ON_CLONE [RA1.R3a RA1.R3b RA1.R3c]                    review/Cristian_Angeles_Review/Cristian_Angeles_Review-rt/src/com/review/Cristian_Angeles_Review/BComponentWithId.java: BComponentWithId flags id=rsd
+CRA1.14  RA1  PASS     frozen action regenerateId [RA1.R4]                                                        review/Cristian_Angeles_Review/Cristian_Angeles_Review-rt/src/com/review/Cristian_Angeles_Review/BComponentWithId.java: BComponentWithId slots action regenerateId()
+CRA1.15  RA1  PASS     regenerateId flags: CONFIRM_REQUIRED [RA1.R5]                                              review/Cristian_Angeles_Review/Cristian_Angeles_Review-rt/src/com/review/Cristian_Angeles_Review/BComponentWithId.java: BComponentWithId flags regenerateId=c
+CRA2.1   RA2  PASS     depends on control-rt [RA2.R1]                                                             modules/Cristian_Angeles_Review-rt.jar!META-INF/module.xml has name="control-rt"
+CRA2.2   RA2  PASS     BPointSummaryService.class built [RA2.R2 X1]                                               modules/Cristian_Angeles_Review-rt.jar: 1 entry matches **/BPointSummaryService.class
+CRA2.3   RA2  PASS     palette lists PointSummaryService [RA2.R7]                                                 modules/Cristian_Angeles_Review-rt.jar!module.palette has n="PointSummaryService"
+CRA2.4   RA2  PASS     Cristian_Angeles_Review-rt is signed [RA2.R8 X10]                                          modules/Cristian_Angeles_Review-rt.jar: META-INF/CODESIGN.SF, META-INF/CODESIGN.RSA
+CRA2.5   RA2  PASS     Cristian_Angeles_Review-rt jar built [RA2.R9]                                              modules/Cristian_Angeles_Review-rt.jar (6 entries)
+CRA2.6   RA2  PASS     NumericWritables in Config/Review2 [RA2.V10]                                               found 2 in Review2: Review2/NumericWritable, Review2/NumericWritable1
+CRA2.7   RA2  PASS     one PointSummaryService, under Services [RA2.V12 RA2.R2]                                   found 1 under baja:ServiceContainer: Services/PointSummaryService
+CRA2.8   RA2  PASS     summaryFile = file:^Review.txt [RA2.V13 RA2.R3]                                            Services/PointSummaryService.summaryFile = file:^Review.txt (stored)
+CRA2.9   RA2  PASS     Review.txt in the station's Files space [RA2.V15 X6]                                       found 1 shared/Review.txt: Review.txt
+CRA2.10  RA2  PASS     Review.txt lines: name: value {status} @ priority [RA2.R5b RA2.V15]                        shared/Review.txt: 2 lines match
+CRA2.11  RA2  PASS     distinct fallback values in Config/Review2 [RA2.V11]                                       2 distinct fallback.value over 2 components: 33.0, 54.0
+CRA2.12  RA2  PASS     signed with the certificate of training-rt (Lab 5) [RA2.R8]                                modules/Cristian_Angeles_Review-rt.jar!META-INF/CODESIGN.RSA: signer CN=(CodeSigning),O=Fixture,C=XX (serial 45e7), the same as modules/training-rt.jar!META-INF/CODESIGN.RSA
+CRA2.13  RA2  PASS     BPointSummaryService extends BAbstractService [RA2.R2]                                     review/Cristian_Angeles_Review/Cristian_Angeles_Review-rt/src/com/review/Cristian_Angeles_Review/BPointSummaryService.java: BPointSummaryService extends BAbstractService
+CRA2.14  RA2  PASS     frozen property summaryFile: BOrd = BOrd.DEFAULT [RA2.R3]                                  review/Cristian_Angeles_Review/Cristian_Angeles_Review-rt/src/com/review/Cristian_Angeles_Review/BPointSummaryService.java: BPointSummaryService defaults summaryFile: BOrd = BOrd.DEFAULT
+CRA2.15  RA2  PASS     frozen action createSummaryFile [RA2.R4]                                                   review/Cristian_Angeles_Review/Cristian_Angeles_Review-rt/src/com/review/Cristian_Angeles_Review/BPointSummaryService.java: BPointSummaryService slots action createSummaryFile()
+CRA2.16  RA2  PASS     Review.txt lists every NumericWritable at def with its fallback [RA2.V15 RA2.R5a RA2.R5b]  shared/Review.txt lists 2 of 2 control:NumericWritable, each at def with its fallback.value
+checked 31: PASS 30, FAIL 1, SKIP 0; station ReviewStation (9 components, 0 links), install install, solutions solutions

@@ -14,14 +14,14 @@ import (
 const goodStation = "../testdata/stations/good"
 
 // runAll runs every check of one station role (the labs: RoleTraining) on a station, with the
-// install, the source tree and the course sources ("" = none).
-func runAll(t *testing.T, stationPath, install, source, labsrc, role string) []Result {
+// install and the trees ("" = none).
+func runAll(t *testing.T, stationPath, install string, trees Trees, role string) []Result {
 	t.Helper()
 	st, err := Open(stationPath, install, true)
 	if err != nil {
 		t.Fatal(err)
 	}
-	st.source, st.labsrc = source, labsrc
+	st.source, st.labsrc, st.solutions = trees.Source, trees.Labsrc, trees.Solutions
 	defer st.Close()
 	var out []Result
 	for i := range Spec {
@@ -32,11 +32,11 @@ func runAll(t *testing.T, stationPath, install, source, labsrc, role string) []R
 	return out
 }
 
-// mostChecks are the labs with more than 8 checks: lab 4 (C4.9 and C4.10 read the annotations of
+// mostChecks are the labs with more than 8 checks: lab 1 (C1.9-C1.12 read the dev home), lab 4 (C4.9 and C4.10 read the annotations of
 // BLoopAction and BTstat), lab 10 (three file-text checks of one CSV, three of
 // its history files, the job's lexicon) and
 // lab 11 (its nested Tcp Config and ping-health slots are one check each).
-var mostChecks = map[string]int{"4": 10, "10": 14, "11": 17}
+var mostChecks = map[string]int{"1": 12, "4": 10, "10": 14, "11": 17}
 
 // keyGroups are the ID prefixes a check of the lab may key: the lab's own items; for a review
 // assignment also the needs-a-run checks X<n>; for the exam the problems P<n>.
@@ -95,6 +95,18 @@ func TestCheckSpecShape(t *testing.T) {
 			ok = ck.Glob != "" && ck.N > 0
 		case kindJar, kindJarSigned:
 			ok = ck.Jar != ""
+		case kindJarCert:
+			_, err := regexp.Compile(ck.Match)
+			switch ck.Fact {
+			case certSubject, certIssuer, certTimestamp:
+				ok = ck.Jar != "" && ck.Match != "" && err == nil
+			case certChain:
+				ok = ck.Jar != "" && ck.Op != "" && ck.N > 0
+			case certSame:
+				ok = ck.Jar != "" && ck.CertOf != "" && ck.CertOf != ck.Jar
+			case certPEM:
+				ok = ck.Jar != "" && ck.Glob != "" && ck.Root != rootStation
+			}
 		case kindJarEntry:
 			ok = ck.Jar != "" && ck.Glob != "" && ck.N > 0
 		case kindJarText:
@@ -109,6 +121,10 @@ func TestCheckSpecShape(t *testing.T) {
 			ok = ck.Glob != "" && ck.Match != "" && err == nil && ck.Op != "" && ck.N > 0
 		case kindAnnotation:
 			ok = ck.Glob != "" && slices.Contains(annotationFacts, ck.Fact) && ck.Want != ""
+		case kindListing:
+			re, err := regexp.Compile(ck.Match)
+			ok = err == nil && typeRe.MatchString(ck.Type) && ck.Glob != "" && re.SubexpIndex("name") >= 0 &&
+				(ck.Slot == "" || (re.SubexpIndex("value") >= 0 && re.SubexpIndex("priority") >= 0 && ck.Want != ""))
 		case kindFileText:
 			_, err := regexp.Compile(ck.Match)
 			ok = ck.Glob != "" && ck.Match != "" && err == nil && (ck.Line > 0 || (ck.Op != "" && ck.N > 0))
@@ -162,7 +178,9 @@ func TestCheckKeysReal(t *testing.T) {
 // audited as observing the whole prediction. 2026-10-17: only L10.24 (open one CSV), whose answer is
 // the file content the three file-text checks read; every other predicted item a check links also
 // predicts a console line, a log, a view or a runtime status.
-var fullyObserved = map[string]bool{"C10.8 L10.24": true, "C10.9 L10.24": true, "C10.10 L10.24": true}
+// 2026-10-18: L1.14 (module-include.xml has the <type> of BFirstComponent), whose answer is the
+// line C1.12 reads; the attribute order of the prediction is not significant in XML.
+var fullyObserved = map[string]bool{"C10.8 L10.24": true, "C10.9 L10.24": true, "C10.10 L10.24": true, "C1.12 L1.14": true}
 
 // liveStations are the real stations of each role and the checks each fails because it really
 // differs from the course, with the evidence read from its config.bog and jars (2026-10-17).
@@ -194,17 +212,19 @@ func TestCheckLiveStations(t *testing.T) {
 				t.Skipf("%s is not set: the live %s station is not checked", live.env, live.role)
 			}
 			install, source, labsrc := os.Getenv("COURSE_NIAGARA_INSTALL"), os.Getenv("COURSE_NIAGARA_SOURCE"), os.Getenv("COURSE_LAB_SOURCES")
+			solutions := os.Getenv("COURSE_SOLUTIONS")
 			got := map[string]string{}
-			results := runAll(t, path, install, source, labsrc, live.role)
+			results := runAll(t, path, install, Trees{Source: source, Labsrc: labsrc, Solutions: solutions}, live.role)
 			if len(results) == 0 {
 				// A role with no rows would pass without checking anything.
 				t.Fatalf("no check runs on the %s station: the spec has no row of this role", live.role)
 			}
 			for _, r := range results {
 				switch {
-				case r.Verdict == Skip && install == "" && strings.HasPrefix(r.Kind, "jar"):
+				case r.Verdict == Skip && install == "" && (strings.HasPrefix(r.Kind, "jar") || r.Root == rootInstall):
 				case r.Verdict == Skip && source == "" && r.Kind == kindSourceText:
-				case r.Verdict == Skip && labsrc == "" && r.Kind == kindAnnotation:
+				case r.Verdict == Skip && labsrc == "" && NeedsLabSources([]*Check{r.Check}):
+				case r.Verdict == Skip && solutions == "" && r.Root == rootSolutions:
 				case r.Verdict == Fail && live.differs[r.ID] != "":
 					got[r.ID] = r.Evidence
 				case r.Verdict != Pass:

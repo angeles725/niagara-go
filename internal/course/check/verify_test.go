@@ -2,6 +2,7 @@ package check
 
 import (
 	"os"
+	"path/filepath"
 	"slices"
 	"strings"
 	"testing"
@@ -16,7 +17,7 @@ func Predicted(it *key.Item) bool { return it.HasStatus("predicted") }
 // verifyOn decides the predicted items of c with every check run on one station.
 func verifyOn(t *testing.T, c *key.Corpus, path, install string) []Prediction {
 	t.Helper()
-	ss, err := OpenStations(LinkedChecks(c, Predicted), func(string) string { return path }, install, "", "")
+	ss, err := OpenStations(LinkedChecks(c, Predicted), func(string) string { return path }, install, Trees{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -32,7 +33,7 @@ func TestDecidePrediction(t *testing.T) {
 	part := r("C1.5", Pass, "y stored", "the console line")
 	part2 := r("C1.6", Pass, "w stored", "the console line", "the log")
 	fail := r("C1.3", Fail, "found 0, want at least 1")
-	skip := r("C1.4", Skip, "no --install DIR")
+	skip := r("C1.4", Skip, "cannot read modules/x.jar")
 	cases := []struct {
 		results         []LinkedResult
 		verdict, reason string
@@ -40,10 +41,10 @@ func TestDecidePrediction(t *testing.T) {
 		{nil, Undecided, "no check covers it"},
 		{[]LinkedResult{pass, pass2}, Confirmed, "C1.1 PASS: found 1; C1.2 PASS: x = 1 (stored)"},
 		{[]LinkedResult{pass, fail, skip}, Contradicted, "C1.3 FAIL: found 0, want at least 1"},
-		{[]LinkedResult{pass, skip}, Undecided, "C1.4 SKIP: no --install DIR"},
-		{[]LinkedResult{skip}, Undecided, "C1.4 SKIP: no --install DIR"},
+		{[]LinkedResult{pass, skip}, Undecided, "C1.4 SKIP: cannot read modules/x.jar"},
+		{[]LinkedResult{skip}, Undecided, "C1.4 SKIP: cannot read modules/x.jar"},
 		{[]LinkedResult{part, fail}, Contradicted, "C1.3 FAIL: found 0, want at least 1"},
-		{[]LinkedResult{part, skip}, Undecided, "C1.4 SKIP: no --install DIR"},
+		{[]LinkedResult{part, skip}, Undecided, "C1.4 SKIP: cannot read modules/x.jar"},
 		// Every passing check observes only the stored part: PARTIAL, with what remains.
 		{[]LinkedResult{part, part2}, Partial,
 			"C1.5 PASS: y stored; C1.6 PASS: w stored; not observed: the console line; the log"},
@@ -167,5 +168,70 @@ func TestVerifyPredictionsTrainingStation(t *testing.T) {
 	}
 	if counts[Confirmed] != len(confirmedLive) || counts[Partial] == 0 {
 		t.Errorf("want CONFIRMED only %v and some PARTIAL on the live station: %v", confirmedLive, counts)
+	}
+}
+
+// A check SKIPped only because its optional tree (--install, --source, --labsrc, --solutions) was
+// not given does not lower what the other checks decide, but caps it at PARTIAL: an item is never
+// CONFIRMED on fewer checks than link it. Any other SKIP still leaves the item UNDECIDED.
+func TestDecideAbsentTree(t *testing.T) {
+	r := func(id, kind, verdict, ev, absent string, notes ...string) LinkedResult {
+		return LinkedResult{Result: Result{Check: &Check{ID: id, Kind: kind}, Verdict: verdict, Evidence: ev, Absent: absent}, Notes: notes}
+	}
+	pass := r("C1.1", kindType, Pass, "found 1", "")
+	part := r("C1.5", kindSlot, Pass, "y stored", "", "the console line")
+	absent := r("C1.12", kindFileText, Skip, "no --labsrc DIR: x not checked", "--labsrc")
+	absent2 := r("C5.6", kindFiles, Skip, "no --labsrc DIR: y not checked", "--labsrc")
+	noJar := r("C1.3", kindJar, Skip, "no --install DIR: modules/training-rt.jar not checked", "--install")
+	unreadable := r("C1.9", kindFiles, Skip, "cannot read /x: not a directory", "")
+	fail := r("C1.3", kindLink, Fail, "found 0, want at least 1", "")
+	for _, c := range []struct {
+		results         []LinkedResult
+		verdict, reason string
+	}{
+		{[]LinkedResult{pass, absent}, Partial, "C1.1 PASS: found 1; not run: C1.12 (--labsrc not given)"},
+		// A passing station check and a jar check the run could not read: PARTIAL, not CONFIRMED live.
+		{[]LinkedResult{pass, noJar}, Partial, "C1.1 PASS: found 1; not run: C1.3 (--install not given)"},
+		{[]LinkedResult{pass, absent, absent2, noJar}, Partial, "C1.1 PASS: found 1; not run: C1.12, C5.6 (--labsrc not given); C1.3 (--install not given)"},
+		{[]LinkedResult{part, absent}, Partial, "C1.5 PASS: y stored; not observed: the console line; not run: C1.12 (--labsrc not given)"},
+		{[]LinkedResult{absent}, Undecided, "C1.12 SKIP: no --labsrc DIR: x not checked"},
+		{[]LinkedResult{pass, unreadable}, Undecided, "C1.9 SKIP: cannot read /x: not a directory"},
+		{[]LinkedResult{absent, fail}, Contradicted, "C1.3 FAIL: found 0, want at least 1"},
+		{[]LinkedResult{pass, absent, unreadable}, Undecided, "C1.9 SKIP: cannot read /x: not a directory"},
+	} {
+		if v, why := Decide(c.results); v != c.verdict || why != c.reason {
+			t.Errorf("Decide = %s %q, want %s %q", v, why, c.verdict, c.reason)
+		}
+	}
+	// The evidence of a marker (for an item every check of which ran) is unchanged.
+	if e := Evidence([]LinkedResult{pass}); e != key.EvidenceLive {
+		t.Errorf("evidence %s, want live", e)
+	}
+}
+
+// Station.Run marks a SKIP Absent only when a tree the check reads was not given.
+func TestRunMarksAbsent(t *testing.T) {
+	st, err := Open(writeStation(t), "", false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, c := range []struct {
+		ck     Check
+		absent string
+	}{
+		{Check{Kind: kindJar, Jar: "x"}, "--install"},
+		{Check{Kind: kindSourceText, Glob: "a", Match: ".", Op: opMin, N: 1}, "--source"},
+		{Check{Kind: kindAnnotation, Glob: "A.java", Fact: factSlots, Want: "x"}, "--labsrc"},
+		{Check{Kind: kindAnnotation, Root: rootSolutions, Glob: "A.java", Fact: factSlots, Want: "x"}, "--solutions"},
+		{Check{Kind: kindFiles, Root: rootLabsrc, Glob: "a", Op: opMin, N: 1}, "--labsrc"},
+		{Check{Kind: kindFileText, Glob: "shared/a", Line: 1, Match: "("}, ""}, // a bad pattern
+	} {
+		if r := st.Run(&c.ck); r.Verdict != Skip || r.Absent != c.absent {
+			t.Errorf("%s %s: %s %q absent %q, want SKIP absent %q", c.ck.Kind, c.ck.Root, r.Verdict, r.Evidence, r.Absent, c.absent)
+		}
+	}
+	st.labsrc = filepath.Join(t.TempDir(), "nosuch") // given but unreadable: not absent
+	if r := st.Run(&Check{Kind: kindFiles, Root: rootLabsrc, Glob: "a", Op: opMin, N: 1}); r.Verdict != Skip || r.Absent != "" {
+		t.Errorf("unreadable tree: %s %q absent %q", r.Verdict, r.Evidence, r.Absent)
 	}
 }

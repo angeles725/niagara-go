@@ -1,0 +1,4 @@
+<types>
+  <!--com.tridiumuniversity.training-->
+  <type class="com.tridiumuniversity.training.BFirstComponent" name="FirstComponent"/>
+</types>

@@ -1,19 +1,22 @@
 usage: course check [-h] [--root DIR] [--station PATH] [--install DIR] [--source DIR]
-                    [--labsrc DIR] [--lab N] [--json]
+                    [--labsrc DIR] [--solutions DIR] [--lab N] [--json]
 
 options:
-  -h, --help      show this help message and exit
-  --root DIR      niagara-research checkout (default: $NIAGARA_RESEARCH_DIR, then found from cwd)
-  --station PATH  station directory, or its config.bog (zipped or plain XML); default:
-                  $COURSE_TRAINING_STATION for the labs, $COURSE_REVIEW_STATION for RA1/RA2,
-                  $COURSE_CERT_STATION for EXAM
-  --install DIR   Niagara install whose modules/ holds the built jars (default:
-                  $COURSE_NIAGARA_INSTALL; jar checks SKIP without either)
-  --source DIR    Niagara source tree, one directory per module part, e.g. niagara-
-                  help/versions/4.15.6.20/source (default: $COURSE_NIAGARA_SOURCE; source checks
-                  SKIP without either)
-  --labsrc DIR    lab module sources: the Niagara dev home holding training/ and
-                  trafficLightDriver/ (default: $COURSE_LAB_SOURCES; annotation checks SKIP
-                  without either)
-  --lab N         only this lab (1-11, B; RA1, RA2, EXAM run only when named); repeatable
-  --json          machine JSON output
+  -h, --help       show this help message and exit
+  --root DIR       niagara-research checkout (default: $NIAGARA_RESEARCH_DIR, then found from cwd)
+  --station PATH   station directory, or its config.bog (zipped or plain XML); default:
+                   $COURSE_TRAINING_STATION for the labs, $COURSE_REVIEW_STATION for RA1/RA2,
+                   $COURSE_CERT_STATION for EXAM
+  --install DIR    Niagara install whose modules/ holds the built jars (default:
+                   $COURSE_NIAGARA_INSTALL; jar checks SKIP without either)
+  --source DIR     Niagara source tree, one directory per module part, e.g. niagara-
+                   help/versions/4.15.6.20/source (default: $COURSE_NIAGARA_SOURCE; source checks
+                   SKIP without either)
+  --labsrc DIR     lab module sources: the Niagara dev home holding training/ and
+                   trafficLightDriver/ (default: $COURSE_LAB_SOURCES; lab-source checks SKIP
+                   without either)
+  --solutions DIR  the participant's module sources as niagara-research keeps them,
+                   sources/n4-dev-course/solutions (default: $COURSE_SOLUTIONS; solutions checks
+                   SKIP without either)
+  --lab N          only this lab (1-11, B; RA1, RA2, EXAM run only when named); repeatable
+  --json           machine JSON output

@@ -3,7 +3,7 @@
     {
       "group": "L1",
       "items": 3,
-      "checked": 2,
+      "checked": 3,
       "confirmed": 0,
       "partial": 1,
       "contradicted": 1,
@@ -70,7 +70,7 @@
   "total": {
     "group": "total",
     "items": 13,
-    "checked": 11,
+    "checked": 12,
     "confirmed": 1,
     "partial": 3,
     "contradicted": 7,

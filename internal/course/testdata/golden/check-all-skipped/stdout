@@ -1,5 +1,16 @@
-ID    LAB  VERDICT  DESCRIPTION                                      EVIDENCE
-C5.1  5    SKIP     training-rt is signed [L5.21 L5.24]              no --install DIR: modules/training-rt.jar not checked
-C5.2  5    SKIP     training-wb is signed [L5.24]                    no --install DIR: modules/training-wb.jar not checked
-C5.3  5    SKIP     signed with the CodeSigning alias [L5.13 L5.14]  no --install DIR: modules/training-rt.jar not checked
-checked 3: PASS 0, FAIL 0, SKIP 3; station GoodStation (237 components, 16 links), install (none: jar checks skipped)
+ID     LAB  VERDICT  DESCRIPTION                                                                       EVIDENCE
+C5.1   5    SKIP     training-rt is signed [L5.21 L5.24]                                               no --install DIR: modules/training-rt.jar not checked
+C5.2   5    SKIP     training-wb is signed [L5.24]                                                     no --install DIR: modules/training-wb.jar not checked
+C5.3   5    SKIP     signed with the CodeSigning alias [L5.13 L5.14]                                   no --install DIR: modules/training-rt.jar not checked
+C5.4   5    SKIP     system.properties: moduleVerificationMode=high [L5.2]                             no --install DIR: defaults/system.properties not checked
+C5.5   5    SKIP     system.properties sets moduleVerificationMode once [L5.2]                         no --install DIR: defaults/system.properties not checked
+C5.6   5    SKIP     ../certificates: the keystore and its profile [L5.8 L5.9]                         no --labsrc DIR: ../certificates/{code_signing.jceks,code_signing.xml} not checked
+C5.7   5    SKIP     dname: C, ST, L, O and CN once each (no OU) [L5.10]                               no --labsrc DIR: ../certificates/code_signing.xml not checked
+C5.8   5    SKIP     dname: CN=${alias} [L5.10]                                                        no --labsrc DIR: ../certificates/code_signing.xml not checked
+C5.9   5    SKIP     standardtsa = http://timestamp.digicert.com [L5.11]                               no --labsrc DIR: ../certificates/code_signing.xml not checked
+C5.10  5    SKIP     profileType RestrictedSigningProfile [L5.11]                                      no --labsrc DIR: ../certificates/code_signing.xml not checked
+C5.11  5    SKIP     signer issued by the Tridium University root [L5.18]                              no --install DIR: modules/training-rt.jar not checked
+C5.12  5    SKIP     chain of two: CodeSigning -> self-signed root [L5.18]                             no --install DIR: modules/training-rt.jar not checked
+C5.13  5    SKIP     signature timestamped by DigiCert [L5.11]                                         no --install DIR: modules/training-rt.jar not checked
+C5.14  5    SKIP     signer = the first certificate of ../certificates/code_signing.pem [L5.17 L5.25]  no --install DIR: modules/training-rt.jar not checked
+checked 14: PASS 0, FAIL 0, SKIP 14; station GoodStation (237 components, 16 links), install (none: jar and install-file checks skipped), labsrc (none: lab-source checks skipped)

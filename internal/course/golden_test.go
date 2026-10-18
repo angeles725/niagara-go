@@ -11,7 +11,7 @@ import (
 // reach a case; the cases that test them set them in cmd.json.
 func clearStationEnv(t *testing.T) {
 	t.Helper()
-	for _, name := range []string{installEnv, sourceEnv, labsrcEnv, stationEnv["training"], stationEnv["review"], stationEnv["cert"]} {
+	for _, name := range []string{installEnv, sourceEnv, labsrcEnv, solutionsEnv, stationEnv["training"], stationEnv["review"], stationEnv["cert"]} {
 		t.Setenv(name, "")
 	}
 }

@@ -31,6 +31,16 @@ const (
 	trainingSrc = "training/training-rt/src/com/tridiumuniversity/training/"
 	driverSrc   = "trafficLightDriver/trafficLightDriver-rt/src/com/tridiumuniversity/trafficLightDriver/"
 	classDecl   = "final and extends BFrozenEnum (the class declaration, not an annotation)"
+	// The lab-source rows of L1.4 read the dev home as it is now, after the later labs.
+	wizardState = "that the New Module Wizard created them at this step (the dev home is read as the later labs left it)"
+	// module-include.xml's entry for BFirstComponent, in either attribute order.
+	firstComponentType = `<type (?:class="com\.tridiumuniversity\.training\.BFirstComponent" name="FirstComponent"|` +
+		`name="FirstComponent" class="com\.tridiumuniversity\.training\.BFirstComponent")\s*/>`
+	systemProperties = "defaults/system.properties" // under the install (the System Home)
+	signingProfile   = "../certificates/code_signing.xml"
+	ownDname         = "that C, ST, L and O hold your own country, state, city and company (the rows read the attribute names and CN)"
+	ownerUnchanged   = "that the Owner is the one of the self-signed certificate (L5.14; the jar holds only the CA-issued one) and that the chain validates against the trust store (runtime)"
+	tsaAfterExpiry   = "that the timestamp keeps the jar verifiable after the certificate expires (the profile is read, not a verification after expiry)"
 )
 
 // Spec is every check: the labs, the review assignments, the exam. A run without --lab selects only
@@ -62,6 +72,21 @@ var labSpec = []Check{
 			"L1.12": "the generated region itself (its markers, getter, setter, invoker, TYPE and getType()): Slot-o-Matic output the lab file does not hold"},
 		Kind: kindAnnotation, Desc: "BFirstComponent declares timeExecuted and execute",
 		Glob: trainingSrc + "BFirstComponent.java", Fact: factSlots, Want: "property timeExecuted: BAbsTime, action execute()"},
+	// L1.4: what the New Module Wizard lays out in the dev home (LI:95-102), read from the lab
+	// sources (offline). Exact names ({a,b}); a name ending in "/" is a folder.
+	{ID: "C1.9", Lab: "1", Keys: []string{"L1.4"}, Unobserved: map[string]string{"L1.4": wizardState}, Kind: kindFiles,
+		Desc: "dev home: the Gradle build and wrapper files", Root: rootLabsrc,
+		Glob: "{settings.gradle.kts,build.gradle.kts,gradle.properties,gradlew,gradlew.bat,gradle/wrapper/gradle-wrapper.properties}", Op: opEq, N: 6},
+	{ID: "C1.10", Lab: "1", Keys: []string{"L1.4"}, Unobserved: map[string]string{"L1.4": wizardState}, Kind: kindFiles,
+		Desc: "training-rt: src/, srcTest/, its Gradle script, lexicon, permissions, palette", Root: rootLabsrc,
+		Glob: "training/training-rt/{src/,srcTest/,training-rt.gradle.kts,module.lexicon,module-permissions.xml,module.palette}", Op: opEq, N: 6},
+	{ID: "C1.11", Lab: "1", Keys: []string{"L1.4"}, Unobserved: map[string]string{"L1.4": wizardState}, Kind: kindFiles,
+		Desc: "training-wb: src/, srcTest/, its Gradle script, lexicon, permissions", Root: rootLabsrc,
+		Glob: "training/training-wb/{src/,srcTest/,training-wb.gradle.kts,module.lexicon,module-permissions.xml}", Op: opEq, N: 5},
+	// L1.14: the compilation writes module-include.xml next to the part's sources (LI:266-267); the
+	// attribute order is not significant (the 4.15 build writes class first).
+	{ID: "C1.12", Lab: "1", Keys: []string{"L1.14"}, Kind: kindFileText, Desc: "module-include.xml has the FirstComponent <type>",
+		Root: rootLabsrc, Glob: "training/training-rt/module-include.xml", Whole: true, Match: firstComponentType, Op: opEq, N: 1},
 
 	// Lab 2. LAB/Lab2 Add Part 1/BAdd.java:15-42: out, in1..in4, BStatusNumeric.
 	{ID: "C2.1", Lab: "2", Keys: []string{"L2.8"}, Kind: kindType, Desc: "an Add in the station",
@@ -140,6 +165,42 @@ var labSpec = []Check{
 	{ID: "C5.2", Lab: "5", Keys: []string{"L5.24"}, Kind: kindJarSigned, Desc: "training-wb is signed", Jar: "training-wb"},
 	{ID: "C5.3", Lab: "5", Keys: []string{"L5.13", "L5.14"}, Kind: kindJarEntry, Desc: "signed with the CodeSigning alias",
 		Jar: trainingRT, Glob: "META-INF/CODESIGN.SF", Op: opMin, N: 1},
+	// L5.2: System Home defaults/system.properties (LI:813-818), read from the install: the one
+	// uncommented setting is high (a second one would override the first).
+	{ID: "C5.4", Lab: "5", Keys: []string{"L5.2"}, Kind: kindFileText, Desc: "system.properties: moduleVerificationMode=high",
+		Root: rootInstall, Glob: systemProperties, Whole: true, Match: `(?m)^[ \t]*niagara\.moduleVerificationMode[ \t]*[=:][ \t]*high[ \t]*$`, Op: opEq, N: 1},
+	{ID: "C5.5", Lab: "5", Keys: []string{"L5.2"}, Kind: kindFileText, Desc: "system.properties sets moduleVerificationMode once",
+		Root: rootInstall, Glob: systemProperties, Whole: true, Match: `(?m)^[ \t]*niagara\.moduleVerificationMode[ \t]*[=:].*$`, Op: opEq, N: 1},
+	// L5.8-L5.11: the signing profile beside the dev home, where `gradlew createProfile
+	// --profile-path ..\certificates\code_signing.xml` run from niagara_dev_home writes it (LI:887-929).
+	// The rows match only the entries named here, never the storepass/keypass ones.
+	{ID: "C5.6", Lab: "5", Keys: []string{"L5.8", "L5.9"}, Kind: kindFiles, Desc: "../certificates: the keystore and its profile",
+		Root: rootLabsrc, Glob: "../certificates/{code_signing.jceks,code_signing.xml}", Op: opEq, N: 2},
+	{ID: "C5.7", Lab: "5", Keys: []string{"L5.10"}, Unobserved: map[string]string{"L5.10": ownDname}, Kind: kindFileText,
+		Desc: "dname: C, ST, L, O and CN once each (no OU)", Root: rootLabsrc, Glob: signingProfile, Whole: true,
+		Match: `<entry key="niagara\.signing\.dname">[ \t]*([^<\n]*?)[ \t]*</entry>`, Names: "C CN L O ST", Op: opEq, N: 1},
+	{ID: "C5.8", Lab: "5", Keys: []string{"L5.10"}, Unobserved: map[string]string{"L5.10": ownDname}, Kind: kindFileText,
+		Desc: "dname: CN=${alias}", Root: rootLabsrc, Glob: signingProfile, Whole: true,
+		Match: `<entry key="niagara\.signing\.dname">(?:[^<\n]*,)?[ \t]*CN=\$\{alias\}[ \t]*(?:,[^<\n]*)?</entry>`, Op: opEq, N: 1},
+	{ID: "C5.9", Lab: "5", Keys: []string{"L5.11"}, Unobserved: map[string]string{"L5.11": tsaAfterExpiry}, Kind: kindFileText,
+		Desc: "standardtsa = http://timestamp.digicert.com", Root: rootLabsrc, Glob: signingProfile, Whole: true,
+		Match: `<entry key="niagara\.signing\.standardtsa">\s*http://timestamp\.digicert\.com\s*</entry>`, Op: opEq, N: 1},
+	{ID: "C5.10", Lab: "5", Keys: []string{"L5.11"}, Unobserved: map[string]string{"L5.11": tsaAfterExpiry}, Kind: kindFileText,
+		Desc: "profileType RestrictedSigningProfile", Root: rootLabsrc, Glob: signingProfile, Whole: true,
+		Match: `<entry key="niagara\.signing\.profileType">\s*com\.tridium\.gradle\.plugins\.signing\.profile\.RestrictedSigningProfile\s*</entry>`, Op: opEq, N: 1},
+	// L5.11, L5.17, L5.18, L5.25: the signer certificate of training-rt's signature block (the
+	// PKCS#7 META-INF/CODESIGN.RSA, jarcert.go), what Tools > Module Info links to.
+	{ID: "C5.11", Lab: "5", Keys: []string{"L5.18"}, Unobserved: map[string]string{"L5.18": ownerUnchanged}, Kind: kindJarCert,
+		Desc: "signer issued by the Tridium University root", Jar: trainingRT, Fact: certIssuer,
+		Match: `^CN=Tridium University Root Certification Authority(?:,|$)`},
+	{ID: "C5.12", Lab: "5", Keys: []string{"L5.18"}, Unobserved: map[string]string{"L5.18": ownerUnchanged}, Kind: kindJarCert,
+		Desc: "chain of two: CodeSigning -> self-signed root", Jar: trainingRT, Fact: certChain, Op: opEq, N: 2},
+	{ID: "C5.13", Lab: "5", Keys: []string{"L5.11"}, Unobserved: map[string]string{"L5.11": tsaAfterExpiry}, Kind: kindJarCert,
+		Desc: "signature timestamped by DigiCert", Jar: trainingRT, Fact: certTimestamp, Match: `(?:^|,)O=DigiCert`},
+	{ID: "C5.14", Lab: "5", Keys: []string{"L5.17", "L5.25"},
+		Unobserved: map[string]string{"L5.25": "the Module Info view and its certificate link (UI); the keystore is read through the code_signing.pem L5.17 imports into it"},
+		Kind:       kindJarCert, Desc: "signer = the first certificate of ../certificates/code_signing.pem", Jar: trainingRT, Fact: certPEM,
+		Root: rootLabsrc, Glob: "../certificates/code_signing.pem"},
 
 	// Lab 6. BWorkOrderServiceWithSerialization.java:55-59 lastSuccess default BAbsTime.DEFAULT;
 	// BIRestrictedComponent: one instance, under Services (L6.7).

@@ -1,5 +1,16 @@
-ID    LAB  VERDICT  DESCRIPTION                                      EVIDENCE
-C5.1  5    PASS     training-rt is signed [L5.21 L5.24]              modules/training-rt.jar: META-INF/CODESIGN.SF, META-INF/CODESIGN.RSA
-C5.2  5    PASS     training-wb is signed [L5.24]                    modules/training-wb.jar: META-INF/CODESIGN.SF, META-INF/CODESIGN.RSA
-C5.3  5    PASS     signed with the CodeSigning alias [L5.13 L5.14]  modules/training-rt.jar: 1 entry matches META-INF/CODESIGN.SF
-checked 3: PASS 3, FAIL 0, SKIP 0; station GoodStation (237 components, 16 links), install install
+ID     LAB  VERDICT  DESCRIPTION                                                                       EVIDENCE
+C5.1   5    PASS     training-rt is signed [L5.21 L5.24]                                               modules/training-rt.jar: META-INF/CODESIGN.SF, META-INF/CODESIGN.RSA
+C5.2   5    PASS     training-wb is signed [L5.24]                                                     modules/training-wb.jar: META-INF/CODESIGN.SF, META-INF/CODESIGN.RSA
+C5.3   5    PASS     signed with the CodeSigning alias [L5.13 L5.14]                                   modules/training-rt.jar: 1 entry matches META-INF/CODESIGN.SF
+C5.4   5    PASS     system.properties: moduleVerificationMode=high [L5.2]                             defaults/system.properties: 1 match (first at line 3: niagara.moduleVerificationMode=high)
+C5.5   5    PASS     system.properties sets moduleVerificationMode once [L5.2]                         defaults/system.properties: 1 match (first at line 3: niagara.moduleVerificationMode=high)
+C5.6   5    SKIP     ../certificates: the keystore and its profile [L5.8 L5.9]                         no --labsrc DIR: ../certificates/{code_signing.jceks,code_signing.xml} not checked
+C5.7   5    SKIP     dname: C, ST, L, O and CN once each (no OU) [L5.10]                               no --labsrc DIR: ../certificates/code_signing.xml not checked
+C5.8   5    SKIP     dname: CN=${alias} [L5.10]                                                        no --labsrc DIR: ../certificates/code_signing.xml not checked
+C5.9   5    SKIP     standardtsa = http://timestamp.digicert.com [L5.11]                               no --labsrc DIR: ../certificates/code_signing.xml not checked
+C5.10  5    SKIP     profileType RestrictedSigningProfile [L5.11]                                      no --labsrc DIR: ../certificates/code_signing.xml not checked
+C5.11  5    PASS     signer issued by the Tridium University root [L5.18]                              modules/training-rt.jar!META-INF/CODESIGN.RSA: issuer CN=Tridium University Root Certification Authority,O=Tridium University,C=US
+C5.12  5    PASS     chain of two: CodeSigning -> self-signed root [L5.18]                             modules/training-rt.jar!META-INF/CODESIGN.RSA: 2 of 2 certificates in the chain: CN=(CodeSigning),O=Fixture,C=XX -> CN=Tridium University Root Certification Authority,O=Tridium University,C=US (self-signed)
+C5.13  5    PASS     signature timestamped by DigiCert [L5.11]                                         modules/training-rt.jar!META-INF/CODESIGN.RSA: timestamped by CN=Fixture Timestamp Responder,O=DigiCert\, Inc.
+C5.14  5    SKIP     signer = the first certificate of ../certificates/code_signing.pem [L5.17 L5.25]  no --labsrc DIR: ../certificates/code_signing.pem not checked
+checked 14: PASS 8, FAIL 0, SKIP 6; station GoodStation (237 components, 16 links), install install, labsrc (none: lab-source checks skipped)

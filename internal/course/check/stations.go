@@ -44,11 +44,17 @@ type Stations struct {
 	list   []*Station
 }
 
+// Trees are the source trees a run reads besides the stations and the install ("" = none).
+type Trees struct {
+	Source    string // the Niagara source tree (source-text)
+	Labsrc    string // the lab module sources (annotation, Root labsrc)
+	Solutions string // the corpus solutions (Root solutions)
+}
+
 // OpenStations opens the station of every role the checks need; path maps a role to its station
-// directory or bog; install, source and labsrc are the Niagara install, the Niagara source tree
-// and the lab module sources ("" = none). The error is the bog reader's message of the first station
-// that cannot be read.
-func OpenStations(checks []*Check, path func(role string) string, install, source, labsrc string) (*Stations, error) {
+// directory or bog; install is the Niagara install ("" = none). The error is the bog reader's
+// message of the first station that cannot be read.
+func OpenStations(checks []*Check, path func(role string) string, install string, trees Trees) (*Stations, error) {
 	perPath := map[string][]*Check{}
 	var paths []string
 	rolePath := map[string]string{}
@@ -72,7 +78,7 @@ func OpenStations(checks []*Check, path func(role string) string, install, sourc
 			ss.Close()
 			return nil, err
 		}
-		st.source, st.labsrc = source, labsrc
+		st.source, st.labsrc, st.solutions = trees.Source, trees.Labsrc, trees.Solutions
 		byPath[p] = st
 		ss.list = append(ss.list, st)
 	}

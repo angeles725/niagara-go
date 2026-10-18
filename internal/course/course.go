@@ -39,7 +39,8 @@ $COURSE_REVIEW_STATION (RA1, RA2), $COURSE_CERT_STATION (EXAM);
 --install, else $COURSE_NIAGARA_INSTALL; --source, else
 $COURSE_NIAGARA_SOURCE (the 4.15 source tree the source-text checks read);
 --labsrc, else $COURSE_LAB_SOURCES (the lab module sources the annotation
-checks read).
+and lab-source checks read); --solutions, else $COURSE_SOLUTIONS (the corpus
+solutions the review rows read).
 
 examples:
   course show L1.9 RA1.R6 P2
@@ -90,7 +91,9 @@ func buildParser() (*argparse.Parser, map[string]*argparse.Parser) {
 	sourceArg := argparse.Arg{Metavar: "DIR", Help: "Niagara source tree, one directory per module part, e.g. " +
 		"niagara-help/versions/4.15.6.20/source (default: $COURSE_NIAGARA_SOURCE; source checks SKIP without either)"}
 	labsrcArg := argparse.Arg{Metavar: "DIR", Help: "lab module sources: the Niagara dev home holding training/ and " +
-		"trafficLightDriver/ (default: $COURSE_LAB_SOURCES; annotation checks SKIP without either)"}
+		"trafficLightDriver/ (default: $COURSE_LAB_SOURCES; lab-source checks SKIP without either)"}
+	solutionsArg := argparse.Arg{Metavar: "DIR", Help: "the participant's module sources as niagara-research keeps them, " +
+		"sources/n4-dev-course/solutions (default: $COURSE_SOLUTIONS; solutions checks SKIP without either)"}
 	s := add("show", "print items by ID (any case; L2.3 also finds the range item L2.2–L2.4)")
 	s.Add(argparse.Arg{Nargs: argparse.OneOrMore, Metavar: "ID", Help: "item ID: L1.9, LB.3, RA1.R6, D2.4, T1.1, X3, P2"}, "ids")
 	s.Add(jsonHelp, "--json")
@@ -109,6 +112,7 @@ func buildParser() (*argparse.Parser, map[string]*argparse.Parser) {
 	ck.Add(installArg, "--install")
 	ck.Add(sourceArg, "--source")
 	ck.Add(labsrcArg, "--labsrc")
+	ck.Add(solutionsArg, "--solutions")
 	ck.Add(argparse.Arg{Action: argparse.Append, Metavar: "N", Help: "only this lab (1-11, B; RA1, RA2, EXAM run only when named); repeatable"}, "--lab")
 	ck.Add(jsonHelp, "--json")
 	vp := add("verify-predictions", "run the checks linked to every *(predicted)* item: CONFIRMED, PARTIAL, CONTRADICTED or UNDECIDED")
@@ -116,6 +120,7 @@ func buildParser() (*argparse.Parser, map[string]*argparse.Parser) {
 	vp.Add(installArg, "--install")
 	vp.Add(sourceArg, "--source")
 	vp.Add(labsrcArg, "--labsrc")
+	vp.Add(solutionsArg, "--solutions")
 	vp.Add(argparse.Arg{Metavar: "YYYY-MM-DD", Help: "date written in the suggested *(verified live|offline ...)* lines (default: today)"}, "--date")
 	vp.Add(jsonHelp, "--json")
 	fd := add("find", "items whose step or answer matches a regexp: group, ID, status and the first matching line")
@@ -128,6 +133,7 @@ func buildParser() (*argparse.Parser, map[string]*argparse.Parser) {
 	vf.Add(installArg, "--install")
 	vf.Add(sourceArg, "--source")
 	vf.Add(labsrcArg, "--labsrc")
+	vf.Add(solutionsArg, "--solutions")
 	vf.Add(argparse.Arg{Metavar: "YYYY-MM-DD", Help: "date written in the suggested *(verified live|offline ...)* lines (default: today)"}, "--date")
 	vf.Add(jsonHelp, "--json")
 	pg := add("progress", "where you are: verify's verdicts per group over every item, then the steps to redo and the markers to add")
@@ -136,6 +142,7 @@ func buildParser() (*argparse.Parser, map[string]*argparse.Parser) {
 	pg.Add(installArg, "--install")
 	pg.Add(sourceArg, "--source")
 	pg.Add(labsrcArg, "--labsrc")
+	pg.Add(solutionsArg, "--solutions")
 	pg.Add(argparse.Arg{Metavar: "YYYY-MM-DD", Help: "date written in the suggested *(verified live|offline ...)* lines (default: today)"}, "--date")
 	pg.Add(jsonHelp, "--json")
 	qz := add("quiz", "draw why, decision and trap questions from the answer keys; --answers prints the answers after them")
@@ -160,6 +167,7 @@ func Main(args []string, s cli.Stdio) int {
 		install: ns.String("install"), hasInstall: ns.Get("install") != nil,
 		source: ns.String("source"), hasSource: ns.Get("source") != nil,
 		labsrc: ns.String("labsrc"), hasLabsrc: ns.Get("labsrc") != nil,
+		solutions: ns.String("solutions"), hasSolutions: ns.Get("solutions") != nil,
 		usage: func(message string) int { return subs[cmd].Error(s.Err, message) }}
 	if cmd == "check" { // reads a station, not the answer keys
 		return cmdCheck(s, o, ns.Strings("lab"), ns.Bool("json"))

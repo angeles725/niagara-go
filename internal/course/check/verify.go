@@ -77,11 +77,18 @@ func joinResults(results []LinkedResult, verdict string) string {
 	return strings.Join(parts, "; ")
 }
 
-// decide turns the results of an item's checks into its verdict and reason.
-func Decide(results []LinkedResult) (string, string) {
-	if len(results) == 0 {
+// Decide turns the results of an item's checks into its verdict and reason. A check SKIPped only
+// because a tree it reads was not given does not count (ran): the others decide, capped at
+// PARTIAL, and the reason names it as not run.
+func Decide(all []LinkedResult) (string, string) {
+	if len(all) == 0 {
 		return Undecided, "no check covers it"
 	}
+	results, absent := ran(all)
+	if len(results) == 0 {
+		return Undecided, joinResults(absent, Skip) // nothing ran: every tree it needs is missing
+	}
+	notRun := notRunReason(absent)
 	fail, skip := false, false
 	for _, r := range results {
 		fail = fail || r.Verdict == Fail
@@ -96,6 +103,11 @@ func Decide(results []LinkedResult) (string, string) {
 	var notes []string
 	for _, r := range results {
 		if len(r.Notes) == 0 {
+			if notRun != "" {
+				// The checks that ran confirm it, but not every linked check ran: never claim more
+				// than was checked (no marker line).
+				return Partial, joinResults(results, "") + notRun
+			}
 			return Confirmed, joinResults(results, "") // this check observes the whole answer
 		}
 		for _, n := range r.Notes {
@@ -104,15 +116,51 @@ func Decide(results []LinkedResult) (string, string) {
 			}
 		}
 	}
-	return Partial, joinResults(results, "") + "; not observed: " + strings.Join(notes, "; ")
+	return Partial, joinResults(results, "") + "; not observed: " + strings.Join(notes, "; ") + notRun
+}
+
+// notRunReason is "; not run: C1.12, C5.6 (--labsrc not given); C1.3 (--install not given)", the
+// absent checks grouped by the tree not given, in first-seen order; "" when none.
+func notRunReason(absent []LinkedResult) string {
+	if len(absent) == 0 {
+		return ""
+	}
+	var trees []string
+	ids := map[string][]string{}
+	for _, r := range absent {
+		if _, ok := ids[r.Absent]; !ok {
+			trees = append(trees, r.Absent)
+		}
+		ids[r.Absent] = append(ids[r.Absent], r.ID)
+	}
+	parts := make([]string, len(trees))
+	for i, tr := range trees {
+		parts[i] = strings.Join(ids[tr], ", ") + " (" + tr + " not given)"
+	}
+	return "; not run: " + strings.Join(parts, "; ")
+}
+
+// ran splits an item's results into the checks that ran and those SKIPped only because a tree
+// they read was not given (Result.Absent). The latter never lower what the others decide, but an
+// item one of them links is at most PARTIAL (Decide).
+func ran(results []LinkedResult) (run, absent []LinkedResult) {
+	for _, r := range results {
+		if r.Absent != "" {
+			absent = append(absent, r)
+		} else {
+			run = append(run, r)
+		}
+	}
+	return run, absent
 }
 
 // Evidence is the evidence kind of the marker the checks of an item give it: live only when every
-// one of them reads a station (evidenceOf), offline otherwise (a jar, the source tree or the lab
+// one of them reads a station (checkEvidence), offline otherwise (a jar, the source tree or the lab
 // sources decided at least part of it).
-func Evidence(results []LinkedResult) string {
+func Evidence(all []LinkedResult) string {
+	results, _ := ran(all)
 	for _, r := range results {
-		if evidenceOf[r.Kind] != key.EvidenceLive {
+		if checkEvidence(r.Check) != key.EvidenceLive {
 			return key.EvidenceOffline
 		}
 	}
@@ -121,7 +169,8 @@ func Evidence(results []LinkedResult) string {
 
 // Suggestion is the line a human (or an agent) applies to a CONFIRMED item, with the marker of
 // its Evidence; course never edits the answer key.
-func Suggestion(id, date string, results []LinkedResult) string {
+func Suggestion(id, date string, all []LinkedResult) string {
+	results, _ := ran(all)
 	ev := make([]string, len(results))
 	for i, r := range results {
 		ev[i] = r.ID + " " + r.Evidence
