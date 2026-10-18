@@ -1,0 +1,1 @@
+{"args": ["by-marker", "--help"], "env": {"COLUMNS": "80", "GIT_DIR": "/nonexistent", "CORPUS_NAV_ROOT": "corpus", "CORPUS_NAV_FIND_INDEX": "off"}}

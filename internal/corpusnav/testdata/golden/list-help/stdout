@@ -1,0 +1,5 @@
+usage: corpus-nav.py list [-h] [--focus FOCUS]
+
+options:
+  -h, --help     show this help message and exit
+  --focus FOCUS  filter to blocks belonging to a focus

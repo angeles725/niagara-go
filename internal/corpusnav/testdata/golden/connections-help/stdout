@@ -1,0 +1,9 @@
+usage: corpus-nav.py connections [-h] [--bare] N
+
+positional arguments:
+  N           block id: 720, B720, 1-3 or TI
+
+options:
+  -h, --help  show this help message and exit
+  --bare      also count bare B<N> mentions (outside code) of existing blocks
+              as citations

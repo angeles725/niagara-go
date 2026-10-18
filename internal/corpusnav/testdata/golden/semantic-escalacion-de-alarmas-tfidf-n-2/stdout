@@ -1,0 +1,6 @@
+(Spanish terms: escalacion→escalation, alarmas→alarm)
+[backend: tfidf (forced by --tfidf)]
+B4 · Enrutamiento de alarmas   (score 0.446)
+  » Escalación de alarmas: the escalation levels [CERT via B5 §2].
+B6 · Security incident review   (score 0.095)
+  » The incident touched alarm recipients and user accounts [CERT+INFER] [CERT*].

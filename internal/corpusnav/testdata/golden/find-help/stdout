@@ -1,0 +1,14 @@
+usage: corpus-nav.py find [-h] [--in {blocks,docs,retros,all}] [--limit LIMIT]
+                          [--and | --or]
+                          query
+
+positional arguments:
+  query
+
+options:
+  -h, --help            show this help message and exit
+  --in {blocks,docs,retros,all}
+                        corpus subset to search (default: blocks)
+  --limit, -n LIMIT     max matching lines to print (default: 50)
+  --and                 ALL terms must appear in a block (AND mode)
+  --or                  ANY term matches (OR mode, default)

@@ -1,0 +1,4 @@
+usage: corpus-nav.py semantic [-h] [--limit LIMIT] [--build-index]
+                              [--model MODEL] [--tfidf] [--threads THREADS]
+                              [query]
+corpus-nav.py semantic: error: argument --limit/-n: must be at least 1, not 0

@@ -1,0 +1,24 @@
+usage: corpus-nav.py [-h] [--version] <command> ...
+
+Navigate the niagara-research knowledge corpus (blocks, docs, retros).
+
+positional arguments:
+  <command>
+    find             full-text case-insensitive tokenized search with ranking
+    grep             regex (re module) search
+    show             H1 + outline + Connections of block B<N>
+    list             list all blocks (from CATALOG.md)
+    by-marker        blocks containing an evidence marker
+    by-focus         blocks belonging to a focus
+    connections      forward + reverse block links for B<N>
+    graph            whole citation graph (summary, or --json adjacency)
+    path             shortest citation chain between two blocks
+    lint-refs        flag non-canonical citations (exit 1 if any)
+    stats            corpus totals + marker counts
+    selftest         assert core search behaviours (exits non-zero on failure)
+    semantic (rank)  rank blocks by embedding similarity (fastembed), TF-IDF
+                     fallback
+
+options:
+  -h, --help         show this help message and exit
+  --version          print the tools version and exit

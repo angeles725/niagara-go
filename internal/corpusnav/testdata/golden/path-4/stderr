@@ -1,0 +1,2 @@
+usage: corpus-nav.py path [-h] [--directed] [--bare] A B
+corpus-nav.py path: error: the following arguments are required: B

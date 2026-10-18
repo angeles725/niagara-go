@@ -1,0 +1,11 @@
+usage: corpus-nav.py graph [-h] [--json] [--limit TOP] [--bare]
+
+options:
+  -h, --help            show this help message and exit
+  --json                emit {nodes, forward, reverse, dangling, stats} as
+                        JSON
+  --limit, --top, -n TOP
+                        most-cited blocks to list in the summary (default: 10;
+                        --top is the old name)
+  --bare                also count bare B<N> mentions (outside code) of
+                        existing blocks as citations

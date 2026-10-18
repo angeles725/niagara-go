@@ -1,0 +1,10 @@
+usage: corpus-nav.py lint-refs [-h] [--warn] [--limit LIMIT] [FILE ...]
+
+positional arguments:
+  FILE               files to lint (default: every block)
+
+options:
+  -h, --help         show this help message and exit
+  --warn             report only; always exit 0
+  --limit, -n LIMIT  max findings to print (default: 50; the summary counts
+                     all)
