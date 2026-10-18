@@ -85,7 +85,7 @@ type quizOpts struct {
 func (o quizOpts) again() string {
 	parts := []string{"course quiz"}
 	if o.hasLab {
-		parts = append(parts, "--lab "+o.lab)
+		parts = append(parts, "--lab "+shellQuote(o.lab))
 	}
 	if o.kind != "" {
 		parts = append(parts, "--kind "+o.kind)
@@ -96,10 +96,22 @@ func (o quizOpts) again() string {
 	return strings.Join(append(parts, "--seed "+strconv.Itoa(o.seed), "--answers"), " ")
 }
 
+// safeArg is a word the shell neither splits nor expands.
+var safeArg = regexp.MustCompile(`^[A-Za-z0-9._/+-]+$`)
+
+// shellQuote returns s as one POSIX shell word: as is when safe, else single-quoted.
+func shellQuote(s string) string {
+	if safeArg.MatchString(s) {
+		return s
+	}
+	return "'" + strings.ReplaceAll(s, "'", `'\''`) + "'"
+}
+
 // cmdQuiz draws count questions (why, decision, trap; one kind with --kind) from the selected
 // groups in the order of the seed, prints each prompt with its course text, then, with --answers,
 // every answer and its status. Exit: 0 drawn; 1 an unknown group or no question in the selection
-// (the honest zero); 2 -n below 1, or a text file that cannot be read.
+// (the honest zero); 2 -n below 1, or a text file that cannot be read or does not hold a drawn
+// item's range (the errors of course text).
 func cmdQuiz(c *key.Corpus, s cli.Stdio, root string, o quizOpts) int {
 	if o.count < 1 {
 		fmt.Fprintf(s.Err, "course: -n %d asks no question (want 1 or more)\n", o.count)
@@ -148,6 +160,12 @@ func cmdQuiz(c *key.Corpus, s cli.Stdio, root string, o quizOpts) int {
 			}
 			texts[f] = lines
 		}
+		for _, r := range q.it.Ranges { // as course text: a range the file does not hold is exit 2
+			if lines := texts[q.it.TextFile]; r.A < 1 || r.B < r.A || r.B > len(lines) {
+				fmt.Fprintf(s.Err, "course: %s: range %s is outside %s (%s)\n", q.it.ID, r, q.it.TextFile, key.Plural(len(lines), "line"))
+				return cli.ExitCannotSearch
+			}
+		}
 	}
 	fmt.Fprintf(s.Out, "quiz: %d of %s (%s; %s), seed %d\n", len(drawn), key.Plural(len(pool), "question"),
 		strings.Join(kinds, ", "), scopeLabel, o.seed)
@@ -184,9 +202,9 @@ func printQuestion(w io.Writer, n int, q question, lines []string) {
 	fmt.Fprintf(w, "Q%d. %s (%s · %s)\n", n, q.it.ID, q.kind, q.it.Section)
 	printIndented(w, q.prompt)
 	shown := 0
-	for _, r := range q.it.Ranges {
-		if lines == nil || r.A < 1 || r.B > len(lines) || r.B < r.A {
-			continue
+	for _, r := range q.it.Ranges { // cmdQuiz checked every range against lines
+		if lines == nil {
+			return
 		}
 		if shown == 0 {
 			fmt.Fprintf(w, "    %s:%s (%s)\n", q.it.TextFile, rangesText(q.it.Ranges), q.it.ID)

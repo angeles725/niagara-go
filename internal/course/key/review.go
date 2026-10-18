@@ -292,6 +292,7 @@ func parseExam(c *Corpus, lines []string) {
 			body = append(body, line)
 		} else if m := fileStatRe.FindStringSubmatch(line); m != nil && fileStatus == nil {
 			s := strings.ToLower(m[1])
+			fileEvidence = nil // each status line states its own evidence, or none
 			if strings.HasPrefix(s, "verified") {
 				fileStatus = []string{"verified"}
 				if e := strings.Fields(strings.TrimRight(s, ".")); len(e) > 1 && (e[1] == EvidenceLive || e[1] == EvidenceOffline) {

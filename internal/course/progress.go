@@ -58,7 +58,7 @@ func (r *progressRow) values() []int {
 type action struct {
 	Kind  string       `json:"kind"`  // "redo" or "mark"
 	ID    string       `json:"id"`    // the check (redo) or the item (mark)
-	Group string       `json:"group"` // the check's lab (redo) or the item's group (mark)
+	Group string       `json:"group"` // the answer-key group (L4, RA1) of the first item it points at
 	Text  string       `json:"text"`  // the check's description and evidence (redo) or the marker and evidence to add (mark)
 	Items []actionItem `json:"items"` // redo: the selected items the check links; mark: the item
 }
@@ -77,12 +77,13 @@ func newActionItem(it *key.Item) actionItem {
 		Text: textRef(it), Step: it.Step}
 }
 
-// labLabel is "lab 3", "lab B" for a lab check, else the group (RA1, EXAM).
-func labLabel(lab string) string {
-	if check.Role(lab) == check.RoleTraining {
-		return "lab " + lab
+// groupLabel is how the text names a group: "lab 3", "lab B" for a lab (L3, LB), else the key
+// (RA1, EXAM). JSON keeps the key.
+func groupLabel(group string) string {
+	if strings.HasPrefix(group, "L") {
+		return "lab " + group[1:]
 	}
-	return lab
+	return group
 }
 
 type progressJSON struct {
@@ -123,7 +124,7 @@ func progressActions(preds []check.Prediction, date string) []action {
 				continue
 			}
 			redo[r.ID] = len(out)
-			out = append(out, action{Kind: "redo", ID: r.ID, Group: labLabel(r.Lab), Items: []actionItem{newActionItem(p.Item)},
+			out = append(out, action{Kind: "redo", ID: r.ID, Group: p.Item.Group, Items: []actionItem{newActionItem(p.Item)},
 				Text: r.Desc + ": " + r.Evidence})
 		}
 		if p.Verdict == check.Confirmed && !p.Item.HasStatus("verified") {
@@ -230,7 +231,7 @@ func printProgress(w io.Writer, rows []progressRow, actions []action) {
 			fmt.Fprintf(w, "mark %s (%s): %s\n", a.ID, a.Items[0].Source, a.Text)
 			continue
 		}
-		fmt.Fprintf(w, "redo %s (%s): %s\n", a.ID, a.Group, a.Text)
+		fmt.Fprintf(w, "redo %s (%s): %s\n", a.ID, groupLabel(a.Group), a.Text)
 		for _, it := range a.Items {
 			where := it.Source
 			if it.Text != "" {

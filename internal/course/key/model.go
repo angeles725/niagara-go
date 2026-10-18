@@ -128,6 +128,9 @@ func (r *Counts) Add(it *Item) {
 			r.Written++
 		}
 	}
+	if !it.HasStatus("verified") {
+		return // evidence counts only under the verified status: live, offline <= verified
+	}
 	if it.HasEvidence(EvidenceLive) {
 		r.Live++
 	}

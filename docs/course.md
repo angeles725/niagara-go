@@ -502,7 +502,9 @@ No new evidence logic: the verdicts, evidence and markers are those of `verify`.
 `progress N: checked c, CONFIRMED ..., UNDECIDED u; K checks run; station ...`. With `--json`,
 stdout is `{groups: [{group, items, checked, confirmed, partial, contradicted, undecided,
 verified_live, verified_offline}], total, actions: [{kind, id, group, text, items: [{id, source,
-text, step}]}]}` and the summary goes to stderr.
+text, step}]}]}` and the summary goes to stderr. An action's `group` is the answer-key group of the
+first item it points at (`L4`, `RA1`: the key of `--lab` and of the rows), for `redo` and `mark`
+alike; only the text spells it `lab 4`.
 
 Exit, as `verify`: 0 no item CONTRADICTED; 1 at least one CONTRADICTED item (so at least one
 `redo` line), or an unknown group (with the group list); 2 the answer keys or a station cannot be
@@ -535,7 +537,9 @@ design (testable, no state files; spaced repetition is out of scope).
 
 Exit: 0 at least one question drawn; 1 an unknown group, or no question of the kinds in the
 groups (`course: no why, decision, trap question in RAX (searched 10 items)`); 2 the answer keys
-or a text file cannot be read, or `-n` below 1.
+or a text file cannot be read, a drawn item's range lies outside its text file (the message of
+`course text`, before any question is printed), or `-n` below 1. The replay line shell-quotes a
+`--lab` value the shell would split or expand.
 
 ## Live run
 
@@ -669,7 +673,10 @@ FAILs, no CONTRADICTED prediction, the item and status counts), not this table.
   `progress-no-station` (the usage error before a bad `--date`).
 - `quiz_test.go` and the Go-only goldens `quiz-seed`, `quiz-answers`, `quiz-none` (the honest
   zero) and `quiz-bad-n`: the pool of the `root` fixture (L1.1 asks its why in the answer, L1.5 and
-  L2.1 in the step, D1.1, T1.1), one seed one order, the clock's seed printed, the eight-line cap.
+  L2.1 in the step, D1.1, T1.1), one seed one order, the clock's seed printed, the eight-line cap,
+  a missing or short text file (exit 2, on a copy of the fixture) and the quoted `--lab` replay.
+  `TestProgressCannotCheck` pins the two exit-2 paths of progress (a bad `--date` with a station;
+  every linked check skipped), `TestProgressJSONGroup` the group key of the actions.
 - `check/verify_test.go` `TestSuggestionEvidence` and `TestEvidenceOfEveryKind`: the live/offline
   rule; `key/labs_test.go` `TestVerifiedEvidence`: both markers, the counts and labels (the `root`
   fixture's LA.1 is verified offline, LA.2 live).

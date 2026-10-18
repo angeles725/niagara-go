@@ -59,7 +59,11 @@ func TestParseLabsFixture(t *testing.T) {
 	}
 	for id, want := range map[string][]string{"LA.1": {"offline"}, "LA.2": {"live"}, "L1.3": nil} {
 		if it := c.Lookup(id); it == nil || !reflect.DeepEqual(it.Verified, want) {
-			t.Errorf("%s: verified evidence %v, want %v", id, it, want)
+			var got []string
+			if it != nil {
+				got = it.Verified
+			}
+			t.Errorf("%s: verified evidence %v (found %v), want %v", id, got, it != nil, want)
 		}
 	}
 	g, lb := c.Group("LB"), c.Lookup("LB.1")
@@ -142,11 +146,42 @@ func TestVerifiedEvidence(t *testing.T) {
 	for _, ev := range [][]string{{"live"}, {"offline"}, {"live", "offline"}, nil} {
 		n.Add(&Item{Status: []string{"verified"}, Verified: ev})
 	}
+	// Evidence without the verified status (an item built by hand) is not counted: live and
+	// offline never exceed verified.
+	n.Add(&Item{Status: []string{"predicted"}, Verified: []string{"live", "offline"}})
 	if n.Verified != 4 || n.Live != 2 || n.Offline != 2 {
 		t.Errorf("counts %+v, want verified 4, live 2, offline 2", n)
 	}
 	it := &Item{Status: []string{"identical", "verified"}, Verified: []string{"live", "offline"}}
 	if got := it.StatusLabels(); !reflect.DeepEqual(got, []string{"identical", "verified (live, offline)"}) {
 		t.Errorf("labels %v", got)
+	}
+}
+
+// The exam's file-level status line: "verified live." and "verified offline" give the problems
+// that evidence, a plain "verified" none, and an unverified line neither status nor evidence.
+func TestParseExamFileStatus(t *testing.T) {
+	cases := []struct {
+		status   string
+		want     []string
+		evidence []string
+	}{
+		{"verified live.", []string{"verified"}, []string{"live"}},
+		{"verified offline.", []string{"verified"}, []string{"offline"}},
+		{"verified.", []string{"verified"}, nil},
+		{"verified on the station", []string{"verified"}, nil},
+		{"unverified", []string{"unverified"}, nil},
+		{"draft", nil, nil},
+	}
+	for _, c := range cases {
+		corpus := newCorpus()
+		parseExam(corpus, []string{"# Exam", "", "> **Status: " + c.status + "** Built.", "", "## 1. Problem 1 — Limiter", "Body."})
+		it := corpus.Lookup("P1")
+		if it == nil {
+			t.Fatalf("%q: no P1", c.status)
+		}
+		if !reflect.DeepEqual(it.Status, c.want) || !reflect.DeepEqual(it.Verified, c.evidence) {
+			t.Errorf("%q: status %v evidence %v; want %v %v", c.status, it.Status, it.Verified, c.want, c.evidence)
+		}
 	}
 }

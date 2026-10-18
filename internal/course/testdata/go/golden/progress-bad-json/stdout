@@ -82,7 +82,7 @@
     {
       "kind": "redo",
       "id": "C1.2",
-      "group": "lab 1",
+      "group": "L1",
       "text": "FirstComponent executed (timeExecuted stored): no training:FirstComponent component (searched 236 components)",
       "items": [
         {
@@ -96,7 +96,7 @@
     {
       "kind": "redo",
       "id": "C4.5",
-      "group": "lab 4",
+      "group": "L4",
       "text": "training Tstat diff = 2: 0 of 1 pass, want 2.0: Lab4/My Tstat.diff = 0.0 (default)",
       "items": [
         {
@@ -124,7 +124,7 @@
     {
       "kind": "redo",
       "id": "C10.6",
-      "group": "lab 10",
+      "group": "L10",
       "text": "ten exported CSV files in the Station Home: found 9 shared/BadStation_NumericWritable*.csv, want exactly 10: BadStation_NumericWritable.csv … BadStation_NumericWritable8.csv",
       "items": [
         {
@@ -138,7 +138,7 @@
     {
       "kind": "redo",
       "id": "C10.8",
-      "group": "lab 10",
+      "group": "L10",
       "text": "CSV line 1 names the history: 0 of 9 files pass, want line 1 =~ ^history:{station}/NumericWritable\\d*$: shared/BadStation_NumericWritable.csv:1 = Timestamp,Value,Status",
       "items": [
         {
@@ -152,7 +152,7 @@
     {
       "kind": "redo",
       "id": "C10.9",
-      "group": "lab 10",
+      "group": "L10",
       "text": "CSV header on line 3: 0 of 9 files pass, want line 3 =~ ^Timestamp,Trend Flags,Status,Value$: shared/BadStation_NumericWritable.csv has 2 lines",
       "items": [
         {
@@ -166,7 +166,7 @@
     {
       "kind": "redo",
       "id": "C10.10",
-      "group": "lab 10",
+      "group": "L10",
       "text": "CSV rows: timestamp, trend flags, status, value: 0 of 9 files pass, want at least 1 line =~ ^\\d{1,2} \\S+ \\d{4} \\d{2}:\\d{2}:\\d{2} \\S+,\\{[^}]*\\},\\{[^}]*\\},\"?-?\\d+(?:[.,]\\d+)?\"?$: shared/BadStation_NumericWritable.csv: 0 lines match",
       "items": [
         {
@@ -180,7 +180,7 @@
     {
       "kind": "redo",
       "id": "C11.10",
-      "group": "lab 11",
+      "group": "L11",
       "text": "driver Tcp Config port = 23: 0 of 1 pass, want 23: Drivers/TrafficLightDriverNetwork/tcpConfig.address.port = 0 (default)",
       "items": [
         {
@@ -194,7 +194,7 @@
     {
       "kind": "redo",
       "id": "C11.11",
-      "group": "lab 11",
+      "group": "L11",
       "text": "network pinged ok (health.lastOkTime stored): 0 of 1 pass, want it stored: Drivers/TrafficLightDriverNetwork.health.lastOkTime = \"\" (default)",
       "items": [
         {
@@ -208,7 +208,7 @@
     {
       "kind": "redo",
       "id": "C11.12",
-      "group": "lab 11",
+      "group": "L11",
       "text": "network pinged and not down (health.down = false, lastOkTime stored): 0 of 1 pass, want false with health.lastOkTime stored: Drivers/TrafficLightDriverNetwork.health.down = true (stored)",
       "items": [
         {
@@ -222,7 +222,7 @@
     {
       "kind": "redo",
       "id": "C11.13",
-      "group": "lab 11",
+      "group": "L11",
       "text": "every driver device pinged ok (health.lastOkTime stored): 3 of 4 pass, want it stored: Drivers/TrafficLightDriverNetwork/Device d.health.lastOkTime = \"\" (default)",
       "items": [
         {
@@ -236,7 +236,7 @@
     {
       "kind": "redo",
       "id": "C11.14",
-      "group": "lab 11",
+      "group": "L11",
       "text": "every driver device pinged and not down: 3 of 4 pass, want false with health.lastOkTime stored: Drivers/TrafficLightDriverNetwork/Device d.health.lastOkTime = \"\" (default)",
       "items": [
         {

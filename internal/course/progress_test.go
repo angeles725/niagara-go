@@ -1,6 +1,7 @@
 package course
 
 import (
+	"encoding/json"
 	"strings"
 	"testing"
 )
@@ -59,5 +60,53 @@ func TestProgressUnknownGroup(t *testing.T) {
 	code, _, errb := run("--root", "testdata/predict-root", "progress", "--lab", "12", "--station", goodStation)
 	if code != 1 || !strings.Contains(errb, "no group 12 (groups: ") {
 		t.Errorf("exit %d, stderr %q", code, errb)
+	}
+}
+
+// The exit-2 paths: a malformed --date (with a station, so the date is what fails), and a
+// selection whose every linked check is skipped (L2 of the root fixture links only a jar check,
+// read without --install).
+func TestProgressCannotCheck(t *testing.T) {
+	clearStationEnv(t)
+	cases := []struct {
+		name, stderr string
+		args         []string
+	}{
+		{"bad date", "course: --date 18/10/2026 is not a YYYY-MM-DD date\n",
+			[]string{"--root", "testdata/predict-root", "progress", "--station", goodStation, "--date", "18/10/2026"}},
+		{"every check skipped", "course: nothing could be checked (every linked check was skipped)\n",
+			[]string{"--root", "testdata/root", "progress", "--lab", "2", "--station", goodStation, "--date", "2026-10-18"}},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			code, _, errb := run(c.args...)
+			if code != 2 || !strings.HasSuffix(errb, c.stderr) {
+				t.Errorf("exit %d, stderr %q; want 2 and %q", code, errb, c.stderr)
+			}
+		})
+	}
+}
+
+// In JSON an action's group is the answer-key group (L4, RA1), the key --lab and the group rows
+// use, for redo and mark alike; only the text prints the label "lab 4".
+func TestProgressJSONGroup(t *testing.T) {
+	clearStationEnv(t)
+	_, out, _ := run("--root", "testdata/predict-root", "progress", "--station", "testdata/stations/bad",
+		"--install", fixtureInstall, "--date", "2026-10-18", "--json")
+	var doc struct {
+		Actions []struct{ Kind, ID, Group string }
+	}
+	if err := json.Unmarshal([]byte(out), &doc); err != nil {
+		t.Fatal(err)
+	}
+	want := map[string]string{"C4.5": "L4", "C1.2": "L1", "L10.6–L10.7": "L10", "C11.10": "L11"}
+	for _, a := range doc.Actions {
+		if g, ok := want[a.ID]; ok && a.Group != g {
+			t.Errorf("%s %s: group %q, want %q", a.Kind, a.ID, a.Group, g)
+		}
+		delete(want, a.ID)
+	}
+	if len(want) > 0 {
+		t.Errorf("actions missing: %v", want)
 	}
 }

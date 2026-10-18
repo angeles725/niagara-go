@@ -1,6 +1,8 @@
 package course
 
 import (
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"testing"
@@ -93,5 +95,54 @@ func TestQuizContextCap(t *testing.T) {
 	if !strings.Contains(out, "   10  line 10\n       11  line 11\n       12  line 12\n    … more: course text L9.1\n") ||
 		strings.Contains(out, "line 13") {
 		t.Errorf("want lines 2-6 and 10-12, then the more line:\n%s", out)
+	}
+}
+
+// copyRoot copies the root fixture into a temporary directory the test may break.
+func copyRoot(t *testing.T) string {
+	t.Helper()
+	dst := t.TempDir()
+	if err := os.CopyFS(dst, os.DirFS("testdata/root")); err != nil {
+		t.Fatal(err)
+	}
+	return dst
+}
+
+// A text file that is missing, or shorter than an item's range, cannot be quoted: exit 2 with
+// the message of course text, before any question is printed.
+func TestQuizText(t *testing.T) {
+	lab := filepath.Join("sources", "n4-dev-course", "text", "Lab Instructions.txt")
+	cases := []struct {
+		name   string
+		breaks func(root string) error
+		stderr string
+	}{
+		{"missing text file", func(root string) error { return os.Remove(filepath.Join(root, lab)) },
+			"course: missing text file sources/n4-dev-course/text/Lab Instructions.txt\n"},
+		{"range past the end", func(root string) error {
+			return os.WriteFile(filepath.Join(root, lab), []byte("1\n2\n3\n4\n5\n"), 0o644)
+		},
+			"course: L1.5: range 8-9 is outside sources/n4-dev-course/text/Lab Instructions.txt (5 lines)\n"},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			root := copyRoot(t)
+			if err := c.breaks(root); err != nil {
+				t.Fatal(err)
+			}
+			code, out, errb := run("--root", root, "quiz", "--lab", "1", "--kind", "why", "--seed", "2")
+			if code != 2 || errb != c.stderr || out != "" {
+				t.Errorf("exit %d, stdout %q, stderr %q; want 2 and %q", code, out, errb, c.stderr)
+			}
+		})
+	}
+}
+
+// The replay line quotes a --lab value the shell would split or expand.
+func TestQuizReplayQuotesLab(t *testing.T) {
+	for in, want := range map[string]string{"3": "--lab 3", "L 1": "--lab 'L 1'", "it's": `--lab 'it'\''s'`} {
+		if got := (quizOpts{lab: in, hasLab: true, count: 5, seed: 1}).again(); !strings.Contains(got, " "+want+" ") {
+			t.Errorf("lab %q: %q, want %q", in, got, want)
+		}
 	}
 }
