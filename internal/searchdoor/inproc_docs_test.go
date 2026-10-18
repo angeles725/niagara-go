@@ -27,7 +27,6 @@ type ftCase struct {
 	Exit   int      `json:"exit"`
 	Stdout *string  `json:"stdout"`
 	Stderr string   `json:"stderr"`
-	Reason string   `json:"reason"`
 }
 
 func loadFtCases(t *testing.T, path string) []ftCase {
@@ -201,9 +200,22 @@ func TestDocsFindMatchesNhOnVersionErrors(t *testing.T) {
 // runNh runs nh in process on the checkout.
 func runNh(t *testing.T, checkout string, args []string) oracle {
 	t.Helper()
-	t.Setenv("NIAGARA_HELP_DIR", checkout)
-	defer t.Setenv("NIAGARA_HELP_DIR", "")
+	t.Setenv("NIAGARA_HELP_DIR", checkout) // restored by the test's cleanup
 	var out, errb bytes.Buffer
 	rc := help.Main(args, cli.Stdio{In: strings.NewReader(""), Out: &out, Err: &errb})
 	return oracle{rc, out.String(), errb.String()}
+}
+
+// TestDocsFindSearchesADashQuery: a query that starts with "-" is searched as text
+// (nh's argparse would read it as an option); an empty query never reaches a
+// backend (the door exits 3 first: goldens blank and blank-spaces).
+func TestDocsFindSearchesADashQuery(t *testing.T) {
+	t.Setenv("XDG_CACHE_HOME", t.TempDir())
+	t.Setenv("NIAGARA_HELP_DIR", "")
+	checkout := ftsfixture.Checkout(t, helpTestdata(t), false)
+	script := stubScript(t, filepath.Join(checkout, "tools", "niagara_help.py"))
+	a := docsFind([]string{script, "--niagara-version", "1.0", "find", "-zzqq", "-n", "5"})
+	if !a.ok || a.rc != 1 || !strings.HasPrefix(a.stdout, "No match for '-zzqq' (find) in this scope.") {
+		t.Errorf("%+v", a)
+	}
 }

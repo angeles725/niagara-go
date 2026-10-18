@@ -58,6 +58,10 @@ GOLDEN_BIN=$PWD/bin/hdbread go test ./internal/hdbread -run TestGolden
 Pass an absolute path: `go test` runs in the package directory, so a relative path such as
 `bin/hdbread` resolves against `internal/hdbread/`. A bare name is looked up on `PATH`.
 
+The nsearch/find3 goldens (internal/searchdoor) skip in exec mode: their backends are the Go
+port of the fake scripts (`scriptFakes`), which exist only in process. The nsearch binary is
+checked on the real corpus by `make parity` (`TestSearchQuality`).
+
 ## Freezing and regenerating
 
 There is no update mode in this repository: a golden is Python's output, so the Go side never

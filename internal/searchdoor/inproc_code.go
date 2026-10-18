@@ -26,28 +26,28 @@ func navDir(script string) string {
 }
 
 // codeToken is `module_nav token <word> -n N` (rankedCode): the compact table and
-// the module summary, or the miss (tokenMiss). Exec answers when the token index
+// the module summary, or the miss (tokenMiss). navRun (mnav token) answers when the token index
 // is missing or unreadable (module_nav's exit-2 errors).
 func codeToken(argv []string) answer {
 	v, _, ok := shape(argv[1:], []string{"token", "*", "-n", "#"})
 	base := navDir(argv[0])
 	if !ok || base == "" {
-		return viaExec
+		return noAnswer
 	}
 	path := core.IndexPath(base, "token-index.db")
 	if !isFile(path) {
-		return viaExec
+		return noAnswer
 	}
 	db, err := index.OpenSQLite(path)
 	if err != nil {
-		return viaExec
+		return noAnswer
 	}
 	defer db.Close()
 	word := v[0]
 	limit, _ := strconv.Atoi(v[1])
 	hits, err := codesearch.Tokens(db, word, "")
 	if err != nil {
-		return viaExec
+		return noAnswer
 	}
 	var b strings.Builder
 	if len(hits) == 0 { // source.tokenMiss without a module filter, minus its similar tokens
@@ -97,26 +97,26 @@ func tokenRows(b *strings.Builder, hits []codesearch.TokenHit, mods []codesearch
 }
 
 // codeGrep is `module_nav grep <regex> -n N` (the degraded path of ranked): the
-// '[module]' groups of 'Class:line text' rows, or the counted miss. Exec answers
+// '[module]' groups of 'Class:line text' rows, or the counted miss. navRun (mnav grep) answers
 // an invalid regex and a missing corpus (module_nav's exit-2 errors).
 func codeGrep(argv []string) answer {
 	v, _, ok := shape(argv[1:], []string{"grep", "*", "-n", "#"})
 	base := navDir(argv[0])
 	if !ok || base == "" {
-		return viaExec
+		return noAnswer
 	}
 	pattern := v[0]
 	limit, _ := strconv.Atoi(v[1])
 	re, err := pyre.Compile(pattern, 0)
 	if err != nil {
-		return viaExec
+		return noAnswer
 	}
 	organized := os.Getenv("NAV_CORPUS_BASE")
 	if organized == "" {
 		organized = filepath.Join(filepath.Dir(base), "organized")
 	}
 	if !isDir(organized) {
-		return viaExec
+		return noAnswer
 	}
 	res := codesearch.Grep(organized, re, limit, codesearch.GrepFilter{})
 	if len(res.Hits) == 0 {

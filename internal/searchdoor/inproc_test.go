@@ -177,43 +177,37 @@ func TestCodeTokenAndGrepMatchModuleNav(t *testing.T) {
 		})
 	}
 	if codeGrep([]string{script, "grep", "ack(Alarm", "-n", "30"}).ok {
-		t.Error("invalid regex: answered in process, want exec")
+		t.Error("invalid regex: answered by the fast path, want mnav's error")
 	}
 	if codeToken([]string{script, "token", "ackAlarm", "-m", "alarm-rt"}).ok {
-		t.Error("a token filter nsearch never sends: answered in process, want exec")
+		t.Error("a token filter nsearch never sends: answered in process, want no answer")
 	}
 	t.Setenv("NAV_CORPUS_BASE", filepath.Join(t.TempDir(), "absent"))
 	if codeGrep([]string{script, "grep", "ackAlarm", "-n", "30"}).ok {
-		t.Error("no corpus: answered in process, want exec")
+		t.Error("no corpus: answered in process, want no answer")
 	}
 }
 
-// recordingBackend is the exec stand-in: it records each call it is handed.
-type recordingBackend struct{ calls [][]string }
-
-func (r *recordingBackend) Run(argv []string, _ float64) Raw {
-	r.calls = append(r.calls, argv)
-	return Raw{State: Empty, Out: "(no matches; exec)", RC: 1, HasRC: true}
-}
-
-// TestInprocRoutesToExec: calls with no in-process answer (another command, a
-// missing script, a path that is not one of the sources) reach exec unchanged.
-func TestInprocRoutesToExec(t *testing.T) {
+// TestInprocUnknownCalls: a script path that is not a file is the Python door's
+// "tool not found"; a call no source answers is typed UNAVAILABLE, never a zero.
+func TestInprocUnknownCalls(t *testing.T) {
 	dir := t.TempDir()
 	code := stubScript(t, filepath.Join(dir, "tools", "module_nav.py"))
-	rec := &recordingBackend{}
-	b := &inprocBackend{exec: rec, clock: time.Now,
-		paths: Paths{Blocks: filepath.Join(dir, "absent.py"), Docs: filepath.Join(dir, "nh.py"), Code: code}}
-	for _, argv := range [][]string{
-		{b.paths.Blocks, "find", "alarm", "--limit", "2000"},
-		{filepath.Join(dir, "other.py"), "find", "alarm"},
+	blocks := stubScript(t, filepath.Join(dir, "tools", "corpus-nav.py"))
+	b := &inprocBackend{clock: time.Now, paths: Paths{Blocks: blocks, Docs: filepath.Join(dir, "absent.py"), Code: code}}
+	for argv, want := range map[*[]string]string{
+		{b.paths.Docs, "find", "alarm", "-n", "5"}: "unavailable: tool not found at " + pyPath(b.paths.Docs),
+		{dir, "find", "alarm", "-n", "5"}:          "unavailable: tool not found at " + pyPath(dir),
+		{code}:                                     "unavailable: no in-process answer for `module_nav.py` (a call nsearch never makes)",
+		{stubScript(t, filepath.Join(dir, "other.py")), "x"}: "unavailable: no in-process answer for `other.py x` (a call nsearch never makes)",
+		{blocks, "grep", "alarm", "--limit", "50"}:           "unavailable: no in-process answer for `corpus-nav.py grep alarm --limit 50` (a call nsearch never makes)",
 	} {
-		if raw := b.Run(argv, 5); raw.Out != "(no matches; exec)" {
-			t.Errorf("%v: %+v", argv, raw)
+		if raw := b.Run(*argv, 5); raw.State != Unavailable || raw.Reason != want || raw.HasRC {
+			t.Errorf("%v: %+v, want %q", *argv, raw, want)
 		}
 	}
-	if len(rec.calls) != 2 {
-		t.Errorf("exec calls %d, want 2", len(rec.calls))
+	if raw := b.Run([]string{blocks, "find", "alarm", "--limit", "50"}, 0); raw.Reason != "unavailable: timed out after 0s" {
+		t.Errorf("a zero budget: %+v", raw)
 	}
 }
 
@@ -283,26 +277,18 @@ func TestCodeRankMatchesModuleNav(t *testing.T) {
 		})
 	}
 	if codeRank([]string{scripts["nav"], "rank", "alarm"}).ok {
-		t.Error("a rank line nsearch never sends: answered in process, want exec")
+		t.Error("a rank line nsearch never sends: answered in process, want no answer")
 	}
 	if err := os.Remove(filepath.Join(filepath.Dir(filepath.Dir(scripts["nav"])), "indexes", "xref-index.json")); err != nil {
 		t.Fatal(err)
 	}
 	if codeRank([]string{scripts["nav"], "rank", "-n", "20", "--", "alarm"}).ok {
-		t.Error("absent xref index (module_nav prints a NOTE): answered in process, want exec")
+		t.Error("absent xref index (module_nav prints a NOTE): answered in process, want no answer")
 	}
 }
 
-// budgetBackend is the exec stand-in that records the timeout it was given.
-type budgetBackend struct{ timeouts []float64 }
-
-func (b *budgetBackend) Run(_ []string, timeout float64) Raw {
-	b.timeouts = append(b.timeouts, timeout)
-	return Raw{State: Empty, Out: "(no matches; exec)", RC: 1, HasRC: true}
-}
-
 // TestInprocBudget: a call past its timeout is typed timed out like a killed
-// process, and a fallback to exec only gets the budget that is left.
+// process.
 func TestInprocBudget(t *testing.T) {
 	script := stubScript(t, filepath.Join(t.TempDir(), "tools", "module_nav.py"))
 	now := time.Unix(0, 0)
@@ -311,44 +297,9 @@ func TestInprocBudget(t *testing.T) {
 	slow := func(Paths, []string) func([]string) answer {
 		return func([]string) answer { <-release; return exact(0, "late", "") }
 	}
-	exec := &budgetBackend{}
-	b := &inprocBackend{exec: exec, clock: func() time.Time { return now }, pick: slow}
+	b := &inprocBackend{clock: func() time.Time { return now }, pick: slow}
 	raw := b.Run([]string{script, "token", "BAlarm", "-n", "5"}, 0.01)
 	if raw.State != Unavailable || raw.Reason != "unavailable: timed out after 0.01s" || raw.MS != 10 {
 		t.Errorf("timed out: %+v", raw)
-	}
-	b.pick = func(Paths, []string) func([]string) answer {
-		return func([]string) answer { now = now.Add(3 * time.Second); return viaExec }
-	}
-	if raw := b.Run([]string{script, "token", "BAlarm", "-n", "5"}, 10); raw.State != Empty ||
-		len(exec.timeouts) != 1 || exec.timeouts[0] != 7 {
-		t.Errorf("fallback: %+v, exec timeouts %v (want [7])", raw, exec.timeouts)
-	}
-	if raw := b.Run([]string{script, "token", "BAlarm", "-n", "5"}, 2); raw.State != Unavailable ||
-		len(exec.timeouts) != 1 {
-		t.Errorf("fallback with no budget left: %+v, exec timeouts %v", raw, exec.timeouts)
-	}
-}
-
-// timeoutBackend is the exec stand-in that times out on whatever budget it gets.
-type timeoutBackend struct{}
-
-func (timeoutBackend) Run(_ []string, timeout float64) Raw {
-	return Raw{State: Unavailable, Reason: "unavailable: timed out after " + formatG3(timeout) + "s",
-		MS: int(timeout * 1000)}
-}
-
-// TestInprocFallbackTimeoutNamesTheCallBudget: an exec fallback that times out on
-// the budget left still reports the call's timeout, as the Python door does.
-func TestInprocFallbackTimeoutNamesTheCallBudget(t *testing.T) {
-	script := stubScript(t, filepath.Join(t.TempDir(), "tools", "module_nav.py"))
-	now := time.Unix(0, 0)
-	b := &inprocBackend{exec: timeoutBackend{}, clock: func() time.Time { return now },
-		pick: func(Paths, []string) func([]string) answer {
-			return func([]string) answer { now = now.Add(time.Millisecond); return viaExec }
-		}}
-	raw := b.Run([]string{script, "token", "BAlarm", "-n", "5"}, 1)
-	if raw.State != Unavailable || raw.Reason != "unavailable: timed out after 1s" || raw.MS != 1000 {
-		t.Errorf("fallback timeout: %+v, want the call budget 1s", raw)
 	}
 }

@@ -33,19 +33,17 @@ func navCheckout(t *testing.T, indexes, organized string) (script, corpus string
 // navOracle is mnav run on the same checkout with explicit paths.
 func navOracle(t *testing.T, script, corpus string, args []string) Raw {
 	t.Helper()
-	t.Setenv("NAV_CORPUS_BASE", corpus)
-	defer t.Setenv("NAV_CORPUS_BASE", "")
+	t.Setenv("NAV_CORPUS_BASE", corpus) // restored by the test's cleanup
 	var out, errb bytes.Buffer
 	rc := nav.Main(append([]string{"--base-dir", filepath.Dir(filepath.Dir(script))}, args...),
 		cli.Stdio{In: strings.NewReader(""), Out: &out, Err: &errb})
 	return Classify(rc, out.String(), errb.String(), 0)
 }
 
-// TestCodeSourceNeverExecs: every module_nav call the door makes (the structure
+// TestCodeSourceMatchesMnav: every module_nav call the door makes (the structure
 // sub-scope, the drivers probe, the license join, and the token/grep/rank calls
-// the fast paths leave) is answered in process with mnav's own bytes; exec is
-// never reached.
-func TestCodeSourceNeverExecs(t *testing.T) {
+// the fast paths leave) is answered in process with mnav's own bytes.
+func TestCodeSourceMatchesMnav(t *testing.T) {
 	t.Setenv("NAV_CORPUS_BASE", "")
 	t.Setenv("MODULE_NAVIGATOR_DIR", "")
 	for _, fx := range []struct {
@@ -68,8 +66,7 @@ func TestCodeSourceNeverExecs(t *testing.T) {
 		{"search", "search-organized", [][]string{{"grep", "(unclosed", "-n", "30"}}},
 	} {
 		script, corpus := navCheckout(t, fx.indexes, fx.organized)
-		rec := &recordingBackend{}
-		b := &inprocBackend{exec: rec, clock: time.Now, paths: Paths{Code: script}}
+		b := &inprocBackend{clock: time.Now, paths: Paths{Code: script}}
 		for _, args := range fx.calls {
 			t.Run(fx.indexes+" "+strings.Join(args, " "), func(t *testing.T) {
 				got := b.Run(append([]string{script}, args...), 30)
@@ -80,9 +77,6 @@ func TestCodeSourceNeverExecs(t *testing.T) {
 				}
 			})
 		}
-		if len(rec.calls) != 0 {
-			t.Errorf("%s: exec reached for %v", fx.indexes, rec.calls)
-		}
 	}
 }
 
@@ -90,16 +84,12 @@ func TestCodeSourceNeverExecs(t *testing.T) {
 // folder is module_nav's "Cannot detect base directory" (exit 1), in process.
 func TestCodeSourceWithoutIndexes(t *testing.T) {
 	script := stubScript(t, filepath.Join(t.TempDir(), "tools", "module_nav.py"))
-	rec := &recordingBackend{}
-	b := &inprocBackend{exec: rec, clock: time.Now, paths: Paths{Code: script}}
+	b := &inprocBackend{clock: time.Now, paths: Paths{Code: script}}
 	for _, args := range [][]string{{"rank", "-n", "20", "--", "alarm"}, {"token", "BAlarm", "-n", "100000"},
 		{"hierarchy", "BAlarm", "--depth", "3"}} {
 		raw := b.Run(append([]string{script}, args...), 5)
 		if raw.State != Unavailable || raw.RC != 1 || !strings.HasPrefix(raw.Out, "ERROR: Cannot detect base directory.") {
 			t.Errorf("%v: %+v", args, raw)
 		}
-	}
-	if len(rec.calls) != 0 {
-		t.Errorf("exec reached for %v", rec.calls)
 	}
 }

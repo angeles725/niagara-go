@@ -15,25 +15,25 @@
 // Exit: 0 a source returned rows, 1 every source searched and none matched,
 // 2 a source was unavailable and none returned rows, 3 usage.
 //
-// A Backend runs one backend call and types its answer (Raw). execBackend runs
-// `<python> <script> <args...>` exactly as the Python front door does. By
-// default inprocBackend answers in process, through the libraries the Go ports
-// share (decision D29), byte for byte what the backend CLI prints, so the
-// parsers see the same rows: blocks (corpusnav/blocksearch), docs (help/fts and
-// help/scope: a missing or stale fulltext.sqlite is rebuilt first, atomically,
-// with nh's notices, decision D38; a miss or an unresolvable version prints
-// nh's own lines) and the code source's token and grep (nav/codesearch) and rank
-// (nav/classrank); every other module_nav call (structure, drivers, modules,
-// license-feature(s)) and every token/grep/rank case those leave runs mnav's own
-// command through nav.RunAt on the script's checkout (decision D42). Only a call
-// whose script path cannot be resolved, or an argv shape the door never sends,
-// still runs through exec; a call that falls back after trying in process gives
-// exec only the budget it has left. NSEARCH_EXEC=1 forces exec for every call.
+// A Backend runs one backend call and types its answer (Raw). inprocBackend
+// answers every call in process; nothing runs Python. Blocks, docs and the code
+// source's token, grep and rank go through the libraries the Go ports share
+// (decision D29), byte for byte what the backend CLI prints, so the parsers see
+// the same rows: blocks (corpusnav/blocksearch), docs (help/fts and help/scope:
+// a missing or stale fulltext.sqlite is rebuilt first, atomically, with nh's
+// notices, decision D38; a miss or an unresolvable version prints nh's own
+// lines), token and grep (nav/codesearch) and rank (nav/classrank). Every other
+// module_nav call (structure, drivers and its --help probe, modules,
+// license-feature(s)) and every token/grep/rank case those fast paths leave runs
+// mnav's own command through nav.RunAt on the script's checkout (decision D42).
 // The in-process blocks source keeps its own find cache,
 // find-<scope>.nsearch.gob, beside corpus-nav's; rank shares module_nav's Go
 // cache (indexes/.mnav-cache/class-rank.gob).
 //
-// Locating the backends (decision D24 style; a binary has no source path):
+// Locating the backends (decision D24 style; a binary has no source path). The
+// script paths are not run: each one names its tool's checkout (the parent of
+// its tools/ folder), as the Python tools find theirs from __file__, and a path
+// that is not a file is that source's "tool not found".
 //
 //	root    $NSEARCH_ROOT, else the first directory holding tools/corpus-nav.py
 //	        walking up from the executable's directory (symlinks resolved), else
@@ -43,23 +43,23 @@
 //	docs    $NSEARCH_NIAGARA_HELP  else <root>/niagara-help/tools/niagara_help.py
 //	code    $NSEARCH_MODULE_NAV    else <root>/module-navigator/tools/module_nav.py
 //	course  $NSEARCH_COURSE_ROOT   else <root>/sources/n4-dev-course
-//	python  $NSEARCH_PYTHON        else python3, else python, from PATH
-//	exec    $NSEARCH_EXEC=1        every call through exec (no in-process answer)
 //
 // The four NSEARCH_* path variables are the same seam the Python front door
 // reads (searchdoor/backend.py); an empty value keeps the default. The hermetic
-// goldens under testdata/ point them at fake backend scripts.
+// goldens under testdata/ point them at fake backend scripts, which the tests
+// answer with their Go port (scriptFakes).
 //
-// Intended differences from Python (none golden-covered): the backends run
-// under $NSEARCH_PYTHON / PATH's python3 instead of the interpreter running
-// nsearch.py, and a missing interpreter is that source's UNAVAILABLE reason; a
-// panic inside one source is typed UNAVAILABLE as "panic: <value>" where Python
-// named the exception type; the course index is not cached between questions
-// (one process answers one question); `--version` describes the Go build (D18);
-// an in-process token miss leaves out module_nav's "Similar tokens:" line (a
-// full scan of the postings; the code source reads only the miss state);
-// an in-process call past its --timeout budget is typed timed out like a killed
-// process, but the library work is not interrupted (it ends with the process);
-// a query that starts with "-" is searched as text by the in-process sources
-// (the Python backends' argparse read it as an option and exited 2).
+// Intended differences from Python (none golden-covered): no backend runs as a
+// process, so $NSEARCH_PYTHON and $NSEARCH_EXEC are gone and a script path that
+// exists but is not a regular file is "tool not found"; a panic inside one
+// source is typed UNAVAILABLE as "panic: <value>" where Python named the
+// exception type; the course index is not cached between questions (one process
+// answers one question); `--version` describes the Go build (D18); an in-process
+// token miss leaves out module_nav's "Similar tokens:" line (a full scan of the
+// postings; the code source reads only the miss state); a call past its
+// --timeout budget is typed timed out like a killed process, but the library
+// work (a fulltext rebuild included, which is atomic) is not interrupted: it ends
+// with the process; a query that starts with "-" is searched as text (the Python
+// backends' argparse read it as an option and exited 2); a call the door never
+// makes is typed UNAVAILABLE "no in-process answer".
 package searchdoor

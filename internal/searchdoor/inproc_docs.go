@@ -29,14 +29,14 @@ func docsFind(argv []string) answer {
 	}
 	v, flag, ok := shape(args, []string{"find", "*", "-n", "#"}, "--and", "--or")
 	if !ok {
-		return viaExec
+		return noAnswer
 	}
 	repo := os.Getenv("NIAGARA_HELP_DIR")
 	if repo == "" {
 		repo = toolDir(argv[0], false)
 	}
 	if repo == "" {
-		return viaExec
+		return noAnswer
 	}
 	id, root, err := scope.Resolve(repo, version, os.Getenv)
 	if err != nil { // nh prints these on stdout
