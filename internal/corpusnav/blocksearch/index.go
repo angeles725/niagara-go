@@ -1,4 +1,4 @@
-package corpusnav
+package blocksearch
 
 import (
 	"crypto/sha256"
@@ -25,18 +25,18 @@ import (
 
 const indexSchema = "go-1"
 
-// doc is one searchable file. text is loaded on demand for a cached document.
-type doc struct {
+// Doc is one searchable file. text is loaded on demand for a cached document.
+type Doc struct {
 	Display, Label, Path string
 	Length               int
 	text                 string
 	hasText              bool
 }
 
-// textOf is Target.text: the file's text, read now for a document from the cache.
-func (d *doc) textOf() (string, bool) {
+// Text is Target.text: the file's text, read now for a document from the cache.
+func (d *Doc) Text() (string, bool) {
 	if !d.hasText {
-		d.text, d.hasText = readText(d.Path)
+		d.text, d.hasText = ReadText(d.Path)
 		if !d.hasText {
 			return "", false
 		}
@@ -49,28 +49,29 @@ type stored struct {
 	Schema, Fingerprint string
 	NDocs, TotalLen     int
 	Unreadable          []string
-	Docs                []doc
+	Docs                []Doc
 	Terms               map[string][]int32 // term -> doc, tf, doc, tf, ...
 }
 
-// memIndex is findindex.SearchIndex: every readable target of a scope, tokenized.
-type memIndex struct {
+// MemIndex is findindex.SearchIndex: every readable target of a scope, tokenized.
+type MemIndex struct {
 	nFiles     int
 	unreadable []string
-	docs       []doc
+	docs       []Doc
 	tfs        []map[string]int
 }
 
-func (c *corpus) newMemIndex(targets []target) *memIndex {
-	catalog := c.loadCatalog()
-	ix := &memIndex{nFiles: len(targets)}
+// NewMemIndex reads and tokenizes every target (title counted 8x).
+func (c *Corpus) NewMemIndex(targets []Target) *MemIndex {
+	catalog := c.LoadCatalog()
+	ix := &MemIndex{nFiles: len(targets)}
 	for _, t := range targets {
-		text, ok := readText(t.path)
+		text, ok := ReadText(t.Path)
 		if !ok {
-			ix.unreadable = append(ix.unreadable, t.path)
+			ix.unreadable = append(ix.unreadable, t.Path)
 			continue
 		}
-		label := mainLabelOf(t.display)
+		label := MainLabel(t.Display)
 		h1 := ""
 		for _, ln := range pycompat.SplitLines(text, false) {
 			if strings.HasPrefix(ln, "# ") {
@@ -97,15 +98,16 @@ func (c *corpus) newMemIndex(targets []target) *memIndex {
 		for _, v := range tf {
 			n += v
 		}
-		ix.docs = append(ix.docs, doc{Display: t.display, Label: label, Path: t.path, Length: n, text: text, hasText: true})
+		ix.docs = append(ix.docs, Doc{Display: t.Display, Label: label, Path: t.Path, Length: n, text: text, hasText: true})
 		ix.tfs = append(ix.tfs, tf)
 	}
 	return ix
 }
 
-type hit struct {
-	score float64
-	doc   *doc
+// Scored is one ranked document.
+type Scored struct {
+	Score float64
+	Doc   *Doc
 }
 
 // queryTerms is the query's ranking terms plus the factored terms not among them.
@@ -123,8 +125,8 @@ func queryTerms(query string, factors []bm25.Factor) []string {
 	return q
 }
 
-func rankStats(docs []doc, post map[string]map[int]int, df map[string]int, total int, q []string,
-	requireAll bool, factors []bm25.Factor) []hit {
+func rankStats(docs []Doc, post map[string]map[int]int, df map[string]int, total int, q []string,
+	requireAll bool, factors []bm25.Factor) []Scored {
 	st := bm25.Stats{NDocs: len(docs), DF: df, Post: post, Len: make([]int, len(docs))}
 	for i, d := range docs {
 		st.Len[i] = d.Length
@@ -132,14 +134,15 @@ func rankStats(docs []doc, post map[string]map[int]int, df map[string]int, total
 	if len(docs) > 0 {
 		st.AvgLen = float64(total) / float64(len(docs))
 	}
-	var out []hit
+	var out []Scored
 	for _, s := range bm25.Textsearch.Rank(q, st, requireAll, factors) {
-		out = append(out, hit{s.Score, &docs[s.Doc]})
+		out = append(out, Scored{s.Score, &docs[s.Doc]})
 	}
 	return out
 }
 
-func (ix *memIndex) rank(query string, requireAll bool, factors []bm25.Factor) []hit {
+// Rank is SearchIndex.rank: BM25 over the in-memory index.
+func (ix *MemIndex) Rank(query string, requireAll bool, factors []bm25.Factor) []Scored {
 	q := queryTerms(query, factors)
 	df, post, total := map[string]int{}, map[string]map[int]int{}, 0
 	for i, tf := range ix.tfs {
@@ -157,7 +160,7 @@ func (ix *memIndex) rank(query string, requireAll bool, factors []bm25.Factor) [
 	return rankStats(ix.docs, post, df, total, q, requireAll, factors)
 }
 
-func (s *stored) rank(query string, requireAll bool, factors []bm25.Factor) ([]hit, error) {
+func (s *stored) rank(query string, requireAll bool, factors []bm25.Factor) ([]Scored, error) {
 	q := queryTerms(query, factors)
 	df, post := map[string]int{}, map[string]map[int]int{}
 	for _, t := range q {
@@ -180,25 +183,30 @@ func (s *stored) rank(query string, requireAll bool, factors []bm25.Factor) ([]h
 	return rankStats(s.Docs, post, df, s.TotalLen, q, requireAll, factors), nil
 }
 
-type findResult struct {
-	results    []hit
-	nFiles     int
-	unreadable []string
-	fallback   string // "", or why the cache was not used: missing, stale, corrupt
+// Ranking is findindex.ranked's answer.
+type Ranking struct {
+	Results    []Scored
+	NFiles     int
+	Unreadable []string
+	Fallback   string // "", or why the cache was not used: missing, stale, corrupt
+	Note       string // the stderr line corpus-nav prints when it ranked in memory, or ""
 }
 
-func (c *corpus) indexPath(scope string) string { return pyJoin(c.indexDir, "find-"+scope+".gob") }
+// IndexPath is the find cache of a scope: find-<scope><CacheTag>.gob in IndexDir.
+func (c *Corpus) IndexPath(scope string) string {
+	return PyJoin(c.IndexDir, "find-"+scope+c.CacheTag+".gob")
+}
 
 // fingerprint hashes the schema, this executable and the stat of CATALOG.md and of every
 // searched file.
-func (c *corpus) fingerprint(targets []target) string {
+func (c *Corpus) fingerprint(targets []Target) string {
 	h := sha256.New()
 	h.Write([]byte(indexSchema))
 	if exe, err := os.Executable(); err == nil {
 		fmt.Fprintf(h, "\x00%s", statStamp(exe))
 	}
-	for _, t := range append([]target{{"CATALOG", c.catalog}}, targets...) {
-		fmt.Fprintf(h, "%s\x00%s\x00%s\n", t.display, t.path, statStamp(t.path))
+	for _, t := range append([]Target{{"CATALOG", c.Catalog}}, targets...) {
+		fmt.Fprintf(h, "%s\x00%s\x00%s\n", t.Display, t.Path, statStamp(t.Path))
 	}
 	return hex.EncodeToString(h.Sum(nil))
 }
@@ -211,15 +219,15 @@ func indexDisabled() bool {
 	return false
 }
 
-// ranked is findindex.ranked: from the cache when fresh, else in memory (rebuilding the
-// cache and saying so on stderr).
-func (c *corpus) ranked(scope, query string, requireAll bool, factors []bm25.Factor) findResult {
-	targets := c.targets(scope)
+// Ranked is findindex.ranked: from the cache when fresh, else in memory (rebuilding the
+// cache; Note is the line corpus-nav prints on stderr then).
+func (c *Corpus) Ranked(scope, query string, requireAll bool, factors []bm25.Factor) Ranking {
+	targets := c.Targets(scope)
 	if indexDisabled() {
-		mem := c.newMemIndex(targets)
-		return findResult{mem.rank(query, requireAll, factors), len(targets), mem.unreadable, ""}
+		mem := c.NewMemIndex(targets)
+		return Ranking{Results: mem.Rank(query, requireAll, factors), NFiles: len(targets), Unreadable: mem.unreadable}
 	}
-	path := c.indexPath(scope)
+	path := c.IndexPath(scope)
 	fp := c.fingerprint(targets) // stat BEFORE reading: a file changed meanwhile leaves the cache stale
 	state := "missing"
 	if f, err := os.Open(path); err == nil {
@@ -231,23 +239,23 @@ func (c *corpus) ranked(scope, query string, requireAll bool, factors []bm25.Fac
 			state = "stale"
 			if s.Schema == indexSchema && s.Fingerprint == fp {
 				if res, err := s.rank(query, requireAll, factors); err == nil {
-					return findResult{res, len(targets), s.Unreadable, ""}
+					return Ranking{Results: res, NFiles: len(targets), Unreadable: s.Unreadable}
 				}
 				state = "corrupt"
 			}
 		}
 	}
-	mem := c.newMemIndex(targets)
+	mem := c.NewMemIndex(targets)
 	outcome := "index rebuilt"
 	if err := writeIndex(mem, fp, path); err != nil {
 		outcome = "index not rebuilt: " + strings.SplitN(err.Error(), "\n", 2)[0]
 	}
-	fmt.Fprintf(c.err, "corpus-nav: find index %s (%s); ranked in memory, %s\n", state, path, outcome)
-	return findResult{mem.rank(query, requireAll, factors), len(targets), mem.unreadable, state}
+	note := fmt.Sprintf("corpus-nav: find index %s (%s); ranked in memory, %s\n", state, path, outcome)
+	return Ranking{mem.Rank(query, requireAll, factors), len(targets), mem.unreadable, state, note}
 }
 
 // writeIndex writes the cache atomically: a temp file in the same directory, then rename.
-func writeIndex(mem *memIndex, fp, path string) error {
+func writeIndex(mem *MemIndex, fp, path string) error {
 	if err := os.MkdirAll(filepath.Dir(path), 0o777); err != nil {
 		return err
 	}

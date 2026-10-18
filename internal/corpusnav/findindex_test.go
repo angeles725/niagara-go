@@ -24,7 +24,7 @@ func TestFindCache(t *testing.T) {
 		}
 		note := ""
 		if state != "warm" {
-			note = "corpus-nav: find index " + state + " (" + c.indexPath("docs") + "); ranked in memory, index rebuilt\n"
+			note = "corpus-nav: find index " + state + " (" + c.search().IndexPath("docs") + "); ranked in memory, index rebuilt\n"
 		}
 		if errb.String() != note {
 			t.Errorf("%s: stderr %q, want %q", state, errb.String(), note)
@@ -32,7 +32,7 @@ func TestFindCache(t *testing.T) {
 	}
 	run("missing")
 	run("warm")
-	if err := os.WriteFile(c.indexPath("docs"), []byte("not a gob"), 0o644); err != nil {
+	if err := os.WriteFile(c.search().IndexPath("docs"), []byte("not a gob"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	run("corrupt")

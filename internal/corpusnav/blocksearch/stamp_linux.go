@@ -1,6 +1,6 @@
 //go:build linux
 
-package corpusnav
+package blocksearch
 
 import (
 	"fmt"

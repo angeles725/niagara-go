@@ -1,0 +1,204 @@
+// Package blocksearch is corpus-nav's find as a library (decision D29): the
+// search scopes of the niagara-research corpus, the BM25 ranking with its gob
+// cache, and the exact text corpus-nav find prints (result headers, hit lines,
+// the honest miss line). It never prints: corpus-nav's Main and the nsearch
+// front door both render the same Result.
+package blocksearch
+
+import (
+	"os"
+	"sort"
+	"strings"
+
+	"github.com/angeles725/niagara-go/internal/blockfiles"
+	"github.com/angeles725/niagara-go/internal/pycompat"
+	"github.com/angeles725/niagara-go/internal/pyre"
+	"github.com/angeles725/niagara-go/internal/textfold"
+)
+
+// Corpus is corpusnav/config.py: where the corpus lives. Paths are kept the way
+// pathlib prints them.
+type Corpus struct {
+	Root, Catalog, Docs, Retros, IndexDir string
+	// CacheTag names another tool's find cache in the same IndexDir
+	// (find-<scope><tag>.gob): the cache fingerprint holds the stat of the
+	// executable, so two binaries sharing one file would rebuild it in turn.
+	// corpus-nav itself uses "".
+	CacheTag string
+}
+
+// New is the corpus at root with the find cache in indexDir (default
+// <root>/tools/.corpus-index).
+func New(root, indexDir string) *Corpus {
+	root = PyPath(root)
+	if indexDir == "" {
+		indexDir = PyJoin(PyJoin(root, "tools"), ".corpus-index")
+	}
+	return &Corpus{Root: root, Catalog: PyJoin(root, "CATALOG.md"), Docs: PyJoin(root, "docs"),
+		Retros: PyJoin(root, "retros"), IndexDir: PyPath(indexDir)}
+}
+
+// PyPath is str(pathlib.PurePosixPath(p)): repeated and trailing slashes and "."
+// components dropped, ".." kept.
+func PyPath(p string) string {
+	abs := strings.HasPrefix(p, "/")
+	var parts []string
+	for _, c := range strings.Split(p, "/") {
+		if c != "" && c != "." {
+			parts = append(parts, c)
+		}
+	}
+	s := strings.Join(parts, "/")
+	switch {
+	case abs:
+		return "/" + s
+	case s == "":
+		return "."
+	}
+	return s
+}
+
+// PyJoin is Path(a) / b for a relative b: posixpath.join, except that Path(".") / b is b.
+func PyJoin(a, b string) string {
+	if a == "." {
+		return b
+	}
+	return pycompat.PosixJoin(a, b)
+}
+
+// RelTo is str(path.relative_to(root)) for a path below root.
+func RelTo(path, root string) string {
+	if root == "." {
+		return path
+	}
+	return strings.TrimPrefix(path, strings.TrimSuffix(root, "/")+"/")
+}
+
+// DisplayID is corpus.display_id: B720, B1-3, BTI; sub-corpus labels as they are.
+func DisplayID(label string) string {
+	if blockfiles.IsMainLabel(label) {
+		return "B" + label
+	}
+	return label
+}
+
+// MainLabel is findindex._main_label: the main-block label of a display id, or "".
+func MainLabel(display string) string {
+	if strings.HasPrefix(display, "B") && blockfiles.IsMainLabel(display[1:]) {
+		return display[1:]
+	}
+	return ""
+}
+
+// DirFiles is corpus.iter_dir_files: every *.md below dir (pathlib rglob, symlinked
+// directories not followed), in Path order (component by component).
+func DirFiles(dir string) []string {
+	var out []string
+	var walk func(d string)
+	walk = func(d string) {
+		entries, err := os.ReadDir(d)
+		if err != nil {
+			return
+		}
+		for _, e := range entries {
+			path := PyJoin(d, e.Name())
+			if strings.HasSuffix(e.Name(), ".md") {
+				out = append(out, path)
+			}
+			if e.IsDir() {
+				walk(path)
+			}
+		}
+	}
+	if st, err := os.Stat(dir); err == nil && st.IsDir() {
+		walk(dir)
+	}
+	sort.Slice(out, func(i, j int) bool { return PathLess(out[i], out[j]) })
+	return out
+}
+
+// PathLess is PurePosixPath ordering: by the list of components.
+func PathLess(a, b string) bool {
+	pa, pb := strings.Split(a, "/"), strings.Split(b, "/")
+	for i := 0; i < len(pa) && i < len(pb); i++ {
+		if pa[i] != pb[i] {
+			return pa[i] < pb[i]
+		}
+	}
+	return len(pa) < len(pb)
+}
+
+var catalogRowRe = pyre.MustCompile(`^\|\s*([^|]+?)\s*\|\s*\[[^\]]+\]\([^)]+\)\s*\|\s*(.*?)\s*\|\s*$`, 0)
+
+// LoadCatalog is corpus.load_catalog: CATALOG.md rows as {label: title}.
+func (c *Corpus) LoadCatalog() map[string]string {
+	titles := map[string]string{}
+	text, ok := ReadText(c.Catalog)
+	if !ok {
+		return titles
+	}
+	for _, line := range pycompat.SplitLines(text, false) {
+		m := catalogRowRe.Search(line)
+		if m == nil {
+			continue
+		}
+		label, title := pycompat.Strip(m.Group(1)), pycompat.Strip(m.Group(2))
+		if label == "Bloque" || label == "--------" || strings.Trim(label, "-") == "" {
+			continue
+		}
+		titles[label] = title
+	}
+	return titles
+}
+
+// ReadText is corpus.read_text_or_none: strict UTF-8 with universal newlines; false
+// when the file is missing, unreadable or not UTF-8.
+func ReadText(path string) (string, bool) {
+	text, err := pycompat.ReadText(path)
+	return text, err == nil
+}
+
+// ReadH1 is corpus.read_h1: the first stripped "# " line without its marker.
+func ReadH1(path string) string {
+	text, _ := ReadText(path)
+	for _, line := range strings.SplitAfter(text, "\n") {
+		if s := pycompat.Strip(line); strings.HasPrefix(s, "# ") {
+			return pycompat.Strip(s[2:])
+		}
+	}
+	return ""
+}
+
+// TitleFor is corpus.title_for: the CATALOG title, else the H1, else "(no title)".
+func TitleFor(label string, catalog map[string]string, path string) string {
+	if t := catalog[label]; t != "" {
+		return t
+	}
+	if h1 := ReadH1(path); h1 != "" {
+		return h1
+	}
+	return "(no title)"
+}
+
+// Target is one searchable file: its display id and path.
+type Target struct{ Display, Path string }
+
+// Targets is corpus.corpus_targets: (display, path) of a search scope.
+func (c *Corpus) Targets(scope string) []Target {
+	var out []Target
+	if scope == "blocks" || scope == "all" {
+		for _, b := range append(blockfiles.MainBlocks(c.Root), blockfiles.SubBlocks(c.Root)...) {
+			out = append(out, Target{DisplayID(b.Label), b.Path})
+		}
+	}
+	for _, d := range []struct{ scope, dir string }{{"docs", c.Docs}, {"retros", c.Retros}} {
+		if scope == d.scope || scope == "all" {
+			for _, p := range DirFiles(d.dir) {
+				out = append(out, Target{RelTo(p, c.Root), p})
+			}
+		}
+	}
+	return out
+}
+
+func fold(s string) string { return textfold.Fold(s, textfold.Corpus) }
