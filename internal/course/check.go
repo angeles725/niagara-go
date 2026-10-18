@@ -32,6 +32,7 @@ type station struct {
 	dir     string // the station directory (holds config.bog and shared/)
 	name    string // the root component's stationName, else the directory name
 	b       *bog.Bog
+	nested  bool   // read with bog.Options.NestedSlots: Comp.Nested holds the dotted slots
 	install string // "" when --install was not given
 	jars    map[string]*jarFile
 }
@@ -41,18 +42,18 @@ type jarFile struct {
 	err error
 }
 
-// openStation reads a station directory or a bog file inside one. The error is the bog
-// reader's message (exit 2).
-func openStation(path, install string) (*station, error) {
+// openStation reads a station directory or a bog file inside one; nested also reads the values
+// stored below composite slots (Comp.Nested). The error is the bog reader's message (exit 2).
+func openStation(path, install string, nested bool) (*station, error) {
 	file, dir := path, filepath.Dir(path)
 	if st, err := os.Stat(path); err == nil && st.IsDir() {
 		file, dir = filepath.Join(path, "config.bog"), path
 	}
-	b, err := bog.Load(file)
+	b, err := bog.LoadOptions(file, bog.Options{NestedSlots: nested})
 	if err != nil {
 		return nil, err
 	}
-	s := &station{dir: dir, name: filepath.Base(dir), b: b, install: install, jars: map[string]*jarFile{}}
+	s := &station{dir: dir, name: filepath.Base(dir), b: b, nested: nested, install: install, jars: map[string]*jarFile{}}
 	for _, h := range b.Roots {
 		if c, _ := b.Comps.Get(h); c != nil {
 			if sl, ok := c.Slots.Get("stationName"); ok && sl.Value != nil && *sl.Value != "" {
@@ -61,6 +62,17 @@ func openStation(path, install string) (*station, error) {
 		}
 	}
 	return s, nil
+}
+
+// needsNested reports whether a check reads a dotted (nested) slot, so the bog must be read
+// with bog.Options.NestedSlots.
+func needsNested(checks []*Check) bool {
+	for _, ck := range checks {
+		if ck.Kind == kindSlot && strings.Contains(ck.Slot, ".") {
+			return true
+		}
+	}
+	return false
 }
 
 func (s *station) close() {
@@ -184,8 +196,15 @@ func (s *station) checkType(ck *Check) (string, string) {
 }
 
 // effective is the value of a slot as the station runs it: the stored value (a composite's
-// nested value), else the type default. stored is false when the bog keeps no value.
+// nested value), else the type default. stored is false when the bog keeps no value. A dotted
+// slot (address.port) is a value below a composite slot, read from Comp.Nested.
 func effective(c *bog.Comp, slot, def string) (value string, stored bool) {
+	if strings.Contains(slot, ".") {
+		if v, ok := c.Nested.Get(slot); ok {
+			return v, true
+		}
+		return def, false
+	}
 	if sl, ok := c.Slots.Get(slot); ok {
 		if sl.Value != nil {
 			return *sl.Value, true
@@ -209,6 +228,10 @@ func describe(c *bog.Comp, slot, value string, stored bool) string {
 }
 
 func (s *station) checkSlot(ck *Check) (string, string) {
+	if strings.Contains(ck.Slot, ".") && !s.nested {
+		// Never pass a nested slot on its type default because the values were not read.
+		return verdictSkip, ck.Slot + " is a nested slot: the station was read without nested values"
+	}
 	cs := s.comps(ck.Type)
 	if len(cs) == 0 {
 		return verdictFail, "no " + ck.Type + " component (searched " + plural(s.b.Comps.Len(), "component") + ")"

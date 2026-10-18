@@ -24,6 +24,10 @@ const miniStation = `<?xml version="1.0" encoding="UTF-8"?>
  <p n="Point" h="6" m="c=control" t="c:NumericWritable"/>
  <p n="Dev" h="7" m="x=lateModule" t="x:Device"><p n="id" v="b"/></p>
  <p n="Dev2" h="8" t="x:Device"/>
+ <p n="Net" h="9" m="n=net" t="n:Network">
+  <p n="health" t="d:PingHealth"><p n="lastOkTime" v="2026-10-16T15:13:00.000-06:00"/></p>
+  <p n="tcp" h="a" t="n:TcpConfig"><p n="address" t="n:IpAddress"><p n="ipAddress" v="localhost"/><p n="port" v="23"/></p></p>
+ </p>
 </p>
 </bajaObjectGraph>
 `
@@ -46,7 +50,7 @@ func writeStation(t *testing.T, csvs ...string) string {
 }
 
 func TestCheckKinds(t *testing.T) {
-	st, err := openStation(writeStation(t, "Mini_a.csv", "Mini_b.csv", "Other_c.csv"), "")
+	st, err := openStation(writeStation(t, "Mini_a.csv", "Mini_b.csv", "Other_c.csv"), "", true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -66,7 +70,14 @@ func TestCheckKinds(t *testing.T) {
 			verdictFail, "1 of 2 pass, want it stored: Svc2.lastSuccess = \"\" (default)"},
 		{Check{Kind: kindSlot, Type: "lateModule:Device", Slot: "id", Default: "A", Distinct: true, Op: opMin, N: 2},
 			verdictPass, "2 distinct id over 2 components: A, b"},
-		{Check{Kind: kindSlot, Type: "training:Add", Slot: "out", Set: true}, verdictFail, "no training:Add component (searched 8 components)"},
+		{Check{Kind: kindSlot, Type: "training:Add", Slot: "out", Set: true}, verdictFail, "no training:Add component (searched 10 components)"},
+		{Check{Kind: kindSlot, Type: "net:TcpConfig", Slot: "address.port", Want: "23", Default: "0"}, verdictPass, "Net/tcp.address.port = 23 (stored)"},
+		{Check{Kind: kindSlot, Type: "net:TcpConfig", Slot: "address.sessionId", Want: "5", Default: "-1"},
+			verdictFail, "0 of 1 pass, want 5: Net/tcp.address.sessionId = -1 (default)"},
+		{Check{Kind: kindSlot, Type: "net:Network", Slot: "health.lastOkTime", Set: true}, verdictPass,
+			"Net.health.lastOkTime = 2026-10-16T15:13:00.000-06:00 (stored)"},
+		{Check{Kind: kindSlot, Type: "net:Network", Slot: "health.down", Want: "false", Default: "false"}, verdictPass,
+			"Net.health.down = false (default)"},
 		{Check{Kind: kindLink, From: "control:NumericWritable", FromSlot: "out", Type: "training:Tstat", Slot: "cv", Op: opMin, N: 1},
 			verdictPass, "found 1: Point.out -> Tstat.cv"},
 		{Check{Kind: kindLink, From: "control:NumericWritable", FromSlot: "out", Type: "training:Tstat", Slot: "sp", Op: opMin, N: 1},
@@ -107,7 +118,7 @@ func TestCheckJarKinds(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(install, "modules", "broken-rt.jar"), []byte("not a zip"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	st, err := openStation(writeStation(t), install)
+	st, err := openStation(writeStation(t), install, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -137,6 +148,22 @@ func TestCheckJarKinds(t *testing.T) {
 		if r.Verdict != c.verdict || !strings.HasPrefix(r.Evidence, c.evidence) {
 			t.Errorf("%s %s %s: %s %q, want %s %q", c.ck.Kind, c.ck.Jar, c.ck.Glob, r.Verdict, r.Evidence, c.verdict, c.evidence)
 		}
+	}
+}
+
+// A dotted slot needs the nested values: a station read without them SKIPs the check instead of
+// passing it on the type default.
+func TestCheckNestedNeedsNestedLoad(t *testing.T) {
+	st, err := openStation(writeStation(t), "", false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	r := st.run(&Check{Kind: kindSlot, Type: "net:Network", Slot: "health.down", Want: "false", Default: "false"})
+	if r.Verdict != verdictSkip || r.Evidence != "health.down is a nested slot: the station was read without nested values" {
+		t.Errorf("%s %q", r.Verdict, r.Evidence)
+	}
+	if !needsNested([]*Check{{Kind: kindJar}, {Kind: kindSlot, Slot: "a.b"}}) || needsNested([]*Check{{Kind: kindSlot, Slot: "diff"}}) {
+		t.Error("needsNested: want true only for a dotted slot")
 	}
 }
 

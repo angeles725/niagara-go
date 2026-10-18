@@ -77,7 +77,7 @@ func cmdCheck(s cli.Stdio, stationPath, install string, labs []string, asJSON bo
 			unknown, strings.Join(checkLabs(), ", "))
 		return cli.ExitNoMatch
 	}
-	st, err := openStation(stationPath, install)
+	st, err := openStation(stationPath, install, needsNested(checks))
 	if err != nil {
 		fmt.Fprintf(s.Err, "course: cannot check the station: %v\n", err)
 		return cli.ExitCannotSearch

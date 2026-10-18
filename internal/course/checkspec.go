@@ -160,6 +160,33 @@ var checkSpec = []Check{
 	{ID: "C11.8", Lab: "11", Keys: []string{"L11.3", "L11.5"}, Kind: kindJarSigned, Desc: "trafficLightServer-rt is signed",
 		Jar: "trafficLightServer-rt"},
 
+	// Lab 11, nested slots (dotted paths below a composite slot, read from Comp.Nested). Defaults:
+	// BTcpCommConfig address = new BIpAddress("local", 0), serverEnabled false
+	// (organized/ndriver/ndriver-rt/decompiled/com/tridium/ndriver/datatypes/BTcpCommConfig.java:41-42);
+	// BPingHealth down false, lastOkTime BAbsTime.DEFAULT
+	// (organized/driver/driver-rt/decompiled/javax/baja/driver/ping/BPingHealth.java:42-44). The
+	// server's palette entry sets 127.0.0.1:23 and serverEnabled (LAB/Lab11 NDriver/
+	// trafficLightServer.zip!trafficLightServer/trafficLightServer-rt/module.palette:7-13); the
+	// driver is pointed at localhost:23 (Lab Instructions LI:2323-2324).
+	{ID: "C11.9", Lab: "11", Keys: []string{"L11.25"}, Kind: kindSlot, Desc: "driver Tcp Config address = localhost",
+		Type: "trafficLightDriver:TrafficLightDriverTcpCommConfig", Slot: "address.ipAddress", Want: "localhost", Default: "local"},
+	{ID: "C11.10", Lab: "11", Keys: []string{"L11.25"}, Kind: kindSlot, Desc: "driver Tcp Config port = 23",
+		Type: "trafficLightDriver:TrafficLightDriverTcpCommConfig", Slot: "address.port", Want: "23", Default: "0"},
+	{ID: "C11.11", Lab: "11", Keys: []string{"L11.26"}, Kind: kindSlot, Desc: "network pinged ok (health.lastOkTime stored)",
+		Type: "trafficLightDriver:TrafficLightDriverNetwork", Slot: "health.lastOkTime", Set: true},
+	{ID: "C11.12", Lab: "11", Keys: []string{"L11.26"}, Kind: kindSlot, Desc: "network health down = false",
+		Type: "trafficLightDriver:TrafficLightDriverNetwork", Slot: "health.down", Want: "false", Default: "false"},
+	{ID: "C11.13", Lab: "11", Keys: []string{"L11.32"}, Kind: kindSlot, Desc: "every driver device pinged ok (health.lastOkTime stored)",
+		Type: "trafficLightDriver:TrafficLightDriverDevice", Slot: "health.lastOkTime", Set: true},
+	{ID: "C11.14", Lab: "11", Keys: []string{"L11.32"}, Kind: kindSlot, Desc: "no driver device down",
+		Type: "trafficLightDriver:TrafficLightDriverDevice", Slot: "health.down", Want: "false", Default: "false"},
+	{ID: "C11.15", Lab: "11", Keys: []string{"L11.7"}, Kind: kindSlot, Desc: "server Tcp Config address = 127.0.0.1",
+		Type: "trafficLightServer:TrafficLightServerTcpCommConfig", Slot: "address.ipAddress", Want: "127.0.0.1", Default: "local"},
+	{ID: "C11.16", Lab: "11", Keys: []string{"L11.7"}, Kind: kindSlot, Desc: "server Tcp Config port = 23",
+		Type: "trafficLightServer:TrafficLightServerTcpCommConfig", Slot: "address.port", Want: "23", Default: "0"},
+	{ID: "C11.17", Lab: "11", Keys: []string{"L11.7"}, Kind: kindSlot, Desc: "server Tcp Config serverEnabled = true",
+		Type: "trafficLightServer:TrafficLightServerTcpCommConfig", Slot: "serverEnabled", Want: "true", Default: "false"},
+
 	// Bonus lab. BTrafficLightDriverDevice.java (LAB/Lab11 NDriver/4 ...):64-67 intersectionId
 	// default "A"; discovered devices carry the other ids.
 	{ID: "CB.1", Lab: "B", Keys: []string{"LB.18"}, Kind: kindSlot, Desc: "devices added by discovery (distinct intersection ids)",

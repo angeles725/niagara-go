@@ -11,4 +11,4 @@ C3.2  3    PASS     NumericWritable.out -> Add.in2 [L3.5]                  found
 C3.3  3    PASS     NumericWritable.out -> Add.in3 (link dialog) [L3.6]    found 1: Lab2/Point3.out -> Lab2/Add.in3
 C3.4  3    PASS     Add.out -> NumericWritable.in10 (Output) [L3.7]        found 1: Lab2/Add.out -> Lab2/Output.in10
 C3.5  3    PASS     Add computed a sum (out stored) [L3.8 L3.9]            Lab2/Add.out = 6.0 (stored)
-checked 12: PASS 7, FAIL 0, SKIP 5; station GoodStation (235 components, 16 links), install (none: jar checks skipped)
+checked 12: PASS 7, FAIL 0, SKIP 5; station GoodStation (237 components, 16 links), install (none: jar checks skipped)

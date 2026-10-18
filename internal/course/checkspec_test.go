@@ -12,7 +12,7 @@ const goodStation = "testdata/stations/good"
 
 func runAll(t *testing.T, stationPath, install string) []Result {
 	t.Helper()
-	st, err := openStation(stationPath, install)
+	st, err := openStation(stationPath, install, true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -25,7 +25,8 @@ func runAll(t *testing.T, stationPath, install string) []Result {
 }
 
 // TestCheckSpecShape: unique IDs named after their lab, keys in the lab's own group, the
-// fields each kind reads, 3-8 checks per lab with station state, none for lab 8.
+// fields each kind reads, 3-8 checks per lab with station state (17 for lab 11, whose nested
+// Tcp Config and ping-health slots are one check each), none for lab 8.
 func TestCheckSpecShape(t *testing.T) {
 	seen := map[string]bool{}
 	perLab := map[string]int{}
@@ -67,8 +68,8 @@ func TestCheckSpecShape(t *testing.T) {
 		}
 	}
 	for _, lab := range []string{"1", "2", "3", "4", "6", "7", "9", "10", "11", "B"} {
-		if n := perLab[lab]; n < 3 || n > 8 {
-			t.Errorf("lab %s has %d checks, want 3-8", lab, n)
+		if n, most := perLab[lab], map[bool]int{true: 17, false: 8}[lab == "11"]; n < 3 || n > most {
+			t.Errorf("lab %s has %d checks, want 3-%d", lab, n, most)
 		}
 	}
 	if perLab["5"] == 0 || perLab["8"] != 0 {

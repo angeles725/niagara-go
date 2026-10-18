@@ -11,6 +11,10 @@
  </p>
  <p n="Drivers" h="3" m="d=driver" t="d:DriverContainer">
   <p n="TrafficLightServerNetwork" h="103" m="tls=trafficLightServer" t="tls:TrafficLightServerNetwork">
+   <p n="tcpConfig" h="1c0" t="tls:TrafficLightServerTcpCommConfig">
+    <p n="address" m="ndriver=ndriver" t="ndriver:IpAddress"><p n="ipAddress" v="127.0.0.1"/><p n="port" v="23"/></p>
+    <p n="serverEnabled" v="true"/>
+   </p>
    <p n="A" h="104" t="tls:TrafficLightServerDevice"><p n="points" h="105" t="tls:TrafficLightServerPointDeviceExt">
     <p n="N" h="106" m="c=control" t="c:EnumWritable"><p n="proxyExt" h="107" t="tls:TrafficLightServerProxyExt"/></p>
     <p n="S" h="108" m="c=control" t="c:EnumWritable"><p n="proxyExt" h="109" t="tls:TrafficLightServerProxyExt"/></p>
@@ -115,11 +119,15 @@
    </p></p>
   </p>
   <p n="TrafficLightDriverNetwork" h="1ae" m="tld=trafficLightDriver" t="tld:TrafficLightDriverNetwork">
-   <p n="Intersection$20A" h="1af" t="tld:TrafficLightDriverDevice"><p n="points" h="1b0" t="tld:TrafficLightDriverPointDeviceExt">
+   <p n="health" t="d:PingHealth"><p n="lastOkTime" v="2026-10-16T15:13:00.000-06:00"/></p>
+   <p n="tcpConfig" h="1c1" t="tld:TrafficLightDriverTcpCommConfig">
+    <p n="address" t="ndriver:IpAddress"><p n="ipAddress" v="localhost"/><p n="port" v="23"/></p>
+   </p>
+   <p n="Intersection$20A" h="1af" t="tld:TrafficLightDriverDevice"><p n="health" t="d:PingHealth"><p n="lastOkTime" v="2026-10-16T15:13:00.000-06:00"/></p><p n="points" h="1b0" t="tld:TrafficLightDriverPointDeviceExt">
     <p n="N" h="1b1" t="c:EnumWritable"><p n="proxyExt" h="1b2" t="tld:TrafficLightDriverProxyExt"/></p>
    </p></p>
-   <p n="Device$20b" h="1b3" t="tld:TrafficLightDriverDevice"><p n="intersectionId" v="b"/></p>
-   <p n="Device$20c" h="1b4" t="tld:TrafficLightDriverDevice"><p n="intersectionId" v="c"/></p>
+   <p n="Device$20b" h="1b3" t="tld:TrafficLightDriverDevice"><p n="health" t="d:PingHealth"><p n="lastOkTime" v="2026-10-16T15:13:00.000-06:00"/></p><p n="intersectionId" v="b"/></p>
+   <p n="Device$20c" h="1b4" t="tld:TrafficLightDriverDevice"><p n="health" t="d:PingHealth"><p n="lastOkTime" v="2026-10-16T15:13:00.000-06:00"/></p><p n="intersectionId" v="c"/></p>
   </p>
  </p>
  <p n="Lab1" h="10" t="b:Folder">

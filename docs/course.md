@@ -158,7 +158,7 @@ own prefixes (`t:`, `tld:`) are resolved through its `m=` declarations.
 | Kind | Checks | PASS when |
 |---|---|---|
 | `type` | components of a type, optionally under an ancestor type (`Within`) | the count is at least / exactly N |
-| `slot` | a slot on every component of a type; its effective value is the stored value (a composite's nested `value`), else the type default | every value equals `Want`; or (`Set`) every slot is stored; or (`Distinct`) the distinct values reach N |
+| `slot` | a slot on every component of a type; its effective value is the stored value (a composite's nested `value`), else the type default. A dotted slot (`address.port`, `health.lastOkTime`) is a value below a composite slot of the component | every value equals `Want`; or (`Set`) every slot is stored; or (`Distinct`) the distinct values reach N |
 | `link` | links `From.FromSlot -> Type.Slot`, source by handle or `slot:` ord | the count is at least / exactly N |
 | `files` | files matching a glob under the station dir, `{station}` = the `stationName` slot | the count is at least / exactly N |
 | `jar` | `modules/<part>.jar` | it exists |
@@ -166,9 +166,18 @@ own prefixes (`t:`, `tld:`) are resolved through its `m=` declarations.
 | `jar-text` | the first entry matching a glob | it holds every listed string |
 | `jar-signed` | `META-INF/*.SF` and `META-INF/*.RSA`, `.DSA` or `.EC` | both exist |
 
+Nested slots: the bog reader keeps only a composite slot's direct `value` and `status`, so a
+dotted slot is read from `Comp.Nested`, which `bog.LoadOptions` fills only with
+`bog.Options{NestedSlots: true}`. `course check` turns the option on only when a selected check
+has a dotted slot (`--lab 4` reads the bog as before); a dotted check run on a bog read without
+it is SKIP, never PASS on the type default. The path is from the component that owns the
+composite slot: the Tcp Config of a driver network is its own component (`tcpConfig`, with a
+handle), so its port is `address.port` on `trafficLightDriver:TrafficLightDriverTcpCommConfig`.
+
 Checks per lab: 1: 7, 2: 4, 3: 5, 4: 7, 5: 3 (jars only: the station holds nothing of code
-signing), 6: 6, 7: 5, 9: 7, 10: 7, 11: 8, B: 4. Lab 8 (ORDs) writes no code and changes
-nothing, so it has none.
+signing), 6: 6, 7: 5, 9: 7, 10: 7, 11: 17 (9 of them nested: driver and server Tcp Config, the
+ping health of the network and of every driver device), B: 4. Lab 8 (ORDs) writes no code and
+changes nothing, so it has none.
 
 Verdicts: PASS; FAIL with what was found instead (`found 9 ..., want exactly 10`,
 `0 of 1 pass, want 2.0: Lab4/My Tstat.diff = 0.0 (default)`); SKIP when the check could not run
@@ -182,7 +191,7 @@ the summary goes to stderr.
 Exit: 0 no FAIL (the SKIPs are in the summary); 1 at least one FAIL; 2 the station cannot be
 read (no such file, not a BOG document) or every selected check was skipped.
 
-The live TrainingStation (2026-10-17, with the 4.15.6.20 install): 63 checked, 62 PASS, 1 FAIL.
+The live TrainingStation (2026-10-17, with the 4.15.6.20 install): 72 checked, 71 PASS, 1 FAIL.
 C3.4 fails because the station really differs: its Lab2 folder has Point1..Point4 linked to
 Add.in1..in4 and no `Output` point, so Lab 3 step 11 (`LI:576`, Add.Out -> Output.In10) was
 not done.
@@ -197,8 +206,9 @@ not done.
   above the real checkout can leak in.
 - `check_test.go` and the `check-*` goldens: synthetic stations under
   `internal/course/testdata/stations/` (`good`: every check PASS; `bad`: no FirstComponent,
-  default Tstat diff, no Add.out -> Output link, nine CSV files; `broken`: not a bog) and a
-  synthetic install under `testdata/install/`, whose jars are generated from the table in
+  default Tstat diff, no Add.out -> Output link, nine CSV files, a driver Tcp Config on the
+  default port and a network whose ping failed (`health.down` true, no `lastOkTime`); `broken`:
+  not a bog) and a synthetic install under `testdata/install/`, whose jars are generated from the table in
   `fixturejars_test.go` (`COURSE_UPDATE_FIXTURES=1 go test -run TestFixtureJars`; the test fails
   when a jar drifts). The zipped form of a bog is covered by `TestCheckZippedBog`.
   `TestCheckTrainingStation` runs the spec against `COURSE_TRAINING_STATION` (and the jars of
