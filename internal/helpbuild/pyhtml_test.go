@@ -31,6 +31,20 @@ func TestParseHTMLEvents(t *testing.T) {
 		{"<a\x0b>", `[["s", "a\u000b", []]]`},
 		{"<x =y>", `[["s", "x", [["=y", null]]]]`},
 		{"&#xD800;&#128;&nGt;", `[["d", "\ufffd\u20ac\u226b\u20d2"]]`},
+		// Raw text left open at the end of the page: the rest is data.
+		{"<script>a<b", `[["s", "script", []], ["d", "a<b"]]`},
+		{"<style>p{} </sty", `[["s", "style", []], ["d", "p{} </sty"]]`},
+		{"<xmp>x</xmp", `[["s", "xmp", []], ["d", "x</xmp"]]`},
+		// The raw-text end tag matches ASCII case-insensitively, before any delimiter.
+		{"<SCRIPT>x</SCRIPT>y", `[["s", "script", []], ["d", "x"], ["e", "script"], ["d", "y"]]`},
+		{"<STYLE>a</STYLE >b", `[["s", "style", []], ["d", "a"], ["e", "style"], ["d", "b"]]`},
+		{"<script>x</SCRIPT\n>y", `[["s", "script", []], ["d", "x"], ["e", "script"], ["d", "y"]]`},
+		// textarea is RCDATA: charrefs unescaped, tags kept as text.
+		{"<textarea>&lt;b&gt; <i>x</i></textarea>z", `[["s", "textarea", []], ["d", "<b> <i>x</i>"], ["e", "textarea"], ["d", "z"]]`},
+		{"<TEXTAREA>a&amp;b</TEXTAREA>c", `[["s", "textarea", []], ["d", "a&b"], ["e", "textarea"], ["d", "c"]]`},
+		{"<textarea>never &amp; closed", `[["s", "textarea", []], ["d", "never & closed"]]`},
+		{"<textarea>a</textareax>b</textarea>c", `[["s", "textarea", []], ["d", "a</textareax>b"], ["e", "textarea"], ["d", "c"]]`},
+		{"<title>a</TITLE>b", `[["s", "title", []], ["d", "a"], ["e", "title"], ["d", "b"]]`},
 	} {
 		got := pyjson.Dumps(goEvents(c.page), DumpDefault)
 		want := pyjson.Dumps(mustLoads(t, c.want), DumpDefault)

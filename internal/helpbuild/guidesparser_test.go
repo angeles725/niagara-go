@@ -219,3 +219,23 @@ func TestParseToc(t *testing.T) {
 		t.Errorf("FindToc(%s) = %q", dir, FindToc(dir))
 	}
 }
+
+// A page that cannot be opened (here a dangling symlink, which os.walk
+// lists as a file) is counted in the errors of the summary line and
+// skipped; the other pages are still extracted.
+func TestParseGuidesCountsUnreadablePages(t *testing.T) {
+	root := spyRoot(t)
+	g := filepath.Join(root, "guides", "Spy")
+	for _, name := range []string{"gone.html", "A/gone.md"} {
+		if err := os.Symlink(filepath.Join(root, "nowhere"), filepath.Join(g, filepath.FromSlash(name))); err != nil {
+			t.Skipf("no symlinks here: %v", err)
+		}
+	}
+	res := mustParseGuides(t, root)
+	if res.Files != 4 {
+		t.Errorf("Files = %d, want 4", res.Files)
+	}
+	if want := "(0.0 MB text, 2 errors, 0 titled from toc.xml)"; len(res.Log) == 0 || !strings.HasSuffix(res.Log[len(res.Log)-1], want) {
+		t.Errorf("Log = %q, want a line ending %q", res.Log, want)
+	}
+}

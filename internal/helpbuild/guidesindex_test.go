@@ -1,6 +1,7 @@
 package helpbuild
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -57,7 +58,10 @@ func TestGuidesIndexKeepsUnverifiableJar(t *testing.T) {
 	}
 	// The module jar itself when modules/ holds it.
 	writeFile(t, filepath.Join(modules, "ascCommon.jar"), []byte("x"))
-	index, _, _, _ = GuidesIndex(root, JarSources{Names: []string{}, ModulesDir: modules})
+	index, _, _, err = GuidesIndex(root, JarSources{Names: []string{}, ModulesDir: modules})
+	if err != nil {
+		t.Fatal(err)
+	}
 	if v := sourceJar(t, index, "ascCommon"); v.S != "ascCommon.jar" {
 		t.Errorf("source_jar = %+v", v)
 	}
@@ -149,5 +153,55 @@ func TestDevguideTOC(t *testing.T) {
 	}
 	if _, err := DevguideTOC(t.TempDir()); err == nil {
 		t.Error("a missing devguide/index.html is an error (Python raises)")
+	}
+}
+
+// known_jar_names on every manifest shape: the outcome (names, or an
+// error where Python raises) was taken from CPython 3.15 running
+// build_guides_index.known_jar_names on the same files.
+func TestKnownJarNamesManifestShapes(t *testing.T) {
+	for _, c := range []struct {
+		manifest string
+		want     string // names joined by " "; "raise" for an error
+	}{
+		{`[]`, "raise"}, // AttributeError: a list has no .get
+		{`{}`, ""},
+		{`{"jars": {}}`, ""},
+		{`{"jars": ""}`, ""},
+		{`{"jars": []}`, ""},
+		{`{"jars": null}`, "raise"}, // TypeError: None is not iterable
+		{`{"jars": 0}`, "raise"},
+		{`{"jars": 5}`, "raise"},
+		{`{"jars": "ab"}`, "raise"},       // TypeError: a str record
+		{`{"jars": {"a": 1}}`, "raise"},   // TypeError: a str key as the record
+		{`{"jars": [{"x": 1}]}`, "raise"}, // KeyError
+		{`{"jars": [{"jar": 5}]}`, "raise"},
+		{`{"jars": ["s"]}`, "raise"},
+		{`{"jars": [{"jar": "m/b.jar"}, {"jar": "a.jar"}]}`, "a.jar b.jar"},
+		{`not json`, "raise"},
+	} {
+		repo := t.TempDir()
+		writeRegistry(t, repo, map[string][3]string{"9.9": {"L", "/nonexistent", "versions/9.9"}})
+		base := filepath.Join(repo, "versions", "9.9")
+		if err := os.MkdirAll(base, 0o755); err != nil {
+			t.Fatal(err)
+		}
+		writeFile(t, filepath.Join(repo, "versions", "9.9.manifest.json"), []byte(c.manifest))
+		names, ok, err := KnownJarNames(base)
+		got := strings.Join(names, " ")
+		if err != nil {
+			got = "raise"
+		} else if !ok || names == nil {
+			got = fmt.Sprintf("ok=%v names=%q", ok, names)
+		}
+		if got != c.want {
+			t.Errorf("manifest %s: %s (err %v), want %s", c.manifest, got, err, c.want)
+		}
+	}
+	// No manifest at all is Python's None.
+	repo := t.TempDir()
+	writeRegistry(t, repo, map[string][3]string{"9.9": {"L", "/nonexistent", "versions/9.9"}})
+	if names, ok, err := KnownJarNames(filepath.Join(repo, "versions", "9.9")); ok || names != nil || err != nil {
+		t.Errorf("no manifest: %q %v %v", names, ok, err)
 	}
 }
