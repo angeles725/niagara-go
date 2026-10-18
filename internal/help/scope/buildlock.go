@@ -8,12 +8,19 @@ package scope
 //
 // A rebuild can run longer than lockStale (about ten minutes for a large
 // version), so while fn runs a heartbeat touches the lock's modification
-// time every lockStale/4: waiters never see it as stale. A lock whose holder
+// time every heartbeatEvery (lockWait/4, 30 s): waiters never see it as
+// stale, and a waiting search sees it move well before its lockWait ends. A lock whose holder
 // died stops being touched and is still taken over after lockStale. The
-// heartbeat only changes the mtime (os.Chtimes, never a new file), touches
-// the lock only while it still holds this process's content, and is
-// stopped and joined before the lock is released, so it can never refresh
-// the lock of the next holder.
+// heartbeat only changes the mtime (os.Chtimes, never a new file), and is
+// stopped and joined before the lock is released, so it never touches the
+// next holder's lock after a normal release. Before each touch it checks
+// that the lock still holds this process's content; the check and the
+// touch are two steps, so one race remains: when this process stalled for
+// longer than lockStale (no heartbeat ran), a waiter may take the lock over
+// between the check and the touch, and the touch then refreshes the new
+// holder's lock once. That holder is alive, so the only effect is that its
+// lock looks fresh a little longer; the next check sees the other content
+// and the heartbeat stops.
 
 import (
 	"bytes"
@@ -58,7 +65,9 @@ func WithBuildLock(baseDir string, fn func() error) error {
 		holder, _ := os.ReadFile(lock)
 		return &LockBusyError{Lock: lock, Holder: string(bytes.TrimSpace(holder))}
 	}
-	stop := heartbeat(lock, mine, lockStale/4)
+	ticks, stopTicks := heartbeatTicks(heartbeatEvery())
+	defer stopTicks()
+	stop, _ := heartbeat(lock, mine, ticks)
 	defer func() {
 		stop() // joined before the release
 		release(lock, mine)
@@ -66,23 +75,33 @@ func WithBuildLock(baseDir string, fn func() error) error {
 	return fn()
 }
 
-// heartbeat touches lock every interval while it holds mine; the returned
-// function stops the goroutine and waits for it to end.
-func heartbeat(lock string, mine []byte, interval time.Duration) (stop func()) {
-	done := make(chan struct{})
-	var wg sync.WaitGroup
-	wg.Add(1)
+// heartbeatEvery is the heartbeat interval: a quarter of lockWait, or of
+// lockStale when that is shorter (only in tests), so the lock never ages
+// past lockStale while it is held.
+func heartbeatEvery() time.Duration { return min(lockWait, lockStale) / 4 }
+
+// heartbeatTicks makes the heartbeat's ticks, one per interval, and the
+// function that stops them; tests replace it to drive the ticks by hand.
+var heartbeatTicks = func(interval time.Duration) (<-chan time.Time, func()) {
+	t := time.NewTicker(interval)
+	return t.C, t.Stop
+}
+
+// heartbeat touches lock on each tick while it holds mine (see the race in
+// the header comment). stop ends the goroutine and waits for it; ended is
+// closed when the goroutine has returned (stopped, or the lock no longer
+// holds mine).
+func heartbeat(lock string, mine []byte, ticks <-chan time.Time) (stop func(), ended <-chan struct{}) {
+	done, exited := make(chan struct{}), make(chan struct{})
 	go func() {
-		defer wg.Done()
-		tick := time.NewTicker(interval)
-		defer tick.Stop()
+		defer close(exited)
 		for {
 			select {
 			case <-done:
 				return
-			case <-tick.C:
+			case <-ticks:
 				if got, err := os.ReadFile(lock); err != nil || !bytes.Equal(got, mine) {
-					return // released or taken over: never touch another holder's lock
+					return // released or taken over
 				}
 				now := time.Now()
 				os.Chtimes(lock, now, now)
@@ -92,6 +111,6 @@ func heartbeat(lock string, mine []byte, interval time.Duration) (stop func()) {
 	var once sync.Once
 	return func() {
 		once.Do(func() { close(done) })
-		wg.Wait()
-	}
+		<-exited
+	}, exited
 }

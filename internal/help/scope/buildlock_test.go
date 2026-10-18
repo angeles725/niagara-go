@@ -59,45 +59,95 @@ func TestWithBuildLockReleasesOnPanic(t *testing.T) {
 	gone(t, lock)
 }
 
-// TestWithBuildLockHeartbeatKeepsALongHolder: a holder that runs several
-// times lockStale keeps its lock fresh; a waiter gets the lock only after
-// fn has returned.
+// manualTicks replaces the heartbeat's ticker for one test: each value
+// sent on the returned channel is one tick.
+func manualTicks(t *testing.T) chan time.Time {
+	t.Helper()
+	ticks := make(chan time.Time)
+	saved := heartbeatTicks
+	t.Cleanup(func() { heartbeatTicks = saved })
+	heartbeatTicks = func(time.Duration) (<-chan time.Time, func()) { return ticks, func() {} }
+	return ticks
+}
+
+// tick sends two ticks: the second send completes only once the goroutine
+// has finished the first one (the channel is unbuffered).
+func tick(ticks chan time.Time) {
+	ticks <- time.Now()
+	ticks <- time.Now()
+}
+
+func lockAge(t *testing.T, lock string) time.Duration {
+	t.Helper()
+	st, err := os.Stat(lock)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return time.Since(st.ModTime())
+}
+
+// TestWithBuildLockHeartbeatKeepsALongHolder: a holder whose lock has aged
+// past lockStale (simulated by backdating its mtime) is kept fresh by one
+// heartbeat tick, so a waiter does not take it over and gets the lock only
+// after fn has returned. The ticks are driven by hand: no wall-clock margin.
 func TestWithBuildLockHeartbeatKeepsALongHolder(t *testing.T) {
-	lockTiming(t, 5*time.Millisecond, 30*time.Second, 120*time.Millisecond)
+	lockTiming(t, time.Millisecond, time.Minute, time.Hour)
+	ticks := manualTicks(t)
 	root, lock := lockRoot(t)
-	started := make(chan struct{})
+	started, proceed := make(chan struct{}), make(chan struct{})
 	var holderDone atomic.Bool
-	var freshest time.Duration
 	errc := make(chan error, 1)
 	go func() {
 		errc <- WithBuildLock(root, func() error {
 			close(started)
-			for end := time.Now().Add(600 * time.Millisecond); time.Now().Before(end); {
-				time.Sleep(20 * time.Millisecond)
-				if st, err := os.Stat(lock); err == nil {
-					freshest = max(freshest, time.Since(st.ModTime()))
-				}
-			}
+			<-proceed
 			holderDone.Store(true)
 			return nil
 		})
 	}()
 	<-started
-	mine, err := acquire(lock)
-	if err != nil || mine == nil {
-		t.Fatalf("waiter: %q %v", mine, err)
+	old := time.Now().Add(-2 * time.Hour)
+	if err := os.Chtimes(lock, old, old); err != nil {
+		t.Fatal(err)
 	}
-	if !holderDone.Load() {
-		t.Error("the waiter took over the lock while its holder was still running")
+	tick(ticks)
+	if age := lockAge(t, lock); age >= time.Minute {
+		t.Fatalf("the heartbeat did not refresh the lock: aged %v", age)
+	}
+	got := make(chan []byte, 1)
+	go func() {
+		mine, err := acquire(lock)
+		if err != nil {
+			t.Error(err)
+		}
+		got <- mine
+	}()
+	select {
+	case <-got:
+		t.Fatal("the waiter took over the lock while its holder was still running")
+	case <-time.After(50 * time.Millisecond):
+	}
+	close(proceed)
+	mine := <-got
+	if mine == nil || !holderDone.Load() {
+		t.Errorf("waiter got %q, holder done %v", mine, holderDone.Load())
 	}
 	release(lock, mine)
 	if err := <-errc; err != nil {
 		t.Fatal(err)
 	}
-	if freshest >= 120*time.Millisecond {
-		t.Errorf("the lock aged %v while held (stale after 120ms)", freshest)
-	}
 	gone(t, lock)
+}
+
+func TestHeartbeatEvery(t *testing.T) {
+	lockTiming(t, time.Millisecond, 2*time.Minute, 10*time.Minute)
+	if got := heartbeatEvery(); got != 30*time.Second {
+		t.Errorf("heartbeat every %v with the default timing, want lockWait/4 = 30s", got)
+	}
+	lockTiming(t, time.Millisecond, time.Minute, 20*time.Second)
+	if got := heartbeatEvery(); got != 5*time.Second {
+		t.Errorf("heartbeat every %v with lockStale < lockWait, want lockStale/4", got)
+	}
 }
 
 // TestWithBuildLockTakesOverAStaleLock: the lock of a holder that died (no
@@ -142,14 +192,11 @@ func TestWithBuildLockBusy(t *testing.T) {
 	}
 }
 
-// TestHeartbeatNeverTouchesAnotherHoldersLock: once the lock holds another
-// content the heartbeat leaves its mtime alone and ends; stop still joins.
+// TestHeartbeatNeverTouchesAnotherHoldersLock: a lock that holds another
+// process's content is left alone and the heartbeat goroutine ends; stop
+// still joins. The other content is in place before the first tick.
 func TestHeartbeatNeverTouchesAnotherHoldersLock(t *testing.T) {
 	_, lock := lockRoot(t)
-	if err := os.WriteFile(lock, []byte("mine\n"), 0o644); err != nil {
-		t.Fatal(err)
-	}
-	stop := heartbeat(lock, []byte("mine\n"), 5*time.Millisecond)
 	if err := os.WriteFile(lock, []byte("next holder\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
@@ -157,11 +204,43 @@ func TestHeartbeatNeverTouchesAnotherHoldersLock(t *testing.T) {
 	if err := os.Chtimes(lock, old, old); err != nil {
 		t.Fatal(err)
 	}
-	time.Sleep(60 * time.Millisecond)
+	ticks := make(chan time.Time)
+	stop, ended := heartbeat(lock, []byte("mine\n"), ticks)
+	ticks <- time.Now()
+	select {
+	case <-ended:
+	case <-time.After(time.Minute):
+		t.Fatal("the heartbeat goroutine did not end on another holder's lock")
+	}
 	stop()
 	stop()
 	if st, err := os.Stat(lock); err != nil || !st.ModTime().Equal(old) {
-		t.Errorf("the next holder's lock was touched: %v %v", st.ModTime(), err)
+		t.Errorf("the other holder's lock was touched: %v %v", st.ModTime(), err)
+	}
+}
+
+// TestHeartbeatTouchesItsOwnLock: each tick refreshes the mtime of a lock
+// that holds this process's content; stop ends the goroutine.
+func TestHeartbeatTouchesItsOwnLock(t *testing.T) {
+	_, lock := lockRoot(t)
+	if err := os.WriteFile(lock, []byte("mine\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	old := time.Now().Add(-time.Hour)
+	if err := os.Chtimes(lock, old, old); err != nil {
+		t.Fatal(err)
+	}
+	ticks := make(chan time.Time)
+	stop, ended := heartbeat(lock, []byte("mine\n"), ticks)
+	tick(ticks)
+	if age := lockAge(t, lock); age >= time.Minute {
+		t.Errorf("own lock not refreshed: aged %v", age)
+	}
+	stop()
+	select {
+	case <-ended:
+	default:
+		t.Error("stop returned before the goroutine ended")
 	}
 }
 
