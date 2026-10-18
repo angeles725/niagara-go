@@ -31,9 +31,11 @@ var (
 // BuilderIndexes are the JSON indexes of maintenance.BUILDERS, in builder
 // order, without the OPTIONAL_ARTIFACTS (jdk-class-index.json): the files
 // _empty_indexes writes as {} when a skipped builder left them absent.
+// call-index.json is retired (decision I3-5): Python's list still holds
+// it, so _empty_indexes writes an empty one; EmptyIndexes does not
+// (intended difference).
 var BuilderIndexes = []string{"class-index.json", "inheritance.json", "method-index.json", "source-index.json",
-	"slots-index.json", "xref-index.json", "call-index.json", "guides-index.json", "devguide-toc.json",
-	"pdf-index.json"}
+	"slots-index.json", "xref-index.json", "guides-index.json", "devguide-toc.json", "pdf-index.json"}
 
 // DumpManifest is the version manifest's json.dumps(indent=1).
 var DumpManifest = pyjson.DumpOpts{EnsureASCII: true, Indent: 1, ItemSep: ",", KeySep: ": "}

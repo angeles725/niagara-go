@@ -8,7 +8,8 @@ keeps (decision D32), plus help and no-command, exactly as that harness does
 (cwd the main checkout, COLUMNS=100, PYTHONHASHSEED=0, its normalization) with
 NIAGARA_HELP_PYTHON=1 so tools/niagara_help.py runs Python, never the Go shim.
 Each case's sha256(stdout), sha256(stderr) and exit code must equal
-tests/golden/cli.json, or nothing is written. help and no-command also get
+tests/golden/cli.json, or nothing is written. The INTENDED cases (help and
+no-command: D32; stats and stats-json: call-index retired, I3-5) also get
 intended.json with the output of GO_NH_BIN run through the same harness.
 On success every case directory next to this script is replaced.
 """
@@ -26,9 +27,12 @@ REPO = os.environ.get("NIAGARA_HELP_DIR") or os.path.expanduser("~/niagara-resea
 KEEP = ["class", "search", "package", "method", "slots", "guide", "guide-search", "devguide",
         "devguide-search", "pdf", "find", "source", "source-grep", "stats", "freshness",
         "selftest", "versions"]
-INTENDED = ("help", "no-command")
-REASON = ("D32: the Go port lists only the kept commands; retired commands print one "
-          "'retired' line (docs/retired-commands.md)")
+D32 = ("D32: the Go port lists only the kept commands; retired commands print one "
+       "'retired' line (docs/retired-commands.md)")
+I3_5 = ("call-index retired (I3-5): the Go port neither builds nor reads call-index.json, "
+        "so stats counts 9 indexes and has no CALL INDEX block or call-index entry, "
+        "even when a stale file is on disk")
+INTENDED = {"help": D32, "no-command": D32, "stats": I3_5, "stats-json": I3_5}
 
 
 def sha(text):
@@ -86,7 +90,7 @@ def capture(out, gobin):
                     _, grc, gso, gse, _ = h.run_case(c, tmp)
                 finally:
                     os.environ.pop("GOLDEN_BIN", None)
-                intended = {"reason": REASON, "stdout": gso, "stderr": gse, "exit": grc}
+                intended = {"reason": INTENDED[cid], "stdout": gso, "stderr": gse, "exit": grc}
             write_case(out, cid, args, rc, so, se, intended)
     finally:
         shutil.rmtree(tmp, ignore_errors=True)

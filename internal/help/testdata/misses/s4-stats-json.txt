@@ -24,10 +24,6 @@
       "properties": 13,
       "actions": 4,
       "topics": 3
-    },
-    "call-index": {
-      "methods": 2,
-      "entries": 3
     }
   },
   "text_dirs": {

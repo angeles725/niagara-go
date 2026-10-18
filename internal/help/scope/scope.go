@@ -55,8 +55,6 @@ var scopes = map[string]def{
 		[]string{"class", "find", "fuzzy"}},
 	"xref": {[]string{"xref-index.json"}, "classes shipped without source (imports unknown)",
 		[]string{"class", "source-grep"}},
-	"calls": {[]string{"call-index.json"}, "calls from classes shipped without source",
-		[]string{"source-grep", "find"}},
 	"modules": {[]string{"source-index.json"},
 		"modules shipped without source (module names come from the source files)",
 		[]string{"module", "find", "search"}},

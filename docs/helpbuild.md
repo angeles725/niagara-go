@@ -610,6 +610,13 @@ The slots time is mostly the `.bajadoc` XML of `devguide/` and `guides/`; xref's
 
 ### S9 intended differences
 
+- **`call-index.json` is retired** (decision I3-5): `build_call_index.py` is not ported,
+  `BuilderIndexes` no longer lists it, so `EmptyIndexes` (Python's `_empty_indexes`) does
+  not write an empty one for a new version (`TestParityEmptyIndexes` removes Python's line
+  and file before comparing, and fails once Python stops writing it); nh `stats` neither
+  counts nor prints it, even when a stale file is on disk, and nh's search scopes have no
+  `calls` scope.
+
 - **File names that are not UTF-8** (Python's surrogateescape, sorted as decoded names)
   are not modelled, as in S7a; parity runs on Linux with UTF-8 names.
 - **The `.bajadoc` files are parsed concurrently** (as in S8): after an unreadable file
