@@ -3,6 +3,7 @@ package course
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -197,16 +198,21 @@ func TestGlobRe(t *testing.T) {
 
 // A station whose directory or name holds glob meta characters still matches only its own files.
 func TestFileCheckEscapesStationPath(t *testing.T) {
-	base := filepath.Join(t.TempDir(), "St[1]*?")
+	name, files := "St[1]*?", []string{"St[1]*?_a.csv", "S1_a.csv", "Sx_a.csv"}
+	if runtime.GOOS == "windows" {
+		// '*' and '?' are illegal in Windows file names; an unescaped '[1]' would match both St1_ files.
+		name, files = "St[1]", []string{"St[1]_a.csv", "St1_a.csv", "St1_b.csv"}
+	}
+	base := filepath.Join(t.TempDir(), name)
 	if err := os.MkdirAll(filepath.Join(base, "shared"), 0o755); err != nil {
 		t.Fatal(err)
 	}
-	for _, n := range []string{"St[1]*?_a.csv", "S1_a.csv", "Sx_a.csv"} {
+	for _, n := range files {
 		if err := os.WriteFile(filepath.Join(base, "shared", n), nil, 0o644); err != nil {
 			t.Fatal(err)
 		}
 	}
-	s := &station{dir: base, name: "St[1]*?"}
+	s := &station{dir: base, name: name}
 	v, ev := s.checkFiles(&Check{Kind: kindFiles, Glob: "shared/{station}_*.csv", Op: opEq, N: 1})
 	if v != verdictPass {
 		t.Errorf("verdict %s, evidence %q", v, ev)
