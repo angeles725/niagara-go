@@ -13,7 +13,13 @@ import (
 // QueryTerms, Scope and FormatRow print nothing, take explicit paths instead
 // of the nav runtime, and FormatRow yields the exact line `rank` prints, so
 // the command and nsearch show the same text. Progress lines, staleness
-// warnings and the absent-xref NOTE belong to the command (Load, Cmd).
+// warnings and the absent-xref NOTE belong to the command (internal/nav/rankcmd).
+
+// The index file names under indexes/.
+const (
+	ClassIndexFile = "class-index.json"
+	XrefIndexFile  = "xref-index.json"
+)
 
 // Source is the files a Ranker is read from.
 type Source struct {
@@ -33,7 +39,7 @@ func SourceOf(baseDir string) Source {
 		}
 		return p
 	}
-	return Source{ClassIndex: abs(classIndex), XrefIndex: abs(xrefIndex),
+	return Source{ClassIndex: abs(ClassIndexFile), XrefIndex: abs(XrefIndexFile),
 		Cache: filepath.Join(core.IndexPath(baseDir, cacheDir), cacheName)}
 }
 
@@ -68,15 +74,24 @@ func (r *Ranker) QueryTerms(question string) []string { return r.terms.queryTerm
 // Scope is the counted description of what Rank searches (the miss scope line).
 func (r *Ranker) Scope() string { return r.scope() }
 
+// Meta is the class index _meta the ranker was built from (nil when absent).
+func (r *Ranker) Meta() *index.Object { return r.meta }
+
 // isFile is os.path.isfile.
 func isFile(p string) bool {
 	st, err := os.Stat(p)
 	return err == nil && st.Mode().IsRegular()
 }
 
-// classTables is (data["classes"], data["_meta"] or None) of a class index;
+// truthy is bool(v) for the `_meta or {}` of a decoded value.
+func truthy(v any) bool {
+	o, ok := v.(*index.Object)
+	return ok && o.Len() > 0
+}
+
+// ClassTables is (data["classes"], data["_meta"] or None) of a class index;
 // ok is false when it has no classes table.
-func classTables(data *index.Object) (classes, meta *index.Object, ok bool) {
+func ClassTables(data *index.Object) (classes, meta *index.Object, ok bool) {
 	if v, _ := data.Get("classes"); v != nil {
 		classes, _ = v.(*index.Object)
 	}
@@ -86,9 +101,9 @@ func classTables(data *index.Object) (classes, meta *index.Object, ok bool) {
 	return classes, meta, classes != nil
 }
 
-// importedByTable is the class_imported_by table of an xref index (nil when
+// ImportedByTable is the class_imported_by table of an xref index (nil when
 // absent or null); ok is false when it is present but not an object.
-func importedByTable(xref *index.Object) (importedBy *index.Object, ok bool) {
+func ImportedByTable(xref *index.Object) (importedBy *index.Object, ok bool) {
 	v, present := xref.Get("class_imported_by")
 	if !present || v == nil {
 		return nil, true
@@ -109,31 +124,54 @@ func loadObject(path, what string) (*index.Object, error) {
 	return nil, fmt.Errorf("%s is unreadable: %s (%v)", what, path, err)
 }
 
-// fromTables builds the ranker of the decoded tables and refreshes src's
-// cache when cached and neither index changed since key was taken.
-func fromTables(src Source, key cacheKey, cached bool, classes, importedBy, meta *index.Object) *Ranker {
+// Loader is one load of a Source: the cache key is taken before the index
+// files are read, so a ranker built from files that changed meanwhile is not
+// cached. The nav command (rankcmd) reads the files itself, to print its
+// progress lines, and hands the decoded tables to Build.
+type Loader struct {
+	src    Source
+	key    cacheKey
+	cached bool
+}
+
+// NewLoader fingerprints src's index files. Class indexes under cacheMinBytes,
+// and a Source without a Cache path, are never cached.
+func NewLoader(src Source) *Loader {
+	key := keyOf(src)
+	return &Loader{src: src, key: key, cached: src.Cache != "" && key.Class.Size >= cacheMinBytes}
+}
+
+// Cached is the ranker stored in the cache under the loader's key, else nil.
+func (l *Loader) Cached() *Ranker {
+	if !l.cached {
+		return nil
+	}
+	return readCache(l.src.Cache, l.key)
+}
+
+// Build builds the ranker of the decoded tables (ClassTables, ImportedByTable)
+// and refreshes the cache when it is used and neither index changed since
+// NewLoader.
+func (l *Loader) Build(classes, importedBy, meta *index.Object) *Ranker {
 	st := build(classes, importedBy)
 	r, err := newRanker(st, meta)
 	if err != nil { // a freshly built state is always well formed
 		panic(err)
 	}
-	if cached && key == keyOf(src) {
-		writeCache(src.Cache, key, st, meta)
+	if l.cached && l.key == keyOf(l.src) {
+		writeCache(l.src.Cache, l.key, st, meta)
 	}
 	return r
 }
 
-// Open is Load without the nav runtime: the cached ranker of src, else one
-// built from its index files (then cached). It prints nothing; an error is
-// the message `rank` would print (an index missing, unreadable or without its
-// table).
+// Open is the nav command's load without the runtime: the cached ranker of
+// src, else one built from its index files (then cached). It prints nothing;
+// an error is the message `rank` would print (an index missing, unreadable or
+// without its table).
 func Open(src Source) (*Ranker, error) {
-	key := keyOf(src)
-	cached := src.Cache != "" && key.Class.Size >= cacheMinBytes
-	if cached {
-		if r := readCache(src.Cache, key); r != nil {
-			return r, nil
-		}
+	l := NewLoader(src)
+	if r := l.Cached(); r != nil {
+		return r, nil
 	}
 	if !isFile(src.ClassIndex) {
 		return nil, fmt.Errorf("class index not found: %s", src.ClassIndex)
@@ -142,7 +180,7 @@ func Open(src Source) (*Ranker, error) {
 	if err != nil {
 		return nil, err
 	}
-	classes, meta, ok := classTables(data)
+	classes, meta, ok := ClassTables(data)
 	if !ok {
 		return nil, fmt.Errorf("class index has no 'classes' table: %s", src.ClassIndex)
 	}
@@ -152,9 +190,9 @@ func Open(src Source) (*Ranker, error) {
 		if err != nil {
 			return nil, err
 		}
-		if importedBy, ok = importedByTable(xref); !ok {
+		if importedBy, ok = ImportedByTable(xref); !ok {
 			return nil, fmt.Errorf("xref index has no 'class_imported_by' table: %s", src.XrefIndex)
 		}
 	}
-	return fromTables(src, key, cached, classes, importedBy, meta), nil
+	return l.Build(classes, importedBy, meta), nil
 }

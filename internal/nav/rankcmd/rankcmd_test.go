@@ -1,4 +1,4 @@
-package classrank
+package rankcmd
 
 import (
 	"bytes"

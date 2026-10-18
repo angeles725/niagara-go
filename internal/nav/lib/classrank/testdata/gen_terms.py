@@ -1,6 +1,6 @@
 """Regenerate terms.json: class_rank's term rules on sample identifiers and questions.
 
-    python3 -I internal/nav/classrank/testdata/gen_terms.py [<module-navigator>/tools]
+    python3 -I internal/nav/lib/classrank/testdata/gen_terms.py [<module-navigator>/tools]
 """
 
 import json

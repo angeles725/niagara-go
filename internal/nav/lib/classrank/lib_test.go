@@ -11,7 +11,7 @@ import (
 // goldenLines is the stdout of a module-nav golden case, one line per entry.
 func goldenLines(t *testing.T, name string) []string {
 	t.Helper()
-	b, err := os.ReadFile(filepath.Join("..", "testdata", "golden", name, "stdout"))
+	b, err := os.ReadFile(filepath.Join("..", "..", "testdata", "golden", name, "stdout"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -21,7 +21,7 @@ func goldenLines(t *testing.T, name string) []string {
 // TestOpenRankFormatRowMatchesGolden calls the library without any runtime and
 // checks its rows against the `rank` golden (nav-rank: -n 3 of 11).
 func TestOpenRankFormatRowMatchesGolden(t *testing.T) {
-	src := SourceOf(filepath.Join("..", "testdata", "fixture", "nav"))
+	src := SourceOf(filepath.Join("..", "..", "testdata", "fixture", "nav"))
 	src.Cache = ""
 	r, err := Open(src)
 	if err != nil {
@@ -50,11 +50,11 @@ func TestOpenErrors(t *testing.T) {
 		want  string
 	}{
 		{"no class index", nil, "class index not found: "},
-		{"bad json", map[string][]byte{classIndex: []byte("{")}, "class index is unreadable: "},
-		{"no classes table", map[string][]byte{classIndex: []byte(`{"x": 1}`)},
+		{"bad json", map[string][]byte{ClassIndexFile: []byte("{")}, "class index is unreadable: "},
+		{"no classes table", map[string][]byte{ClassIndexFile: []byte(`{"x": 1}`)},
 			"class index has no 'classes' table: "},
-		{"bad xref table", map[string][]byte{classIndex: []byte(`{"classes": {}}`),
-			xrefIndex: []byte(`{"class_imported_by": []}`)}, "xref index has no 'class_imported_by' table: "},
+		{"bad xref table", map[string][]byte{ClassIndexFile: []byte(`{"classes": {}}`),
+			XrefIndexFile: []byte(`{"class_imported_by": []}`)}, "xref index has no 'class_imported_by' table: "},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -72,7 +72,7 @@ func TestOpenWritesTheCacheItReadsBack(t *testing.T) {
 	old := cacheMinBytes
 	cacheMinBytes = 0
 	t.Cleanup(func() { cacheMinBytes = old })
-	src := SourceOf(newBase(t, map[string][]byte{classIndex: skipsIndex(t)}))
+	src := SourceOf(newBase(t, map[string][]byte{ClassIndexFile: skipsIndex(t)}))
 	built, err := Open(src)
 	if err != nil {
 		t.Fatal(err)

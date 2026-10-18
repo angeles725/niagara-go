@@ -1,4 +1,9 @@
-package classrank
+// Package rankcmd is the nav runtime half of `rank` and `ask` (class_rank.py
+// cmd_rank and load_ranker): the progress lines, staleness warnings, the
+// absent-xref NOTE and the outcome reporting around the import-clean ranker in
+// internal/nav/lib/classrank. It registers no command; the source and lookup
+// groups call Cmd.
+package rankcmd
 
 import (
 	"fmt"
@@ -7,14 +12,21 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/index"
 	"github.com/angeles725/niagara-go/internal/nav/core"
+	"github.com/angeles725/niagara-go/internal/nav/lib/classrank"
 	"github.com/angeles725/niagara-go/internal/nav/registry"
 )
 
 const (
-	classIndex = "class-index.json"
-	xrefIndex  = "xref-index.json"
+	classIndex = classrank.ClassIndexFile
+	xrefIndex  = classrank.XrefIndexFile
 	progressMB = 20 // indexes this large print a progress line (indexes.py)
 )
+
+// isFile is os.path.isfile.
+func isFile(p string) bool {
+	st, err := os.Stat(p)
+	return err == nil && st.Mode().IsRegular()
+}
 
 // progressStart is _progress_start: the progress line of a large index.
 func progressStart(env *registry.Env, path, name string) bool {
@@ -49,7 +61,7 @@ func warnStale(env *registry.Env, meta *index.Object, path string) {
 
 // xrefAbsent is _note_absent: true, after the NOTE indexes.load prints, when
 // the optional xref index does not exist.
-func xrefAbsent(env *registry.Env, src Source) bool {
+func xrefAbsent(env *registry.Env, src classrank.Source) bool {
 	if isFile(src.XrefIndex) {
 		return false
 	}
@@ -66,13 +78,13 @@ func load(env *registry.Env, path, name, what string) *index.Object {
 
 // readInputs is class_rank_cache.read_inputs: (classes, imported_by, meta) of
 // the class and xref indexes, or ok=false after an exit-2 error.
-func readInputs(env *registry.Env, src Source) (classes, importedBy, meta *index.Object, ok bool) {
+func readInputs(env *registry.Env, src classrank.Source) (classes, importedBy, meta *index.Object, ok bool) {
 	path := src.ClassIndex
 	data := load(env, path, classIndex, "class index")
 	if data == nil {
 		return nil, nil, nil, false
 	}
-	if classes, meta, ok = classTables(data); !ok {
+	if classes, meta, ok = classrank.ClassTables(data); !ok {
 		env.Error(fmt.Sprintf("class index has no 'classes' table: %s", path), "Run: ./reindex.sh")
 		return nil, nil, nil, false
 	}
@@ -84,7 +96,7 @@ func readInputs(env *registry.Env, src Source) (classes, importedBy, meta *index
 	if xref == nil {
 		return nil, nil, nil, false
 	}
-	if importedBy, ok = importedByTable(xref); !ok {
+	if importedBy, ok = classrank.ImportedByTable(xref); !ok {
 		env.Error(fmt.Sprintf("xref index has no 'class_imported_by' table: %s", src.XrefIndex),
 			"Run: ./reindex.sh")
 		return nil, nil, nil, false
@@ -92,10 +104,34 @@ func readInputs(env *registry.Env, src Source) (classes, importedBy, meta *index
 	return classes, importedBy, meta, true
 }
 
-// truthy is bool(v) for the `_meta or {}` of a decoded value.
-func truthy(v any) bool {
-	o, ok := v.(*index.Object)
-	return ok && o.Len() > 0
+// announce is class_rank_cache.announce: on a cache hit, the stderr a build
+// prints (progress line, staleness warnings, the absent-xref NOTE or the xref
+// progress line).
+func announce(env *registry.Env, src classrank.Source, meta *index.Object) {
+	progressEnd(env, progressStart(env, src.ClassIndex, classIndex), true)
+	warnStale(env, meta, src.ClassIndex)
+	if !xrefAbsent(env, src) {
+		progressEnd(env, progressStart(env, src.XrefIndex, xrefIndex), true)
+	}
+}
+
+// Load is load_ranker: the Ranker of the base directory's indexes, or nil
+// after an exit-2 error: the cached one, else a full build (which then
+// refreshes the cache unless an index changed while it was read). It is
+// classrank.Open plus the runtime's stderr (progress, staleness, NOTE) and
+// error reporting.
+func Load(env *registry.Env) *classrank.Ranker {
+	src := classrank.SourceOf(env.BaseDir)
+	l := classrank.NewLoader(src)
+	if r := l.Cached(); r != nil {
+		announce(env, src, r.Meta())
+		return r
+	}
+	classes, importedBy, meta, ok := readInputs(env, src)
+	if !ok {
+		return nil
+	}
+	return l.Build(classes, importedBy, meta)
 }
 
 // Cmd is cmd_rank: print the classes most relevant to question, best first.
@@ -126,7 +162,7 @@ func Cmd(env *registry.Env, question string, limit int) {
 		"columns: rank, score, class, module, path")
 	fmt.Fprintln(w)
 	for k, x := range results[:min(limit, len(results))] {
-		fmt.Fprintln(w, FormatRow(k+1, x))
+		fmt.Fprintln(w, classrank.FormatRow(k+1, x))
 	}
 	if len(results) > limit {
 		fmt.Fprintln(w)

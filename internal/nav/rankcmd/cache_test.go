@@ -1,4 +1,4 @@
-package classrank
+package rankcmd
 
 import (
 	"os"
@@ -6,17 +6,17 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/angeles725/niagara-go/internal/nav/lib/classrank"
 )
 
-// cachedBase is a base directory whose ranker is cached (no size floor), with
-// a _meta naming another corpus so that the staleness warning is part of stderr.
+// cachedBase is a base directory whose ranker is cached, with a _meta naming
+// another corpus so that the staleness warning is part of stderr. Trailing
+// JSON whitespace lifts the class index over the 1 MiB cache floor.
 func cachedBase(t *testing.T, withXref bool) string {
 	t.Helper()
-	old := cacheMinBytes
-	cacheMinBytes = 0
-	t.Cleanup(func() { cacheMinBytes = old })
 	ci := strings.Replace(string(skipsIndex(t)), `"_meta": {`,
-		`"_meta": {"source": "/elsewhere/organized", "n": 1.50, `, 1)
+		`"_meta": {"source": "/elsewhere/organized", "n": 1.50, `, 1) + strings.Repeat(" ", 1<<20)
 	files := map[string][]byte{classIndex: []byte(ci), "class-rank.cache": []byte("python's")}
 	if withXref {
 		files[xrefIndex] = []byte(`{"class_imported_by": {"BServiceAlarm": ["A", "B", "A"]}}`)
@@ -30,7 +30,7 @@ func TestCacheHitPrintsWhatABuildPrints(t *testing.T) {
 	for _, withXref := range []bool{true, false} {
 		base := cachedBase(t, withXref)
 		out1, err1, code1 := run(t, base, "alarm service", 2)
-		st, err := os.Stat(SourceOf(base).Cache)
+		st, err := os.Stat(classrank.SourceOf(base).Cache)
 		if err != nil {
 			t.Fatalf("xref=%v: no cache written: %v", withXref, err)
 		}
@@ -58,7 +58,7 @@ func TestCacheHitPrintsWhatABuildPrints(t *testing.T) {
 func TestCacheRebuildsWhenStaleOrCorrupt(t *testing.T) {
 	base := cachedBase(t, true)
 	want, _, _ := run(t, base, "alarm", 20)
-	path := SourceOf(base).Cache
+	path := classrank.SourceOf(base).Cache
 	if err := os.WriteFile(path, []byte("garbage"), 0o600); err != nil {
 		t.Fatal(err)
 	}

@@ -8,7 +8,6 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/index"
 	"github.com/angeles725/niagara-go/internal/nav/core"
-	"github.com/angeles725/niagara-go/internal/nav/registry"
 )
 
 // The prepared-ranker cache (class_rank_cache.py), Go's own file: Python's
@@ -125,36 +124,4 @@ func writeCache(path string, key cacheKey, st state, meta *index.Object) bool {
 		return false
 	}
 	return true
-}
-
-// announce is class_rank_cache.announce: on a cache hit, the stderr a build
-// prints (progress line, staleness warnings, the absent-xref NOTE or the xref
-// progress line).
-func announce(env *registry.Env, src Source, meta *index.Object) {
-	progressEnd(env, progressStart(env, src.ClassIndex, classIndex), true)
-	warnStale(env, meta, src.ClassIndex)
-	if !xrefAbsent(env, src) {
-		progressEnd(env, progressStart(env, src.XrefIndex, xrefIndex), true)
-	}
-}
-
-// Load is load_ranker: the Ranker of the base directory's indexes, or nil
-// after an exit-2 error: the cached one, else a full build (which then
-// refreshes the cache unless an index changed while it was read). It is Open
-// plus the runtime's stderr (progress, staleness, NOTE) and error reporting.
-func Load(env *registry.Env) *Ranker {
-	src := SourceOf(env.BaseDir)
-	key := keyOf(src)
-	cached := key.Class.Size >= cacheMinBytes
-	if cached {
-		if r := readCache(src.Cache, key); r != nil {
-			announce(env, src, r.meta)
-			return r
-		}
-	}
-	classes, importedBy, meta, ok := readInputs(env, src)
-	if !ok {
-		return nil
-	}
-	return fromTables(src, key, cached, classes, importedBy, meta)
 }
