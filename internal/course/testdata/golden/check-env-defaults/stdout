@@ -1,0 +1,9 @@
+ID    LAB  VERDICT  DESCRIPTION                                     EVIDENCE
+C4.1  4    PASS     a training Tstat (My Tstat) [L4.6]              found 1: Lab4/My Tstat
+C4.2  4    PASS     a kitControl Tstat (Reference Tstat) [L4.6]     found 1: Lab4/Reference Tstat
+C4.3  4    PASS     NumericWritable.out -> Tstat.cv [L4.10]         found 1: Lab4/SpaceTemp.out -> Lab4/My Tstat.cv
+C4.4  4    PASS     NumericWritable.out -> Tstat.sp [L4.10]         found 1: Lab4/Setpoint.out -> Lab4/My Tstat.sp
+C4.5  4    PASS     training Tstat diff = 2 [L4.13]                 Lab4/My Tstat.diff = 2.0 (stored)
+C4.6  4    PASS     training Tstat action = reverse [L4.15]         Lab4/My Tstat.action = reverse (stored)
+C4.7  4    PASS     Reference Tstat nullOnInControl = false [L4.7]  Lab4/Reference Tstat.nullOnInControl = false (stored)
+checked 7: PASS 7, FAIL 0, SKIP 0; station GoodStation (237 components, 16 links), install install

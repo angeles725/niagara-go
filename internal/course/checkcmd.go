@@ -22,17 +22,16 @@ type resultJSON struct {
 // cmdCheck runs the selected checks and prints a table (or a JSON list) and a summary line
 // (stdout; stderr with --json). Exit: 0 no FAIL (SKIPs are counted, never passed),
 // 1 at least one FAIL, 2 the station cannot be read or nothing could be checked.
-func cmdCheck(s cli.Stdio, stationPath, install string, labs []string, asJSON bool) int {
+func cmdCheck(s cli.Stdio, o stationOpts, labs []string, asJSON bool) int {
 	checks, unknown := check.Select(labs)
 	if unknown != "" {
 		fmt.Fprintf(s.Err, "course: no check for lab %s (labs with checks: %s; lab 8 changes nothing)\n",
 			unknown, strings.Join(check.Labs(), ", "))
 		return cli.ExitNoMatch
 	}
-	st, err := check.Open(stationPath, install, check.NeedsNested(checks))
-	if err != nil {
-		fmt.Fprintf(s.Err, "course: cannot check the station: %v\n", err)
-		return cli.ExitCannotSearch
+	st, code := o.open(s, checks)
+	if st == nil {
+		return code
 	}
 	defer st.Close()
 	results := make([]check.Result, len(checks))
@@ -60,7 +59,7 @@ func cmdCheck(s cli.Stdio, stationPath, install string, labs []string, asJSON bo
 	} else {
 		printResults(s.Out, results)
 	}
-	scope := fmt.Sprintf("%s, install %s", st.Scope(), orNone(install))
+	scope := fmt.Sprintf("%s, install %s", st.Scope(), orNone(o.installDir()))
 	fmt.Fprintf(summary, "checked %d: PASS %d, FAIL %d, SKIP %d; %s\n", len(results), pass, fail, skip, scope)
 	switch {
 	case fail > 0:

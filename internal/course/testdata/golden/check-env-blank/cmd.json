@@ -1,0 +1,1 @@
+{"args": ["check", "--lab", "4"], "env": {"COURSE_TRAINING_STATION": "  ", "COURSE_REVIEW_STATION": "stations/good"}}

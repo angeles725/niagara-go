@@ -116,32 +116,33 @@ func Suggestion(id, date string, results []LinkedResult) string {
 	return fmt.Sprintf("%s: *(verified live %s)* evidence: %s", id, date, strings.Join(ev, "; "))
 }
 
-// verifyPredictions runs, on the station, every check linked to an item still marked
-// predicted, and decides each such item. Only the linked checks run. The caller closes the
-// station.
-func VerifyPredictions(c *key.Corpus, path, install string) ([]Prediction, *Station, error) {
-	var preds []Prediction
+// LinkedChecks are the checks linked to at least one item keep selects, once each, in item order.
+func LinkedChecks(c *key.Corpus, keep func(*key.Item) bool) []*Check {
 	links := itemLinks(c, Spec)
 	var checks []*Check
 	seen := map[*Check]bool{}
 	for _, it := range c.Items {
 		for _, l := range links[it] {
-			if it.HasStatus("predicted") && !seen[l.Check] {
+			if keep(it) && !seen[l.Check] {
 				seen[l.Check] = true
 				checks = append(checks, l.Check)
 			}
 		}
 	}
-	st, err := Open(path, install, NeedsNested(checks))
-	if err != nil {
-		return nil, nil, err
-	}
+	return checks
+}
+
+// Verify runs, on the stations, every check linked to an item keep selects (only those checks)
+// and decides each such item.
+func Verify(c *key.Corpus, ss *Stations, keep func(*key.Item) bool) []Prediction {
+	links := itemLinks(c, Spec)
 	results := map[*Check]Result{}
-	for _, ck := range checks {
-		results[ck] = st.Run(ck)
+	for _, ck := range LinkedChecks(c, keep) {
+		results[ck] = ss.Run(ck)
 	}
+	var preds []Prediction
 	for _, it := range c.Items {
-		if !it.HasStatus("predicted") {
+		if !keep(it) {
 			continue
 		}
 		p := Prediction{Item: it}
@@ -151,5 +152,8 @@ func VerifyPredictions(c *key.Corpus, path, install string) ([]Prediction, *Stat
 		p.Verdict, p.Reason = Decide(p.Results)
 		preds = append(preds, p)
 	}
-	return preds, st, nil
+	return preds
 }
+
+// Predicted selects the items still marked *(predicted)*.
+func Predicted(it *key.Item) bool { return it.HasStatus("predicted") }

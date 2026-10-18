@@ -9,6 +9,17 @@ import (
 	"github.com/angeles725/niagara-go/internal/course/key"
 )
 
+// verifyOn decides the predicted items of c with every check run on one station.
+func verifyOn(t *testing.T, c *key.Corpus, path, install string) []Prediction {
+	t.Helper()
+	ss, err := OpenStations(LinkedChecks(c, Predicted), func(string) string { return path }, install)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(ss.Close)
+	return Verify(c, ss, Predicted)
+}
+
 func TestDecidePrediction(t *testing.T) {
 	r := func(id, verdict, ev string, notes ...string) LinkedResult {
 		return LinkedResult{Result: Result{Check: &Check{ID: id}, Verdict: verdict, Evidence: ev}, Notes: notes}
@@ -72,11 +83,7 @@ func TestVerifyPredictionsThroughRange(t *testing.T) {
 	if c == nil {
 		t.Fatalf("%v", problems)
 	}
-	preds, st, err := VerifyPredictions(c, goodStation, fixtureInstall)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer st.Close()
+	preds := verifyOn(t, c, goodStation, fixtureInstall)
 	got := map[string]Prediction{}
 	for _, p := range preds {
 		got[p.Item.ID] = p
@@ -101,11 +108,7 @@ func TestVerifyPredictionsTrainingStation(t *testing.T) {
 	if c == nil {
 		t.Fatalf("%v", problems)
 	}
-	preds, st, err := VerifyPredictions(c, path, os.Getenv("COURSE_NIAGARA_INSTALL"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer st.Close()
+	preds := verifyOn(t, c, path, os.Getenv("COURSE_NIAGARA_INSTALL"))
 	counts := map[string]int{}
 	for _, p := range preds {
 		counts[p.Verdict]++

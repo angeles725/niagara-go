@@ -54,7 +54,8 @@ func rootParent(suppress bool) *argparse.Parser {
 	return p
 }
 
-func buildParser() *argparse.Parser {
+// buildParser returns the main parser and the subcommand parsers by name (their usage errors).
+func buildParser() (*argparse.Parser, map[string]*argparse.Parser) {
 	p := argparse.New(argparse.Config{Prog: "course", Description: description,
 		Formatter: argparse.RawDescriptionHelpFormatter, Parents: []*argparse.Parser{rootParent(false)}})
 	p.Add(argparse.Arg{Action: argparse.Custom, Nargs: argparse.NoArgs, Default: argparse.Suppress,
@@ -63,11 +64,17 @@ func buildParser() *argparse.Parser {
 			return &argparse.ExitError{Code: 0}
 		}}, "--version")
 	sub := p.AddSubparsers(argparse.SubparsersConfig{Dest: "cmd", Required: true})
+	subs := map[string]*argparse.Parser{}
 	add := func(name, help string) *argparse.Parser {
-		return sub.AddParser(name, argparse.SubparserConfig{
+		subs[name] = sub.AddParser(name, argparse.SubparserConfig{
 			Config: argparse.Config{Parents: []*argparse.Parser{rootParent(true)}}, Help: help})
+		return subs[name]
 	}
 	jsonHelp := argparse.Arg{Action: argparse.StoreTrue, Help: "machine JSON output"}
+	stationArg := argparse.Arg{Metavar: "PATH", Help: "station directory, or its config.bog (zipped or plain XML); default: " +
+		"$COURSE_TRAINING_STATION for the labs, $COURSE_REVIEW_STATION for RA1/RA2, $COURSE_CERT_STATION for EXAM"}
+	installArg := argparse.Arg{Metavar: "DIR", Help: "Niagara install whose modules/ holds the built jars " +
+		"(default: $COURSE_NIAGARA_INSTALL; jar checks SKIP without either)"}
 	s := add("show", "print items by ID (any case; L2.3 also finds the range item L2.2–L2.4)")
 	s.Add(argparse.Arg{Nargs: argparse.OneOrMore, Metavar: "ID", Help: "item ID: L1.9, LB.3, RA1.R6, D2.4, T1.1, X3, P2"}, "ids")
 	s.Add(jsonHelp, "--json")
@@ -82,27 +89,31 @@ func buildParser() *argparse.Parser {
 	t := add("text", "print the course text lines an item (or a lab) points at")
 	t.Add(argparse.Arg{Metavar: "ID|GROUP", Help: "item ID or group (L3, 3, B, A)"}, "target")
 	ck := add("check", "check what each lab leaves in a station (and the built jars): PASS/FAIL/SKIP per check")
-	ck.Add(argparse.Arg{Required: true, Metavar: "PATH", Help: "station directory, or its config.bog (zipped or plain XML)"}, "--station")
-	ck.Add(argparse.Arg{Metavar: "DIR", Help: "Niagara install whose modules/ holds the built jars (jar checks SKIP without it)"}, "--install")
+	ck.Add(stationArg, "--station")
+	ck.Add(installArg, "--install")
 	ck.Add(argparse.Arg{Action: argparse.Append, Metavar: "N", Help: "only this lab (1-11, B); repeatable"}, "--lab")
 	ck.Add(jsonHelp, "--json")
 	vp := add("verify-predictions", "run the checks linked to every *(predicted)* item: CONFIRMED, CONTRADICTED or UNDECIDED")
-	vp.Add(argparse.Arg{Required: true, Metavar: "PATH", Help: "station directory, or its config.bog (zipped or plain XML)"}, "--station")
-	vp.Add(argparse.Arg{Metavar: "DIR", Help: "Niagara install whose modules/ holds the built jars (jar checks SKIP without it)"}, "--install")
+	vp.Add(stationArg, "--station")
+	vp.Add(installArg, "--install")
 	vp.Add(argparse.Arg{Metavar: "YYYY-MM-DD", Help: "date written in the suggested *(verified live ...)* lines (default: today)"}, "--date")
 	vp.Add(jsonHelp, "--json")
-	return p
+	return p, subs
 }
 
 // Main runs course with argv (without the program name).
 func Main(args []string, s cli.Stdio) int {
-	p := buildParser()
+	p, subs := buildParser()
 	ns, code, done := p.Parse(args, s)
 	if done {
 		return code
 	}
-	if ns.String("cmd") == "check" { // reads a station, not the answer keys
-		return cmdCheck(s, ns.String("station"), ns.String("install"), ns.Strings("lab"), ns.Bool("json"))
+	cmd := ns.String("cmd")
+	o := stationOpts{station: ns.String("station"), hasStation: ns.Get("station") != nil,
+		install: ns.String("install"), hasInstall: ns.Get("install") != nil,
+		usage: func(message string) int { return subs[cmd].Error(s.Err, message) }}
+	if cmd == "check" { // reads a station, not the answer keys
+		return cmdCheck(s, o, ns.Strings("lab"), ns.Bool("json"))
 	}
 	root, err := findRoot(ns.String("root"), ns.Get("root") != nil)
 	if err != nil {
@@ -116,11 +127,11 @@ func Main(args []string, s cli.Stdio) int {
 		}
 		return cli.ExitCannotSearch
 	}
-	switch ns.String("cmd") {
+	switch cmd {
 	case "show":
 		return cmdShow(c, s, ns.Strings("ids"), ns.Bool("json"))
 	case "verify-predictions":
-		return cmdVerifyPredictions(c, s, ns.String("station"), ns.String("install"), ns.String("date"), ns.Bool("json"))
+		return cmdVerifyPredictions(c, s, o, ns.String("date"), ns.Bool("json"))
 	case "status":
 		return cmdStatus(c, s, ns.Get("lab") != nil, ns.String("lab"), ns.String("status"), ns.Bool("json"))
 	default:

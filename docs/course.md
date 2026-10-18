@@ -149,15 +149,27 @@ exits 2: an answer key that cannot be read without ambiguity is not searched.
 
 ## course check
 
-`course check --station <dir|config.bog> [--install DIR] [--lab N ...] [--json]` verifies what a
+`course check [--station <dir|config.bog>] [--install DIR] [--lab N ...] [--json]` verifies what a
 correct solution of each lab leaves in a station and in the install, and prints one verdict
 per check. It reads the station and the jars only; it needs no niagara-research root.
 
 - `--station`: the station directory (its `config.bog`, zipped or plain XML, and `shared/`), or
-  the bog file itself (its directory is the station directory).
+  the bog file itself (its directory is the station directory). Every selected check runs on it.
 - `--install`: a Niagara install; the jar checks read `<install>/modules/<part>.jar`. Without it
-  every jar check is SKIP.
+  (and without `COURSE_NIAGARA_INSTALL`) every jar check is SKIP.
 - `--lab`: repeatable; `3`, `03`, `L3`, `B`, `LB`. A lab without checks (8) is exit 1.
+
+Defaults (explicit flags win; a blank variable counts as unset):
+
+| Flag | Default |
+|---|---|
+| `--install` | `COURSE_NIAGARA_INSTALL` |
+| `--station` | per check, the variable of its station role: `COURSE_TRAINING_STATION` for the labs (1-11, B), `COURSE_REVIEW_STATION` for RA1 and RA2, `COURSE_CERT_STATION` for EXAM |
+
+Without `--station`, a run whose checks span several roles reads each role's station once, and
+the summary names every station read. A role whose variable is unset is the usage error of a
+missing `--station` (`the following arguments are required: --station`, exit 2). The same
+defaults apply to `verify-predictions`.
 
 The spec is the table `Spec` in `internal/course/check/spec.go`: one row per check with an
 ID (`C<lab>.<n>`), the lab, the answer-key items it confirms (`L4.13`, ...), a kind and a
@@ -186,9 +198,11 @@ composite slot: the Tcp Config of a driver network is its own component (`tcpCon
 handle), so its port is `address.port` on `trafficLightDriver:TrafficLightDriverTcpCommConfig`.
 
 Checks per lab: 1: 7, 2: 4, 3: 5, 4: 7, 5: 3 (jars only: the station holds nothing of code
-signing), 6: 6, 7: 5, 9: 7, 10: 7, 11: 17 (9 of them nested: driver and server Tcp Config, the
-ping health of the network and of every driver device), B: 4. Lab 8 (ORDs) writes no code and
-changes nothing, so it has none.
+signing), 6: 6, 7: 5, 9: 7, 10: 7, 11: 17 (8 of them nested: C11.9-C11.16, the driver and server
+Tcp Config addresses and the ping health of the network and of every driver device; C11.17
+`serverEnabled` is a plain slot), B: 4. Lab 8 (ORDs) writes no code and changes nothing, so it
+has none (its station steps, such as L8.15 and L8.17, happen in the Workbench UI). Appendix A
+(`LA`) has none either.
 
 Verdicts: PASS; FAIL with what was found instead (`found 9 ..., want exactly 10`,
 `0 of 1 pass, want 2.0: Lab4/My Tstat.diff = 0.0 (default)`); SKIP when the check could not run
@@ -209,9 +223,9 @@ not done.
 
 ## course verify-predictions
 
-`course verify-predictions --station <dir|config.bog> [--install DIR] [--date YYYY-MM-DD] [--json]`
+`course verify-predictions [--station <dir|config.bog>] [--install DIR] [--date YYYY-MM-DD] [--json]`
 reads the answer keys (it needs the root, like `show`) and the station, and decides every item
-still marked `*(predicted)*` from the checks whose `Keys` resolve to it (`Corpus.lookup`: the ID,
+still marked `*(predicted)*` from the checks whose `Keys` resolve to it (`Corpus.Lookup`: the ID,
 a range ID or a covered ID, so key `L4.15` reaches the range item `L4.15–L4.16`). A check is
 linked once per item however many of its keys reach it, and its `Unobserved` note is read under
 the key that matched, not the item's ID (`itemLinks`, which `TestCheckKeysReal` uses too). Only those linked checks run; the bog is read with nested values only when
@@ -263,6 +277,9 @@ not observed.
 - `internal/course/testdata/golden/`: hand-written expectations over the fixture roots
   (`root`, `dup-root`, `partial-root`, `norelated`); the help and usage cases were captured
   from the first green build and reviewed.
+  `TestGolden` clears the `COURSE_*` variables first, so a developer's defaults never reach a
+  case; `check-env-defaults`, `check-env-blank` and `check-flag-beats-env` set them in `cmd.json`.
+  `check/stations_test.go`: the station roles and one read per station path.
 - `root_test.go`: the discovery order (flag, variable, cwd walk, executable walk) and the
   not-found error, run from a temporary directory with the executable stubbed, so no `labs.md`
   above the real checkout can leak in.
