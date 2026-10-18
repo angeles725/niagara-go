@@ -1,0 +1,4 @@
+usage: module-find.py [-h] [--json] [--csv] [--limit N] [--version]
+                      [root]
+                      {slots,actions,writers,extends,ords,grep,slot-types,ext-writable,compare,callers,selftest} ...
+module-find.py: error: the following arguments are required: cmd

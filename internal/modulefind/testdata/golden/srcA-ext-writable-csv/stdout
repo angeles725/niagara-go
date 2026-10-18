@@ -1,0 +1,3 @@
+class,slot,type,verdict,note
+BColdRoom,setpoint,baja:StatusNumeric,ok(has-action),class exposes an action
+BRoomPanel,temp,BStatusNumeric,WARN,"external write must use the oBIX child-leaf bare <real> (…/value, B826-G2) or add an OPERATOR action (B822)"

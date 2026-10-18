@@ -1,0 +1,4 @@
+class,line,text
+BColdRoom,25,public void forceDefrost()
+BRoomPanel,10,room.forceDefrost();
+Helper,7,room.forceDefrost ();

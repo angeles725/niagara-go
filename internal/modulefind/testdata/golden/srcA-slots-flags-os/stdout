@@ -1,0 +1,1 @@
+BColdRoom.setpoint  <baja:StatusNumeric>  flags=Flags.SUMMARY | Flags.OPERATOR  min=-40.0  [COMPLEX]

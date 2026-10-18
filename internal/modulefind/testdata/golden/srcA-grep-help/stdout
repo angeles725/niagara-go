@@ -1,0 +1,12 @@
+usage: module-find.py [root] grep [-h] [--json] [--csv] [--limit N] [--source]
+                                  regex
+
+positional arguments:
+  regex          Python regex, case-insensitive
+
+options:
+  -h, --help     show this help message and exit
+  --json         machine JSON output
+  --csv          CSV output (header + rows)
+  --limit, -n N  print at most N rows (default: all); the cut is reported
+  --source       search every line of every .java file (file:line text)

@@ -1,0 +1,7 @@
+class,slot,type,flags,min,complex
+BColdRoom,setpoint,baja:StatusNumeric,Flags.SUMMARY | Flags.OPERATOR,-40.0,True
+BColdRoom,mode,baja:String,Flags.OPERATOR,,False
+BRoomPanel,temp,BStatusNumeric,Flags.OPERATOR,,True
+BRoomPanel,label,baja:String,Flags.READONLY | Flags.SUMMARY,,False
+BRoomPanel,cache,baja:Integer,Flags.TRANSIENT | Flags.HIDDEN,,False
+BRoomPanel,untyped,,,,False

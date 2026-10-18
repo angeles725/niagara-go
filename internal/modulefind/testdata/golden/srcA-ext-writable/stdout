@@ -1,0 +1,3 @@
+ok(has-action) BColdRoom.setpoint  <baja:StatusNumeric>  class exposes an action
+WARN           BRoomPanel.temp  <BStatusNumeric>  external write must use the oBIX child-leaf bare <real> (…/value, B826-G2) or add an OPERATOR action (B822)
+# 2 OPERATOR complex properties; 1 WARN (S19)

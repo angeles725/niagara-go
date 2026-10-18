@@ -1,0 +1,2 @@
+usage: module-find.py [root] writers [-h] [--json] [--csv] [--limit N] slot
+module-find.py [root] writers: error: the following arguments are required: slot

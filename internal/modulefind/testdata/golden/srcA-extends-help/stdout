@@ -1,0 +1,9 @@
+usage: module-find.py [root] extends [-h] [--json] [--csv] [--limit N]
+                                     [--of OF]
+
+options:
+  -h, --help     show this help message and exit
+  --json         machine JSON output
+  --csv          CSV output (header + rows)
+  --limit, -n N  print at most N rows (default: all); the cut is reported
+  --of OF        resolve the full chain of one class

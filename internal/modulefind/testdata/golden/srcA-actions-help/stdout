@@ -1,0 +1,9 @@
+usage: module-find.py [root] actions [-h] [--json] [--csv] [--limit N]
+                                     [--name NAME]
+
+options:
+  -h, --help     show this help message and exit
+  --json         machine JSON output
+  --csv          CSV output (header + rows)
+  --limit, -n N  print at most N rows (default: all); the cut is reported
+  --name NAME    regex on action name

@@ -1,0 +1,4 @@
+com/acme/BColdRoom.java:25  public void forceDefrost()
+com/acme/BDashServlet.java:11  // forceDefrost is named in a comment, not called
+com/acme/BRoomPanel.java:10  room.forceDefrost();
+com/acme/util/Helper.java:7  room.forceDefrost ();

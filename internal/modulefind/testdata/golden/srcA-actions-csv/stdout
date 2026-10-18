@@ -1,0 +1,4 @@
+class,action,flags
+BColdRoom,applySetpoint,o
+BColdRoom,defrost,o
+BColdRoom,reset,h

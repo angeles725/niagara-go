@@ -1,0 +1,42 @@
+[
+  {
+    "change": "slot-added",
+    "ref": "BColdRoom.alarmLimit",
+    "detail": "baja:StatusNumeric"
+  },
+  {
+    "change": "slot-reflagged",
+    "ref": "BColdRoom.mode",
+    "detail": "Flags.OPERATOR -> Flags.SUMMARY"
+  },
+  {
+    "change": "slot-retyped",
+    "ref": "BColdRoom.setpoint",
+    "detail": "baja:StatusNumeric -> baja:Double"
+  },
+  {
+    "change": "action-removed",
+    "ref": "BColdRoom.defrost()",
+    "detail": ""
+  },
+  {
+    "change": "action-removed",
+    "ref": "BColdRoom.reset()",
+    "detail": ""
+  },
+  {
+    "change": "action-added",
+    "ref": "BColdRoom.silence()",
+    "detail": ""
+  },
+  {
+    "change": "slot-removed",
+    "ref": "BRoomPanel.cache",
+    "detail": "baja:Integer"
+  },
+  {
+    "change": "slot-removed",
+    "ref": "BRoomPanel.label",
+    "detail": "baja:String"
+  }
+]

@@ -1,0 +1,7 @@
+[
+  {
+    "class": "BColdRoom",
+    "action": "applySetpoint",
+    "flags": "o"
+  }
+]

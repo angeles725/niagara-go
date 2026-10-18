@@ -1,0 +1,21 @@
+  ok   dot-dir (.git) pruned
+  ok   multi-line @NiagaraProperty joined by paren balance
+  ok   multi-token flags "SUMMARY | OPERATOR" captured WHOLE (not truncated at |)
+  ok   --flags OPERATOR matches a SUMMARY|OPERATOR slot
+  ok   MIN facet parsed
+  ok   StatusNumeric detected as complex
+  ok   @NiagaraAction OPERATOR flag
+  ok   both .set("setpoint",..) and setSetpoint(..) writers found
+  ok   extends chain resolved (servlet name inherited from BWebServlet)
+  ok   dynamic .set(prop,..) writer detected (runtime-resolved slot)
+  ok   ORD literal captured
+  ok   slot-types: aggregates StatusNumeric as complex
+  ok   ext-writable: flags BRoomPanel.setpoint (OPERATOR complex, no action) as S19 WARN
+  ok   ext-writable: BColdRoom.setpoint is ok (class has applySetpoint action)
+  ok   callers: finds setSetpoint call site
+  ok   grep --source: finds a method-body line with file:line
+  ok   grep (names): the miss line says it searched names, not the code
+  ok   compare: detects an added slot
+  ok   compare: detects a retype (schema-risk)
+
+SELFTEST OK

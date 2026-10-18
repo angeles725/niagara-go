@@ -1,0 +1,1 @@
+{"args": ["srcA", "writers", "--csv", "setpoint"], "env": {"COLUMNS": "80", "GIT_DIR": "/nonexistent"}}

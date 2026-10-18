@@ -1,0 +1,3 @@
+BColdRoom.applySetpoint()  f=o
+BColdRoom.defrost()  f=o
+BColdRoom.reset()  f=h

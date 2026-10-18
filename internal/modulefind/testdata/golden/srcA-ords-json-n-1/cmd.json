@@ -1,0 +1,1 @@
+{"args": ["srcA", "ords", "--json", "-n", "1"], "env": {"COLUMNS": "80", "GIT_DIR": "/nonexistent"}}

@@ -1,0 +1,5 @@
+  2x  baja:String          simple   OPERATOR=1 TRANSIENT=0
+  1x  baja:StatusNumeric   complex  OPERATOR=1 TRANSIENT=0
+  1x  BStatusNumeric       complex  OPERATOR=1 TRANSIENT=0
+  1x  baja:Integer         simple   OPERATOR=0 TRANSIENT=1
+  1x  (none)               simple   OPERATOR=0 TRANSIENT=0

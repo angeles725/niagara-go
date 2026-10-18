@@ -1,0 +1,5 @@
+class,ord
+BColdRoom,station:|slot:/Drivers
+BColdRoom,slot:/Config/Rooms
+BDashServlet,history:/station/temp
+BDashServlet,file:^web/index.html

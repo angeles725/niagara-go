@@ -1,0 +1,10 @@
+usage: module-find.py [root] compare [-h] [--json] [--csv] [--limit N] srcB
+
+positional arguments:
+  srcB           source root B (newer) — <root> is A (older)
+
+options:
+  -h, --help     show this help message and exit
+  --json         machine JSON output
+  --csv          CSV output (header + rows)
+  --limit, -n N  print at most N rows (default: all); the cut is reported

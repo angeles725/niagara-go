@@ -1,0 +1,9 @@
+slot-removed    BColdRoom.alarmLimit  baja:StatusNumeric
+slot-reflagged  BColdRoom.mode  Flags.SUMMARY -> Flags.OPERATOR
+slot-retyped    BColdRoom.setpoint  baja:Double -> baja:StatusNumeric
+action-added    BColdRoom.defrost()  
+action-added    BColdRoom.reset()  
+action-removed  BColdRoom.silence()  
+slot-added      BRoomPanel.cache  baja:Integer
+slot-added      BRoomPanel.label  baja:String
+# 8 changes; 2 schema-RISK (removed/retyped — run schema-risk.sh, B795)

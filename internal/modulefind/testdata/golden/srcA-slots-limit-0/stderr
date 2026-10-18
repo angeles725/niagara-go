@@ -1,0 +1,3 @@
+usage: module-find.py [root] slots [-h] [--json] [--csv] [--limit N]
+                                   [--type TYPE] [--flags FLAGS] [--name NAME]
+module-find.py [root] slots: error: argument --limit/-n: must be at least 1, not 0

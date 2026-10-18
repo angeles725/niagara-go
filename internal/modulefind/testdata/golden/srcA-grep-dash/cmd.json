@@ -1,0 +1,1 @@
+{"args": ["srcA", "grep", "dash"], "env": {"COLUMNS": "80", "GIT_DIR": "/nonexistent"}}

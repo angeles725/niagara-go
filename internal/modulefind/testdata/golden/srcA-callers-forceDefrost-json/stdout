@@ -1,0 +1,17 @@
+[
+  {
+    "class": "BColdRoom",
+    "line": 25,
+    "text": "public void forceDefrost()"
+  },
+  {
+    "class": "BRoomPanel",
+    "line": 10,
+    "text": "room.forceDefrost();"
+  },
+  {
+    "class": "Helper",
+    "line": 7,
+    "text": "room.forceDefrost ();"
+  }
+]
