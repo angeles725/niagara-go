@@ -3,7 +3,13 @@ package searchdoor
 import (
 	"os"
 	"path/filepath"
+
+	"github.com/angeles725/niagara-go/internal/locate"
 )
+
+// envFunc reads one environment variable: cli.Stdio.Env in the binaries, a
+// map in the tests that inject their environment.
+type envFunc = func(string) string
 
 // pathEnv names the variable that re-points each source (the Python seam).
 var pathEnv = [5]string{"NSEARCH_CORPUS_NAV", "NSEARCH_NIAGARA_HELP", "NSEARCH_MODULE_NAV", "NSEARCH_COURSE_ROOT",
@@ -21,36 +27,23 @@ var executable = func() (string, error) {
 	return filepath.EvalSymlinks(exe)
 }
 
-// findUp returns the first directory at or above dir holding the marker.
-func findUp(dir string) (string, bool) {
-	for {
-		if st, err := os.Stat(filepath.Join(dir, marker)); err == nil && !st.IsDir() {
-			return dir, true
-		}
-		parent := filepath.Dir(dir)
-		if parent == dir {
-			return "", false
-		}
-		dir = parent
-	}
+// isCheckout holds the marker as any non-directory (the Python seam's is_file
+// would also refuse a device; no checkout holds one).
+func isCheckout(dir string) bool {
+	st, err := os.Stat(filepath.Join(dir, marker))
+	return err == nil && !st.IsDir()
 }
 
 // root locates the niagara-research checkout (see the package doc).
-func root() string {
-	if r := os.Getenv("NSEARCH_ROOT"); r != "" {
+func root(getenv envFunc) string {
+	if r, ok := locate.Find(locate.Options{Env: []string{"NSEARCH_ROOT"}, Getenv: getenv,
+		Starts: []locate.Start{locate.FromExecutable, locate.FromCwd}, Marker: isCheckout,
+		Executable: executable}); ok {
 		return r
 	}
 	exeDir := ""
 	if exe, err := executable(); err == nil {
 		exeDir = filepath.Dir(exe)
-		if r, ok := findUp(exeDir); ok {
-			return r
-		}
-	}
-	if wd, err := os.Getwd(); err == nil {
-		if r, ok := findUp(wd); ok {
-			return r
-		}
 	}
 	return filepath.Dir(exeDir)
 }
@@ -58,15 +51,15 @@ func root() string {
 // defaultPaths are the backends of the checkout, each re-pointed by its
 // NSEARCH_* variable when that is set and not empty. The checkout is only
 // located when a path still needs it.
-func defaultPaths() Paths {
+func defaultPaths(getenv envFunc) Paths {
 	vals := [len(pathEnv)]string{}
 	need := false
 	for i, name := range pathEnv {
-		vals[i] = os.Getenv(name)
+		vals[i] = getenv(name)
 		need = need || vals[i] == ""
 	}
 	if need {
-		r := root()
+		r := root(getenv)
 		defaults := [len(pathEnv)]string{filepath.Join(r, "tools", "corpus-nav.py"),
 			filepath.Join(r, "niagara-help", "tools", "niagara_help.py"),
 			filepath.Join(r, "module-navigator", "tools", "module_nav.py"),

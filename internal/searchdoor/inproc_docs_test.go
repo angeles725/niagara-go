@@ -65,7 +65,6 @@ func recorded(t *testing.T, path string) string {
 func TestDocsFindMatchesNiagaraHelp(t *testing.T) {
 	testdata := helpTestdata(t)
 	t.Setenv("XDG_CACHE_HOME", t.TempDir())
-	t.Setenv("NIAGARA_HELP_DIR", "")
 	checkout := ftsfixture.Checkout(t, testdata, false)
 	script := stubScript(t, filepath.Join(checkout, "tools", "niagara_help.py"))
 	n := 0
@@ -77,7 +76,7 @@ func TestDocsFindMatchesNiagaraHelp(t *testing.T) {
 		t.Run(c.Name, func(t *testing.T) {
 			norm := strings.NewReplacer(ftsfixture.Root, checkout)
 			want := norm.Replace(recorded(t, filepath.Join(testdata, "fulltext-cli", c.Name+".txt")))
-			checkAnswer(t, docsFind(append([]string{script}, docsArgv(c.Args)...)),
+			checkAnswer(t, docsFind(envOf(nil), append([]string{script}, docsArgv(c.Args)...)),
 				oracle{c.Exit, want, norm.Replace(c.Stderr)})
 		})
 	}
@@ -92,7 +91,6 @@ func TestDocsFindMatchesNiagaraHelp(t *testing.T) {
 // tests are the oracle (intended.json where nh answers otherwise on purpose).
 func TestDocsFindRebuildsTheFulltextIndex(t *testing.T) {
 	testdata := helpTestdata(t)
-	t.Setenv("NIAGARA_HELP_DIR", "")
 	dir := filepath.Join(testdata, "fulltext-rebuild")
 	override := map[string]ftCase{}
 	for _, c := range loadFtCases(t, filepath.Join(dir, "intended.json")) {
@@ -143,7 +141,7 @@ func TestDocsFindRebuildsTheFulltextIndex(t *testing.T) {
 			cacheDB := fts.CachePath(base)
 			norm := strings.NewReplacer("<CACHEDB>", cacheDB, "<CACHEDIR>", filepath.Dir(cacheDB),
 				"<CACHE>", cache, ftsfixture.Root, checkout)
-			checkAnswer(t, docsFind(append([]string{script}, docsArgv(c.Args)...)),
+			checkAnswer(t, docsFind(envOf(nil), append([]string{script}, docsArgv(c.Args)...)),
 				oracle{c.Exit, norm.Replace(*c.Stdout), norm.Replace(c.Stderr)})
 			if p, _ := fts.FreshPath(base, fts.Fingerprint(fts.SourceDirs(base))); c.Exit != 2 && p == "" {
 				t.Error("no up-to-date index after the answer")
@@ -160,8 +158,7 @@ func TestDocsFindRebuildsTheFulltextIndex(t *testing.T) {
 func TestDocsFindMatchesNhOnVersionErrors(t *testing.T) {
 	testdata := helpTestdata(t)
 	t.Setenv("XDG_CACHE_HOME", t.TempDir())
-	t.Setenv("NIAGARA_HELP_DIR", "")
-	t.Setenv("NIAGARA_HELP_VERSION", "")
+	t.Setenv("NIAGARA_HELP_VERSION", "") // for nh (runNh), which reads the process
 	checkout := ftsfixture.Checkout(t, testdata, false)
 	script := stubScript(t, filepath.Join(checkout, "tools", "niagara_help.py"))
 	reg := filepath.Join(checkout, "versions", "registry.json")
@@ -187,7 +184,7 @@ func TestDocsFindMatchesNhOnVersionErrors(t *testing.T) {
 		{"--niagara-version", "-x", "find", "alarm", "-n", "5", "--or"},
 	} {
 		t.Run(strings.Join(args, " "), func(t *testing.T) {
-			got := docsFind(append([]string{script}, args...))
+			got := docsFind(envOf(nil), append([]string{script}, args...))
 			want := runNh(t, checkout, args)
 			if want.rc != 2 {
 				t.Fatalf("nh exit %d, want a version error (2): %q", want.rc, want.stdout)
@@ -211,10 +208,9 @@ func runNh(t *testing.T, checkout string, args []string) oracle {
 // backend (the door exits 3 first: goldens blank and blank-spaces).
 func TestDocsFindSearchesADashQuery(t *testing.T) {
 	t.Setenv("XDG_CACHE_HOME", t.TempDir())
-	t.Setenv("NIAGARA_HELP_DIR", "")
 	checkout := ftsfixture.Checkout(t, helpTestdata(t), false)
 	script := stubScript(t, filepath.Join(checkout, "tools", "niagara_help.py"))
-	a := docsFind([]string{script, "--niagara-version", "1.0", "find", "-zzqq", "-n", "5"})
+	a := docsFind(envOf(nil), []string{script, "--niagara-version", "1.0", "find", "-zzqq", "-n", "5"})
 	if !a.ok || a.rc != 1 || !strings.HasPrefix(a.stdout, "No match for '-zzqq' (find) in this scope.") {
 		t.Errorf("%+v", a)
 	}

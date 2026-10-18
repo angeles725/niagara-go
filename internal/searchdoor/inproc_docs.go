@@ -2,7 +2,6 @@ package searchdoor
 
 import (
 	"fmt"
-	"os"
 	"sort"
 	"strconv"
 	"strings"
@@ -22,7 +21,7 @@ const findMaxResults = 10
 // with nh's notices on stderr (help/scope.OpenFulltext, decision D38); a search
 // that cannot run is nh's "ERROR: ..." line (exit 2); a miss is nh's honest-zero
 // block (scope.Miss, exit 1).
-func docsFind(argv []string) answer {
+func docsFind(getenv envFunc, argv []string) answer {
 	args, version := argv[1:], ""
 	if len(args) >= 2 && args[0] == "--niagara-version" {
 		version, args = args[1], args[2:]
@@ -31,14 +30,14 @@ func docsFind(argv []string) answer {
 	if !ok {
 		return noAnswer
 	}
-	repo := os.Getenv("NIAGARA_HELP_DIR")
+	repo := getenv("NIAGARA_HELP_DIR")
 	if repo == "" {
 		repo = toolDir(argv[0], false)
 	}
 	if repo == "" { // nh Main without a niagara-help directory (exit 1)
 		return exact(1, "ERROR: Cannot find niagara-help directory.\nSet NIAGARA_HELP_DIR or run from tools/ directory.\n", "")
 	}
-	id, root, err := scope.Resolve(repo, version, os.Getenv)
+	id, root, err := scope.Resolve(repo, version, getenv)
 	if err != nil { // nh prints these on stdout
 		return exact(2, strings.Join(scope.VersionLines(err), "\n")+"\n", "")
 	}

@@ -2,7 +2,6 @@ package searchdoor
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -99,7 +98,7 @@ func tokenRows(b *strings.Builder, hits []codesearch.TokenHit, mods []codesearch
 // codeGrep is `module_nav grep <regex> -n N` (the degraded path of ranked): the
 // '[module]' groups of 'Class:line text' rows, or the counted miss. navRun (mnav grep) answers
 // an invalid regex and a missing corpus (module_nav's exit-2 errors).
-func codeGrep(argv []string) answer {
+func codeGrep(getenv envFunc, argv []string) answer {
 	v, _, ok := shape(argv[1:], []string{"grep", "*", "-n", "#"})
 	base := navDir(argv[0])
 	if !ok || base == "" {
@@ -111,7 +110,7 @@ func codeGrep(argv []string) answer {
 	if err != nil {
 		return noAnswer
 	}
-	organized := os.Getenv("NAV_CORPUS_BASE")
+	organized := getenv("NAV_CORPUS_BASE")
 	if organized == "" {
 		organized = filepath.Join(filepath.Dir(base), "organized")
 	}

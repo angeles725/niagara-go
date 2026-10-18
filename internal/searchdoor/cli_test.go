@@ -1,10 +1,14 @@
 package searchdoor
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
+
+	"github.com/angeles725/niagara-go/internal/cli"
 )
 
 func TestSplitLicense(t *testing.T) {
@@ -33,28 +37,27 @@ func TestSplitLicense(t *testing.T) {
 	}
 }
 
+// envOf is an injected environment: the variables of vars, every other one unset.
+func envOf(vars map[string]string) envFunc { return func(name string) string { return vars[name] } }
+
 func TestDefaultPathsHonourEachVariable(t *testing.T) {
-	t.Setenv("NSEARCH_ROOT", "/r")
-	t.Setenv("NSEARCH_CORPUS_NAV", "")
-	t.Setenv("NSEARCH_NIAGARA_HELP", "")
-	t.Setenv("NSEARCH_MODULE_NAV", "x/nav.py")
-	t.Setenv("NSEARCH_COURSE_ROOT", "")
-	t.Setenv("NSEARCH_COURSE_KEYS", "")
+	t.Parallel()
+	vars := map[string]string{"NSEARCH_ROOT": "/r", "NSEARCH_CORPUS_NAV": "", "NSEARCH_MODULE_NAV": "x/nav.py"}
 	// Python joins REPO / "tools" / ... with pathlib: native separators (\r\tools\corpus-nav.py on Windows).
 	want := Paths{Blocks: filepath.Join("/r", "tools", "corpus-nav.py"),
 		Docs: filepath.Join("/r", "niagara-help", "tools", "niagara_help.py"),
 		Code: "x/nav.py", Course: filepath.Join("/r", "sources", "n4-dev-course"), Keys: "/r"}
-	if got := defaultPaths(); got != want {
+	if got := defaultPaths(envOf(vars)); got != want {
 		t.Errorf("defaultPaths() = %+v, want %+v", got, want)
 	}
-	t.Setenv("NSEARCH_COURSE_KEYS", "k")
-	if got := defaultPaths().Keys; got != "k" {
+	vars["NSEARCH_COURSE_KEYS"] = "k"
+	if got := defaultPaths(envOf(vars)).Keys; got != "k" {
 		t.Errorf("defaultPaths().Keys = %q, want NSEARCH_COURSE_KEYS", got)
 	}
 }
 
 func TestRootIsFoundAboveTheExecutableThenTheWorkingDirectory(t *testing.T) {
-	t.Setenv("NSEARCH_ROOT", "")
+	noEnv := envOf(nil)
 	checkout := t.TempDir()
 	if err := os.MkdirAll(filepath.Join(checkout, "tools", "sub"), 0o755); err != nil {
 		t.Fatal(err)
@@ -68,16 +71,36 @@ func TestRootIsFoundAboveTheExecutableThenTheWorkingDirectory(t *testing.T) {
 
 	executable = func() (string, error) { return filepath.Join(checkout, "tools", "sub", "nsearch"), nil }
 	t.Chdir(elsewhere)
-	if got := root(); got != checkout {
+	if got := root(noEnv); got != checkout {
 		t.Errorf("root from the executable = %q, want %q", got, checkout)
 	}
 	executable = func() (string, error) { return filepath.Join(elsewhere, "bin", "nsearch"), nil }
 	t.Chdir(filepath.Join(checkout, "tools"))
-	if got := root(); got != checkout {
+	if got := root(noEnv); got != checkout {
 		t.Errorf("root from the working directory = %q, want %q", got, checkout)
 	}
 	t.Chdir(elsewhere)
-	if got := root(); got != elsewhere {
+	if got := root(noEnv); got != elsewhere {
 		t.Errorf("fallback root = %q, want the executable directory's parent %q", got, elsewhere)
+	}
+}
+
+// TestMainReadsTheEnvironmentOfItsStdio: the binaries read every path variable
+// through cli.Stdio.Env, never the process when the Stdio brings its own.
+func TestMainReadsTheEnvironmentOfItsStdio(t *testing.T) {
+	t.Setenv("NSEARCH_CORPUS_NAV", filepath.Join(t.TempDir(), "process", "corpus-nav.py"))
+	missing := filepath.Join(t.TempDir(), "injected")
+	vars := map[string]string{"NSEARCH_ROOT": missing}
+	for i, name := range pathEnv {
+		vars[name] = filepath.Join(missing, fmt.Sprintf("source%d.py", i))
+	}
+	var out, errb strings.Builder
+	rc := Main([]string{"alarm"}, cli.Stdio{In: strings.NewReader(""), Out: &out, Err: &errb, Getenv: envOf(vars)})
+	if rc != cli.ExitCannotSearch {
+		t.Errorf("exit %d, want %d (every source unavailable)\n%s%s", rc, cli.ExitCannotSearch, out.String(), errb.String())
+	}
+	want := "tool not found at " + pyPath(vars["NSEARCH_CORPUS_NAV"])
+	if !strings.Contains(out.String(), want) || strings.Contains(out.String(), "process") {
+		t.Errorf("the blocks source does not use the injected path (%q):\n%s", want, out.String())
 	}
 }

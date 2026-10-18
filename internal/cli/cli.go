@@ -14,11 +14,25 @@ const (
 	ExitCannotSearch = 2 // missing or corrupt index, bad input, unreadable source
 )
 
-// Stdio is the process I/O a command writes to; tests pass buffers.
+// Stdio is the process I/O a command writes to and the environment it reads;
+// tests pass buffers and, to stay off the process environment (no os.Setenv, so
+// they can run in parallel), a Getenv of their own.
 type Stdio struct {
 	In  io.Reader
 	Out io.Writer
 	Err io.Writer
+	// Getenv reads one environment variable; nil reads the process (os.Getenv),
+	// so a Stdio built without it behaves as before.
+	Getenv func(name string) string
+}
+
+// Env is the value of the environment variable name ("" when unset), read
+// through Getenv.
+func (s Stdio) Env(name string) string {
+	if s.Getenv == nil {
+		return os.Getenv(name)
+	}
+	return s.Getenv(name)
 }
 
 // Main is the signature every command package exports.
@@ -26,5 +40,10 @@ type Main func(args []string, s Stdio) int
 
 // Run executes m with the process arguments and exits with its code.
 func Run(m Main) {
-	os.Exit(m(os.Args[1:], Stdio{In: os.Stdin, Out: os.Stdout, Err: os.Stderr}))
+	os.Exit(m(os.Args[1:], processStdio()))
+}
+
+// processStdio is the process's own streams and environment.
+func processStdio() Stdio {
+	return Stdio{In: os.Stdin, Out: os.Stdout, Err: os.Stderr, Getenv: os.Getenv}
 }

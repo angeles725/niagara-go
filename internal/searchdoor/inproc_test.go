@@ -76,18 +76,18 @@ func TestBlocksFindMatchesCorpusNav(t *testing.T) {
 		"find-zzqq":                          {"find", "zzqq", "--limit", "2000", "--or"},
 	} {
 		t.Run(golden, func(t *testing.T) {
-			checkAnswer(t, blocksFind(append([]string{script}, args...)),
+			checkAnswer(t, blocksFind(os.Getenv, append([]string{script}, args...)),
 				readOracle(t, filepath.Join("..", "corpusnav", "testdata", "golden", golden)))
 		})
 	}
 	for _, args := range [][]string{{"find", "alarm", "--limit", "0"},
 		{"find", "alarm", "--in", "all"}, {"grep", "alarm", "--limit", "50"}} {
-		if blocksFind(append([]string{script}, args...)).ok {
+		if blocksFind(os.Getenv, append([]string{script}, args...)).ok {
 			t.Errorf("%v: answered in process, want exec", args)
 		}
 	}
 	// A query that starts with "-" is searched as text (corpus-nav's argparse read it as an option).
-	if a := blocksFind(append([]string{script}, "find", "-zzqq", "--limit", "50")); !a.ok || a.rc != 1 ||
+	if a := blocksFind(os.Getenv, append([]string{script}, "find", "-zzqq", "--limit", "50")); !a.ok || a.rc != 1 ||
 		!MissLine.MatchString(a.stdout) {
 		t.Errorf("a query starting with '-': %+v", a)
 	}
@@ -107,7 +107,7 @@ func TestBlocksFindWithoutCatalogMatchesCorpusNav(t *testing.T) {
 	for _, query := range []string{"alarm", "zzqq"} {
 		args := []string{"find", query, "--limit", "2000"}
 		t.Setenv("CORPUS_NAV_ROOT", "")
-		got := blocksFind(append([]string{script}, args...))
+		got := blocksFind(os.Getenv, append([]string{script}, args...))
 		t.Setenv("CORPUS_NAV_ROOT", root)
 		var out, errb bytes.Buffer
 		rc := corpusnav.Main(args, cli.Stdio{In: strings.NewReader(""), Out: &out, Err: &errb})
@@ -144,7 +144,8 @@ func TestCodeTokenAndGrepMatchModuleNav(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Setenv("NAV_CORPUS_BASE", organized)
+	t.Parallel()
+	env := envOf(map[string]string{"NAV_CORPUS_BASE": organized})
 	base := filepath.Join(t.TempDir(), "module-navigator")
 	if err := os.CopyFS(filepath.Join(base, "indexes"), os.DirFS("../nav/testdata/fixture/search/indexes")); err != nil {
 		t.Fatal(err)
@@ -163,7 +164,7 @@ func TestCodeTokenAndGrepMatchModuleNav(t *testing.T) {
 		t.Run(golden, func(t *testing.T) {
 			run := codeToken
 			if args[0] == "grep" {
-				run = codeGrep
+				run = func(argv []string) answer { return codeGrep(env, argv) }
 			}
 			want := readOracle(t, filepath.Join("..", "nav", "testdata", "golden", golden))
 			if golden == "nav-token-similar" { // tokenMiss leaves out the similar tokens (intended)
@@ -176,14 +177,14 @@ func TestCodeTokenAndGrepMatchModuleNav(t *testing.T) {
 			checkAnswer(t, run(append([]string{script}, args...)), want)
 		})
 	}
-	if codeGrep([]string{script, "grep", "ack(Alarm", "-n", "30"}).ok {
+	if codeGrep(env, []string{script, "grep", "ack(Alarm", "-n", "30"}).ok {
 		t.Error("invalid regex: answered by the fast path, want mnav's error")
 	}
 	if codeToken([]string{script, "token", "ackAlarm", "-m", "alarm-rt"}).ok {
 		t.Error("a token filter nsearch never sends: answered in process, want no answer")
 	}
-	t.Setenv("NAV_CORPUS_BASE", filepath.Join(t.TempDir(), "absent"))
-	if codeGrep([]string{script, "grep", "ackAlarm", "-n", "30"}).ok {
+	absent := envOf(map[string]string{"NAV_CORPUS_BASE": filepath.Join(t.TempDir(), "absent")})
+	if codeGrep(absent, []string{script, "grep", "ackAlarm", "-n", "30"}).ok {
 		t.Error("no corpus: answered in process, want no answer")
 	}
 }
@@ -299,7 +300,7 @@ func TestInprocBudget(t *testing.T) {
 	now := time.Unix(0, 0)
 	release := make(chan struct{})
 	defer close(release)
-	slow := func(Paths, []string) func([]string) answer {
+	slow := func(Paths, envFunc, []string) func([]string) answer {
 		return func([]string) answer { <-release; return exact(0, "late", "") }
 	}
 	b := &inprocBackend{clock: func() time.Time { return now }, pick: slow}

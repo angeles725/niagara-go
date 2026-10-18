@@ -177,9 +177,9 @@ func TestSearchQuality(t *testing.T) {
 	}
 	t.Setenv("NSEARCH_ROOT", root)
 	rows := loadQualityRows(t)
-	paths := defaultPaths()
+	paths := defaultPaths(os.Getenv)
 	d := newDoor()
-	d.bind(paths)
+	d.bind(paths, os.Getenv)
 	search := func(q string) map[string]*Outcome {
 		out := map[string]*Outcome{}
 		for _, o := range d.search(q, paths, qualityLimit, "", qualityTimeout, qualityDocVersion) {

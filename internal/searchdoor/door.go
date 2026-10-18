@@ -29,10 +29,11 @@ type door struct {
 	now     func() float64
 }
 
-// bind tells a backend that answers in process which scripts are the sources.
-func (d *door) bind(p Paths) {
+// bind tells a backend that answers in process which scripts are the sources
+// and how to read the environment (the command's cli.Stdio.Env).
+func (d *door) bind(p Paths, getenv envFunc) {
 	if b, ok := d.backend.(pathBinder); ok {
-		b.bindPaths(p)
+		b.bindPaths(p, getenv)
 	}
 }
 
