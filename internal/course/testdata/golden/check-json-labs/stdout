@@ -77,6 +77,17 @@
     "evidence": "Lab4/Reference Tstat.nullOnInControl = false (stored)"
   },
   {
+    "id": "C4.8",
+    "lab": "4",
+    "keys": [
+      "L4.8"
+    ],
+    "kind": "audit",
+    "description": "SpaceTemp Out text has the unit (audit)",
+    "verdict": "PASS",
+    "evidence": "history/station/seg7/AuditHistory.hdb: 1 of 12 audit records match; first 2026-10-15T18:42:34.959Z Invoked /Lab4/SpaceTemp.set = 22,0 °C"
+  },
+  {
     "id": "CB.1",
     "lab": "B",
     "keys": [

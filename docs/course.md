@@ -202,6 +202,9 @@ own prefixes (`t:`, `tld:`) are resolved through its `m=` declarations.
 | `jar-text` | the first entry matching a glob | it holds every listed string |
 | `jar-signed` | `META-INF/*.SF` and `META-INF/*.RSA`, `.DSA` or `.EC` | both exist |
 | `file-text` | every file matching a glob under the station dir (`{station}` as for `files`), read as text: a UTF-8 BOM and CRLF line ends dropped; `Match` is a Go regexp (`{station}` = the station name, quoted) | `Line` > 0: that line matches; `Line` 0: the matching lines are at least / exactly N. No matching file is FAIL; a file over 16 MiB is SKIP (`cannot read`), never checked on its first part |
+| `audit` | the records of every history file matching a glob under the station dir (`history/*/*/AuditHistory.hdb`), decoded by `internal/hdbread`; `Hist` holds Go regexps on `operation`, `target`, `slotName`, `oldValue`, `value` (empty = any) | the matching records, summed over the files, are at least / exactly N |
+| `log` | as `audit`, over `history:LogRecord` files; regexps on `logName`, `level` (`INFO`, `SEVERE`, ...), `message` | as `audit` |
+| `trend` | every trend history matching the glob (`history/*/*/NumericWritable*.hdb`); a boolean value counts 0/1, an enum its ordinal | each file has at least / exactly N records (`Distinct`: N distinct values), and every value lies in `Hist.Min..Max` (NaN never does) |
 
 Nested slots: the bog reader keeps only a composite slot's direct `value` and `status`, so a
 dotted slot is read from `Comp.Nested`, which `bog.LoadOptions` fills only with
@@ -211,12 +214,34 @@ it is SKIP, never PASS on the type default. The path is from the component that 
 composite slot: the Tcp Config of a driver network is its own component (`tcpConfig`, with a
 handle), so its port is `address.port` on `trafficLightDriver:TrafficLightDriverTcpCommConfig`.
 
-Checks per lab: 1: 7, 2: 4, 3: 5, 4: 7, 5: 3 (jars only: the station holds nothing of code
-signing), 6: 6, 7: 5, 9: 7, 10: 10 (three of them `file-text` on the exported CSVs), 11: 17 (8 of them nested: C11.9-C11.16, the driver and server
+Checks per lab: 1: 7, 2: 4, 3: 5, 4: 8 (C4.8 an `audit`), 5: 3 (jars only: the station holds nothing of code
+signing), 6: 6, 7: 5, 9: 7, 10: 13 (three of them `file-text` on the exported CSVs, three on the
+history files), 11: 17 (8 of them nested: C11.9-C11.16, the driver and server
 Tcp Config addresses and the ping health of the network and of every driver device; C11.17
 `serverEnabled` is a plain slot), B: 4. Lab 8 (ORDs) writes no code and changes nothing, so it
 has none (its station steps, such as L8.15 and L8.17, happen in the Workbench UI). Appendix A
 (`LA`) has none either.
+
+History files. A history kind reads what the station recorded while it ran, which the bog does
+not keep. A history file that cannot be decoded, or holds another record type than the kind reads,
+is SKIP; no matching file is FAIL. The rows (TrainingStation, 2026-10-17):
+
+| Row | Item | Reads |
+|---|---|---|
+| C4.8 | L4.8 (PARTIAL: the glyph) | an audited `set` on `SpaceTemp` whose old value shows Out with the unit: `24,0 °C {ok} (Out = 24,0 °C {ok} @ def)` |
+| C10.11 | L10.19 (PARTIAL: the one Ramp) | nine `Added /Lab10 NumericWritable1..9` audit records, the paste |
+| C10.12 | L10.18, L10.19 | every `NumericWritable*` trend history holds two or more values, all in the Ramp's 0..100 |
+| C10.13 | L10.21 | ten `NumericWritable*` history files, named after their points (`files`) |
+
+What the histories do not decide (2026-10-17): the LogHistory keeps its last 500 records only (on
+the TrainingStation 2026-10-16 21:13:54 to 21:15:09, the minute before the Quit), so no log line of a
+lab step is left; a ping is not audited and the batch-job step histories are empty. So L1.25 (the
+console line; the audit has only `Invoked /Lab1/FirstComponent execute`), L8.17 (a view's
+`?period=today` query), L11.26 and L11.32 (the ping), L11.41 (the subscription and `readOk`),
+L11.42 (the order of Write and Read Value) and L11.43 (the audit shows `intersectionId` A -> Z -> A
+and `lightId` N <-> S, but the WARNING it predicts was logged long before the log's window, and S is a
+known light) stay as they were. The audit also shows why L10.19's one Ramp is not observed: the live
+paste added `Ramp1`..`Ramp9` with the copies.
 
 Verdicts: PASS; FAIL with what was found instead (`found 9 ..., want exactly 10`,
 `0 of 1 pass, want 2.0: Lab4/My Tstat.diff = 0.0 (default)`); SKIP when the check could not run
@@ -371,6 +396,13 @@ not observed.
 - `root_test.go`: the discovery order (flag, variable, cwd walk, executable walk) and the
   not-found error, run from a temporary directory with the executable stubbed, so no `labs.md`
   above the real checkout can leak in.
+- `check/history_test.go`: the `audit`, `log` and `trend` kinds over `.hdb` files built by
+  `check/fixturehdb_test.go` (a one-page record store, a one-page fixed trend table, the layouts of
+  `internal/hdbread`): matches and misses, several files, a value range with NaN, no file, another
+  record type and an undecodable file (SKIP), a bad regexp. The `good` and `bad` stations carry
+  history files generated from the table `fixtureHistories` (`COURSE_UPDATE_FIXTURES=1 go test -run
+  TestFixtureHistories`; the test fails when one drifts): `bad` audits three copies and a set without
+  units, one constant trend and one out of 0..100.
 - `check/filetext_test.go`: the `file-text` kind over a BOM + CRLF trend CSV, an old-format CSV, a
   short file, a line count, no matching file, a bad regexp and a file over the read bound (SKIP).
 - `check/check_test.go` and the `check-*` goldens: synthetic stations under

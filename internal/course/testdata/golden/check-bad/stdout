@@ -22,6 +22,7 @@ C4.4    4    PASS     NumericWritable.out -> Tstat.sp [L4.10]                   
 C4.5    4    FAIL     training Tstat diff = 2 [L4.13]                                                0 of 1 pass, want 2.0: Lab4/My Tstat.diff = 0.0 (default)
 C4.6    4    PASS     training Tstat action = reverse [L4.15]                                        Lab4/My Tstat.action = reverse (stored)
 C4.7    4    PASS     Reference Tstat nullOnInControl = false [L4.7]                                 Lab4/Reference Tstat.nullOnInControl = false (stored)
+C4.8    4    FAIL     SpaceTemp Out text has the unit (audit) [L4.8]                                 history/station/seg7/AuditHistory.hdb: 0 of 4 audit records match, want at least 1 (operation =~ ^Invoked$, target =~ /SpaceTemp$, slotName =~ ^set$, oldValue =~ \(Out = -?[0-9.,]+ °[CF] )
 C5.1    5    PASS     training-rt is signed [L5.21 L5.24]                                            modules/training-rt.jar: META-INF/CODESIGN.SF, META-INF/CODESIGN.RSA
 C5.2    5    PASS     training-wb is signed [L5.24]                                                  modules/training-wb.jar: META-INF/CODESIGN.SF, META-INF/CODESIGN.RSA
 C5.3    5    PASS     signed with the CodeSigning alias [L5.13 L5.14]                                modules/training-rt.jar: 1 entry matches META-INF/CODESIGN.SF
@@ -53,6 +54,9 @@ C10.7   10   PASS     depends on history-rt, file-rt, bql-rt [L10.6 L10.7 L10.15
 C10.8   10   FAIL     CSV line 1 names the history [L10.24]                                          0 of 9 files pass, want line 1 =~ ^history:{station}/NumericWritable\d*$: shared/BadStation_NumericWritable.csv:1 = Timestamp,Value,Status
 C10.9   10   FAIL     CSV header on line 3 [L10.24]                                                  0 of 9 files pass, want line 3 =~ ^Timestamp,Trend Flags,Status,Value$: shared/BadStation_NumericWritable.csv has 2 lines
 C10.10  10   FAIL     CSV rows: timestamp, trend flags, status, value [L10.24]                       0 of 9 files pass, want at least 1 line =~ ^\d{1,2} \S+ \d{4} \d{2}:\d{2}:\d{2} \S+,\{[^}]*\},\{[^}]*\},"?-?\d+(?:[.,]\d+)?"?$: shared/BadStation_NumericWritable.csv: 0 lines match
+C10.11  10   FAIL     paste added NumericWritable1-9 (audit) [L10.19]                                history/station/seg7/AuditHistory.hdb: 3 of 4 audit records match, want at least 9 (operation =~ ^Added$, target =~ /Lab10$, slotName =~ ^NumericWritable[1-9]$); first 2026-10-15T18:42:33.959Z Added /Lab10.NumericWritable1 = 36,3 {ok} @ 16
+C10.12  10   FAIL     NumericWritable histories ramp in 0..100 [L10.18 L10.19]                       history/station/seg0/NumericWritable1.hdb: 1 distinct value, 0..0, want at least 2
+C10.13  10   FAIL     ten NumericWritable histories by point name [L10.21]                           found 2 history/*/*/NumericWritable*.hdb, want exactly 10: NumericWritable1.hdb … NumericWritable2.hdb
 C11.1   11   PASS     one TrafficLightServerNetwork [L11.7]                                          found 1: Drivers/TrafficLightServerNetwork
 C11.2   11   PASS     17 server devices (intersections A-Q) [L11.8]                                  found 17: Drivers/TrafficLightServerNetwork/A, Drivers/TrafficLightServerNetwork/B, Drivers/TrafficLightServerNetwork/C, … (+14)
 C11.3   11   PASS     68 server proxy extensions (4 lights each) [L11.8]                             found 68: Drivers/TrafficLightServerNetwork/A/points/N/proxyExt, Drivers/TrafficLightServerNetwork/A/points/S/proxyExt, Drivers/TrafficLightServerNetwork/A/points/E/proxyExt, … (+65)
@@ -74,4 +78,4 @@ CB.1    B    PASS     devices added by discovery (distinct intersection ids) [LB
 CB.2    B    PASS     device discovery leaf in trafficLightDriver-rt [LB.16]                         modules/trafficLightDriver-rt.jar: 1 entry matches com/tridiumuniversity/trafficLightDriver/learn/BTrafficLightDriverDeviceDiscoveryLeaf.class
 CB.3    B    PASS     point discovery leaf in trafficLightDriver-rt [LB.19]                          modules/trafficLightDriver-rt.jar: 1 entry matches com/tridiumuniversity/trafficLightDriver/point/BTrafficLightDriverPointDiscoveryLeaf.class
 CB.4    B    PASS     point manager in trafficLightDriver-wb [LB.8]                                  modules/trafficLightDriver-wb.jar: 1 entry matches **/BTrafficLightDriverPointManager*.class
-checked 75: PASS 62, FAIL 13, SKIP 0; station BadStation (236 components, 15 links), install install
+checked 79: PASS 62, FAIL 17, SKIP 0; station BadStation (236 components, 15 links), install install

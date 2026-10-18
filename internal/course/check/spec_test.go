@@ -30,9 +30,10 @@ func runAll(t *testing.T, stationPath, install, role string) []Result {
 	return out
 }
 
-// mostChecks are the labs with more than 8 checks: lab 10 (three file-text checks of one CSV) and
+// mostChecks are the labs with more than 8 checks: lab 10 (three file-text checks of one CSV, three of
+// its history files) and
 // lab 11 (its nested Tcp Config and ping-health slots are one check each).
-var mostChecks = map[string]int{"10": 10, "11": 17}
+var mostChecks = map[string]int{"10": 13, "11": 17}
 
 // keyGroups are the ID prefixes a check of the lab may key: the lab's own items; for a review
 // assignment also the needs-a-run checks X<n>; for the exam the problems P<n>.
@@ -95,6 +96,11 @@ func TestCheckSpecShape(t *testing.T) {
 			ok = ck.Jar != "" && ck.Glob != "" && ck.N > 0
 		case kindJarText:
 			ok = ck.Jar != "" && ck.Glob != "" && len(ck.Contains) > 0
+		case kindAudit, kindLog:
+			_, err := histFields(ck.Kind, ck.Hist)
+			ok = ck.Glob != "" && ck.Hist != nil && err == nil && ck.Op != "" && ck.N > 0
+		case kindTrend:
+			ok = ck.Glob != "" && ck.Hist != nil && ck.Hist.Max > ck.Hist.Min && ck.Op != "" && ck.N > 0
 		case kindFileText:
 			_, err := regexp.Compile(ck.Match)
 			ok = ck.Glob != "" && ck.Match != "" && err == nil && (ck.Line > 0 || (ck.Op != "" && ck.N > 0))

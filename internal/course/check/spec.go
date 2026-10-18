@@ -18,6 +18,10 @@ const (
 	trainingXML     = "META-INF/module.xml"
 	services        = "baja:ServiceContainer"
 	csvGlob         = "shared/{station}_NumericWritable*.csv" // the Lab 10 export (LI:1976-1977)
+	// The station's history files: history/<device>/<segment>/<history name>.hdb.
+	auditGlob  = "history/*/*/AuditHistory.hdb"
+	nwHistGlob = "history/*/*/NumericWritable*.hdb" // the Lab 10 trend histories, named after their points
+	oneRamp    = "that the copies share the one Ramp"
 )
 
 // Spec is every check: the labs, the review assignments, the exam. A run without --lab selects only
@@ -85,6 +89,13 @@ var labSpec = []Check{
 		Type: "training:Tstat", Slot: "action", Want: "reverse", Default: "direct"},
 	{ID: "C4.7", Lab: "4", Keys: []string{"L4.7"}, Kind: kindSlot, Desc: "Reference Tstat nullOnInControl = false",
 		Type: "kitControl:Tstat", Slot: "nullOnInControl", Want: "false", Default: "true"},
+	// L4.8: once the units facet is set, the set action audits the point's text with the unit,
+	// "24,0 °C {ok} (Out = 24,0 °C {ok} @ def)" (the live AuditHistory, 2026-10-13).
+	{ID: "C4.8", Lab: "4", Keys: []string{"L4.8"},
+		Unobserved: map[string]string{"L4.8": "the wire-sheet glyph itself (the audit keeps the Out text the glyph shows)"},
+		Kind:       kindAudit, Desc: "SpaceTemp Out text has the unit (audit)", Glob: auditGlob,
+		Hist: &HistMatch{Operation: `^Invoked$`, Target: `/SpaceTemp$`, SlotName: `^set$`, OldValue: `\(Out = -?[0-9.,]+ °[CF] `},
+		Op:   opMin, N: 1},
 
 	// Lab 5: nothing in the station. jarsigner names the signature files after the alias
 	// CodeSigning, upper-cased and cut to 8 characters: META-INF/CODESIGN.SF (L5.13-L5.14).
@@ -141,17 +152,18 @@ var labSpec = []Check{
 	// Lab 10. BHistoryExt enabled default false
 	// (organized/history/history-rt/decompiled/javax/baja/history/ext/BHistoryExt.java:106).
 	// The lab copies only the point, "Keep all links" (LI:1934-1936): one Ramp feeds all ten
-	// points, so C10.2 wants one Ramp, not ten (the live station has one Ramp per point).
+	// points, so C10.2 wants one Ramp, not ten (the live station has one Ramp per point: its audit
+	// shows Ramp1-Ramp9 pasted with the copies, so L10.19's one Ramp stays not observed).
 	{ID: "C10.1", Lab: "10", Keys: []string{"L10.4", "L10.22"},
 		Unobserved: map[string]string{"L10.22": "the Success state and the job log lines"}, Kind: kindType, Desc: "one HistoriesToCsvService, under Services",
 		Type: "training:HistoriesToCsvService", Within: services, Op: opEq, N: 1},
 	{ID: "C10.2", Lab: "10", Keys: []string{"L10.16"}, Kind: kindType, Desc: "a kitControl Ramp",
 		Type: "kitControl:Ramp", Op: opMin, N: 1},
 	{ID: "C10.3", Lab: "10", Keys: []string{"L10.17", "L10.19"},
-		Unobserved: map[string]string{"L10.19": "the copy names NumericWritable1-9 and that they share the one Ramp"}, Kind: kindType, Desc: "ten NumericCov history extensions",
+		Unobserved: map[string]string{"L10.19": oneRamp}, Kind: kindType, Desc: "ten NumericCov history extensions",
 		Type: "history:NumericCovHistoryExt", Op: opMin, N: 10},
 	{ID: "C10.4", Lab: "10", Keys: []string{"L10.16", "L10.19"},
-		Unobserved: map[string]string{"L10.19": "the copy names NumericWritable1-9 and that they share the one Ramp"}, Kind: kindLink, Desc: "Ramp.out -> NumericWritable.in16, ten times",
+		Unobserved: map[string]string{"L10.19": oneRamp}, Kind: kindLink, Desc: "Ramp.out -> NumericWritable.in16, ten times",
 		From: "kitControl:Ramp", FromSlot: "out", Type: numericWritable, Slot: "in16", Op: opMin, N: 10},
 	{ID: "C10.5", Lab: "10", Keys: []string{"L10.17", "L10.20"}, Kind: kindSlot, Desc: "every NumericCov enabled",
 		Type: "history:NumericCovHistoryExt", Slot: "enabled", Want: "true", Default: "false"},
@@ -169,6 +181,18 @@ var labSpec = []Check{
 		Glob: csvGlob, Line: 3, Match: `^Timestamp,Trend Flags,Status,Value$`},
 	{ID: "C10.10", Lab: "10", Keys: []string{"L10.24"}, Kind: kindFileText, Desc: "CSV rows: timestamp, trend flags, status, value",
 		Glob: csvGlob, Match: `^\d{1,2} \S+ \d{4} \d{2}:\d{2}:\d{2} \S+,\{[^}]*\},\{[^}]*\},"?-?\d+(?:[.,]\d+)?"?$`, Op: opMin, N: 1},
+	// The history files. The paste is audited as one Added per copy (L10.19, the names); each trend
+	// history samples a Ramp, offset 50 and amplitude 50, so 0..100
+	// (organized/kitControl/kitControl-rt/vineflower/com/tridium/kitControl/util/BRamp.java:48-49); the
+	// histories are named after their points (L10.21, history name %parent.name%).
+	{ID: "C10.11", Lab: "10", Keys: []string{"L10.19"}, Unobserved: map[string]string{"L10.19": oneRamp},
+		Kind: kindAudit, Desc: "paste added NumericWritable1-9 (audit)", Glob: auditGlob,
+		Hist: &HistMatch{Operation: `^Added$`, Target: `/Lab10$`, SlotName: `^NumericWritable[1-9]$`}, Op: opMin, N: 9},
+	{ID: "C10.12", Lab: "10", Keys: []string{"L10.18", "L10.19"}, Unobserved: map[string]string{"L10.19": oneRamp},
+		Kind: kindTrend, Desc: "NumericWritable histories ramp in 0..100", Glob: nwHistGlob,
+		Distinct: true, Op: opMin, N: 2, Hist: &HistMatch{Min: 0, Max: 100}},
+	{ID: "C10.13", Lab: "10", Keys: []string{"L10.21"}, Kind: kindFiles, Desc: "ten NumericWritable histories by point name",
+		Glob: nwHistGlob, Op: opEq, N: 10},
 
 	// Lab 11. Intersections A-Q (L11.8): 17 server devices, four lights each.
 	{ID: "C11.1", Lab: "11", Keys: []string{"L11.7"},

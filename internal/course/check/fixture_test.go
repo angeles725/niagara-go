@@ -2,6 +2,7 @@ package check
 
 import (
 	"archive/zip"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"testing"
@@ -31,21 +32,26 @@ func TestCheckZippedBog(t *testing.T) {
 		t.Fatal(err)
 	}
 	f.Close()
-	csvs, err := filepath.Glob(filepath.Join(goodStation, "shared", "*.csv"))
-	if err != nil || len(csvs) == 0 {
-		t.Fatalf("fixture CSVs: %d, %v", len(csvs), err)
-	}
-	if err := os.Mkdir(filepath.Join(dir, "shared"), 0o755); err != nil {
-		t.Fatal(err)
-	}
-	for _, c := range csvs {
-		data, err := os.ReadFile(c)
+	// Every other file of the station (shared/ CSVs, history/ files) is copied as it is.
+	err = filepath.WalkDir(goodStation, func(path string, d fs.DirEntry, err error) error {
+		if err != nil || d.IsDir() || d.Name() == "config.bog" {
+			return err
+		}
+		rel, err := filepath.Rel(goodStation, path)
 		if err != nil {
-			t.Fatal(err)
+			return err
 		}
-		if err := os.WriteFile(filepath.Join(dir, "shared", filepath.Base(c)), data, 0o644); err != nil {
-			t.Fatal(err)
+		data, err := os.ReadFile(path)
+		if err != nil {
+			return err
 		}
+		if err := os.MkdirAll(filepath.Join(dir, filepath.Dir(rel)), 0o755); err != nil {
+			return err
+		}
+		return os.WriteFile(filepath.Join(dir, rel), data, 0o644)
+	})
+	if err != nil {
+		t.Fatal(err)
 	}
 	plain, zipped := runAll(t, goodStation, fixtureInstall, RoleTraining), runAll(t, dir, fixtureInstall, RoleTraining)
 	if len(plain) == 0 || len(plain) != len(zipped) {
