@@ -84,6 +84,13 @@ python3 -I internal/nav/testdata/gen_golden.py
 NIAGARA_RESEARCH=~/niagara-research python3 -I internal/bognav/testdata/convert_golden.py
 ```
 
+Phase 5 left only exec shims in the live checkouts, so the Python reference is a worktree of the
+source repo's `pre-go-retire` tag (D39 d, D47), named by `NIAGARA_RESEARCH_PY_REF`,
+`MODULE_NAVIGATOR_PY_REF` or `NIAGARA_HELP_PY_REF`, default
+`~/niagara-research-worktrees/pre-go-retire-<repo>`, created with
+`git -C <repo> worktree add --detach <dir> pre-go-retire`. A generator pins the tag's commit and
+refuses a worktree at any other HEAD (`internal/secaudit/testdata/freeze_golden.py`).
+
 The generator's docstring states its inputs. Since the entry scripts exec the Go ports (D35),
 a converter that re-runs Python exports the frozen tools from niagara-research at the parent of
 the switch commit (`git archive`), checks each run against the frozen JSON in text mode and
