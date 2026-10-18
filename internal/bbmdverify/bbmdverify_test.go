@@ -6,8 +6,6 @@ import (
 	"net"
 	"os"
 	"reflect"
-	"runtime"
-	"syscall"
 	"testing"
 	"time"
 
@@ -163,18 +161,6 @@ func TestSetOrderMatchesPython(t *testing.T) {
 		if got := pySetOrder(r[0]); !reflect.DeepEqual(got, r[1]) {
 			t.Errorf("set(%v): %v, want %v", r[0], got, r[1])
 		}
-	}
-}
-
-func TestOSErrorText(t *testing.T) {
-	if runtime.GOOS != "linux" {
-		t.Skip("errno numbers are Linux's")
-	}
-	if got := pyOSError(syscall.ENETUNREACH); got != "[Errno 101] Network is unreachable" {
-		t.Errorf("got %q", got)
-	}
-	if got := pyOSError(syscall.EADDRINUSE); got != "[Errno 98] Address already in use" {
-		t.Errorf("got %q", got)
 	}
 }
 

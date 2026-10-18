@@ -4,8 +4,6 @@ package bbmdverify
 
 import "syscall"
 
-const errnoLabel = "WinError"
-
 // setSockOpts mirrors make_socket: SO_BROADCAST, then SO_REUSEADDR (best effort).
 func setSockOpts(fd uintptr) error {
 	if err := syscall.SetsockoptInt(syscall.Handle(fd), syscall.SOL_SOCKET, syscall.SO_BROADCAST, 1); err != nil {

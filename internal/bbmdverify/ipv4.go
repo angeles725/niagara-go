@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	"syscall"
 
 	"github.com/angeles725/niagara-go/internal/pycompat"
 )
@@ -86,18 +85,4 @@ func inSubnet(ip, deviceIP string, prefix int) bool {
 		mask = ^uint32(0) << (32 - prefix)
 	}
 	return a&mask == d&mask
-}
-
-// pyOSError renders str(OSError) for a socket error: "[Errno N] Text" (POSIX)
-// or "[WinError N] Text" (Windows).
-func pyOSError(err error) string {
-	var errno syscall.Errno
-	if !errors.As(err, &errno) {
-		return err.Error()
-	}
-	msg := errno.Error()
-	if msg != "" {
-		msg = strings.ToUpper(msg[:1]) + msg[1:]
-	}
-	return fmt.Sprintf("[%s %d] %s", errnoLabel, int(errno), msg)
 }

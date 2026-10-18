@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/angeles725/niagara-go/internal/cli"
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // Options are the parsed bacnet-bbmd-verify.py arguments.
@@ -131,7 +132,7 @@ func Run(o Options, s cli.Stdio) int {
 	localIP, err := localIPToward(o.DeviceIP, o.Port)
 	if err != nil {
 		fmt.Fprintf(s.Err, "bacnet-bbmd-verify: no route from this host to %s (%s); nothing was probed\n",
-			o.DeviceIP, pyOSError(err))
+			o.DeviceIP, pycompat.WinOSErrorText(err))
 		return 2
 	}
 	r := &report{o: o, localIP: localIP, onDeviceSubnet: inSubnet(localIP, o.DeviceIP, o.DevicePrefix),
@@ -146,7 +147,7 @@ func Run(o Options, s cli.Stdio) int {
 	pc, err := lc.ListenPacket(context.Background(), "udp4", fmt.Sprintf("0.0.0.0:%d", o.SrcPort))
 	if err != nil {
 		fmt.Fprintln(s.Out, color(fmt.Sprintf("  ! could not bind local UDP :%d (%s). Retry with --src-port 0 (ephemeral).",
-			o.SrcPort, pyOSError(err)), "high"))
+			o.SrcPort, pycompat.WinOSErrorText(err)), "high"))
 		return 2
 	}
 	conn := pc.(*net.UDPConn)
@@ -171,7 +172,7 @@ func Run(o Options, s cli.Stdio) int {
 		return 1
 	}
 	if err != nil {
-		fmt.Fprintf(s.Err, "OSError: %s\n", pyOSError(err))
+		fmt.Fprintf(s.Err, "OSError: %s\n", pycompat.WinOSErrorText(err))
 		return 1
 	}
 	return r.print(s)

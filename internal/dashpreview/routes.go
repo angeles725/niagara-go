@@ -307,11 +307,7 @@ func urlopenError(err error) string {
 		}
 		return "<urlopen error [Errno -3] Temporary failure in name resolution>"
 	case errors.As(err, &errno):
-		msg := errno.Error()
-		if msg != "" {
-			msg = strings.ToUpper(msg[:1]) + msg[1:]
-		}
-		return fmt.Sprintf("<urlopen error [Errno %d] %s>", int(errno), msg)
+		return "<urlopen error " + pycompat.WinOSErrorText(err) + ">"
 	}
 	return "<urlopen error " + err.Error() + ">"
 }
