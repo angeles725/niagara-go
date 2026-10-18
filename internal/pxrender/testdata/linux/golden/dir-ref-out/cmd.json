@@ -7,5 +7,6 @@
   "/dev/null",
   "--organized",
   "inputs/organized"
- ]
+ ],
+ "cwd_fixture": ".."
 }

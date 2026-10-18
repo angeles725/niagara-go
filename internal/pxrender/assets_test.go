@@ -44,18 +44,21 @@ func TestModuleCandidateOrder(t *testing.T) {
 		want := []string{"shared/px/m/i.png", "org/m/m-wb/extracted/i.png", "org/m/m-rt/extracted/i.png",
 			"org/m/m-ux/extracted/i.png", "org/m/m-aa/extracted/i.png", "org/m/m-ux/extracted/i.png",
 			"org/m/m-wb/extracted/i.png", "org/m/m-zz/extracted/i.png"}
+		for i := range want {
+			want[i] = filepath.FromSlash(want[i]) // Python's os.path.join uses the native separator
+		}
 		if !reflect.DeepEqual(got, want) {
 			t.Errorf("organized %q: candidates\n got %q\nwant %q", organized, got, want)
 		}
 	}
 	a := newAssets("shared", "org")
-	if got := a.resolve("module://m/i.png"); got != "shared/px/m/i.png" {
+	if got := a.resolve("module://m/i.png"); got != filepath.FromSlash("shared/px/m/i.png") {
 		t.Errorf("resolve = %q, want the station copy first", got)
 	}
 	if err := os.Remove("shared/px/m/i.png"); err != nil {
 		t.Fatal(err)
 	}
-	if got := a.resolve("module://m/i.png"); got != "org/m/m-wb/extracted/i.png" {
+	if got := a.resolve("module://m/i.png"); got != filepath.FromSlash("org/m/m-wb/extracted/i.png") {
 		t.Errorf("resolve = %q, want the wb artifact next", got)
 	}
 	if got := newAssets("shared", "").moduleCandidates("m", "i.png"); len(got) != 1 {
