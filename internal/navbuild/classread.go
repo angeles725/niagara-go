@@ -23,7 +23,8 @@ type classIndexEntry struct {
 }
 
 // readClassIndex is build.read_json(<baseDir>/indexes/class-index.json)["classes"]
-// flattened in dict order. A missing index is an error naming it; values of an
+// flattened in dict order (a missing "classes" key is empty, as Python's
+// ci_data.get("classes", {})). A missing index is an error naming it; values of an
 // unexpected type are errors too (Python would die or index them oddly).
 func readClassIndex(baseDir string) ([]classIndexEntry, error) {
 	path := IndexPath(baseDir, ClassIndexFile)
