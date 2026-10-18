@@ -99,6 +99,9 @@ func run(args []string, s cli.Stdio, prog string, d *door, paths func() Paths) i
 		return p.Error(s.Err, "--limit and --timeout must be at least 1")
 	}
 	src := paths()
+	if ip, ok := d.backend.(*inprocBackend); ok {
+		ip.paths = src
+	}
 	var outcomes []*Outcome
 	hint := searchHint
 	if isLicense {

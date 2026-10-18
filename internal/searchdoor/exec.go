@@ -12,9 +12,15 @@ import (
 
 var processStart = time.Now()
 
+// newDoor is the front door of the binaries: the in-process backends with exec
+// behind them, or exec alone when $NSEARCH_EXEC is 1. bind gives the in-process
+// backend the script paths it answers for.
 func newDoor() *door {
-	return &door{backend: execBackend{python: pythonInterpreter},
-		now: func() float64 { return time.Since(processStart).Seconds() }}
+	var b Backend = execBackend{python: pythonInterpreter}
+	if os.Getenv(ExecEnv) != "1" {
+		b = &inprocBackend{exec: b, clock: time.Now}
+	}
+	return &door{backend: b, now: func() float64 { return time.Since(processStart).Seconds() }}
 }
 
 // execBackend runs `<python> <script> <args...>` like backend.run_tool.

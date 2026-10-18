@@ -16,6 +16,14 @@ import (
 
 func TestGoldenNsearch(t *testing.T) { golden.Run(t, "testdata", Main) }
 
+// TestGoldenNsearchExec runs the same cases with every backend forced through
+// exec (NSEARCH_EXEC=1): the fakes have no data an in-process backend can read,
+// so both modes must print the same bytes.
+func TestGoldenNsearchExec(t *testing.T) {
+	t.Setenv(ExecEnv, "1")
+	golden.Run(t, "testdata", Main)
+}
+
 func TestGoldenNsearchTimeouts(t *testing.T) {
 	if testing.Short() {
 		t.Skip("each case waits for a --timeout 1 backend")
