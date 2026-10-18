@@ -1,0 +1,51 @@
+{
+ "scalars": [
+  "[\n  null,\n  true,\n  false,\n  0,\n  -7,\n  12345678901234567890123,\n  0,\n  1.5,\n  -0.0,\n  1e-07,\n  1e+22,\n  Infinity,\n  -Infinity,\n  NaN,\n  2.5e-05,\n  1.2345678901234568e+17,\n  0.1,\n  -Infinity,\n  null\n]",
+  "[null, true, false, 0, -7, 12345678901234567890123, 0, 1.5, -0.0, 1e-07, 1e+22, Infinity, -Infinity, NaN, 2.5e-05, 1.2345678901234568e+17, 0.1, -Infinity, null]",
+  "[null,true,false,0,-7,12345678901234567890123,0,1.5,-0.0,1e-07,1e+22,Infinity,-Infinity,NaN,2.5e-05,1.2345678901234568e+17,0.1,-Infinity,null]",
+  "[null, true, false, 0, -7, 12345678901234567890123, 0, 1.5, -0.0, 1e-07, 1e+22, Infinity, -Infinity, NaN, 2.5e-05, 1.2345678901234568e+17, 0.1, -Infinity, null]",
+  "[\nnull,\ntrue,\nfalse,\n0,\n-7,\n12345678901234567890123,\n0,\n1.5,\n-0.0,\n1e-07,\n1e+22,\nInfinity,\n-Infinity,\nNaN,\n2.5e-05,\n1.2345678901234568e+17,\n0.1,\n-Infinity,\nnull\n]"
+ ],
+ "nested ordered dict": [
+  "{\n  \"z\": 1,\n  \"a\": {\n    \"y\": [\n      1,\n      \"x\",\n      {\n        \"k\": null\n      }\n    ]\n  },\n  \"empty\": {},\n  \"list\": [],\n  \"strs\": [\n    \"A\",\n    \"B\"\n  ]\n}",
+  "{\"z\": 1, \"a\": {\"y\": [1, \"x\", {\"k\": null}]}, \"empty\": {}, \"list\": [], \"strs\": [\"A\", \"B\"]}",
+  "{\"a\":{\"y\":[1,\"x\",{\"k\":null}]},\"empty\":{},\"list\":[],\"strs\":[\"A\",\"B\"],\"z\":1}",
+  "{\"z\": 1, \"a\": {\"y\": [1, \"x\", {\"k\": null}]}, \"empty\": {}, \"list\": [], \"strs\": [\"A\", \"B\"]}",
+  "{\n\"z\": 1,\n\"a\": {\n\"y\": [\n1,\n\"x\",\n{\n\"k\": null\n}\n]\n},\n\"empty\": {},\n\"list\": [],\n\"strs\": [\n\"A\",\n\"B\"\n]\n}"
+ ],
+ "repeated key keeps first position, last value": [
+  "{\n  \"a\": 3,\n  \"b\": 2\n}",
+  "{\"a\": 3, \"b\": 2}",
+  "{\"a\":3,\"b\":2}",
+  "{\"a\": 3, \"b\": 2}",
+  "{\n\"a\": 3,\n\"b\": 2\n}"
+ ],
+ "string escapes": [
+  "\"q\\\" b\\\\ \\n\\r\\t\\b\\f \\u0001 \\u007f ~ \\u00e9 \\u2014 \\ud83d\\ude00\"",
+  "\"q\\\" b\\\\ \\n\\r\\t\\b\\f \\u0001 \\u007f ~ \\u00e9 \\u2014 \\ud83d\\ude00\"",
+  "\"q\\\" b\\\\ \\n\\r\\t\\b\\f \\u0001 \\u007f ~ \\u00e9 \\u2014 \\ud83d\\ude00\"",
+  "\"q\\\" b\\\\ \\n\\r\\t\\b\\f \\u0001 \u007f ~ \u00e9 \u2014 \ud83d\ude00\"",
+  "\"q\\\" b\\\\ \\n\\r\\t\\b\\f \\u0001 \\u007f ~ \\u00e9 \\u2014 \\ud83d\\ude00\""
+ ],
+ "undecodable bytes read as U+FFFD": [
+  "{\n  \"k\\ufffd\": \"\\ufffdabc\\ufffd\\ufffd\\ufffd\"\n}",
+  "{\"k\\ufffd\": \"\\ufffdabc\\ufffd\\ufffd\\ufffd\"}",
+  "{\"k\\ufffd\":\"\\ufffdabc\\ufffd\\ufffd\\ufffd\"}",
+  "{\"k\ufffd\": \"\ufffdabc\ufffd\ufffd\ufffd\"}",
+  "{\n\"k\\ufffd\": \"\\ufffdabc\\ufffd\\ufffd\\ufffd\"\n}"
+ ],
+ "dict and nil dict": [
+  "[\n  {\n    \"b\": 1,\n    \"a\": [\n      true,\n      \"s\"\n    ]\n  },\n  {}\n]",
+  "[{\"b\": 1, \"a\": [true, \"s\"]}, {}]",
+  "[{\"a\":[true,\"s\"],\"b\":1},{}]",
+  "[{\"b\": 1, \"a\": [true, \"s\"]}, {}]",
+  "[\n{\n\"b\": 1,\n\"a\": [\ntrue,\n\"s\"\n]\n},\n{}\n]"
+ ],
+ "value passes through with its lone surrogate": [
+  "[\n  \"\\ud800\",\n  3\n]",
+  "[\"\\ud800\", 3]",
+  "[\"\\ud800\",3]",
+  "[\"\ud800\", 3]",
+  "[\n\"\\ud800\",\n3\n]"
+ ]
+}
