@@ -33,6 +33,7 @@ type Check struct {
 
 	Type   string // component type "module:Type" (type, slot, link target)
 	Within string // type: an ancestor type "module:Type" every counted component must have
+	Under  string // type, slot: a folder path ("Review2") every counted component must be below
 	Op     string // type, link, files, jar-entry, slot with Distinct, file-text without Line: opMin or opEq
 	N      int
 

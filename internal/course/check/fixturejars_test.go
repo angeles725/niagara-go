@@ -45,6 +45,14 @@ var fixtureJars = map[string]map[string]string{
 	"trafficLightDriver-wb": {
 		"com/tridiumuniversity/trafficLightDriver/ui/BTrafficLightDriverPointManager.class": "stand-in class\n",
 	},
+	"Cristian_Angeles_Review-rt": {
+		"META-INF/CODESIGN.SF":  "Signature-Version: 1.0\n",
+		"META-INF/CODESIGN.RSA": "stand-in signature block\n",
+		"META-INF/module.xml":   fixtureReviewXML,
+		"module.palette":        `<p t="c:ComponentWithId" n="ComponentWithId"/><p t="c:PointSummaryService" n="PointSummaryService"/>` + "\n",
+		"com/review/Cristian_Angeles_Review/BComponentWithId.class":     "stand-in class\n",
+		"com/review/Cristian_Angeles_Review/BPointSummaryService.class": "stand-in class\n",
+	},
 	"trafficLightServer-rt": {
 		"META-INF/CODESIGN.SF":  "Signature-Version: 1.0\n",
 		"META-INF/CODESIGN.EC":  "stand-in signature block\n",
@@ -70,6 +78,20 @@ const fixtureModuleXML = `<module name="training-rt">
   <name>REFLECTION</name>
   <name>MANAGE_EXECUTION</name>
  </permissions>
+</module>
+`
+
+// fixtureReviewXML is the module.xml of the review module as the build writes it (the live jar
+// misspells "Review" in its description; this one does not).
+const fixtureReviewXML = `<module name="Cristian_Angeles_Review-rt" vendor="review" description="Cristian Angeles Niagara Review Assignments" moduleName="Cristian_Angeles_Review" runtimeProfile="rt">
+ <dependencies>
+  <dependency name="baja"/>
+  <dependency name="control-rt"/>
+ </dependencies>
+ <types>
+  <type class="com.review.Cristian_Angeles_Review.BComponentWithId" name="ComponentWithId"/>
+  <type class="com.review.Cristian_Angeles_Review.BPointSummaryService" name="PointSummaryService"/>
+ </types>
 </module>
 `
 

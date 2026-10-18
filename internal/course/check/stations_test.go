@@ -45,3 +45,25 @@ func TestOpenStationsSharesAPath(t *testing.T) {
 		t.Error("an unreadable station: no error")
 	}
 }
+
+// Without --lab only the labs of the TrainingStation run; RA1 and RA2 run when named, in any case.
+func TestSelectDefaultsToTheLabs(t *testing.T) {
+	all, _ := Select(nil)
+	for _, ck := range all {
+		if Role(ck.Lab) != RoleTraining {
+			t.Errorf("%s (%s) runs without --lab", ck.ID, ck.Lab)
+		}
+	}
+	ra, unknown := Select([]string{"ra1", "RA2"})
+	if unknown != "" || len(ra) == 0 {
+		t.Fatalf("Select(ra1, RA2): %d checks, unknown %q", len(ra), unknown)
+	}
+	for _, ck := range ra {
+		if ck.Lab != "RA1" && ck.Lab != "RA2" {
+			t.Errorf("%s (%s) selected by --lab ra1 --lab RA2", ck.ID, ck.Lab)
+		}
+	}
+	if _, unknown := Select([]string{"RA3"}); unknown != "RA3" {
+		t.Errorf("Select(RA3): unknown %q, want RA3", unknown)
+	}
+}

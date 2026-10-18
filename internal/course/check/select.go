@@ -2,7 +2,8 @@ package check
 
 import "strings"
 
-// checkLab normalises a --lab spelling of the check command: 3, 03, L3 -> "3"; B, LB -> "B".
+// checkLab normalises a --lab spelling of the check command: 3, 03, L3 -> "3"; B, LB -> "B";
+// ra1 -> "RA1"; exam -> "EXAM".
 func checkLab(name string) string {
 	n := strings.ToUpper(strings.TrimSpace(name))
 	if len(n) > 1 && n[0] == 'L' {
@@ -14,7 +15,7 @@ func checkLab(name string) string {
 	return n
 }
 
-// checkLabs lists the labs that have checks, in spec order.
+// Labs lists the labs that have checks, in spec order.
 func Labs() []string {
 	var labs []string
 	seen := map[string]bool{}
@@ -27,8 +28,8 @@ func Labs() []string {
 	return labs
 }
 
-// selectChecks returns the spec rows of the given labs (all when none), or the first lab
-// that has no checks.
+// Select returns the spec rows of the given labs (every lab of the TrainingStation when none:
+// RA1, RA2 and EXAM run only when named), or the first lab that has no checks.
 func Select(labs []string) ([]*Check, string) {
 	want := map[string]bool{}
 	for _, l := range labs {
@@ -44,7 +45,7 @@ func Select(labs []string) ([]*Check, string) {
 	}
 	var out []*Check
 	for i := range Spec {
-		if len(want) == 0 || want[Spec[i].Lab] {
+		if want[Spec[i].Lab] || (len(want) == 0 && Role(Spec[i].Lab) == RoleTraining) {
 			out = append(out, &Spec[i])
 		}
 	}

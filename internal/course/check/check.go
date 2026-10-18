@@ -186,30 +186,45 @@ func verdict(ok bool) string {
 	return Fail
 }
 
+// below reports whether a component path is inside the folder path under.
+func below(path, under string) bool { return strings.HasPrefix(path, under+"/") }
+
+// selected returns the components of the check's type that pass its Within and Under filters,
+// all the components of the type, and the filter as evidence (" under T", " in F", or "").
+func (s *Station) selected(ck *Check) (cs, all []*bog.Comp, where string) {
+	all = s.comps(ck.Type)
+	if ck.Within == "" && ck.Under == "" {
+		return all, all, ""
+	}
+	for _, c := range all {
+		if (ck.Within == "" || s.within(c, ck.Within)) && (ck.Under == "" || below(c.Path, ck.Under)) {
+			cs = append(cs, c)
+		}
+	}
+	if ck.Within != "" {
+		where = " under " + ck.Within
+	}
+	if ck.Under != "" {
+		where += " in " + ck.Under
+	}
+	if len(all) != len(cs) {
+		where += fmt.Sprintf(" (%d in total)", len(all))
+	}
+	return cs, all, where
+}
+
 func (s *Station) checkType(ck *Check) (string, string) {
-	all := s.comps(ck.Type)
-	cs := all
-	if ck.Within != "" {
-		cs = nil
-		for _, c := range all {
-			if s.within(c, ck.Within) {
-				cs = append(cs, c)
-			}
-		}
-	}
-	ev := fmt.Sprintf("found %d", len(cs))
-	if ck.Within != "" {
-		ev += " under " + ck.Within
-		if len(all) != len(cs) {
-			ev += fmt.Sprintf(" (%d in total)", len(all))
-		}
-	}
+	cs, all, where := s.selected(ck)
+	ev := fmt.Sprintf("found %d", len(cs)) + where
 	ok := countOK(ck.Op, len(cs), ck.N)
 	if !ok {
 		ev += ", want " + want(ck.Op, ck.N)
 	}
-	if len(cs) > 0 {
+	switch {
+	case len(cs) > 0:
 		ev += ": " + pathList(cs)
+	case ck.Under != "" && len(all) > 0:
+		ev += "; elsewhere: " + pathList(all)
 	}
 	return verdict(ok), ev
 }
@@ -252,8 +267,11 @@ func (s *Station) checkSlot(ck *Check) (string, string) {
 		return Skip, strings.Join(append([]string{ck.Slot}, ck.Stored...), ", ") +
 			" is a nested slot: the station was read without nested values"
 	}
-	cs := s.comps(ck.Type)
+	cs, _, where := s.selected(ck)
 	if len(cs) == 0 {
+		if where != "" {
+			return Fail, "no " + ck.Type + " component" + where
+		}
 		return Fail, "no " + ck.Type + " component (searched " + key.Plural(s.b.Comps.Len(), "component") + ")"
 	}
 	if ck.Distinct {

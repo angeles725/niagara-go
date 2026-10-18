@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bajaObjectGraph version="4.0">
+<p h="1" m="b=baja" t="b:Station">
+ <p n="stationName" v="ReviewStation"/>
+ <p n="Services" h="2" t="b:ServiceContainer">
+  <p n="PointSummaryService" h="3" m="CAR=Cristian_Angeles_Review" t="CAR:PointSummaryService">
+   <p n="summaryFile" t="b:Ord" v="file:^Review.txt"/>
+  </p>
+ </p>
+ <p n="Cristian_Angeles_Review" h="4" t="b:Folder">
+  <p n="ComponentWithId" h="5" t="CAR:ComponentWithId">
+   <p n="id" v="6e958344-8315-4541-b5bd-986d7357d791"/>
+  </p>
+  <p n="ComponentWithId1" h="6" t="CAR:ComponentWithId">
+   <p n="id" v="bcb23dd3-6cf1-4d3e-89d0-24457bd93019"/>
+  </p>
+ </p>
+ <p n="Review2" h="7" t="b:Folder">
+  <p n="NumericWritable" h="8" m="c=control" t="c:NumericWritable">
+   <p n="fallback" t="b:StatusNumeric"><p n="value" v="54.0"/></p>
+  </p>
+  <p n="NumericWritable1" h="9" t="c:NumericWritable">
+   <p n="fallback" t="b:StatusNumeric"><p n="value" v="33.0"/></p>
+  </p>
+ </p>
+</p>
+</bajaObjectGraph>

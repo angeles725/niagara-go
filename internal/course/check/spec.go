@@ -1,5 +1,7 @@
 package check
 
+import "slices"
+
 // The lab check spec: what a correct solution of each lab leaves in a station (components,
 // slot values, links, output files) or in the install (built, signed jars). It is data; the
 // kinds are run by check.go. Types are "module:Type" with the module name (training,
@@ -18,7 +20,11 @@ const (
 	csvGlob         = "shared/{station}_NumericWritable*.csv" // the Lab 10 export (LI:1976-1977)
 )
 
-var Spec = []Check{
+// Spec is every check: the labs, then the review assignments. A run without --lab selects only
+// the labs (Select), whose station is the TrainingStation.
+var Spec = slices.Concat(labSpec, reviewSpec)
+
+var labSpec = []Check{
 	// Lab 1. BFirstComponent.java:15-20 timeExecuted, default BAbsTime.DEFAULT (not stored);
 	// doExecute (:28-32) sets it to now.
 	{ID: "C1.1", Lab: "1", Keys: []string{"L1.24"}, Kind: kindType, Desc: "a FirstComponent in the station",

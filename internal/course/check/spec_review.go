@@ -1,0 +1,94 @@
+package check
+
+// The review-assignment checks (RA1, RA2): what the participant's solution leaves in the review
+// station (sources/n4-dev-course/text/Review Assignment <k>.txt asks for one station per
+// participant, <First>_<Last>_Review) and in the built module <First>_<Last>_Review-rt. Keys are
+// the requirement IDs of review-assignments.md (RA1.V9–V14 and RA2.V10–V15 are one range item each,
+// reached by any covered ID) and the needs-a-run checks X1, X3, X6, X10 that a station or a jar
+// answers. The participant's names are those of the verified module (Cristian_Angeles_Review):
+// the module name and the types follow from them.
+//
+// Defaults: BComponentWithId id "" and BPointSummaryService summaryFile BOrd.DEFAULT ("null")
+// (sources/n4-dev-course/solutions/review/ and review-assignments.md §1.3, §2.3); BNumericWritable
+// fallback 0.0 (organized/control/control-rt/decompiled/javax/baja/control/BNumericWritable.java:78),
+// a value the bog reader does not keep (internal/bog/parse.go: a fallback property is skipped).
+
+const (
+	reviewRT        = "Cristian_Angeles_Review-rt"
+	componentWithID = "Cristian_Angeles_Review:ComponentWithId"
+	pointSummary    = "Cristian_Angeles_Review:PointSummaryService"
+	reviewTxt       = "shared/Review.txt" // file:^Review.txt: the station's Files space
+
+	// The UI steps of RA1.V9–V14 no bog or jar holds.
+	ra1UISteps = "the Wire Sheet Id column, the regenerateId confirmation dialog and the read-only Property Sheet (UI steps)"
+	// What no check of RA2.V10–V15 reads: the bog reader keeps no fallback value of a writable
+	// (internal/bog drops it), so "several NumericWritables with different values" is not observed.
+	ra2Values = "that the Review2 NumericWritables hold different values (the bog reader keeps no fallback value)"
+	// What a jar entry does not say about the written listing (X1).
+	writtenListing = "the written listing of review-assignments.md (the jar holds the participant's built code, not the listing)"
+)
+
+var reviewSpec = []Check{
+	// RA1. Module identity (module.xml written by the build from the -rt Gradle script).
+	{ID: "CRA1.1", Lab: "RA1", Keys: []string{"RA1.M2"}, Kind: kindJarText, Desc: "module name <First>_<Last>_Review",
+		Jar: reviewRT, Glob: trainingXML, Contains: []string{`moduleName="Cristian_Angeles_Review"`}},
+	{ID: "CRA1.2", Lab: "RA1", Keys: []string{"RA1.M3"}, Kind: kindJarText, Desc: "description <First> <Last> Niagara Review Assignments",
+		Jar: reviewRT, Glob: trainingXML, Contains: []string{`description="Cristian Angeles Niagara Review Assignments"`}},
+	{ID: "CRA1.3", Lab: "RA1", Keys: []string{"RA1.M4"}, Kind: kindJarText, Desc: "vendor review",
+		Jar: reviewRT, Glob: trainingXML, Contains: []string{`vendor="review"`}},
+	{ID: "CRA1.4", Lab: "RA1", Keys: []string{"RA1.M5"},
+		Unobserved: map[string]string{"RA1.M5": "that the wizard created no other part (-ux, -wb)"}, Kind: kindJarText, Desc: "runtime profile rt",
+		Jar: reviewRT, Glob: trainingXML, Contains: []string{`runtimeProfile="rt"`}},
+	{ID: "CRA1.5", Lab: "RA1", Keys: []string{"RA1.M6", "RA1.R8"}, Kind: kindJarText, Desc: "palette lists ComponentWithId",
+		Jar: reviewRT, Glob: "module.palette", Contains: []string{`n="ComponentWithId"`}},
+	{ID: "CRA1.6", Lab: "RA1", Keys: []string{"RA1.R1"},
+		Unobserved: map[string]string{"RA1.R1": "that the class extends BComponent"}, Kind: kindJarText, Desc: "module.xml registers ComponentWithId",
+		Jar: reviewRT, Glob: trainingXML, Contains: []string{`name="ComponentWithId"`}},
+	{ID: "CRA1.7", Lab: "RA1", Keys: []string{"RA1.R1", "X1"},
+		Unobserved: map[string]string{"RA1.R1": "that the class extends BComponent", "X1": writtenListing}, Kind: kindJarEntry,
+		Desc: "BComponentWithId.class built", Jar: reviewRT, Glob: "**/BComponentWithId.class", Op: opMin, N: 1},
+
+	// RA1 station steps (RA1.V9–V14): Config/Review, one added, copy/paste gives a different id.
+	{ID: "CRA1.8", Lab: "RA1", Keys: []string{"RA1.V11"},
+		Unobserved: map[string]string{"RA1.V11": ra1UISteps}, Kind: kindType, Desc: "two ComponentWithId (one added, one pasted)",
+		Type: componentWithID, Op: opMin, N: 2},
+	{ID: "CRA1.9", Lab: "RA1", Keys: []string{"RA1.V12", "RA1.R6", "X3"},
+		Unobserved: map[string]string{"RA1.V12": ra1UISteps, "RA1.R6": "that started() set the ids (the bog holds them, not when they were set)",
+			"X3": "that cut/paste keeps the id"}, Kind: kindSlot, Desc: "the ComponentWithId ids are distinct",
+		Type: componentWithID, Slot: "id", Default: "", Distinct: true, Op: opMin, N: 2},
+	{ID: "CRA1.10", Lab: "RA1", Keys: []string{"RA1.V10"},
+		Unobserved: map[string]string{"RA1.V10": ra1UISteps}, Kind: kindType, Desc: "ComponentWithId in the folder Config/Review",
+		Type: componentWithID, Under: "Review", Op: opMin, N: 1},
+
+	// RA2. The service and its summary file.
+	{ID: "CRA2.1", Lab: "RA2", Keys: []string{"RA2.R1"}, Kind: kindJarText, Desc: "depends on control-rt",
+		Jar: reviewRT, Glob: trainingXML, Contains: []string{`name="control-rt"`}},
+	{ID: "CRA2.2", Lab: "RA2", Keys: []string{"RA2.R2", "X1"},
+		Unobserved: map[string]string{"RA2.R2": "that the class extends BAbstractService", "X1": writtenListing}, Kind: kindJarEntry,
+		Desc: "BPointSummaryService.class built", Jar: reviewRT, Glob: "**/BPointSummaryService.class", Op: opMin, N: 1},
+	{ID: "CRA2.3", Lab: "RA2", Keys: []string{"RA2.R7"}, Kind: kindJarText, Desc: "palette lists PointSummaryService",
+		Jar: reviewRT, Glob: "module.palette", Contains: []string{`n="PointSummaryService"`}},
+	{ID: "CRA2.4", Lab: "RA2", Keys: []string{"RA2.R8", "X10"},
+		Unobserved: map[string]string{"RA2.R8": "that the certificate is the one of the Code Signing lab",
+			"X10": "Module Info's green check at moduleVerificationMode=high (runtime)"}, Kind: kindJarSigned,
+		Desc: "Cristian_Angeles_Review-rt is signed", Jar: reviewRT},
+	{ID: "CRA2.5", Lab: "RA2", Keys: []string{"RA2.R9"}, Kind: kindJar, Desc: "Cristian_Angeles_Review-rt jar built", Jar: reviewRT},
+	{ID: "CRA2.6", Lab: "RA2", Keys: []string{"RA2.V10"},
+		Unobserved: map[string]string{"RA2.V10": ra2Values}, Kind: kindType, Desc: "NumericWritables in Config/Review2",
+		Type: numericWritable, Under: "Review2", Op: opMin, N: 2},
+	{ID: "CRA2.7", Lab: "RA2", Keys: []string{"RA2.V12", "RA2.R2"},
+		Unobserved: map[string]string{"RA2.R2": "that the class extends BAbstractService", "RA2.V12": ra2Values}, Kind: kindType,
+		Desc: "one PointSummaryService, under Services", Type: pointSummary, Within: services, Op: opEq, N: 1},
+	{ID: "CRA2.8", Lab: "RA2", Keys: []string{"RA2.V13", "RA2.R3"},
+		Unobserved: map[string]string{"RA2.R3": "that summaryFile is a frozen BOrd property with default BOrd.DEFAULT",
+			"RA2.V13": ra2Values}, Kind: kindSlot,
+		Desc: "summaryFile = file:^Review.txt", Type: pointSummary, Slot: "summaryFile", Want: "file:^Review.txt", Default: "null"},
+	{ID: "CRA2.9", Lab: "RA2", Keys: []string{"RA2.V15", "X6"},
+		Unobserved: map[string]string{"RA2.V15": ra2Values}, Kind: kindFiles, Desc: "Review.txt in the station's Files space",
+		Glob: reviewTxt, Op: opEq, N: 1},
+	{ID: "CRA2.10", Lab: "RA2", Keys: []string{"RA2.R5b", "RA2.V15"},
+		Unobserved: map[string]string{"RA2.R5b": "that every NumericWritable of the station is listed (the check wants two lines or more)",
+			"RA2.V15": ra2Values + "; that every NumericWritable of the station is listed (the check wants two lines or more)"}, Kind: kindFileText,
+		Desc: "Review.txt lines: name: value {status} @ priority", Glob: reviewTxt,
+		Match: `^\S+: -?[0-9][0-9.,]* \{[^}]*\} @ \S+$`, Op: opMin, N: 2},
+}

@@ -1,0 +1,2 @@
+NumericWritable: 54,00 {ok} @ def
+NumericWritable1: 33,00 {ok} @ def

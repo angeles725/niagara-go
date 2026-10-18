@@ -157,7 +157,9 @@ per check. It reads the station and the jars only; it needs no niagara-research 
   the bog file itself (its directory is the station directory). Every selected check runs on it.
 - `--install`: a Niagara install; the jar checks read `<install>/modules/<part>.jar`. Without it
   (and without `COURSE_NIAGARA_INSTALL`) every jar check is SKIP.
-- `--lab`: repeatable; `3`, `03`, `L3`, `B`, `LB`. A lab without checks (8) is exit 1.
+- `--lab`: repeatable; `3`, `03`, `L3`, `B`, `LB`, `RA1`, `RA2` (any case). A lab without checks (8)
+  is exit 1. Without `--lab` only the labs run (1-11, B: the TrainingStation); `RA1` and `RA2`
+  run only when named, on their own station.
 
 Defaults (explicit flags win; a blank variable counts as unset):
 
@@ -180,7 +182,7 @@ own prefixes (`t:`, `tld:`) are resolved through its `m=` declarations.
 
 | Kind | Checks | PASS when |
 |---|---|---|
-| `type` | components of a type, optionally under an ancestor type (`Within`) | the count is at least / exactly N |
+| `type` | components of a type, optionally under an ancestor type (`Within`) or below a folder path (`Under`, `Review2`) | the count is at least / exactly N; with `Under`, a FAIL lists where the components are instead |
 | `slot` | a slot on every component of a type; its effective value is the stored value (a composite's nested `value`), else the type default. A dotted slot (`address.port`, `health.lastOkTime`) is a value below a composite slot of the component | every value equals `Want`, and every `Stored` slot is stored (`health.down = false` is also the default of a device never pinged, so C11.12 and C11.14 need `health.lastOkTime` stored); or (`Set`) every slot is stored; or (`Distinct`) the distinct values reach N |
 | `link` | links `From.FromSlot -> Type.Slot`, source by handle or `slot:` ord | the count is at least / exactly N |
 | `files` | files matching a glob under the station dir, `{station}` = the `stationName` slot | the count is at least / exactly N |
@@ -216,6 +218,32 @@ the summary goes to stderr.
 
 Exit: 0 no FAIL (the SKIPs are in the summary); 1 at least one FAIL; 2 the station cannot be
 read (no such file, not a BOG document) or every selected check was skipped.
+
+### Review-assignment checks (RA1, RA2)
+
+The rows `CRA1.<n>` and `CRA2.<n>` (`internal/course/check/spec_review.go`) read the review
+station (`COURSE_REVIEW_STATION`) and the module `Cristian_Angeles_Review-rt` (the participant's
+names: the module and type names follow from them). Keys are the requirement IDs of
+review-assignments.md; a station step reaches its range item (`RA1.V10` -> `RA1.V9–V14`), and
+the needs-a-run checks a station or a jar answers are keys too: X1 (`CRA1.7`, `CRA2.2`, the built
+classes), X3 (`CRA1.9`, distinct ids), X6 (`CRA2.9`, `shared/Review.txt`), X10 (`CRA2.4`,
+signed).
+
+| Rows | Check |
+|---|---|
+| CRA1.1-CRA1.4 | module.xml: `moduleName`, `description` (`<First> <Last> Niagara Review Assignments`), `vendor="review"`, `runtimeProfile="rt"` |
+| CRA1.5-CRA1.7 | palette entry, type registration, `BComponentWithId.class` |
+| CRA1.8-CRA1.10 | two ComponentWithId, distinct ids, in the folder `Review` |
+| CRA2.1-CRA2.5 | `control-rt` dependency, `BPointSummaryService.class`, palette entry, signed, built |
+| CRA2.6-CRA2.10 | NumericWritables in `Review2`, one PointSummaryService under Services, `summaryFile = file:^Review.txt`, `shared/Review.txt` with `name: value {status} @ priority` lines |
+
+What no row observes is an `Unobserved` note: flags, the confirmation dialog and other UI steps,
+superclasses, and that the `Review2` points hold different values: the bog reader drops a
+writable's `fallback` (`internal/bog/parse.go`), so the values cannot be read.
+
+The live review station (2026-10-17, with the 4.15.6.20 install): 20 checked, 18 PASS, 2 FAIL,
+both real: CRA1.2 (the jar's description is `Cristian Angeles Niagara Reviw Assignments`) and
+CRA1.10 (the components sit in `Config/Cristian_Angeles_Review`, not in `Config/Review`).
 
 The live TrainingStation (2026-10-17, with the 4.15.6.20 install): 75 checked, 74 PASS, 1 FAIL.
 C3.4 fails because the station really differs: its Lab2 folder has Point1..Point4 linked to
@@ -303,9 +331,11 @@ not observed.
   not a bog) and a synthetic install under `testdata/install/`, whose jars are generated from the table in
   `check/fixturejars_test.go` (`COURSE_UPDATE_FIXTURES=1 go test -run TestFixtureJars`; the test fails
   when a jar drifts). The zipped form of a bog is covered by `TestCheckZippedBog`.
-  `TestCheckTrainingStation` runs the spec against `COURSE_TRAINING_STATION` (and the jars of
-  `COURSE_NIAGARA_INSTALL`) and pins the known station differences; it skips, visibly,
-  without the variable. `TestCheckNestedNeedsNestedLoad`: a dotted check on a bog read without
+  `TestCheckLiveStations` runs the rows of each role against its live station
+  (`COURSE_TRAINING_STATION`, `COURSE_REVIEW_STATION`, `COURSE_CERT_STATION`, and the jars of
+  `COURSE_NIAGARA_INSTALL`) and pins the known station differences; a role whose variable is unset
+  skips, visibly. The synthetic `stations/review` mirrors the live review station (components in
+  `Cristian_Angeles_Review`, so CRA1.10 FAILs); the `check-review` golden runs it. `TestCheckNestedNeedsNestedLoad`: a dotted check on a bog read without
   nested values is SKIP.
 - `check/verify_test.go` and the `verify-*` goldens: the verdict rules (`TestDecidePrediction`) and
   the command over `testdata/predict-root/` (a synthetic answer key whose predicted IDs are
