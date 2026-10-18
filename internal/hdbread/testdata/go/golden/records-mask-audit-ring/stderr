@@ -1,0 +1,2 @@
+# inputs/audit-ring.hdb
+# records=4 (header declares 4) record_type=history:AuditRecord version=2 first=2026-10-16T18:32:00.000Z last=2026-10-16T18:33:02.000Z monotonic=yes

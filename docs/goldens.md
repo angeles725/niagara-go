@@ -69,9 +69,9 @@ checked on the real corpus by `make parity` (`TestSearchQuality`).
 
 ## Freezing and regenerating
 
-There is no update mode in this repository: a golden is Python's output, so the Go side never
-rewrites it. Each package freezes its cases with a generator next to them, run against the
-Python tool, for example:
+A Python golden has no update mode: it is Python's output, so the Go side never rewrites it
+(Go-only cases, below, are the exception). Each package freezes its cases with a generator
+next to them, run against the Python tool, for example:
 
 ```sh
 NIAGARA_RESEARCH=~/niagara-research python3 -I internal/typecatalog/testdata/freeze_golden.py
@@ -95,6 +95,24 @@ keeps them. Unit-test fixtures of shared packages follow the same rule (`testdat
 without `.py`, upper-cased, `-` -> `_`, e.g. `GOLDEN_BIN_BOG_NAV`) runs a tool's Python golden
 suite against the Go binary, and `GOLDEN_UPDATE` refuses to run with such an override so the
 port's output is never frozen as the expectation.
+
+## Go-only cases (D34)
+
+Behaviour added to a port after its Python tool froze has no Python output to freeze. Its cases
+live in a second set, `<package>/testdata/go/golden/<case>/`, with the same layout and runner
+(`golden.Run(t, "testdata/go", Main)`), but `stdout`, `stderr` and `exit` hold the reviewed Go
+output. Their inputs are synthetic, built by a Go test helper and committed under
+`testdata/go/inputs/`; a test fails when a committed input differs from what the helper builds.
+A changed Go-only output is regenerated, then reviewed in the diff before it is committed:
+
+```sh
+go test ./internal/hdbread -run 'TestGoInputs|TestGoldenGo' -update
+go test ./internal/hdbread -run 'TestGoInputs|TestGoldenGo'
+```
+
+`-update` writes only `testdata/go/` (new cases need their `cmd.json` first). A Python case
+whose output the new behaviour changes keeps its Python bytes and declares the Go output in
+`intended.json` with a D34 reason (hdbread `records-audit-type`, `usage-help`).
 
 ## Search quality: `make parity`
 

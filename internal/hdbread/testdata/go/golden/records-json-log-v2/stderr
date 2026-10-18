@@ -1,0 +1,2 @@
+# inputs/log-v2.hdb
+# records=3 (header declares 3) record_type=history:LogRecord version=2 first=2026-10-16T18:33:00.000Z last=2026-10-16T18:34:01.000Z monotonic=yes

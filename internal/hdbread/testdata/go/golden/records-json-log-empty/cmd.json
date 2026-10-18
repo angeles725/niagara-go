@@ -1,0 +1,7 @@
+{
+ "args": [
+  "inputs/log-empty.hdb",
+  "--records",
+  "--json"
+ ]
+}

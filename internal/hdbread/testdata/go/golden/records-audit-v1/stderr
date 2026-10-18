@@ -1,0 +1,2 @@
+# inputs/audit-v1.hdb
+# records=1 (header declares 1) record_type=history:AuditRecord version=1 first=2026-10-16T18:33:00.000Z last=2026-10-16T18:33:00.000Z monotonic=yes

@@ -211,5 +211,9 @@ func fixtures() map[string][]byte {
 	s.pages[0].append(rec)
 	binary.BigEndian.PutUint32(s.pages[0].buf[12:], 1)
 	out["audit-overrun.hdb"] = auditFile(2, s)
+
+	// A variable-length record type --records does not decode.
+	out["security-type.hdb"] = hdbFile(2, "/S/SecurityHistory", "history:SecurityAuditRecord", "",
+		newStore(64, 4, 0).bytes())
 	return out
 }

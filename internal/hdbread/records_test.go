@@ -120,8 +120,7 @@ func TestDecodeRejectsMalformedStores(t *testing.T) {
 }
 
 func TestDecodeRefusesOtherVariableRecords(t *testing.T) {
-	d := hdbFile(2, "/S/SecurityHistory", "history:SecurityAuditRecord", "", newStore(64, 4, 0).bytes())
-	_, err := DecodeRecords(d)
+	_, err := DecodeRecords(fixtures()["security-type.hdb"])
 	if err == nil || !strings.Contains(err.Error(), "history:SecurityAuditRecord") {
 		t.Fatalf("err = %v", err)
 	}

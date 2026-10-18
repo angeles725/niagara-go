@@ -1,0 +1,2 @@
+# inputs/log-empty.hdb
+# records=0 (header declares 0) record_type=history:LogRecord version=2

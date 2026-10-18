@@ -1,0 +1,29 @@
+[
+ {
+  "timestamp": "2026-10-16T18:33:00.000Z",
+  "millis": 1792175580000,
+  "logName": "sys.engine",
+  "severity": 800,
+  "level": "INFO",
+  "message": "Station started",
+  "exception": ""
+ },
+ {
+  "timestamp": "2026-10-16T18:33:01.500Z",
+  "millis": 1792175581500,
+  "logName": "trafficLightDriver",
+  "severity": 1000,
+  "level": "SEVERE",
+  "message": "poll failed, retrying \"dev1\"",
+  "exception": "java.io.IOException: timeout\n\tat a.B.c(B.java:1)\n\tat a.B.d(B.java:2)"
+ },
+ {
+  "timestamp": "2026-10-16T18:34:01.000Z",
+  "millis": 1792175641000,
+  "logName": "custom",
+  "severity": 850,
+  "level": "850",
+  "message": "café \u0000 😀",
+  "exception": ""
+ }
+]

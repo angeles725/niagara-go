@@ -1,0 +1,4 @@
+{
+ "reason": "D34 Go-only: --records decodes AuditRecord record-store histories, so an AuditRecord file whose data section is not a record store (this fixture holds a fixed-table header) is refused for its bad record-store magic instead of for its record type",
+ "stderr": "hdbread: --records: bad record-store magic 00000001 (RecordStoreHeader.java reads 0addab01)\n"
+}

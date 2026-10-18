@@ -36,8 +36,9 @@ const doc = "hdbread.py — read-only reader for Niagara N4 .hdb history files.\
 	"  trend flags: 1 start, 2 outOfOrder, 4 hidden, 8 modified, 16 interpolated, 32/64/128 reserved0-2,\n" +
 	"               \"{ }\" when empty (javax/baja/history/BTrendFlags.java:155-158,244-251)\n" +
 	"A header record size that differs from the size these rules give for the record type and version is\n" +
-	"refused (HdbFormatError), never guessed. Audit/log records are variable-length (recstore/): --ops and\n" +
-	"--strings walk them heuristically, --records does not decode them.\n" +
+	"refused (HdbFormatError), never guessed. Audit/log records are variable-length (recstore/, layout and\n" +
+	"sources in the Go package recstore.go): --ops and --strings walk them heuristically, --records decodes\n" +
+	"them in history order and refuses a record whose fields do not match its blocks.\n" +
 	"\n" +
 	"SECRETS DISCIPLINE: audit/log records carry operator activity. Use --mask to redact user identities\n" +
 	"and long values before printing; cite structure/counts, not specific secret values.\n" +
@@ -46,6 +47,9 @@ const doc = "hdbread.py — read-only reader for Niagara N4 .hdb history files.\
 	"  python3 hdbread.py <file.hdb> [--schema] [--ops] [--strings] [--mask]\n" +
 	"  python3 hdbread.py <file.hdb> --records [--json]   trend records as CSV (or JSON) on stdout,\n" +
 	"        timestamp (UTC ISO 8601), millis, status, trendFlags, value; summary on stderr\n" +
+	"  hdbread <file.hdb> --records [--json] [--mask]   LogRecord/AuditRecord histories: timestamp, millis,\n" +
+	"        then the schema fields (a log record adds the severity's level name); --mask prints\n" +
+	"        <VALUE-MASKED>/<USER-MASKED> for their text, keeping times, severity and operation constants\n" +
 	"  (no option = --schema). Exit 0 ok, 2 usage or an unreadable file, 1 a non-.hdb file, nothing decoded\n" +
 	"  or a record format this reader does not decode.\n" +
 	""
@@ -58,8 +62,8 @@ func newParser() *argparse.Parser {
 	flag("--schema", "history id, record type and field list (default)")
 	flag("--ops", "count audit-log operation strings")
 	flag("--strings", "printable strings of the record region")
-	flag("--mask", "fail-closed redaction of --strings, --ops and --schema output")
-	flag("--records", "decode Numeric/Boolean/EnumTrendRecord rows: CSV on stdout, summary on stderr")
+	flag("--mask", "fail-closed redaction of --strings, --ops, --schema and log/audit --records output")
+	flag("--records", "decode trend, LogRecord and AuditRecord rows: CSV on stdout, summary on stderr")
 	flag("--json", "with --records: a JSON list instead of CSV")
 	return p
 }

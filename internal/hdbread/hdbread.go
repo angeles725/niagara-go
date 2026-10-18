@@ -1,6 +1,8 @@
 // Package hdbread reads Niagara N4 .hdb history files (port of niagara-research tools/hdbread.py).
 // The on-disk format and the history-rt file:line of each rule are documented in the Python
-// module docstring; this package reproduces its output byte for byte.
+// module docstring; this package reproduces its output byte for byte. Decoding LogRecord and
+// AuditRecord histories is Go-only (D34): their record-store layout is in recstore.go, the
+// library API (ReadRecords, DecodeRecords) in records.go, and its CLI cases in testdata/go.
 package hdbread
 
 import (
@@ -26,8 +28,8 @@ type Options struct {
 	Schema  bool   // history id, record type and field list (the default when nothing else is set)
 	Ops     bool   // count audit-log operation strings
 	Strings bool   // printable strings of the record region
-	Mask    bool   // rule v5 redaction of --strings, --ops names and the --schema history id
-	Records bool   // decode fixed-length trend records: CSV on stdout, summary on stderr
+	Mask    bool   // rule v5 redaction of --strings, --ops names, the --schema history id and log/audit --records
+	Records bool   // decode trend, log or audit records: CSV on stdout, summary on stderr
 	JSON    bool   // with Records: a JSON list instead of CSV
 }
 
@@ -159,6 +161,11 @@ func report(o Options, f *file, s cli.Stdio) int {
 }
 
 func runRecords(o Options, data []byte, s cli.Stdio) int {
+	if f, err := parse(data); err == nil {
+		if _, ok := varDecoders[firstGroup(recordTypeRE, f.xml, "?")]; ok {
+			return runVarRecords(o, data, s)
+		}
+	}
 	t, err := decodeTrend(data)
 	if err != nil {
 		var exit exitError

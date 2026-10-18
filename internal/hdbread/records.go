@@ -89,12 +89,9 @@ func DecodeRecords(data []byte) (*History, error) {
 		return nil, err
 	}
 	id, rt, _ := schemaOf(f.xml)
-	if _, ok := valueBytes[rt]; ok {
-		return trendHistory(data, id)
-	}
 	decode, ok := varDecoders[rt]
-	if !ok {
-		return nil, formatErr("record type %s is not decoded (decoded: %s)", rt, decodedTypes())
+	if !ok { // a trend history, or the refusal of a type nothing here decodes
+		return trendHistory(data, id)
 	}
 	out := &History{ID: id, RecordType: rt, Version: f.version}
 	h, err := walkStore(f.section, func(h storeHeader, s storedRecord) error {

@@ -1,0 +1,5 @@
+timestamp,millis,operation,target,slotName,oldValue,value,userName
+2026-10-16T18:32:00.000Z,1792175520000,Changed,/Test/Ramp,amplitude,1.0,2.5,admin
+2026-10-16T18:33:00.000Z,1792175580000,Invoked,/Test/Ramp,set,,,"operator, one"
+2026-10-16T18:33:01.000Z,1792175581000,Login,,,,,admin
+2026-10-16T18:33:02.000Z,1792175582000,Flags Changed,/Test/Limiter/out,out,,"hidden,summary",admin
