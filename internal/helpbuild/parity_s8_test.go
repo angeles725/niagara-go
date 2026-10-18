@@ -30,7 +30,7 @@ const s8IndexesVar = "HELPBUILD_PARITY_INDEXES"
 func init() { parityVars = append(parityVars, s8IndexesVar) }
 
 // s8Modes are the driver modes, in the order rebuild-all runs the builders.
-var s8Modes = []string{"class"}
+var s8Modes = []string{"class", "inherit"}
 
 // runIndexDriver runs indexdriver.py and returns its lines (the "took" line
 // removed) and the builder's own run time.
@@ -62,6 +62,8 @@ func goIndexBuild(mode, base string) (*IndexResult, error) {
 	switch mode {
 	case "class":
 		return BuildClassIndex(base)
+	case "inherit":
+		return BuildInheritance(base)
 	}
 	return nil, fmt.Errorf("unknown mode %s", mode)
 }
@@ -119,7 +121,7 @@ func s8Bases(t *testing.T) (py, gol string) {
 }
 
 // TestParityS8Synthetic: every builder on the checked-in fixture, then on
-// the corners a fixture cannot hold (s8Corners), and on roots without the
+// the corners a fixture cannot hold (s8Corners, s8CleanCorners), and on roots without the
 // folders each builder reads. It also re-checks the golden files (or
 // rewrites them with -update-s8).
 func TestParityS8Synthetic(t *testing.T) {
@@ -154,6 +156,7 @@ func TestParityS8Synthetic(t *testing.T) {
 	}
 	for _, b := range []string{pyBase, goBase} {
 		s8Corners(t, b)
+		s8CleanCorners(t, b)
 	}
 	for _, mode := range s8Modes {
 		indexBoth(t, "corners", mode, pyBase, goBase)
@@ -195,6 +198,36 @@ func s8Corners(t *testing.T, base string) {
 		t.Fatal(err)
 	}
 	if err := os.Symlink("allclasses-noframe.html.real", list); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// s8CleanCorners adds bajadoc-clean/ pages that are not UTF-8 (in the
+// header, after it in the same decode chunk, past it, a sequence cut by a
+// chunk end, a bad continuation after the cut, the blank line's "\r" at a
+// chunk end, a truncated end, a header line longer than a chunk) and a
+// symlinked folder.
+func s8CleanCorners(t *testing.T, base string) {
+	t.Helper()
+	clean := filepath.Join(base, "bajadoc-clean", "zz")
+	head := "CLASS: BBad\nPACKAGE: zz\n\n"         // a whole header
+	open := "CLASS: BOpen\nPACKAGE: zz\nNOTE: "    // a header still open
+	fill := func(prefix string, room int) string { // prefix padded to room bytes
+		return prefix + strings.Repeat("x", room-len(prefix))
+	}
+	for name, data := range map[string]string{
+		"InHeader.txt":    "CLASS: BIn\xffHeader\nPACKAGE: zz\n",
+		"AfterHeader.txt": head + "DESCRIPTION:\n\xff\n",              // same decode chunk: still an error
+		"PastChunk.txt":   fill(head, textChunk) + "\xff\n",           // next chunk: never read
+		"CutAtChunk.txt":  fill(open, textChunk-1) + "\u20ac\xff\n",   // the euro sign spans the chunks
+		"CutBad.txt":      fill(open, textChunk-1) + "\xe2\x28\xac\n", // a bad continuation after the cut
+		"CrAtChunk.txt":   fill(open, textChunk-2) + "\r\r\xff",       // the blank line's "\r" waits for the next chunk
+		"Truncated.txt":   "CLASS: BTrunc\nPACKAGE: zz\nEXTENDS: BObject\n\xe2\x82",
+		"LongLine.txt":    "CLASS: BLong\nPACKAGE: zz\nIMPLEMENTS: " + strings.Repeat("BIa, ", 4000) + "BIz\n\n\xff",
+	} {
+		writeFile(t, filepath.Join(clean, name), []byte(data))
+	}
+	if err := os.Symlink("../javax", filepath.Join(clean, "linked")); err != nil {
 		t.Fatal(err)
 	}
 }

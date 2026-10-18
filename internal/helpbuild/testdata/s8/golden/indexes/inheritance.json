@@ -1,0 +1,83 @@
+{
+  "BAbstractService": {
+    "extends": "BComponent",
+    "implements": [],
+    "package": "javax.baja.sys",
+    "subclasses": []
+  },
+  "BComponent": {
+    "extends": "BComplex",
+    "implements": [
+      "BISpaceNode",
+      "BIProtected",
+      "BIEntity"
+    ],
+    "package": "javax.baja.sys",
+    "subclasses": [
+      "BAbstractService",
+      "BFolder",
+      "BIQuirk"
+    ]
+  },
+  "BFolder": {
+    "extends": "BComponent",
+    "implements": [],
+    "package": "javax.baja.util",
+    "subclasses": []
+  },
+  "BIObject": {
+    "extends": null,
+    "implements": [],
+    "package": "javax.baja.sys",
+    "subclasses": [
+      "BIParent",
+      "BComponent",
+      "BIThing"
+    ]
+  },
+  "BMode": {
+    "extends": "BFrozenEnum",
+    "implements": [],
+    "package": "javax.baja.sys",
+    "subclasses": []
+  },
+  "BNone": {
+    "extends": null,
+    "implements": [],
+    "package": "org.nomembers",
+    "subclasses": []
+  },
+  "BÄrger": {
+    "extends": "BÖbject",
+    "implements": [
+      "BIété",
+      "BIx"
+    ],
+    "package": "com.uni",
+    "subclasses": []
+  },
+  "Marker": {
+    "extends": null,
+    "implements": [],
+    "package": "javax.baja.sys",
+    "subclasses": []
+  },
+  "Twice": {
+    "extends": "Second",
+    "implements": [],
+    "package": "com.twice",
+    "subclasses": []
+  },
+  "com.a.BFolder": {
+    "extends": "BObject",
+    "implements": [],
+    "package": "com.a",
+    "subclasses": []
+  },
+  "com.tridium.control.BFolder": {
+    "extends": "BComponent",
+    "implements": [],
+    "package": "com.tridium.control",
+    "subclasses": []
+  }
+}
