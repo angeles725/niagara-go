@@ -171,17 +171,31 @@ func TestSplitArgsAndClean(t *testing.T) {
 }
 
 // Python's int has no bound: hex and decimal flag literals beyond int64 keep every bit
-// (values from tools/n4-type-catalog.py decode_flags).
+// (values from tools/n4-type-catalog.py decode_flags; letters in Flags.encodeToString order, D34).
 func TestDecodeFlagsBigValues(t *testing.T) {
 	cases := []struct{ expr, value, letters string }{
-		{"0x1FFFFFFFFFFFFFFFF0 | 1", "590295810358705651697", "randcoxfApRmLN1"},
-		{"99999999999999999999 | Flags.HIDDEN", "99999999999999999999", "rthsandcoxfApRmLN"},
-		{"-1 | 0x100000000000000000", "-1", "rthsandcoxfApRmLN1"},
+		{"0x1FFFFFFFFFFFFFFFF0 | 1", "590295810358705651697", "randcoxfApRmNL1234"},
+		{"99999999999999999999 | Flags.HIDDEN", "99999999999999999999", "rthsandcoxfApRmNL23"},
+		{"-1 | 0x100000000000000000", "-1", "rthsandcoxfApRmNL1234"},
 	}
 	for _, c := range cases {
 		v, letters := DecodeFlags(c.expr)
 		if v.String() != c.value || strings.Join(letters, "") != c.letters {
 			t.Errorf("%s -> %s %v, want %s %s", c.expr, v, letters, c.value, c.letters)
+		}
+	}
+}
+
+// Flags.encodeToString walks the FLAGS array: N before L, then 1-4; bit 32 is no flag.
+func TestDecodeFlagsEncodeToStringOrder(t *testing.T) {
+	for expr, want := range map[string]string{
+		"Flags.LINK_TARGET | Flags.NON_CRITICAL":      "NL",
+		"Flags.USER_DEFINED_4 | Flags.USER_DEFINED_2": "24",
+		"-2147483648": "4",
+		"0x100000000": "",
+	} {
+		if _, got := DecodeFlags(expr); strings.Join(got, "") != want {
+			t.Errorf("DecodeFlags(%q) letters = %q, want %q", expr, strings.Join(got, ""), want)
 		}
 	}
 }
