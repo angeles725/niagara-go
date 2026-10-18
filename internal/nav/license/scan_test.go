@@ -14,7 +14,9 @@ import (
 )
 
 // TestScanFileMatchesPython replays testdata/scan.json (gen_scan.py): the calls
-// license_features._scan_file finds in sample sources, read back through the
+// and getLicenseManager() sites license_features._scan_file finds in sample
+// sources (call form, receiver, vendor, feature, line and arguments; site line,
+// features and reason), read back through the
 // resolver (replacement decoding, universal newlines) with a files table for
 // the cross-file constant and superclass lookups.
 func TestScanFileMatchesPython(t *testing.T) {
@@ -25,7 +27,7 @@ func TestScanFileMatchesPython(t *testing.T) {
 	var fx struct {
 		Files map[string]string `json:"files"`
 		Raw   map[string]string `json:"raw"`
-		Scans [][4]json.RawMessage
+		Scans [][5]json.RawMessage
 	}
 	if err := json.Unmarshal(raw, &fx); err != nil {
 		t.Fatal(err)
@@ -67,8 +69,8 @@ func TestScanFileMatchesPython(t *testing.T) {
 	res := newResolver(root, db)
 	for _, s := range fx.Scans {
 		var rel, module, cls string
-		var want [][4]*string
-		for i, dst := range []any{&rel, &module, &cls, &want} {
+		var wantCalls, wantSites []json.RawMessage
+		for i, dst := range []any{&rel, &module, &cls, &wantCalls, &wantSites} {
 			if err := json.Unmarshal(s[i], dst); err != nil {
 				t.Fatal(err)
 			}
@@ -77,13 +79,27 @@ func TestScanFileMatchesPython(t *testing.T) {
 		if !ok {
 			t.Fatalf("cannot read %s", rel)
 		}
-		var got [][4]*string
-		for _, c := range scanFile(text, rel, module, cls, res) {
-			form, recv := c.Form, c.Receiver
-			got = append(got, [4]*string{&form, &recv, c.Vendor, c.Feature})
+		calls, sites := scanFile(text, rel, module, cls, res)
+		var gotCalls, gotSites []string
+		for _, c := range calls {
+			gotCalls = append(gotCalls, jsonOf(t, []any{c.Form, c.Receiver, c.Vendor, c.Feature, c.Line, c.Args}))
 		}
-		if !reflect.DeepEqual(got, want) {
-			t.Errorf("%s:\n got  %s\n want %s", rel, show(got), show(want))
+		for _, st := range sites {
+			var reason *string
+			if st.Reason != "" {
+				reason = &st.Reason
+			}
+			features := st.Features
+			if features == nil {
+				features = []string{}
+			}
+			gotSites = append(gotSites, jsonOf(t, []any{st.Line, features, reason}))
+		}
+		if want := compact(t, wantCalls); !reflect.DeepEqual(gotCalls, want) {
+			t.Errorf("%s calls:\n got  %q\n want %q", rel, gotCalls, want)
+		}
+		if want := compact(t, wantSites); !reflect.DeepEqual(gotSites, want) {
+			t.Errorf("%s sites:\n got  %q\n want %q", rel, gotSites, want)
 		}
 	}
 	if res.err != nil {
@@ -91,20 +107,28 @@ func TestScanFileMatchesPython(t *testing.T) {
 	}
 }
 
-func show(calls [][4]*string) string {
-	var b strings.Builder
-	for _, c := range calls {
-		b.WriteString("[")
-		for _, p := range c {
-			if p == nil {
-				b.WriteString(" nil")
-			} else {
-				b.WriteString(" " + *p)
-			}
-		}
-		b.WriteString(" ]")
+// jsonOf is v as compact JSON.
+func jsonOf(t *testing.T, v any) string {
+	t.Helper()
+	b, err := json.Marshal(v)
+	if err != nil {
+		t.Fatal(err)
 	}
-	return b.String()
+	return string(b)
+}
+
+// compact re-encodes every raw record as compact JSON.
+func compact(t *testing.T, raws []json.RawMessage) []string {
+	t.Helper()
+	var out []string
+	for _, r := range raws {
+		var v any
+		if err := json.Unmarshal(r, &v); err != nil {
+			t.Fatal(err)
+		}
+		out = append(out, jsonOf(t, v))
+	}
+	return out
 }
 
 // TestIsLicenseCallReceiverEndingInDot: a receiver ending in "." leaves an

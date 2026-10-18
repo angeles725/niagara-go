@@ -7,129 +7,83 @@
   "drv/drv-rt/vineflower/a/BDrvLicenseManager.java": "class BDrvLicenseManager<T extends X> extends BBase {\n  void go() { this.checkFeature(vendor(), name()); getFeature(\"v\", label()); }\n}\n",
   "drv/drv-rt/vineflower/a/BBase.java": "class BBase<T>\n  extends BRoot { String vendor() { return \"base-vendor\"; } }\n",
   "drv/drv-rt/vineflower/a/BRoot.java": "class BRoot { public String name ( ) {\n return  \"root-name\" ; } }\n",
-  "uni/uni-rt/vineflower/c/BÉtat.java": "class BÉtat {\n  BLicenseManager élm;\n  void go() { élm.getFeature(\"uni\", \"code\"); xélm.getFeature(\"not\", \"typed\"); ñ$lm.getFeature(\"a\", \"b\"); }\n  Object ñ$lm = Sys.getLicenseManager();\n}\n"
+  "uni/uni-rt/vineflower/c/BÉtat.java": "class BÉtat {\n  BLicenseManager élm;\n  void go() { élm.getFeature(\"uni\", \"code\"); xélm.getFeature(\"not\", \"typed\"); ñ$lm.getFeature(\"a\", \"b\"); }\n  Object ñ$lm = Sys.getLicenseManager();\n}\n",
+  "site/site-rt/vineflower/e/BSites.java": "package e;\nclass BSites {\n  public LicenseManager getLicenseManager() { return null; }\n  // Sys.getLicenseManager() in a comment\n  void a() { Sys.getLicenseManager().getFeatures(); }\n  void b(Object o) { if (Sys.getLicenseManager() instanceof BLicenseManager) { } }\n  void c(Object o) { boolean q = o instanceof\n      getLicenseManager(); }\n  void d() { LicenseManager unused = Sys.getLicenseManager(); }\n  void e() { field.checkFeature(\"v\", \"fieldFeature\"); }\n  private BLicenseManager field;\n  BSites() { this.field = Sys.getLicenseManager(); }\n  void f() { LicenseManager lm = Sys.getLicenseManager(); lm.checkFeature(vendorVar, featureVar); }\n  void g() { foo(Sys.getLicenseManager(),   bar(  1  ) ); }\n  void h() { LicenseManager lm2; if (x) { lm2 = Sys.getLicenseManager(); } lm2.getFeature(\"v\", \"late\"); }\n  void i() { lm3 = (BLicenseManager) Sys.getLicenseManager(); if (y) { lm3.checkFeature(\"v\", \"inner\"); } }\n  void j() { lm2.checkFeature(\"v\", \"otherScope\"); }\n  Runnable r = new Runnable() { public void run() { mgr = Sys.getLicenseManager(); mgr.checkFeature(\"a\", \"anon\"); } };\n  void k() { LicenseManager é = Sys.getLicenseManager()\n      ; é.getFeature(\"u\", \"nicode\"); x.getLicenseManager( ).checkFeature(\"t\", \"wo\"); }\n}\n"
  },
  "raw": {
   "crlf/crlf-rt/vineflower/d/BCrlf.java": "636c617373204243726c66207b0d0a20202f2f206120636f6d6d656e7420fffe0d20205379732e6765744c6963656e73654d616e6167657228292e636865636b4665617475726528226372222c20226c6622293b0d0a2020537472696e672073203d2022e9ff223b0d0a20206d67722e67657446656174757265284b45592c20227822293b0d0a2020424d794c6963656e73654d616e61676572206d67723b0d0a202073746174696320537472696e67204b4559203d20226b5c0d223b0d0a7d0d0a"
  },
  "scans": [
-  [
-   "drv/drv-rt/vineflower/a/BDrvNetwork.java",
-   "drv-rt",
-   "BDrvNetwork",
+  ["drv/drv-rt/vineflower/a/BDrvNetwork.java", "drv-rt", "BDrvNetwork",
    [
-    [
-     "checkFeature",
-     "getLicenseManager()",
-     "tridium",
-     "drvTcp"
-    ],
-    [
-     "getFeature",
-     "getLicenseManager()",
-     "acme",
-     "drv"
-    ],
-    [
-     "checkFeature",
-     "lm",
-     "consts-vendor",
-     "lm"
-    ],
-    [
-     "getFeature",
-     "lm",
-     "acme",
-     "drv"
-    ],
-    [
-     "checkFeature",
-     "Helper",
-     null,
-     null
-    ],
-    [
-     "getFeature",
-     "FooManager.INSTANCE",
-     "inst",
-     "ance"
-    ],
-    [
-     "checkFeature",
-     "getLicenseManager()",
-     "a\\\"b",
-     "c\\\\d"
-    ],
-    [
-     "getFeature",
-     "getLicenseManager()",
-     "other-in-same-module",
-     "x"
-    ],
-    [
-     "checkFeature",
-     "this",
-     "kw",
-     "this"
-    ]
-   ]
-  ],
-  [
-   "drv/drv-rt/vineflower/a/BDrvLicenseManager.java",
-   "drv-rt",
-   "BDrvLicenseManager",
+    ["checkFeature", "getLicenseManager()", "tridium", "drvTcp", 6, ["\"tridium\"", "\"drvTcp\""]],
+    ["getFeature", "getLicenseManager()", "acme", "drv", 7, ["VENDOR", "FEATURE"]],
+    ["checkFeature", "lm", "consts-vendor", "lm", 12, ["Consts.VENDOR", "\"lm\""]],
+    ["getFeature", "lm", "acme", "drv", 13, ["this.VENDOR", "TYPE.getModule().getModuleName()"]],
+    ["checkFeature", "Helper", null, null, 15, ["vendorVar", "featureVar"]],
+    ["getFeature", "FooManager.INSTANCE", "inst", "ance", 16, ["\"inst\"", "\"ance\""]],
+    ["checkFeature", "getLicenseManager()", "a\\\"b", "c\\\\d", 19, ["\"a\\\"b\"", "\"c\\\\d\""]],
+    ["getFeature", "getLicenseManager()", "other-in-same-module", "x", 20, ["Other.NAME", "\"x\""]],
+    ["checkFeature", "this", "kw", "this", 23, ["\"kw\"", "\"this\""]]
+   ],
    [
-    [
-     "checkFeature",
-     "this",
-     "base-vendor",
-     "root-name"
-    ],
-    [
-     "getFeature",
-     "this",
-     "v",
-     null
-    ]
-   ]
-  ],
-  [
-   "uni/uni-rt/vineflower/c/BÉtat.java",
-   "uni-rt",
-   "BÉtat",
+    [6, ["drvTcp"], null],
+    [7, ["drv"], null],
+    [8, [], "in a comment"],
+    [9, [], "in a comment"],
+    [10, [], "other use: getLicenseManager().checkFeature(\\\"no\\\", \\\"string\\\")\";"],
+    [11, ["drv", "lm"], null],
+    [19, ["c\\\\d"], null],
+    [20, ["x"], null]
+   ]],
+  ["drv/drv-rt/vineflower/a/BDrvLicenseManager.java", "drv-rt", "BDrvLicenseManager",
    [
-    [
-     "getFeature",
-     "élm",
-     "uni",
-     "code"
-    ],
-    [
-     "getFeature",
-     "ñ$lm",
-     "a",
-     "b"
-    ]
-   ]
-  ],
-  [
-   "crlf/crlf-rt/vineflower/d/BCrlf.java",
-   "crlf-rt",
-   "BCrlf",
+    ["checkFeature", "this", "base-vendor", "root-name", 2, ["vendor()", "name()"]],
+    ["getFeature", "this", "v", null, 2, ["\"v\"", "label()"]]
+   ],
+   []],
+  ["uni/uni-rt/vineflower/c/BÉtat.java", "uni-rt", "BÉtat",
    [
-    [
-     "checkFeature",
-     "getLicenseManager()",
-     "cr",
-     "lf"
-    ],
-    [
-     "getFeature",
-     "mgr",
-     null,
-     "x"
-    ]
-   ]
-  ]
+    ["getFeature", "élm", "uni", "code", 3, ["\"uni\"", "\"code\""]],
+    ["getFeature", "ñ$lm", "a", "b", 3, ["\"a\"", "\"b\""]]
+   ],
+   [
+    [4, ["b"], null]
+   ]],
+  ["crlf/crlf-rt/vineflower/d/BCrlf.java", "crlf-rt", "BCrlf",
+   [
+    ["checkFeature", "getLicenseManager()", "cr", "lf", 3, ["\"cr\"", "\"lf\""]],
+    ["getFeature", "mgr", null, "x", 5, ["KEY", "\"x\""]]
+   ],
+   [
+    [3, ["lf"], null]
+   ]],
+  ["site/site-rt/vineflower/e/BSites.java", "site-rt", "BSites",
+   [
+    ["checkFeature", "field", "v", "fieldFeature", 10, ["\"v\"", "\"fieldFeature\""]],
+    ["checkFeature", "lm", null, null, 13, ["vendorVar", "featureVar"]],
+    ["getFeature", "lm2", "v", "late", 15, ["\"v\"", "\"late\""]],
+    ["checkFeature", "lm3", "v", "inner", 16, ["\"v\"", "\"inner\""]],
+    ["checkFeature", "lm2", "v", "otherScope", 17, ["\"v\"", "\"otherScope\""]],
+    ["checkFeature", "mgr", "a", "anon", 18, ["\"a\"", "\"anon\""]],
+    ["getFeature", "é", "u", "nicode", 20, ["\"u\"", "\"nicode\""]],
+    ["checkFeature", "getLicenseManager()", "t", "wo", 20, ["\"t\"", "\"wo\""]]
+   ],
+   [
+    [3, [], "declaration of getLicenseManager()"],
+    [4, [], "in a comment"],
+    [5, [], "getFeatures(): every licensed feature, none named"],
+    [6, [], "instanceof check, no feature named"],
+    [8, [], "declaration of getLicenseManager()"],
+    [9, [], "assigned to 'unused', never used for a feature call"],
+    [12, ["fieldFeature"], null],
+    [13, [], "feature argument not resolvable: featureVar"],
+    [14, [], "other use: getLicenseManager(), bar( 1 ) ); } void h() { License"],
+    [15, ["late"], null],
+    [16, ["inner"], null],
+    [18, ["anon"], null],
+    [19, ["nicode"], null],
+    [20, ["wo"], null]
+   ]]
  ]
 }

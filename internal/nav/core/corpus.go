@@ -28,16 +28,25 @@ func ResolveOrganized() (path, tried string) {
 // root, or "" after an exit-2 error. meta is the _meta block of the index in
 // use: when it was built from another corpus that still exists, the hint names it.
 func (r *Runtime) SourceRoot(meta *index.Object) string {
+	path, message, hint := FindSourceRoot(meta)
+	if path == "" {
+		r.Error(message, hint)
+	}
+	return path
+}
+
+// FindSourceRoot is SourceRoot without a runtime: the corpus root, or "" with
+// the error message and hint to report.
+func FindSourceRoot(meta *index.Object) (path, message, hint string) {
 	path, tried := ResolveOrganized()
 	if path != "" {
-		return path
+		return path, "", ""
 	}
-	hint := "Set NAV_CORPUS_BASE to the organized/ directory."
+	hint = "Set NAV_CORPUS_BASE to the organized/ directory."
 	if rec := metaSource(meta); rec != "" && isDir(rec) && realpath(rec) != realpath(tried) {
 		hint = "The index was built from " + rec + ", which exists: export NAV_CORPUS_BASE=" + rec
 	}
-	r.Error("corpus not found: "+tried, hint)
-	return ""
+	return "", "corpus not found: " + tried, hint
 }
 
 // submoduleMarkers: any of these inside organized/<module>/<dir>/ makes <dir> a submodule.

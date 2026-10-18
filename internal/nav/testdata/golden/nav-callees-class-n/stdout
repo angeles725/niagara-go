@@ -1,0 +1,9 @@
+
+  CALLEES of BCaller (all methods): 2 methods, 7 total calls
+  Module: caller-rt
+
+  <init> (1 calls):
+    -> BTarget.<init>                            [target-wb]
+
+  ... and 1 more methods (use -n 2 to see all)
+

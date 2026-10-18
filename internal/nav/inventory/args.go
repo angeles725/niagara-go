@@ -10,11 +10,11 @@ import (
 
 func init() {
 	registry.Register("inventory", []registry.Command{
-		{Name: "selftest", Help: "Self-checks; --recall verifies `class` finds every declaration in organized/", Args: argsSelftest},
+		{Name: "selftest", Help: "Self-checks; --recall verifies `class` finds every declaration in organized/", Args: argsSelftest, Run: runSelftest},
 		{Name: "inventory", Help: "Summary of all indexed modules", Run: runInventory},
 		{Name: "module", Help: "Detailed info for a specific submodule", Args: argsModule, Run: runModule},
 		{Name: "modules", Help: "List modules with filters", Args: argsModules, Run: runModules},
-		{Name: "stats", Help: "Corpus summary (modules, classes, indexes)", Args: argsStats},
+		{Name: "stats", Help: "Corpus summary (modules, classes, indexes)", Args: argsStats, Run: runStats},
 	})
 }
 

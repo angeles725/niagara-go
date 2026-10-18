@@ -1,0 +1,1 @@
+{"args": ["--base-dir", "fixture/cg", "callers", "BTarget", "go"], "env": {"NAV_CORPUS_BASE": "fixture/no-corpus"}}

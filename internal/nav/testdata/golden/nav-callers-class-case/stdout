@@ -1,0 +1,12 @@
+
+  CALLERS of Outer.Inner.*: 1 methods with callers, 1 call sites
+  Target module: ?
+
+                                    METHOD  CALLERS
+  --------------------------------------------------
+                                  copyInto        1
+
+                             CALLER METHOD  MODULE                     CALLS
+  ------------------------------------------------------------------------------------------
+                              BCaller.work  caller-rt                  copyInto
+

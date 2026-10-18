@@ -29,6 +29,14 @@ DRV_BASE = "fixture/drivers"
 CORPUS = {"NAV_CORPUS_BASE": "fixture/organized"}
 SRC = {"NAV_CORPUS_BASE": "fixture/search-organized"}
 SRC_BASE = "fixture/search"
+LIC = {"NAV_CORPUS_BASE": "fixture/lic-organized"}
+LIC_BASE = "fixture/lic"
+CG_BASE = "fixture/cg"
+STATS_BASE = "fixture/stats/base"
+PLA_BASE = "fixture/pla"
+RECALL = {"NAV_CORPUS_BASE": "fixture/recall/organized"}
+RECALL_CLEAN = {"NAV_CORPUS_BASE": "fixture/recall/clean"}
+RECALL_BASE = "fixture/recall/base"
 
 CLASS_NAMES = ["BAlarmService", "BAlarmClass", "BAlarmRecord", "AlarmDbConnection", "BAckState",
                "AlarmSupport", "BAlarmArchive", "BAlarmablePointMarkerTag", "BAlarm", "Entry",
@@ -169,6 +177,60 @@ CASES = [
     ("token-context-no-corpus", ["token", "ackAlarm", "--context", "1", "-n", "2"], NO_CORPUS, SRC_BASE),
     ("ask", ["ask", "who calls ackAlarm"], NO_CORPUS),
     ("ask-n", ["ask", "-n", "2", "como funciona el ack de alarmas"], NO_CORPUS),
+    ("license-feature", ["license-feature", "LICFEAT"], LIC, LIC_BASE),
+    ("license-feature-module", ["license-feature", "licFeat", "-m", "lic", "-n", "1"], LIC, LIC_BASE),
+    ("license-feature-miss", ["license-feature", "feat"], LIC, LIC_BASE),
+    ("license-feature-no-index", ["license-feature", "x"], LIC, "fixture/nav"),
+    ("license-features", ["license-features"], LIC, LIC_BASE),
+    ("license-features-n", ["license-features", "-n", "1"], LIC, LIC_BASE),
+    ("license-features-module", ["license-features", "--module", "lic-rt"], LIC, LIC_BASE),
+    ("license-features-module-miss", ["license-features", "-m", "nope"], LIC, LIC_BASE),
+    ("license-features-unresolved", ["license-features", "--unresolved", "-n", "2"], LIC, LIC_BASE),
+    ("license-features-no-corpus", ["license-features"], NO_CORPUS, LIC_BASE),
+    ("resources", ["resources", "lic-rt"], LIC, LIC_BASE),
+    ("resources-type", ["resources", "lic-rt.jar", "--type", "PNG", "-n", "1"], LIC, LIC_BASE),
+    ("resources-type-none", ["resources", "lic-rt", "--type", "xml"], LIC, LIC_BASE),
+    ("resources-n", ["resources", "lic-rt", "-n", "2"], LIC, LIC_BASE),
+    ("resources-miss", ["resources", "lic"], LIC, LIC_BASE),
+    ("resources-bad-jar", ["resources", "lic-wb"], LIC, LIC_BASE),
+    ("resources-no-corpus", ["resources", "lic-rt"], NO_CORPUS, LIC_BASE),
+    ("callers", ["callers", "BTarget", "run"], NO_CORPUS, CG_BASE),
+    ("callers-n", ["callers", "BTarget", "run", "-n", "1"], NO_CORPUS, CG_BASE),
+    ("callers-negative-n", ["callers", "BTarget", "run", "-n", "-1"], NO_CORPUS, CG_BASE),
+    ("callers-case", ["callers", "btarget", "RUN"], NO_CORPUS, CG_BASE),
+    ("callers-suffix", ["callers", "Inner", "copyInto"], NO_CORPUS, CG_BASE),
+    ("callers-miss", ["callers", "BTarget", "go"], NO_CORPUS, CG_BASE),
+    ("callers-class", ["callers", "BTarget"], NO_CORPUS, CG_BASE),
+    ("callers-class-n", ["callers", "BTarget", "-n", "2"], NO_CORPUS, CG_BASE),
+    ("callers-class-case", ["callers", "outer.inner"], NO_CORPUS, CG_BASE),
+    ("callers-class-ambiguous", ["callers", "bcase"], NO_CORPUS, CG_BASE),
+    ("callers-class-miss", ["callers", "BNothing"], NO_CORPUS, CG_BASE),
+    ("callers-empty-graph", ["callers", "BTarget", "run"], NO_CORPUS, "fixture/cg-empty"),
+    ("callees", ["callees", "BCaller", "work"], NO_CORPUS, CG_BASE),
+    ("callees-n", ["callees", "BCaller", "work", "-n", "2"], NO_CORPUS, CG_BASE),
+    ("callees-miss", ["callees", "BCaller", "nothing"], NO_CORPUS, CG_BASE),
+    ("callees-class", ["callees", "BCaller"], NO_CORPUS, CG_BASE),
+    ("callees-class-n", ["callees", "BCaller", "-n", "1"], NO_CORPUS, CG_BASE),
+    ("callees-class-miss", ["callees", "caller"], NO_CORPUS, CG_BASE),
+    ("callees-empty-method", ["callees", "BCaller", ""], NO_CORPUS, CG_BASE),
+    ("stats", ["stats"], NO_CORPUS, STATS_BASE),
+    ("stats-json", ["stats", "--json"], NO_CORPUS, STATS_BASE),
+    ("stats-sparse", ["stats"], NO_CORPUS, "fixture/stats-sparse/base"),
+    ("stats-sparse-json", ["stats", "--json"], NO_CORPUS, "fixture/stats-sparse/base"),
+    ("palette-lexicon-agents", ["palette-lexicon-agents", "pal"], NO_CORPUS, PLA_BASE),
+    ("palette-lexicon-agents-json", ["palette-lexicon-agents", "pal", "--json"], NO_CORPUS, PLA_BASE),
+    ("palette-lexicon-agents-empty", ["palette-lexicon-agents", "empty"], NO_CORPUS, PLA_BASE),
+    ("palette-lexicon-agents-empty-json", ["palette-lexicon-agents", "empty", "--json"], NO_CORPUS, PLA_BASE),
+    ("palette-lexicon-agents-missing", ["palette-lexicon-agents", "nope"], NO_CORPUS, PLA_BASE),
+    ("palette-lexicon-agents-missing-json", ["palette-lexicon-agents", "nope", "--json"], NO_CORPUS, PLA_BASE),
+    ("selftest", ["selftest", "--recall"], RECALL, RECALL_BASE),
+    ("selftest-sample", ["selftest", "--recall", "--sample", "3"], RECALL, RECALL_BASE),
+    ("selftest-sample-all", ["selftest", "--recall", "--sample", "50"], RECALL, RECALL_BASE),
+    ("selftest-clean", ["selftest", "--recall"], RECALL_CLEAN, RECALL_BASE),
+    ("selftest-none", ["selftest", "--sample", "2"], RECALL, RECALL_BASE),
+    ("selftest-no-corpus", ["selftest", "--recall"], NO_CORPUS, RECALL_BASE),
+    ("selftest-no-index", ["selftest", "--recall"], RECALL, "fixture/recall/no-base"),
+    ("selftest-bad-index", ["selftest", "--recall"], RECALL, "fixture/recall/bad-base"),
 ]
 
 
@@ -455,6 +517,293 @@ def fresh_class_index():
         os.utime(path, (future, future))
 
 
+# license-feature(s) and resources: a token index over three candidate files
+# (direct, variable and helper calls, every unresolved site reason, an
+# unreadable file), small method and class indexes for the miss hints, and a
+# JAR with resources by extension (a cp437 name, a directory entry, a file
+# without extension); lic-wb holds a JAR that is not a zip.
+LIC_SOURCES = {
+    "lic/lic-rt/vineflower/com/x/BLicNetwork.java": """package com.x;
+public class BLicNetwork {
+  static final String VENDOR = "acme";
+  void a() { Sys.getLicenseManager().checkFeature(VENDOR, "licFeat"); }
+  void b() { LicenseManager lm = Sys.getLicenseManager(); lm.getFeature("Acme", "otherFeat"); }
+  void c() { Sys.getLicenseManager().getFeatures(); }
+  void d() { Sys.getLicenseManager().checkFeature(vendorVar, featureVar); }
+  void e() { use(Sys.getLicenseManager()); }
+}
+""",
+    "lic/lic-wb/vineflower/com/x/BLicView.java": """package com.x;
+class BLicView {
+  void a() { Sys.getLicenseManager().checkFeature("tridium", "licFeat"); }
+  void b() { LicenseManager unused = Sys.getLicenseManager(); }
+}
+""",
+    "other/other-rt/vineflower/com/y/Helper.java": """class Helper {
+  void a() { Helper.checkFeature(null, "licFeat"); }
+}
+""",
+}
+
+LIC_JAR = ["META-INF/MANIFEST.MF", "META-INF/", "com/x/BLicNetwork.class", "com/x/BLicView.class",
+           "module.palette", "lic-rt.lexicon", "com/x/icons/a.png", "com/x/icons/b.PNG", "README",
+           "dir.d/NOTICE", "~t~.png"]  # ~t~ becomes cp437 bytes (no UTF-8 flag): "été"
+
+
+def build_lic():
+    import zipfile
+    fx = os.path.join(HERE, "fixture")
+    idx = os.path.join(fx, "lic", "indexes")
+    org = os.path.join(fx, "lic-organized")
+    for d in (os.path.join(fx, "lic"), org):
+        shutil.rmtree(d, ignore_errors=True)
+    os.makedirs(idx)
+    conn = sqlite3.connect(os.path.join(idx, "token-index.db"))
+    conn.executescript("CREATE TABLE files (id INTEGER PRIMARY KEY, path TEXT NOT NULL, module TEXT NOT NULL, "
+                       "class_name TEXT NOT NULL); CREATE TABLE postings (token TEXT NOT NULL, file_id INTEGER "
+                       "NOT NULL, line_no INTEGER NOT NULL); CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT "
+                       "NOT NULL); INSERT INTO meta VALUES ('timestamp', '2026-03-04T05:06:07');")
+    for rel in sorted(LIC_SOURCES) + ["lic/lic-rt/vineflower/com/x/Gone.java"]:
+        cur = conn.execute("INSERT INTO files (path, module, class_name) VALUES (?, ?, ?)",
+                           (rel, rel.split("/")[1], os.path.basename(rel)[:-5]))
+        conn.execute("INSERT INTO postings VALUES ('getLicenseManager', ?, 3)", (cur.lastrowid,))
+        conn.execute("INSERT INTO postings VALUES ('checkFeature', ?, 4)", (cur.lastrowid,))
+        if rel in LIC_SOURCES:
+            path = os.path.join(org, rel)
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            with open(path, "w", encoding="utf-8") as f:
+                f.write(LIC_SOURCES[rel])
+    conn.commit()
+    conn.execute("VACUUM")
+    conn.close()
+    with open(os.path.join(idx, "method-index.json"), "w", encoding="utf-8") as f:
+        json.dump({"_meta": {}, "methods": {"getFeature": [], "featureOf": [], "feat": [], "Feature": []}}, f)
+    with open(os.path.join(idx, "class-index.json"), "w", encoding="utf-8") as f:
+        json.dump({"_meta": {"timestamp": "2026-03-04T05:06:07"}, "classes": {"BFeatureView": []}}, f)
+    jar = os.path.join(org, "lic", "lic-rt", "lic-rt.jar")
+    with zipfile.ZipFile(jar, "w") as zf:
+        for name in LIC_JAR:
+            info = zipfile.ZipInfo(name, date_time=(2026, 1, 2, 3, 4, 6))
+            zf.writestr(info, b"" if name.endswith("/") else name.encode("utf-8"))
+    with open(jar, "rb") as f:
+        data = f.read()
+    with open(jar, "wb") as f:
+        f.write(data.replace(b"~t~.png", b"\x82t\x82.png"))
+    with open(os.path.join(org, "lic", "lic-wb", "lic-wb.jar"), "wb") as f:
+        f.write(b"not a zip file\n")
+
+
+# callers and callees: a small call graph with a qualified callee filed under
+# its dotted suffixes, a caller recording one callee twice (qualified and
+# simple), 16 classes with a `go` method (the "... and N more" partial
+# list), two classes differing only in case, a method with 12 callees, and
+# an empty JSON object as the graph. (A missing index is an error naming its
+# absolute path, which a frozen case cannot hold.)
+def cg_calls():
+    calls = {
+        "BCaller.work": ["BTarget.run", "org.x.Outer.Inner.copyInto", "Outer.Inner.copyInto",
+                         "BTarget.stop", "Helper.<init>", "util.Strings.join"],
+        "BCaller.<init>": ["BTarget.<init>"],
+        "BOther.run": ["BTarget.run", "BTarget.run", "BCase.get", "Bcase.get"],
+        "BTarget.restart": ["BTarget.stop", "BTarget.run"],
+        "Zeta.go": ["BTarget.run"],
+        ".odd": ["noDots", "a..b", "trail."],
+        "BMany.calls": ["Many{:02d}.go".format(i) for i in range(12)],
+    }
+    for i in range(16):
+        calls["C{:02d}.go".format(i)] = ["K{:02d}.go".format(i)]
+    return calls
+
+
+def build_cg():
+    fx = os.path.join(HERE, "fixture")
+    for name in ("cg", "cg-empty"):
+        shutil.rmtree(os.path.join(fx, name), ignore_errors=True)
+        os.makedirs(os.path.join(fx, name, "indexes"))
+    calls = cg_calls()
+    cg = {"_meta": {"timestamp": "2026-04-05T06:07:08", "total_edges": sum(len(v) for v in calls.values())},
+          "calls": calls}
+    with open(os.path.join(fx, "cg", "indexes", "callgraph-index.json"), "w", encoding="utf-8") as f:
+        json.dump(cg, f)
+    with open(os.path.join(fx, "cg-empty", "indexes", "callgraph-index.json"), "w", encoding="utf-8") as f:
+        f.write("{}")
+    classes = {"BTarget": [{"module": "target-rt", "outer_class": "X"}, {"module": "target-wb"}],
+               "BCaller": [{"module": "caller-rt"}], "BOther": [{"module": "other-rt", "outer_class": "Y"}],
+               "Inner": [], "BCase": [{"module": "case-rt"}]}
+    with open(os.path.join(fx, "cg", "indexes", "class-index.json"), "w", encoding="utf-8") as f:
+        json.dump({"_meta": {"timestamp": "2026-04-05T06:07:08"}, "classes": classes}, f)
+
+
+# stats: every index with a _meta block (floats, a non-ASCII name, a meta
+# value Python formats with grouping), a field index with NaN (decoded whole,
+# not from its prefix), an exceptions index with two _meta keys (the last
+# wins), a token index and a string index that is not SQLite, a file that is
+# not an index, and a niagara-help sibling; stats-sparse has only a module
+# inventory with a null type, a broken class index and no help sibling.
+STATS_METAS = {
+    "swing-index.json": {"classes_with_ui": 3, "total_dialogs": 1, "total_dimensions": 1234,
+                         "total_colors": 0, "total_fonts": 5, "total_icons": 6},
+    "inheritance.json": {"unique_parents": 10, "unique_interfaces_implemented": 4, "classes_with_chains": 9,
+                         "max_chain_depth": 7, "avg_chain_depth": 2.25, "with_extends": 8, "with_implements": 3},
+    "xref-index.json": {"classes_with_imports": 1500, "classes_imported_by_others": 2, "total_import_statements": 3,
+                        "resolved_imports": 4, "wildcard_imports": 5, "modules_with_deps": 6,
+                        "modules_depended_on": 7, "total_class_import_edges": 8, "total_module_dep_edges": 9},
+    "method-index.json": {"total_method_definitions": 1234567, "unique_method_names": 2, "total_constructors": 3,
+                          "classes_with_methods": 4, "avg_methods_per_class": 12.35, "max_methods_per_class": 99,
+                          "max_methods_class": "BÉtat"},
+    "annotations-index.json": {"total_niagara_types": 1, "with_properties": 2},
+    "callgraph-index.json": {"total_caller_methods": 11, "total_unique_callees": 12, "total_edges": 13,
+                             "avg_callees_per_caller": 0.05},
+}
+
+
+def build_stats():
+    fx = os.path.join(HERE, "fixture")
+    for name in ("stats", "stats-sparse"):
+        shutil.rmtree(os.path.join(fx, name), ignore_errors=True)
+    idx = os.path.join(fx, "stats", "base", "indexes")
+    os.makedirs(idx)
+    with open(os.path.join(idx, "notes.txt"), "w", encoding="utf-8") as f:
+        f.write("not an index\n")
+    for name, meta in STATS_METAS.items():
+        with open(os.path.join(idx, name), "w", encoding="utf-8") as f:
+            json.dump({"_meta": meta, "data": {"x": [1, 2]}}, f)
+    with open(os.path.join(idx, "field-index.json"), "w", encoding="utf-8") as f:
+        f.write('{"_meta": {"total_field_definitions": 5, "avg_fields_per_class": NaN, '
+                '"max_fields_class": "BMax"}, "fields": {}}')
+    with open(os.path.join(idx, "exceptions-index.json"), "w", encoding="utf-8") as f:
+        f.write('{"_meta": {"total_catch_blocks": 1}, "x": 1, "_meta": {"total_catch_blocks": 2}}')
+    with open(os.path.join(idx, "class-index.json"), "w", encoding="utf-8") as f:
+        json.dump({"_meta": {"top_level_classes": 3, "inner_classes": 0, "interfaces": 1, "unique_packages": 2},
+                   "classes": {"A": [{}, {}], "B": [{}]}}, f)
+    inv = {"a-rt": {"module": "a", "type": "rt", "has_code": True, "java_files": 1200, "class_count": 1300,
+                    "zkm": False},
+           "a-wb": {"module": "a", "type": "wb", "has_code": False, "java_files": 0, "class_count": 0, "zkm": True},
+           "b": {"module": "b", "type": "", "has_code": True, "java_files": 3, "class_count": 4, "zkm": False}}
+    with open(os.path.join(idx, "module-inventory.json"), "w", encoding="utf-8") as f:
+        json.dump({"_meta": {}, "modules": inv}, f)
+    conn = sqlite3.connect(os.path.join(idx, "token-index.db"))
+    conn.executescript("CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT NOT NULL); INSERT INTO meta VALUES "
+                       "('total_postings', '15528521'), ('unique_tokens', '7'), ('files_with_tokens', '8'), "
+                       "('total_lines', '9');")
+    conn.close()
+    with open(os.path.join(idx, "string-index.db"), "wb") as f:
+        f.write(b"not a database\n")
+    help_idx = os.path.join(fx, "stats", "niagara-help", "indexes")
+    os.makedirs(help_idx)
+    for name, data in (("class-index.json", {"A": 1, "B": 2}), ("source-index.json", ["x"]),
+                       ("slots-index.json", {}), ("other.json", {})):
+        with open(os.path.join(help_idx, name), "w", encoding="utf-8") as f:
+            json.dump(data, f)
+    sparse = os.path.join(fx, "stats-sparse", "base", "indexes")
+    os.makedirs(sparse)
+    with open(os.path.join(sparse, "module-inventory.json"), "w", encoding="utf-8") as f:
+        json.dump({"_meta": {}, "modules": {"z": {"module": "z", "type": None, "has_code": False,
+                                                  "java_files": 0, "class_count": 0, "zkm": False}}}, f)
+    with open(os.path.join(sparse, "class-index.json"), "w", encoding="utf-8") as f:
+        f.write('{"_meta": {"top_level_classes": 1}, "classes": ')
+
+
+# palette-lexicon-agents: module pal with an extracted artifact (nested and
+# attribute-less <p>, a lexicon with duplicate keys, agents with and without
+# <on>), a JAR-only artifact (palette and lexicon read from the JAR, a
+# malformed module.xml ignored), an artifact whose palette is not well formed
+# (a late XML declaration), 55 palette entries (the "... and N more" line) and
+# a directory that is not an artifact; module empty has no artifact.
+PLA_PALETTE = '''<?xml version="1.0" encoding="UTF-8"?>
+<bajaObjectGraph version="1.0">
+<p m="b=baja" t="b:Folder">
+ <p n="Net" m="x=pal" t="x:Net"/>
+ <p n="Caf\u00e9 '&amp;'"/>
+ <p/>
+</p>
+</bajaObjectGraph>
+'''
+PLA_LEXICON = "# comment\nkey=1\n other = 2\nkey = 3\n\nnoequals\nother=4\nkey=5\n=x\n"
+PLA_MODULE_XML = '''<module><types>
+ <type name="Net" class="com.x.BNet"><agent><on type="x:A"/><on type="x:B"/></agent><agent/></type>
+ <type name="It's" class="com.x.BQuote"/>
+ <type name="View" class="com.x.BView"><agent><on/></agent></type>
+</types></module>
+'''
+
+
+def build_pla():
+    import zipfile
+    base = os.path.join(HERE, "fixture", "pla")
+    shutil.rmtree(base, ignore_errors=True)
+    ext = os.path.join(base, "pal", "pal-rt", "extracted")
+    os.makedirs(os.path.join(ext, "META-INF"))
+    for name, text in (("module.palette", PLA_PALETTE), ("pal-rt.lexicon", PLA_LEXICON),
+                       ("META-INF/module.xml", PLA_MODULE_XML)):
+        with open(os.path.join(ext, name), "w", encoding="utf-8") as f:
+            f.write(text)
+    os.makedirs(os.path.join(base, "pal", "pal-wb"))
+    with zipfile.ZipFile(os.path.join(base, "pal", "pal-wb", "pal-wb.jar"), "w") as zf:
+        for name, text in (("module.palette", "<a>" + "".join('<p n="e%d"/>' % i for i in range(55)) + "</a>"),
+                           ("pal-wb.lexicon", "a=1\r\na=2\r\n"), ("META-INF/module.xml", "<module>")):
+            zf.writestr(zipfile.ZipInfo(name, date_time=(2026, 1, 2, 3, 4, 6)), text)
+    bad = os.path.join(base, "pal", "pal-ux", "extracted")
+    os.makedirs(bad)
+    with open(os.path.join(bad, "module.palette"), "w", encoding="utf-8") as f:
+        f.write("<!-- c -->\n<?xml version=\"1.0\"?><a><p n=\"x\"/></a>")
+    os.makedirs(os.path.join(base, "pal", "docs"))
+    with open(os.path.join(base, "pal", "README"), "w", encoding="utf-8") as f:
+        f.write("not an artifact\n")
+    os.makedirs(os.path.join(base, "empty", "notes"))
+    with open(os.path.join(base, "empty", "notes", "x.txt"), "w", encoding="utf-8") as f:
+        f.write("no jar, no extracted/\n")
+
+
+# selftest --recall: one .java file per directory (os.walk order is the
+# file system's, so a directory never holds two) with annotated, modified,
+# record and @interface declarations, a header split over lines with type
+# arguments and comments, a declaration missing from the index, one indexed
+# without its supertypes, an original docSource source checked through its
+# vineflower path, and a corpus where everything is indexed (exit 0); a
+# missing and a malformed class index.
+RECALL_SOURCES = {
+    "m/m-rt/vineflower/a/A.java": "@Deprecated @SuppressWarnings(\"x\")\npublic final class A extends B {}\n"
+                                  "class A2 {}\n",
+    "m/m-rt/vineflower/a/b/C.java": "public non-sealed class C<T extends X>\n  // implements nothing\n"
+                                    "  extends D<Y> /* implements */ implements E {\n}\n",
+    "m/m-rt/vineflower/a/b/c/R.java": "public record R(int x) implements Q {}\n@interface Note {}\n",
+    "m/m-rt/vineflower/a/b/c/d/Missing.java": "enum Missing { A }\n",
+    "m/m-rt/vineflower/a/b/c/d/e/Lost.java": "abstract class Lost extends Base implements I {}\n",
+    "docSource/docSource-doc/extracted/x/Orig.java": "public interface Orig extends Base {}\n",
+}
+RECALL_INDEX = {
+    "A": [{"path": "m/m-rt/vineflower/a/A.java", "extends": "B"}],
+    "A2": [{"path": "m/m-rt/vineflower/a/A.java"}],
+    "C": [{"path": "m/m-rt/vineflower/a/b/C.java", "extends": "D", "implements": ["E"]}],
+    "R": [{"path": "m/m-rt/vineflower/a/b/c/R.java", "implements": ["Q"]}],
+    "Note": [{"path": "m/m-rt/vineflower/a/b/c/R.java"}],
+    "Lost": [{"path": "m/m-rt/vineflower/a/b/c/d/e/Lost.java", "extends": "Base"},
+             {"path": "m/m-rt/vineflower/a/b/c/d/e/Lost.java", "implements": ["I"], "outer_class": "X"}],
+    "Orig": [{"path": "docSource/docSource-doc/vineflower/x/Orig.java", "extends": "Base"}],
+}
+
+
+def build_recall():
+    fx = os.path.join(HERE, "fixture", "recall")
+    shutil.rmtree(fx, ignore_errors=True)
+    for corpus, sources in (("organized", RECALL_SOURCES),
+                            ("clean", {k: v for k, v in RECALL_SOURCES.items()
+                                       if "Missing" not in k and "Lost" not in k})):
+        for rel, text in sources.items():
+            path = os.path.join(fx, corpus, rel)
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            with open(path, "w", encoding="utf-8") as f:
+                f.write(text)
+    os.makedirs(os.path.join(fx, "base", "indexes"))
+    with open(os.path.join(fx, "base", "indexes", "class-index.json"), "w", encoding="utf-8") as f:
+        json.dump({"_meta": {"timestamp": "2026-05-06T07:08:09"}, "classes": RECALL_INDEX}, f)
+    os.makedirs(os.path.join(fx, "no-base"))
+    os.makedirs(os.path.join(fx, "bad-base", "indexes"))
+    with open(os.path.join(fx, "bad-base", "indexes", "class-index.json"), "w", encoding="utf-8") as f:
+        f.write('{"_meta": {}, "classes": ')
+
+
 def build_fixture():
     fx = os.path.join(HERE, "fixture")
     shutil.rmtree(fx, ignore_errors=True)
@@ -493,8 +842,15 @@ def capture(cid, args, env, base=BASE):
     p = subprocess.run([sys.executable, CLI] + argv, cwd=HERE, env=full_env,
                        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     d = os.path.join(HERE, "golden", cid)
+    kept = None  # an intended.json written by hand (e.g. a D32 retired command) survives a re-capture
+    if os.path.isfile(os.path.join(d, "intended.json")):
+        with open(os.path.join(d, "intended.json"), encoding="utf-8") as f:
+            kept = f.read()
     shutil.rmtree(d, ignore_errors=True)
     os.makedirs(d)
+    if kept is not None and cid[len("nav-"):] not in INTENDED:
+        with open(os.path.join(d, "intended.json"), "w", encoding="utf-8") as f:
+            f.write(kept)
     with open(os.path.join(d, "cmd.json"), "w", encoding="utf-8") as f:
         json.dump({"args": argv, "env": env} if env else {"args": argv}, f)
         f.write("\n")
@@ -511,14 +867,33 @@ def capture(cid, args, env, base=BASE):
 
 
 def main():
+    """--fixture rebuilds every fixture; --search only the grep/source/token one,
+    --lic only the license/resources one, --cg only the call graph one, --stats
+    only the stats ones, --pla only the palette-lexicon-agents one, --recall
+    only the selftest one.
+    --only a,b captures just those case ids (without the nav- prefix)."""
     if "--fixture" in sys.argv:
         build_fixture()
         build_drivers()
     if "--fixture" in sys.argv or "--search" in sys.argv:
         build_search()
+    if "--fixture" in sys.argv or "--lic" in sys.argv:
+        build_lic()
+    if "--fixture" in sys.argv or "--cg" in sys.argv:
+        build_cg()
+    if "--fixture" in sys.argv or "--stats" in sys.argv:
+        build_stats()
+    if "--fixture" in sys.argv or "--pla" in sys.argv:
+        build_pla()
+    if "--fixture" in sys.argv or "--recall" in sys.argv:
+        build_recall()
+    only = set(sys.argv[sys.argv.index("--only") + 1].split(",")) if "--only" in sys.argv else None
     fresh_class_index()
     for cid, args, env, *base in CASES:
-        capture("nav-" + cid, args, env, *base)
+        if only is None or cid in only:
+            capture("nav-" + cid, args, env, *base)
+    if only is not None:
+        return
     for cache in glob.glob(os.path.join(HERE, "fixture", "*", "indexes", "class-rank.cache")):
         os.remove(cache)  # Python's rank cache; the Go port keeps its own
     for cid, args in PARSE_CASES:

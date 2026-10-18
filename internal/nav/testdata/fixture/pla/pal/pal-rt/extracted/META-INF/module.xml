@@ -1,0 +1,5 @@
+<module><types>
+ <type name="Net" class="com.x.BNet"><agent><on type="x:A"/><on type="x:B"/></agent><agent/></type>
+ <type name="It's" class="com.x.BQuote"/>
+ <type name="View" class="com.x.BView"><agent><on/></agent></type>
+</types></module>

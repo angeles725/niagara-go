@@ -1,0 +1,4 @@
+recall 87.50% (7/8 declarations in 6 files, sampled; 0 excluded; index 8 entries built 2026-05-06T07:08:09)
+  MISSING Missing  m/m-rt/vineflower/a/b/c/d/Missing.java
+supertypes 4/5 declarations whose header names extends/implements have them in the index
+  NO IMPLEMENTS Lost  m/m-rt/vineflower/a/b/c/d/e/Lost.java

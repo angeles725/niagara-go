@@ -1,0 +1,7 @@
+
+  MODULE lic-rt requires features: licFeat, otherFeat
+
+    licFeat                lic/lic-rt/vineflower/com/x/BLicNetwork.java:4  checkFeature(acme, licFeat)
+    otherFeat              lic/lic-rt/vineflower/com/x/BLicNetwork.java:5  getFeature(Acme, otherFeat)
+    (unresolved)           lic/lic-rt/vineflower/com/x/BLicNetwork.java:7  checkFeature(vendorVar, featureVar)
+

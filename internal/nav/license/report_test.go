@@ -1,15 +1,10 @@
 package license
 
 import (
-	"bytes"
 	"database/sql"
 	"os"
 	"path/filepath"
 	"testing"
-
-	"github.com/angeles725/niagara-go/internal/cli"
-	"github.com/angeles725/niagara-go/internal/nav/core"
-	"github.com/angeles725/niagara-go/internal/nav/registry"
 )
 
 // tokenBase writes a token index listing files (path -> source; "" = not on
@@ -46,13 +41,23 @@ func tokenBase(t *testing.T, files map[string]string) (base, corpus string) {
 	return base, corpus
 }
 
+// scan runs Scan and renders its outcome the way the CLI reports it: the
+// stderr text and the exit status.
 func scan(t *testing.T, base, corpus string) (*Report, string, int) {
 	t.Helper()
 	t.Setenv("NAV_CORPUS_BASE", corpus)
-	var out, errb bytes.Buffer
-	env := &registry.Env{Stdio: cli.Stdio{Out: &out, Err: &errb}, Runtime: core.New(base, &out, &errb)}
-	defer env.Close()
-	return Scan(env), errb.String(), env.ExitCode()
+	rep, f := Scan(base)
+	switch {
+	case f != nil:
+		stderr := "ERROR: " + f.Message + "\n"
+		if f.Hint != "" {
+			stderr += "  " + f.Hint + "\n"
+		}
+		return rep, stderr, 2
+	case rep.Warning != "":
+		return rep, "WARNING: " + rep.Warning + "\n", 0
+	}
+	return rep, "", 0
 }
 
 // TestScan pins license_report's outcomes: calls with the candidate counts,
@@ -85,5 +90,20 @@ func TestScan(t *testing.T) {
 		"\n  Run: ./reindex.sh\n"
 	if rep != nil || stderr != want || code != 2 {
 		t.Errorf("no token index: report %v, stderr %q, exit %d", rep, stderr, code)
+	}
+}
+
+// TestScanIndexTakesExplicitInputs: the explicit-input entry ignores
+// NAV_CORPUS_BASE and reads the corpus it is given.
+func TestScanIndexTakesExplicitInputs(t *testing.T) {
+	src := `class C { void f() { Sys.getLicenseManager().checkFeature("v", "f"); } }`
+	base, corpus := tokenBase(t, map[string]string{"m/m-rt/a/C.java": src})
+	t.Setenv("NAV_CORPUS_BASE", t.TempDir())
+	rep, f := ScanIndex(filepath.Join(base, "indexes", "token-index.db"), corpus)
+	if f != nil || len(rep.Calls) != 1 || len(rep.Sites) != 1 || rep.Sites[0].Features[0] != "f" {
+		t.Fatalf("ScanIndex = %+v, %v", rep, f)
+	}
+	if _, f := ScanIndex(filepath.Join(base, "missing.db"), corpus); f == nil || f.Hint != "Run: ./reindex.sh" {
+		t.Errorf("missing index: %v", f)
 	}
 }

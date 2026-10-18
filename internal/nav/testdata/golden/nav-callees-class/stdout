@@ -1,0 +1,15 @@
+
+  CALLEES of BCaller (all methods): 2 methods, 7 total calls
+  Module: caller-rt
+
+  <init> (1 calls):
+    -> BTarget.<init>                            [target-wb]
+
+  work (6 calls):
+    -> BTarget.run                               [target-wb]
+    -> org.x.Outer.Inner.copyInto                [?]
+    -> Outer.Inner.copyInto                      [?]
+    -> BTarget.stop                              [target-wb]
+    -> Helper.<init>                             [?]
+    -> util.Strings.join                         [?]
+

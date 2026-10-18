@@ -1,0 +1,23 @@
+
+  =================================================================
+  RESOURCES: lic-rt.jar
+  =================================================================
+
+  Total entries:       11
+  Class files:          2
+  Resources:            8
+
+  BY EXTENSION:
+    .png                3 files
+    .mf                 1 files
+    .palette            1 files
+    .lexicon            1 files
+    (none)              1 files
+                        1 files
+
+  ALL RESOURCES (8, showing 2):
+  -----------------------------------------------------------------
+    META-INF/MANIFEST.MF
+    module.palette
+    ... and 6 more
+

@@ -15,7 +15,7 @@ import (
 // nothing and returns typed rows; DriverTableHeader, FormatDriverRow and
 // FormatAnatomy yield the exact lines the command prints, so the command and
 // nsearch show the same text. Loading the indexes, scanning the licensing
-// calls (license.Scan, which needs the runtime) and the miss reports belong
+// calls (license.Scan of the base directory) and the miss reports belong
 // to the command (drivers.go, drivers_print.go).
 
 // DriverRow is one driver network (the dict _anatomy returns).

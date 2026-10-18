@@ -1,4 +1,5 @@
-"""Regenerate scan.json: license_features._scan_file calls on sample sources.
+"""Regenerate scan.json: license_features._scan_file calls and getLicenseManager()
+sites on sample sources.
 
     python3 -I internal/nav/license/testdata/gen_scan.py [<module-navigator>/tools]
 
@@ -62,6 +63,28 @@ public class BDrvNetwork extends BDeviceNetwork {
 }
 ''',
     "crlf/crlf-rt/vineflower/d/BCrlf.java": None,  # raw bytes below
+    "site/site-rt/vineflower/e/BSites.java": '''package e;
+class BSites {
+  public LicenseManager getLicenseManager() { return null; }
+  // Sys.getLicenseManager() in a comment
+  void a() { Sys.getLicenseManager().getFeatures(); }
+  void b(Object o) { if (Sys.getLicenseManager() instanceof BLicenseManager) { } }
+  void c(Object o) { boolean q = o instanceof
+      getLicenseManager(); }
+  void d() { LicenseManager unused = Sys.getLicenseManager(); }
+  void e() { field.checkFeature("v", "fieldFeature"); }
+  private BLicenseManager field;
+  BSites() { this.field = Sys.getLicenseManager(); }
+  void f() { LicenseManager lm = Sys.getLicenseManager(); lm.checkFeature(vendorVar, featureVar); }
+  void g() { foo(Sys.getLicenseManager(),   bar(  1  ) ); }
+  void h() { LicenseManager lm2; if (x) { lm2 = Sys.getLicenseManager(); } lm2.getFeature("v", "late"); }
+  void i() { lm3 = (BLicenseManager) Sys.getLicenseManager(); if (y) { lm3.checkFeature("v", "inner"); } }
+  void j() { lm2.checkFeature("v", "otherScope"); }
+  Runnable r = new Runnable() { public void run() { mgr = Sys.getLicenseManager(); mgr.checkFeature("a", "anon"); } };
+  void k() { LicenseManager é = Sys.getLicenseManager()
+      ; é.getFeature("u", "nicode"); x.getLicenseManager( ).checkFeature("t", "wo"); }
+}
+''',
 }
 
 RAW = {
@@ -76,6 +99,7 @@ SCANS = [
     ("drv/drv-rt/vineflower/a/BDrvLicenseManager.java", "drv-rt", "BDrvLicenseManager"),
     ("uni/uni-rt/vineflower/c/BÉtat.java", "uni-rt", "BÉtat"),
     ("crlf/crlf-rt/vineflower/d/BCrlf.java", "crlf-rt", "BCrlf"),
+    ("site/site-rt/vineflower/e/BSites.java", "site-rt", "BSites"),
 ]
 
 with tempfile.TemporaryDirectory() as root:
@@ -90,13 +114,24 @@ with tempfile.TemporaryDirectory() as root:
     resolver = lf._Resolver(root, conn)
     scans = []
     for rel, module, cls in SCANS:
-        calls, _ = lf._scan_file(resolver._text(rel), rel, module, cls, resolver)
-        scans.append([rel, module, cls, [[c["form"], c["receiver"], c["vendor"], c["feature"]]
-                                         for c in calls]])
+        calls, sites = lf._scan_file(resolver._text(rel), rel, module, cls, resolver)
+        scans.append([rel, module, cls,
+                      [[c["form"], c["receiver"], c["vendor"], c["feature"], c["line"], c["args"]]
+                       for c in calls],
+                      [[s["line"], s["features"], s["reason"]] for s in sites]])
 
-out = {"files": {k: v for k, v in FILES.items() if v is not None},
-       "raw": {k: v.hex() for k, v in RAW.items()}, "scans": scans}
+def records(rows):
+    """A JSON list with one compact record per line."""
+    if not rows:
+        return "[]"
+    return "[\n    " + ",\n    ".join(json.dumps(r, ensure_ascii=False) for r in rows) + "\n   ]"
+
+
+head = json.dumps({"files": {k: v for k, v in FILES.items() if v is not None},
+                   "raw": {k: v.hex() for k, v in RAW.items()}}, ensure_ascii=False, indent=1)
+body = ",\n".join("  [{}, {}, {},\n   {},\n   {}]".format(
+    json.dumps(rel, ensure_ascii=False), json.dumps(module), json.dumps(cls, ensure_ascii=False),
+    records(calls), records(sites)) for rel, module, cls, calls, sites in scans)
 with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "scan.json"), "w",
           encoding="utf-8") as f:
-    json.dump(out, f, ensure_ascii=False, indent=1)
-    f.write("\n")
+    f.write(head[:-2] + ',\n "scans": [\n' + body + "\n ]\n}\n")

@@ -1,0 +1,9 @@
+
+  LICENSE FEATURE 'LICFEAT': 3 call site(s) in 3 submodule(s)
+
+  CLASS                                  LINE  VENDOR    FORM         MODULE                 PATH
+  --------------------------------------------------------------------------------------------------------------
+  BLicNetwork                               4  acme      checkFeature lic-rt                 lic/lic-rt/vineflower/com/x/BLicNetwork.java
+  BLicView                                  3  tridium   checkFeature lic-wb                 lic/lic-wb/vineflower/com/x/BLicView.java
+  Helper                                    2  ?         checkFeature other-rt               other/other-rt/vineflower/com/y/Helper.java
+

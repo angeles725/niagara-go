@@ -64,16 +64,21 @@ func Names() []string {
 }
 
 // AddParsers adds the commands in order to sub (registry.add_commands); order must
-// name every registered command exactly once.
-func AddParsers(sub *argparse.Subparsers, order []string) error {
+// name every registered command exactly once, except the retired ones, which
+// are left out of the parser (a group may still declare one until its
+// declaration is deleted).
+func AddParsers(sub *argparse.Subparsers, order, retired []string) error {
 	seen := map[string]bool{}
+	for _, name := range retired {
+		seen[name] = true
+	}
 	for _, name := range order {
 		c, ok := commands[name]
 		if !ok {
 			return fmt.Errorf("registry: order names an unknown command: %s", name)
 		}
 		if seen[name] {
-			return fmt.Errorf("registry: order names a command twice: %s", name)
+			return fmt.Errorf("registry: order names a command twice or a retired one: %s", name)
 		}
 		seen[name] = true
 		p := sub.AddParser(name, argparse.SubparserConfig{

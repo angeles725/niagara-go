@@ -1,0 +1,1 @@
+{"args": ["--base-dir", "fixture/recall/base", "selftest", "--sample", "2"], "env": {"NAV_CORPUS_BASE": "fixture/recall/organized"}}

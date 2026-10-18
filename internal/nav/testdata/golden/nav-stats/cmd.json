@@ -1,0 +1,1 @@
+{"args": ["--base-dir", "fixture/stats/base", "stats"], "env": {"NAV_CORPUS_BASE": "fixture/no-corpus"}}

@@ -1,0 +1,90 @@
+{
+  "corpus": {
+    "submodules": 1,
+    "unique_modules": 1,
+    "with_code": 0,
+    "without_code": 1,
+    "java_files": 0,
+    "class_files": 0,
+    "zkm_obfuscated": 0,
+    "types": {
+      "standalone": 1
+    }
+  },
+  "class_index": {
+    "total_entries": 0,
+    "unique_names": 0,
+    "top_level": 0,
+    "inner_classes": 0,
+    "interfaces": 0,
+    "enums": 0,
+    "abstract_classes": 0,
+    "packages": 0
+  },
+  "swing_index": {
+    "classes_with_ui": 0,
+    "dialogs": 0,
+    "dimensions": 0,
+    "colors": 0,
+    "fonts": 0,
+    "icons": 0
+  },
+  "inheritance_index": {
+    "unique_parents": 0,
+    "unique_interfaces": 0,
+    "classes_with_chains": 0,
+    "max_chain_depth": 0,
+    "avg_chain_depth": 0,
+    "with_extends": 0,
+    "with_implements": 0
+  },
+  "xref_index": {
+    "classes_with_imports": 0,
+    "classes_imported_by_others": 0,
+    "total_import_statements": 0,
+    "resolved_imports": 0,
+    "wildcard_imports": 0,
+    "modules_with_deps": 0,
+    "modules_depended_on": 0,
+    "total_class_import_edges": 0,
+    "total_module_dep_edges": 0
+  },
+  "method_index": {
+    "total_definitions": 0,
+    "unique_names": 0,
+    "constructors": 0,
+    "classes_with_methods": 0,
+    "avg_methods_per_class": 0,
+    "max_methods_per_class": 0,
+    "max_methods_class": ""
+  },
+  "annotations_index": {
+    "niagara_types": 0,
+    "with_properties": 0,
+    "with_actions": 0,
+    "with_topics": 0,
+    "total_properties": 0,
+    "total_actions": 0,
+    "total_topics": 0,
+    "unique_property_types": 0,
+    "unique_action_names": 0
+  },
+  "callgraph_index": {},
+  "field_index": {},
+  "exceptions_index": {},
+  "token_index": {},
+  "string_index": {},
+  "indexes": [
+    {
+      "name": "class-index.json",
+      "size_bytes": 47,
+      "size_mb": 0.0
+    },
+    {
+      "name": "module-inventory.json",
+      "size_bytes": 130,
+      "size_mb": 0.0
+    }
+  ],
+  "total_index_size_mb": 0.0
+}

@@ -1,0 +1,10 @@
+
+  LICENSE FEATURES — aggregate
+  5 licensing calls (4 resolved to 2 feature names, 1 unresolved) in 4 candidate files (1 unreadable) from 3 submodules, token index built 2026-03-04T05:06:07
+  getLicenseManager() sites: 7 (3 lead to a feature, 4 unresolved: license-features --unresolved)
+
+  FEATURE                        VENDOR        HITS    CLS    MOD
+  ----------------------------------------------------------------------
+  licFeat                        ?,acme,tridi     3      3      3
+    ... limit reached (1) — use -n to increase
+

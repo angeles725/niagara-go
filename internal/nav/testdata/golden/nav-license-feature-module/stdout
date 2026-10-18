@@ -1,0 +1,8 @@
+
+  LICENSE FEATURE 'licFeat': 2 call site(s) in 2 submodule(s)
+
+  CLASS                                  LINE  VENDOR    FORM         MODULE                 PATH
+  --------------------------------------------------------------------------------------------------------------
+  BLicNetwork                               4  acme      checkFeature lic-rt                 lic/lic-rt/vineflower/com/x/BLicNetwork.java
+    ... limit reached (1) — use -n to increase
+

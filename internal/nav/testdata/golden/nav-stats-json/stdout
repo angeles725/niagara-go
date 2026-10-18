@@ -1,0 +1,165 @@
+{
+  "corpus": {
+    "submodules": 3,
+    "unique_modules": 2,
+    "with_code": 2,
+    "without_code": 1,
+    "java_files": 1203,
+    "class_files": 1304,
+    "zkm_obfuscated": 1,
+    "types": {
+      "rt": 1,
+      "wb": 1,
+      "standalone": 1
+    }
+  },
+  "class_index": {
+    "total_entries": 3,
+    "unique_names": 2,
+    "top_level": 3,
+    "inner_classes": 0,
+    "interfaces": 1,
+    "enums": 0,
+    "abstract_classes": 0,
+    "packages": 2
+  },
+  "swing_index": {
+    "classes_with_ui": 3,
+    "dialogs": 1,
+    "dimensions": 1234,
+    "colors": 0,
+    "fonts": 5,
+    "icons": 6
+  },
+  "inheritance_index": {
+    "unique_parents": 10,
+    "unique_interfaces": 4,
+    "classes_with_chains": 9,
+    "max_chain_depth": 7,
+    "avg_chain_depth": 2.25,
+    "with_extends": 8,
+    "with_implements": 3
+  },
+  "xref_index": {
+    "classes_with_imports": 1500,
+    "classes_imported_by_others": 2,
+    "total_import_statements": 3,
+    "resolved_imports": 4,
+    "wildcard_imports": 5,
+    "modules_with_deps": 6,
+    "modules_depended_on": 7,
+    "total_class_import_edges": 8,
+    "total_module_dep_edges": 9
+  },
+  "method_index": {
+    "total_definitions": 1234567,
+    "unique_names": 2,
+    "constructors": 3,
+    "classes_with_methods": 4,
+    "avg_methods_per_class": 12.35,
+    "max_methods_per_class": 99,
+    "max_methods_class": "B\u00c9tat"
+  },
+  "annotations_index": {
+    "niagara_types": 1,
+    "with_properties": 2,
+    "with_actions": 0,
+    "with_topics": 0,
+    "total_properties": 0,
+    "total_actions": 0,
+    "total_topics": 0,
+    "unique_property_types": 0,
+    "unique_action_names": 0
+  },
+  "callgraph_index": {
+    "caller_methods": 11,
+    "unique_callees": 12,
+    "total_edges": 13,
+    "avg_callees_per_caller": 0.05
+  },
+  "field_index": {
+    "total_definitions": 5,
+    "unique_names": 0,
+    "static_fields": 0,
+    "final_fields": 0,
+    "constants": 0,
+    "with_init": 0,
+    "classes_with_fields": 0,
+    "avg_fields_per_class": NaN,
+    "max_fields_per_class": 0,
+    "max_fields_class": "BMax"
+  },
+  "exceptions_index": {
+    "throws_declarations": 0,
+    "catch_blocks": 2,
+    "unique_thrown_types": 0,
+    "unique_caught_types": 0,
+    "classes_with_throws": 0,
+    "classes_with_catches": 0
+  },
+  "token_index": {
+    "total_postings": 15528521,
+    "unique_tokens": 7,
+    "files_with_tokens": 8,
+    "total_lines": 9
+  },
+  "string_index": {},
+  "indexes": [
+    {
+      "name": "annotations-index.json",
+      "size_bytes": 82,
+      "size_mb": 0.0
+    },
+    {
+      "name": "callgraph-index.json",
+      "size_bytes": 141,
+      "size_mb": 0.0
+    },
+    {
+      "name": "class-index.json",
+      "size_bytes": 133,
+      "size_mb": 0.0
+    },
+    {
+      "name": "exceptions-index.json",
+      "size_bytes": 80,
+      "size_mb": 0.0
+    },
+    {
+      "name": "field-index.json",
+      "size_bytes": 112,
+      "size_mb": 0.0
+    },
+    {
+      "name": "inheritance.json",
+      "size_bytes": 206,
+      "size_mb": 0.0
+    },
+    {
+      "name": "method-index.json",
+      "size_bytes": 245,
+      "size_mb": 0.0
+    },
+    {
+      "name": "module-inventory.json",
+      "size_bytes": 345,
+      "size_mb": 0.0
+    },
+    {
+      "name": "swing-index.json",
+      "size_bytes": 157,
+      "size_mb": 0.0
+    },
+    {
+      "name": "xref-index.json",
+      "size_bytes": 283,
+      "size_mb": 0.0
+    },
+    {
+      "name": "token-index.db",
+      "size_bytes": 12288,
+      "size_mb": 0.0
+    }
+  ],
+  "total_index_size_mb": 0.0
+}

@@ -39,10 +39,10 @@ func TestOutcomeHighestStatusWins(t *testing.T) {
 	if errb.String() != "ERROR: class index not found: /p\n  Run: ./reindex.sh\n" {
 		t.Errorf("stderr %q", errb.String())
 	}
-	r.Reset()
-	r.Ambiguous()
-	if r.ExitCode() != StatusMiss {
-		t.Errorf("after Reset: exit %d", r.ExitCode())
+	r2, _, _, _ := newTestRuntime(t)
+	r2.Ambiguous()
+	if r2.ExitCode() != StatusMiss {
+		t.Errorf("ambiguous: exit %d", r2.ExitCode())
 	}
 }
 

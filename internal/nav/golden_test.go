@@ -13,8 +13,10 @@ import (
 // top-level help, a help-<cmd> sample covering every command group and both nested
 // subparsers, the no-command help and usage errors; and, as nav-<case>, the ported
 // commands run against the small indexes under testdata/fixture (gen_golden.py
-// regenerates both). The module-navigator golden suite (tests/golden_cli.py with
-// GOLDEN_BIN) covers every command against the real corpus.
+// regenerates both). Cases of commands retired by decision D32 keep Python's
+// output and declare the Go result (one "retired" line, exit 2; the shorter
+// --help list) in intended.json. The module-navigator golden suite
+// (tests/golden_cli.py with GOLDEN_BIN) covers every command against the real corpus.
 func TestGolden(t *testing.T) {
 	// A checkout gives the drivers and search class indexes and their corpora
 	// the same mtime; dated ahead, an index is never "older than the corpus"
