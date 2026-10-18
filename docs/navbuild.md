@@ -119,6 +119,14 @@ into another temp base over the same corpus, then byte-diffs both indexes after
 | real modules linked into a temp `organized/` (`$NAVBUILD_PARITY_MODULES`, default `alarm,backup,ColdRoomPan,CentralineAhuPx,kitControl`) | not with `-short` |
 | the whole corpus (`$NAV_CORPUS_BASE`, else `$NIAGARA_RESEARCH/organized`) | `NAVBUILD_PARITY_FULL=1` |
 
+`TestParityLaterIndexes` builds the chain (inventory, class index, then every later
+builder in `laterBuilders`) on both sides; `$NAVBUILD_PARITY_ONLY` (comma-separated index
+names) limits the later indexes it checks (inheritance always runs, the call graph reads
+it). Each run logs wall time and peak RSS: on the full corpus the Go builder runs in a child
+process (the test binary re-executed through `TestMain`), and both sides run under GNU
+`/usr/bin/time` when it exists, because Linux keeps a process's RSS high-water mark across
+`exec`, so the rusage of a child of the (large) test process would report the parent's peak.
+
 `testdata/golden/<index>.golden` hold the normalised PYTHON outputs of the synthetic corpus;
 `TestGoldenSynthetic` checks the Go builders against them without Python. Regenerate with
 `go test ./internal/navbuild -run Parity -args -update` (Python and the module-navigator
