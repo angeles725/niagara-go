@@ -8,6 +8,7 @@ package modulefind
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"slices"
 	"sort"
@@ -97,16 +98,18 @@ func Main(args []string, s cli.Stdio) int {
 		fmt.Fprintln(s.Err, "module-find: a src root is required for this command")
 		return 2
 	}
-	if st, err := os.Stat(root); err != nil || !st.IsDir() {
-		fmt.Fprintf(s.Err, "module-find: not a directory: %s\n", root)
-		return 3
+	m, code := openRoot(root, s.Err)
+	if m == nil {
+		return code
 	}
-	m := newModule(root)
-	if m.files == 0 {
-		return honest.Fail(s.Err, "module-find", fmt.Sprintf("no .java files under %s (dot-dirs pruned)", root), 3)
+	var b *module // compare's srcB, refused like <root> (exit 3) when it cannot be searched
+	if cmd == "compare" {
+		if b, code = openRoot(ns.String("srcB"), s.Err); b == nil {
+			return code
+		}
 	}
 	o.scope = scope(m, root)
-	found := run(m, o, cmd, ns)
+	found := run(m, b, o, cmd, ns)
 	paths := make([]string, 0, len(m.unreadable))
 	for path := range m.unreadable {
 		paths = append(paths, path)
@@ -115,10 +118,24 @@ func Main(args []string, s cli.Stdio) int {
 	for _, path := range paths {
 		fmt.Fprintf(s.Err, "module-find: unreadable, not searched: %s: %s\n", path, m.unreadable[path])
 	}
-	if found == 0 && slices.Contains(searchCommands, cmd) {
+	if found == 0 {
 		return 1
 	}
 	return 0
+}
+
+// openRoot scans a module source root, or reports why it cannot be searched (exit 3): not a
+// directory, or no .java file under it.
+func openRoot(root string, stderr io.Writer) (*module, int) {
+	if st, err := os.Stat(root); err != nil || !st.IsDir() {
+		fmt.Fprintf(stderr, "module-find: not a directory: %s\n", root)
+		return nil, 3
+	}
+	m := newModule(root)
+	if m.files == 0 {
+		return nil, honest.Fail(stderr, "module-find", fmt.Sprintf("no .java files under %s (dot-dirs pruned)", root), 3)
+	}
+	return m, 0
 }
 
 func regexArg(ns *argparse.Namespace, dest string) *pyre.Regexp {
@@ -126,7 +143,9 @@ func regexArg(ns *argparse.Namespace, dest string) *pyre.Regexp {
 	return re
 }
 
-func run(m *module, o *opts, cmd string, ns *argparse.Namespace) int {
+// run dispatches one command: a command that can miss returns its match count (0 is exit 1),
+// any other -1.
+func run(m, b *module, o *opts, cmd string, ns *argparse.Namespace) int {
 	switch cmd {
 	case "slots":
 		return cmdSlots(m, o, slotFilter{typ: ns.String("type"), hasType: ns.Get("type") != nil,
@@ -136,7 +155,7 @@ func run(m *module, o *opts, cmd string, ns *argparse.Namespace) int {
 	case "writers":
 		cmdWriters(m, o, ns.String("slot"))
 	case "extends":
-		cmdExtends(m, o, ns.String("of"), ns.Get("of") != nil)
+		return cmdExtends(m, o, ns.String("of"), ns.Get("of") != nil)
 	case "ords":
 		return cmdOrds(m, o, regexArg(ns, "name"))
 	case "grep":
@@ -146,7 +165,7 @@ func run(m *module, o *opts, cmd string, ns *argparse.Namespace) int {
 	case "ext-writable":
 		cmdExtWritable(m, o)
 	case "compare":
-		cmdCompare(m, o, ns.String("srcB"))
+		cmdCompare(m, b, o)
 	case "callers":
 		return cmdCallers(m, o, ns.String("method"))
 	}

@@ -1,0 +1,5 @@
+{
+ "reason": "Python echoed an unknown class as its own one-element chain with exit 0; under the exit contract (0 found, 1 searched and no match) a --of class with no extends declaration is a miss: the miss line names the scope and the exit is 1 (D-I2-6).",
+ "stdout": "(no extends declaration for Nope) -- searched srcA: 4 java files\n",
+ "exit": 1
+}

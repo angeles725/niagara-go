@@ -1,0 +1,6 @@
+{
+ "reason": "Python read a missing srcB as an empty tree and reported every A slot and action as removed (exit 0); the help documents exit 3 for an unreadable root, so a srcB that is not a directory is now refused like <root> (D-I2-6).",
+ "stdout": "",
+ "stderr": "module-find: not a directory: missing\n",
+ "exit": 3
+}

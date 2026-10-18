@@ -1,7 +1,7 @@
 package modulefind
 
-// description is module-find.py __doc__ verbatim, the parser description
-// (RawDescriptionHelpFormatter).
+// description is module-find.py __doc__ (its Exit line updated for the D-I2-6 exit fixes), the
+// parser description (RawDescriptionHelpFormatter).
 const description = "module-find: read-only finder for a Niagara N4 module's Java SOURCE tree.\n" +
 	"\n" +
 	"WHY: bog-nav navigates a station's saved graph; this navigates the MODULE that defines the\n" +
@@ -28,5 +28,6 @@ const description = "module-find: read-only finder for a Niagara N4 module's Jav
 	"  callers <method>                           call sites of a method\n" +
 	"\n" +
 	"Read-only. Prints rows; --json/--csv for machine output, --limit N (-n) caps the rows.\n" +
-	"Exit: 0 found · 1 slots/actions/ords/grep/callers matched nothing (the miss line names the root\n" +
-	"and its .java count) · 2 usage · 3 unreadable root / no .java. Prunes dot-dirs. stdlib only.\n"
+	"Exit: 0 found · 1 slots/actions/ords/grep/callers/extends --of matched nothing (the miss line\n" +
+	"names the root and its .java count) · 2 usage · 3 unreadable root or srcB / no .java. Prunes\n" +
+	"dot-dirs. stdlib only.\n"
