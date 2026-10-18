@@ -209,7 +209,7 @@ func TestEnsureFulltextCapIsNotResetByChangingHolders(t *testing.T) {
 	if err != nil || !rebuilt {
 		t.Errorf("rebuilt %v err %v", rebuilt, err)
 	}
-	if elapsed > 1500*time.Millisecond {
+	if elapsed < 300*time.Millisecond || elapsed > 1500*time.Millisecond {
 		t.Errorf("built after %v, want about lockFollowMax (300ms)", elapsed)
 	}
 }
