@@ -119,16 +119,6 @@ func walkJava(root string, fn func(path, name string)) {
 	}
 }
 
-// sortedSet is sorted(a Python set).
-func sortedSet(set map[string]bool) []string {
-	out := make([]string, 0, len(set))
-	for k := range set {
-		out = append(out, k)
-	}
-	sort.Strings(out)
-	return out
-}
-
 func addTo(set map[string]map[string]bool, key, value string) {
 	if set[key] == nil {
 		set[key] = map[string]bool{}

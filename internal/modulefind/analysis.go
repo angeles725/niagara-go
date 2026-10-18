@@ -2,6 +2,8 @@ package modulefind
 
 import (
 	"fmt"
+	"maps"
+	"slices"
 	"sort"
 	"strings"
 
@@ -108,7 +110,7 @@ func cmdCompare(a *module, o *opts, srcB string) {
 	add := func(change, ref, detail string) {
 		rows = append(rows, row{{"change", change}, {"ref", ref}, {"detail", detail}})
 	}
-	for _, cls := range sortedSet(classes) {
+	for _, cls := range slices.Sorted(maps.Keys(classes)) {
 		sa, sb := slotsOf(a, cls), slotsOf(b, cls)
 		for _, slot := range unionKeys(sa.m, sb.m) {
 			x, inA := sa.m[slot]
@@ -173,5 +175,5 @@ func unionKeys[V any](a, b map[string]V) []string {
 	for k := range b {
 		set[k] = true
 	}
-	return sortedSet(set)
+	return slices.Sorted(maps.Keys(set))
 }

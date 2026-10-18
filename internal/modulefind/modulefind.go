@@ -9,6 +9,7 @@ package modulefind
 import (
 	"fmt"
 	"os"
+	"slices"
 	"sort"
 	"strings"
 
@@ -73,15 +74,6 @@ func buildParser() *argparse.Parser {
 	return p
 }
 
-func contains(xs []string, x string) bool {
-	for _, y := range xs {
-		if y == x {
-			return true
-		}
-	}
-	return false
-}
-
 // Main runs module-find with argv (without the program name).
 func Main(args []string, s cli.Stdio) int {
 	p := buildParser()
@@ -90,7 +82,7 @@ func Main(args []string, s cli.Stdio) int {
 		return code
 	}
 	cmd := ns.String("cmd")
-	if ns.Get("limit") != nil && !contains(limitCommands, cmd) {
+	if ns.Get("limit") != nil && !slices.Contains(limitCommands, cmd) {
 		sorted := append([]string(nil), limitCommands...)
 		sort.Strings(sorted)
 		return p.Error(s.Err, fmt.Sprintf("--limit does not apply to `%s` (it caps the rows of: %s)", cmd,
@@ -123,7 +115,7 @@ func Main(args []string, s cli.Stdio) int {
 	for _, path := range paths {
 		fmt.Fprintf(s.Err, "module-find: unreadable, not searched: %s: %s\n", path, m.unreadable[path])
 	}
-	if found == 0 && contains(searchCommands, cmd) {
+	if found == 0 && slices.Contains(searchCommands, cmd) {
 		return 1
 	}
 	return 0

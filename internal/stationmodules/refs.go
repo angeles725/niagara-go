@@ -1,7 +1,6 @@
 package stationmodules
 
 import (
-	"sort"
 	"unicode/utf8"
 
 	"github.com/angeles725/niagara-go/internal/pycompat"
@@ -103,15 +102,5 @@ func wordPairs(s string) [][2]string {
 		}
 		i = e
 	}
-	return out
-}
-
-// sortedKeys returns the keys of a set in sorted order.
-func sortedKeys(m map[string]bool) []string {
-	out := make([]string, 0, len(m))
-	for k := range m {
-		out = append(out, k)
-	}
-	sort.Strings(out)
 	return out
 }

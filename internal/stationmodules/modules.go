@@ -12,6 +12,8 @@ package stationmodules
 import (
 	"fmt"
 	"io"
+	"maps"
+	"slices"
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/argparse"
@@ -151,14 +153,14 @@ func check(o options, w io.Writer) (int, error) {
 	var rows []moduleRow
 	seed := map[string]bool{}
 	var seedOrder []string
-	for _, module := range sortedKeys(setOfKeys(refs)) {
+	for _, module := range slices.Sorted(maps.Keys(setOfKeys(refs))) {
 		installed := map[string]bool{}
 		in.parts.each(func(p *part) {
 			if p.module == module {
 				installed[p.name] = true
 			}
 		})
-		ts := sortedKeys(refs[module])
+		ts := slices.Sorted(maps.Keys(refs[module]))
 		for _, tn := range ts {
 			if prov := typeProvider(in.parts, module, tn); prov != "" {
 				if !seed[prov] {
@@ -172,11 +174,11 @@ func check(o options, w io.Writer) (int, error) {
 		if len(installed) == 0 && len(ts) == 0 {
 			missing.setDefault(module+"-rt", fmt.Sprintf("module %s referenced, no part installed", module))
 		}
-		rows = append(rows, moduleRow{module, sortedKeys(installed), ts})
+		rows = append(rows, moduleRow{module, slices.Sorted(maps.Keys(installed)), ts})
 	}
 	// Python iterates a set here; with more than one new name its order follows the string
 	// hash. Sorted is the deterministic choice.
-	for _, dm := range sortedKeys(resolveDeps(in.parts, seedOrder)) {
+	for _, dm := range slices.Sorted(maps.Keys(resolveDeps(in.parts, seedOrder))) {
 		missing.setDefault(dm, "dependency of an installed part the station uses")
 	}
 	fixes, err := planFixes(missing, in, o.fix)
@@ -207,7 +209,7 @@ func check(o options, w io.Writer) (int, error) {
 				for _, p := range r.installed {
 					profiles[in.parts.byName[p].profile] = true
 				}
-				tag = strings.Join(sortedKeys(profiles), ",")
+				tag = strings.Join(slices.Sorted(maps.Keys(profiles)), ",")
 			}
 			tsug := ""
 			if len(r.refs) > 0 {

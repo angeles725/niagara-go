@@ -2,6 +2,7 @@ package searchdoor
 
 import (
 	"fmt"
+	"slices"
 	"sort"
 	"strings"
 
@@ -276,14 +277,14 @@ func parseTokens(outs, idents []string) ([]string, []Item) {
 				order = append(order, m.Group(1))
 			}
 			c.n++
-			if !contains(c.mods, m.Group(3)) {
+			if !slices.Contains(c.mods, m.Group(3)) {
 				c.mods = append(c.mods, m.Group(3))
 			}
 		}
 	}
 	sort.SliceStable(order, func(i, j int) bool {
 		a, b := order[i], order[j]
-		if x, y := contains(idents, a), contains(idents, b); x != y {
+		if x, y := slices.Contains(idents, a), slices.Contains(idents, b); x != y {
 			return x
 		}
 		if found[a].n != found[b].n {
@@ -335,13 +336,4 @@ func moduleNames(out string) map[string]bool {
 		}
 	}
 	return names
-}
-
-func contains(xs []string, x string) bool {
-	for _, y := range xs {
-		if y == x {
-			return true
-		}
-	}
-	return false
 }

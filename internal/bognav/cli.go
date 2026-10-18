@@ -12,6 +12,7 @@ package bognav
 
 import (
 	"fmt"
+	"slices"
 	"sort"
 	"strings"
 
@@ -126,7 +127,7 @@ func Main(args []string, s cli.Stdio) int {
 		return code
 	}
 	cmd := ns.String("cmd")
-	if ns.Get("limit") != nil && !contains(limitCommands, cmd) {
+	if ns.Get("limit") != nil && !slices.Contains(limitCommands, cmd) {
 		sorted := append([]string(nil), limitCommands...)
 		sort.Strings(sorted)
 		return p.Error(s.Err, fmt.Sprintf("--limit does not apply to `%s` (it caps the rows of: %s)", cmd, strings.Join(sorted, ", ")))
@@ -160,13 +161,4 @@ func Main(args []string, s cli.Stdio) int {
 // scope is Bog.scope: "searched <bog>: N components, M links".
 func scope(b *bog.Bog) string {
 	return honest.Scope(b.SrcPath, honest.Count{Label: "components", N: b.Comps.Len()}, honest.Count{Label: "links", N: len(b.Links)})
-}
-
-func contains(list []string, s string) bool {
-	for _, x := range list {
-		if x == s {
-			return true
-		}
-	}
-	return false
 }
