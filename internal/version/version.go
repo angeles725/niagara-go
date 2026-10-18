@@ -1,12 +1,10 @@
-// Package version is tools/lib/version.py: the one version line every
-// command prints for --version, "<tool> <ToolsVersion>" plus " (git <describe>)"
-// when the build knows its source revision.
 package version
 
 import "runtime/debug"
 
-// ToolsVersion is version.TOOLS_VERSION, bumped by hand when a tooling round
-// changes a CLI contract; a test keeps it equal to the Python constant.
+// ToolsVersion is the canonical tools version (it started as
+// version.TOOLS_VERSION), bumped by hand when a tooling round changes a CLI
+// contract.
 const ToolsVersion = "3.0.0"
 
 // gitDescribe, when set at link time
