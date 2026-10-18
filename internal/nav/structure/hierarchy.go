@@ -10,7 +10,6 @@ import (
 	"github.com/angeles725/niagara-go/internal/index"
 	"github.com/angeles725/niagara-go/internal/nav/core"
 	"github.com/angeles725/niagara-go/internal/nav/registry"
-	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
 // The hierarchy commands of hierarchy.py: hierarchy (subclass tree or
@@ -143,10 +142,10 @@ func showSubtree(env *registry.Env, name string, maxDepth int) {
 	if inh == nil {
 		return
 	}
-	p2c := tableOf(inh, "parent_to_children")
 	classes := classTable(env)
 	w := env.Out
-	if !p2c.has(name) {
+	h, ok := Subclasses(inh, classes, name, maxDepth)
+	if !ok {
 		if classes != nil && classes.Len() > 0 && classes.Has(name) {
 			fmt.Fprintln(w)
 			fmt.Fprintf(w, "  %s has no known subclasses.\n", name)
@@ -159,50 +158,18 @@ func showSubtree(env *registry.Env, name string, maxDepth int) {
 		}
 		return
 	}
-	total := countDescendants(name, p2c, map[string]bool{})
 	fmt.Fprintln(w)
 	fmt.Fprintf(w, "  Hierarchy: %s (%d direct children, %d total descendants)\n", name,
-		len(p2c.list(name)), total)
-	if mod, pkg, ok := moduleInfo(name, classes); ok {
-		fmt.Fprintf(w, "  Module: %s  Package: %s\n", mod, pkg)
+		h.Children, h.Descendants)
+	if h.Located {
+		fmt.Fprintf(w, "  Module: %s  Package: %s\n", h.Module, h.Package)
 	}
 	fmt.Fprintf(w, "  Depth limit: %d\n", maxDepth)
 	fmt.Fprintln(w)
-	printTree(w, name, p2c, classes, maxDepth, "  ", true, 0)
+	for _, r := range h.Rows {
+		fmt.Fprintln(w, FormatTreeRow(r))
+	}
 	fmt.Fprintln(w)
-}
-
-// printTree is _print_tree: one class per line under its parent, cut at
-// maxDepth with a descendant count.
-func printTree(w io.Writer, name string, p2c table, classes *index.Object, maxDepth int,
-	prefix string, isLast bool, depth int) {
-	connector, childPrefix := "", prefix
-	if depth > 0 {
-		connector, childPrefix = "|-- ", prefix+"|   "
-		if isLast {
-			connector, childPrefix = "`-- ", prefix+"    "
-		}
-	}
-	moduleStr := ""
-	if mod, _, ok := moduleInfo(name, classes); ok {
-		moduleStr = "  (" + mod + ")"
-	}
-	fmt.Fprintf(w, "%s%s%s%s\n", prefix, connector, name, moduleStr)
-	children := p2c.list(name)
-	next := childPrefix
-	if depth == 0 {
-		next = prefix + "    "
-	}
-	if depth >= maxDepth {
-		if len(children) > 0 {
-			fmt.Fprintf(w, "%s... %d descendants (use --depth %d to expand)\n", next,
-				countDescendants(name, p2c, map[string]bool{}), maxDepth+1)
-		}
-		return
-	}
-	for i, c := range children {
-		printTree(w, c, p2c, classes, maxDepth, next, i == len(children)-1, depth+1)
-	}
 }
 
 // printImplements prints "  Implements: ..." when the class's first top-level
@@ -222,11 +189,11 @@ func showChain(env *registry.Env, name string) {
 	if inh == nil {
 		return
 	}
-	c2c := tableOf(inh, "class_to_chain")
 	classes := classTable(env)
 	w := env.Out
 	known := classes != nil && classes.Len() > 0 && classes.Has(name)
-	if !c2c.has(name) {
+	rows, ok := Chain(inh, classes, name)
+	if !ok {
 		if known {
 			fmt.Fprintln(w)
 			fmt.Fprintf(w, "  %s has no superclass chain (root class or interface).\n", name)
@@ -237,33 +204,17 @@ func showChain(env *registry.Env, name string) {
 		}
 		return
 	}
-	chain := c2c.list(name)
 	fmt.Fprintln(w)
-	fmt.Fprintf(w, "  Inheritance chain for %s (depth %d):\n", name, len(chain))
+	fmt.Fprintf(w, "  Inheritance chain for %s (depth %d):\n", name, len(rows)-1)
 	fmt.Fprintln(w)
-	all := append([]string{name}, chain...)
-	width := 0
-	for _, c := range all {
-		width = max(width, len([]rune(c)))
-	}
-	for i, c := range all {
-		mod, pkg, ok := moduleInfo(c, classes)
-		if !ok {
-			mod, pkg = "?", "?"
-		}
-		arrow, label := "", c
-		if i > 0 {
-			arrow = "^-- "
-		} else {
-			label = core.RJust(c, width)
-		}
-		fmt.Fprintf(w, "  %s%s%s  (%s, %s)\n", strings.Repeat("  ", i), arrow, label, mod, pkg)
+	for _, line := range FormatChain(rows) {
+		fmt.Fprintln(w, line)
 	}
 	if known {
 		printImplements(w, classes, name, true)
 	}
-	if len(chain) > 0 {
-		parent := chain[0]
+	if len(rows) > 1 {
+		parent := rows[1].Class
 		if n := len(tableOf(inh, "parent_to_children").list(parent)) - 1; n > 0 {
 			fmt.Fprintf(w, "  Siblings under %s: %d\n", parent, n)
 		}
@@ -281,45 +232,29 @@ func cmdImplementors(env *registry.Env, name string, limit int) {
 	if inh == nil {
 		return
 	}
-	i2i := tableOf(inh, "interface_to_implementors")
 	classes := classTable(env)
-	if !i2i.has(name) {
-		lower, found := textfold.Lower(name), false
-		for _, k := range i2i.keys() {
-			if textfold.Lower(k) == lower {
-				name, found = k, true
-				break
-			}
+	name, impls, ok := Implementors(inh, classes, name)
+	if !ok {
+		i2i := tableOf(inh, "interface_to_implementors")
+		scope := fmt.Sprintf("%s interfaces with implementors in inheritance.json, %s",
+			core.Commas(int64(i2i.len())), core.Built(inh.Object("_meta")))
+		if tableOf(inh, "parent_to_children").has(name) {
+			env.Miss(fmt.Sprintf("implementors of '%s' (a class with subclasses, not an interface)", name),
+				scope, "hierarchy "+name)
+		} else {
+			env.Report(fmt.Sprintf("interface '%s'", name), scope, name, i2i.keys(),
+				fmt.Sprintf("search '*%s*'", name))
 		}
-		if !found {
-			scope := fmt.Sprintf("%s interfaces with implementors in inheritance.json, %s",
-				core.Commas(int64(i2i.len())), core.Built(inh.Object("_meta")))
-			if tableOf(inh, "parent_to_children").has(name) {
-				env.Miss(fmt.Sprintf("implementors of '%s' (a class with subclasses, not an interface)", name),
-					scope, "hierarchy "+name)
-			} else {
-				env.Report(fmt.Sprintf("interface '%s'", name), scope, name, i2i.keys(),
-					fmt.Sprintf("search '*%s*'", name))
-			}
-			return
-		}
+		return
 	}
-	impls := i2i.list(name)
 	w := env.Out
 	fmt.Fprintln(w)
 	fmt.Fprintf(w, "  Implementors of %s: %d classes\n", name, len(impls))
 	fmt.Fprintln(w)
 	fmt.Fprintf(w, "  %s  %s  %s\n", core.RJust("CLASS", 35), core.LJust("MODULE", 20), "PACKAGE")
 	fmt.Fprintln(w, "  "+strings.Repeat("-", 85))
-	for i, c := range impls {
-		if i >= limit {
-			break
-		}
-		mod, pkg, ok := moduleInfo(c, classes)
-		if !ok {
-			mod, pkg = "?", "?"
-		}
-		fmt.Fprintf(w, "  %s  %s  %s\n", core.RJust(c, 35), core.LJust(mod, 20), pkg)
+	for _, r := range impls[:min(max(limit, 0), len(impls))] {
+		fmt.Fprintln(w, FormatImplementor(r))
 	}
 	if len(impls) > limit {
 		fmt.Fprintln(w)
