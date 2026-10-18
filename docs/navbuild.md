@@ -218,7 +218,9 @@ in-process); the retired builders (string, field, exceptions, swing, annotations
 are not run, so `stats` shows those indexes missing; the logs hold a summary instead of the
 Python builders' progress output; elapsed seconds are measured, not `date +%s`
 differences; every builder writes atomically, so a failed build already leaves the old
-index in place before the rollback copies the backup over it. Tested only against temp
+index in place before the rollback copies the backup over it; with `--no-backup` the
+shrink check compares with the live index only, never with a `.reindex-bak` an earlier run
+left (`reindex.sh` reads that stale backup). Tested only against temp
 copies (`reindex_test.go`), never a real `indexes/`.
 
 ## Gates

@@ -318,7 +318,13 @@ func (r *run) backupAll() error {
 // runOne is run_one: build, validate, roll back a bad index.
 func (r *run) runOne(b Builder) {
 	out := filepath.Join(r.idx, b.Index)
-	prev := sizeOf(filepath.Join(r.bak, b.Index))
+	// The previous size: this run's backup, else the live index. With
+	// --no-backup a .reindex-bak left by an earlier run is stale, so only the
+	// live index counts (reindex.sh reads the stale backup).
+	var prev int64
+	if r.backup {
+		prev = sizeOf(filepath.Join(r.bak, b.Index))
+	}
 	if prev == 0 {
 		prev = sizeOf(out)
 	}

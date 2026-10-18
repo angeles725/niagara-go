@@ -2,9 +2,11 @@ package reindex
 
 import (
 	"bytes"
+	"errors"
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strings"
 	"testing"
 
@@ -177,5 +179,76 @@ func TestReindexSetupErrors(t *testing.T) {
 				t.Errorf("exit %d, want %d; output lacks %q:\n%s%s", code, tc.code, tc.out, out, errs)
 			}
 		})
+	}
+}
+
+// failing replaces the build of the builder writing index for one test: it
+// writes junk over the index, then fails, so only a rollback restores it.
+func failing(t *testing.T, index string) {
+	t.Helper()
+	saved := slices.Clone(Builders)
+	t.Cleanup(func() { Builders = saved })
+	for i, b := range Builders {
+		if b.Index == index {
+			Builders[i].Build = func(base, _ string) (string, error) {
+				os.WriteFile(filepath.Join(base, "indexes", index), []byte("junk"), 0o644)
+				return "", errors.New("injected failure")
+			}
+		}
+	}
+}
+
+func TestReindexContinuesAfterAFailureAndRollsItBack(t *testing.T) {
+	lenient(t)
+	nav, organized := fixture(t)
+	if code, out, _ := reindex(t, "--base-dir", nav, "--organized", organized); code != cli.ExitFound {
+		t.Fatalf("setup: exit %d:\n%s", code, out)
+	}
+	xref := filepath.Join(nav, "indexes", "xref-index.json")
+	want, _ := os.ReadFile(xref)
+	failing(t, "xref-index.json")
+	code, out, _ := reindex(t, "--base-dir", nav, "--organized", organized)
+	if code != cli.ExitNoMatch || !strings.Contains(out, "✗ build_xref.py (") ||
+		!strings.Contains(out, "rolled back xref-index.json from backup") || !strings.Contains(out, "✓ build_callgraph_index.py (") {
+		t.Fatalf("exit %d:\n%s", code, out)
+	}
+	if got, _ := os.ReadFile(xref); !bytes.Equal(got, want) {
+		t.Errorf("xref-index.json not restored: %q", got)
+	}
+}
+
+func TestReindexShrinkRule(t *testing.T) {
+	nav, organized := fixture(t)
+	oldMin := minSize
+	minSize = 1 // only the shrink rule applies
+	t.Cleanup(func() { minSize = oldMin })
+	big := bytes.Repeat([]byte("x"), 200<<10)
+	inv := filepath.Join(nav, "indexes", "module-inventory.json")
+	if err := os.WriteFile(inv, big, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	code, out, _ := reindex(t, "--base-dir", nav, "--organized", organized, "--only", "build_module_inventory.py")
+	if code != cli.ExitNoMatch || !strings.Contains(out, "shrank 204800B->") || !strings.Contains(out, "rolled back module-inventory.json") {
+		t.Fatalf("exit %d:\n%s", code, out)
+	}
+	if got, _ := os.ReadFile(inv); !bytes.Equal(got, big) {
+		t.Error("the shrunk inventory was not rolled back")
+	}
+}
+
+func TestReindexNoBackupIgnoresAStaleBackup(t *testing.T) {
+	lenient(t)
+	shrinkMinPrev = 102400
+	nav, organized := fixture(t)
+	stale := filepath.Join(nav, "indexes", ".reindex-bak", "module-inventory.json")
+	if err := os.MkdirAll(filepath.Dir(stale), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(stale, bytes.Repeat([]byte("x"), 200<<10), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	code, out, _ := reindex(t, "--base-dir", nav, "--organized", organized, "--no-backup", "--only", "module-inventory.json")
+	if code != cli.ExitFound || strings.Contains(out, "shrank") {
+		t.Fatalf("a stale backup decided the shrink check: exit %d:\n%s", code, out)
 	}
 }
