@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -139,6 +140,9 @@ func TestCourseMissingAndFailedCopy(t *testing.T) {
 	if !isRegular(filepath.Join(c, "course-text", "kept.txt")) {
 		t.Error("a missing course_dir touched course-text/")
 	}
+	if runtime.GOOS == "windows" {
+		t.Skip("mode 0 only sets the read-only attribute on Windows: the failed copy is not checked")
+	}
 	if os.Geteuid() == 0 {
 		t.Skip("root reads a 000 file: the failed copy is not checked")
 	}
@@ -172,15 +176,22 @@ func TestCourseTextDest(t *testing.T) {
 // (sorted); a symlinked folder is not entered.
 func TestCourseFilesOrder(t *testing.T) {
 	src := t.TempDir()
-	writeTree(t, src, map[string]string{"b/x": "", "a/z/y": "", "a/b": "", "c": "", "B": "", "outside/o": ""})
+	upper := "B" // sorts before "c": a code point sort, not a case-insensitive one
+	if runtime.GOOS == "windows" {
+		upper = "D" // a case-insensitive file system cannot hold both B and b/
+	}
+	writeTree(t, src, map[string]string{"b/x": "", "a/z/y": "", "a/b": "", "c": "", upper: "", "outside/o": ""})
 	if err := os.Symlink(filepath.Join(src, "outside"), filepath.Join(src, "linked")); err != nil {
-		t.Fatal(err)
+		if runtime.GOOS != "windows" {
+			t.Fatal(err)
+		}
+		t.Logf("no symlink privilege, the symlinked folder is not checked: %v", err)
 	}
 	var rels []string
 	for _, f := range courseFiles(src) {
 		rels = append(rels, f.rel)
 	}
-	if want := []string{"B", "c", "a/b", "a/z/y", "b/x", "outside/o"}; !reflect.DeepEqual(rels, want) {
+	if want := []string{upper, "c", "a/b", "a/z/y", "b/x", "outside/o"}; !reflect.DeepEqual(rels, want) {
 		t.Errorf("courseFiles = %q, want %q", rels, want)
 	}
 }
