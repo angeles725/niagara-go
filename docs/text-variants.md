@@ -63,5 +63,5 @@ those tools; only the textsearch analyzer lives in `textfold`.
 | module-navigator `class_rank.GLOSSARY` | the same 178 entries inline | the already stemmed query term against keys stemmed the same way | replaces the term with the raw English terms | `glossary.ClassRankByStem()` |
 | niagara-help `search_lang.GLOSSARY` | the same minus `guardan`, `montar` (`EXCLUDED`) | the lower-cased `fulltext_terms.fold` word, then minus `s`, minus `es` | replaces the word with its English alternatives in one group | `glossary.Help()`, `LookupKey` |
 
-The Go package embeds one copy of the JSON; a test fails when it drifts from
-`tools/lib/glossary_es_en.json`.
+The Go package embeds one copy of the JSON. Since Phase 5 deleted `tools/lib`, that copy is
+the canonical one (D44); `internal/glossary/doc.go` says how to edit it.

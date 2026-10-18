@@ -3,8 +3,8 @@ package version
 import (
 	"encoding/json"
 	"os"
-	"path/filepath"
 	"regexp"
+	"strings"
 	"testing"
 )
 
@@ -27,31 +27,20 @@ func load(t *testing.T) fixtures {
 	return f
 }
 
+// TestLineFormat checks the Python line format the fixture recorded, with the
+// canonical ToolsVersion in place of the recorded TOOLS_VERSION.
 func TestLineFormat(t *testing.T) {
 	f := load(t)
-	if ToolsVersion != f.ToolsVersion {
-		t.Fatalf("ToolsVersion %q, fixture %q", ToolsVersion, f.ToolsVersion)
-	}
 	for _, c := range f.Lines {
-		if got := lineWith(c[0], c[1]); got != c[2] {
-			t.Errorf("line(%q, %q) = %q, Python %q", c[0], c[1], got, c[2])
+		prefix := c[0] + " " + f.ToolsVersion
+		rest, ok := strings.CutPrefix(c[2], prefix)
+		if !ok {
+			t.Fatalf("fixture line %q does not start with %q", c[2], prefix)
 		}
-	}
-}
-
-// TestToolsVersionMatchesPython keeps ToolsVersion equal to tools/lib/version.py.
-func TestToolsVersionMatchesPython(t *testing.T) {
-	root := os.Getenv("NIAGARA_RESEARCH")
-	if root == "" {
-		t.Skip("NIAGARA_RESEARCH (the niagara-research checkout) is not set: tools/lib/version.py not checked")
-	}
-	src, err := os.ReadFile(filepath.Join(root, "tools", "lib", "version.py"))
-	if err != nil {
-		t.Skipf("tools/lib/version.py not available: %v", err)
-	}
-	m := regexp.MustCompile(`(?m)^TOOLS_VERSION = "([^"]+)"`).FindSubmatch(src)
-	if m == nil || string(m[1]) != ToolsVersion {
-		t.Fatalf("tools/lib/version.py TOOLS_VERSION %q, Go %q", m, ToolsVersion)
+		want := c[0] + " " + ToolsVersion + rest
+		if got := lineWith(c[0], c[1]); got != want {
+			t.Errorf("line(%q, %q) = %q, Python %q", c[0], c[1], got, want)
+		}
 	}
 }
 

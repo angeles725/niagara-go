@@ -1,7 +1,9 @@
 """Regenerate the internal/bog parity fixtures from the Python originals (the specification).
 
-    NIAGARA_RESEARCH=/path/to/niagara-research python3 internal/bog/testdata/gen_fixtures.py
-    NIAGARA_RESEARCH=... python3 internal/bog/testdata/gen_fixtures.py --dump <station.bog> <out.json>
+    python3 internal/bog/testdata/gen_fixtures.py
+    python3 internal/bog/testdata/gen_fixtures.py --dump <station.bog> <out.json>
+
+The Python is niagara-research tag pre-go-retire (NIAGARA_RESEARCH_PY_REF names its worktree, D47).
 
 Writes, next to this script:
   read/<case>       synthetic inputs for bog.ReadBytes/ReadText (ZIPs built with fixed timestamps)
@@ -15,12 +17,23 @@ import hashlib
 import io
 import json
 import os
+import subprocess
 import sys
 import warnings
 import zipfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-ROOT = os.environ.get("NIAGARA_RESEARCH") or sys.exit("set NIAGARA_RESEARCH to the niagara-research checkout")
+
+
+def py_ref(repo, env, rev):  # D47: a clean worktree of <repo> tag pre-go-retire (docs/goldens.md)
+    root = os.environ.get(env) or os.path.expanduser("~/niagara-research-worktrees/pre-go-retire-" + repo)
+    git = lambda *a: subprocess.run(["git", "-C", root, *a], capture_output=True, text=True).stdout.strip()  # noqa: E731
+    if git("rev-parse", "HEAD") != rev or git("status", "--porcelain"):
+        sys.exit(f"{env}={root}: not a clean worktree of {repo} tag pre-go-retire ({rev[:9]}); see docs/goldens.md")
+    return root
+
+
+ROOT = py_ref("niagara-research", "NIAGARA_RESEARCH_PY_REF", "c846ce1e5eb92ee6d938efbb3585473a545f7e50")
 sys.path[:0] = [os.path.join(ROOT, "tools", "lib"), os.path.join(ROOT, "tools")]
 import bogio  # noqa: E402
 from bognav import model  # noqa: E402

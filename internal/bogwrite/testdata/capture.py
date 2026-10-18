@@ -1,6 +1,6 @@
 """Freeze the bog-write fixtures from the Python original (the specification).
 
-    NIAGARA_RESEARCH=/path/to/niagara-research python3 -I internal/bogwrite/testdata/capture.py
+    python3 -I internal/bogwrite/testdata/capture.py
 
 Writes, next to this script:
   fixtures/        plans and BOG documents (all synthetic) the cases read
@@ -13,6 +13,7 @@ Writes, next to this script:
                    or the JSONDecodeError text (parity suite of plan.go's decoder)
 Every case runs `python3 -I tools/bog-write.py <args>` with COLUMNS=100 and NO_COLOR=1.
 """
+import contextlib
 import io
 import json
 import os
@@ -24,11 +25,58 @@ import tempfile
 import zipfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-ROOT = os.environ.get("NIAGARA_RESEARCH") or sys.exit("set NIAGARA_RESEARCH to the niagara-research checkout")
+
+
+def py_ref(repo, env, rev):  # D47: a clean worktree of <repo> tag pre-go-retire (docs/goldens.md)
+    root = os.environ.get(env) or os.path.expanduser("~/niagara-research-worktrees/pre-go-retire-" + repo)
+    git = lambda *a: subprocess.run(["git", "-C", root, *a], capture_output=True, text=True).stdout.strip()  # noqa: E731
+    if git("rev-parse", "HEAD") != rev or git("status", "--porcelain"):
+        sys.exit(f"{env}={root}: not a clean worktree of {repo} tag pre-go-retire ({rev[:9]}); see docs/goldens.md")
+    return root
+
+
+ROOT = py_ref("niagara-research", "NIAGARA_RESEARCH_PY_REF", "c846ce1e5eb92ee6d938efbb3585473a545f7e50")
 TOOL = os.path.join(ROOT, "tools", "bog-write.py")
+
+# At the tag, running tools/<x>.py execs the Go port (its D35 switch block); the Python under that block
+# is the frozen specification. `python3 [-I] -c FROZEN <tool> <args>` runs it like `python3 [-I] <tool>
+# <args>` did before the switch: the block is cut out (giving back the exact e21fe8825^ source, line
+# numbers included), the code runs as __main__ under the tool's own path, and a traceback skips this frame.
+FROZEN = r"""
+import linecache, os, sys, types
+del sys.argv[0]
+tool = sys.argv[0]
+with open(tool, encoding="utf-8") as fh:
+    lines = fh.read().splitlines(True)
+i = next(n for n, line in enumerate(lines) if line.startswith('if __name__ == "__main__":  # Go switch (D35)'))
+j = i + 1
+while j < len(lines) and lines[j][:1] in (" ", "\t"):
+    j += 1
+if j < len(lines) and not lines[j].strip():
+    j += 1
+elif i and not lines[i - 1].strip():
+    i -= 1
+del lines[i:j]
+linecache.cache[tool] = (None, None, lines, tool)
+if not getattr(sys.flags, "safe_path", False):  # -P / -I (Python 3.11+)
+    sys.path[0] = os.path.dirname(tool)
+mod = sys.modules["__main__"] = types.ModuleType("__main__")
+mod.__file__ = tool
+try:
+    exec(compile("".join(lines), tool, "exec"), mod.__dict__)
+except SystemExit:
+    raise
+except BaseException as exc:
+    exc = exc.with_traceback(exc.__traceback__.tb_next)
+    sys.excepthook(type(exc), exc, exc.__traceback__)
+    sys.exit(1)
+"""
 FIX = os.path.join(HERE, "fixtures")
 DATE = (2020, 1, 1, 0, 0, 0)
 ENV = dict(os.environ, COLUMNS="100", NO_COLOR="1")
+# A Python traceback names its frames' files by path: the goldens keep the checkout they were first
+# captured in, so a run from any worktree of the tag gives the same bytes.
+CAPTURED_ROOT = b"/home/cristian/niagara-research"
 
 PLAN = {  # tools/tests/test_bog_write.py PLAN
     "root": {"name": "Demo", "type": "baja:Folder"},
@@ -155,7 +203,10 @@ GENERATED = [
 
 
 def run(args, cwd):
-    return subprocess.run([sys.executable, "-I", TOOL, *args], cwd=cwd, env=ENV, capture_output=True, timeout=120)
+    res = subprocess.run([sys.executable, "-I", "-c", FROZEN, TOOL, *args], cwd=cwd, env=ENV, capture_output=True,
+                         timeout=120)
+    res.stderr = res.stderr.replace(b'File "' + ROOT.encode() + b'/', b'File "' + CAPTURED_ROOT + b'/')
+    return res
 
 
 def store(d, args, res, intended=False):
@@ -186,6 +237,18 @@ def typed(v):
     if isinstance(v, list):
         return [typed(x) for x in v]
     return {"dict": [[k.encode("utf-8", "surrogatepass").hex(), typed(x)] for k, x in v.items()]}
+
+
+def clock_only(old, new):
+    """True when two one-entry ZIPs differ at most in the entry's DOS time and date: bog-write.py stamps
+    the local time now there (checkZip in bogwrite_test.go ignores it), so a rerun keeps the stored file."""
+    c = new.find(b"PK\x01\x02")
+    if old is None or len(old) != len(new) or not new.startswith(b"PK\x03\x04") or c < 0:
+        return False
+    fixed = bytearray(new)
+    fixed[10:14] = old[10:14]  # local file header: time, date
+    fixed[c + 12:c + 16] = old[c + 12:c + 16]  # central directory header: time, date
+    return bytes(fixed) == old
 
 
 def json_cases():
@@ -240,6 +303,10 @@ def main():
             xml = z.read("file.xml")
         with open(os.path.join(FIX, "plan.bog"), "wb") as fh:
             fh.write(zipped([("file.xml", xml)]))
+    stored = {}
+    for case, _ in GENERATED:
+        with contextlib.suppress(FileNotFoundError), open(os.path.join(HERE, "generated", case, "out.bog"), "rb") as fh:
+            stored[case] = fh.read()
     for d in ("golden", "generated"):
         shutil.rmtree(os.path.join(HERE, d), ignore_errors=True)
     for case, args in GOLDEN:
@@ -254,7 +321,10 @@ def main():
             if res.returncode:
                 sys.exit("generated case %s failed:\n%s" % (case, res.stderr.decode()))
             if out.endswith(".bog"):
-                shutil.copy(out, os.path.join(d, "out.bog"))
+                with open(out, "rb") as fh:
+                    data = fh.read()
+                with open(os.path.join(d, "out.bog"), "wb") as fh:
+                    fh.write(stored[case] if clock_only(stored.get(case), data) else data)
                 with zipfile.ZipFile(out) as z:
                     with open(os.path.join(d, "file.xml"), "wb") as fh:
                         fh.write(z.read("file.xml"))

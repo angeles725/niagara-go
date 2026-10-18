@@ -1,12 +1,3 @@
-// Package glossary is the Spanish -> English query glossary of the
-// niagara-research tools (tools/lib/glossary.py), with the views the
-// module-navigator and niagara-help copies take of the same data
-// (docs/text-variants.md).
-//
-// The data is glossary_es_en.json, embedded; a test keeps it equal to the
-// canonical niagara-research file. Because the copy is compiled in, the Python
-// fallback for a missing or unreadable file (search without English terms, one
-// warning) has no Go counterpart: Parse reports the same problems as errors.
 package glossary
 
 import (

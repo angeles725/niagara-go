@@ -1,10 +1,8 @@
 package glossary
 
 import (
-	"bytes"
 	"encoding/json"
 	"os"
-	"path/filepath"
 	"reflect"
 	"strconv"
 	"testing"
@@ -56,22 +54,6 @@ func dec(t *testing.T, raw json.RawMessage, v any) {
 }
 
 func same(a, b []string) bool { return len(a) == 0 && len(b) == 0 || reflect.DeepEqual(a, b) }
-
-// TestEmbeddedCopyMatchesCanonical is the drift test: the embedded data must
-// equal niagara-research tools/lib/glossary_es_en.json byte for byte.
-func TestEmbeddedCopyMatchesCanonical(t *testing.T) {
-	root := os.Getenv("NIAGARA_RESEARCH")
-	if root == "" {
-		t.Skip("NIAGARA_RESEARCH (the niagara-research checkout) is not set: canonical glossary not checked")
-	}
-	canon, err := os.ReadFile(filepath.Join(root, "tools", "lib", "glossary_es_en.json"))
-	if err != nil {
-		t.Skipf("canonical glossary not available: %v", err)
-	}
-	if !bytes.Equal(canon, embedded) {
-		t.Fatal("internal/glossary/glossary_es_en.json drifted from tools/lib/glossary_es_en.json: copy it again")
-	}
-}
 
 func TestCanonicalKeys(t *testing.T) {
 	if got, want := Default().keys, load(t).Canonical.Keys; !reflect.DeepEqual(got, want) {
