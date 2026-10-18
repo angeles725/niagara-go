@@ -176,11 +176,17 @@ func (p *parser) property(t tag) {
 		return
 	}
 	if n == "fallback" {
-		if c := p.nearestComp(); c != nil {
+		c := p.nearestComp()
+		if c != nil {
 			c.HasFallback = true
 		}
 		if !t.selfClose {
-			p.push(frame{kind: frameOther, path: p.topPath() + "/fallback"})
+			f := frame{kind: frameOther, path: p.topPath() + "/fallback"}
+			if p.opts.NestedSlots && c != nil {
+				// model.py keeps only has_fallback; Nested also records "fallback.value".
+				f.nestOwner, f.nestPath = c, "fallback"
+			}
+			p.push(f)
 		}
 		return
 	}

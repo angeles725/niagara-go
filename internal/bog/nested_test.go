@@ -42,11 +42,12 @@ func TestNestedSlotsRecordsCompositeChildrenByDotPath(t *testing.T) {
 			want:   [][2]any{{"pollConfig.rate", "fast"}},
 		},
 		{
-			name:   "value and status of a StatusNumeric, fallback and plain value slots excluded",
+			name:   "value and status of a StatusNumeric and the writable's fallback, plain value slots excluded",
 			handle: "4",
 			want: [][2]any{
 				{"setpoint.value", "21.5"},
 				{"setpoint.status", "0;activeLevel=e:17@control:PriorityLevel"},
+				{"fallback.value", "0.0"},
 			},
 		},
 		{

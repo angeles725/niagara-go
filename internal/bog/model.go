@@ -34,7 +34,8 @@ type Comp struct {
 	Present map[string]struct{}
 	// Nested maps the dot path of every value stored below a composite property (a slot in Slots)
 	// to that value, in document order: "tcpConfig.address.port" -> "4911". It is filled only by
-	// ParseOptions and LoadOptions with Options.NestedSlots; model.py has no equivalent.
+	// ParseOptions and LoadOptions with Options.NestedSlots; model.py has no equivalent. A writable's
+	// fallback is recorded the same way ("fallback.value"), although it is not a slot in Slots.
 	Nested Ordered[string]
 }
 
