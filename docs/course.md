@@ -3,7 +3,8 @@
 `course` looks up the written answers of the N4 Developer Certification course by item ID,
 counts them by verification status, checks a station against the labs (`course check`), and
 decides the predicted answers (`course verify-predictions`), or the answers of any status
-(`course verify --status`), from the stations.
+(`course verify --status`), from the stations; `course progress` shows how far the labs, review
+assignments and exam are and what to do next, and `course quiz` draws study questions.
 It reads three Markdown files of a niagara-research checkout and one or two course text
 files. It is new (no Python original), so its golden cases run over the synthetic tree
 `internal/course/testdata/root/`.
@@ -13,7 +14,7 @@ files. It is new (no Python original), so its golden cases run over the syntheti
 | Package | Holds | Prints |
 |---|---|---|
 | `internal/course/key` | the answer-key parser and model: `Load(root)`, `Corpus`, `Item`, `Group`, the status vocabulary, `GroupKeys`, `Counts` (one row of `status`) | nothing (reusable, e.g. by nsearch) |
-| `internal/course/check` | the check spec (`Spec`), the kinds, the station and jar reader (`Open`, `Station.Run`), the verdicts of `verify-predictions` | nothing |
+| `internal/course/check` | the check spec (`Spec`), the kinds and their evidence (live, offline), the station and jar reader (`Open`, `Station.Run`), the verdicts of `verify` and the suggestion lines | nothing |
 | `internal/course` | the CLI: argument parsing, root discovery, the tables, JSON and summaries | everything |
 | `internal/niagaraannot` | the Slot-o-Matic annotation parser the `annotation` kind reads (owner Integrante3; not course-specific) | nothing |
 
@@ -121,8 +122,14 @@ unverified). `written` means none of the others.
 | `unverified` | `*(unverified — not compiled)*`; a heading containing `unverified`; the `Needs a run` section |
 | `corrected` | `**Corrected**` (any case) |
 | `identical` | `**Identical**` (any case) |
-| `verified` | `*(verified live <YYYY-MM-DD>)*` (an item confirmed on a live station); a file-level `**Status: verified ...**` line (certification-exam.md) |
+| `verified` | `*(verified live <YYYY-MM-DD>)*` (confirmed from what a station stores) or `*(verified offline <YYYY-MM-DD>)*` (confirmed from a jar, the source tree or the lab sources); a file-level `**Status: verified ...**` line (certification-exam.md; `verified live.` is live evidence, `verified offline` offline, a bare `verified` states none) |
 | `written` | none of the above |
+
+Both verified markers are the status `verified`. `course status` splits it in two more columns,
+`live` and `offline` (`verified_live`, `verified_offline` in JSON): the items carrying a marker of
+that evidence (an item with both counts in both; a verified status of unstated evidence, in
+neither). `show --json` lists an item's evidence in `verified`; the text of `show` keeps the plain
+status line, the one nsearch renders too (`TestShowLinesMatchCourseShow`).
 
 A file-level note such as `Status of every code listing: unverified` describes code listings,
 not items, and is not applied to the items.
@@ -142,7 +149,8 @@ exits 2: an answer key that cannot be read without ambiguity is not searched.
   `no item <ID> (searched N items in <files>)` to stderr; if any ID is unknown the exit is 1,
   even when others were printed.
 - `course status [--lab G] [--status S] [--json]`: items per group and status (columns
-  overlap), then with `--status` the matching IDs and steps (truncated to 80 characters).
+  overlap; `live` and `offline` split `verified`), then with `--status` the matching IDs and
+  steps (truncated to 80 characters).
   No match is exit 1 with the scope and counts.
 - `course find REGEXP [-i]`: every item whose step or one of its answer lines matches the Go
   regexp (RE2 syntax, not Python's `re`; `-i` folds case), in answer-key order, one row each:
@@ -296,11 +304,10 @@ another layout, so they are not the input):
 | CB.5 | LB.1, LB.3 | `BTrafficLightDriverDevice` facet `intersectionId=SfUtil.incl(SfUtil.MGR_EDIT)` |
 
 Every link carries an `Unobserved` note (the view, the generated code, the class declaration or the
-UI behaviour), so the items become PARTIAL, never CONFIRMED. The live run (2026-10-18, the
-participant's dev home `N4_Labs/niagara_dev_home`, the TrainingStation, install and source tree):
-`check` 90 checked, 89 PASS, 1 FAIL (C3.4); `verify-predictions` 14 PARTIAL (L1.12, L2.11, L4.2,
-LB.3 were UNDECIDED), 25 UNDECIDED; `verify --status identical` 7 more PARTIAL (L1.9, L2.2–L2.4,
-L4.1, L4.3, L6.2, L6.29, LB.1); `verify --status written` L6.32 PARTIAL. No row for L6.3: its answer
+UI behaviour), so the items become PARTIAL, never CONFIRMED (on the live run, with the participant's
+dev home `N4_Labs/niagara_dev_home`: L1.12, L2.11, L4.2 and LB.3 among the predicted items, L1.9,
+L2.2–L2.4, L4.1, L4.3, L6.2, L6.29 and LB.1 among the identical ones, L6.32 among the written
+ones; the counts are in [Live run](#live-run)). No row for L6.3: its answer
 recommends `state` READONLY | TRANSIENT, which the participant's `state` (READONLY) does not
 apply, and a recommendation is not a requirement. Not decided by annotations: L2.10 and L2.13 (UI
 rules), L6.4 and L10.2 (compiler errors).
@@ -340,9 +347,10 @@ What no row observes is an `Unobserved` note: flags, the confirmation dialog and
 superclasses, and that `Review.txt` lists every NumericWritable of the station (CRA2.10 counts two
 lines or more), so the range item RA2.V10–V15 stays PARTIAL.
 
-The live review station (2026-10-17, with the 4.15.6.20 install): 21 checked, 19 PASS (CRA2.11: four
-distinct fallbacks, 111.0, 221.0, 33.0, 54.0), 2 FAIL, both real: CRA1.2 (the jar's description is `Cristian Angeles Niagara Reviw Assignments`) and
-CRA1.10 (the components sit in `Config/Cristian_Angeles_Review`, not in `Config/Review`).
+On the live review station two rows FAIL, both real: CRA1.2 (the jar's description is
+`Cristian Angeles Niagara Reviw Assignments`) and CRA1.10 (the components sit in
+`Config/Cristian_Angeles_Review`, not in `Config/Review`); CRA2.11 passes with four distinct
+fallbacks (111.0, 221.0, 33.0, 54.0). The counts are in [Live run](#live-run).
 
 ### Exam checks (EXAM)
 
@@ -356,11 +364,8 @@ The rows `CEXAM.<n>` (`internal/course/check/spec_exam.go`) read the exam statio
 | P2 HistoryExportService | one under Services, `historyId = /Cristian_Angeles_Cert/AuditHistory`, `shared/history.csv` with the header `Timestamp,Operation,Target,SlotName` and audit rows, `BHistoryExportService.class` |
 | P3 websiteDriver | a `WebsiteDriverDevice` under Drivers with `website` stored and `health.lastOkTime` stored (nested), the jar signed, the network, device and folder classes by exact name (`BWebsiteDriver{Network,Device,DeviceFolder}.class`, the names in the live jar), `NETWORK_COMMUNICATION` |
 
-The live exam station (2026-10-17, with the 4.15.6.20 install): 19 checked, 19 PASS.
-
-The live TrainingStation (2026-10-17, with the 4.15.6.20 install and source tree): 83 checked, 82
-PASS, 1 FAIL (75, 74 and 1 before the history and source-text rows: all eight new rows PASS).
-C3.4 fails because the station really differs: its Lab2 folder has Point1..Point4 linked to
+On the live exam station every row passes. On the live TrainingStation one row FAILs, C3.4, because
+the station really differs: its Lab2 folder has Point1..Point4 linked to
 Add.in1..in4 and no `Output` point, so Lab 3 step 11 (`LI:576`, Add.Out -> Output.In10) was
 not done.
 
@@ -371,18 +376,17 @@ decides every item carrying status `S` (the vocabulary of `status`: `predicted`,
 `corrected`, `identical`, `verified`, `written`) in the group `--lab` (the spellings of `status
 --lab`: `3`, `L3`, `RA1`, `RA` for RA1, RA2 and RAX, `EXAM`; every group without it), with the
 rules, output and exit of `verify-predictions` below; the summary starts with the status
-(`written 258: CONFIRMED ...`). Each linked check runs on the station of its role (the defaults
+(`written N: CONFIRMED ...`). Each linked check runs on the station of its role (the defaults
 of `course check`), so `course verify --status written` with the three station variables set
 decides the lab, review and exam items in one run. An unknown group is exit 1 with the group list.
 
-The live stations and the real answer key (2026-10-17, with the 4.15.6.20 install and source tree):
-`verify --status written` decides 258 items: 57 CONFIRMED, 8 PARTIAL, 3 CONTRADICTED (L3.7: C3.4,
-the missing Add.out -> Output link; RA1.M3: the description typo; RA1.V9–V14: no folder
-`Review`), 190 UNDECIDED (no check covers them); 75 checks run on the TrainingStation and the
-review station (no written item links an exam check: the exam items are verified). L10.18 (the
-NumericWritable chart has data) and L10.21 (ten histories named after their points) became
-CONFIRMED from the history files (C10.12, C10.13). L10.24 is now verified: `verify --status
-verified` decides 5 items, 5 CONFIRMED (L10.24 by C10.8-C10.10).
+On the live stations `verify --status written` contradicts three items, each from a real station
+difference: L3.7 (C3.4, the missing Add.out -> Output link), RA1.M3 (CRA1.2, the description typo)
+and RA1.V9–V14 (CRA1.10, no folder `Review`); its checks run on the TrainingStation and the review
+station only (no written item links an exam check: the exam items are verified). L10.18 (the
+NumericWritable chart has data) and L10.21 (ten histories named after their points) are CONFIRMED
+from the history files (C10.12, C10.13); L10.24 is verified (C10.8-C10.10). The counts are in
+[Live run](#live-run).
 
 `course verify-predictions` is `course verify --status predicted` over every group: the same
 stdout, stderr and exit (`TestVerifyPredictionsIsVerifyStatusPredicted`).
@@ -424,6 +428,22 @@ The table `ID  VERDICT  EVIDENCE` lists the predicted items in answer-key order,
 item is CONFIRMED, one ready-to-apply line per CONFIRMED item (never for PARTIAL):
 
     L4.13: *(verified live 2026-10-17)* evidence: C4.5 Lab4/My Tstat.diff = 2.0 (stored)
+    L10.6–L10.7: *(verified offline 2026-10-17)* evidence: C10.7 modules/training-rt.jar!META-INF/module.xml has ...
+
+The marker's evidence comes from the kinds of the item's linked checks (`check.Evidence`, the map
+`evidenceOf` in `check/kinds.go`, which `TestEvidenceOfEveryKind` holds complete):
+
+| Evidence | Kinds | Reads |
+|---|---|---|
+| live | `type`, `slot`, `link` | the station's bog |
+| live | `files`, `file-text` | files in the station directory (`shared/`; neither kind reads the install or the source tree) |
+| live | `audit`, `log`, `trend` | the station's histories |
+| offline | `jar`, `jar-entry`, `jar-text`, `jar-signed` | a jar of the install |
+| offline | `source-text` | the Niagara source tree |
+| offline | `annotation` | the participant's lab sources |
+
+An item whose checks mix both is live only when every linked check is live; one offline check makes
+the whole line offline, since part of the evidence was not read from the station.
 
 `course` never edits the Markdown: a human or an agent applies the line. `--date` is the date
 written in the lines (default: today, local time; the clock is injectable for tests); a value that is not `YYYY-MM-DD` is exit 2.
@@ -438,12 +458,10 @@ CONTRADICTED, or no item carries the status in the selected groups (the honest z
 station is read); 2 the answer keys or the station cannot be read, a bad `--date`, or every linked
 check was skipped (nothing could be checked, as in `course check`).
 
-The live TrainingStation and the real answer key (2026-10-17, with the 4.15.6.20 install and source
-tree): 39 predicted, 0 CONFIRMED, 10 PARTIAL (L1.14, L1.25, L4.8, L4.15, L7.18, L10.19, L10.22,
-L11.7, L11.26, L11.32), 0 CONTRADICTED, 29 UNDECIDED (no check covers them); 22 checks run. L4.8
-moved from UNDECIDED to PARTIAL (C4.8, the audited set); L7.18, L10.19 and L10.22 stay PARTIAL with
-more evidence (C7.6-C7.8 from the 4.15 source, C10.11-C10.12 from the histories, C10.14 from the
-lexicon). L10.24, CONFIRMED before, is now marked verified live in labs.md.
+On the live TrainingStation no predicted item is CONFIRMED or CONTRADICTED (the counts are in
+[Live run](#live-run)). L4.8 is PARTIAL from C4.8 (the audited set); L7.18, L10.19 and L10.22 are
+PARTIAL with evidence from the 4.15 source (C7.6-C7.8), the histories (C10.11-C10.12) and the
+lexicon (C10.14). L10.24, CONFIRMED before, is marked verified live in labs.md.
 
 Audit of the links to predicted items (2026-10-17): C3.5 (Add.out stored) no longer links L3.9
 (`Output = Point1 + Point2 + Point3`): it says nothing of the Output point, which the live
@@ -451,6 +469,115 @@ station does not have (C3.4). C10.2 wants one Ramp, not ten, and links only L10.
 copies the point alone with "Keep all links" (`LI:1934-1936`), so one Ramp feeds all ten
 points; the live station has one Ramp per point, which the PARTIAL note of L10.19 records as
 not observed.
+
+## course progress
+
+`course progress [--lab GROUP] [--station <dir|config.bog>] [--install DIR] [--source DIR] [--labsrc DIR] [--date YYYY-MM-DD] [--json]`
+answers "how far am I, and what next?". It runs the `verify` loop over every item of the selected
+groups (every group without `--lab`; the spellings of `status --lab`), whatever its status, with
+the stations, flags and variables of `verify`, and prints one row per group and a total:
+
+| Column | Counts |
+|---|---|
+| `items` | the items of the group |
+| `checked` | the items at least one check links (the others are UNDECIDED: no check covers them) |
+| `CONFIRMED`, `PARTIAL`, `CONTRADICTED`, `UNDECIDED` | the verdicts of `verify` |
+| `live`, `offline` | the items already carrying a verified marker of that evidence (the columns of `status`) |
+
+Then the next steps, in answer-key order (the `redo` from the live run, the `mark` from the
+`predict-root` fixture with the `good` station):
+
+    redo C3.4 (lab 3): Add.out -> NumericWritable.in10 (Output): found 0, want at least 1 (searched 18 links)
+      L3.7 (labs.md:239, LI:576): Link `Add.Out → Output.In10` (`LI:576`).
+    mark L4.13 (labs.md:25): *(verified live 2026-10-18)* evidence: C4.5 Lab4/My Tstat.diff = 2.0 (stored)
+
+- `redo`: one per FAIL check, at the first item it links: the check's lab, description and
+  evidence, then every selected item it links with its answer-key line, its course text (`LI:` for
+  the lab instructions, else the text file's name) and its step (cut at 100 characters).
+- `mark`: one per CONFIRMED item that carries no verified marker: the answer-key line to edit and
+  the marker and evidence to add (the suggestion line of `verify`, with the live/offline rule
+  above). PARTIAL items get no line: a check does not observe all of their answer.
+
+No new evidence logic: the verdicts, evidence and markers are those of `verify`. The summary is
+`progress N: checked c, CONFIRMED ..., UNDECIDED u; K checks run; station ...`. With `--json`,
+stdout is `{groups: [{group, items, checked, confirmed, partial, contradicted, undecided,
+verified_live, verified_offline}], total, actions: [{kind, id, group, text, items: [{id, source,
+text, step}]}]}` and the summary goes to stderr.
+
+Exit, as `verify`: 0 no item CONTRADICTED; 1 at least one CONTRADICTED item (so at least one
+`redo` line), or an unknown group (with the group list); 2 the answer keys or a station cannot be
+read, a missing station (the usage error of `verify`, naming the role's variable), a bad `--date`,
+or every linked check skipped.
+
+Why `progress`, not `next`: the command answers both "how far" (the table) and "what next" (the
+lines); `next` would name only the second half, and `progress` reads naturally with `--lab 3`.
+
+## course quiz
+
+`course quiz [--lab GROUP] [--kind why|decision|trap] [-n N] [--seed S] [--answers]` draws study
+questions from the answer keys; it reads no station.
+
+| Kind | Items | Prompt | Answer |
+|---|---|---|---|
+| `why` | lab items whose step asks `*Why ...?*` (any case), or whose answer starts with one (the question then joins the prompt) | the step | the answer (without the leading question) |
+| `decision` | the review-assignment decisions (`D<k>.<n>`, the `Why` tables) | `Why this decision? <decision>` | the `Why` cell |
+| `trap` | the review-assignment traps (`T<k>.<n>`) | `What goes wrong, and what does this solution do? <trap>` | what goes wrong + this solution |
+
+`--lab` and `--kind` narrow the pool; `-n` is the number of questions (default 5; fewer when the
+pool holds fewer). The order is a Fisher-Yates shuffle driven by a PCG seeded with `--seed`, so the
+same seed draws the same quiz on every platform; without `--seed` the clock gives one (below
+1000000) and the header prints it. Each question prints `Q<n>. <ID> (<kind> · <section>)`, the
+prompt and up to eight lines of the item's course text (the lines of `course text`, then `… more:
+course text <ID>`). Without `--answers` the last line is the command that prints the same quiz
+with its answers (`answers: course quiz --lab 3 --seed 1 --answers`); with it, an `answers` block
+follows the questions: `A<n>. <ID> [<status>] <file>:<line>` and the answer. Non-interactive by
+design (testable, no state files; spaced repetition is out of scope).
+
+Exit: 0 at least one question drawn; 1 an unknown group, or no question of the kinds in the
+groups (`course: no why, decision, trap question in RAX (searched 10 items)`); 2 the answer keys
+or a text file cannot be read, or `-n` below 1.
+
+## Live run
+
+Every count of a live run lives in this one table (dated; the prose above names only the items
+behind them). Inputs: the stations `TrainingStation`, `Cristian_Angeles_Review` and
+`Cristian_Angeles_Cert` (Niagara 4.15), the install `Niagara-4.15.6.20`, the 4.15.6.20 source tree of
+niagara-research, the participant's lab sources `N4_Labs/niagara_dev_home`, and the niagara-research
+answer keys at `8beb0eb78`.
+
+| Command (2026-10-18) | Result |
+|---|---|
+| `course check` (the labs) | 90 checked: PASS 89, FAIL 1 (C3.4), SKIP 0 |
+| `course check --lab RA1 --lab RA2` | 21 checked: PASS 19, FAIL 2 (CRA1.2, CRA1.10) |
+| `course check --lab EXAM` | 19 checked: PASS 19 |
+| `course verify --status predicted` | 39: CONFIRMED 0, PARTIAL 14, CONTRADICTED 0, UNDECIDED 25; 26 checks run |
+| `course verify --status written` | 258: CONFIRMED 57 (27 live, 30 offline lines), PARTIAL 9, CONTRADICTED 3 (L3.7, RA1.M3, RA1.V9–V14), UNDECIDED 189; 76 checks run |
+| `course verify --status identical` | 50: CONFIRMED 9 (offline), PARTIAL 7, CONTRADICTED 0, UNDECIDED 34; 16 checks run |
+| `course verify --status corrected` | 10: CONFIRMED 2 (offline), UNDECIDED 8; 2 checks run |
+| `course verify --status unverified` | 20: CONFIRMED 1 (live), PARTIAL 5, UNDECIDED 14; 7 checks run |
+| `course verify --status verified` | 5: CONFIRMED 5; 23 checks run |
+| `course progress` | 370 items: checked 108, CONFIRMED 72, PARTIAL 33, CONTRADICTED 3, UNDECIDED 262; 130 checks run; 3 `redo` (C3.4, CRA1.2, CRA1.10), 67 `mark` (28 live, 39 offline) |
+| `course status` | verified 5: live 5 (L10.23, L10.24, P1-P3), offline 0 |
+| `course quiz -n 500` | 89 questions: why 34, decision 29, trap 26 |
+
+To regenerate it, set the variables and run the commands of the table (zsh: run loops in `bash -c`):
+
+```sh
+export COURSE_TRAINING_STATION=/mnt/c/Users/<you>/Niagara4.15/tridium/stations/TrainingStation
+export COURSE_REVIEW_STATION=/mnt/c/Users/<you>/Niagara4.15/tridium/stations/Cristian_Angeles_Review
+export COURSE_CERT_STATION=/mnt/c/Users/<you>/Niagara4.15/tridium/stations/Cristian_Angeles_Cert
+export COURSE_NIAGARA_INSTALL=/mnt/c/Niagara/Niagara-4.15.6.20
+export COURSE_NIAGARA_SOURCE=~/niagara-research/niagara-help/versions/4.15.6.20/source
+export COURSE_LAB_SOURCES=/mnt/c/N4-Developer-Training/Core-Class/N4_Labs/niagara_dev_home
+export NIAGARA_RESEARCH_DIR=~/niagara-research
+bash -c 'for st in predicted written identical corrected unverified verified; do
+  course verify --status $st | tail -1; done'
+course check | tail -1; course progress | tail -1; course status
+```
+
+Then replace the table and its date in one edit. The live tests (`TestCheckLiveStations`,
+`TestVerifyPredictionsTrainingStation`, `TestRecallReal`) pin only what must not regress (the known
+FAILs, no CONTRADICTED prediction, the item and status counts), not this table.
 
 ## Tests
 
@@ -537,6 +664,15 @@ not observed.
   (a blank variable alone is the plain usage error, before a bad root and `--date`) and
   `verify-predictions-none` (no `--lab`: the honest zero over every group of the synthetic
   `testdata/nopredict-root/`, whose answer key carries no predicted item).
+- `progress_test.go` and the Go-only goldens `progress-good`, `progress-bad-json` (the `bad`
+  station: `redo` lines, exit 1), `progress-lab` (`--lab RA` on the review fixture) and
+  `progress-no-station` (the usage error before a bad `--date`).
+- `quiz_test.go` and the Go-only goldens `quiz-seed`, `quiz-answers`, `quiz-none` (the honest
+  zero) and `quiz-bad-n`: the pool of the `root` fixture (L1.1 asks its why in the answer, L1.5 and
+  L2.1 in the step, D1.1, T1.1), one seed one order, the clock's seed printed, the eight-line cap.
+- `check/verify_test.go` `TestSuggestionEvidence` and `TestEvidenceOfEveryKind`: the live/offline
+  rule; `key/labs_test.go` `TestVerifiedEvidence`: both markers, the counts and labels (the `root`
+  fixture's LA.1 is verified offline, LA.2 live).
 - `key/oracle_test.go`: the recall oracle (plain regexes over the raw files, its own range
   expansion) must equal the parsed ID set on the fixture, and on the real checkout when
   `NIAGARA_RESEARCH_DIR` is set, where the counts per group and per status are pinned; they are
