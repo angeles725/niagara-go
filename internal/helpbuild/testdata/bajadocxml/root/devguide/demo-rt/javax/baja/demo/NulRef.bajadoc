@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bajadoc>
+<class qualifiedName="javax.baja.demo.BNulRef" name="BNulRef" packageName="javax.baja.demo">
+<description>A default of &#x0; and &#1; becomes ?; &#x41; stays.</description>
+<field name="NUL" public="true" static="true"><type class="char"/></field>
+</class>
+</bajadoc>

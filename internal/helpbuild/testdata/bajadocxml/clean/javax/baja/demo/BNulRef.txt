@@ -1,0 +1,8 @@
+CLASS: BNulRef
+PACKAGE: javax.baja.demo
+
+DESCRIPTION:
+A default of ? and ? becomes ?; A stays.
+
+FIELDS:
+  static char NUL

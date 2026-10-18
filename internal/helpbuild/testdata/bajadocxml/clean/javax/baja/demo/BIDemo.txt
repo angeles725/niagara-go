@@ -1,0 +1,5 @@
+INTERFACE: BIDemo
+PACKAGE: javax.baja.demo
+
+DESCRIPTION:
+An interface.

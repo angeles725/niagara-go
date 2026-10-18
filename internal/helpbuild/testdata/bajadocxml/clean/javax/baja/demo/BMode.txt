@@ -1,0 +1,10 @@
+ENUM: BMode
+PACKAGE: javax.baja.demo
+EXTENDS: BFrozenEnum
+
+DESCRIPTION:
+An enum.
+
+FIELDS:
+  static BMode OFF
+  static BMode ON

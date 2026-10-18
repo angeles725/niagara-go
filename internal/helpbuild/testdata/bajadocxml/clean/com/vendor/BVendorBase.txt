@@ -1,0 +1,6 @@
+CLASS: BVendorBase
+PACKAGE: com.vendor
+
+DESCRIPTION:
+A vendor base: its subclass extends com.vendor.BVendorBase, a name _simple
+keeps, so no SUBCLASSES line.

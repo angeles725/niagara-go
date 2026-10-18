@@ -1,0 +1,27 @@
+CLASS: BDemo
+PACKAGE: javax.baja.demo
+SINCE: Niagara 4.1
+EXTENDS: BComponent
+IMPLEMENTS: BIService, java.lang.Comparable<javax.baja.demo.BDemo>
+SUBCLASSES: BAWidget, BDup, BTop
+
+DESCRIPTION:
+BDemo is the demo base class of the fixture. It carries a description long
+enough to wrap at seventy-eight code points: café, naïve, Ünicode and bold
+CDATA words.
+
+FIELDS:
+  BThing[] Abc
+  int count
+  static Property status
+
+CONSTRUCTORS:
+  BDemo()
+  BDemo(BParent parent,  slots)
+
+METHODS:
+  int[][] alpha()
+  BValue alpha(java.util.Map x)
+  Type getType()
+  ? wild()
+  abstract static java.util.List<? extends BObject, T> zeta(java.lang.String... names)

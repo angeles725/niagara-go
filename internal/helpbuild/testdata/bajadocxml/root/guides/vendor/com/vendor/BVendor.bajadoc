@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bajadoc version="2.0">
+<class qualifiedName="com.vendor.BVendorBase" name="BVendorBase" packageName="com.vendor"><description>A vendor base: its subclass extends com.vendor.BVendorBase, a name _simple keeps, so no SUBCLASSES line.</description></class>
+<class qualifiedName="com.vendor.BVendorChild" name="BVendorChild" packageName="com.vendor"><extends><type class="com.vendor.BVendorBase"/></extends></class>
+<class qualifiedName="com.vendor.BWidget" name="BWidget" packageName="com.vendor"><extends><parameterizedType class="javax.baja.demo.BDemo"><args><type class="javax.baja.sys.BValue"/></args></parameterizedType></extends></class>
+<class qualifiedName="com.vendor.BAWidget" name="BAWidget" packageName="com.vendor"><extends><type class="javax.baja.demo.BDemo"/></extends></class>
+<class qualifiedName="javax.baja.demo.BDemo" name="BDemo" packageName="javax.baja.demo"><description>a guides copy of BDemo: devguide/ wins</description></class>
+<class qualifiedName="javax.baja.demo.BMode" name="BMode" packageName="javax.baja.demo"><extends><type class="javax.baja.sys.BFrozenEnum"/></extends></class>
+</bajadoc>

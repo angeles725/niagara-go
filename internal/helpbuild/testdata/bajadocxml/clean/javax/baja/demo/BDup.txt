@@ -1,0 +1,6 @@
+CLASS: BDup
+PACKAGE: javax.baja.demo
+EXTENDS: BDemo
+
+DESCRIPTION:
+first: alpha-rt walks before zeta-rt

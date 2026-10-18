@@ -1,0 +1,3 @@
+CLASS: BVendorChild
+PACKAGE: com.vendor
+EXTENDS: com.vendor.BVendorBase

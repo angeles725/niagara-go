@@ -1,0 +1,3 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bajadoc version="2.0"><module name="demo"><class qualifiedName="javax.baja.demo.BIndexOnly" name="BIndexOnly" packageName="javax.baja.demo"/></module>
+<class qualifiedName="javax.baja.demo.BInIndexFile" name="BInIndexFile" packageName="javax.baja.demo"/></bajadoc>

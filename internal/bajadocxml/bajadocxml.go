@@ -306,12 +306,19 @@ func sanitizeXML(data []byte) []byte {
 
 // ParseFile is parse_file: the classes of one .bajadoc file (none
 // for an index file). ok is false when the file stayed unparseable after
-// sanitizing (a PARSE_FAILURES entry).
+// sanitizing (a PARSE_FAILURES entry) or could not be read.
 func ParseFile(path string) (classes []Class, ok bool) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, false
 	}
+	return Parse(data)
+}
+
+// Parse is parse_file on the bytes of a file already read (a builder that
+// stops on a read error, as ET.parse raises it, reads the file itself): ok
+// is false when the document stayed unparseable after sanitizing.
+func Parse(data []byte) (classes []Class, ok bool) {
 	root, err := parseXML(data)
 	if err != nil {
 		if root, err = parseXML(sanitizeXML(data)); err != nil {
@@ -340,9 +347,12 @@ func simpleType(name string) string {
 }
 
 // CleanInfo is the dict of to_clean_info that format_output renders.
+// Subclasses is the caller's to fill (to_clean_info leaves it empty;
+// bajadoc_xml_parser.build derives it from the extends relation).
 type CleanInfo struct {
 	ClassName, Kind, Pkg, Since, Extends, Desc string
 	Implements, Fields, Ctors, Methods         []string
+	Subclasses                                 []string
 }
 
 // ToCleanInfo is to_clean_info.
@@ -409,6 +419,9 @@ func FormatCleanInfo(info CleanInfo) string {
 	}
 	if len(info.Implements) > 0 {
 		lines = append(lines, "IMPLEMENTS: "+strings.Join(info.Implements, ", "))
+	}
+	if len(info.Subclasses) > 0 {
+		lines = append(lines, "SUBCLASSES: "+strings.Join(info.Subclasses, ", "))
 	}
 	lines = append(lines, "")
 	if info.Desc != "" {
