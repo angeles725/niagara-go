@@ -3,13 +3,11 @@ package helpbuild
 import (
 	"flag"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
-	"sort"
 	"strings"
 	"testing"
-
-	"github.com/angeles725/niagara-go/internal/pyjson"
 )
 
 // Parity of the S9 index builders (source-index.json, slots-index.json,
@@ -45,25 +43,52 @@ func s9Bases(t *testing.T) (py, gol string) {
 	return py, gol
 }
 
-// topSorted is an index with its top-level keys sorted (same formatting):
-// the golden comparison of a builder whose key order follows the directory
-// order of the file system the golden file was written on.
-func topSorted(t *testing.T, text string) string {
+// checkS9Fixture fails when testdata/s9/root/ could make a golden file
+// depend on the directory order of the file system: source_indexer lists
+// the files of a folder unsorted (at most one .java per folder) and
+// slots_indexer everything inside a module (at most one annotated .java
+// per module). The order-dependent cases live in s9Corners, which only
+// the Python parity tests see.
+func checkS9Fixture(t *testing.T) {
 	t.Helper()
-	v, err := pyjson.Loads([]rune(text))
-	if err != nil || v.Kind != pyjson.Object {
-		return text
+	perDir, annotated := map[string]int{}, map[string]int{}
+	src := filepath.Join("testdata", "s9", "root")
+	err := filepath.WalkDir(src, func(p string, d fs.DirEntry, err error) error {
+		if err != nil || d.IsDir() || !strings.HasSuffix(p, ".java") {
+			return err
+		}
+		perDir[filepath.Dir(p)]++
+		rel, _ := filepath.Rel(filepath.Join(src, "source"), p)
+		data, err := os.ReadFile(p)
+		if module, _, ok := strings.Cut(filepath.ToSlash(rel), "/"); ok && !strings.HasPrefix(rel, "..") &&
+			strings.Contains(string(data), "@Niagara") {
+			annotated[module]++
+		}
+		return err
+	})
+	if err != nil {
+		t.Fatal(err)
 	}
-	sort.Strings(v.Keys)
-	return pyjson.Dumps(v, DumpIndent2Unicode)
+	for dir, n := range perDir {
+		if n > 1 {
+			t.Errorf("%s holds %d .java files: their order in source-index.json is the file system's (move them to s9Corners)", dir, n)
+		}
+	}
+	for module, n := range annotated {
+		if n > 1 {
+			t.Errorf("source/%s holds %d annotated files: their order in slots-index.json is the file system's (move them to s9Corners)", module, n)
+		}
+	}
 }
 
 // checkS9Golden runs the Go builder of mode on a copy of testdata/s9/root/
 // and compares its lines with testdata/s9/golden/<mode>.stdout and its
-// index with testdata/s9/golden/indexes/ (top-level key order aside, see
-// topSorted); no Python is needed.
+// index with testdata/s9/golden/indexes/, byte for byte (the fixture's
+// output does not depend on directory order, see checkS9Fixture); no
+// Python is needed.
 func checkS9Golden(t *testing.T, mode string) {
 	t.Helper()
+	checkS9Fixture(t)
 	base := t.TempDir()
 	copyTree(t, filepath.Join("testdata", "s9", "root"), base)
 	lines, _ := goIndexRun(mode, base)
@@ -86,7 +111,7 @@ func checkS9Golden(t *testing.T, mode string) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if g, w := topSorted(t, got[name]), topSorted(t, string(data)); g != w {
+	if g, w := got[name], string(data); g != w {
 		t.Errorf("%s differs:\n go     %s\n python %s", name, around(g, w), around(w, g))
 	}
 }
@@ -114,7 +139,7 @@ func TestParityS9Synthetic(t *testing.T) {
 			t.Errorf("testdata/s9/golden/%s.stdout is not Python's output any more (%v): rerun with -update-s9", mode, err)
 		}
 		if want, err := os.ReadFile(filepath.Join(golden, "indexes", s9Indexes[mode])); err != nil ||
-			topSorted(t, string(want)) != topSorted(t, index) {
+			string(want) != index {
 			t.Errorf("testdata/s9/golden/indexes/%s is not Python's output any more (%v): rerun with -update-s9", s9Indexes[mode], err)
 		}
 	}

@@ -100,31 +100,13 @@
     ]
   },
   "BCafé": {
-    "module": "baja-rt",
+    "module": "cafe-rt",
     "package": "javax.baja.sys",
     "properties": [
       {
         "name": "température",
         "type": "double",
         "defaultValue": "21°"
-      }
-    ]
-  },
-  "BObject": {
-    "module": "control-rt",
-    "package": "javax.baja.control",
-    "properties": [
-      {
-        "name": "shadow",
-        "type": "int",
-        "defaultValue": "0"
-      }
-    ],
-    "topics": [
-      {
-        "name": "moved",
-        "origin": "bajadoc",
-        "eventType": "BValue"
       }
     ]
   },
@@ -145,6 +127,24 @@
       {
         "name": "p",
         "type": "int"
+      }
+    ]
+  },
+  "BObject": {
+    "module": "shadow-rt",
+    "package": "javax.baja.control",
+    "properties": [
+      {
+        "name": "shadow",
+        "type": "int",
+        "defaultValue": "0"
+      }
+    ],
+    "topics": [
+      {
+        "name": "moved",
+        "origin": "bajadoc",
+        "eventType": "BValue"
       }
     ]
   },

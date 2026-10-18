@@ -7,21 +7,15 @@
   },
   "BIObject": {
     "module": "baja-rt",
-    "path": "baja-rt/javax/baja/sys/BIObject.java",
+    "path": "baja-rt/javax/baja/sys/iface/BIObject.java",
     "package": "javax.baja.sys",
     "lines": 5
   },
   "BObject": {
     "module": "baja-rt",
-    "path": "baja-rt/javax/baja/sys/BObject.java",
+    "path": "baja-rt/javax/baja/sys/object/BObject.java",
     "package": "javax.baja.sys",
     "lines": 24
-  },
-  "BCafé": {
-    "module": "baja-rt",
-    "path": "baja-rt/javax/baja/sys/BCafé.java",
-    "package": "javax.baja.sys",
-    "lines": 7
   },
   "Lexicon": {
     "module": "baja-rt",
@@ -29,11 +23,11 @@
     "package": "javax.baja.util",
     "lines": 7
   },
-  "BObject (control-rt)": {
-    "module": "control-rt",
-    "path": "control-rt/javax/baja/control/BObject.java",
-    "package": "javax.baja.control",
-    "lines": 4
+  "BCafé": {
+    "module": "cafe-rt",
+    "path": "cafe-rt/javax/baja/sys/BCafé.java",
+    "package": "javax.baja.sys",
+    "lines": 7
   },
   "BNumericPoint": {
     "module": "control-rt",
@@ -53,23 +47,29 @@
     "package": "marker",
     "lines": 2
   },
-  "NoDecl.java": {
-    "module": "nopkg-rt",
-    "path": "nopkg-rt/odd/NoDecl.java.java",
-    "package": "",
-    "lines": 3
-  },
   "Odd": {
     "module": "nopkg-rt",
     "path": "nopkg-rt/odd/Odd.java",
     "package": "",
     "lines": 4
   },
+  "NoDecl.java": {
+    "module": "nopkg-rt",
+    "path": "nopkg-rt/odd/nodecl/NoDecl.java.java",
+    "package": "",
+    "lines": 3
+  },
   "Sample": {
     "module": "nopkg-rt",
     "path": "nopkg-rt/plain/Sample.java",
     "package": "",
     "lines": 3
+  },
+  "BObject (shadow-rt)": {
+    "module": "shadow-rt",
+    "path": "shadow-rt/javax/baja/control/BObject.java",
+    "package": "javax.baja.control",
+    "lines": 4
   },
   "Sample (devguide-rc)": {
     "module": "devguide-rc",
