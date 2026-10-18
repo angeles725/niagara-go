@@ -151,6 +151,9 @@ func timedCovBoth(t *testing.T, what, mode string, pyArgs []string, goRun func()
 	start := time.Now()
 	py := runCovDriver(t, append([]string{mode}, pyArgs...)...)
 	pyTook := time.Since(start)
+	if len(py) != 2 {
+		t.Fatalf("%s: the driver printed %d lines, want 2: %q", what, len(py), py)
+	}
 	start = time.Now()
 	gol := goRun()
 	goTook := time.Since(start)
@@ -184,6 +187,21 @@ func TestParityCoverageReal(t *testing.T) {
 				args := append([]string{root}, mode[1:]...)
 				timedCovBoth(t, vid+" "+strings.Join(mode, " "), mode[0], args, func() []string { return goCov(mode[0], args...) })
 			}
+			var goldens map[string]covGolden
+			if vid == covGoldenVersion { // the two reports that need no install
+				goldens = covGoldens(t, filepath.Dir(refTools))
+				var b strings.Builder
+				res, err := Coverage(&b, root, "")
+				if err != nil {
+					t.Fatal(err)
+				}
+				checkCovGolden(t, goldens, "coverage", b.String(), min(res.GuideGaps, 1))
+				b.Reset()
+				if _, err := Coverage(&b, root, "alarm-rt"); err != nil {
+					t.Fatal(err)
+				}
+				checkCovGolden(t, goldens, "coverage-module", b.String(), 0)
+			}
 			if !isDir(install) {
 				if explicit {
 					t.Fatalf("%s: install %s not mounted (%s lists the version)", vid, install, covVar)
@@ -200,6 +218,9 @@ func TestParityCoverageReal(t *testing.T) {
 			timedCovBoth(t, vid+" --doc-jars", "docjars", []string{repos[0], root, vid},
 				func() []string { return goCovDocJars(freshDocs, repos[1], root, vid) })
 			pyCache, goCache := fileTexts(t, filepath.Join(repos[0], ".cache")), fileTexts(t, filepath.Join(repos[1], ".cache"))
+			if len(pyCache) == 0 {
+				t.Fatalf("%s: Python saved no listing cache under %s: nothing to compare", vid, repos[0])
+			}
 			for rel, text := range pyCache {
 				if goCache[rel] != text {
 					t.Errorf("%s: listing cache %s differs", vid, rel)
@@ -211,19 +232,7 @@ func TestParityCoverageReal(t *testing.T) {
 			if vid != covGoldenVersion {
 				return
 			}
-			goldens := covGoldens(t, filepath.Dir(refTools))
 			var b strings.Builder
-			res, err := Coverage(&b, root, "")
-			if err != nil {
-				t.Fatal(err)
-			}
-			checkCovGolden(t, goldens, "coverage", b.String(), min(res.GuideGaps, 1))
-			b.Reset()
-			if _, err := Coverage(&b, root, "alarm-rt"); err != nil {
-				t.Fatal(err)
-			}
-			checkCovGolden(t, goldens, "coverage-module", b.String(), 0)
-			b.Reset()
 			rc, err := DocJarCoverage(&b, repos[1], root, vid, freshDocs)
 			if err != nil {
 				t.Fatal(err)
