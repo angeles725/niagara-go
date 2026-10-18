@@ -8,8 +8,8 @@ import (
 	"github.com/angeles725/niagara-go/internal/index"
 )
 
-// TestCannotSearchPaths pins the exit-2 paths that print ERROR (or the
-// not-ported note) on stderr and nothing on stdout.
+// TestCannotSearchPaths pins the exit-2 paths that print ERROR on stderr and
+// nothing on stdout.
 func TestCannotSearchPaths(t *testing.T) {
 	missing := func(dir, name string) string {
 		return "ERROR: index indexes/" + name + " is missing under " + dir +
@@ -23,8 +23,10 @@ func TestCannotSearchPaths(t *testing.T) {
 	}{
 		{"guide needs guides-index.json", "{}", []string{"guide", "bacnet"},
 			func(dir string) string { return missing(dir, "guides-index.json") }},
-		{"source --grep waits for the Python-regex package", "{}", []string{"source", "BX", "--grep", "x"},
-			func(string) string { return "nh: 'source --grep' is not ported yet\n" }},
+		{"source-grep with an invalid regex", "{}", []string{"source-grep", "("},
+			func(string) string {
+				return "ERROR: invalid regex '(': missing ), unterminated subpattern at position 0\n"
+			}},
 		{"others item that is not an object", `{"BX": {"package": "p", "type": "class", "others": ["oops"]}}`,
 			[]string{"class", "BX"},
 			func(string) string { return "ERROR: malformed class index: \"others\"[0] of BX is not an object\n" }},

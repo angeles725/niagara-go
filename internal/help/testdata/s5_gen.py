@@ -33,6 +33,26 @@ CLI = [
     ("source-glob", ["source", "BUser*"]),
     ("source-glob-fold", ["source", "buser0*"]),
     ("source-miss", ["source", "BZzz"]),
+    # source --grep: case-insensitive, lines keep their "\n" (so \s$ sees it), CRLF and
+    # invalid UTF-8, a \x1c that splits no line, a miss, a missing file, a bad regex.
+    ("source-grep-in", ["source", "BAlarmService", "--grep", "ackAlarm"]),
+    ("source-grep-case", ["source", "bgrep", "--grep", "ALARM"]),
+    ("source-grep-newline", ["source", "BGrep", "--grep", r"\}\s$"]),
+    ("source-grep-crlf", ["source", "BCrlf", "--grep", r"a|�"]),
+    ("source-grep-fs", ["source", "BAlarmService", "--grep", "\x1c$"]),
+    ("source-grep-miss", ["source", "BGrep", "--grep", "zzqq"]),
+    ("source-grep-missing-file", ["source", "BMissing", "--grep", "x"]),
+    ("source-grep-glob", ["source", "BUser0*", "--grep", "x"]),
+    ("source-grep-bad", ["source", "BGrep", "--grep", "["]),
+    # source-grep: every source file, imports and package lines skipped, grouped by
+    # sorted class, long lines clipped, the -n cap and the early stop at 3 * n.
+    ("source-grep-all", ["source-grep", "alarm"]),
+    ("source-grep-cap", ["source-grep", "alarm", "-n", "2"]),
+    ("source-grep-zero", ["source-grep", "class", "-n", "0"]),
+    ("source-grep-import", ["source-grep", "import"]),
+    ("source-grep-none", ["source-grep", "zzqq"]),
+    ("source-grep-regex-error", ["source-grep", "("]),
+    ("source-grep-lookbehind", ["source-grep", "(?<=void )alarm"]),
     ("method", ["method", "ackAlarm"]),
     ("method-fold", ["method", "ACKALARM"]),
     ("method-glob", ["method", "*a*"]),

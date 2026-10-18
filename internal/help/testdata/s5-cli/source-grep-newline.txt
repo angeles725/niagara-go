@@ -1,0 +1,9 @@
+SOURCE: BGrep
+MODULE: g-rt
+PACKAGE: g
+LINES: 12
+PATH: source/g/BGrep.java
+
+Grep '\}\s$':
+  L7:   void alarmOne() {}
+  L12: }

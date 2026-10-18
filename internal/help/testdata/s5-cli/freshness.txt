@@ -2,7 +2,7 @@ Niagara version: 4.14.0.162  (<ROOT>)
 CORPUS FRESHNESS
 ============================================================
   OK             bajadoc      now: 8 files, 193 bytes
-  CHANGED        source       now: 4 files, 166 bytes
+  CHANGED        source       now: 5 files, 527 bytes
                               was: 1 files, 2 bytes
   NEW SOURCE     guides       now: 7 files, 515 bytes
   OK             devguide     now: 6 files, 2,285 bytes

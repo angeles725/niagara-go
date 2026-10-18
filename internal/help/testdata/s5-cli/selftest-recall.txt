@@ -35,10 +35,11 @@ RECALL 4.14.0.162 (ground truth from raw sources, parsed in 0s)
       miss: javax.baja.alarm.BAlarmRecord#getAlarms
   slots                      3         2        1  
       miss: javax.baja.alarm.BAlarmRecord#ack
-  source                     5         5        0  
-  xref                       5         2        3  the file's own entry (package), not only used_by
+  source                     6         6        0  
+  xref                       6         2        4  the file's own entry (package), not only used_by
       miss: source/a/BFoo.java
       miss: source/b/BFoo.java
+      miss: source/g/BGrep.java
       miss: source/x/BCrlf.java
   guide-search               4         2        2  
       miss: Alarm/ack.txt

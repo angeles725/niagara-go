@@ -1,0 +1,14 @@
+SOURCE: BGrep
+MODULE: g-rt
+PACKAGE: g
+LINES: 12
+PATH: source/g/BGrep.java
+
+Grep 'ALARM':
+  L2: import javax.baja.alarm.BAlarmService;
+  L3:   import alarm.Shadow;
+  L7:   void alarmOne() {}
+  L8:   void ALARMTwo() {}
+  L9:     String note = "alarm alarm alarm alarm alarm alarm alarm alarm alarm alarm alarm alarm alarm alarm alarm alarm alarm alarm alarm alarm alarm alarm alarm alarm alarm ";
+  L10:   // ackAlarm() in a comment
+  L11:   int alarmé = 1;

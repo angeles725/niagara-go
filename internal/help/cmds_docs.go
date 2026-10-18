@@ -81,5 +81,8 @@ var sourceCommands = []command{
 		args: func(p *argparse.Parser) {
 			positional(p, "pattern", "Regex pattern (e.g. 'getSession\\(\\)')")
 			intOpt(p, 30, "", "-n", "--max-results")
+		},
+		run: func(e *Env, ns *argparse.Namespace) error {
+			return e.SourceGrep(SourceGrepParams{Pattern: ns.String("pattern"), Max: ns.Int("max_results")})
 		}},
 }

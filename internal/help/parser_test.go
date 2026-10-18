@@ -43,14 +43,6 @@ func TestAliasHelp(t *testing.T) {
 	}
 }
 
-func TestNotPortedStub(t *testing.T) {
-	dir := repo(t, twoVersions, ".")
-	out, errs, code := run(t, dir, "--niagara-version", "1.0", "source-grep", "x")
-	if code != 2 || out != "" || errs != "nh: 'source-grep' is not ported yet\n" {
-		t.Errorf("code %d out %q err %q", code, out, errs)
-	}
-}
-
 // TestRetiredCommands: a retired command, with any arguments (even --help
 // or an unknown version), prints one line naming docs/retired-commands.md
 // on stderr and exits 2; --help no longer lists it.

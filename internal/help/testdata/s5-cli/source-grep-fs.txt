@@ -1,0 +1,8 @@
+SOURCE: BAlarmService
+MODULE: alarm-rt
+PACKAGE: javax.baja.alarm
+LINES: 6
+PATH: source/alarm-rt/javax/baja/alarm/BAlarmService.java
+
+Grep '$':
+  L5:   void ackAlarm() {}

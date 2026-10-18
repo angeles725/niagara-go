@@ -1,8 +1,8 @@
 package help
 
 // Java source lookups over source-index.json and source/ (source_search.py):
-// source (lookup, glob listing, --code). The resolvers source_matches and
-// corpus_path are shared with selftest --recall.
+// source (lookup, glob listing, --code, --grep). The resolvers source_matches and
+// corpus_path are shared with selftest --recall; source-grep is in source_grep.go.
 
 import (
 	"fmt"
@@ -78,7 +78,7 @@ func rstrip(s string) string { return strings.TrimRightFunc(s, pycompat.IsSpace)
 type SourceParams struct {
 	Name string
 	Code bool
-	Grep string // a regex: source --grep waits for the shared Python-regex package
+	Grep string // a Python regex, matched case-insensitively against each line
 }
 
 // sourceGlob returns the sorted keys matching pattern with fnmatch, then
@@ -103,11 +103,8 @@ func sourceGlob(idx *index.Object, pattern string) []string {
 
 // Source is source_search.cmd_source: the source-index entry of a class
 // (exact, then case-insensitive), a listing when the name is a glob, and
-// with --code the numbered source text.
+// with --code the numbered source text or with --grep the matching lines.
 func (e *Env) Source(p SourceParams) error {
-	if p.Grep != "" {
-		return notPortedError("source --grep")
-	}
 	idx, err := e.loadIndex("source-index.json", false)
 	if err != nil {
 		return err
@@ -140,6 +137,9 @@ func (e *Env) Source(p SourceParams) error {
 	}
 	if len(others) > 0 {
 		fmt.Fprintf(e.Out, "ALSO: %s\n", strings.Join(others, ", "))
+	}
+	if p.Grep != "" {
+		return e.grepSource(data, p.Grep)
 	}
 	if !p.Code {
 		return nil

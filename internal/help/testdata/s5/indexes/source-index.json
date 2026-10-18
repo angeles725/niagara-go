@@ -172,5 +172,11 @@
   "path": "u/BUser22.java",
   "package": "u",
   "lines": 22
+ },
+ "BGrep": {
+  "module": "g-rt",
+  "path": "g/BGrep.java",
+  "package": "g",
+  "lines": 12
  }
 }

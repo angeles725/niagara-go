@@ -28,8 +28,7 @@ recovered from this repository's history (the commit that retired it names the f
 
 Kept: class (with --jdk), search, package, method, slots (all modes), guide, guide-search,
 devguide, devguide-search, pdf, find, source (with --code, --grep), source-grep, stats,
-freshness (with --all), selftest (with --recall), versions. source --grep and source-grep wait
-for the shared Python-regex package (internal/pyre) to reach this branch.
+freshness (with --all), selftest (with --recall), versions.
 
 Paths are under `tools/niagara_help_lib/` of the niagara-help repository.
 
