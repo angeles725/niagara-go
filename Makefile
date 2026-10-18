@@ -74,6 +74,10 @@ NIAGARA_RESEARCH ?= $(HOME)/niagara-research
 parity:
 	NSEARCH_QUALITY_ROOT=$(abspath $(NIAGARA_RESEARCH)) $(GO) test -count=1 -v -timeout 30m \
 		-run '^(TestSearchQuality|TestQualityFixtureMatchesResearch)$$' ./internal/searchdoor
+	MODULE_NAVIGATOR_DIR=$(abspath $(NIAGARA_RESEARCH))/module-navigator $(GO) test -count=1 -timeout 30m \
+		-run '^TestGoldenReal$$' ./internal/nav
+	NIAGARA_HELP_DIR=$(abspath $(NIAGARA_RESEARCH))/niagara-help $(GO) test -count=1 -timeout 30m \
+		-run '^TestGoldenReal$$' ./internal/help
 
 hooks:
 	git config core.hooksPath scripts/git-hooks
