@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"syscall"
 	"testing"
@@ -18,13 +19,15 @@ import (
 func TestValidateImageMatchesGoldenUsageMessages(t *testing.T) {
 	cases := map[string]string{"usage-no-image": "", "usage-missing-image": "images/missing.img",
 		"usage-directory-image": "images", "usage-char-device": "/dev/null"}
-	frozen, err := golden.Load(root)
-	if err != nil {
-		t.Fatal(err)
-	}
 	stderr := map[string][]byte{}
-	for _, c := range frozen {
-		stderr[c.Name] = c.Stderr
+	for _, suite := range []string{root, filepath.Join(root, "linux")} {
+		frozen, err := golden.Load(suite)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, c := range frozen {
+			stderr[c.Name] = c.Stderr
+		}
 	}
 	t.Chdir(runDir)
 	for name, image := range cases {
@@ -49,6 +52,9 @@ func TestValidateImageMatchesGoldenUsageMessages(t *testing.T) {
 }
 
 func TestValidateImageUnreadable(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("mode 0 only sets the read-only attribute on Windows: the file stays readable")
+	}
 	if os.Geteuid() == 0 {
 		t.Skip("root reads anything")
 	}
@@ -199,9 +205,15 @@ func TestDetectOffPropagatesIOError(t *testing.T) {
 	sb := make([]byte, sbSize)
 	binary.LittleEndian.PutUint32(sb, sbMagic)
 	binary.LittleEndian.PutUint32(sb[80:], 7) // inode file root: block 7, levels 0
+	want := "cannot read disk.img at byte 7168: Input/output error"
+	if runtime.GOOS == "windows" {
+		// syscall.EIO is a value Go invents on Windows, not a Win32 code: CPython's
+		// winerror_to_errno default (EINVAL) words it.
+		want = "cannot read disk.img at byte 7168: Invalid argument"
+	}
 	_, err := open(&failingReader{sb: sb}, 0, "disk.img")
-	if err == nil || err.Error() != "cannot read disk.img at byte 7168: Input/output error" {
-		t.Fatalf("err = %v", err)
+	if err == nil || err.Error() != want {
+		t.Fatalf("err = %v, want %q", err, want)
 	}
 }
 
