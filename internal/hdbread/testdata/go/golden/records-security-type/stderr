@@ -1,0 +1,1 @@
+hdbread: --records: record type history:SecurityAuditRecord is not decoded (decoded: history:AuditRecord, history:BooleanTrendRecord, history:EnumTrendRecord, history:LogRecord, history:NumericTrendRecord)

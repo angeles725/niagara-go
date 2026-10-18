@@ -1,0 +1,6 @@
+{
+ "args": [
+  "inputs/security-type.hdb",
+  "--records"
+ ]
+}

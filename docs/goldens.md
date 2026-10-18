@@ -69,9 +69,9 @@ checked on the real corpus by `make parity` (`TestSearchQuality`).
 
 ## Freezing and regenerating
 
-There is no update mode in this repository: a golden is Python's output, so the Go side never
-rewrites it. Each package freezes its cases with a generator next to them, run against the
-Python tool, for example:
+A Python golden has no update mode: it is Python's output, so the Go side never rewrites it
+(Go-only cases, below, are the exception). Each package freezes its cases with a generator
+next to them, run against the Python tool, for example:
 
 ```sh
 NIAGARA_RESEARCH=~/niagara-research python3 -I internal/typecatalog/testdata/freeze_golden.py
@@ -90,11 +90,35 @@ their `intended.json` (see `INTENDED` in `internal/nav/testdata/gen_golden.py`),
 keeps them. Unit-test fixtures of shared packages follow the same rule (`testdata/gen.py`,
 `gen_fixtures.py`).
 
-`GOLDEN_UPDATE=1` belongs to the Python suites of the source repos
-(niagara-research `tools/tests/goldencli.py`). There, `GOLDEN_BIN_<TOOL>` (script name
+In the Python suites of the source repos (niagara-research `tools/tests/goldencli.py`),
+`GOLDEN_UPDATE=1` rewrites the Python goldens, and `GOLDEN_BIN_<TOOL>` (script name
 without `.py`, upper-cased, `-` -> `_`, e.g. `GOLDEN_BIN_BOG_NAV`) runs a tool's Python golden
 suite against the Go binary, and `GOLDEN_UPDATE` refuses to run with such an override so the
 port's output is never frozen as the expectation.
+
+## Go-only cases (D34)
+
+Behaviour added to a port after its Python tool froze has no Python output to freeze. Its cases
+live in a second set, `<package>/testdata/go/golden/<case>/`, with the same layout, run by
+`golden.RunGo(t, Main)`, but `stdout`, `stderr` and `exit` hold the reviewed Go output. Their inputs are synthetic, built by a Go test helper and committed under
+`testdata/go/inputs/`; a test fails when a committed input differs from what the helper builds.
+A changed Go-only output is regenerated, then reviewed in the diff before it is committed:
+
+```sh
+GOLDEN_UPDATE=1 go test ./internal/hdbread -run 'TestGoInputs|TestGoldenGo'
+go test ./internal/hdbread -run 'TestGoInputs|TestGoldenGo'
+```
+
+With `GOLDEN_UPDATE` set (any non-empty value), `golden.RunGo` first runs each case in process,
+each in its own subtest so its working directory and env are restored, and rewrites its
+`stdout`, `stderr` and `exit` (a new case needs only its `cmd.json`; an empty stderr removes the
+file); then it checks the cases as usual. Update mode logs one line saying it is on and one
+`golden: rewrote <path>` per file whose bytes changed (`go test -v` shows them), so a
+`GOLDEN_UPDATE` left exported is visible; review that diff before committing. The package's input helper rewrites
+`testdata/go/inputs/` under the same variable (`golden.Updating()`, hdbread `TestGoInputs`).
+Nothing outside `testdata/go/` is written: `golden.Run` never rewrites a Python case. A Python case
+whose output the new behaviour changes keeps its Python bytes and declares the Go output in
+`intended.json` with a D34 reason (hdbread `records-audit-type`, `usage-help`).
 
 ## Search quality: `make parity`
 

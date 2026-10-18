@@ -1,0 +1,6 @@
+{
+ "args": [
+  "inputs/log-v2.hdb",
+  "--records"
+ ]
+}

@@ -12,9 +12,9 @@ import (
 	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
-// FormatError is a .hdb whose trend data --records cannot decode (Python HdbFormatError): a record
-// type that is not a fixed-length trend record, an unknown header version, or a geometry that does
-// not fit.
+// FormatError is a .hdb whose records --records cannot decode (Python HdbFormatError): a record
+// type this package does not decode, an unknown header version, a geometry that does not fit, or
+// (record-store histories, recstore.go) a record whose bytes do not match its blocks.
 type FormatError string
 
 func (e FormatError) Error() string { return string(e) }
@@ -123,8 +123,7 @@ func decodeTrend(data []byte) (*trendTable, error) {
 	rt := firstGroup(recordTypeRE, f.xml, "?")
 	vbytes, ok := valueBytes[rt]
 	if !ok {
-		return nil, formatErr("record type %s is not a fixed-length trend record (decoded: %s)", rt,
-			"history:BooleanTrendRecord, history:EnumTrendRecord, history:NumericTrendRecord")
+		return nil, formatErr("record type %s is not decoded (decoded: %s)", rt, decodedTypes())
 	}
 	if _, ok := tsBytes[f.version]; !ok {
 		return nil, formatErr("history version %d is neither 1 nor 2", f.version)

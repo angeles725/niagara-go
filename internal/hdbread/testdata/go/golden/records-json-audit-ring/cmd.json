@@ -1,0 +1,7 @@
+{
+ "args": [
+  "inputs/audit-ring.hdb",
+  "--records",
+  "--json"
+ ]
+}

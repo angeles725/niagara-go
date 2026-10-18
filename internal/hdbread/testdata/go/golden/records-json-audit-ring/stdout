@@ -1,0 +1,42 @@
+[
+ {
+  "timestamp": "2026-10-16T18:32:00.000Z",
+  "millis": 1792175520000,
+  "operation": "Changed",
+  "target": "/Test/Ramp",
+  "slotName": "amplitude",
+  "oldValue": "1.0",
+  "value": "2.5",
+  "userName": "admin"
+ },
+ {
+  "timestamp": "2026-10-16T18:33:00.000Z",
+  "millis": 1792175580000,
+  "operation": "Invoked",
+  "target": "/Test/Ramp",
+  "slotName": "set",
+  "oldValue": "",
+  "value": "",
+  "userName": "operator, one"
+ },
+ {
+  "timestamp": "2026-10-16T18:33:01.000Z",
+  "millis": 1792175581000,
+  "operation": "Login",
+  "target": "",
+  "slotName": "",
+  "oldValue": "",
+  "value": "",
+  "userName": "admin"
+ },
+ {
+  "timestamp": "2026-10-16T18:33:02.000Z",
+  "millis": 1792175582000,
+  "operation": "Flags Changed",
+  "target": "/Test/Limiter/out",
+  "slotName": "out",
+  "oldValue": "",
+  "value": "hidden,summary",
+  "userName": "admin"
+ }
+]

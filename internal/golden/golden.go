@@ -98,7 +98,8 @@ func Load(testdata string) ([]Case, error) {
 	return cases, nil
 }
 
-func loadCase(dir string) (Case, error) {
+// loadCmd reads the invocation of the case in dir (its cmd.json) without the expectation.
+func loadCmd(dir string) (Case, error) {
 	var c Case
 	raw, err := os.ReadFile(filepath.Join(dir, "cmd.json"))
 	if err != nil {
@@ -111,6 +112,14 @@ func loadCase(dir string) (Case, error) {
 	}
 	if err := c.Requires.validate(); err != nil {
 		return c, fmt.Errorf("cmd.json: %w", err)
+	}
+	return c, nil
+}
+
+func loadCase(dir string) (Case, error) {
+	c, err := loadCmd(dir)
+	if err != nil {
+		return c, err
 	}
 	if c.Stdout, err = os.ReadFile(filepath.Join(dir, "stdout")); err != nil {
 		return c, err
