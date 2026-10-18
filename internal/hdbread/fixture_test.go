@@ -216,7 +216,9 @@ func fixtures() map[string][]byte {
 	out["security-type.hdb"] = hdbFile(2, "/S/SecurityHistory", "history:SecurityAuditRecord", "",
 		newStore(64, 4, 0).bytes())
 
-	// A store whose header stops short of the 256 bytes the record-store header takes.
+	// A data section cut to 100 bytes, shorter than the 256-byte record-store header. The decoder
+	// keeps the 28 bytes of header fields, so it fails the geometry check (64 x 4 blocks do not
+	// fit), which is what records-malformed pins; a section under 28 bytes has its own message.
 	out["truncated-header.hdb"] = hdbFile(2, "/S/LogHistory", "history:LogRecord", logSchema,
 		newStore(64, 4, 0).bytes()[:100])
 	return out
