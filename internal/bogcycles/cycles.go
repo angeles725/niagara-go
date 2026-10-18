@@ -31,7 +31,7 @@ const description = "" +
 	"legitimate feedback (PID, hysteresis) also appears. Dangling `h:` references are reported (a link with an\n" +
 	"unresolvable source creates no knob and no fault, B1115); a non-handle sourceOrd (`station:|slot:/...`)\n" +
 	"is not an edge.\n" +
-	"Usage: bog-cycles.py <config.bog|backup.dist|file.xml> [--json]\n" +
+	"Usage: bogcycles <config.bog|backup.dist|file.xml> [--json]\n" +
 	"Paths always start with `/` at the station root: `/Services/X`; an unnamed root (every station bog) is `/`,\n" +
 	"a named root R renders as `/R` and its children as `/R/A`.\n" +
 	"`links` counts the links whose source resolves (or is not a handle); a dangling link is counted in\n" +
@@ -168,7 +168,7 @@ func slotText(s *string) string {
 
 // Main is bog-cycles.py main().
 func Main(args []string, s cli.Stdio) int {
-	p := argparse.New(argparse.Config{Prog: "bog-cycles.py", Description: description,
+	p := argparse.New(argparse.Config{Prog: "bogcycles", Description: description,
 		Formatter: argparse.RawDescriptionHelpFormatter})
 	p.Add(argparse.Arg{Help: "config.bog, a .dist station backup or a plain BOG file.xml"}, "bog")
 	p.Add(argparse.Arg{Action: argparse.StoreTrue, Help: "machine JSON output"}, "--json")

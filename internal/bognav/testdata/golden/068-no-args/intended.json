@@ -1,0 +1,4 @@
+{
+ "reason": "Python's argparse took prog from the invoked script (tools/<tool>.py); the Go binaries are run as their installed command (tools/install.sh), so usage and help name that command, not a retired .py script.",
+ "stderr": "usage: bognav [-h] [--json] [--csv] [--limit N] [--version]\n              [bog]\n              {tree,slot,links,handle,path,find,types,pointcache,writable,relays,hoa,tiles,grep,diff,selftest} ...\nbognav: error: the following arguments are required: cmd\n"
+}

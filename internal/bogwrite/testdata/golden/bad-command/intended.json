@@ -1,0 +1,4 @@
+{
+ "reason": "Python's argparse took prog from the invoked script (tools/<tool>.py); the Go binaries are run as their installed command (tools/install.sh), so usage and help name that command, not a retired .py script.",
+ "stderr": "usage: bog-write [-h] {generate,validate,selftest} ...\nbog-write: error: argument cmd: invalid choice: 'write' (choose from 'generate', 'validate', 'selftest')\n"
+}

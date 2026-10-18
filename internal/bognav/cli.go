@@ -41,7 +41,7 @@ var limitCommands = []string{"find", "types", "grep", "links", "writable", "rela
 
 func newParser() *argparse.Parser {
 	top, common := argparse.OutputParent(false), argparse.OutputParent(true)
-	p := argparse.New(argparse.Config{Prog: "bog-nav.py", Description: description,
+	p := argparse.New(argparse.Config{Prog: "bognav", Description: description,
 		Formatter: argparse.RawDescriptionHelpFormatter, Parents: []*argparse.Parser{top}})
 	p.Add(argparse.Arg{Action: argparse.Custom, Nargs: argparse.NoArgs, Default: argparse.Suppress,
 		Help: "print the tools version and exit", Call: func(c *argparse.Call) error {

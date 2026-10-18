@@ -42,7 +42,7 @@ func fail(code int, format string, a ...any) error {
 }
 
 func parser() *argparse.Parser {
-	p := argparse.New(argparse.Config{Prog: "station-modules.py",
+	p := argparse.New(argparse.Config{Prog: "station-modules",
 		Description: "Resolve a station's module deps against a Niagara install."})
 	sub := p.AddSubparsers(argparse.SubparsersConfig{Dest: "cmd", Required: true})
 	c := sub.AddParser("check", argparse.SubparserConfig{Help: "station-driven dependency check"})

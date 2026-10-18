@@ -22,7 +22,7 @@ import (
 const tool = "n4-type-catalog"
 
 func newParser() *argparse.Parser {
-	ap := argparse.New(argparse.Config{Prog: tool + ".py", Description: description,
+	ap := argparse.New(argparse.Config{Prog: tool, Description: description,
 		Formatter: argparse.RawDescriptionHelpFormatter})
 	sub := ap.AddSubparsers(argparse.SubparsersConfig{Dest: "cmd", Required: true})
 	b := sub.AddParser("build", argparse.SubparserConfig{})
