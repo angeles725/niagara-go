@@ -10,7 +10,10 @@
 // and whitespace are dropped, re.ASCII is applied by the rewrite (with IGNORECASE it
 // folds the ASCII letters only, as Python does). $ without MULTILINE matches at the
 // end or before a final newline, with it before every newline, as in Python.
-// Positions are code-point (rune) indices, as in Python.
+// Positions are code-point (rune) indices, as in Python. MatchRunes is
+// pattern.match(text, pos), anchored by a second, lazily compiled \G program so the
+// engine does not scan; IsWord and IsSpace test one code point against the same \w
+// and \s tables, for hand-written scanners that must agree with a pattern.
 //
 // Known differences, none hit by the ported tools: Unicode IGNORECASE folds with
 // .NET's simple lower-casing (Python also folds ı/i, ſ/s, µ/μ and ς/σ; pinned in

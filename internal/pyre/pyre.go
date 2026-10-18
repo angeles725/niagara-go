@@ -10,6 +10,8 @@ type Regexp struct {
 	pattern string
 	names   map[string]int
 	groups  int
+	// anchored is the \G-anchored program behind MatchRunes, compiled on first use.
+	anchored func() *regexp2.Regexp
 }
 
 // Compile is re.compile(pattern, flags). The error is an *Error.
@@ -30,7 +32,8 @@ func Compile(pattern string, flags Flags) (*Regexp, error) {
 	if st.flags&DOTALL != 0 {
 		opts |= regexp2.Singleline
 	}
-	re, cerr := regexp2.Compile(em.b.String(), opts)
+	body := em.b.String()
+	re, cerr := regexp2.Compile(body, opts)
 	if cerr != nil {
 		return nil, newError("unsupported by the Go regex engine: "+cerr.Error(), "", -1)
 	}
@@ -38,7 +41,8 @@ func Compile(pattern string, flags Flags) (*Regexp, error) {
 	for name, gid := range st.groupdict {
 		names[name] = gid
 	}
-	return &Regexp{re: re, pattern: pattern, names: names, groups: st.groups() - 1}, nil
+	return &Regexp{re: re, pattern: pattern, names: names, groups: st.groups() - 1,
+		anchored: anchoredProgram(body, opts)}, nil
 }
 
 // MustCompile is Compile for patterns known to be valid; it panics otherwise.
