@@ -118,6 +118,11 @@ func listMore(env *registry.Env, items []string, limit int) {
 	}
 }
 
+// pyError is an error whose text is a Python exception message, verbatim.
+type pyError string
+
+func (e pyError) Error() string { return string(e) }
+
 // jarNames is zipfile.ZipFile(path).namelist() (core.ZipName). Errors read
 // as Python's: "File is not a zip file" for a malformed archive, the OSError
 // text for a file that cannot be opened.
@@ -126,7 +131,7 @@ func jarNames(path string) ([]string, error) {
 	var pe *fs.PathError
 	switch {
 	case errors.Is(err, zip.ErrFormat):
-		return nil, errors.New("File is not a zip file")
+		return nil, pyError("File is not a zip file")
 	case errors.As(err, &pe):
 		return nil, errors.New(index.OSError(pe.Err, path))
 	case err != nil:
