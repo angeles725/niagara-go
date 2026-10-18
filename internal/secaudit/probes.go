@@ -190,21 +190,23 @@ func (e *env) keytoolDefault(path string) (*keytoolOutcome, error) {
 }
 
 // keytoolKeysizes reads "keytool -list -v" on the store at path: one key per "Subject Public Key
-// Algorithm:" line, in listing order, and the entry count ("" when keytool printed none). failure
-// is set (keys nil) when keytool did not exit 0: the keys were not read, which is not "none".
-func (e *env) keytoolKeysizes(path string) (keys []key, entries digits, failure string, err error) {
+// Algorithm:" line, in listing order, the entry count ("" when keytool printed none) and one
+// entryBlock per "Alias name:" block. failure is set (keys and blocks nil) when keytool did not
+// exit 0: the keys were not read, which is not "none".
+func (e *env) keytoolKeysizes(path string) (keys []key, entries digits, blocks []entryBlock, failure string,
+	err error) {
 	if !pycompat.IsFile(path) {
-		return nil, "", "", nil
+		return nil, "", nil, "", nil
 	}
 	o, err := e.keytoolList(path, true)
 	if err != nil {
-		return nil, "", "", err
+		return nil, "", nil, "", err
 	}
 	if !o.opened {
-		return nil, "", o.failure, nil
+		return nil, "", nil, o.failure, nil
 	}
-	keys, entries = parseKeys(o.stdout)
-	return keys, entries, "", nil
+	keys, entries, blocks = parseKeys(o.stdout)
+	return keys, entries, blocks, "", nil
 }
 
 // tlsSubject is the "subject=..." line of the certificate host:port serves; "" on any failure.
