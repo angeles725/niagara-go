@@ -9,6 +9,10 @@ Every mode prints JSON lines (json.dumps defaults) that the Go test rebuilds.
                    attrs], ["e", tag], ["d", data]) and html_text.convert
   fuzz SEED COUNT  COUNT seeded random snippets, per snippet
                    [page, events, title, text]
+  feed             stdin: [page, ...]; per page the callbacks of one
+                   feed(page) without close()
+  feedfuzz SEED COUNT  COUNT seeded random snippets, per snippet
+                   [page, feed events]
   entities         sorted(html.entities.html5)
   unescape         stdin: [s, ...]; [html.unescape(s), ...]
   toc PATH...      per path ["toc", parse_toc(path) as [[page, title,
@@ -55,6 +59,12 @@ def events(page):
     rec = _Recorder()
     rec.feed(page)
     rec.close()
+    return rec.events
+
+
+def feed_events(page):
+    rec = _Recorder()
+    rec.feed(page)
     return rec.events
 
 
@@ -120,6 +130,13 @@ def fuzz(seed, count):
         print(json.dumps([page, events(page), title, text]))
 
 
+def feedfuzz(seed, count):
+    rng = random.Random(seed)
+    for _ in range(count):
+        page = snippet(rng)
+        print(json.dumps([page, feed_events(page)]))
+
+
 def toc(paths):
     for path in paths:
         err = io.StringIO()
@@ -166,6 +183,11 @@ def main():
         pages(json.load(sys.stdin))
     elif mode == "fuzz":
         fuzz(int(args[0]), int(args[1]))
+    elif mode == "feed":
+        for page in json.load(sys.stdin):
+            print(json.dumps(feed_events(page)))
+    elif mode == "feedfuzz":
+        feedfuzz(int(args[0]), int(args[1]))
     elif mode == "entities":
         print(json.dumps(sorted(html.entities.html5)))
     elif mode == "unescape":

@@ -353,6 +353,13 @@ collapses whitespace per chunk) and are the same: data before a tag, a malformed
 reported as text, a lone `<`, a trailing `</`. Unterminated constructs at the end of the
 page are dropped (`<a href='x`, `</a`, `<!--`), as in Python.
 
+`pyhtml.Feed` is one `feed()` alone (`goahead(end=0)`), which bajadoc's `strip_tags` uses
+(it never calls `close()`): what would wait for more input is dropped, that is an
+unterminated construct or a lone `<` at the end with everything after it, raw text
+without its end tag, and the data after the last `<` when an `&` in its last 34 code
+points has no `[\t\n\r\f ;]` after it (the window counts code points, as Python's
+`n-34` does).
+
 `locatetagend`, `tagfind_tolerant` and `attrfind_tolerant` are hand-ported: every part
 after the tag name is optional, so sre's first path is the greedy one, except the value
 indicator, which backtracks one space before a quote that is never closed (`x= 'y` is
@@ -372,6 +379,7 @@ parity test over all 2,231 names of `html.entities.html5`). The attribute rule
 |---|---|
 | `TestParityHTMLCorners` | the parser callbacks and `convert()` of 60 hand-written pages (the Python tests' fixtures, unterminated constructs, raw text, attribute quoting, charrefs) |
 | `TestParityHTMLFuzz` | the same on 5,000 seeded random snippets of tag/charref/whitespace fragments, some cut at a random point (400 with `-short`) |
+| `TestParityHTMLFeed` | `pyhtml.Feed` (one `feed()` without `close()`, bajadoc's `strip_tags`) against the same on the corner pages plus held-back ends (cut references inside and outside the 34-code-point look-back, raw text without its end tag, a lone `<`) and on 5,000 seeded random snippets (400 with `-short`) |
 | `TestParityHTML5Entities` | `pyhtml.IsHTML5Entity` on every `html5` name and its near misses, `pyhtml.Unescape` against `html.unescape` on 46,851 texts |
 | `TestParityTocFiles` | `parse_toc` (order, titles, trails), `count_items` and the stderr warning on the synthetic toc.xml files and corners (namespaced, root `tocitem`, empty, undefined entity, BOM + ISO-8859-1 / US-ASCII / UTF-8 / UTF-16 (one real 4.3/4.15 toc.xml is BOM + ISO-8859-1; `pyxml` applies the declared encoding after a BOM as expat does), junk, missing file) |
 | `TestParityGuidesSynthetic` | stdout/stderr lines, return value and both whole trees after each builder (and a second run) on a synthetic root: the `test_extraction` pages, toc.xml corners, Markdown, `.txt` beside `.html`, licence texts, a non-UTF-8 page body, CRLF, a broken toc, `TOC.XML` |

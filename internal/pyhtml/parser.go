@@ -2,6 +2,7 @@ package pyhtml
 
 import (
 	"strings"
+	"unicode/utf8"
 
 	"github.com/angeles725/niagara-go/internal/textfold"
 )
@@ -56,13 +57,40 @@ type tokenizer struct {
 	h         Handler
 	cdataElem string // "" is None
 	escapable bool
+	end       bool // goahead(end): close() was called
 }
 
 // Parse is HTMLParser(convert_charrefs=True).feed(page); close(), the
 // callbacks going to h.
 func Parse(page string, h Handler) {
+	p := &tokenizer{raw: page, h: h, escapable: true, end: true}
+	p.goahead()
+}
+
+// Feed is HTMLParser(convert_charrefs=True).feed(page) without close(): one
+// goahead(end=0) (feed() parses at once: the first call's threshold is one
+// character). What would wait for more input is never reported: an
+// unterminated construct and a lone "<" at the end with all that follows,
+// raw text without its end tag, and the data after the last "<" when an "&"
+// in its last 34 code points has no [\t\n\r\f ;] after it (heldCharref).
+func Feed(page string, h Handler) {
 	p := &tokenizer{raw: page, h: h, escapable: true}
 	p.goahead()
+}
+
+// heldCharref is the look-back of goahead(end=0) when no "<" follows i:
+// rawdata.rfind('&', max(i, n-34)) found an "&" that no [\t\n\r\f ;]
+// follows, so the data could end in a cut reference and waits. n-34 counts
+// code points, as Python's str indices do.
+func heldCharref(raw string, i int) bool {
+	lo := len(raw)
+	for c := 0; c < 34 && lo > 0; c++ {
+		_, size := utf8.DecodeLastRuneInString(raw[:lo])
+		lo -= size
+	}
+	lo = max(lo, i)
+	amp := strings.LastIndexByte(raw[lo:], '&')
+	return amp >= 0 && !strings.ContainsAny(raw[lo+amp:], "\t\n\r\f ;")
 }
 
 func isASCIILetter(c byte) bool { return c|0x20 >= 'a' && c|0x20 <= 'z' }
@@ -98,6 +126,9 @@ func (p *tokenizer) goahead() {
 		if p.cdataElem == "" {
 			j = strings.IndexByte(raw[i:], '<')
 			if j < 0 {
+				if !p.end && heldCharref(raw, i) {
+					break
+				}
 				j = n
 			} else {
 				j += i
@@ -127,11 +158,16 @@ func (p *tokenizer) goahead() {
 			k = indexFrom(raw, ">", i+2, 1)
 		case strings.HasPrefix(rest, "<!"):
 			k = p.parseHTMLDeclaration(i)
-		default:
+		case i+1 < n || p.end:
 			p.h.Data("<")
 			k = i + 1
+		default: // a lone "<" at the end of a feed() waits for more
+			k = -1
 		}
 		if k < 0 {
+			if !p.end {
+				break
+			}
 			// end=1: an unterminated construct runs to the end of the
 			// page; only a bare "</" at the very end is reported.
 			if strings.HasPrefix(raw[i:], "</") && i+2 == n {
@@ -141,7 +177,7 @@ func (p *tokenizer) goahead() {
 		}
 		i = k
 	}
-	if i < n {
+	if p.end && i < n {
 		p.emit(raw[i:])
 	}
 }

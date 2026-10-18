@@ -8,7 +8,7 @@ import (
 	"unicode/utf8"
 )
 
-// Native fuzzing of the tokenizer: no input may panic, take longer than
+// Native fuzzing of the tokenizer (Parse and Feed): no input may panic, take longer than
 // fuzzDeadline, or turn valid UTF-8 into a callback argument that is not.
 // The parser assumes valid UTF-8 (the tools read pages with
 // errors="replace"), so a raw input is parsed as is (no panic, no hang) and
@@ -76,16 +76,18 @@ func (c *utf8Checker) EndTag(tag string)                    { c.check("end tag",
 func (c *utf8Checker) Data(text string)                     { c.check("data", text) }
 
 func FuzzParse(f *testing.F) {
-	for _, c := range eventCases {
+	for _, c := range append(append([]struct{ page, want string }{}, eventCases...), feedCases...) {
 		f.Add(c.page)
 	}
 	f.Add("\xff<p \xfe=\x80>a</p\xc3>")
 	f.Fuzz(func(t *testing.T, raw string) {
 		withinDeadline(t, raw, func() []string { Parse(raw, &eventRecorder{}); return nil })
-		page := strings.ToValidUTF8(raw, "�")
+		withinDeadline(t, raw, func() []string { Feed(raw, &eventRecorder{}); return nil })
+		page := strings.ToValidUTF8(raw, "\uFFFD")
 		withinDeadline(t, page, func() []string {
 			c := &utf8Checker{page: page}
 			Parse(page, c)
+			Feed(page, c)
 			return c.problems
 		})
 	})

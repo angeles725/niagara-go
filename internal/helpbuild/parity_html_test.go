@@ -64,6 +64,13 @@ func goEvents(page string) pyjson.Value {
 	return array(r.events...)
 }
 
+// goFeedEvents are the callbacks of pyhtml.Feed (feed() without close()).
+func goFeedEvents(page string) pyjson.Value {
+	r := &eventRecorder{}
+	pyhtml.Feed(page, r)
+	return array(r.events...)
+}
+
 // goPageLine is one "pages" line ([events, title, text]), page first for
 // "fuzz".
 func goPageLine(page string, withPage bool) string {
@@ -136,6 +143,52 @@ func TestParityHTMLFuzz(t *testing.T) {
 		gol[i] = goPageLine(v.A[0].S, true)
 	}
 	diffLines(t, "html fuzz", py, gol)
+}
+
+// feedCorners are pages whose end feed() holds back, on top of htmlCorners:
+// cut references inside and outside the 34-code-point look-back (counted in
+// code points, so multi-byte text before the "&" matters), raw text without
+// its end tag, a lone "<" or "</".
+var feedCorners = []string{
+	"tail &amp", "tail &amp x", "a&b" + strings.Repeat("\u00e9", 32), "a&b" + strings.Repeat("\u00e9", 33),
+	"x &" + strings.Repeat("y", 31), "x &" + strings.Repeat("y", 32), "x &" + strings.Repeat("y", 40),
+	"<script>x</scr", "<textarea>a &amp b", "<plaintext>a &amp", "a <", "a </", "a < b", "a&#65", "a&#65;",
+	"<b>int</b>&nbsp;x", "a &\t", "a &;", "<p>a</p>&\u00e9\u00e9",
+}
+
+// TestParityHTMLFeed compares pyhtml.Feed with one feed() without close()
+// (the strip_tags of bajadoc_parser) on the corner pages and on seeded
+// random snippets: 400 with -short, 5,000 otherwise.
+func TestParityHTMLFeed(t *testing.T) {
+	driver(t)
+	pages := append(append([]string{}, htmlCorners...), feedCorners...)
+	in, err := json.Marshal(pages)
+	if err != nil {
+		t.Fatal(err)
+	}
+	py := runHTMLDriver(t, string(in), "feed")
+	var gol []string
+	for _, page := range pages {
+		gol = append(gol, pyjson.Dumps(goFeedEvents(page), DumpDefault))
+	}
+	diffLines(t, "feed corners", py, gol)
+	count := 5000
+	if testing.Short() {
+		count = 400
+	}
+	py = runHTMLDriver(t, "", "feedfuzz", "20261018", strconv.Itoa(count))
+	if len(py) != count {
+		t.Fatalf("driver returned %d cases, want %d", len(py), count)
+	}
+	gol = make([]string, len(py))
+	for i, line := range py {
+		v, err := pyjson.Loads(pyjson.Runes(line))
+		if err != nil || v.Kind != pyjson.Array || len(v.A) == 0 {
+			t.Fatalf("case %d: bad driver line %q: %v", i, line, err)
+		}
+		gol[i] = pyjson.Dumps(array(v.A[0], goFeedEvents(v.A[0].S)), DumpDefault)
+	}
+	diffLines(t, "feed fuzz", py, gol)
 }
 
 // TestParityHTML5Entities checks pyhtml.IsHTML5Entity against every key of

@@ -2,6 +2,7 @@ package pyhtml
 
 import (
 	"encoding/json"
+	"strings"
 	"testing"
 )
 
@@ -58,6 +59,53 @@ func TestParseEvents(t *testing.T) {
 		}
 		if w := canonical(t, want); got != w {
 			t.Errorf("events of %q:\n got %s\nwant %s", c.page, got, w)
+		}
+	}
+}
+
+// feedCases are feed() without close() (values from CPython 3.15): what
+// waits for more input is never reported. An unterminated construct and a
+// lone "<" or "</" at the end, raw text without its end tag, and data
+// after the last "<" whose last 34 code points hold an "&" with no
+// [\t\n\r\f ;] after it (a reference that could be cut) are dropped.
+var feedCases = []struct{ page, want string }{
+	{"a&b" + strings.Repeat("\u00e9", 32), `[]`},
+	{"a&b" + strings.Repeat("\u00e9", 33), `[["d", "a&b\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9"]]`},
+	{"<p>a &amp; b</p> tail", `[["s", "p", []], ["d", "a & b"], ["e", "p"], ["d", " tail"]]`},
+	{"tail &amp", `[]`},
+	{"tail &amp x", `[["d", "tail & x"]]`},
+	{"x &" + strings.Repeat("y", 40), `[["d", "x &yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy"]]`},
+	{"x &" + strings.Repeat("y", 33), `[]`},
+	{"x &" + strings.Repeat("y", 32), `[]`},
+	{"&eacute;" + strings.Repeat("\u00e9", 33) + "&amp", `[]`},
+	{"a <", `[["d", "a "]]`},
+	{"a <b", `[["d", "a "]]`},
+	{"a </", `[["d", "a "]]`},
+	{"a </b", `[["d", "a "]]`},
+	{"a <!-- c", `[["d", "a "]]`},
+	{"a <![CDATA[x", `[["d", "a "]]`},
+	{"<script>x</scr", `[["s", "script", []]]`},
+	{"<script>x</script>y", `[["s", "script", []], ["d", "x"], ["e", "script"], ["d", "y"]]`},
+	{"<textarea>a &amp b", `[["s", "textarea", []]]`},
+	{"<plaintext>a &amp", `[["s", "plaintext", []], ["d", "a &amp"]]`},
+	{"x <p", `[["d", "x "]]`},
+	{"a&#65", `[]`},
+	{"a&#65;", `[["d", "aA"]]`},
+	{"a < b", `[["d", "a "], ["d", "<"], ["d", " b"]]`},
+	{"<b>int</b>&nbsp;x", `[["s", "b", []], ["d", "int"], ["e", "b"], ["d", "\u00a0x"]]`},
+}
+
+func TestFeedEvents(t *testing.T) {
+	for _, c := range feedCases {
+		r := &eventRecorder{events: []any{}}
+		Feed(c.page, r)
+		got := canonical(t, r.events)
+		var want any
+		if err := json.Unmarshal([]byte(c.want), &want); err != nil {
+			t.Fatalf("%s: %v", c.want, err)
+		}
+		if w := canonical(t, want); got != w {
+			t.Errorf("feed events of %q:\n got %s\nwant %s", c.page, got, w)
 		}
 	}
 }

@@ -1,7 +1,8 @@
 // Package pyhtml is Python's html module family as the niagara-help tools use it
 // (decision D37; owner Integrante3): the tokenizer of CPython 3.15's
 // html.parser.HTMLParser with convert_charrefs=True (Parse: one feed() of the whole
-// page, then close()), html.unescape with the full WHATWG html5 table (Unescape) and
+// page, then close(); Feed: one feed() alone, as bajadoc_parser.strip_tags calls it),
+// html.unescape with the full WHATWG html5 table (Unescape) and
 // `name in html.entities.html5` (IsHTML5Entity).
 //
 // Contract: for valid UTF-8 input, the callbacks a Handler receives (start tag,
@@ -18,6 +19,6 @@
 // The live parity checks run the interpreter and live in internal/helpbuild, next to
 // their driver (testdata/parity/htmldriver.py): TestParityHTMLCorners and
 // TestParityHTMLFuzz (callbacks over hand-written pages and 5,000 seeded random
-// snippets) and TestParityHTML5Entities (every html5 name, its near misses and
+// snippets), TestParityHTMLFeed (the same for Feed) and TestParityHTML5Entities (every html5 name, its near misses and
 // html.unescape over 46,851 texts). See docs/helpbuild.md, "The html.parser port".
 package pyhtml
