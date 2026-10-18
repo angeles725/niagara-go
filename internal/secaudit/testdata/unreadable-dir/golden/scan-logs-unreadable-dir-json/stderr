@@ -1,0 +1,2 @@
+WARNING: --scan-logs: 1 unreadable directory(ies) not scanned:
+  inputs/logs-locked/locked: Permission denied
