@@ -23,7 +23,8 @@ document disagree, the code wins and this document is corrected.
 | **S7b** (done) | bajadoc text from `.bajadoc` XML for the classes without an HTML page; the XML reader moved to the shared leaf `internal/bajadocxml` | `bajadoc_xml_parser.py`, `bajadoc_xml.py` (rest) | ~900 with tests |
 | **S8** (done) | class / inheritance / method indexes | `build_class_index.py`, `inheritance_builder.py`, `method_indexer.py` (+ the class attributes of `bajadoc_xml.parse_file`) | ~1,900 with tests |
 | **S9** (done) | source / slots / xref indexes; `call-index.json` is retired (decision I3-5), not ported | `source_indexer.py`, `slots_indexer.py`, `xref_builder.py` | ~2,000 with tests |
-| S10 | orchestration (`extract`, `versions add`, `rebuild-all`, `freshness`) | `extract_version.py`, `version_setup.py`, `version_report.py`, `maintenance.py` | ~750 |
+| **S10a** (done) | `rebuild-all` in process (plan, `--only`, `--dry-run`, `--stamp-only`, the corpus manifest), the `build.log` hook of `extract_and_index` | `maintenance.py` (`BUILDERS`, `cmd_rebuild_all`, the fingerprint), `version_setup._rebuild` | ~1,000 with tests |
+| S10 | orchestration (`extract`, `versions add`, `freshness`) and the nh wiring of `rebuild-all` | `extract_version.py`, `version_setup.py`, `version_report.py`, `maintenance.py` (rest) | ~750 |
 | **S10b-1** (done) | the coverage reports: `coverage`, `coverage <module>`, `coverage --doc-jars` (library + printers; the nh wiring is a later slice) | `coverage_report.py`, `doc_coverage.py` (+ `doc_types.classify`, `classify_unmapped`, `content_type`, `example_skip_reason`) | ~1,300 + tests |
 | **S11a** (done) | whole-install sweep gate (`coverage --sweep`, a `versions add` gate) as a library + report, on S10b-1's `Classify` and `Indexed`; nh wiring is a later slice | `install_sweep.py`, `course.gate` / `print_gate` | ~1,700 with tests |
 
@@ -790,6 +791,119 @@ real test builds a temporary one.
   object or a non-string truthy `source_pdf`, which are an error naming the file.
 - **File names that are not UTF-8** are not modelled (as in S7a and S9).
 
+## S10a: rebuild-all
+
+| File | Ports | Notes |
+|---|---|---|
+| `rebuildall.go` | `maintenance.BUILDERS`, `OPTIONAL_ARTIFACTS`, `cmd_rebuild_all`; `version_setup._rebuild`'s build.log part (`RebuildToLog`) | the plan is `Builders()` (14 rows, `call-index.json` retired); each builder is the Go entry point of its slice, called in process with the data root, and what the script prints is written to `Stdout`/`Stderr` after it returns (pdf_extractor streams through `PDFOptions.Emit`, progress entries included); the exit status is the script's, an error or a panic of the builder is exit 1 |
+| `rebuildall_stamp.go` | `SOURCE_DIRS`, `SOURCE_EXT`, `_fingerprint_dir`, `compute_fingerprint`, `_write_manifest` | `CorpusFingerprint` walks the five folders concurrently (`os.walk`: links to folders listed, not entered; a file whose size cannot be read not counted; `docs/` counts `*.pdf` by `str.lower()`); `StampManifest` takes the time first, then the fingerprint, as the dict literal does, and writes `json.dumps(indent=2)` atomically; `stamped_utc` is `isoformat()` (microseconds only when not zero) |
+
+API for the nh wiring (`internal/help` routes `rebuild-all` to it under the full-text scope
+lock; helpbuild never imports `internal/help` and takes no lock itself):
+
+```go
+res, err := helpbuild.RebuildAll(baseDir, helpbuild.RebuildOptions{
+	Only: only, DryRun: dryRun, StampOnly: stampOnly, // --only, --dry-run, --stamp-only
+	Stdout: os.Stdout, Stderr: os.Stderr,             // nil discards
+})
+// err != nil is where Python raises (a stream that cannot be written, a manifest that
+// cannot be saved): exit 1. Otherwise exit 0, failed builders included: run_rebuild_all
+// never exits non-zero; res.Failed counts them and res.Stamped is "" (manifest kept).
+
+res, err := helpbuild.ExtractAndIndex(repo, vid, helpbuild.SetupOptions{
+	Rebuild: helpbuild.RebuildToLog(os.Stderr), // stdout -> <root>/build.log, returns its tail
+})
+```
+
+What it prints, in order (stdout unless noted):
+
+- `--stamp-only`: `Manifest stamped at <stamped_utc> (baseline = current corpus).` and nothing else.
+- `REBUILD-ALL ` (with `(dry run)` after the space on a dry run), then 60 `=`.
+- per builder of the plan whose script starts with `--only`: `  SKIP  <label>  (source '<dir>/' absent)`
+  when its source folder is not a folder; else `  PLAN  <label>` on a dry run; else
+  `  RUN   <label>`, the builder's own stdout (and its stderr on stderr), and
+  `  FAIL  <script> (exit <n>)` when it exited non-zero. `<label>` is `{:26s} -> {}` of the
+  script and its artifacts (`jdk-class-index.json (when jdk/ exists)`).
+- a dry run: an empty line, `Dry run — nothing executed. Drop --dry-run to build.`
+- otherwise an empty line, `Ran <n>, skipped <n>, failed <n>.`, then
+  `Manifest re-stamped. Run 'freshness' to confirm FRESH.` (stamped after the line is
+  printed) or `Builders failed — manifest NOT updated (still reflects last good build).`
+
+The manifest Go writes is the bytes Python writes (`stamped_utc` aside), so nh `freshness`
+reads it as it reads Python's.
+
+`fulltext.sqlite` is not a rebuild-all builder on either side: the full-text index is
+built on demand by the search scope when its own fingerprint changes (Integrante2's
+`internal/helpbuild/fulltext`, called by nh), not by `maintenance.BUILDERS`.
+
+### What a concurrent reader sees
+
+nh calls RebuildAll under the full-text scope lock, while other nh commands may read the
+data root. Every index file is replaced by rename, never truncated in place:
+
+| Output | Written by | A reader during the run sees |
+|---|---|---|
+| `indexes/*.json` (class, jdk-class, inheritance, method, source, slots, xref, guides, devguide-toc, pdf) and `indexes/.manifest.json` | `WriteJSON` / `WriteText` (temp file + rename in the same folder) | the old file or the new one |
+| `guides-clean/`, `devguide-clean/`, `course-text/`, `devguide-examples/course/` | `RebuiltDir` (a sibling temp tree swapped in) | the old tree or the new one, and for the moment between the two renames (old aside, new in) no folder at all, as Python's `rebuilt_dir` |
+| `bajadoc-clean/`, `docs-text/` | page by page with `WriteText` (both are shared by two builders or kept page by page on failure) | whole pages only, old and new mixed while the builder runs; `docs-text/` drops stale pages after a clean run |
+| `indexes/pdf-index.json` stub (`ExtractAndIndex` only, when the file is absent) | `WriteText` (Python: a plain `open("w")`) | no file or `{}` |
+| `build.log` (`RebuildToLog` only) | plain truncating write, as Python | a growing log; nh reads none |
+
+### S10a parity (`testdata/rebuild/driver.py`, modes `plan`, `run`, `log`)
+
+The driver runs the `tools/` of the pinned niagara-help reference (`pyref.Dir(t,
+"niagara-help")`, the `pre-go-retire` worktree, with `pyref.Env`) under the CPython 3.15 the
+other drivers check; the real version roots are untracked, so they are copied from the
+live checkout. The driver takes `build_call_index.py` out of `maintenance.BUILDERS` before anything runs
+and sets the parent's stdout line-buffered (see the intended differences). Each scenario
+runs on one data-root path: built, run by Python (its builders as child processes),
+observed, removed, built again, run by Go, observed; so printed paths and the directory
+order the unsorted walks follow are equal and stdout, stderr and the whole tree
+(`build.log` included) are compared as they are. Normalized: `Done in`/`Time:` values,
+`stamped_utc` (checked to be `isoformat()`), a traceback on stderr against Go's
+`ERROR: <script> raised:` line (both `<raised>`), and the PDF page counts of Python's
+`pdf-index.json` (as `pyPDFTreeLines`).
+
+| Test | Compares |
+|---|---|
+| `TestParityRebuildPlan` | the plan rows (script, artifacts, source, skip-if `None`) and `OPTIONAL_ARTIFACTS` against `BUILDERS` minus exactly `build_call_index.py` |
+| `TestParityRebuildSynthetic` | the S7a, S7b, S8 and S9 fixtures merged with the S5 guide pages: a dry run, `--dry-run --only build_`, a full run, `--stamp-only`, a second run, the `build.log` hook (`_rebuild`: stub, log, tail, EMPTY lines); a root with no corpus folder (dry run, run, hook); a stamp, then a run where `bajadoc_parser` exits 1 and `xref_builder` raises (manifest kept), then the hook; `--only zzz` (nothing runs, the manifest is stamped) |
+| `TestParityRebuildReal` | `--dry-run`, then a full rebuild-all of a copy of each listed version root (`HELPBUILD_PARITY_REBUILD=<id>[:<id>...]`), registered in a temporary repo with its real `install_dir` and `course_dir`, so the PDF manuals and the course are converted too; logs both run times |
+
+Measured 2026-10-18 (dry run then full run; stdout, stderr and the whole data-root tree
+identical after both steps, CPython 3.15 with the builders as child processes vs Go in
+process, wall time of the two steps, PDFs converted from the installs under /mnt/c):
+
+| Version | Lines compared (both steps) | Python | Go |
+|---|---|---|---|
+| 4.3.58.18 | 69,754 | 137.9 s | 89.2 s |
+| 4.14.0.162 (data root `.`) | 115,415 | 760.5 s | 623.1 s |
+
+Most of the time is pdftotext on the manuals (the same binary on both sides).
+
+### S10a intended differences
+
+- **`call-index.json` is retired** (decision I3-5): the plan has no `build_call_index.py`
+  row, so `--only build_c` runs `build_class_index.py` only, the `Ran`/`skipped` counts of a
+  version with `source/` are one lower than Python's, and no `call-index.json` is written
+  or stamped empty.
+- **A builder that raises**: Python's child prints a traceback on stderr; Go prints one line,
+  `ERROR: <script> raised: <error>`. A panic of a Go builder is caught the same way (in
+  Python the child process dies alone). Both are `  FAIL  <script> (exit 1)` and the run
+  goes on.
+- **Output order**: Go writes the orchestrator's lines and each builder's output in run
+  order on any stream. Python's own lines are line-buffered only on a terminal: to a pipe
+  or a file (`nh rebuild-all | tee`, the `build.log` of `extract_version`) they wait in
+  the block buffer and come after all the builders' output. The `build.log` tail
+  (`SKIP`/`FAIL`/`Ran` lines) is the same either way; the parity driver line-buffers to
+  compare the terminal order.
+- **stdout and stderr of one builder** are written when it returns, stdout first
+  (pdf_extractor's stdout streams); on a terminal Python's child interleaves them as it
+  prints. Each stream on its own is byte-identical.
+- **The `pdf-index.json` stub** of `ExtractAndIndex` is an atomic write with mode 0644
+  (Python's `open("w")` is not atomic and takes 0666 less the umask; the same bytes and
+  mode under the usual umask 022).
+
 ## Real-data parity
 
 Every test that reads a real install or the real corpus runs only on request, `-short`
@@ -816,6 +930,10 @@ cache, glob, toc and fuzz parity tests (5,000 snippets) stay on in `go test`.
 | `HELPBUILD_PARITY_SWEEP=a:b` | `TestParitySweepReal` on that list of version ids (only this variable turns it on; a list naming no version fails) |
 
 `make parity` sets `REAL`, `FULL`, `415`, `INDEXES=4.14.0.162:4.15.6.20:4.3.58.18`, `COVERAGE=4.14.0.162:4.15.6.20` and `SWEEP=4.15.6.20:4.3.58.18` and runs every `Parity` test of the package (the sweep adds about 100 s over a warm jar-listing cache).
+
+| `HELPBUILD_PARITY_REBUILD=a:b` | `TestParityRebuildReal` on that list of version ids (off otherwise; not part of the `REAL` umbrella) |
+
+`make parity` sets `REAL`, `FULL`, `415`, `INDEXES=4.14.0.162:4.15.6.20:4.3.58.18` and `REBUILD=4.3.58.18` and runs every `Parity` test of the package.
 Timings on the development laptop: `go test ./internal/helpbuild/` about 20 s without the
 variables (about 170 s when the real tests ran by default); `HELPBUILD_PARITY_REAL=1 go test ./internal/helpbuild/` about 2.5 min (the 4.14 coverage reports
 about 80 s of it); `make parity` 8 to 10 min (the full-install sweep 80 s or more over /mnt/c,

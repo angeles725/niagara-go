@@ -67,7 +67,8 @@ func needRealParity(t *testing.T, finer ...string) {
 // parityVars are every HELPBUILD_PARITY_* variable, switches first.
 var parityVars = []string{realParityVar, "HELPBUILD_PARITY_FULL", "HELPBUILD_PARITY_415",
 	"HELPBUILD_PARITY_JARS", "HELPBUILD_PARITY_PDF_DOCS", "HELPBUILD_PARITY_COURSE", "HELPBUILD_PARITY_BAJADOC",
-	"HELPBUILD_PARITY_BAJADOCXML", "HELPBUILD_PARITY_INDEXES", "HELPBUILD_PARITY_COVERAGE", "HELPBUILD_PARITY_SWEEP"}
+	"HELPBUILD_PARITY_BAJADOCXML", "HELPBUILD_PARITY_INDEXES", "HELPBUILD_PARITY_COVERAGE", "HELPBUILD_PARITY_SWEEP",
+	rebuildParityVar}
 
 // parityRequested names the first HELPBUILD_PARITY_* variable set (as
 // "NAME=value"), "" when none is: the run asked for parity, so a missing
