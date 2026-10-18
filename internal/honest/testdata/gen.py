@@ -1,15 +1,26 @@
 """Regenerate internal/honest/testdata/fixtures.json from tools/lib/honest.py.
 
-Run: python3 -I internal/honest/testdata/gen.py   (NIAGARA_RESEARCH overrides the checkout path)
+Run: python3 -I internal/honest/testdata/gen.py   (NIAGARA_RESEARCH_PY_REF overrides the worktree path)
 """
 import contextlib
 import io
 import json
 import os
+import subprocess
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-NR = os.environ.get("NIAGARA_RESEARCH", "/home/cristian/niagara-research")
+
+
+def py_ref(repo, env, rev):  # D47: a clean worktree of <repo> tag pre-go-retire (docs/goldens.md)
+    root = os.environ.get(env) or os.path.expanduser("~/niagara-research-worktrees/pre-go-retire-" + repo)
+    git = lambda *a: subprocess.run(["git", "-C", root, *a], capture_output=True, text=True).stdout.strip()  # noqa: E731
+    if git("rev-parse", "HEAD") != rev or git("status", "--porcelain", "--untracked-files=no"):
+        sys.exit(f"{env}={root}: not a clean worktree of {repo} tag pre-go-retire ({rev[:9]}); see docs/goldens.md")
+    return root
+
+
+NR = py_ref("niagara-research", "NIAGARA_RESEARCH_PY_REF", "c846ce1e5eb92ee6d938efbb3585473a545f7e50")
 sys.path.insert(0, os.path.join(NR, "tools", "lib"))
 
 import honest  # noqa: E402

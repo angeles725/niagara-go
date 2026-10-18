@@ -1,6 +1,6 @@
 """Regenerate internal/textfold/unicode.txt and testdata/fixtures.json from the Python tools.
 
-Run: python3 -I internal/textfold/testdata/gen.py   (NIAGARA_RESEARCH overrides the checkout path)
+Run: python3 -I internal/textfold/testdata/gen.py   (the *_PY_REF variables override the worktree paths)
 
 unicode.txt holds the per-code-point facts of THIS Python's unicodedata that the Go package needs
 (Go's stdlib has no NFKD and a different Unicode version). Each line is one record kind followed
@@ -20,13 +20,25 @@ import hashlib
 import json
 import os
 import random
+import subprocess
 import sys
 import unicodedata
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-NR = os.environ.get("NIAGARA_RESEARCH", "/home/cristian/niagara-research")
-sys.path[:0] = [os.path.join(NR, "tools", "lib"), os.path.join(NR, "module-navigator", "tools"),
-                os.path.join(NR, "niagara-help", "tools")]
+
+
+def py_ref(repo, env, rev):  # D47: a clean worktree of <repo> tag pre-go-retire (docs/goldens.md)
+    root = os.environ.get(env) or os.path.expanduser("~/niagara-research-worktrees/pre-go-retire-" + repo)
+    git = lambda *a: subprocess.run(["git", "-C", root, *a], capture_output=True, text=True).stdout.strip()  # noqa: E731
+    if git("rev-parse", "HEAD") != rev or git("status", "--porcelain", "--untracked-files=no"):
+        sys.exit(f"{env}={root}: not a clean worktree of {repo} tag pre-go-retire ({rev[:9]}); see docs/goldens.md")
+    return root
+
+
+NR = py_ref("niagara-research", "NIAGARA_RESEARCH_PY_REF", "c846ce1e5eb92ee6d938efbb3585473a545f7e50")
+MNAV = py_ref("module-navigator", "MODULE_NAVIGATOR_PY_REF", "f897268e900138e08a82bf1b389a1715c1be26e1")
+NHELP = py_ref("niagara-help", "NIAGARA_HELP_PY_REF", "8410d74511673e38b87622f7214fa5210ba25a63")
+sys.path[:0] = [os.path.join(NR, "tools", "lib"), os.path.join(MNAV, "tools"), os.path.join(NHELP, "tools")]
 
 import textsearch  # noqa: E402
 from module_nav_lib import class_rank, corpus  # noqa: E402
