@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"path/filepath"
 	"sort"
-	"strconv"
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/index"
@@ -65,9 +64,9 @@ func readClassIndex(baseDir string) ([]classIndexEntry, error) {
 			}
 			ce := classIndexEntry{Name: name}
 			outer, _ := e.Get("outer_class")
-			ce.Outer = truthy(outer)
+			ce.Outer = index.Truthy(outer)
 			inner, _ := e.Get("inner")
-			ce.innerFile = truthy(inner) || !(outer == nil || outer == "" || outer == "None")
+			ce.innerFile = index.Truthy(inner) || !(outer == nil || outer == "" || outer == "None")
 			if m, ok := e.Get("module"); ok && m == nil {
 				ce.ModuleNull = true
 			}
@@ -138,25 +137,6 @@ func optField(e *index.Object, key string) (string, error) {
 		return "", fmt.Errorf("%s is not a string", key)
 	}
 	return s, nil
-}
-
-// truthy is bool(v) for a decoded JSON value.
-func truthy(v any) bool {
-	switch t := v.(type) {
-	case nil:
-		return false
-	case bool:
-		return t
-	case string:
-		return t != ""
-	case []any:
-		return len(t) > 0
-	case *index.Object:
-		return t.Len() > 0
-	default: // json.Number
-		f, err := strconv.ParseFloat(fmt.Sprint(t), 64)
-		return err != nil || f != 0
-	}
 }
 
 // orderedLists is a dict of str -> list in insertion order, each list without

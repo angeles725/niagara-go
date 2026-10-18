@@ -229,7 +229,7 @@ func TopLevelFiles(classes *index.Object) []ClassEntry {
 			pv, _ := e.Get("path")
 			path, _ := pv.(string)
 			inner := false
-			if v, ok := e.Get("inner"); ok && truthy(v) {
+			if v, ok := e.Get("inner"); ok && index.Truthy(v) {
 				inner = true
 			}
 			if v, ok := e.Get("outer_class"); ok {
@@ -237,7 +237,7 @@ func TopLevelFiles(classes *index.Object) []ClassEntry {
 					inner = true
 				}
 			}
-			if inner || !truthy(pv) || seen[path] {
+			if inner || !index.Truthy(pv) || seen[path] {
 				continue
 			}
 			seen[path] = true

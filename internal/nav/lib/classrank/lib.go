@@ -83,19 +83,13 @@ func isFile(p string) bool {
 	return err == nil && st.Mode().IsRegular()
 }
 
-// truthy is bool(v) for the `_meta or {}` of a decoded value.
-func truthy(v any) bool {
-	o, ok := v.(*index.Object)
-	return ok && o.Len() > 0
-}
-
 // ClassTables is (data["classes"], data["_meta"] or None) of a class index;
 // ok is false when it has no classes table.
 func ClassTables(data *index.Object) (classes, meta *index.Object, ok bool) {
 	if v, _ := data.Get("classes"); v != nil {
 		classes, _ = v.(*index.Object)
 	}
-	if v, _ := data.Get("_meta"); truthy(v) {
+	if v, _ := data.Get("_meta"); index.Truthy(v) {
 		meta, _ = v.(*index.Object)
 	}
 	return classes, meta, classes != nil

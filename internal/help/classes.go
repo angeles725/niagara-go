@@ -158,7 +158,7 @@ func (e *Env) Class(p ClassParams) error {
 		fmt.Fprintf(e.Out, "%d classes named '%s':\n", len(hits), p.Name)
 		for _, h := range hits {
 			mod := ""
-			if truthy(h.Module) {
+			if index.Truthy(h.Module) {
 				mod = ", " + pyStr(h.Module)
 			}
 			fmt.Fprintf(e.Out, "  %s (%s%s)\n", h.qualified(), h.Type, mod)
@@ -168,7 +168,7 @@ func (e *Env) Class(p ClassParams) error {
 	}
 	h := hits[0]
 	fmt.Fprintf(e.Out, "CLASS: %s\nPACKAGE: %s\nTYPE: %s\n", h.Name, h.Package, h.Type)
-	if truthy(h.Module) {
+	if index.Truthy(h.Module) {
 		fmt.Fprintf(e.Out, "MODULE: %s\n", pyStr(h.Module))
 	}
 	fmt.Fprintln(e.Out, sourceLabel(h.Path))

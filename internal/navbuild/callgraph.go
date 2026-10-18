@@ -57,7 +57,7 @@ func readParentMap(baseDir string) (map[string]string, bool, error) {
 	for i, cls := range obj.Keys() {
 		chain, ok := obj.Values()[i].([]any)
 		if !ok {
-			if truthy(obj.Values()[i]) {
+			if index.Truthy(obj.Values()[i]) {
 				return nil, true, fmt.Errorf("%s: class_to_chain[%q] is not a list", path, cls)
 			}
 			continue

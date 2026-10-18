@@ -126,7 +126,7 @@ func metaSource(meta *index.Object) string {
 		return ""
 	}
 	for _, k := range []string{"source", "source_root"} {
-		if v, ok := meta.Get(k); ok && truthy(v) {
+		if v, ok := meta.Get(k); ok && index.Truthy(v) {
 			return PyStr(v)
 		}
 	}

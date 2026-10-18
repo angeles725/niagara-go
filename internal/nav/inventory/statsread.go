@@ -51,7 +51,7 @@ func summarize(path string, full bool) summary {
 	if err != nil {
 		return summary{}
 	}
-	s := summary{Loaded: true, Full: true, Truthy: truthy(v)}
+	s := summary{Loaded: true, Full: true, Truthy: index.Truthy(v)}
 	switch t := v.(type) {
 	case *index.Object:
 		s.Len = int64(t.Len())
@@ -119,24 +119,4 @@ func metaFromPrefix(path string) (summary, bool) {
 		s.Meta = []byte(core.Dumps(m, -1))
 	}
 	return s, true
-}
-
-// truthy is bool(v) for a decoded value.
-func truthy(v any) bool {
-	switch t := v.(type) {
-	case nil:
-		return false
-	case bool:
-		return t
-	case string:
-		return t != ""
-	case int64:
-		return t != 0
-	case *index.Object:
-		return t != nil && t.Len() > 0
-	case []any:
-		return len(t) > 0
-	}
-	f, _ := index.Float(v)
-	return f != 0
 }

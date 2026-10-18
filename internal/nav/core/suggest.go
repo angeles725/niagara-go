@@ -142,7 +142,7 @@ func ClassScope(data *index.Object) string {
 	}
 	modules := Commas(int64(len(mods)))
 	if meta != nil {
-		if v, ok := meta.Get("modules"); ok && truthy(v) {
+		if v, ok := meta.Get("modules"); ok && index.Truthy(v) {
 			if n, isInt := index.Int(v); isInt {
 				modules = Commas(n)
 			} else {
