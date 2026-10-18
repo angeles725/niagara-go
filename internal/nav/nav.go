@@ -1,7 +1,3 @@
-// Package nav is module-nav (module-navigator tools/module_nav.py): the parser built
-// from the command registry, base directory detection and dispatch. Each command group
-// lives in its own package under nav/ and registers itself; importing them here is
-// what makes them part of the CLI.
 package nav
 
 import (
