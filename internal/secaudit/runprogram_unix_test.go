@@ -3,13 +3,19 @@
 package secaudit
 
 import (
+	"bytes"
+	"errors"
+	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"syscall"
 	"testing"
 	"time"
+
+	"github.com/angeles725/niagara-go/internal/cli"
 )
 
 // forkingKeytool is a keytool wrapper that forks its "JVM" (a long sleep), writes the fork's pid
@@ -30,6 +36,83 @@ func TestTimeoutKillsForkedChildren(t *testing.T) {
 	pid, ok := readPid(filepath.Join(dir, "child.pid"))
 	if !ok {
 		t.Skip("the fake keytool did not fork its child within the 1 s timeout")
+	}
+	waitGone(t, pid)
+}
+
+// interruptHelperEnv makes the test binary act as the audit process of killsChildGroupOn: its
+// value is the keytool timeout (fakeKeytool sets it in the parent only) and interruptHomeEnv the
+// Niagara home to audit.
+const (
+	interruptHelperEnv = "SECAUDIT_INTERRUPT_HELPER_TIMEOUT"
+	interruptHomeEnv   = "SECAUDIT_INTERRUPT_HELPER_HOME"
+)
+
+// Ctrl-C on the audit while keytool runs kills keytool's whole process group, which does not get
+// the terminal's SIGINT itself, and the audit dies of SIGINT (130) without printing a report.
+func TestInterruptKillsChildGroup(t *testing.T) { killsChildGroupOn(t, syscall.SIGINT) }
+
+// SIGTERM to the audit does the same, and the audit dies of SIGTERM (143).
+func TestTerminateKillsChildGroup(t *testing.T) { killsChildGroupOn(t, syscall.SIGTERM) }
+
+// killsChildGroupOn re-runs the test binary as the audit (Main on a home with a truststore, so
+// the audit runs the forking fake keytool), waits for the fake keytool to fork, signals the audit
+// and checks that it died of sig, printed nothing on stdout and that the forked child is gone.
+func killsChildGroupOn(t *testing.T, sig syscall.Signal) {
+	if v := os.Getenv(interruptHelperEnv); v != "" {
+		d, err := time.ParseDuration(v)
+		if err != nil {
+			fmt.Printf("bad %s=%q: %v\n", interruptHelperEnv, v, err)
+			os.Exit(4)
+		}
+		keytoolTimeout = d
+		code := Main([]string{os.Getenv(interruptHomeEnv)}, cli.Stdio{In: os.Stdin, Out: os.Stdout, Err: os.Stderr})
+		fmt.Printf("audit survived %s: exit %d\n", sig, code)
+		os.Exit(3)
+	}
+	needProc(t)
+	dir := fakeKeytool(t, 30*time.Second, forkingKeytool)
+	home := homeWithTruststore(t)
+	self, err := os.Executable()
+	if err != nil {
+		t.Fatal(err)
+	}
+	cmd := exec.Command(self, "-test.run=^"+t.Name()+"$")
+	cmd.Env = append(os.Environ(), interruptHelperEnv+"="+keytoolTimeout.String(), interruptHomeEnv+"="+home)
+	var out bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, os.Stderr
+	if err := cmd.Start(); err != nil {
+		t.Fatal(err)
+	}
+	waited := false
+	defer func() {
+		if !waited {
+			_ = cmd.Process.Kill()
+			_ = cmd.Wait()
+		}
+	}()
+	pidFile := filepath.Join(dir, "child.pid")
+	deadline := time.Now().Add(10 * time.Second)
+	pid, ok := readPid(pidFile)
+	for ; !ok; pid, ok = readPid(pidFile) {
+		if time.Now().After(deadline) {
+			t.Fatal("the fake keytool never forked its child")
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+	if err := cmd.Process.Signal(sig); err != nil {
+		t.Fatal(err)
+	}
+	err = cmd.Wait()
+	waited = true
+	var exitErr *exec.ExitError
+	if !errors.As(err, &exitErr) {
+		t.Errorf("audit process ended with %v, want death by %s", err, sig)
+	} else if ws := exitErr.Sys().(syscall.WaitStatus); !ws.Signaled() || ws.Signal() != sig {
+		t.Errorf("audit process ended with %v, want death by %s", exitErr, sig)
+	}
+	if out.Len() > 0 {
+		t.Errorf("audit printed on stdout, want no report:\n%s", out.String())
 	}
 	waitGone(t, pid)
 }
