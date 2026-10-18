@@ -107,7 +107,7 @@ func parseGuidesInto(res *TextResult, guidesDir, outDir string) error {
 				res.Warnings = append(res.Warnings, warning)
 			}
 		}
-		dupWalk(folderPath, func(dir string, dirs, files []string) []string {
+		pyWalk(folderPath, func(dir string, dirs, files []string) []string {
 			for _, fname := range files {
 				if werr != nil || !IsGuidePage(fname) {
 					continue
@@ -196,7 +196,7 @@ func parseDevguideInto(res *TextResult, baseDir, devguideDir, outDir string) err
 	chars := 0
 	var excluded []string
 	var werr error
-	dupWalk(devguideDir, func(dir string, dirs, files []string) []string {
+	pyWalk(devguideDir, func(dir string, dirs, files []string) []string {
 		for _, fname := range files {
 			if werr != nil {
 				break

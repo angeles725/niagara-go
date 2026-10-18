@@ -18,7 +18,7 @@ document disagree, the code wins and this document is corrected.
 | **S3** (done) | PDF text (`pdftotext -layout -enc UTF-8`, `docs-text/`, `pdf-index.json`) | `pdf_extractor.py` (+ the `os`/`shutil`/`json` and registry helpers S4 shares) | ~1,970 with tests |
 | **S4** (done) | developer course (`course-text/`, `devguide-examples/course/`); `gate()` waits for S10 (it reads the full-text index) | `course_extractor.py`, `course.py` (part) | ~670 with tests |
 | **S5** (done) | `html_text` (html.parser with `convert_charrefs`) + guides/devguide parsers | `html_text.py`, `guides_parser.py`, `guide_toc.py`, `devguide_parser.py` | ~2,100 with tests |
-| **S6** (done) | `guides-index.json` + `devguide-toc.json` | `build_guides_index.py`, `build_devguide_toc.py` | ~1,100 with tests (S3 duplicates included) |
+| **S6** (done) | `guides-index.json` + `devguide-toc.json` | `build_guides_index.py`, `build_devguide_toc.py` | ~930 with tests |
 | S7 | bajadoc text (`bajadoc-clean/`) | `bajadoc_parser.py`, `bajadoc_xml_parser.py`, `bajadoc_xml.py` | ~800 |
 | S8 | class / inheritance / method indexes | `build_class_index.py`, `inheritance_builder.py`, `method_indexer.py` | ~550 |
 | S9 | source / slots / xref / call indexes | `source_indexer.py`, `slots_indexer.py`, `xref_builder.py`, `build_call_index.py` | ~800 |
@@ -309,9 +309,8 @@ second package needs them.
 | `htmltext.go` | `html_text.convert` as `HTMLToText(page) (title, text)` | Python's Unicode `\s`, `strip` and `\w` (`pycompat.IsSpace`, `IsWordRune`) |
 | `guidetoc.go` | `guide_toc.find_toc`, `parse_toc`, `count_items` | ElementTree is `internal/pyxml` in ETree mode; the warning is returned, not printed |
 | `guidesparser.go` | `guides_parser.parse_guides`, `_markdown_title`, `devguide_parser.parse_devguide` | `RebuiltDir`; `TextResult.Log` = stdout lines, `.Warnings` = stderr lines |
-| `guidesindex.go` | `build_guides_index` (`topic_name`, `known_jar_names`, `modules_dir_of`, `jar_for_folder`, `previous_jars`, `build`, `main`) | `JarSources` replaces the `_MANIFEST` sentinels; `Unknown` is `jar_names=None` |
+| `guidesindex.go` | `build_guides_index` (`topic_name`, `known_jar_names`, `modules_dir_of`, `jar_for_folder`, `previous_jars`, `build`, `main`) | `JarSources` replaces the `_MANIFEST` sentinels; `Unknown` is `jar_names=None`; the walk, `json.load` and registry lookups are S3's (`pyfs.go`, `registry.go`) |
 | `devguidetoc.go` | `build_devguide_toc.build`, `main` | its regexes run through `internal/pyre` (Python semantics, code-point offsets) |
-| `dup_s3helpers.go` | S3's `pyWalk`, `loadJSON`, `identify`, `installDir` (feat/i3-helpbuild-s3 360a4ef) | **duplicates** with a `dup` prefix so both branches compile together; delete when S3 lands |
 
 API for S10 (`maintenance.BUILDERS` runs these as subprocesses; the Go orchestration calls
 them in process and prints `Log`, then `Warnings` on stderr):
@@ -389,7 +388,6 @@ Go does not export its table, so `isHTML5Entity` reads it through `html.Unescape
 - **`pycompat.HTMLUnescape`** should learn `&nGt;` / `&nLt;`; `htmlUnescape` and
   `goMissingEntities` then go away. `isHTML5Entity` would sit well next to it.
 - **`pyxml`**: the BOM + declared-encoding gap above belongs in `applyEncoding`.
-- **`dup_s3helpers.go`** is deleted when S3 lands (its functions become S3's).
 
 ## Dead code not ported
 

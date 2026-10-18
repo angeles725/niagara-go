@@ -84,7 +84,7 @@ func KnownJarNames(baseDir string) (names []string, ok bool, err error) {
 	if err != nil {
 		return nil, false, err
 	}
-	vid, err := dupIdentify(abs)
+	vid, err := identify(abs)
 	if err != nil || vid == "" {
 		return nil, false, err
 	}
@@ -93,7 +93,7 @@ func KnownJarNames(baseDir string) (names []string, ok bool, err error) {
 		if !isRegular(manifest) {
 			continue
 		}
-		data, err := dupLoadJSON(manifest)
+		data, err := loadJSON(manifest)
 		if err != nil {
 			return nil, false, err
 		}
@@ -125,7 +125,7 @@ func KnownJarNames(baseDir string) (names []string, ok bool, err error) {
 // the version whose data root is baseDir, "" when unregistered or not a
 // folder.
 func ModulesDirOf(baseDir string) (string, error) {
-	install, err := dupInstallDir(baseDir)
+	install, err := installDir(baseDir)
 	if err != nil || install == "" {
 		return "", err
 	}
@@ -175,8 +175,8 @@ func jarForFolder(folder, rawFolder string, src JarSources, rules *Rules) (jar p
 // under baseDir; empty when it is absent or unreadable (what Python
 // catches: an OSError, a ValueError, a top level that is not a dict).
 func previousJars(baseDir string) (map[string]pyjson.Value, error) {
-	data, err := dupLoadJSON(pyJoin(baseDir, "indexes", "guides-index.json"))
-	var le *dupJSONLoadError
+	data, err := loadJSON(pyJoin(baseDir, "indexes", "guides-index.json"))
+	var le *JSONLoadError
 	if errors.As(err, &le) {
 		return nil, nil
 	}
@@ -221,7 +221,7 @@ func GuidesIndex(baseDir string, src JarSources) (index pyjson.Value, kept, warn
 		var pages []string
 		htmlCount := 0
 		var werr error
-		dupWalk(path, func(dir string, dirs, files []string) []string {
+		pyWalk(path, func(dir string, dirs, files []string) []string {
 			for _, f := range files {
 				if low := textfold.Lower(f); strings.HasSuffix(low, ".html") || strings.HasSuffix(low, ".htm") {
 					htmlCount++
