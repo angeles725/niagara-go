@@ -25,10 +25,11 @@ var updateS9 = flag.Bool("update-s9", false, "rewrite testdata/s9/golden/ from t
 // s9Builders are the S9 driver modes and their Go builders.
 var s9Builders = map[string]func(string) (*IndexResult, error){
 	"source": BuildSourceIndex,
+	"slots":  BuildSlotsIndex,
 }
 
 // s9Modes are the S9 driver modes, in the order rebuild-all runs them.
-var s9Modes = []string{"source"}
+var s9Modes = []string{"source", "slots"}
 
 // s9Indexes are the files each mode writes.
 var s9Indexes = map[string]string{"source": "source-index.json", "slots": "slots-index.json", "xref": "xref-index.json"}
@@ -191,7 +192,8 @@ func s9Corners(t *testing.T, base string) {
 }
 
 // A .java file that cannot be read (skipped by source and slots, named
-// after its file by xref): the lines and the index of each builder are
+// after its file by xref) and a .bajadoc that cannot be read (slots
+// raises, nothing written): the lines and the index of each builder are
 // compared (the trees cannot be read whole).
 func TestParityS9Unreadable(t *testing.T) {
 	driver(t)
@@ -206,6 +208,11 @@ func TestParityS9Unreadable(t *testing.T) {
 			t.Fatal(err)
 		}
 		t.Cleanup(func() { _ = os.Chmod(locked, 0o644) })
+		xml := filepath.Join(b, "guides", "clX", "Sample.bajadoc")
+		if err := os.Chmod(xml, 0); err != nil {
+			t.Fatal(err)
+		}
+		t.Cleanup(func() { _ = os.Chmod(xml, 0o644) })
 	}
 	for _, mode := range s9Modes {
 		pyLines, _ := runIndexDriver(t, mode, pyBase)
@@ -254,4 +261,41 @@ func TestParityS9Real(t *testing.T) {
 // "X.java.java", non-ASCII names, devguide-rc/).
 func TestBuildSourceIndexFixture(t *testing.T) {
 	checkS9Golden(t, "source")
+}
+
+// TestBuildSlotsIndexFixture: the Go slots index of the fixture against
+// the golden file (multi-line annotations, nested parentheses, literals
+// holding commas, quotes and "=", comments inside and around annotations,
+// unnamed and duplicate keys, a closer that does not match, slots merged
+// from devguide/ and guides/ .bajadoc classes with and without a source
+// entry, module or package).
+func TestBuildSlotsIndexFixture(t *testing.T) {
+	checkS9Golden(t, "slots")
+}
+
+// collision_key: three same-name classes keep three entries; when every
+// key is taken the "#n" key is used and a warning printed
+// (test_review_advisories.TestSlotsCollisionKey).
+func TestSlotsCollisionKey(t *testing.T) {
+	x := &slotsIndex{entries: map[string]*slotsEntry{}, res: &IndexResult{}}
+	for _, pkg := range []string{"p1", "p2", "p3"} {
+		x.put(x.collisionKey("BX", "mod", pkg), &slotsEntry{pkg: pkg})
+	}
+	if got := strings.Join(x.keys, "|"); got != "BX|BX (mod)|BX (p3)" {
+		t.Errorf("keys %q", got)
+	}
+	for _, k := range []string{"BY", "BY (m)", "BY (p)", "BY (m, p)"} {
+		x.put(k, &slotsEntry{})
+	}
+	if key := x.collisionKey("BY", "m", "p"); key != "BY (m, p) #2" || len(x.res.Stderr) != 1 ||
+		!strings.HasPrefix(x.res.Stderr[0], "WARNING: slots for BY declared more than once") {
+		t.Errorf("exhausted keys: %q, stderr %q", key, x.res.Stderr)
+	}
+	if key := x.collisionKey("BZ", "", ""); key != "BZ" {
+		t.Errorf("free name: %q", key)
+	}
+	x.put("BZ", &slotsEntry{})
+	if key := x.collisionKey("BZ", "", ""); key != "BZ ()" {
+		t.Errorf("no qualifier: %q", key)
+	}
 }

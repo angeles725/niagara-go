@@ -1,0 +1,211 @@
+{
+  "BComponent": {
+    "module": "baja-rt",
+    "package": "javax.baja.sys",
+    "properties": [
+      {
+        "name": "out",
+        "type": "BStatusNumeric",
+        "defaultValue": "new BStatusNumeric(0, BStatus.ok)",
+        "flags": "Flags.SUMMARY | Flags.READONLY",
+        "facets": "@Facet(name = \"BFacets.MIN\", value = \"0\")"
+      },
+      {
+        "name": "label",
+        "type": "String",
+        "defaultValue": "a, (b) \\\"c\\\" = d"
+      },
+      {
+        "name": "x",
+        "type": "int",
+        "defaultValue": "\"1\" + \"2\""
+      },
+      {
+        "name": "spaced",
+        "type": "boolean",
+        "defaultValue": "true"
+      },
+      {
+        "name": "dup2",
+        "type": "BValue"
+      },
+      {
+        "name": "arr",
+        "type": "BValue[]",
+        "defaultValue": "new BValue[] { BValue.a, BValue.b }"
+      },
+      {
+        "name": "commented",
+        "type": "int"
+      },
+      {
+        "name": "inner",
+        "type": "char",
+        "defaultValue": "')'"
+      },
+      {
+        "name": "slotOnlyInXml",
+        "origin": "bajadoc",
+        "type": "BValue"
+      },
+      {
+        "name": "map",
+        "origin": "bajadoc",
+        "type": "java.util.Map"
+      }
+    ],
+    "actions": [
+      {
+        "name": "execute"
+      },
+      {
+        "name": "set",
+        "parameterType": "BDouble",
+        "defaultValue": "BDouble.make(0)",
+        "flags": "Flags.OPERATOR"
+      },
+      {
+        "name": "fire",
+        "origin": "bajadoc",
+        "parameterType": "BBoolean",
+        "returnType": "BValue"
+      },
+      {
+        "name": "noop",
+        "origin": "bajadoc"
+      },
+      {
+        "name": "bare",
+        "origin": "bajadoc"
+      }
+    ],
+    "topics": [
+      {
+        "name": "changed",
+        "eventType": "BValue"
+      },
+      {
+        "name": "unbalanced",
+        "eventType": "\"BValue"
+      },
+      {
+        "name": "evt",
+        "origin": "bajadoc",
+        "eventType": "BEvent"
+      },
+      {
+        "name": "silent",
+        "origin": "bajadoc"
+      }
+    ]
+  },
+  "BCafé": {
+    "module": "baja-rt",
+    "package": "javax.baja.sys",
+    "properties": [
+      {
+        "name": "température",
+        "type": "double",
+        "defaultValue": "21°"
+      }
+    ]
+  },
+  "BObject": {
+    "module": "control-rt",
+    "package": "javax.baja.control",
+    "properties": [
+      {
+        "name": "shadow",
+        "type": "int",
+        "defaultValue": "0"
+      }
+    ],
+    "topics": [
+      {
+        "name": "moved",
+        "origin": "bajadoc",
+        "eventType": "BValue"
+      }
+    ]
+  },
+  "BNumericPoint": {
+    "module": "control-rt",
+    "package": "javax.baja.control",
+    "properties": [
+      {
+        "name": "facets",
+        "type": "BFacets",
+        "defaultValue": "BFacets.makeNumeric(1)"
+      }
+    ]
+  },
+  "Sample": {
+    "module": "nopkg-rt",
+    "properties": [
+      {
+        "name": "p",
+        "type": "int"
+      }
+    ]
+  },
+  "BObject (baja)": {
+    "module": "baja",
+    "package": "javax.baja.sys",
+    "origin": "bajadoc",
+    "properties": [
+      {
+        "name": "rootSlot",
+        "origin": "bajadoc",
+        "type": "BString"
+      }
+    ]
+  },
+  "BVav": {
+    "module": "clHVAC-rt",
+    "package": "com.hvac",
+    "origin": "bajadoc",
+    "properties": [
+      {
+        "name": "damper",
+        "origin": "bajadoc",
+        "type": "BDamper"
+      }
+    ],
+    "actions": [
+      {
+        "name": "flush",
+        "origin": "bajadoc",
+        "parameterType": "BRelTime"
+      }
+    ]
+  },
+  "Sample (clX)": {
+    "module": "clX",
+    "package": "",
+    "origin": "bajadoc",
+    "properties": [
+      {
+        "name": "q",
+        "origin": "bajadoc",
+        "type": "int"
+      }
+    ]
+  },
+  "Loose": {
+    "module": "",
+    "package": "",
+    "origin": "bajadoc",
+    "properties": [
+      {
+        "name": "r",
+        "origin": "bajadoc",
+        "type": "int"
+      },
+      {
+        "name": "s",
+        "origin": "bajadoc",
+        "type": "int"
+      }
+    ]
+  }
+}
