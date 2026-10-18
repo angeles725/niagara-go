@@ -179,7 +179,7 @@ func TestSearchQuality(t *testing.T) {
 	rows := loadQualityRows(t)
 	paths := defaultPaths(os.Getenv)
 	d := newDoor()
-	d.bind(paths, os.Getenv)
+	d.bind(os.Getenv)
 	search := func(q string) map[string]*Outcome {
 		out := map[string]*Outcome{}
 		for _, o := range d.search(q, paths, qualityLimit, "", qualityTimeout, qualityDocVersion) {

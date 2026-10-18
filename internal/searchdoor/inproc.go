@@ -26,7 +26,7 @@ var processStart = time.Now()
 var testBackend Backend
 
 // newDoor is the front door of the binaries: the in-process backends (door.bind
-// then gives them the script paths they answer for).
+// then gives them the command's environment).
 func newDoor() *door {
 	b := testBackend
 	if b == nil {
@@ -39,22 +39,19 @@ func newDoor() *door {
 // own (its fingerprint holds the executable's stat).
 const blocksCacheTag = ".nsearch"
 
-// inprocBackend answers the backend calls in process. paths are the backend
-// scripts it answers for and getenv the environment its sources read
-// (bindPaths; unbound, the process's); pick chooses the in-process answer of a
-// call (route; tests replace it).
+// inprocBackend answers the backend calls in process. getenv is the environment
+// its sources read (bindEnv; unbound, the process's); pick chooses the in-process
+// answer of a call (route; tests replace it).
 type inprocBackend struct {
-	paths  Paths
 	getenv envFunc
 	clock  func() time.Time
-	pick   func(Paths, envFunc, []string) func([]string) answer
+	pick   func(source, envFunc, []string) func([]string) answer
 }
 
-// pathBinder is a Backend that must know the backend scripts of the question
-// and the environment of the command.
-type pathBinder interface{ bindPaths(Paths, envFunc) }
+// envBinder is a Backend that must know the environment of the command.
+type envBinder interface{ bindEnv(envFunc) }
 
-func (b *inprocBackend) bindPaths(p Paths, getenv envFunc) { b.paths, b.getenv = p, getenv }
+func (b *inprocBackend) bindEnv(getenv envFunc) { b.getenv = getenv }
 
 // answer is one in-process run: what the backend would have printed, or ok
 // false for a call this package has no answer for (noAnswer).
@@ -64,10 +61,10 @@ type answer struct {
 	ok             bool
 }
 
-// Run answers argv in process within timeout seconds. A script path that is
+// Run answers the call to src in process within timeout seconds. A script path that is
 // not a file is the Python door's "tool not found"; a call no source knows (an
 // argv the door never sends) is typed UNAVAILABLE, never a silent zero.
-func (b *inprocBackend) Run(argv []string, timeout float64) Raw {
+func (b *inprocBackend) Run(src source, argv []string, timeout float64) Raw {
 	if !isFile(argv[0]) {
 		return Raw{State: Unavailable, Reason: "unavailable: tool not found at " + pyPath(argv[0])}
 	}
@@ -78,7 +75,7 @@ func (b *inprocBackend) Run(argv []string, timeout float64) Raw {
 	if pick == nil {
 		pick = route
 	}
-	run := pick(b.paths, cli.Stdio{Getenv: b.getenv}.Env, argv)
+	run := pick(src, cli.Stdio{Getenv: b.getenv}.Env, argv)
 	if run == nil {
 		return unknownCall(argv)
 	}
@@ -107,22 +104,26 @@ func timedOut(timeout float64) Raw {
 		MS: int(timeout * 1000)}
 }
 
-// route picks the in-process answer for a backend call, or nil when none does;
-// the sources that read the environment read it through getenv.
-func route(p Paths, getenv envFunc, argv []string) func([]string) answer {
-	switch {
-	case len(argv) < 2:
-	case argv[0] == p.Blocks:
+// route picks the in-process answer for a call to src, or nil when none does
+// (no arguments); the sources that read the environment read it through getenv.
+func route(src source, getenv envFunc, argv []string) func([]string) answer {
+	if len(argv) < 2 {
+		return nil
+	}
+	switch src {
+	case blocksSource:
 		return func(argv []string) answer { return blocksFind(getenv, argv) }
-	case argv[0] == p.Docs:
+	case docsSource:
 		return func(argv []string) answer { return docsFind(getenv, argv) }
-	case argv[0] == p.Code && argv[1] == "token":
-		return orNav(codeToken)
-	case argv[0] == p.Code && argv[1] == "grep":
-		return orNav(func(argv []string) answer { return codeGrep(getenv, argv) })
-	case argv[0] == p.Code && argv[1] == "rank":
-		return orNav(codeRank)
-	case argv[0] == p.Code:
+	case codeSource:
+		switch argv[1] {
+		case "token":
+			return orNav(codeToken)
+		case "grep":
+			return orNav(func(argv []string) answer { return codeGrep(getenv, argv) })
+		case "rank":
+			return orNav(codeRank)
+		}
 		return navRun
 	}
 	return nil

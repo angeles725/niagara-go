@@ -3,7 +3,6 @@ package searchdoor
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"slices"
 	"strconv"
 	"strings"
@@ -16,8 +15,8 @@ import (
 // scriptFakes is the Go port of the fake backend scripts the frozen nsearch goldens were
 // recorded with (niagara-research tests/searchdoor fakes, copied once to testdata/fake): the
 // goldens test the front door (fan-out, parsing, rendering, budgets) against canned backend
-// answers, so they need no Python and no corpus. Each call is answered by the basename of its
-// script, as the fakes were: corpus-nav.py, niagara_help.py, module_nav.py. A script path that
+// answers, so they need no Python and no corpus. Each call is answered by the fake of its
+// source (the scripts corpus-nav.py, niagara_help.py, module_nav.py). A script path that
 // does not exist is the backends' "tool not found"; a word that made a fake sleep 10 s sleeps
 // until the call's budget and is then timed out, like the killed process.
 type scriptFakes struct{}
@@ -25,7 +24,7 @@ type scriptFakes struct{}
 // fakeSleep is the fakes' time.sleep(10).
 const fakeSleep = 10.0
 
-func (scriptFakes) Run(argv []string, timeout float64) Raw {
+func (scriptFakes) Run(src source, argv []string, timeout float64) Raw {
 	if _, err := os.Stat(argv[0]); err != nil {
 		return Raw{State: Unavailable, Reason: "unavailable: tool not found at " + pyPath(argv[0])}
 	}
@@ -33,15 +32,15 @@ func (scriptFakes) Run(argv []string, timeout float64) Raw {
 		return timedOut(timeout)
 	}
 	f := &fakeRun{timeout: timeout}
-	switch filepath.Base(argv[0]) {
-	case "corpus-nav.py":
+	switch src {
+	case blocksSource:
 		f.corpusNav(argv[1:])
-	case "niagara_help.py":
+	case docsSource:
 		f.niagaraHelp(argv[1:])
-	case "module_nav.py":
+	case codeSource:
 		f.moduleNav(argv[1:])
 	default:
-		panic("scriptFakes: unknown script " + argv[0])
+		panic(fmt.Sprintf("scriptFakes: unknown source %d (%s)", src, argv[0]))
 	}
 	if f.timedOut {
 		return timedOut(timeout)

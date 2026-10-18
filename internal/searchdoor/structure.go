@@ -150,7 +150,7 @@ func (d *door) structureJob(path, query string, deadline float64) *Outcome {
 		return unavailable("code", title, command,
 			"unavailable: timeout, the CODE budget was spent before the structure command ran")
 	}
-	raw := d.backend.Run(append([]string{path}, argv...), left)
+	raw := d.backend.Run(codeSource, append([]string{path}, argv...), left)
 	if raw.HasRC && (raw.RC == 0 || raw.RC == 1) && notFoundRx.MatchString(raw.Out) {
 		o := newOutcome("code", title, command, Empty)
 		o.MS = raw.MS
@@ -184,6 +184,6 @@ func (d *door) structureJob(path, query string, deadline float64) *Outcome {
 
 // hasCommand reports whether this module_nav knows command (its --help exits 0).
 func (d *door) hasCommand(path, command string, timeout float64) bool {
-	raw := d.backend.Run([]string{path, command, "--help"}, timeout)
+	raw := d.backend.Run(codeSource, []string{path, command, "--help"}, timeout)
 	return raw.HasRC && raw.RC == 0
 }

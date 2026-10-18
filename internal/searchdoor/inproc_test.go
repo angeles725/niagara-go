@@ -195,24 +195,26 @@ func TestInprocUnknownCalls(t *testing.T) {
 	dir := t.TempDir()
 	code := stubScript(t, filepath.Join(dir, "tools", "module_nav.py"))
 	blocks := stubScript(t, filepath.Join(dir, "tools", "corpus-nav.py"))
-	b := &inprocBackend{clock: time.Now, paths: Paths{Blocks: blocks, Docs: filepath.Join(dir, "absent.py"), Code: code}}
+	docs := filepath.Join(dir, "absent.py")
+	b := &inprocBackend{clock: time.Now}
 	for _, c := range []struct {
+		src  source
 		argv []string
 		want string
 	}{
-		{[]string{b.paths.Docs, "find", "alarm", "-n", "5"}, "unavailable: tool not found at " + pyPath(b.paths.Docs)},
-		{[]string{dir, "find", "alarm", "-n", "5"}, "unavailable: tool not found at " + pyPath(dir)},
-		{[]string{code}, "unavailable: no in-process answer for `module_nav.py` (a call nsearch never makes)"},
-		{[]string{stubScript(t, filepath.Join(dir, "other.py")), "x"},
+		{docsSource, []string{docs, "find", "alarm", "-n", "5"}, "unavailable: tool not found at " + pyPath(docs)},
+		{blocksSource, []string{dir, "find", "alarm", "-n", "5"}, "unavailable: tool not found at " + pyPath(dir)},
+		{codeSource, []string{code}, "unavailable: no in-process answer for `module_nav.py` (a call nsearch never makes)"},
+		{source(0), []string{stubScript(t, filepath.Join(dir, "other.py")), "x"},
 			"unavailable: no in-process answer for `other.py x` (a call nsearch never makes)"},
-		{[]string{blocks, "grep", "alarm", "--limit", "50"},
+		{blocksSource, []string{blocks, "grep", "alarm", "--limit", "50"},
 			"unavailable: no in-process answer for `corpus-nav.py grep alarm --limit 50` (a call nsearch never makes)"},
 	} {
-		if raw := b.Run(c.argv, 5); raw.State != Unavailable || raw.Reason != c.want || raw.HasRC {
+		if raw := b.Run(c.src, c.argv, 5); raw.State != Unavailable || raw.Reason != c.want || raw.HasRC {
 			t.Errorf("%v: %+v, want %q", c.argv, raw, c.want)
 		}
 	}
-	if raw := b.Run([]string{blocks, "find", "alarm", "--limit", "50"}, 0); raw.Reason != "unavailable: timed out after 0s" {
+	if raw := b.Run(blocksSource, []string{blocks, "find", "alarm", "--limit", "50"}, 0); raw.Reason != "unavailable: timed out after 0s" {
 		t.Errorf("a zero budget: %+v", raw)
 	}
 }
@@ -300,11 +302,11 @@ func TestInprocBudget(t *testing.T) {
 	now := time.Unix(0, 0)
 	release := make(chan struct{})
 	defer close(release)
-	slow := func(Paths, envFunc, []string) func([]string) answer {
+	slow := func(source, envFunc, []string) func([]string) answer {
 		return func([]string) answer { <-release; return exact(0, "late", "") }
 	}
 	b := &inprocBackend{clock: func() time.Time { return now }, pick: slow}
-	raw := b.Run([]string{script, "token", "BAlarm", "-n", "5"}, 0.01)
+	raw := b.Run(codeSource, []string{script, "token", "BAlarm", "-n", "5"}, 0.01)
 	if raw.State != Unavailable || raw.Reason != "unavailable: timed out after 0.01s" || raw.MS != 10 {
 		t.Errorf("timed out: %+v", raw)
 	}

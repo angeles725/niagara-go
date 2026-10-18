@@ -99,7 +99,7 @@ func run(args []string, s cli.Stdio, prog string, d *door, paths func(envFunc) P
 		return p.Error(s.Err, "--limit and --timeout must be at least 1")
 	}
 	src := paths(s.Env)
-	d.bind(src, s.Env)
+	d.bind(s.Env)
 	var outcomes []*Outcome
 	hint := searchHint
 	if isLicense {
