@@ -22,11 +22,15 @@ import (
 // bajadocDone is the elapsed-time line, the one volatile line of the log.
 var bajadocDone = regexp.MustCompile(`^Done in \d+\.\ds$`)
 
-// bajadocLog is res.Log with base printed as <base> and the seconds as <t>.
+// bajadocLog is res.Log with base printed as <base>, the seconds as <t>
+// and the host separator as "/": stdout.txt is the POSIX run's, and on
+// Windows the Output line carries ntpath.join's backslash, as CPython's
+// does there.
 func bajadocLog(log []string, base string) []string {
 	out := make([]string, len(log))
 	for i, l := range log {
 		l = strings.ReplaceAll(l, base, "<base>")
+		l = strings.ReplaceAll(l, string(filepath.Separator), "/")
 		out[i] = bajadocDone.ReplaceAllString(l, "Done in <t>s")
 	}
 	return out
