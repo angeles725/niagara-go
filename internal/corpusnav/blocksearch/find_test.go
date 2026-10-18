@@ -3,6 +3,7 @@ package blocksearch
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -22,6 +23,9 @@ func TestFindMatchesCorpusNavGoldens(t *testing.T) {
 		{"find-zzqq", Query{Text: "zzqq", Scope: "blocks", Limit: 50}},
 	} {
 		t.Run(tc.golden, func(t *testing.T) {
+			if tc.golden == "find-alarm-in-all-limit-4" && runtime.GOOS == "windows" {
+				t.Skip("the golden prints docs/ ids; pathlib prints docs\\ on Windows (requires.goos linux)")
+			}
 			dir := filepath.Join("..", "testdata", "golden", tc.golden)
 			r := New(filepath.Join("..", "testdata", "corpus"), t.TempDir()).Find(tc.q)
 			if got, want := r.Stdout(), read(t, dir, "stdout"); got != want {

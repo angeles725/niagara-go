@@ -3,6 +3,7 @@ package corpusnav
 import (
 	"bytes"
 	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -33,7 +34,7 @@ func TestByFocusNamesUnreadable(t *testing.T) {
 	}
 
 	c, out, errb, root = copyCorpus(t)
-	state := root + "/RESEARCH-STATE-gamma.md"
+	state := filepath.Join(root, "RESEARCH-STATE-gamma.md")
 	if err := os.WriteFile(state, []byte("cites [B4] \xff\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
