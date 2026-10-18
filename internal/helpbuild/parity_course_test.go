@@ -217,11 +217,11 @@ func realCourse(t *testing.T) string {
 	if p := os.Getenv("HELPBUILD_PARITY_COURSE"); p != "" {
 		return p
 	}
-	tools := niagaraHelpTools()
-	if tools == "" {
+	help := niagaraHelpData()
+	if help == "" {
 		return ""
 	}
-	return filepath.Join(filepath.Dir(filepath.Dir(tools)), "sources", "n4-dev-course")
+	return filepath.Join(filepath.Dir(help), "sources", "n4-dev-course")
 }
 
 // TestParityCourseReal plans and copies the real course (only read) into

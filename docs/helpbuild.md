@@ -96,27 +96,28 @@ copy. When the data file changes upstream: copy it, run `go test ./internal/help
 
 ## Parity harness
 
-`testdata/parity/driver.py` imports the real niagara-help modules (`python3 -I -B`: isolated, no `__pycache__` written into the checkout; the tools
-directory put on `sys.path` explicitly) and prints JSON lines; `parity_test.go` rebuilds
-every line from this package and requires an empty diff. It needs `python3` and a
-niagara-help checkout — `$NIAGARA_HELP_DIR`; else `$NIAGARA_RESEARCH/niagara-help` when it
-holds the data file (the variable the glossary and version drift tests read); else the
-first one met walking up from the test directory as `<dir>/niagara-help` or
+`testdata/parity/driver.py` imports the niagara-help modules of the pinned Python reference
+(`python3 -I -B`: isolated, no `__pycache__` written into the reference; its tools directory
+put on `sys.path` explicitly) and prints JSON lines; `parity_test.go` rebuilds every line from
+this package and requires an empty diff. The reference is the `pre-go-retire` worktree of
+niagara-help (`8410d7451`, D47) named by `NIAGARA_HELP_PY_REF`, default
+`~/niagara-research-worktrees/pre-go-retire-niagara-help`; `internal/pyref` refuses one whose
+HEAD is not the tag or that has local changes (see docs/goldens.md). The live checkout's
+`tools/` is never read: it holds exec shims of the Go ports, so comparing against it would
+compare Go with Go. The live checkout is only the data the real-data tests read
+(`versions/registry.json`, the version roots, `../sources/n4-dev-course`): `$NIAGARA_HELP_DIR`;
+else `$NIAGARA_RESEARCH/niagara-help` when it holds `versions/registry.json`; else the first
+one met walking up from the test directory as `<dir>/niagara-help` or
 `<dir>/niagara-research/niagara-help` (a worktree under `~/niagara-go-worktrees` finds
-`~/niagara-research/niagara-help`) — and skips visibly only when there is none. A run
-that set any `HELPBUILD_PARITY_*` variable (`make parity` sets five) fails instead of
-skipping when `python3`, the checkout, its tools or a real version's `versions/` tree are
-missing, the message naming the variable. The interpreter must be CPython 3.15.x
-(`html.parser` and the other stdlib behaviour the drivers compare change between minor
-releases): another version is a missing reference like the rest (skipped visibly in a
-plain run, every parity test failing when a `HELPBUILD_PARITY_*` variable is set), and `-v`
-logs the version used (`parity driver python: CPython 3.15.0 (...)`). After Phase 5 retires the Python tools from
-niagara-research, the reference lives in a `pre-go-retire` worktree of niagara-research:
-point `NIAGARA_HELP_DIR` at its `niagara-help` folder (for example
-`NIAGARA_HELP_DIR=~/niagara-research-worktrees/pre-go-retire/niagara-help make parity`). The drift
-test `TestEmbeddedRulesMatchCanonical` uses the same lookup; `$NIAGARA_HELP_DIR` pointing
-at a folder without the data file fails it, a `$NIAGARA_RESEARCH` without one falls
-through to the walk.
+`~/niagara-research/niagara-help`). A plain run skips visibly without `python3` or the
+reference. A run that set any `HELPBUILD_PARITY_*` variable or `PYREF_REQUIRED=1` (`make
+parity` sets both) fails instead of skipping when `python3`, the reference or a real version's
+`versions/` tree is missing, the message naming the variable. The interpreter must be CPython
+3.15.x (`html.parser` and the other stdlib behaviour the drivers compare change between minor
+releases), checked before the reference: another version is a missing reference like the rest
+(skipped visibly in a plain run, every parity test failing when a `HELPBUILD_PARITY_*` variable
+is set), and `-v` logs the version and reference used (`parity driver python: CPython 3.15.0
+(...), reference ...`).
 
 | Test | Driver mode | Compares |
 |---|---|---|

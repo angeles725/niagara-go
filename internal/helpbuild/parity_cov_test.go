@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -20,22 +19,13 @@ import (
 // cmd_guide_coverage against Coverage and PrintGuideCoverage (and, in
 // parity_covdocjars_test.go, cmd_doc_jar_coverage against DocJarCoverage).
 
-// covPython is the Python side of the coverage parity: the niagara-help
-// tools of the pre-go-retire reference (internal/pyref) run by a CPython
-// 3.15 python3; a missing reference skips, or fails under make parity
+// covPython is the Python side of the coverage parity: driver's CPython
+// 3.15 python3 and the niagara-help tools of the pre-go-retire reference
+// (internal/pyref); a missing reference skips, or fails under make parity
 // (PYREF_REQUIRED=1, or a HELPBUILD_PARITY_* variable set).
 func covPython(t *testing.T) (python, tools string) {
 	t.Helper()
-	ref := pyref.Dir(t, "niagara-help")
-	python = pyref.Python(t)
-	v, err := pythonVersion(python)
-	if err == nil {
-		err = checkPythonMinor(v)
-	}
-	if err != nil {
-		missingReference(t, fmt.Sprintf("parity driver interpreter %s: %v", python, err))
-	}
-	return python, filepath.Join(ref, "tools")
+	return driver(t)
 }
 
 // runCovDriver runs covdriver.py and returns its two lines.

@@ -12,31 +12,30 @@ import (
 	"testing"
 
 	"github.com/angeles725/niagara-go/internal/pyjson"
+	"github.com/angeles725/niagara-go/internal/pyref"
 )
 
-// The Python-vs-Go parity harness: testdata/parity/driver.py runs the real
-// niagara-help functions and prints JSON lines; the tests below rebuild
-// every line from this package and require an empty diff. It needs python3
-// and a niagara-help checkout (niagaraHelpTools: $NIAGARA_HELP_DIR, else
-// found walking up from the test directory): plain `go test` skips visibly
-// without them or with a python3 that is not CPython 3.15, a run that set a
-// HELPBUILD_PARITY_* variable (make parity) fails (missingReference).
+// The Python-vs-Go parity harness: testdata/parity/driver.py runs the
+// niagara-help functions of the pinned Python reference (internal/pyref: the
+// pre-go-retire worktree named by NIAGARA_HELP_PY_REF, decision D47) and
+// prints JSON lines; the tests below rebuild every line from this package and
+// require an empty diff. It needs python3 (CPython 3.15) and that worktree:
+// plain `go test` skips visibly without them, a run that set a
+// HELPBUILD_PARITY_* variable or PYREF_REQUIRED=1 (make parity) fails
+// (missingReference). The live niagara-help checkout is only DATA
+// (niagaraHelpData: versions/, the course); its Python is never read.
 
 // parityDrivers are the Python sides of the parity tests.
 var parityDrivers = []string{"driver.py", "htmldriver.py", "textdriver.py", "bajadocdriver.py", "sweepdriver.py"}
 
+// driver is the parity interpreter and the tools/ folder of the niagara-help
+// Python reference; the interpreter is checked first, so a wrong python3 is
+// reported even without the reference.
 func driver(t *testing.T) (python, tools string) {
 	t.Helper()
 	python, err := exec.LookPath("python3")
 	if err != nil {
 		missingReference(t, "python3 not on PATH: parity not checked")
-	}
-	tools = niagaraHelpTools()
-	if tools == "" {
-		missingReference(t, "no niagara-help checkout ($NIAGARA_HELP_DIR unset, none under $NIAGARA_RESEARCH or walking up): parity not checked")
-	}
-	if _, err := os.Stat(filepath.Join(tools, "niagara_help_lib", "jar_listing.py")); err != nil {
-		missingReference(t, fmt.Sprintf("niagara-help tools not available (%v): parity not checked", err))
 	}
 	for _, name := range parityDrivers {
 		if _, err := os.Stat(filepath.Join("testdata", "parity", name)); err != nil {
@@ -50,7 +49,11 @@ func driver(t *testing.T) (python, tools string) {
 	if err != nil {
 		missingReference(t, fmt.Sprintf("parity driver interpreter %s: %v", python, err))
 	}
-	pythonLogged.Do(func() { t.Logf("parity driver python: CPython %s (%s)", v, python) })
+	tools = filepath.Join(helpPyRef(t), "tools")
+	if _, err := os.Stat(filepath.Join(tools, "niagara_help_lib", "jar_listing.py")); err != nil {
+		t.Fatalf("the niagara-help Python reference has no tools/niagara_help_lib (%v): it is not the %s tree", err, pyref.Tag)
+	}
+	pythonLogged.Do(func() { t.Logf("parity driver python: CPython %s (%s), reference %s", v, python, filepath.Dir(tools)) })
 	return python, tools
 }
 

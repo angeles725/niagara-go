@@ -296,11 +296,11 @@ func TestParityTocFiles(t *testing.T) {
 // devguide/ are symlinks.
 func realBase(t *testing.T, vid string) string {
 	t.Helper()
-	tools := niagaraHelpTools()
-	if tools == "" {
-		missingReference(t, "no niagara-help checkout")
+	help := niagaraHelpData()
+	if help == "" {
+		missingReference(t, "no niagara-help data checkout")
 	}
-	src := filepath.Join(filepath.Dir(tools), "versions")
+	src := filepath.Join(help, "versions")
 	reg, err := os.ReadFile(filepath.Join(src, "registry.json"))
 	if err != nil {
 		missingReference(t, fmt.Sprintf("no registry: %v", err))
