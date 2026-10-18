@@ -37,7 +37,7 @@ func fingerprintDir(path, ext string) *dirPrint {
 	}
 	fp := &dirPrint{}
 	fts.WalkFiles(path, func(p string) {
-		if ext != "" && !strings.HasSuffix(lowerStr(filepath.Base(p)), ext) {
+		if ext != "" && !strings.HasSuffix(pycompat.Lower(filepath.Base(p)), ext) {
 			return
 		}
 		if st, err := os.Stat(p); err == nil {

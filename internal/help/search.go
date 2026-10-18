@@ -8,10 +8,13 @@ import (
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/fnmatch"
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // lowerGlob is fnmatch(name.lower(), pat.lower()).
-func lowerGlob(name, pat string) bool { return fnmatch.Fnmatch(lowerStr(name), lowerStr(pat)) }
+func lowerGlob(name, pat string) bool {
+	return fnmatch.Fnmatch(pycompat.Lower(name), pycompat.Lower(pat))
+}
 
 // SearchParams are the arguments of `search`.
 type SearchParams struct {
@@ -113,16 +116,16 @@ func (e *Env) Package(p PackageParams) error {
 		}
 		return nil
 	}
-	want := lowerStr(p.Name)
+	want := pycompat.Lower(p.Name)
 	var matched []string
 	for _, pkg := range order {
-		if lowerStr(pkg) == want {
+		if pycompat.Lower(pkg) == want {
 			matched = append(matched, pkg)
 		}
 	}
 	if len(matched) == 0 {
 		for _, pkg := range order {
-			if strings.Contains(lowerStr(pkg), want) {
+			if strings.Contains(pycompat.Lower(pkg), want) {
 				matched = append(matched, pkg)
 			}
 		}

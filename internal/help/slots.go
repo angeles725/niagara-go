@@ -68,10 +68,10 @@ func (e *Env) Slots(p SlotsParams) error {
 // classSlotKeys is class_slot_entries without a package: the keys naming a
 // class case-insensitively, plus the "Name (module)" keys of colliding names.
 func classSlotKeys(idx *index.Object, name string) []string {
-	low := lowerStr(name)
+	low := pycompat.Lower(name)
 	var out []string
 	for _, k := range idx.Keys() {
-		if kl := lowerStr(k); kl == low || strings.HasPrefix(kl, low+" (") {
+		if kl := pycompat.Lower(k); kl == low || strings.HasPrefix(kl, low+" (") {
 			out = append(out, k)
 		}
 	}
@@ -119,12 +119,12 @@ func slotLists(cls string, o *index.Object, sections ...string) ([][]*index.Obje
 // lower-cased query must equal the value or only occur in it.
 func globOrFold(value, query string, exact bool) bool {
 	if strings.ContainsAny(query, "*?") {
-		return fnmatch.Fnmatch(value, query) || fnmatch.Fnmatch(lowerStr(value), lowerStr(query))
+		return fnmatch.Fnmatch(value, query) || fnmatch.Fnmatch(pycompat.Lower(value), pycompat.Lower(query))
 	}
 	if exact {
-		return lowerStr(query) == lowerStr(value)
+		return pycompat.Lower(query) == pycompat.Lower(value)
 	}
-	return strings.Contains(lowerStr(value), lowerStr(query))
+	return strings.Contains(pycompat.Lower(value), pycompat.Lower(query))
 }
 
 // slotsByName is mode 3 of cmd_slots: slot names containing (or globbing)

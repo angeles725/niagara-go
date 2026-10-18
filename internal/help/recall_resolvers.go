@@ -31,7 +31,7 @@ func newInheritanceKeys(inh *index.Object) *inheritanceKeys {
 	for _, key := range inh.Keys() {
 		s := stripGenerics(key)
 		setDefault(k.stripped, s, key)
-		setDefault(k.lowerK, lowerStr(s), key)
+		setDefault(k.lowerK, pycompat.Lower(s), key)
 		if pv := get(inh.Object(key), "package", nil); index.Truthy(pv) {
 			pkg, simple := pyStr(pv), s
 			if strings.HasPrefix(s, pkg+".") {
@@ -54,7 +54,7 @@ func (k *inheritanceKeys) resolve(name string) string {
 	if v := k.qual[name]; v != "" {
 		return v
 	}
-	return k.lowerK[lowerStr(name)]
+	return k.lowerK[pycompat.Lower(name)]
 }
 
 // isEnumType is enum_search._is_enum_type: the class extends an enum root.
@@ -75,9 +75,9 @@ func isEnumType(inh *index.Object, name string) bool {
 func resolveEnum(src, inh *index.Object, keys *inheritanceKeys, name string) bool {
 	key, ok := name, src.Has(name)
 	if !ok {
-		want := lowerStr(name)
+		want := pycompat.Lower(name)
 		for _, k := range src.Keys() {
-			if lowerStr(k) == want {
+			if pycompat.Lower(k) == want {
 				key, ok = k, true
 				break
 			}
@@ -97,7 +97,7 @@ func resolveEnum(src, inh *index.Object, keys *inheritanceKeys, name string) boo
 func slotKeys(si *index.Object) map[string][]string {
 	m := map[string][]string{}
 	for _, k := range si.Keys() {
-		low := lowerStr(k)
+		low := pycompat.Lower(k)
 		m[low] = append(m[low], k)
 		for i := 0; ; {
 			j := strings.Index(low[i:], " (")
@@ -124,7 +124,7 @@ func bareType(t string) string {
 	if i := strings.IndexByte(s, '<'); i >= 0 {
 		s = s[:i]
 	}
-	return lowerStr(strings.ReplaceAll(pycompat.Strip(s), "$", "."))
+	return pycompat.Lower(strings.ReplaceAll(pycompat.Strip(s), "$", "."))
 }
 
 type implementor struct{ name, pkg string }
@@ -167,7 +167,7 @@ var moduleSuffix = regexp.MustCompile(`-(?:rt|ux|wb|se|doc)(\n?)$`)
 
 // moduleKey is _module_key: "alarm-rt" -> "alarm", "docAlarms" -> "alarm".
 func moduleKey(name string) string {
-	clean := moduleSuffix.ReplaceAllString(lowerStr(name), "$1")
+	clean := moduleSuffix.ReplaceAllString(pycompat.Lower(name), "$1")
 	clean = strings.TrimPrefix(clean, "doc")
 	return strings.TrimRight(clean, "s")
 }
@@ -181,15 +181,15 @@ type namedEntry struct {
 // module equals the name or contains the key, or whose name or package
 // contains the key.
 func moduleClassMatches(idx *index.Object, module string) []namedEntry {
-	clean, exact := moduleKey(module), lowerStr(module)
+	clean, exact := moduleKey(module), pycompat.Lower(module)
 	var out []namedEntry
 	for _, name := range idx.Keys() {
 		entry := idx.Object(name)
 		variants := append([]*index.Object{entry}, objList(entry, "others")...)
 		for _, d := range variants {
-			mod, pkg := lowerStr(getStr(d, "module", "")), lowerStr(getStr(d, "package", ""))
+			mod, pkg := pycompat.Lower(getStr(d, "module", "")), pycompat.Lower(getStr(d, "package", ""))
 			if mod == exact || (clean != "" && strings.Contains(mod, clean)) ||
-				strings.Contains(lowerStr(name), clean) || strings.Contains(pkg, clean) {
+				strings.Contains(pycompat.Lower(name), clean) || strings.Contains(pkg, clean) {
 				out = append(out, namedEntry{name, d})
 			}
 		}
