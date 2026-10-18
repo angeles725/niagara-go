@@ -1,6 +1,7 @@
 package course
 
 import (
+	"bytes"
 	"encoding/json"
 	"strings"
 	"testing"
@@ -108,5 +109,28 @@ func TestProgressJSONGroup(t *testing.T) {
 	}
 	if len(want) > 0 {
 		t.Errorf("actions missing: %v", want)
+	}
+}
+
+// In text a redo names its group by groupLabel: "lab N" for a lab (L4, LB), the key group
+// itself otherwise (RA1); an item that points at no course text shows its source only.
+func TestProgressTextRedoLabel(t *testing.T) {
+	var b bytes.Buffer
+	printProgress(&b, nil, []action{
+		{Kind: "redo", ID: "C4.5", Group: "L4", Text: "diff",
+			Items: []actionItem{{ID: "L4.13", Source: "labs.md:25", Text: "LI:21", Step: "Set diff"}}},
+		{Kind: "redo", ID: "CB.1", Group: "LB", Text: "bonus",
+			Items: []actionItem{{ID: "LB.2", Source: "labs.md:40", Step: "Bonus step"}}},
+		{Kind: "redo", ID: "CR.1", Group: "RA1", Text: "requirement",
+			Items: []actionItem{{ID: "RA1.3", Source: "reqs.md:7", Step: "Meet it"}}},
+	})
+	for _, want := range []string{
+		"redo C4.5 (lab 4): diff\n  L4.13 (labs.md:25, LI:21): Set diff\n",
+		"redo CB.1 (lab B): bonus\n  LB.2 (labs.md:40): Bonus step\n",
+		"redo CR.1 (RA1): requirement\n  RA1.3 (reqs.md:7): Meet it\n",
+	} {
+		if !strings.Contains(b.String(), want) {
+			t.Errorf("text lacks %q:\n%s", want, b.String())
+		}
 	}
 }

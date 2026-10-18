@@ -162,6 +162,12 @@ func TestRangeOutside(t *testing.T) {
 			"L1.3: range 2-4 is outside t.txt (3 lines)"},
 		{"reversed", key.Item{ID: "L1.4", TextFile: "t.txt", Ranges: []key.Range{{A: 3, B: 2}}},
 			"L1.4: range 3-2 is outside t.txt (3 lines)"},
+		{"starts at 0", key.Item{ID: "L1.5", TextFile: "t.txt", Ranges: []key.Range{{A: 0, B: 2}}},
+			"L1.5: range 0-2 is outside t.txt (3 lines)"},
+		{"several ranges fit", key.Item{ID: "L1.6", TextFile: "t.txt", Ranges: []key.Range{{A: 1, B: 1}, {A: 2, B: 3}}}, ""},
+		{"first failing range reported", key.Item{ID: "L1.7", TextFile: "t.txt",
+			Ranges: []key.Range{{A: 1, B: 2}, {A: 5, B: 5}, {A: 0, B: 1}}},
+			"L1.7: range 5 is outside t.txt (3 lines)"},
 	} {
 		if got := rangeOutside(&c.it, lines); got != c.want {
 			t.Errorf("%s: %q, want %q", c.name, got, c.want)
