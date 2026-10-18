@@ -52,8 +52,13 @@
 //
 // The first four NSEARCH_* path variables are the same seam the Python front door
 // reads (searchdoor/backend.py); NSEARCH_COURSE_KEYS is Go only. An empty value
-// keeps the default. The hermetic
-// goldens under testdata/ point them at fake backend scripts, which the tests
+// keeps the default. The root search is locate.Find (decision D44). Every
+// variable this package reads (these, and the sources' CORPUS_NAV_ROOT,
+// CORPUS_NAV_INDEX_DIR, NIAGARA_HELP_DIR, the docs version and NAV_CORPUS_BASE)
+// goes through the command's cli.Stdio.Env, the process environment under
+// cli.Run; the libraries the sources call (blocksearch's CORPUS_NAV_FIND_INDEX,
+// help/scope's cache directory, nav.RunAt) still read the process. The hermetic
+// goldens under testdata/ point the NSEARCH_* paths at fake backend scripts, which the tests
 // answer with their Go port (scriptFakes).
 //
 // Intended differences from Python (none golden-covered): no backend runs as a

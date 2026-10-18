@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/angeles725/niagara-go/internal/cli"
 	"github.com/angeles725/niagara-go/internal/corpusnav/blocksearch"
 )
 
@@ -39,18 +40,21 @@ func newDoor() *door {
 const blocksCacheTag = ".nsearch"
 
 // inprocBackend answers the backend calls in process. paths are the backend
-// scripts it answers for (bindPaths); pick chooses the in-process answer of a
+// scripts it answers for and getenv the environment its sources read
+// (bindPaths; unbound, the process's); pick chooses the in-process answer of a
 // call (route; tests replace it).
 type inprocBackend struct {
-	paths Paths
-	clock func() time.Time
-	pick  func(Paths, []string) func([]string) answer
+	paths  Paths
+	getenv envFunc
+	clock  func() time.Time
+	pick   func(Paths, envFunc, []string) func([]string) answer
 }
 
-// pathBinder is a Backend that must know the backend scripts of the question.
-type pathBinder interface{ bindPaths(Paths) }
+// pathBinder is a Backend that must know the backend scripts of the question
+// and the environment of the command.
+type pathBinder interface{ bindPaths(Paths, envFunc) }
 
-func (b *inprocBackend) bindPaths(p Paths) { b.paths = p }
+func (b *inprocBackend) bindPaths(p Paths, getenv envFunc) { b.paths, b.getenv = p, getenv }
 
 // answer is one in-process run: what the backend would have printed, or ok
 // false for a call this package has no answer for (noAnswer).
@@ -74,7 +78,7 @@ func (b *inprocBackend) Run(argv []string, timeout float64) Raw {
 	if pick == nil {
 		pick = route
 	}
-	run := pick(b.paths, argv)
+	run := pick(b.paths, cli.Stdio{Getenv: b.getenv}.Env, argv)
 	if run == nil {
 		return unknownCall(argv)
 	}
@@ -103,18 +107,19 @@ func timedOut(timeout float64) Raw {
 		MS: int(timeout * 1000)}
 }
 
-// route picks the in-process answer for a backend call, or nil when none does.
-func route(p Paths, argv []string) func([]string) answer {
+// route picks the in-process answer for a backend call, or nil when none does;
+// the sources that read the environment read it through getenv.
+func route(p Paths, getenv envFunc, argv []string) func([]string) answer {
 	switch {
 	case len(argv) < 2:
 	case argv[0] == p.Blocks:
-		return blocksFind
+		return func(argv []string) answer { return blocksFind(getenv, argv) }
 	case argv[0] == p.Docs:
-		return docsFind
+		return func(argv []string) answer { return docsFind(getenv, argv) }
 	case argv[0] == p.Code && argv[1] == "token":
 		return orNav(codeToken)
 	case argv[0] == p.Code && argv[1] == "grep":
-		return orNav(codeGrep)
+		return orNav(func(argv []string) answer { return codeGrep(getenv, argv) })
 	case argv[0] == p.Code && argv[1] == "rank":
 		return orNav(codeRank)
 	case argv[0] == p.Code:
@@ -221,12 +226,12 @@ func isDir(p string) bool { st, err := os.Stat(p); return err == nil && st.IsDir
 // blocksearch, on the corpus corpus-nav.py would use: $CORPUS_NAV_ROOT, else the
 // parent of its tools/ folder (a folder without CATALOG.md is searched like
 // corpus-nav does: no block titles).
-func blocksFind(argv []string) answer {
+func blocksFind(getenv envFunc, argv []string) answer {
 	v, flag, ok := shape(argv[1:], []string{"find", "*", "--limit", "#"}, "--and", "--or")
 	if !ok {
 		return noAnswer
 	}
-	root := os.Getenv("CORPUS_NAV_ROOT")
+	root := getenv("CORPUS_NAV_ROOT")
 	if root == "" {
 		root = toolDir(argv[0], true)
 	}
@@ -234,7 +239,7 @@ func blocksFind(argv []string) answer {
 		return exact(2, "", "corpus-nav: cannot locate the corpus from "+pyPath(argv[0])+"\n")
 	}
 	limit, _ := strconv.Atoi(v[1])
-	c := blocksearch.New(root, os.Getenv("CORPUS_NAV_INDEX_DIR"))
+	c := blocksearch.New(root, getenv("CORPUS_NAV_INDEX_DIR"))
 	c.CacheTag = blocksCacheTag
 	r := c.Find(blocksearch.Query{Text: v[0], Scope: "blocks", Limit: limit, RequireAll: flag == "--and"})
 	return exact(r.Exit(), r.Stdout(), r.Stderr())

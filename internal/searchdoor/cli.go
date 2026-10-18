@@ -75,7 +75,7 @@ func common(p *argparse.Parser, tool string) {
 		Help: "niagara-help documentation version for the docs source (default: niagara-help's own)"}, "--doc-version")
 }
 
-func run(args []string, s cli.Stdio, prog string, d *door, paths func() Paths) int {
+func run(args []string, s cli.Stdio, prog string, d *door, paths func(envFunc) Paths) int {
 	isLicense, rest := splitLicense(args)
 	var p *argparse.Parser
 	if isLicense {
@@ -98,8 +98,8 @@ func run(args []string, s cli.Stdio, prog string, d *door, paths func() Paths) i
 	if limit < 1 || timeout < 1 {
 		return p.Error(s.Err, "--limit and --timeout must be at least 1")
 	}
-	src := paths()
-	d.bind(src)
+	src := paths(s.Env)
+	d.bind(src, s.Env)
 	var outcomes []*Outcome
 	hint := searchHint
 	if isLicense {
