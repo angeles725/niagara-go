@@ -313,10 +313,11 @@ Found while porting (the Python code wins, kept for parity):
 
 ## Shared-helper candidates
 
-`pyJoin` (`os.path.join` without cleaning), `pyAbspath`, `pyBasename`, `rmtreeIgnore`
-(`shutil.rmtree(ignore_errors=True)`) and `commas` (`format(n, ",")`) are local to this
-package; `pyJoin`/`pyAbspath`/`pyBasename` belong next to `pycompat.PosixJoin` once a
-second package needs them.
+`pyAbspath`, `pyBasename`, `rmtreeIgnore` (`shutil.rmtree(ignore_errors=True)`) and
+`commas` (`format(n, ",")`) are local to this package; `pyAbspath`/`pyBasename` belong
+next to `pycompat.Join` once a second package needs them. `os.path.join`,
+`os.path.isdir` and `os.path.isfile` already come from `pycompat` (`Join`, `IsDir`,
+`IsFile`).
 
 S8 adds one: `pyTextLines` (`inheritread.go`, a text file read line by line with
 TextIOWrapper's chunked strict decoding) belongs in `pycompat` next to `ReadText` once a

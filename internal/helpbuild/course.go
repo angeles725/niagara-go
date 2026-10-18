@@ -35,10 +35,6 @@ type CourseDirMissingError struct{ Dir string }
 
 func (e *CourseDirMissingError) Error() string { return "course_dir not found: " + e.Dir }
 
-// CourseDir is course.course_dir: the absolute course tree bound to the
-// version whose data root is baseDir, "" when none is.
-func CourseDir(baseDir string) (string, error) { return courseDir(baseDir) }
-
 // courseFile is one file of the course tree: its path relative to the
 // tree ("/"-separated) and on disk.
 type courseFile struct{ rel, path string }
