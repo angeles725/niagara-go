@@ -29,6 +29,13 @@ type door struct {
 	now     func() float64
 }
 
+// bind tells a backend that answers in process which scripts are the sources.
+func (d *door) bind(p Paths) {
+	if b, ok := d.backend.(pathBinder); ok {
+		b.bindPaths(p)
+	}
+}
+
 // job is one source job, named so a failure can be typed as that source.
 type job struct {
 	key, title, command string

@@ -2,6 +2,7 @@ package corpusnav
 
 import (
 	"fmt"
+	"io"
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/bm25"
@@ -13,13 +14,14 @@ import (
 // engines; failures go to stderr and exit 1.
 func (c *corpus) cmdSelftest() int {
 	var errs []string
-	index := c.newMemIndex(c.targets("blocks"))
+	bs := c.search()
+	index := bs.NewMemIndex(bs.Targets("blocks"))
 	for _, t := range []struct {
 		label, query string
 		all          bool
 	}{{"single-word", "BStatus", false}, {"two-word OR", "BStatus overridden", false},
 		{"two-word AND", "BStatus overridden", true}} {
-		if hits := len(index.rank(t.query, t.all, nil)); hits == 0 {
+		if hits := len(index.Rank(t.query, t.all, nil)); hits == 0 {
 			errs = append(errs, fmt.Sprintf("%s (%s) → 0 blocks; expected > 0", pycompat.StrRepr(t.query), t.label))
 		} else {
 			fmt.Fprintf(c.out, "  PASS  %s %s → %d block(s)\n", t.label, pycompat.StrRepr(t.query), hits)
@@ -28,18 +30,19 @@ func (c *corpus) cmdSelftest() int {
 
 	// the cached find index ranks exactly like the in-memory BM25
 	query := "BStatus overridden"
-	stored := c.ranked("blocks", query, false, nil)
-	mem := index.rank(query, false, nil)
-	same := len(stored.results) == len(mem)
+	stored := bs.Ranked("blocks", query, false, nil)
+	io.WriteString(c.err, stored.Note)
+	mem := index.Rank(query, false, nil)
+	same := len(stored.Results) == len(mem)
 	for i := 0; same && i < len(mem); i++ {
-		same = stored.results[i].score == mem[i].score && stored.results[i].doc.Display == mem[i].doc.Display
+		same = stored.Results[i].Score == mem[i].Score && stored.Results[i].Doc.Display == mem[i].Doc.Display
 	}
 	if !same {
 		errs = append(errs, fmt.Sprintf("find index: %s ranks differently from the in-memory BM25", pycompat.StrRepr(query)))
 	} else {
 		how := "warm"
-		if stored.fallback != "" {
-			how = stored.fallback + ", rebuilt"
+		if stored.Fallback != "" {
+			how = stored.Fallback + ", rebuilt"
 		}
 		fmt.Fprintf(c.out, "  PASS  find index (%s) ranks %s like memory → %d block(s)\n", how, pycompat.StrRepr(query), len(mem))
 	}

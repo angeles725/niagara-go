@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"reflect"
 	"testing"
+
+	"github.com/angeles725/niagara-go/internal/corpusnav/blocksearch"
 )
 
 // testCorpus is the fixture corpus (niagara-research tools/tests/fixtures/golden-cli/corpus).
@@ -20,7 +22,7 @@ func TestPyPath(t *testing.T) {
 			t.Errorf("pyPath(%q) = %q, want %q", in, got, want)
 		}
 	}
-	if !pathLess("docs/a/x.md", "docs/a-b.md") {
+	if !blocksearch.PathLess("docs/a/x.md", "docs/a-b.md") {
 		t.Error("Path order compares components, not strings")
 	}
 }

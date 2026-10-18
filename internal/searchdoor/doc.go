@@ -15,10 +15,21 @@
 // Exit: 0 a source returned rows, 1 every source searched and none matched,
 // 2 a source was unavailable and none returned rows, 3 usage.
 //
-// The backends stay the Python tools: a Backend runs one of them and types its
-// answer (Raw). execBackend runs `<python> <script> <args...>` exactly as the
-// Python front door does; an in-process Backend can replace it per source once
-// the Go ports export library subpackages (decision D29).
+// A Backend runs one backend call and types its answer (Raw). execBackend runs
+// `<python> <script> <args...>` exactly as the Python front door does. By
+// default inprocBackend answers in process, through the libraries the Go ports
+// share (decision D29), the calls it can reproduce byte for byte: blocks
+// (corpusnav/blocksearch), docs (help/fts) and the code source's token and grep
+// (nav/codesearch) and rank (nav/classrank); it renders the exact text the
+// backend CLI prints, so the parsers see the same rows. Everything else runs
+// through exec: the structure, modules and license calls, and any call whose
+// data is absent, whose full-text index is missing or stale (D21) or whose
+// niagara_help miss block belongs to a printing package (or whose rank xref
+// index is absent); a call that falls back after trying in process gives exec
+// only the budget it has left. NSEARCH_EXEC=1 forces exec for every call; it is
+// the parity oracle. The in-process blocks source keeps its own find cache,
+// find-<scope>.nsearch.gob, beside corpus-nav's; rank shares module_nav's Go
+// cache (indexes/.mnav-cache/class-rank.gob).
 //
 // Locating the backends (decision D24 style; a binary has no source path):
 //
@@ -31,6 +42,7 @@
 //	code    $NSEARCH_MODULE_NAV    else <root>/module-navigator/tools/module_nav.py
 //	course  $NSEARCH_COURSE_ROOT   else <root>/sources/n4-dev-course
 //	python  $NSEARCH_PYTHON        else python3, else python, from PATH
+//	exec    $NSEARCH_EXEC=1        every call through exec (no in-process answer)
 //
 // The four NSEARCH_* path variables are the same seam the Python front door
 // reads (searchdoor/backend.py); an empty value keeps the default. The hermetic
@@ -41,5 +53,9 @@
 // nsearch.py, and a missing interpreter is that source's UNAVAILABLE reason; a
 // panic inside one source is typed UNAVAILABLE as "panic: <value>" where Python
 // named the exception type; the course index is not cached between questions
-// (one process answers one question); `--version` describes the Go build (D18).
+// (one process answers one question); `--version` describes the Go build (D18);
+// an in-process token miss leaves out module_nav's "Similar tokens:" line (a
+// full scan of the postings; the code source reads only the miss state);
+// an in-process call past its --timeout budget is typed timed out like a killed
+// process, but the library work is not interrupted (it ends with the process).
 package searchdoor

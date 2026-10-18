@@ -2,71 +2,21 @@ package corpusnav
 
 import (
 	"fmt"
-	"strings"
+	"io"
 
-	"github.com/angeles725/niagara-go/internal/bm25"
-	"github.com/angeles725/niagara-go/internal/glossary"
-	"github.com/angeles725/niagara-go/internal/honest"
+	"github.com/angeles725/niagara-go/internal/corpusnav/blocksearch"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyre"
-	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
-// corpusnav/search.py: find (ranked BM25) and grep (regex), with honest misses.
-
-type lineHit struct {
-	n    int
-	text string
-}
-
-type group struct {
-	display, path string
-	hits          []lineHit
-}
-
-// resultHeader is search.result_header: "B<N> · <title>" for main blocks, else
-// "<id or relpath> · <H1>".
-func resultHeader(display, path string, catalog map[string]string) string {
-	if label := mainLabelOf(display); label != "" {
-		return display + " · " + titleFor(label, catalog, path)
-	}
-	return strings.TrimRight(display+" · "+readH1(path), " ·")
-}
-
-// printHits is search.print_hits over groups pulled one at a time from next (Python
-// iterates a lazy generator); limit caps the TOTAL lines printed.
-func (c *corpus) printHits(next func() (group, bool), limit int, catalog map[string]string) {
-	shown := 0
-	for i := 0; ; i++ {
-		g, ok := next()
-		if !ok || shown >= limit {
-			return
-		}
-		if i > 0 {
-			fmt.Fprintln(c.out)
-		}
-		fmt.Fprintln(c.out, resultHeader(g.display, g.path, catalog))
-		for _, h := range g.hits {
-			if shown >= limit {
-				fmt.Fprintf(c.out, "    ... (limit %d reached; use --limit to see more)\n", limit)
-				break
-			}
-			fmt.Fprintf(c.out, "  %s: %s\n", pycompat.RJust(fmt.Sprint(h.n), 6, ' '), pycompat.Strip(h.text))
-			shown++
-		}
-	}
-}
+// corpusnav/search.py: find (ranked BM25, blocksearch) and grep (regex), with honest misses.
 
 // searchOutcome is search.search_outcome: a miss names what was searched; unreadable
 // files fail the run.
 func (c *corpus) searchOutcome(found bool, scope string, nFiles int, unreadable []string) int {
 	c.reportUnreadable(unreadable)
 	if !found {
-		counts := []honest.Count{{Label: "files", N: nFiles}}
-		if len(unreadable) > 0 {
-			counts = append(counts, honest.Count{Label: "unreadable", N: len(unreadable)})
-		}
-		fmt.Fprintln(c.out, honest.Miss("matches", scope, counts...))
+		fmt.Fprintln(c.out, blocksearch.MissLine(scope, nFiles, len(unreadable)))
 	}
 	switch {
 	case len(unreadable) > 0:
@@ -77,50 +27,19 @@ func (c *corpus) searchOutcome(found bool, scope string, nFiles int, unreadable 
 	return 1
 }
 
-// cmdFind is search.cmd_find: files ranked by BM25 (title 8x); a line is shown when its
-// folded text contains a query term. In OR mode a Spanish question also searches the
-// English glossary terms at half weight and says so first.
+// cmdFind is search.cmd_find, ranked and rendered by blocksearch.
 func (c *corpus) cmdFind(query, scope string, limit int, requireAll bool) int {
-	catalog := c.loadCatalog()
-	var factors []bm25.Factor
-	if !requireAll {
-		factors = glossary.Default().WeightedTerms(query)
+	r := c.search().Find(blocksearch.Query{Text: query, Scope: scope, Limit: limit, RequireAll: requireAll})
+	if r.Note != "" {
+		fmt.Fprintf(c.out, "(%s)\n", r.Note)
 	}
-	if len(factors) > 0 {
-		fmt.Fprintf(c.out, "(%s)\n", glossary.Default().Note(query))
+	io.WriteString(c.err, r.CacheNote)
+	io.WriteString(c.out, r.Rows)
+	c.reportUnreadable(r.Unreadable)
+	if r.Miss != "" {
+		fmt.Fprintln(c.out, r.Miss)
 	}
-	found := c.ranked(scope, query, requireAll, factors)
-	qTerms := textfold.Terms(query)
-	for _, f := range factors {
-		qTerms = append(qTerms, f.Term)
-	}
-	unreadable := append([]string(nil), found.unreadable...)
-	i := 0
-	next := func() (group, bool) {
-		for ; i < len(found.results); i++ {
-			d := found.results[i].doc
-			text, ok := d.textOf()
-			if !ok { // gone or unreadable since the index was checked: an error, not a skip
-				unreadable = append(unreadable, d.Path)
-				continue
-			}
-			g := group{display: d.Display, path: d.Path}
-			for n, ln := range pycompat.SplitLines(text, false) {
-				folded := fold(ln)
-				for _, q := range qTerms {
-					if strings.Contains(folded, q) {
-						g.hits = append(g.hits, lineHit{n + 1, ln})
-						break
-					}
-				}
-			}
-			i++
-			return g, true
-		}
-		return group{}, false
-	}
-	c.printHits(next, limit, catalog)
-	return c.searchOutcome(len(found.results) > 0, scope, found.nFiles, unreadable)
+	return r.Exit()
 }
 
 func (c *corpus) cmdGrep(regex, scope string, limit int) int {
@@ -131,7 +50,7 @@ func (c *corpus) cmdGrep(regex, scope string, limit int) int {
 		return 2
 	}
 	targets := c.targets(scope)
-	var groups []group
+	var groups []blocksearch.Group
 	var unreadable []string
 	for _, t := range targets {
 		text, ok := readText(t.path)
@@ -139,23 +58,23 @@ func (c *corpus) cmdGrep(regex, scope string, limit int) int {
 			unreadable = append(unreadable, t.path)
 			continue
 		}
-		g := group{display: t.display, path: t.path}
+		g := blocksearch.Group{Display: t.display, Path: t.path}
 		for n, ln := range pycompat.SplitLines(text, false) {
 			if re.MatchString(ln) {
-				g.hits = append(g.hits, lineHit{n + 1, ln})
+				g.Hits = append(g.Hits, blocksearch.Line{N: n + 1, Text: ln})
 			}
 		}
-		if len(g.hits) > 0 {
+		if len(g.Hits) > 0 {
 			groups = append(groups, g)
 		}
 	}
 	i := 0
-	c.printHits(func() (group, bool) {
+	io.WriteString(c.out, blocksearch.Render(func() (blocksearch.Group, bool) {
 		if i >= len(groups) {
-			return group{}, false
+			return blocksearch.Group{}, false
 		}
 		i++
 		return groups[i-1], true
-	}, limit, catalog)
+	}, limit, catalog))
 	return c.searchOutcome(len(groups) > 0, scope, len(targets), unreadable)
 }
