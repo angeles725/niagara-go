@@ -77,3 +77,45 @@ func TestLabels(t *testing.T) {
 		t.Error("IsMainLabel / IsSnapshot")
 	}
 }
+
+// TestPathIsPathlib: a block path is str(Path(root) / ... / name), so on Windows every
+// separator is "\" (sub_blocks walks with os.walk, then Path(cur) / name).
+func TestPathIsPathlib(t *testing.T) {
+	root := t.TempDir()
+	for _, f := range []string{"niagara-mental-model-bloque4.md", "notes/sub/bloque7-x.md"} {
+		p := filepath.Join(root, f)
+		if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(p, []byte("x\n"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	var got []string
+	for _, b := range AllBlocks(root) {
+		got = append(got, b.Path)
+	}
+	sep := string(filepath.Separator)
+	want := []string{root + sep + "niagara-mental-model-bloque4.md",
+		root + sep + "notes" + sep + "sub" + sep + "bloque7-x.md"}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("paths = %q, want %q", got, want)
+	}
+	for _, tt := range []struct {
+		dir, name string
+		windows   bool
+		want      string
+	}{
+		{".", "a.md", true, "a.md"},
+		{`C:\r`, "a.md", true, `C:\r\a.md`},
+		{`C:\r\`, "a.md", true, `C:\r\a.md`},
+		{"C:/r/", "a.md", true, `C:\r\a.md`},
+		{"testdata/r", "a.md", true, `testdata\r\a.md`},
+		{"r/", "a.md", false, "r/a.md"},
+		{"r", "a.md", false, "r/a.md"},
+	} {
+		if got := joinFor(tt.dir, tt.name, tt.windows); got != tt.want {
+			t.Errorf("joinFor(%q, %q, %v) = %q, want %q", tt.dir, tt.name, tt.windows, got, tt.want)
+		}
+	}
+}

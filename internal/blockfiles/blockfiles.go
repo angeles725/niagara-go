@@ -15,6 +15,7 @@ package blockfiles
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"sort"
 	"strings"
 
@@ -142,15 +143,22 @@ func sortBlocks(bs []Block, tie func(a, b Block) bool) {
 	})
 }
 
-// join is Path(dir) / name.
-func join(dir, name string) string {
+// join is str(Path(dir) / name) for the host: on Windows pathlib spells every separator
+// "\" (the tie-break sort on str(path) then compares that spelling, as Python does).
+func join(dir, name string) string { return joinFor(dir, name, runtime.GOOS == "windows") }
+
+func joinFor(dir, name string, windows bool) string {
+	sep := "/"
+	if windows {
+		sep, dir = `\`, strings.ReplaceAll(dir, "/", `\`)
+	}
 	switch {
 	case dir == ".":
 		return name
-	case strings.HasSuffix(dir, "/"):
+	case strings.HasSuffix(dir, sep):
 		return dir + name
 	}
-	return dir + "/" + name
+	return dir + sep + name
 }
 
 // MainBlocks is main_blocks: the main blocks directly under root, sorted by label, then
