@@ -1,4 +1,4 @@
-package course
+package check
 
 import (
 	"archive/zip"
@@ -48,7 +48,7 @@ func TestCheckZippedBog(t *testing.T) {
 		t.Fatalf("plain station gave %d results, zipped %d", len(plain), len(zipped))
 	}
 	for i := range plain {
-		if plain[i].Verdict != verdictPass || plain[i].Verdict != zipped[i].Verdict || plain[i].Evidence != zipped[i].Evidence {
+		if plain[i].Verdict != Pass || plain[i].Verdict != zipped[i].Verdict || plain[i].Evidence != zipped[i].Evidence {
 			t.Errorf("%s: plain %s %q, zipped %s %q", plain[i].ID, plain[i].Verdict, plain[i].Evidence,
 				zipped[i].Verdict, zipped[i].Evidence)
 		}

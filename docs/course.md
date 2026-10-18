@@ -7,6 +7,16 @@ It reads three Markdown files of a niagara-research checkout and one or two cour
 files. It is new (no Python original), so its golden cases run over the synthetic tree
 `internal/course/testdata/root/`.
 
+## Packages
+
+| Package | Holds | Prints |
+|---|---|---|
+| `internal/course/key` | the answer-key parser and model: `Load(root)`, `Corpus`, `Item`, `Group`, the status vocabulary, `GroupKeys` | nothing (reusable, e.g. by nsearch) |
+| `internal/course/check` | the check spec (`Spec`), the kinds, the station and jar reader (`Open`, `Station.Run`), the verdicts of `verify-predictions` | nothing |
+| `internal/course` | the CLI: argument parsing, root discovery, the tables, JSON and summaries | everything |
+
+The fixtures of all three stay under `internal/course/testdata/`.
+
 ## Sources
 
 | File (relative to the root) | Items |
@@ -149,7 +159,7 @@ per check. It reads the station and the jars only; it needs no niagara-research 
   every jar check is SKIP.
 - `--lab`: repeatable; `3`, `03`, `L3`, `B`, `LB`. A lab without checks (8) is exit 1.
 
-The spec is the table `checkSpec` in `internal/course/checkspec.go`: one row per check with an
+The spec is the table `Spec` in `internal/course/check/spec.go`: one row per check with an
 ID (`C<lab>.<n>`), the lab, the answer-key items it confirms (`L4.13`, ...), a kind and a
 one-line description. Expected defaults are cited next to each lab's rows (lab `.java`
 file:line, or `organized/` for a framework type). Component types are written
@@ -256,19 +266,19 @@ not observed.
 - `root_test.go`: the discovery order (flag, variable, cwd walk, executable walk) and the
   not-found error, run from a temporary directory with the executable stubbed, so no `labs.md`
   above the real checkout can leak in.
-- `check_test.go` and the `check-*` goldens: synthetic stations under
+- `check/check_test.go` and the `check-*` goldens: synthetic stations under
   `internal/course/testdata/stations/` (`good`: every check PASS; `bad`: no FirstComponent,
   default Tstat diff, no Add.out -> Output link, nine CSV files, a driver Tcp Config on the
   default port, a network whose ping failed (`health.down` true, no `lastOkTime`) and a driver
   device never pinged (no `health`); `broken`:
   not a bog) and a synthetic install under `testdata/install/`, whose jars are generated from the table in
-  `fixturejars_test.go` (`COURSE_UPDATE_FIXTURES=1 go test -run TestFixtureJars`; the test fails
+  `check/fixturejars_test.go` (`COURSE_UPDATE_FIXTURES=1 go test -run TestFixtureJars`; the test fails
   when a jar drifts). The zipped form of a bog is covered by `TestCheckZippedBog`.
   `TestCheckTrainingStation` runs the spec against `COURSE_TRAINING_STATION` (and the jars of
   `COURSE_NIAGARA_INSTALL`) and pins the known station differences; it skips, visibly,
   without the variable. `TestCheckNestedNeedsNestedLoad`: a dotted check on a bog read without
   nested values is SKIP.
-- `verify_test.go` and the `verify-*` goldens: the verdict rules (`TestDecidePrediction`) and
+- `check/verify_test.go` and the `verify-*` goldens: the verdict rules (`TestDecidePrediction`) and
   the command over `testdata/predict-root/` (a synthetic answer key whose predicted IDs are
   linked keys: one unlinked, one linked only to a jar check, the range item `L4.15–L4.16`
   reached through the noted key L4.15 (PARTIAL), the range `L10.6–L10.7` reached by two keys
@@ -280,7 +290,7 @@ not observed.
   `TestVerifyPredictionsTrainingStation` (with `COURSE_TRAINING_STATION` and
   `NIAGARA_RESEARCH_DIR`) pins only that no predicted item is CONTRADICTED, none is CONFIRMED
   and some are PARTIAL on the live station. `TestCheckKeysReal` resolves every linked key in the real labs.md.
-- `oracle_test.go`: the recall oracle (plain regexes over the raw files, its own range
+- `key/oracle_test.go`: the recall oracle (plain regexes over the raw files, its own range
   expansion) must equal the parsed ID set on the fixture, and on the real checkout when
   `NIAGARA_RESEARCH_DIR` is set, where the counts per group and per status are pinned.
 

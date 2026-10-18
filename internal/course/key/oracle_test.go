@@ -1,4 +1,4 @@
-package course
+package key
 
 import (
 	"os"
@@ -47,17 +47,17 @@ func readSource(t *testing.T, root, rel string) string {
 func oracleIDs(t *testing.T, root string) []string {
 	t.Helper()
 	set := map[string]bool{}
-	for _, m := range oracleLab.FindAllStringSubmatch(readSource(t, root, labsFile), -1) {
+	for _, m := range oracleLab.FindAllStringSubmatch(readSource(t, root, LabsFile), -1) {
 		for _, id := range oracleExpand(m[1]) {
 			set[normID(id)] = true
 		}
 	}
-	for _, m := range oracleTable.FindAllStringSubmatch(readSource(t, root, reviewFile), -1) {
+	for _, m := range oracleTable.FindAllStringSubmatch(readSource(t, root, ReviewFile), -1) {
 		for _, id := range oracleExpand(m[1]) {
 			set[normID(id)] = true
 		}
 	}
-	for _, m := range oracleExam.FindAllStringSubmatch(readSource(t, root, examFile), -1) {
+	for _, m := range oracleExam.FindAllStringSubmatch(readSource(t, root, ExamFile), -1) {
 		set["P"+m[1]] = true
 	}
 	return sortedKeys(set)
@@ -111,7 +111,7 @@ func diff(a, b []string) (onlyA, onlyB []string) {
 // every item's source line names its ID.
 func checkRecall(t *testing.T, root string) *Corpus {
 	t.Helper()
-	c, problems := load(root)
+	c, problems := Load(root)
 	if c == nil {
 		t.Fatalf("load %s: %s", root, strings.Join(problems, "\n"))
 	}
@@ -120,7 +120,7 @@ func checkRecall(t *testing.T, root string) *Corpus {
 		t.Errorf("recall: oracle IDs not parsed %v; parsed IDs not in the oracle %v", missed, extra)
 	}
 	files := map[string][]string{}
-	for _, f := range sourceFiles {
+	for _, f := range SourceFiles {
 		files[f] = strings.Split(strings.ReplaceAll(readSource(t, root, f), "\r\n", "\n"), "\n")
 	}
 	for _, it := range c.Items {
@@ -141,24 +141,24 @@ func checkRecall(t *testing.T, root string) *Corpus {
 }
 
 func TestRecallFixture(t *testing.T) {
-	c := checkRecall(t, "testdata/root")
+	c := checkRecall(t, "../testdata/root")
 	if got := len(c.Items); got != 24 {
 		t.Errorf("fixture items = %d, want 24", got)
 	}
 }
 
 func TestParseErrorsFixture(t *testing.T) {
-	c, problems := load("testdata/dup-root")
+	c, problems := Load("../testdata/dup-root")
 	want := []string{
-		labsFile + ":6: malformed item ID L1.x",
-		labsFile + ":7: item L2.1 is outside its group L1",
-		labsFile + ":8: duplicate ID L1.1 (first at " + labsFile + ":5)",
-		labsFile + ":12: live-run ID L1.9 is not an item",
-		labsFile + ":12: live-run range L1.4–L1.2 is reversed or crosses groups",
-		reviewFile + ":10: duplicate ID D1.1 (first at " + reviewFile + ":9)",
-		reviewFile + ":11: table row has 2 cells, want 3",
-		reviewFile + ":17: traceability ID RA1.R9 is not a requirement",
-		reviewFile + ":19: traceability row FOO is not a requirement ID",
+		LabsFile + ":6: malformed item ID L1.x",
+		LabsFile + ":7: item L2.1 is outside its group L1",
+		LabsFile + ":8: duplicate ID L1.1 (first at " + LabsFile + ":5)",
+		LabsFile + ":12: live-run ID L1.9 is not an item",
+		LabsFile + ":12: live-run range L1.4–L1.2 is reversed or crosses groups",
+		ReviewFile + ":10: duplicate ID D1.1 (first at " + ReviewFile + ":9)",
+		ReviewFile + ":11: table row has 2 cells, want 3",
+		ReviewFile + ":17: traceability ID RA1.R9 is not a requirement",
+		ReviewFile + ":19: traceability row FOO is not a requirement ID",
 		"9 parse errors; nothing searched",
 	}
 	if c != nil || !reflect.DeepEqual(problems, want) {
@@ -166,14 +166,21 @@ func TestParseErrorsFixture(t *testing.T) {
 	}
 }
 
-func countsByGroup(c *Corpus) map[string]*countRow {
-	rows := map[string]*countRow{"total": {Group: "total"}}
+// counts is the number of items per status ("items": every item), as course status counts them.
+type counts map[string]int
+
+func countsByGroup(c *Corpus) map[string]counts {
+	rows := map[string]counts{"total": {}}
 	for _, it := range c.Items {
 		if rows[it.Group] == nil {
-			rows[it.Group] = &countRow{Group: it.Group}
+			rows[it.Group] = counts{}
 		}
-		rows[it.Group].count(it)
-		rows["total"].count(it)
+		for _, g := range []string{it.Group, "total"} {
+			rows[g]["items"]++
+			for _, s := range it.StatusList() {
+				rows[g][s]++
+			}
+		}
 	}
 	return rows
 }
@@ -185,22 +192,22 @@ func TestRecallReal(t *testing.T) {
 	if root == "" {
 		t.Skipf("%s is not set: the real niagara-research answer keys are not checked", RootEnv)
 	}
-	if !hasMarker(root) {
-		t.Skipf("%s=%s has no %s: the real answer keys are not checked", RootEnv, root, labsFile)
+	if !HasMarker(root) {
+		t.Skipf("%s=%s has no %s: the real answer keys are not checked", RootEnv, root, LabsFile)
 	}
 	c := checkRecall(t, root)
 	rows := countsByGroup(c)
 	want := map[string]int{"L1": 26, "L2": 12, "L3": 11, "L4": 16, "L5": 25, "L6": 35, "L7": 21, "L8": 17,
 		"L9": 15, "L10": 25, "L11": 43, "LB": 21, "LA": 4, "RA1": 39, "RA2": 47, "RAX": 10, "EXAM": 3}
 	for g, n := range want {
-		if rows[g] == nil || rows[g].Items != n {
+		if rows[g] == nil || rows[g]["items"] != n {
 			t.Errorf("group %s items = %v, want %d", g, rows[g], n)
 		}
 	}
-	got := *rows["total"]
-	pinned := countRow{Group: "total", Items: 370, Predicted: 40, Unverified: 20, Corrected: 10, Identical: 50,
-		Verified: 4, Written: 258}
-	if got != pinned {
+	got := rows["total"]
+	pinned := counts{"items": 370, "predicted": 40, "unverified": 20, "corrected": 10, "identical": 50,
+		"verified": 4, "written": 258}
+	if !reflect.DeepEqual(got, pinned) {
 		t.Errorf("totals = %+v, want %+v", got, pinned)
 	}
 	live, ids := 0, len(parsedIDs(c))
@@ -212,10 +219,10 @@ func TestRecallReal(t *testing.T) {
 	if live != 10 || ids != 382 {
 		t.Errorf("live-run items = %d (want 10), distinct IDs with ranges expanded = %d (want 382)", live, ids)
 	}
-	text := strings.Split(strings.TrimSuffix(readSource(t, root, labText), "\n"), "\n")
+	text := strings.Split(strings.TrimSuffix(readSource(t, root, LabText), "\n"), "\n")
 	for _, it := range c.Items {
 		for _, r := range it.Ranges {
-			if it.TextFile == labText && (r.A < 1 || r.B < r.A || r.B > len(text)) {
+			if it.TextFile == LabText && (r.A < 1 || r.B < r.A || r.B > len(text)) {
 				t.Errorf("%s: LI range %s outside Lab Instructions.txt (%d lines)", it.ID, r, len(text))
 			}
 		}

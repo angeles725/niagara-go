@@ -1,4 +1,4 @@
-package course
+package key
 
 import (
 	"os"
@@ -14,12 +14,12 @@ func parseLabsFile(t *testing.T, path string) *Corpus {
 		t.Fatal(err)
 	}
 	c := newCorpus()
-	parseLabs(c, splitLines(raw))
+	parseLabs(c, SplitLines(raw))
 	return c
 }
 
 func TestParseLabsFixture(t *testing.T) {
-	c := parseLabsFile(t, "testdata/root/docs/n4-dev-course-solutions/labs.md")
+	c := parseLabsFile(t, "../testdata/root/docs/n4-dev-course-solutions/labs.md")
 	if len(c.errs) > 0 {
 		t.Fatalf("errors: %v", c.errs)
 	}
@@ -46,7 +46,7 @@ func TestParseLabsFixture(t *testing.T) {
 		{"LA.2", []string{"verified"}, false, []Range{{26, 26}}},
 	}
 	for _, ck := range checks {
-		it := c.lookup(ck.id)
+		it := c.Lookup(ck.id)
 		if it == nil {
 			t.Errorf("%s: not found", ck.id)
 			continue
@@ -56,7 +56,7 @@ func TestParseLabsFixture(t *testing.T) {
 				ck.status, ck.live, ck.ranges)
 		}
 	}
-	g, lb := c.group("LB"), c.lookup("LB.1")
+	g, lb := c.Group("LB"), c.Lookup("LB.1")
 	switch {
 	case g == nil || len(g.Ranges) != 1 || g.Ranges[0] != (Range{21, 24}):
 		t.Errorf("Bonus lab group wrong: %+v", g)
@@ -66,13 +66,13 @@ func TestParseLabsFixture(t *testing.T) {
 }
 
 func TestParseLabsErrors(t *testing.T) {
-	c := parseLabsFile(t, "testdata/dup-root/docs/n4-dev-course-solutions/labs.md")
+	c := parseLabsFile(t, "../testdata/dup-root/docs/n4-dev-course-solutions/labs.md")
 	var got []string
 	for _, e := range c.sortedErrors() {
 		got = append(got, e.msg)
 	}
 	want := []string{"malformed item ID L1.x", "item L2.1 is outside its group L1",
-		"duplicate ID L1.1 (first at " + labsFile + ":5)", "live-run ID L1.9 is not an item",
+		"duplicate ID L1.1 (first at " + LabsFile + ":5)", "live-run ID L1.9 is not an item",
 		"live-run range L1.4–L1.2 is reversed or crosses groups"}
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("errors:\n%s\nwant:\n%s", strings.Join(got, "\n"), strings.Join(want, "\n"))

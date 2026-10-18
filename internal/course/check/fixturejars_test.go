@@ -1,4 +1,4 @@
-package course
+package check
 
 import (
 	"archive/zip"
@@ -73,7 +73,7 @@ const fixtureModuleXML = `<module name="training-rt">
 </module>
 `
 
-const fixtureInstall = "testdata/install"
+const fixtureInstall = "../testdata/install"
 
 func buildJar(entries map[string]string) []byte {
 	names := make([]string, 0, len(entries))

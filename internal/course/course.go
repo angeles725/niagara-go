@@ -12,6 +12,7 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/argparse"
 	"github.com/angeles725/niagara-go/internal/cli"
+	"github.com/angeles725/niagara-go/internal/course/key"
 	"github.com/angeles725/niagara-go/internal/version"
 )
 
@@ -72,8 +73,8 @@ func buildParser() *argparse.Parser {
 	s.Add(jsonHelp, "--json")
 	st := add("status", "items per group and status; --status lists the matching items")
 	st.Add(argparse.Arg{Metavar: "GROUP", Help: "one group: a lab number (3 or L3), B, A, RA1, RA2, RAX, RA (all three), EXAM"}, "--lab")
-	choices := make([]any, len(statuses))
-	for i, s := range statuses {
+	choices := make([]any, len(key.Statuses))
+	for i, s := range key.Statuses {
 		choices[i] = s
 	}
 	st.Add(argparse.Arg{Choices: choices, Help: "list the items carrying this status (written = no marker)"}, "--status")
@@ -108,7 +109,7 @@ func Main(args []string, s cli.Stdio) int {
 		fmt.Fprintf(s.Err, "course: %v\n", err)
 		return cli.ExitCannotSearch
 	}
-	c, problems := load(root)
+	c, problems := key.Load(root)
 	if c == nil {
 		for _, pr := range problems {
 			fmt.Fprintf(s.Err, "course: %s\n", pr)

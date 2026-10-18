@@ -1,4 +1,4 @@
-package course
+package check
 
 import (
 	"archive/zip"
@@ -9,13 +9,14 @@ import (
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/bog"
+	"github.com/angeles725/niagara-go/internal/course/key"
 )
 
 // Verdicts. A check that could not run (no --install, an unreadable jar) is SKIP, never PASS.
 const (
-	verdictPass = "PASS"
-	verdictFail = "FAIL"
-	verdictSkip = "SKIP"
+	Pass = "PASS"
+	Fail = "FAIL"
+	Skip = "SKIP"
 )
 
 // Result is one check run against a station.
@@ -25,10 +26,10 @@ type Result struct {
 	Evidence string
 }
 
-// station is the input of a check run: the parsed bog, its directory and the optional install.
-type station struct {
+// Station is the input of a check run: the parsed bog, its directory and the optional install.
+type Station struct {
 	dir     string // the station directory (holds config.bog and shared/)
-	name    string // the root component's stationName, else the directory name
+	Name    string // the root component's stationName, else the directory name
 	b       *bog.Bog
 	nested  bool   // read with bog.Options.NestedSlots: Comp.Nested holds the dotted slots
 	install string // "" when --install was not given
@@ -40,9 +41,9 @@ type jarFile struct {
 	err error
 }
 
-// openStation reads a station directory or a bog file inside one; nested also reads the values
+// Open reads a station directory or a bog file inside one; nested also reads the values
 // stored below composite slots (Comp.Nested). The error is the bog reader's message (exit 2).
-func openStation(path, install string, nested bool) (*station, error) {
+func Open(path, install string, nested bool) (*Station, error) {
 	file, dir := path, filepath.Dir(path)
 	if st, err := os.Stat(path); err == nil && st.IsDir() {
 		file, dir = filepath.Join(path, "config.bog"), path
@@ -51,20 +52,20 @@ func openStation(path, install string, nested bool) (*station, error) {
 	if err != nil {
 		return nil, err
 	}
-	s := &station{dir: dir, name: filepath.Base(dir), b: b, nested: nested, install: install, jars: map[string]*jarFile{}}
+	s := &Station{dir: dir, Name: filepath.Base(dir), b: b, nested: nested, install: install, jars: map[string]*jarFile{}}
 	for _, h := range b.Roots {
 		if c, _ := b.Comps.Get(h); c != nil {
 			if sl, ok := c.Slots.Get("stationName"); ok && sl.Value != nil && *sl.Value != "" {
-				s.name = *sl.Value
+				s.Name = *sl.Value
 			}
 		}
 	}
 	return s, nil
 }
 
-// needsNested reports whether a check reads a dotted (nested) slot, so the bog must be read
+// NeedsNested reports whether a check reads a dotted (nested) slot, so the bog must be read
 // with bog.Options.NestedSlots.
-func needsNested(checks []*Check) bool {
+func NeedsNested(checks []*Check) bool {
 	for _, ck := range checks {
 		if ck.Kind == kindSlot && ck.dotted() {
 			return true
@@ -83,7 +84,14 @@ func (ck *Check) dotted() bool {
 	return false
 }
 
-func (s *station) close() {
+// Scope is "station <name> (<n> components, <m> links)", for a summary line.
+func (s *Station) Scope() string {
+	return fmt.Sprintf("station %s (%s, %s)", s.Name, key.Plural(s.b.Comps.Len(), "component"),
+		key.Plural(len(s.b.Links), "link"))
+}
+
+// Close releases the jars the checks opened.
+func (s *Station) Close() {
 	for _, j := range s.jars {
 		if j.zr != nil {
 			j.zr.Close()
@@ -93,13 +101,13 @@ func (s *station) close() {
 
 // isType reports whether c is "module:Type"; the module comes from the bog's final prefix
 // map, so a prefix declared after its first use still resolves.
-func (s *station) isType(c *bog.Comp, spec string) bool {
+func (s *Station) isType(c *bog.Comp, spec string) bool {
 	module, typ, _ := strings.Cut(spec, ":")
 	m, _ := s.b.Prefixes.Get(c.Pfx)
 	return m == module && c.SimpleType() == typ
 }
 
-func (s *station) within(c *bog.Comp, spec string) bool {
+func (s *Station) within(c *bog.Comp, spec string) bool {
 	for p := c.ParentH; p != nil; {
 		pc, ok := s.b.Comps.Get(*p)
 		if !ok {
@@ -114,7 +122,7 @@ func (s *station) within(c *bog.Comp, spec string) bool {
 }
 
 // comps returns the components of type spec in document order.
-func (s *station) comps(spec string) []*bog.Comp {
+func (s *Station) comps(spec string) []*bog.Comp {
 	var out []*bog.Comp
 	for _, c := range s.b.Comps.All() {
 		if s.isType(c, spec) {
@@ -151,7 +159,8 @@ func pathList(cs []*bog.Comp) string {
 	return strings.Join(names, ", ")
 }
 
-func (s *station) run(ck *Check) Result {
+// Run runs one check on the station.
+func (s *Station) Run(ck *Check) Result {
 	r := Result{Check: ck}
 	switch ck.Kind {
 	case kindType:
@@ -170,12 +179,12 @@ func (s *station) run(ck *Check) Result {
 
 func verdict(ok bool) string {
 	if ok {
-		return verdictPass
+		return Pass
 	}
-	return verdictFail
+	return Fail
 }
 
-func (s *station) checkType(ck *Check) (string, string) {
+func (s *Station) checkType(ck *Check) (string, string) {
 	all := s.comps(ck.Type)
 	cs := all
 	if ck.Within != "" {
@@ -235,15 +244,15 @@ func describe(c *bog.Comp, slot, value string, stored bool) string {
 	return fmt.Sprintf("%s.%s = %s (%s)", c.Path, slot, value, src)
 }
 
-func (s *station) checkSlot(ck *Check) (string, string) {
+func (s *Station) checkSlot(ck *Check) (string, string) {
 	if ck.dotted() && !s.nested {
 		// Never pass a nested slot on its type default because the values were not read.
-		return verdictSkip, strings.Join(append([]string{ck.Slot}, ck.Stored...), ", ") +
+		return Skip, strings.Join(append([]string{ck.Slot}, ck.Stored...), ", ") +
 			" is a nested slot: the station was read without nested values"
 	}
 	cs := s.comps(ck.Type)
 	if len(cs) == 0 {
-		return verdictFail, "no " + ck.Type + " component (searched " + plural(s.b.Comps.Len(), "component") + ")"
+		return Fail, "no " + ck.Type + " component (searched " + key.Plural(s.b.Comps.Len(), "component") + ")"
 	}
 	if ck.Distinct {
 		seen := map[string]bool{}
@@ -256,7 +265,7 @@ func (s *station) checkSlot(ck *Check) (string, string) {
 		}
 		sort.Strings(vals)
 		ok := countOK(ck.Op, len(vals), ck.N)
-		ev := fmt.Sprintf("%d distinct %s over %s", len(vals), ck.Slot, plural(len(cs), "component"))
+		ev := fmt.Sprintf("%d distinct %s over %s", len(vals), ck.Slot, key.Plural(len(cs), "component"))
 		if !ok {
 			ev += ", want " + want(ck.Op, ck.N)
 		}
@@ -292,15 +301,15 @@ func (s *station) checkSlot(ck *Check) (string, string) {
 	}
 	if len(bad) == 0 {
 		if len(cs) == 1 {
-			return verdictPass, first
+			return Pass, first
 		}
-		return verdictPass, fmt.Sprintf("%d of %d: %s", len(cs), len(cs), first)
+		return Pass, fmt.Sprintf("%d of %d: %s", len(cs), len(cs), first)
 	}
-	return verdictFail, fmt.Sprintf("%d of %d pass, %s: %s", len(cs)-len(bad), len(cs), target, bad[0])
+	return Fail, fmt.Sprintf("%d of %d pass, %s: %s", len(cs)-len(bad), len(cs), target, bad[0])
 }
 
 // linkSource resolves a link's source component: a handle, else a "slot:/path" ord.
-func (s *station) linkSource(l *bog.Link) *bog.Comp {
+func (s *Station) linkSource(l *bog.Link) *bog.Comp {
 	if l.SrcH != nil {
 		c, _ := s.b.Comps.Get(*l.SrcH)
 		return c
@@ -314,7 +323,7 @@ func (s *station) linkSource(l *bog.Link) *bog.Comp {
 	return nil
 }
 
-func (s *station) checkLink(ck *Check) (string, string) {
+func (s *Station) checkLink(ck *Check) (string, string) {
 	var rows []string
 	for _, l := range s.b.Links {
 		if l.ContainerH == nil || l.TgtSlot == nil || *l.TgtSlot != ck.Slot || l.SrcSlot == nil || *l.SrcSlot != ck.FromSlot {
@@ -330,7 +339,7 @@ func (s *station) checkLink(ck *Check) (string, string) {
 	ok := countOK(ck.Op, len(rows), ck.N)
 	ev := fmt.Sprintf("found %d", len(rows))
 	if !ok {
-		ev += fmt.Sprintf(", want %s (searched %s)", want(ck.Op, ck.N), plural(len(s.b.Links), "link"))
+		ev += fmt.Sprintf(", want %s (searched %s)", want(ck.Op, ck.N), key.Plural(len(s.b.Links), "link"))
 	}
 	if len(rows) > 0 {
 		ev += ": " + rows[0]
@@ -341,11 +350,11 @@ func (s *station) checkLink(ck *Check) (string, string) {
 	return verdict(ok), ev
 }
 
-func (s *station) checkFiles(ck *Check) (string, string) {
-	pattern := strings.ReplaceAll(ck.Glob, "{station}", globEscape(s.name))
+func (s *Station) checkFiles(ck *Check) (string, string) {
+	pattern := strings.ReplaceAll(ck.Glob, "{station}", globEscape(s.Name))
 	matches, err := filepath.Glob(filepath.Join(globEscape(s.dir), filepath.FromSlash(pattern)))
 	if err != nil {
-		return verdictSkip, fmt.Sprintf("bad pattern %s: %v", pattern, err)
+		return Skip, fmt.Sprintf("bad pattern %s: %v", pattern, err)
 	}
 	var files []string
 	for _, m := range matches {

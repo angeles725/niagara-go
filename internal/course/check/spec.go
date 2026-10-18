@@ -1,4 +1,4 @@
-package course
+package check
 
 // The lab check spec: what a correct solution of each lab leaves in a station (components,
 // slot values, links, output files) or in the install (built, signed jars). It is data; the
@@ -17,7 +17,7 @@ const (
 	services        = "baja:ServiceContainer"
 )
 
-var checkSpec = []Check{
+var Spec = []Check{
 	// Lab 1. BFirstComponent.java:15-20 timeExecuted, default BAbsTime.DEFAULT (not stored);
 	// doExecute (:28-32) sets it to now.
 	{ID: "C1.1", Lab: "1", Keys: []string{"L1.24"}, Kind: kindType, Desc: "a FirstComponent in the station",

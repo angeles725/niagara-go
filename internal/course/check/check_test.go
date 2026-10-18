@@ -1,4 +1,4 @@
-package course
+package check
 
 import (
 	"os"
@@ -52,7 +52,7 @@ func writeStation(t *testing.T, csvs ...string) string {
 }
 
 func TestCheckKinds(t *testing.T) {
-	st, err := openStation(writeStation(t, "Mini_a.csv", "Mini_b.csv", "Other_c.csv"), "", true)
+	st, err := Open(writeStation(t, "Mini_a.csv", "Mini_b.csv", "Other_c.csv"), "", true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -61,49 +61,49 @@ func TestCheckKinds(t *testing.T) {
 		verdict  string
 		evidence string
 	}{
-		{Check{Kind: kindType, Type: "training:WorkOrderService", Op: opEq, N: 2}, verdictPass, "found 2: Services/Svc, Svc2"},
+		{Check{Kind: kindType, Type: "training:WorkOrderService", Op: opEq, N: 2}, Pass, "found 2: Services/Svc, Svc2"},
 		{Check{Kind: kindType, Type: "training:WorkOrderService", Within: "baja:ServiceContainer", Op: opEq, N: 2},
-			verdictFail, "found 1 under baja:ServiceContainer (2 in total), want exactly 2: Services/Svc"},
-		{Check{Kind: kindType, Type: "training:Add", Op: opMin, N: 1}, verdictFail, "found 0, want at least 1"},
-		{Check{Kind: kindSlot, Type: "training:Tstat", Slot: "diff", Want: "2.0", Default: "0.0"}, verdictPass, "Tstat.diff = 2.0 (stored)"},
+			Fail, "found 1 under baja:ServiceContainer (2 in total), want exactly 2: Services/Svc"},
+		{Check{Kind: kindType, Type: "training:Add", Op: opMin, N: 1}, Fail, "found 0, want at least 1"},
+		{Check{Kind: kindSlot, Type: "training:Tstat", Slot: "diff", Want: "2.0", Default: "0.0"}, Pass, "Tstat.diff = 2.0 (stored)"},
 		{Check{Kind: kindSlot, Type: "training:Tstat", Slot: "action", Want: "reverse", Default: "direct"},
-			verdictFail, "0 of 1 pass, want reverse: Tstat.action = direct (default)"},
+			Fail, "0 of 1 pass, want reverse: Tstat.action = direct (default)"},
 		{Check{Kind: kindSlot, Type: "training:WorkOrderService", Slot: "lastSuccess", Set: true},
-			verdictFail, "1 of 2 pass, want it stored: Svc2.lastSuccess = \"\" (default)"},
+			Fail, "1 of 2 pass, want it stored: Svc2.lastSuccess = \"\" (default)"},
 		{Check{Kind: kindSlot, Type: "lateModule:Device", Slot: "id", Default: "A", Distinct: true, Op: opMin, N: 2},
-			verdictPass, "2 distinct id over 2 components: A, b"},
-		{Check{Kind: kindSlot, Type: "training:Add", Slot: "out", Set: true}, verdictFail, "no training:Add component (searched 11 components)"},
-		{Check{Kind: kindSlot, Type: "net:TcpConfig", Slot: "address.port", Want: "23", Default: "0"}, verdictPass, "Net/tcp.address.port = 23 (stored)"},
+			Pass, "2 distinct id over 2 components: A, b"},
+		{Check{Kind: kindSlot, Type: "training:Add", Slot: "out", Set: true}, Fail, "no training:Add component (searched 11 components)"},
+		{Check{Kind: kindSlot, Type: "net:TcpConfig", Slot: "address.port", Want: "23", Default: "0"}, Pass, "Net/tcp.address.port = 23 (stored)"},
 		{Check{Kind: kindSlot, Type: "net:TcpConfig", Slot: "address.sessionId", Want: "5", Default: "-1"},
-			verdictFail, "0 of 1 pass, want 5: Net/tcp.address.sessionId = -1 (default)"},
-		{Check{Kind: kindSlot, Type: "net:Network", Slot: "health.lastOkTime", Set: true}, verdictPass,
+			Fail, "0 of 1 pass, want 5: Net/tcp.address.sessionId = -1 (default)"},
+		{Check{Kind: kindSlot, Type: "net:Network", Slot: "health.lastOkTime", Set: true}, Pass,
 			"Net.health.lastOkTime = 2026-10-16T15:13:00.000-06:00 (stored)"},
-		{Check{Kind: kindSlot, Type: "net:Network", Slot: "health.down", Want: "false", Default: "false"}, verdictPass,
+		{Check{Kind: kindSlot, Type: "net:Network", Slot: "health.down", Want: "false", Default: "false"}, Pass,
 			"Net.health.down = false (default)"},
 		// down = false on a component never pinged is the default: Stored requires lastOkTime too.
 		{Check{Kind: kindSlot, Type: "net:Network", Slot: "health.down", Want: "false", Default: "false",
-			Stored: []string{"health.lastOkTime"}}, verdictPass, "Net.health.down = false (default)"},
+			Stored: []string{"health.lastOkTime"}}, Pass, "Net.health.down = false (default)"},
 		{Check{Kind: kindSlot, Type: "net:Dev", Slot: "health.down", Want: "false", Default: "false",
-			Stored: []string{"health.lastOkTime"}}, verdictFail,
+			Stored: []string{"health.lastOkTime"}}, Fail,
 			"0 of 1 pass, want false with health.lastOkTime stored: Net/dev.health.lastOkTime = \"\" (default)"},
 		{Check{Kind: kindLink, From: "control:NumericWritable", FromSlot: "out", Type: "training:Tstat", Slot: "cv", Op: opMin, N: 1},
-			verdictPass, "found 1: Point.out -> Tstat.cv"},
+			Pass, "found 1: Point.out -> Tstat.cv"},
 		{Check{Kind: kindLink, From: "control:NumericWritable", FromSlot: "out", Type: "training:Tstat", Slot: "sp", Op: opMin, N: 1},
-			verdictPass, "found 1: Point.out -> Tstat.sp"},
+			Pass, "found 1: Point.out -> Tstat.sp"},
 		{Check{Kind: kindLink, From: "control:NumericWritable", FromSlot: "out", Type: "training:Tstat", Slot: "diff", Op: opMin, N: 1},
-			verdictFail, "found 0, want at least 1 (searched 2 links)"},
-		{Check{Kind: kindFiles, Glob: "shared/{station}_*.csv", Op: opEq, N: 2}, verdictPass, "found 2 shared/Mini_*.csv: Mini_a.csv … Mini_b.csv"},
-		{Check{Kind: kindFiles, Glob: "shared/{station}_*.csv", Op: opEq, N: 3}, verdictFail, "found 2 shared/Mini_*.csv, want exactly 3: Mini_a.csv … Mini_b.csv"},
-		{Check{Kind: kindJar, Jar: trainingRT}, verdictSkip, "no --install DIR: modules/training-rt.jar not checked"},
+			Fail, "found 0, want at least 1 (searched 2 links)"},
+		{Check{Kind: kindFiles, Glob: "shared/{station}_*.csv", Op: opEq, N: 2}, Pass, "found 2 shared/Mini_*.csv: Mini_a.csv … Mini_b.csv"},
+		{Check{Kind: kindFiles, Glob: "shared/{station}_*.csv", Op: opEq, N: 3}, Fail, "found 2 shared/Mini_*.csv, want exactly 3: Mini_a.csv … Mini_b.csv"},
+		{Check{Kind: kindJar, Jar: trainingRT}, Skip, "no --install DIR: modules/training-rt.jar not checked"},
 	}
 	for _, c := range cases {
-		r := st.run(&c.ck)
+		r := st.Run(&c.ck)
 		if r.Verdict != c.verdict || r.Evidence != c.evidence {
 			t.Errorf("%s %s.%s: %s %q, want %s %q", c.ck.Kind, c.ck.Type, c.ck.Slot, r.Verdict, r.Evidence, c.verdict, c.evidence)
 		}
 	}
-	if st.name != "Mini" {
-		t.Errorf("station name %q, want the stationName slot Mini", st.name)
+	if st.Name != "Mini" {
+		t.Errorf("station name %q, want the stationName slot Mini", st.Name)
 	}
 }
 
@@ -126,33 +126,33 @@ func TestCheckJarKinds(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(install, "modules", "broken-rt.jar"), []byte("not a zip"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	st, err := openStation(writeStation(t), install, false)
+	st, err := Open(writeStation(t), install, false)
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer st.close()
+	defer st.Close()
 	cases := []struct {
 		ck       Check
 		verdict  string
 		evidence string
 	}{
-		{Check{Kind: kindJar, Jar: trainingRT}, verdictPass, "modules/training-rt.jar (9 entries)"},
-		{Check{Kind: kindJar, Jar: "training-wb"}, verdictFail, "missing modules/training-wb.jar under " + install},
-		{Check{Kind: kindJar, Jar: "broken-rt"}, verdictSkip, "cannot read modules/broken-rt.jar: zip: not a valid zip file"},
-		{Check{Kind: kindJarSigned, Jar: trainingRT}, verdictPass, "modules/training-rt.jar: META-INF/CODESIGN.SF, META-INF/CODESIGN.RSA"},
-		{Check{Kind: kindJarSigned, Jar: "trafficLightServer-rt"}, verdictPass,
+		{Check{Kind: kindJar, Jar: trainingRT}, Pass, "modules/training-rt.jar (9 entries)"},
+		{Check{Kind: kindJar, Jar: "training-wb"}, Fail, "missing modules/training-wb.jar under " + install},
+		{Check{Kind: kindJar, Jar: "broken-rt"}, Skip, "cannot read modules/broken-rt.jar: zip: not a valid zip file"},
+		{Check{Kind: kindJarSigned, Jar: trainingRT}, Pass, "modules/training-rt.jar: META-INF/CODESIGN.SF, META-INF/CODESIGN.RSA"},
+		{Check{Kind: kindJarSigned, Jar: "trafficLightServer-rt"}, Pass,
 			"modules/trafficLightServer-rt.jar: META-INF/CODESIGN.SF, META-INF/CODESIGN.EC"},
-		{Check{Kind: kindJarEntry, Jar: trainingRT, Glob: "com/**/*.class", Op: opMin, N: 2}, verdictPass,
+		{Check{Kind: kindJarEntry, Jar: trainingRT, Glob: "com/**/*.class", Op: opMin, N: 2}, Pass,
 			"modules/training-rt.jar: 2 entries match com/**/*.class"},
-		{Check{Kind: kindJarEntry, Jar: trainingRT, Glob: "com/**/*.class", Op: opMin, N: 3}, verdictFail,
+		{Check{Kind: kindJarEntry, Jar: trainingRT, Glob: "com/**/*.class", Op: opMin, N: 3}, Fail,
 			"modules/training-rt.jar: 2 entries match com/**/*.class, want at least 3 (searched 9 entries)"},
 		{Check{Kind: kindJarText, Jar: trainingRT, Glob: "META-INF/module.xml", Contains: []string{`name="net-rt"`, "<name>X</name>"}},
-			verdictFail, "modules/training-rt.jar!META-INF/module.xml lacks <name>X</name> (1 of 2 found)"},
+			Fail, "modules/training-rt.jar!META-INF/module.xml lacks <name>X</name> (1 of 2 found)"},
 		{Check{Kind: kindJarText, Jar: trainingRT, Glob: "nothing.txt", Contains: []string{"a"}},
-			verdictFail, "modules/training-rt.jar: no entry nothing.txt (searched 9 entries)"},
+			Fail, "modules/training-rt.jar: no entry nothing.txt (searched 9 entries)"},
 	}
 	for _, c := range cases {
-		r := st.run(&c.ck)
+		r := st.Run(&c.ck)
 		if r.Verdict != c.verdict || !strings.HasPrefix(r.Evidence, c.evidence) {
 			t.Errorf("%s %s %s: %s %q, want %s %q", c.ck.Kind, c.ck.Jar, c.ck.Glob, r.Verdict, r.Evidence, c.verdict, c.evidence)
 		}
@@ -162,16 +162,16 @@ func TestCheckJarKinds(t *testing.T) {
 // A dotted slot needs the nested values: a station read without them SKIPs the check instead of
 // passing it on the type default.
 func TestCheckNestedNeedsNestedLoad(t *testing.T) {
-	st, err := openStation(writeStation(t), "", false)
+	st, err := Open(writeStation(t), "", false)
 	if err != nil {
 		t.Fatal(err)
 	}
-	r := st.run(&Check{Kind: kindSlot, Type: "net:Network", Slot: "health.down", Want: "false", Default: "false"})
-	if r.Verdict != verdictSkip || r.Evidence != "health.down is a nested slot: the station was read without nested values" {
+	r := st.Run(&Check{Kind: kindSlot, Type: "net:Network", Slot: "health.down", Want: "false", Default: "false"})
+	if r.Verdict != Skip || r.Evidence != "health.down is a nested slot: the station was read without nested values" {
 		t.Errorf("%s %q", r.Verdict, r.Evidence)
 	}
-	if !needsNested([]*Check{{Kind: kindJar}, {Kind: kindSlot, Slot: "a.b"}}) || needsNested([]*Check{{Kind: kindSlot, Slot: "diff"}}) ||
-		!needsNested([]*Check{{Kind: kindSlot, Slot: "diff", Stored: []string{"a.b"}}}) {
+	if !NeedsNested([]*Check{{Kind: kindJar}, {Kind: kindSlot, Slot: "a.b"}}) || NeedsNested([]*Check{{Kind: kindSlot, Slot: "diff"}}) ||
+		!NeedsNested([]*Check{{Kind: kindSlot, Slot: "diff", Stored: []string{"a.b"}}}) {
 		t.Error("needsNested: want true only for a dotted slot (Slot or Stored)")
 	}
 }
@@ -212,9 +212,9 @@ func TestFileCheckEscapesStationPath(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	s := &station{dir: base, name: name}
+	s := &Station{dir: base, Name: name}
 	v, ev := s.checkFiles(&Check{Kind: kindFiles, Glob: "shared/{station}_*.csv", Op: opEq, N: 1})
-	if v != verdictPass {
+	if v != Pass {
 		t.Errorf("verdict %s, evidence %q", v, ev)
 	}
 }

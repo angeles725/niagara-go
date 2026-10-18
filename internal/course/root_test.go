@@ -7,12 +7,13 @@ import (
 	"testing"
 
 	"github.com/angeles725/niagara-go/internal/cli"
+	"github.com/angeles725/niagara-go/internal/course/key"
 )
 
 // mkRoot creates dir with an empty labs.md marker.
 func mkRoot(t *testing.T, dir string) string {
 	t.Helper()
-	p := filepath.Join(dir, filepath.FromSlash(labsFile))
+	p := filepath.Join(dir, filepath.FromSlash(key.LabsFile))
 	if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -91,20 +92,5 @@ func TestMainNoRoot(t *testing.T) {
 		"NIAGARA_RESEARCH_DIR, or run inside a niagara-research checkout\n"
 	if code != cli.ExitCannotSearch || out.Len() != 0 || errb.String() != want {
 		t.Errorf("exit %d, stdout %q, stderr %q; want 2, empty, %q", code, out.String(), errb.String(), want)
-	}
-}
-
-func TestGroupKeysLeadingZeros(t *testing.T) {
-	c, problems := load("testdata/root")
-	if c == nil {
-		t.Fatalf("fixture root: %v", problems)
-	}
-	for _, in := range []string{"1", "01", "L01", "l001", " 1 "} {
-		if got := c.groupKeys(in); len(got) != 1 || got[0] != "L1" {
-			t.Errorf("groupKeys(%q) = %v, want [L1]", in, got)
-		}
-	}
-	if got := c.groupKeys("0"); got != nil {
-		t.Errorf("groupKeys(\"0\") = %v, want none", got)
 	}
 }

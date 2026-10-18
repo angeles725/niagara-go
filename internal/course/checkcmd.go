@@ -6,56 +6,8 @@ import (
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/cli"
+	"github.com/angeles725/niagara-go/internal/course/check"
 )
-
-// checkLab normalises a --lab spelling of the check command: 3, 03, L3 -> "3"; B, LB -> "B".
-func checkLab(name string) string {
-	n := strings.ToUpper(strings.TrimSpace(name))
-	if len(n) > 1 && n[0] == 'L' {
-		n = n[1:]
-	}
-	if n != "" && strings.Trim(n, "0123456789") == "" {
-		n = strings.TrimLeft(n, "0")
-	}
-	return n
-}
-
-// checkLabs lists the labs that have checks, in spec order.
-func checkLabs() []string {
-	var labs []string
-	seen := map[string]bool{}
-	for _, ck := range checkSpec {
-		if !seen[ck.Lab] {
-			seen[ck.Lab] = true
-			labs = append(labs, ck.Lab)
-		}
-	}
-	return labs
-}
-
-// selectChecks returns the spec rows of the given labs (all when none), or the first lab
-// that has no checks.
-func selectChecks(labs []string) ([]*Check, string) {
-	want := map[string]bool{}
-	for _, l := range labs {
-		n := checkLab(l)
-		found := false
-		for _, ck := range checkSpec {
-			found = found || ck.Lab == n
-		}
-		if !found {
-			return nil, l
-		}
-		want[n] = true
-	}
-	var out []*Check
-	for i := range checkSpec {
-		if len(want) == 0 || want[checkSpec[i].Lab] {
-			out = append(out, &checkSpec[i])
-		}
-	}
-	return out, ""
-}
 
 type resultJSON struct {
 	ID          string   `json:"id"`
@@ -71,26 +23,26 @@ type resultJSON struct {
 // (stdout; stderr with --json). Exit: 0 no FAIL (SKIPs are counted, never passed),
 // 1 at least one FAIL, 2 the station cannot be read or nothing could be checked.
 func cmdCheck(s cli.Stdio, stationPath, install string, labs []string, asJSON bool) int {
-	checks, unknown := selectChecks(labs)
+	checks, unknown := check.Select(labs)
 	if unknown != "" {
 		fmt.Fprintf(s.Err, "course: no check for lab %s (labs with checks: %s; lab 8 changes nothing)\n",
-			unknown, strings.Join(checkLabs(), ", "))
+			unknown, strings.Join(check.Labs(), ", "))
 		return cli.ExitNoMatch
 	}
-	st, err := openStation(stationPath, install, needsNested(checks))
+	st, err := check.Open(stationPath, install, check.NeedsNested(checks))
 	if err != nil {
 		fmt.Fprintf(s.Err, "course: cannot check the station: %v\n", err)
 		return cli.ExitCannotSearch
 	}
-	defer st.close()
-	results := make([]Result, len(checks))
+	defer st.Close()
+	results := make([]check.Result, len(checks))
 	pass, fail, skip := 0, 0, 0
 	for i, ck := range checks {
-		results[i] = st.run(ck)
+		results[i] = st.Run(ck)
 		switch results[i].Verdict {
-		case verdictPass:
+		case check.Pass:
 			pass++
-		case verdictFail:
+		case check.Fail:
 			fail++
 		default:
 			skip++
@@ -108,8 +60,7 @@ func cmdCheck(s cli.Stdio, stationPath, install string, labs []string, asJSON bo
 	} else {
 		printResults(s.Out, results)
 	}
-	scope := fmt.Sprintf("station %s (%s, %s), install %s", st.name, plural(st.b.Comps.Len(), "component"),
-		plural(len(st.b.Links), "link"), orNone(install))
+	scope := fmt.Sprintf("%s, install %s", st.Scope(), orNone(install))
 	fmt.Fprintf(summary, "checked %d: PASS %d, FAIL %d, SKIP %d; %s\n", len(results), pass, fail, skip, scope)
 	switch {
 	case fail > 0:
@@ -128,7 +79,7 @@ func orNone(s string) string {
 	return s
 }
 
-func printResults(w io.Writer, results []Result) {
+func printResults(w io.Writer, results []check.Result) {
 	head := []string{"ID", "LAB", "VERDICT", "DESCRIPTION", "EVIDENCE"}
 	rows := [][]string{head}
 	for _, r := range results {

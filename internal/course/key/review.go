@@ -1,4 +1,4 @@
-package course
+package key
 
 import (
 	"regexp"
@@ -123,7 +123,7 @@ func parseReview(c *Corpus, lines []string) {
 				continue
 			}
 			if len(cells) < 3 {
-				c.errorf(reviewFile, n, "table row has %d cells, want 3", len(cells))
+				c.errorf(ReviewFile, n, "table row has %d cells, want 3", len(cells))
 				continue
 			}
 			if kind == traceTable {
@@ -133,7 +133,7 @@ func parseReview(c *Corpus, lines []string) {
 				case labelCellRe.MatchString(cells[0]):
 					// A parenthesised label row such as "(robustness)" traces no requirement.
 				default:
-					c.errorf(reviewFile, n, "traceability row %s is not a requirement ID", cells[0])
+					c.errorf(ReviewFile, n, "traceability row %s is not a requirement ID", cells[0])
 				}
 				continue
 			}
@@ -142,11 +142,11 @@ func parseReview(c *Corpus, lines []string) {
 				continue
 			}
 			if group == nil {
-				c.errorf(reviewFile, n, "item %s is outside any group", it.ID)
+				c.errorf(ReviewFile, n, "item %s is outside any group", it.ID)
 				continue
 			}
 			if want := groupOfReviewID(it.ID); want != group.Key {
-				c.errorf(reviewFile, n, "item %s is outside its group %s", it.ID, group.Key)
+				c.errorf(ReviewFile, n, "item %s is outside its group %s", it.ID, group.Key)
 			}
 			it.Group, it.Section, it.Subsection = group.Key, section, sub
 			if kind == reqTable && textFile != "" {
@@ -163,7 +163,7 @@ func parseReview(c *Corpus, lines []string) {
 
 // tableItem builds the item of one data row, or reports a malformed ID.
 func tableItem(c *Corpus, kind tableKind, cells []string, n int) *Item {
-	it := &Item{File: reviewFile, Line: n}
+	it := &Item{File: ReviewFile, Line: n}
 	id := cells[0]
 	switch kind {
 	case reqTable:
@@ -171,12 +171,12 @@ func tableItem(c *Corpus, kind tableKind, cells []string, n int) *Item {
 		if reqRangeRe.MatchString(id) {
 			covers, ok := expandRange(id)
 			if !ok {
-				c.errorf(reviewFile, n, "malformed item ID %s", id)
+				c.errorf(ReviewFile, n, "malformed item ID %s", id)
 				return nil
 			}
 			it.Covers = covers
 		} else if !reqIDRe.MatchString(id) {
-			c.errorf(reviewFile, n, "malformed item ID %s", id)
+			c.errorf(ReviewFile, n, "malformed item ID %s", id)
 			return nil
 		}
 		for _, m := range srcLineRe.FindAllStringSubmatch(cells[2], -1) {
@@ -185,7 +185,7 @@ func tableItem(c *Corpus, kind tableKind, cells []string, n int) *Item {
 	case decisionTable:
 		it.Kind, it.Step, it.Answer = "decision", cells[1], cells[2]
 		if !decIDRe.MatchString(id) {
-			c.errorf(reviewFile, n, "malformed item ID %s", id)
+			c.errorf(ReviewFile, n, "malformed item ID %s", id)
 			return nil
 		}
 	case trapTable:
@@ -193,7 +193,7 @@ func tableItem(c *Corpus, kind tableKind, cells []string, n int) *Item {
 		it.Kind, it.Step = "trap", strings.TrimSpace(step)
 		it.Answer = "What goes wrong: " + cells[1] + "\nThis solution: " + cells[2]
 		if !trapIDRe.MatchString(id) {
-			c.errorf(reviewFile, n, "malformed item ID %s", id)
+			c.errorf(ReviewFile, n, "malformed item ID %s", id)
 			return nil
 		}
 		it.ID = id
@@ -201,7 +201,7 @@ func tableItem(c *Corpus, kind tableKind, cells []string, n int) *Item {
 	case checkTable:
 		it.Kind, it.Step, it.Answer = "check", cells[1], "Cheapest check: "+cells[2]
 		if !checkIDRe.MatchString(id) {
-			c.errorf(reviewFile, n, "malformed item ID %s", id)
+			c.errorf(ReviewFile, n, "malformed item ID %s", id)
 			return nil
 		}
 	}
@@ -224,21 +224,21 @@ func groupOfReviewID(id string) string {
 func joinTraces(c *Corpus, traces []traceRow) {
 	for _, t := range traces {
 		var targets []*Item
-		if it := c.lookup(t.id); it != nil && it.Kind == "requirement" && normID(it.ID) == normID(t.id) {
+		if it := c.Lookup(t.id); it != nil && it.Kind == "requirement" && normID(it.ID) == normID(t.id) {
 			targets = []*Item{it}
 		} else if ids, ok := expandRange(t.id); ok && strings.ContainsAny(t.id, "–-") {
 			for _, id := range ids {
-				it := c.lookup(id)
+				it := c.Lookup(id)
 				if it == nil || it.Kind != "requirement" {
-					c.errorf(reviewFile, t.line, "traceability ID %s is not a requirement", id)
+					c.errorf(ReviewFile, t.line, "traceability ID %s is not a requirement", id)
 					continue
 				}
 				targets = append(targets, it)
 			}
-		} else if it := c.lookup(t.id); it != nil && it.Kind == "requirement" {
+		} else if it := c.Lookup(t.id); it != nil && it.Kind == "requirement" {
 			targets = []*Item{it}
 		} else {
-			c.errorf(reviewFile, t.line, "traceability ID %s is not a requirement", t.id)
+			c.errorf(ReviewFile, t.line, "traceability ID %s is not a requirement", t.id)
 		}
 		for _, it := range targets {
 			text := "Satisfied by: " + t.satisfied + "\nVerified by: " + t.verified
@@ -282,7 +282,7 @@ func parseExam(c *Corpus, lines []string) {
 			flush()
 			if m := problemRe.FindStringSubmatch(line); m != nil {
 				cur = &Item{ID: "P" + m[2], Kind: "exam problem", Group: g.Key, Section: strings.TrimPrefix(line, "## "),
-					Step: m[1], File: examFile, Line: i + 1}
+					Step: m[1], File: ExamFile, Line: i + 1}
 			}
 			continue
 		}

@@ -1,4 +1,4 @@
-package course
+package check
 
 // Check kinds.
 const (

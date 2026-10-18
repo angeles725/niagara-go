@@ -1,4 +1,4 @@
-package course
+package key
 
 import (
 	"regexp"
@@ -49,14 +49,14 @@ func parseLabs(c *Corpus, lines []string) {
 		if strings.ContainsAny(r.id, "–-") {
 			var ok bool
 			if ids, ok = expandRange(r.id); !ok {
-				c.errorf(labsFile, r.line, "live-run range %s is reversed or crosses groups", r.id)
+				c.errorf(LabsFile, r.line, "live-run range %s is reversed or crosses groups", r.id)
 				continue
 			}
 		}
 		for _, id := range ids {
-			it := c.lookup(id)
+			it := c.Lookup(id)
 			if it == nil {
-				c.errorf(labsFile, r.line, "live-run ID %s is not an item", id)
+				c.errorf(LabsFile, r.line, "live-run ID %s is not an item", id)
 				continue
 			}
 			it.LiveRun = true
@@ -117,7 +117,7 @@ func (p *labsParser) heading(line string) {
 	p.section = strings.TrimPrefix(line, "## ")
 	g := &Group{Key: key, Title: p.section}
 	if r := headLIRe.FindStringSubmatch(line); r != nil {
-		g.TextFile, g.Ranges = labText, []Range{rangeOf(r[1], r[2])}
+		g.TextFile, g.Ranges = LabText, []Range{rangeOf(r[1], r[2])}
 	}
 	p.group = p.c.addGroup(g)
 }
@@ -129,18 +129,18 @@ func (p *labsParser) start(n int, id, rest string) {
 	case labRangeRe.MatchString(id):
 		var ok bool
 		if covers, ok = expandRange(id); !ok {
-			p.c.errorf(labsFile, n, "malformed item ID %s", id)
+			p.c.errorf(LabsFile, n, "malformed item ID %s", id)
 			return
 		}
 	default:
-		p.c.errorf(labsFile, n, "malformed item ID %s", id)
+		p.c.errorf(LabsFile, n, "malformed item ID %s", id)
 		return
 	}
 	if g := id[:strings.Index(id, ".")]; g != p.group.Key {
-		p.c.errorf(labsFile, n, "item %s is outside its group %s", id, p.group.Key)
+		p.c.errorf(LabsFile, n, "item %s is outside its group %s", id, p.group.Key)
 	}
 	p.cur = &Item{ID: id, Covers: covers, Kind: "lab item", Group: p.group.Key, Section: p.section,
-		Subsection: p.sub, File: labsFile, Line: n}
+		Subsection: p.sub, File: LabsFile, Line: n}
 	p.raw = []string{rest}
 }
 
@@ -183,7 +183,7 @@ func (p *labsParser) finish() {
 		it.Ranges = liRanges(headText)
 	}
 	if len(it.Ranges) > 0 {
-		it.TextFile = labText
+		it.TextFile = LabText
 	}
 	it.Status = markers(strings.Join(body, "\n"), headingStatus(it.Section)...)
 	p.c.add(it)

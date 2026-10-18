@@ -1,4 +1,4 @@
-package course
+package key
 
 import (
 	"fmt"
@@ -10,17 +10,17 @@ import (
 
 // Source paths, relative to the root and always with "/".
 const (
-	labsFile   = "docs/n4-dev-course-solutions/labs.md"
-	reviewFile = "docs/n4-dev-course-solutions/review-assignments.md"
-	examFile   = "docs/n4-dev-course-solutions/certification-exam.md"
-	labText    = "sources/n4-dev-course/text/Lab Instructions.txt"
+	LabsFile   = "docs/n4-dev-course-solutions/labs.md"
+	ReviewFile = "docs/n4-dev-course-solutions/review-assignments.md"
+	ExamFile   = "docs/n4-dev-course-solutions/certification-exam.md"
+	LabText    = "sources/n4-dev-course/text/Lab Instructions.txt"
 )
 
-// sourceFiles are parsed in this order; every one is required.
-var sourceFiles = []string{labsFile, reviewFile, examFile}
+// SourceFiles are parsed in this order; every one is required.
+var SourceFiles = []string{LabsFile, ReviewFile, ExamFile}
 
-// statuses is the vocabulary in print order; "written" means none of the others.
-var statuses = []string{"predicted", "unverified", "corrected", "identical", "verified", "written"}
+// Statuses is the vocabulary in print order; "written" means none of the others.
+var Statuses = []string{"predicted", "unverified", "corrected", "identical", "verified", "written"}
 
 // Range is lines A..B (1-based, inclusive) of a text file.
 type Range struct{ A, B int }
@@ -51,7 +51,7 @@ type Item struct {
 	Answer     string
 }
 
-func (it *Item) hasStatus(s string) bool {
+func (it *Item) HasStatus(s string) bool {
 	if s == "written" {
 		return len(it.Status) == 0
 	}
@@ -63,7 +63,7 @@ func (it *Item) hasStatus(s string) bool {
 	return false
 }
 
-func (it *Item) statusList() []string {
+func (it *Item) StatusList() []string {
 	if len(it.Status) == 0 {
 		return []string{"written"}
 	}
@@ -101,7 +101,7 @@ func (c *Corpus) errorf(file string, line int, format string, args ...any) {
 // sortedErrors orders the errors by source file, then line.
 func (c *Corpus) sortedErrors() []parseError {
 	rank := map[string]int{}
-	for i, f := range sourceFiles {
+	for i, f := range SourceFiles {
 		rank[f] = i
 	}
 	errs := append([]parseError(nil), c.errs...)
@@ -114,7 +114,7 @@ func (c *Corpus) sortedErrors() []parseError {
 	return errs
 }
 
-func (c *Corpus) group(key string) *Group {
+func (c *Corpus) Group(key string) *Group {
 	for _, g := range c.Groups {
 		if g.Key == key {
 			return g
@@ -124,7 +124,7 @@ func (c *Corpus) group(key string) *Group {
 }
 
 func (c *Corpus) addGroup(g *Group) *Group {
-	if old := c.group(g.Key); old != nil {
+	if old := c.Group(g.Key); old != nil {
 		return old
 	}
 	c.Groups = append(c.Groups, g)
@@ -147,7 +147,7 @@ func (c *Corpus) add(it *Item) {
 }
 
 // lookup finds an item by ID, range ID or covered ID, in any case.
-func (c *Corpus) lookup(id string) *Item { return c.byKey[normID(id)] }
+func (c *Corpus) Lookup(id string) *Item { return c.byKey[normID(id)] }
 
 func normID(s string) string { return strings.ToUpper(strings.ReplaceAll(s, "–", "-")) }
 
@@ -192,7 +192,7 @@ var (
 	verifiedRe = regexp.MustCompile(`\*\(verified live \d{4}-\d{2}-\d{2}\)\*`)
 )
 
-// markers returns the statuses whose marker occurs in text, plus the inherited ones.
+// markers returns the Statuses whose marker occurs in text, plus the inherited ones.
 func markers(text string, inherited ...string) []string {
 	found := map[string]bool{}
 	for _, s := range inherited {
@@ -204,7 +204,7 @@ func markers(text string, inherited ...string) []string {
 	found["identical"] = found["identical"] || identicalRe.MatchString(text)
 	found["verified"] = found["verified"] || verifiedRe.MatchString(text)
 	var out []string
-	for _, s := range statuses {
+	for _, s := range Statuses {
 		if found[s] {
 			out = append(out, s)
 		}
@@ -220,8 +220,8 @@ func headingStatus(heading string) []string {
 	return nil
 }
 
-// splitLines splits a file into lines, accepting CRLF.
-func splitLines(data []byte) []string {
+// SplitLines splits a file into lines, accepting CRLF.
+func SplitLines(data []byte) []string {
 	s := strings.ReplaceAll(string(data), "\r\n", "\n")
 	s = strings.TrimSuffix(s, "\n")
 	if s == "" {
@@ -231,39 +231,3 @@ func splitLines(data []byte) []string {
 }
 
 func isFence(line string) bool { return strings.HasPrefix(strings.TrimSpace(line), "```") }
-
-// countRow is one line of the status table (and its JSON object).
-type countRow struct {
-	Group      string `json:"group"`
-	Items      int    `json:"items"`
-	Predicted  int    `json:"predicted"`
-	Unverified int    `json:"unverified"`
-	Corrected  int    `json:"corrected"`
-	Identical  int    `json:"identical"`
-	Verified   int    `json:"verified"`
-	Written    int    `json:"written"`
-}
-
-func (r *countRow) values() []int {
-	return []int{r.Items, r.Predicted, r.Unverified, r.Corrected, r.Identical, r.Verified, r.Written}
-}
-
-func (r *countRow) count(it *Item) {
-	r.Items++
-	for _, s := range it.statusList() {
-		switch s {
-		case "predicted":
-			r.Predicted++
-		case "unverified":
-			r.Unverified++
-		case "corrected":
-			r.Corrected++
-		case "identical":
-			r.Identical++
-		case "verified":
-			r.Verified++
-		case "written":
-			r.Written++
-		}
-	}
-}

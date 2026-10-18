@@ -1,4 +1,4 @@
-package course
+package check
 
 import (
 	"os"
@@ -7,20 +7,22 @@ import (
 	"slices"
 	"strings"
 	"testing"
+
+	"github.com/angeles725/niagara-go/internal/course/key"
 )
 
-const goodStation = "testdata/stations/good"
+const goodStation = "../testdata/stations/good"
 
 func runAll(t *testing.T, stationPath, install string) []Result {
 	t.Helper()
-	st, err := openStation(stationPath, install, true)
+	st, err := Open(stationPath, install, true)
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer st.close()
+	defer st.Close()
 	var out []Result
-	for i := range checkSpec {
-		out = append(out, st.run(&checkSpec[i]))
+	for i := range Spec {
+		out = append(out, st.Run(&Spec[i]))
 	}
 	return out
 }
@@ -32,7 +34,7 @@ func TestCheckSpecShape(t *testing.T) {
 	seen := map[string]bool{}
 	perLab := map[string]int{}
 	typeRe := regexp.MustCompile(`^[a-zA-Z]+:[A-Z][A-Za-z]+$`)
-	for _, ck := range checkSpec {
+	for _, ck := range Spec {
 		perLab[ck.Lab]++
 		if seen[ck.ID] || !strings.HasPrefix(ck.ID, "C"+ck.Lab+".") {
 			t.Errorf("%s: duplicate or not named after lab %s", ck.ID, ck.Lab)
@@ -85,28 +87,28 @@ func TestCheckSpecShape(t *testing.T) {
 
 // TestCheckKeysReal: every linked key item exists in the real answer key.
 func TestCheckKeysReal(t *testing.T) {
-	root := os.Getenv(RootEnv)
-	if root == "" || !hasMarker(root) {
-		t.Skipf("%s is not a niagara-research checkout: the check keys are not resolved", RootEnv)
+	root := os.Getenv(key.RootEnv)
+	if root == "" || !key.HasMarker(root) {
+		t.Skipf("%s is not a niagara-research checkout: the check keys are not resolved", key.RootEnv)
 	}
-	c, problems := load(root)
+	c, problems := key.Load(root)
 	if c == nil {
 		t.Fatalf("%v", problems)
 	}
-	for _, ck := range checkSpec {
+	for _, ck := range Spec {
 		for _, k := range ck.Keys {
-			if c.lookup(k) == nil {
-				t.Errorf("%s: key %s is not an item of %s", ck.ID, k, labsFile)
+			if c.Lookup(k) == nil {
+				t.Errorf("%s: key %s is not an item of %s", ck.ID, k, key.LabsFile)
 			}
 		}
 	}
-	// A link to a predicted item must say what of the prediction the check does not observe,
+	// A link to a predicted item must say what of the Prediction the check does not observe,
 	// unless it was audited as observing all of it: the answer key would be marked verified from a
 	// CONFIRMED verdict. The links are resolved as verify-predictions resolves them (itemLinks).
-	links := itemLinks(c, checkSpec)
+	links := itemLinks(c, Spec)
 	for _, it := range c.Items {
 		for _, l := range links[it] {
-			if it.hasStatus("predicted") && len(l.Notes) == 0 && !fullyObserved[l.Check.ID+" "+it.ID] {
+			if it.HasStatus("predicted") && len(l.Notes) == 0 && !fullyObserved[l.Check.ID+" "+it.ID] {
 				t.Errorf("%s: links predicted %s (%s:%d): add an Unobserved note or audit it into fullyObserved",
 					l.Check.ID, it.ID, it.File, it.Line)
 			}
@@ -115,7 +117,7 @@ func TestCheckKeysReal(t *testing.T) {
 }
 
 // fullyObserved lists the "check item" links to a predicted item of the real answer key that were
-// audited as observing the whole prediction (2026-10-17: none; every predicted item a check links
+// audited as observing the whole Prediction (2026-10-17: none; every predicted item a check links
 // also predicts a console line, a log, a view or a runtime status).
 var fullyObserved = map[string]bool{}
 
@@ -138,10 +140,10 @@ func TestCheckTrainingStation(t *testing.T) {
 	got := map[string]string{}
 	for _, r := range runAll(t, path, install) {
 		switch {
-		case r.Verdict == verdictSkip && install == "" && strings.HasPrefix(r.Kind, "jar"):
-		case r.Verdict == verdictFail && stationDiffers[r.ID] != "":
+		case r.Verdict == Skip && install == "" && strings.HasPrefix(r.Kind, "jar"):
+		case r.Verdict == Fail && stationDiffers[r.ID] != "":
 			got[r.ID] = r.Evidence
-		case r.Verdict != verdictPass:
+		case r.Verdict != Pass:
 			t.Errorf("%s %s: %s", r.ID, r.Verdict, r.Evidence)
 		}
 	}
