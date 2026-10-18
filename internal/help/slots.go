@@ -11,6 +11,7 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/fnmatch"
 	"github.com/angeles725/niagara-go/internal/index"
+	"github.com/angeles725/niagara-go/internal/pyjson"
 )
 
 // slotSections are the three slot lists of a slots-index entry, in order.
@@ -185,15 +186,15 @@ func ellipsis(s string, max int) string {
 func (e *Env) printSlotHitsJSON(hits []slotHit) {
 	out := make([]any, len(hits))
 	for i, h := range hits {
-		out[i] = jsonObj{{"section", h.section}, {"class", h.class}, {"package", h.pkg}, {"slot", slotValue(h.slot)}}
+		out[i] = pyjson.Obj{{"section", h.section}, {"class", h.class}, {"package", h.pkg}, {"slot", slotValue(h.slot)}}
 	}
-	fmt.Fprintln(e.Out, dumpsIndent2(out))
+	fmt.Fprintln(e.Out, pyjson.DumpsAny(out, pyjson.Indent2))
 }
 
 // slotValue is a slot for json.dumps: a non-object list item stays {}.
 func slotValue(o *index.Object) any {
 	if o == nil {
-		return jsonObj{}
+		return pyjson.Obj{}
 	}
 	return o
 }
@@ -252,11 +253,11 @@ func (e *Env) slotsByType(idx *index.Object, query string, asJSON bool) error {
 func (e *Env) printClassSlots(class string, data *index.Object, asJSON bool) error {
 	pkg, module := get(data, "package", "?"), get(data, "module", "?")
 	if asJSON {
-		out := jsonObj{{"class", class}, {"package", pkg}, {"module", module}}
+		out := pyjson.Obj{{"class", class}, {"package", pkg}, {"module", module}}
 		for _, s := range slotSections {
-			out = append(out, jsonKV{s, get(data, s, []any{})})
+			out = append(out, pyjson.KV{s, get(data, s, []any{})})
 		}
-		fmt.Fprintln(e.Out, dumpsIndent2(out))
+		fmt.Fprintln(e.Out, pyjson.DumpsAny(out, pyjson.Indent2))
 		return nil
 	}
 	lists, err := slotLists(class, data, slotSections...)

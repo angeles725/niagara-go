@@ -136,47 +136,26 @@ func writeCSV(w io.Writer, fields []string) {
 	fmt.Fprint(w, strings.Join(out, ",")+"\r\n")
 }
 
-// jsonDumps is json.dumps(v, indent=2) (ensure_ascii); jsonValue lists the types.
+// jsonDumps is json.dumps(v, indent=2) (ensure_ascii) of rows (ordered dicts), lists,
+// strings, ints, bools, *float64 and None.
 func jsonDumps(v any) string {
-	return pyjson.Dumps(jsonValue(v), pyjson.DumpOpts{EnsureASCII: true, Indent: 2, ItemSep: ",", KeySep: ": "})
+	return pyjson.DumpsAny(v, pyjson.Indent2)
 }
 
-// jsonValue is v as a pyjson value: rows (ordered dicts), lists, strings, ints, bools,
-// *float64 and None. A string passes through []rune first: pyjson reads WTF-8, and this
-// keeps an undecodable byte one U+FFFD.
-func jsonValue(v any) pyjson.Value {
-	switch x := v.(type) {
-	case nil:
-		return pyjson.Value{Kind: pyjson.Null}
-	case string:
-		return pyjson.String(string([]rune(x)))
-	case bool:
-		return pyjson.Value{Kind: pyjson.Bool, B: x}
-	case int:
-		return pyjson.IntValue(int64(x))
-	case *float64:
-		if x == nil {
-			return pyjson.Value{Kind: pyjson.Null}
-		}
-		return pyjson.Value{Kind: pyjson.Float, F: *x}
-	case []string:
-		items := make([]pyjson.Value, len(x))
-		for i, it := range x {
-			items[i] = jsonValue(it)
-		}
-		return pyjson.Value{Kind: pyjson.Array, A: items}
-	case []any:
-		items := make([]pyjson.Value, len(x))
-		for i, it := range x {
-			items[i] = jsonValue(it)
-		}
-		return pyjson.Value{Kind: pyjson.Array, A: items}
-	case row:
-		o := pyjson.NewObject()
-		for _, f := range x {
-			o.Set(string([]rune(f.key)), jsonValue(f.val))
-		}
-		return o
+// Keys and Values make a row a pyjson.Dict.
+func (r row) Keys() []string {
+	keys := make([]string, len(r))
+	for i, f := range r {
+		keys[i] = f.key
 	}
-	panic(fmt.Sprintf("jsonValue: unsupported %T", v))
+	return keys
+}
+
+// Values is the row's values in key order.
+func (r row) Values() []any {
+	vals := make([]any, len(r))
+	for i, f := range r {
+		vals[i] = f.val
+	}
+	return vals
 }

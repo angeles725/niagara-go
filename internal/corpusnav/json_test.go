@@ -1,6 +1,10 @@
 package corpusnav
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/angeles725/niagara-go/internal/pyjson"
+)
 
 func TestJSONDumps(t *testing.T) {
 	tests := []struct {
@@ -8,8 +12,8 @@ func TestJSONDumps(t *testing.T) {
 		v    any
 		want string
 	}{
-		{"empty containers", obj{{"a", []any{}}, {"b", obj{}}}, `{"a": [], "b": {}}`},
-		{"nested object keeps key order", obj{{"z", 1}, {"a", []any{"B1", 2}}}, `{"z": 1, "a": ["B1", 2]}`},
+		{"empty containers", pyjson.Obj{{"a", []any{}}, {"b", pyjson.Obj{}}}, `{"a": [], "b": {}}`},
+		{"nested object keeps key order", pyjson.Obj{{"z", 1}, {"a", []any{"B1", 2}}}, `{"z": 1, "a": ["B1", 2]}`},
 		{"non-ASCII is kept raw, controls escaped", "ñ \"\\\n\x01", "\"ñ \\\"\\\\\\n\\u0001\""},
 		{"an undecodable byte is one U+FFFD", "\xffabc", "\"�abc\""},
 	}

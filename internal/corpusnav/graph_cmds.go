@@ -5,6 +5,7 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/blockfiles"
 	"github.com/angeles725/niagara-go/internal/pycompat"
+	"github.com/angeles725/niagara-go/internal/pyjson"
 )
 
 // The connections, graph, path and lint-refs commands of corpusnav/graph.py.
@@ -119,15 +120,15 @@ func (c *corpus) cmdGraph(asJSON bool, top int, bare bool) int {
 			}
 			return out
 		}
-		fwd, rev := obj{}, obj{}
+		fwd, rev := pyjson.Obj{}, pyjson.Obj{}
 		for _, k := range g.nodes {
-			fwd = append(fwd, kv{displayID(k), ids(g.forward[k])})
+			fwd = append(fwd, pyjson.KV{displayID(k), ids(g.forward[k])})
 		}
 		for _, k := range g.reverseIDs {
-			rev = append(rev, kv{displayID(k), ids(g.reverse[k])})
+			rev = append(rev, pyjson.KV{displayID(k), ids(g.reverse[k])})
 		}
-		data := obj{{"nodes", ids(g.nodes)}, {"forward", fwd}, {"reverse", rev}, {"dangling", ids(g.dangling)},
-			{"unreadable", ids(g.unreadable)}, {"stats", obj{{"nodes", len(g.nodes)}, {"edges", edges},
+		data := pyjson.Obj{{"nodes", ids(g.nodes)}, {"forward", fwd}, {"reverse", rev}, {"dangling", ids(g.dangling)},
+			{"unreadable", ids(g.unreadable)}, {"stats", pyjson.Obj{{"nodes", len(g.nodes)}, {"edges", edges},
 				{"dangling", len(g.dangling)}, {"unreadable", len(g.unreadable)}}}}
 		fmt.Fprintln(c.out, jsonDumps(data))
 		return rc

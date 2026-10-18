@@ -4,9 +4,11 @@ import (
 	"testing"
 
 	"github.com/angeles725/niagara-go/internal/index"
+	"github.com/angeles725/niagara-go/internal/pyjson"
 )
 
-// TestDumpsIndent2 pins json.dumps(json.loads(src), indent=2) as Python 3.15 prints it.
+// TestDumpsIndent2 pins json.dumps(json.loads(src), indent=2) as Python 3.15 prints it, for
+// the decoded index values (*index.Object as a pyjson.Dict) the --json views dump.
 func TestDumpsIndent2(t *testing.T) {
 	tests := []struct{ name, src, want string }{
 		{"scalars and number re-printing",
@@ -26,7 +28,7 @@ func TestDumpsIndent2(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if got := dumpsIndent2(v); got != tt.want {
+			if got := pyjson.DumpsAny(v, pyjson.Indent2); got != tt.want {
 				t.Errorf("got\n%s\nwant\n%s", got, tt.want)
 			}
 		})
@@ -34,7 +36,7 @@ func TestDumpsIndent2(t *testing.T) {
 }
 
 func TestDumpsIndent2BuiltValues(t *testing.T) {
-	got := dumpsIndent2(jsonObj{{"chain", []string{"A", "B"}}, {"n", 2}, {"none", jsonObj{}}})
+	got := pyjson.DumpsAny(pyjson.Obj{{"chain", []string{"A", "B"}}, {"n", 2}, {"none", pyjson.Obj{}}}, pyjson.Indent2)
 	want := "{\n  \"chain\": [\n    \"A\",\n    \"B\"\n  ],\n  \"n\": 2,\n  \"none\": {}\n}"
 	if got != want {
 		t.Errorf("got\n%s\nwant\n%s", got, want)
