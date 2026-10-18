@@ -255,6 +255,7 @@ func TestParityTocFiles(t *testing.T) {
 		"bomlatin1bad.xml": "\xef\xbb\xbf<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?><toc><tocitem></toc>",
 		"bomascii.xml":     "\xef\xbb\xbf<?xml version='1.0' encoding='US-ASCII'?>\n<toc><tocitem target='a.html' text='\xe9'/></toc>",
 		"bomutf8.xml":      "\xef\xbb\xbf<?xml version=\"1.0\" encoding=\"utf-8\"?><toc><tocitem target=\"a.html\" text=\"\xc3\xa9\"/><x></toc>",
+		"bomutf16.xml":     "\xef\xbb\xbf<?xml version=\"1.0\" encoding=\"UTF-16\"?><toc/>",
 		"utf8.xml":         "<?xml version='1.0' encoding='UTF-8'?><toc><tocitem target='u.html' text='\xc3\xa9 \xe2\x80\x94'/></toc>",
 	}
 	paths := []string{

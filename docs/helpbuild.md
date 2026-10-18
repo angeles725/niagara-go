@@ -358,7 +358,7 @@ Go does not export its table, so `isHTML5Entity` reads it through `html.Unescape
 | `TestParityHTMLCorners` | the parser callbacks and `convert()` of 60 hand-written pages (the Python tests' fixtures, unterminated constructs, raw text, attribute quoting, charrefs) |
 | `TestParityHTMLFuzz` | the same on 5,000 seeded random snippets of tag/charref/whitespace fragments, some cut at a random point (400 with `-short`) |
 | `TestParityHTML5Entities` | `isHTML5Entity` on every `html5` name and its near misses, `htmlUnescape` against `html.unescape` on 46,851 texts |
-| `TestParityTocFiles` | `parse_toc` (order, titles, trails), `count_items` and the stderr warning on the synthetic toc.xml files and corners (namespaced, root `tocitem`, empty, undefined entity, BOM + ISO-8859-1 / US-ASCII / UTF-8, junk, missing file) |
+| `TestParityTocFiles` | `parse_toc` (order, titles, trails), `count_items` and the stderr warning on the synthetic toc.xml files and corners (namespaced, root `tocitem`, empty, undefined entity, BOM + ISO-8859-1 / US-ASCII / UTF-8 / UTF-16 (one real 4.3/4.15 toc.xml is BOM + ISO-8859-1; `pyxml` applies the declared encoding after a BOM as expat does), junk, missing file) |
 | `TestParityGuidesSynthetic` | stdout/stderr lines, return value and both whole trees after each builder (and a second run) on a synthetic root: the `test_extraction` pages, toc.xml corners, Markdown, `.txt` beside `.html`, licence texts, a non-UTF-8 page body, CRLF, a broken toc, `TOC.XML` |
 | `TestParityGuidesIndexSources` | `guides-index.json` of a registered root with a manifest and a mounted install, an unmounted install, and no manifest (values kept from an earlier index) |
 | `TestParityNonUTF8Names` | page and folder names that are not UTF-8 |
@@ -372,13 +372,6 @@ Go does not export its table, so `isHTML5Entity` reads it through `html.Unescape
   error at the same point (same outcome, an error instead of a traceback);
   `guides-index.json` spells such names as Python does (`\udcXX`, sorted as decoded
   names). A licence text with such a name is printed raw in the `excluded` line.
-- **BOM before a non-UTF-8 XML declaration** (one 4.3/4.15 toc.xml is BOM +
-  ISO-8859-1): not a difference, a workaround. `pyxml` decodes the BOM as Latin-1 text and
-  fails where expat applies the declared encoding and counts the BOM as 3 columns of line
-  1; `parseTocXML` parses the document after the BOM and moves a line-1 error column by 3.
-  A BOM before an encoding `pyxml` does not know (UTF-16 declared in an 8-bit document) is
-  still reported differently (`unknown encoding` where expat says `encoding specified in
-  XML declaration is incorrect`).
 
 ### S5/S6 shared-helper candidates
 
@@ -387,7 +380,6 @@ Go does not export its table, so `isHTML5Entity` reads it through `html.Unescape
   handler interface) is a rename.
 - **`pycompat.HTMLUnescape`** should learn `&nGt;` / `&nLt;`; `htmlUnescape` and
   `goMissingEntities` then go away. `isHTML5Entity` would sit well next to it.
-- **`pyxml`**: the BOM + declared-encoding gap above belongs in `applyEncoding`.
 
 ## Real-data parity
 
