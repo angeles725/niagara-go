@@ -2,7 +2,7 @@ package helpbuild
 
 import (
 	"database/sql"
-	"path/filepath"
+	"path"
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/index"
@@ -111,12 +111,14 @@ func (x *indexedViews) classSet(jdk bool) (map[string]bool, error) {
 	return out, nil
 }
 
-// pyNormpath is posixpath.normpath (two leading slashes are kept).
+// pyNormpath is posixpath.normpath on every OS: only "/" separates (a
+// backslash or a drive letter is part of a name), two leading slashes are
+// kept, three or more become one.
 func pyNormpath(p string) string {
 	if p == "" {
 		return "."
 	}
-	clean := filepath.ToSlash(filepath.Clean(filepath.FromSlash(p)))
+	clean := path.Clean(p)
 	if strings.HasPrefix(p, "//") && !strings.HasPrefix(p, "///") {
 		return "/" + clean
 	}
