@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/angeles725/niagara-go/internal/pyhtml"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 )
 
@@ -31,6 +32,36 @@ func runHTMLDriver(t *testing.T, stdin string, args ...string) []string {
 		t.Fatalf("htmldriver %v: %v\n%s", args, err, stderr.String())
 	}
 	return strings.Split(strings.TrimSuffix(string(out), "\n"), "\n")
+}
+
+// eventRecorder is htmldriver.py's _Recorder over pyhtml.Parse.
+type eventRecorder struct{ events []pyjson.Value }
+
+func attrsValue(attrs []pyhtml.Attr) pyjson.Value {
+	out := array()
+	for _, a := range attrs {
+		v := str(a.Value)
+		if a.Null {
+			v = pyjson.Value{}
+		}
+		out.A = append(out.A, array(str(a.Name), v))
+	}
+	return out
+}
+
+func (r *eventRecorder) StartTag(tag string, attrs []pyhtml.Attr) {
+	r.events = append(r.events, array(str("s"), str(tag), attrsValue(attrs)))
+}
+func (r *eventRecorder) StartEndTag(tag string, attrs []pyhtml.Attr) {
+	r.events = append(r.events, array(str("se"), str(tag), attrsValue(attrs)))
+}
+func (r *eventRecorder) EndTag(tag string) { r.events = append(r.events, array(str("e"), str(tag))) }
+func (r *eventRecorder) Data(text string)  { r.events = append(r.events, array(str("d"), str(text))) }
+
+func goEvents(page string) pyjson.Value {
+	r := &eventRecorder{}
+	pyhtml.Parse(page, r)
+	return array(r.events...)
 }
 
 // goPageLine is one "pages" line ([events, title, text]), page first for
@@ -107,10 +138,9 @@ func TestParityHTMLFuzz(t *testing.T) {
 	diffLines(t, "html fuzz", py, gol)
 }
 
-// TestParityHTML5Entities checks isHTML5Entity against every key of
-// html.entities.html5 and their near misses, and htmlUnescape
-// (pycompat.HTMLUnescape plus the names Go lacks) against html.unescape over
-// every key in data-like contexts.
+// TestParityHTML5Entities checks pyhtml.IsHTML5Entity against every key of
+// html.entities.html5 and their near misses, and pyhtml.Unescape against
+// html.unescape over every key in data-like contexts.
 func TestParityHTML5Entities(t *testing.T) {
 	driver(t)
 	var keys []string
@@ -138,10 +168,10 @@ func TestParityHTML5Entities(t *testing.T) {
 		if !isAlnumName(p) {
 			continue
 		}
-		if got := isHTML5Entity(p); got != in[p] {
+		if got := pyhtml.IsHTML5Entity(p); got != in[p] {
 			bad++
 			if bad <= 10 {
-				t.Errorf("isHTML5Entity(%q) = %v, html5 has it: %v", p, got, in[p])
+				t.Errorf("IsHTML5Entity(%q) = %v, html5 has it: %v", p, got, in[p])
 			}
 		}
 	}
@@ -158,10 +188,10 @@ func TestParityHTML5Entities(t *testing.T) {
 		t.Fatal(err)
 	}
 	for i, s := range texts {
-		if got := htmlUnescape(s); got != want[i] {
+		if got := pyhtml.Unescape(s); got != want[i] {
 			bad++
 			if bad <= 20 {
-				t.Errorf("HTMLUnescape(%q) = %q, html.unescape %q", s, got, want[i])
+				t.Errorf("Unescape(%q) = %q, html.unescape %q", s, got, want[i])
 			}
 		}
 	}
@@ -174,11 +204,12 @@ func TestParityHTML5Entities(t *testing.T) {
 // isAlnumName: the attr_charref name shape, [a-zA-Z][a-zA-Z0-9]*;?.
 func isAlnumName(p string) bool {
 	p = strings.TrimSuffix(p, ";")
-	if p == "" || !isASCIILetter(p[0]) {
+	letter := func(c byte) bool { return c|0x20 >= 'a' && c|0x20 <= 'z' }
+	if p == "" || !letter(p[0]) {
 		return false
 	}
 	for i := 1; i < len(p); i++ {
-		if !isASCIILetter(p[i]) && !isDigitByte(p[i]) {
+		if !letter(p[i]) && (p[i] < '0' || p[i] > '9') {
 			return false
 		}
 	}

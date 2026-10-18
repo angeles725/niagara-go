@@ -1,17 +1,17 @@
-package helpbuild
+package pyhtml
 
 import (
 	"strings"
 
-	"github.com/angeles725/niagara-go/internal/pycompat"
+	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
-// The tokenizer of CPython 3.15's html.parser.HTMLParser, as html_text
-// drives it: convert_charrefs=True, scripting=False, one feed() of the whole
-// page, then close(). Only the callbacks html_text overrides are reported
-// (start tag, start-end tag, end tag, data); comments, declarations,
-// processing instructions and CDATA sections are consumed and dropped, as the
-// base class's empty handlers drop them.
+// The tokenizer of CPython 3.15's html.parser.HTMLParser with
+// convert_charrefs=True, scripting=False, as the niagara-help tools drive it:
+// one feed() of the whole page, then close() (Parse). Only the callbacks the
+// tools override are reported (start tag, start-end tag, end tag, data);
+// comments, declarations, processing instructions and CDATA sections are
+// consumed and dropped, as the base class's empty handlers drop them.
 //
 // One feed() of the whole page then close() parses exactly like a single
 // goahead(end=1): every early stop of the feed() pass (an unterminated
@@ -22,26 +22,28 @@ import (
 //
 // With convert_charrefs the "&" branches of goahead are unreachable (data
 // runs to the next "<", or to the CDATA end tag), so data is unescaped with
-// html.unescape (pycompat.HTMLUnescape) chunk by chunk, outside the raw-text
+// html.unescape (Unescape) chunk by chunk, outside the raw-text
 // elements (script, style, xmp, iframe, noembed, noframes, plaintext).
 //
 // Offsets are byte offsets into valid UTF-8: every delimiter the regexes test
 // is ASCII and every class excludes ASCII bytes only, so a multi-byte rune is
 // always consumed whole, as Python consumes one code point.
 
-// htmlAttr is one (name, value) attribute pair; Null is Python's None value
+// Attr is one (name, value) attribute pair; Null is Python's None value
 // (an attribute without "=").
-type htmlAttr struct {
+type Attr struct {
 	Name, Value string
 	Null        bool
 }
 
-// htmlHandler receives the callbacks html_text overrides.
-type htmlHandler interface {
-	startTag(tag string, attrs []htmlAttr)
-	startEndTag(tag string, attrs []htmlAttr)
-	endTag(tag string)
-	data(text string)
+// Handler receives the callbacks: handle_starttag, handle_startendtag,
+// handle_endtag and handle_data (tag and attribute names lower-cased, data
+// and attribute values unescaped as html.parser does).
+type Handler interface {
+	StartTag(tag string, attrs []Attr)
+	StartEndTag(tag string, attrs []Attr)
+	EndTag(tag string)
+	Data(text string)
 }
 
 var (
@@ -49,16 +51,17 @@ var (
 	htmlRCDATAContent = map[string]bool{"textarea": true, "title": true}
 )
 
-type htmlTokenizer struct {
+type tokenizer struct {
 	raw       string
-	h         htmlHandler
+	h         Handler
 	cdataElem string // "" is None
 	escapable bool
 }
 
-// parseHTML is HTMLParser(convert_charrefs=True).feed(page); close().
-func parseHTML(page string, h htmlHandler) {
-	p := &htmlTokenizer{raw: page, h: h, escapable: true}
+// Parse is HTMLParser(convert_charrefs=True).feed(page); close(), the
+// callbacks going to h.
+func Parse(page string, h Handler) {
+	p := &tokenizer{raw: page, h: h, escapable: true}
 	p.goahead()
 }
 
@@ -79,14 +82,14 @@ func isAttrNameChar(c byte) bool { return isTagNameChar(c) && c != '=' }
 // isAttrLookbehind is the (?<=['"\t\n\r\f /]) before an attribute name.
 func isAttrLookbehind(c byte) bool { return c == '\'' || c == '"' || c == '/' || isHTMLSpace(c) }
 
-func (p *htmlTokenizer) emit(s string) {
+func (p *tokenizer) emit(s string) {
 	if p.escapable {
-		s = htmlUnescape(s)
+		s = Unescape(s)
 	}
-	p.h.data(s)
+	p.h.Data(s)
 }
 
-func (p *htmlTokenizer) goahead() {
+func (p *tokenizer) goahead() {
 	raw := p.raw
 	n := len(raw)
 	i := 0
@@ -125,14 +128,14 @@ func (p *htmlTokenizer) goahead() {
 		case strings.HasPrefix(rest, "<!"):
 			k = p.parseHTMLDeclaration(i)
 		default:
-			p.h.data("<")
+			p.h.Data("<")
 			k = i + 1
 		}
 		if k < 0 {
 			// end=1: an unterminated construct runs to the end of the
 			// page; only a bare "</" at the very end is reported.
 			if strings.HasPrefix(raw[i:], "</") && i+2 == n {
-				p.h.data("</")
+				p.h.Data("</")
 			}
 			k = n
 		}
@@ -160,7 +163,7 @@ func indexFrom(s, sep string, from, extra int) int {
 // cdataEnd is interesting.search in CDATA mode: the next
 // </elem(?=[\t\n\r\f />]) (re.IGNORECASE|re.ASCII, so only ASCII letters
 // fold), or the end of the page for plaintext (\z); -1 when there is none.
-func (p *htmlTokenizer) cdataEnd(i int) int {
+func (p *tokenizer) cdataEnd(i int) int {
 	raw, elem := p.raw, p.cdataElem
 	if elem == "plaintext" {
 		return len(raw)
@@ -282,7 +285,7 @@ func tagFind(s string, p int) (end int, name string) {
 
 // attrFind is attrfind_tolerant.match(s, k): the attribute (value as the
 // regex captured it, quotes included) and the end of the match.
-func attrFind(s string, k int) (a htmlAttr, end int, ok bool) {
+func attrFind(s string, k int) (a Attr, end int, ok bool) {
 	if k == 0 || k >= len(s) || !isAttrLookbehind(s[k-1]) || !isTagNameChar(s[k]) {
 		return a, 0, false
 	}
@@ -299,15 +302,15 @@ func attrFind(s string, k int) (a htmlAttr, end int, ok bool) {
 	return a, skipTagSpace(s, q), true
 }
 
-func (p *htmlTokenizer) parseStarttag(i int) int {
+func (p *tokenizer) parseStarttag(i int) int {
 	raw := p.raw
 	endpos := locateTagEnd(raw, i+1)
 	if raw[endpos-1] != '>' {
 		return -1
 	}
 	k, name := tagFind(raw, i+1)
-	tag := pycompat.Lower(name)
-	var attrs []htmlAttr
+	tag := textfold.Lower(name)
+	var attrs []Attr
 	for k < endpos {
 		a, end, ok := attrFind(raw, k)
 		if !ok {
@@ -327,23 +330,23 @@ func (p *htmlTokenizer) parseStarttag(i int) int {
 			}
 			a.Value = v
 		}
-		a.Name = pycompat.Lower(a.Name)
+		a.Name = textfold.Lower(a.Name)
 		attrs = append(attrs, a)
 		k = end
 	}
 	end := ""
 	if k < endpos {
-		end = pycompat.Strip(raw[k:endpos])
+		end = strings.TrimFunc(raw[k:endpos], textfold.IsSpace) // str.strip()
 	}
 	if end != ">" && end != "/>" {
-		p.h.data(raw[i:endpos])
+		p.h.Data(raw[i:endpos])
 		return endpos
 	}
 	if strings.HasSuffix(end, "/>") {
-		p.h.startEndTag(tag, attrs)
+		p.h.StartEndTag(tag, attrs)
 		return endpos
 	}
-	p.h.startTag(tag, attrs)
+	p.h.StartTag(tag, attrs)
 	switch {
 	case htmlCDATAContent[tag] || tag == "plaintext":
 		p.cdataElem, p.escapable = tag, false
@@ -353,7 +356,7 @@ func (p *htmlTokenizer) parseStarttag(i int) int {
 	return endpos
 }
 
-func (p *htmlTokenizer) parseEndtag(i int) int {
+func (p *tokenizer) parseEndtag(i int) int {
 	raw := p.raw
 	if strings.IndexByte(raw[i+2:], '>') < 0 {
 		return -1
@@ -369,14 +372,14 @@ func (p *htmlTokenizer) parseEndtag(i int) int {
 		return -1
 	}
 	_, name := tagFind(raw, i+2)
-	p.h.endTag(pycompat.Lower(name))
+	p.h.EndTag(textfold.Lower(name))
 	p.cdataElem, p.escapable = "", true
 	return j
 }
 
 // parseComment: an empty comment closes abruptly at ">" or "->", else at
 // the first "-->" or "--!>".
-func (p *htmlTokenizer) parseComment(i int) int {
+func (p *tokenizer) parseComment(i int) int {
 	raw := p.raw
 	s := i + 4
 	switch {
@@ -400,7 +403,7 @@ func (p *htmlTokenizer) parseComment(i int) int {
 	}
 }
 
-func (p *htmlTokenizer) parseHTMLDeclaration(i int) int {
+func (p *tokenizer) parseHTMLDeclaration(i int) int {
 	raw := p.raw
 	switch {
 	case strings.HasPrefix(raw[i:], "<![CDATA["):

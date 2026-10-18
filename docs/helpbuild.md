@@ -315,7 +315,7 @@ second package needs them.
 
 | File | Ports | Notes |
 |---|---|---|
-| `pyhtml.go`, `pyhtmlref.go` | `html.parser.HTMLParser` (CPython 3.15), `convert_charrefs=True` | the tokenizer below; reports only the callbacks `html_text` overrides |
+| `internal/pyhtml` (shared package, D37) | `html.parser.HTMLParser` (CPython 3.15), `convert_charrefs=True`; `html.unescape`; `name in html.entities.html5` | the tokenizer below (`pyhtml.Parse`, a `pyhtml.Handler`); reports only the callbacks the tools override |
 | `htmltext.go` | `html_text.convert` as `HTMLToText(page) (title, text)` | Python's Unicode `\s`, `strip` and `\w` (`pycompat.IsSpace`, `IsWordRune`) |
 | `guidetoc.go` | `guide_toc.find_toc`, `parse_toc`, `count_items` | ElementTree is `internal/pyxml` in ETree mode; the warning is returned, not printed |
 | `guidesparser.go` | `guides_parser.parse_guides`, `_markdown_title`, `devguide_parser.parse_devguide` | `RebuiltDir`; `TextResult.Log` = stdout lines, `.Warnings` = stderr lines |
@@ -337,6 +337,11 @@ Both indexes are `json.dumps(indent=2)` with `ensure_ascii` on (`DumpIndent2`).
 
 ### The html.parser port
 
+The port lives in the shared `internal/pyhtml` package (decision D37, owner Integrante3;
+its `doc.go` holds the contract), which depends on `textfold` only so that
+`pycompat.HTMLUnescape` can forward to it. Its parity tests stay here, next to their
+driver.
+
 One `feed()` of the whole page and `close()` parse exactly like one `goahead(end=1)`: each
 early stop of the feed pass leaves the state unchanged and `close()` resumes there, and
 the text after the last `<` is handed over whole either way, so the `&` look-back that
@@ -355,11 +360,11 @@ indicator, which backtracks one space before a quote that is never closed (`x= '
 CDATA end tag folds ASCII letters only (`re.ASCII`). Offsets are byte offsets into valid
 UTF-8: every delimiter is ASCII and every class excludes ASCII bytes only.
 
-`html.unescape` is `pycompat.HTMLUnescape` plus `&nGt;` and `&nLt;`: Go's `html` entity
-table lacks these two WHATWG names (found by the parity test over all 2,231 names of
-`html.entities.html5`). The attribute rule (`_unescape_attrvalue`) needs `name in html5`;
-Go does not export its table, so `isHTML5Entity` reads it through `html.UnescapeString`
-(an exact name decodes to 1 or 2 code points, a prefix match leaves the rest of the name).
+`html.unescape` is `pyhtml.Unescape` (`pycompat.HTMLUnescape` forwards to it): Go's
+`html` entity table plus `&nGt;` and `&nLt;`, the two WHATWG names it lacks (found by the
+parity test over all 2,231 names of `html.entities.html5`). The attribute rule
+(`_unescape_attrvalue`) needs `name in html5`; Go does not export its table, so
+`pyhtml.IsHTML5Entity` reads it through `html.UnescapeString` (an exact name decodes to 1 or 2 code points, a prefix match leaves the rest of the name).
 
 ### Parity tests (`testdata/parity/htmldriver.py`)
 
@@ -367,7 +372,7 @@ Go does not export its table, so `isHTML5Entity` reads it through `html.Unescape
 |---|---|
 | `TestParityHTMLCorners` | the parser callbacks and `convert()` of 60 hand-written pages (the Python tests' fixtures, unterminated constructs, raw text, attribute quoting, charrefs) |
 | `TestParityHTMLFuzz` | the same on 5,000 seeded random snippets of tag/charref/whitespace fragments, some cut at a random point (400 with `-short`) |
-| `TestParityHTML5Entities` | `isHTML5Entity` on every `html5` name and its near misses, `htmlUnescape` against `html.unescape` on 46,851 texts |
+| `TestParityHTML5Entities` | `pyhtml.IsHTML5Entity` on every `html5` name and its near misses, `pyhtml.Unescape` against `html.unescape` on 46,851 texts |
 | `TestParityTocFiles` | `parse_toc` (order, titles, trails), `count_items` and the stderr warning on the synthetic toc.xml files and corners (namespaced, root `tocitem`, empty, undefined entity, BOM + ISO-8859-1 / US-ASCII / UTF-8 / UTF-16 (one real 4.3/4.15 toc.xml is BOM + ISO-8859-1; `pyxml` applies the declared encoding after a BOM as expat does), junk, missing file) |
 | `TestParityGuidesSynthetic` | stdout/stderr lines, return value and both whole trees after each builder (and a second run) on a synthetic root: the `test_extraction` pages, toc.xml corners, Markdown, `.txt` beside `.html`, licence texts, a non-UTF-8 page body, CRLF, a broken toc, `TOC.XML` |
 | `TestParityGuidesIndexSources` | `guides-index.json` of a registered root with a manifest and a mounted install, an unmounted install, and no manifest (values kept from an earlier index) |
@@ -386,14 +391,6 @@ Go does not export its table, so `isHTML5Entity` reads it through `html.Unescape
   WTF-8, CPython as `\udcXX`), and both sides fail the same way.
 - **The `excluded (licence text)` line** is `os.path.relpath` unchanged, so it keeps the
   host separator (`devguide\sub\lgpl-2.1.txt` on Windows) while `SOURCE:` headers use `/`.
-
-### S5/S6 shared-helper candidates
-
-- **`internal/pyhtml`**: `pyhtml.go` + `pyhtmlref.go` have no helpbuild dependency and
-  bajadoc (S7) needs the same parser; moving them to a shared package (exporting the
-  handler interface) is a rename.
-- **`pycompat.HTMLUnescape`** should learn `&nGt;` / `&nLt;`; `htmlUnescape` and
-  `goMissingEntities` then go away. `isHTML5Entity` would sit well next to it.
 
 ## Real-data parity
 
