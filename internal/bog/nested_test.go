@@ -96,7 +96,7 @@ func TestNestedSlotsLeavesTheGraphUnchanged(t *testing.T) {
 		t.Run(filepath.Base(path), func(t *testing.T) {
 			text, err := ReadText(path)
 			if err != nil {
-				t.Skip(err) // the read fixtures are exercised by read_test.go
+				t.Fatal(err)
 			}
 			plain := dumpBog(Parse(path, text), -1)
 			nested := dumpBog(ParseOptions(path, text, Options{NestedSlots: true}), -1)
