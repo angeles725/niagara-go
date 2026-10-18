@@ -21,7 +21,7 @@ func init() {
 		{Name: "service-order", Help: "Analyze service startup order issues", Args: argsServiceOrder},
 		{Name: "dependency-audit", Help: "Audit third-party and external dependencies", Args: argsDependencyAudit},
 		{Name: "module-health", Help: "Overall module health scorecard (A/B/C/D/F)", Args: argsModuleHealth},
-		{Name: "palette-lexicon-agents", Help: "Palette entries, lexicon keys (+ dup-key report), and agent registrations for a module", Args: argsPaletteLexiconAgents},
+		{Name: "palette-lexicon-agents", Help: "Palette entries, lexicon keys (+ dup-key report), and agent registrations for a module", Args: argsPaletteLexiconAgents, Run: runPaletteLexiconAgents},
 	})
 }
 

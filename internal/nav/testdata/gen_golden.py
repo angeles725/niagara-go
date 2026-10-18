@@ -33,6 +33,7 @@ LIC = {"NAV_CORPUS_BASE": "fixture/lic-organized"}
 LIC_BASE = "fixture/lic"
 CG_BASE = "fixture/cg"
 STATS_BASE = "fixture/stats/base"
+PLA_BASE = "fixture/pla"
 
 CLASS_NAMES = ["BAlarmService", "BAlarmClass", "BAlarmRecord", "AlarmDbConnection", "BAckState",
                "AlarmSupport", "BAlarmArchive", "BAlarmablePointMarkerTag", "BAlarm", "Entry",
@@ -213,6 +214,12 @@ CASES = [
     ("stats-json", ["stats", "--json"], NO_CORPUS, STATS_BASE),
     ("stats-sparse", ["stats"], NO_CORPUS, "fixture/stats-sparse/base"),
     ("stats-sparse-json", ["stats", "--json"], NO_CORPUS, "fixture/stats-sparse/base"),
+    ("palette-lexicon-agents", ["palette-lexicon-agents", "pal"], NO_CORPUS, PLA_BASE),
+    ("palette-lexicon-agents-json", ["palette-lexicon-agents", "pal", "--json"], NO_CORPUS, PLA_BASE),
+    ("palette-lexicon-agents-empty", ["palette-lexicon-agents", "empty"], NO_CORPUS, PLA_BASE),
+    ("palette-lexicon-agents-empty-json", ["palette-lexicon-agents", "empty", "--json"], NO_CORPUS, PLA_BASE),
+    ("palette-lexicon-agents-missing", ["palette-lexicon-agents", "nope"], NO_CORPUS, PLA_BASE),
+    ("palette-lexicon-agents-missing-json", ["palette-lexicon-agents", "nope", "--json"], NO_CORPUS, PLA_BASE),
 ]
 
 
@@ -686,6 +693,57 @@ def build_stats():
         f.write('{"_meta": {"top_level_classes": 1}, "classes": ')
 
 
+# palette-lexicon-agents: module pal with an extracted artifact (nested and
+# attribute-less <p>, a lexicon with duplicate keys, agents with and without
+# <on>), a JAR-only artifact (palette and lexicon read from the JAR, a
+# malformed module.xml ignored), an artifact whose palette is not well formed
+# (a late XML declaration), 55 palette entries (the "... and N more" line) and
+# a directory that is not an artifact; module empty has no artifact.
+PLA_PALETTE = '''<?xml version="1.0" encoding="UTF-8"?>
+<bajaObjectGraph version="1.0">
+<p m="b=baja" t="b:Folder">
+ <p n="Net" m="x=pal" t="x:Net"/>
+ <p n="Caf\u00e9 '&amp;'"/>
+ <p/>
+</p>
+</bajaObjectGraph>
+'''
+PLA_LEXICON = "# comment\nkey=1\n other = 2\nkey = 3\n\nnoequals\nother=4\nkey=5\n=x\n"
+PLA_MODULE_XML = '''<module><types>
+ <type name="Net" class="com.x.BNet"><agent><on type="x:A"/><on type="x:B"/></agent><agent/></type>
+ <type name="It's" class="com.x.BQuote"/>
+ <type name="View" class="com.x.BView"><agent><on/></agent></type>
+</types></module>
+'''
+
+
+def build_pla():
+    import zipfile
+    base = os.path.join(HERE, "fixture", "pla")
+    shutil.rmtree(base, ignore_errors=True)
+    ext = os.path.join(base, "pal", "pal-rt", "extracted")
+    os.makedirs(os.path.join(ext, "META-INF"))
+    for name, text in (("module.palette", PLA_PALETTE), ("pal-rt.lexicon", PLA_LEXICON),
+                       ("META-INF/module.xml", PLA_MODULE_XML)):
+        with open(os.path.join(ext, name), "w", encoding="utf-8") as f:
+            f.write(text)
+    os.makedirs(os.path.join(base, "pal", "pal-wb"))
+    with zipfile.ZipFile(os.path.join(base, "pal", "pal-wb", "pal-wb.jar"), "w") as zf:
+        for name, text in (("module.palette", "<a>" + "".join('<p n="e%d"/>' % i for i in range(55)) + "</a>"),
+                           ("pal-wb.lexicon", "a=1\r\na=2\r\n"), ("META-INF/module.xml", "<module>")):
+            zf.writestr(zipfile.ZipInfo(name, date_time=(2026, 1, 2, 3, 4, 6)), text)
+    bad = os.path.join(base, "pal", "pal-ux", "extracted")
+    os.makedirs(bad)
+    with open(os.path.join(bad, "module.palette"), "w", encoding="utf-8") as f:
+        f.write("<!-- c -->\n<?xml version=\"1.0\"?><a><p n=\"x\"/></a>")
+    os.makedirs(os.path.join(base, "pal", "docs"))
+    with open(os.path.join(base, "pal", "README"), "w", encoding="utf-8") as f:
+        f.write("not an artifact\n")
+    os.makedirs(os.path.join(base, "empty", "notes"))
+    with open(os.path.join(base, "empty", "notes", "x.txt"), "w", encoding="utf-8") as f:
+        f.write("no jar, no extracted/\n")
+
+
 def build_fixture():
     fx = os.path.join(HERE, "fixture")
     shutil.rmtree(fx, ignore_errors=True)
@@ -744,7 +802,7 @@ def capture(cid, args, env, base=BASE):
 def main():
     """--fixture rebuilds every fixture; --search only the grep/source/token one,
     --lic only the license/resources one, --cg only the call graph one, --stats
-    only the stats ones.
+    only the stats ones, --pla only the palette-lexicon-agents one.
     --only a,b captures just those case ids (without the nav- prefix)."""
     if "--fixture" in sys.argv:
         build_fixture()
@@ -757,6 +815,8 @@ def main():
         build_cg()
     if "--fixture" in sys.argv or "--stats" in sys.argv:
         build_stats()
+    if "--fixture" in sys.argv or "--pla" in sys.argv:
+        build_pla()
     only = set(sys.argv[sys.argv.index("--only") + 1].split(",")) if "--only" in sys.argv else None
     fresh_class_index()
     for cid, args, env, *base in CASES:

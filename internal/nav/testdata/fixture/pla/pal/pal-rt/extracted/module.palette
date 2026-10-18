@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bajaObjectGraph version="1.0">
+<p m="b=baja" t="b:Folder">
+ <p n="Net" m="x=pal" t="x:Net"/>
+ <p n="Café '&amp;'"/>
+ <p/>
+</p>
+</bajaObjectGraph>

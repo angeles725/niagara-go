@@ -1,0 +1,9 @@
+# comment
+key=1
+ other = 2
+key = 3
+
+noequals
+other=4
+key=5
+=x
