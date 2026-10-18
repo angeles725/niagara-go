@@ -3,7 +3,8 @@
 `internal/navbuild` is the Go port of the module-navigator index builders
 (`tools/build_*.py`, Phase 4 of the Go migration, decision D33). It is a **non-printing
 library**: each builder returns typed results and errors and writes only its index file;
-the summaries the Python builders print belong to the CLI layer (`mnav reindex`, slice B8).
+the summaries the Python builders print belong to the CLI layer (`mnav reindex`, slice B8,
+`internal/navbuild/reindex`).
 Only the indexes that kept commands read are ported (D32).
 
 Source of truth: module-navigator `tools/` (Python 3.15). Where the Python code and this
@@ -19,8 +20,8 @@ document disagree, the code wins and this document is corrected.
 | B4 | token index (SQLite) | `build_token_index.py` |
 | B5 | Java member scanner + method index | `build_method_index.py` |
 | ~~B6~~ | field index: dropped, no kept reader (D32) | `build_field_index.py` |
-| **B7** | call graph | `build_callgraph_index.py` |
-| B8 | `mnav reindex` orchestration | `reindex.sh` |
+| B7 | call graph | `build_callgraph_index.py` |
+| **B8** | `mnav reindex` orchestration | `reindex.sh` |
 
 ## Foundations
 
@@ -192,6 +193,33 @@ callee lists are sorted; the index is streamed like the method index.
 
 Intended difference: a `class_to_chain` value that is not a list (Python would take the
 first character of a string) or a chain whose first element is not a string is an error.
+
+## `mnav reindex`
+
+`internal/navbuild/reindex` is module-navigator's `reindex.sh` over the Go builders:
+`mnav reindex [--check] [--no-backup] [--only NAME] [--organized DIR] [--base-dir DIR]`.
+`cmd/mnav` routes `reindex` (first, or after a leading `--base-dir DIR`/`-d DIR`) to it
+before the command registry: `reindex.sh` is not a `module_nav.py` command, so it is not in
+the registry, the `--help` list or `nav.Order`.
+
+| Step | Behaviour |
+|---|---|
+| order | `build_module_inventory.py`, `build_class_index.py`, `build_inheritance.py`, `build_xref.py`, `build_token_index.py`, `build_method_index.py`, `build_callgraph_index.py` (the kept indexes; `--only` takes these names or the index file name) |
+| base dir | `--base-dir`, else the checkout found from the working directory or the executable (D24); `indexes/` must exist |
+| corpus | `--organized DIR` (made absolute), else `$NAV_CORPUS_BASE`, else `organized/` next to the base dir; a missing one aborts before any build |
+| `--check` | prints the plan with `numfmt --to=iec` sizes (`IEC`) and builds nothing |
+| backup | unless `--no-backup`: `indexes/.reindex-bak` recreated, every existing index copied with mode and mtime (`cp -p`) |
+| validation | a builder error (`exit=1`), an index under 10 KiB (`tiny`), or one under half of a previous index over 100 KiB (`shrank`) is a failure: the index is restored from the backup and the run ends with exit 1 |
+| abort | a failed inventory or class index stops the run (every later builder reads them) |
+| logs | `indexes/logs/<builder>.log`: the builder's result summary or its error |
+
+Differences from `reindex.sh`: no `tools/`/`python3` preflight (the builders run
+in-process); the retired builders (string, field, exceptions, swing, annotations; D32/D33)
+are not run, so `stats` shows those indexes missing; the logs hold a summary instead of the
+Python builders' progress output; elapsed seconds are measured, not `date +%s`
+differences; every builder writes atomically, so a failed build already leaves the old
+index in place before the rollback copies the backup over it. Tested only against temp
+copies (`reindex_test.go`), never a real `indexes/`.
 
 ## Gates
 
