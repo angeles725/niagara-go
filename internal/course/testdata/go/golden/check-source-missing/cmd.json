@@ -1,1 +1,23 @@
-{"args": ["check", "--station", "stations/good", "--install", "install", "--source", "nosuch", "--lab", "7"], "cwd_fixture": ".."}
+{
+ "args": [
+  "check",
+  "--station",
+  "stations/good",
+  "--install",
+  "install",
+  "--source",
+  "nosuch",
+  "--lab",
+  "7"
+ ],
+ "cwd_fixture": "..",
+ "requires": {
+  "goos": [
+   "linux",
+   "darwin",
+   "freebsd",
+   "netbsd",
+   "openbsd"
+  ]
+ }
+}
