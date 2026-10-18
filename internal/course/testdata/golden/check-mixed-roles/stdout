@@ -1,44 +1,45 @@
-ID        LAB   VERDICT  DESCRIPTION                                                          EVIDENCE
-C7.1      7     SKIP     training-rtTest jar built [L7.7 L7.8]                                no --install DIR: modules/training-rtTest.jar not checked
-C7.2      7     SKIP     BWorkOrderServiceTest.class in training-rtTest [L7.1 L7.2]           no --install DIR: modules/training-rtTest.jar not checked
-C7.3      7     SKIP     Mockito in the test uberjar [L7.3]                                   no --install DIR: modules/training-rtTest.jar not checked
-C7.4      7     SKIP     training-rt.lexicon in training-rt [L7.13]                           no --install DIR: modules/training-rt.jar not checked
-C7.5      7     PASS     WorkOrderService url restored [L7.18]                                Services/WorkOrderService.url = http://localhost:3001/workOrders (default)
-C7.6      7     SKIP     4.15 configOk() clears faultCause, updates status [L7.18]            no --source DIR: baja/javax/baja/sys/BAbstractService.java not checked
-C7.7      7     SKIP     4.15 fault bit only on a fatal or config fault [L7.18]               no --source DIR: baja/javax/baja/sys/BAbstractService.java not checked
-C7.8      7     SKIP     4.15 BAbstractService: three properties, no Last Ok [L7.18]          no --source DIR: baja/javax/baja/sys/BAbstractService.java not checked
-CRA2.1    RA2   SKIP     depends on control-rt [RA2.R1]                                       no --install DIR: modules/Cristian_Angeles_Review-rt.jar not checked
-CRA2.2    RA2   SKIP     BPointSummaryService.class built [RA2.R2 X1]                         no --install DIR: modules/Cristian_Angeles_Review-rt.jar not checked
-CRA2.3    RA2   SKIP     palette lists PointSummaryService [RA2.R7]                           no --install DIR: modules/Cristian_Angeles_Review-rt.jar not checked
-CRA2.4    RA2   SKIP     Cristian_Angeles_Review-rt is signed [RA2.R8 X10]                    no --install DIR: modules/Cristian_Angeles_Review-rt.jar not checked
-CRA2.5    RA2   SKIP     Cristian_Angeles_Review-rt jar built [RA2.R9]                        no --install DIR: modules/Cristian_Angeles_Review-rt.jar not checked
-CRA2.6    RA2   PASS     NumericWritables in Config/Review2 [RA2.V10]                         found 2 in Review2: Review2/NumericWritable, Review2/NumericWritable1
-CRA2.7    RA2   PASS     one PointSummaryService, under Services [RA2.V12 RA2.R2]             found 1 under baja:ServiceContainer: Services/PointSummaryService
-CRA2.8    RA2   PASS     summaryFile = file:^Review.txt [RA2.V13 RA2.R3]                      Services/PointSummaryService.summaryFile = file:^Review.txt (stored)
-CRA2.9    RA2   PASS     Review.txt in the station's Files space [RA2.V15 X6]                 found 1 shared/Review.txt: Review.txt
-CRA2.10   RA2   PASS     Review.txt lines: name: value {status} @ priority [RA2.R5b RA2.V15]  shared/Review.txt: 2 lines match
-CRA2.11   RA2   PASS     distinct fallback values in Config/Review2 [RA2.V11]                 2 distinct fallback.value over 2 components: 33.0, 54.0
-CRA2.12   RA2   SKIP     signed with the certificate of training-rt (Lab 5) [RA2.R8]          no --install DIR: modules/Cristian_Angeles_Review-rt.jar not checked
-CRA2.13   RA2   SKIP     BPointSummaryService extends BAbstractService [RA2.R2]               no --solutions DIR: review/Cristian_Angeles_Review/Cristian_Angeles_Review-rt/src/com/review/Cristian_Angeles_Review/BPointSummaryService.java not checked
-CRA2.14   RA2   SKIP     frozen property summaryFile: BOrd = BOrd.DEFAULT [RA2.R3]            no --solutions DIR: review/Cristian_Angeles_Review/Cristian_Angeles_Review-rt/src/com/review/Cristian_Angeles_Review/BPointSummaryService.java not checked
-CRA2.15   RA2   SKIP     frozen action createSummaryFile [RA2.R4]                             no --solutions DIR: review/Cristian_Angeles_Review/Cristian_Angeles_Review-rt/src/com/review/Cristian_Angeles_Review/BPointSummaryService.java not checked
-CEXAM.1   EXAM  PASS     a Limiter in Config/Test [P1]                                        found 1 in Test: Test/Limiter
-CEXAM.2   EXAM  PASS     Limiter min = 25 [P1]                                                Test/Limiter.min = 25.0 (stored)
-CEXAM.3   EXAM  PASS     Limiter max = 75 [P1]                                                Test/Limiter.max = 75.0 (stored)
-CEXAM.4   EXAM  PASS     Ramp.out -> Limiter.in [P1]                                          found 1: Test/Ramp.out -> Test/Limiter.in
-CEXAM.5   EXAM  PASS     Limiter computed out (out stored) [P1]                               Test/Limiter.out = 75.0 (stored)
-CEXAM.6   EXAM  SKIP     Cristian_Angeles_Cert-rt is signed [P1 P2]                           no --install DIR: modules/Cristian_Angeles_Cert-rt.jar not checked
-CEXAM.7   EXAM  SKIP     BLimiter.class built [P1]                                            no --install DIR: modules/Cristian_Angeles_Cert-rt.jar not checked
-CEXAM.8   EXAM  PASS     one HistoryExportService, under Services [P2]                        found 1 under baja:ServiceContainer: Services/HistoryExportService
-CEXAM.9   EXAM  PASS     historyId = /<station>/AuditHistory [P2]                             Services/HistoryExportService.historyId = /Cristian_Angeles_Cert/AuditHistory (stored)
-CEXAM.10  EXAM  PASS     history.csv in the station's Files space [P2]                        found 1 shared/history.csv: history.csv
-CEXAM.11  EXAM  PASS     history.csv header Timestamp,Operation,Target,SlotName [P2]          shared/history.csv:1 = Timestamp,Operation,Target,SlotName
-CEXAM.12  EXAM  PASS     history.csv rows: timestamp, operation, target, slot [P2]            shared/history.csv: 2 lines match
-CEXAM.13  EXAM  SKIP     BHistoryExportService.class built [P2]                               no --install DIR: modules/Cristian_Angeles_Cert-rt.jar not checked
-CEXAM.14  EXAM  PASS     a WebsiteDriverDevice under Drivers [P3]                             found 1 under driver:DriverContainer: Drivers/WebsiteDriverNetwork/WebsiteDriverDevice
-CEXAM.15  EXAM  PASS     device website set [P3]                                              Drivers/WebsiteDriverNetwork/WebsiteDriverDevice.website = www.google.com (stored)
-CEXAM.16  EXAM  PASS     device pinged ok (health.lastOkTime stored) [P3]                     Drivers/WebsiteDriverNetwork/WebsiteDriverDevice.health.lastOkTime = 2026-10-16T13:24:00.000-06:00 (stored)
-CEXAM.17  EXAM  SKIP     websiteDriver-rt is signed [P3]                                      no --install DIR: modules/websiteDriver-rt.jar not checked
-CEXAM.18  EXAM  SKIP     network, device and folder classes built [P3]                        no --install DIR: modules/websiteDriver-rt.jar not checked
-CEXAM.19  EXAM  SKIP     websiteDriver requests NETWORK_COMMUNICATION [P3]                    no --install DIR: modules/websiteDriver-rt.jar not checked
-checked 42: PASS 20, FAIL 0, SKIP 22; station GoodStation (237 components, 16 links), station ReviewStation (9 components, 0 links), station CertStation (9 components, 1 link), install (none: jar and install-file checks skipped), source (none: source checks skipped), solutions (none: solutions checks skipped)
+ID        LAB   VERDICT  DESCRIPTION                                                                                EVIDENCE
+C7.1      7     SKIP     training-rtTest jar built [L7.7 L7.8]                                                      no --install DIR: modules/training-rtTest.jar not checked
+C7.2      7     SKIP     BWorkOrderServiceTest.class in training-rtTest [L7.1 L7.2]                                 no --install DIR: modules/training-rtTest.jar not checked
+C7.3      7     SKIP     Mockito in the test uberjar [L7.3]                                                         no --install DIR: modules/training-rtTest.jar not checked
+C7.4      7     SKIP     training-rt.lexicon in training-rt [L7.13]                                                 no --install DIR: modules/training-rt.jar not checked
+C7.5      7     PASS     WorkOrderService url restored [L7.18]                                                      Services/WorkOrderService.url = http://localhost:3001/workOrders (default)
+C7.6      7     SKIP     4.15 configOk() clears faultCause, updates status [L7.18]                                  no --source DIR: baja/javax/baja/sys/BAbstractService.java not checked
+C7.7      7     SKIP     4.15 fault bit only on a fatal or config fault [L7.18]                                     no --source DIR: baja/javax/baja/sys/BAbstractService.java not checked
+C7.8      7     SKIP     4.15 BAbstractService: three properties, no Last Ok [L7.18]                                no --source DIR: baja/javax/baja/sys/BAbstractService.java not checked
+CRA2.1    RA2   SKIP     depends on control-rt [RA2.R1]                                                             no --install DIR: modules/Cristian_Angeles_Review-rt.jar not checked
+CRA2.2    RA2   SKIP     BPointSummaryService.class built [RA2.R2 X1]                                               no --install DIR: modules/Cristian_Angeles_Review-rt.jar not checked
+CRA2.3    RA2   SKIP     palette lists PointSummaryService [RA2.R7]                                                 no --install DIR: modules/Cristian_Angeles_Review-rt.jar not checked
+CRA2.4    RA2   SKIP     Cristian_Angeles_Review-rt is signed [RA2.R8 X10]                                          no --install DIR: modules/Cristian_Angeles_Review-rt.jar not checked
+CRA2.5    RA2   SKIP     Cristian_Angeles_Review-rt jar built [RA2.R9]                                              no --install DIR: modules/Cristian_Angeles_Review-rt.jar not checked
+CRA2.6    RA2   PASS     NumericWritables in Config/Review2 [RA2.V10]                                               found 2 in Review2: Review2/NumericWritable, Review2/NumericWritable1
+CRA2.7    RA2   PASS     one PointSummaryService, under Services [RA2.V12 RA2.R2]                                   found 1 under baja:ServiceContainer: Services/PointSummaryService
+CRA2.8    RA2   PASS     summaryFile = file:^Review.txt [RA2.V13 RA2.R3]                                            Services/PointSummaryService.summaryFile = file:^Review.txt (stored)
+CRA2.9    RA2   PASS     Review.txt in the station's Files space [RA2.V15 X6]                                       found 1 shared/Review.txt: Review.txt
+CRA2.10   RA2   PASS     Review.txt lines: name: value {status} @ priority [RA2.R5b RA2.V15]                        shared/Review.txt: 2 lines match
+CRA2.11   RA2   PASS     distinct fallback values in Config/Review2 [RA2.V11]                                       2 distinct fallback.value over 2 components: 33.0, 54.0
+CRA2.12   RA2   SKIP     signed with the certificate of training-rt (Lab 5) [RA2.R8]                                no --install DIR: modules/Cristian_Angeles_Review-rt.jar not checked
+CRA2.13   RA2   SKIP     BPointSummaryService extends BAbstractService [RA2.R2]                                     no --solutions DIR: review/Cristian_Angeles_Review/Cristian_Angeles_Review-rt/src/com/review/Cristian_Angeles_Review/BPointSummaryService.java not checked
+CRA2.14   RA2   SKIP     frozen property summaryFile: BOrd = BOrd.DEFAULT [RA2.R3]                                  no --solutions DIR: review/Cristian_Angeles_Review/Cristian_Angeles_Review-rt/src/com/review/Cristian_Angeles_Review/BPointSummaryService.java not checked
+CRA2.15   RA2   SKIP     frozen action createSummaryFile [RA2.R4]                                                   no --solutions DIR: review/Cristian_Angeles_Review/Cristian_Angeles_Review-rt/src/com/review/Cristian_Angeles_Review/BPointSummaryService.java not checked
+CRA2.16   RA2   PASS     Review.txt lists every NumericWritable at def with its fallback [RA2.V15 RA2.R5a RA2.R5b]  shared/Review.txt lists 2 of 2 control:NumericWritable, each at def with its fallback.value
+CEXAM.1   EXAM  PASS     a Limiter in Config/Test [P1]                                                              found 1 in Test: Test/Limiter
+CEXAM.2   EXAM  PASS     Limiter min = 25 [P1]                                                                      Test/Limiter.min = 25.0 (stored)
+CEXAM.3   EXAM  PASS     Limiter max = 75 [P1]                                                                      Test/Limiter.max = 75.0 (stored)
+CEXAM.4   EXAM  PASS     Ramp.out -> Limiter.in [P1]                                                                found 1: Test/Ramp.out -> Test/Limiter.in
+CEXAM.5   EXAM  PASS     Limiter computed out (out stored) [P1]                                                     Test/Limiter.out = 75.0 (stored)
+CEXAM.6   EXAM  SKIP     Cristian_Angeles_Cert-rt is signed [P1 P2]                                                 no --install DIR: modules/Cristian_Angeles_Cert-rt.jar not checked
+CEXAM.7   EXAM  SKIP     BLimiter.class built [P1]                                                                  no --install DIR: modules/Cristian_Angeles_Cert-rt.jar not checked
+CEXAM.8   EXAM  PASS     one HistoryExportService, under Services [P2]                                              found 1 under baja:ServiceContainer: Services/HistoryExportService
+CEXAM.9   EXAM  PASS     historyId = /<station>/AuditHistory [P2]                                                   Services/HistoryExportService.historyId = /Cristian_Angeles_Cert/AuditHistory (stored)
+CEXAM.10  EXAM  PASS     history.csv in the station's Files space [P2]                                              found 1 shared/history.csv: history.csv
+CEXAM.11  EXAM  PASS     history.csv header Timestamp,Operation,Target,SlotName [P2]                                shared/history.csv:1 = Timestamp,Operation,Target,SlotName
+CEXAM.12  EXAM  PASS     history.csv rows: timestamp, operation, target, slot [P2]                                  shared/history.csv: 2 lines match
+CEXAM.13  EXAM  SKIP     BHistoryExportService.class built [P2]                                                     no --install DIR: modules/Cristian_Angeles_Cert-rt.jar not checked
+CEXAM.14  EXAM  PASS     a WebsiteDriverDevice under Drivers [P3]                                                   found 1 under driver:DriverContainer: Drivers/WebsiteDriverNetwork/WebsiteDriverDevice
+CEXAM.15  EXAM  PASS     device website set [P3]                                                                    Drivers/WebsiteDriverNetwork/WebsiteDriverDevice.website = www.google.com (stored)
+CEXAM.16  EXAM  PASS     device pinged ok (health.lastOkTime stored) [P3]                                           Drivers/WebsiteDriverNetwork/WebsiteDriverDevice.health.lastOkTime = 2026-10-16T13:24:00.000-06:00 (stored)
+CEXAM.17  EXAM  SKIP     websiteDriver-rt is signed [P3]                                                            no --install DIR: modules/websiteDriver-rt.jar not checked
+CEXAM.18  EXAM  SKIP     network, device and folder classes built [P3]                                              no --install DIR: modules/websiteDriver-rt.jar not checked
+CEXAM.19  EXAM  SKIP     websiteDriver requests NETWORK_COMMUNICATION [P3]                                          no --install DIR: modules/websiteDriver-rt.jar not checked
+checked 43: PASS 21, FAIL 0, SKIP 22; station GoodStation (237 components, 16 links), station ReviewStation (9 components, 0 links), station CertStation (9 components, 1 link), install (none: jar and install-file checks skipped), source (none: source checks skipped), solutions (none: solutions checks skipped)

@@ -73,7 +73,7 @@ func Open(path, install string, nested bool) (*Station, error) {
 // with bog.Options.NestedSlots.
 func NeedsNested(checks []*Check) bool {
 	for _, ck := range checks {
-		if ck.Kind == kindSlot && ck.dotted() {
+		if (ck.Kind == kindSlot || ck.Kind == kindListing) && ck.dotted() {
 			return true
 		}
 	}
@@ -187,6 +187,8 @@ func (s *Station) Run(ck *Check) Result {
 		r.Verdict, r.Evidence = s.checkAnnotation(ck)
 	case kindJarCert:
 		r.Verdict, r.Evidence = s.checkJarCert(ck)
+	case kindListing:
+		r.Verdict, r.Evidence = s.checkListing(ck)
 	default:
 		r.Verdict, r.Evidence = s.checkJar(ck)
 	}

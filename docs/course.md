@@ -240,6 +240,7 @@ own prefixes (`t:`, `tld:`) are resolved through its `m=` declarations.
 | `log` | as `audit`, over `history:LogRecord` files; regexps on `logName`, `level` (`INFO`, `SEVERE`, ...), `message` | as `audit` |
 | `trend` | every trend history matching the glob (`history/*/*/NumericWritable*.hdb`); a boolean value counts 0/1, an enum its ordinal; any other value type is SKIP | each file has at least / exactly N records (`Distinct`: N distinct values, NaN not counted), and every value lies in `Hist.Min..Max` (NaN never does; the evidence's min..max leaves it out) |
 | `annotation` | one Java file (`Glob`) of the `--labsrc` tree, or of the `--solutions` tree with `Root: solutions`, read by `internal/niagaraannot`: only the annotations before the top-level type, never the generated region. `Fact` renders `flags` (`out=rs in3=-`: each slot's Slot Sheet letters, `Flags.encodeToString` order), `enum` (`DIRECT=0 REVERSE=1 DEFAULT=direct`), `slots` (`property timeExecuted: BAbsTime, action submit(BWorkOrder = new BWorkOrder())`), `facets`, `defaults` (`summaryFile: BOrd = BOrd.DEFAULT`; no or an empty `defaultValue` is `""`) or `extends` (the superclass of the class declaration, as written: `BAbstractService`, `BList<BObject>`; the one fact read past the annotations); `Slot` narrows it to one slot | the fact equals `Want`. No tree, an unreadable one, a file the parser refuses or a flags expression it cannot evaluate is SKIP; a missing file or slot FAIL |
+| `listing` | one file under the station dir (`Glob`) that lists the components of `Type` (`Within`, `Under` as for `type`), one line each; `Match` is a Go regexp with a `(?P<name>...)` group, and with `Slot` also `(?P<value>...)` and `(?P<priority>...)` | the matching lines name exactly the components (none missing, none extra, none twice); with `Slot`, every line is at priority `Want` and its value (a decimal comma is a point) equals the component's effective `Slot` (`Default` when not stored; a dotted slot needs nested values). Not one matching file is FAIL |
 | `source-text` | one file of the `--source` tree (`Glob` is its path, `/`-separated); `Match` is a Go regexp over the whole text (`(?s)` and `\s*` cross lines) | the matches are at least / exactly N; the evidence gives the first one's line. No `--source`, or a tree that cannot be read, is SKIP; a missing file FAIL |
 
 File roots. A `files` or `file-text` row reads the station directory unless it names a root
@@ -393,6 +394,8 @@ signed).
 | CRA2.6-CRA2.10 | NumericWritables in `Review2`, one PointSummaryService under Services, `summaryFile = file:^Review.txt`, `shared/Review.txt` with `name: value {status} @ priority` lines |
 | CRA2.11 | the `Review2` NumericWritables hold at least two distinct values (RA2.V11): the nested `fallback.value` (the value the set action writes; default 0.0), read with nested values |
 | CRA2.12 | the module's signer certificate is `training-rt`'s (RA2.R8, the Code Signing lab's certificate: `jar-cert` `same`) |
+| CRA2.13-CRA2.15 | the service's superclass, `summaryFile` default and `createSummaryFile` action, from the corpus solutions (below) |
+| CRA2.16 | `Review.txt` names exactly the station's NumericWritables, each `@ def` with its fallback (RA2.V15, RA2.R5a, RA2.R5b: `listing`) |
 
 The rows `CRA1.11`-`CRA1.15` and `CRA2.13`-`CRA2.15` read the participant's sources in the corpus
 solutions (`--solutions`, `COURSE_SOLUTIONS`; annotation rows, offline) against the traceability of
@@ -412,9 +415,12 @@ review-assignments.md:
 A requirement the participant meets in another way than the key's design is PARTIAL with the key's
 part as the note, never CONFIRMED and never weakened to pass.
 
-What no row observes is an `Unobserved` note: flags, the confirmation dialog and other UI steps,
-superclasses, and that `Review.txt` lists every NumericWritable of the station (CRA2.10 counts two
-lines or more), so the range item RA2.V10–V15 stays PARTIAL.
+What no row observes is an `Unobserved` note: the confirmation dialog and other UI steps, the
+superclass of a jar's class (the solutions rows read it from the sources), and what of a requirement
+is runtime (an overwritten file, the BQL that produced the listing). CRA2.16 (`listing`) compares
+`Review.txt` with the bog: it names exactly the station's NumericWritables, each at `@ def` with its
+`fallback.value` as the value (RA2.V11's set writes the fallback), so the range item RA2.V10–V15 is
+CONFIRMED live (every linked check reads the station); RA2.R5a and RA2.R5b stay PARTIAL.
 
 On the live review station two rows FAIL, both real: CRA1.2 (the jar's description is
 `Cristian Angeles Niagara Reviw Assignments`) and CRA1.10 (the components sit in
@@ -512,6 +518,7 @@ The marker's evidence comes from the kinds of the item's linked checks (`check.E
 | live | `files`, `file-text` | files in the station directory (`shared/`), the default root |
 | offline | `files`, `file-text` with `Root` `install` or `labsrc` | a file of the install or of the lab sources (`checkEvidence`) |
 | live | `audit`, `log`, `trend` | the station's histories |
+| live | `listing` | a file in the station directory compared with the bog |
 | offline | `jar`, `jar-entry`, `jar-text`, `jar-signed`, `jar-cert` | a jar of the install |
 | offline | `source-text` | the Niagara source tree |
 | offline | `annotation` | the participant's lab sources, or the corpus solutions (`Root: solutions`) |
@@ -628,15 +635,15 @@ keys at `9e7c8a7eb`.
 | Command (2026-10-18) | Result |
 |---|---|
 | `course check` (the labs) | 105 checked: PASS 104, FAIL 1 (C3.4), SKIP 0 |
-| `course check --lab RA1 --lab RA2` | 30 checked: PASS 28, FAIL 2 (CRA1.2, CRA1.10) |
+| `course check --lab RA1 --lab RA2` | 31 checked: PASS 29, FAIL 2 (CRA1.2, CRA1.10) |
 | `course check --lab EXAM` | 19 checked: PASS 19 |
 | `course verify --status predicted` | 39: CONFIRMED 1 (L1.14, offline), PARTIAL 14, CONTRADICTED 0, UNDECIDED 24; 30 checks run |
-| `course verify --status written` | 201: CONFIRMED 9 (L5.2, L5.8, L5.9, L5.17, RA1.R1, RA1.R2, RA1.R4, RA2.R3, RA2.R8, offline), PARTIAL 15, CONTRADICTED 3 (L3.7, RA1.M3, RA1.V9–V14), UNDECIDED 174; 37 checks run |
+| `course verify --status written` | 201: CONFIRMED 10 (RA2.V10–V15 live; L5.2, L5.8, L5.9, L5.17, RA1.R1, RA1.R2, RA1.R4, RA2.R3, RA2.R8 offline), PARTIAL 15, CONTRADICTED 3 (L3.7, RA1.M3, RA1.V9–V14), UNDECIDED 173; 38 checks run |
 | `course verify --status identical` | 50: CONFIRMED 9 (offline), PARTIAL 7, CONTRADICTED 0, UNDECIDED 34; 16 checks run |
 | `course verify --status corrected` | 10: CONFIRMED 2 (offline), UNDECIDED 8; 2 checks run |
 | `course verify --status unverified` | 20: CONFIRMED 1 (live), PARTIAL 5, UNDECIDED 14; 7 checks run |
 | `course verify --status verified` | 72: CONFIRMED 72 (30 live, 42 offline lines); 90 checks run |
-| `course progress` | 370 items: checked 124, CONFIRMED 82, PARTIAL 39, CONTRADICTED 3, UNDECIDED 246; 154 checks run; 3 `redo` (C3.4, CRA1.2, CRA1.10), 10 `mark` (offline: L1.14, L5.2, L5.8, L5.9, L5.17, RA1.R1, RA1.R2, RA1.R4, RA2.R3, RA2.R8) |
+| `course progress` | 370 items: checked 125, CONFIRMED 83, PARTIAL 39, CONTRADICTED 3, UNDECIDED 245; 155 checks run; 3 `redo` (C3.4, CRA1.2, CRA1.10), 11 `mark` (live: RA2.V10–V15; offline: L1.14, L5.2, L5.8, L5.9, L5.17, RA1.R1, RA1.R2, RA1.R4, RA2.R3, RA2.R8) |
 | `course status` | verified 72: live 33, offline 39 |
 | `course quiz -n 500` | 89 questions: why 34, decision 29, trap 26 |
 
@@ -726,6 +733,11 @@ FAILs, no CONTRADICTED prediction, the item and status counts), not this table.
   variants (another superclass, a generic one, no extends clause: SKIP, another default, a property
   without one). `TestAnnotationReal` also runs the solutions rows when `COURSE_SOLUTIONS` is set,
   and `TestCheckLiveStations` reads it. The `check-review` golden passes `--solutions solutions`.
+- `check/listing_test.go`: the `listing` kind over the mini station's one NumericWritable: CRLF and
+  decimal-comma lines, a header line that does not match, a missing, an extra and a twice-listed
+  name, another priority, another value, names only, no file, a nested slot read without nested
+  values (SKIP) and a regexp without the name group (SKIP). `check-review` runs CRA2.16 on the review
+  fixture.
 - `check/filetext_test.go`: the `file-text` kind over a BOM + CRLF trend CSV, an old-format CSV, a
   short file, a line count, no matching file, a bad regexp and a file over the read bound (SKIP).
 - `check/check_test.go` and the `check-*` goldens: synthetic stations under

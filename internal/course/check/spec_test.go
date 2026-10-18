@@ -121,6 +121,10 @@ func TestCheckSpecShape(t *testing.T) {
 			ok = ck.Glob != "" && ck.Match != "" && err == nil && ck.Op != "" && ck.N > 0
 		case kindAnnotation:
 			ok = ck.Glob != "" && slices.Contains(annotationFacts, ck.Fact) && ck.Want != ""
+		case kindListing:
+			re, err := regexp.Compile(ck.Match)
+			ok = err == nil && typeRe.MatchString(ck.Type) && ck.Glob != "" && re.SubexpIndex("name") >= 0 &&
+				(ck.Slot == "" || (re.SubexpIndex("value") >= 0 && re.SubexpIndex("priority") >= 0 && ck.Want != ""))
 		case kindFileText:
 			_, err := regexp.Compile(ck.Match)
 			ok = ck.Glob != "" && ck.Match != "" && err == nil && (ck.Line > 0 || (ck.Op != "" && ck.N > 0))

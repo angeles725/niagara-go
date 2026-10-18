@@ -19,6 +19,7 @@ const (
 	kindTrend      = "trend"       // every Glob trend history: N records (Distinct: N values), values in Hist's range
 	kindSourceText = "source-text" // the matches of Match in the source-tree file Glob counted against N
 	kindAnnotation = "annotation"  // the Fact the annotations of the lab-source file Glob declare equals Want
+	kindListing    = "listing"     // the station file Glob names exactly the Type components, each with its Slot value (listing.go)
 )
 
 // evidenceOf is the evidence kind of a verified marker each check kind gives (key.EvidenceLive,
@@ -28,7 +29,7 @@ const (
 // kind says (checkEvidence). TestEvidenceOfEveryKind fails on a spec kind missing here.
 var evidenceOf = map[string]string{
 	kindType: key.EvidenceLive, kindSlot: key.EvidenceLive, kindLink: key.EvidenceLive,
-	kindFiles: key.EvidenceLive, kindFileText: key.EvidenceLive,
+	kindFiles: key.EvidenceLive, kindFileText: key.EvidenceLive, kindListing: key.EvidenceLive,
 	kindAudit: key.EvidenceLive, kindLog: key.EvidenceLive, kindTrend: key.EvidenceLive,
 	kindJar: key.EvidenceOffline, kindJarEntry: key.EvidenceOffline, kindJarText: key.EvidenceOffline,
 	kindJarSigned: key.EvidenceOffline, kindJarCert: key.EvidenceOffline, kindSourceText: key.EvidenceOffline, kindAnnotation: key.EvidenceOffline,
@@ -59,7 +60,7 @@ type Check struct {
 	N      int
 
 	Slot     string   // slot: the slot; link: the target slot; annotation: the one slot the Fact covers ("" = every slot)
-	Want     string   // slot: the expected effective value; annotation: the expected Fact
+	Want     string   // slot: the expected effective value; annotation: the expected Fact; listing: the priority every line is at
 	Fact     string   // annotation: what the annotations declare (flags, enum, slots, facets: see annotation.go); jar-cert: what of the signer certificate (jarcert.go)
 	CertOf   string   // jar-cert same: the jar part whose signer certificate must be the same
 	Default  string   // slot: the type's default, the value of a slot the bog does not store
