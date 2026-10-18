@@ -43,7 +43,7 @@ func TestLineFormat(t *testing.T) {
 func TestToolsVersionMatchesPython(t *testing.T) {
 	root := os.Getenv("NIAGARA_RESEARCH")
 	if root == "" {
-		root = "/home/cristian/niagara-research"
+		t.Skip("NIAGARA_RESEARCH (the niagara-research checkout) is not set: tools/lib/version.py not checked")
 	}
 	src, err := os.ReadFile(filepath.Join(root, "tools", "lib", "version.py"))
 	if err != nil {
