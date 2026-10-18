@@ -1,6 +1,6 @@
 """Regenerate the full-text fixtures from the Python niagara-help.
 
-Run: python3 -I internal/help/testdata/fulltext_gen.py   (NIAGARA_RESEARCH overrides the checkout)
+Run: python3 -I internal/help/testdata/fulltext_gen.py   (NIAGARA_HELP_PY_REF overrides the pre-go-retire worktree)
 
 fulltext/ is a two-version niagara-help checkout (1.0 at ".", 2.0 under versions/2.0 without
 manuals, so it borrows 1.0's docs-text). The script copies it to a temporary folder, gives every
@@ -22,8 +22,19 @@ import sys
 import tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-NR = os.environ.get("NIAGARA_RESEARCH", "/home/cristian/niagara-research")
-TOOLS = os.path.join(NR, "niagara-help", "tools")
+
+
+def py_ref(repo, env, rev):  # D47: a clean worktree of <repo> tag pre-go-retire (docs/goldens.md)
+    root = os.environ.get(env) or os.path.expanduser("~/niagara-research-worktrees/pre-go-retire-" + repo)
+    git = lambda *a: subprocess.run(["git", "-C", root, *a], capture_output=True, text=True).stdout.strip()  # noqa: E731
+    if git("rev-parse", "HEAD") != rev or git("status", "--porcelain"):
+        sys.exit(f"{env}={root}: not a clean worktree of {repo} tag pre-go-retire ({rev[:9]}); see docs/goldens.md")
+    return root
+
+
+PYREF = py_ref("niagara-help", "NIAGARA_HELP_PY_REF", "8410d74511673e38b87622f7214fa5210ba25a63")
+os.environ["NIAGARA_HELP_PYTHON"] = "1"  # a tag shim runs its Python, never Go
+TOOLS = os.path.join(PYREF, "tools")
 sys.path[:0] = [TOOLS]
 
 from niagara_help_lib import fulltext, fulltext_index  # noqa: E402
@@ -144,7 +155,8 @@ def cli_records(checkout):
     out = os.path.join(HERE, "fulltext-cli")
     os.makedirs(out, exist_ok=True)
     env = {"PATH": os.environ.get("PATH", ""), "COLUMNS": "100", "NO_COLOR": "1",
-           "PYTHONHASHSEED": "0", "NIAGARA_HELP_DIR": checkout,
+           "PYTHONHASHSEED": "0", "NIAGARA_HELP_PYTHON": "1", "NIAGARA_HELP_DIR": checkout,
+           "NIAGARA_GO_BIN_DIR": os.environ.get("NIAGARA_GO_BIN_DIR", ""),
            "XDG_CACHE_HOME": os.path.join(os.path.dirname(checkout), "cache")}
     cases = []
     for name, vid, args in CLI:

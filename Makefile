@@ -78,6 +78,8 @@ RESEARCH := $(abspath $(NIAGARA_RESEARCH))
 # (682 records); an empty value skips it, a missing file fails. Write a `$` of an overriding path
 # as `$$`, on the command line or in the environment (docs/goldens.md).
 HDBREAD_REAL_HDB ?= $(RESEARCH)/clients/distech-merida-harbor/HM_BMS_backup_08_09_2026/HM_BMS/history/station/seg1/UMA14$$20Ret.hdb
+# PYREF_REQUIRED=1: a missing pre-go-retire Python reference (internal/pyref, D47) fails, never skips.
+parity: export PYREF_REQUIRED = 1
 parity: parity-helpbuild
 	NSEARCH_QUALITY_ROOT=$(RESEARCH) $(GO) test -count=1 -v -timeout 30m \
 		-run '^(TestSearchQuality|TestQualityFixtureMatchesResearch)$$' ./internal/searchdoor

@@ -105,6 +105,17 @@ generator carries the same `py_ref` snippet: it refuses a worktree whose HEAD is
 revision or that has local changes or untracked files (also in `internal/secaudit/testdata/freeze_golden.py`) (ignored files such as `__pycache__` pass). Rerunning a generator from the tag must leave `git status`
 clean; that is the proof its fixtures are still the Python's output.
 
+A tag script that carries an escape runs with it: `MODULE_NAV_PYTHON=1` (module_nav.py is still
+full Python at the tag) or `NIAGARA_HELP_PYTHON=1` (niagara_help.py is a shim there), set in
+`os.environ` and in any subprocess environment a generator builds from scratch, which also passes
+`NIAGARA_GO_BIN_DIR` through: a run with `NIAGARA_GO_BIN_DIR=/nonexistent` proves no Go port
+answered. The real-corpus captures (`internal/{nav,help}/testdata/golden-real/capture.py`) take
+the harness and the CLI from the tag and the data (indexes/, organized/, fulltext.sqlite,
+versions/) from the live `MODULE_NAVIGATOR_DIR` / `NIAGARA_HELP_DIR`. Go tests reach the same
+worktrees through `internal/pyref`: `Dir` (same pin and clean check; a missing worktree skips
+unless `PYREF_REQUIRED=1`, which `make parity` exports, then fails), `Python` (python3; skips off
+Linux, where the references write CRLF and hit cp1252) and `Env` (the escape).
+
 At the tag the switched entry scripts exec the Go ports (D35), so running `tools/<x>.py` would
 record Go checking itself. The capture scripts that run a CLI (`internal/{bogcycles,bognav,
 bogwrite,stationmodules,typecatalog}/testdata`) run it through `FROZEN`: the switch block is cut
@@ -226,11 +237,12 @@ mnav also needs the `organized/` corpus (`$NAV_CORPUS_BASE`, else next to the ch
 uses `niagara-help/` next to the checkout when it exists. nh must be the main checkout
 (untracked files there change several counts, see the harness docstring).
 
-To re-capture (after a reindex re-captured `cli.json`), run the generator next to the cases. It
-runs each kept case through the harness's own `run_case`/`run_isolated`, with
-`NIAGARA_HELP_PYTHON=1` so `tools/niagara_help.py` runs Python and never its Go shim, refuses
-to write anything when a hash differs from `cli.json`, and takes the Go binary for the
-`intended.json` output:
+To re-capture, run the generator next to the cases. It runs each kept case through the
+harness's own `run_case`/`run_isolated`, with `MODULE_NAV_PYTHON=1` / `NIAGARA_HELP_PYTHON=1`
+so a tag shim runs Python and never Go, refuses to write anything when a hash differs from
+`cli.json`, and takes the Go binary for the `intended.json` output. The code (harness,
+`cli.json`, the CLI) comes from the frozen `pre-go-retire` worktree, the data
+(`MODULE_NAVIGATOR_DIR` / `NIAGARA_HELP_DIR`) from the live checkout ("Freezing and regenerating"):
 
 ```sh
 make build

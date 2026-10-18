@@ -7,6 +7,10 @@ Runs every case of niagara-help tests/golden_cli.py whose command the Go port
 keeps (decision D32), plus help and no-command, exactly as that harness does
 (cwd the main checkout, COLUMNS=100, PYTHONHASHSEED=0, its normalization) with
 NIAGARA_HELP_PYTHON=1 so tools/niagara_help.py runs Python, never the Go shim.
+Two roles (D47, niagara-go internal/pyref): the code (the harness, its
+tests/golden/cli.json and tools/niagara_help.py) is the pre-go-retire worktree,
+$NIAGARA_HELP_PY_REF; the data stays NIAGARA_HELP_DIR, the live checkout (its
+fulltext.sqlite and versions/ trees are not in the tag), see harness().
 Each case's sha256(stdout), sha256(stderr) and exit code must equal
 tests/golden/cli.json, or nothing is written. The INTENDED cases (help and
 no-command: D32; stats and stats-json: call-index retired, I3-5) also get
@@ -19,11 +23,24 @@ import importlib
 import json
 import os
 import shutil
+import subprocess
 import sys
 import tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.environ.get("NIAGARA_HELP_DIR") or os.path.expanduser("~/niagara-research/niagara-help")
+
+
+def py_ref(repo, env, rev):  # D47: a clean worktree of <repo> tag pre-go-retire (docs/goldens.md)
+    root = os.environ.get(env) or os.path.expanduser("~/niagara-research-worktrees/pre-go-retire-" + repo)
+    git = lambda *a: subprocess.run(["git", "-C", root, *a], capture_output=True, text=True).stdout.strip()  # noqa: E731
+    if git("rev-parse", "HEAD") != rev or git("status", "--porcelain"):
+        sys.exit(f"{env}={root}: not a clean worktree of {repo} tag pre-go-retire ({rev[:9]}); see docs/goldens.md")
+    return root
+
+
+PYREF = py_ref("niagara-help", "NIAGARA_HELP_PY_REF", "8410d74511673e38b87622f7214fa5210ba25a63")
+os.environ["NIAGARA_HELP_PYTHON"] = "1"  # a tag shim runs its Python, never Go
 KEEP = ["class", "search", "package", "method", "slots", "guide", "guide-search", "devguide",
         "devguide-search", "pdf", "find", "source", "source-grep", "stats", "freshness",
         "selftest", "versions"]
@@ -61,12 +78,21 @@ def write_case(out, cid, args, rc, stdout, stderr, intended=None):
             f.write("\n")
 
 
+def harness():
+    """The tag's tests/golden_cli.py on the live data: its BASE_DIR (the cwd and the <REPO>
+    normalization) becomes REPO, and the tag's Python CLI gets NIAGARA_HELP_DIR=REPO, which
+    run_case removes from the environment (a GOLDEN_BIN port runs unchanged)."""
+    sys.path.insert(0, os.path.join(PYREF, "tests"))
+    h = importlib.import_module("golden_cli")
+    h.BASE_DIR, cli = REPO, h.cli_command
+    h.cli_command = lambda: cli() if os.environ.get("GOLDEN_BIN") else ["env", "NIAGARA_HELP_DIR=" + REPO] + cli()
+    return h
+
+
 def capture(out, gobin):
     """Write every kept case into out; return the ids whose hashes differ from cli.json."""
-    os.environ["NIAGARA_HELP_PYTHON"] = "1"
     os.environ.pop("GOLDEN_BIN", None)
-    sys.path.insert(0, os.path.join(REPO, "tests"))
-    h = importlib.import_module("golden_cli")
+    h = harness()
     golden = h.load_golden()
     cases = [c for c in h.CASES
              if c[0] in INTENDED or (command_word(c[1]) in KEEP and c[2] is None)]

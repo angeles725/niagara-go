@@ -1,14 +1,27 @@
 """Regenerate terms.json: class_rank's term rules on sample identifiers and questions.
 
     python3 -I internal/nav/lib/classrank/testdata/gen_terms.py [<module-navigator>/tools]
+
+<module-navigator>/tools defaults to the pre-go-retire worktree ($MODULE_NAVIGATOR_PY_REF, internal/pyref).
 """
 
 import json
 import os
+import subprocess
 import sys
 
-TOOLS = sys.argv[1] if len(sys.argv) > 1 else os.path.expanduser(
-    "~/niagara-research/module-navigator/tools")
+
+def py_ref(repo, env, rev):  # D47: a clean worktree of <repo> tag pre-go-retire (docs/goldens.md)
+    root = os.environ.get(env) or os.path.expanduser("~/niagara-research-worktrees/pre-go-retire-" + repo)
+    git = lambda *a: subprocess.run(["git", "-C", root, *a], capture_output=True, text=True).stdout.strip()  # noqa: E731
+    if git("rev-parse", "HEAD") != rev or git("status", "--porcelain"):
+        sys.exit(f"{env}={root}: not a clean worktree of {repo} tag pre-go-retire ({rev[:9]}); see docs/goldens.md")
+    return root
+
+
+os.environ["MODULE_NAV_PYTHON"] = "1"  # a tag shim runs its Python, never Go
+TOOLS = sys.argv[1] if len(sys.argv) > 1 else os.path.join(
+    py_ref("module-navigator", "MODULE_NAVIGATOR_PY_REF", "f897268e900138e08a82bf1b389a1715c1be26e1"), "tools")
 sys.path.insert(0, TOOLS)
 from module_nav_lib import class_rank  # noqa: E402
 

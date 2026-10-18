@@ -12,15 +12,17 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/angeles725/niagara-go/internal/pyref"
 )
 
 // The Python-vs-Go parity harness: each test runs a real module-navigator
 // builder (python3 tools/build_*.py --base-dir <temp>) and the Go builder into
 // another temp base dir over the same organized/ tree, then byte-diffs the two
-// indexes after NormalizeVolatile. It needs python3 and a module-navigator
-// checkout whose builders take --base-dir (fix/deterministic-xref-base-dir):
-// $NAVBUILD_PY_NAV, else $NIAGARA_RESEARCH/module-navigator (`make parity` sets
-// NIAGARA_RESEARCH). It skips visibly without.
+// indexes after NormalizeVolatile. It needs python3 on Linux and the frozen
+// module-navigator builders (pythonNav: the pre-go-retire worktree, D47); the
+// real corpora are the live data under $NIAGARA_RESEARCH (`make parity` sets
+// it and PYREF_REQUIRED=1). It skips visibly without, or fails when required.
 //
 // Corpora: testdata/organized (synthetic, always); a few real modules of the
 // organized/ corpus linked into a temp tree ($NAVBUILD_PARITY_MODULES, comma
@@ -47,15 +49,19 @@ func researchRoot(t *testing.T) string {
 	return root
 }
 
+// pythonNav is python3 (internal/pyref: Linux only) and the module-navigator
+// checkout whose Python builders the tests run: $NAVBUILD_PY_NAV when set, an
+// explicit override for a builder branch under study that is NOT checked
+// against the tag, else the frozen reference pyref.Dir(t, "module-navigator")
+// ($MODULE_NAVIGATOR_PY_REF, else ~/niagara-research-worktrees/pre-go-retire-
+// module-navigator), which skips when missing or fails under PYREF_REQUIRED=1.
+// Only the code comes from there: the corpus stays $NIAGARA_RESEARCH's.
 func pythonNav(t *testing.T) (python, nav string) {
 	t.Helper()
-	python, err := exec.LookPath("python3")
-	if err != nil {
-		t.Skip("python3 not on PATH: parity not checked")
-	}
+	python = pyref.Python(t)
 	nav = os.Getenv("NAVBUILD_PY_NAV")
 	if nav == "" {
-		nav = filepath.Join(researchRoot(t), "module-navigator")
+		nav = pyref.Dir(t, "module-navigator")
 	}
 	src, err := os.ReadFile(filepath.Join(nav, "tools", "build_module_inventory.py"))
 	if err != nil {
@@ -75,7 +81,7 @@ func runPython(t *testing.T, script, base, organized string, args ...string) tim
 	python, nav := pythonNav(t)
 	cmd := measured(python, append([]string{"-E", "-B", script, "--base-dir", base}, args...)...)
 	cmd.Dir = filepath.Join(nav, "tools")
-	cmd.Env = append(os.Environ(), "NAV_CORPUS_BASE="+organized)
+	cmd.Env = append(append(os.Environ(), pyref.Env("module-navigator")...), "NAV_CORPUS_BASE="+organized)
 	t0 := time.Now()
 	out, err := cmd.CombinedOutput()
 	if err != nil {

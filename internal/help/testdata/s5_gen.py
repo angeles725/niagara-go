@@ -1,6 +1,6 @@
 """Regenerate the s5 fixture outputs from the Python niagara-help.
 
-Run: python3 -I internal/help/testdata/s5_gen.py   (NIAGARA_RESEARCH overrides the checkout)
+Run: python3 -I internal/help/testdata/s5_gen.py   (NIAGARA_HELP_PY_REF overrides the pre-go-retire worktree)
 
 s5/ is a niagara-help checkout for the commands ported after S6 (source, method, freshness,
 class --jdk, selftest --recall): a javadoc HTML tree, .bajadoc XML under devguide/, guides/ and
@@ -20,8 +20,19 @@ import sys
 import tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-NR = os.environ.get("NIAGARA_RESEARCH", "/home/cristian/niagara-research")
-TOOLS = os.path.join(NR, "niagara-help", "tools")
+
+
+def py_ref(repo, env, rev):  # D47: a clean worktree of <repo> tag pre-go-retire (docs/goldens.md)
+    root = os.environ.get(env) or os.path.expanduser("~/niagara-research-worktrees/pre-go-retire-" + repo)
+    git = lambda *a: subprocess.run(["git", "-C", root, *a], capture_output=True, text=True).stdout.strip()  # noqa: E731
+    if git("rev-parse", "HEAD") != rev or git("status", "--porcelain"):
+        sys.exit(f"{env}={root}: not a clean worktree of {repo} tag pre-go-retire ({rev[:9]}); see docs/goldens.md")
+    return root
+
+
+PYREF = py_ref("niagara-help", "NIAGARA_HELP_PY_REF", "8410d74511673e38b87622f7214fa5210ba25a63")
+os.environ["NIAGARA_HELP_PYTHON"] = "1"  # a tag shim runs its Python, never Go
+TOOLS = os.path.join(PYREF, "tools")
 ROOT = "<ROOT>"
 
 CLI = [
@@ -87,7 +98,8 @@ def main():
             checkout = os.path.join(tmp, "checkout")
             shutil.copytree(os.path.join(HERE, "s5"), checkout)
             env = {"PATH": os.environ.get("PATH", ""), "COLUMNS": "100", "NO_COLOR": "1",
-                   "PYTHONHASHSEED": "0", "NIAGARA_HELP_DIR": checkout,
+                   "PYTHONHASHSEED": "0", "NIAGARA_HELP_PYTHON": "1", "NIAGARA_HELP_DIR": checkout,
+                   "NIAGARA_GO_BIN_DIR": os.environ.get("NIAGARA_GO_BIN_DIR", ""),
                    "XDG_CACHE_HOME": os.path.join(tmp, "cache")}
             argv = ["--niagara-version", "4.14.0.162"] + args
             p = subprocess.run([sys.executable, "-I", os.path.join(TOOLS, "niagara_help.py")] + argv,
