@@ -22,6 +22,11 @@ type frame struct {
 	comp      *Comp // frameComp
 	slotOwner *Comp // frameOther of a composite property: the component that owns the slot
 	slotName  string
+	// nestOwner and nestPath are set only under Options.NestedSlots, on the frame of a composite
+	// property at any depth below a component slot: the owning component and the dot path of the
+	// property from it ("tcpConfig.address").
+	nestOwner *Comp
+	nestPath  string
 }
 
 // platformSlots are not recorded as value slots (bognav/model.py _PLATFORM_SLOTS).
@@ -31,15 +36,29 @@ var writableTypes = map[string]bool{
 	"BooleanWritable": true, "NumericWritable": true, "FloatWritable": true, "IntegerWritable": true,
 }
 
+// Options selects opt-in additions to the model.py graph. The zero value is Parse and Load.
+type Options struct {
+	// NestedSlots fills Comp.Nested with every value stored below a composite property, keyed by
+	// its dot path from the component (tcpConfig.address.port). model.py keeps only the direct
+	// value and status of a composite property (Slot.Child), so the option is Go-only.
+	NestedSlots bool
+}
+
 // Parse builds the graph of a BOG XML text, as bognav/model.py Bog(path, lines=text.splitlines())
 // does: a tolerant, line-oriented tag reader, so a truncated or malformed document yields a
 // smaller graph rather than an error. srcPath is only recorded. Text that is not valid UTF-8 is
 // first decoded as ReadText does.
 func Parse(srcPath, text string) *Bog {
+	return ParseOptions(srcPath, text, Options{})
+}
+
+// ParseOptions is Parse with the opt-in additions of opts; every part of the graph Parse builds
+// stays the same.
+func ParseOptions(srcPath, text string, opts Options) *Bog {
 	if !utf8.ValidString(text) {
 		text = pycompat.DecodeReplace([]byte(text))
 	}
-	p := parser{b: &Bog{SrcPath: srcPath}}
+	p := parser{b: &Bog{SrcPath: srcPath}, opts: opts}
 	sc := tagScanner{s: text}
 	for {
 		t, ok := sc.next()
@@ -53,6 +72,7 @@ func Parse(srcPath, text string) *Bog {
 
 type parser struct {
 	b      *Bog
+	opts   Options
 	stack  []frame
 	inLink bool
 	link   *Link
@@ -182,7 +202,16 @@ func (p *parser) property(t tag) {
 		if n != "" {
 			path = strings.TrimLeft(ppath+"/"+n, "/")
 		}
-		p.push(frame{kind: frameOther, path: path, slotOwner: owner, slotName: n})
+		f := frame{kind: frameOther, path: path, slotOwner: owner, slotName: n}
+		if p.opts.NestedSlots {
+			switch {
+			case owner != nil:
+				f.nestOwner, f.nestPath = owner, n
+			case parent != nil && parent.nestOwner != nil:
+				f.nestOwner, f.nestPath = parent.nestOwner, parent.nestPath+"."+n
+			}
+		}
+		p.push(f)
 	}
 }
 
@@ -245,6 +274,9 @@ func (p *parser) valueSlot(n, typ, v string, hasV bool, flags string) {
 	parent := p.top()
 	if parent == nil {
 		return
+	}
+	if parent.nestOwner != nil && hasV {
+		parent.nestOwner.Nested.Set(parent.nestPath+"."+n, v)
 	}
 	switch {
 	case parent.kind == frameComp && !platformSlots[n]:

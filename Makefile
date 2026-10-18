@@ -7,6 +7,9 @@ LDFLAGS := -s -w
 STATICCHECK ?= honnef.co/go/tools/cmd/staticcheck@v0.8.2
 DEADCODE    ?= golang.org/x/tools/cmd/deadcode@v0.50.0
 COVERPROFILE ?= $(BIN)/cover.out
+# staticcheck is installed once as a host binary so it can analyse other GOOS
+# targets: `GOOS=windows go run ...` would build a Windows staticcheck instead.
+TOOLBIN := $(abspath $(BIN))/tools
 export CGO_ENABLED=0
 
 .PHONY: all build cross test test-short vet fmt-check check lint deadcode cover ci hooks clean
@@ -34,8 +37,12 @@ fmt-check:
 
 check: fmt-check vet test
 
+# Lints the host build, then the Windows build so *_windows.go files are
+# checked too (they are invisible to a Linux-only pass).
 lint:
-	$(GO) run $(STATICCHECK) ./...
+	GOOS= GOARCH= GOBIN=$(TOOLBIN) $(GO) install $(STATICCHECK)
+	$(TOOLBIN)/staticcheck ./...
+	GOOS=windows GOARCH=amd64 $(TOOLBIN)/staticcheck ./...
 
 # Report-only: lists functions unreachable from any cmd/ main (deadcode exits 0
 # on findings; only a load error fails). Test-only helpers such as internal/golden

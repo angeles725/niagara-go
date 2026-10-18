@@ -1,0 +1,41 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<bajaObjectGraph version='4.0'>
+ <p h='1' m='b=baja c=control wd=websiteDriver' t='b:Station'>
+  <p n='Drivers' h='2' t='b:DriverContainer'>
+   <p n='Web' h='3' t='wd:WebsiteDriverNetwork'>
+    <p n='tcpConfig' t='wd:TcpConfig'>
+     <p n='address' t='wd:TcpAddress'>
+      <p n='host' v='10.0.0.5'/>
+      <p n='port' v='4911'/>
+      <p n='alt$20port' f='h' v='8080'/>
+      <p n='hidden' f='h'/>
+     </p>
+     <p n='timeout' v='5000'/>
+     <p n='Link1' t='b:Link'>
+      <p n='sourceOrd' t='b:Ord' v='h:4'/>
+      <p n='sourceSlotName' v='out'/>
+      <p n='targetSlotName' v='in'/>
+     </p>
+    </p>
+    <p n='status' t='b:Status'>
+     <p n='bits' v='0'/>
+    </p>
+    <p n='Dev' h='5' t='wd:WebsiteDevice'>
+     <p n='pollConfig' t='wd:PollConfig'>
+      <p n='rate' v='fast'/>
+     </p>
+    </p>
+   </p>
+  </p>
+  <p n='SP' h='4' t='c:NumericWritable'>
+   <p n='setpoint' t='b:StatusNumeric'>
+    <p n='value' v='21.5'/>
+    <p n='status' v='0;activeLevel=e:17@control:PriorityLevel'/>
+   </p>
+   <p n='fallback' t='b:StatusNumeric'>
+    <p n='value' v='0.0'/>
+   </p>
+   <p n='facets' v='units=u:celsius'/>
+  </p>
+ </p>
+</bajaObjectGraph>

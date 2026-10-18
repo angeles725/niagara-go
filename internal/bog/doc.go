@@ -11,6 +11,16 @@
 // smaller graph, never an error. A caller that needs well-formedness (bog-cycles, bog-write)
 // checks it separately.
 //
+// Nested composite values (opt-in, Go-only). Like model.py, Parse keeps a composite property (a
+// non-self-closing <p> without a handle, such as a setpoint StatusNumeric) as a Slot, with only
+// its direct value and status children in Slot.Child; anything deeper, and any other direct child,
+// is dropped. ParseOptions and LoadOptions with Options{NestedSlots: true} also fill Comp.Nested
+// with every value stored at any depth below a non-platform composite slot, keyed by the dot path
+// of decoded names from the component: tcpConfig.address.port -> "4911". Flags-only children,
+// links and handle components inside the property are not entries; a name containing '.' is not
+// escaped. The rest of the graph is identical with or without the option, so Parse and Load
+// output (and every tool golden built on them) is unchanged.
+//
 // No parse cache. model.py caches the parsed graph on disk (tools/lib/bogcache.py) because the
 // Python parse of the largest available station (HARBOR HM_BMS backup: 7.1 MB of XML, 36,132
 // components, 844 links) takes about 7.9 s. Measured on 2026-10-17 (WSL2, Go 1.27.2), Load of the
