@@ -126,8 +126,9 @@ frozen JSON in text mode and write the exact bytes (`internal/{corpusnav,checkco
 modulefind,gencatalog}/testdata/convert_golden.py`). A case that needs state git cannot hold (an empty root, a mode-000 file, a
 CATALOG.md state) lives in its own `testdata/<set>/golden/` and a package test stages it in a
 temporary directory before calling `golden.Run` on it. When a generator owns the cases it also writes
-their `intended.json` (see `INTENDED` in `internal/nav/testdata/gen_golden.py`), so a re-run
-keeps them. Unit-test fixtures of shared packages follow the same rule (`testdata/gen.py`,
+their `intended.json` (see `INTENDED` in `internal/nav/testdata/gen_golden_cases.py`), so a re-run
+keeps them; a re-capture also keeps every `cmd.json` key it does not write (`gen_golden.py` owns
+`args` and `env`, so a hand-added `requires` survives). Unit-test fixtures of shared packages follow the same rule (`testdata/gen.py`,
 `gen_fixtures.py`).
 
 In the Python suites of the source repos (niagara-research `tools/tests/goldencli.py`),
