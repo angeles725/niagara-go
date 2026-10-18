@@ -123,7 +123,11 @@ func (t *Type) addSlot(kind string, a *Annotation) error {
 		s.Flags = v.Text
 	}
 	if v, ok := a.Elems["override"]; ok {
-		s.Override = v.Text == "true"
+		b, err := boolValue(v)
+		if err != nil {
+			return fmt.Errorf("line %d: @%s %v", v.Line, a.Name, err)
+		}
+		s.Override = b
 	}
 	if v, ok := a.Elems["facets"]; ok {
 		for _, e := range elements(v) {
@@ -143,7 +147,10 @@ func facet(v Value) (string, error) {
 	if v.Annot == nil || v.Annot.Name != "Facet" {
 		return "", fmt.Errorf("line %d: @Facet expected, got %s", v.Line, v.Text)
 	}
-	val := v.Annot.Elems["value"]
+	val, ok := v.Annot.Elems["value"]
+	if !ok {
+		return "", fmt.Errorf("line %d: @Facet has no value: %s", v.Line, v.Text)
+	}
 	out := val.Str
 	if !val.IsStr {
 		out = val.Text
@@ -156,6 +163,18 @@ func facet(v Value) (string, error) {
 		out = name + "=" + out
 	}
 	return out, nil
+}
+
+// boolValue is a boolean literal, in parentheses or not; anything else is an error.
+func boolValue(v Value) (bool, error) {
+	toks, err := lex(v.Text)
+	for err == nil && len(toks) >= 3 && toks[0].text == "(" && toks[len(toks)-1].text == ")" {
+		toks = toks[1 : len(toks)-1]
+	}
+	if err == nil && len(toks) == 1 && toks[0].kind == tIdent && (toks[0].text == "true" || toks[0].text == "false") {
+		return toks[0].text == "true", nil
+	}
+	return false, fmt.Errorf("cannot evaluate override %s", v.Text)
 }
 
 // enumOf reads a @NiagaraEnum: its range of @Range tags and its defaultValue.

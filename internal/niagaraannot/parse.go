@@ -213,14 +213,14 @@ func (p *parser) value() (Value, error) {
 	if p.i >= len(p.toks) {
 		return Value{}, p.errorf("value expected")
 	}
-	start := p.toks[p.i]
+	first, start := p.i, p.toks[p.i]
 	switch {
 	case p.isPunct(p.i, "@"):
 		a, err := p.annotation()
 		if err != nil {
 			return Value{}, err
 		}
-		return Value{Text: p.text(start, p.toks[p.i-1]), Annot: a, Line: start.line}, nil
+		return Value{Text: p.text(first, p.i), Annot: a, Line: start.line}, nil
 	case p.isPunct(p.i, "{"):
 		p.i++
 		v := Value{IsArray: true, Line: start.line}
@@ -237,7 +237,7 @@ func (p *parser) value() (Value, error) {
 			}
 		}
 		p.i++
-		v.Text = p.text(start, p.toks[p.i-1])
+		v.Text = p.text(first, p.i)
 		return v, nil
 	}
 	depth, from := 0, p.i
@@ -270,7 +270,7 @@ func (p *parser) expr(from int) (Value, error) {
 		return Value{}, p.errorf("empty annotation value")
 	}
 	toks := p.toks[from:p.i]
-	v := Value{Text: p.text(toks[0], toks[len(toks)-1]), Line: toks[0].line}
+	v := Value{Text: p.text(from, p.i), Line: toks[0].line}
 	var sb strings.Builder
 	v.IsStr = true
 	for k, tk := range toks {
@@ -292,7 +292,16 @@ func (p *parser) expr(from int) (Value, error) {
 	return v, nil
 }
 
-// text is the source from a to b, whitespace runs collapsed.
-func (p *parser) text(a, b token) string {
-	return strings.Join(strings.Fields(p.src[a.pos:b.end]), " ")
+// text is the source of the tokens from..to-1 as written, without the comments between them:
+// one space where whitespace or a comment separated two tokens, nothing where they touched.
+func (p *parser) text(from, to int) string {
+	var b strings.Builder
+	for k := from; k < to; k++ {
+		tk := p.toks[k]
+		if k > from && tk.pos > p.toks[k-1].end {
+			b.WriteByte(' ')
+		}
+		b.WriteString(p.src[tk.pos:tk.end])
+	}
+	return b.String()
 }

@@ -146,6 +146,20 @@ func unescape(s string) string {
 			b.WriteByte('\f')
 		case 's':
 			b.WriteByte(' ')
+		case '\n': // a text block's line continuation
+		case '0', '1', '2', '3', '4', '5', '6', '7':
+			// OctalEscape: \0-\7, \00-\77, \000-\377 (JLS 3.10.7).
+			n, limit := 0, 2
+			if s[i] <= '3' {
+				limit = 3
+			}
+			j := i
+			for j < len(s) && j-i < limit && s[j] >= '0' && s[j] <= '7' {
+				n = n*8 + int(s[j]-'0')
+				j++
+			}
+			b.WriteRune(rune(n))
+			i = j - 1
 		case 'u':
 			for i+1 < len(s) && s[i+1] == 'u' {
 				i++
@@ -165,11 +179,34 @@ func unescape(s string) string {
 	return b.String()
 }
 
-// textBlock is the value of a text block: the content after its opening line, escapes decoded.
-// The incidental indentation is not stripped (no annotation the course reads uses one).
+// textBlock is the value of a text block whose body follows the opening delimiter: as javac
+// builds it (JLS 3.10.6), the opening line is dropped, the incidental indentation (the smallest
+// indentation of the non-blank lines and of the closing-delimiter line) and each line's trailing
+// white space are stripped, and only then are the escapes decoded.
 func textBlock(body string) string {
-	if _, rest, ok := strings.Cut(body, "\n"); ok {
-		body = rest
+	_, body, _ = strings.Cut(strings.ReplaceAll(body, "\r\n", "\n"), "\n")
+	lines := strings.Split(body, "\n")
+	last := len(lines) - 1
+	indent := -1
+	for k, l := range lines {
+		blank := strings.TrimSpace(l) == ""
+		if blank && k != last {
+			continue
+		}
+		n := len(l) - len(strings.TrimLeft(l, " \t\f"))
+		if blank {
+			n = len(l)
+		}
+		if indent < 0 || n < indent {
+			indent = n
+		}
 	}
-	return unescape(body)
+	for k, l := range lines {
+		if strings.TrimSpace(l) == "" {
+			lines[k] = ""
+			continue
+		}
+		lines[k] = strings.TrimRight(l[indent:], " \t\f")
+	}
+	return unescape(strings.Join(lines, "\n"))
 }
