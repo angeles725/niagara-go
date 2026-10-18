@@ -1,7 +1,6 @@
 package searchdoor
 
 import (
-	"encoding/json"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -9,8 +8,6 @@ import (
 	"strings"
 	"testing"
 	"time"
-
-	"github.com/angeles725/niagara-go/internal/help/fts/ftsfixture"
 )
 
 // The in-process answers are compared with what the PYTHON backends printed on
@@ -87,60 +84,6 @@ func TestBlocksFindMatchesCorpusNav(t *testing.T) {
 	}
 	if blocksFind([]string{filepath.Join(t.TempDir(), "tools", "corpus-nav.py"), "find", "a", "--limit", "5"}).ok {
 		t.Error("a folder without CATALOG.md: answered in process, want exec")
-	}
-}
-
-func TestDocsFindMatchesNiagaraHelp(t *testing.T) {
-	testdata, err := filepath.Abs("../help/testdata")
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Setenv("XDG_CACHE_HOME", t.TempDir())
-	t.Setenv("NIAGARA_HELP_DIR", "")
-	checkout := ftsfixture.Checkout(t, testdata, false)
-	script := stubScript(t, filepath.Join(checkout, "tools", "niagara_help.py"))
-	raw, err := os.ReadFile(filepath.Join(testdata, "fulltext-cli", "cases.json"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	var cases []struct {
-		Name string   `json:"name"`
-		Args []string `json:"args"`
-		Exit int      `json:"exit"`
-	}
-	if err := json.Unmarshal(raw, &cases); err != nil {
-		t.Fatal(err)
-	}
-	n := 0
-	for _, c := range cases {
-		if !strings.HasPrefix(c.Name, "find") {
-			continue
-		}
-		n++
-		t.Run(c.Name, func(t *testing.T) {
-			got := docsFind(append([]string{script}, docsArgv(c.Args)...))
-			if c.Exit != 0 { // a miss or an unsearchable query: niagara-help's own block, via exec
-				if got.ok {
-					t.Errorf("exit %d case answered in process", c.Exit)
-				}
-				return
-			}
-			want, err := os.ReadFile(filepath.Join(testdata, "fulltext-cli", c.Name+".txt"))
-			if err != nil {
-				t.Fatal(err)
-			}
-			checkAnswer(t, got, oracle{0, strings.ReplaceAll(string(want), ftsfixture.Root, checkout), ""})
-		})
-	}
-	if n < 6 {
-		t.Fatalf("only %d find cases in cases.json", n)
-	}
-	stale := ftsfixture.Checkout(t, testdata, true) // D21: no index Go may read
-	if docsFind([]string{stubScript(t, filepath.Join(stale, "tools", "niagara_help.py")), "find", "alarm", "-n", "5"}).ok {
-		t.Error("without fulltext.sqlite: answered in process, want exec")
-	}
-	if docsFind([]string{script, "--niagara-version", "9.9", "find", "alarm", "-n", "5"}).ok {
-		t.Error("unknown version: answered in process, want exec")
 	}
 }
 

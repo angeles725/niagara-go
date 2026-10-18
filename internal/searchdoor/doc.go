@@ -22,11 +22,13 @@
 // (corpusnav/blocksearch), docs (help/fts) and the code source's token and grep
 // (nav/codesearch) and rank (nav/classrank); it renders the exact text the
 // backend CLI prints, so the parsers see the same rows. Everything else runs
-// through exec: the structure, modules and license calls, and any call whose
-// data is absent, whose full-text index is missing or stale (D21) or whose
-// niagara_help miss block belongs to a printing package (or whose rank xref
-// index is absent); a call that falls back after trying in process gives exec
-// only the budget it has left. NSEARCH_EXEC=1 forces exec for every call; it is
+// through exec: the structure, modules and license calls, and any code or
+// blocks call whose data is absent (or whose rank xref index is absent); a call
+// that falls back after trying in process gives exec only the budget it has
+// left. The docs source answers every niagara_help find in process, as nh does:
+// a missing or stale fulltext.sqlite is rebuilt first, atomically, with nh's
+// notices (help/scope.OpenFulltext, decision D38), and a miss or an unresolvable
+// version prints nh's own lines (help/scope). NSEARCH_EXEC=1 forces exec for every call; it is
 // the parity oracle. The in-process blocks source keeps its own find cache,
 // find-<scope>.nsearch.gob, beside corpus-nav's; rank shares module_nav's Go
 // cache (indexes/.mnav-cache/class-rank.gob).

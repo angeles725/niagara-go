@@ -14,9 +14,9 @@ import (
 // the docs source (niagara_help find) and the code source's token, grep and rank
 // calls are answered by the libraries the Go ports share, producing the exact text the
 // backend CLI prints, so parse.go and the goldens see the same rows without a
-// process start. Every case the library cannot answer exactly (no data, a stale
-// full-text index (D21), a miss whose text belongs to a printing package, an
-// argv shape this file does not know) runs the backend through exec as before:
+// process start. Every case the library cannot answer exactly (no code or blocks
+// data, a miss whose text belongs to a printing package, an argv shape this file
+// does not know) runs the backend through exec as before:
 // the exec path stays the parity oracle and NSEARCH_EXEC=1 forces it.
 
 // ExecEnv names the variable that forces every backend through exec.
