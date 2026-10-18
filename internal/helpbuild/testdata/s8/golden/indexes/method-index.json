@@ -1,0 +1,190 @@
+{
+  "count": [
+    {
+      "class": "BFolder",
+      "package": null,
+      "section": "fields",
+      "signature": "int count"
+    }
+  ],
+  "added": [
+    {
+      "class": "BAbstractService",
+      "package": "javax.baja.sys",
+      "section": "methods",
+      "signature": "void added(Property p)"
+    },
+    {
+      "class": "BComponent",
+      "package": "javax.baja.sys",
+      "section": "methods",
+      "signature": "void added(Property p)"
+    },
+    {
+      "class": "BFolder",
+      "package": "com.tridium.control",
+      "section": "methods",
+      "signature": "void added(Property p)"
+    },
+    {
+      "class": "BSpace",
+      "package": "com.space",
+      "section": "methods",
+      "signature": "void added(Property p)"
+    },
+    {
+      "class": "BÄrger",
+      "package": "com.uni",
+      "section": "methods",
+      "signature": "void added(Property p)"
+    }
+  ],
+  "grüß": [
+    {
+      "class": "BÄrger",
+      "package": "com.uni",
+      "section": "methods",
+      "signature": "void grüß(int x)"
+    }
+  ],
+  "getType": [
+    {
+      "class": "BAbstractService",
+      "package": "javax.baja.sys",
+      "section": "methods",
+      "signature": "Type getType()"
+    },
+    {
+      "class": "BIObject",
+      "package": "javax.baja.sys",
+      "section": "methods",
+      "signature": "Type getType()"
+    }
+  ],
+  "TYPE": [
+    {
+      "class": "BComponent",
+      "package": "javax.baja.sys",
+      "section": "fields",
+      "signature": "static Type TYPE"
+    }
+  ],
+  "servletName": [
+    {
+      "class": "BComponent",
+      "package": "javax.baja.sys",
+      "section": "fields",
+      "signature": "static final Property servletName - the name - really"
+    }
+  ],
+  "wide": [
+    {
+      "class": "BComponent",
+      "package": "javax.baja.sys",
+      "section": "fields",
+      "signature": "int wide"
+    }
+  ],
+  "BComponent": [
+    {
+      "class": "BComponent",
+      "package": "javax.baja.sys",
+      "section": "constructors",
+      "signature": "BComponent (int x)"
+    },
+    {
+      "class": "BComponent",
+      "package": "javax.baja.sys",
+      "section": "constructors",
+      "signature": "BComponent()"
+    }
+  ],
+  "add": [
+    {
+      "class": "BComponent",
+      "package": "javax.baja.sys",
+      "section": "methods",
+      "signature": "Property add(java.lang.String name, BValue value)"
+    }
+  ],
+  "make": [
+    {
+      "class": "BComponent",
+      "package": "javax.baja.sys",
+      "section": "methods",
+      "signature": "static <T extends BObject> T  make (Class<T> c)"
+    }
+  ],
+  "names": [
+    {
+      "class": "BComponent",
+      "package": "javax.baja.sys",
+      "section": "methods",
+      "signature": "java.util.List<java.lang.String> names()"
+    }
+  ],
+  "ünïcode_näme": [
+    {
+      "class": "BComponent",
+      "package": "javax.baja.sys",
+      "section": "methods",
+      "signature": "void ünïcode_näme(int x)"
+    }
+  ],
+  "ace": [
+    {
+      "class": "BComponent",
+      "package": "javax.baja.sys",
+      "section": "methods",
+      "signature": "void sp ace (int x)"
+    }
+  ],
+  "y": [
+    {
+      "class": "BComponent",
+      "package": "javax.baja.sys",
+      "section": "methods",
+      "signature": "int x.y(int z)"
+    }
+  ],
+  "a": [
+    {
+      "class": "BComponent",
+      "package": "javax.baja.sys",
+      "section": "methods",
+      "signature": "void a(b(c)"
+    }
+  ],
+  "on": [
+    {
+      "class": "BMode",
+      "package": "javax.baja.sys",
+      "section": "fields",
+      "signature": "static BMode on"
+    }
+  ],
+  "value": [
+    {
+      "class": "Marker",
+      "package": "javax.baja.sys",
+      "section": "methods",
+      "signature": "String value()"
+    }
+  ],
+  "BFolder": [
+    {
+      "class": "BFolder",
+      "package": "javax.baja.util",
+      "section": "constructors",
+      "signature": "BFolder()"
+    }
+  ],
+  "inHeader": [
+    {
+      "class": "BNone",
+      "package": "org.nomembers",
+      "section": "methods",
+      "signature": "void inHeader()"
+    }
+  ]
+}

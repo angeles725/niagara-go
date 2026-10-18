@@ -30,7 +30,7 @@ const s8IndexesVar = "HELPBUILD_PARITY_INDEXES"
 func init() { parityVars = append(parityVars, s8IndexesVar) }
 
 // s8Modes are the driver modes, in the order rebuild-all runs the builders.
-var s8Modes = []string{"class", "inherit"}
+var s8Modes = []string{"class", "inherit", "method"}
 
 // runIndexDriver runs indexdriver.py and returns its lines (the "took" line
 // removed) and the builder's own run time.
@@ -64,6 +64,8 @@ func goIndexBuild(mode, base string) (*IndexResult, error) {
 		return BuildClassIndex(base)
 	case "inherit":
 		return BuildInheritance(base)
+	case "method":
+		return BuildMethodIndex(base)
 	}
 	return nil, fmt.Errorf("unknown mode %s", mode)
 }
