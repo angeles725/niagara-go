@@ -12,8 +12,8 @@ import (
 	"github.com/angeles725/niagara-go/internal/pyre"
 )
 
-// The cmd_* functions of module-find.py. A search command (and extends --of) returns its
-// match count (0 means exit 1); the others return -1.
+// The cmd_* functions of module-find.py. A search command (and extends --of, writers) returns
+// its match count (0 means exit 1); the others return -1.
 
 // scope is modulefind.sources.scope: java files read, plus the unreadable ones.
 func scope(m *module, where string) string {
@@ -101,7 +101,9 @@ func cmdActions(m *module, o *opts, name *pyre.Regexp) int {
 	}, "(no matching @NiagaraAction)")
 }
 
-func cmdWriters(m *module, o *opts, slot string) {
+// cmdWriters lists who writes a slot and returns the static plus dynamic writer count: a slot
+// with neither is a miss (0). A dynamic writer alone is a hit, since it may write any slot.
+func cmdWriters(m *module, o *opts, slot string) int {
 	w := slices.Sorted(maps.Keys(m.writers[slot]))
 	all := map[string]bool{}
 	for _, s := range m.dynWriters {
@@ -110,6 +112,7 @@ func cmdWriters(m *module, o *opts, slot string) {
 		}
 	}
 	dyn := slices.Sorted(maps.Keys(all))
+	found, empty := len(w)+len(dyn), "(no writers of "+slot+")"
 	if o.csv {
 		var rows []row
 		for _, kind := range []struct {
@@ -120,12 +123,15 @@ func cmdWriters(m *module, o *opts, slot string) {
 				rows = append(rows, row{{"slot", slot}, {"kind", kind.name}, {"writer", x}})
 			}
 		}
-		render(rows, o, nil, "(no writers of "+slot+")")
-		return
+		render(rows, o, nil, empty)
+		return found
 	}
 	if o.json {
 		fmt.Fprintln(o.out, jsonDumps(row{{"slot", slot}, {"writers", w}, {"dynamic", dyn}}))
-		return
+		if found == 0 {
+			fmt.Fprintf(o.err, "%s -- %s\n", empty, o.scope)
+		}
+		return found
 	}
 	for _, line := range w {
 		fmt.Fprintf(o.out, "  %s\n", line)
@@ -135,7 +141,12 @@ func cmdWriters(m *module, o *opts, slot string) {
 		if rs := []rune(slot); len(rs) > 0 {
 			head, rest = strings.ToUpper(string(rs[0])), string(rs[1:])
 		}
-		fmt.Fprintf(o.out, "%s: no STATIC writer (.set(\"%s\",...) or set%s%s(...))\n", slot, slot, head, rest)
+		line := fmt.Sprintf("%s: no STATIC writer (.set(\"%s\",...) or set%s%s(...))", slot, slot, head, rest)
+		if len(dyn) == 0 {
+			miss(o, line)
+			return 0
+		}
+		fmt.Fprintln(o.out, line)
 	}
 	if len(dyn) > 0 {
 		fmt.Fprintln(o.out, "  dynamic writers (slot chosen at runtime — any slot could be the target):")
@@ -143,10 +154,13 @@ func cmdWriters(m *module, o *opts, slot string) {
 			fmt.Fprintf(o.out, "    %s\n", line)
 		}
 	}
+	return found
 }
 
 // cmdExtends lists class -> superclass, or with --of the chain of one class: a class with no
-// extends declaration in the tree is a miss (0), a resolved chain a match (1).
+// extends declaration in the tree is a miss (0), a resolved chain a match (1). --csv follows
+// the --json shape: class,superclass rows, or with --of one class,position,ancestor row per
+// chain link (position 0 is the class itself, like the JSON chain).
 func cmdExtends(m *module, o *opts, of string, hasOf bool) int {
 	if hasOf && of != "" {
 		chain := m.resolveChain(of)
@@ -156,8 +170,16 @@ func cmdExtends(m *module, o *opts, of string, hasOf bool) int {
 		}
 		empty := "(no extends declaration for " + of + ")"
 		switch {
-		case o.json:
-			fmt.Fprintln(o.out, jsonDumps(row{{"class", of}, {"chain", chain}}))
+		case o.json || o.csv:
+			if o.csv {
+				rows := make([]row, len(chain))
+				for i, c := range chain {
+					rows[i] = row{{"class", of}, {"position", i}, {"ancestor", c}}
+				}
+				render(rows, o, nil, empty)
+			} else {
+				fmt.Fprintln(o.out, jsonDumps(row{{"class", of}, {"chain", chain}}))
+			}
 			if found == 0 {
 				fmt.Fprintf(o.err, "%s -- %s\n", empty, o.scope)
 			}
@@ -167,6 +189,14 @@ func cmdExtends(m *module, o *opts, of string, hasOf bool) int {
 			fmt.Fprintln(o.out, strings.Join(chain, " -> "))
 		}
 		return found
+	}
+	if o.csv {
+		rows := make([]row, 0, len(m.extends.keys))
+		for _, cls := range m.extends.keys {
+			rows = append(rows, row{{"class", cls}, {"superclass", m.extends.m[cls]}})
+		}
+		render(rows, o, nil, "(no extends declarations)")
+		return -1
 	}
 	if o.json {
 		r := row{}

@@ -2,8 +2,9 @@
 // module's Java source tree (slots, actions, writers, extends chains, ORD literals,
 // grep, slot-type summary, the S19 ext-writable lint, schema compare, callers).
 //
-// Exit: 0 found, 1 a search command (slots, actions, ords, grep, callers) matched
-// nothing, 2 usage, 3 unreadable root or no .java file.
+// Exit: 0 found, 1 a search command (slots, actions, ords, grep, callers, extends --of)
+// matched nothing or writers found no static and no dynamic writer, 2 usage, 3 unreadable
+// root or srcB, or no .java file.
 package modulefind
 
 import (
@@ -23,7 +24,8 @@ import (
 )
 
 var (
-	// searchCommands exit 1 when they match nothing.
+	// searchCommands exit 1 when they match nothing (so do extends --of and writers, which
+	// --limit does not cap).
 	searchCommands = []string{"slots", "actions", "ords", "grep", "callers"}
 	// limitCommands list rows, so --limit caps them; any other command rejects it.
 	limitCommands = append(append([]string(nil), searchCommands...), "slot-types", "ext-writable", "compare")
@@ -144,7 +146,7 @@ func regexArg(ns *argparse.Namespace, dest string) *pyre.Regexp {
 }
 
 // run dispatches one command and returns what Main turns into the exit code. A command that
-// can miss (a search, extends --of) returns its match count, and Main exits 1 only on 0. Every
+// can miss (a search, extends --of, writers) returns its match count, and Main exits 1 only on 0. Every
 // other command (a listing or summary such as slot-types, ext-writable, extends, compare)
 // returns -1, so it exits 0 even when it has nothing to list: an empty listing is an answer,
 // not a miss. A new command returns -1 unless the exit contract says it can miss.
@@ -156,7 +158,7 @@ func run(m, b *module, o *opts, cmd string, ns *argparse.Namespace) int {
 	case "actions":
 		return cmdActions(m, o, regexArg(ns, "name"))
 	case "writers":
-		cmdWriters(m, o, ns.String("slot"))
+		return cmdWriters(m, o, ns.String("slot"))
 	case "extends":
 		return cmdExtends(m, o, ns.String("of"), ns.Get("of") != nil)
 	case "ords":
