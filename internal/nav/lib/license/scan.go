@@ -178,7 +178,7 @@ func assignedManagerVar(text, v string) bool {
 // scanFile is _scan_file: the licensing calls of one source file and the
 // classification of its getLicenseManager() sites.
 func scanFile(text, rel, module, cls string, res *resolver) ([]Call, []Site) {
-	comments := commentSpans(text)
+	comments := CommentSpans(text)
 	var calls []Call
 	for i := 0; ; {
 		start, method, paren, ok := nextCall(text, i)

@@ -25,8 +25,8 @@ func TestCallArgsAndCommentSpans(t *testing.T) {
 		}
 	}
 	text := "a // x\n\"//no\" /* y */ '/' /* open"
-	want := []span{{2, 6}, {14, 21}, {26, len(text)}}
-	if got := commentSpans(text); !reflect.DeepEqual(got, want) {
+	want := []Span{{2, 6}, {14, 21}, {26, len(text)}}
+	if got := CommentSpans(text); !reflect.DeepEqual(got, want) {
 		t.Errorf("commentSpans = %v, want %v", got, want)
 	}
 }

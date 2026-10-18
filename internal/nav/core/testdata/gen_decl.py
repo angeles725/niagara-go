@@ -36,6 +36,7 @@ def main():
         out.append({
             "line": line,
             "decl": list(m.groups()) if m else None,
+            "end": m.end() if m else None,
             "type": corpus.type_decl_name(line),
             "annotation": bool(corpus.ANNOTATION_LINE_RE.match(line)),
             "package": p.group(1) if p else None,

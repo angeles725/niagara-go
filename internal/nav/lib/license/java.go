@@ -16,13 +16,14 @@ import (
 	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
-// span is a [start, end) byte range.
-type span struct{ start, end int }
+// Span is a [Start, End) byte range.
+type Span struct{ Start, End int }
 
-// commentSpans is java_text.comment_spans: every // and /* */ comment,
-// skipping string and char literals (which end at a newline).
-func commentSpans(text string) []span {
-	var spans []span
+// CommentSpans is java_text.comment_spans: every // and /* */ comment,
+// skipping string and char literals (which end at a newline). The nav
+// builders (internal/navbuild) share it.
+func CommentSpans(text string) []Span {
+	var spans []Span
 	n := len(text)
 	for i := 0; i < n; {
 		c := text[i]
@@ -44,7 +45,7 @@ func commentSpans(text string) []span {
 			} else {
 				j += i
 			}
-			spans = append(spans, span{i, j})
+			spans = append(spans, Span{i, j})
 			i = j
 		case strings.HasPrefix(text[i:], "/*"):
 			j := strings.Index(text[i+2:], "*/")
@@ -53,7 +54,7 @@ func commentSpans(text string) []span {
 			} else {
 				j += i + 4
 			}
-			spans = append(spans, span{i, j})
+			spans = append(spans, Span{i, j})
 			i = j
 		default:
 			i++
@@ -62,9 +63,9 @@ func commentSpans(text string) []span {
 	return spans
 }
 
-func inSpans(pos int, spans []span) bool {
+func inSpans(pos int, spans []Span) bool {
 	for _, s := range spans {
-		if s.start <= pos && pos < s.end {
+		if s.Start <= pos && pos < s.End {
 			return true
 		}
 	}

@@ -18,6 +18,7 @@ type Decl struct {
 	Modifiers string // group 2, with its trailing whitespace ("public static ")
 	Kind      string // class, interface, @interface, enum or record
 	Name      string
+	End       int // m.end() as a byte offset: just after Name, where the header continues
 }
 
 var declModifiers = []string{"public", "protected", "private", "static", "abstract", "final",
@@ -87,7 +88,7 @@ func MatchDecl(line string) (Decl, bool) {
 		if end == j {
 			return Decl{}, false
 		}
-		d.Kind, d.Name = k, line[j:end]
+		d.Kind, d.Name, d.End = k, line[j:end], end
 		return d, true
 	}
 	return Decl{}, false

@@ -19,9 +19,9 @@ type Site struct {
 }
 
 // classifySites is the getLicenseManager() half of _scan_file.
-func classifySites(text, rel, module, cls string, comments []span, calls []Call) []Site {
+func classifySites(text, rel, module, cls string, comments []Span, calls []Call) []Site {
 	var sites []Site
-	var blocks []span
+	var blocks []Span
 	blocksDone := false
 	for i := 0; ; {
 		start, end, ok := nextManager(text, i)
@@ -241,16 +241,16 @@ func collapseSpace(s string) string {
 
 // braceBlocks is java_text.brace_blocks: every {...} block outside comments
 // and string or char literals, an unclosed one ending at the end of the text.
-func braceBlocks(text string, comments []span) []span {
-	var blocks []span
+func braceBlocks(text string, comments []Span) []Span {
+	var blocks []Span
 	var stack []int
 	n, k := len(text), 0
 	for i := 0; i < n; {
-		for k < len(comments) && comments[k].end <= i {
+		for k < len(comments) && comments[k].End <= i {
 			k++
 		}
-		if k < len(comments) && comments[k].start <= i {
-			i = comments[k].end
+		if k < len(comments) && comments[k].Start <= i {
+			i = comments[k].End
 			continue
 		}
 		c := text[i]
@@ -269,31 +269,31 @@ func braceBlocks(text string, comments []span) []span {
 		case c == '{':
 			stack = append(stack, i)
 		case c == '}' && len(stack) > 0:
-			blocks = append(blocks, span{stack[len(stack)-1], i})
+			blocks = append(blocks, Span{stack[len(stack)-1], i})
 			stack = stack[:len(stack)-1]
 		}
 		i++
 	}
 	for _, o := range stack {
-		blocks = append(blocks, span{o, n})
+		blocks = append(blocks, Span{o, n})
 	}
 	return blocks
 }
 
 // enclosing is java_text.enclosing: the blocks containing pos (open < pos <=
 // close), innermost first.
-func enclosing(blocks []span, pos int) []span {
-	var out []span
+func enclosing(blocks []Span, pos int) []Span {
+	var out []Span
 	for _, b := range blocks {
-		if b.start < pos && pos <= b.end {
+		if b.Start < pos && pos <= b.End {
 			out = append(out, b)
 		}
 	}
-	slices.SortFunc(out, func(a, b span) int {
-		if a.start != b.start {
-			return b.start - a.start
+	slices.SortFunc(out, func(a, b Span) int {
+		if a.Start != b.Start {
+			return b.Start - a.Start
 		}
-		return b.end - a.end
+		return b.End - a.End
 	})
 	return out
 }
@@ -347,16 +347,16 @@ func anonymousClassHead(head string) bool {
 // name assigned at pos by the statement stmt is the same variable: a local
 // from the assignment to the end of its declaring block, a field its whole
 // class body.
-func variableScope(text string, blocks []span, name string, pos int, stmt string) (int, int) {
+func variableScope(text string, blocks []Span, name string, pos int, stmt string) (int, int) {
 	thisField := thisFieldAssign(stmt, name)
 	encl := enclosing(blocks, pos)
-	var declaring []span
+	var declaring []Span
 	if declaredFinally(stmt, name) || thisField {
 		declaring = encl[:min(1, len(encl))]
 	} else {
 		for _, b := range encl {
-			if isTypeBody(text, b.start) || declares(header(text, b.start)+text[b.start:pos], name) >= 0 {
-				declaring = []span{b}
+			if isTypeBody(text, b.Start) || declares(header(text, b.Start)+text[b.Start:pos], name) >= 0 {
+				declaring = []Span{b}
 				break
 			}
 		}
@@ -365,17 +365,17 @@ func variableScope(text string, blocks []span, name string, pos int, stmt string
 		return pos, len(text)
 	}
 	d := declaring[0]
-	if thisField || isTypeBody(text, d.start) {
+	if thisField || isTypeBody(text, d.Start) {
 		body := d
 		for _, b := range encl {
-			if isTypeBody(text, b.start) {
+			if isTypeBody(text, b.Start) {
 				body = b
 				break
 			}
 		}
-		return body.start, body.end
+		return body.Start, body.End
 	}
-	return pos, d.end
+	return pos, d.End
 }
 
 // declares finds decl = r'[\w$>\]]\s+' + name + r'\s*[;=,)]' in s: the offset
