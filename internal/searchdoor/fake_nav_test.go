@@ -52,7 +52,7 @@ func fakeClass(word string) string {
 			b.WriteRune(r)
 		}
 	}
-	return "B" + strings.ReplaceAll(pycompat.Title(b.String()), "_", "")
+	return "B" + strings.ReplaceAll(fakeTitle(b.String()), "_", "")
 }
 
 // unescape is re.sub(r"\\(.)", r"\1", t).

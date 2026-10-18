@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
 
 	"github.com/angeles725/niagara-go/internal/pycompat"
 )
@@ -185,7 +186,7 @@ func (f *fakeRun) niagaraHelp(args []string) {
 	}
 	f.print("by source: guides-clean 3, devguide-clean 2")
 	for i := range shown {
-		word := pycompat.Title(words[i%len(words)])
+		word := fakeTitle(words[i%len(words)])
 		f.print("  [guides-clean] %s guide, page %d", word, i+1)
 		f.print("    L%d: how the %s setting works", 10+i, words[i%len(words)])
 		if i < shown-1 {
@@ -196,4 +197,24 @@ func (f *fakeRun) niagaraHelp(args []string) {
 		f.print("  ... and %d more files", total-shown)
 	}
 	f.exit(0)
+}
+
+// fakeTitle is Python's str.title() for the fakes' word inputs: a letter
+// after a non-letter is upper-cased, every other letter lower-cased.
+func fakeTitle(s string) string {
+	var b strings.Builder
+	prev := false
+	for _, r := range s {
+		cased := unicode.IsUpper(r) || unicode.IsLower(r) || unicode.IsTitle(r)
+		switch {
+		case cased && !prev:
+			b.WriteRune(unicode.ToTitle(r))
+		case cased:
+			b.WriteRune(unicode.ToLower(r))
+		default:
+			b.WriteRune(r)
+		}
+		prev = cased
+	}
+	return b.String()
 }
