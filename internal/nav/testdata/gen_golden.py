@@ -210,7 +210,9 @@ CASES = [
     ("callees-class-miss", ["callees", "caller"], NO_CORPUS, CG_BASE),
     ("callees-empty-method", ["callees", "BCaller", ""], NO_CORPUS, CG_BASE),
     ("stats", ["stats"], NO_CORPUS, STATS_BASE),
+    ("stats-json", ["stats", "--json"], NO_CORPUS, STATS_BASE),
     ("stats-sparse", ["stats"], NO_CORPUS, "fixture/stats-sparse/base"),
+    ("stats-sparse-json", ["stats", "--json"], NO_CORPUS, "fixture/stats-sparse/base"),
 ]
 
 
