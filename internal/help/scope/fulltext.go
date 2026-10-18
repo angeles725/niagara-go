@@ -201,7 +201,10 @@ func acquireLock(lock string, onWait func(holder []byte)) (mine []byte, err erro
 			continue
 		}
 		now := time.Now()
-		if rerr == nil && serr == nil {
+		if onWait != nil && now.Sub(start) > lockFollowMax {
+			return nil, nil // checked first: changing holders reset the deadline below
+		}
+		if rerr == nil && serr == nil && len(seen) > 0 { // empty: a lock being written
 			if !bytes.Equal(seen, lastSeen) { // another holder: its moves count from now
 				if lastSeen != nil && onWait != nil {
 					deadline = now.Add(lockWait) // and it gets a full wait of its own
@@ -212,7 +215,7 @@ func acquireLock(lock string, onWait func(holder []byte)) (mine []byte, err erro
 			}
 		}
 		if now.After(deadline) {
-			if onWait == nil || lastMove.IsZero() || now.Sub(lastMove) > lockWait || now.Sub(start) > lockFollowMax {
+			if onWait == nil || lastMove.IsZero() || now.Sub(lastMove) > lockWait {
 				return nil, nil
 			}
 			if !waiting {

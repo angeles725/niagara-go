@@ -2,6 +2,7 @@ package scope
 
 import (
 	"bytes"
+	"fmt"
 	"os"
 	"strings"
 	"sync"
@@ -135,10 +136,11 @@ func TestEnsureFulltextGivesANewHolderAFullWait(t *testing.T) {
 	handover := make(chan time.Time, 1)
 	go func() {
 		<-h.done
+		at := time.Now() // before the write: the search can only see the new holder after it
 		if err := os.WriteFile(lock, []byte("2 other\n"), 0o644); err != nil {
 			t.Errorf("handover: %v", err)
 		}
-		handover <- time.Now()
+		handover <- at
 	}()
 	var errb bytes.Buffer
 	_, rebuilt, err := ensure(root, &errb)
@@ -170,6 +172,44 @@ func TestEnsureFulltextFollowsARebuildAtMostLockFollowMax(t *testing.T) {
 		t.Errorf("rebuilt %v err %v stderr %q", rebuilt, err, errb.String())
 	}
 	if elapsed < 300*time.Millisecond || elapsed > 1500*time.Millisecond {
+		t.Errorf("built after %v, want about lockFollowMax (300ms)", elapsed)
+	}
+}
+
+// TestEnsureFulltextCapIsNotResetByChangingHolders: lock content that keeps
+// changing faster than lockWait (holders replacing each other, or a torn
+// read of a lock being written) does not extend a search past lockFollowMax.
+func TestEnsureFulltextCapIsNotResetByChangingHolders(t *testing.T) {
+	lockTiming(t, testPoll, testWait, time.Hour)
+	followMax(t, 300*time.Millisecond)
+	root := noIndexCheckout(t)
+	lock := fts.DBPath(root) + ".lock"
+	if err := os.WriteFile(lock, []byte("1 a\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	stop := make(chan struct{})
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		for i := 0; ; i++ {
+			select {
+			case <-stop:
+				return
+			case <-time.After(testHeartbeat):
+				os.WriteFile(lock, []byte(fmt.Sprintf("%d changing\n", i+2)), 0o644)
+			}
+		}
+	}()
+	start := time.Now()
+	var errb bytes.Buffer
+	_, rebuilt, err := ensure(root, &errb)
+	elapsed := time.Since(start)
+	close(stop)
+	<-done
+	if err != nil || !rebuilt {
+		t.Errorf("rebuilt %v err %v", rebuilt, err)
+	}
+	if elapsed > 1500*time.Millisecond {
 		t.Errorf("built after %v, want about lockFollowMax (300ms)", elapsed)
 	}
 }
