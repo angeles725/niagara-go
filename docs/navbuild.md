@@ -108,11 +108,13 @@ non-ASCII character splits; at least two characters; not one of the 60 `STOP_WOR
 `var\d+`), one posting per distinct token of a line of at least `--min-len` characters.
 `files.id` is the position in the scan list + 1, so an unreadable or empty file leaves a
 gap; `files_with_tokens` counts a file with any token before the `--min-len` filter, as
-Python does. Four workers tokenize; one goroutine inserts in scan order inside one
+Python does. Up to four workers (`min(4, GOMAXPROCS)`) tokenize; one goroutine inserts in scan order inside one
 transaction (300-row multi-value `INSERT`s), then creates the three indexes, writes `meta`
 (`timestamp` as `%Y-%m-%d %H:%M:%S`, `build_time_sec` as `str(round(x, 1))`), runs
-`ANALYZE` and `VACUUM`, and renames the temp database into place (a failed build removes
-it and leaves the old index).
+`ANALYZE` and `VACUUM`, and renames `<index>.tmp` into place (a stale temp database of a
+killed build is removed first; a failed build removes its own and leaves the old index).
+As in Python, `temp_store=MEMORY` keeps the index sorts in RAM: the full-corpus build
+peaks at about 2 GB.
 
 The writer opens SQLite through `modernc.org/sqlite` directly: `internal/index` only opens
 databases read-only (as `internal/helpbuild/fulltext` does). The `CREATE TABLE` texts are
@@ -126,8 +128,8 @@ with `timestamp`/`build_time_sec`/`source_root` blanked, `sqlite_stat1` and `sql
 and `postings` in rowid order, all through `quote()`; the full-corpus run compares the two
 streams record by record without holding either.
 
-Intended difference: a top-level entry with `"module": null` is an error naming it
-(`files.module` is `NOT NULL`; Python dies with `IntegrityError`).
+Intended difference: a scanned file whose entry has `"module": null` is an error naming it
+where Python dies with `IntegrityError` (`files.module` is `NOT NULL`).
 
 ## Gates
 

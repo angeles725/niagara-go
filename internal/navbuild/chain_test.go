@@ -2,6 +2,7 @@ package navbuild
 
 import (
 	"os"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -12,11 +13,13 @@ import (
 // laterBuilders are the builders that read the class index: each runs after
 // the inventory and the class index of its base dir, in this order (the call
 // graph reads the inheritance index). pyArgs are extra builder arguments.
-var laterBuilders = []struct {
+type laterBuilder struct {
 	script, index string
 	pyArgs        []string
 	build         func(base, organized string) error
-}{
+}
+
+var laterBuilders = []laterBuilder{
 	{"build_inheritance.py", InheritanceFile, nil, func(base, _ string) error { _, err := BuildInheritance(base); return err }},
 	{"build_xref.py", XrefFile, nil, func(base, organized string) error { _, err := BuildXref(base, organized); return err }},
 	{"build_token_index.py", TokenFile, nil, func(base, organized string) error {
@@ -37,6 +40,11 @@ func TestParityLaterIndexes(t *testing.T) {
 	for _, n := range strings.Split(os.Getenv("NAVBUILD_PARITY_ONLY"), ",") {
 		if n != "" {
 			only[n] = true
+		}
+	}
+	for n := range only {
+		if !slices.ContainsFunc(laterBuilders, func(b laterBuilder) bool { return b.index == n }) {
+			t.Fatalf("NAVBUILD_PARITY_ONLY names %q, which no later builder writes", n)
 		}
 	}
 	for _, tc := range []struct {

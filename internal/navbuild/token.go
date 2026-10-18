@@ -143,6 +143,7 @@ type TokenIndex struct {
 // in the scan list + 1, so a skipped file leaves a gap).
 type tokenSource struct {
 	full, rel, className, module string
+	moduleNull                   bool
 }
 
 // tokenSources is build_index's files_to_scan: the top-level files that exist.
@@ -151,7 +152,7 @@ func tokenSources(entries []classIndexEntry, organized string) []tokenSource {
 	for _, e := range topLevelFiles(entries) {
 		full := sourcePath(organized, e.Path)
 		if isFile(full) {
-			out = append(out, tokenSource{full, e.Path, e.Name, e.Module})
+			out = append(out, tokenSource{full, e.Path, e.Name, e.Module, e.ModuleNull})
 		}
 	}
 	return out
@@ -164,12 +165,6 @@ func BuildTokenIndex(baseDir, organized string, minLen int) (*TokenIndex, error)
 	entries, err := readClassIndex(baseDir)
 	if err != nil {
 		return nil, err
-	}
-	for _, e := range topLevelFiles(entries) {
-		if e.ModuleNull && isFile(sourcePath(organized, e.Path)) {
-			// files.module is NOT NULL: Python dies with an IntegrityError.
-			return nil, fmt.Errorf("%s: classes[%q] has a null module (files.module is NOT NULL)", ClassIndexFile, e.Name)
-		}
 	}
 	ti := &TokenIndex{MinTokenLen: minLen, Source: organized, Path: IndexPath(baseDir, TokenFile)}
 	if err := writeTokenDB(ti, tokenSources(entries, organized)); err != nil {

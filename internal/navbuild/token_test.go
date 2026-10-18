@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"os"
 	"reflect"
+	"slices"
 	"strings"
 	"testing"
 )
@@ -141,6 +142,10 @@ func diffSeqs(want, got iter.Seq[string]) (int, string) {
 	for w := range want {
 		n++
 		g, ok := next()
+		// A failed dump is a difference even when both sides fail alike.
+		if strings.HasPrefix(w, "error\t") || strings.HasPrefix(g, "error\t") {
+			return n, fmt.Sprintf("dump failed: python: %.300q, go: %.300q", w, g)
+		}
 		if !ok {
 			return n, fmt.Sprintf("python: %.300q, go: <end>", w)
 		}
@@ -150,6 +155,9 @@ func diffSeqs(want, got iter.Seq[string]) (int, string) {
 	}
 	if g, ok := next(); ok {
 		return n + 1, fmt.Sprintf("python: <end>, go: %.300q", g)
+	}
+	if n == 0 {
+		return 0, "no records on either side"
 	}
 	return n, ""
 }
@@ -185,5 +193,55 @@ func goldenLines(t *testing.T, path string) iter.Seq[string] {
 				return
 			}
 		}
+	}
+}
+
+func TestDiffSeqsFailsOnDumpErrors(t *testing.T) {
+	seq := func(recs ...string) iter.Seq[string] { return slices.Values(recs) }
+	for _, tc := range []struct {
+		name      string
+		want, got iter.Seq[string]
+		differ    bool
+	}{
+		{"equal", seq("a", "b"), seq("a", "b"), false},
+		{"the same error on both sides", seq("error\tno such table"), seq("error\tno such table"), true},
+		{"nothing at all", seq(), seq(), true},
+		{"go is shorter", seq("a", "b"), seq("a"), true},
+		{"go is longer", seq("a"), seq("a", "b"), true},
+	} {
+		if _, diff := diffSeqs(tc.want, tc.got); (diff != "") != tc.differ {
+			t.Errorf("%s: diff %q", tc.name, diff)
+		}
+	}
+}
+
+func TestBuildTokenIndexFailures(t *testing.T) {
+	organized := t.TempDir()
+	mustWrite(t, organized+"/m/A.java", "class A {}\n")
+	mustWrite(t, organized+"/m/Empty.java", "")
+	for _, tc := range []struct {
+		name, classes string
+		fails         bool
+	}{
+		// Python inserts no files row for an empty file, so its null module never fails.
+		{"null module of an empty file", `{"Empty": [{"path": "m/Empty.java", "module": null}], "A": [{"path": "m/A.java", "module": "m"}]}`, false},
+		{"null module of a scanned file", `{"A": [{"path": "m/A.java", "module": null}]}`, true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			base := newBase(t)
+			mustWrite(t, IndexPath(base, ClassIndexFile), `{"classes": `+tc.classes+`}`)
+			// a stale temp database of a killed build is replaced, never reused
+			mustWrite(t, IndexPath(base, TokenFile)+".tmp", "not a database")
+			_, err := BuildTokenIndex(base, organized, DefaultMinTokenLen)
+			if (err != nil) != tc.fails {
+				t.Fatalf("err = %v, want failure %v", err, tc.fails)
+			}
+			if isFile(IndexPath(base, TokenFile) + ".tmp") {
+				t.Error("the temp database is left behind")
+			}
+			if isFile(IndexPath(base, TokenFile)) == tc.fails {
+				t.Errorf("index written = %v after err %v", !tc.fails, err)
+			}
+		})
 	}
 }

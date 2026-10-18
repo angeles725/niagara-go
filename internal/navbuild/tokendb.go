@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -29,7 +30,8 @@ var tokenSchema = []string{
 	"CREATE TABLE meta (\n            key TEXT PRIMARY KEY,\n            value TEXT NOT NULL\n        )",
 }
 
-// tokenIndexes are created after the bulk insert, as in Python.
+// tokenIndexes are created after the bulk insert, as in Python, with Python's
+// names (idx_token_module has no module column: the names are kept for parity).
 var tokenIndexes = []string{
 	"CREATE INDEX idx_token ON postings(token)",
 	"CREATE INDEX idx_token_module ON postings(token, file_id)",
@@ -40,17 +42,16 @@ var tokenIndexes = []string{
 // parameters each, far below SQLite's limit).
 const postingsPerInsert = 300
 
-// writeTokenDB builds the database in a temporary file beside ti.Path and
-// renames it into place (build.tmp_db/publish_db): a failed build leaves the
-// previous index untouched and removes its temporary file.
+// writeTokenDB builds the database in <index>.tmp and renames it into place
+// (build.tmp_db/publish_db): a stale temp database of a killed build is
+// removed first, and a failed build leaves the previous index untouched and
+// removes its temp database.
 func writeTokenDB(ti *TokenIndex, sources []tokenSource) error {
 	if err := os.MkdirAll(filepath.Dir(ti.Path), 0o777); err != nil {
 		return err
 	}
-	tmp, err := newTempDB(ti.Path)
-	if err != nil {
-		return err
-	}
+	tmp := ti.Path + ".tmp"
+	removeDB(tmp)
 	if err := fillTokenDB(tmp, ti, sources); err != nil {
 		removeDB(tmp)
 		return err
@@ -62,21 +63,6 @@ func writeTokenDB(ti *TokenIndex, sources []tokenSource) error {
 	return nil
 }
 
-// newTempDB reserves a fresh, empty file name beside final for SQLite to
-// create (mode 0666 minus the umask, as SQLite and Python create one).
-func newTempDB(final string) (string, error) {
-	f, err := os.CreateTemp(filepath.Dir(final), "."+filepath.Base(final)+".*.tmp")
-	if err != nil {
-		return "", err
-	}
-	name := f.Name()
-	f.Close()
-	if err := os.Remove(name); err != nil {
-		return "", err
-	}
-	return name, nil
-}
-
 func removeDB(path string) {
 	for _, suffix := range []string{"", "-journal", "-wal", "-shm"} {
 		os.Remove(path + suffix)
@@ -85,7 +71,8 @@ func removeDB(path string) {
 
 // fillTokenDB is build_index from the CREATE TABLEs to the VACUUM.
 func fillTokenDB(path string, ti *TokenIndex, sources []tokenSource) error {
-	db, err := sql.Open("sqlite", path)
+	// A file: URI, so a '?' or '#' in the path is part of the name.
+	db, err := sql.Open("sqlite", (&url.URL{Scheme: "file", Opaque: url.PathEscape(path)}).String())
 	if err != nil {
 		return err
 	}
@@ -182,6 +169,10 @@ func insertTokens(ctx context.Context, db *sql.DB, ti *TokenIndex, sources []tok
 			return nil
 		}
 		s := sources[i]
+		if s.moduleNull {
+			// files.module is NOT NULL: Python dies with an IntegrityError here.
+			return fmt.Errorf("%s: classes[%q] has a null module (files.module is NOT NULL)", ClassIndexFile, s.className)
+		}
 		fileID := i + 1
 		if _, err := insFile.ExecContext(ctx, fileID, s.rel, s.module, s.className); err != nil {
 			return err
