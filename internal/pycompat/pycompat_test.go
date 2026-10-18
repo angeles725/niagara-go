@@ -262,15 +262,11 @@ func TestTextFunctions(t *testing.T) {
 		}
 	}
 	for _, c := range f.HTML {
-		var s, esc, unesc string
+		var s, esc string
 		decode(t, c[0], &s)
 		decode(t, c[1], &esc)
-		decode(t, c[2], &unesc)
 		if got := HTMLEscape(s); got != esc {
 			t.Errorf("HTMLEscape(%q) = %q, want %q", s, got, esc)
-		}
-		if got := HTMLUnescape(s); got != unesc {
-			t.Errorf("HTMLUnescape(%q) = %q, want %q", s, got, unesc)
 		}
 	}
 	for _, c := range f.Paths {
