@@ -2,23 +2,22 @@ package bognav
 
 import (
 	"fmt"
-	"strconv"
-	"strings"
 
 	"github.com/angeles725/niagara-go/internal/bog"
+	"github.com/angeles725/niagara-go/internal/pyjson"
 )
 
-// The json.dumps subset bog-nav prints; local until internal/pyjson lands (decision D26).
+// bog-nav prints json.dumps through the shared pyjson builder: a row is a pyjson.Dict.
 
 // dumps is json.dumps(v, indent=indent) with ensure_ascii; indent < 0 is indent=None (one line,
-// ", " and ": " separators).
-// Any other value type is an error, never a panic.
+// ", " and ": " separators). v is a row or a []any of output values (see row); any other value
+// type is an error, never a panic.
 func dumps(v any, indent int) (string, error) {
-	var b strings.Builder
-	if err := encode(&b, v, indent, 0); err != nil {
+	val, err := pyjson.FromAny(jsonValue(v))
+	if err != nil {
 		return "", err
 	}
-	return b.String(), nil
+	return pyjson.Dumps(val, pyjson.Defaults(indent)), nil
 }
 
 // printJSON prints dumps(v, indent) and a newline; on an encoder error it prints one stderr
@@ -33,115 +32,39 @@ func (e *env) printJSON(v any, indent int) {
 	e.println(s)
 }
 
-func encode(b *strings.Builder, v any, indent, level int) error {
-	sep := func(first bool, l int) {
-		if !first {
-			b.WriteByte(',')
-			if indent < 0 {
-				b.WriteByte(' ')
-			}
-		}
-		if indent >= 0 {
-			b.WriteString("\n" + strings.Repeat(" ", indent*l))
-		}
+// Keys and Values make a row a pyjson.Dict, its members in output order.
+func (r row) Keys() []string {
+	keys := make([]string, len(r))
+	for i, m := range r {
+		keys[i] = m.K
 	}
-	end := func() {
-		if indent >= 0 {
-			b.WriteString("\n" + strings.Repeat(" ", indent*level))
-		}
+	return keys
+}
+
+func (r row) Values() []any {
+	vals := make([]any, len(r))
+	for i, m := range r {
+		vals[i] = jsonValue(m.V)
 	}
+	return vals
+}
+
+// jsonValue is v in a type pyjson.FromAny reads: a *string is its str or None, a []row a list.
+func jsonValue(v any) any {
 	switch x := v.(type) {
-	case nil:
-		b.WriteString("null")
-	case bool:
-		b.WriteString(strconv.FormatBool(x))
-	case int:
-		b.WriteString(strconv.Itoa(x))
-	case string:
-		quote(b, x)
 	case *string:
 		if x == nil {
-			b.WriteString("null")
-		} else {
-			quote(b, *x)
+			return nil
 		}
-	case []string:
-		items := make([]any, len(x))
-		for i, s := range x {
-			items[i] = s
-		}
-		return encode(b, items, indent, level)
+		return *x
 	case []row:
 		items := make([]any, len(x))
 		for i, r := range x {
 			items[i] = r
 		}
-		return encode(b, items, indent, level)
-	case []any:
-		if len(x) == 0 {
-			b.WriteString("[]")
-			return nil
-		}
-		b.WriteByte('[')
-		for i, it := range x {
-			sep(i == 0, level+1)
-			if err := encode(b, it, indent, level+1); err != nil {
-				return err
-			}
-		}
-		end()
-		b.WriteByte(']')
-	case row:
-		if len(x) == 0 {
-			b.WriteString("{}")
-			return nil
-		}
-		b.WriteByte('{')
-		for i, m := range x {
-			sep(i == 0, level+1)
-			quote(b, m.K)
-			b.WriteString(": ")
-			if err := encode(b, m.V, indent, level+1); err != nil {
-				return err
-			}
-		}
-		end()
-		b.WriteByte('}')
-	default:
-		return fmt.Errorf("json: unsupported value of type %T", v)
+		return items
 	}
-	return nil
-}
-
-// quote is json's ensure_ascii string encoder: every character outside ' '..'~' is escaped.
-func quote(b *strings.Builder, s string) {
-	b.WriteByte('"')
-	for _, r := range s {
-		switch {
-		case r == '"':
-			b.WriteString(`\"`)
-		case r == '\\':
-			b.WriteString(`\\`)
-		case r == '\n':
-			b.WriteString(`\n`)
-		case r == '\r':
-			b.WriteString(`\r`)
-		case r == '\t':
-			b.WriteString(`\t`)
-		case r == '\b':
-			b.WriteString(`\b`)
-		case r == '\f':
-			b.WriteString(`\f`)
-		case r >= ' ' && r <= '~':
-			b.WriteRune(r)
-		case r > 0xFFFF:
-			r -= 0x10000
-			fmt.Fprintf(b, `\u%04x\u%04x`, 0xD800+(r>>10), 0xDC00+(r&0x3FF))
-		default:
-			fmt.Fprintf(b, `\u%04x`, r)
-		}
-	}
-	b.WriteByte('"')
+	return v
 }
 
 // slotJSON is a stored slot as the Python dict {type, value, flags[, child]}.
