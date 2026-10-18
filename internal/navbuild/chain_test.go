@@ -19,6 +19,10 @@ var laterBuilders = []struct {
 }{
 	{"build_inheritance.py", InheritanceFile, nil, func(base, _ string) error { _, err := BuildInheritance(base); return err }},
 	{"build_xref.py", XrefFile, nil, func(base, organized string) error { _, err := BuildXref(base, organized); return err }},
+	{"build_token_index.py", TokenFile, nil, func(base, organized string) error {
+		_, err := BuildTokenIndex(base, organized, DefaultMinTokenLen)
+		return err
+	}},
 }
 
 // TestParityLaterIndexes builds the whole chain on each side (inventory, class

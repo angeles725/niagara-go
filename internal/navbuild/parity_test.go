@@ -122,6 +122,10 @@ func newBase(t *testing.T) string {
 // showing the first differing line.
 func sameIndex(t *testing.T, name, pyBase, goBase string) {
 	t.Helper()
+	if name == TokenFile {
+		sameTokenDB(t, IndexPath(pyBase, name), IndexPath(goBase, name))
+		return
+	}
 	py, err := os.ReadFile(IndexPath(pyBase, name))
 	if err != nil {
 		t.Fatal(err)

@@ -15,8 +15,11 @@ document disagree, the code wins and this document is corrected.
 |---|---|---|
 | B1 | foundations (JSON layouts, `_meta`, atomic write, normalisation, parity driver) + module inventory | `build_module_inventory.py`, `module_nav_lib/build.py` |
 | B2 | `declaration_header` / `strip_comments` + class index | `build_class_index.py`, `module_nav_lib/java_text.py` |
-| **B3** | inheritance + xref | `build_inheritance.py`, `build_xref.py` |
-| B4-B7 | token (SQLite), method, field, callgraph | `build_token_index.py`, ... |
+| B3 | inheritance + xref | `build_inheritance.py`, `build_xref.py` |
+| **B4** | token index (SQLite) | `build_token_index.py` |
+| B5 | Java member scanner + method index | `build_method_index.py` |
+| ~~B6~~ | field index: dropped, no kept reader (D32) | `build_field_index.py` |
+| B7 | call graph | `build_callgraph_index.py` |
 | B8 | `mnav reindex` orchestration | `reindex.sh` |
 
 ## Foundations
@@ -94,6 +97,38 @@ are key-sorted, matching module-navigator after `fix/deterministic-xref-base-dir
 `PYTHONHASHSEED`). `avg_imports_per_class` is the int `0` when no class imports
 anything, as Python's `else 0`.
 
+## Token index
+
+`BuildTokenIndex(base, organized, minLen)` is `build_token_index.build_index`: the
+`corpus.top_level_files` of the class index (`topLevelFiles`: the first entry per path
+with a falsy `inner` and an `outer_class` of null, `""` or `"None"`) whose source exists,
+each read as `readlines()` with `errors="replace"` (universal newlines), tokenized line by
+line (`tokenizeLine`: the runs of `[a-zA-Z0-9_]`, an ASCII class, so every byte of a
+non-ASCII character splits; at least two characters; not one of the 60 `STOP_WORDS`; not
+`var\d+`), one posting per distinct token of a line of at least `--min-len` characters.
+`files.id` is the position in the scan list + 1, so an unreadable or empty file leaves a
+gap; `files_with_tokens` counts a file with any token before the `--min-len` filter, as
+Python does. Four workers tokenize; one goroutine inserts in scan order inside one
+transaction (300-row multi-value `INSERT`s), then creates the three indexes, writes `meta`
+(`timestamp` as `%Y-%m-%d %H:%M:%S`, `build_time_sec` as `str(round(x, 1))`), runs
+`ANALYZE` and `VACUUM`, and renames the temp database into place (a failed build removes
+it and leaves the old index).
+
+The writer opens SQLite through `modernc.org/sqlite` directly: `internal/index` only opens
+databases read-only (as `internal/helpbuild/fulltext` does). The `CREATE TABLE` texts are
+Python's triple-quoted strings byte for byte (`sqlite_master` keeps them). The rollback
+journal is off during the build (Python uses WAL); the file left behind is in rollback
+mode either way.
+
+Parity is logical (`token_test.go` `tokenDump`): `sqlite_master`, `meta` in rowid order
+with `timestamp`/`build_time_sec`/`source_root` blanked, `sqlite_stat1` and `sqlite_stat4`
+(both SQLite builds have STAT4, so the readers get the same query plans), `files` by id
+and `postings` in rowid order, all through `quote()`; the full-corpus run compares the two
+streams record by record without holding either.
+
+Intended difference: a top-level entry with `"module": null` is an error naming it
+(`files.module` is `NOT NULL`; Python dies with `IntegrityError`).
+
 ## Gates
 
 | Gate | Result (2026-10-17) |
@@ -102,6 +137,7 @@ anything, as Python's `else 0`.
 | full-corpus `class-index.json` normalised byte diff | 0 (34,144,621 bytes); Python 32.3 s, Go 3.4 s on a loaded host |
 | full-corpus `inheritance.json` normalised byte diff | 0 (3,740,761 bytes); Python 1.6 s, Go 0.5 s |
 | full-corpus `xref-index.json` normalised byte diff | 0 (19,290,729 bytes); Python 12.3 s, Go 4.7 s |
+| full-corpus `token-index.db` logical dump | 0 differences in 15,581,950 records (53,324 files, 15,528,521 postings; 1,006,706,688 bytes, the same size as Python's); Python 3m13s, Go 2m49s on a loaded host |
 | `selftest --recall` on the Go-built index (`TestRecallOnGoBuiltIndex`; the Python oracle via `--base-dir`, since the Go `mnav selftest` is not ported) | 100.00% (55,931/55,931), supertypes 44,369/44,369 |
 
 ## Parity harness

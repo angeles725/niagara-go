@@ -1,0 +1,408 @@
+schema	index	idx_file_module	files	'CREATE INDEX idx_file_module ON files(module)'
+schema	index	idx_token	postings	'CREATE INDEX idx_token ON postings(token)'
+schema	index	idx_token_module	postings	'CREATE INDEX idx_token_module ON postings(token, file_id)'
+schema	index	sqlite_autoindex_meta_1	meta	NULL
+schema	table	files	files	'CREATE TABLE files (\n            id INTEGER PRIMARY KEY,\n            path TEXT NOT NULL,\n            module TEXT NOT NULL,\n            class_name TEXT NOT NULL\n        )'
+schema	table	meta	meta	'CREATE TABLE meta (\n            key TEXT PRIMARY KEY,\n            value TEXT NOT NULL\n        )'
+schema	table	postings	postings	'CREATE TABLE postings (\n            token TEXT NOT NULL,\n            file_id INTEGER NOT NULL,\n            line_no INTEGER NOT NULL\n        )'
+schema	table	sqlite_stat1	sqlite_stat1	'CREATE TABLE sqlite_stat1(tbl,idx,stat)'
+schema	table	sqlite_stat4	sqlite_stat4	'CREATE TABLE sqlite_stat4(tbl,idx,neq,nlt,ndlt,sample)'
+meta	timestamp	<VOLATILE>
+meta	build_time_sec	<VOLATILE>
+meta	files_scanned	'30'
+meta	files_with_tokens	'28'
+meta	total_lines	'640'
+meta	total_postings	'286'
+meta	unique_tokens	'156'
+meta	min_token_len	'2'
+meta	stop_words_count	'60'
+meta	source_root	<VOLATILE>
+stat1	files	'idx_file_module'	'30 5'
+stat1	meta	'sqlite_autoindex_meta_1'	'10 1'
+stat1	postings	'idx_token'	'286 2'
+stat1	postings	'idx_token_module'	'286 2 2'
+stat4	files	idx_file_module	3 1	17 19	2 19	031B01626574612D757814
+stat4	files	idx_file_module	1 1	20 20	3 20	031B01626574612D787815
+stat4	files	idx_file_module	16 1	0 3	0 3	031D01616C7068612D727404
+stat4	files	idx_file_module	16 1	0 7	0 7	031D01616C7068612D72740A
+stat4	files	idx_file_module	16 1	0 11	0 11	031D01616C7068612D72740E
+stat4	files	idx_file_module	16 1	0 15	0 15	031D01616C7068612D727412
+stat4	files	idx_file_module	1 1	16 16	1 16	031D01616C7068612D776216
+stat4	files	idx_file_module	1 1	29 29	6 29	031D0167616D6D612D72741E
+stat4	files	idx_file_module	7 1	21 23	4 23	032101657073696C6F6E2D727419
+stat4	files	idx_file_module	7 1	21 27	4 27	032101657073696C6F6E2D72741D
+stat4	files	idx_file_module	1 1	28 28	5 28	032101657073696C6F6E2D776209
+stat4	meta	sqlite_autoindex_meta_1	1 1	6 6	6 6	031F0974696D657374616D70
+stat4	meta	sqlite_autoindex_meta_1	1 1	4 4	4 4	032301736F757263655F726F6F740A
+stat4	meta	sqlite_autoindex_meta_1	1 1	7 7	7 7	032301746F74616C5F6C696E657305
+stat4	meta	sqlite_autoindex_meta_1	1 1	1 1	1 1	03270166696C65735F7363616E6E656403
+stat4	meta	sqlite_autoindex_meta_1	1 1	3 3	3 3	0327016D696E5F746F6B656E5F6C656E08
+stat4	meta	sqlite_autoindex_meta_1	1 1	9 9	9 9	032701756E697175655F746F6B656E7307
+stat4	meta	sqlite_autoindex_meta_1	1 1	0 0	0 0	0329016275696C645F74696D655F73656302
+stat4	meta	sqlite_autoindex_meta_1	1 1	8 8	8 8	032901746F74616C5F706F7374696E677306
+stat4	meta	sqlite_autoindex_meta_1	1 1	5 5	5 5	032D0173746F705F776F7264735F636F756E7409
+stat4	meta	sqlite_autoindex_meta_1	1 1	2 2	2 2	032F0166696C65735F776974685F746F6B656E7304
+stat4	postings	idx_token	3 1	205 205	135 205	031301666F6F4F
+stat4	postings	idx_token	15 1	221 223	146 223	031301706B6729
+stat4	postings	idx_token	3 1	50 51	32 51	031302466F6F009E
+stat4	postings	idx_token	1 1	95 95	68 95	031302493337008B
+stat4	postings	idx_token	2 1	171 172	131 172	031302636166010C
+stat4	postings	idx_token	17 1	187 191	133 191	03130265707300CD
+stat4	postings	idx_token	14 1	173 173	132 173	0315016465657005
+stat4	postings	idx_token	5 1	10 14	8 14	0315024261736500A8
+stat4	postings	idx_token	3 1	281 283	154 283	0315027574696C00DF
+stat4	postings	idx_token	2 1	284 285	155 285	03170176616C756513
+stat4	postings	idx_token	3 1	114 115	86 115	031702496E6E657200A1
+stat4	postings	idx_token	2 1	163 164	125 164	031702616C70686100E3
+stat4	postings	idx_token	1 1	127 127	96 127	0319014D79416E6E6F11
+stat4	postings	idx_token	2 1	240 241	148 241	0319017365616C65641D
+stat4	postings	idx_token	7 1	26 31	20 31	0319024379636C65310111
+stat4	postings	idx_token	4 1	33 35	21 35	0319024379636C653200D9
+stat4	postings	idx_token	2 1	62 63	36 63	03190248696464656E0108
+stat4	postings	idx_token	1 1	159 159	122 159	03190254616262656400A6
+stat4	postings	idx_token	4 1	236 239	147 239	0319027265636F726400B3
+stat4	postings	idx_token	7 1	53 53	33 53	031B0147656E657269633D
+stat4	postings	idx_token	3 1	213 214	140 214	031B026E69616761726100B9
+stat4	postings	idx_token	34 1	244 255	151 255	031B027472696469756D0093
+stat4	postings	idx_token	2 1	109 110	82 110	031D02496D706F727465720110
+stat4	postings	idx_token	3 1	143 145	111 145	031D0252756E6E61626C65011A
+stat4	postings	idx_token_module	3 1 1	50 50 50	32 45 50	04130101466F6F030E
+stat4	postings	idx_token_module	15 1 1	221 223 223	146 204 223	04130101706B670529
+stat4	postings	idx_token_module	1 1 1	95 95 95	68 89 95	041301024933370C008B
+stat4	postings	idx_token_module	17 1 1	187 191 191	133 180 191	041301026570731900CD
+stat4	postings	idx_token_module	17 7 1	187 194 196	133 182 196	041301026570731B00FF
+stat4	postings	idx_token_module	3 1 1	205 207 207	135 188 207	04130102666F6F1B00E9
+stat4	postings	idx_token_module	15 3 1	221 233 233	146 214 233	04130102706B671B00E7
+stat4	postings	idx_token_module	5 2 1	10 13 14	8 13 14	04150102426173650E00A8
+stat4	postings	idx_token_module	14 2 1	173 185 186	132 176 186	04150102646565701B00EC
+stat4	postings	idx_token_module	3 2 1	281 282 283	154 244 283	041501027574696C1B00DF
+stat4	postings	idx_token_module	2 2 1	150 150 151	115 142 151	0417010153686170650318
+stat4	postings	idx_token_module	3 1 1	114 116 116	86 109 116	04170102496E6E65721000B4
+stat4	postings	idx_token_module	1 1 1	127 127 127	96 120 127	041901014D79416E6E6F0311
+stat4	postings	idx_token_module	7 2 1	26 30 31	20 28 31	041901024379636C65311B0111
+stat4	postings	idx_token_module	4 1 1	33 34 34	21 31 34	041901024379636C65321800CA
+stat4	postings	idx_token_module	2 1 1	62 63 63	36 57 63	0419010248696464656E1B0108
+stat4	postings	idx_token_module	1 1 1	159 159 159	122 150 159	041901025461626265640E00A6
+stat4	postings	idx_token_module	4 3 1	236 237 239	147 216 239	041901027265636F72641000B3
+stat4	postings	idx_token_module	3 1 1	213 213 213	140 194 213	041B01016E696167617261084E
+stat4	postings	idx_token_module	7 2 1	53 57 58	33 52 58	041B010247656E657269631B00EE
+stat4	postings	idx_token_module	34 1 1	244 255 255	151 230 255	041B01027472696469756D0D0093
+stat4	postings	idx_token_module	34 9 1	244 266 271	151 238 271	041B01027472696469756D1B0101
+stat4	postings	idx_token_module	2 2 1	109 109 109	82 103 109	041D0102496D706F727465721B00FD
+stat4	postings	idx_token_module	3 1 1	143 145 145	111 137 145	041D010252756E6E61626C651C011A
+files	1	'alpha/alpha-rt/vineflower/Root.java'	'alpha-rt'	'Root'
+files	2	'alpha/alpha-rt/vineflower/com/tridium/café/D.java'	'alpha-rt'	'D'
+files	3	'alpha/alpha-rt/vineflower/com/tridium/deep/pkg/Annotated.java'	'alpha-rt'	'Annotated'
+files	4	'alpha/alpha-rt/vineflower/com/tridium/deep/pkg/Bad.java'	'alpha-rt'	'Bad'
+files	5	'alpha/alpha-rt/vineflower/com/tridium/deep/pkg/Breaks.java'	'alpha-rt'	'Breaks'
+files	6	'alpha/alpha-rt/vineflower/com/tridium/deep/pkg/Crlf.java'	'alpha-rt'	'Crlf'
+files	7	'alpha/alpha-rt/vineflower/com/tridium/deep/pkg/Generic.java'	'alpha-rt'	'Generic'
+files	8	'beta/beta-ux/vineflower/com/niagara/foo/Generic.java'	'beta-ux'	'Generic'
+files	9	'epsilon/epsilon-wb/vineflower/com/tridium/epswb/Generic.java'	'epsilon-wb'	'Generic'
+files	10	'alpha/alpha-rt/vineflower/com/tridium/deep/pkg/Late.java'	'alpha-rt'	'Late'
+files	11	'alpha/alpha-rt/vineflower/com/tridium/deep/pkg/LoneCr.java'	'alpha-rt'	'LoneCr'
+files	12	'alpha/alpha-rt/vineflower/com/tridium/deep/pkg/NoBrace.java'	'alpha-rt'	'NoBrace'
+files	13	'alpha/alpha-rt/vineflower/com/tridium/deep/pkg/NoTop.java'	'alpha-rt'	'Indented'
+files	14	'alpha/alpha-rt/vineflower/com/tridium/deep/pkg/Odd.java'	'alpha-rt'	'Weird'
+files	15	'alpha/alpha-rt/vineflower/com/tridium/deep/pkg/Z.java'	'alpha-rt'	'Z'
+files	16	'alpha/alpha-rt/vineflower/com/tridium/deep/pkg/record/Rec.java'	'alpha-rt'	'Rec'
+files	17	'alpha/alpha-rt/vineflower/javax/baja/alpha/BAlpha.java'	'alpha-rt'	'BAlpha'
+files	18	'alpha/alpha-rt/vineflower/org/apache/x/Y.java'	'alpha-rt'	'Y'
+files	19	'beta/beta-ux/vineflower/com/niagara/foo/B.java'	'beta-ux'	'B'
+files	20	'beta/beta-ux/vineflower/com/niagaraX/C.java'	'beta-ux'	'C'
+files	21	'beta/beta-xx/vineflower/single/A.java'	'beta-xx'	'A'
+files	22	'delta/alpha-wb/vineflower/q/Q.java'	'alpha-wb'	'Q'
+files	23	'epsilon/epsilon-rt/vineflower/com/tridium/eps/Cycle1.java'	'epsilon-rt'	'Cycle1'
+files	24	'epsilon/epsilon-rt/vineflower/com/tridium/eps/Cycle2.java'	'epsilon-rt'	'Cycle2'
+files	25	'epsilon/epsilon-rt/vineflower/com/tridium/eps/Deep3.java'	'epsilon-rt'	'Deep3'
+files	26	'epsilon/epsilon-rt/vineflower/com/tridium/eps/Edge.java'	'epsilon-rt'	'Edge'
+files	27	'epsilon/epsilon-rt/vineflower/com/tridium/eps/Importer.java'	'epsilon-rt'	'Importer'
+files	28	'epsilon/epsilon-rt/vineflower/com/tridium/eps/Long.java'	'epsilon-rt'	'Long'
+files	29	'epsilon/epsilon-rt/vineflower/com/tridium/eps/Self.java'	'epsilon-rt'	'Self'
+files	30	'gamma/gamma-rt/vineflower/a/b/c/d/E.java'	'gamma-rt'	'E'
+postings	'Root'	1	1
+postings	'tridium'	2	1
+postings	'caf'	2	1
+postings	'tridium'	3	1
+postings	'deep'	3	1
+postings	'pkg'	3	1
+postings	'unchecked'	3	3
+postings	'Annotated'	3	3
+postings	'Base'	3	3
+postings	'Doc'	3	5
+postings	'Annotated2'	3	5
+postings	'Fake'	3	5
+postings	'Real'	3	5
+postings	'Foo'	3	7
+postings	'value'	3	7
+postings	'AnnSp'	3	7
+postings	'MyAnno'	3	8
+postings	'String'	3	9
+postings	'value'	3	9
+postings	'record'	3	11
+postings	'Point'	3	11
+postings	'Shape'	3	11
+postings	'sealed'	3	13
+postings	'Shape'	3	13
+postings	'permits'	3	13
+postings	'Point'	3	13
+postings	'Circle'	3	13
+postings	'non'	3	15
+postings	'sealed'	3	15
+postings	'NS'	3	15
+postings	'Shape2'	3	15
+postings	'tridium'	4	1
+postings	'deep'	4	1
+postings	'pkg'	4	1
+postings	'broken'	4	2
+postings	'bytes'	4	2
+postings	'Bad'	4	3
+postings	'ase'	4	3
+postings	'tridium'	5	1
+postings	'deep'	5	1
+postings	'pkg'	5	1
+postings	'note'	5	2
+postings	'Ghost'	5	2
+postings	'form'	5	3
+postings	'Feed'	5	3
+postings	'Breaks'	5	4
+postings	'Seen'	5	4
+postings	'tridium'	6	1
+postings	'deep'	6	1
+postings	'pkg'	6	1
+postings	'Crlf'	6	3
+postings	'CrBase'	6	4
+postings	'CrI'	6	5
+postings	'tridium'	7	1
+postings	'deep'	7	1
+postings	'pkg'	7	1
+postings	'util'	7	3
+postings	'List'	7	3
+postings	'InJavadoc'	7	6
+postings	'Nothing'	7	6
+postings	'Generic'	7	8
+postings	'Comparable'	7	8
+postings	'Base'	7	8
+postings	'Inner'	7	9
+postings	'Thing'	7	9
+postings	'Deep'	7	10
+postings	'Abs'	7	14
+postings	'Other'	7	15
+postings	'Map'	7	15
+postings	'Color'	7	20
+postings	'Paint'	7	20
+postings	'RED'	7	21
+postings	'Second'	7	25
+postings	'Hidden'	7	25
+postings	'Shown'	7	25
+postings	'Gone'	7	25
+postings	'Kept'	7	26
+postings	'niagara'	8	1
+postings	'foo'	8	1
+postings	'Generic'	8	2
+postings	'Base'	8	2
+postings	'tridium'	9	1
+postings	'epswb'	9	1
+postings	'tridium'	9	2
+postings	'eps'	9	2
+postings	'Generic'	9	3
+postings	'Cycle1'	9	3
+postings	'Runnable'	9	3
+postings	'tridium'	10	32
+postings	'late'	10	32
+postings	'Late'	10	33
+postings	'tridium'	11	1
+postings	'deep'	11	1
+postings	'pkg'	11	1
+postings	'LoneCr'	11	2
+postings	'LcBase'	11	2
+postings	'tridium'	12	1
+postings	'deep'	12	1
+postings	'pkg'	12	1
+postings	'NoBrace'	12	2
+postings	'Never'	12	2
+postings	'I0'	12	3
+postings	'I1'	12	4
+postings	'I2'	12	5
+postings	'I3'	12	6
+postings	'I4'	12	7
+postings	'I5'	12	8
+postings	'I6'	12	9
+postings	'I7'	12	10
+postings	'I8'	12	11
+postings	'I9'	12	12
+postings	'I10'	12	13
+postings	'I11'	12	14
+postings	'I12'	12	15
+postings	'I13'	12	16
+postings	'I14'	12	17
+postings	'I15'	12	18
+postings	'I16'	12	19
+postings	'I17'	12	20
+postings	'I18'	12	21
+postings	'I19'	12	22
+postings	'I20'	12	23
+postings	'I21'	12	24
+postings	'I22'	12	25
+postings	'I23'	12	26
+postings	'I24'	12	27
+postings	'I25'	12	28
+postings	'I26'	12	29
+postings	'I27'	12	30
+postings	'I28'	12	31
+postings	'I29'	12	32
+postings	'I30'	12	33
+postings	'I31'	12	34
+postings	'I32'	12	35
+postings	'I33'	12	36
+postings	'I34'	12	37
+postings	'I35'	12	38
+postings	'I36'	12	39
+postings	'I37'	12	40
+postings	'I38'	12	41
+postings	'I39'	12	42
+postings	'I40'	12	43
+postings	'I41'	12	44
+postings	'I42'	12	45
+postings	'I43'	12	46
+postings	'I44'	12	47
+postings	'tridium'	13	1
+postings	'deep'	13	1
+postings	'pkg'	13	1
+postings	'Indented'	13	2
+postings	'First'	13	2
+postings	'Indented2'	13	4
+postings	'tridium'	14	1
+postings	'deep'	14	1
+postings	'pkg'	14	1
+postings	'Weird'	14	2
+postings	'TC'	14	4
+postings	'Foo'	14	4
+postings	'Comma'	14	6
+postings	'Outer'	14	8
+postings	'Inner'	14	8
+postings	'Caf'	14	10
+postings	'Base'	14	10
+postings	'NB'	14	12
+postings	'Spaced'	14	12
+postings	'Tabbed'	14	14
+postings	'Str'	14	16
+postings	'Base'	14	16
+postings	'String'	14	16
+postings	'tridium'	15	1
+postings	'deep'	15	1
+postings	'pkg'	15	1
+postings	'tridium'	16	1
+postings	'deep'	16	1
+postings	'pkg'	16	1
+postings	'record'	16	1
+postings	'Rec'	16	2
+postings	'record'	16	3
+postings	'record'	16	4
+postings	'Inner'	16	4
+postings	'baja'	17	1
+postings	'alpha'	17	1
+postings	'BAlpha'	17	3
+postings	'apache'	18	1
+postings	'niagara'	19	1
+postings	'foo'	19	1
+postings	'niagaraX'	20	1
+postings	'single'	21	1
+postings	'tridium'	23	1
+postings	'eps'	23	1
+postings	'tridium'	23	2
+postings	'deep'	23	2
+postings	'pkg'	23	2
+postings	'Generic'	23	2
+postings	'Cycle1'	23	3
+postings	'Cycle2'	23	3
+postings	'tridium'	24	1
+postings	'eps'	24	1
+postings	'tridium'	24	2
+postings	'eps'	24	2
+postings	'Cycle1'	24	2
+postings	'Cycle2'	24	3
+postings	'Cycle1'	24	3
+postings	'tridium'	25	1
+postings	'eps'	25	1
+postings	'Deep3'	25	2
+postings	'Deep2'	25	2
+postings	'Deep2'	25	3
+postings	'Deep1'	25	3
+postings	'Deep1'	25	4
+postings	'lang'	25	4
+postings	'Object'	25	4
+postings	'tridium'	26	1
+postings	'eps'	26	1
+postings	'tridium'	26	200
+postings	'eps'	26	200
+postings	'Cycle2'	26	200
+postings	'Edge'	26	201
+postings	'tridium'	27	1
+postings	'eps'	27	1
+postings	'util'	27	3
+postings	'List'	27	3
+postings	'util'	27	4
+postings	'swing'	27	5
+postings	'JPanel'	27	5
+postings	'baja'	27	6
+postings	'alpha'	27	6
+postings	'BAlpha'	27	6
+postings	'tridium'	27	7
+postings	'deep'	27	7
+postings	'pkg'	27	7
+postings	'niagara'	27	8
+postings	'foo'	27	8
+postings	'Generic'	27	8
+postings	'tridium'	27	9
+postings	'deep'	27	9
+postings	'pkg'	27	9
+postings	'Generic'	27	9
+postings	'FOO'	27	9
+postings	'Annotated'	27	10
+postings	'BAR'	27	10
+postings	'lang'	27	11
+postings	'Math'	27	11
+postings	'other'	27	12
+postings	'Thing'	27	12
+postings	'BAZ'	27	12
+postings	'unknown'	27	13
+postings	'Foo'	27	13
+postings	'unknown'	27	14
+postings	'pkg'	27	14
+postings	'tridium'	27	15
+postings	'eps'	27	15
+postings	'Importer'	27	15
+postings	'tridium'	27	16
+postings	'eps'	27	16
+postings	'Cycle1'	27	16
+postings	'tridium'	27	19
+postings	'eps'	27	19
+postings	'Cycle2'	27	19
+postings	'member'	27	19
+postings	'Fake'	27	21
+postings	'tridium'	27	21
+postings	'eps'	27	21
+postings	'Hidden'	27	21
+postings	'tridium'	27	22
+postings	'eps'	27	22
+postings	'Commented'	27	22
+postings	'caf'	27	23
+postings	'tridium'	27	24
+postings	'eps'	27	24
+postings	'Self'	27	24
+postings	'Importer'	27	26
+postings	'Cycle1'	27	26
+postings	'Runnable'	27	26
+postings	'tridium'	28	1
+postings	'eps'	28	1
+postings	'tridium'	28	201
+postings	'eps'	28	201
+postings	'Cycle1'	28	201
+postings	'Long'	28	202
+postings	'Generic'	28	202
+postings	'Runnable'	28	202
+postings	'Cloneable'	28	202
+postings	'tridium'	29	1
+postings	'eps'	29	1
+postings	'Self'	29	2

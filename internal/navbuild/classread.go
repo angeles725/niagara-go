@@ -2,8 +2,10 @@ package navbuild
 
 import (
 	"fmt"
+	"path/filepath"
 	"sort"
 	"strconv"
+	"strings"
 
 	"github.com/angeles725/niagara-go/internal/index"
 )
@@ -20,6 +22,11 @@ type classIndexEntry struct {
 	Package  string
 	Module   string
 	Path     string
+	// ModuleNull is a "module": null member (e.get("module", "") is then None).
+	ModuleNull bool
+	// innerFile is corpus.top_level_files' inner test: a truthy "inner" or an
+	// outer_class other than None, "" and "None".
+	innerFile bool
 }
 
 // readClassIndex is build.read_json(<baseDir>/indexes/class-index.json)["classes"]
@@ -59,6 +66,11 @@ func readClassIndex(baseDir string) ([]classIndexEntry, error) {
 			ce := classIndexEntry{Name: name}
 			outer, _ := e.Get("outer_class")
 			ce.Outer = truthy(outer)
+			inner, _ := e.Get("inner")
+			ce.innerFile = truthy(inner) || !(outer == nil || outer == "" || outer == "None")
+			if m, ok := e.Get("module"); ok && m == nil {
+				ce.ModuleNull = true
+			}
 			var errs [4]error
 			ce.Extends, errs[0] = optField(e, "extends")
 			ce.Package, errs[1] = optField(e, "package")
@@ -86,6 +98,33 @@ func readClassIndex(baseDir string) ([]classIndexEntry, error) {
 		}
 	}
 	return out, nil
+}
+
+// topLevelFiles is corpus.top_level_files: one entry per source file, the first
+// non-inner entry with a non-empty path, in index order.
+func topLevelFiles(entries []classIndexEntry) []classIndexEntry {
+	seen := map[string]bool{}
+	var out []classIndexEntry
+	for _, e := range entries {
+		if e.innerFile || e.Path == "" || seen[e.Path] {
+			continue
+		}
+		seen[e.Path] = true
+		out = append(out, e)
+	}
+	return out
+}
+
+// sourcePath is os.path.join(organized, path), unnormalised: an absolute path
+// stays as it is, a separator is added unless organized ends with one.
+func sourcePath(organized, path string) string {
+	switch {
+	case filepath.IsAbs(path):
+		return path
+	case organized == "" || strings.HasSuffix(organized, string(filepath.Separator)) || strings.HasSuffix(organized, "/"):
+		return organized + path
+	}
+	return organized + string(filepath.Separator) + path
 }
 
 // optField is a string member, "" when absent or null; any other type is an error.
