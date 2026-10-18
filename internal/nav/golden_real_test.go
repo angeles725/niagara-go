@@ -13,6 +13,7 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/cli"
 	"github.com/angeles725/niagara-go/internal/golden"
+	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyre"
 )
 
@@ -71,7 +72,7 @@ func TestGoldenReal(t *testing.T) {
 	cases := loadRealCases(t, filepath.Join("testdata", "golden-real"))
 	bin := realGoldenBin(t)
 	run := t.TempDir()
-	if help := filepath.Join(filepath.Dir(nav), "niagara-help"); isDir(help) {
+	if help := filepath.Join(filepath.Dir(nav), "niagara-help"); pycompat.IsDir(help) {
 		if err := os.Symlink(help, filepath.Join(run, "niagara-help")); err != nil {
 			t.Fatal(err)
 		}
@@ -136,11 +137,6 @@ func corpusPath(corpus string) *pyre.Regexp {
 		esc.WriteRune(r)
 	}
 	return pyre.MustCompile(esc.String()+`(?![^\s/'"),:;.]|\.[^\s'"),:;])`, 0)
-}
-
-func isDir(p string) bool {
-	st, err := os.Stat(p)
-	return err == nil && st.IsDir()
 }
 
 // loadRealCases reads every case directory under dir with golden.Load, which

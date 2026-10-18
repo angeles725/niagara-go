@@ -151,7 +151,7 @@ func tokenSources(entries []classIndexEntry, organized string) []tokenSource {
 	var out []tokenSource
 	for _, e := range topLevelFiles(entries) {
 		full := sourcePath(organized, e.Path)
-		if isFile(full) {
+		if pycompat.IsFile(full) {
 			out = append(out, tokenSource{full, e.Path, e.Name, e.Module, e.ModuleNull})
 		}
 	}

@@ -21,6 +21,7 @@ import (
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/index"
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // EngineVersion is fulltext_index.ENGINE_VERSION, part of the fingerprint.
@@ -119,7 +120,7 @@ func Open(baseDir, versionID string) (*Index, error) {
 func FreshPath(baseDir, fingerprint string) (path string, missing bool) {
 	missing = true
 	for _, p := range []string{DBPath(baseDir), CachePath(baseDir)} {
-		if !isFile(p) {
+		if !pycompat.IsFile(p) {
 			continue
 		}
 		missing = false

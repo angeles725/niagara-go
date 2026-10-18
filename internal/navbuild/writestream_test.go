@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"runtime"
 	"testing"
+
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 func TestWriteIndexStream(t *testing.T) {
@@ -58,7 +60,7 @@ func TestTokenIndexInOddBaseDir(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if ti.FilesScanned != 1 || ti.TotalPostings != 1 || !isFile(IndexPath(base, TokenFile)) {
+	if ti.FilesScanned != 1 || ti.TotalPostings != 1 || !pycompat.IsFile(IndexPath(base, TokenFile)) {
 		t.Errorf("index %+v", ti)
 	}
 	if entries, _ := os.ReadDir(filepath.Dir(base)); len(entries) != 1 {

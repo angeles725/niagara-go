@@ -182,7 +182,7 @@ func scanImports(entries []classIndexEntry, organized string) []fileImports {
 					full = filepath.Join(organized, full)
 				}
 				content, err := pycompat.ReadTextReplace(full)
-				if !isFile(full) || err != nil {
+				if !pycompat.IsFile(full) || err != nil {
 					out[n].failed = true
 					continue
 				}

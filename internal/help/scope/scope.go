@@ -21,6 +21,7 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/help/fts"
 	"github.com/angeles725/niagara-go/internal/index"
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 const docTypesExcluded = "images, fonts/css, JavaHelp .dat search indexes, " +
@@ -173,7 +174,7 @@ func dirCount(baseDir string, sources []fts.SourceDir, name string) string {
 	if path == "" {
 		path = filepath.Join(baseDir, name)
 	}
-	if !isDir(path) {
+	if !pycompat.IsDir(path) {
 		return name + "/: absent"
 	}
 	shared := ""

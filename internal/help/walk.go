@@ -4,6 +4,8 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // pyWalkFiles calls fn for every file os.walk(dir) lists: it does not follow
@@ -20,16 +22,10 @@ func pyWalkFiles(dir string, fn func(path string)) {
 		switch {
 		case d.IsDir():
 			pyWalkFiles(path, fn)
-		case d.Type()&fs.ModeSymlink != 0 && isDir(path):
+		case d.Type()&fs.ModeSymlink != 0 && pycompat.IsDir(path):
 			// os.walk lists it under dirs and does not descend (followlinks=False)
 		default:
 			fn(path)
 		}
 	}
-}
-
-// isDir is os.path.isdir: true for a directory or a link to one.
-func isDir(path string) bool {
-	st, err := os.Stat(path)
-	return err == nil && st.IsDir()
 }

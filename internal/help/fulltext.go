@@ -13,6 +13,7 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/help/fts"
 	"github.com/angeles725/niagara-go/internal/help/scope"
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // FulltextParams are the arguments of find, guide-search and devguide-search.
@@ -153,7 +154,7 @@ func (e *Env) sharedNotes(labels []string) []string {
 // restricted to srcs, a miss when the first source folder is absent.
 func (e *Env) rankedSearch(p FulltextParams, srcs []string, command, scope string,
 	tag func(*fts.Hit) string) error {
-	if !isDir(filepath.Join(e.BaseDir, srcs[0])) {
+	if !pycompat.IsDir(filepath.Join(e.BaseDir, srcs[0])) {
 		return e.reportMiss(command, p.Query, scope)
 	}
 	r, err := e.search(p.Query, srcs, p.mode())

@@ -13,6 +13,7 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/help/scope"
 	"github.com/angeles725/niagara-go/internal/index"
+	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 )
 
@@ -23,7 +24,7 @@ type fileCount struct{ files, bytes int }
 
 func countFiles(dir, ext string) fileCount {
 	var c fileCount
-	if !isDir(dir) {
+	if !pycompat.IsDir(dir) {
 		return c
 	}
 	pyWalkFiles(dir, func(path string) {

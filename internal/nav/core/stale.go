@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/index"
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // mtime is os.path.getmtime: seconds as a float, like Python's st_mtime.
@@ -63,7 +64,7 @@ func changedDirs(organized string, built float64) []string {
 	}
 	for _, module := range modules {
 		mpath := filepath.Join(organized, module)
-		if strings.HasPrefix(module, ".") || !isDir(mpath) {
+		if strings.HasPrefix(module, ".") || !pycompat.IsDir(mpath) {
 			continue
 		}
 		type labelled struct{ label, path string }
@@ -71,7 +72,7 @@ func changedDirs(organized string, built float64) []string {
 		if subs, err := listdir(mpath); err == nil {
 			for _, sub := range subs {
 				spath := filepath.Join(mpath, sub)
-				if isDir(spath) {
+				if pycompat.IsDir(spath) {
 					dirs = append(dirs, labelled{module + "/" + sub, spath},
 						labelled{module + "/" + sub + "/vineflower", filepath.Join(spath, "vineflower")})
 				}
@@ -107,7 +108,7 @@ func StalenessAt(organized string, meta *index.Object, indexPath string) []strin
 		warnings = append(warnings, fmt.Sprintf("index %s was built from %s but the corpus is %s",
 			filepath.Base(indexPath), source, organized))
 	}
-	if built, ok := mtime(indexPath); ok && isDir(organized) {
+	if built, ok := mtime(indexPath); ok && pycompat.IsDir(organized) {
 		if newer := changedDirs(organized, built); len(newer) > 0 {
 			warnings = append(warnings, fmt.Sprintf("%d corpus modules had directories added, removed or "+
 				"re-created after %s was built (e.g. %s)", len(newer), filepath.Base(indexPath),

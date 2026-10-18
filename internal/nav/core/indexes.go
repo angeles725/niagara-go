@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/index"
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // progressMB is the size from which loading an index prints a progress line.
@@ -28,20 +29,10 @@ func absPath(p string) string {
 	return p
 }
 
-func isFile(p string) bool {
-	st, err := os.Stat(p)
-	return err == nil && st.Mode().IsRegular()
-}
-
-func isDir(p string) bool {
-	st, err := os.Stat(p)
-	return err == nil && st.IsDir()
-}
-
 // absentOptional is _absent_optional: true, after a one-time NOTE, when the
 // optional index at key does not exist.
 func (r *Runtime) absentOptional(key, name string) bool {
-	if isFile(key) {
+	if pycompat.IsFile(key) {
 		return false
 	}
 	if !r.noted[key] {
@@ -119,7 +110,7 @@ func (r *Runtime) LoadedFromCache(name string) {
 // LoadJSON is outcome.load_json: the JSON object at path, or nil after an
 // exit-2 error naming it (a truncated index must not look like an empty search).
 func (r *Runtime) LoadJSON(path, what string) *index.Object {
-	if !isFile(path) {
+	if !pycompat.IsFile(path) {
 		r.Error(fmt.Sprintf("%s not found: %s", what, path), "Run: ./reindex.sh")
 		return nil
 	}
@@ -144,7 +135,7 @@ func (r *Runtime) Connect(name string, optional bool) *sql.DB {
 	if optional && r.absentOptional(key, name) {
 		return nil
 	}
-	if !isFile(key) {
+	if !pycompat.IsFile(key) {
 		r.Error(fmt.Sprintf("%s not found: %s", what(name), key), "Run: ./reindex.sh")
 		return nil
 	}

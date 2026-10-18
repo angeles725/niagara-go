@@ -13,6 +13,7 @@ import (
 	"github.com/angeles725/niagara-go/internal/index"
 	"github.com/angeles725/niagara-go/internal/nav/core"
 	"github.com/angeles725/niagara-go/internal/nav/registry"
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // selftest --recall (recall.py): every top-level class / interface /
@@ -75,7 +76,7 @@ func javaFiles(organized string) []recallFile {
 	var out []recallFile
 	for _, module := range sortedDir(organized) {
 		mpath := filepath.Join(organized, module)
-		if !isDir(mpath) {
+		if !pycompat.IsDir(mpath) {
 			continue
 		}
 		for _, sub := range sortedDir(mpath) {

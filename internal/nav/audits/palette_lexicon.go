@@ -55,7 +55,7 @@ func walkLexicons(dir, rel string, fn func(rel, path string)) {
 		switch {
 		case e.IsDir():
 			walkLexicons(path, name, fn)
-		case e.Type()&os.ModeSymlink != 0 && isDir(path):
+		case e.Type()&os.ModeSymlink != 0 && pycompat.IsDir(path):
 			// os.walk lists a symlinked directory as a directory and does not enter it
 		case strings.HasSuffix(e.Name(), ".lexicon"):
 			fn(name, path)
@@ -122,7 +122,7 @@ func countDirs(dir string) int {
 	f.Close()
 	n := 0
 	for _, name := range names {
-		if isDir(filepath.Join(dir, name)) {
+		if pycompat.IsDir(filepath.Join(dir, name)) {
 			n++
 		}
 	}
@@ -163,7 +163,7 @@ func paletteCensus(env *registry.Env, base string, asJSON bool) int {
 	var rows []censusRow
 	for _, m := range names {
 		dir := pycompat.Join(base, m)
-		if !isDir(dir) || len(findArtifacts(dir)) == 0 {
+		if !pycompat.IsDir(dir) || len(findArtifacts(dir)) == 0 {
 			continue
 		}
 		r := censusRow{module: m, dups: index.NewObject()}

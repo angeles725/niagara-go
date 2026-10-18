@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/index"
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // source is one text_sources.SOURCES row.
@@ -61,7 +62,7 @@ func SourceDirs(baseDir string) []SourceDir {
 			root, _ = SharedRoot(baseDir, label)
 		}
 		dir := abs(filepath.Join(root, label))
-		if isDir(dir) {
+		if pycompat.IsDir(dir) {
 			out = append(out, SourceDir{label, dir})
 		}
 	}
@@ -187,7 +188,7 @@ func walkFiles(dir string, fn func(path string)) {
 		path := filepath.Join(dir, e.Name())
 		isLink := e.Type()&os.ModeSymlink != 0
 		switch {
-		case isLink && isDir(path):
+		case isLink && pycompat.IsDir(path):
 			// listed among the folders, never walked (followlinks=False)
 		case e.IsDir():
 			dirs = append(dirs, path)
@@ -222,16 +223,4 @@ func abs(p string) string {
 		return a
 	}
 	return p
-}
-
-// isDir is os.path.isdir (follows symbolic links).
-func isDir(path string) bool {
-	st, err := os.Stat(path)
-	return err == nil && st.IsDir()
-}
-
-// isFile is os.path.isfile (follows symbolic links).
-func isFile(path string) bool {
-	st, err := os.Stat(path)
-	return err == nil && st.Mode().IsRegular()
 }

@@ -2,11 +2,11 @@ package classrank
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 
 	"github.com/angeles725/niagara-go/internal/index"
 	"github.com/angeles725/niagara-go/internal/nav/core"
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // The library half of the package (decision D29): Source, Open, Rank,
@@ -76,12 +76,6 @@ func (r *Ranker) Scope() string { return r.scope() }
 
 // Meta is the class index _meta the ranker was built from (nil when absent).
 func (r *Ranker) Meta() *index.Object { return r.meta }
-
-// isFile is os.path.isfile.
-func isFile(p string) bool {
-	st, err := os.Stat(p)
-	return err == nil && st.Mode().IsRegular()
-}
 
 // ClassTables is (data["classes"], data["_meta"] or None) of a class index;
 // ok is false when it has no classes table.
@@ -167,7 +161,7 @@ func Open(src Source) (*Ranker, error) {
 	if r := l.Cached(); r != nil {
 		return r, nil
 	}
-	if !isFile(src.ClassIndex) {
+	if !pycompat.IsFile(src.ClassIndex) {
 		return nil, fmt.Errorf("class index not found: %s", src.ClassIndex)
 	}
 	data, err := loadObject(src.ClassIndex, "class index")
@@ -179,7 +173,7 @@ func Open(src Source) (*Ranker, error) {
 		return nil, fmt.Errorf("class index has no 'classes' table: %s", src.ClassIndex)
 	}
 	var importedBy *index.Object
-	if isFile(src.XrefIndex) {
+	if pycompat.IsFile(src.XrefIndex) {
 		xref, err := loadObject(src.XrefIndex, "xref index")
 		if err != nil {
 			return nil, err

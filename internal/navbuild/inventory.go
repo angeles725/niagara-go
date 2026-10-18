@@ -67,7 +67,7 @@ func ScanInventory(organized string) (*Inventory, error) {
 		case errors.As(err, &notObject):
 			return nil, err
 		case err != nil:
-			if isFile(reconPath) {
+			if pycompat.IsFile(reconPath) {
 				inv.UnreadableRecon = append(inv.UnreadableRecon, reconPath)
 			}
 			inv.NoRecon = append(inv.NoRecon, s.Name)
@@ -90,8 +90,8 @@ func ScanInventory(organized string) (*Inventory, error) {
 			JavaFiles:     count,
 			ZKM:           get("ofuscador_detectado", boolean(false)).Truthy(),
 			Bytecode:      get("bytecode_major_version", integer(0)),
-			HasVineflower: isDir(vineflower),
-			HasCFR:        isDir(filepath.Join(s.Path, "decompiled")),
+			HasVineflower: pycompat.IsDir(vineflower),
+			HasCFR:        pycompat.IsDir(filepath.Join(s.Path, "decompiled")),
 			HasCode:       get("tiene_codigo_java", boolean(count > 0)).Truthy(),
 			Recon:         recon.Truthy(),
 			Packages:      packages,
@@ -182,7 +182,7 @@ func listDir(dir string) (dirs, files []string) {
 		switch {
 		case e.IsDir():
 			dirs = append(dirs, name)
-		case e.Type()&os.ModeSymlink != 0 && isDir(filepath.Join(dir, name)):
+		case e.Type()&os.ModeSymlink != 0 && pycompat.IsDir(filepath.Join(dir, name)):
 			// a link to a directory: a dir name, never walked into
 		default:
 			files = append(files, name)
@@ -207,16 +207,6 @@ func sortedKeys(m map[string]bool) []string {
 	}
 	sort.Strings(out)
 	return out
-}
-
-func isFile(p string) bool {
-	st, err := os.Stat(p)
-	return err == nil && st.Mode().IsRegular()
-}
-
-func isDir(p string) bool {
-	st, err := os.Stat(p)
-	return err == nil && st.IsDir()
 }
 
 // Document is the module-inventory.json text for this inventory: _meta

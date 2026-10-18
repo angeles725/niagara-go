@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // walkCount counts every file os.walk(dir) lists: symbolic links are not
@@ -23,18 +25,12 @@ func walkCount(dir string) int {
 		switch {
 		case d.IsDir():
 			n += walkCount(path)
-		case d.Type()&fs.ModeSymlink != 0 && isDir(path):
+		case d.Type()&fs.ModeSymlink != 0 && pycompat.IsDir(path):
 		default:
 			n++
 		}
 	}
 	return n
-}
-
-// isDir is os.path.isdir: true for a directory or a link to one.
-func isDir(path string) bool {
-	st, err := os.Stat(path)
-	return err == nil && st.IsDir()
 }
 
 // thousands is "{:,}".format(n) for n >= 0.

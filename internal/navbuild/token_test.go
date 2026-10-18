@@ -11,6 +11,8 @@ import (
 	"slices"
 	"strings"
 	"testing"
+
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 func TestTokenizeLine(t *testing.T) {
@@ -236,10 +238,10 @@ func TestBuildTokenIndexFailures(t *testing.T) {
 			if (err != nil) != tc.fails {
 				t.Fatalf("err = %v, want failure %v", err, tc.fails)
 			}
-			if isFile(IndexPath(base, TokenFile) + ".tmp") {
+			if pycompat.IsFile(IndexPath(base, TokenFile) + ".tmp") {
 				t.Error("the temp database is left behind")
 			}
-			if isFile(IndexPath(base, TokenFile)) == tc.fails {
+			if pycompat.IsFile(IndexPath(base, TokenFile)) == tc.fails {
 				t.Errorf("index written = %v after err %v", !tc.fails, err)
 			}
 		})

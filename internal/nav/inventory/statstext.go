@@ -3,7 +3,6 @@ package inventory
 import (
 	"fmt"
 	"io"
-	"os"
 	"path/filepath"
 	"runtime"
 	"sort"
@@ -160,7 +159,7 @@ func printHelpStatus(w io.Writer, baseDir string, reader *statsCache) {
 	fmt.Fprintln(w, "  HELP NAVIGATOR INTEGRATION:")
 	help := pycompat.Join(hostDirname(baseDir), "niagara-help")
 	idx := filepath.Join(help, "indexes")
-	if !isDir(help) || !isDir(idx) {
+	if !pycompat.IsDir(help) || !pycompat.IsDir(idx) {
 		fmt.Fprintln(w, "    Status:      NOT AVAILABLE")
 		fmt.Fprintln(w, "    (niagara-help/ not found as sibling of module-navigator/)")
 		fmt.Fprintln(w)
@@ -211,9 +210,4 @@ func posixDirname(p string) string {
 		head = strings.TrimRight(head, "/")
 	}
 	return head
-}
-
-func isDir(p string) bool {
-	st, err := os.Stat(p)
-	return err == nil && st.IsDir()
 }

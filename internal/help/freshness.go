@@ -14,6 +14,7 @@ import (
 	"sync"
 
 	"github.com/angeles725/niagara-go/internal/index"
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // freshnessDirs are SOURCE_DIRS: the raw corpus directories whose change
@@ -30,7 +31,7 @@ type dirPrint struct{ files, bytes int64 }
 // ext is given and no file has it. A file whose size cannot be read (a
 // dangling link) is not counted.
 func fingerprintDir(path, ext string) *dirPrint {
-	if !isDir(path) {
+	if !pycompat.IsDir(path) {
 		return nil
 	}
 	fp := &dirPrint{}
@@ -230,7 +231,7 @@ func isDocJar(name string) bool {
 func docJarSizes(install string) (map[string]int64, error) {
 	out := map[string]int64{}
 	modules := filepath.Join(install, "modules")
-	if isDir(modules) {
+	if pycompat.IsDir(modules) {
 		entries, err := os.ReadDir(modules)
 		if err != nil {
 			return nil, err
@@ -260,7 +261,7 @@ func installStatus(repoRoot, vid, install string) (string, error) {
 	if st, err := os.Stat(path); err != nil || !st.Mode().IsRegular() {
 		return "no jar manifest", nil
 	}
-	if install == "" || !isDir(install) {
+	if install == "" || !pycompat.IsDir(install) {
 		return "install absent", nil
 	}
 	m, err := index.LoadObject(path)

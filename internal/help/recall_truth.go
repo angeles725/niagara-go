@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/angeles725/niagara-go/internal/bajadocxml"
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // classKey is a (package, simple name) pair; keys sort like Python tuples.
@@ -67,7 +68,7 @@ func relSlash(path, base string) string {
 // in sorted walk order (nothing when root is not a directory).
 func walkMatching(root string, pred func(name string) bool) []string {
 	var out []string
-	if !isDir(root) {
+	if !pycompat.IsDir(root) {
 		return out
 	}
 	walkSorted(root, func(path, name string) {
@@ -198,7 +199,7 @@ func groundTruth(baseDir string) recallTruth {
 	t := recallTruth{xmlFailed: map[string]bool{}}
 	failed := func(path string) { t.xmlFailed[relSlash(path, baseDir)] = true }
 	for _, d := range []string{"devguide", "guides"} {
-		if root := filepath.Join(baseDir, d); isDir(root) {
+		if root := filepath.Join(baseDir, d); pycompat.IsDir(root) {
 			t.xml = append(t.xml, iterBajadocClasses(root, failed)...)
 		}
 	}
@@ -243,7 +244,7 @@ func groundTruth(baseDir string) recallTruth {
 	for _, p := range walkMatching(droot, isDevguidePage) {
 		t.devguide = append(t.devguide, relSlash(p, droot))
 	}
-	if root := filepath.Join(baseDir, "jdk"); isDir(root) {
+	if root := filepath.Join(baseDir, "jdk"); pycompat.IsDir(root) {
 		t.jdk = iterBajadocClasses(root, failed)
 	}
 	for _, d := range []string{"devguide", "guides", "jdk"} {
@@ -275,7 +276,7 @@ func walkSorted(root string, fn func(path, name string)) {
 	var dirs, files []string
 	for _, d := range entries {
 		p := filepath.Join(root, d.Name())
-		if d.IsDir() || (d.Type()&os.ModeSymlink != 0 && isDir(p)) {
+		if d.IsDir() || (d.Type()&os.ModeSymlink != 0 && pycompat.IsDir(p)) {
 			dirs = append(dirs, d.Name())
 		} else {
 			files = append(files, d.Name())

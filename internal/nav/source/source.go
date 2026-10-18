@@ -3,7 +3,6 @@ package source
 import (
 	"fmt"
 	"io"
-	"os"
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/argparse"
@@ -139,13 +138,13 @@ func sourceClass(env *registry.Env, name string, code bool, grep string) {
 		fmt.Fprintf(out, "  Kind:     %s\n", core.Str(entry, "kind"))
 		fmt.Fprintf(out, "  Lines:    %s\n", core.Commas(core.Int(entry, "lines")))
 		fmt.Fprintf(out, "  Path:     %s\n", core.Str(entry, "path"))
-		if root != "" && !isFile(path) {
+		if root != "" && !pycompat.IsFile(path) {
 			fmt.Fprintln(out, "  WARNING:  Source file not found on disk!")
 		}
 		fmt.Fprintln(out)
 		return
 	}
-	if !isFile(path) {
+	if !pycompat.IsFile(path) {
 		fmt.Fprintf(out, "  ERROR: Source file not found: %s\n", path)
 		return
 	}
@@ -189,9 +188,4 @@ func sourceGrep(out io.Writer, lines []string, class, module, pattern string) {
 		fmt.Fprintf(out, "\n  %d matches in %d lines\n", matches, len(lines))
 	}
 	fmt.Fprintln(out)
-}
-
-func isFile(p string) bool {
-	st, err := os.Stat(p)
-	return err == nil && st.Mode().IsRegular()
 }
