@@ -8,7 +8,7 @@ import (
 	"github.com/angeles725/niagara-go/internal/course/key"
 )
 
-// Prediction verdicts of verify-predictions. CONFIRMED needs every linked check PASS and one of
+// Verdicts of verify (and verify-predictions) for one item. CONFIRMED needs every linked check PASS and one of
 // them observing the whole answer (no Unobserved note for the item); PARTIAL is every check PASS
 // but each observes only the stored part; one FAIL contradicts; anything else (no check, a SKIP)
 // is undecided.
@@ -19,7 +19,8 @@ const (
 	Partial      = "PARTIAL"
 )
 
-// Prediction is one answer-key item still marked *(predicted)* and the checks that link it.
+// Prediction is one answer-key item verify decides (a predicted one for verify-predictions) and the
+// checks that link it.
 type Prediction struct {
 	Item    *key.Item
 	Results []LinkedResult // the checks whose keys resolve to the item, once each, in spec order

@@ -29,9 +29,13 @@ exit: 0 found; 1 searched, no match (show: any unknown ID, even when the
 others were printed); 2 cannot search (no root, a missing or ambiguous answer
 key, a missing text file). check: 0 no FAIL (SKIPs are counted, never passed);
 1 at least one FAIL; 2 the station cannot be read, or every check was skipped.
-verify-predictions: 0 no predicted item contradicted; 1 at least one
-CONTRADICTED; 2 cannot search, the station cannot be read, or every linked
-check was skipped.
+verify, verify-predictions (= verify --status predicted): 0 no item
+contradicted; 1 at least one CONTRADICTED; 2 cannot search, the station
+cannot be read, or every linked check was skipped.
+
+stations: --station, else $COURSE_TRAINING_STATION (labs),
+$COURSE_REVIEW_STATION (RA1, RA2), $COURSE_CERT_STATION (EXAM);
+--install, else $COURSE_NIAGARA_INSTALL.
 
 examples:
   course show L1.9 RA1.R6 P2
@@ -39,7 +43,8 @@ examples:
   course text L5.16
   course check --station ~/Niagara4.15/tridium/stations/TrainingStation \
     --install /opt/Niagara/Niagara-4.15.6.20 --lab 4 --lab 10
-  course verify-predictions --station ~/Niagara4.15/tridium/stations/TrainingStation`
+  course verify-predictions --station ~/Niagara4.15/tridium/stations/TrainingStation
+  course verify --status written --lab RA1`
 
 // rootParent holds --root: None on the main parser, SUPPRESS on the subcommands, so the
 // flag works before or after the subcommand.
@@ -98,6 +103,13 @@ func buildParser() (*argparse.Parser, map[string]*argparse.Parser) {
 	vp.Add(installArg, "--install")
 	vp.Add(argparse.Arg{Metavar: "YYYY-MM-DD", Help: "date written in the suggested *(verified live ...)* lines (default: today)"}, "--date")
 	vp.Add(jsonHelp, "--json")
+	vf := add("verify", "decide every item of a status from its linked checks: CONFIRMED, PARTIAL, CONTRADICTED or UNDECIDED")
+	vf.Add(argparse.Arg{Required: true, Choices: choices, Help: "the status of the items to decide (written = no marker)"}, "--status")
+	vf.Add(argparse.Arg{Metavar: "GROUP", Help: "one group: a lab number (3 or L3), B, A, RA1, RA2, RAX, RA (all three), EXAM"}, "--lab")
+	vf.Add(stationArg, "--station")
+	vf.Add(installArg, "--install")
+	vf.Add(argparse.Arg{Metavar: "YYYY-MM-DD", Help: "date written in the suggested *(verified live ...)* lines (default: today)"}, "--date")
+	vf.Add(jsonHelp, "--json")
 	return p, subs
 }
 
@@ -131,7 +143,16 @@ func Main(args []string, s cli.Stdio) int {
 	case "show":
 		return cmdShow(c, s, ns.Strings("ids"), ns.Bool("json"))
 	case "verify-predictions":
-		return cmdVerifyPredictions(c, s, o, ns.String("date"), ns.Bool("json"))
+		return cmdVerify(c, s, o, "predicted", nil, ns.String("date"), ns.Bool("json"))
+	case "verify":
+		var groups []string
+		if ns.Get("lab") != nil {
+			if groups = c.GroupKeys(ns.String("lab")); len(groups) == 0 {
+				fmt.Fprintf(s.Err, "course: no group %s (groups: %s)\n", ns.String("lab"), c.GroupList())
+				return cli.ExitNoMatch
+			}
+		}
+		return cmdVerify(c, s, o, ns.String("status"), groups, ns.String("date"), ns.Bool("json"))
 	case "status":
 		return cmdStatus(c, s, ns.Get("lab") != nil, ns.String("lab"), ns.String("status"), ns.Bool("json"))
 	default:

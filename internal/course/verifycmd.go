@@ -30,23 +30,30 @@ type predictionJSON struct {
 	Suggestion *string         `json:"suggestion"`
 }
 
-// cmdVerifyPredictions prints a verdict per predicted item, the suggestion lines of the
-// CONFIRMED ones (only those) and a summary (stdout; stderr with --json). Exit: 0 nothing
-// contradicted (PARTIAL counts like UNDECIDED), 1 at least one CONTRADICTED, 2 the station
-// cannot be read, a bad --date, or every linked check was skipped.
-func cmdVerifyPredictions(c *key.Corpus, s cli.Stdio, o stationOpts, date string, asJSON bool) int {
+// cmdVerify decides every item carrying status in the selected groups (all when groups is nil)
+// from the checks linked to it, and prints a verdict per item, the suggestion lines of the
+// CONFIRMED ones (only those) and a summary (stdout; stderr with --json). verify-predictions is
+// status "predicted" over every group. Exit: 0 nothing contradicted (PARTIAL counts like
+// UNDECIDED), 1 at least one CONTRADICTED, 2 the station cannot be read, a bad --date, or every
+// linked check was skipped.
+func cmdVerify(c *key.Corpus, s cli.Stdio, o stationOpts, status string, groups []string, date string, asJSON bool) int {
 	if date == "" {
 		date = now().Format(time.DateOnly)
 	} else if _, err := time.Parse(time.DateOnly, date); err != nil {
 		fmt.Fprintf(s.Err, "course: --date %s is not a YYYY-MM-DD date\n", date)
 		return cli.ExitCannotSearch
 	}
-	st, code := o.open(s, check.LinkedChecks(c, check.Predicted))
+	selected := map[string]bool{}
+	for _, g := range groups {
+		selected[g] = true
+	}
+	keep := func(it *key.Item) bool { return it.HasStatus(status) && (groups == nil || selected[it.Group]) }
+	st, code := o.open(s, check.LinkedChecks(c, keep))
 	if st == nil {
 		return code
 	}
 	defer st.Close()
-	preds := check.Verify(c, st, check.Predicted)
+	preds := check.Verify(c, st, keep)
 	counts := map[string]int{}
 	ran, skipped := map[string]bool{}, map[string]bool{}
 	for _, p := range preds {
@@ -78,8 +85,8 @@ func cmdVerifyPredictions(c *key.Corpus, s cli.Stdio, o stationOpts, date string
 	} else {
 		printPredictions(s.Out, preds, date)
 	}
-	fmt.Fprintf(summary, "predicted %d: CONFIRMED %d, PARTIAL %d, CONTRADICTED %d, UNDECIDED %d; %s run; %s, install %s\n",
-		len(preds), counts[check.Confirmed], counts[check.Partial], counts[check.Contradicted], counts[check.Undecided], key.Plural(len(ran), "check"),
+	fmt.Fprintf(summary, "%s %d: CONFIRMED %d, PARTIAL %d, CONTRADICTED %d, UNDECIDED %d; %s run; %s, install %s\n",
+		status, len(preds), counts[check.Confirmed], counts[check.Partial], counts[check.Contradicted], counts[check.Undecided], key.Plural(len(ran), "check"),
 		st.Scope(), orNone(o.installDir()))
 	switch {
 	case counts[check.Contradicted] > 0:

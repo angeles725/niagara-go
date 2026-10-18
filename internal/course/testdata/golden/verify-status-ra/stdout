@@ -1,0 +1,14 @@
+ID            VERDICT       EVIDENCE
+RA1.M1        UNDECIDED     no check covers it
+RA1.M2        CONFIRMED     CRA1.1 PASS: modules/Cristian_Angeles_Review-rt.jar!META-INF/module.xml has moduleName="Cristian_Angeles_Review"
+RA1.R1        PARTIAL       CRA1.6 PASS: modules/Cristian_Angeles_Review-rt.jar!META-INF/module.xml has name="ComponentWithId"; CRA1.7 PASS: modules/Cristian_Angeles_Review-rt.jar: 1 entry matches **/BComponentWithId.class; not observed: that the class extends BComponent
+RA1.R3a       UNDECIDED     no check covers it
+RA1.V9–V11    CONTRADICTED  CRA1.10 FAIL: found 0 in Review (2 in total), want at least 1; elsewhere: Cristian_Angeles_Review/ComponentWithId, Cristian_Angeles_Review/ComponentWithId1
+D1.1          UNDECIDED     no check covers it
+T1.1          UNDECIDED     no check covers it
+RA2.R1        CONFIRMED     CRA2.1 PASS: modules/Cristian_Angeles_Review-rt.jar!META-INF/module.xml has name="control-rt"
+
+suggested updates (CONFIRMED only; course never edits the answer key):
+RA1.M2: *(verified live 2026-10-17)* evidence: CRA1.1 modules/Cristian_Angeles_Review-rt.jar!META-INF/module.xml has moduleName="Cristian_Angeles_Review"
+RA2.R1: *(verified live 2026-10-17)* evidence: CRA2.1 modules/Cristian_Angeles_Review-rt.jar!META-INF/module.xml has name="control-rt"
+written 8: CONFIRMED 2, PARTIAL 1, CONTRADICTED 1, UNDECIDED 4; 6 checks run; station ReviewStation (9 components, 0 links), install install

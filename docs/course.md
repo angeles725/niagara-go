@@ -2,7 +2,8 @@
 
 `course` looks up the written answers of the N4 Developer Certification course by item ID,
 counts them by verification status, checks a station against the labs (`course check`), and
-decides the predicted answers from that station (`course verify-predictions`).
+decides the predicted answers (`course verify-predictions`), or the answers of any status
+(`course verify --status`), from the stations.
 It reads three Markdown files of a niagara-research checkout and one or two course text
 files. It is new (no Python original), so its golden cases run over the synthetic tree
 `internal/course/testdata/root/`.
@@ -264,6 +265,26 @@ C3.4 fails because the station really differs: its Lab2 folder has Point1..Point
 Add.in1..in4 and no `Output` point, so Lab 3 step 11 (`LI:576`, Add.Out -> Output.In10) was
 not done.
 
+## course verify
+
+`course verify --status S [--lab GROUP] [--station <dir|config.bog>] [--install DIR] [--date YYYY-MM-DD] [--json]`
+decides every item carrying status `S` (the vocabulary of `status`: `predicted`, `unverified`,
+`corrected`, `identical`, `verified`, `written`) in the group `--lab` (the spellings of `status
+--lab`: `3`, `L3`, `RA1`, `RA` for RA1, RA2 and RAX, `EXAM`; every group without it), with the
+rules, output and exit of `verify-predictions` below; the summary starts with the status
+(`written 258: CONFIRMED ...`). Each linked check runs on the station of its role (the defaults
+of `course check`), so `course verify --status written` with the three station variables set
+decides the lab, review and exam items in one run. An unknown group is exit 1 with the group list.
+
+The live stations and the real answer key (2026-10-17, with the 4.15.6.20 install):
+`verify --status written` decides 258 items: 55 CONFIRMED, 8 PARTIAL, 3 CONTRADICTED (L3.7: C3.4,
+the missing Add.out -> Output link; RA1.M3: the description typo; RA1.V9–V14: no folder
+`Review`), 192 UNDECIDED (no check covers them); 72 checks run on the TrainingStation and the
+review station (no written item links an exam check: the exam items are verified).
+
+`course verify-predictions` is `course verify --status predicted` over every group: the same
+stdout, stderr and exit (`TestVerifyPredictionsIsVerifyStatusPredicted`).
+
 ## course verify-predictions
 
 `course verify-predictions [--station <dir|config.bog>] [--install DIR] [--date YYYY-MM-DD] [--json]`
@@ -353,6 +374,8 @@ not observed.
   is a passing exam station (`check-exam`); `check-mixed-roles` reads three stations in one run and
   `check-missing-role` is the usage error of a role without a station. `TestCheckNestedNeedsNestedLoad`: a dotted check on a bog read without
   nested values is SKIP.
+- `verify-status-ra`, `verify-unknown-group`, `verify-no-status`: `verify` over the `root`
+  fixture's RA items with the review station.
 - `check/verify_test.go` and the `verify-*` goldens: the verdict rules (`TestDecidePrediction`) and
   the command over `testdata/predict-root/` (a synthetic answer key whose predicted IDs are
   linked keys: one unlinked, one linked only to a jar check, the range item `L4.15–L4.16`

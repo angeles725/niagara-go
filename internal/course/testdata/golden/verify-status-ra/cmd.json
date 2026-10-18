@@ -1,0 +1,1 @@
+{"args": ["--root", "root", "verify", "--status", "written", "--lab", "RA", "--date", "2026-10-17"], "env": {"COURSE_REVIEW_STATION": "stations/review", "COURSE_NIAGARA_INSTALL": "install"}}

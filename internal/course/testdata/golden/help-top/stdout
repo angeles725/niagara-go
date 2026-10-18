@@ -1,4 +1,4 @@
-usage: course [-h] [--root DIR] [--version] {show,status,text,check,verify-predictions} ...
+usage: course [-h] [--root DIR] [--version] {show,status,text,check,verify-predictions,verify} ...
 
 Look up the N4 developer-course answer keys of a niagara-research checkout
 (labs, review assignments, certification exam) by item ID, count them by
@@ -13,9 +13,13 @@ exit: 0 found; 1 searched, no match (show: any unknown ID, even when the
 others were printed); 2 cannot search (no root, a missing or ambiguous answer
 key, a missing text file). check: 0 no FAIL (SKIPs are counted, never passed);
 1 at least one FAIL; 2 the station cannot be read, or every check was skipped.
-verify-predictions: 0 no predicted item contradicted; 1 at least one
-CONTRADICTED; 2 cannot search, the station cannot be read, or every linked
-check was skipped.
+verify, verify-predictions (= verify --status predicted): 0 no item
+contradicted; 1 at least one CONTRADICTED; 2 cannot search, the station
+cannot be read, or every linked check was skipped.
+
+stations: --station, else $COURSE_TRAINING_STATION (labs),
+$COURSE_REVIEW_STATION (RA1, RA2), $COURSE_CERT_STATION (EXAM);
+--install, else $COURSE_NIAGARA_INSTALL.
 
 examples:
   course show L1.9 RA1.R6 P2
@@ -24,9 +28,10 @@ examples:
   course check --station ~/Niagara4.15/tridium/stations/TrainingStation \
     --install /opt/Niagara/Niagara-4.15.6.20 --lab 4 --lab 10
   course verify-predictions --station ~/Niagara4.15/tridium/stations/TrainingStation
+  course verify --status written --lab RA1
 
 positional arguments:
-  {show,status,text,check,verify-predictions}
+  {show,status,text,check,verify-predictions,verify}
     show                print items by ID (any case; L2.3 also finds the range item L2.2–L2.4)
     status              items per group and status; --status lists the matching items
     text                print the course text lines an item (or a lab) points at
@@ -34,6 +39,8 @@ positional arguments:
                         PASS/FAIL/SKIP per check
     verify-predictions  run the checks linked to every *(predicted)* item: CONFIRMED, CONTRADICTED
                         or UNDECIDED
+    verify              decide every item of a status from its linked checks: CONFIRMED, PARTIAL,
+                        CONTRADICTED or UNDECIDED
 
 options:
   -h, --help            show this help message and exit
