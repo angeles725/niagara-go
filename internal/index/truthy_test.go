@@ -2,6 +2,7 @@ package index
 
 import (
 	"encoding/json"
+	"math"
 	"strings"
 	"testing"
 )
@@ -37,12 +38,27 @@ func TestTruthy(t *testing.T) {
 	}
 }
 
-// Values Decode never produces have no Python counterpart; they are falsy
-// (an absent *Object is an empty dict) rather than a panic.
+// Values Decode never produces with no Python counterpart are falsy (an
+// absent *Object is an empty dict) rather than a panic.
 func TestTruthyOutsideDecode(t *testing.T) {
-	for _, v := range []any{(*Object)(nil), json.Number("not a number"), 1, 2.5} {
+	for _, v := range []any{(*Object)(nil), json.Number("not a number")} {
 		if Truthy(v) {
 			t.Errorf("Truthy(%#v) = true, want false", v)
 		}
+	}
+}
+
+// Go numbers a caller computes follow Python's bool(): true unless zero.
+func TestTruthyGoNumbers(t *testing.T) {
+	for v, want := range map[any]bool{
+		0: false, 1: true, -3: true, int64(0): false, int64(7): true,
+		0.0: false, 2.5: true, math.Inf(-1): true,
+	} {
+		if Truthy(v) != want {
+			t.Errorf("Truthy(%#v) = %v, want %v", v, !want, want)
+		}
+	}
+	if !Truthy(math.NaN()) {
+		t.Error("Truthy(NaN) = false, want true")
 	}
 }

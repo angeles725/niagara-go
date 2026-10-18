@@ -6,9 +6,10 @@ package index
 // (0.0) are false while NaN, ±Infinity, 1e400 (inf) and integers beyond
 // float64 are true.
 //
-// Values Decode never returns have no Python counterpart and are false: a
-// nil *Object (an absent dict), a json.Number that is not a JSON number
-// literal, and Go numbers.
+// Go numbers (int, int64, float64), which callers may pass for computed
+// values, follow Python too: true unless zero (NaN is true). Values with no
+// Python counterpart are false: a nil *Object (an absent dict) and a
+// json.Number that is not a JSON number literal.
 func Truthy(v any) bool {
 	switch t := v.(type) {
 	case nil:
@@ -21,6 +22,12 @@ func Truthy(v any) bool {
 		return len(t) > 0
 	case *Object:
 		return t != nil && t.Len() > 0
+	case int:
+		return t != 0
+	case int64:
+		return t != 0
+	case float64:
+		return t != 0
 	}
 	f, ok := Float(v)
 	return ok && f != 0
