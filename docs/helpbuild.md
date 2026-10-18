@@ -209,9 +209,8 @@ S2 additions (none changes an output Python produces from a well-formed install)
 
 | File | Ports | Notes |
 |---|---|---|
-| `pdftext.go` | `classify`, `sanitize`, `top_folder`, `find_pdfs`, `fix_unmapped_bullets`, `extract_text`, `resolve_name` | one pdftotext run: argv list, no shell, `PDFTimeout` (120 s); a failure is a `*PDFError` whose `Failure` says which of the four cases `extract_text` catches (exit status, timeout, output not UTF-8, could not start) |
+| `pdftext.go` | `classify`, `sanitize`, `top_folder`, `find_pdfs`, `fix_unmapped_bullets`, `extract_text`, `resolve_name` | one pdftotext run: argv list, no shell, `PDFTimeout` (120 s); a failure is a `*PDFError` whose `Failure` says which of the four cases `extract_text` catches (exit status, timeout, output not UTF-8, could not start); the run goes through `internal/procgroup` (own process group, SIGINT/SIGTERM relay), shared with `internal/secaudit` |
 | `pdfindex.go` | `pdf_extractor.main()` | `ExtractPDFs`; the early exits, the `-v` probe, keep-last-good, the index save, the prune after a clean run, the summary |
-| `procgroup_unix.go`, `procgroup_other.go` | — | the child runs in its own process group; the timeout or a relayed SIGINT/SIGTERM kills the group (a copy of `internal/secaudit`'s relay) |
 | `registry.go` | `versions.identify`, `versions.install_dir`, `course.course_dir` | read with pyjson so every malformed entry takes Python's branch: skipped where Python catches, an error where it raises |
 | `pyfs.go` | `os.walk`, `os.remove`, `shutil.copyfile`, `json.load` | `pyWalk` lists a symlinked folder without entering it and skips unreadable ones; `removeFile` refuses a directory; `pyCopyfile` refuses a named pipe before opening it; `loadJSON` returns a `*JSONLoadError` (Python's `str(e)`) for what the builders catch |
 | `course.go` | `course.course_dir`, `_files`, `_text_dest`, `plan`, `remove_copies`, `build`, `course_extractor.main()` | both trees staged with `RebuiltDir`, nested like Python's `with` (devguide-examples/course/ swaps first) |
@@ -301,12 +300,6 @@ Found while porting (the Python code wins, kept for parity):
 (`shutil.rmtree(ignore_errors=True)`) and `commas` (`format(n, ",")`) are local to this
 package; `pyJoin`/`pyAbspath`/`pyBasename` belong next to `pycompat.PosixJoin` once a
 second package needs them.
-
-`relayInterrupts`, `reraise` and the group kill in `procgroup_unix.go` are a copy of
-`internal/secaudit/procgroup_unix.go`. Proposed: one `internal/procgroup` package
-(`KillGroupOnCancel(cmd)`, `RelayInterrupts(cancel) (stop func())`, `Reraise(sig)` and
-an `*InterruptError`) with the forking-child and signal tests once, used by secaudit and
-helpbuild; until it exists both packages keep their copy.
 
 ## Dead code not ported
 

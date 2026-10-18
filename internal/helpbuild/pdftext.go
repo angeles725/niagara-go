@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
 	"os/exec"
 	"path/filepath"
 	"sort"
@@ -13,6 +12,7 @@ import (
 	"time"
 	"unicode/utf8"
 
+	"github.com/angeles725/niagara-go/internal/procgroup"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
@@ -196,43 +196,37 @@ func (e *PDFError) Unwrap() error { return e.Err }
 // errTimedOut marks a run stopped by its timeout.
 var errTimedOut = errors.New("timed out")
 
-// interruptError is a SIGINT or SIGTERM that came while pdftotext ran (on
-// Unix, see relayInterrupts): Python's KeyboardInterrupt, which
-// pdf_extractor does not catch, so the run stops instead of counting a
-// failed PDF.
-type interruptError struct{ sig os.Signal }
-
-func (e *interruptError) Error() string { return "interrupted by " + e.sig.String() }
-
 // runCapture runs argv (no shell) and returns its stdout; stderr is
 // dropped (Python captures it and never reads it) and stdin is the null
-// device (Python lets the child inherit it; pdftotext never reads it). On
-// the timeout the child's process group is killed (killGroupOnCancel) and
-// errTimedOut returned. A SIGINT or SIGTERM meanwhile kills the group too,
-// then is raised again on this process (reraise) and, should it survive,
-// returned as an *interruptError.
+// device (Python lets the child inherit it; pdftotext never reads it). The
+// child runs through internal/procgroup: on the timeout its process group
+// is killed and errTimedOut returned. A SIGINT or SIGTERM meanwhile kills
+// the group too, then is raised again on this process and, should it
+// survive, returned as a *procgroup.InterruptError: Python's
+// KeyboardInterrupt, which pdf_extractor does not catch, so the run stops
+// instead of counting a failed PDF.
 func runCapture(argv []string, timeout time.Duration) ([]byte, error) {
-	base, interrupt := context.WithCancelCause(context.Background())
-	defer interrupt(nil)
-	ctx, cancel := context.WithTimeout(base, timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
-	cmd := exec.CommandContext(ctx, argv[0], argv[1:]...)
-	killGroupOnCancel(cmd)
+	cmd := procgroup.CommandContext(ctx, argv[0], argv[1:]...)
 	cmd.WaitDelay = time.Second
 	var out bytes.Buffer
 	cmd.Stdout = &out
-	stop := relayInterrupts(interrupt)
-	err := cmd.Run()
-	stop()
-	var in *interruptError
-	if errors.As(context.Cause(base), &in) {
-		reraise(in.sig)
-		return nil, in
+	runErr := cmd.Run()
+	if isInterrupt(runErr) {
+		return nil, runErr
 	}
-	if err := runFailure(ctx, err); err != nil {
+	if err := runFailure(ctx, runErr); err != nil {
 		return nil, err
 	}
 	return out.Bytes(), nil
+}
+
+// isInterrupt reports whether err is the *procgroup.InterruptError of a
+// signal that came while pdftotext ran.
+func isInterrupt(err error) bool {
+	var in *procgroup.InterruptError
+	return errors.As(err, &in)
 }
 
 // runFailure is the error of a finished run: errTimedOut only when the run
@@ -267,9 +261,8 @@ func ExtractPDFText(pdftotext, pdfPath string, timeout time.Duration) (text stri
 	out, err := runCapture([]string{pdftotext, "-layout", "-enc", "UTF-8", pdfPath, "-"}, timeout)
 	if err != nil {
 		var exit *exec.ExitError
-		var in *interruptError
 		switch {
-		case errors.As(err, &in):
+		case isInterrupt(err):
 			return "", 0, err // not a failed PDF: the run stops
 		case errors.Is(err, errTimedOut):
 			return "", 0, &PDFError{Path: pdfPath, Failure: PDFTimedOut}

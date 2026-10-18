@@ -15,10 +15,14 @@ import (
 	"syscall"
 	"testing"
 	"time"
+
+	"github.com/angeles725/niagara-go/internal/procgroup"
 )
 
 // A fake pdftotext that forks its real work instead of exec'ing it leaves
-// nothing running after the timeout: the whole process group is killed.
+// nothing running after the timeout: runCapture runs it through
+// internal/procgroup, which kills the whole process group (the signal
+// relay and its tests live there).
 func TestPDFTimeoutKillsForkedChildren(t *testing.T) {
 	needProc(t)
 	script, dir := fakePdftotext(t)
@@ -37,17 +41,8 @@ func TestPDFTimeoutKillsForkedChildren(t *testing.T) {
 }
 
 // pdfInterruptHelperEnv makes the test binary act as the extractor process
-// of killsPdftotextGroupOn: "<script>\n<pdf>".
+// of TestPDFInterruptCaughtStopsTheRun: "<script>\n<pdf>".
 const pdfInterruptHelperEnv = "HELPBUILD_INTERRUPT_HELPER"
-
-// Ctrl-C on the extractor while pdftotext runs kills pdftotext's whole
-// process group, which does not get the terminal's SIGINT itself, and the
-// extractor then dies of SIGINT as Python does on KeyboardInterrupt (130).
-func TestPDFInterruptKillsChildGroup(t *testing.T) { killsPdftotextGroupOn(t, syscall.SIGINT) }
-
-// SIGTERM to the extractor does the same, and it dies of SIGTERM (143);
-// Python dies of it too but leaves pdftotext running.
-func TestPDFTerminateKillsChildGroup(t *testing.T) { killsPdftotextGroupOn(t, syscall.SIGTERM) }
 
 // A caller that catches SIGINT itself (signal.Notify) keeps the process
 // alive: ExtractPDFs then returns the interrupt, as Python raises
@@ -58,9 +53,9 @@ func TestPDFInterruptCaughtStopsTheRun(t *testing.T) {
 		signal.Notify(make(chan os.Signal, 1), syscall.SIGINT)
 		root := filepath.Join(filepath.Dir(pdf), "root")
 		res, err := ExtractPDFs(root, PDFOptions{DocsDir: filepath.Dir(pdf), Pdftotext: script, Timeout: 30 * time.Second})
-		var in *interruptError
+		var in *procgroup.InterruptError
 		_, statErr := os.Stat(filepath.Join(root, "indexes", "pdf-index.json"))
-		if errors.As(err, &in) && in.sig == syscall.SIGINT && errors.Is(statErr, fs.ErrNotExist) && res.Stats.Failed == 0 {
+		if errors.As(err, &in) && in.Signal == syscall.SIGINT && errors.Is(statErr, fs.ErrNotExist) && res.Stats.Failed == 0 {
 			os.Exit(5)
 		}
 		fmt.Printf("ExtractPDFs = %+v, %v; index: %v\n", res.Stats, err, statErr)
@@ -73,30 +68,6 @@ func TestPDFInterruptCaughtStopsTheRun(t *testing.T) {
 	var exitErr *exec.ExitError
 	if err := cmd.Wait(); !errors.As(err, &exitErr) || exitErr.ExitCode() != 5 {
 		t.Errorf("extractor ended with %v, want exit 5 (the interrupt returned)", err)
-	}
-	waitGone(t, pid)
-}
-
-// killsPdftotextGroupOn re-runs the test binary as the extractor so sig
-// hits a separate process, waits for the fake pdftotext to fork, signals
-// the extractor and checks that it died of sig and the fork is gone.
-func killsPdftotextGroupOn(t *testing.T, sig syscall.Signal) {
-	if v := os.Getenv(pdfInterruptHelperEnv); v != "" {
-		script, pdf, _ := strings.Cut(v, "\n")
-		_, _, err := ExtractPDFText(script, pdf, 30*time.Second)
-		fmt.Printf("ExtractPDFText survived %s: %v\n", sig, err)
-		os.Exit(3)
-	}
-	cmd, pid := startInterruptHelper(t)
-	if err := cmd.Process.Signal(sig); err != nil {
-		t.Fatal(err)
-	}
-	err := cmd.Wait()
-	var exitErr *exec.ExitError
-	if !errors.As(err, &exitErr) {
-		t.Errorf("extractor ended with %v, want death by %s", err, sig)
-	} else if ws := exitErr.Sys().(syscall.WaitStatus); !ws.Signaled() || ws.Signal() != sig {
-		t.Errorf("extractor ended with %v, want death by %s", exitErr, sig)
 	}
 	waitGone(t, pid)
 }

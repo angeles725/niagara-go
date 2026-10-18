@@ -268,8 +268,7 @@ func extractAll(res *PDFResult, docs string, pdfs []string, outputDir, indexPath
 			return err
 		}
 		text, pages, err := ExtractPDFText(prog, pdfPath, pdfTimeout(pdfPath, timeout))
-		var in *interruptError
-		if errors.As(err, &in) {
+		if isInterrupt(err) {
 			return err // KeyboardInterrupt: nothing is saved or pruned
 		}
 		if err != nil {
