@@ -88,6 +88,43 @@ func TestExtractAndIndexRefusalsAndStatus(t *testing.T) {
 	}
 }
 
+// Every spelling of a data_root that resolves to the repository is
+// refused before anything is removed, even with Force: Python matches
+// only "." and "", and "./" or the absolute repo path would make it
+// remove the raw and derived folders of the repository itself.
+func TestExtractAndIndexRefusesEverySpellingOfTheRepoRoot(t *testing.T) {
+	repo, install := setupFixture(t)
+	abs, err := filepath.Abs(repo)
+	if err != nil {
+		t.Fatal(err)
+	}
+	spellings := []string{".", "", "./", ".//", "x/..", "versions/..", abs, abs + string(filepath.Separator)}
+	link := filepath.Join(t.TempDir(), "repo-link")
+	if err := os.Symlink(abs, link); err != nil {
+		t.Logf("no symlinks here (%v): link spellings not checked", err)
+	} else if err := os.Symlink(abs, filepath.Join(repo, "versions", "self")); err != nil {
+		t.Fatal(err)
+	} else {
+		spellings = append(spellings, link, "versions/self")
+	}
+	keep := []string{"guides/keep.txt", "source/keep.txt", "indexes/keep.json", "bajadoc-clean/keep.txt"}
+	for _, k := range keep {
+		writeFile(t, filepath.Join(repo, filepath.FromSlash(k)), []byte("repository file"))
+	}
+	for _, spelling := range spellings {
+		writeRegistry(t, repo, map[string][3]string{"1.0.0.0": {"fixture", install, spelling}})
+		res, err := ExtractAndIndex(repo, "1.0.0.0", SetupOptions{Force: true})
+		if err != nil || res.Status != 2 || res.Error != "refusing to extract over the repo root; use --verify-only" {
+			t.Errorf("data_root %q: %+v %v", spelling, res, err)
+		}
+		for _, k := range keep {
+			if _, err := os.Stat(filepath.Join(repo, filepath.FromSlash(k))); err != nil {
+				t.Fatalf("data_root %q removed %s: %v", spelling, k, err)
+			}
+		}
+	}
+}
+
 // The Rebuild hook runs after a full extraction: the pdf stub is there
 // before it, its lines and the EMPTY lines follow in the log, a hook
 // error stops the run.

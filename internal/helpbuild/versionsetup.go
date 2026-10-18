@@ -3,6 +3,7 @@ package helpbuild
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -148,7 +149,7 @@ func ExtractAndIndex(repo, vid string, opt SetupOptions) (*SetupResult, error) {
 		}
 		res.out("fill-missing: wrote %d file(s)", len(res.Filled))
 	case !opt.VerifyOnly:
-		if done, err := extractStep(res, root, dataRootRel, install, ls, opt); done || err != nil {
+		if done, err := extractStep(res, repo, root, dataRootRel, install, ls, opt); done || err != nil {
 			return res, err
 		}
 	}
@@ -172,11 +173,39 @@ func ExtractAndIndex(repo, vid string, opt SetupOptions) (*SetupResult, error) {
 	return res, nil
 }
 
+// isRepoRoot is extract_and_index's data_root in (".", "") for every
+// spelling: root (index.DataRoot: absolute, cleaned) is the repository
+// itself when it is the same path once cleaned, or the same folder once
+// symlinks are followed ("./", "x/..", the absolute repo path, a link to
+// it). Python matches only the two literal values.
+func isRepoRoot(repo, root string) (bool, error) {
+	abs, err := filepath.Abs(repo)
+	if err != nil {
+		return false, err
+	}
+	if filepath.Clean(root) == abs {
+		return true, nil
+	}
+	rs, err := os.Stat(root)
+	if err != nil {
+		return false, nil // absent: it cannot be the repository
+	}
+	as, err := os.Stat(abs)
+	if err != nil {
+		return false, err
+	}
+	return os.SameFile(rs, as), nil
+}
+
 // extractStep is the full extraction: refusals, removal of the raw and
 // derived folders, Extract, then the optional rebuild. done is true after
 // a refusal (res holds it).
-func extractStep(res *SetupResult, root, dataRootRel, install string, ls *Listings, opt SetupOptions) (done bool, err error) {
-	if dataRootRel == "." || dataRootRel == "" {
+func extractStep(res *SetupResult, repo, root, dataRootRel, install string, ls *Listings, opt SetupOptions) (done bool, err error) {
+	same, err := isRepoRoot(repo, root)
+	if err != nil {
+		return false, err
+	}
+	if same || dataRootRel == "." || dataRootRel == "" {
 		res.refuse("refusing to extract over the repo root; use --verify-only")
 		return true, nil
 	}

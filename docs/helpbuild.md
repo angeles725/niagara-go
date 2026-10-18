@@ -177,9 +177,21 @@ S2 additions (none changes an output Python produces from a well-formed install)
   `read()` (fidelity, fill-missing) inflates everything on both sides.
 - **A failed entry read during extract** leaves the empty file Python's single-chunk copy
   leaves; for an entry above one copy chunk Python leaves the chunks already written.
-- **A mapped path with a `..` segment**: Python writes wherever `os.path.join` points,
-  also outside the data root; `Extract` and `FillMissing` return `ErrUnsafeEntry`.
-  Fidelity only reads and keeps Python's join.
+- **A mapped path that could leave the data root**: a `..` segment (split on both `/`
+  and `\`), a leading `/` or `\`, or a drive letter (`C:`, `C:x`, `C:\x`). Python writes
+  wherever `os.path.join` points, also outside the data root, and on Linux writes a
+  name such as `..\x` verbatim as one file; `Extract` and `FillMissing` return
+  `ErrUnsafeEntry` on every OS, so the same jar is refused wherever the corpus is built
+  (safety over parity). The joined path is also checked to stay under the root. A `\`
+  in an otherwise safe name (`a\b.txt`) is kept: one file with that name on Linux, as
+  Python writes it, the folder `a` and the file `b.txt` on Windows. Fidelity only reads
+  and keeps Python's join.
+- **A data root that is the repository under another spelling**: Python refuses only
+  the literal `data_root` values `.` and `""`, so `./`, `x/..`, the absolute repo path or
+  a symlink to the repository would make a `--force` run remove the raw and derived
+  folders of the repository itself. Go refuses with the same message whenever the data
+  root is the repository once cleaned, made absolute and (when it exists) followed
+  through symlinks (`os.SameFile`).
 - **Registry entries**: a non-string `install_dir`, `data_root` or `label` is an error
   before any work (Python fails later or copies a non-string label); a missing `label`
   is an error up front where Python raises `KeyError` after extraction and fidelity.

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -124,6 +125,45 @@ func TestExtractRefusesDotDotEntries(t *testing.T) {
 	}
 	if _, err := os.Stat(filepath.Join(dir, "escaped.txt")); !os.IsNotExist(err) {
 		t.Fatal("written outside the root")
+	}
+	// The Windows spelling is refused on Linux too, where Python would
+	// write a file named "..\..\..\escaped.txt" inside the guide folder.
+	install = filepath.Join(dir, "install-bs")
+	writeJar(t, filepath.Join(install, "modules", "docEvil-doc.jar"), [2]string{`doc/..\..\..\escaped.txt`, "x"})
+	if _, err := Extract(install, root, nil); !errors.Is(err, ErrUnsafeEntry) {
+		t.Fatalf("extract backslash: %v", err)
+	}
+	if _, err := FillMissing(install, root, nil); !errors.Is(err, ErrUnsafeEntry) {
+		t.Fatalf("fill backslash: %v", err)
+	}
+}
+
+// outPath refuses, on every OS, a ".." segment split on "/" or "\", a
+// leading separator and a drive letter: on Windows filepath.Join treats
+// "\" as a separator, so each of them would leave the root there.
+func TestOutPathRefusesUnsafeEntries(t *testing.T) {
+	root := filepath.Join(t.TempDir(), "root")
+	for _, rel := range []string{"../x", "a/../../x", "a/..", "..", `..\x`, `a\..\..\x`, `a\..`, "/abs", `\abs`,
+		`\\server\share\x`, `C:\x`, "C:x", "c:/x", "Z:"} {
+		if out, err := outPath(root, rel); !errors.Is(err, ErrUnsafeEntry) {
+			t.Errorf("%q: %q %v, want ErrUnsafeEntry", rel, out, err)
+		}
+	}
+	// Names that only look odd stay under the root.
+	for _, rel := range []string{"a/b.txt", "a/..b", "a/b..", "a/.../x", "a/C:x", "a/b:c"} {
+		if out, err := outPath(root, rel); err != nil || out != pyJoin(root, rel) {
+			t.Errorf("%q: %q %v", rel, out, err)
+		}
+	}
+	// A "\" without "..": Python on Linux writes one file named a\b.txt
+	// (kept); on Windows it is the folder a and the file b.txt.
+	out, err := outPath(root, `a\b.txt`)
+	want := root + `/a\b.txt`
+	if runtime.GOOS == "windows" {
+		want = filepath.Join(root, "a", "b.txt")
+	}
+	if err != nil || out != want {
+		t.Fatalf("a\\b.txt: %q %v, want %q", out, err, want)
 	}
 }
 

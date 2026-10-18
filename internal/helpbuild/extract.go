@@ -17,10 +17,12 @@ import (
 // entries mapped by MappedEntries with the default rules; an unreadable
 // doc jar or entry is an error, as Python raises.
 
-// ErrUnsafeEntry is a mapped entry whose corpus path has a ".." segment.
-// Python joins it to the root and writes wherever it points; Extract and
-// FillMissing refuse it instead (vendor jars never hold one).
-var ErrUnsafeEntry = errors.New(`jar entry path has a ".." segment`)
+// ErrUnsafeEntry is a mapped entry whose corpus path could leave the
+// data root on some OS: a ".." segment (split on "/" and on "\"), a
+// leading "/" or "\", or a drive letter ("C:"). Python joins it to the
+// root and writes wherever it points; Extract and FillMissing refuse it
+// instead, on every OS (vendor jars never hold one).
+var ErrUnsafeEntry = errors.New("jar entry path could leave the data root")
 
 // Collision is one corpus path two entries map to: Owner's entry was
 // written first, By's replaced it (extract), or By's was skipped in favour
@@ -104,14 +106,39 @@ func eachDocJar(installDir string, ls *Listings, f func(jar string) error) error
 	return nil
 }
 
-// outPath is os.path.join(root, rel) for a write, refusing ".." segments.
+// outPath is os.path.join(root, rel) for a write, refusing what could
+// leave root. Both separators are checked on every OS: filepath.Join on
+// Windows splits on "\", and the refusal must not depend on where the
+// corpus is built. A "\" in a safe name is kept (on Linux the file is
+// named with it, as Python writes it). The joined path is checked to stay
+// under root as well.
 func outPath(root, rel string) (string, error) {
-	for _, seg := range strings.Split(rel, "/") {
+	unsafe := fmt.Errorf("%w: %q", ErrUnsafeEntry, rel)
+	if strings.HasPrefix(rel, "/") || strings.HasPrefix(rel, `\`) || hasDriveLetter(rel) ||
+		filepath.IsAbs(rel) || filepath.VolumeName(rel) != "" {
+		return "", unsafe
+	}
+	for _, seg := range strings.FieldsFunc(rel, func(r rune) bool { return r == '/' || r == '\\' }) {
 		if seg == ".." {
-			return "", fmt.Errorf("%w: %s", ErrUnsafeEntry, rel)
+			return "", unsafe
 		}
 	}
-	return pyJoin(root, rel), nil
+	out := pyJoin(root, rel)
+	if r, err := filepath.Rel(filepath.Clean(root), filepath.Clean(out)); err != nil ||
+		r == ".." || strings.HasPrefix(r, ".."+string(filepath.Separator)) {
+		return "", unsafe
+	}
+	return out, nil
+}
+
+// hasDriveLetter is a rel starting like a Windows volume: "C:", "C:x",
+// "C:\x".
+func hasDriveLetter(rel string) bool {
+	if len(rel) < 2 || rel[1] != ':' {
+		return false
+	}
+	c := rel[0] | 0x20
+	return c >= 'a' && c <= 'z'
 }
 
 // Extract writes every mapped entry of every doc jar of installDir under
