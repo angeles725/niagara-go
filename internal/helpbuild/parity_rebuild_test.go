@@ -121,8 +121,8 @@ func normalizeRebuild(text string, stderr bool) []string {
 }
 
 // rebuildTreeLines is treeLines of root with indexes/.manifest.json as
-// its text, stamped_utc normalized (it is set aside while treeLines walks,
-// then put back); on the Python side, once pdf_extractor has run in the
+// its text, stamped_utc normalized, and build.log as its text, run times
+// normalized (both set aside while treeLines walks, then put back); on the Python side, once pdf_extractor has run in the
 // scenario, the PDF page counts are adjusted as pyPDFTreeLines does
 // (intended difference; a pdf-index.json copied in is compared as it is).
 func rebuildTreeLines(t *testing.T, root string, python, pdfRan bool) []string {
@@ -152,13 +152,34 @@ func rebuildTreeLines(t *testing.T, root string, python, pdfRan bool) []string {
 			}
 		}()
 	}
+	// build.log records each builder's "Done in N.Ns": compared as text with
+	// the run times normalized, not hashed (a hash differed whenever the two
+	// sides' timings differed in one digit).
+	logPath := filepath.Join(root, "build.log")
+	var buildLog []string
+	if data, err := os.ReadFile(logPath); err == nil {
+		info, err := os.Lstat(logPath)
+		if err != nil {
+			t.Fatal(err)
+		}
+		buildLog = append([]string{fmt.Sprintf("build.log %o", info.Mode().Perm())},
+			normalizeRebuild(string(data), false)...)
+		if err := os.Remove(logPath); err != nil {
+			t.Fatal(err)
+		}
+		defer func() {
+			if err := os.WriteFile(logPath, data, info.Mode().Perm()); err != nil {
+				t.Fatal(err)
+			}
+		}()
+	}
 	var lines []string
 	if python && pdfRan {
 		lines = pyPDFTreeLines(t, root, root)
 	} else {
 		lines = treeLines(t, root)
 	}
-	return append(lines, manifest...)
+	return append(append(lines, manifest...), buildLog...)
 }
 
 // rebuildBoth runs steps on a fresh setup(root) on each side and compares
