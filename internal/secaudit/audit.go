@@ -222,52 +222,6 @@ func (e *env) sec06(home string, rep *report) {
 		"developer{skipModuleValidation}/unreleasedSoftware accept self-signed / disable validation")
 }
 
-func (e *env) sec11(home, ts string, rep *report) error {
-	fips := pycompat.IsFile(filepath.Join(home, "jre", "lib", "security", "cacerts.bcfks"))
-	if !pycompat.IsFile(ts) { // no key was read: the check did not run, which is not a PASS (Python passes)
-		rep.add("SEC-11", "med", "weak signing keys / FIPS",
-			"not checked (no security/truststore.jks); FIPS keystore "+pick(fips, "present", "absent"),
-			"all keys >= 2048; FIPS suppresses RSA-1024 option", "SKIP", "B113/B392",
-			"run: keytool -list -v -keystore <home>/security/truststore.jks with the store password")
-		return nil
-	}
-	sizes, failure, err := e.keytoolKeysizes(ts)
-	if err != nil {
-		return fmt.Errorf("keytool: %w", err)
-	}
-	if failure != "" { // the store did not open with "changeit": its key sizes are unknown, not absent
-		rep.add("SEC-11", "med", "weak signing keys / FIPS",
-			"key sizes not read (keytool "+failure+"); FIPS keystore "+pick(fips, "present", "absent"),
-			"all keys >= 2048; FIPS suppresses RSA-1024 option", "SKIP", "B113/B392",
-			"run: keytool -list -v -keystore <home>/security/truststore.jks with the store password")
-		return nil
-	}
-	uniq := map[int]bool{}
-	weak := false
-	for _, s := range sizes {
-		uniq[s] = true
-		weak = weak || s < 2048
-	}
-	keys := make([]int, 0, len(uniq))
-	for s := range uniq {
-		keys = append(keys, s)
-	}
-	sort.Ints(keys)
-	shown := "n/a"
-	if len(keys) > 0 {
-		parts := make([]string, len(keys))
-		for i, k := range keys {
-			parts[i] = strconv.Itoa(k)
-		}
-		shown = "[" + strings.Join(parts, ", ") + "]"
-	}
-	rep.add("SEC-11", "med", "weak signing keys / FIPS",
-		"key sizes "+shown+"; FIPS keystore "+pick(fips, "present", "absent"),
-		"all keys >= 2048; FIPS suppresses RSA-1024 option", verdict(weak), "B113/B392",
-		"RSA-1024 allowed with click-through warning")
-	return nil
-}
-
 // sec12 looks for a structured EncryptionKeySource marker in the raw header and the XML prologue.
 func sec12(stationXML string, rawHead []byte, rep *report) {
 	raw := make([]rune, len(rawHead))

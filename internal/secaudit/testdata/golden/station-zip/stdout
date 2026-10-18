@@ -15,7 +15,9 @@
   [92m[PASS  ][0m SEC-07 (high) program.requireSigning (BProgram bytecode)  [B75]
   [92m[PASS  ][0m SEC-08 (high) allowProgramRuntimeExec  [B75]
   [92m[PASS  ][0m SEC-10 (high) syslog offload to external SIEM  [B75/B393/B396]
-  [92m[PASS  ][0m SEC-11 (med) weak signing keys / FIPS  [B113/B392]
+  [90m[SKIP  ][0m SEC-11 (med) weak signing keys / FIPS  [B113/B392]
+           observed: not checked (no security/truststore.jks); FIPS keystore absent
+           note    : run: keytool -list -v -keystore <home>/security/truststore.jks with the store password
   [92m[PASS  ][0m SEC-12 (med) config.bog at-rest encryption  [B114]
   [96m[FAIL  ][0m SEC-16 (med) local data record integrity (audit/history/backup/.bog)  [B393/B396]
            observed: unsigned by design (architectural)

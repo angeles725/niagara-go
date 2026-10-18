@@ -1,5 +1,0 @@
-{
-  "reason": "Python ends in a FileNotFoundError traceback when keytool is not on PATH; Go prints one line and exits 2 (cannot search)",
-  "stderr": "niagara-security-audit.py: keytool: [Errno 2] No such file or directory: 'keytool'\n",
-  "exit": 2
-}

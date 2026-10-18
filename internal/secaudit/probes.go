@@ -11,7 +11,6 @@ import (
 	"net"
 	"os"
 	"os/exec"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -139,6 +138,13 @@ const storepassVar = "NIAGARA_SECAUDIT_STOREPASS"
 // keytool prints its errors on stdout, so both streams are searched.
 const wrongPassMarker = "password was incorrect"
 
+// keytoolLocaleArgs are JVM options keytool forwards to its JVM, so its output is English whatever
+// the host locale: under a Spanish one keytool prints "Su almacén de claves contiene 2 entradas" and
+// "Clave RSA de 1024 bits (débil)", which no English pattern reads. They come last so they override
+// any earlier -J-Duser.* (the last one wins; measured on JDK 8 and JDK 21 in niagara-research
+// 526526c72).
+var keytoolLocaleArgs = []string{"-J-Duser.language=en", "-J-Duser.country=US"}
+
 // keytoolTimeout bounds every keytool run: a stalled keytool must not hang the audit.
 var keytoolTimeout = 60 * time.Second
 
@@ -148,8 +154,8 @@ func (e *env) keytoolList(path string, verbose bool) (keytoolOutcome, error) {
 	if verbose {
 		argv = append(argv, "-v")
 	}
-	r, err := e.run(append(argv, "-keystore", path, "-storepass:env", storepassVar), nil, keytoolTimeout,
-		storepassVar+"=changeit")
+	argv = append(append(argv, "-keystore", path, "-storepass:env", storepassVar), keytoolLocaleArgs...)
+	r, err := e.run(argv, nil, keytoolTimeout, storepassVar+"=changeit")
 	var timedOut *timeoutError
 	if errors.As(err, &timedOut) { // not opened, not refused: the rows say the store was not checked
 		return keytoolOutcome{failure: "timed out after " +
@@ -183,26 +189,22 @@ func (e *env) keytoolDefault(path string) (*keytoolOutcome, error) {
 	return &o, err
 }
 
-var bitsRE = regexp.MustCompile(`([0-9]+)-bit`)
-
-// keytoolKeysizes are the key sizes "keytool -list -v" prints for the store at path. failure is
-// set (and sizes nil) when keytool did not exit 0: the sizes were not read, which is not "none".
-func (e *env) keytoolKeysizes(path string) (sizes []int, failure string, err error) {
+// keytoolKeysizes reads "keytool -list -v" on the store at path: one key per "Subject Public Key
+// Algorithm:" line, in listing order, and the entry count ("" when keytool printed none). failure
+// is set (keys nil) when keytool did not exit 0: the keys were not read, which is not "none".
+func (e *env) keytoolKeysizes(path string) (keys []key, entries digits, failure string, err error) {
 	if !pycompat.IsFile(path) {
-		return nil, "", nil
+		return nil, "", "", nil
 	}
 	o, err := e.keytoolList(path, true)
 	if err != nil {
-		return nil, "", err
+		return nil, "", "", err
 	}
 	if !o.opened {
-		return nil, o.failure, nil
+		return nil, "", o.failure, nil
 	}
-	for _, m := range bitsRE.FindAllStringSubmatch(o.stdout, -1) {
-		n, _ := strconv.Atoi(m[1])
-		sizes = append(sizes, n)
-	}
-	return sizes, "", nil
+	keys, entries = parseKeys(o.stdout)
+	return keys, entries, "", nil
 }
 
 // tlsSubject is the "subject=..." line of the certificate host:port serves; "" on any failure.

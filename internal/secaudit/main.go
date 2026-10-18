@@ -58,7 +58,7 @@ func run(e *env, home, station, host, scanDir string, asJSON bool, s cli.Stdio) 
 	}
 	rep := &report{}
 	if err := e.audit(home, stationXML, host, rawHead, rep); err != nil {
-		// Python ends in a traceback when keytool cannot be started.
+		// keytool could not be started: no keytool is no audit (one line, exit 2, as Python).
 		fmt.Fprintf(s.Err, "%s: %s\n", prog, err)
 		return cli.ExitCannotSearch
 	}

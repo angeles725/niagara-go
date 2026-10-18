@@ -18,7 +18,9 @@
            observed: disabled/absent
            secure  : enabled + serverHost + TLS transport
            note    : the ONLY tamper-resistance for the (unsigned) local audit/history record
-  [92m[PASS  ][0m SEC-11 (med) weak signing keys / FIPS  [B113/B392]
+  [90m[SKIP  ][0m SEC-11 (med) weak signing keys / FIPS  [B113/B392]
+           observed: not checked (no security/truststore.jks); FIPS keystore absent
+           note    : run: keytool -list -v -keystore <home>/security/truststore.jks with the store password
   [96m[FAIL  ][0m SEC-12 (med) config.bog at-rest encryption  [B114]
            observed: EncryptionKeySource=external/none in raw header; EncryptionKeySource=external/none in XML prologue (none = plaintext)
            secure  : keyring
