@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/cli"
+	"github.com/angeles725/niagara-go/internal/course/key"
 )
 
 type match struct {
@@ -30,14 +31,14 @@ func truncate(s string, n int) string {
 }
 
 // cmdStatus prints the per-group counts and, with --status, the matching items.
-func cmdStatus(c *Corpus, s cli.Stdio, hasLab bool, lab, status string, asJSON bool) int {
+func cmdStatus(c *key.Corpus, s cli.Stdio, hasLab bool, lab, status string, asJSON bool) int {
 	keys := make([]string, 0, len(c.Groups))
 	for _, g := range c.Groups {
 		keys = append(keys, g.Key)
 	}
 	if hasLab {
-		if keys = c.groupKeys(lab); len(keys) == 0 {
-			fmt.Fprintf(s.Err, "course: no group %s (groups: %s)\n", lab, c.groupList())
+		if keys = c.GroupKeys(lab); len(keys) == 0 {
+			fmt.Fprintf(s.Err, "course: no group %s (groups: %s)\n", lab, c.GroupList())
 			return cli.ExitNoMatch
 		}
 	}
@@ -59,7 +60,7 @@ func cmdStatus(c *Corpus, s cli.Stdio, hasLab bool, lab, status string, asJSON b
 		searched++
 		rows[it.Group].count(it)
 		total.count(it)
-		if status != "" && it.hasStatus(status) {
+		if status != "" && it.HasStatus(status) {
 			matches = append(matches, match{it.ID, it.Step})
 		}
 	}
@@ -76,7 +77,7 @@ func cmdStatus(c *Corpus, s cli.Stdio, hasLab bool, lab, status string, asJSON b
 	} else {
 		printTable(s, append(ordered, total))
 		if status != "" && len(matches) > 0 {
-			fmt.Fprintf(s.Out, "\n%s: %s\n", status, plural(len(matches), "item"))
+			fmt.Fprintf(s.Out, "\n%s: %s\n", status, key.Plural(len(matches), "item"))
 			w := 0
 			for _, m := range matches {
 				w = max(w, len([]rune(m.ID)))
@@ -88,7 +89,7 @@ func cmdStatus(c *Corpus, s cli.Stdio, hasLab bool, lab, status string, asJSON b
 	}
 	if status != "" && len(matches) == 0 {
 		fmt.Fprintf(s.Err, "course: no %s item in %s (searched %s)\n", status, strings.Join(keys, ", "),
-			plural(searched, "item"))
+			key.Plural(searched, "item"))
 		return cli.ExitNoMatch
 	}
 	return cli.ExitFound
@@ -115,4 +116,40 @@ func printTable(s cli.Stdio, rows []countRow) {
 		fmt.Fprintln(s.Out, b.String())
 	}
 	fmt.Fprintln(s.Out, tableFooter)
+}
+
+// countRow is one line of the status table (and its JSON object).
+type countRow struct {
+	Group      string `json:"group"`
+	Items      int    `json:"items"`
+	Predicted  int    `json:"predicted"`
+	Unverified int    `json:"unverified"`
+	Corrected  int    `json:"corrected"`
+	Identical  int    `json:"identical"`
+	Verified   int    `json:"verified"`
+	Written    int    `json:"written"`
+}
+
+func (r *countRow) values() []int {
+	return []int{r.Items, r.Predicted, r.Unverified, r.Corrected, r.Identical, r.Verified, r.Written}
+}
+
+func (r *countRow) count(it *key.Item) {
+	r.Items++
+	for _, s := range it.StatusList() {
+		switch s {
+		case "predicted":
+			r.Predicted++
+		case "unverified":
+			r.Unverified++
+		case "corrected":
+			r.Corrected++
+		case "identical":
+			r.Identical++
+		case "verified":
+			r.Verified++
+		case "written":
+			r.Written++
+		}
+	}
 }

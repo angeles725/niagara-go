@@ -33,6 +33,8 @@
 - **L10.6–L10.7** · Depend on history-rt and file-rt (`LI:30`) · *(predicted)* both in module.xml. C10.7
   reaches it through two of its keys: one link, listed once.
 - **L10.23** · Files: ten CSV files (`LI:31`) · *(verified live 2026-10-15)* already verified: not reported.
+- **L10.24** · Open one CSV (`LI:32`) · *(predicted)* the history line, the header, rows. Decided by the
+  three file-text checks C10.8-C10.10.
 
 ---
 

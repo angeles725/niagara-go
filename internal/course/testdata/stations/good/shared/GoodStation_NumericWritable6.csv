@@ -1,1 +1,5 @@
-timestamp,value,status
+﻿history:GoodStation/NumericWritable6
+
+Timestamp,Trend Flags,Status,Value
+15 oct 2026 12:43:20 CST,{start},{ok},"82,9"
+15 oct 2026 12:43:21 CST,{ },{ok},"75,7"

@@ -9,14 +9,16 @@ import (
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/cli"
+	"github.com/angeles725/niagara-go/internal/course/key"
 )
 
-func (c *Corpus) scope() string {
-	names := make([]string, len(sourceFiles))
-	for i, f := range sourceFiles {
+// scope is "searched N items in labs.md, review-assignments.md, certification-exam.md".
+func scope(c *key.Corpus) string {
+	names := make([]string, len(key.SourceFiles))
+	for i, f := range key.SourceFiles {
 		names[i] = f[strings.LastIndex(f, "/")+1:]
 	}
-	return fmt.Sprintf("searched %s in %s", plural(len(c.Items), "item"), strings.Join(names, ", "))
+	return fmt.Sprintf("searched %s in %s", key.Plural(len(c.Items), "item"), strings.Join(names, ", "))
 }
 
 func writeJSON(w io.Writer, v any) {
@@ -26,7 +28,7 @@ func writeJSON(w io.Writer, v any) {
 	_ = enc.Encode(v)
 }
 
-func textLine(it *Item) string {
+func textLine(it *key.Item) string {
 	if it.TextFile == "" || len(it.Ranges) == 0 {
 		return "(none)"
 	}
@@ -37,7 +39,7 @@ func textLine(it *Item) string {
 	return it.TextFile + ":" + strings.Join(rs, ", ")
 }
 
-func printItem(w io.Writer, it *Item) {
+func printItem(w io.Writer, it *key.Item) {
 	field := func(label, value string) { fmt.Fprintf(w, "  %-10s%s\n", label+":", value) }
 	fmt.Fprintf(w, "%s (%s)\n", it.ID, it.Kind)
 	section := it.Section
@@ -50,7 +52,7 @@ func printItem(w io.Writer, it *Item) {
 	}
 	field("step", it.Step)
 	field("text", textLine(it))
-	field("status", strings.Join(it.statusList(), ", "))
+	field("status", strings.Join(it.StatusList(), ", "))
 	if it.LiveRun {
 		field("live run", "needed")
 	}
@@ -82,10 +84,10 @@ type itemJSON struct {
 	Answer     string   `json:"answer"`
 }
 
-func toJSON(it *Item) itemJSON {
+func toJSON(it *key.Item) itemJSON {
 	j := itemJSON{ID: it.ID, Covers: append([]string{}, it.Covers...), Kind: it.Kind, Group: it.Group,
 		Section: it.Section, Subsection: it.Subsection, Step: it.Step, TextFile: it.TextFile,
-		Ranges: []string{}, Status: it.statusList(), LiveRun: it.LiveRun, File: it.File, Line: it.Line, Answer: it.Answer}
+		Ranges: []string{}, Status: it.StatusList(), LiveRun: it.LiveRun, File: it.File, Line: it.Line, Answer: it.Answer}
 	for _, r := range it.Ranges {
 		j.Ranges = append(j.Ranges, r.String())
 	}
@@ -93,13 +95,13 @@ func toJSON(it *Item) itemJSON {
 }
 
 // cmdShow prints every found item; any unknown ID makes the exit 1.
-func cmdShow(c *Corpus, s cli.Stdio, ids []string, asJSON bool) int {
-	var found []*Item
+func cmdShow(c *key.Corpus, s cli.Stdio, ids []string, asJSON bool) int {
+	var found []*key.Item
 	code := cli.ExitFound
 	for _, id := range ids {
-		it := c.lookup(id)
+		it := c.Lookup(id)
 		if it == nil {
-			fmt.Fprintf(s.Err, "course: no item %s (%s)\n", id, c.scope())
+			fmt.Fprintf(s.Err, "course: no item %s (%s)\n", id, scope(c))
 			code = cli.ExitNoMatch
 			continue
 		}
@@ -122,52 +124,18 @@ func cmdShow(c *Corpus, s cli.Stdio, ids []string, asJSON bool) int {
 	return code
 }
 
-// groupKeys resolves a --lab / text spelling to group keys: 3, 03 and L3, B and LB, A and LA,
-// RA (RA1, RA2 and RAX together) or a key in any case.
-func (c *Corpus) groupKeys(name string) []string {
-	n := strings.ToUpper(strings.TrimSpace(name))
-	switch {
-	case n == "B" || n == "A":
-		n = "L" + n
-	case n != "" && strings.Trim(n, "0123456789") == "":
-		n = "L" + strings.TrimLeft(n, "0")
-	case len(n) > 1 && n[0] == 'L' && strings.Trim(n[1:], "0123456789") == "":
-		n = "L" + strings.TrimLeft(n[1:], "0") // L03 is L3
-	case n == "RA":
-		var keys []string
-		for _, g := range c.Groups {
-			if strings.HasPrefix(g.Key, "RA") {
-				keys = append(keys, g.Key)
-			}
-		}
-		return keys
-	}
-	if c.group(n) == nil {
-		return nil
-	}
-	return []string{n}
-}
-
-func (c *Corpus) groupList() string {
-	keys := make([]string, len(c.Groups))
-	for i, g := range c.Groups {
-		keys[i] = g.Key
-	}
-	return strings.Join(keys, ", ")
-}
-
 // cmdText prints the numbered text lines of an item's or a group's ranges.
-func cmdText(c *Corpus, s cli.Stdio, root, target string) int {
+func cmdText(c *key.Corpus, s cli.Stdio, root, target string) int {
 	var file, label string
-	var ranges []Range
-	if it := c.lookup(target); it != nil {
+	var ranges []key.Range
+	if it := c.Lookup(target); it != nil {
 		file, ranges, label = it.TextFile, it.Ranges, it.ID
-	} else if keys := c.groupKeys(target); len(keys) == 1 {
-		g := c.group(keys[0])
+	} else if keys := c.GroupKeys(target); len(keys) == 1 {
+		g := c.Group(keys[0])
 		file, ranges, label = g.TextFile, g.Ranges, g.Key
 	} else {
 		fmt.Fprintf(s.Err, "course: no item or group %s (searched %s, %s)\n", target,
-			plural(len(c.Items), "item"), plural(len(c.Groups), "group"))
+			key.Plural(len(c.Items), "item"), key.Plural(len(c.Groups), "group"))
 		return cli.ExitNoMatch
 	}
 	if file == "" || len(ranges) == 0 {
@@ -183,10 +151,10 @@ func cmdText(c *Corpus, s cli.Stdio, root, target string) int {
 		fmt.Fprintf(s.Err, "course: cannot read %s: %v\n", file, err)
 		return cli.ExitCannotSearch
 	}
-	lines := splitLines(raw)
+	lines := key.SplitLines(raw)
 	for _, r := range ranges {
 		if r.A < 1 || r.B < r.A || r.B > len(lines) {
-			fmt.Fprintf(s.Err, "course: %s: range %s is outside %s (%s)\n", label, r, file, plural(len(lines), "line"))
+			fmt.Fprintf(s.Err, "course: %s: range %s is outside %s (%s)\n", label, r, file, key.Plural(len(lines), "line"))
 			return cli.ExitCannotSearch
 		}
 	}

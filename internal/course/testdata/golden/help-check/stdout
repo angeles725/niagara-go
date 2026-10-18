@@ -1,9 +1,12 @@
-usage: course check [-h] [--root DIR] --station PATH [--install DIR] [--lab N] [--json]
+usage: course check [-h] [--root DIR] [--station PATH] [--install DIR] [--lab N] [--json]
 
 options:
   -h, --help      show this help message and exit
   --root DIR      niagara-research checkout (default: $NIAGARA_RESEARCH_DIR, then found from cwd)
-  --station PATH  station directory, or its config.bog (zipped or plain XML)
-  --install DIR   Niagara install whose modules/ holds the built jars (jar checks SKIP without it)
-  --lab N         only this lab (1-11, B); repeatable
+  --station PATH  station directory, or its config.bog (zipped or plain XML); default:
+                  $COURSE_TRAINING_STATION for the labs, $COURSE_REVIEW_STATION for RA1/RA2,
+                  $COURSE_CERT_STATION for EXAM
+  --install DIR   Niagara install whose modules/ holds the built jars (default:
+                  $COURSE_NIAGARA_INSTALL; jar checks SKIP without either)
+  --lab N         only this lab (1-11, B; RA1, RA2, EXAM run only when named); repeatable
   --json          machine JSON output

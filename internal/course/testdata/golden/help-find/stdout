@@ -1,0 +1,10 @@
+usage: course find [-h] [--root DIR] [-i] REGEXP
+
+positional arguments:
+  REGEXP             a Go regexp (RE2), matched line by line
+
+options:
+  -h, --help         show this help message and exit
+  --root DIR         niagara-research checkout (default: $NIAGARA_RESEARCH_DIR, then found from
+                     cwd)
+  -i, --ignore-case  ignore case

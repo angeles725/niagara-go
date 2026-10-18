@@ -1,0 +1,1 @@
+{"args": ["check", "--station", "stations/good", "--install", "install", "--lab", "5"], "env": {"COURSE_TRAINING_STATION": "stations/nosuch", "COURSE_NIAGARA_INSTALL": "nosuch"}}

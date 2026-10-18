@@ -50,6 +50,9 @@ C10.4   10   PASS     Ramp.out -> NumericWritable.in16, ten times [L10.16 L10.19
 C10.5   10   PASS     every NumericCov enabled [L10.17 L10.20]                                       10 of 10: Lab10/NumericWritable/NumericCov.enabled = true (stored)
 C10.6   10   FAIL     ten exported CSV files in the Station Home [L10.23]                            found 9 shared/BadStation_NumericWritable*.csv, want exactly 10: BadStation_NumericWritable.csv … BadStation_NumericWritable8.csv
 C10.7   10   PASS     depends on history-rt, file-rt, bql-rt [L10.6 L10.7 L10.15]                    modules/training-rt.jar!META-INF/module.xml has name="history-rt", name="file-rt", name="bql-rt"
+C10.8   10   FAIL     CSV line 1 names the history [L10.24]                                          0 of 9 files pass, want line 1 =~ ^history:{station}/NumericWritable\d*$: shared/BadStation_NumericWritable.csv:1 = Timestamp,Value,Status
+C10.9   10   FAIL     CSV header on line 3 [L10.24]                                                  0 of 9 files pass, want line 3 =~ ^Timestamp,Trend Flags,Status,Value$: shared/BadStation_NumericWritable.csv has 2 lines
+C10.10  10   FAIL     CSV rows: timestamp, trend flags, status, value [L10.24]                       0 of 9 files pass, want at least 1 line =~ ^\d{1,2} \S+ \d{4} \d{2}:\d{2}:\d{2} \S+,\{[^}]*\},\{[^}]*\},"?-?\d+(?:[.,]\d+)?"?$: shared/BadStation_NumericWritable.csv: 0 lines match
 C11.1   11   PASS     one TrafficLightServerNetwork [L11.7]                                          found 1: Drivers/TrafficLightServerNetwork
 C11.2   11   PASS     17 server devices (intersections A-Q) [L11.8]                                  found 17: Drivers/TrafficLightServerNetwork/A, Drivers/TrafficLightServerNetwork/B, Drivers/TrafficLightServerNetwork/C, … (+14)
 C11.3   11   PASS     68 server proxy extensions (4 lights each) [L11.8]                             found 68: Drivers/TrafficLightServerNetwork/A/points/N/proxyExt, Drivers/TrafficLightServerNetwork/A/points/S/proxyExt, Drivers/TrafficLightServerNetwork/A/points/E/proxyExt, … (+65)
@@ -71,4 +74,4 @@ CB.1    B    PASS     devices added by discovery (distinct intersection ids) [LB
 CB.2    B    PASS     device discovery leaf in trafficLightDriver-rt [LB.16]                         modules/trafficLightDriver-rt.jar: 1 entry matches com/tridiumuniversity/trafficLightDriver/learn/BTrafficLightDriverDeviceDiscoveryLeaf.class
 CB.3    B    PASS     point discovery leaf in trafficLightDriver-rt [LB.19]                          modules/trafficLightDriver-rt.jar: 1 entry matches com/tridiumuniversity/trafficLightDriver/point/BTrafficLightDriverPointDiscoveryLeaf.class
 CB.4    B    PASS     point manager in trafficLightDriver-wb [LB.8]                                  modules/trafficLightDriver-wb.jar: 1 entry matches **/BTrafficLightDriverPointManager*.class
-checked 72: PASS 62, FAIL 10, SKIP 0; station BadStation (236 components, 15 links), install install
+checked 75: PASS 62, FAIL 13, SKIP 0; station BadStation (236 components, 15 links), install install

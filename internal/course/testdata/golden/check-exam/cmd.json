@@ -1,0 +1,1 @@
+{"args": ["check", "--lab", "EXAM", "--json"], "env": {"COURSE_CERT_STATION": "stations/cert", "COURSE_NIAGARA_INSTALL": "install"}}

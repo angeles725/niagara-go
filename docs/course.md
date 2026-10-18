@@ -2,10 +2,21 @@
 
 `course` looks up the written answers of the N4 Developer Certification course by item ID,
 counts them by verification status, checks a station against the labs (`course check`), and
-decides the predicted answers from that station (`course verify-predictions`).
+decides the predicted answers (`course verify-predictions`), or the answers of any status
+(`course verify --status`), from the stations.
 It reads three Markdown files of a niagara-research checkout and one or two course text
 files. It is new (no Python original), so its golden cases run over the synthetic tree
 `internal/course/testdata/root/`.
+
+## Packages
+
+| Package | Holds | Prints |
+|---|---|---|
+| `internal/course/key` | the answer-key parser and model: `Load(root)`, `Corpus`, `Item`, `Group`, the status vocabulary, `GroupKeys` | nothing (reusable, e.g. by nsearch) |
+| `internal/course/check` | the check spec (`Spec`), the kinds, the station and jar reader (`Open`, `Station.Run`), the verdicts of `verify-predictions` | nothing |
+| `internal/course` | the CLI: argument parsing, root discovery, the tables, JSON and summaries | everything |
+
+The fixtures of all three stay under `internal/course/testdata/`.
 
 ## Sources
 
@@ -132,6 +143,13 @@ exits 2: an answer key that cannot be read without ambiguity is not searched.
 - `course status [--lab G] [--status S] [--json]`: items per group and status (columns
   overlap), then with `--status` the matching IDs and steps (truncated to 80 characters).
   No match is exit 1 with the scope and counts.
+- `course find REGEXP [-i]`: every item whose step or one of its answer lines matches the Go
+  regexp (RE2 syntax, not Python's `re`; `-i` folds case), in answer-key order, one row each:
+  group, ID, statuses and the first matching line (the step first, then the answer lines,
+  trimmed, cut at 120 characters), the columns aligned. No match is exit 1 with
+  `course: no item matches <q> (searched N items in labs.md, review-assignments.md,
+  certification-exam.md)` on stderr, the scope `show` prints; a regexp that does not compile
+  is exit 2.
 - `course text ID|GROUP`: the text-file lines of the item's (or the lab's) ranges, numbered,
   with no trailing whitespace (a blank line prints only its number).
   No range is exit 1; a missing text file or a range past its end is exit 2. Requirements
@@ -139,17 +157,31 @@ exits 2: an answer key that cannot be read without ambiguity is not searched.
 
 ## course check
 
-`course check --station <dir|config.bog> [--install DIR] [--lab N ...] [--json]` verifies what a
+`course check [--station <dir|config.bog>] [--install DIR] [--lab N ...] [--json]` verifies what a
 correct solution of each lab leaves in a station and in the install, and prints one verdict
 per check. It reads the station and the jars only; it needs no niagara-research root.
 
 - `--station`: the station directory (its `config.bog`, zipped or plain XML, and `shared/`), or
-  the bog file itself (its directory is the station directory).
+  the bog file itself (its directory is the station directory). Every selected check runs on it.
 - `--install`: a Niagara install; the jar checks read `<install>/modules/<part>.jar`. Without it
-  every jar check is SKIP.
-- `--lab`: repeatable; `3`, `03`, `L3`, `B`, `LB`. A lab without checks (8) is exit 1.
+  (and without `COURSE_NIAGARA_INSTALL`) every jar check is SKIP.
+- `--lab`: repeatable; `3`, `03`, `L3`, `B`, `LB`, `RA1`, `RA2`, `EXAM` (any case). A lab without
+  checks (8) is exit 1. Without `--lab` only the labs run (1-11, B: the TrainingStation); `RA1`,
+  `RA2` and `EXAM` run only when named, on their own station.
 
-The spec is the table `checkSpec` in `internal/course/checkspec.go`: one row per check with an
+Defaults (explicit flags win; a blank variable counts as unset):
+
+| Flag | Default |
+|---|---|
+| `--install` | `COURSE_NIAGARA_INSTALL` |
+| `--station` | per check, the variable of its station role: `COURSE_TRAINING_STATION` for the labs (1-11, B), `COURSE_REVIEW_STATION` for RA1 and RA2, `COURSE_CERT_STATION` for EXAM |
+
+Without `--station`, a run whose checks span several roles reads each role's station once, and
+the summary names every station read. A role whose variable is unset is the usage error of a
+missing `--station` (`the following arguments are required: --station`, exit 2). The same
+defaults apply to `verify-predictions`.
+
+The spec is the table `Spec` in `internal/course/check/spec.go`: one row per check with an
 ID (`C<lab>.<n>`), the lab, the answer-key items it confirms (`L4.13`, ...), a kind and a
 one-line description. Expected defaults are cited next to each lab's rows (lab `.java`
 file:line, or `organized/` for a framework type). Component types are written
@@ -158,7 +190,7 @@ own prefixes (`t:`, `tld:`) are resolved through its `m=` declarations.
 
 | Kind | Checks | PASS when |
 |---|---|---|
-| `type` | components of a type, optionally under an ancestor type (`Within`) | the count is at least / exactly N |
+| `type` | components of a type, optionally under an ancestor type (`Within`) or below a folder path (`Under`, `Review2`) | the count is at least / exactly N; with `Under`, a FAIL lists where the components are instead |
 | `slot` | a slot on every component of a type; its effective value is the stored value (a composite's nested `value`), else the type default. A dotted slot (`address.port`, `health.lastOkTime`) is a value below a composite slot of the component | every value equals `Want`, and every `Stored` slot is stored (`health.down = false` is also the default of a device never pinged, so C11.12 and C11.14 need `health.lastOkTime` stored); or (`Set`) every slot is stored; or (`Distinct`) the distinct values reach N |
 | `link` | links `From.FromSlot -> Type.Slot`, source by handle or `slot:` ord | the count is at least / exactly N |
 | `files` | files matching a glob under the station dir, `{station}` = the `stationName` slot | the count is at least / exactly N |
@@ -166,6 +198,7 @@ own prefixes (`t:`, `tld:`) are resolved through its `m=` declarations.
 | `jar-entry` | entries matching a glob (`**` crosses `/`) | the count reaches N |
 | `jar-text` | the first entry matching a glob | it holds every listed string |
 | `jar-signed` | `META-INF/*.SF` and `META-INF/*.RSA`, `.DSA` or `.EC` | both exist |
+| `file-text` | every file matching a glob under the station dir (`{station}` as for `files`), read as text: a UTF-8 BOM and CRLF line ends dropped; `Match` is a Go regexp (`{station}` = the station name, quoted) | `Line` > 0: that line matches; `Line` 0: the matching lines are at least / exactly N. No matching file is FAIL |
 
 Nested slots: the bog reader keeps only a composite slot's direct `value` and `status`, so a
 dotted slot is read from `Comp.Nested`, which `bog.LoadOptions` fills only with
@@ -176,9 +209,11 @@ composite slot: the Tcp Config of a driver network is its own component (`tcpCon
 handle), so its port is `address.port` on `trafficLightDriver:TrafficLightDriverTcpCommConfig`.
 
 Checks per lab: 1: 7, 2: 4, 3: 5, 4: 7, 5: 3 (jars only: the station holds nothing of code
-signing), 6: 6, 7: 5, 9: 7, 10: 7, 11: 17 (9 of them nested: driver and server Tcp Config, the
-ping health of the network and of every driver device), B: 4. Lab 8 (ORDs) writes no code and
-changes nothing, so it has none.
+signing), 6: 6, 7: 5, 9: 7, 10: 10 (three of them `file-text` on the exported CSVs), 11: 17 (8 of them nested: C11.9-C11.16, the driver and server
+Tcp Config addresses and the ping health of the network and of every driver device; C11.17
+`serverEnabled` is a plain slot), B: 4. Lab 8 (ORDs) writes no code and changes nothing, so it
+has none (its station steps, such as L8.15 and L8.17, happen in the Workbench UI). Appendix A
+(`LA`) has none either.
 
 Verdicts: PASS; FAIL with what was found instead (`found 9 ..., want exactly 10`,
 `0 of 1 pass, want 2.0: Lab4/My Tstat.diff = 0.0 (default)`); SKIP when the check could not run
@@ -192,16 +227,76 @@ the summary goes to stderr.
 Exit: 0 no FAIL (the SKIPs are in the summary); 1 at least one FAIL; 2 the station cannot be
 read (no such file, not a BOG document) or every selected check was skipped.
 
-The live TrainingStation (2026-10-17, with the 4.15.6.20 install): 72 checked, 71 PASS, 1 FAIL.
+### Review-assignment checks (RA1, RA2)
+
+The rows `CRA1.<n>` and `CRA2.<n>` (`internal/course/check/spec_review.go`) read the review
+station (`COURSE_REVIEW_STATION`) and the module `Cristian_Angeles_Review-rt` (the participant's
+names: the module and type names follow from them). Keys are the requirement IDs of
+review-assignments.md; a station step reaches its range item (`RA1.V10` -> `RA1.V9–V14`), and
+the needs-a-run checks a station or a jar answers are keys too: X1 (`CRA1.7`, `CRA2.2`, the built
+classes), X3 (`CRA1.9`, distinct ids), X6 (`CRA2.9`, `shared/Review.txt`), X10 (`CRA2.4`,
+signed).
+
+| Rows | Check |
+|---|---|
+| CRA1.1-CRA1.4 | module.xml: `moduleName`, `description` (`<First> <Last> Niagara Review Assignments`), `vendor="review"`, `runtimeProfile="rt"` |
+| CRA1.5-CRA1.7 | palette entry, type registration, `BComponentWithId.class` |
+| CRA1.8-CRA1.10 | two ComponentWithId, distinct ids, in the folder `Review` |
+| CRA2.1-CRA2.5 | `control-rt` dependency, `BPointSummaryService.class`, palette entry, signed, built |
+| CRA2.6-CRA2.10 | NumericWritables in `Review2`, one PointSummaryService under Services, `summaryFile = file:^Review.txt`, `shared/Review.txt` with `name: value {status} @ priority` lines |
+
+What no row observes is an `Unobserved` note: flags, the confirmation dialog and other UI steps,
+superclasses, and that the `Review2` points hold different values: the bog reader drops a
+writable's `fallback` (`internal/bog/parse.go`), so the values cannot be read.
+
+The live review station (2026-10-17, with the 4.15.6.20 install): 20 checked, 18 PASS, 2 FAIL,
+both real: CRA1.2 (the jar's description is `Cristian Angeles Niagara Reviw Assignments`) and
+CRA1.10 (the components sit in `Config/Cristian_Angeles_Review`, not in `Config/Review`).
+
+### Exam checks (EXAM)
+
+The rows `CEXAM.<n>` (`internal/course/check/spec_exam.go`) read the exam station
+(`COURSE_CERT_STATION`, `Cristian_Angeles_Cert`) and the jars `Cristian_Angeles_Cert-rt` and
+`websiteDriver-rt`; keys are P1-P3.
+
+| Problem | Rows |
+|---|---|
+| P1 Limiter | a `Limiter` in `Test`, `min = 25.0`, `max = 75.0`, the link `Ramp.out -> Limiter.in`, `out` stored, the jar signed, `BLimiter.class` |
+| P2 HistoryExportService | one under Services, `historyId = /Cristian_Angeles_Cert/AuditHistory`, `shared/history.csv` with the header `Timestamp,Operation,Target,SlotName` and audit rows, `BHistoryExportService.class` |
+| P3 websiteDriver | a `WebsiteDriverDevice` under Drivers with `website` stored and `health.lastOkTime` stored (nested), the jar signed, the network, device and folder classes, `NETWORK_COMMUNICATION` |
+
+The live exam station (2026-10-17, with the 4.15.6.20 install): 19 checked, 19 PASS.
+
+The live TrainingStation (2026-10-17, with the 4.15.6.20 install): 75 checked, 74 PASS, 1 FAIL.
 C3.4 fails because the station really differs: its Lab2 folder has Point1..Point4 linked to
 Add.in1..in4 and no `Output` point, so Lab 3 step 11 (`LI:576`, Add.Out -> Output.In10) was
 not done.
 
+## course verify
+
+`course verify --status S [--lab GROUP] [--station <dir|config.bog>] [--install DIR] [--date YYYY-MM-DD] [--json]`
+decides every item carrying status `S` (the vocabulary of `status`: `predicted`, `unverified`,
+`corrected`, `identical`, `verified`, `written`) in the group `--lab` (the spellings of `status
+--lab`: `3`, `L3`, `RA1`, `RA` for RA1, RA2 and RAX, `EXAM`; every group without it), with the
+rules, output and exit of `verify-predictions` below; the summary starts with the status
+(`written 258: CONFIRMED ...`). Each linked check runs on the station of its role (the defaults
+of `course check`), so `course verify --status written` with the three station variables set
+decides the lab, review and exam items in one run. An unknown group is exit 1 with the group list.
+
+The live stations and the real answer key (2026-10-17, with the 4.15.6.20 install):
+`verify --status written` decides 258 items: 55 CONFIRMED, 8 PARTIAL, 3 CONTRADICTED (L3.7: C3.4,
+the missing Add.out -> Output link; RA1.M3: the description typo; RA1.V9–V14: no folder
+`Review`), 192 UNDECIDED (no check covers them); 72 checks run on the TrainingStation and the
+review station (no written item links an exam check: the exam items are verified).
+
+`course verify-predictions` is `course verify --status predicted` over every group: the same
+stdout, stderr and exit (`TestVerifyPredictionsIsVerifyStatusPredicted`).
+
 ## course verify-predictions
 
-`course verify-predictions --station <dir|config.bog> [--install DIR] [--date YYYY-MM-DD] [--json]`
+`course verify-predictions [--station <dir|config.bog>] [--install DIR] [--date YYYY-MM-DD] [--json]`
 reads the answer keys (it needs the root, like `show`) and the station, and decides every item
-still marked `*(predicted)*` from the checks whose `Keys` resolve to it (`Corpus.lookup`: the ID,
+still marked `*(predicted)*` from the checks whose `Keys` resolve to it (`Corpus.Lookup`: the ID,
 a range ID or a covered ID, so key `L4.15` reaches the range item `L4.15–L4.16`). A check is
 linked once per item however many of its keys reach it, and its `Unobserved` note is read under
 the key that matched, not the item's ID (`itemLinks`, which `TestCheckKeysReal` uses too). Only those linked checks run; the bog is read with nested values only when
@@ -218,8 +313,17 @@ A check proves what the station and the jars store, never a console line, a job 
 or a runtime status. So a spec row may carry `Unobserved`, a map from a key to what of that
 item's answer the check does not observe (C1.2 -> L1.25: `the Hello, World! line in the station
 console`). `TestCheckKeysReal` fails on a link to an item the real key marks predicted that has
-no note, unless the link is audited into `fullyObserved` (empty on 2026-10-17: every predicted
+no note, unless the link is audited into `fullyObserved` (2026-10-17: only C10.8-C10.10 ->
+L10.24, whose answer is the content of the exported CSV the checks read; every other predicted
 item a check links also predicts something no bog or jar holds).
+
+L10.24 (open one CSV) is decided by the CSVs the live station exported
+(`shared/TrainingStation_NumericWritable1.csv`): a UTF-8 BOM, `history:TrainingStation/NumericWritable1`,
+a blank line, the header `Timestamp,Trend Flags,Status,Value`, then rows such as
+`15 oct 2026 12:43:20 CST,{start},{ok},"82,9"` (the es-MX locale's decimal comma, so the value is
+quoted). C10.8 (line 1), C10.9 (line 3) and C10.10 (the rows) check exactly that, so the item is
+CONFIRMED; its answer text (`a header row, then timestamp / value / status rows`) predicts other
+columns and no history line, and must be corrected with the verified marker.
 
 The table `ID  VERDICT  EVIDENCE` lists the predicted items in answer-key order, then, when any
 item is CONFIRMED, one ready-to-apply line per CONFIRMED item (never for PARTIAL):
@@ -238,8 +342,8 @@ CONTRADICTED; 2 the answer keys or the station cannot be read, a bad `--date`, o
 check was skipped (nothing could be checked, as in `course check`).
 
 The live TrainingStation and the real answer key (2026-10-17, with the 4.15.6.20 install):
-40 predicted, 0 CONFIRMED, 9 PARTIAL (L1.14, L1.25, L4.15, L7.18, L10.19, L10.22, L11.7,
-L11.26, L11.32), 0 CONTRADICTED, 31 UNDECIDED (no check covers them); 15 checks run.
+40 predicted, 1 CONFIRMED (L10.24), 9 PARTIAL (L1.14, L1.25, L4.15, L7.18, L10.19, L10.22, L11.7,
+L11.26, L11.32), 0 CONTRADICTED, 30 UNDECIDED (no check covers them); 18 checks run.
 
 Audit of the links to predicted items (2026-10-17): C3.5 (Add.out stored) no longer links L3.9
 (`Output = Point1 + Point2 + Point3`): it says nothing of the Output point, which the live
@@ -253,34 +357,47 @@ not observed.
 - `internal/course/testdata/golden/`: hand-written expectations over the fixture roots
   (`root`, `dup-root`, `partial-root`, `norelated`); the help and usage cases were captured
   from the first green build and reviewed.
+  `TestGolden` clears the `COURSE_*` variables first, so a developer's defaults never reach a
+  case; `check-env-defaults`, `check-env-blank` and `check-flag-beats-env` set them in `cmd.json`.
+  `check/stations_test.go`: the station roles and one read per station path.
+- `find_test.go` and the `find-*` goldens: step and answer matches, case folding, the honest
+  zero and a bad regexp.
 - `root_test.go`: the discovery order (flag, variable, cwd walk, executable walk) and the
   not-found error, run from a temporary directory with the executable stubbed, so no `labs.md`
   above the real checkout can leak in.
-- `check_test.go` and the `check-*` goldens: synthetic stations under
+- `check/filetext_test.go`: the `file-text` kind over a BOM + CRLF trend CSV, an old-format CSV, a
+  short file, a line count, no matching file and a bad regexp.
+- `check/check_test.go` and the `check-*` goldens: synthetic stations under
   `internal/course/testdata/stations/` (`good`: every check PASS; `bad`: no FirstComponent,
-  default Tstat diff, no Add.out -> Output link, nine CSV files, a driver Tcp Config on the
+  default Tstat diff, no Add.out -> Output link, nine CSV files in the old header-first format, a driver Tcp Config on the
   default port, a network whose ping failed (`health.down` true, no `lastOkTime`) and a driver
   device never pinged (no `health`); `broken`:
   not a bog) and a synthetic install under `testdata/install/`, whose jars are generated from the table in
-  `fixturejars_test.go` (`COURSE_UPDATE_FIXTURES=1 go test -run TestFixtureJars`; the test fails
+  `check/fixturejars_test.go` (`COURSE_UPDATE_FIXTURES=1 go test -run TestFixtureJars`; the test fails
   when a jar drifts). The zipped form of a bog is covered by `TestCheckZippedBog`.
-  `TestCheckTrainingStation` runs the spec against `COURSE_TRAINING_STATION` (and the jars of
-  `COURSE_NIAGARA_INSTALL`) and pins the known station differences; it skips, visibly,
-  without the variable. `TestCheckNestedNeedsNestedLoad`: a dotted check on a bog read without
+  `TestCheckLiveStations` runs the rows of each role against its live station
+  (`COURSE_TRAINING_STATION`, `COURSE_REVIEW_STATION`, `COURSE_CERT_STATION`, and the jars of
+  `COURSE_NIAGARA_INSTALL`) and pins the known station differences; a role whose variable is unset
+  skips, visibly. The synthetic `stations/review` mirrors the live review station (components in
+  `Cristian_Angeles_Review`, so CRA1.10 FAILs); the `check-review` golden runs it. `stations/cert`
+  is a passing exam station (`check-exam`); `check-mixed-roles` reads three stations in one run and
+  `check-missing-role` is the usage error of a role without a station. `TestCheckNestedNeedsNestedLoad`: a dotted check on a bog read without
   nested values is SKIP.
-- `verify_test.go` and the `verify-*` goldens: the verdict rules (`TestDecidePrediction`) and
+- `verify-status-ra`, `verify-unknown-group`, `verify-no-status`: `verify` over the `root`
+  fixture's RA items with the review station.
+- `check/verify_test.go` and the `verify-*` goldens: the verdict rules (`TestDecidePrediction`) and
   the command over `testdata/predict-root/` (a synthetic answer key whose predicted IDs are
   linked keys: one unlinked, one linked only to a jar check, the range item `L4.15–L4.16`
   reached through the noted key L4.15 (PARTIAL), the range `L10.6–L10.7` reached by two keys
-  of C10.7 (linked once), and L4.13 and L11.25 marked
+  of C10.7 (linked once), L10.24 decided by the file-text checks, and L4.13 and L11.25 marked
   predicted so that a fully observing check yields CONFIRMED) with the `good` station (every
   linked check PASS: CONFIRMED and PARTIAL), the `bad` one (L1.25, L4.13, L11.25, L11.26 and
   L11.32 CONTRADICTED), no `--install`, the `root`
   fixture (its one linked check is a jar check: exit 2), a bad `--date` and a broken bog.
   `TestVerifyPredictionsTrainingStation` (with `COURSE_TRAINING_STATION` and
-  `NIAGARA_RESEARCH_DIR`) pins only that no predicted item is CONTRADICTED, none is CONFIRMED
+  `NIAGARA_RESEARCH_DIR`) pins only that no predicted item is CONTRADICTED, only L10.24 is CONFIRMED
   and some are PARTIAL on the live station. `TestCheckKeysReal` resolves every linked key in the real labs.md.
-- `oracle_test.go`: the recall oracle (plain regexes over the raw files, its own range
+- `key/oracle_test.go`: the recall oracle (plain regexes over the raw files, its own range
   expansion) must equal the parsed ID set on the fixture, and on the real checkout when
   `NIAGARA_RESEARCH_DIR` is set, where the counts per group and per status are pinned.
 

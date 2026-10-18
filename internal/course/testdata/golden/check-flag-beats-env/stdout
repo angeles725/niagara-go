@@ -1,0 +1,5 @@
+ID    LAB  VERDICT  DESCRIPTION                                      EVIDENCE
+C5.1  5    PASS     training-rt is signed [L5.21 L5.24]              modules/training-rt.jar: META-INF/CODESIGN.SF, META-INF/CODESIGN.RSA
+C5.2  5    PASS     training-wb is signed [L5.24]                    modules/training-wb.jar: META-INF/CODESIGN.SF, META-INF/CODESIGN.RSA
+C5.3  5    PASS     signed with the CodeSigning alias [L5.13 L5.14]  modules/training-rt.jar: 1 entry matches META-INF/CODESIGN.SF
+checked 3: PASS 3, FAIL 0, SKIP 0; station GoodStation (237 components, 16 links), install install
