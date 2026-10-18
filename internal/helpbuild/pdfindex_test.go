@@ -100,6 +100,36 @@ func TestPDFFailedKeepsTextAndIndexEntry(t *testing.T) { // test_a_failed_pdf_ke
 	}
 }
 
+// A failed PDF keeps the last good entry only when that entry came from
+// the same PDF: "a b.pdf" and "a_b.pdf" sanitise to one stem, so once the
+// first is removed the second takes its stem "a_b" and, when it fails,
+// must not inherit the removed manual's text (Python matches the stem
+// only; an intended difference).
+func TestPDFFailedInheritsOnlyFromTheSamePDF(t *testing.T) {
+	r := newPDFRun(t)
+	r.texts(t, map[string]string{"docA/A.pdf": strings.Repeat("new text A ", 10), "docB/B.pdf": strings.Repeat("new text B ", 10)})
+	for stem, src := range map[string]string{"a_b": "docA/a b.pdf", "a_b_2": "docA/a_b.pdf"} {
+		writeFile(t, filepath.Join(r.textDir, stem+".txt"), []byte("old text of "+src))
+		e := pyjson.NewObject()
+		e.Set("source_pdf", pyjson.String(src))
+		r.oldIndex.Set(stem, e)
+	}
+	writeFile(t, filepath.Join(r.root, "indexes", "pdf-index.json"), []byte(pyjson.Dumps(r.oldIndex, DumpDefault)))
+	writeFile(t, filepath.Join(r.docs, "docA", "a_b.pdf"), []byte("%PDF"))
+	r.texts(t, map[string]string{"docA/a_b.pdf": ""})
+	res := r.main(t, r.root, r.docs)
+	if res.Status != 1 || !reflect.DeepEqual(res.Failed, []string{"a_b.pdf"}) {
+		t.Fatalf("status %d, failed %q", res.Status, res.Failed)
+	}
+	idx := r.index(t)
+	if got, ok := idx.Get("a_b"); ok {
+		t.Errorf("a_b.pdf inherited the entry of the removed a b.pdf: %s", pyjson.Dumps(got, DumpDefault))
+	}
+	if got := idx.Keys; !reflect.DeepEqual(got, []string{"A", "B"}) {
+		t.Errorf("index keys %q, want A and B", got)
+	}
+}
+
 func TestPDFPruneRunsAfterTheIndexIsSaved(t *testing.T) { // test_prune_runs_after_the_index_is_saved
 	r := newPDFRun(t)
 	r.texts(t, map[string]string{"docA/A.pdf": strings.Repeat("new text A ", 10), "docB/B.pdf": strings.Repeat("new text B ", 10)})

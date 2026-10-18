@@ -253,6 +253,10 @@ func extractAll(res *PDFResult, docs, outputDir, indexPath string, previous pyjs
 		stem := resolveName(SanitizePDFName(name), seen)
 		res.add(fmt.Sprintf("\r[%3d%%] %d/%d  %s", (i+1)*100/total, i+1, total, firstRunes(name, 60)))
 		textPath := filepath.Join(outputDir, stem+".txt")
+		rel, err := pyRelSlash(pdfPath, docs)
+		if err != nil {
+			return err
+		}
 		text, pages, err := ExtractPDFText(prog, pdfPath, timeout)
 		var in *interruptError
 		if errors.As(err, &in) {
@@ -262,8 +266,10 @@ func extractAll(res *PDFResult, docs, outputDir, indexPath string, previous pyjs
 			res.Stats.Failed++
 			res.Failed = append(res.Failed, name)
 			// Keep the last good text and its index entry: a failed run
-			// must not make a manual unsearchable.
-			if old, ok := previous.Get(stem); ok && isRegular(textPath) {
+			// must not make a manual unsearchable. Only an entry of this
+			// same PDF is kept (Python matches the stem only): a PDF that
+			// took the stem of a removed one must not inherit its text.
+			if old, ok := previous.Get(stem); ok && sameSource(old, rel) && isRegular(textPath) {
 				index.Set(stem, old)
 				written[stem] = true
 			}
@@ -284,10 +290,6 @@ func extractAll(res *PDFResult, docs, outputDir, indexPath string, previous pyjs
 			return err
 		}
 		written[stem] = true
-		rel, err := pyRelSlash(pdfPath, docs)
-		if err != nil {
-			return err
-		}
 		e := pyjson.NewObject()
 		e.Set("source_pdf", pyjson.String(rel))
 		e.Set("folder", pyjson.String(folder))
@@ -316,6 +318,13 @@ func extractAll(res *PDFResult, docs, outputDir, indexPath string, previous pyjs
 	}
 	summary(res, elapsed, outputDir, indexPath)
 	return nil
+}
+
+// sameSource reports whether the previous index entry old was made from
+// the PDF at rel (its "source_pdf", relative to the docs dir).
+func sameSource(old pyjson.Value, rel string) bool {
+	src, ok := old.Get("source_pdf")
+	return ok && src.Kind == pyjson.Str && src.S == rel
 }
 
 // pruneText removes the docs-text/*.txt files whose stem is not in written

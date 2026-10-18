@@ -261,6 +261,11 @@ S3/S4 intended differences (none changes an output Python produces):
 - **A pdftotext run that succeeds as its deadline passes** keeps its output; it is a
   timeout only when the run failed and the deadline is past (`subprocess.run` raises
   `TimeoutExpired` only while it is still waiting).
+- **Keep-last-good matches the source PDF too**: a failed PDF keeps its previous text and
+  index entry only when that entry's `source_pdf` is this PDF. Python matches the stem
+  only, so once `a b.pdf` is removed, a failing `a_b.pdf` that takes its stem `a_b`
+  would be indexed with the removed manual's text (safety over parity). The stale
+  `.txt` stays until the next clean run prunes it, as in Python.
 - **stdin** of pdftotext is the null device; Python lets it inherit stdin. pdftotext never
   reads it with `-` as the output file. stderr is dropped on both sides.
 - **`PDFOptions.DocsDir` ""** means "not given" (registry lookup); `--docs-dir ''` in Python
