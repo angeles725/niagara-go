@@ -75,15 +75,35 @@ func route(p Paths, argv []string) func([]string) answer {
 }
 
 // bounded runs run under the backend timeout (seconds). Past it the library keeps
-// running and its answer is dropped, as a killed process's output would be.
+// running and its answer is dropped, as a killed process's output would be. A
+// panic in run is raised again in the caller's goroutine, where the source guard
+// (guarded, sub) types it UNAVAILABLE; one past the timeout is dropped with the
+// answer, so a library fault never ends the process.
 func bounded(run func() answer, timeout float64) (answer, bool) {
-	done := make(chan answer, 1)
-	go func() { done <- run() }()
+	type result struct {
+		a        answer
+		panicked bool
+		value    any
+	}
+	done := make(chan result, 1)
+	go func() {
+		var r result
+		defer func() {
+			if v := recover(); v != nil {
+				r = result{panicked: true, value: v}
+			}
+			done <- r
+		}()
+		r.a = run()
+	}()
 	timer := time.NewTimer(time.Duration(timeout * float64(time.Second)))
 	defer timer.Stop()
 	select {
-	case a := <-done:
-		return a, true
+	case r := <-done:
+		if r.panicked {
+			panic(r.value)
+		}
+		return r.a, true
 	case <-timer.C:
 		return answer{}, false
 	}

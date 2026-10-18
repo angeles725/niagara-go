@@ -250,3 +250,32 @@ func TestBoundedTimesOut(t *testing.T) {
 		t.Errorf("a quick run: %v %+v", done, a)
 	}
 }
+
+// A library panic in process must stay that source's failure, as a crashed
+// backend process was: bounded hands it to the caller's goroutine, where the
+// source guard types it UNAVAILABLE.
+func TestBoundedPanicReachesTheSourceGuard(t *testing.T) {
+	o := guarded(job{"docs", "SOURCE 2", "niagara_help find", func() *Outcome {
+		bounded(func() answer { panic("corrupt cache") }, 5)
+		return nil
+	}})
+	if o.State != Unavailable ||
+		o.Reason != "unavailable: the front door failed on this source: panic: corrupt cache" {
+		t.Errorf("got %+v", o)
+	}
+}
+
+// A run that panics after its answer was dropped must not take the process down.
+func TestBoundedPanicPastTimeoutIsDropped(t *testing.T) {
+	release, panicking := make(chan struct{}), make(chan struct{})
+	if _, done := bounded(func() answer {
+		<-release
+		defer close(panicking)
+		panic("late")
+	}, 0.01); done {
+		t.Fatal("a run past the timeout reported done")
+	}
+	close(release)
+	<-panicking
+	time.Sleep(50 * time.Millisecond) // an unrecovered panic would end the test binary here
+}
