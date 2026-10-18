@@ -1,0 +1,3 @@
+change,ref,detail
+slot-added,BColdRoom.alarmLimit,baja:StatusNumeric
+slot-reflagged,BColdRoom.mode,Flags.OPERATOR -> Flags.SUMMARY

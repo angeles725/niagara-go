@@ -1,0 +1,20 @@
+prior-coverage gate — scanned 21 block(s)
+
+  [MENTIONED] kitControl:
+      body     B10 — Bloque 10 — Topic 10
+      body     B11 — Bloque 11 — Topic 11
+      body     B12 — Bloque 12 — Topic 12
+      body     B13 — Bloque 13 — Topic 13
+      body     B14 — Bloque 14 — Topic 14
+      body     B15 — Bloque 15 — Topic 15
+      body     B16 — Bloque 16 — Topic 16
+      body     B17 — Bloque 17 — Topic 17
+      body     B18 — Bloque 18 — Topic 18
+      body     B19 — Bloque 19 — Topic 19
+      body     B20 — Bloque 20 — Topic 20
+      body     B21 — Bloque 21 — Topic 21
+      body     … +2 more block(s)
+
+VERDICT: prior coverage found. DO NOT declare "extends X, never re-derives" blindly.
+For each covered module, decide in the bootstrap: net-new / deepening of B<n> (cite it) /
+already covered -> out of scope. A focus that is entirely covered does NOT open.

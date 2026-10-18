@@ -1,0 +1,3 @@
+usage: corpus-nav.py grep [-h] [--in {blocks,docs,retros,all}] [--limit LIMIT]
+                          regex
+corpus-nav.py grep: error: argument --limit/-n: must be at least 1, not -1

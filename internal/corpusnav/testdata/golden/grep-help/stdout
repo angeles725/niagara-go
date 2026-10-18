@@ -1,0 +1,11 @@
+usage: corpus-nav.py grep [-h] [--in {blocks,docs,retros,all}] [--limit LIMIT]
+                          regex
+
+positional arguments:
+  regex
+
+options:
+  -h, --help            show this help message and exit
+  --in {blocks,docs,retros,all}
+                        corpus subset to search (default: blocks)
+  --limit, -n LIMIT     max matching lines to print (default: 50)

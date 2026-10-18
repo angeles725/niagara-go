@@ -1,0 +1,1 @@
+{"args": ["lint-refs", "niagara-mental-model-bloque5.md"], "env": {"COLUMNS": "80", "GIT_DIR": "/nonexistent", "CORPUS_NAV_ROOT": ".", "CORPUS_NAV_FIND_INDEX": "off"}, "cwd_fixture": "corpus"}

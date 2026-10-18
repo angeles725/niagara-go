@@ -1,0 +1,57 @@
+usage: module-find.py [-h] [--json] [--csv] [--limit N] [--version]
+                      [root]
+                      {slots,actions,writers,extends,ords,grep,slot-types,ext-writable,compare,callers,selftest} ...
+
+module-find: read-only finder for a Niagara N4 module's Java SOURCE tree.
+
+WHY: bog-nav navigates a station's saved graph; this navigates the MODULE that defines the
+types in it. Niagara slots/actions are declared with multi-line @NiagaraProperty /
+@NiagaraAction annotations whose args wrap across lines, and a slot's writers are the
+`.set("slot", ...)` / setSlot(...) calls scattered across a servlet or logic class. A naive
+grep splits on the line break, misses the paren-balanced tail (the flags= / type= that decide
+OPERATOR-vs-hidden), and cannot follow `extends` to say a servlet's name is inherited from
+BWebServlet. This walks the tree, joins each annotation by PAREN BALANCE (bog-audit D9 lesson),
+and answers those questions structurally.
+
+Slot/action/extends/.set() extraction REUSED from build-n4-module-kit/toolbelt/bog-audit.sh
+(kit main 3f666a0), source-dir scanning section: the paren-balanced @NiagaraProperty /
+@NiagaraAction join, the `class X extends Y` capture, and the `.set("SLOT", ...)` writer scan.
+
+Subcommands:
+  slots [--type T] [--flags F] [--name RE]   @NiagaraProperty declarations (type/flags/min)
+  actions [--name RE]                        @NiagaraAction declarations
+  writers <slotName>                         who writes a slot: setSlot(/ .set("slot",
+  extends [--of CLASS]                       class -> superclass map (follow a chain with --of)
+  ords [--name RE]                           ORD-shaped string literals in the source
+  grep <regex>                               regex over class names / slot names / action names
+  grep --source <regex>                      regex over every source line (file:line text)
+  callers <method>                           call sites of a method
+
+Read-only. Prints rows; --json/--csv for machine output, --limit N (-n) caps the rows.
+Exit: 0 found · 1 slots/actions/ords/grep/callers matched nothing (the miss line names the root
+and its .java count) · 2 usage · 3 unreadable root / no .java. Prunes dot-dirs. stdlib only.
+
+positional arguments:
+  root                  module src root (omit for selftest)
+  {slots,actions,writers,extends,ords,grep,slot-types,ext-writable,compare,callers,selftest}
+    slots               @NiagaraProperty declarations
+    actions             @NiagaraAction declarations
+    writers             who writes a slot
+    extends             class -> superclass map
+    ords                ORD-shaped string literals
+    grep                regex over class/slot/action names (--source: over the
+                        code)
+    slot-types          per-type summary (count/OPERATOR/complex/TRANSIENT)
+    ext-writable        S19 lint preview: OPERATOR complex property without
+                        action
+    compare             schema diff <root>(A,older) vs <srcB>(newer)
+    callers             who calls a method across the tree
+    selftest            in-memory assertions (no tree needed)
+
+options:
+  -h, --help            show this help message and exit
+  --json                machine JSON output
+  --csv                 CSV output (header + rows)
+  --limit, -n N         print at most N rows (default: all); the cut is
+                        reported
+  --version             print the tools version and exit

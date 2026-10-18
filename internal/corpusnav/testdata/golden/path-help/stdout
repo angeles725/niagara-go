@@ -1,0 +1,11 @@
+usage: corpus-nav.py path [-h] [--directed] [--bare] A B
+
+positional arguments:
+  A
+  B
+
+options:
+  -h, --help  show this help message and exit
+  --directed  follow forward citations only (default: either direction)
+  --bare      also count bare B<N> mentions (outside code) of existing blocks
+              as citations

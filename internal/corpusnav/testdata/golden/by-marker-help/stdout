@@ -1,0 +1,7 @@
+usage: corpus-nav.py by-marker [-h] marker
+
+positional arguments:
+  marker      e.g. INFER, CERT, CERT-hw, CERT-live
+
+options:
+  -h, --help  show this help message and exit

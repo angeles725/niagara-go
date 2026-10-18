@@ -1,0 +1,3 @@
+slot    BColdRoom  setpoint
+action  BColdRoom  applySetpoint
+action  BColdRoom  reset

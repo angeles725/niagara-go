@@ -1,0 +1,1 @@
+{"args": ["srcA", "ext-writable", "--help"], "env": {"COLUMNS": "80", "GIT_DIR": "/nonexistent"}}

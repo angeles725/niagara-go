@@ -1,0 +1,6 @@
+type,count,operator,shape,transient
+baja:String,2,1,simple,0
+baja:StatusNumeric,1,1,complex,0
+BStatusNumeric,1,1,complex,0
+baja:Integer,1,0,simple,1
+(none),1,0,simple,0

@@ -1,0 +1,2 @@
+file,line,text
+com/acme/BColdRoom.java,9,"facets = @Facet(""BFacets.make(BFacets.MIN, BDouble.make(-40.0d))"")"

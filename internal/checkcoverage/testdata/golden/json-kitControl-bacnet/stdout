@@ -1,0 +1,85 @@
+{
+  "scanned_blocks": 21,
+  "names": {
+    "kitControl": {
+      "subject": [],
+      "body": [
+        {
+          "block": "B10",
+          "h1": "Bloque 10 — Topic 10"
+        },
+        {
+          "block": "B11",
+          "h1": "Bloque 11 — Topic 11"
+        },
+        {
+          "block": "B12",
+          "h1": "Bloque 12 — Topic 12"
+        },
+        {
+          "block": "B13",
+          "h1": "Bloque 13 — Topic 13"
+        },
+        {
+          "block": "B14",
+          "h1": "Bloque 14 — Topic 14"
+        },
+        {
+          "block": "B15",
+          "h1": "Bloque 15 — Topic 15"
+        },
+        {
+          "block": "B16",
+          "h1": "Bloque 16 — Topic 16"
+        },
+        {
+          "block": "B17",
+          "h1": "Bloque 17 — Topic 17"
+        },
+        {
+          "block": "B18",
+          "h1": "Bloque 18 — Topic 18"
+        },
+        {
+          "block": "B19",
+          "h1": "Bloque 19 — Topic 19"
+        },
+        {
+          "block": "B20",
+          "h1": "Bloque 20 — Topic 20"
+        },
+        {
+          "block": "B21",
+          "h1": "Bloque 21 — Topic 21"
+        },
+        {
+          "block": "B22",
+          "h1": "Bloque 22 — Topic 22"
+        },
+        {
+          "block": "notes/bloque40-palettes.md",
+          "h1": "Notes bloque 40 — palettes"
+        }
+      ]
+    },
+    "bacnet": {
+      "subject": [
+        {
+          "block": "niagara-reflow-block2.md",
+          "h1": "Reflow 2 — bacnet COV"
+        }
+      ],
+      "body": [
+        {
+          "block": "BTI",
+          "h1": "Bloque TI — test harness"
+        },
+        {
+          "block": "examinacion-optimizer-4.13/os413-bloque3.md",
+          "h1": "OS413 bloque 3 — QNX"
+        }
+      ]
+    }
+  },
+  "verdict": "prior-coverage-found"
+}

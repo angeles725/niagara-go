@@ -1,0 +1,2 @@
+usage: module-find.py [root] compare [-h] [--json] [--csv] [--limit N] srcB
+module-find.py [root] compare: error: the following arguments are required: srcB

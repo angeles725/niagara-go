@@ -1,0 +1,4 @@
+  BColdRoom: .set("mode", ...)
+  Helper: setMode(...)
+  dynamic writers (slot chosen at runtime — any slot could be the target):
+    BDashServlet: comp.set(prop, ...)  [slot resolved at runtime]

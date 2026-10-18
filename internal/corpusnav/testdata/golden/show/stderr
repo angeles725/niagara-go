@@ -1,0 +1,2 @@
+usage: corpus-nav.py show [-h] N
+corpus-nav.py show: error: the following arguments are required: N

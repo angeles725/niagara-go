@@ -1,0 +1,50 @@
+[
+  {
+    "class": "BColdRoom",
+    "slot": "setpoint",
+    "type": "baja:StatusNumeric",
+    "flags": "Flags.SUMMARY | Flags.OPERATOR",
+    "min": -40.0,
+    "complex": true
+  },
+  {
+    "class": "BColdRoom",
+    "slot": "mode",
+    "type": "baja:String",
+    "flags": "Flags.OPERATOR",
+    "min": null,
+    "complex": false
+  },
+  {
+    "class": "BRoomPanel",
+    "slot": "temp",
+    "type": "BStatusNumeric",
+    "flags": "Flags.OPERATOR",
+    "min": null,
+    "complex": true
+  },
+  {
+    "class": "BRoomPanel",
+    "slot": "label",
+    "type": "baja:String",
+    "flags": "Flags.READONLY | Flags.SUMMARY",
+    "min": null,
+    "complex": false
+  },
+  {
+    "class": "BRoomPanel",
+    "slot": "cache",
+    "type": "baja:Integer",
+    "flags": "Flags.TRANSIENT | Flags.HIDDEN",
+    "min": null,
+    "complex": false
+  },
+  {
+    "class": "BRoomPanel",
+    "slot": "untyped",
+    "type": "",
+    "flags": "",
+    "min": null,
+    "complex": false
+  }
+]

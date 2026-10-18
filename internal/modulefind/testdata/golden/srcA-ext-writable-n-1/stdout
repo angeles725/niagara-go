@@ -1,0 +1,3 @@
+ok(has-action) BColdRoom.setpoint  <baja:StatusNumeric>  class exposes an action
+... 1 more rows (raise --limit)
+# 2 OPERATOR complex properties; 1 WARN (S19)

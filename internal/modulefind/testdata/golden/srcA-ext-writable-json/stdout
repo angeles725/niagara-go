@@ -1,0 +1,16 @@
+[
+  {
+    "class": "BColdRoom",
+    "slot": "setpoint",
+    "type": "baja:StatusNumeric",
+    "verdict": "ok(has-action)",
+    "note": "class exposes an action"
+  },
+  {
+    "class": "BRoomPanel",
+    "slot": "temp",
+    "type": "BStatusNumeric",
+    "verdict": "WARN",
+    "note": "external write must use the oBIX child-leaf bare <real> (\u2026/value, B826-G2) or add an OPERATOR action (B822)"
+  }
+]

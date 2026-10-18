@@ -1,0 +1,1 @@
+{"nodes": ["B1-3", "B4", "B5", "B6", "BTI"], "forward": {"B1-3": [], "B4": ["B5", "B6"], "B5": ["B1-3", "B4", "B77"], "B6": [], "BTI": []}, "reverse": {"B1-3": ["B5"], "B4": ["B5"], "B5": ["B4"], "B6": ["B4"], "B77": ["B5"], "BTI": []}, "dangling": ["B77"], "unreadable": [], "stats": {"nodes": 5, "edges": 5, "dangling": 1, "unreadable": 0}}

@@ -1,0 +1,9 @@
+{
+  "slot": "setpoint",
+  "writers": [
+    "BColdRoom: setSetpoint(...)"
+  ],
+  "dynamic": [
+    "BDashServlet: comp.set(prop, ...)  [slot resolved at runtime]"
+  ]
+}

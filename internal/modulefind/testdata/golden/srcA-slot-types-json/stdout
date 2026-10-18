@@ -1,0 +1,37 @@
+[
+  {
+    "type": "baja:String",
+    "count": 2,
+    "operator": 1,
+    "shape": "simple",
+    "transient": 0
+  },
+  {
+    "type": "baja:StatusNumeric",
+    "count": 1,
+    "operator": 1,
+    "shape": "complex",
+    "transient": 0
+  },
+  {
+    "type": "BStatusNumeric",
+    "count": 1,
+    "operator": 1,
+    "shape": "complex",
+    "transient": 0
+  },
+  {
+    "type": "baja:Integer",
+    "count": 1,
+    "operator": 0,
+    "shape": "simple",
+    "transient": 1
+  },
+  {
+    "type": "(none)",
+    "count": 1,
+    "operator": 0,
+    "shape": "simple",
+    "transient": 0
+  }
+]

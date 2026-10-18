@@ -1,0 +1,10 @@
+usage: module-find.py [root] callers [-h] [--json] [--csv] [--limit N] method
+
+positional arguments:
+  method         method name, e.g. setSetpoint / forceDefrost
+
+options:
+  -h, --help     show this help message and exit
+  --json         machine JSON output
+  --csv          CSV output (header + rows)
+  --limit, -n N  print at most N rows (default: all); the cut is reported

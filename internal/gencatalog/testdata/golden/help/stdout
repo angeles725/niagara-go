@@ -1,0 +1,8 @@
+usage: gen-catalog.py [-h] [--check | --stdout]
+
+Generate CATALOG.md from the block H1s.
+
+options:
+  -h, --help  show this help message and exit
+  --check     exit 1 if CATALOG.md is stale; write nothing
+  --stdout    print the catalog instead of writing it

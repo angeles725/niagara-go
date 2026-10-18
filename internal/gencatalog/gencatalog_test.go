@@ -12,7 +12,8 @@ import (
 )
 
 // The cases are niagara-research tools/tests/fixtures/golden-cli/gen-catalog/*.json (the
-// Python output); the repository root is the case's working directory (the fixture corpus).
+// Python output, converted by testdata/convert_golden.py); the repository root is the case's
+// working directory (the fixture corpus).
 
 func useCwdAsRoot(t *testing.T) {
 	t.Helper()
@@ -24,6 +25,35 @@ func useCwdAsRoot(t *testing.T) {
 func TestGolden(t *testing.T) {
 	useCwdAsRoot(t)
 	golden.Run(t, "testdata", Main)
+}
+
+// TestGoldenCatalogStates runs the written, fresh and stale cases (testdata/states/<state>)
+// on a temporary copy of the corpus whose CATALOG.md is absent, the Python one, or the Python
+// one with block 9's row renamed to gone.md (the states of the Python suite).
+func TestGoldenCatalogStates(t *testing.T) {
+	useCwdAsRoot(t)
+	catalog := expected(t, filepath.Join("testdata", "expected"), "CATALOG.md")
+	for state, content := range map[string]string{
+		"written": "",
+		"fresh":   catalog,
+		"stale":   strings.Replace(catalog, "| 9 | [niagara-mental-model-bloque9.md]", "| 8 | [gone.md]", 1),
+	} {
+		t.Run(state, func(t *testing.T) {
+			dir := t.TempDir()
+			if err := os.CopyFS(filepath.Join(dir, "corpus"), os.DirFS(filepath.Join("testdata", "corpus"))); err != nil {
+				t.Fatal(err)
+			}
+			if err := os.CopyFS(filepath.Join(dir, "golden"), os.DirFS(filepath.Join("testdata", "states", state, "golden"))); err != nil {
+				t.Fatal(err)
+			}
+			if content != "" {
+				if err := os.WriteFile(filepath.Join(dir, "corpus", catalogName), []byte(content), 0o644); err != nil {
+					t.Fatal(err)
+				}
+			}
+			golden.Run(t, dir, Main)
+		})
+	}
 }
 
 func run(t *testing.T, args ...string) (string, int) {

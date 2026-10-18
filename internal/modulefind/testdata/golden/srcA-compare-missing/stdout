@@ -1,0 +1,10 @@
+slot-removed    BColdRoom.mode  baja:String
+slot-removed    BColdRoom.setpoint  baja:StatusNumeric
+action-removed  BColdRoom.applySetpoint()  
+action-removed  BColdRoom.defrost()  
+action-removed  BColdRoom.reset()  
+slot-removed    BRoomPanel.cache  baja:Integer
+slot-removed    BRoomPanel.label  baja:String
+slot-removed    BRoomPanel.temp  BStatusNumeric
+slot-removed    BRoomPanel.untyped  
+# 9 changes; 6 schema-RISK (removed/retyped — run schema-risk.sh, B795)

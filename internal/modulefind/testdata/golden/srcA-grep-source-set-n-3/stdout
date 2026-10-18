@@ -1,0 +1,4 @@
+com/acme/BColdRoom.java:5  name = "setpoint",
+com/acme/BColdRoom.java:13  @NiagaraAction(name = "applySetpoint", flags = Flags.OPERATOR)
+com/acme/BColdRoom.java:15  @NiagaraAction(name = "reset", flags = Flags.HIDDEN)
+... 7 more rows (raise --limit)

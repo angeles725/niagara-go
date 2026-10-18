@@ -1,0 +1,4 @@
+usage: corpus-nav.py find [-h] [--in {blocks,docs,retros,all}] [--limit LIMIT]
+                          [--and | --or]
+                          query
+corpus-nav.py find: error: the following arguments are required: query

@@ -1,0 +1,7 @@
+usage: corpus-nav.py by-focus [-h] focus
+
+positional arguments:
+  focus
+
+options:
+  -h, --help  show this help message and exit
