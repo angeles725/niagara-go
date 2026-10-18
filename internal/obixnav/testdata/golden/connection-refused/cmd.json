@@ -6,5 +6,9 @@
   "inputs/pass.txt",
   "cond"
  ],
- "cwd_fixture": ".."
+ "requires": {
+  "goos": [
+   "linux"
+  ]
+ }
 }

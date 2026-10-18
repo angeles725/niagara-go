@@ -15,10 +15,12 @@ func TestGolden(t *testing.T) { golden.Run(t, "testdata", Main) }
 // TestGoldenDanglingLinks runs the cases whose log directories hold a symlink to a missing file
 // (inputs/logs-dangling/nre.log and inputs/logs-partial/station.log, both -> gone.log). The
 // links are made in a temp copy of the suite, so the checked-in tree holds none (a Windows
-// checkout cannot create them).
+// checkout cannot create them). The frozen paths are joined with "/" and the reason is the
+// POSIX ENOENT text, so every POSIX host reproduces them byte for byte; only Windows (which
+// joins with a backslash and needs a privilege to make symlinks) is left out.
 func TestGoldenDanglingLinks(t *testing.T) {
-	if runtime.GOOS != "linux" {
-		t.Skip(`captured on Linux: the unreadable log path is joined with "/" there`)
+	if runtime.GOOS == "windows" {
+		t.Skip("frozen on POSIX: Windows joins the unreadable log path with a backslash")
 	}
 	suite := t.TempDir()
 	if err := os.CopyFS(suite, os.DirFS(filepath.Join("testdata", "dangling-links"))); err != nil {

@@ -6,5 +6,9 @@
   "-o",
   "/dev/null"
  ],
- "cwd_fixture": ".."
+ "requires": {
+  "goos": [
+   "linux"
+  ]
+ }
 }
