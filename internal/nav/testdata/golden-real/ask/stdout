@@ -1,0 +1,27 @@
+
+  Rank 'who calls ackAlarm': 967 matching classes (terms: call, ack, alarm, ackalarm)
+  Classes named in the question first, then BM25 x importer prior; columns: rank, score, class, module, path
+
+1	60.996	AckAlarmResult	cloudLink-rt	cloudLink/cloudLink-rt/vineflower/com/tridium/cloudLink/msg/AckAlarmResult.java
+2	57.594	IForgeAckAlarmCommandHandler	cloudLinkForge-rt	cloudLinkForge/cloudLinkForge-rt/vineflower/com/tridium/cloudLink/forge/msg/IForgeAckAlarmCommandHandler.java
+3	55.490	BAckAlarmCommand	cloudLink-rt	cloudLink/cloudLink-rt/vineflower/com/tridium/cloudLink/command/BAckAlarmCommand.java
+4	55.348	IAckAlarmCommandHandler	cloudLink-rt	cloudLink/cloudLink-rt/vineflower/com/tridium/cloudLink/msg/IAckAlarmCommandHandler.java
+5	54.994	ForgeAmqpAckAlarmCommandHandler	cloudLinkForge-rt	cloudLinkForge/cloudLinkForge-rt/vineflower/com/tridium/cloudLink/forge/msg/ForgeAmqpAckAlarmCommandHandler.java
+6	52.751	AckAlarmRequest	bacnet-rt	bacnet/bacnet-rt/vineflower/com/tridium/bacnet/stack/client/AckAlarmRequest.java
+7	48.622	AckAlarm	obix-rt	obix/obix-rt/vineflower/obix/contracts/AckAlarm.java
+8	43.032	BAckState	alarm-rt	alarm/alarm-rt/vineflower/javax/baja/alarm/BAckState.java
+9	39.769	AckAlarmIn	obix-rt	obix/obix-rt/vineflower/obix/contracts/AckAlarmIn.java
+10	39.769	AckAlarmOut	obix-rt	obix/obix-rt/vineflower/obix/contracts/AckAlarmOut.java
+11	39.259	BForgeAckAlarmCommand	cloudLinkForge-rt	cloudLinkForge/cloudLinkForge-rt/vineflower/com/tridium/cloudLink/forge/command/BForgeAckAlarmCommand.java
+12	38.924	BForgeAckAlarmSystemCommand	cloudLinkForge-rt	cloudLinkForge/cloudLinkForge-rt/vineflower/com/tridium/cloudLink/forge/command/BForgeAckAlarmSystemCommand.java
+13	38.594	BForgeBatchAckAlarmSystemCommand	cloudLinkForge-rt	cloudLinkForge/cloudLinkForge-rt/vineflower/com/tridium/cloudLink/forge/command/BForgeBatchAckAlarmSystemCommand.java
+14	33.462	RequestAlarmAckMessage	honPlantControllerHMI-rt	honPlantControllerHMI/honPlantControllerHMI-rt/vineflower/com/honeywell/honplantcontroller/hmi/messages/RequestAlarmAckMessage.java
+15	30.047	MethodCallStatusException	opcUaCore-rt	opcUaCore/opcUaCore-rt/vineflower/com/prosysopc/ua/MethodCallStatusException.java
+16	29.258	GetAlarmSummaryAck	bacnet-rt	bacnet/bacnet-rt/vineflower/com/tridium/bacnet/services/confirmed/GetAlarmSummaryAck.java
+17	29.199	BAckPendingAlarmTable	alarm-rt	alarm/alarm-rt/vineflower/com/tridium/alarm/db/BAckPendingAlarmTable.java
+18	27.623	ReadRangeAck	bacnet-rt	bacnet/bacnet-rt/vineflower/com/tridium/bacnet/services/confirmed/ReadRangeAck.java
+19	27.068	MethodCallExpr	devkit-wb	devkit/devkit-wb/vineflower/com/github/javaparser/ast/expr/MethodCallExpr.java
+20	26.460	BIServerSideCallHandler	box-rt	box/box-rt/vineflower/javax/baja/box/BIServerSideCallHandler.java
+
+  ... and 947 more (use -n to show more)
+

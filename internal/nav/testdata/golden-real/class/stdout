@@ -1,0 +1,10 @@
+
+  2 entries for 'BAlarmService':
+
+  [1] javax.baja.alarm.BAlarmService
+      Module: alarm-rt  Kind: class  Lines: 1,027
+      Extends: BAbstractService
+  [2] javax.baja.alarm.BAlarmService
+      Module: docSource-doc  Kind: class  Lines: 1,760
+      Extends: BAbstractService
+

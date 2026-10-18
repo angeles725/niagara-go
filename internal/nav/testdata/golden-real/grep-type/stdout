@@ -1,0 +1,9 @@
+
+  grep /ackAlarm\(/ — 4 matches in 2 files (48 files searched)
+
+  [alarm-se]
+    BLinePrinterRecipient:147    public BBoolean ackAlarm(BAlarmRecord parameter) {
+    BLinePrinterRecipient:226          return BBoolean.make(this.support.ackAlarm(alert));
+    BPrinterRecipient:195    public BBoolean ackAlarm(BAlarmRecord alert) {
+    BPrinterRecipient:197          return BBoolean.make(this.support.ackAlarm(alert));
+

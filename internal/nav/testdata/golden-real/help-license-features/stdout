@@ -1,0 +1,8 @@
+usage: module-nav license-features [-h] [-n N] [--module LF_MODULE] [--unresolved]
+
+options:
+  -h, --help            show this help message and exit
+  -n N                  Max feature names to show (default 50)
+  --module, -m LF_MODULE
+                        Show the features this submodule or module requires
+  --unresolved          List every call and getLicenseManager() site no feature name was found for

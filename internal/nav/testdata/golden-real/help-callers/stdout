@@ -1,0 +1,10 @@
+usage: module-nav callers [-h] [-n N] class_name [method]
+
+positional arguments:
+  class_name  Class name (e.g. BLinkPad)
+  method      Method name (e.g. setPreferredSize); omit for every method of the class: per-method
+              caller counts, then the call sites
+
+options:
+  -h, --help  show this help message and exit
+  -n N        Max results (default 50)

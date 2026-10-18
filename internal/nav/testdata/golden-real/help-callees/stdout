@@ -1,0 +1,9 @@
+usage: module-nav callees [-h] [-n N] class_name [method]
+
+positional arguments:
+  class_name  Class name (e.g. BLinkPad)
+  method      Method name (optional; omit to see all class callees)
+
+options:
+  -h, --help  show this help message and exit
+  -n N        Max results (default 50)

@@ -1,0 +1,9 @@
+usage: module-nav hierarchy [-h] [--depth DEPTH] [--chain] name
+
+positional arguments:
+  name           Class name (e.g. BEdgePane)
+
+options:
+  -h, --help     show this help message and exit
+  --depth DEPTH  Max depth for subclass tree (default 2)
+  --chain        Show inheritance chain to root instead of subtree

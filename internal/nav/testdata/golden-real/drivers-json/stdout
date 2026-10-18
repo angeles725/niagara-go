@@ -1,0 +1,57 @@
+{
+  "module": "niagaraDriver",
+  "scope": "78 driver networks (BDeviceNetwork subclasses) in 57 rt submodules of 67,720 class entries, index built <DATE>",
+  "networks": [
+    {
+      "network": "BNiagaraNetwork",
+      "module": "niagaraDriver-rt",
+      "package": "com.tridium.nd",
+      "abstract": false,
+      "extends": "BDeviceNetwork",
+      "family": "standalone",
+      "devices": [
+        "BNiagaraStation"
+      ],
+      "devices_from": "niagaraDriver-rt",
+      "devices_resolved_via": "getDeviceType()",
+      "point_device_exts": [
+        "BNiagaraPointDeviceExt"
+      ],
+      "point_device_exts_from": "niagaraDriver-rt",
+      "proxy_exts": [
+        "BNiagaraProxyExt"
+      ],
+      "proxy_exts_from": "niagaraDriver-rt",
+      "managers": [
+        "BNiagaraFileManager",
+        "BNiagaraHistoryExportManager",
+        "BNiagaraHistoryExportUxManager",
+        "BNiagaraHistoryImportManager",
+        "BNiagaraHistoryImportUxManager",
+        "BNiagaraPointManager",
+        "BNiagaraPointUxManager",
+        "BNiagaraScheduleExportManager",
+        "BNiagaraScheduleExportUxManager",
+        "BNiagaraScheduleImportManager",
+        "BNiagaraScheduleImportUxManager",
+        "BNiagaraStationUxManager",
+        "BStationManager",
+        "BUserSyncManager"
+      ],
+      "discovery_jobs": [
+        "BNiagaraScheduleLearnJob",
+        "BStationDiscoveryJob"
+      ],
+      "license_features": [
+        "tridium:niagaraDriver"
+      ],
+      "help_guide_base": "module://docDrivers/doc",
+      "help_guide_base_others": [],
+      "help_doc_module": "docDrivers",
+      "help_doc_module_exists": true,
+      "doc_module": "docDrivers-doc",
+      "doc_module_via": "help.guide.base",
+      "path": "niagaraDriver/niagaraDriver-rt/vineflower/com/tridium/nd/BNiagaraNetwork.java"
+    }
+  ]
+}

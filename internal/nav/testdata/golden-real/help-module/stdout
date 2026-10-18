@@ -1,0 +1,11 @@
+usage: module-nav module [-h] [--permissions] [--dependencies] [--sma] name
+
+positional arguments:
+  name            Submodule name (e.g. workbench-wb)
+
+options:
+  -h, --help      show this help message and exit
+  --permissions   Show only the <permissions> block from module.xml
+  --dependencies  Show only the <dependencies> block from module.xml
+  --sma           Cross-reference the module with installed license features (SMA-exempt,
+                  expiration, feature attributes)

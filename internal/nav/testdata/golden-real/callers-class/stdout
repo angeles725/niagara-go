@@ -1,0 +1,33 @@
+
+  CALLERS of BAlarmService.*: 34 methods with callers, 74 call sites
+  Target module: alarm-rt
+
+                                    METHOD  CALLERS
+  --------------------------------------------------
+                                    invoke        8
+                          lookupAlarmClass        6
+                             isOperational        5
+                                       get        4
+                                getAlarmDb        4
+                                       set        4
+                        doRouteToRecipient        3
+                   getArchiveAlarmProvider        3
+                                 isRunning        3
+                                    <init>        2
+  ... and 24 more methods (use -n 34)
+
+                             CALLER METHOD  MODULE                     CALLS
+  ------------------------------------------------------------------------------------------
+                    BAlarmService.ackAlarm  alarm-rt                   invoke
+             BAlarmService.auditForceClear  alarm-rt                   invoke
+              BAlarmService.disableToFault  alarm-rt                   invoke
+          BAlarmService.disableToOffnormal  alarm-rt                   invoke
+               BAlarmService.enableToFault  alarm-rt                   invoke
+           BAlarmService.enableToOffnormal  alarm-rt                   invoke
+              BAlarmService.escalateAlarms  alarm-rt                   invoke
+                  BAlarmService.routeAlarm  alarm-rt                   invoke
+                    BAlarmService.checkAdd  alarm-rt                   lookupAlarmClass
+                 BAlarmService.checkRename  alarm-rt                   lookupAlarmClass
+
+  ... and 64 more call sites (use -n 74 to see all, or callers BAlarmService <method>)
+

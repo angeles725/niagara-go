@@ -1,0 +1,1 @@
+{"args": ["--base-dir", "{tmp}", "grep", "class BAlarmService", "-m", "alarm-rt", "-n", "5"]}

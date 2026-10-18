@@ -1,0 +1,8 @@
+usage: module-nav implementors [-h] [-n N] name
+
+positional arguments:
+  name        Interface name (e.g. BIDialogPane)
+
+options:
+  -h, --help  show this help message and exit
+  -n N        Max results to show (default 50)
