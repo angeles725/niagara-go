@@ -55,8 +55,6 @@ func TestFindWalksUpFromEachStartInOrder(t *testing.T) {
 	}{
 		{"cwd first", []Start{FromCwd, FromExecutable}, a},
 		{"executable first", []Start{FromExecutable, FromCwd}, b},
-		{"explicit path", []Start{FromPath(filepath.Join(b, "bin")), FromCwd}, b},
-		{"empty explicit path is skipped", []Start{FromPath(""), FromCwd}, a},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

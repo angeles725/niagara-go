@@ -12,10 +12,10 @@
 //	        the answer as given: not made absolute, not checked against Marker
 //	        (a caller that rejects a wrong value calls FirstEnv itself, checks it,
 //	        and leaves Env empty).
-//	Starts  where to search, in order: FromCwd, FromExecutable (the executable's
-//	        directory, symlinks resolved; the path as given when it cannot be
-//	        resolved) and FromPath(dir). A start that cannot be read (Getwd or
-//	        Executable fails, an empty FromPath) is skipped.
+//	Starts  where to search, in order: FromCwd and FromExecutable (the
+//	        executable's directory, symlinks resolved; the path as given when it
+//	        cannot be resolved). A start that cannot be read (Getwd or Executable
+//	        fails) is skipped.
 //	Marker  what identifies the checkout (HasFile, HasDir, Exists, All, or the
 //	        caller's own predicate). Each start is walked up, itself first, to the
 //	        file-system root; the first directory the marker accepts is the answer.
