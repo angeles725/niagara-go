@@ -49,9 +49,17 @@ func (r row) Values() []any {
 	return vals
 }
 
-// jsonValue is v in a type pyjson.FromAny reads: a *string is its str or None, a []row a list.
+// jsonValue is v in a type pyjson.FromAny reads: a *string is its str or None, a []row a list;
+// a []any is converted element by element, so both are handled at any depth (rows recurse
+// through Values).
 func jsonValue(v any) any {
 	switch x := v.(type) {
+	case []any:
+		items := make([]any, len(x))
+		for i, e := range x {
+			items[i] = jsonValue(e)
+		}
+		return items
 	case *string:
 		if x == nil {
 			return nil
