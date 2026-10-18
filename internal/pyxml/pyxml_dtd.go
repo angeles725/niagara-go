@@ -232,12 +232,11 @@ func normalizeEncoding(name string) string {
 // knows UTF-8, US-ASCII and ISO-8859-1; other names go through Python's codecs. Only
 // Latin-1 and the UTF-8/ASCII aliases are modelled: any other name is "unknown encoding"
 // (Python decodes any single-byte codec such as cp1252 there and raises LookupError for an
-// unknown name).
+// unknown name). expat's own UTF-16 names conflict with the one-byte input: "incorrect" at the
+// name. A UTF-8 byte order mark is read as UTF-8 before the switch, but positions after it are
+// counted in the new encoding, so its three bytes become three columns.
 func (p *xparser) applyEncoding(data []byte) error {
-	start := 0
-	if p.at(0) == 0xFEFF {
-		start = 1
-	}
+	start := p.bom
 	if p.at(start) != '<' || p.at(start+1) != '?' || p.at(start+2) != 'x' || p.at(start+3) != 'm' ||
 		p.at(start+4) != 'l' || !isS(p.at(start+5)) {
 		return nil
@@ -251,6 +250,8 @@ func (p *xparser) applyEncoding(data []byte) error {
 	switch {
 	case raw == "" || raw == "utf-8":
 		return nil
+	case raw == "utf-16" || raw == "utf-16be" || raw == "utf-16le":
+		return p.fail(p.encAt, errIncorrect)
 	case raw == "us-ascii" || raw == "iso-8859-1" || latin1Names[norm] || byteRejectNames[norm]:
 		latin1 := raw == "iso-8859-1" || latin1Names[norm]
 		p.r = p.r[:0]
@@ -262,6 +263,9 @@ func (p *xparser) applyEncoding(data []byte) error {
 			p.r = append(p.r, c)
 		}
 		p.n = len(p.r)
+		if p.bom > 0 {
+			p.bom = 3 // EF BB BF, now one rune per byte: the prolog skips them unread
+		}
 		return nil
 	}
 	return p.fail(0, errEncoding)

@@ -8,7 +8,9 @@ document its tree as [tag, [[name, value], ...], [children...]]:
   expat  pyexpat ParserCreate().Parse(text, True) on a str (bog-cycles.py require_wellformed)
   etree  xml.etree.ElementTree.fromstring(bytes) (bog-write.py validate_xml, station-modules.py)
 Inputs: hand-written cases, every truncation of SAMPLE, and every single-character insertion and
-deletion of SHORT, and RANDOM documents with two random edits of SAMPLE (fixed seed). "in" is the text (UTF-8 encoded for etree); "hex" cases are raw bytes, etree only.
+deletion of SHORT, RANDOM documents with two random edits of SAMPLE (fixed seed), and BOM_HEX: a UTF-8 byte
+order mark before a declaration naming another encoding. "in" is the text (UTF-8 encoded for etree);
+"hex" cases are raw bytes, etree only.
 """
 import json
 import random
@@ -59,6 +61,10 @@ HAND = [
     "<b xmlns='u' xmlns:p='v' p:a='1' a='2'><c xmlns=''><p:d/></c><e/></b>",
     "<!DOCTYPE b [<!ENTITY e 'xy'>]><b a='1&e;2'><c/></b>", "<p n='$20' t=\"b:Folder\"><p n='a' v='&lt;&gt;'/></p>", "<x:b xmlns:x='u'></x:b>", "<x:b xmlns:x='u'></b>", "<b xml:lang='en'/>",
     "<b xmlns:xml='http://www.w3.org/XML/1998/namespace'/>", "<b xmlns:a='u'><a:c/></b><a:d/>",
+    "\ufeff<?xml version='1.0' encoding='ISO-8859-1'?><b>\xe9</c>", "\ufeff<?xml version='1.0' encoding='US-ASCII'?><b></c>",
+    "\ufeff<?xml version='1.0' encoding='UTF-16'?><b></c>", "\ufeff<?xml version='1.0' encoding='bogus'?><b></c>",
+    "<?xml version='1.0' encoding='UTF-16'?><b/>", "<?xml version='1.0' encoding='utf-16le'?><b/>",
+    "\ufeff<?xml version='1.0' encoding='latin1'?>\n<b a='\xe9'></c>",
 ]
 
 HEX = [
@@ -68,6 +74,18 @@ HEX = [
     "3c3f786d6c2076657273696f6e3d27312e302720656e636f64696e673d2749534f2d383835392d31273f3e3c623ee93c2f623e",
     "3c623ec3a93c2f623e", "3c623ee282ac3c2f623e", "3c623ee2823c2f623e", "3c623ef09f9880e93c2f623e",
 ]
+
+# A UTF-8 byte order mark followed by a declaration naming another encoding (a 4.3 help toc.xml
+# has one): expat skips the mark as UTF-8, then switches to the declared encoding, so a position
+# after the declaration counts the mark as three columns, one before it. Bodies are Latin-1 bytes.
+BOM_ENCODINGS = ["ISO-8859-1", "iso-8859-1", "latin1", "US-ASCII", "ascii", "utf8", "UTF-8", "UTF-16",
+                 "UTF-16BE", "utf-16le", "utf_16", "bogus"]
+BOM_BODIES = ["<b a='\xe9'>\xe9</b>", "<b></c>", "<b>\x80</b>", "\n<b></c>", "\r\n<b></c>", "", "<b/><c/>",
+              "<?xml version='1.0'?><b/>", "<!DOCTYPE b [<!ENTITY e 'x'>]><b>&e;</c>"]
+BOM_DECLS = ["<?xml version='1.0' encoding='{}'?>", "<?xml version=\"1.0\" encoding=\"{}\" standalone=\"no\"?>",
+             "<?xml version='1.0' encoding='{}' ?x><b/>"]
+BOM_HEX = [(b"\xef\xbb\xbf" + d.format(e).encode("ascii") + body.encode("latin-1")).hex()
+           for e in BOM_ENCODINGS for d in BOM_DECLS for body in BOM_BODIES]
 
 
 def expat(text):
@@ -90,6 +108,8 @@ def etree(data):
         return str(exc)
     except LookupError:
         return "!LookupError"  # an unknown declared encoding: Python crashes, Go says "unknown encoding"
+    except ValueError:
+        return "!LookupError"  # a multi-byte codec such as utf_16: pyexpat crashes, Go says "unknown encoding"
     return ""
 
 
@@ -116,8 +136,11 @@ def main():
             if case["etree"] == "":
                 case["tree"] = tree(ET.fromstring(t.encode("utf-8")))
             cases.append(case)
-    for h in HEX:
-        cases.append({"hex": h, "etree": etree(bytes.fromhex(h))})
+    for h in HEX + BOM_HEX:
+        case = {"hex": h, "etree": etree(bytes.fromhex(h))}
+        if case["etree"] == "":
+            case["tree"] = tree(ET.fromstring(bytes.fromhex(h)))
+        cases.append(case)
     with open(os.path.join(HERE, "xmlerrors.json"), "w", encoding="utf-8") as fh:
         fh.write("[\n" + ",\n".join(json.dumps(c, ensure_ascii=True) for c in cases) + "\n]\n")
 
