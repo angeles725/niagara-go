@@ -3,6 +3,7 @@ package helpbuild
 import (
 	"errors"
 	"fmt"
+	"github.com/angeles725/niagara-go/internal/procgroup"
 	"io/fs"
 	"os"
 	"os/exec"
@@ -268,7 +269,7 @@ func extractAll(res *PDFResult, docs string, pdfs []string, outputDir, indexPath
 			return err
 		}
 		text, pages, err := ExtractPDFText(prog, pdfPath, pdfTimeout(pdfPath, timeout))
-		if isInterrupt(err) {
+		if procgroup.IsInterrupt(err) {
 			return err // KeyboardInterrupt: nothing is saved or pruned
 		}
 		if err != nil {

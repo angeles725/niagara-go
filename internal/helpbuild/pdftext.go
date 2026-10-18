@@ -213,7 +213,7 @@ func runCapture(argv []string, timeout time.Duration) ([]byte, error) {
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	runErr := cmd.Run()
-	if isInterrupt(runErr) {
+	if procgroup.IsInterrupt(runErr) {
 		return nil, runErr
 	}
 	if err := runFailure(ctx, runErr); err != nil {
@@ -221,10 +221,6 @@ func runCapture(argv []string, timeout time.Duration) ([]byte, error) {
 	}
 	return out.Bytes(), nil
 }
-
-// isInterrupt reports whether err is the *procgroup.InterruptError of a
-// signal that came while pdftotext ran.
-func isInterrupt(err error) bool { return procgroup.IsInterrupt(err) }
 
 // runFailure is the error of a finished run: errTimedOut only when the run
 // failed and its context is done (the cancel killed it); a run that
@@ -259,7 +255,7 @@ func ExtractPDFText(pdftotext, pdfPath string, timeout time.Duration) (text stri
 	if err != nil {
 		var exit *exec.ExitError
 		switch {
-		case isInterrupt(err):
+		case procgroup.IsInterrupt(err):
 			return "", 0, err // not a failed PDF: the run stops
 		case errors.Is(err, errTimedOut):
 			return "", 0, &PDFError{Path: pdfPath, Failure: PDFTimedOut}
