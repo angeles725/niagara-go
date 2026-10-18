@@ -10,15 +10,20 @@ package scope
 //
 // Unlike Python, a build holds a lock file next to the database, so
 // concurrent nh / nsearch processes build an index once: the others wait,
-// then use the index the first one wrote.
+// then use the index the first one wrote. A lock left by a process that died
+// (Ctrl-C) is taken over at once (lock_unix.go / lock_windows.go check its
+// pid), one older than lockStale too.
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
+	"runtime"
+	"strconv"
 	"strings"
 	"sync"
 	"syscall"
@@ -32,7 +37,9 @@ import (
 var (
 	lockPoll  = 100 * time.Millisecond // how often a waiting process retries the lock
 	lockWait  = 2 * time.Minute        // how long it waits before building anyway
-	lockStale = 10 * time.Minute       // a lock older than this is taken over
+	lockStale = 10 * time.Minute       // a lock older than this is taken over, live pid or not
+	// guardStale is the age after which a takeover guard is abandoned.
+	guardStale = time.Minute
 )
 
 // UnwritableIndexError is a missing or stale full-text index that cannot be
@@ -123,12 +130,12 @@ func buildAt(baseDir, out, current string, announce func()) (path string, log []
 		return "", nil, err
 	}
 	lock := out + ".lock"
-	held, err := acquire(lock)
+	mine, err := acquire(lock)
 	if err != nil {
 		return "", nil, err
 	}
-	if held {
-		defer os.Remove(lock)
+	if mine != nil {
+		defer release(lock, mine)
 	}
 	if p, _ := fts.FreshPath(baseDir, current); p != "" {
 		return p, nil, nil
@@ -145,37 +152,108 @@ func buildAt(baseDir, out, current string, announce func()) (path string, log []
 	return res.Path, res.Log, nil
 }
 
-// acquire creates the lock file (O_EXCL; it holds the pid and the time). A
-// lock older than lockStale is taken over; after waiting lockWait for a live
-// one it returns held false, and the caller builds anyway (a build writes a
-// temp file and renames it, so concurrent builds stay safe). An error means
-// the lock cannot be created: the location is not writable.
-func acquire(lock string) (held bool, err error) {
+// acquire creates the lock file (O_EXCL) and returns what it wrote in it:
+// "<pid> <GOOS> <host> <time>". A lock whose holder is dead (stale) is taken
+// over at once; after waiting lockWait for a live one it returns nil, and
+// the caller builds anyway (a build writes a temp file and renames it, so
+// concurrent builds stay safe). An error means the lock cannot be created:
+// the location is not writable.
+func acquire(lock string) (mine []byte, err error) {
 	deadline := time.Now().Add(lockWait)
 	for {
+		content := lockContent()
 		f, err := os.OpenFile(lock, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o666)
 		if err == nil {
-			_, werr := fmt.Fprintf(f, "%d %s\n", os.Getpid(), time.Now().UTC().Format(time.RFC3339))
+			_, werr := f.Write(content)
 			if cerr := f.Close(); werr == nil {
 				werr = cerr
 			}
 			if werr != nil {
 				os.Remove(lock)
-				return false, werr
+				return nil, werr
 			}
-			return true, nil
+			return content, nil
 		}
 		if !errors.Is(err, fs.ErrExist) {
-			return false, err
+			return nil, err
 		}
-		if st, serr := os.Stat(lock); serr == nil && time.Since(st.ModTime()) > lockStale {
-			os.Remove(lock)
+		seen, rerr := os.ReadFile(lock)
+		st, serr := os.Stat(lock)
+		if errors.Is(rerr, fs.ErrNotExist) || errors.Is(serr, fs.ErrNotExist) {
+			continue // released meanwhile
+		}
+		if rerr == nil && serr == nil && stale(seen, st.ModTime()) && takeOver(lock, seen) {
 			continue
 		}
 		if time.Now().After(deadline) {
-			return false, nil
+			return nil, nil
 		}
 		time.Sleep(lockPoll)
+	}
+}
+
+// lockContent identifies this process's lock: pid, OS and host (a pid only
+// means something on the host that wrote it) and the time to the nanosecond,
+// so no two locks have the same content.
+func lockContent() []byte {
+	host, _ := os.Hostname()
+	if host == "" || strings.ContainsAny(host, " \n") {
+		host = "-"
+	}
+	return fmt.Appendf(nil, "%d %s %s %s\n", os.Getpid(), runtime.GOOS, host,
+		time.Now().UTC().Format(time.RFC3339Nano))
+}
+
+// stale reports whether a lock with this content and modification time was
+// left by a process that is gone: it is older than lockStale, or it names a
+// pid of this OS and host that is not running (Ctrl-C ends nh without
+// running its deferred release). Anything unclear counts as live.
+func stale(content []byte, mtime time.Time) bool {
+	if time.Since(mtime) > lockStale {
+		return true
+	}
+	f := strings.Fields(string(content))
+	host, _ := os.Hostname()
+	if len(f) < 4 || f[1] != runtime.GOOS || host == "" || f[2] != host {
+		return false
+	}
+	pid, err := strconv.Atoi(f[0])
+	if err != nil || pid == os.Getpid() {
+		return false
+	}
+	alive, known := pidAlive(pid)
+	return known && !alive
+}
+
+// takeOver removes the stale lock whose content was seen, so that of several
+// waiters only one does: the one that creates the guard file <lock>.takeover
+// (O_EXCL) removes the lock if it still has the content seen; the others
+// report false and retry. (Renaming the lock away is not exclusive on
+// Windows: two concurrent renames of one file can both succeed.) A guard
+// older than guardStale, left by a process that died in these few
+// statements, is removed.
+func takeOver(lock string, seen []byte) bool {
+	guard := lock + ".takeover"
+	f, err := os.OpenFile(guard, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o666)
+	if err != nil {
+		if st, serr := os.Stat(guard); serr == nil && time.Since(st.ModTime()) > guardStale {
+			os.Remove(guard)
+		}
+		return false
+	}
+	f.Close()
+	defer os.Remove(guard)
+	if got, err := os.ReadFile(lock); err != nil || !bytes.Equal(got, seen) {
+		return false
+	}
+	return os.Remove(lock) == nil
+}
+
+// release removes the lock if it still holds this process's content (a lock
+// taken over after lockStale belongs to another process).
+func release(lock string, mine []byte) {
+	if got, err := os.ReadFile(lock); err == nil && bytes.Equal(got, mine) {
+		os.Remove(lock)
 	}
 }
 
