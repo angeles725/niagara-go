@@ -4,11 +4,20 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/angeles725/niagara-go/internal/golden"
 )
 
 // courseKeys is the hermetic answer key of the item-ID routing tests and goldens:
 // L10.22, L10.23, RA1.R1, RA1.V9–V14, X3 and P2.
 const courseKeys = "testdata/course-keys"
+
+// The course-item goldens are Go only (Python nsearch has no course lead), so they live
+// apart from testdata/golden, which convert_goldens.py rewrites from the Python goldens.
+func TestGoldenCourseItem(t *testing.T) {
+	useFakes(t)
+	golden.Run(t, "testdata/courseitem", Main)
+}
 
 func TestCourseItemIDs(t *testing.T) {
 	for query, want := range map[string][]string{
