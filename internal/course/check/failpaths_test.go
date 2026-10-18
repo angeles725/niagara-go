@@ -37,7 +37,7 @@ func TestExamFailPaths(t *testing.T) {
 		"CEXAM.18": "modules/websiteDriver-rt.jar: 2 entries match **/websiteDriver/BWebsiteDriver{Network,Device,DeviceFolder}.class, want exactly 3",
 		"CEXAM.19": "modules/websiteDriver-rt.jar!META-INF/module.xml lacks <name>NETWORK_COMMUNICATION</name>",
 	}
-	results := runAll(t, "../testdata/stations/cert-bad", install, "", RoleCert)
+	results := runAll(t, "../testdata/stations/cert-bad", install, "", "", RoleCert)
 	if len(results) != len(examSpec) {
 		t.Fatalf("%d exam results, want %d", len(results), len(examSpec))
 	}

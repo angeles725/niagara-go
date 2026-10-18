@@ -14,14 +14,14 @@ import (
 const goodStation = "../testdata/stations/good"
 
 // runAll runs every check of one station role (the labs: RoleTraining) on a station, with the
-// install and the source tree ("" = none).
-func runAll(t *testing.T, stationPath, install, source, role string) []Result {
+// install, the source tree and the course sources ("" = none).
+func runAll(t *testing.T, stationPath, install, source, labsrc, role string) []Result {
 	t.Helper()
 	st, err := Open(stationPath, install, true)
 	if err != nil {
 		t.Fatal(err)
 	}
-	st.source = source
+	st.source, st.labsrc = source, labsrc
 	defer st.Close()
 	var out []Result
 	for i := range Spec {
@@ -32,10 +32,11 @@ func runAll(t *testing.T, stationPath, install, source, role string) []Result {
 	return out
 }
 
-// mostChecks are the labs with more than 8 checks: lab 10 (three file-text checks of one CSV, three of
+// mostChecks are the labs with more than 8 checks: lab 4 (C4.9 and C4.10 read the annotations of
+// BLoopAction and BTstat), lab 10 (three file-text checks of one CSV, three of
 // its history files, the job's lexicon) and
 // lab 11 (its nested Tcp Config and ping-health slots are one check each).
-var mostChecks = map[string]int{"10": 14, "11": 17}
+var mostChecks = map[string]int{"4": 10, "10": 14, "11": 17}
 
 // keyGroups are the ID prefixes a check of the lab may key: the lab's own items; for a review
 // assignment also the needs-a-run checks X<n>; for the exam the problems P<n>.
@@ -106,6 +107,8 @@ func TestCheckSpecShape(t *testing.T) {
 		case kindSourceText:
 			_, err := regexp.Compile(ck.Match)
 			ok = ck.Glob != "" && ck.Match != "" && err == nil && ck.Op != "" && ck.N > 0
+		case kindAnnotation:
+			ok = ck.Glob != "" && slices.Contains(annotationFacts, ck.Fact) && ck.Want != ""
 		case kindFileText:
 			_, err := regexp.Compile(ck.Match)
 			ok = ck.Glob != "" && ck.Match != "" && err == nil && (ck.Line > 0 || (ck.Op != "" && ck.N > 0))
@@ -190,9 +193,9 @@ func TestCheckLiveStations(t *testing.T) {
 			if path == "" {
 				t.Skipf("%s is not set: the live %s station is not checked", live.env, live.role)
 			}
-			install, source := os.Getenv("COURSE_NIAGARA_INSTALL"), os.Getenv("COURSE_NIAGARA_SOURCE")
+			install, source, labsrc := os.Getenv("COURSE_NIAGARA_INSTALL"), os.Getenv("COURSE_NIAGARA_SOURCE"), os.Getenv("COURSE_LAB_SOURCES")
 			got := map[string]string{}
-			results := runAll(t, path, install, source, live.role)
+			results := runAll(t, path, install, source, labsrc, live.role)
 			if len(results) == 0 {
 				// A role with no rows would pass without checking anything.
 				t.Fatalf("no check runs on the %s station: the spec has no row of this role", live.role)
@@ -201,6 +204,7 @@ func TestCheckLiveStations(t *testing.T) {
 				switch {
 				case r.Verdict == Skip && install == "" && strings.HasPrefix(r.Kind, "jar"):
 				case r.Verdict == Skip && source == "" && r.Kind == kindSourceText:
+				case r.Verdict == Skip && labsrc == "" && r.Kind == kindAnnotation:
 				case r.Verdict == Fail && live.differs[r.ID] != "":
 					got[r.ID] = r.Evidence
 				case r.Verdict != Pass:

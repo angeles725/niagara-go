@@ -26,6 +26,11 @@ const (
 	abstractService = "baja/javax/baja/sys/BAbstractService.java"
 	liveSubmit      = "that the live submit cleared the fault: the {ok} status and the empty Fault Cause are runtime state"
 	jobLog          = "the Success state and the job log of a run (its ten Exporting lines are runtime state; the lexicon holds the texts)"
+	// The lab module's sources, relative to the --labsrc module root (the participant's Niagara dev
+	// home, which holds training/ and trafficLightDriver/ as the New Module Wizard lays them out).
+	trainingSrc = "training/training-rt/src/com/tridiumuniversity/training/"
+	driverSrc   = "trafficLightDriver/trafficLightDriver-rt/src/com/tridiumuniversity/trafficLightDriver/"
+	classDecl   = "final and extends BFrozenEnum (the class declaration, not an annotation)"
 )
 
 // Spec is every check: the labs, the review assignments, the exam. A run without --lab selects only
@@ -49,6 +54,14 @@ var labSpec = []Check{
 		Jar: trainingRT, Glob: trainingXML, Contains: []string{`name="FirstComponent"`}},
 	{ID: "C1.7", Lab: "1", Keys: []string{"L1.11", "L1.18"}, Kind: kindJarText, Desc: "palette lists FirstComponent",
 		Jar: trainingRT, Glob: "module.palette", Contains: []string{`n="FirstComponent"`}},
+	// The slots L1.12 predicts in the generated region are the ones the annotations declare (shipped LAB/Lab1
+	// BFirstComponent/BFirstComponent.java:14-24); the region itself is Slot-o-Matic output.
+	{ID: "C1.8", Lab: "1", Keys: []string{"L1.9", "L1.12"},
+		Unobserved: map[string]string{
+			"L1.9":  "the flags, the default and the doExecute body (the fact is the declared slots and types)",
+			"L1.12": "the generated region itself (its markers, getter, setter, invoker, TYPE and getType()): Slot-o-Matic output the lab file does not hold"},
+		Kind: kindAnnotation, Desc: "BFirstComponent declares timeExecuted and execute",
+		Glob: trainingSrc + "BFirstComponent.java", Fact: factSlots, Want: "property timeExecuted: BAbsTime, action execute()"},
 
 	// Lab 2. LAB/Lab2 Add Part 1/BAdd.java:15-42: out, in1..in4, BStatusNumeric.
 	{ID: "C2.1", Lab: "2", Keys: []string{"L2.8"}, Kind: kindType, Desc: "an Add in the station",
@@ -59,6 +72,14 @@ var labSpec = []Check{
 		Jar: trainingRT, Glob: "module.palette", Contains: []string{`n="kitControl"`, `n="Add"`}},
 	{ID: "C2.4", Lab: "2", Keys: []string{"L2.1"}, Kind: kindJarText, Desc: "module.xml registers Add",
 		Jar: trainingRT, Glob: trainingXML, Contains: []string{`name="Add"`}},
+	// L2.11's Flags column is Flags.encodeToString of each slot's flags: the declared ones for a frozen
+	// slot (shipped LAB/Lab2 Add Part 1/BAdd.java:14-41; letters docSource baja/javax/baja/sys/Flags.java:207-228).
+	{ID: "C2.5", Lab: "2", Keys: []string{"L2.2", "L2.11"},
+		Unobserved: map[string]string{
+			"L2.2":  "the property types and defaults (the fact is the declared slots and flags)",
+			"L2.11": "the AX Slot Sheet view itself (it shows Flags.encodeToString of the flags declared here)"},
+		Kind: kindAnnotation, Desc: "BAdd flags: out rs, in1/in2 s, in3/in4 none",
+		Glob: trainingSrc + "kitControl/BAdd.java", Fact: factFlags, Want: "out=rs in1=s in2=s in3=- in4=-"},
 
 	// Lab 3. LAB/Lab3 Add Part 2/BAdd.java:18-45 (same slots); changed() writes out (:49-106),
 	// so a stored out proves the callback ran. Links per Lab Instructions LI:560-576. C3.5 does
@@ -100,6 +121,18 @@ var labSpec = []Check{
 		Kind:       kindAudit, Desc: "SpaceTemp Out text has the unit (audit)", Glob: auditGlob,
 		Hist: &HistMatch{Operation: `^Invoked$`, Target: `/SpaceTemp$`, SlotName: `^set$`, OldValue: `\(Out = -?[0-9.,]+ °[CF] `},
 		Op:   opMin, N: 1},
+	// L4.2's constants follow from the range (shipped LAB/Lab4 Tstat/BLoopAction.java:11-12): an omitted
+	// ordinal is the previous one plus 1, a tag's constant is its upper-snake name.
+	{ID: "C4.9", Lab: "4", Keys: []string{"L4.1", "L4.2"},
+		Unobserved: map[string]string{
+			"L4.1": classDecl,
+			"L4.2": "make(int), make(String), the constructor, ENUM_TYPE/TYPE and the kitControl comparison: generated or decompiled code, not the lab file"},
+		Kind: kindAnnotation, Desc: "BLoopAction enum: DIRECT 0, REVERSE 1, default direct",
+		Glob: trainingSrc + "kitControl/BLoopAction.java", Fact: factEnum, Want: "DIRECT=0 REVERSE=1 DEFAULT=direct"},
+	// L4.3: the same pattern as L2.2 (shipped LAB/Lab4 Tstat/BTstat.java:18-44).
+	{ID: "C4.10", Lab: "4", Keys: []string{"L4.3"}, Unobserved: map[string]string{"L4.3": "the property types and defaults (the fact is the declared slots and flags)"},
+		Kind: kindAnnotation, Desc: "BTstat flags: out rs, cv/sp/diff/action none",
+		Glob: trainingSrc + "kitControl/BTstat.java", Fact: factFlags, Want: "out=rs cv=- sp=- diff=- action=-"},
 
 	// Lab 5: nothing in the station. jarsigner names the signature files after the alias
 	// CodeSigning, upper-cased and cut to 8 characters: META-INF/CODESIGN.SF (L5.13-L5.14).
@@ -122,6 +155,15 @@ var labSpec = []Check{
 		Jar: trainingRT, Glob: trainingXML, Contains: []string{"<name>REFLECTION</name>"}},
 	{ID: "C6.6", Lab: "6", Keys: []string{"L6.28"}, Kind: kindJarEntry, Desc: "jackson-databind in the uberjar",
 		Jar: trainingRT, Glob: "META-INF/maven/com.fasterxml.jackson.core/jackson-databind/pom.properties", Op: opMin, N: 1},
+	{ID: "C6.7", Lab: "6", Keys: []string{"L6.2"}, Unobserved: map[string]string{"L6.2": classDecl}, Kind: kindAnnotation, Desc: "BWorkOrderSubmissionState enum: IDLE 0, SUBMITTING 1, default idle",
+		Glob: trainingSrc + "workOrder/BWorkOrderSubmissionState.java", Fact: factEnum, Want: "IDLE=0 SUBMITTING=1 DEFAULT=idle"},
+	// L6.32's dialog: submit takes a BWorkOrder with a default (shipped …WithSerialization.java:67-71).
+	{ID: "C6.8", Lab: "6", Keys: []string{"L6.29", "L6.32"},
+		Unobserved: map[string]string{
+			"L6.29": "serializeToJson and the response parsing (code, not annotations)",
+			"L6.32": "the dialog itself (Workbench builds the editor from the parameter)"}, Kind: kindAnnotation, Desc: "submit takes a BWorkOrder with a default",
+		Glob: trainingSrc + "workOrder/BWorkOrderService.java", Fact: factSlots, Slot: "submit",
+		Want: "action submit(BWorkOrder = new BWorkOrder())"},
 
 	// Lab 7. BWorkOrderServiceWithSerialization.java:38-41 url default
 	// "http://localhost:3001/workOrders": restored after the bad_url experiment (L7.16-L7.18).
@@ -282,4 +324,11 @@ var labSpec = []Check{
 		Jar: "trafficLightDriver-rt", Glob: "com/tridiumuniversity/trafficLightDriver/point/BTrafficLightDriverPointDiscoveryLeaf.class", Op: opMin, N: 1},
 	{ID: "CB.4", Lab: "B", Keys: []string{"LB.8"}, Kind: kindJarEntry, Desc: "point manager in trafficLightDriver-wb",
 		Jar: "trafficLightDriver-wb", Glob: "**/BTrafficLightDriverPointManager*.class", Op: opMin, N: 1},
+	{ID: "CB.5", Lab: "B", Keys: []string{"LB.1", "LB.3"},
+		Unobserved: map[string]string{
+			"LB.1": "what incl() and MGR_EDIT do in the managers (UI behaviour)",
+			"LB.3": "the Intersection Id column of the bajaui Device Manager (a view; the incl() facet is what adds it)"},
+		Kind: kindAnnotation, Desc: "intersectionId has the facet SfUtil.incl(SfUtil.MGR_EDIT)",
+		Glob: driverSrc + "BTrafficLightDriverDevice.java",
+		Fact: factFacets, Slot: "intersectionId", Want: "intersectionId=SfUtil.incl(SfUtil.MGR_EDIT)"},
 }

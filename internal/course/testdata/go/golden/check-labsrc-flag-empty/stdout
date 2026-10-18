@@ -1,0 +1,7 @@
+ID    LAB  VERDICT  DESCRIPTION                                               EVIDENCE
+C2.1  2    PASS     an Add in the station [L2.8]                              found 1: Lab2/Add
+C2.2  2    PASS     BAdd.class in training-rt [L2.1 L2.7]                     modules/training-rt.jar: 1 entry matches com/tridiumuniversity/training/kitControl/BAdd.class
+C2.3  2    PASS     palette has the kitControl folder with Add [L2.6]         modules/training-rt.jar!module.palette has n="kitControl", n="Add"
+C2.4  2    PASS     module.xml registers Add [L2.1]                           modules/training-rt.jar!META-INF/module.xml has name="Add"
+C2.5  2    SKIP     BAdd flags: out rs, in1/in2 s, in3/in4 none [L2.2 L2.11]  no --labsrc DIR: training/training-rt/src/com/tridiumuniversity/training/kitControl/BAdd.java not checked
+checked 5: PASS 4, FAIL 0, SKIP 1; station GoodStation (237 components, 16 links), install install, labsrc (none: annotation checks skipped)

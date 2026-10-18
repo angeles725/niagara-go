@@ -15,6 +15,7 @@ files. It is new (no Python original), so its golden cases run over the syntheti
 | `internal/course/key` | the answer-key parser and model: `Load(root)`, `Corpus`, `Item`, `Group`, the status vocabulary, `GroupKeys`, `Counts` (one row of `status`) | nothing (reusable, e.g. by nsearch) |
 | `internal/course/check` | the check spec (`Spec`), the kinds, the station and jar reader (`Open`, `Station.Run`), the verdicts of `verify-predictions` | nothing |
 | `internal/course` | the CLI: argument parsing, root discovery, the tables, JSON and summaries | everything |
+| `internal/niagaraannot` | the Slot-o-Matic annotation parser the `annotation` kind reads (owner Integrante3; not course-specific) | nothing |
 
 The fixtures of all three stay under `internal/course/testdata/`.
 
@@ -157,7 +158,7 @@ exits 2: an answer key that cannot be read without ambiguity is not searched.
 
 ## course check
 
-`course check [--station <dir|config.bog>] [--install DIR] [--source DIR] [--lab N ...] [--json]`
+`course check [--station <dir|config.bog>] [--install DIR] [--source DIR] [--labsrc DIR] [--lab N ...] [--json]`
 verifies what a correct solution of each lab leaves in a station and in the install, and prints one
 verdict per check. It reads the station, the jars and the source tree only; it needs no
 niagara-research root.
@@ -174,6 +175,12 @@ niagara-research root.
   `source-text` check is SKIP with `cannot read <dir>: ...` (a missing file inside the tree is
   FAIL). An explicit `--source` wins over the variable, even an empty one (`--source ""`: no
   tree, SKIP). The summary names the tree only when a selected check reads it.
+- `--labsrc`: the participant's lab module sources: the Niagara dev home that holds `training/`
+  and `trafficLightDriver/` as the New Module Wizard lays them out
+  (`training/training-rt/src/com/tridiumuniversity/training/...`). The `annotation` checks read
+  it, with the rules of `--source` (no tree or an unreadable one: SKIP; a missing file: FAIL; the
+  flag wins over the variable, even empty; the summary says `labsrc (none: annotation checks
+  skipped)`).
 - `--lab`: repeatable; `3`, `03`, `L3`, `B`, `LB`, `RA1`, `RA2`, `EXAM` (any case). A lab without
   checks (8) is exit 1. Without `--lab` only the labs run (1-11, B: the TrainingStation); `RA1`,
   `RA2` and `EXAM` run only when named, on their own station.
@@ -184,6 +191,7 @@ Defaults (explicit flags win; a blank variable counts as unset):
 |---|---|
 | `--install` | `COURSE_NIAGARA_INSTALL` |
 | `--source` | `COURSE_NIAGARA_SOURCE` |
+| `--labsrc` | `COURSE_LAB_SOURCES` |
 | `--station` | per check, the variable of its station role: `COURSE_TRAINING_STATION` for the labs (1-11, B), `COURSE_REVIEW_STATION` for RA1 and RA2, `COURSE_CERT_STATION` for EXAM |
 
 Without `--station`, a run whose checks span several roles reads each role's station once, and
@@ -215,6 +223,7 @@ own prefixes (`t:`, `tld:`) are resolved through its `m=` declarations.
 | `audit` | the records of every history file matching a glob under the station dir (`history/*/*/AuditHistory.hdb`), decoded by `internal/hdbread`; `Hist` holds Go regexps on `operation`, `target`, `slotName`, `oldValue`, `value` (empty = any) | the matching records, summed over the files, are at least / exactly N |
 | `log` | as `audit`, over `history:LogRecord` files; regexps on `logName`, `level` (`INFO`, `SEVERE`, ...), `message` | as `audit` |
 | `trend` | every trend history matching the glob (`history/*/*/NumericWritable*.hdb`); a boolean value counts 0/1, an enum its ordinal; any other value type is SKIP | each file has at least / exactly N records (`Distinct`: N distinct values, NaN not counted), and every value lies in `Hist.Min..Max` (NaN never does; the evidence's min..max leaves it out) |
+| `annotation` | one Java file of the `--labsrc` tree (`Glob`), read by `internal/niagaraannot`: only the annotations before the top-level type, never the generated region. `Fact` renders `flags` (`out=rs in3=-`: each slot's Slot Sheet letters, `Flags.encodeToString` order), `enum` (`DIRECT=0 REVERSE=1 DEFAULT=direct`), `slots` (`property timeExecuted: BAbsTime, action submit(BWorkOrder = new BWorkOrder())`) or `facets`; `Slot` narrows it to one slot | the fact equals `Want`. No tree, an unreadable one, a file the parser refuses or a flags expression it cannot evaluate is SKIP; a missing file or slot FAIL |
 | `source-text` | one file of the `--source` tree (`Glob` is its path, `/`-separated); `Match` is a Go regexp over the whole text (`(?s)` and `\s*` cross lines) | the matches are at least / exactly N; the evidence gives the first one's line. No `--source`, or a tree that cannot be read, is SKIP; a missing file FAIL |
 
 Nested slots: the bog reader keeps only a composite slot's direct `value` and `status`, so a
@@ -225,11 +234,11 @@ it is SKIP, never PASS on the type default. The path is from the component that 
 composite slot: the Tcp Config of a driver network is its own component (`tcpConfig`, with a
 handle), so its port is `address.port` on `trafficLightDriver:TrafficLightDriverTcpCommConfig`.
 
-Checks per lab: 1: 7, 2: 4, 3: 5, 4: 8 (C4.8 an `audit`), 5: 3 (jars only: the station holds nothing of code
-signing), 6: 6, 7: 8 (C7.6-C7.8 `source-text`), 9: 7, 10: 14 (three of them `file-text` on the
+Checks per lab: 1: 8, 2: 5, 3: 5, 4: 10 (C4.8 an `audit`, C4.9 and C4.10 `annotation`), 5: 3 (jars only: the station holds nothing of code
+signing), 6: 8, 7: 8 (C7.6-C7.8 `source-text`), 9: 7, 10: 14 (three of them `file-text` on the
 exported CSVs, three on the history files, C10.14 the job's lexicon), 11: 17 (8 of them nested: C11.9-C11.16, the driver and server
 Tcp Config addresses and the ping health of the network and of every driver device; C11.17
-`serverEnabled` is a plain slot), B: 4. Lab 8 (ORDs) writes no code and changes nothing, so it
+`serverEnabled` is a plain slot), B: 5. C1.8, C2.5, C4.9, C4.10, C6.7, C6.8 and CB.5 are `annotation` rows. Lab 8 (ORDs) writes no code and changes nothing, so it
 has none (its station steps, such as L8.15 and L8.17, happen in the Workbench UI). Appendix A
 (`LA`) has none either.
 
@@ -271,6 +280,30 @@ holds `Beginning export of {0} histories`, `Exporting history {0}` and `Complete
 signature check is `com.tridium.sys.module`, which the extraction does not hold: only `javax` and a
 few `com.tridium` modules), L1.17 (the registry rebuild is `com.tridium.sys.registry`, absent too)
 or L9.10 (the executors are lab code, the training module's, not framework code).
+
+Lab sources. The `annotation` rows decide from the participant's own lab module what Slot-o-Matic
+generates and what a slot view shows, offline (the shipped `LAB/` files hold no generated region and
+another layout, so they are not the input):
+
+| Row | Items | Fact (`Want`) |
+|---|---|---|
+| C1.8 | L1.9, L1.12 | `BFirstComponent` slots `property timeExecuted: BAbsTime, action execute()` |
+| C2.5 | L2.2–L2.4, L2.11 | `BAdd` flags `out=rs in1=s in2=s in3=- in4=-` |
+| C4.9 | L4.1, L4.2 | `BLoopAction` enum `DIRECT=0 REVERSE=1 DEFAULT=direct` |
+| C4.10 | L4.3 | `BTstat` flags `out=rs cv=- sp=- diff=- action=-` |
+| C6.7 | L6.2 | `BWorkOrderSubmissionState` enum `IDLE=0 SUBMITTING=1 DEFAULT=idle` |
+| C6.8 | L6.29, L6.32 | `BWorkOrderService` slot `action submit(BWorkOrder = new BWorkOrder())` |
+| CB.5 | LB.1, LB.3 | `BTrafficLightDriverDevice` facet `intersectionId=SfUtil.incl(SfUtil.MGR_EDIT)` |
+
+Every link carries an `Unobserved` note (the view, the generated code, the class declaration or the
+UI behaviour), so the items become PARTIAL, never CONFIRMED. The live run (2026-10-18, the
+participant's dev home `N4_Labs/niagara_dev_home`, the TrainingStation, install and source tree):
+`check` 90 checked, 89 PASS, 1 FAIL (C3.4); `verify-predictions` 14 PARTIAL (L1.12, L2.11, L4.2,
+LB.3 were UNDECIDED), 25 UNDECIDED; `verify --status identical` 7 more PARTIAL (L1.9, L2.2–L2.4,
+L4.1, L4.3, L6.2, L6.29, LB.1); `verify --status written` L6.32 PARTIAL. No row for L6.3: its answer
+recommends `state` READONLY | TRANSIENT, which the participant's `state` (READONLY) does not
+apply, and a recommendation is not a requirement. Not decided by annotations: L2.10 and L2.13 (UI
+rules), L6.4 and L10.2 (compiler errors).
 
 Verdicts: PASS; FAIL with what was found instead (`found 9 ..., want exactly 10`,
 `0 of 1 pass, want 2.0: Lab4/My Tstat.diff = 0.0 (default)`); SKIP when the check could not run
@@ -333,7 +366,7 @@ not done.
 
 ## course verify
 
-`course verify --status S [--lab GROUP] [--station <dir|config.bog>] [--install DIR] [--source DIR] [--date YYYY-MM-DD] [--json]`
+`course verify --status S [--lab GROUP] [--station <dir|config.bog>] [--install DIR] [--source DIR] [--labsrc DIR] [--date YYYY-MM-DD] [--json]`
 decides every item carrying status `S` (the vocabulary of `status`: `predicted`, `unverified`,
 `corrected`, `identical`, `verified`, `written`) in the group `--lab` (the spellings of `status
 --lab`: `3`, `L3`, `RA1`, `RA` for RA1, RA2 and RAX, `EXAM`; every group without it), with the
@@ -356,7 +389,7 @@ stdout, stderr and exit (`TestVerifyPredictionsIsVerifyStatusPredicted`).
 
 ## course verify-predictions
 
-`course verify-predictions [--station <dir|config.bog>] [--install DIR] [--source DIR] [--date YYYY-MM-DD] [--json]`
+`course verify-predictions [--station <dir|config.bog>] [--install DIR] [--source DIR] [--labsrc DIR] [--date YYYY-MM-DD] [--json]`
 reads the answer keys (it needs the root, like `show`) and the station, and decides every item
 still marked `*(predicted)*` from the checks whose `Keys` resolve to it (`Corpus.Lookup`: the ID,
 a range ID or a covered ID, so key `L4.15` reaches the range item `L4.15–L4.16`). A check is
@@ -449,6 +482,17 @@ not observed.
   `check-source-missing` names a missing tree (SKIP), `check-source-flag-beats-env` and
   `check-source-flag-empty` pin that `--source` (even empty) wins over the variable; `check-bad`
   runs without it (SKIP).
+- `check/annotation_test.go`: the `annotation` rows over the synthetic `testdata/labsrc/` (the
+  annotations of the six lab classes in the module layout), a changed flag (FAIL with the declared
+  and wanted facts), a missing slot or file (FAIL), an unparseable file, an undecidable flags
+  expression and an enum fact on a class without one (SKIP), no `--labsrc` and a missing or file
+  tree (SKIP); `TestAnnotationReal` runs the rows on `COURSE_LAB_SOURCES`. The
+  `check-labsrc-flag-beats-env` and `check-labsrc-flag-empty` Go-only goldens pin that `--labsrc`
+  (even empty: no tree, SKIP) wins over the variable;
+  `check-good` reads the fixture tree, the other `check-*` cases run without it (SKIP).
+  `internal/niagaraannot` has its own table tests and an oracle (`COURSE_NIAGARA_SOURCE`) that
+  compares the parsed annotations with the generated code of a source tree (4.15.6.20: 1826
+  files, 205 enums, 3699 slots).
 - `check/filetext_test.go`: the `file-text` kind over a BOM + CRLF trend CSV, an old-format CSV, a
   short file, a line count, no matching file, a bad regexp and a file over the read bound (SKIP).
 - `check/check_test.go` and the `check-*` goldens: synthetic stations under

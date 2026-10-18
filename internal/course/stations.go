@@ -19,6 +19,10 @@ const installEnv = "COURSE_NIAGARA_INSTALL"
 // 4.15.6.20 sources of a niagara-research checkout: niagara-help/versions/4.15.6.20/source).
 const sourceEnv = "COURSE_NIAGARA_SOURCE"
 
+// labsrcEnv stands in for --labsrc: the participant's lab module sources the annotation checks read
+// (the Niagara dev home holding training/ and trafficLightDriver/).
+const labsrcEnv = "COURSE_LAB_SOURCES"
+
 var stationEnv = map[string]string{
 	check.RoleTraining: "COURSE_TRAINING_STATION",
 	check.RoleReview:   "COURSE_REVIEW_STATION",
@@ -35,6 +39,8 @@ type stationOpts struct {
 	hasInstall bool
 	source     string
 	hasSource  bool
+	labsrc     string
+	hasLabsrc  bool
 	// usage prints the subcommand's usage error and returns its exit (2).
 	usage func(message string) int
 }
@@ -105,14 +111,32 @@ func (o stationOpts) sourceDir() string {
 	return getenv(sourceEnv)
 }
 
+// labsrcDir is --labsrc, else COURSE_LAB_SOURCES, else "" (the annotation checks SKIP).
+func (o stationOpts) labsrcDir() string {
+	if o.hasLabsrc {
+		return o.labsrc
+	}
+	return getenv(labsrcEnv)
+}
+
 // scope is the summary's "station ..., install <dir>", with ", source <dir>" when a check reads the
-// source tree.
+// source tree and ", labsrc <dir>" when one reads the course sources.
 func (o stationOpts) scope(ss *check.Stations, checks []*check.Check) string {
 	out := fmt.Sprintf("%s, install %s", ss.Scope(), orNone(o.installDir()))
 	if check.NeedsSource(checks) {
 		out += ", source " + orNoSource(o.sourceDir())
 	}
+	if check.NeedsLabSources(checks) {
+		out += ", labsrc " + orNoLabsrc(o.labsrcDir())
+	}
 	return out
+}
+
+func orNoLabsrc(s string) string {
+	if s == "" {
+		return "(none: annotation checks skipped)"
+	}
+	return s
 }
 
 func orNoSource(s string) string {
@@ -137,7 +161,7 @@ func (o stationOpts) open(s cli.Stdio, checks []*check.Check) (*check.Stations, 
 			return nil, o.missingStation(r, checks)
 		}
 	}
-	ss, err := check.OpenStations(checks, path, o.installDir(), o.sourceDir())
+	ss, err := check.OpenStations(checks, path, o.installDir(), o.sourceDir(), o.labsrcDir())
 	if err != nil {
 		fmt.Fprintf(s.Err, "course: cannot check the station: %v\n", err)
 		return nil, cli.ExitCannotSearch

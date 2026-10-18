@@ -1,5 +1,5 @@
-usage: course check [-h] [--root DIR] [--station PATH] [--install DIR] [--source DIR] [--lab N]
-                    [--json]
+usage: course check [-h] [--root DIR] [--station PATH] [--install DIR] [--source DIR]
+                    [--labsrc DIR] [--lab N] [--json]
 
 options:
   -h, --help      show this help message and exit
@@ -12,5 +12,8 @@ options:
   --source DIR    Niagara source tree, one directory per module part, e.g. niagara-
                   help/versions/4.15.6.20/source (default: $COURSE_NIAGARA_SOURCE; source checks
                   SKIP without either)
+  --labsrc DIR    lab module sources: the Niagara dev home holding training/ and
+                  trafficLightDriver/ (default: $COURSE_LAB_SOURCES; annotation checks SKIP
+                  without either)
   --lab N         only this lab (1-11, B; RA1, RA2, EXAM run only when named); repeatable
   --json          machine JSON output
