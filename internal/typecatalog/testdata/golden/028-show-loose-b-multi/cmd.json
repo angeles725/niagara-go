@@ -1,1 +1,1 @@
-{"args": ["show", "loose", "b:Multi"]}
+{"args": ["show", "loose", "b:Multi"], "requires": {"goos": ["linux"]}}

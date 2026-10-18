@@ -28,6 +28,11 @@ One directory per case under `<package>/testdata/golden/<case>/`:
   Use it for a case whose frozen bytes cannot hold on that OS (for example `make wintest` on
   Windows) instead of a skip in the package test. An empty list or an unknown GOOS name fails
   the load. Both requirements may be combined; each must hold.
+  Bind a case only after checking that the port's output on that OS is what the frozen Python
+  tool prints there: for Windows, run both on the Windows host (Windows CPython against the
+  pre-switch script, niagara-research `e21fe8825^`) from a copy of `testdata/` with the case's
+  args and env. A difference there is a bug to fix in the port, not a case to bind. Text-mode
+  `print` writes CRLF on Windows and the ports write LF; that difference is not checked.
 
 Cases run sequentially, sorted by directory name. A package wires them with one test:
 

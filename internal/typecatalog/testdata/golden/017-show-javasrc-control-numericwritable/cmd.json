@@ -1,1 +1,1 @@
-{"args": ["show", "javasrc", "CONTROL:NumericWritable"]}
+{"args": ["show", "javasrc", "CONTROL:NumericWritable"], "requires": {"goos": ["linux"]}}

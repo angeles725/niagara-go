@@ -1,1 +1,1 @@
-{"args": ["build", "loose"]}
+{"args": ["build", "loose"], "requires": {"goos": ["linux"]}}

@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"runtime"
 	"sort"
 	"testing"
 )
@@ -122,5 +123,17 @@ func TestReadZipMemberKeepsTheLastEntry(t *testing.T) {
 	}
 	if _, ok := readZipMember(notZip, "META-INF/module.xml"); ok {
 		t.Error("non-ZIP read")
+	}
+}
+
+// TestInstallPathsJoinLikeOsPathJoin: the modules/ directory is os.path.join(root, "modules"),
+// so a drive-relative root stays drive-relative on Windows (ntpath: "Q:modules").
+func TestInstallPathsJoinLikeOsPathJoin(t *testing.T) {
+	want := "Q:/modules"
+	if runtime.GOOS == "windows" {
+		want = "Q:modules"
+	}
+	if _, dir, ok := indexInstall("Q:"); ok || dir != want {
+		t.Errorf("indexInstall(%q) dir %q ok %v, want %q false", "Q:", dir, ok, want)
 	}
 }

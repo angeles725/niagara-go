@@ -1,1 +1,1 @@
-{"args": ["build", "loose", "plain", "javasrc"]}
+{"args": ["build", "loose", "plain", "javasrc"], "requires": {"goos": ["linux"]}}
