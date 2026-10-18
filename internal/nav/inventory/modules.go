@@ -142,82 +142,20 @@ func runModules(env *registry.Env, ns *argparse.Namespace) int {
 		return env.ExitCode()
 	}
 	w := env.Out
-	inv := data.Object("modules")
-	typeFilter := ns.String("mod_type")
-	zkmOnly, noCode, hasCode := ns.Bool("zkm"), ns.Bool("no_code"), ns.Bool("has_code")
-	bytecode, filterBC := ns.Get("bytecode").(int)
-	top := ns.Int("top")
-	type row struct {
-		name string
-		v    *index.Object
-	}
-	var results []row
-	for i, name := range inv.Keys() {
-		v, ok := inv.Values()[i].(*index.Object)
-		if !ok {
-			continue
-		}
-		switch {
-		case typeFilter != "" && typeOrStandalone(v) != typeFilter,
-			zkmOnly && !core.Truthy(v, "zkm"),
-			noCode && core.Truthy(v, "has_code"),
-			hasCode && !core.Truthy(v, "has_code"):
-			continue
-		}
-		if filterBC {
-			if n, isInt := index.Int(func() any { x, _ := v.Get("bytecode"); return x }()); !isInt || n != int64(bytecode) {
-				continue
-			}
-		}
-		results = append(results, row{name, v})
-	}
-	if top != 0 {
-		sort.SliceStable(results, func(a, b int) bool {
-			return core.Int(results[a].v, "java_files") > core.Int(results[b].v, "java_files")
-		})
-		results = results[:pySliceEnd(top, len(results))]
-	} else {
-		sort.SliceStable(results, func(a, b int) bool { return results[a].name < results[b].name })
-	}
-	var parts []string
-	if typeFilter != "" {
-		parts = append(parts, "type="+typeFilter)
-	}
-	if zkmOnly {
-		parts = append(parts, "ZKM")
-	}
-	if noCode {
-		parts = append(parts, "no-code")
-	}
-	if hasCode {
-		parts = append(parts, "has-code")
-	}
-	if filterBC {
-		parts = append(parts, fmt.Sprintf("bytecode=v%d", bytecode))
-	}
-	label := ""
-	if len(parts) > 0 {
-		label = " (" + strings.Join(parts, ", ") + ")"
-	}
+	bytecode, byBytecode := ns.Get("bytecode").(int)
+	f := ModuleFilter{Type: ns.String("mod_type"), ZKM: ns.Bool("zkm"), NoCode: ns.Bool("no_code"),
+		HasCode: ns.Bool("has_code"), ByBytecode: byBytecode, Bytecode: bytecode, Top: ns.Int("top")}
+	results := Modules(data, f)
 	fmt.Fprintln(w)
-	fmt.Fprintf(w, "  Modules%s: %d results\n", label, len(results))
-	fmt.Fprintf(w, "  %-40s %4s  %6s  %6s  %3s  %3s\n", "NAME", "TYPE", "JAVA", "CLASS", "ZKM", "BC")
-	fmt.Fprintln(w, "  "+strings.Repeat("-", 70))
+	fmt.Fprintf(w, "  Modules%s: %d results\n", f.Label(), len(results))
+	for _, line := range ModuleTableHeader() {
+		fmt.Fprintln(w, line)
+	}
 	var java, classes int64
 	for _, r := range results {
-		typ := "-"
-		if core.Truthy(r.v, "type") {
-			typ = core.Str(r.v, "type")
-		}
-		bc := "?"
-		if core.Int(r.v, "bytecode") > 0 {
-			bc = core.Str(r.v, "bytecode")
-		}
-		fmt.Fprintf(w, "  %s %s  %s  %s  %s  v%s\n", core.LJust(r.name, 40), core.RJust(typ, 4),
-			core.RJust(core.Commas(core.Int(r.v, "java_files")), 6), core.RJust(core.Commas(core.Int(r.v, "class_count")), 6),
-			core.RJust(yesBlank(core.Truthy(r.v, "zkm")), 3), bc)
-		java += core.Int(r.v, "java_files")
-		classes += core.Int(r.v, "class_count")
+		fmt.Fprintln(w, FormatModuleRow(r))
+		java += r.JavaFiles
+		classes += r.ClassCount
 	}
 	fmt.Fprintln(w)
 	fmt.Fprintf(w, "  Total: %d modules, %s java files, %s classes\n", len(results), core.Commas(java), core.Commas(classes))
