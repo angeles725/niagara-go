@@ -3,6 +3,7 @@ package helpbuild
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -207,25 +208,46 @@ func TestParityPythonMinor(t *testing.T) {
 	}
 }
 
+// pythonVersionQuery is the command line pythonVersion runs.
+const pythonVersionQuery = "import sys; print('%d.%d.%d' % sys.version_info[:3])"
+
+// fakeWrongPython puts first on an otherwise empty PATH a python3 that
+// answers pythonVersion's query with 3.14.9 and fails on any other command
+// line, and points NIAGARA_HELP_DIR at a stub checkout, so driver reaches
+// the version check and stops there.
+func fakeWrongPython(t *testing.T) string {
+	t.Helper()
+	help := t.TempDir()
+	writeFile(t, filepath.Join(help, "tools", "niagara_help_lib", "jar_listing.py"), nil)
+	t.Setenv("NIAGARA_HELP_DIR", help)
+	bin := t.TempDir()
+	python := filepath.Join(bin, "python3")
+	script := "#!/bin/sh\n" +
+		`if [ "$#" -eq 4 ] && [ "$1" = -I ] && [ "$2" = -B ] && [ "$3" = -c ] && [ "$4" = "` + pythonVersionQuery + `" ]; then` + "\n" +
+		"\techo 3.14.9\n\texit 0\nfi\n" +
+		`echo "fake python3: unexpected command line: $*" >&2` + "\nexit 2\n"
+	if err := os.WriteFile(python, []byte(script), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("PATH", bin)
+	return python
+}
+
 // A python3 that is not CPython 3.15 is a missing reference: a plain run
 // skips once the version was read (the tools check passed), as it does
-// without python3 or a checkout.
+// without python3 or a checkout. A HELPBUILD_PARITY_* variable set to ""
+// counts as unset: the run is still a plain one.
 func TestParityWrongPythonSkips(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("the fake python3 is a shell script")
 	}
 	for _, v := range parityVars {
 		t.Setenv(v, "")
+		if _, set := os.LookupEnv(v); !set {
+			t.Fatalf("%s not set to the empty string", v)
+		}
 	}
-	help := t.TempDir()
-	writeFile(t, filepath.Join(help, "tools", "niagara_help_lib", "jar_listing.py"), nil)
-	t.Setenv("NIAGARA_HELP_DIR", help)
-	bin := t.TempDir()
-	python := filepath.Join(bin, "python3")
-	if err := os.WriteFile(python, []byte("#!/bin/sh\necho 3.14.9\n"), 0o755); err != nil {
-		t.Fatal(err)
-	}
-	t.Setenv("PATH", bin)
+	python := fakeWrongPython(t)
 	var skipped bool
 	t.Run("driver", func(t *testing.T) {
 		defer func() { skipped = t.Skipped() }()
@@ -233,5 +255,44 @@ func TestParityWrongPythonSkips(t *testing.T) {
 	})
 	if v, ok := pythonVersions.Load(python); !skipped || !ok || v != "3.14.9" {
 		t.Errorf("CPython 3.14.9 in a plain run: skipped %v, version read %v %v; want a skip after reading 3.14.9", skipped, v, ok)
+	}
+}
+
+// wrongPythonChild marks the test binary that TestParityWrongPythonFails
+// runs: it only calls driver, whose failure is the result under test.
+const wrongPythonChild = "HELPBUILD_TEST_WRONG_PYTHON_CHILD"
+
+// When the run requested parity (a HELPBUILD_PARITY_* variable set, as
+// make parity does), the same wrong python3 fails the test instead of
+// skipping it. driver's t.Fatalf would fail this test too, so it runs in a
+// child test binary whose exit status and output are checked.
+func TestParityWrongPythonFails(t *testing.T) {
+	if os.Getenv(wrongPythonChild) == "1" {
+		driver(t)
+		return
+	}
+	if runtime.GOOS == "windows" {
+		t.Skip("the fake python3 is a shell script")
+	}
+	exe, err := os.Executable()
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, c := range [][2]string{{realParityVar, "1"}, {"HELPBUILD_PARITY_BAJADOC", "/some/root"}} {
+		t.Run(c[0], func(t *testing.T) {
+			for _, v := range parityVars {
+				t.Setenv(v, "")
+			}
+			t.Setenv(c[0], c[1])
+			fakeWrongPython(t)
+			cmd := exec.Command(exe, "-test.run=^TestParityWrongPythonFails$", "-test.v")
+			cmd.Env = append(os.Environ(), wrongPythonChild+"=1")
+			out, err := cmd.CombinedOutput()
+			want := c[0] + "=" + c[1] + " is set, so the Python reference is required"
+			if err == nil || !strings.Contains(string(out), "--- FAIL: TestParityWrongPythonFails") ||
+				!strings.Contains(string(out), want) || !strings.Contains(string(out), `CPython "3.14.9"`) {
+				t.Errorf("CPython 3.14.9 with %s=%s: %v\n%s\nwant a failure naming %q", c[0], c[1], err, out, want)
+			}
+		})
 	}
 }
