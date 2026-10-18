@@ -1,6 +1,7 @@
 package procgroup
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"os"
@@ -68,6 +69,41 @@ func (c *Cmd) Run() error {
 		return err
 	}
 	return c.Wait()
+}
+
+// Output and CombinedOutput have no caller today but are not dead code: *Cmd
+// embeds *exec.Cmd, so without them c.Output() would resolve to exec.Cmd's own
+// Run and bypass the process-group kill.
+//
+// Output is exec.Cmd.Output through this Cmd's Run: stdout is returned,
+// and stderr, unless the caller set Stderr, goes into an *exec.ExitError.
+func (c *Cmd) Output() ([]byte, error) {
+	if c.Stdout != nil {
+		return nil, errors.New("exec: Stdout already set")
+	}
+	var stdout, stderr bytes.Buffer
+	c.Stdout = &stdout
+	captureErr := c.Stderr == nil
+	if captureErr {
+		c.Stderr = &stderr
+	}
+	err := c.Run()
+	var ee *exec.ExitError
+	if captureErr && errors.As(err, &ee) {
+		ee.Stderr = stderr.Bytes()
+	}
+	return stdout.Bytes(), err
+}
+
+// CombinedOutput is exec.Cmd.CombinedOutput through this Cmd's Run.
+func (c *Cmd) CombinedOutput() ([]byte, error) {
+	if c.Stdout != nil || c.Stderr != nil {
+		return nil, errors.New("exec: Stdout or Stderr already set")
+	}
+	var b bytes.Buffer
+	c.Stdout, c.Stderr = &b, &b
+	err := c.Run()
+	return b.Bytes(), err
 }
 
 // finish ends the relay of the run and releases the context, then turns a
