@@ -70,9 +70,39 @@ make lint      # staticcheck (pinned in the Makefile)
 make cover     # coverage across ./internal/... and the total
 make deadcode  # report-only list of functions no command reaches
 make cross     # linux-amd64 and windows-amd64 binaries
+make wintest   # the test suites as Windows processes (WSL only; not part of ci)
 ```
 
 `make ci` (check, lint, cross) is what `.github/workflows/ci.yml` runs.
+
+### Windows test run
+
+`make wintest` (scripts/wintest.sh) cross-compiles each package's tests for windows/amd64
+into `bin/wintest/` and runs them on the Windows host through WSL interop, so `*_windows.go`
+paths and Windows file-system behaviour are actually exercised. Outside WSL it prints
+`wintest: skipped (not running under WSL)` and exits 0. It prints `ok <pkg> <secs>` or
+`FAIL <pkg>` with the tail of the package's output (the full log stays in
+`bin/wintest/<pkg>.log`), then `wintest: N packages, P ok, F failed, S skipped`; any
+failure makes it exit non-zero.
+
+Each binary runs from its package directory, as `go test` does. By default that is a copy
+of the tree (tracked and untracked-unignored files) under `%TEMP%\niagara-go-wintest\`,
+removed on exit: from the `\\wsl.localhost\...` path itself, `t.Chdir` cannot restore the
+working directory and panics, aborting the package. Committed symlinks cannot be created
+on the Windows disk; the script lists them before the run.
+
+```sh
+WINTEST_PKGS="./internal/pycompat ./internal/secaudit" make wintest  # restrict packages
+WINTEST_RUN='^TestWinError' make wintest  # -test.run regex
+WINTEST_SHORT=0 make wintest              # full suites (default passes -test.short)
+WINTEST_TIMEOUT=20m make wintest          # per-package -test.timeout (default 10m)
+WINTEST_MIRROR=0 make wintest             # run in place from the UNC path
+PYCOMPAT_WINPY=/mnt/c/.../python.exe make wintest  # or WINTEST_PYTHON
+```
+
+The Windows CPython that the Python-comparison tests run is auto-detected under
+`/mnt/c/Users/*/AppData/Local/Programs/Python/Python3*/python.exe` and passed as
+`PYCOMPAT_WINPY` through `WSLENV`; without one the script says so and those tests skip.
 
 ## 6. Commits and review
 

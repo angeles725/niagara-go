@@ -12,7 +12,7 @@ COVERPROFILE ?= $(BIN)/cover.out
 TOOLBIN := $(abspath $(BIN))/tools
 export CGO_ENABLED=0
 
-.PHONY: all build cross test test-short vet fmt-check check lint deadcode cover ci hooks clean
+.PHONY: all build cross test test-short vet fmt-check check lint deadcode cover ci wintest hooks clean
 
 all: check build
 
@@ -61,6 +61,11 @@ cover:
 	@tail -n 1 $(COVERPROFILE).func
 
 ci: check lint cross
+
+# Not part of ci: cross-compiles each package's tests for Windows and runs them on the
+# Windows host through WSL interop (skips cleanly elsewhere). See scripts/wintest.sh.
+wintest:
+	GO=$(GO) scripts/wintest.sh
 
 hooks:
 	git config core.hooksPath scripts/git-hooks
