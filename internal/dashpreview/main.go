@@ -12,7 +12,6 @@ import (
 	"os/signal"
 	"path/filepath"
 	"strings"
-	"syscall"
 	"time"
 
 	"github.com/angeles725/niagara-go/internal/argparse"
@@ -154,7 +153,7 @@ func Run(ctx context.Context, o Options, s cli.Stdio) int {
 	}
 	ln, err := net.Listen("tcp4", fmt.Sprintf("127.0.0.1:%d", o.Port))
 	if err != nil {
-		fmt.Fprintf(s.Err, "OSError: %s\n", osErrorText(err))
+		fmt.Fprintf(s.Err, "OSError: %s\n", pycompat.WinOSErrorText(err))
 		return 1
 	}
 	srv := &http.Server{Handler: h, ReadHeaderTimeout: 30 * time.Second}
@@ -201,19 +200,4 @@ func loadMock(path string) (pyjson.Value, error) {
 		return pyjson.Value{}, fmt.Errorf("json.decoder.JSONDecodeError: %v", err)
 	}
 	return v, nil
-}
-
-// osErrorText renders "[Errno N] Text" for a socket error (net.Listen). It stays local:
-// pycompat.OSErrorText maps Windows codes through the C runtime's errno table, which has no
-// text for the WSA socket codes (Python prints "[WinError N] <system message>" there).
-func osErrorText(err error) string {
-	var errno syscall.Errno
-	if !errors.As(err, &errno) {
-		return err.Error()
-	}
-	msg := errno.Error()
-	if msg != "" {
-		msg = strings.ToUpper(msg[:1]) + msg[1:]
-	}
-	return fmt.Sprintf("[Errno %d] %s", int(errno), msg)
 }
