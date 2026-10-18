@@ -1,0 +1,1 @@
+{"args": ["check", "--station", "stations/good", "--install", "install", "--source", "source", "--lab", "7"], "env": {"COURSE_NIAGARA_SOURCE": "nosuch"}, "cwd_fixture": ".."}

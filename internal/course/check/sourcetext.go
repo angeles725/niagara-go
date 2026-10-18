@@ -45,11 +45,17 @@ func excerpt(m string) string {
 }
 
 // checkSourceText counts the matches of Match in the file Glob of the source tree (Glob is one
-// path, "/"-separated, relative to the tree): at least / exactly N. Without a tree the check is
-// SKIP; a missing file is FAIL, as a missing jar is.
+// path, "/"-separated, relative to the tree): at least / exactly N. Without a tree, or with a tree
+// that is not a readable directory (a configuration error), the check is SKIP; a missing file in
+// the tree is FAIL, as a missing jar is.
 func (s *Station) checkSourceText(ck *Check) (string, string) {
 	if s.source == "" {
 		return Skip, "no --source DIR: " + ck.Glob + " not checked"
+	}
+	if fi, err := os.Stat(s.source); err != nil {
+		return Skip, fmt.Sprintf("cannot read %s: %v", s.source, err)
+	} else if !fi.IsDir() {
+		return Skip, fmt.Sprintf("cannot read %s: not a directory", s.source)
 	}
 	re, err := regexp.Compile(ck.Match)
 	if err != nil {

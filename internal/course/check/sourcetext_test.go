@@ -30,6 +30,8 @@ func TestSourceTextKind(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(dir, "BAbstractService.java"), []byte(extra), 0o644); err != nil {
 		t.Fatal(err)
 	}
+	missing := filepath.Join(other, "nosuch")
+	notDir := filepath.Join(dir, "BAbstractService.java")
 	cases := []struct {
 		source   string
 		ck       Check
@@ -50,6 +52,9 @@ func TestSourceTextKind(t *testing.T) {
 		{other, Check{Kind: kindSourceText, Glob: abstractService, Match: `(`, Op: opMin, N: 1}, Skip, "bad pattern ("},
 		{other, Check{Kind: kindSourceText, Glob: abstractService, Match: `lastSuccess`, Op: opMin, N: 1}, Fail,
 			"baja/javax/baja/sys/BAbstractService.java: 0 matches, want at least 1 of lastSuccess"},
+		// A tree that is not there is a configuration error (SKIP), never a missing file (FAIL).
+		{missing, *specRow("C7.8"), Skip, "cannot read " + missing + ": "},
+		{notDir, *specRow("C7.6"), Skip, "cannot read " + notDir + ": not a directory"},
 	}
 	for _, c := range cases {
 		st.source = c.source

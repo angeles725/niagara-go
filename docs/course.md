@@ -170,7 +170,10 @@ niagara-research root.
   the 4.15.6.20 sources a niagara-research checkout holds in
   `niagara-help/versions/4.15.6.20/source`. The `source-text` checks read it; without it (and
   without `COURSE_NIAGARA_SOURCE`) they are SKIP, and the summary says `source (none: source
-  checks skipped)`. The summary names the tree only when a selected check reads it.
+  checks skipped)`. A tree that is missing or not a directory is a configuration error: each
+  `source-text` check is SKIP with `cannot read <dir>: ...` (a missing file inside the tree is
+  FAIL). An explicit `--source` wins over the variable, even an empty one (`--source ""`: no
+  tree, SKIP). The summary names the tree only when a selected check reads it.
 - `--lab`: repeatable; `3`, `03`, `L3`, `B`, `LB`, `RA1`, `RA2`, `EXAM` (any case). A lab without
   checks (8) is exit 1. Without `--lab` only the labs run (1-11, B: the TrainingStation); `RA1`,
   `RA2` and `EXAM` run only when named, on their own station.
@@ -212,7 +215,7 @@ own prefixes (`t:`, `tld:`) are resolved through its `m=` declarations.
 | `audit` | the records of every history file matching a glob under the station dir (`history/*/*/AuditHistory.hdb`), decoded by `internal/hdbread`; `Hist` holds Go regexps on `operation`, `target`, `slotName`, `oldValue`, `value` (empty = any) | the matching records, summed over the files, are at least / exactly N |
 | `log` | as `audit`, over `history:LogRecord` files; regexps on `logName`, `level` (`INFO`, `SEVERE`, ...), `message` | as `audit` |
 | `trend` | every trend history matching the glob (`history/*/*/NumericWritable*.hdb`); a boolean value counts 0/1, an enum its ordinal | each file has at least / exactly N records (`Distinct`: N distinct values), and every value lies in `Hist.Min..Max` (NaN never does) |
-| `source-text` | one file of the `--source` tree (`Glob` is its path, `/`-separated); `Match` is a Go regexp over the whole text (`(?s)` and `\s*` cross lines) | the matches are at least / exactly N; the evidence gives the first one's line. No `--source` is SKIP, a missing file FAIL |
+| `source-text` | one file of the `--source` tree (`Glob` is its path, `/`-separated); `Match` is a Go regexp over the whole text (`(?s)` and `\s*` cross lines) | the matches are at least / exactly N; the evidence gives the first one's line. No `--source`, or a tree that cannot be read, is SKIP; a missing file FAIL |
 
 Nested slots: the bog reader keeps only a composite slot's direct `value` and `status`, so a
 dotted slot is read from `Comp.Nested`, which `bog.LoadOptions` fills only with
@@ -438,9 +441,12 @@ not observed.
   units, one constant trend and one out of 0..100.
 - `check/sourcetext_test.go`: the `source-text` kind over the synthetic `testdata/source/` (a
   stand-in `BAbstractService.java` with only the members C7.6-C7.8 read), a variant with a fourth
-  property (FAIL), no `--source` (SKIP), a missing file, a bad regexp and the read bound;
-  `TestSourceTextReal` runs the rows on `COURSE_NIAGARA_SOURCE`. The `check-source-env` Go-only
-  golden reads the tree from the variable; `check-bad` runs without it (SKIP).
+  property (FAIL), no `--source` (SKIP), a missing tree or a file as the tree (SKIP), a missing
+  file, a bad regexp and the read bound; `TestSourceTextReal` runs the rows on
+  `COURSE_NIAGARA_SOURCE`. The `check-source-env` Go-only golden reads the tree from the variable;
+  `check-source-missing` names a missing tree (SKIP), `check-source-flag-beats-env` and
+  `check-source-flag-empty` pin that `--source` (even empty) wins over the variable; `check-bad`
+  runs without it (SKIP).
 - `check/filetext_test.go`: the `file-text` kind over a BOM + CRLF trend CSV, an old-format CSV, a
   short file, a line count, no matching file, a bad regexp and a file over the read bound (SKIP).
 - `check/check_test.go` and the `check-*` goldens: synthetic stations under
