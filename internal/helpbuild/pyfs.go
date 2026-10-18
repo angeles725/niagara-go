@@ -1,0 +1,123 @@
+package helpbuild
+
+import (
+	"errors"
+	"io"
+	"io/fs"
+	"os"
+	"syscall"
+
+	"github.com/angeles725/niagara-go/internal/index"
+	"github.com/angeles725/niagara-go/internal/pycompat"
+	"github.com/angeles725/niagara-go/internal/pyjson"
+)
+
+// File-system helpers with the semantics of the Python calls the S3/S4
+// builders make: os.walk, os.remove, shutil.copyfile and json.load.
+
+// pyWalk is os.walk(top) top-down without followlinks. visit receives each
+// directory (joined like os.path.join, from top), the names of its
+// subdirectories (a symlink to a directory counts as one, as
+// DirEntry.is_dir() follows links) and of everything else, and returns the
+// subdirectories to descend, like a caller editing dirnames in place. A
+// symlinked subdirectory is listed but not descended. A directory that
+// cannot be read is skipped silently (onerror=None).
+func pyWalk(top string, visit func(dir string, dirs, files []string) []string) {
+	ents, err := os.ReadDir(top)
+	if err != nil {
+		return
+	}
+	var dirs, files []string
+	for _, e := range ents {
+		isDirEntry := e.IsDir()
+		if e.Type()&fs.ModeSymlink != 0 {
+			st, err := os.Stat(pyJoin(top, e.Name()))
+			isDirEntry = err == nil && st.IsDir()
+		}
+		if isDirEntry {
+			dirs = append(dirs, e.Name())
+		} else {
+			files = append(files, e.Name())
+		}
+	}
+	for _, d := range visit(top, dirs, files) {
+		sub := pyJoin(top, d)
+		if st, err := os.Lstat(sub); err == nil && st.Mode()&fs.ModeSymlink != 0 {
+			continue
+		}
+		pyWalk(sub, visit)
+	}
+}
+
+// removeFile is os.remove: it unlinks a file or a symlink and refuses a
+// directory (IsADirectoryError), where os.Remove would delete an empty one.
+func removeFile(path string) error {
+	if st, err := os.Lstat(path); err == nil && st.IsDir() {
+		return &fs.PathError{Op: "remove", Path: path, Err: syscall.EISDIR}
+	}
+	return os.Remove(path)
+}
+
+// pyCopyfile is shutil.copyfile(src, dst): the content only, following
+// symlinks, dst created or truncated with the default mode (0666 less the
+// umask). The error names the file that failed, as Python's OSError does.
+func pyCopyfile(src, dst string) error {
+	for _, fn := range []string{src, dst} {
+		if st, err := os.Stat(fn); err == nil && st.Mode()&fs.ModeNamedPipe != 0 {
+			return &specialFileError{fn} // never opened: a FIFO would block
+		}
+	}
+	in, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer in.Close()
+	out, err := os.OpenFile(dst, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o666)
+	if err != nil {
+		return err
+	}
+	if _, err := io.Copy(out, in); err != nil {
+		_ = out.Close()
+		return err
+	}
+	return out.Close()
+}
+
+// specialFileError is shutil.SpecialFileError, an OSError.
+type specialFileError struct{ path string }
+
+func (e *specialFileError) Error() string { return "`" + e.path + "` is a named pipe" }
+
+// JSONLoadError is an error json.load(open(path, encoding="utf-8")) raises
+// that the builders catch: an OSError (OS true) or a ValueError (a
+// UnicodeDecodeError, a JSONDecodeError or the int digit limit). Msg is
+// what str(exception) prints. Other failures (Python's RecursionError) are
+// returned as they are.
+type JSONLoadError struct {
+	OS  bool
+	Msg string
+}
+
+func (e *JSONLoadError) Error() string { return e.Msg }
+
+// loadJSON is json.load(open(path, encoding="utf-8")): strict UTF-8 over
+// the whole file, universal newlines, then Python's decoder.
+func loadJSON(path string) (pyjson.Value, error) {
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		var pe *fs.PathError
+		if errors.As(err, &pe) {
+			return pyjson.Value{}, &JSONLoadError{OS: true, Msg: index.OSError(pe.Err, path)}
+		}
+		return pyjson.Value{}, err
+	}
+	if err := index.CheckUTF8(raw); err != nil {
+		return pyjson.Value{}, &JSONLoadError{Msg: err.Error()}
+	}
+	v, err := pyjson.Loads([]rune(pycompat.UniversalNewlines(string(raw))))
+	var rec *pyjson.RecursionError
+	if err != nil && !errors.As(err, &rec) {
+		return pyjson.Value{}, &JSONLoadError{Msg: err.Error()}
+	}
+	return v, err
+}
