@@ -33,7 +33,7 @@
 // On Linux the re-raise is a signal to the calling thread, delivered before
 // the system call returns: the process is gone at that point, or, when
 // another handler caught the signal, Wait returns at once. Other Unix
-// systems signal the process and wait at most reraiseWait (250 ms) for it to die.
+// systems signal the process and wait at most 250 ms for it to die.
 //
 // On Windows (and any other non-Unix system) a *Cmd behaves as the
 // exec.Cmd it wraps: the cancel kills the direct child, which is how the

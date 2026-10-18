@@ -224,10 +224,7 @@ func runCapture(argv []string, timeout time.Duration) ([]byte, error) {
 
 // isInterrupt reports whether err is the *procgroup.InterruptError of a
 // signal that came while pdftotext ran.
-func isInterrupt(err error) bool {
-	var in *procgroup.InterruptError
-	return errors.As(err, &in)
-}
+func isInterrupt(err error) bool { return procgroup.IsInterrupt(err) }
 
 // runFailure is the error of a finished run: errTimedOut only when the run
 // failed and its context is done (the cancel killed it); a run that

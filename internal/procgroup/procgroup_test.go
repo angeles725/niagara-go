@@ -204,3 +204,21 @@ func TestInterruptErrorText(t *testing.T) {
 		t.Fatalf("Error() = %q", got)
 	}
 }
+
+func TestIsInterrupt(t *testing.T) {
+	in := &InterruptError{os.Interrupt}
+	for _, tc := range []struct {
+		err  error
+		want bool
+	}{
+		{in, true},
+		{fmt.Errorf("keytool: %w", in), true},
+		{nil, false},
+		{errors.New("interrupted by interrupt"), false},
+		{context.Canceled, false},
+	} {
+		if got := IsInterrupt(tc.err); got != tc.want {
+			t.Errorf("IsInterrupt(%v) = %v, want %v", tc.err, got, tc.want)
+		}
+	}
+}

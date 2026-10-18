@@ -14,6 +14,14 @@ type InterruptError struct{ Signal os.Signal }
 
 func (e *InterruptError) Error() string { return "interrupted by " + e.Signal.String() }
 
+// IsInterrupt reports whether err is, or wraps, the *InterruptError of a
+// SIGINT or SIGTERM that came while a child ran. A caller returns such an
+// error up instead of reading it as a failed run.
+func IsInterrupt(err error) bool {
+	var in *InterruptError
+	return errors.As(err, &in)
+}
+
 // Cmd is an *exec.Cmd run in its own process group (see the package doc).
 // Configure the embedded fields (Stdin, Stdout, Env, WaitDelay, the pipe
 // methods...) as for exec.Cmd before Start.

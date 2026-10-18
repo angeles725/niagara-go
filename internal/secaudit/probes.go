@@ -70,7 +70,7 @@ func runProgram(argv []string, stdin []byte, timeout time.Duration, extraEnv ...
 	cmd.Stdout, cmd.Stderr = &out, &errb
 	cmd.WaitDelay = time.Second
 	err := cmd.Run()
-	if isInterrupt(err) {
+	if procgroup.IsInterrupt(err) {
 		return result{}, err
 	}
 	if ctx.Err() != nil {
@@ -203,27 +203,20 @@ func (e *env) keytoolKeysizes(path string) (keys []key, entries digits, blocks [
 // Only an interrupt is returned as an error: it ends the audit instead of skipping the check.
 func (e *env) tlsSubject(host string, port int) (string, error) {
 	r, err := e.run([]string{"openssl", "s_client", "-connect", host + ":" + strconv.Itoa(port)}, nil, 15*time.Second)
-	if isInterrupt(err) {
+	if procgroup.IsInterrupt(err) {
 		return "", err
 	}
 	if err != nil || !utf8.Valid(r.stdout) {
 		return "", nil
 	}
 	c, err := e.run([]string{"openssl", "x509", "-noout", "-subject"}, r.stdout, 0)
-	if isInterrupt(err) {
+	if procgroup.IsInterrupt(err) {
 		return "", err
 	}
 	if err != nil || !utf8.Valid(c.stdout) {
 		return "", nil
 	}
 	return pycompat.Strip(string(c.stdout)), nil
-}
-
-// isInterrupt reports whether err is the *procgroup.InterruptError of a signal that came while a
-// probe child ran; every caller of e.run returns it up so the audit stops.
-func isInterrupt(err error) bool {
-	var in *procgroup.InterruptError
-	return errors.As(err, &in)
 }
 
 // icaclsPaths is where WSL keeps icacls when System32 is not on PATH.
@@ -246,7 +239,7 @@ func (e *env) findIcacls() string {
 // or a non-zero exit. An interrupt is returned as the error instead: it ends the audit.
 func (e *env) runIcacls(exe, winpath string) (listing, why string, err error) {
 	r, err := e.run([]string{exe, winpath}, nil, 60*time.Second)
-	if isInterrupt(err) {
+	if procgroup.IsInterrupt(err) {
 		return "", "", err
 	}
 	if err != nil {
