@@ -1,1 +1,1 @@
-{"args": ["--niagara-version", "4.14.0.162", "versions", "add", "/nonexistent-nh-golden/nope"]}
+{"args": ["--niagara-version", "4.14.0.162", "versions", "add", "/nonexistent-nh-golden/nope"], "requires": {"goos": ["linux"]}}

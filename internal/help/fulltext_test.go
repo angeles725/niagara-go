@@ -4,13 +4,35 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"strings"
 	"testing"
 
 	"github.com/angeles725/niagara-go/internal/help/fts"
 	"github.com/angeles725/niagara-go/internal/help/fts/ftsfixture"
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
+
+// rootPath is <ROOT> and the "/"-joined rest of a path in a recorded output.
+var rootPath = regexp.MustCompile(`<ROOT>(/[^\s)'"]*)`)
+
+// rootSourceRepr is a quoted source file path, os.path.join(base_dir,
+// "source", data["path"]) in source_search.py: on Windows only the joins are
+// "\" (the index path keeps its "/").
+var rootSourceRepr = regexp.MustCompile(`'<ROOT>/source/([^']*)'`)
+
+// atRoot is a recorded Linux output with <ROOT> replaced by the checkout:
+// os.path.join builds every path after it, so on Windows its "/" become "\".
+func atRoot(recorded, checkout string) string {
+	s := rootSourceRepr.ReplaceAllStringFunc(recorded, func(m string) string {
+		return pycompat.FSRepr(pycompat.Join(checkout, "source", rootSourceRepr.FindStringSubmatch(m)[1]))
+	})
+	s = rootPath.ReplaceAllStringFunc(s, func(m string) string {
+		return checkout + filepath.FromSlash(m[len(ftsfixture.Root):])
+	})
+	return strings.ReplaceAll(s, ftsfixture.Root, checkout)
+}
 
 // TestFulltextCommandsMatchPython runs find, guide-search, devguide-search
 // and pdf over the full-text fixture checkout and compares them with what
@@ -36,6 +58,7 @@ func TestFulltextCommandsMatchPython(t *testing.T) {
 	}
 	t.Setenv("XDG_CACHE_HOME", t.TempDir())
 	checkout := ftsfixture.Checkout(t, testdata, false)
+	ftsfixture.RefreshAll(t, checkout, func(base string) string { return fts.Fingerprint(fts.SourceDirs(base)) })
 	for _, c := range cases {
 		t.Run(c.Name, func(t *testing.T) {
 			want, err := os.ReadFile(filepath.Join(testdata, "fulltext-cli", c.Name+".txt"))
@@ -43,8 +66,7 @@ func TestFulltextCommandsMatchPython(t *testing.T) {
 				t.Fatal(err)
 			}
 			out, errs, code := run(t, checkout, c.Args...)
-			wantOut := strings.ReplaceAll(string(want), ftsfixture.Root, checkout)
-			wantErr := strings.ReplaceAll(c.Stderr, ftsfixture.Root, checkout)
+			wantOut, wantErr := atRoot(string(want), checkout), atRoot(c.Stderr, checkout)
 			if code != c.Exit || errs != wantErr || out != wantOut {
 				t.Errorf("exit %d (want %d) stderr %q (want %q) stdout:\n%s\nwant:\n%s",
 					code, c.Exit, errs, wantErr, out, wantOut)
@@ -123,11 +145,11 @@ func TestFulltextRebuildMatchesPython(t *testing.T) {
 			out, errs, code := run(t, checkout, c.Args...)
 			cacheDB := fts.CachePath(base)
 			norm := strings.NewReplacer("<CACHEDB>", cacheDB, "<CACHEDIR>", filepath.Dir(cacheDB),
-				"<CACHE>", cache, ftsfixture.Root, checkout)
-			if wantErr := norm.Replace(c.Stderr); code != c.Exit || errs != wantErr {
+				"<CACHE>", cache)
+			if wantErr := atRoot(norm.Replace(c.Stderr), checkout); code != c.Exit || errs != wantErr {
 				t.Errorf("exit %d (want %d) stderr:\n%s\nwant:\n%s", code, c.Exit, errs, wantErr)
 			}
-			if wantOut := norm.Replace(*c.Stdout); out != wantOut {
+			if wantOut := atRoot(norm.Replace(*c.Stdout), checkout); out != wantOut {
 				t.Errorf("stdout:\n%s\nwant:\n%s", out, wantOut)
 			}
 			if got := builtAt(base); got != c.Built {

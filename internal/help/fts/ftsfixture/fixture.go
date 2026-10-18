@@ -9,6 +9,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -102,5 +103,30 @@ func SetFingerprint(t testing.TB, db, value, old, new string) {
 	}
 	if err != nil {
 		t.Fatal(err)
+	}
+}
+
+// Fingerprinter is fts.Fingerprint(fts.SourceDirs(base)), handed in by the
+// caller: ftsfixture cannot import fts, whose own tests use this package.
+type Fingerprinter func(base string) string
+
+// Refresh rewrites, on Windows only, the stored fingerprint of db (the index
+// of the data root base) to fp(base). The fixture databases were built on
+// Linux, and Windows never reproduces their fingerprints: NTFS keeps mtimes in
+// 100 ns ticks and the source directories are spelled with "\". Off Windows
+// it does nothing, so the Python-built value is still what the tests check.
+func Refresh(t testing.TB, db, base string, fp Fingerprinter) {
+	t.Helper()
+	if runtime.GOOS == "windows" {
+		SetFingerprint(t, db, fp(base), "", "")
+	}
+}
+
+// RefreshAll is Refresh for the index of every version of a checkout.
+func RefreshAll(t testing.TB, checkout string, fp Fingerprinter) {
+	t.Helper()
+	for _, rel := range Versions {
+		base := filepath.Join(checkout, rel)
+		Refresh(t, filepath.Join(base, "indexes", "fulltext.sqlite"), base, fp)
 	}
 }

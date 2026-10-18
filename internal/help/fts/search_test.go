@@ -9,8 +9,6 @@ import (
 	"strconv"
 	"strings"
 	"testing"
-
-	"github.com/angeles725/niagara-go/internal/help/fts/ftsfixture"
 )
 
 // searchFixture is testdata/fulltext-search.json (fulltext_gen.py): Python's
@@ -65,7 +63,7 @@ func pyHex(s string) string {
 
 func TestSearchMatchesPython(t *testing.T) {
 	t.Setenv("XDG_CACHE_HOME", t.TempDir())
-	checkout := ftsfixture.Checkout(t, testdata, false)
+	checkout := indexedCheckout(t)
 	for _, c := range loadSearchFixture(t).Searches {
 		t.Run(c.Version+" "+c.Query+" "+strings.Join(c.Sources, ",")+" "+c.Mode, func(t *testing.T) {
 			base := dataRoot(checkout, c.Version)

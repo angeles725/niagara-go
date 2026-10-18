@@ -11,6 +11,7 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/argparse"
 	"github.com/angeles725/niagara-go/internal/cli"
+	"github.com/angeles725/niagara-go/internal/index"
 )
 
 func TestPopVersionArg(t *testing.T) {
@@ -129,7 +130,7 @@ func TestVersionsList(t *testing.T) {
 	}
 	empty := repo(t, `{"default": "", "versions": {}}`)
 	out, _, code = run(t, empty, "versions", "list")
-	if code != 1 || out != "No version registered (versions/registry.json); add one with 'versions add <install>'.\n" {
+	if code != 1 || out != "No version registered ("+index.RegistryRel+"); add one with 'versions add <install>'.\n" {
 		t.Errorf("empty registry: code %d out %q", code, out)
 	}
 }

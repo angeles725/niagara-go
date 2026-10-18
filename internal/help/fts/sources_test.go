@@ -14,6 +14,18 @@ func dataRoot(checkout, vid string) string {
 	return filepath.Join(checkout, ftsfixture.Versions[vid])
 }
 
+// hostFingerprint is what ftsfixture.Refresh stores on Windows.
+func hostFingerprint(base string) string { return Fingerprint(SourceDirs(base)) }
+
+// indexedCheckout is ftsfixture.Checkout with its indexes, their fingerprints
+// rewritten for the host on Windows (ftsfixture.Refresh).
+func indexedCheckout(t *testing.T) string {
+	t.Helper()
+	checkout := ftsfixture.Checkout(t, testdata, false)
+	ftsfixture.RefreshAll(t, checkout, hostFingerprint)
+	return checkout
+}
+
 func TestSourceDirsBorrowManuals(t *testing.T) {
 	checkout := ftsfixture.Checkout(t, testdata, true)
 	got := SourceDirs(dataRoot(checkout, "2.0"))

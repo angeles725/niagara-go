@@ -124,7 +124,7 @@ func TestResolveWithoutRegistry(t *testing.T) {
 		t.Errorf("no request: %q %q %v", id, root, err)
 	}
 	_, err = ResolveVersion(repo, "4.15", env(nil))
-	if err == nil || err.Error() != "Unknown Niagara version '4.15': no versions/registry.json found" {
+	if err == nil || err.Error() != "Unknown Niagara version '4.15': no "+RegistryRel+" found" {
 		t.Errorf("request without registry: %v", err)
 	}
 }
