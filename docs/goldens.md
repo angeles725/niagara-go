@@ -114,7 +114,10 @@ the harness and the CLI from the tag and the data (indexes/, organized/, fulltex
 versions/) from the live `MODULE_NAVIGATOR_DIR` / `NIAGARA_HELP_DIR`. Go tests reach the same
 worktrees through `internal/pyref`: `Dir` (same pin and clean check; a missing worktree skips
 unless `PYREF_REQUIRED=1`, which `make parity` exports, then fails), `Python` (python3; skips off
-Linux, where the references write CRLF and hit cp1252) and `Env` (the escape).
+Linux, where the references write CRLF and hit cp1252) and `Env` (the escape). A Go test that
+only checks a value the Python once recorded (a hash, an exit status) copies it
+into its own testdata with the tag it came from instead of reading the reference: helpbuild's
+`testdata/cov/cli-goldens.json` holds the coverage cases of niagara-help `tests/golden/cli.json`.
 
 At the tag the switched entry scripts exec the Go ports (D35), so running `tools/<x>.py` would
 record Go checking itself. The capture scripts that run a CLI (`internal/{bogcycles,bognav,

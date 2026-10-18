@@ -17,7 +17,8 @@ import (
 // alarm-rt`, the guide coverage and `coverage --doc-jars` on a registered
 // version's data root and install, Python against Go, plus (for the
 // version the niagara-help CLI goldens record) the SHA-256 of each Go
-// report against tests/golden/cli.json.
+// report against those goldens, copied from niagara-help
+// tests/golden/cli.json at pre-go-retire into testdata/cov/cli-goldens.json.
 
 // covVar selects the versions of TestParityCoverageReal (a path-list of
 // version ids); it is one of parityVars, so it counts as a parity request.
@@ -25,6 +26,10 @@ const covVar = "HELPBUILD_PARITY_COVERAGE"
 
 // covGoldenVersion is golden_cli.VERSION, the version cli.json records.
 const covGoldenVersion = "4.14.0.162"
+
+// covGoldensFile holds the coverage cases of niagara-help
+// tests/golden/cli.json as captured at the tag pre-go-retire (8410d7451).
+var covGoldensFile = filepath.Join("testdata", "cov", "cli-goldens.json")
 
 // covVersions are the versions to compare: the covVar list, else
 // 4.14.0.162 with HELPBUILD_PARITY_REAL=1 and 4.15.6.20 with
@@ -113,9 +118,11 @@ type covGolden struct {
 	Stdout string `json:"stdout"`
 }
 
-func covGoldens(t *testing.T, help string) map[string]covGolden {
+// covGoldens reads the copied cases (covGoldensFile); a case missing from
+// it is an error, never a zero hash.
+func covGoldens(t *testing.T) map[string]covGolden {
 	t.Helper()
-	data, err := os.ReadFile(filepath.Join(help, "tests", "golden", "cli.json"))
+	data, err := os.ReadFile(covGoldensFile)
 	if err != nil {
 		t.Fatalf("CLI goldens: %v", err)
 	}
@@ -126,6 +133,9 @@ func covGoldens(t *testing.T, help string) map[string]covGolden {
 	out := map[string]covGolden{}
 	for _, id := range []string{"coverage", "coverage-module", "coverage-doc-jars"} {
 		var g covGolden
+		if all[id] == nil {
+			t.Fatalf("golden %s: not in %s", id, covGoldensFile)
+		}
 		if err := json.Unmarshal(all[id], &g); err != nil {
 			t.Fatalf("golden %s: %v", id, err)
 		}
@@ -163,23 +173,22 @@ func timedCovBoth(t *testing.T, what, mode string, pyArgs []string, goRun func()
 }
 
 // TestParityCoverageReal: the reports on real versions, read from the live
-// niagara-help checkout (registry, data roots), the Python side and the CLI
-// goldens taken from the pre-go-retire reference. The data root is
+// niagara-help checkout (registry, data roots), the Python side taken from
+// the pre-go-retire reference and the CLI goldens from covGoldensFile. The data root is
 // only read (its full-text index must be up to date, else Python would
 // rebuild it in place); each side saves its listing cache in a repository
 // of its own holding a copy of the registry.
 func TestParityCoverageReal(t *testing.T) {
 	needRealParity(t, "HELPBUILD_PARITY_415", covVar)
-	_, refTools := covPython(t)
+	covPython(t)
 	vids, explicit, err := covVersions()
 	if err != nil {
 		t.Fatal(err)
 	}
-	live := niagaraHelpTools()
-	if live == "" {
-		missingReference(t, "no niagara-help checkout (the registry and data roots): parity not checked")
+	help := niagaraHelpData()
+	if help == "" {
+		missingReference(t, "no niagara-help data checkout (the registry and data roots): parity not checked")
 	}
-	help := filepath.Dir(live)
 	for _, vid := range vids {
 		t.Run(vid, func(t *testing.T) {
 			root, install, registry := covRegistryEntry(t, help, vid)
@@ -189,7 +198,7 @@ func TestParityCoverageReal(t *testing.T) {
 			}
 			var goldens map[string]covGolden
 			if vid == covGoldenVersion { // the two reports that need no install
-				goldens = covGoldens(t, filepath.Dir(refTools))
+				goldens = covGoldens(t)
 				var b strings.Builder
 				res, err := Coverage(&b, root, "")
 				if err != nil {
