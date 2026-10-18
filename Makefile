@@ -12,7 +12,7 @@ COVERPROFILE ?= $(BIN)/cover.out
 TOOLBIN := $(abspath $(BIN))/tools
 export CGO_ENABLED=0
 
-.PHONY: all build cross test test-short vet fmt-check check lint deadcode cover ci wintest hooks clean
+.PHONY: all build cross test test-short vet fmt-check check lint deadcode cover ci wintest parity hooks clean
 
 all: check build
 
@@ -66,6 +66,14 @@ ci: check lint cross
 # Windows host through WSL interop (skips cleanly elsewhere). See scripts/wintest.sh.
 wintest:
 	GO=$(GO) scripts/wintest.sh
+
+# Not part of ci: checks against the real niagara-research corpus (NIAGARA_RESEARCH, the checkout).
+# The search-quality gate of tools/searchdoor/golden.py: hit@1/hit@5 per source must not fall
+# below the floor in internal/searchdoor/quality_test.go. See docs/goldens.md.
+NIAGARA_RESEARCH ?= $(HOME)/niagara-research
+parity:
+	NSEARCH_QUALITY_ROOT=$(abspath $(NIAGARA_RESEARCH)) $(GO) test -count=1 -v -timeout 30m \
+		-run '^(TestSearchQuality|TestQualityFixtureMatchesResearch)$$' ./internal/searchdoor
 
 hooks:
 	git config core.hooksPath scripts/git-hooks

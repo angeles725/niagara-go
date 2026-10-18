@@ -70,7 +70,13 @@ python3 -I internal/nav/testdata/gen_golden.py
 NIAGARA_RESEARCH=~/niagara-research python3 -I internal/bognav/testdata/convert_golden.py
 ```
 
-The generator's docstring states its inputs. When a generator owns the cases it also writes
+The generator's docstring states its inputs. Since the entry scripts exec the Go ports (D35),
+a converter that re-runs Python exports the frozen tools from niagara-research at the parent of
+the switch commit (`git archive`), checks each run against the frozen JSON in text mode and
+writes the exact bytes (`internal/{corpusnav,checkcoverage,modulefind,gencatalog}/testdata/
+convert_golden.py`). A case that needs state git cannot hold (an empty root, a mode-000 file, a
+CATALOG.md state) lives in its own `testdata/<set>/golden/` and a package test stages it in a
+temporary directory before calling `golden.Run` on it. When a generator owns the cases it also writes
 their `intended.json` (see `INTENDED` in `internal/nav/testdata/gen_golden.py`), so a re-run
 keeps them. Unit-test fixtures of shared packages follow the same rule (`testdata/gen.py`,
 `gen_fixtures.py`).
@@ -80,3 +86,13 @@ keeps them. Unit-test fixtures of shared packages follow the same rule (`testdat
 without `.py`, upper-cased, `-` -> `_`, e.g. `GOLDEN_BIN_BOG_NAV`) runs a tool's Python golden
 suite against the Go binary, and `GOLDEN_UPDATE` refuses to run with such an override so the
 port's output is never frozen as the expectation.
+
+## Search quality: `make parity`
+
+`make parity` runs `TestSearchQuality` (internal/searchdoor): the gate of niagara-research
+`tools/searchdoor/golden.py` in process on the real corpus (`NIAGARA_RESEARCH`, default
+`~/niagara-research`): hit@1/hit@5 per source over `testdata/quality/golden-queries.jsonl` (81
+questions, docs pinned to 4.14.0.162) and the warm p50/p95 latency. A hit count below
+`qualityFloor` fails; a higher one is logged so the floor can be raised. Without
+`NSEARCH_QUALITY_ROOT` the test skips. `TestQualityFixtureMatchesResearch` fails when the copied
+question set drifts from the niagara-research one (skipped when that file is absent).
