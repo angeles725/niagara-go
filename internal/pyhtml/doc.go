@@ -11,8 +11,8 @@
 // declarations, processing instructions and CDATA sections are dropped, as the base
 // class's empty handlers drop them. Invalid UTF-8 never panics or hangs (FuzzParse)
 // but is outside the contract: the tools decode pages with errors="replace" first.
-// The package depends on textfold only (str.lower, str.isspace), so pycompat can
-// forward its HTMLUnescape here.
+// The package depends on textfold only (str.lower, str.isspace); callers use
+// Unescape directly.
 //
 // Fixtures: the expected events of parser_test.go and the values of unescape_test.go
 // were taken from CPython 3.15 by hand (python3 -c with html.parser / html.unescape).
