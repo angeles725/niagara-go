@@ -3,6 +3,7 @@ package course
 import (
 	"fmt"
 	"io"
+	"slices"
 	"strings"
 	"time"
 
@@ -34,8 +35,9 @@ type predictionJSON struct {
 // from the checks linked to it, and prints a verdict per item, the suggestion lines of the
 // CONFIRMED ones (only those) and a summary (stdout; stderr with --json). verify-predictions is
 // status "predicted" over every group. Exit: 0 nothing contradicted (PARTIAL counts like
-// UNDECIDED), 1 at least one CONTRADICTED, 2 the station cannot be read, a bad --date, or every
-// linked check was skipped.
+// UNDECIDED), 1 at least one CONTRADICTED or no item of the status in the groups (the honest zero,
+// before any station is read), 2 the station cannot be read, a bad --date, or every linked check
+// was skipped.
 func cmdVerify(c *key.Corpus, s cli.Stdio, o stationOpts, status string, groups []string, date string, asJSON bool) int {
 	if date == "" {
 		date = now().Format(time.DateOnly)
@@ -48,6 +50,9 @@ func cmdVerify(c *key.Corpus, s cli.Stdio, o stationOpts, status string, groups 
 		selected[g] = true
 	}
 	keep := func(it *key.Item) bool { return it.HasStatus(status) && (groups == nil || selected[it.Group]) }
+	if code, empty := honestZero(c, s, status, groups, keep); empty {
+		return code
+	}
 	st, code := o.open(s, check.LinkedChecks(c, keep))
 	if st == nil {
 		return code
@@ -121,4 +126,28 @@ func printPredictions(w io.Writer, preds []check.Prediction, date string) {
 			fmt.Fprintln(w, l)
 		}
 	}
+}
+
+// honestZero prints "no <status> item in <groups> (searched N items)" when keep selects no item, as
+// status --status does, and returns exit 1: an empty selection is a searched miss, never a pass.
+func honestZero(c *key.Corpus, s cli.Stdio, status string, groups []string, keep func(*key.Item) bool) (int, bool) {
+	if groups == nil {
+		for _, g := range c.Groups {
+			groups = append(groups, g.Key)
+		}
+	}
+	selected, searched := 0, 0
+	for _, it := range c.Items {
+		if slices.Contains(groups, it.Group) {
+			searched++
+		}
+		if keep(it) {
+			selected++
+		}
+	}
+	if selected > 0 {
+		return cli.ExitFound, false
+	}
+	fmt.Fprintf(s.Err, "course: no %s item in %s (searched %s)\n", status, strings.Join(groups, ", "), key.Plural(searched, "item"))
+	return cli.ExitNoMatch, true
 }

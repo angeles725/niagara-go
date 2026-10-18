@@ -13,6 +13,10 @@ import (
 // The file-text kind: lines of files the station wrote into its directory (shared/ is the
 // station's Files space, the file:^ root).
 
+// maxFileText bounds a file-text read; a larger file is an error, never read in part. A variable so
+// that a test can shrink it.
+var maxFileText = 16 << 20
+
 // fileLines reads a text file as lines: a UTF-8 BOM and the CR of CRLF line ends are dropped.
 func fileLines(path string) ([]string, error) {
 	f, err := os.Open(path)
@@ -20,9 +24,13 @@ func fileLines(path string) ([]string, error) {
 		return nil, err
 	}
 	defer f.Close()
-	data, err := io.ReadAll(io.LimitReader(f, 16<<20))
+	data, err := io.ReadAll(io.LimitReader(f, int64(maxFileText)+1))
 	if err != nil {
 		return nil, err
+	}
+	if len(data) > maxFileText {
+		// A cut file would be checked on its first lines only: the check cannot run (SKIP).
+		return nil, fmt.Errorf("larger than %d bytes", maxFileText)
 	}
 	text := strings.TrimPrefix(string(data), "\ufeff")
 	text = strings.TrimSuffix(strings.ReplaceAll(text, "\r\n", "\n"), "\n")

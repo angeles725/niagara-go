@@ -1,0 +1,1 @@
+{"args": ["--root", "norelated", "verify-predictions", "--date", "17/10/2026"], "cwd_fixture": ".."}

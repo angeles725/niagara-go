@@ -41,6 +41,10 @@ func TestOpenStationsSharesAPath(t *testing.T) {
 	if r := ss2.Run(checks[1]); len(ss2.list) != 2 || r.Verdict != Fail {
 		t.Errorf("stations %d, the RA1 check on the bad station: %s %s", len(ss2.list), r.Verdict, r.Evidence)
 	}
+	// The summary names every station read, in role order, comma-separated.
+	if want := "station GoodStation (237 components, 16 links), station BadStation (236 components, 15 links)"; ss2.Scope() != want {
+		t.Errorf("two-station scope %q, want %q", ss2.Scope(), want)
+	}
 	if _, err := OpenStations(checks, func(r string) string { return paths[r] + "x" }, ""); err == nil {
 		t.Error("an unreadable station: no error")
 	}

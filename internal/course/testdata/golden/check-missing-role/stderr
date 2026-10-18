@@ -1,2 +1,2 @@
 usage: course check [-h] [--root DIR] [--station PATH] [--install DIR] [--lab N] [--json]
-course check: error: the following arguments are required: --station
+course check: error: the following arguments are required: --station (EXAM needs --station or COURSE_CERT_STATION)

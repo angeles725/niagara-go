@@ -32,3 +32,10 @@ func TestGoldenLinux(t *testing.T) {
 	clearStationEnv(t)
 	golden.Run(t, "testdata/linux", Main)
 }
+
+// TestGoldenGo runs the Go-only cases under testdata/go/golden (D46: regenerated with GOLDEN_UPDATE=1
+// and reviewed in the diff); they run from testdata (cwd_fixture ".."), over the same fixtures.
+func TestGoldenGo(t *testing.T) {
+	clearStationEnv(t)
+	golden.RunGo(t, Main)
+}

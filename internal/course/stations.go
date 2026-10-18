@@ -3,6 +3,7 @@ package course
 import (
 	"fmt"
 	"os"
+	"slices"
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/cli"
@@ -40,9 +41,59 @@ func (o stationOpts) installDir() string {
 	return getenv(installEnv)
 }
 
+// anyStation reports whether a station was given at all: --station or one role's variable. A run
+// reads at least one station, so verify checks it before the root and the --date (the usage error
+// of a missing --station comes first, as when --station was required).
+func (o stationOpts) anyStation() bool {
+	if o.hasStation {
+		return true
+	}
+	for _, env := range stationEnv {
+		if getenv(env) != "" {
+			return true
+		}
+	}
+	return false
+}
+
+// missingStation is the usage error of no --station: with the groups of a role whose variable is
+// unset, it names them and the variable ("EXAM needs --station or COURSE_CERT_STATION").
+func (o stationOpts) missingStation(role string, checks []*check.Check) int {
+	msg := "the following arguments are required: --station"
+	if role != "" {
+		label, verb := roleGroups(role, checks)
+		msg += fmt.Sprintf(" (%s %s --station or %s)", label, verb, stationEnv[role])
+	}
+	return o.usage(msg)
+}
+
+// roleGroups names the groups of the checks that run on role: "EXAM", "RA1, RA2", "lab 4",
+// "labs 1, 4", or "the labs" for more than three labs; and the verb that agrees with it.
+func roleGroups(role string, checks []*check.Check) (string, string) {
+	var labs []string
+	for _, ck := range checks {
+		if check.Role(ck.Lab) == role && !slices.Contains(labs, ck.Lab) {
+			labs = append(labs, ck.Lab)
+		}
+	}
+	label := strings.Join(labs, ", ")
+	switch {
+	case len(labs) == 0 || (role == check.RoleTraining && len(labs) > 3):
+		return "the labs", "need" // no check (the station is still read) or most of the labs
+	case role == check.RoleTraining && len(labs) == 1:
+		label = "lab " + label
+	case role == check.RoleTraining:
+		label = "labs " + label
+	}
+	if len(labs) == 1 {
+		return label, "needs"
+	}
+	return label, "need"
+}
+
 // open reads the station of every role the checks run on: --station for all of them, else the
-// role's variable. A role with neither is the usage error of a missing --station; a station
-// that cannot be read is exit 2.
+// role's variable. A role with neither is the usage error of a missing --station, naming the
+// role's groups and variable; a station that cannot be read is exit 2.
 func (o stationOpts) open(s cli.Stdio, checks []*check.Check) (*check.Stations, int) {
 	path := func(role string) string {
 		if o.hasStation {
@@ -52,7 +103,7 @@ func (o stationOpts) open(s cli.Stdio, checks []*check.Check) (*check.Stations, 
 	}
 	for _, r := range check.Roles(checks) {
 		if path(r) == "" {
-			return nil, o.usage("the following arguments are required: --station")
+			return nil, o.missingStation(r, checks)
 		}
 	}
 	ss, err := check.OpenStations(checks, path, o.installDir())

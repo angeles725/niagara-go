@@ -12,7 +12,7 @@ files. It is new (no Python original), so its golden cases run over the syntheti
 
 | Package | Holds | Prints |
 |---|---|---|
-| `internal/course/key` | the answer-key parser and model: `Load(root)`, `Corpus`, `Item`, `Group`, the status vocabulary, `GroupKeys` | nothing (reusable, e.g. by nsearch) |
+| `internal/course/key` | the answer-key parser and model: `Load(root)`, `Corpus`, `Item`, `Group`, the status vocabulary, `GroupKeys`, `Counts` (one row of `status`) | nothing (reusable, e.g. by nsearch) |
 | `internal/course/check` | the check spec (`Spec`), the kinds, the station and jar reader (`Open`, `Station.Run`), the verdicts of `verify-predictions` | nothing |
 | `internal/course` | the CLI: argument parsing, root discovery, the tables, JSON and summaries | everything |
 
@@ -178,8 +178,11 @@ Defaults (explicit flags win; a blank variable counts as unset):
 
 Without `--station`, a run whose checks span several roles reads each role's station once, and
 the summary names every station read. A role whose variable is unset is the usage error of a
-missing `--station` (`the following arguments are required: --station`, exit 2). The same
-defaults apply to `verify-predictions`.
+missing `--station` naming the groups of that role and its variable (`the following arguments are
+required: --station (EXAM needs --station or COURSE_CERT_STATION)`; `the labs` for more than three
+labs), exit 2. The same defaults apply to `verify-predictions` and `verify`, which check first that
+some station is given (`--station` or one of the three variables): without any, the plain usage
+error comes before the root and `--date` errors.
 
 The spec is the table `Spec` in `internal/course/check/spec.go`: one row per check with an
 ID (`C<lab>.<n>`), the lab, the answer-key items it confirms (`L4.13`, ...), a kind and a
@@ -191,14 +194,14 @@ own prefixes (`t:`, `tld:`) are resolved through its `m=` declarations.
 | Kind | Checks | PASS when |
 |---|---|---|
 | `type` | components of a type, optionally under an ancestor type (`Within`) or below a folder path (`Under`, `Review2`) | the count is at least / exactly N; with `Under`, a FAIL lists where the components are instead |
-| `slot` | a slot on every component of a type; its effective value is the stored value (a composite's nested `value`), else the type default. A dotted slot (`address.port`, `health.lastOkTime`) is a value below a composite slot of the component | every value equals `Want`, and every `Stored` slot is stored (`health.down = false` is also the default of a device never pinged, so C11.12 and C11.14 need `health.lastOkTime` stored); or (`Set`) every slot is stored; or (`Distinct`) the distinct values reach N |
+| `slot` | a slot on every component of a type (filtered by `Within` and `Under` as for `type`); its effective value is the stored value (a composite's nested `value`), else the type default. A dotted slot (`address.port`, `health.lastOkTime`) is a value below a composite slot of the component | every value equals `Want`, and every `Stored` slot is stored (`health.down = false` is also the default of a device never pinged, so C11.12 and C11.14 need `health.lastOkTime` stored); or (`Set`) every slot is stored; or (`Distinct`) the distinct values reach N |
 | `link` | links `From.FromSlot -> Type.Slot`, source by handle or `slot:` ord | the count is at least / exactly N |
 | `files` | files matching a glob under the station dir, `{station}` = the `stationName` slot | the count is at least / exactly N |
 | `jar` | `modules/<part>.jar` | it exists |
-| `jar-entry` | entries matching a glob (`**` crosses `/`) | the count reaches N |
+| `jar-entry` | entries matching a glob (`**` crosses `/`; `{A,B}` is one of the exact names A or B) | the count reaches N |
 | `jar-text` | the first entry matching a glob | it holds every listed string |
 | `jar-signed` | `META-INF/*.SF` and `META-INF/*.RSA`, `.DSA` or `.EC` | both exist |
-| `file-text` | every file matching a glob under the station dir (`{station}` as for `files`), read as text: a UTF-8 BOM and CRLF line ends dropped; `Match` is a Go regexp (`{station}` = the station name, quoted) | `Line` > 0: that line matches; `Line` 0: the matching lines are at least / exactly N. No matching file is FAIL |
+| `file-text` | every file matching a glob under the station dir (`{station}` as for `files`), read as text: a UTF-8 BOM and CRLF line ends dropped; `Match` is a Go regexp (`{station}` = the station name, quoted) | `Line` > 0: that line matches; `Line` 0: the matching lines are at least / exactly N. No matching file is FAIL; a file over 16 MiB is SKIP (`cannot read`), never checked on its first part |
 
 Nested slots: the bog reader keeps only a composite slot's direct `value` and `status`, so a
 dotted slot is read from `Comp.Nested`, which `bog.LoadOptions` fills only with
@@ -263,7 +266,7 @@ The rows `CEXAM.<n>` (`internal/course/check/spec_exam.go`) read the exam statio
 |---|---|
 | P1 Limiter | a `Limiter` in `Test`, `min = 25.0`, `max = 75.0`, the link `Ramp.out -> Limiter.in`, `out` stored, the jar signed, `BLimiter.class` |
 | P2 HistoryExportService | one under Services, `historyId = /Cristian_Angeles_Cert/AuditHistory`, `shared/history.csv` with the header `Timestamp,Operation,Target,SlotName` and audit rows, `BHistoryExportService.class` |
-| P3 websiteDriver | a `WebsiteDriverDevice` under Drivers with `website` stored and `health.lastOkTime` stored (nested), the jar signed, the network, device and folder classes, `NETWORK_COMMUNICATION` |
+| P3 websiteDriver | a `WebsiteDriverDevice` under Drivers with `website` stored and `health.lastOkTime` stored (nested), the jar signed, the network, device and folder classes by exact name (`BWebsiteDriver{Network,Device,DeviceFolder}.class`, the names in the live jar), `NETWORK_COMMUNICATION` |
 
 The live exam station (2026-10-17, with the 4.15.6.20 install): 19 checked, 19 PASS.
 
@@ -338,7 +341,9 @@ With `--json`, stdout is a list of `{id, verdict, reason, checks: [{id, verdict,
 file, line, suggestion}` (`suggestion` is null unless CONFIRMED) and the summary goes to stderr.
 
 Exit: 0 no item CONTRADICTED (PARTIAL and UNDECIDED items are counted, never confirmed); 1 at least one
-CONTRADICTED; 2 the answer keys or the station cannot be read, a bad `--date`, or every linked
+CONTRADICTED, or no item carries the status in the selected groups (the honest zero
+`course: no predicted item in RA1 (searched 7 items)` on stderr, as `status --status` prints it; no
+station is read); 2 the answer keys or the station cannot be read, a bad `--date`, or every linked
 check was skipped (nothing could be checked, as in `course check`).
 
 The live TrainingStation and the real answer key (2026-10-17, with the 4.15.6.20 install):
@@ -366,7 +371,7 @@ not observed.
   not-found error, run from a temporary directory with the executable stubbed, so no `labs.md`
   above the real checkout can leak in.
 - `check/filetext_test.go`: the `file-text` kind over a BOM + CRLF trend CSV, an old-format CSV, a
-  short file, a line count, no matching file and a bad regexp.
+  short file, a line count, no matching file, a bad regexp and a file over the read bound (SKIP).
 - `check/check_test.go` and the `check-*` goldens: synthetic stations under
   `internal/course/testdata/stations/` (`good`: every check PASS; `bad`: no FirstComponent,
   default Tstat diff, no Add.out -> Output link, nine CSV files in the old header-first format, a driver Tcp Config on the
@@ -381,7 +386,10 @@ not observed.
   skips, visibly. The synthetic `stations/review` mirrors the live review station (components in
   `Cristian_Angeles_Review`, so CRA1.10 FAILs); the `check-review` golden runs it. `stations/cert`
   is a passing exam station (`check-exam`); `check-mixed-roles` reads three stations in one run and
-  `check-missing-role` is the usage error of a role without a station. `TestCheckNestedNeedsNestedLoad`: a dotted check on a bog read without
+  `check-missing-role` is the usage error of a role without a station. `stations/cert-bad` holds
+  the exam failures (`TestExamFailPaths`: a wrong min and max, an empty historyId, history.csv rows
+  in another format, a device never pinged under a pinged network, and, from an install built in
+  the test, no network class and no `NETWORK_COMMUNICATION`). `TestCheckNestedNeedsNestedLoad`: a dotted check on a bog read without
   nested values is SKIP.
 - `verify-status-ra`, `verify-unknown-group`, `verify-no-status`: `verify` over the `root`
   fixture's RA items with the review station.
@@ -395,10 +403,14 @@ not observed.
   L11.32 CONTRADICTED), no `--install`, the `root`
   fixture (its one linked check is a jar check: exit 2), a bad `--date` and a broken bog.
   `TestVerifyPredictionsTrainingStation` (with `COURSE_TRAINING_STATION` and
-  `NIAGARA_RESEARCH_DIR`) pins only that no predicted item is CONTRADICTED, only L10.24 is CONFIRMED
+  `NIAGARA_RESEARCH_DIR`) pins only that no predicted item is CONTRADICTED, none is CONFIRMED (L10.24, the one that was, is no longer predicted)
   and some are PARTIAL on the live station. `TestCheckKeysReal` resolves every linked key in the real labs.md.
+- `testdata/go/golden/` (D46, `TestGoldenGo` via `golden.RunGo`, regenerated with `GOLDEN_UPDATE=1`
+  and reviewed in the diff): `verify-predictions-no-station` (the missing `--station` before a bad
+  root and a bad `--date`) and `verify-status-none` (the honest zero, exit 1).
 - `key/oracle_test.go`: the recall oracle (plain regexes over the raw files, its own range
   expansion) must equal the parsed ID set on the fixture, and on the real checkout when
-  `NIAGARA_RESEARCH_DIR` is set, where the counts per group and per status are pinned.
+  `NIAGARA_RESEARCH_DIR` is set, where the counts per group and per status are pinned; they are
+  counted by `key.Counts.Add`, the counter `course status` prints.
 
 Paths are printed relative to the root with `/`, on every OS.

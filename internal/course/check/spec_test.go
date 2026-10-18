@@ -181,7 +181,12 @@ func TestCheckLiveStations(t *testing.T) {
 			}
 			install := os.Getenv("COURSE_NIAGARA_INSTALL")
 			got := map[string]string{}
-			for _, r := range runAll(t, path, install, live.role) {
+			results := runAll(t, path, install, live.role)
+			if len(results) == 0 {
+				// A role with no rows would pass without checking anything.
+				t.Fatalf("no check runs on the %s station: the spec has no row of this role", live.role)
+			}
+			for _, r := range results {
 				switch {
 				case r.Verdict == Skip && install == "" && strings.HasPrefix(r.Kind, "jar"):
 				case r.Verdict == Fail && live.differs[r.ID] != "":

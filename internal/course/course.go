@@ -131,6 +131,9 @@ func Main(args []string, s cli.Stdio) int {
 	if cmd == "check" { // reads a station, not the answer keys
 		return cmdCheck(s, o, ns.Strings("lab"), ns.Bool("json"))
 	}
+	if (cmd == "verify" || cmd == "verify-predictions") && !o.anyStation() {
+		return o.missingStation("", nil) // before the root and --date errors
+	}
 	root, err := findRoot(ns.String("root"), ns.Get("root") != nil)
 	if err != nil {
 		fmt.Fprintf(s.Err, "course: %v\n", err)

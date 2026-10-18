@@ -96,9 +96,10 @@ func TestVerifyPredictionsThroughRange(t *testing.T) {
 	}
 }
 
-// confirmedLive are the predicted items the live TrainingStation confirms: L10.24 through the file
-// checks of its exported CSVs (its answer text still predicts other columns; reported for a fix).
-var confirmedLive = map[string]bool{"L10.24": true}
+// confirmedLive are the predicted items the live TrainingStation confirms. L10.24 was the one (the
+// file checks of its exported CSVs) until labs.md recorded it from the CSV on 2026-10-17: it is no
+// longer predicted, so none is.
+var confirmedLive = map[string]bool{}
 
 // TestVerifyPredictionsTrainingStation runs verify-predictions on the live TrainingStation
 // against the real answer key; it pins only what the live check test pins: C3.4 is the one

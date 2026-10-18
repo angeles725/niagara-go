@@ -196,7 +196,7 @@
     "kind": "jar-entry",
     "description": "network, device and folder classes built",
     "verdict": "PASS",
-    "evidence": "modules/websiteDriver-rt.jar: 3 entries match **/websiteDriver/BWebsiteDriver*.class"
+    "evidence": "modules/websiteDriver-rt.jar: 3 entries match **/websiteDriver/BWebsiteDriver{Network,Device,DeviceFolder}.class"
   },
   {
     "id": "CEXAM.19",
