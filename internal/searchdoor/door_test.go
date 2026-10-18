@@ -3,6 +3,7 @@ package searchdoor
 import (
 	"reflect"
 	"strings"
+	"sync"
 	"testing"
 )
 
@@ -12,11 +13,14 @@ import (
 type fakeBackend struct {
 	clock    *float64
 	handlers map[string]func(argv []string, timeout float64) Raw
-	calls    []string
+	mu       sync.Mutex // the sources call Run concurrently
+	calls    []string   // read once the search has returned
 }
 
 func (f *fakeBackend) Run(argv []string, timeout float64) Raw {
+	f.mu.Lock()
 	f.calls = append(f.calls, strings.Join(argv[1:], " "))
+	f.mu.Unlock()
 	if h, ok := f.handlers[argv[1]]; ok {
 		return h(argv, timeout)
 	}
