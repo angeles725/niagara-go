@@ -91,7 +91,7 @@ func autodetect(explicit string) (string, error) {
 		return explicit, nil
 	}
 	for _, c := range installCandidates {
-		if isDir(pycompat.Join(c, "modules")) {
+		if isDir(pyJoin(c, "modules")) {
 			return c, nil
 		}
 	}
