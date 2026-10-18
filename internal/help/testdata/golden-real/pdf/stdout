@@ -1,0 +1,53 @@
+61 PDF manuals matching 'modbus configuration':
+
+  docModbus (101 pages, 2737 KB, software)
+    source: docModbus/docModbus.pdf
+    L52 p.3: Limits imposed by the Modbus licenses.....................................................11
+    path: docs-text/docModbus.txt
+
+  EN2B 0415GE51 - IRM Function Blocks User Guide (596 pages, 18037 KB, software)
+    source: docOptimizerUnitary/EU/EN2B 0415GE51 - IRM Function Blocks User Guide.pdf
+    L17006 p.482: Modbus Configuration Screen
+    path: docs-text/EN2B_0415GE51_-_IRM_Function_Blocks_User_Guide.txt
+
+  EN2B 0415-GE51 R1023 - IRM Function Blocks User Guide (594 pages, 29770 KB, software)
+    source: docMerlin_NX/EU/EN2B 0415-GE51 R1023 - IRM Function Blocks User Guide.pdf
+    L16906 p.480: Modbus Configuration Screen
+    path: docs-text/EN2B_0415-GE51_R1023_-_IRM_Function_Blocks_User_Guide.txt
+
+  TR50 IAQ Sensor User Guide 31-00567M-02 (114 pages, 8518 KB, hardware)
+    source: docTR50/TR50_IAQ Sensor_User Guide_31-00567M-02.pdf
+    L3529 p.70: Parity: Modbus devices may have a configurable Parity, they will not have a
+    path: docs-text/TR50_IAQ_Sensor_User_Guide_31-00567M-02.txt
+
+  EN2B-0414-GE51 R0224 - IRM Engineering Guide (430 pages, 19338 KB, software)
+    source: docOptimizerUnitary/EU/EN2B-0414-GE51 R0224 - IRM Engineering Guide.pdf
+    L10649 p.329: "Modbus plus" devices, nor does it support such configurations on the Modbus.
+    path: docs-text/EN2B-0414-GE51_R0224_-_IRM_Engineering_Guide.txt
+
+  EN2B-0414-GE51 R1023 - IRM Engineering Guide (429 pages, 49162 KB, software)
+    source: docMerlin_NX/EU/EN2B-0414-GE51 R1023 - IRM Engineering Guide.pdf
+    L10603 p.328: "Modbus plus" devices, nor does it support such configurations on the Modbus.
+    path: docs-text/EN2B-0414-GE51_R1023_-_IRM_Engineering_Guide.txt
+
+  Honeywell Compact VAV, Unitary and VAV System Engineering Guide - 31-00744 (401 pages, 20146 KB, software)
+    source: docOptimizerUnitary/EU/Honeywell Compact VAV, Unitary and VAV System Engineering Guide - 31-00744.pdf
+    L9361 p.304: 6. Configure Parity: Modbus devices may have a configurable parity; they will not have a
+    path: docs-text/Honeywell_Compact_VAV,_Unitary_and_VAV_System_Engineering_Guide_-_31-00744.txt
+
+  Honeywell Compact VAV Unitary and VAV Function Blocks User Guide - 31-00745 (557 pages, 17705 KB, software)
+    source: docOptimizerUnitary/EU/Honeywell Compact VAV Unitary and VAV Function Blocks User Guide - 31-00745.pdf
+    L15171 p.442: Step 3.    Double-click on the Modbus device to view the Modbus Device Configuration
+    path: docs-text/Honeywell_Compact_VAV_Unitary_and_VAV_Function_Blocks_User_Guide_-_31-00745.txt
+
+  Spyder Model 5 and Spyder Model 7 Function Blocks User Guide - 31-00364 (543 pages, 22985 KB, software)
+    source: docSpyderModel5/Spyder Model 5 and Spyder Model 7 Function Blocks User Guide - 31-00364.pdf
+    L14638 p.421: Using the Modbus device configuration view, the user can configure various types of read
+    path: docs-text/Spyder_Model_5_and_Spyder_Model_7_Function_Blocks_User_Guide_-_31-00364.txt
+
+  Spyder Model 5 and Spyder Model 7 Function Blocks User Guide - 31-00364 2 (543 pages, 22985 KB, software)
+    source: docSpyderModel7/Spyder Model 5 and Spyder Model 7 Function Blocks User Guide - 31-00364.pdf
+    L14638 p.421: Using the Modbus device configuration view, the user can configure various types of read
+    path: docs-text/Spyder_Model_5_and_Spyder_Model_7_Function_Blocks_User_Guide_-_31-00364_2.txt
+
+  ... and 51 more manuals
