@@ -137,6 +137,15 @@ floor can be raised. Without
 `NSEARCH_QUALITY_ROOT` the test skips. `TestQualityFixtureMatchesResearch` fails when the copied
 question set drifts from the niagara-research one (skipped when that file is absent).
 
+## Real history data: hdbread
+
+`TestRealHarborHistory` (internal/hdbread) replaces the deleted Python `RealHarborHistoryTest`
+(niagara-research `pre-go-retire:tools/tests/test_t6c_hdb_trend.py`): it decodes a real .hdb
+history named by `HDBREAD_REAL_HDB` and checks the HARBOR UMA14 Ret history (682 records, the
+first at 2018-09-26T17:30:00.008Z, ascending timestamps, a 15-minute median step, every value in
+(0, 60) degC). The client data never enters this repo. Unset, the test skips; `make parity` sets
+it to that file in the checkout (`HDBREAD_REAL_HDB= make parity` skips it), and a missing file fails.
+
 ## Real-corpus goldens: mnav and nh keep sets
 
 `internal/nav/testdata/golden-real/` and `internal/help/testdata/golden-real/` hold the

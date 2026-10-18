@@ -74,6 +74,9 @@ RESEARCH := $(abspath $(NIAGARA_RESEARCH))
 #   course: COURSE_TRAINING_STATION=<...>/TrainingStation/config.bog [COURSE_NIAGARA_INSTALL=<install>]
 #   bog recall: BOG_RECALL_FILES=<bog>[:<bog>...]  bog parity: BOG_PARITY_FILES + BOG_PARITY_DIR
 #     (the dump dir that internal/bog/testdata/gen_fixtures.py --dump wrote, kept outside the repo)
+# hdbread real history: HDBREAD_REAL_HDB, by default the HARBOR UMA14 Ret history of the checkout
+# (682 records); an empty value skips it, a missing file fails.
+HDBREAD_REAL_HDB ?= $(RESEARCH)/clients/distech-merida-harbor/HM_BMS_backup_08_09_2026/HM_BMS/history/station/seg1/UMA14$$20Ret.hdb
 parity: parity-helpbuild
 	NSEARCH_QUALITY_ROOT=$(RESEARCH) $(GO) test -count=1 -v -timeout 30m \
 		-run '^(TestSearchQuality|TestQualityFixtureMatchesResearch)$$' ./internal/searchdoor
@@ -89,6 +92,8 @@ parity: parity-helpbuild
 		-run '^(TestCheckTrainingStation|TestVerifyPredictionsTrainingStation)$$' ./internal/course
 	$(GO) test -count=1 -timeout 30m \
 		-run '^(TestRecallRealBogs|TestParityRealBogs)$$' ./internal/bog
+	HDBREAD_REAL_HDB='$(HDBREAD_REAL_HDB)' $(GO) test -count=1 -timeout 5m \
+		-run '^TestRealHarborHistory$$' ./internal/hdbread
 
 hooks:
 	git config core.hooksPath scripts/git-hooks
