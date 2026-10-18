@@ -15,8 +15,8 @@ document disagree, the code wins and this document is corrected.
 |---|---|---|---|
 | **S1** (done) | atomic writes, jar-listing cache, install rules + embedded `install_docs.json`, the `doc_types` predicates the builders share | `atomic.py`, `jar_listing.py`, `install_rules.py`, `doc_types.py` (part) | ~650 |
 | **S2** (done) | doc-jar extract + fidelity (dest paths, mapped entries, fill-missing, sha256 + EOL-only class), the raw steps of `extract_and_index`, `jar_manifest`, the version manifest, `_empty_indexes` | `doc_jars.py`, `version_setup.py` (part), `extract_version.py` (as library options) | ~1,500 with tests |
-| S3 | PDF text (`pdftotext -layout -enc UTF-8`, `docs-text/`, `pdf-index.json`) | `pdf_extractor.py` | ~500 |
-| S4 | developer course (`course-text/`, `devguide-examples/course/`) | `course_extractor.py`, `course.py` | ~350 |
+| **S3** (done) | PDF text (`pdftotext -layout -enc UTF-8`, `docs-text/`, `pdf-index.json`) | `pdf_extractor.py` (+ the `os`/`shutil`/`json` and registry helpers S4 shares) | ~1,970 with tests |
+| **S4** (done) | developer course (`course-text/`, `devguide-examples/course/`); `gate()` waits for S10 (it reads the full-text index) | `course_extractor.py`, `course.py` (part) | ~670 with tests |
 | S5 | `html_text` (html.parser with `convert_charrefs`) + guides/devguide parsers | `html_text.py`, `guides_parser.py`, `guide_toc.py`, `devguide_parser.py` | ~750 |
 | S6 | `guides-index.json` + `devguide-toc.json` | `build_guides_index.py`, `build_devguide_toc.py` | ~350 |
 | S7 | bajadoc text (`bajadoc-clean/`) | `bajadoc_parser.py`, `bajadoc_xml_parser.py`, `bajadoc_xml.py` | ~800 |
@@ -204,6 +204,77 @@ S2 additions (none changes an output Python produces from a well-formed install)
   is an error up front where Python raises `KeyError` after extraction and fidelity.
 - **The overlapped-entries warning** (`warnings.warn`, a duplicate sharing one local
   header) is not printed; the entry is read as in Python.
+
+## S3 and S4 files
+
+| File | Ports | Notes |
+|---|---|---|
+| `pdftext.go` | `classify`, `sanitize`, `top_folder`, `find_pdfs`, `fix_unmapped_bullets`, `extract_text`, `resolve_name` | one pdftotext run: argv list, no shell, `PDFTimeout` (120 s); a failure is a `*PDFError` whose `Failure` says which of the four cases `extract_text` catches (exit status, timeout, output not UTF-8, could not start) |
+| `pdfindex.go` | `pdf_extractor.main()` | `ExtractPDFs`; the early exits, the `-v` probe, keep-last-good, the index save, the prune after a clean run, the summary |
+| `procgroup_unix.go`, `procgroup_other.go` | — | the child runs in its own process group; the timeout kills the group |
+| `registry.go` | `versions.identify`, `versions.install_dir`, `course.course_dir` | read with pyjson so every malformed entry takes Python's branch: skipped where Python catches, an error where it raises |
+| `pyfs.go` | `os.walk`, `os.remove`, `shutil.copyfile`, `json.load` | `pyWalk` lists a symlinked folder without entering it and skips unreadable ones; `removeFile` refuses a directory; `pyCopyfile` refuses a named pipe before opening it; `loadJSON` returns a `*JSONLoadError` (Python's `str(e)`) for what the builders catch |
+| `course.go` | `course.course_dir`, `_files`, `_text_dest`, `plan`, `remove_copies`, `build`, `course_extractor.main()` | both trees staged with `RebuiltDir`, nested like Python's `with` (devguide-examples/course/ swaps first) |
+
+`SOFTWARE_HIGH` of `pdf_extractor.py` is never read and is not ported.
+
+API for S10 (`rebuild-all` runs both tools as builders):
+
+```go
+res, err := helpbuild.ExtractPDFs(root, helpbuild.PDFOptions{
+	DocsDir: docsDir,          // --docs-dir; "" = <install_dir>/docs of the registered version
+	Emit:    func(e string) {}, // optional live output; an entry starting with "\r" is a progress write
+})
+// os.Stdout.WriteString(res.Stdout()) is pdf_extractor's stdout; exit res.Status;
+// err != nil is a Python traceback (exit 1), res.Log holds what was printed before it.
+
+out, err := helpbuild.CourseExtractor(root, rules) // rules from helpbuild.Default()
+// print out.Stdout to stdout and out.Stderr to stderr, exit out.Status; err != nil is a traceback.
+```
+
+`Pdftotext` (`"pdftotext"`) is resolved on PATH when each run starts, as `subprocess.run`
+does without a shell; `PDFOptions.Pdftotext` names another program. The parity tests make
+both sides resolve the same binary (pdftotext 26.10.0 of linuxbrew): the test puts a fake
+`pdftotext` first on PATH that hands every real PDF to that binary.
+
+S3/S4 parity (`testdata/parity/textdriver.py`, modes `pdf`, `course`, `plan`):
+
+| Test | Compares |
+|---|---|
+| `TestParityPDFSynthetic` | stdout (data root relabeled, the `Time:` value normalized), exit status and both whole repo trees after each of: unregistered root (SKIP, docs dir `None`), unregistered root with manuals, corrupt index (bad JSON, not an object, not UTF-8) with nothing to rebuild from, install not mounted, a docs dir with no PDF, pdftotext not on PATH, then 13 hand-written PDFs (two pages with an unmapped bullet, a WinAnsi degree sign, short and blank pages, a stem collision, hardware, top-level, nested, non-ASCII and punctuated names, a symlinked folder) with a corrupt PDF, output that is not UTF-8 and a timeout (fake pdftotext, 1 s on both sides): failures keep the last good text and its re-dumped entry, a corrupt index is rebuilt, a clean run prunes |
+| `TestParityPDFReal` | the same on five EC-Net 4.3.58.18 manuals (the largest, `Getting Started`, 9.6 MB; `Station Security`, whose bullets come out as U+FFFD; the smallest; a hardware guide; the platform guide); `HELPBUILD_PARITY_PDF_DOCS` converts a whole docs dir instead; skipped with `-short` |
+| `TestParityCoursePlanSynthetic` | every `plan` row plus the `(course)` exclude rule id over the test_course_source fixture and 18 more files (nested text, upper-case extension, dev readme.md, .js and doc pages, key material, solutions, PDFs, non-ASCII names, a symlinked folder) |
+| `TestParityCourseExtractorSynthetic` | stdout, stderr, exit status and both repo trees: bound by a relative and an absolute `course_dir`, unbound (earlier copies removed; a symlink in their place refused), `course_dir` missing, unregistered root, rebuilt after the course changed, a copy that fails (mode 000 file), a named pipe in the course, a registry that is not JSON |
+| `TestParityCourseReal` | plan rows and the copy of `sources/n4-dev-course` (334 files: 20 text, 169 code, 17 PDFs, 128 not copied; `HELPBUILD_PARITY_COURSE` replaces it); skipped with `-short` |
+
+S3/S4 intended differences (none changes an output Python produces):
+
+- **The pdftotext child runs in its own process group** and the timeout kills the group;
+  `subprocess.run` kills only the direct child (a wrapper that forks would leave the real
+  program running). The group does not get the terminal's Ctrl-C: an interrupted run
+  leaves pdftotext to finish its one PDF (its pipe is gone, so it dies on the next write).
+  On Windows the direct child is killed, as in Python.
+- **stdin** of pdftotext is the null device; Python lets it inherit stdin. pdftotext never
+  reads it with `-` as the output file. stderr is dropped on both sides.
+- **`PDFOptions.DocsDir` ""** means "not given" (registry lookup); `--docs-dir ''` in Python
+  skips the lookup and prints `''` where the unset value prints `None`.
+- **Registry shapes**: where Python raises `AttributeError`/`TypeError` (a top level that is
+  not an object, a `versions` value that is a number, a non-string `install_dir` or
+  `course_dir`), Go returns an error; where Python catches the error (a version without a
+  string `data_root`) both skip the entry.
+- **`os.path.normpath` keeps a leading `//`**, `filepath.Clean` does not; registry paths
+  never start with two slashes.
+- **File names that are not UTF-8** (Python's surrogateescape) are not modelled; parity runs
+  on Linux with UTF-8 names.
+
+Found while porting (the Python code wins, kept for parity):
+
+- pdftotext 26.10.0 ends **every** page with a form feed, the last one too, so
+  `extract_text`'s `count('\f') + 1` reports one page more than the PDF has; its comment
+  says the last page has none. `pages` in `pdf-index.json` is therefore N+1 (a blank
+  one-page PDF is 0: its text strips to nothing).
+- The parity driver shortens the 120 s timeout only for the timeout fixture
+  (`HB_PDF_TIMEOUT` replaces `timeout=120` in the one `subprocess.run` call that passes it).
 
 ## Shared-helper candidates
 
