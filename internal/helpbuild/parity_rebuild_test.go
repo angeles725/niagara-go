@@ -34,8 +34,7 @@ const rebuildParityVar = "HELPBUILD_PARITY_REBUILD"
 // (pyref.Dir: the pre-go-retire worktree), with its Python escape set.
 func runRebuildDriver(t *testing.T, args ...string) (stdout, stderr string) {
 	t.Helper()
-	python, _ := driver(t)
-	tools := filepath.Join(pyref.Dir(t, "niagara-help"), "tools")
+	python, tools := driver(t)
 	script, err := filepath.Abs(filepath.Join("testdata", "rebuild", "driver.py"))
 	if err != nil {
 		t.Fatal(err)
@@ -325,7 +324,7 @@ var rebuildInputs = append(append(append([]string(nil), RawDirs...), DerivedDirs
 // temporary repo with its real install_dir and course_dir, so the PDF
 // manuals and the course are rebuilt too; it logs both run times. The
 // version roots are untracked (versions/*/ is ignored), so they come from
-// the live niagara-help checkout (niagaraHelpTools), the Python code from
+// the live niagara-help checkout (niagaraHelpData), the Python code from
 // the pinned reference (runRebuildDriver).
 func TestParityRebuildReal(t *testing.T) {
 	if !parityOn(t, rebuildParityVar) {
@@ -341,7 +340,7 @@ func TestParityRebuildReal(t *testing.T) {
 	if len(vids) == 0 {
 		t.Fatalf("%s names no version id", rebuildParityVar)
 	}
-	help := filepath.Dir(niagaraHelpTools())
+	help := niagaraHelpData()
 	data, err := os.ReadFile(filepath.Join(help, "versions", "registry.json"))
 	if err != nil {
 		missingReference(t, fmt.Sprintf("no registry: %v", err))

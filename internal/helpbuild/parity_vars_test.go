@@ -8,6 +8,8 @@ import (
 	"runtime"
 	"strings"
 	"testing"
+
+	"github.com/angeles725/niagara-go/internal/pyref"
 )
 
 // realParityVar is the umbrella switch of every test that reads a real
@@ -87,8 +89,9 @@ func parityRequested() string {
 func missingReference(t *testing.T, msg string) {
 	t.Helper()
 	if req := parityRequested(); req != "" {
-		t.Fatalf("%s\n%s is set, so the Python reference is required: python3 (CPython 3.15) on PATH and a niagara-help "+
-			"checkout; after Phase 5 it lives in a pre-go-retire worktree of niagara-research, point NIAGARA_HELP_DIR at its niagara-help", msg, req)
+		t.Fatalf("%s\n%s is set, so the Python reference is required: python3 (CPython 3.15) on PATH and the niagara-help "+
+			"pre-go-retire worktree (%s, default %s); NIAGARA_HELP_DIR names only the data checkout", msg, req,
+			helpPyRefEnv, pyref.DefaultDir("niagara-help"))
 	}
 	t.Skip(msg)
 }
@@ -215,13 +218,12 @@ const pythonVersionQuery = "import sys; print('%d.%d.%d' % sys.version_info[:3])
 
 // fakeWrongPython puts first on an otherwise empty PATH a python3 that
 // answers pythonVersion's query with 3.14.9 and fails on any other command
-// line, and points NIAGARA_HELP_DIR at a stub checkout, so driver reaches
-// the version check and stops there.
+// line, and points NIAGARA_HELP_PY_REF at a folder that does not exist:
+// driver checks the interpreter before the reference, so it stops at the
+// version check.
 func fakeWrongPython(t *testing.T) string {
 	t.Helper()
-	help := t.TempDir()
-	writeFile(t, filepath.Join(help, "tools", "niagara_help_lib", "jar_listing.py"), nil)
-	t.Setenv("NIAGARA_HELP_DIR", help)
+	t.Setenv(helpPyRefEnv, filepath.Join(t.TempDir(), "no-ref"))
 	bin := t.TempDir()
 	python := filepath.Join(bin, "python3")
 	script := "#!/bin/sh\n" +
@@ -236,8 +238,8 @@ func fakeWrongPython(t *testing.T) string {
 }
 
 // A python3 that is not CPython 3.15 is a missing reference: a plain run
-// skips once the version was read (the tools check passed), as it does
-// without python3 or a checkout. A HELPBUILD_PARITY_* variable set to ""
+// skips once the version was read (before the reference is looked up), as
+// it does without python3 or the Python reference. A HELPBUILD_PARITY_* variable set to ""
 // counts as unset: the run is still a plain one.
 func TestParityWrongPythonSkips(t *testing.T) {
 	if runtime.GOOS == "windows" {

@@ -87,37 +87,39 @@ other's cache without opening a jar.
 
 ### The rules data file
 
-`internal/helpbuild/install_docs.json` is a **copy** of niagara-help
-`tools/niagara_help_lib/install_docs.json`, kept equal by a drift test
-(`TestEmbeddedRulesMatchCanonical`, skipped visibly when the checkout is absent). A copy
-was chosen over generation because the established pattern (`internal/glossary`) is a
-copy plus a drift test, it needs no `go generate` step or build-time access to the
-niagara-research checkout, and the drift test fails on the first commit that forgets to
-copy. When the data file changes upstream: copy it, run `go test ./internal/helpbuild/`.
+`internal/helpbuild/install_docs.json` is the **canonical** rules data file (D44). It began
+as a byte-for-byte copy of niagara-help `tools/niagara_help_lib/install_docs.json`, kept equal
+by a drift test; with the Python tools retired the Go copy is the only one maintained, so the
+drift test is gone and a rule changes here, followed by `go test ./internal/helpbuild/`. The
+parity drivers still load the tag's own `install_docs.json` through the Python reference, so a
+rule changed here diverges from the Python on purpose and the parity cases it touches must say so.
 
 ## Parity harness
 
-`testdata/parity/driver.py` imports the real niagara-help modules (`python3 -I -B`: isolated, no `__pycache__` written into the checkout; the tools
-directory put on `sys.path` explicitly) and prints JSON lines; `parity_test.go` rebuilds
-every line from this package and requires an empty diff. It needs `python3` and a
-niagara-help checkout — `$NIAGARA_HELP_DIR`; else `$NIAGARA_RESEARCH/niagara-help` when it
-holds the data file (the variable the glossary and version drift tests read); else the
-first one met walking up from the test directory as `<dir>/niagara-help` or
+`testdata/parity/driver.py` imports the niagara-help modules of the pinned Python reference
+(`python3 -I -B`: isolated, no `__pycache__` written into the reference; its tools directory
+put on `sys.path` explicitly) and prints JSON lines; `parity_test.go` rebuilds every line from
+this package and requires an empty diff. The reference is the `pre-go-retire` worktree of
+niagara-help (`8410d7451`, D47) named by `NIAGARA_HELP_PY_REF`, default
+`~/niagara-research-worktrees/pre-go-retire-niagara-help`; `internal/pyref` refuses one whose
+HEAD is not the tag or that has local changes (see docs/goldens.md). The live checkout's
+`tools/` is never read: it holds exec shims of the Go ports, so comparing against it would
+compare Go with Go. The live checkout is only the data the real-data tests read
+(`versions/registry.json`, the version roots, `../sources/n4-dev-course`): `$NIAGARA_HELP_DIR`;
+else `$NIAGARA_RESEARCH/niagara-help` when it holds `versions/registry.json`; else the first
+one met walking up from the test directory as `<dir>/niagara-help` or
 `<dir>/niagara-research/niagara-help` (a worktree under `~/niagara-go-worktrees` finds
-`~/niagara-research/niagara-help`) — and skips visibly only when there is none. A run
-that set any `HELPBUILD_PARITY_*` variable (`make parity` sets five) fails instead of
-skipping when `python3`, the checkout, its tools or a real version's `versions/` tree are
-missing, the message naming the variable. The interpreter must be CPython 3.15.x
-(`html.parser` and the other stdlib behaviour the drivers compare change between minor
-releases): another version is a missing reference like the rest (skipped visibly in a
-plain run, every parity test failing when a `HELPBUILD_PARITY_*` variable is set), and `-v`
-logs the version used (`parity driver python: CPython 3.15.0 (...)`). After Phase 5 retires the Python tools from
-niagara-research, the reference lives in a `pre-go-retire` worktree of niagara-research:
-point `NIAGARA_HELP_DIR` at its `niagara-help` folder (for example
-`NIAGARA_HELP_DIR=~/niagara-research-worktrees/pre-go-retire/niagara-help make parity`). The drift
-test `TestEmbeddedRulesMatchCanonical` uses the same lookup; `$NIAGARA_HELP_DIR` pointing
-at a folder without the data file fails it, a `$NIAGARA_RESEARCH` without one falls
-through to the walk.
+`~/niagara-research/niagara-help`). A plain run skips visibly without `python3` or the
+reference. A run that set any `HELPBUILD_PARITY_*` variable or `PYREF_REQUIRED=1` (`make
+parity` sets both) fails instead of skipping when `python3`, the reference or a real version's
+`versions/` tree is missing, the message naming the variable. The interpreter must be CPython
+3.15.x (`html.parser` and the other stdlib behaviour the drivers compare change between minor
+releases), checked before the reference: another version is a missing reference like the rest
+(skipped visibly in a plain run, every parity test failing when a `HELPBUILD_PARITY_*` variable
+is set), and `-v` logs the version and reference used (`parity driver python: CPython 3.15.0
+(...), reference ...`). The CLI goldens `TestParityCoverageReal` checks on 4.14.0.162 are the
+`coverage`, `coverage-module` and `coverage-doc-jars` cases of niagara-help
+`tests/golden/cli.json` at the tag, copied into `testdata/cov/cli-goldens.json`.
 
 | Test | Driver mode | Compares |
 |---|---|---|
@@ -674,7 +676,7 @@ CPython 3.15 python3:
 | `TestParityDocJarCoverage` | the gate on the synthetic install (11 jars: every index kind indexed, not indexed and not extracted, every exclusion reason, unmapped and unknown entries, duplicates, an unreadable jar, a module help jar, a jar name cut at 34 code points around non-ASCII letters, a content type cut at 20) by version id and identified from the data root, an unregistered version, no `install_dir`, no registry, more than 25 gaps, a PASS, a FAIL from a guide folder alone, no indexes, a malformed index; the listing cache each side saves is byte-identical |
 | `TestCoverageMalformedIndexes`, `TestParityCoverageMalformed` | indexes of an unexpected shape (see the intended differences) |
 | `TestParityCoverageReport` | the overview (ties on the percentage, a class without module, non-ASCII modules, `str.replace` of every `.txt`), module reports (`alarm-rt`, `ALARM`, `alarm-ux`, `zeta-rt`, `école`, `rt`), a miss, the guide coverage alone, an empty source index, each missing index |
-| `TestParityCoverageReal` | `coverage`, `coverage alarm-rt`, the guide coverage and `coverage --doc-jars` on the real data roots and installs (4.14.0.162 with `HELPBUILD_PARITY_REAL=1`, 4.15.6.20 with `HELPBUILD_PARITY_415=1`, or the `HELPBUILD_PARITY_COVERAGE` list); each side saves its listing cache in a temporary repository holding a copy of the registry, and the full-text index must already be up to date (the test never writes the corpus); on 4.14.0.162 the SHA-256 and exit status of the three Go reports also equal the `coverage`, `coverage-module` and `coverage-doc-jars` cases of the reference's `tests/golden/cli.json` (the first two before the install is looked at: only `--doc-jars` needs it mounted) |
+| `TestParityCoverageReal` | `coverage`, `coverage alarm-rt`, the guide coverage and `coverage --doc-jars` on the real data roots and installs (4.14.0.162 with `HELPBUILD_PARITY_REAL=1`, 4.15.6.20 with `HELPBUILD_PARITY_415=1`, or the `HELPBUILD_PARITY_COVERAGE` list); each side saves its listing cache in a temporary repository holding a copy of the registry, and the full-text index must already be up to date (the test never writes the corpus); on 4.14.0.162 the SHA-256 and exit status of the three Go reports also equal the `coverage`, `coverage-module` and `coverage-doc-jars` cases of niagara-help `tests/golden/cli.json` at `pre-go-retire`, copied into `testdata/cov/cli-goldens.json` (the first two before the install is looked at: only `--doc-jars` needs it mounted) |
 
 Measured 2026-10-18 (byte-identical; wall time, Python's driver start-up included):
 

@@ -191,11 +191,10 @@ func versionList(listVar string, defaults [][2]string) ([]string, error) {
 // registry.
 func registeredDataRoot(t *testing.T, vid string) string {
 	t.Helper()
-	tools := niagaraHelpTools()
-	if tools == "" {
-		missingReference(t, "no niagara-help checkout")
+	help := niagaraHelpData()
+	if help == "" {
+		missingReference(t, "no niagara-help data checkout")
 	}
-	help := filepath.Dir(tools)
 	data, err := os.ReadFile(filepath.Join(help, "versions", "registry.json"))
 	if err != nil {
 		missingReference(t, fmt.Sprintf("no registry: %v", err))

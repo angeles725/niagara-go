@@ -237,7 +237,10 @@ func TestParitySweepReal(t *testing.T) {
 		t.Fatal(err)
 	}
 	driver(t)
-	help := filepath.Dir(niagaraHelpTools())
+	help := niagaraHelpData()
+	if help == "" {
+		missingReference(t, "no niagara-help data checkout (the registry and data roots): parity not checked")
+	}
 	data, err := os.ReadFile(filepath.Join(help, index.RegistryRel))
 	if err != nil {
 		t.Fatal(err)
