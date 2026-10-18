@@ -1,0 +1,1167 @@
+
+  module                    palette  lexKeys  dupKeys  agents
+  ------------------------------------------------------------
+  BACnetFFTN4                     2       52        0       0
+  CentralineAhuPx               425        0        0       0
+  CentralineHtgPx               309        0        0       0
+  CentralineLONIOr5            5927        0        0       0
+  ColdRoomPan                     4       32        0       0
+  DINsymbol                    1884        0        0       0
+  SentienceModelSync              2        0        0       0
+  SylkActuatorAnalytics         301        0        0       1
+  aaphp                          21       63        2       4
+  aapup                          23       89        0       3
+  abstractMqttDriver             39       97        0       4
+  ace                             0      157        3      11
+  aceEdge                         4       33        0       0
+  airFlowBalancer                 0      138        1       0
+  alarm                          35      480        3      37
+  alarmOrion                      6        8        0       2
+  analytics                     153      595        0      43
+  analytics-lib               11067        0        0       0
+  andoverAC256                   24       90        0       4
+  andoverInfinity                23       61        0       2
+  apachePoi                       0        0        0       0
+  app                             3        4        0       1
+  ascBacnet                       0       92        0       4
+  ascCommon                      15     3064      205      12
+  ascLon                          0       22        0       1
+  awsUtils                        7       42        0       1
+  axvelocity                      4       10        0       2
+  azureUtils                      0        8        0       0
+  backup                          2       23        0       2
+  bacnet                        132      715        0     110
+  bacnetAlarmRouter               9        6        0       0
+  bacnetAws                      78       87        0       5
+  bacnetEDE                       0       42        0       4
+  bacnetMigrator                  0        2        0       0
+  bacnetOws                      77       35        0       2
+  bacnetUtil                     18        1        0       0
+  baja                           19      475        0      21
+  bajaScript                      0        0        0       0
+  bajaui                        540      936        5      45
+  bajaux                          0       30        0       0
+  baseRtsp                        0        0        0       0
+  basicDriver                     0        2        0       0
+  batchJob                        2      263        0      31
+  box                             2       19        0       0
+  boxAnalyzer                     2       11        0       2
+  bql                             0       71        0      25
+  brick                           5       22        0       0
+  ccn                             4       59        0       9
+  chart                           7       35        0      12
+  clCBus                          6      396        0       8
+  clEnoceanNetwork               15        0        0       4
+  clExtensions                    3        0        0       0
+  clHVAC                        101      627        0       7
+  clHVACAirConditioning          33     1077        0       0
+  clHVACChiller                   8      210        0       0
+  clHVACEnergyManagement          5       68        0       0
+  clHVACGeneral                  11      160        0       0
+  clHVACHeating                  14      590        0       0
+  clHVACNordicAirCondition       13      388        0       0
+  clHVACNordicGeneral             4       56        0       0
+  clHVACRoomControl               3       72        0       0
+  clIOcreation                    7       72        0       2
+  clLexiconDe                     0     7099        1       0
+  clLexiconFr_V1_3                0    14819        0       0
+  clOnboardIO                    18       70        0       3
+  clPanelBus                    243      695        3       9
+  clPrintout                      4      398        1       2
+  clProfile                       1        2        0       0
+  clStationUpgradeTool            4       18        1       1
+  clUtils                         0       24        0       1
+  clUtilsBacnet                   0       14        0       1
+  clUtilsNiagara                  0       14        0       1
+  clientCertAuth                  2       18        0       6
+  cloudBackup                    17       99        0       5
+  cloudConfig                     0        0        0       1
+  cloudConnector                  0        5        0       0
+  cloudIotHubConnector            0        5        0       0
+  cloudIotHubDep                  0       13        0       0
+  cloudLink                     186      226        1       6
+  cloudLinkAzure                  0        0        0       0
+  cloudLinkForge                 10       39        0       1
+  cloudLinkHonSbp               338       27        1       0
+  cloudLinkNcs                   11        0        0       0
+  cloudSentienceConnector        18       37        0       1
+  commonsCompress                 0        0        0       0
+  commonsIo                       0        0        0       0
+  commonsLang                     0        0        0       0
+  control                        19       39        0      12
+  converters                      0        9        0     154
+  csmgrbase                       0       21        0       0
+  dashboard                       3        2        0       3
+  datasharing                     0       65        2       1
+  dcImages                     2693        0        0       0
+  dcImagesMigrator                0        0        0       0
+  devDriver                       0       41        0       2
+  devHttpDriver                   0        1        0       0
+  devIpDriver                     0        1        0       0
+  devSerialDriver                 0        7        0       0
+  devkit                          0      208        0       4
+  docAXtoN4Migration              0        0        0       0
+  docAapup                        0        0        0       0
+  docAce                          0        0        0       0
+  docAlarms                       0        0        0       0
+  docAnalytics                    0        0        0       0
+  docAnalyticsAPI                 0        0        0       0
+  docAnalyticsGuide               0        0        0       0
+  docAnalyticsReference           0        0        0       0
+  docAwsUtils                     0        0        0       0
+  docBaaS                         0        0        0       0
+  docBackupRestore                0        0        0       0
+  docBacnet                       0        0        0       0
+  docCcn                          0        0        0       0
+  docContainer                    0        0        0       0
+  docDataRecoverySvc              0        0        0       0
+  docDeveloper                  157       29        0       2
+  docDeveloperAnalytics           0        0        0       0
+  docDrivers                      0        0        0       0
+  docEdge10Startup                0        0        0       0
+  docEngNotes                     0        0        0       0
+  docExportTags                   0        0        0       0
+  docFips                         0        0        0       0
+  docGraphics                     0        0        0       0
+  docHierarchies                  0        0        0       0
+  docHistories                    0        0        0       0
+  docHoneywell                    1        0        0       0
+  docHoneywellFunctionBlocks        0        0        0       0
+  docHoneywellSpyder              1        0        0       0
+  docHoneywellSylkDevice          0        0        0       0
+  docHttpClient                   0        0        0       0
+  docIPCProgrammingTool           0        0        0       0
+  docIeee8021x                    0        0        0       0
+  docJ8Startup                    0        0        0       0
+  docJ8WiFi                       0        0        0       0
+  docJ9BackupRestore              0        0        0       0
+  docJ9MtgWrg                     0        0        0       0
+  docJ9Startup                    0        0        0       0
+  docJ9WiFi                       0        0        0       0
+  docJaceN4Startup                0        0        0       0
+  docJavaWebClients               0        0        0       0
+  docJdk                          0        0        0       0
+  docJsonToolkit                  0        0        0       0
+  docKitControl                   0        0        0       0
+  docKnxnetIp                     0        0        0       0
+  docLdapN4                       0        0        0       0
+  docLexicon                      0        0        0       0
+  docLinuxN4                      0        0        0       0
+  docLonworks                     0        0        0       0
+  docMbus                         0        0        0       0
+  docMicros                       0        0        0       0
+  docMobile                       0        0        0       0
+  docModbus                       0        0        0       0
+  docModuleSign                   0        0        0       0
+  docMqtt                         0        0        0       0
+  docN4Install                    0        0        0       0
+  docNCloud                       0        0        0       0
+  docNdio                         0        0        0       0
+  docNiagaraIT                    0        0        0       0
+  docNrio                         0        0        0       0
+  docNsnmp                        0        0        0       0
+  docObix                         0        0        0       0
+  docOpc                          0        0        0       0
+  docOpcUa                        0        0        0       0
+  docPlatform                     0        0        0       0
+  docProvisioning                 0        0        0       0
+  docRdbms                        0        0        0       0
+  docRelations                    0        0        0       0
+  docScheduling                   0        0        0       0
+  docSeriesTransform              0        0        0       0
+  docSigningService               0        0        0       0
+  docSnmp                         0        0        0       0
+  docSource                       0        0        0       0
+  docStationSecurity              0        0        0       0
+  docSystemDb                     0        0        0       0
+  docTagging                      0        0        0       0
+  docTemplates                    0        0        0       0
+  docTlsVeeder-Root               0        0        0       0
+  docTouch                        0        0        0       0
+  docUser                         0        0        0       0
+  docVideoframework               0        0        0       0
+  docWeather                      0        0        0       0
+  docWebCharts                    0        0        0       0
+  docWebStart                     0        0        0       0
+  docZWave                        0        0        0       0
+  driver                          6       95       20      15
+  driverUpgrade                   1      102        0       0
+  easyBinding                     8      100        0       9
+  easyDatabaseManager             3      118        0       1
+  easyHealthyBuilding            34      181        1       2
+  easyTemplating                  4      202        2      10
+  edgeIo                          0       33        0       4
+  eibnetIp                       27      359        0       8
+  electronicSignature             4      703        7      50
+  electronicSignatureRemote        1        0        0       0
+  email                          15       70        0      23
+  entityIo                        0        0        0       0
+  event                          25        1        0       1
+  export                          0        2        0       0
+  exportTags                     35      154        0       7
+  fcEasyOnboard                   7        5        0       0
+  fcModelSync                     2       12        0       1
+  fcModelSyncBacnet               0        1        0       1
+  fcModelSyncNiagara              0        1        0       1
+  fcTagDict                     181        0        0       0
+  ffmpeg                          0        3        0       0
+  file                            0       41        0       4
+  flexSerial                     29       13        0       6
+  fonts                           0        0        0       0
+  fox                             9      103        0       9
+  galileoKitPx                    4        0        0       6
+  galileoPointListWrapper         0        0        0       0
+  galileoPointViewer              4      132        0       3
+  galileoSignalR                  2        0        0       0
+  galileoSupervisor               3       21        0       1
+  galileoWidgets                  0        3        0       0
+  gauth                           2       25        0       7
+  genericUIFramework            199        1        0       2
+  gx                              0       35        0      19
+  haystack                        9       74        0       0
+  hdk8000                         0        1        0       0
+  help                            0       15        0       3
+  hierarchy                      28       18        0      12
+  history                        17      303        0      62
+  honAdvWirelessCfg               0      419       16       4
+  honAlarmConsole                 2        9        0       1
+  honAlarmExt                     2        0        0       0
+  honBACnetUtilities             28      301        1      34
+  honBacnetHelper                 6       15        0      12
+  honCloudEasyOnboard             2        0        0       0
+  honDescriptionUtility           3        0        0       0
+  honEagleHawkHMI                13      199        0       5
+  honFirmwarePackage              1        0        0       0
+  honIOBase                       0     1064        3       2
+  honImporter                     2     1656        4       1
+  honIrmAppl                 121587        0        0       0
+  honIrmConfig                    0     1232       14      14
+  honIrmControl                2596      162        0       4
+  honLonsockClient                3        9        0       0
+  honMqttDriver                  17       11        0       0
+  honPlantController            253       94        1       0
+  honPlantControllerEHMigrator        0       25        0       0
+  honPlantControllerHMI           6      424        0      24
+  honPlantControllerMigrator        3      202        1       1
+  honProjectExport                3       20        0       1
+  honRemoteConfig                 2        0        0       0
+  honRemoteConfigBacnet           3        0        0       0
+  honTagDictionary              256        0        0       0
+  honUtilityBacRestore            2        0        0       0
+  honeywellASC                    7        0        0       0
+  honeywellAXPlatinum           946        1        0       0
+  honeywellAXPlatinumHR         946        1        0       0
+  honeywellBacnetDeviceManager        2       24        0       1
+  honeywellBacnetSmartSensor        2       35        1       1
+  honeywellBacnetSpyder           0       20        1       6
+  honeywellBacnetWallModule        2        3        0       0
+  honeywellDeviceManager          2      112        4       2
+  honeywellEdgeDevices           21        0        0       0
+  honeywellFunctionBlocks        52       17        0      33
+  honeywellLonSpyder              0       15        0       4
+  honeywellModbusDeviceManager        4       27        0       1
+  honeywellModbusSmartSensor        2       34        0       1
+  honeywellSpyderTool           282     1641        7      10
+  honeywellSylkDevice           276      377        8       1
+  honeywellTB3026BWizard          2      450        4       8
+  honeywellTCThermostatWizard        5      230        7       1
+  honeywellVenomBacnet          160       13        0       4
+  honeywellVenomBacnetApps   125364        0        0       0
+  honeywellVenomGraphics          0        0        0       0
+  honeywellVenomLon             111        6        0       3
+  honeywellVenomLonApps      180230        0        0       0
+  honeywellVenomTools            25      252       44       2
+  honeywellVersionManager         0        0        0       0
+  html                            0        5        0       0
+  httpClient                     30       85        2      13
+  hx                              0       46        0      55
+  icons                           0        0        0       0
+  ipcBaseDriver                   0        0        0       0
+  ipcCommBus                      0      288        1       6
+  ipcMigrator                     0       79        0       0
+  ipcProgrammingTool              1        0        0       0
+  jetty                           4        4        0       0
+  jodaTime                        0        0        0       0
+  js                              0        5        0       0
+  jsonSmart                       0        0        0       0
+  jsonToolkit                   390      117        2      11
+  jtds                            0        0        0       0
+  jxBrowser                       0        6        0       0
+  kitCat                         33      261        0       4
+  kitControl                    163       21        0      52
+  kitIo                           0       48        0       3
+  kitLon                          7        3        0       0
+  kitPx                         205       13        0      53
+  kitPxBuilding                1897       21        0       1
+  kitPxGraphics                3241        0        0       0
+  kitPxHvac                     840        0        0       0
+  kitPxN4svg                   2815        0        0       0
+  knxStationConverter             0        2        0       0
+  knxnetIp                       32      251        0      11
+  ldap                            5      125        4      14
+  ledMonitor                      2        0        0       0
+  lonAaon                        17        0        0       0
+  lonAbb                         47        0        0       0
+  lonAct                         45        0        0       0
+  lonActech                       9        0        0       0
+  lonAcutherm                     5        0        0       0
+  lonAerco                       11        0        0       0
+  lonAirtest                      3        0        0       0
+  lonAlco                         7        0        0       0
+  lonAlya                         7        0        0       0
+  lonAndover                     15        0        0       0
+  lonApice                        7        0        0       0
+  lonAr2I                         9        0        0       0
+  lonAtt                          5        0        0       0
+  lonBapi                        13        0        0       0
+  lonBelimo                       5        0        0       0
+  lonBellGossett                  3        0        0       0
+  lonBircher                      3        0        0       0
+  lonBrunata                      5        0        0       0
+  lonBtr                         19        0        0       0
+  lonCalon                       45        0        0       0
+  lonCapelon                     13        0        0       0
+  lonCarel                       49        0        0       0
+  lonCarrier                     21        0        0       0
+  lonCcs                          5        0        0       0
+  lonCeag                         5        0        0       0
+  lonCiac                         3        0        0       0
+  lonCircon                      99        0        0       0
+  lonCircon2                     41        0        0       0
+  lonClimaCool                    3        0        0       0
+  lonCommtec                      5        0        0       0
+  lonComputec                     3        0        0       0
+  lonCompwell                    13        0        0       0
+  lonComtec                       5        0        0       0
+  lonConnectbv                    5        0        0       0
+  lonContcontrol                 11        0        0       0
+  lonControlTechniques            3        0        0       0
+  lonControlsolutions             9        0        0       0
+  lonCpc                          9        0        0       0
+  lonCristal                      5        0        0       0
+  lonCsi                          3        0        0       0
+  lonCummins                     23        0        0       0
+  lonDaikin                       3        0        0       0
+  lonDanfoss                     19        0        0       0
+  lonDataaire                     7        0        0       0
+  lonDelmatic                     3        0        0       0
+  lonDistech                    111        0        0       0
+  lonDouglas                     21        0        0       0
+  lonDristeem                    11        0        0       0
+  lonDynalite                     5        0        0       0
+  lonEbtron                       7        0        0       0
+  lonEchelon                     19        0        0       0
+  lonElectronicsysusa            11        0        0       0
+  lonElka                         7        0        0       0
+  lonElm                          3        0        0       0
+  lonEmon                         3        0        0       0
+  lonEnergyControlSystems        17        0        0       0
+  lonEsmi                         3        0        0       0
+  lonEurotherm                    3        0        0       0
+  lonExhausto                     5        0        0       0
+  lonFieldServer                 25        0        0       0
+  lonFloridaHeatPumps             3        0        0       0
+  lonFunctionaldevices            9        0        0       0
+  lonGe                          13        0        0       0
+  lonGmc                          3        0        0       0
+  lonGraham                       5        0        0       0
+  lonGrundfos                     9        0        0       0
+  lonHelvar                       7        0        0       0
+  lonHillrom                     29        0        0       0
+  lonHitachi                      7        0        0       0
+  lonHoneywell                   54        0        0       0
+  lonHoneywellAnalytics           5        0        0       0
+  lonHoneywellVacon               7        0        0       0
+  lonHoneywellXfl800             45       64        1       1
+  lonHoneywellio                 31        0        0       0
+  lonHorton                       3        0        0       0
+  lonHubbell                     11        0        0       0
+  lonIdec                        21        0        0       0
+  lonIndala                       3        0        0       0
+  lonInnovent                     3        0        0       0
+  lonIp                           2       20        0       2
+  lonIsh                          3        0        0       0
+  lonItgworldwide                15        0        0       0
+  lonIzumi                       37        0        0       0
+  lonJanitza                      5        0        0       0
+  lonJohnson                     49        0        0       0
+  lonJrs                          3        0        0       0
+  lonKamstrup                    11        0        0       0
+  lonKawasaki                     3        0        0       0
+  lonKele                        13        0        0       0
+  lonKhi                          3        0        0       0
+  lonKiebackpeter                 7        0        0       0
+  lonKlon                         5        0        0       0
+  lonLakewood                     3        0        0       0
+  lonLennox                       9        0        0       0
+  lonLeviton                     33        0        0       0
+  lonLexel                       13        0        0       0
+  lonLg                           5        0        0       0
+  lonLiebert                      5        0        0       0
+  lonLochinvar                    3        0        0       0
+  lonLonix                       27        0        0       0
+  lonLoras                       11        0        0       0
+  lonLsis                         3        0        0       0
+  lonLuxonic                      3        0        0       0
+  lonLynxspring                  11        0        0       0
+  lonMagnetek                     3        0        0       0
+  lonMarubeni                     9        0        0       0
+  lonMatsushita                   7        0        0       0
+  lonMatsushitaVavlesst           3        0        0       0
+  lonMenerga                      3        0        0       0
+  lonMetrawatt                    3        0        0       0
+  lonMiEnvir                      7        0        0       0
+  lonMicrometl                    3        0        0       0
+  lonMicrotech                   17        0        0       0
+  lonMicrotechII                 19        0        0       0
+  lonMicrotechIII                21        0        0       0
+  lonMitsubishi                  13        0        0       0
+  lonMoore                        3        0        0       0
+  lonMotivar                      3        0        0       0
+  lonMsa                          3        0        0       0
+  lonMsr                          3        0        0       0
+  lonNico                        19        0        0       0
+  lonNilan                        3        0        0       0
+  lonNr                          33        0        0       0
+  lonOjair                        3        0        0       0
+  lonOmron                        3        0        0       0
+  lonOnan                         7        0        0       0
+  lonOnicon                      11        0        0       0
+  lonOntrol                       3        0        0       0
+  lonOrion                       21        0        0       0
+  lonOuman                        7        0        0       0
+  lonPentacontrol                 3        0        0       0
+  lonPeweng                       5        0        0       0
+  lonPhilips                     33        0        0       0
+  lonPhoenix                      5        0        0       0
+  lonPhoenixCeleris2              7        0        0       0
+  lonPmluft                       5        0        0       0
+  lonProlon                       7        0        0       0
+  lonPurechoice                  19        0        0       0
+  lonQuantumAutomation           23        0        0       0
+  lonRaypak                       5        0        0       0
+  lonReko                         3        0        0       0
+  lonRetech                       3        0        0       0
+  lonReznor                       5        0        0       0
+  lonRichardszeta                 3        0        0       0
+  lonRockwell                     9        0        0       0
+  lonSanyo                        5        0        0       0
+  lonSauter                       3        0        0       0
+  lonSchneider                    7        0        0       0
+  lonSeefar                       3        0        0       0
+  lonSemco                        3        0        0       0
+  lonSenseair                     3        0        0       0
+  lonServisys                     7        0        0       0
+  lonSiebe                       33        0        0       0
+  lonSiemens                    243        0        0       0
+  lonSiemensLandis               17        0        0       0
+  lonSilentgliss                  3        0        0       0
+  lonSmartcontrols               31        0        0       0
+  lonSolidyne                    25        0        0       0
+  lonSomfy                       51        0        0       0
+  lonSontay                      13        0        0       0
+  lonSontex                       3        0        0       0
+  lonSpega                       39        0        0       0
+  lonSquared                     13        0        0       0
+  lonStaefa                      61        0        0       0
+  lonStanilite                    3        0        0       0
+  lonStulz                        5        0        0       0
+  lonSurfNetworks                 3        0        0       0
+  lonSvea                        57        0        0       0
+  lonSysmik                       3        0        0       0
+  lonTac                         33        0        0       0
+  lonTeco                         3        0        0       0
+  lonTelda                        5        0        0       0
+  lonThermokon                   97        0        0       0
+  lonTitan                        7        0        0       0
+  lonToshiba                     11        0        0       0
+  lonTrane                       71        0        0       0
+  lonTrend                       15        0        0       0
+  lonTriatek                     41        0        0       0
+  lonTridonic                     3        0        0       0
+  lonTrox                         5        0        0       0
+  lonTsi                         45        0        0       0
+  lonUnitro                       3        0        0       0
+  lonUnknown                      5        0        0       0
+  lonVacom                        3        0        0       0
+  lonVaisalaoy                    3        0        0       0
+  lonVeris                       11        0        0       0
+  lonViconics                    25        0        0       0
+  lonViessman                    11        0        0       0
+  lonVykonStat                   11        0        0       0
+  lonWago                        17        0        0       0
+  lonWatanabe                    13        0        0       0
+  lonWattStopper                 25        1        0       0
+  lonWccc                         7        0        0       0
+  lonWestParkMob                  3        0        0       0
+  lonWfiGlobal                    7        0        0       0
+  lonWfiMinnesota                 3        0        0       0
+  lonWilo                         7        0        0       0
+  lonWps                          9        0        0       0
+  lonYamatake                    11        0        0       0
+  lonYaskawa                      5        0        0       0
+  lonYokogawa                    27        0        0       0
+  lonYork                        15        0        0       0
+  lonZener                        5        0        0       0
+  lonZytron                      43        0        0       0
+  lonhoneywellAXWizards          30     1299        3      15
+  lontunnel                       3        0        0       0
+  lonworks                       53      330        0      48
+  maxpro                          8        6        0       2
+  mbus                            8      213        0       7
+  mcquay                         15        1        0       2
+  micros                        132      147        2       6
+  migration                       0        4        0       0
+  migrator                        0      106        0       0
+  mobile                         66      175        3      18
+  mobileThemeZebra                0        0        0       0
+  modbusAsync                    40        5        0       2
+  modbusCore                      0       81        0       8
+  modbusSlave                    22        6        0       2
+  modbusTcp                      43        7        0       4
+  modbusTcpSlave                 22        5        0       2
+  modbusTcpSlaveMigrator          0        0        0       0
+  nCloudDriver                   36      108        0       4
+  nSnmp                          57      119        0      15
+  naxisVideo                      3       23        1       2
+  ndio                           25       44        0       8
+  ndriver                         0        8        0       4
+  neql                            0        8        0       1
+  net                             2       39        0       0
+  niagaraDriver                  23      114        1      21
+  niagaraLexiconAl                0     7186       25       0
+  niagaraLexiconAr                0       40        0       0
+  niagaraLexiconBe                0       44        0       0
+  niagaraLexiconBg                0       44        0       0
+  niagaraLexiconCa                0       40        0       0
+  niagaraLexiconCs                0       40        0       0
+  niagaraLexiconDa                0       40        0       0
+  niagaraLexiconDe                0     2446        1       0
+  niagaraLexiconEl                0       40        0       0
+  niagaraLexiconEs                0       41        0       0
+  niagaraLexiconEt                0       40        0       0
+  niagaraLexiconFi                0       40        0       0
+  niagaraLexiconFr                0      898        0       0
+  niagaraLexiconHi                0       73        0       0
+  niagaraLexiconHr                0       40        0       0
+  niagaraLexiconHu                0       40        0       0
+  niagaraLexiconIn                0       40        0       0
+  niagaraLexiconIs                0       40        0       0
+  niagaraLexiconIt                0       41        0       0
+  niagaraLexiconIw                0       40        0       0
+  niagaraLexiconJa                0      127        0       0
+  niagaraLexiconKo                0      126        0       0
+  niagaraLexiconLt                0       40        0       0
+  niagaraLexiconLv                0       40        0       0
+  niagaraLexiconMk                0       40        0       0
+  niagaraLexiconNl                0       39        0       0
+  niagaraLexiconNo                0       40        0       0
+  niagaraLexiconPl                0       44        0       0
+  niagaraLexiconPt                0       40        0       0
+  niagaraLexiconRo                0       40        0       0
+  niagaraLexiconRu                0       67        0       0
+  niagaraLexiconSk                0       40        0       0
+  niagaraLexiconSl                0       40        0       0
+  niagaraLexiconSq                0       40        0       0
+  niagaraLexiconSr                0       40        0       0
+  niagaraLexiconSv                0       40        0       0
+  niagaraLexiconTh                0       39        0       0
+  niagaraLexiconTr                0       40        0       0
+  niagaraLexiconUk                0       44        0       0
+  niagaraLexiconVi                0       40        0       0
+  niagaraLexiconZh                0       77        0       0
+  niagaraLexiconZhcn              0       77        0       0
+  niagaraSystemIndex             19       41        0       5
+  niagaraTest                     0        0        0       0
+  niagaraVirtual                  0       29        2      16
+  nmilestone                      3       25        7       5
+  nmodsomnipal                    0        1        0       0
+  nmodsreflow                     3        0        0      11
+  nmodsreflow77                   3        0        0      11
+  nrio                            8       88        0      11
+  nrioConversion                  0       24        0       0
+  nsh                             0        0        0       0
+  nss                            24      125        0       8
+  nvideo                          0       23        0       4
+  oauth2                          0        0        0       0
+  obix                            0        0        0       0
+  obixDriver                     32        9        0      32
+  obixMigrator                    0        4        0       0
+  obixSeriesTransform             1        1        0       1
+  onCall                         58       45        2       8
+  opc                            20       29        0       3
+  opcUaClient                     5       46        0       6
+  opcUaCore                       0       29        0       0
+  opcUaServer                     8       34        0       8
+  openAdr                         6       59        0       0
+  orientSystemDb                  0       14        0       1
+  orion                           8       58        0      14
+  pdf                             0       35        0      26
+  platAceIpc                      0        1        0       0
+  platBacnet                      0        6        0       0
+  platCcn                         0        2        0       0
+  platCrypto                      0      781        0      11
+  platDaemon                      0     1802        6      24
+  platDataRecovery                0       69        3       5
+  platEdgeIo                      0        1        0       0
+  platHwScan                      7       90        2       1
+  platHwScanAtlas                 0        7        0       0
+  platHwScanJ603                  0       10        0       0
+  platHwScanJ645                  0        7        0       0
+  platHwScanJvln                  0        8        0       0
+  platHwScanNpm                   0       12        0       0
+  platHwScanSec                   0       12        0       0
+  platHwScanTitan                 0        5        0       0
+  platHwScanXpr                   0        5        0       0
+  platIEEE8021X                   0       94        0       6
+  platLon                         0        2        0       0
+  platMstp                        0        2        0       0
+  platNdio                        0        2        0       0
+  platNrio                        0        2        0       0
+  platPanelbus                    0        2        0       0
+  platPower                       0       74        0       6
+  platSerial                      0        2        0       0
+  platSerialNpsdk                 0        2        0       0
+  platSerialQnx                   0        3        0       0
+  platWifi                        0      299        6       6
+  platform                        0     1032        1      40
+  portalApi                       0       65        0       0
+  program                       140      153        0       6
+  propMigration                   7        1        0       0
+  provisioningNiagara            17     1248        5     103
+  pxEditor                       23      262        0      15
+  query                          19        2        0       0
+  queryTable                      5       51        2       5
+  rapidEyeObjects                 0        0        0       0
+  raster                          0       29        0       2
+  rdb                             5       52        0      30
+  rdbHsqlDb                       4        1        0       0
+  rdbMySQL                        5       10        0       3
+  rdbOracle                       5        4        0       3
+  rdbSqlServer                    6        9        0       3
+  remoteVideo                     2        1        0       2
+  report                        182       76        0      22
+  saml                           14      134        2      11
+  samlEncryption                  6        7        0       0
+  sbcIconGallery               6245        0        0       0
+  sbcIconGalleryV4            31454        0        0       0
+  schedule                       11      236        7      22
+  search                         11       50        0       4
+  serial                          0       14        0       1
+  seriesTransform                12      137        1      32
+  signingService                134      198        0       8
+  silk                            1        0        0       0
+  smartTableHx                    0      146        1      15
+  sms                             5       18        0       0
+  snmp                           52      106        0      10
+  snmpLibs                        0        0        0       0
+  snmpMigrator                    0        0        0       0
+  spyderToIrmNxMigrator           0       83        0       0
+  svg                             0        0        0       0
+  svgBatik                        0        0        0       1
+  systemDb                        2       19        0       1
+  systemIndex                     3       32        0       0
+  systemMonitor                  20       32        0       0
+  tagdictionary                 123      141        1       2
+  template                        3      655        0       4
+  templateBulk                    0        1        0       0
+  test                           10       26        0       1
+  themeDistech                    0        0        0       0
+  themeHoneywell                  0        0        0       0
+  themeLucid                      0        0        0       0
+  themeOptimizer                  0        0        0       0
+  themeZebra                      0        0        0       0
+  tls                            49       87        0       0
+  tunnel                         10       40        0       2
+  uxBuilder                       0        8        0       0
+  videoDriver                    31      300        0      26
+  videoMigrator                   0        3        0       0
+  wbutil                          0      418        0      35
+  weather                         4       65        0      21
+  weatherUnderground              2        2        0       0
+  web                            17      238        0      11
+  webChart                       10      206        6       2
+  webEditors                      0      514        0      59
+  wiresheet                       0       51        1       4
+  workbench                       7      681        1     113
+  xprotect                        4        3        0       3
+  zwave                           5       14        0       6
+
+  Modules with DUPLICATE bare lexicon keys (B759 hazard): 62 / 685
+    aaphp  aaphp-rt:examineSetup.results.prompt  x2
+    aaphp  aaphp-rt:examineSetup.terminalCommands.prompt  x2
+    ace  ace-rt:ace.expression.incomplete  x2
+    ace  ace-rt:ace.expression.invalidOp  x2
+    ace  ace-rt:ace.kitNotFound  x2
+    airFlowBalancer  airFlowBalancer:device.in.use.header  x2
+    alarm  alarm-rt:command.filter.icon  x2
+    alarm  alarm-rt:command.filter.label  x2
+    alarm  alarm-rt:command.refresh.icon  x2
+    ascCommon  ascCommon:Alarm.auto.refresh.OnlineDevice.Error  x2
+    ascCommon  ascCommon:CascadeControlLbl.ToolTip  x3
+    ascCommon  ascCommon:CoolMaxAOChngLbl.ToolTip  x3
+    ascCommon  ascCommon:CoolMinAOChngLbl.ToolTip  x3
+    ascCommon  ascCommon:CoolTRLbl.ToolTip  x3
+    ascCommon  ascCommon:Cooling  x2
+    ascCommon  ascCommon:CoolingCycleRate.ToolTip  x3
+    ascCommon  ascCommon:CoolingDBLbl.ToolTip  x3
+    ascCommon  ascCommon:CoolingDerivativeGainLbl.ToolTip  x3
+    ascCommon  ascCommon:DATHighLimitCooling.ToolTip  x3
+    ascCommon  ascCommon:DATHighLimitHeating.ToolTip  x3
+    ascCommon  ascCommon:DATLowLimitCooling.ToolTip  x3
+    ascCommon  ascCommon:DATLowLimitHeating.ToolTip  x3
+    ascCommon  ascCommon:DePressurizeLabel.ToolTip  x2
+    ascCommon  ascCommon:DischargeAirTempLbl.ToolTip  x3
+    ascCommon  ascCommon:FreeAnalog  x2
+    ascCommon  ascCommon:FreeAnalog1.FreeAnalog.ToolTip  x2
+    ascCommon  ascCommon:FreeAnalog1.FreeFloating.ToolTip  x2
+    ascCommon  ascCommon:FreeAnalog1.Undefined.ToolTip  x2
+    ascCommon  ascCommon:FreeAnalog2.FreeAnalog.ToolTip  x2
+    ascCommon  ascCommon:FreeAnalog2.FreeFloating.ToolTip  x2
+    ascCommon  ascCommon:FreeAnalog2.Undefined.ToolTip  x2
+    ascCommon  ascCommon:FreeAnalogOut1Lbl.ToolTip  x2
+    ascCommon  ascCommon:FreeAnalogOut2Lbl.ToolTip  x2
+    ascCommon  ascCommon:FreeCoolingMinOnLabel.ToolTip  x2
+    ascCommon  ascCommon:FreezeStatusOperation.AlarmOnly.ToolTip  x2
+    ascCommon  ascCommon:FreezeStatusOperation.CloseDmpr.ToolTip  x2
+    ascCommon  ascCommon:FreezeStatusOperation.CloseDmprOpnHtg.ToolTip  x2
+    ascCommon  ascCommon:FreezeStatusOperation.CloseDmprOpnHtgClg.ToolTip  x2
+    ascCommon  ascCommon:FreezeStatusOperationLabel.ToolTip  x2
+    ascCommon  ascCommon:HeatMaxAOChngLbl.ToolTip  x3
+    ascCommon  ascCommon:HeatMinAOChngLbl.ToolTip  x3
+    ascCommon  ascCommon:HeatTRLbl.ToolTip  x3
+    ascCommon  ascCommon:Heating  x2
+    ascCommon  ascCommon:HeatingCycleRate.ToolTip  x3
+    ascCommon  ascCommon:HeatingDBLbl.ToolTip  x3
+    ascCommon  ascCommon:HeatingDerivativeGainLbl.ToolTip  x3
+    ascCommon  ascCommon:HeatingUnOccValPosition.Fixed.ToolTip  x6
+    ascCommon  ascCommon:HeatingUnOccValPosition.Normal.ToolTip  x6
+    ascCommon  ascCommon:IAQControlType.BinaryOverride.ToolTip  x2
+    ascCommon  ascCommon:IAQControlType.None.ToolTip  x2
+    ascCommon  ascCommon:IAQControlType.ReturnAirCO2.ToolTip  x2
+    ascCommon  ascCommon:IAQControlType.SpaceCO2.ToolTip  x2
+    ascCommon  ascCommon:IAQControlTypeLabel.ToolTip  x2
+    ascCommon  ascCommon:LowLimitDBLabel.ToolTip  x2
+    ascCommon  ascCommon:LowLimitMaxAOChangeLabel.ToolTip  x2
+    ascCommon  ascCommon:LowLimitMinAOChangeLabel.ToolTip  x2
+    ascCommon  ascCommon:LowLimitSetpointLabel.ToolTip  x2
+    ascCommon  ascCommon:LowLimitTRLabel.ToolTip  x2
+    ascCommon  ascCommon:MATDeadBandLabel.ToolTip  x2
+    ascCommon  ascCommon:MATMaxAOChngLabel.ToolTip  x2
+    ascCommon  ascCommon:MATMinAOChngLabel.ToolTip  x2
+    ascCommon  ascCommon:MATSetpointLabel.ToolTip  x2
+    ascCommon  ascCommon:MATThrottlingRangeLabel.ToolTip  x2
+    ascCommon  ascCommon:MinimumCoolingOn/OffTime.ToolTip  x3
+    ascCommon  ascCommon:MinimumHeatingOn/OffTime.ToolTip  x3
+    ascCommon  ascCommon:MixedAirTempLbl.ToolTip  x3
+    ascCommon  ascCommon:Normal  x2
+    ascCommon  ascCommon:OAEnthStptBTULabel.ToolTip  x2
+    ascCommon  ascCommon:OAEnthStptMALabel.ToolTip  x2
+    ascCommon  ascCommon:OATLockoutforCooling.ToolTip  x3
+    ascCommon  ascCommon:OATLockoutforHeating.ToolTip  x3
+    ascCommon  ascCommon:Outputs.PwmOutputSettings.PwmFullScale.Error.Cooling  x2
+    ascCommon  ascCommon:PressurizeLabel.ToolTip  x2
+    ascCommon  ascCommon:SmokeControl.CloseDmprFanOff.ToolTip  x2
+    ascCommon  ascCommon:SmokeControl.CloseDmprFanOn.ToolTip  x2
+    ascCommon  ascCommon:SmokeControl.NoAction.ToolTip  x2
+    ascCommon  ascCommon:SmokeControl.OpnDmprFanOn.ToolTip  x2
+    ascCommon  ascCommon:SmokeControlLabel.ToolTip  x2
+    ascCommon  ascCommon:StrykerBatchOperations.BatchCommands  x2
+    ascCommon  ascCommon:UnoccupiedValvePosition.ToolTip  x3
+    ascCommon  ascCommon:UnoccupiedValvePositionClg.ToolTip  x3
+    ascCommon  ascCommon:UnoccupiedValvePositionDuringCooling.ToolTip  x3
+    ascCommon  ascCommon:UnoccupiedValvePositionDuringHeating.ToolTip  x3
+    ascCommon  ascCommon:auxDO.DigitalControl.ToolTip  x2
+    ascCommon  ascCommon:auxDO.Undefined.ToolTip  x2
+    ascCommon  ascCommon:auxDOLabel.ToolTip  x2
+    ascCommon  ascCommon:auxEconomizer.DigitalControl.ToolTip  x2
+    ascCommon  ascCommon:auxEconomizer.Undefined.ToolTip  x2
+    ascCommon  ascCommon:auxEconomizerLabel.ToolTip  x2
+    ascCommon  ascCommon:auxPulseOff.DigitalControl.ToolTip  x2
+    ascCommon  ascCommon:auxPulseOff.Undefined.ToolTip  x2
+    ascCommon  ascCommon:auxPulseOffLabel.ToolTip  x2
+    ascCommon  ascCommon:auxPulseOn.DigitalControl.ToolTip  x2
+    ascCommon  ascCommon:auxPulseOn.Undefined.ToolTip  x2
+    ascCommon  ascCommon:auxPulseOnLabel.ToolTip  x2
+    ascCommon  ascCommon:cascadeControl.Disable.ToolTip  x3
+    ascCommon  ascCommon:cascadeControl.Enable.ToolTip  x3
+    ascCommon  ascCommon:coilfrz.DI_NC.ToolTip  x2
+    ascCommon  ascCommon:coilfrz.DI_NO.ToolTip  x2
+    ascCommon  ascCommon:coilfrz.Undefined.ToolTip  x2
+    ascCommon  ascCommon:coilfrz.nviCoilFrz.ToolTip  x2
+    ascCommon  ascCommon:coilfrzLabel.ToolTip  x2
+    ascCommon  ascCommon:cooling.None.ToolTip  x2
+    ascCommon  ascCommon:dat.C7400sTemp_0.ToolTip  x3
+    ascCommon  ascCommon:dat.C7400sTemp_1.ToolTip  x3
+    ascCommon  ascCommon:dat.C7400sTemp_2.ToolTip  x3
+    ascCommon  ascCommon:dat.C7400sTemp_3.ToolTip  x3
+    ascCommon  ascCommon:dat.C7400sTemp_4.ToolTip  x3
+    ascCommon  ascCommon:dat.UI_20Kntc.ToolTip  x3
+    ascCommon  ascCommon:dat.UI_Custom1.ToolTip  x3
+    ascCommon  ascCommon:dat.UI_Custom2.ToolTip  x3
+    ascCommon  ascCommon:dat.Undefined.ToolTip  x3
+    ascCommon  ascCommon:dat.nviDschrgAirTemp.ToolTip  x3
+    ascCommon  ascCommon:dcvSetpointLabel.ToolTip  x2
+    ascCommon  ascCommon:depressurize  x2
+    ascCommon  ascCommon:diffDryBulbTempLabel.ToolTip  x2
+    ascCommon  ascCommon:diffEnthalpyStptBTULabel.ToolTip  x2
+    ascCommon  ascCommon:diffEnthalpyStptMALabel.ToolTip  x2
+    ascCommon  ascCommon:dirtyFilterSetpointLabel.ToolTip  x2
+    ascCommon  ascCommon:econoEnable.DI_NC.ToolTip  x2
+    ascCommon  ascCommon:econoEnable.DI_NO.ToolTip  x2
+    ascCommon  ascCommon:econoEnable.Undefined.ToolTip  x2
+    ascCommon  ascCommon:econoEnableLabel.ToolTip  x2
+    ascCommon  ascCommon:enableHtgDuringIAQLabel.ToolTip  x2
+    ascCommon  ascCommon:enableHtgDuringIAQNo.ToolTip  x2
+    ascCommon  ascCommon:enableHtgDuringIAQYes.ToolTip  x2
+    ascCommon  ascCommon:filterStaticPress.UI_Custom1.ToolTip  x5
+    ascCommon  ascCommon:filterStaticPress.UI_Custom2.ToolTip  x5
+    ascCommon  ascCommon:filterStaticPress.UI_Press2_5inWc.ToolTip  x2
+    ascCommon  ascCommon:filterStaticPress.UI_Press5inWc.ToolTip  x2
+    ascCommon  ascCommon:filterStaticPress.UI_PressQtrInWc.ToolTip  x2
+    ascCommon  ascCommon:filterStaticPress.Undefined.ToolTip  x2
+    ascCommon  ascCommon:filterStaticPressLabel.ToolTip  x2
+    ascCommon  ascCommon:freeDO1.DigitalControl.ToolTip  x2
+    ascCommon  ascCommon:freeDO1.Undefined.ToolTip  x2
+    ascCommon  ascCommon:freeDO1Label.ToolTip  x2
+    ascCommon  ascCommon:freeDO2.DigitalControl.ToolTip  x2
+    ascCommon  ascCommon:freeDO2.Undefined.ToolTip  x2
+    ascCommon  ascCommon:freeDO2Label.ToolTip  x2
+    ascCommon  ascCommon:freePulseOff.DigitalControl.ToolTip  x2
+    ascCommon  ascCommon:freePulseOff.Undefined.ToolTip  x2
+    ascCommon  ascCommon:freePulseOffLabel.ToolTip  x2
+    ascCommon  ascCommon:freePulseOn.DigitalControl.ToolTip  x2
+    ascCommon  ascCommon:freePulseOn.Undefined.ToolTip  x2
+    ascCommon  ascCommon:freePulseOnLabel.ToolTip  x2
+    ascCommon  ascCommon:freezeProtectionSetpointLabel.ToolTip  x2
+    ascCommon  ascCommon:heatCoolCfg.unOccValPosDuringClg.NotWithinRange  x2
+    ascCommon  ascCommon:heating.None.ToolTip  x2
+    ascCommon  ascCommon:iaqOverride.DI_NC.ToolTip  x2
+    ascCommon  ascCommon:iaqOverride.DI_NO.ToolTip  x2
+    ascCommon  ascCommon:iaqOverride.Undefined.ToolTip  x2
+    ascCommon  ascCommon:iaqOverride.nviIaqOvr.ToolTip  x2
+    ascCommon  ascCommon:iaqOverrideLabel.ToolTip  x2
+    ascCommon  ascCommon:mat.C7400sTemp_0.ToolTip  x3
+    ascCommon  ascCommon:mat.C7400sTemp_1.ToolTip  x3
+    ascCommon  ascCommon:mat.C7400sTemp_2.ToolTip  x3
+    ascCommon  ascCommon:mat.C7400sTemp_3.ToolTip  x3
+    ascCommon  ascCommon:mat.C7400sTemp_4.ToolTip  x3
+    ascCommon  ascCommon:mat.UI_20Kntc.ToolTip  x3
+    ascCommon  ascCommon:mat.UI_Custom1.ToolTip  x3
+    ascCommon  ascCommon:mat.UI_Custom2.ToolTip  x3
+    ascCommon  ascCommon:mat.Undefined.ToolTip  x3
+    ascCommon  ascCommon:mat.nviMixedAirTemp.ToolTip  x3
+    ascCommon  ascCommon:minOADamperPosDuringIAQOvrdLabel.ToolTip  x2
+    ascCommon  ascCommon:minOADamperPosLabel.ToolTip  x2
+    ascCommon  ascCommon:monitorSensor.UI_Custom1.ToolTip  x3
+    ascCommon  ascCommon:monitorSensor.UI_Custom2.ToolTip  x3
+    ascCommon  ascCommon:nviSpaceTemp  x2
+    ascCommon  ascCommon:nviWSHPenable  x2
+    ascCommon  ascCommon:oaEnth.UI_Custom1.ToolTip  x4
+    ascCommon  ascCommon:oaEnth.UI_Custom2.ToolTip  x4
+    ascCommon  ascCommon:oaRH.UI_Custom1.ToolTip  x4
+    ascCommon  ascCommon:oaRH.UI_Custom2.ToolTip  x4
+    ascCommon  ascCommon:oat.UI_Custom1.ToolTip  x3
+    ascCommon  ascCommon:oat.UI_Custom2.ToolTip  x3
+    ascCommon  ascCommon:oatHiLimitLabel.ToolTip  x2
+    ascCommon  ascCommon:pressurize  x2
+    ascCommon  ascCommon:raCO2.UI_CO2.ToolTip  x2
+    ascCommon  ascCommon:raCO2.UI_Custom1.ToolTip  x5
+    ascCommon  ascCommon:raCO2.UI_Custom2.ToolTip  x5
+    ascCommon  ascCommon:raCO2.Undefined.ToolTip  x2
+    ascCommon  ascCommon:raCO2.nviReturnAirCO2.ToolTip  x2
+    ascCommon  ascCommon:raCO2Label.ToolTip  x2
+    ascCommon  ascCommon:raEnth.UI_Custom1.ToolTip  x4
+    ascCommon  ascCommon:raEnth.UI_Custom2.ToolTip  x4
+    ascCommon  ascCommon:raRH.UI_Custom1.ToolTip  x4
+    ascCommon  ascCommon:raRH.UI_Custom2.ToolTip  x4
+    ascCommon  ascCommon:rat.UI_Custom1.ToolTip  x3
+    ascCommon  ascCommon:rat.UI_Custom2.ToolTip  x3
+    ascCommon  ascCommon:spaceCO2.UI_CO2.ToolTip  x2
+    ascCommon  ascCommon:spaceCO2.UI_Custom1.ToolTip  x5
+    ascCommon  ascCommon:spaceCO2.UI_Custom2.ToolTip  x5
+    ascCommon  ascCommon:spaceCO2.Undefined.ToolTip  x2
+    ascCommon  ascCommon:spaceCO2.nviSpaceCO2.ToolTip  x2
+    ascCommon  ascCommon:spaceCO2Label.ToolTip  x2
+    ascCommon  ascCommon:spaceRH.UI_Custom1.ToolTip  x4
+    ascCommon  ascCommon:spaceRH.UI_Custom2.ToolTip  x4
+    ascCommon  ascCommon:spaceTemp1.nviSpaceTemp.ToolTip  x2
+    ascCommon  ascCommon:spaceTemp2.nviSpaceTemp.ToolTip  x2
+    ascCommon  ascCommon:spaceTemp3.nviSpaceTemp.ToolTip  x2
+    ascCommon  ascCommon:spaceTemp4.nviSpaceTemp.ToolTip  x2
+    ascCommon  ascCommon:spaceTemp5.nviSpaceTemp.ToolTip  x2
+    ascCommon  ascCommon:spaceTemperature.AvgSpcTemp.ToolTip  x2
+    ascCommon  ascCommon:spaceTemperature.MaxSpcTemp.ToolTip  x2
+    ascCommon  ascCommon:spaceTemperature.MinSpcTemp.ToolTip  x2
+    ascCommon  ascCommon:spaceTemperature.SmartSpcTemp.ToolTip  x2
+    ascCommon  ascCommon:spaceTemperature.UI_Custom1.ToolTip  x3
+    ascCommon  ascCommon:spaceTemperature.UI_Custom2.ToolTip  x3
+    ascCommon  ascCommon:ventTimeBeforeOccLabel.ToolTip  x2
+    ascCommon  ascCommon:windowSwitch.DI_NC.ToolTip  x2
+    ascCommon  ascCommon:windowSwitch.DI_NO.ToolTip  x2
+    ascCommon  ascCommon:windowSwitch.Undefined.ToolTip  x2
+    ascCommon  ascCommon:windowSwitchLabel.ToolTip  x2
+    ascCommon  ascCommon:zoneOptionsCfg.temperatureSetpointsCfg.spaceTempAlarmDisableDelay  x2
+    bajaui  bajaui-wb:commands.makeStationTemplate.description  x2
+    bajaui  bajaui-wb:commands.makeStationTemplate.icon  x2
+    bajaui  bajaui-wb:commands.makeStationTemplate.label  x2
+    bajaui  bajaui-wb:name  x2
+    bajaui  bajaui-wb:type  x2
+    clLexiconDe  clLexiconDe-rt:de/clHVACGeneral.lexicon:enabledIn  x2
+    clPanelBus  clPanelBus-rt:PanelbusNetwork.dispatchFrame.displayName  x2
+    clPanelBus  clPanelBus-rt:displaySensorId  x2
+    clPanelBus  clPanelBus-rt:displayUnitId  x2
+    clPrintout  clPrintout-rt:clPrintout.OutputType  x2
+    clStationUpgradeTool  clStationUpgradeTool-wb:BClStationUpgradeToolWizard.info  x2
+    cloudLink  cloudLink-rt:transport.noAuthenticator  x2
+    cloudLinkHonSbp  cloudLinkHonSbp-rt:UrlAccessibilityChecker.job.message  x2
+    datasharing  datasharing:DataSharing.BothThirdParty  x2
+    datasharing  datasharing:DataSharing.MaxPushPollReached  x2
+    driver  driver-rt:commands.addPoint.description  x2
+    driver  driver-rt:commands.addPoint.displayName  x2
+    driver  driver-rt:commands.addPoint.icon  x2
+    driver  driver-rt:commands.addPoint.label  x2
+    driver  driver-rt:commands.deleteAllPoint.description  x2
+    driver  driver-rt:commands.deleteAllPoint.displayName  x2
+    driver  driver-rt:commands.deleteAllPoint.icon  x2
+    driver  driver-rt:commands.deleteAllPoint.label  x2
+    driver  driver-rt:commands.editPoint.description  x2
+    driver  driver-rt:commands.editPoint.displayName  x2
+    driver  driver-rt:commands.editPoint.icon  x2
+    driver  driver-rt:commands.editPoint.label  x2
+    driver  driver-rt:commands.removePoint.description  x2
+    driver  driver-rt:commands.removePoint.displayName  x2
+    driver  driver-rt:commands.removePoint.icon  x2
+    driver  driver-rt:commands.removePoint.label  x2
+    driver  driver-rt:commands.resortPoint.description  x2
+    driver  driver-rt:commands.resortPoint.displayName  x2
+    driver  driver-rt:commands.resortPoint.icon  x2
+    driver  driver-rt:commands.resortPoint.label  x2
+    easyHealthyBuilding  easyHealthyBuilding-ux:EasyHealthyBuilding.zoneConfiguration.editZone  x2
+    easyTemplating  easyTemplating-wb:EasyTemplate.ET.Name.exists  x2
+    easyTemplating  easyTemplating-wb:EasyTemplate.Export.Error  x2
+    electronicSignature  electronicSignature-rt:commands.addcustomer.description  x2
+    electronicSignature  electronicSignature-rt:reasonForChange  x2
+    electronicSignature  electronicSignature-rt:reasonSetName  x2
+    electronicSignature  electronicSignature-ux:CustomerManager.displayName  x2
+    electronicSignature  electronicSignature-ux:commands.addcustomer.description  x2
+    electronicSignature  electronicSignature-ux:mgr.emptyName  x2
+    electronicSignature  electronicSignature-wb:commands.addcustomer.description  x2
+    honAdvWirelessCfg  honAdvWirelessCfg-rt:band24  x2
+    honAdvWirelessCfg  honAdvWirelessCfg-rt:band49  x2
+    honAdvWirelessCfg  honAdvWirelessCfg-rt:band50  x2
+    honAdvWirelessCfg  honAdvWirelessCfg-rt:ht20  x2
+    honAdvWirelessCfg  honAdvWirelessCfg-rt:ht20ht40  x2
+    honAdvWirelessCfg  honAdvWirelessCfg-rt:ht40  x2
+    honAdvWirelessCfg  honAdvWirelessCfg-rt:ieee802_11a  x2
+    honAdvWirelessCfg  honAdvWirelessCfg-rt:ieee802_11b  x2
+    honAdvWirelessCfg  honAdvWirelessCfg-rt:ieee802_11g  x2
+    honAdvWirelessCfg  honAdvWirelessCfg-rt:ieee802_11n  x2
+    honAdvWirelessCfg  honAdvWirelessCfg-rt:none  x4
+    honAdvWirelessCfg  honAdvWirelessCfg-rt:wep  x2
+    honAdvWirelessCfg  honAdvWirelessCfg-rt:wpa  x3
+    honAdvWirelessCfg  honAdvWirelessCfg-rt:wpa2  x3
+    honAdvWirelessCfg  honAdvWirelessCfg-rt:wpa_2_psk  x2
+    honAdvWirelessCfg  honAdvWirelessCfg-rt:wpa_psk  x2
+    honBACnetUtilities  honBACnetUtilities-rt:BHonBacnetObjectsImporterWizard.infoTextStep4  x2
+    honIOBase  honIOBase-rt:HonSmartEdgeHelper.configOutOfRange  x2
+    honIOBase  honIOBase-rt:iod16uios.description  x2
+    honIOBase  honIOBase-wb:iod16uios.description  x2
+    honImporter  honImporter-rt:buttonCancel  x2
+    honImporter  honImporter-rt:labelTargetModuleType  x2
+    honImporter  honImporter-rt:nvDlcShed  x2
+    honImporter  honImporter-rt:txtLabel  x2
+    honIrmConfig  honIrmConfig-rt:NanoError.DEVICE_OFFLINE  x2
+    honIrmConfig  honIrmConfig-rt:NanoError.HEAP_MEMORY_FULL  x2
+    honIrmConfig  honIrmConfig-rt:NanoError.IRM_DEVICE_NOT_READY_TO_COMMISSION  x2
+    honIrmConfig  honIrmConfig-rt:balancing.object.not.supported.for.nonVAV  x2
+    honIrmConfig  honIrmConfig-rt:ip.invalid.address  x2
+    honIrmConfig  honIrmConfig-rt:na  x2
+    honIrmConfig  honIrmConfig-rt:nts.invalid.address  x2
+    honIrmConfig  honIrmConfig-rt:sylk.device.name.duplicate.message  x2
+    honIrmConfig  honIrmConfig-rt:zero  x2
+    honIrmConfig  honIrmConfig-wb:clearProject.confirm  x2
+    honIrmConfig  honIrmConfig-wb:clearProject.title  x2
+    honIrmConfig  honIrmConfig-wb:swapIn.title  x2
+    honIrmConfig  honIrmConfig-wb:swapOut.title  x2
+    honIrmConfig  honIrmConfig-wb:teach.confirm  x2
+    honPlantController  honPlantController-rt:applyRSTPSettings  x2
+    honPlantControllerMigrator  honPlantControllerMigrator-rt:migrator.ui.summary.additionalObjects  x2
+    honeywellBacnetSmartSensor  honeywellBacnetSmartSensor-rt:BHonBacnetSmartSensorDevice.configOutOfRange  x2
+    honeywellBacnetSpyder  honeywellBacnetSpyder:BacnetSpyder.displayName  x2
+    honeywellDeviceManager  honeywellDeviceManager-rt:BCommandJob.USER_CANCEL_MSG  x2
+    honeywellDeviceManager  honeywellDeviceManager-rt:BFirmwareDownloadJob.COMPLETE_DOWNLOAD  x2
+    honeywellDeviceManager  honeywellDeviceManager-rt:BFirmwareDownloadJob.FIRMWARE_DEVICE_DOWNLOAD_FAILED  x2
+    honeywellDeviceManager  honeywellDeviceManager-rt:PeripheralFirmwareDownloadTask.RECEIVED_FW_STATUS  x2
+    honeywellSpyderTool  honeywellSpyderTool:Auto  x2
+    honeywellSpyderTool  honeywellSpyderTool:BDiagnosticsDialog.InvalidValue  x2
+    honeywellSpyderTool  honeywellSpyderTool:Correction.InvalidLink  x2
+    honeywellSpyderTool  honeywellSpyderTool:ModeCleanUp.title  x2
+    honeywellSpyderTool  honeywellSpyderTool:rename.start  x2
+    honeywellSpyderTool  honeywellSpyderTool:time.dialog.close  x2
+    honeywellSpyderTool  honeywellSpyderTool:time.dialog.sync  x2
+    honeywellSylkDevice  honeywellSylkDevice-rt:Sylk.param.alarmLowHighLimitError  x2
+    honeywellSylkDevice  honeywellSylkDevice-rt:SylkDevice.invalid.device  x2
+    honeywellSylkDevice  honeywellSylkDevice-rt:day  x2
+    honeywellSylkDevice  honeywellSylkDevice-rt:hours  x2
+    honeywellSylkDevice  honeywellSylkDevice-rt:minutes  x2
+    honeywellSylkDevice  honeywellSylkDevice-rt:month  x2
+    honeywellSylkDevice  honeywellSylkDevice-rt:timeofDay  x2
+    honeywellSylkDevice  honeywellSylkDevice-rt:year  x2
+    honeywellTB3026BWizard  honeywellTB3026BWizard:FFTBatchOperations.BatchCommands  x2
+    honeywellTB3026BWizard  honeywellTB3026BWizard:termLayout.com  x2
+    honeywellTB3026BWizard  honeywellTB3026BWizard:termLayout.gnd  x2
+    honeywellTB3026BWizard  honeywellTB3026BWizard:time.sync.deviceFaultError  x2
+    honeywellTCThermostatWizard  honeywellTCThermostatWizard-rt:boolean.enableDisable  x2
+    honeywellTCThermostatWizard  honeywellTCThermostatWizard-rt:deviceObjectCheck  x2
+    honeywellTCThermostatWizard  honeywellTCThermostatWizard-rt:modelNameError  x2
+    honeywellTCThermostatWizard  honeywellTCThermostatWizard-rt:vendorIdError  x2
+    honeywellTCThermostatWizard  honeywellTCThermostatWizard-ux:deviceObjectCheck  x2
+    honeywellTCThermostatWizard  honeywellTCThermostatWizard-ux:modelNameError  x2
+    honeywellTCThermostatWizard  honeywellTCThermostatWizard-ux:vendorIdError  x2
+    honeywellVenomTools  honeywellVenomTools-rt:BVenomBalanceLonMixIn.deviceNotConfigOnline  x2
+    honeywellVenomTools  honeywellVenomTools-rt:FlowCalView.DamperPos  x2
+    honeywellVenomTools  honeywellVenomTools-rt:InvalidTempSpts.occCool  x2
+    honeywellVenomTools  honeywellVenomTools-rt:InvalidTempSpts.occHeat  x2
+    honeywellVenomTools  honeywellVenomTools-rt:InvalidTempSpts.ok  x2
+    honeywellVenomTools  honeywellVenomTools-rt:InvalidTempSpts.stbyCool  x2
+    honeywellVenomTools  honeywellVenomTools-rt:InvalidTempSpts.stbyHeat  x2
+    honeywellVenomTools  honeywellVenomTools-rt:InvalidTempSpts.unocCool  x2
+    honeywellVenomTools  honeywellVenomTools-rt:MixIn.ProxyPoint  x2
+    honeywellVenomTools  honeywellVenomTools-rt:MixIn.ProxyPointDis  x2
+    honeywellVenomTools  honeywellVenomTools-rt:ModuleCheck.isPresent  x2
+    honeywellVenomTools  honeywellVenomTools-rt:VenomBalanceService  x2
+    honeywellVenomTools  honeywellVenomTools-rt:ZeroJob.calibrator.damperNotClosing  x2
+    honeywellVenomTools  honeywellVenomTools-rt:ZeroJob.calibrator.failedDamperRead  x2
+    honeywellVenomTools  honeywellVenomTools-rt:ZeroJob.calibrator.failedFlowOvrd  x2
+    honeywellVenomTools  honeywellVenomTools-rt:ZeroJob.calibrator.failedHiPres  x2
+    honeywellVenomTools  honeywellVenomTools-rt:ZeroJob.calibrator.failedVelPresRead  x2
+    honeywellVenomTools  honeywellVenomTools-rt:ZeroJob.calibrator.failedWriteZero  x2
+    honeywellVenomTools  honeywellVenomTools-rt:ZeroJob.calibrator.zeroComplete  x2
+    honeywellVenomTools  honeywellVenomTools-rt:ZeroJob.jobSuccess  x2
+    honeywellVenomTools  honeywellVenomTools-rt:ZeroJob.starting  x2
+    honeywellVenomTools  honeywellVenomTools-rt:auto  x4
+    honeywellVenomTools  honeywellVenomTools-rt:balanced  x2
+    honeywellVenomTools  honeywellVenomTools-rt:error  x6
+    honeywellVenomTools  honeywellVenomTools-rt:error.BadReadObject  x2
+    honeywellVenomTools  honeywellVenomTools-rt:error.BadWriteObject  x2
+    honeywellVenomTools  honeywellVenomTools-rt:license.brandError.message  x2
+    honeywellVenomTools  honeywellVenomTools-rt:license.module  x2
+    honeywellVenomTools  honeywellVenomTools-rt:nciRefreshExt.nameNotFound  x2
+    honeywellVenomTools  honeywellVenomTools-rt:noComm  x2
+    honeywellVenomTools  honeywellVenomTools-rt:notConfigured  x2
+    honeywellVenomTools  honeywellVenomTools-rt:notSupported  x2
+    honeywellVenomTools  honeywellVenomTools-rt:notZeroed  x2
+    honeywellVenomTools  honeywellVenomTools-rt:ovrd  x2
+    honeywellVenomTools  honeywellVenomTools-rt:ovrdClose  x2
+    honeywellVenomTools  honeywellVenomTools-rt:ovrdFlow  x2
+    honeywellVenomTools  honeywellVenomTools-rt:ovrdMaxFlow  x2
+    honeywellVenomTools  honeywellVenomTools-rt:ovrdMinFlow  x2
+    honeywellVenomTools  honeywellVenomTools-rt:ovrdOpen  x2
+    honeywellVenomTools  honeywellVenomTools-rt:ovrdPercent  x2
+    honeywellVenomTools  honeywellVenomTools-rt:ovrdPosition  x2
+    honeywellVenomTools  honeywellVenomTools-rt:unbalanced  x2
+    honeywellVenomTools  honeywellVenomTools-rt:unknown  x6
+    honeywellVenomTools  honeywellVenomTools-rt:zeroed  x2
+    httpClient  httpClient-rt:disabled  x2
+    httpClient  httpClient-rt:smaExpired  x2
+    ipcCommBus  ipcCommBus-rt:zero  x2
+    jsonToolkit  jsonToolkit-rt:displayName  x3
+    jsonToolkit  jsonToolkit-rt:name  x2
+    ldap  ldap-rt:kerberos.gss.contextEstablished  x2
+    ldap  ldap-rt:kerberos.gss.couldNotDelegate  x2
+    ldap  ldap-rt:kerberos.gss.delegating  x2
+    ldap  ldap-rt:kerberos.gss.noToken  x2
+    lonHoneywellXfl800  lonHoneywellXfl800-rt:remain  x2
+    lonhoneywellAXWizards  lonhoneywellAXWizards:VavFlowTracking  x2
+    lonhoneywellAXWizards  lonhoneywellAXWizards:input_config  x2
+    lonhoneywellAXWizards  lonhoneywellAXWizards:output_config  x2
+    micros  micros-rt:help.guide.base  x2
+    micros  micros-rt:linkMessageDebug  x2
+    mobile  mobile-ux:loading  x2
+    mobile  mobile-ux:refresh  x2
+    mobile  mobile-ux:save  x2
+    naxisVideo  naxisVideo-rt:help.guide.base  x2
+    niagaraDriver  niagaraDriver-rt:userSync.error.syncInDisabled  x2
+    niagaraLexiconAl  niagaraLexiconAl-rt:aaphp.lexicon:examineSetup.results.prompt  x2
+    niagaraLexiconAl  niagaraLexiconAl-rt:aaphp.lexicon:examineSetup.terminalCommands.prompt  x2
+    niagaraLexiconAl  niagaraLexiconAl-rt:accessControl.lexicon:accessRights  x2
+    niagaraLexiconAl  niagaraLexiconAl-rt:accessControl.lexicon:fromDate  x2
+    niagaraLexiconAl  niagaraLexiconAl-rt:accessControl.lexicon:pinNumberTooLong  x2
+    niagaraLexiconAl  niagaraLexiconAl-rt:accessControl.lexicon:toDate  x2
+    niagaraLexiconAl  niagaraLexiconAl-rt:alarm.lexicon:alarm.alarms  x2
+    niagaraLexiconAl  niagaraLexiconAl-rt:bacnet.lexicon:pointManager.value  x2
+    niagaraLexiconAl  niagaraLexiconAl-rt:bajaui.lexicon:name  x2
+    niagaraLexiconAl  niagaraLexiconAl-rt:bajaui.lexicon:type  x2
+    niagaraLexiconAl  niagaraLexiconAl-rt:fox.lexicon:address  x2
+    niagaraLexiconAl  niagaraLexiconAl-rt:mobile.lexicon:loading  x2
+    niagaraLexiconAl  niagaraLexiconAl-rt:mobile.lexicon:refresh  x2
+    niagaraLexiconAl  niagaraLexiconAl-rt:mobile.lexicon:save  x2
+    niagaraLexiconAl  niagaraLexiconAl-rt:platDaemon.lexicon:CommissioningWizard.installDist.complete  x2
+    niagaraLexiconAl  niagaraLexiconAl-rt:platDaemon.lexicon:StationSurrogateView.command.saveStation.description  x2
+    niagaraLexiconAl  niagaraLexiconAl-rt:platDaemon.lexicon:StationSurrogateView.command.saveStation.label  x2
+    niagaraLexiconAl  niagaraLexiconAl-rt:platform.lexicon:StationSurrogate.stopping.title  x2
+    niagaraLexiconAl  niagaraLexiconAl-rt:provisioningNiagara.lexicon:StationSoftwareView.command.uninstallSelected.label  x2
+    niagaraLexiconAl  niagaraLexiconAl-rt:pxEditor.lexicon:actionArg.prompUser  x2
+    niagaraLexiconAl  niagaraLexiconAl-rt:schedule.lexicon:summary  x2
+    niagaraLexiconAl  niagaraLexiconAl-rt:sentinel.lexicon:accessRights  x2
+    niagaraLexiconAl  niagaraLexiconAl-rt:sentinel.lexicon:fromDate  x2
+    niagaraLexiconAl  niagaraLexiconAl-rt:sentinel.lexicon:toDate  x2
+    niagaraLexiconAl  niagaraLexiconAl-rt:workbench.lexicon:objectTree.invalidName  x2
+    niagaraLexiconDe  niagaraLexiconDe-rt:alarm.lexicon:alarm.console.columns.fromState  x2
+    niagaraVirtual  niagaraVirtual-rt:slotOrd  x2
+    niagaraVirtual  niagaraVirtual-rt:typeSpec  x2
+    nmilestone  nmilestone-rt:MilestoneCentralServerCredentialsIssue  x2
+    nmilestone  nmilestone-rt:MilestoneCentralServerStatusListIssue1  x2
+    nmilestone  nmilestone-rt:MilestoneCentralServerStatusListIssue2  x2
+    nmilestone  nmilestone-rt:MilestoneCentralServerStatusListObjectIssue  x2
+    nmilestone  nmilestone-rt:MilestoneImageServerPingFailure  x2
+    nmilestone  nmilestone-rt:MilestoneImageServerPingSessionStartFailure  x2
+    nmilestone  nmilestone-rt:help.guide.base  x2
+    onCall  onCall-rt:onCallList  x2
+    onCall  onCall-rt:priority  x2
+    platDaemon  platDaemon-wb:CommissioningWizard.authNativeUsersStep.desc  x2
+    platDaemon  platDaemon-wb:CommissioningWizard.installDist.complete  x2
+    platDaemon  platDaemon-wb:StationCopierOptions.displayName  x2
+    platDaemon  platDaemon-wb:StationCopierOptions.icon  x2
+    platDaemon  platDaemon-wb:StationSurrogateView.command.saveStation.description  x2
+    platDaemon  platDaemon-wb:UserManager.error.passwordMismatch  x2
+    platDataRecovery  platDataRecovery-rt:storageSize  x2
+    platDataRecovery  platDataRecovery-rt:unknown  x2
+    platDataRecovery  platDataRecovery-rt:unlimited  x2
+    platHwScan  platHwScan-rt:disabled  x2
+    platHwScan  platHwScan-rt:unknown  x2
+    platWifi  platWifi-rt:none  x3
+    platWifi  platWifi-rt:unknown  x2
+    platWifi  platWifi-rt:wpa  x2
+    platWifi  platWifi-rt:wpa2  x2
+    platWifi  platWifi-rt:wpa_2_psk  x2
+    platWifi  platWifi-rt:wpa_psk  x2
+    platform  platform-rt:labels.system.serialNumber  x2
+    provisioningNiagara  provisioningNiagara-wb:StationSoftwareView.command.uninstallSelected.label  x2
+    provisioningNiagara  provisioningNiagara-wb:StationSoftwareView.status.needCommissioningMissing  x2
+    provisioningNiagara  provisioningNiagara-wb:TakeTimeFactory.displayIcon  x2
+    provisioningNiagara  provisioningNiagara-wb:TakeTimeFactory.displayName  x2
+    provisioningNiagara  provisioningNiagara-wb:TakeTimeStep.display  x2
+    queryTable  queryTable-wb:displayName  x2
+    queryTable  queryTable-wb:saveColumnsForAllUsersQuestion  x2
+    saml  saml-rt:idpCert  x2
+    saml  saml-rt:samlPrototypes  x2
+    schedule  schedule-rt:customSchedule  x2
+    schedule  schedule-rt:dateRangeSchedule  x2
+    schedule  schedule-rt:dateSchedule  x2
+    schedule  schedule-rt:scheduleReference  x2
+    schedule  schedule-rt:summary  x3
+    schedule  schedule-rt:type  x2
+    schedule  schedule-rt:weekAndDaySchedule  x2
+    seriesTransform  seriesTransform-rt:transformParams.editor.colName  x2
+    smartTableHx  smartTableHx-wb:autoRefresh.label  x2
+    tagdictionary  tagdictionary-rt:selectTagGroupDialog.info3  x2
+    webChart  webChart-ux:absolute  x2
+    webChart  webChart-ux:milliseconds  x2
+    webChart  webChart-ux:minutes  x2
+    webChart  webChart-ux:relative  x2
+    webChart  webChart-ux:sampling  x2
+    webChart  webChart-ux:seconds  x2
+    wiresheet  wiresheet-wb:relationSelection  x2
+    workbench  workbench-wb:objectTree.invalidName  x2

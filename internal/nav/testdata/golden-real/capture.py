@@ -10,7 +10,10 @@ exactly as that harness does (run_isolated: cwd the checkout, a scratch
 normalization). Each case's sha256(stdout), sha256(stderr) and exit code must
 equal tests/golden/cli.json, or nothing is written. help also gets
 intended.json with the output of GO_MNAV_BIN run through the same harness.
-On success every case directory next to this script is replaced.
+On success every case directory next to this script is replaced, then
+../gen_palette_lexicon.py --real GO_MNAV_BIN re-captures the palette-lexicon-agents
+cases from niagara-research tools/palette-lexicon-agents.py (D39 e), which that
+command follows instead of module_nav.py.
 """
 
 import hashlib
@@ -18,6 +21,7 @@ import importlib
 import json
 import os
 import shutil
+import subprocess
 import sys
 import tempfile
 
@@ -105,7 +109,8 @@ def main(argv):
         replace_cases(out)
     finally:
         shutil.rmtree(out, ignore_errors=True)
-    return 0
+    gen = os.path.join(os.path.dirname(HERE), "gen_palette_lexicon.py")
+    return subprocess.run([sys.executable, "-I", gen, "--real", os.path.abspath(argv[0])]).returncode
 
 
 if __name__ == "__main__":

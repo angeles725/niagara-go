@@ -1,0 +1,6 @@
+{
+ "exit": 0,
+ "reason": "D39 e: palette-lexicon-agents follows niagara-research tools/palette-lexicon-agents.py (every **/*.lexicon, lexicon JAR fallback, exit 1 naming the searched base dir; docs/tools-compatibility-contract.md section 6)",
+ "stderr": "",
+ "stdout": "usage: module-nav palette-lexicon-agents [-h] [--all] [--json] [module]\n\npositional arguments:\n  module      Module name in organized/ (e.g. alarm)\n\noptions:\n  -h, --help  show this help message and exit\n  --all       Census of every module under the base directory (summary table)\n  --json      Structured JSON output\n"
+}
