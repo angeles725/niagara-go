@@ -12,11 +12,13 @@ var laterBuilders = []struct {
 	build         func(base, organized string) error
 }{
 	{"build_inheritance.py", InheritanceFile, func(base, _ string) error { _, err := BuildInheritance(base); return err }},
+	{"build_xref.py", XrefFile, func(base, organized string) error { _, err := BuildXref(base, organized); return err }},
 }
 
 // TestParityLaterIndexes builds the whole chain on each side (inventory, class
 // index, then laterBuilders) and diffs every later index. The Python builders
-// run with a random hash seed (-E).
+// run with a random hash seed (-E): the xref key order no longer follows set
+// order (module-navigator fix/deterministic-xref-base-dir).
 func TestParityLaterIndexes(t *testing.T) {
 	for _, tc := range []struct {
 		name   string

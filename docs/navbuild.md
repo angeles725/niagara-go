@@ -79,12 +79,29 @@ an error (Python would die or key a dict by it). `ComputeInheritance` is
 implementors deduplicated in first-seen order and then sorted, the first `extends` of a
 name wins for the chains, a cycle stops a chain and counts once per walk.
 
+## Xref
+
+`ComputeXref` is `build_xref`: the package, FQCN and class -> modules maps from the
+top-level entries, then the import header of each top-level entry's source (the first
+200 lines, `content.split("\n", 200)[:200]`; four workers read the files, the merge
+keeps entry order). `findImports` is `RE_IMPORT.finditer` with `re.MULTILINE` as a hand
+scanner: a match is tried at each line start, `^\s*` may cross blank lines, `static\s+`
+is tried first and on failure `static` is read as the start of the name, and only two
+lengths of the greedy `[\w.]+` can succeed (the whole run, or all but a final `.` that
+starts `.*`), so `import g.h.;` yields `g.h.` as in Python. The reverse and module maps
+are key-sorted, matching module-navigator after `fix/deterministic-xref-base-dir`
+(before it, their key order followed CPython set order and changed with
+`PYTHONHASHSEED`). `avg_imports_per_class` is the int `0` when no class imports
+anything, as Python's `else 0`.
+
 ## Gates
 
 | Gate | Result (2026-10-17) |
 |---|---|
 | full-corpus `module-inventory.json` normalised byte diff | 0 (365,332 bytes) |
 | full-corpus `class-index.json` normalised byte diff | 0 (34,144,621 bytes); Python 32.3 s, Go 3.4 s on a loaded host |
+| full-corpus `inheritance.json` normalised byte diff | 0 (3,740,761 bytes); Python 1.6 s, Go 0.5 s |
+| full-corpus `xref-index.json` normalised byte diff | 0 (19,290,729 bytes); Python 12.3 s, Go 4.7 s |
 | `selftest --recall` on the Go-built index (`TestRecallOnGoBuiltIndex`; the Python oracle via `--base-dir`, since the Go `mnav selftest` is not ported) | 100.00% (55,931/55,931), supertypes 44,369/44,369 |
 
 ## Parity harness
