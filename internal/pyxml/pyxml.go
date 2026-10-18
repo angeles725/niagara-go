@@ -67,6 +67,7 @@ const (
 	errUndeclare  = "must not undeclare prefix"
 	errPERef      = "illegal parameter entity reference"
 	errEncoding   = "unknown encoding"
+	errIncorrect  = "encoding specified in XML declaration is incorrect"
 	bad           = -1 // an undecodable byte in the rune slice
 )
 
@@ -83,6 +84,8 @@ type xparser struct {
 	entities map[string]string // general entities of the internal DTD subset
 	extDTD   bool              // external DTD subset or PE reference: undefined entities are skipped
 	encoding string            // the declaration's encoding name
+	encAt    int               // rune index of that name
+	bom      int               // runes the byte order mark occupies (it counts as that many columns)
 }
 
 type openElem struct {
@@ -95,6 +98,9 @@ type openElem struct {
 func Parse(data []byte, mode Mode) (*Element, error) {
 	p := &xparser{r: decodeUTF8(data), mode: mode}
 	p.n = len(p.r)
+	if p.at(0) == 0xFEFF {
+		p.bom = 1
+	}
 	if mode.ETree {
 		if err := p.applyEncoding(data); err != nil {
 			return nil, err

@@ -9,10 +9,7 @@ import "strings"
 
 // prolog skips everything before the root element and returns the index of its '<'.
 func (p *xparser) prolog() (int, error) {
-	start := 0
-	if p.at(0) == 0xFEFF {
-		start = 1 // the byte order mark is skipped but counts as a column
-	}
+	start := p.bom // the byte order mark is skipped but counts as columns
 	doctype := false
 	for i := start; ; {
 		if p.eof(i) {
@@ -228,7 +225,7 @@ func (p *xparser) xmlDecl(b, end int) error {
 		if c := p.ascii(val, end); !('a' <= c && c <= 'z' || 'A' <= c && c <= 'Z') {
 			return p.fail(val, errBadDecl)
 		}
-		p.encoding = string(p.r[val : i-1])
+		p.encoding, p.encAt = string(p.r[val:i-1]), val
 		if name, val, ok = p.pseudoAttr(&i, end); !ok {
 			return p.fail(i, errBadDecl)
 		}
