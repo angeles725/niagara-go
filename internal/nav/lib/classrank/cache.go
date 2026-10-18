@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/gob"
 	"os"
-	"path/filepath"
 
 	"github.com/angeles725/niagara-go/internal/index"
 	"github.com/angeles725/niagara-go/internal/nav/core"
@@ -101,27 +100,5 @@ func writeCache(path string, key cacheKey, st state, meta *index.Object) bool {
 	if meta != nil {
 		cf.Meta = []byte(core.Dumps(meta, -1))
 	}
-	var buf bytes.Buffer
-	if gob.NewEncoder(&buf).Encode(&cf) != nil {
-		return false
-	}
-	if os.MkdirAll(filepath.Dir(path), 0o700) != nil {
-		return false
-	}
-	f, err := os.CreateTemp(filepath.Dir(path), cacheName+".*.tmp")
-	if err != nil {
-		return false
-	}
-	_, werr := f.Write(buf.Bytes())
-	if cerr := f.Close(); werr == nil {
-		werr = cerr
-	}
-	if werr == nil {
-		werr = os.Rename(f.Name(), path)
-	}
-	if werr != nil {
-		os.Remove(f.Name())
-		return false
-	}
-	return true
+	return core.WriteGob(path, &cf)
 }
