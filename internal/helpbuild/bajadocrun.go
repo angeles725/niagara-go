@@ -9,14 +9,15 @@ import (
 	"sort"
 	"strings"
 	"time"
-	"unicode/utf8"
 
+	"github.com/angeles725/niagara-go/internal/bajadocxml"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyhtml"
 )
 
 // The run half of the bajadoc_parser.py port: main() (walk, parse, write,
-// report) and the bajadoc_xml.format_output / write_clean_class it calls.
+// report) and the bajadoc_xml.write_clean_class it calls (format_output is
+// internal/bajadocxml's).
 // bajadoc-clean/ is written in place, page by page with atomic writes (it
 // also holds the classes bajadoc_xml_parser.py renders from .bajadoc XML),
 // never rebuilt as a whole.
@@ -138,49 +139,10 @@ func writeCleanClass(outDir, pkg, className, text string) error {
 	return nil
 }
 
-// formatBajadoc is bajadoc_xml.format_output: the header lines, then the
-// description wrapped at 78 code points and the member sections, each
-// followed by a blank line, joined with "\n".
+// formatBajadoc is bajadoc_xml.format_output on the class of a javadoc
+// page (bajadocxml.FormatCleanInfo, the port S7b and nh's class --jdk use).
 func formatBajadoc(c *BajadocClass) string {
-	lines := []string{
-		strings.ReplaceAll(strings.ToUpper(c.Kind), "_", " ") + ": " + c.Name,
-		"PACKAGE: " + c.Package,
-	}
-	for _, h := range []struct{ label, value string }{
-		{"SINCE", c.Since}, {"EXTENDS", c.Extends},
-		{"IMPLEMENTS", strings.Join(c.Implements, ", ")}, {"SUBCLASSES", strings.Join(c.Subclasses, ", ")},
-	} {
-		if h.value != "" {
-			lines = append(lines, h.label+": "+h.value)
-		}
-	}
-	lines = append(lines, "")
-	if c.Description != "" {
-		lines = append(lines, "DESCRIPTION:")
-		current := ""
-		for _, w := range pycompat.Fields(c.Description) {
-			switch {
-			case current != "" && utf8.RuneCountInString(current)+1+utf8.RuneCountInString(w) > 78:
-				lines = append(lines, current)
-				current = w
-			case current == "":
-				current = w
-			default:
-				current += " " + w
-			}
-		}
-		if current != "" {
-			lines = append(lines, current)
-		}
-		lines = append(lines, "")
-	}
-	for _, s := range []struct {
-		label string
-		rows  []string
-	}{{"FIELDS:", c.Fields}, {"CONSTRUCTORS:", c.Constructors}, {"METHODS:", c.Methods}} {
-		if len(s.rows) > 0 {
-			lines = append(append(append(lines, s.label), s.rows...), "")
-		}
-	}
-	return strings.Join(lines, "\n")
+	return bajadocxml.FormatCleanInfo(bajadocxml.CleanInfo{ClassName: c.Name, Kind: c.Kind, Pkg: c.Package,
+		Since: c.Since, Extends: c.Extends, Desc: c.Description, Implements: c.Implements,
+		Subclasses: c.Subclasses, Fields: c.Fields, Ctors: c.Constructors, Methods: c.Methods})
 }

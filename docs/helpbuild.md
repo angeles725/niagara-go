@@ -406,7 +406,7 @@ parity test over all 2,231 names of `html.entities.html5`). The attribute rule
 | File | Ports | Notes |
 |---|---|---|
 | `bajadoc.go` | `parse_bajadoc_html` and its `extract_*` / `parse_*_summary` helpers, `strip_tags`, `normalize_ws` | the regexes are Python's, run by `internal/pyre` on code points (Unicode `\s` `\S` `\w` `\b`, lazy quantifiers, backtracking); `_find_summary_section` searches the end markers from 10 code points past the marker; `strip_tags` is `pyhtml.Feed` (one `feed()`, never `close()`) |
-| `bajadocrun.go` | `bajadoc_parser.main`, `bajadoc_xml.format_output`, `bajadoc_xml.write_clean_class`, `doc_types.clean_class_name` | the walk skips the index pages and the files of a folder whose path holds `/class-use/` (so `class-use/` itself is read, its pages skipped as no class); pages are read with `errors="replace"` and universal newlines; `bajadoc-clean/` is written in place with atomic writes (it also holds what S7b writes), a page left under its escaped name (`Cursor&lt;E&gt;.txt`) is removed |
+| `bajadocrun.go` | `bajadoc_parser.main`, `bajadoc_xml.write_clean_class`, `doc_types.clean_class_name` (`format_output` is `bajadocxml.FormatCleanInfo`, see S7b) | the walk skips the index pages and the files of a folder whose path holds `/class-use/` (so `class-use/` itself is read, its pages skipped as no class); pages are read with `errors="replace"` and universal newlines; `bajadoc-clean/` is written in place with atomic writes (it also holds what S7b writes), a page left under its escaped name (`Cursor&lt;E&gt;.txt`) is removed |
 
 API for S10 (`maintenance.BUILDERS` runs `bajadoc_parser.py <data root>`):
 
