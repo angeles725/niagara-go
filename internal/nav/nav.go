@@ -42,7 +42,11 @@ func Main(args []string, s cli.Stdio) int {
 	}
 	baseDir := ns.String("base_dir")
 	if baseDir == "" {
-		baseDir = DetectBaseDir()
+		var err error
+		if baseDir, err = DetectBaseDir(); err != nil {
+			fmt.Fprintf(s.Err, "mnav: %v\n", err)
+			return cli.ExitCannotSearch
+		}
 	}
 	if baseDir == "" {
 		fmt.Fprintln(s.Out, "ERROR: Cannot detect base directory.")

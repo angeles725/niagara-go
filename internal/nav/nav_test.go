@@ -201,3 +201,16 @@ func TestStdoutWriteFailureExitsTwo(t *testing.T) {
 		t.Errorf("exit %d, stderr %q", code, errb.String())
 	}
 }
+
+// TestMainRejectsBadNavigatorDir: a MODULE_NAVIGATOR_DIR that names no
+// checkout is one stderr line naming it and exit 2, not a search elsewhere.
+func TestMainRejectsBadNavigatorDir(t *testing.T) {
+	bad := filepath.Join(t.TempDir(), "missing")
+	t.Setenv("MODULE_NAVIGATOR_DIR", bad)
+	var out, errb bytes.Buffer
+	code := Main([]string{"class", "BFoo"}, cli.Stdio{Out: &out, Err: &errb})
+	want := "mnav: MODULE_NAVIGATOR_DIR=" + bad + ": not a module-navigator checkout (no indexes/ directory)\n"
+	if code != cli.ExitCannotSearch || errb.String() != want || out.Len() != 0 {
+		t.Errorf("exit %d, stderr %q, stdout %q; want exit 2 and %q", code, errb.String(), out.String(), want)
+	}
+}

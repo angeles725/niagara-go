@@ -214,7 +214,11 @@ func Main(args []string, s cli.Stdio) int {
 	}
 	nav := opts.baseDir
 	if nav == "" {
-		nav = core.FindNavDir()
+		var err error
+		if nav, err = core.LocateNavDir(); err != nil {
+			fmt.Fprintf(s.Err, "mnav reindex: %v\n", err)
+			return cli.ExitCannotSearch
+		}
 	}
 	if nav == "" {
 		red(s.Out, "module-navigator checkout not found (no indexes/module-inventory.json above the working directory or the executable); use --base-dir DIR")
