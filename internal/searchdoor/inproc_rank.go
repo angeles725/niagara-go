@@ -11,26 +11,26 @@ import (
 
 // codeRank is `module_nav rank -n N -- <question>` (ranked) through classrank:
 // the header, the tab-separated rows and the "... and N more" line, or the
-// counted miss. Exec answers when the class index cannot be opened (module_nav
+// counted miss. navRun (mnav rank) answers when the class index cannot be opened (module_nav
 // exits 2 there, which sends the code source to its DEGRADED grep) and when the
 // xref index is absent (its NOTE line is module_nav's own printing).
 func codeRank(argv []string) answer {
 	args := argv[1:]
 	if len(args) != 5 || args[0] != "rank" || args[1] != "-n" || args[3] != "--" {
-		return viaExec
+		return noAnswer
 	}
 	limit, err := strconv.Atoi(args[2])
 	base := navDir(argv[0])
 	if err != nil || limit < 1 || strconv.Itoa(limit) != args[2] || base == "" {
-		return viaExec
+		return noAnswer
 	}
 	src := classrank.SourceOf(base)
 	if !isFile(src.XrefIndex) {
-		return viaExec
+		return noAnswer
 	}
 	r, err := classrank.Open(src)
 	if err != nil {
-		return viaExec
+		return noAnswer
 	}
 	question := args[4]
 	results := r.Rank(question)

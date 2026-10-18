@@ -10,27 +10,38 @@ import (
 	"github.com/angeles725/niagara-go/internal/corpusnav/blocksearch"
 )
 
-// In-process backends (decisions D29, D30): the blocks source (corpus-nav find),
-// the docs source (niagara_help find) and the code source's token, grep and rank
-// calls are answered by the libraries the Go ports share, producing the exact text the
-// backend CLI prints, so parse.go and the goldens see the same rows without a
-// process start. Every case the library cannot answer exactly (no data, a stale
-// full-text index (D21), a miss whose text belongs to a printing package, an
-// argv shape this file does not know) runs the backend through exec as before:
-// the exec path stays the parity oracle and NSEARCH_EXEC=1 forces it.
+// The backends, all in process (decisions D29, D30, D38, D42): the blocks source
+// (corpus-nav find), the docs source (niagara_help find) and the code source's
+// token, grep and rank calls are answered by the libraries the Go ports share,
+// and every other module_nav call by mnav's own command (nav.RunAt), producing
+// the exact text the backend CLI prints, so parse.go and the goldens see the
+// same rows without a process start. Nothing runs Python: the script paths only
+// locate each backend's checkout.
 
-// ExecEnv names the variable that forces every backend through exec.
-const ExecEnv = "NSEARCH_EXEC"
+var processStart = time.Now()
+
+// testBackend, when set (tests only), answers every backend call of newDoor: the
+// hermetic goldens' fake backends (fake_test.go).
+var testBackend Backend
+
+// newDoor is the front door of the binaries: the in-process backends (door.bind
+// then gives them the script paths they answer for).
+func newDoor() *door {
+	b := testBackend
+	if b == nil {
+		b = &inprocBackend{clock: time.Now}
+	}
+	return &door{backend: b, now: func() float64 { return time.Since(processStart).Seconds() }}
+}
 
 // blocksCacheTag keeps nsearch's corpus-nav find cache apart from corpus-nav's
 // own (its fingerprint holds the executable's stat).
 const blocksCacheTag = ".nsearch"
 
-// inprocBackend answers the calls it knows in process and hands the rest to exec.
-// paths are the backend scripts it answers for (bindPaths); pick chooses the
-// in-process answer of a call (route; tests replace it).
+// inprocBackend answers the backend calls in process. paths are the backend
+// scripts it answers for (bindPaths); pick chooses the in-process answer of a
+// call (route; tests replace it).
 type inprocBackend struct {
-	exec  Backend
 	paths Paths
 	clock func() time.Time
 	pick  func(Paths, []string) func([]string) answer
@@ -42,39 +53,48 @@ type pathBinder interface{ bindPaths(Paths) }
 func (b *inprocBackend) bindPaths(p Paths) { b.paths = p }
 
 // answer is one in-process run: what the backend would have printed, or ok
-// false when only exec can answer exactly.
+// false for a call this package has no answer for (noAnswer).
 type answer struct {
 	rc             int
 	stdout, stderr string
 	ok             bool
 }
 
-// Run answers argv in process when it can, else through exec. A call that falls
-// back after trying in process gives exec only the budget it has left, so one
-// call never spends more than timeout seconds.
+// Run answers argv in process within timeout seconds. A script path that is
+// not a file is the Python door's "tool not found"; a call no source knows (an
+// argv the door never sends) is typed UNAVAILABLE, never a silent zero.
 func (b *inprocBackend) Run(argv []string, timeout float64) Raw {
+	if !isFile(argv[0]) {
+		return Raw{State: Unavailable, Reason: "unavailable: tool not found at " + pyPath(argv[0])}
+	}
+	if timeout <= 0 { // subprocess.run(timeout=0) never lets the backend answer
+		return timedOut(timeout)
+	}
 	pick := b.pick
 	if pick == nil {
 		pick = route
 	}
 	run := pick(b.paths, argv)
-	if run == nil || !isFile(argv[0]) { // a missing script is exec's "tool not found"
-		return b.exec.Run(argv, timeout)
+	if run == nil {
+		return unknownCall(argv)
 	}
 	t0 := b.clock()
 	a, done := bounded(func() answer { return run(argv) }, timeout)
-	left := timeout - b.clock().Sub(t0).Seconds()
 	switch {
-	case !done || (!a.ok && left <= 0):
+	case !done:
 		return timedOut(timeout)
 	case !a.ok:
-		raw := b.exec.Run(argv, left)
-		if raw.State == Unavailable && raw.Reason == timedOut(left).Reason {
-			return timedOut(timeout) // name the call's budget, as the Python door does
-		}
-		return raw
+		return unknownCall(argv)
 	}
 	return Classify(a.rc, a.stdout, a.stderr, int(b.clock().Sub(t0)/time.Millisecond))
+}
+
+// unknownCall is the Raw of a backend call no in-process source answers: an
+// argv the door never builds (every source answers each call the door makes,
+// its environment errors included).
+func unknownCall(argv []string) Raw {
+	return Raw{State: Unavailable, Reason: "unavailable: no in-process answer for `" +
+		strings.Join(append([]string{filepath.Base(argv[0])}, argv[1:]...), " ") + "` (a call nsearch never makes)"}
 }
 
 // timedOut is the Raw of a call killed at its timeout.
@@ -83,7 +103,7 @@ func timedOut(timeout float64) Raw {
 		MS: int(timeout * 1000)}
 }
 
-// route picks the in-process answer for a backend call, or nil for exec.
+// route picks the in-process answer for a backend call, or nil when none does.
 func route(p Paths, argv []string) func([]string) answer {
 	switch {
 	case len(argv) < 2:
@@ -92,11 +112,13 @@ func route(p Paths, argv []string) func([]string) answer {
 	case argv[0] == p.Docs:
 		return docsFind
 	case argv[0] == p.Code && argv[1] == "token":
-		return codeToken
+		return orNav(codeToken)
 	case argv[0] == p.Code && argv[1] == "grep":
-		return codeGrep
+		return orNav(codeGrep)
 	case argv[0] == p.Code && argv[1] == "rank":
-		return codeRank
+		return orNav(codeRank)
+	case argv[0] == p.Code:
+		return navRun
 	}
 	return nil
 }
@@ -138,11 +160,13 @@ func bounded(run func() answer, timeout float64) (answer, bool) {
 
 func exact(rc int, stdout, stderr string) answer { return answer{rc, stdout, stderr, true} }
 
-var viaExec = answer{}
+// noAnswer is the answer of a call the source does not know.
+var noAnswer = answer{}
 
 // shape matches argv[1:] against a fixed command line: a literal word, "*" for one
-// positional that must not look like an option (argparse would read it as one),
-// "#" for a positive integer. opt lists the optional trailing flags.
+// positional (any text: a query that starts with "-" is searched as text, where
+// the Python backends' argparse read it as an option and failed), "#" for a
+// positive integer. opt lists the optional trailing flags.
 func shape(args []string, want []string, opt ...string) (vals []string, flag string, ok bool) {
 	if len(args) < len(want) || len(args) > len(want)+1 {
 		return nil, "", false
@@ -151,9 +175,6 @@ func shape(args []string, want []string, opt ...string) (vals []string, flag str
 		a := args[i]
 		switch w {
 		case "*":
-			if a == "" || strings.HasPrefix(a, "-") {
-				return nil, "", false
-			}
 			vals = append(vals, a)
 		case "#":
 			if n, err := strconv.Atoi(a); err != nil || n < 1 || strconv.Itoa(n) != a {
@@ -198,18 +219,19 @@ func isDir(p string) bool { st, err := os.Stat(p); return err == nil && st.IsDir
 
 // blocksFind is `corpus-nav find <query> --limit N [--and|--or]` (blocksJob) through
 // blocksearch, on the corpus corpus-nav.py would use: $CORPUS_NAV_ROOT, else the
-// parent of its tools/ folder; a folder without CATALOG.md is left to exec.
+// parent of its tools/ folder (a folder without CATALOG.md is searched like
+// corpus-nav does: no block titles).
 func blocksFind(argv []string) answer {
 	v, flag, ok := shape(argv[1:], []string{"find", "*", "--limit", "#"}, "--and", "--or")
 	if !ok {
-		return viaExec
+		return noAnswer
 	}
 	root := os.Getenv("CORPUS_NAV_ROOT")
 	if root == "" {
 		root = toolDir(argv[0], true)
 	}
-	if root == "" || !isFile(filepath.Join(root, "CATALOG.md")) {
-		return viaExec
+	if root == "" { // the script's folder cannot be resolved (corpus-nav.py's own _root)
+		return exact(2, "", "corpus-nav: cannot locate the corpus from "+pyPath(argv[0])+"\n")
 	}
 	limit, _ := strconv.Atoi(v[1])
 	c := blocksearch.New(root, os.Getenv("CORPUS_NAV_INDEX_DIR"))
