@@ -98,6 +98,22 @@ class BAdd {}
 	if r := st.Run(specRow("C2.5")); r.Verdict != Fail || r.Evidence != want {
 		t.Errorf("changed in3: %s %q, want FAIL %q", r.Verdict, r.Evidence, want)
 	}
+	// An action's defaultValue shows even without a parameterType.
+	for _, c := range []struct {
+		slot string
+		want string
+	}{
+		{`@NiagaraAction(name = "go", defaultValue = "BBoolean.TRUE")`, "action go(= BBoolean.TRUE)"},
+		{`@NiagaraAction(name = "go", parameterType = "BWorkOrder")`, "action go(BWorkOrder)"},
+		{`@NiagaraAction(name = "go", returnType = "BString")`, "action go(): BString"},
+		{`@NiagaraTopic(name = "go", eventType = "BString")`, "topic go(BString)"},
+	} {
+		writeLabFile(t, other, "A.java", c.slot+"\nclass A {}")
+		ck := Check{Kind: kindAnnotation, Glob: "A.java", Fact: factSlots, Want: c.want}
+		if r := st.Run(&ck); r.Verdict != Pass {
+			t.Errorf("%s: %s %q, want %q", c.slot, r.Verdict, r.Evidence, c.want)
+		}
+	}
 	if !NeedsLabSources([]*Check{specRow("C2.1"), specRow("C2.5")}) || NeedsLabSources([]*Check{specRow("C2.1")}) {
 		t.Error("NeedsLabSources: want true only with an annotation check")
 	}

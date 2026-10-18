@@ -26,7 +26,8 @@ const (
 	// factEnum: the generated int constants and the DEFAULT tag: "DIRECT=0 REVERSE=1 DEFAULT=direct".
 	factEnum = "enum"
 	// factSlots: each declared slot: "property name: Type", "action name(Param = default)" (the
-	// parameter and default only when declared), "topic name(EventType)", joined with ", ".
+	// parameter and default only when declared: "action name(= default)" without a parameter type),
+	// "topic name(EventType)", joined with ", ".
 	factSlots = "slots"
 	// factFacets: each declared slot with facets as name=facet;facet.
 	factFacets = "facets"
@@ -137,8 +138,8 @@ func slotText(sl niagaraannot.Slot) string {
 		return "property " + sl.Name + ": " + sl.Type
 	case niagaraannot.Action:
 		param := sl.Type
-		if param != "" && sl.Default != "" {
-			param += " = " + sl.Default
+		if sl.Default != "" {
+			param = strings.TrimSpace(param + " = " + sl.Default)
 		}
 		out := "action " + sl.Name + "(" + param + ")"
 		if sl.ReturnType != "" {

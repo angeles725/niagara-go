@@ -487,7 +487,8 @@ not observed.
   and wanted facts), a missing slot or file (FAIL), an unparseable file, an undecidable flags
   expression and an enum fact on a class without one (SKIP), no `--labsrc` and a missing or file
   tree (SKIP); `TestAnnotationReal` runs the rows on `COURSE_LAB_SOURCES`. The
-  `check-labsrc-flag-beats-env` Go-only golden pins that `--labsrc` wins over the variable;
+  `check-labsrc-flag-beats-env` and `check-labsrc-flag-empty` Go-only goldens pin that `--labsrc`
+  (even empty: no tree, SKIP) wins over the variable;
   `check-good` reads the fixture tree, the other `check-*` cases run without it (SKIP).
   `internal/niagaraannot` has its own table tests and an oracle (`COURSE_NIAGARA_SOURCE`) that
   compares the parsed annotations with the generated code of a source tree (4.15.6.20: 1826
