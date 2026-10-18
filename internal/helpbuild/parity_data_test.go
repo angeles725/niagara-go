@@ -41,12 +41,17 @@ func helpPyRef(t *testing.T) string {
 	if _, ok := helpPyRefChecked.Load(dir); ok {
 		return dir
 	}
-	ref := pyref.Dir(t, "niagara-help")
-	helpPyRefChecked.Store(ref, true)
-	return ref
+	// pyref.Dir resolves the same variable and default: the directory it
+	// checked is the one cached under dir, never another.
+	if ref := pyref.Dir(t, "niagara-help"); ref != dir {
+		t.Fatalf("niagara-help Python reference: pyref.Dir checked %s, not %s", ref, dir)
+	}
+	helpPyRefChecked.Store(dir, true)
+	return dir
 }
 
-// helpPyRefChecked holds the reference directories pyref.Dir accepted.
+// helpPyRefChecked holds the reference directories pyref.Dir accepted,
+// keyed as helpPyRef resolves them.
 var helpPyRefChecked sync.Map
 
 // helpDataMarker is the file that makes a folder a niagara-help data root.

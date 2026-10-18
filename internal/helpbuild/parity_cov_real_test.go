@@ -1,6 +1,7 @@
 package helpbuild
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -128,22 +129,60 @@ func covGoldens(t *testing.T) map[string]covGolden {
 	if err != nil {
 		t.Fatalf("CLI goldens: %v", err)
 	}
+	out, err := parseCovGoldens(data, covGoldenIDs)
+	if err != nil {
+		t.Fatalf("CLI goldens %s: %v", covGoldensFile, err)
+	}
+	return out
+}
+
+// covGoldenIDs are the cases checkCovGolden compares.
+var covGoldenIDs = []string{"coverage", "coverage-module", "coverage-doc-jars"}
+
+// parseCovGoldens decodes the cases ids of a cli.json; a case that is
+// missing or not a JSON object (null included) is an error.
+func parseCovGoldens(data []byte, ids []string) (map[string]covGolden, error) {
 	var all map[string]json.RawMessage
 	if err := json.Unmarshal(data, &all); err != nil {
-		t.Fatal(err)
+		return nil, err
 	}
 	out := map[string]covGolden{}
-	for _, id := range []string{"coverage", "coverage-module", "coverage-doc-jars"} {
+	for _, id := range ids {
 		var g covGolden
-		if all[id] == nil {
-			t.Fatalf("golden %s: not in %s", id, covGoldensFile)
+		raw, has := all[id]
+		if !has {
+			return nil, fmt.Errorf("golden %s: not in the file", id)
 		}
-		if err := json.Unmarshal(all[id], &g); err != nil {
-			t.Fatalf("golden %s: %v", id, err)
+		// json.Unmarshal of null into a struct is a no-op: the zero case.
+		if raw = bytes.TrimSpace(raw); len(raw) == 0 || raw[0] != '{' {
+			return nil, fmt.Errorf("golden %s: %s, not an object", id, raw)
+		}
+		if err := json.Unmarshal(raw, &g); err != nil {
+			return nil, fmt.Errorf("golden %s: %v", id, err)
 		}
 		out[id] = g
 	}
-	return out
+	return out, nil
+}
+
+// A case missing, stored as JSON null or not an object is an error: each
+// would otherwise compare as rc 0 with an empty stdout.
+func TestParseCovGoldensRejectsAMissingCase(t *testing.T) {
+	ok := `{"rc": 0, "stdout": "x"}`
+	if got, err := parseCovGoldens([]byte(`{"a": `+ok+`}`), []string{"a"}); err != nil || got["a"].Stdout != "x" {
+		t.Fatalf("a good case: %+v, %v", got, err)
+	}
+	for name, text := range map[string]string{
+		"missing":   `{"b": ` + ok + `}`,
+		"null":      `{"a": null}`,
+		"spaced":    `{"a":  null }`,
+		"string":    `{"a": "x"}`,
+		"no object": `[]`,
+	} {
+		if got, err := parseCovGoldens([]byte(text), []string{"a"}); err == nil {
+			t.Errorf("%s: accepted as %+v", name, got)
+		}
+	}
 }
 
 // checkCovGolden compares a Go report with a CLI golden case.
