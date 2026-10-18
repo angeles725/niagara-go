@@ -137,6 +137,10 @@ func TestPyCopyfileRefusesSameFileAndDirectory(t *testing.T) {
 	if got := string(readBytes(t, dst)); got != "keep" {
 		t.Errorf("pyCopyfile(dir, dst) truncated dst to %q", got)
 	}
+	err = pyCopyfile(a, src) // a directory as destination: open(dst, "wb") fails
+	if want := "[Errno 21] Is a directory: " + pycompat.FSRepr(src); err == nil || pycompat.OSErrorText(err) != want {
+		t.Errorf("pyCopyfile(a, dir) = %v, want %q", err, want)
+	}
 }
 
 // loadJSON errors carry Python's str(exception); what Python catches is a

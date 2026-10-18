@@ -133,11 +133,13 @@ func TestPDFFailedInheritsOnlyFromTheSamePDF(t *testing.T) {
 func TestPDFPruneRunsAfterTheIndexIsSaved(t *testing.T) { // test_prune_runs_after_the_index_is_saved
 	r := newPDFRun(t)
 	r.texts(t, map[string]string{"docA/A.pdf": strings.Repeat("new text A ", 10), "docB/B.pdf": strings.Repeat("new text B ", 10)})
-	saved := writePDFIndex
-	t.Cleanup(func() { writePDFIndex = saved })
-	writePDFIndex = func(string, pyjson.Value) error { return errors.New("disk full") }
-	_, err := ExtractPDFs(r.root, PDFOptions{DocsDir: r.docs, Pdftotext: r.script})
-	writePDFIndex = saved
+	var err error
+	func() { // the broken save only for this run: r.main below saves for real
+		saved := writePDFIndex
+		defer func() { writePDFIndex = saved }()
+		writePDFIndex = func(string, pyjson.Value) error { return errors.New("disk full") }
+		_, err = ExtractPDFs(r.root, PDFOptions{DocsDir: r.docs, Pdftotext: r.script})
+	}()
 	if err == nil || err.Error() != "disk full" {
 		t.Fatalf("broken save: %v", err)
 	}
