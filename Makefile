@@ -80,3 +80,11 @@ hooks:
 
 clean:
 	rm -rf $(BIN)
+
+# Real-corpus parity (Python vs Go on the installs under /mnt/c and the niagara-help
+# versions/ trees): off in `test` and `ci`, run on request before handing a builder PR.
+.PHONY: parity
+parity:
+	@out=$$(HELPBUILD_PARITY_REAL=1 HELPBUILD_PARITY_FULL=1 HELPBUILD_PARITY_415=1 \
+		$(GO) test -count=1 -timeout 60m -run Parity -v ./internal/helpbuild/ 2>&1); st=$$?; \
+		printf '%s\n' "$$out" | grep -E '^(--- |ok|FAIL|PASS)|real-data parity|not mounted|not found'; exit $$st
