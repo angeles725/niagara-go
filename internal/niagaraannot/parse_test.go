@@ -111,6 +111,8 @@ func TestFlagLetters(t *testing.T) {
 		{"Flags.HIDDEN + Flags.READONLY", "rh", ""},
 		{"(Flags.HIDDEN | 0x10) | javax.baja.sys.Flags.OPERATOR", "hao", ""},
 		{"Flags.NON_CRITICAL | Flags.LINK_TARGET | Flags.USER_DEFINED_4", "NL4", ""},
+		{"Flags.LINK_TARGET | Flags.NON_CRITICAL", "NL", ""},
+		{"Flags.USER_DEFINED_4 | Flags.USER_DEFINED_3 | Flags.USER_DEFINED_2 | Flags.USER_DEFINED_1", "1234", ""},
 		{"1026L", "tf", ""},
 		{"Flags.BOGUS", "", "unknown flag Flags.BOGUS"},
 		{"Flags.SUMMARY & ~Flags.READONLY", "", "cannot evaluate"},
