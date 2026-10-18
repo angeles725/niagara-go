@@ -87,9 +87,9 @@ func (r *Registry) Entry(id string) (Entry, bool) {
 	return e, true
 }
 
-// Match maps a requested id or unique dotted prefix ("4.15") to a registered
+// match maps a requested id or unique dotted prefix ("4.15") to a registered
 // id (versions.py _match), with Python's exact error texts.
-func (r *Registry) Match(requested string) (string, error) {
+func (r *Registry) match(requested string) (string, error) {
 	ids := r.IDs()
 	if r.Versions.Has(requested) {
 		return requested, nil
@@ -137,7 +137,7 @@ func ResolveVersion(repoRoot, requested string, getenv func(string) string) (str
 		}
 		wanted = reg.Default
 	}
-	return reg.Match(wanted)
+	return reg.match(wanted)
 }
 
 // DataRoot returns the absolute data folder of a registered version

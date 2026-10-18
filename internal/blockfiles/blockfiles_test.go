@@ -73,8 +73,8 @@ func TestLabels(t *testing.T) {
 			t.Errorf("MainLabel(%q) = %q, want %q", name, got, want)
 		}
 	}
-	if !IsMainLabel("720") || !IsMainLabel("TI") || IsMainLabel("R2") || !IsSnapshot("niagara-mental-model.2026-04-19.md") {
-		t.Error("IsMainLabel / IsSnapshot")
+	if !IsMainLabel("720") || !IsMainLabel("TI") || IsMainLabel("R2") || !isSnapshot("niagara-mental-model.2026-04-19.md") {
+		t.Error("IsMainLabel / isSnapshot")
 	}
 }
 

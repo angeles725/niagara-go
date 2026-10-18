@@ -177,13 +177,13 @@ func TestWalkUp(t *testing.T) {
 	t.Parallel()
 	a := checkout(t, filepath.Join("sub", "MARK"))
 	deep := filepath.Join(a, "bin", "deep")
-	if got, ok := WalkUp(deep, HasFile(filepath.Join("sub", "MARK"))); !ok || got != a {
-		t.Errorf("WalkUp = %q %v, want %q true", got, ok, a)
+	if got, ok := walkUp(deep, HasFile(filepath.Join("sub", "MARK"))); !ok || got != a {
+		t.Errorf("walkUp = %q %v, want %q true", got, ok, a)
 	}
-	if got, ok := WalkUp(deep+string(filepath.Separator)+"..", HasDir("deep")); !ok || got != filepath.Join(a, "bin") {
+	if got, ok := walkUp(deep+string(filepath.Separator)+"..", HasDir("deep")); !ok || got != filepath.Join(a, "bin") {
 		t.Errorf("WalkUp of an unclean path = %q %v, want %q true", got, ok, filepath.Join(a, "bin"))
 	}
-	if got, ok := WalkUp(deep, HasFile("no-such-marker")); ok || got != "" {
+	if got, ok := walkUp(deep, HasFile("no-such-marker")); ok || got != "" {
 		t.Errorf("WalkUp to the root = %q %v, want \"\" false", got, ok)
 	}
 }

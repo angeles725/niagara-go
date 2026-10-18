@@ -100,7 +100,7 @@ func TestNestedSlotsLeavesTheGraphUnchanged(t *testing.T) {
 				t.Fatal(err)
 			}
 			plain := dumpBog(Parse(path, text), -1)
-			nested := dumpBog(ParseOptions(path, text, Options{NestedSlots: true}), -1)
+			nested := dumpBog(parseOptions(path, text, Options{NestedSlots: true}), -1)
 			if !reflect.DeepEqual(plain, nested) {
 				t.Fatal("Options{NestedSlots: true} changed the model.py graph")
 			}

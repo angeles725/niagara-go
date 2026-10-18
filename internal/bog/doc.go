@@ -14,7 +14,7 @@
 // Nested composite values (opt-in, Go-only). Like model.py, Parse keeps a composite property (a
 // non-self-closing <p> without a handle, such as a setpoint StatusNumeric) as a Slot, with only
 // its direct value and status children in Slot.Child; anything deeper, and any other direct child,
-// is dropped. ParseOptions and LoadOptions with Options{NestedSlots: true} also fill Comp.Nested
+// is dropped. LoadOptions (and parseOptions) with Options{NestedSlots: true} also fill Comp.Nested
 // with every value stored at any depth below a non-platform composite slot, keyed by the dot path
 // of decoded names from the component: tcpConfig.address.port -> "4911". Flags-only children,
 // links and handle components inside the property are not entries; a name containing '.' is not

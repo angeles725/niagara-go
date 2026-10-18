@@ -68,7 +68,7 @@ func withDescribe(t *testing.T, d string) {
 	t.Cleanup(func() { gitDescribe = old })
 }
 
-// stamp is what Describe returns from a toolchain VCS stamp: the git revision
+// stamp is what describe returns from a toolchain VCS stamp: the git revision
 // (always longer than 9) cut to 9 characters, with an optional "-dirty".
 const stamp = `[0-9a-f]{9}(-dirty)?`
 
@@ -78,14 +78,14 @@ var stampRe = regexp.MustCompile(`^(` + stamp + `)?$`)
 func TestDescribe(t *testing.T) {
 	t.Run("link-time value is printed as is", func(t *testing.T) {
 		withDescribe(t, "v3.0.0-4-gd62aeb56a-dirty")
-		if got := Describe(); got != "v3.0.0-4-gd62aeb56a-dirty" {
-			t.Fatalf("Describe() = %q, want the -X value", got)
+		if got := describe(); got != "v3.0.0-4-gd62aeb56a-dirty" {
+			t.Fatalf("describe() = %q, want the -X value", got)
 		}
 	})
 	t.Run("without link-time value it falls back to the build stamp", func(t *testing.T) {
 		withDescribe(t, "")
-		if got := Describe(); !stampRe.MatchString(got) {
-			t.Fatalf("Describe() = %q, want empty or <rev[:9]>[-dirty]", got)
+		if got := describe(); !stampRe.MatchString(got) {
+			t.Fatalf("describe() = %q, want empty or <rev[:9]>[-dirty]", got)
 		}
 	})
 }
@@ -97,15 +97,15 @@ func TestLine(t *testing.T) {
 			t.Fatalf("Line = %q, want %q", got, want)
 		}
 	})
-	t.Run("matches Describe when only the build stamp is known", func(t *testing.T) {
+	t.Run("matches describe when only the build stamp is known", func(t *testing.T) {
 		withDescribe(t, "")
 		re := regexp.MustCompile(`^bog-nav ` + regexp.QuoteMeta(ToolsVersion) + `( \(git ` + stamp + `\))?$`)
 		got := Line("bog-nav")
 		if !re.MatchString(got) {
 			t.Fatalf("Line = %q, want %s", got, re)
 		}
-		if d := Describe(); (d == "") != (got == "bog-nav "+ToolsVersion) {
-			t.Fatalf("Line = %q disagrees with Describe() = %q", got, d)
+		if d := describe(); (d == "") != (got == "bog-nav "+ToolsVersion) {
+			t.Fatalf("Line = %q disagrees with describe() = %q", got, d)
 		}
 	})
 }

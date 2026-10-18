@@ -173,7 +173,7 @@ func (p Params) Rank(q []string, st Stats, requireAll bool, factors []Factor) []
 			out = append(out, Scored{s, d})
 		}
 	}
-	SortScored(out)
+	sortScored(out)
 	return out
 }
 
@@ -186,8 +186,8 @@ func holdsAll(post map[string]map[int]int, q []string, d int) bool {
 	return true
 }
 
-// SortScored orders by score descending, then doc ascending.
-func SortScored(xs []Scored) {
+// sortScored orders by score descending, then doc ascending.
+func sortScored(xs []Scored) {
 	sort.Slice(xs, func(i, j int) bool {
 		if xs[i].Score != xs[j].Score {
 			return xs[i].Score > xs[j].Score

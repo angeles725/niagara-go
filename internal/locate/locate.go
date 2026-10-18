@@ -52,7 +52,7 @@ func Find(o Options) (string, bool) {
 		if !ok {
 			continue
 		}
-		if found, ok := WalkUp(dir, o.Marker); ok {
+		if found, ok := walkUp(dir, o.Marker); ok {
 			return found, true
 		}
 	}
@@ -97,9 +97,9 @@ func FirstEnv(getenv func(string) string, names ...string) (name, value string) 
 	return "", ""
 }
 
-// WalkUp returns the first of dir (made absolute) and its parents that marker
+// walkUp returns the first of dir (made absolute) and its parents that marker
 // accepts, or ("", false) at the file-system root.
-func WalkUp(dir string, marker func(string) bool) (string, bool) {
+func walkUp(dir string, marker func(string) bool) (string, bool) {
 	dir, err := filepath.Abs(dir)
 	if err != nil {
 		return "", false

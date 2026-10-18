@@ -157,12 +157,12 @@ func TestClassNeedsUnicodeWordBoundary(t *testing.T) {
 }
 
 func TestSplitArgsAndClean(t *testing.T) {
-	got := SplitArgs(` a , "x,\"y" , f(1, 2), [3, 4] , 'c'`)
+	got := splitArgs(` a , "x,\"y" , f(1, 2), [3, 4] , 'c'`)
 	want := []string{"a", `"x,\"y"`, "f(1, 2)", "[3, 4]", "'c'"}
 	if !reflect.DeepEqual(got, want) {
-		t.Errorf("SplitArgs = %q", got)
+		t.Errorf("splitArgs = %q", got)
 	}
-	if got := SplitArgs("  "); got != nil {
+	if got := splitArgs("  "); got != nil {
 		t.Errorf("blank = %q", got)
 	}
 	if got := Clean(" (BValue) (int)\n x  +\t y "); got != "x + y" {

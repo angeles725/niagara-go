@@ -43,12 +43,12 @@ var canonical = sync.OnceValue(func() *Glossary {
 func Default() *Glossary { return canonical() }
 
 // Help is niagara-help search_lang.GLOSSARY: Default without HelpExcluded.
-func Help() *Glossary { return Default().Without(HelpExcluded...) }
+func Help() *Glossary { return Default().without(HelpExcluded...) }
 
 // ClassRankByStem is module-navigator class_rank._GLOSSARY_BY_STEM: the
 // canonical entries keyed by textfold.Stem of the key, since its query terms
 // reach the lookup already stemmed.
-func ClassRankByStem() map[string][]string { return Default().KeyedBy(textfold.Stem) }
+func ClassRankByStem() map[string][]string { return Default().keyedBy(textfold.Stem) }
 
 // Parse reads glossary JSON the way glossary.py does: the object under
 // "glossary"; a string value is one term, a list of strings is the terms, and
@@ -153,8 +153,8 @@ func termsOf(raw json.RawMessage) ([]string, bool) {
 	return nil, false
 }
 
-// Without is g minus the given keys.
-func (g *Glossary) Without(keys ...string) *Glossary {
+// without is g minus the given keys.
+func (g *Glossary) without(keys ...string) *Glossary {
 	drop := map[string]bool{}
 	for _, k := range keys {
 		drop[k] = true
@@ -169,8 +169,8 @@ func (g *Glossary) Without(keys ...string) *Glossary {
 	return out
 }
 
-// KeyedBy re-keys the entries by f(key); a later key wins a shared f(key).
-func (g *Glossary) KeyedBy(f func(string) string) map[string][]string {
+// keyedBy re-keys the entries by f(key); a later key wins a shared f(key).
+func (g *Glossary) keyedBy(f func(string) string) map[string][]string {
 	out := make(map[string][]string, len(g.keys))
 	for _, k := range g.keys {
 		out[f(k)] = g.terms[k]
