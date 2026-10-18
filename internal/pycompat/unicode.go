@@ -194,15 +194,6 @@ var spaceClass = sync.OnceValue(func() string {
 	return b.String()
 })
 
-// IsLineBreak reports a str.splitlines() boundary character.
-func IsLineBreak(r rune) bool {
-	switch r {
-	case '\n', '\r', '\v', '\f', 0x1c, 0x1d, 0x1e, 0x85, 0x2028, 0x2029:
-		return true
-	}
-	return false
-}
-
 // decimalValue is the digit value of a str.isdecimal() code point, -1 otherwise. Every
 // Unicode Nd block is a run of ten starting at its zero, so ranges stay aligned.
 func decimalValue(r rune) int {

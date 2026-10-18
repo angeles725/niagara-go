@@ -237,17 +237,6 @@
 ["¿Cómo configuro las alarmas del cuarto frío?", "como configuro las alarmas del cuarto frio?", "Como configuro las alarmas del cuarto frio?", "¿Como configuro las alarmas del cuarto frio?", "¿Como configuro las alarmas del cuarto frio?", "¿cómo configuro las alarmas del cuarto frío?", ["¿cómo", "configuro", "las", "alarmas", "del", "cuarto", "frío?"], ["configuro", "alarma", "cuarto", "frio"], ["configuro", "alarma", "cuarto", "frio"]],
 ["alarm alarm alarms ALARMS", "alarm alarm alarms alarms", "alarm alarm alarms ALARMS", "alarm alarm alarms ALARMS", "alarm alarm alarms ALARMS", "alarm alarm alarms alarms", ["alarm", "alarm", "alarms", "alarms"], ["alarm", "alarm", "alarm", "alarm"], ["alarm"]]
 ],
-"score": [
-["alarm fault", "alarm and fault and alarm again", 2003],
-["alarm fault", "just alarm", 1001],
-["alarm fault", "nothing here", 0],
-["", "anything", 0],
-["aa", "aaaaa", 1002],
-["ión", "migración estación", 1002],
-["ΣΟΦΟΣ", "σοφος σοφοσ", 1001],
-["İ", "i̇stanbul", 1001],
-["x", "", 0]
-],
 "digests": {
 "corpus": "fa5048932ca007ea61e8ab55a1983ed8d84418579b3bc4bf809541df23ff0f6f",
 "classrank": "8511a7d7107a84aba25dfadcf9f165004abd9cc378983b4ae35a046c967f9eeb",

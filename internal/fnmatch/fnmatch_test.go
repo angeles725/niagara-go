@@ -24,28 +24,28 @@ func TestMatchesPython(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, c := range f.Cases {
-		var pat, translated string
+		var pat string
 		var hits []string
 		var misses int
-		for i, v := range []any{&pat, &translated, &hits, &misses} {
+		for i, v := range []any{&pat, &hits, &misses} {
 			if err := json.Unmarshal(c[i], v); err != nil {
 				t.Fatal(err)
 			}
 		}
-		if got := Translate(pat); got != translated {
-			t.Errorf("Translate(%q) = %q, want %q", pat, got, translated)
-		}
-		if got := Filter(f.Names, pat); strings.Join(got, "\x00") != strings.Join(hits, "\x00") {
-			t.Errorf("Filter(%q) = %q, want %q", pat, got, hits)
-		}
+		var got []string
 		n := 0
 		for _, name := range f.Names {
-			if !FnmatchCase(name, pat) {
+			if FnmatchCase(name, pat) {
+				got = append(got, name)
+			} else {
 				n++
 			}
 			if Fnmatch(name, pat) != FnmatchCase(name, pat) {
 				t.Errorf("Fnmatch(%q, %q) differs from FnmatchCase on POSIX", name, pat)
 			}
+		}
+		if strings.Join(got, "\x00") != strings.Join(hits, "\x00") {
+			t.Errorf("pattern %q matches %q, want %q", pat, got, hits)
 		}
 		if n != misses {
 			t.Errorf("pattern %q: %d names do not match, want %d", pat, n, misses)

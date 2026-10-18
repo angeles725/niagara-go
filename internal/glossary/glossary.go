@@ -162,15 +162,6 @@ func termsOf(raw json.RawMessage) ([]string, bool) {
 	return nil, false
 }
 
-// Keys are the Spanish keys in file order.
-func (g *Glossary) Keys() []string { return append([]string(nil), g.keys...) }
-
-// Terms are the English terms of one key.
-func (g *Glossary) Terms(key string) ([]string, bool) {
-	t, ok := g.terms[key]
-	return t, ok
-}
-
 // Without is g minus the given keys.
 func (g *Glossary) Without(keys ...string) *Glossary {
 	drop := map[string]bool{}

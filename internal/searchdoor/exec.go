@@ -8,6 +8,8 @@ import (
 	"os/exec"
 	"syscall"
 	"time"
+
+	"github.com/angeles725/niagara-go/internal/procgroup"
 )
 
 var processStart = time.Now()
@@ -50,14 +52,28 @@ func (b execBackend) Run(argv []string, timeout float64) Raw {
 	if err != nil {
 		return Raw{State: Unavailable, Reason: "unavailable: " + err.Error()}
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout*float64(time.Second)))
+	limit := time.Duration(timeout * float64(time.Second))
+	ctx, cancel := context.WithTimeout(context.Background(), limit)
 	defer cancel()
-	cmd := exec.CommandContext(ctx, python, argv...)
+	// The backend runs in its own process group: the deadline kills the whole
+	// group, so a grandchild it started dies with it.
+	cmd := procgroup.CommandContext(ctx, python, argv...)
 	var out, errb bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &out, &errb
-	cmd.WaitDelay = 100 * time.Millisecond // a grandchild holding a pipe must not outlive the deadline
+	// Like subprocess.run(capture_output=True, timeout=...), the pipes are read
+	// to EOF or the deadline: a grandchild still holding one after the backend
+	// exited is waited for. exec stops watching ctx once the backend itself has
+	// exited, so the deadline cancels the group explicitly as well. WaitDelay
+	// only bounds a holder outside the group (or on Windows, where only the
+	// direct child is killed): it gives up one timeout after the exit or kill.
+	cmd.WaitDelay = limit
 	t0 := time.Now()
-	runErr := cmd.Run()
+	runErr := cmd.Start()
+	if runErr == nil {
+		stop := context.AfterFunc(ctx, func() { _ = cmd.Cancel() })
+		runErr = cmd.Wait()
+		stop()
+	}
 	if ctx.Err() != nil {
 		return Raw{State: Unavailable, Reason: "unavailable: timed out after " + formatG3(timeout) + "s",
 			MS: int(timeout * 1000)}

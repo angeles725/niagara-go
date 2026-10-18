@@ -163,16 +163,3 @@ func Fields(s string) []string {
 func ParseQuery(q string) []string {
 	return Fields(Lower(q))
 }
-
-// Score is textsearch.score: 1000 per distinct term found in textLower plus
-// the total number of non-overlapping occurrences; 0 for no terms.
-func Score(terms []string, textLower string) int {
-	distinct, total := 0, 0
-	for _, t := range terms {
-		if strings.Contains(textLower, t) {
-			distinct++
-		}
-		total += strings.Count(textLower, t) // like str.count: "" counts runes + 1
-	}
-	return distinct*1000 + total
-}

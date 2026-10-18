@@ -23,9 +23,6 @@ func setOf(words string) map[string]bool {
 	return out
 }
 
-// IsStopword reports textsearch.STOPWORDS membership.
-func IsStopword(token string) bool { return textsearchStopwords[token] }
-
 // Stem is textsearch.stem: drop one final "s" from a token longer than four
 // characters that does not end in "ss" ("alarms" -> "alarm", "class" kept).
 func Stem(token string) string {
