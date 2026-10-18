@@ -1,0 +1,118 @@
+{
+  "_meta": {
+    "description": "Module inventory for Niagara N4 decompiled modules",
+    "source": "<SOURCE>",
+    "total_submodules": 6,
+    "build_time_sec": 0,
+    "timestamp": "<TIMESTAMP>"
+  },
+  "modules": {
+    "alpha": {
+      "module": "alpha",
+      "type": "",
+      "jar": "alpha.jar",
+      "class_count": 0,
+      "java_files": 0,
+      "zkm": false,
+      "bytecode": 0,
+      "has_vineflower": false,
+      "has_cfr": true,
+      "has_code": false,
+      "recon": false,
+      "packages": [],
+      "third_party": []
+    },
+    "alpha-rt": {
+      "module": "alpha",
+      "type": "rt",
+      "jar": "alpha-rt.jar",
+      "class_count": 3,
+      "java_files": 17,
+      "zkm": true,
+      "bytecode": 52,
+      "has_vineflower": true,
+      "has_cfr": false,
+      "has_code": true,
+      "recon": true,
+      "packages": [
+        "com.tridium",
+        "javax.baja",
+        "org.apache"
+      ],
+      "third_party": [
+        "org.apache"
+      ]
+    },
+    "alpha-wb": {
+      "module": "delta",
+      "type": "wb",
+      "jar": "alpha-wb.jar",
+      "class_count": 0,
+      "java_files": 1,
+      "zkm": false,
+      "bytecode": 0,
+      "has_vineflower": true,
+      "has_cfr": false,
+      "has_code": true,
+      "recon": false,
+      "packages": [
+        "q"
+      ],
+      "third_party": []
+    },
+    "beta-ux": {
+      "module": "beta",
+      "type": "ux",
+      "jar": "beta-ux.jar",
+      "class_count": 12345678901234567890123,
+      "java_files": 3,
+      "zkm": true,
+      "bytecode": 52.0,
+      "has_vineflower": true,
+      "has_cfr": false,
+      "has_code": false,
+      "recon": true,
+      "packages": [
+        "com.niagara",
+        "com.niagaraX"
+      ],
+      "third_party": []
+    },
+    "beta-xx": {
+      "module": "beta",
+      "type": "",
+      "jar": "beta-xx.jar",
+      "class_count": 0,
+      "java_files": 1,
+      "zkm": false,
+      "bytecode": 0,
+      "has_vineflower": true,
+      "has_cfr": false,
+      "has_code": true,
+      "recon": false,
+      "packages": [
+        "single"
+      ],
+      "third_party": []
+    },
+    "gamma-rt": {
+      "module": "gamma",
+      "type": "rt",
+      "jar": "gamma-rt.jar",
+      "class_count": 0,
+      "java_files": 1,
+      "zkm": false,
+      "bytecode": 0,
+      "has_vineflower": true,
+      "has_cfr": false,
+      "has_code": true,
+      "recon": false,
+      "packages": [
+        "a.b"
+      ],
+      "third_party": [
+        "a.b"
+      ]
+    }
+  }
+}

@@ -2,6 +2,7 @@ package navbuild
 
 import (
 	"bytes"
+	"flag"
 	"fmt"
 	"os"
 	"os/exec"
@@ -22,6 +23,11 @@ import (
 // Corpora: testdata/organized (synthetic, always); a few real modules of the
 // organized/ corpus linked into a temp tree ($NAVBUILD_PARITY_MODULES, comma
 // separated, skipped with -short); the whole corpus with NAVBUILD_PARITY_FULL=1.
+
+// update rewrites testdata/golden/<index>.golden from the PYTHON build of the
+// synthetic corpus (normalised), so the Python-free golden tests keep checking
+// what the parity tests proved.
+var update = flag.Bool("update", false, "rewrite testdata/golden from the Python builders")
 
 // defaultRealModules cover a ZKM submodule (alarm-rt), a module without recon
 // output and with third-party packages (ColdRoomPan), one without code
@@ -95,6 +101,11 @@ func sameIndex(t *testing.T, name, pyBase, goBase string) {
 		t.Fatal(err)
 	}
 	py, gob = NormalizeVolatile(py), NormalizeVolatile(gob)
+	if *update && filepath.Base(t.Name()) == "synthetic" {
+		if err := os.WriteFile(goldenPath(name), py, 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
 	if bytes.Equal(py, gob) {
 		t.Logf("%s: %d bytes identical after normalisation", name, len(py))
 		return

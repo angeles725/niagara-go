@@ -13,8 +13,8 @@ document disagree, the code wins and this document is corrected.
 
 | Slice | Scope | Python source |
 |---|---|---|
-| **B1** | foundations (JSON layouts, `_meta`, atomic write, normalisation, parity driver) + module inventory | `build_module_inventory.py`, `module_nav_lib/build.py` |
-| B2 | `declaration_header` / `strip_comments` + class index | `build_class_index.py`, `module_nav_lib/java_text.py` |
+| B1 | foundations (JSON layouts, `_meta`, atomic write, normalisation, parity driver) + module inventory | `build_module_inventory.py`, `module_nav_lib/build.py` |
+| **B2** | `declaration_header` / `strip_comments` + class index | `build_class_index.py`, `module_nav_lib/java_text.py` |
 | B3 | inheritance + xref | `build_inheritance.py`, `build_xref.py` |
 | B4-B7 | token (SQLite), method, field, callgraph | `build_token_index.py`, ... |
 | B8 | `mnav reindex` orchestration | `reindex.sh` |
@@ -45,6 +45,38 @@ directories listed but not entered, a dangling `*.java` link counted).
 Intended difference: a `fase1-recon.json` that is valid JSON but not an object is an error
 here; Python dies with `AttributeError`.
 
+## Class index
+
+`ScanClasses(organized, zkm)` is `build_class_index`: `core.IterJava` order, each file
+read with `errors="replace"` and universal newlines and split as `readlines()`
+(`pycompat.Lines`: `\f`, `\v`, U+2028 are not line breaks), the package from the first 30
+stripped lines, block/line comment skipping by line prefix, `core.MatchDecl` per line, and
+`declarationHeader` (`java_text.declaration_header`: up to 40 lines to the first brace
+outside comments, `commentSpans`/`stripComments` ported byte-wise, whitespace collapsed
+with Python's `str.split()`). Files are parsed by four workers and merged in corpus order.
+`LoadZKMModules` reads `<base>/indexes/module-inventory.json` like `load_zkm_modules`
+(absent = all flags false and `zkm_source: null`).
+
+Python quirks kept on purpose (they are what the index holds today): an indented
+declaration after a top-level one is its inner type even when it is a separate top-level
+type at another indent (`\tclass Tabbed` after `class NB`); `implements A extends B` gives
+`extends: ""` (a reversed slice) and `implements: ["A extends B"]`; `extends ,` gives
+`null`; a header without a brace in 40 lines keeps every `implements` word.
+
+`core.MatchDecl` does not return the match end that `declaration_header` starts from;
+`declEnd` recovers it (the name after Modifiers+Kind and whitespace, confirmed by
+re-matching the cut line, which skips the same text inside an annotation argument).
+Export requests to the owners: `core.MatchDecl`'s end offset (Integrante2) and the
+`nav/license` `commentSpans` twin (one shared Java-text helper).
+
+## Gates
+
+| Gate | Result (2026-10-17) |
+|---|---|
+| full-corpus `module-inventory.json` normalised byte diff | 0 (365,332 bytes) |
+| full-corpus `class-index.json` normalised byte diff | 0 (34,144,621 bytes); Python 32.3 s, Go 3.4 s on a loaded host |
+| `selftest --recall` on the Go-built index (`TestRecallOnGoBuiltIndex`; the Python oracle via `--base-dir`, since the Go `mnav selftest` is not ported) | 100.00% (55,931/55,931), supertypes 44,369/44,369 |
+
 ## Parity harness
 
 `parity_test.go` runs the real Python builder (`python3 -E -B tools/<builder> --base-dir
@@ -56,6 +88,11 @@ into another temp base over the same corpus, then byte-diffs both indexes after
 
 | Corpus | When |
 |---|---|
-| `testdata/organized` (synthetic: BOM, invalid JSON and UTF-8 recon files, `{}` recon, float and big-int recon values, a duplicate submodule name, unknown suffix, standalone submodule, a non-submodule dir, the `com.niagaraX` prefix quirk, a non-ASCII package) | always |
+| `testdata/organized` (synthetic: Java headers with generics, comments, annotations, records, sealed types, CRLF/CR, invalid UTF-8, U+00A0, `$` names, line-break characters, a late package line; recon files with BOM, invalid JSON and UTF-8 recon files, `{}` recon, float and big-int recon values, a duplicate submodule name, unknown suffix, standalone submodule, a non-submodule dir, the `com.niagaraX` prefix quirk, a non-ASCII package) | always |
 | real modules linked into a temp `organized/` (`$NAVBUILD_PARITY_MODULES`, default `alarm,backup,ColdRoomPan,CentralineAhuPx,kitControl`) | not with `-short` |
 | the whole corpus (`$NAV_CORPUS_BASE`, else `$NIAGARA_RESEARCH/organized`) | `NAVBUILD_PARITY_FULL=1` |
+
+`testdata/golden/<index>.golden` hold the normalised PYTHON outputs of the synthetic corpus;
+`TestGoldenSynthetic` checks the Go builders against them without Python. Regenerate with
+`go test ./internal/navbuild -run Parity -args -update` (Python and the module-navigator
+checkout required), then rerun without `-update`.
