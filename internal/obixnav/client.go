@@ -37,14 +37,6 @@ type baseError string
 
 func (e baseError) Error() string { return string(e) }
 
-func strerror(errno syscall.Errno) string {
-	msg := errno.Error()
-	if msg == "" {
-		return msg
-	}
-	return strings.ToUpper(msg[:1]) + msg[1:]
-}
-
 // netReason renders a transport failure the way urllib's URLError reason prints.
 func netReason(err error) string {
 	var ne net.Error
@@ -53,7 +45,7 @@ func netReason(err error) string {
 	}
 	var errno syscall.Errno
 	if errors.As(err, &errno) {
-		return fmt.Sprintf("[Errno %d] %s", int(errno), strerror(errno))
+		return pycompat.WinOSErrorText(err)
 	}
 	return err.Error()
 }
