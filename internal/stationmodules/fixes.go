@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 )
 
@@ -33,7 +34,7 @@ func planFixes(missing *missingSet, in *install, doFix bool) (*fixPlan, error) {
 		if cands := in.staged[name]; len(cands) > 0 {
 			src, srcVer := locateFix(cands, ver, jarVersion)
 			f.hasStaged, f.staged, f.stagedVersion = true, src, srcVer
-			f.cp = fmt.Sprintf(`cp "%s" "%s"`, src, pyJoin(in.modulesDir, name+".jar"))
+			f.cp = fmt.Sprintf(`cp "%s" "%s"`, src, pycompat.Join(in.modulesDir, name+".jar"))
 			if ver != "" && srcVer != "" && srcVer != ver {
 				f.warn = fmt.Sprintf("staged version %s != install %s", srcVer, ver)
 			}

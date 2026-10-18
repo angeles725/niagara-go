@@ -4,7 +4,6 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
-	"strings"
 
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/textfold"
@@ -48,14 +47,9 @@ func Walk(root string, sorted bool, fn WalkFunc) {
 	}
 }
 
-// Join is os.path.join(dir, name): no separator is added after one that is already there, and
-// nothing is cleaned.
-func Join(dir, name string) string {
-	if dir == "" || strings.HasSuffix(dir, "/") || strings.HasSuffix(dir, string(filepath.Separator)) {
-		return dir + name
-	}
-	return dir + string(filepath.Separator) + name
-}
+// Join is os.path.join(dir, name) for the host (pycompat.Join): no separator is added after one
+// that is already there, a rooted name restarts the path, and nothing is cleaned.
+func Join(dir, name string) string { return pycompat.Join(dir, name) }
 
 // OrganizedRoot is the organized/ tree of decompiled module sources, or "" when there is none:
 // $NIAGARA_ORGANIZED ("", "off" and "0", after strip() and lower(), disable it; otherwise the

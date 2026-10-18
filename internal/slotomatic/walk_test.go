@@ -74,3 +74,17 @@ func must(t *testing.T, err error) {
 		t.Fatal(err)
 	}
 }
+
+// Join is os.path.join: a rooted name restarts the path instead of being glued to dir.
+func TestJoinIsHostPathJoin(t *testing.T) {
+	for _, c := range []struct{ dir, name, want string }{
+		{"a", "/b", "/b"},
+		{"", "b", "b"},
+		{"a/", "b", "a/b"},
+		{"a", "b", "a" + string(filepath.Separator) + "b"},
+	} {
+		if got := Join(c.dir, c.name); got != c.want {
+			t.Errorf("Join(%q, %q) = %q, want %q", c.dir, c.name, got, c.want)
+		}
+	}
+}

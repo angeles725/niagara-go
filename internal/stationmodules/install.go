@@ -9,6 +9,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyxml"
 )
 
@@ -37,20 +38,6 @@ func (x *partIndex) each(fn func(*part)) {
 	for _, n := range x.order {
 		fn(x.byName[n])
 	}
-}
-
-// pyJoin is os.path.join(a, b) without cleaning: b wins when absolute, no separator is
-// doubled after a trailing one. On Windows '/' and '\' both count; drive-relative joins of
-// ntpath are not modelled. (internal/pycompat has only PosixJoin.)
-func pyJoin(a, b string) string {
-	isSep := func(c byte) bool { return c == '/' || os.PathSeparator == '\\' && c == '\\' }
-	switch {
-	case b != "" && isSep(b[0]):
-		return b
-	case a == "" || isSep(a[len(a)-1]):
-		return a + b
-	}
-	return a + string(os.PathSeparator) + b
 }
 
 func isDir(p string) bool {
@@ -118,7 +105,7 @@ func parseModuleXML(raw []byte) *part {
 // indexInstall indexes every module-part jar under <root>/modules; ok is false when there
 // is no modules/ directory.
 func indexInstall(root string) (*partIndex, string, bool) {
-	dir := pyJoin(root, "modules")
+	dir := pycompat.Join(root, "modules")
 	if !isDir(dir) {
 		return nil, dir, false
 	}
@@ -128,7 +115,7 @@ func indexInstall(root string) (*partIndex, string, bool) {
 		if !strings.HasSuffix(e.Name(), ".jar") {
 			continue
 		}
-		jar := pyJoin(dir, e.Name())
+		jar := pycompat.Join(dir, e.Name())
 		raw, ok := readZipMember(jar, "META-INF/module.xml")
 		if !ok {
 			continue
@@ -146,7 +133,7 @@ func indexInstall(root string) (*partIndex, string, bool) {
 // Directory entries are visited in sorted order; Python uses the file system's order.
 func indexSw(root string) map[string][]string {
 	staged := map[string][]string{}
-	sw := pyJoin(root, "sw")
+	sw := pycompat.Join(root, "sw")
 	if !isDir(sw) {
 		return staged
 	}
@@ -158,7 +145,7 @@ func indexSw(root string) map[string][]string {
 		}
 		var dirs []string
 		for _, e := range entries {
-			p := pyJoin(dir, e.Name())
+			p := pycompat.Join(dir, e.Name())
 			if isDir(p) {
 				dirs = append(dirs, p)
 			} else if strings.HasSuffix(e.Name(), ".jar") {
@@ -255,7 +242,7 @@ func fileSHA256(path string) (string, error) {
 // (content, permission bits and modification time; the access time is set to the source's
 // modification time).
 func applyFix(name, src, modulesDir string) (string, string, error) {
-	dst := pyJoin(modulesDir, name+".jar")
+	dst := pycompat.Join(modulesDir, name+".jar")
 	if _, err := os.Stat(dst); err == nil {
 		return dst, "exists", nil
 	}
