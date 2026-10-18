@@ -992,7 +992,7 @@ cache, glob, toc and fuzz parity tests (5,000 snippets) stay on in `go test`.
 `make parity` sets `REAL`, `FULL`, `415`, `INDEXES=4.14.0.162:4.15.6.20:4.3.58.18`, `COVERAGE=4.14.0.162:4.15.6.20` and `SWEEP=4.15.6.20:4.3.58.18` and runs every `Parity` test of the package (the sweep adds about 100 s over a warm jar-listing cache).
 
 | `HELPBUILD_PARITY_REBUILD=a:b` | `TestParityRebuildReal` on that list of version ids (off otherwise; not part of the `REAL` umbrella) |
-| `HELPBUILD_PARITY_VERSIONS_ADD=<install>` | `TestParityVersionsAddReal` on a subset copy of that install (off otherwise; not part of the `REAL` umbrella or `make parity`) |
+| `HELPBUILD_PARITY_VERSIONS_ADD=<install>` | `TestParityVersionsAddReal` on a subset copy of that install (off otherwise; not part of the `REAL` umbrella; `make parity` sets the EC-Net 4.3.58.18 install) |
 
 `make parity` sets `REAL`, `FULL`, `415`, `INDEXES=4.14.0.162:4.15.6.20:4.3.58.18` and `REBUILD=4.3.58.18` and runs every `Parity` test of the package.
 Timings on the development laptop: `go test ./internal/helpbuild/` about 20 s without the
