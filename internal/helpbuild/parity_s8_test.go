@@ -13,6 +13,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // Parity of the S8 index builders (class-index.json + jdk-class-index.json,
@@ -339,12 +341,12 @@ func realIndexBase(t *testing.T, vid string, inputs []string, need string) strin
 		t.Fatalf("version %s has no data_root in the registry", vid)
 	}
 	src := filepath.Join(help, filepath.FromSlash(entry.DataRoot))
-	if !isDir(filepath.Join(src, need)) {
+	if !pycompat.IsDir(filepath.Join(src, need)) {
 		missingReference(t, fmt.Sprintf("version %s has no %s/ (%s)", vid, need, src))
 	}
 	base := t.TempDir()
 	for _, d := range inputs {
-		if isDir(filepath.Join(src, d)) {
+		if pycompat.IsDir(filepath.Join(src, d)) {
 			if err := os.Symlink(filepath.Join(src, d), filepath.Join(base, d)); err != nil {
 				t.Fatal(err)
 			}

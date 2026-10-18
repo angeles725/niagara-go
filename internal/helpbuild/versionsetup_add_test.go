@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // moduleXML is a baja.jar module.xml declaring version v.
@@ -206,7 +208,7 @@ func TestAddVersionHappyPath(t *testing.T) {
 	if !strings.Contains(gates, "\nRESULT: PASS") || strings.Count(gates, "RESULT: ") != 2 {
 		t.Errorf("gates.log:\n%s", gates)
 	}
-	if !isRegular(filepath.Join(root, "build.log")) || !isRegular(filepath.Join(root, "indexes", "fulltext.sqlite")) {
+	if !pycompat.IsFile(filepath.Join(root, "build.log")) || !pycompat.IsFile(filepath.Join(root, "indexes", "fulltext.sqlite")) {
 		t.Error("build.log or fulltext.sqlite missing")
 	}
 	// Again without --force: refused, nothing rolled back; with --force the
@@ -236,7 +238,7 @@ func TestAddVersionRollsBackARefusal(t *testing.T) {
 	if status != 2 || out != want {
 		t.Fatalf("status %d out %q", status, out)
 	}
-	if isRegular(filepath.Join(repo, "versions", "registry.json")) || !isRegular(filepath.Join(root, "bajadoc", "keep.html")) {
+	if pycompat.IsFile(filepath.Join(repo, "versions", "registry.json")) || !pycompat.IsFile(filepath.Join(root, "bajadoc", "keep.html")) {
 		t.Error("registry not removed, or the existing data root removed")
 	}
 	writeFile(t, filepath.Join(repo, "versions", "registry.json"), []byte("{\"default\": \"x\", \"versions\": {}}"))
@@ -265,7 +267,7 @@ func TestAddVersionRollsBackAnError(t *testing.T) {
 	if _, err := os.Lstat(filepath.Join(repo, "versions", "1.2.3.4")); !errors.Is(err, os.ErrNotExist) {
 		t.Errorf("data root kept: %v", err)
 	}
-	if isRegular(filepath.Join(repo, "versions", "registry.json")) {
+	if pycompat.IsFile(filepath.Join(repo, "versions", "registry.json")) {
 		t.Error("registry kept")
 	}
 }

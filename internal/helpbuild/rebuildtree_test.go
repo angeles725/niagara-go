@@ -3,6 +3,7 @@ package helpbuild
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"slices"
 	"testing"
 )
@@ -10,14 +11,24 @@ import (
 // Two runs that differ only in the run times build.log records must give
 // the same tree observation (TestParityRebuildSynthetic flaked when a
 // builder's "Done in N.Ns" differed by one digit), and build.log is put
-// back after the walk.
+// back after the walk with its text and its permission bits (0666 is one
+// the umask would lower if the restore relied on the create mode).
 func TestRebuildTreeLinesNormalizesBuildLogTimes(t *testing.T) {
 	observe := func(log string) []string {
 		root := t.TempDir()
-		writeFile(t, filepath.Join(root, "build.log"), []byte(log))
+		path := filepath.Join(root, "build.log")
+		writeFile(t, path, []byte(log))
+		if err := os.Chmod(path, 0o666); err != nil {
+			t.Fatal(err)
+		}
 		lines := rebuildTreeLines(t, root, false, false)
-		if got, err := os.ReadFile(filepath.Join(root, "build.log")); err != nil || string(got) != log {
+		if got, err := os.ReadFile(path); err != nil || string(got) != log {
 			t.Fatalf("build.log not restored: %q, %v", got, err)
+		}
+		if st, err := os.Lstat(path); err != nil || !st.Mode().IsRegular() {
+			t.Fatalf("build.log restored as %v, %v", st, err)
+		} else if runtime.GOOS != "windows" && st.Mode().Perm() != 0o666 {
+			t.Fatalf("build.log restored with mode %o, want 666", st.Mode().Perm())
 		}
 		return lines
 	}

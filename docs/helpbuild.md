@@ -36,7 +36,7 @@ document disagree, the code wins and this document is corrected.
 
 | File | Ports | Notes |
 |---|---|---|
-| `atomic.go` | `atomic.write_bytes/write_text/write_json/rebuilt_dir` | temp file + rename in the same directory; no fsync (atomic.py has none: the guarantee is against an interrupted builder, not power loss); modes 0644 / 0755 like the explicit `chmod` calls; removing the old tree after a good swap ignores errors like `shutil.rmtree(old, ignore_errors=True)` (the rebuild succeeded; a leftover `.old-<pid>` tree is not reported) |
+| `internal/atomicfile` (`WriteBytes`, `WriteText`, `RebuiltDir`) and `jsonwrite.go` (`WriteJSON`) | `atomic.write_bytes/write_text/write_json/rebuilt_dir` | `atomicfile` is a leaf package (no module imports) so other commands can share it; temp file + rename in the same directory; no fsync (atomic.py has none: the guarantee is against an interrupted builder, not power loss); modes 0644 / 0755 like the explicit `chmod` calls; removing the old tree after a good swap ignores errors like `shutil.rmtree(old, ignore_errors=True)` (the rebuild succeeded; a leftover `.old-<pid>` tree is not reported) |
 | `zipdir.go` | `zipfile.ZipFile(path).infolist()` (3.15) | `_EndRecData`, `_EndRecData64`, `_RealGetContents`, `ZipInfo._decodeExtra` ported, see below |
 | `jarlisting.go` | `jar_listing.cache_path/read_listing/Listings` | the cache file is byte-identical to Python's |
 | `rules.go` | `install_rules.glob_re/Rule/Rules/load/default` | `install_docs.json` embedded with `//go:embed` |
@@ -313,10 +313,11 @@ Found while porting (the Python code wins, kept for parity):
 
 ## Shared-helper candidates
 
-`pyJoin` (`os.path.join` without cleaning), `pyAbspath`, `pyBasename`, `rmtreeIgnore`
-(`shutil.rmtree(ignore_errors=True)`) and `commas` (`format(n, ",")`) are local to this
-package; `pyJoin`/`pyAbspath`/`pyBasename` belong next to `pycompat.PosixJoin` once a
-second package needs them.
+`pyAbspath`, `pyBasename`, `rmtreeIgnore` (`shutil.rmtree(ignore_errors=True)`) and
+`commas` (`format(n, ",")`) are local to this package; `pyAbspath`/`pyBasename` belong
+next to `pycompat.Join` once a second package needs them. `os.path.join`,
+`os.path.isdir` and `os.path.isfile` already come from `pycompat` (`Join`, `IsDir`,
+`IsFile`).
 
 S8 adds one: `pyTextLines` (`inheritread.go`, a text file read line by line with
 TextIOWrapper's chunked strict decoding) belongs in `pycompat` next to `ReadText` once a
@@ -537,6 +538,7 @@ prints each builder's own run time):
 | `TestBuildClassIndexFixture`, `TestBuildInheritanceFixture`, `TestBuildMethodIndexFixture` | no Python needed: each Go builder on `testdata/s8/root/` against `testdata/s8/golden/` (stdout lines and indexes, Python's output; `go test -run TestParityS8Synthetic -args -update-s8` rewrites them) |
 | `TestParityS8Synthetic` | stdout lines, exit status and both whole trees after each builder on the fixture: a javadoc list with spans, CRLF, a byte that is not UTF-8, a duplicate and a non-class title; `.bajadoc` classes of every kind (attributes and categories), modules with and without a runtime profile, a class without a qualified name, nested and namespaced classes, a file fixed by sanitizing (`&#x0;`, `&#0;`, a value beyond any integer), one that stays broken, Latin-1, simple names shared across javax.baja, javadoc and sibling trees; bajadoc-clean pages with every header line, CRLF and lone CR, a BOM, Unicode whitespace, duplicate names (preferred, no package, empty package, twice the same), member sections with generic returns, Unicode names and spaces, field descriptions; then the corners (decode errors in, after and past the header, across a chunk end, a `\r` at a chunk end, a truncated end, a line longer than a chunk, symlinked folders and files) and roots without the folders each builder reads; it also fails when the golden files are no longer Python's output |
 | `TestParityS8Unreadable` | stdout lines and exit status with an unreadable `.bajadoc`, an unreadable page and a dangling `.bajadoc` link (class and method index raise, inheritance lists the page under `Errors`) |
+| `TestS8UnreadableInputKeepsThePreviousIndexes` | no Python needed: an unreadable `.bajadoc` (class-index) or `bajadoc-clean/` page (method-index) is an error and the previous index files stay as they were, no temp file left |
 | `TestParityS8Real` | the three builders on a real version's `bajadoc/`, `devguide/`, `guides/`, `jdk/` and `bajadoc-clean/` (linked into a temporary data root): 4.14.0.162 with `HELPBUILD_PARITY_REAL=1`, 4.15.6.20 with `HELPBUILD_PARITY_415=1`, or the `HELPBUILD_PARITY_INDEXES` list; logs sizes and both run times |
 
 Measured 2026-10-17 (every file byte-identical, builder time only, CPython 3.15 vs Go, a
@@ -766,6 +768,7 @@ a repository of its own, a copy of the registry, so each writes its own jar-list
 
 | Test | Compares |
 |---|---|
+| `TestGateCourseBoundCourse`, `TestRunSweepRegistryErrorExitsOne` | no Python needed: the COURSE gate on a bound, an unbound and a missing course (every Dest prefix cut, PDF pairing, not-indexed rows); an unreadable registry exits 1 with nothing printed |
 | `TestSweepClassifiesEveryEntry`, `TestRunSweepReport`, `TestSweepListingCache`, `TestSweepCorners`, `TestSweepShadowedEntries`, `TestFreshFulltextDocs`, `TestIndexedViewsCheck` (every `check` kind) | no Python needed: the assertions of niagara-help `test_install_sweep.py` (12 tests) and the sweep cases of `test_t3a_advisories.py` / `test_n3_advisories.py` on a Go-extracted fixture, plus the whole report of that fixture |
 | `TestParitySweepSynthetic` | the report lines, the exit status and both jar-listing caches (byte for byte), cold then warm, on the driver's fixture (extracted and rebuilt by Python's rebuild-all, full-text index built by `open_index`): every content kind, installed copies identical and changed, in-jar duplicates identical and different, empty, corrupt, upper-case and non-ASCII jars, a root jar, a location longer than its column, more than 25 gaps, loose PDFs in and out of `pdf-index.json` in any case, unreadable folders in the install and under `docs/`, the course row; for version 1.0 with the shipped and the test rules, an identified version, a version sharing the install but never extracted (PDF fallback and course note), an install that is not registered, an unknown version and an unregistered data root |
 | `TestParitySweepReal` | the same on real registered versions (`HELPBUILD_PARITY_SWEEP`); nothing is written into niagara-help: the repositories are temporary (seeded with niagara-help's jar-listing cache of the install when it has one), and a stale `indexes/fulltext.sqlite` (Python would rebuild it in place) is replaced by an index the Go builder writes in a temporary `XDG_CACHE_HOME`, open_index's second place |
@@ -902,10 +905,10 @@ data root. Every index file is replaced by rename, never truncated in place:
 
 | Output | Written by | A reader during the run sees |
 |---|---|---|
-| `indexes/*.json` (class, jdk-class, inheritance, method, source, slots, xref, guides, devguide-toc, pdf) and `indexes/.manifest.json` | `WriteJSON` / `WriteText` (temp file + rename in the same folder) | the old file or the new one |
-| `guides-clean/`, `devguide-clean/`, `course-text/`, `devguide-examples/course/` | `RebuiltDir` (a sibling temp tree swapped in) | the old tree or the new one, and for the moment between the two renames (old aside, new in) no folder at all, as Python's `rebuilt_dir` |
-| `bajadoc-clean/`, `docs-text/` | page by page with `WriteText` (both are shared by two builders or kept page by page on failure) | whole pages only, old and new mixed while the builder runs; `docs-text/` drops stale pages after a clean run |
-| `indexes/pdf-index.json` stub (`ExtractAndIndex` only, when the file is absent) | `WriteText` (Python: a plain `open("w")`) | no file or `{}` |
+| `indexes/*.json` (class, jdk-class, inheritance, method, source, slots, xref, guides, devguide-toc, pdf) and `indexes/.manifest.json` | `WriteJSON` / `atomicfile.WriteText` (temp file + rename in the same folder) | the old file or the new one |
+| `guides-clean/`, `devguide-clean/`, `course-text/`, `devguide-examples/course/` | `atomicfile.RebuiltDir` (a sibling temp tree swapped in) | the old tree or the new one, and for the moment between the two renames (old aside, new in) no folder at all, as Python's `rebuilt_dir` |
+| `bajadoc-clean/`, `docs-text/` | page by page with `atomicfile.WriteText` (both are shared by two builders or kept page by page on failure) | whole pages only, old and new mixed while the builder runs; `docs-text/` drops stale pages after a clean run |
+| `indexes/pdf-index.json` stub (`ExtractAndIndex` only, when the file is absent) | `atomicfile.WriteText` (Python: a plain `open("w")`) | no file or `{}` |
 | `build.log` (`RebuildToLog` only) | plain truncating write, as Python | a growing log; nh reads none |
 
 ### S10a parity (`testdata/rebuild/driver.py`, modes `plan`, `run`, `log`)

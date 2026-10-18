@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/angeles725/niagara-go/internal/index"
+	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyref"
 )
 
@@ -158,26 +159,26 @@ func setAside(t *testing.T, path, aside string, f func()) {
 // format, the version manifest with generated_utc normalized).
 func addTreeLines(t *testing.T, repo, vid string, python bool) []string {
 	t.Helper()
-	if !isDir(repo) {
+	if !pycompat.IsDir(repo) {
 		return []string{"<absent>"}
 	}
 	root := filepath.Join(repo, "versions", vid)
 	aside := repo + ".aside"
 	var lines []string
 	observeRoot := func() { lines = append(lines, rebuildTreeLines(t, root, python, true)...) }
-	if ft := filepath.Join(root, "indexes", "fulltext.sqlite"); isRegular(ft) {
+	if ft := filepath.Join(root, "indexes", "fulltext.sqlite"); pycompat.IsFile(ft) {
 		lines = append(lines, "fulltext.sqlite:")
 		lines = append(lines, fulltextRows(t, ft)...)
 		inner := observeRoot
 		observeRoot = func() { setAside(t, ft, aside+".sqlite", inner) }
 	}
-	if bl := filepath.Join(root, "build.log"); isRegular(bl) {
+	if bl := filepath.Join(root, "build.log"); pycompat.IsFile(bl) {
 		lines = append(lines, "build.log:")
 		lines = append(lines, normalizeRebuild(readText(t, bl), false)...)
 		inner := observeRoot
 		observeRoot = func() { setAside(t, bl, aside+".log", inner) }
 	}
-	if isDir(root) {
+	if pycompat.IsDir(root) {
 		lines = append(lines, "data root:")
 		observeRoot()
 	}
@@ -191,7 +192,7 @@ func treeLinesExcept(t *testing.T, repo, skip string) []string {
 	t.Helper()
 	aside := repo + ".skipped"
 	var lines []string
-	if isDir(skip) {
+	if pycompat.IsDir(skip) {
 		setAside(t, skip, aside, func() { lines = treeLines(t, repo) })
 		return lines
 	}
@@ -273,13 +274,13 @@ func TestParityVersionsAddReal(t *testing.T) {
 		t.Skipf("real-data parity runs only on request: set %s=<install>", versionsAddParityVar)
 	}
 	driver(t)
-	if !isRegular(filepath.Join(src, "modules", "baja.jar")) {
+	if !pycompat.IsFile(filepath.Join(src, "modules", "baja.jar")) {
 		t.Fatalf("%s=%s: no modules/baja.jar", versionsAddParityVar, src)
 	}
 	dir := homeTemp(t)
 	install := filepath.Join(dir, filepath.Base(src))
 	for _, name := range append([]string{"baja.jar"}, realSubset...) {
-		if from := filepath.Join(src, "modules", name); isRegular(from) {
+		if from := filepath.Join(src, "modules", name); pycompat.IsFile(from) {
 			copyFile(t, from, filepath.Join(install, "modules", name))
 		}
 	}

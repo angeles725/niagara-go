@@ -4,6 +4,7 @@ import (
 	"path/filepath"
 
 	"github.com/angeles725/niagara-go/internal/index"
+	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 )
 
@@ -17,7 +18,7 @@ import (
 // not exist (None).
 func loadRegistry(repo string) (reg pyjson.Value, ok bool, err error) {
 	path := filepath.Join(repo, index.RegistryRel)
-	if !isRegular(path) {
+	if !pycompat.IsFile(path) {
 		return pyjson.Value{}, false, nil
 	}
 	reg, err = loadJSON(path)

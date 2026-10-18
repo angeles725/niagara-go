@@ -120,7 +120,7 @@ func TestCourseUnboundBuildsNothing(t *testing.T) { // test_unbound_version_buil
 	if err != nil || counts != nil {
 		t.Fatalf("BuildCourse(B) = %+v, %v", counts, err)
 	}
-	if isDir(filepath.Join(b, "course-text")) {
+	if pycompat.IsDir(filepath.Join(b, "course-text")) {
 		t.Error("course-text/ of an unbound version kept")
 	}
 }
@@ -137,7 +137,7 @@ func TestCourseMissingAndFailedCopy(t *testing.T) {
 	if !errors.As(err, &missing) || missing.Error() != "course_dir not found: "+filepath.Join(dir, "no-course") {
 		t.Fatalf("missing course: %v", err)
 	}
-	if !isRegular(filepath.Join(c, "course-text", "kept.txt")) {
+	if !pycompat.IsFile(filepath.Join(c, "course-text", "kept.txt")) {
 		t.Error("a missing course_dir touched course-text/")
 	}
 	if runtime.GOOS == "windows" {
@@ -236,7 +236,7 @@ func TestRemoveCourseCopiesRefusesASymlink(t *testing.T) {
 	if err != nil || out.Status != 2 || len(out.Stdout) != 0 || !reflect.DeepEqual(out.Stderr, []string{line}) {
 		t.Errorf("CourseExtractor = %+v, %v\nwant stderr %q", out, err, line)
 	}
-	if !isRegular(filepath.Join(target, "keep.txt")) {
+	if !pycompat.IsFile(filepath.Join(target, "keep.txt")) {
 		t.Error("the symlink's target was emptied")
 	}
 }

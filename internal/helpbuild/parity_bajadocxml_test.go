@@ -7,6 +7,8 @@ import (
 	"runtime"
 	"testing"
 	"time"
+
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // Parity of the S7b builder (.bajadoc XML -> bajadoc-clean/) through
@@ -153,7 +155,7 @@ func realBajadocXMLBase(t *testing.T, vid string) string {
 	linked := 0
 	for _, d := range []string{"bajadoc", "devguide", "guides"} {
 		src := filepath.Join(data, d)
-		if !isDir(src) {
+		if !pycompat.IsDir(src) {
 			continue
 		}
 		if err := os.Symlink(src, filepath.Join(base, d)); err != nil {

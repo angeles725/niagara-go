@@ -67,12 +67,12 @@ func TestRemoveFileRefusesADirectory(t *testing.T) {
 	if err := os.Mkdir(d, 0o755); err != nil {
 		t.Fatal(err)
 	}
-	if err := removeFile(d); err == nil || !isDir(d) {
-		t.Errorf("removeFile(dir) = %v, dir kept %v", err, isDir(d))
+	if err := removeFile(d); err == nil || !pycompat.IsDir(d) {
+		t.Errorf("removeFile(dir) = %v, dir kept %v", err, pycompat.IsDir(d))
 	}
 	f := filepath.Join(dir, "f.txt")
 	writeFile(t, f, nil)
-	if err := removeFile(f); err != nil || isRegular(f) {
+	if err := removeFile(f); err != nil || pycompat.IsFile(f) {
 		t.Errorf("removeFile(file) = %v", err)
 	}
 }

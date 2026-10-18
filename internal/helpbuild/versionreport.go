@@ -105,7 +105,7 @@ func sourceCounts(root string, docs FulltextDocs) (map[string]int, error) {
 // ({} when the file is absent).
 func summaryClasses(root string) (int, error) {
 	const name = "class-index.json"
-	if !isRegular(pycompat.Join(root, "indexes", name)) {
+	if !pycompat.IsFile(pycompat.Join(root, "indexes", name)) {
 		return 0, nil
 	}
 	idx, err := loadReportIndex(root, name, false)
@@ -140,7 +140,7 @@ func summaryClasses(root string) (int, error) {
 // summaryFolders is len(guides-index.json) (0 when the file is absent).
 func summaryFolders(root string) (int, error) {
 	const name = "guides-index.json"
-	if !isRegular(pycompat.Join(root, "indexes", name)) {
+	if !pycompat.IsFile(pycompat.Join(root, "indexes", name)) {
 		return 0, nil
 	}
 	idx, err := loadReportIndex(root, name, false)

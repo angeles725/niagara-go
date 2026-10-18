@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/angeles725/niagara-go/internal/helpbuild"
+	"github.com/angeles725/niagara-go/internal/atomicfile"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 )
 
@@ -168,7 +168,7 @@ func writeIndexStream(baseDir, name string, fill func(w *bufio.Writer) error) (e
 
 // writeIndex writes data to <baseDir>/indexes/<name> atomically (build.write_json:
 // the previous index stays in place when the write fails). The temp file is
-// helpbuild's ".tmp-*" sibling instead of Python's "<name>.tmp".
+// atomicfile's ".tmp-*" sibling instead of Python's "<name>.tmp".
 func writeIndex(baseDir, name, data string) error {
-	return helpbuild.WriteText(IndexPath(baseDir, name), data)
+	return atomicfile.WriteText(IndexPath(baseDir, name), data)
 }

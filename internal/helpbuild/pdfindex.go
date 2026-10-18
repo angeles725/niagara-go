@@ -3,7 +3,6 @@ package helpbuild
 import (
 	"errors"
 	"fmt"
-	"github.com/angeles725/niagara-go/internal/procgroup"
 	"io/fs"
 	"os"
 	"os/exec"
@@ -13,6 +12,9 @@ import (
 	"strings"
 	"time"
 	"unicode/utf8"
+
+	"github.com/angeles725/niagara-go/internal/atomicfile"
+	"github.com/angeles725/niagara-go/internal/procgroup"
 
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyjson"
@@ -82,7 +84,7 @@ var writePDFIndex = func(path string, v pyjson.Value) error {
 	if !utf8.ValidString(text) {
 		return fmt.Errorf("%s: 'utf-8' codec can't encode a surrogate of the index", path)
 	}
-	return WriteText(path, text)
+	return atomicfile.WriteText(path, text)
 }
 
 // pyRound1 is round(x, 1): correctly rounded to one decimal, ties to even
@@ -121,7 +123,7 @@ func docsDirOf(base, docs string) (string, error) {
 // Python does not catch.
 func loadPDFIndex(path string) (prev pyjson.Value, corrupt string, isCorrupt bool, err error) {
 	prev = pyjson.NewObject()
-	if !isRegular(path) {
+	if !pycompat.IsFile(path) {
 		return prev, "", false, nil
 	}
 	v, err := loadJSON(path)
@@ -185,7 +187,7 @@ func ExtractPDFs(baseDir string, opt PDFOptions) (res *PDFResult, err error) {
 	}
 	// One walk for the check and the run (Python walks twice).
 	var pdfs []string
-	if docs != "" && isDir(docs) {
+	if docs != "" && pycompat.IsDir(docs) {
 		pdfs = FindPDFs(docs)
 	}
 	hasPDFs := len(pdfs) > 0
@@ -207,7 +209,7 @@ func ExtractPDFs(baseDir string, opt PDFOptions) (res *PDFResult, err error) {
 		return res, nil
 	case nPrev > 0 && !hasPDFs:
 		state := "is missing"
-		if isDir(docs) {
+		if pycompat.IsDir(docs) {
 			state = "holds no PDF"
 		}
 		res.out("ERROR: %s lists %d PDF manual(s) but the docs dir %s %s; pdf-index.json and docs-text/ are kept "+
@@ -279,7 +281,7 @@ func extractAll(res *PDFResult, docs string, pdfs []string, outputDir, indexPath
 			// must not make a manual unsearchable. Only an entry of this
 			// same PDF is kept (Python matches the stem only): a PDF that
 			// took the stem of a removed one must not inherit its text.
-			if old, ok := previous.Get(stem); ok && sameSource(old, rel) && isRegular(textPath) {
+			if old, ok := previous.Get(stem); ok && sameSource(old, rel) && pycompat.IsFile(textPath) {
 				index.Set(stem, old)
 				written[stem] = true
 			}
@@ -296,7 +298,7 @@ func extractAll(res *PDFResult, docs string, pdfs []string, outputDir, indexPath
 		} else {
 			res.Stats.Extracted++
 		}
-		if err := WriteText(textPath, text); err != nil {
+		if err := atomicfile.WriteText(textPath, text); err != nil {
 			return err
 		}
 		written[stem] = true

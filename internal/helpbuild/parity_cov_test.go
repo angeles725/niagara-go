@@ -191,6 +191,9 @@ func TestParityCoverageMalformed(t *testing.T) {
 				return
 			}
 			py := runCovDriver(t, append([]string{"coverage"}, args(p)...)...)
+			if len(py) != 2 {
+				t.Fatalf("covdriver gave %d lines, want the output line and the outcome: %q", len(py), py)
+			}
 			var out string
 			if err := json.Unmarshal([]byte(strings.TrimSuffix(strings.TrimPrefix(py[0], `["out", `), "]")), &out); err != nil {
 				t.Fatal(err)

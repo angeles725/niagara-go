@@ -14,6 +14,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 )
 
@@ -206,7 +207,7 @@ func TestParityPDFSynthetic(t *testing.T) {
 	saved := pdfTimeout
 	t.Cleanup(func() { pdfTimeout = saved })
 	pdfTimeout = func(pdf string, d time.Duration) time.Duration {
-		if isRegular(pdf + ".sleep") {
+		if pycompat.IsFile(pdf + ".sleep") {
 			return time.Second
 		}
 		return d
@@ -316,7 +317,7 @@ func TestParityPDFReal(t *testing.T) {
 		}
 	} else {
 		src := "/mnt/c/Niagara/EC-Net4-4.3.58.18/docs"
-		if !isDir(src) {
+		if !pycompat.IsDir(src) {
 			t.Skip("EC-Net 4.3.58.18 docs not mounted: real PDF parity not checked")
 		}
 		docs = filepath.Join(dir, "docs")

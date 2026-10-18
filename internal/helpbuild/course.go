@@ -8,6 +8,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/angeles725/niagara-go/internal/atomicfile"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 )
@@ -34,10 +35,6 @@ var CourseCodeDir = filepath.Join("devguide-examples", "course")
 type CourseDirMissingError struct{ Dir string }
 
 func (e *CourseDirMissingError) Error() string { return "course_dir not found: " + e.Dir }
-
-// CourseDir is course.course_dir: the absolute course tree bound to the
-// version whose data root is baseDir, "" when none is.
-func CourseDir(baseDir string) (string, error) { return courseDir(baseDir) }
 
 // courseFile is one file of the course tree: its path relative to the
 // tree ("/"-separated) and on disk.
@@ -103,7 +100,7 @@ func RemoveCourseCopies(baseDir string) ([]string, error) {
 	var removed []string
 	for _, d := range []string{CourseTextDir, CourseCodeDir} {
 		p := filepath.Join(baseDir, d)
-		if !isDir(p) {
+		if !pycompat.IsDir(p) {
 			continue
 		}
 		if st, err := os.Lstat(p); err == nil && st.Mode()&os.ModeSymlink != 0 {
@@ -131,7 +128,7 @@ type CourseCounts struct {
 
 // BuildCourse is course.build: copy the bound course into baseDir,
 // replacing earlier copies. Both trees are built in staging directories
-// and swapped in at the end (RebuiltDir, devguide-examples/course/ first
+// and swapped in at the end (atomicfile.RebuiltDir, devguide-examples/course/ first
 // as Python's nested with-statement exits it first): a failed copy keeps
 // the previous copies. It returns nil when no course is bound (copies
 // left from an earlier binding are removed), a *CourseDirMissingError when
@@ -146,12 +143,12 @@ func BuildCourse(baseDir string, rules *Rules) (*CourseCounts, error) {
 		_, err := RemoveCourseCopies(baseDir)
 		return nil, err
 	}
-	if !isDir(src) {
+	if !pycompat.IsDir(src) {
 		return nil, &CourseDirMissingError{src}
 	}
 	counts := &CourseCounts{CourseDir: src}
-	err = RebuiltDir(filepath.Join(baseDir, CourseTextDir), func(textTmp string) error {
-		return RebuiltDir(filepath.Join(baseDir, CourseCodeDir), func(codeTmp string) error {
+	err = atomicfile.RebuiltDir(filepath.Join(baseDir, CourseTextDir), func(textTmp string) error {
+		return atomicfile.RebuiltDir(filepath.Join(baseDir, CourseCodeDir), func(codeTmp string) error {
 			for _, row := range CoursePlan(src, rules) {
 				var top, tmp string
 				switch row.Kind {

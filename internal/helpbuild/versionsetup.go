@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/angeles725/niagara-go/internal/atomicfile"
 	"github.com/angeles725/niagara-go/internal/index"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyjson"
@@ -135,7 +136,7 @@ func ExtractAndIndex(repo, vid string, opt SetupOptions) (*SetupResult, error) {
 		return res, err
 	}
 	res.Install, res.Root = install, root
-	if !isDir(install) {
+	if !pycompat.IsDir(install) {
 		return res.refuse("install dir not found: " + install), nil
 	}
 	cache, err := CachePath(repo, install)
@@ -245,7 +246,7 @@ func extractStep(res *SetupResult, repo, root, dataRootRel, install string, ls *
 	}
 	var present []string
 	for _, d := range RawDirs {
-		if isDir(pycompat.Join(root, d)) {
+		if pycompat.IsDir(pycompat.Join(root, d)) {
 			present = append(present, d)
 		}
 	}
@@ -291,8 +292,8 @@ func rebuild(root string, hook func(string) ([]string, error)) ([]string, error)
 	if err := os.MkdirAll(pycompat.Join(root, "indexes"), 0o777); err != nil {
 		return nil, err
 	}
-	if pdf := pycompat.Join(root, "indexes", "pdf-index.json"); !isRegular(pdf) {
-		if err := WriteText(pdf, "{}\n"); err != nil {
+	if pdf := pycompat.Join(root, "indexes", "pdf-index.json"); !pycompat.IsFile(pdf) {
+		if err := atomicfile.WriteText(pdf, "{}\n"); err != nil {
 			return nil, err
 		}
 	}
@@ -312,7 +313,7 @@ func EmptyIndexes(root string) ([]string, error) {
 	var lines []string
 	for _, name := range BuilderIndexes {
 		path := pycompat.Join(root, "indexes", name)
-		if isRegular(path) {
+		if pycompat.IsFile(path) {
 			continue
 		}
 		if err := WriteJSON(path, pyjson.NewObject(), DumpDefault); err != nil {

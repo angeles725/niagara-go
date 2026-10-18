@@ -30,7 +30,7 @@ func TestExtractThenFidelityIsExact(t *testing.T) {
 	if err != nil || st.Files != 3 {
 		t.Fatalf("extract %+v %v", st, err)
 	}
-	if !isRegular(filepath.Join(root, "guides", "Foo", "sub", "b.html")) {
+	if !pycompat.IsFile(filepath.Join(root, "guides", "Foo", "sub", "b.html")) {
 		t.Fatal("guides/Foo/sub/b.html not extracted")
 	}
 	rep, err := Fidelity(install, root, nil)

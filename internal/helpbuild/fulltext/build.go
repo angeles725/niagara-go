@@ -98,20 +98,8 @@ func Build(versionRoot string, opts Options) (*Result, error) {
 // DefaultOutput is fulltext_index.db_path(versionRoot) as Python spells it,
 // os.path.join(versionRoot, "indexes", "fulltext.sqlite"), the path Build
 // writes and names in its log line when Options.Output is "".
-func DefaultOutput(versionRoot string) string { return pyJoin(versionRoot, "indexes", fts.DBName) }
-
-// pyJoin is os.path.join for the default path, unnormalised like Python's
-// (the log line shows it as Python would).
-func pyJoin(first string, rest ...string) string {
-	out := first
-	for _, p := range rest {
-		if out == "" || strings.HasSuffix(out, "/") || strings.HasSuffix(out, string(filepath.Separator)) {
-			out += p
-		} else {
-			out += string(filepath.Separator) + p
-		}
-	}
-	return out
+func DefaultOutput(versionRoot string) string {
+	return pycompat.Join(versionRoot, "indexes", fts.DBName)
 }
 
 // tempPath creates an empty file beside final for the build to fill. It is

@@ -3,7 +3,9 @@ package helpbuild
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -13,6 +15,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyref"
 )
 
@@ -126,51 +129,29 @@ func normalizeRebuild(text string, stderr bool) []string {
 // (intended difference; a pdf-index.json copied in is compared as it is).
 func rebuildTreeLines(t *testing.T, root string, python, pdfRan bool) []string {
 	t.Helper()
-	if !isDir(root) {
+	if !pycompat.IsDir(root) {
 		return []string{"<absent>"}
 	}
 	path := filepath.Join(root, "indexes", ".manifest.json")
 	var manifest []string
-	if data, err := os.ReadFile(path); err == nil {
-		info, err := os.Lstat(path)
-		if err != nil {
-			t.Fatal(err)
-		}
+	if data, perm, restore, ok := takeAside(t, path); ok {
 		m := stampedField.FindSubmatch(data)
 		if m == nil || !isoMicros.Match(m[1]) {
 			t.Errorf("%s: stamped_utc missing or not isoformat()", path)
 		}
-		manifest = append([]string{fmt.Sprintf("indexes/.manifest.json %o", info.Mode().Perm())},
+		manifest = append([]string{fmt.Sprintf("indexes/.manifest.json %o", perm)},
 			strings.Split(stampedField.ReplaceAllString(string(data), `"stamped_utc": "<utc>"`), "\n")...)
-		if err := os.Remove(path); err != nil {
-			t.Fatal(err)
-		}
-		defer func() {
-			if err := os.WriteFile(path, data, info.Mode().Perm()); err != nil {
-				t.Fatal(err)
-			}
-		}()
+		defer restore()
 	}
 	// build.log records each builder's "Done in N.Ns": compared as text with
 	// the run times normalized, not hashed (a hash differed whenever the two
 	// sides' timings differed in one digit).
 	logPath := filepath.Join(root, "build.log")
 	var buildLog []string
-	if data, err := os.ReadFile(logPath); err == nil {
-		info, err := os.Lstat(logPath)
-		if err != nil {
-			t.Fatal(err)
-		}
-		buildLog = append([]string{fmt.Sprintf("build.log %o", info.Mode().Perm())},
+	if data, perm, restore, ok := takeAside(t, logPath); ok {
+		buildLog = append([]string{fmt.Sprintf("build.log %o", perm)},
 			normalizeRebuild(string(data), false)...)
-		if err := os.Remove(logPath); err != nil {
-			t.Fatal(err)
-		}
-		defer func() {
-			if err := os.WriteFile(logPath, data, info.Mode().Perm()); err != nil {
-				t.Fatal(err)
-			}
-		}()
+		defer restore()
 	}
 	var lines []string
 	if python && pdfRan {
@@ -179,6 +160,40 @@ func rebuildTreeLines(t *testing.T, root string, python, pdfRan bool) []string {
 		lines = treeLines(t, root)
 	}
 	return append(append(lines, manifest...), buildLog...)
+}
+
+// takeAside reads the file at path and removes it until restore puts it
+// back with the same bytes and permission bits (a Chmod after the write:
+// the create mode alone is lowered by the umask). ok is false when there
+// is no file; anything that is not a regular file (a symlink, a folder)
+// fails the test, since putting it back as a file would change the tree.
+func takeAside(t *testing.T, path string) (data []byte, perm os.FileMode, restore func(), ok bool) {
+	t.Helper()
+	info, err := os.Lstat(path)
+	if errors.Is(err, fs.ErrNotExist) {
+		return nil, 0, nil, false
+	}
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !info.Mode().IsRegular() {
+		t.Fatalf("%s is %v, not a regular file: it cannot be set aside and restored", path, info.Mode().Type())
+	}
+	if data, err = os.ReadFile(path); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Remove(path); err != nil {
+		t.Fatal(err)
+	}
+	perm = info.Mode().Perm()
+	return data, perm, func() {
+		if err := os.WriteFile(path, data, perm); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.Chmod(path, perm); err != nil {
+			t.Fatal(err)
+		}
+	}, true
 }
 
 // rebuildBoth runs steps on a fresh setup(root) on each side and compares
@@ -358,7 +373,7 @@ func TestParityRebuildReal(t *testing.T) {
 				t.Fatalf("%s: version %s is not registered", rebuildParityVar, vid)
 			}
 			src := filepath.Join(help, filepath.FromSlash(entry["data_root"]))
-			if !isDir(src) {
+			if !pycompat.IsDir(src) {
 				missingReference(t, fmt.Sprintf("version %s has no data root (%s)", vid, src))
 			}
 			repo := t.TempDir()
@@ -366,7 +381,7 @@ func TestParityRebuildReal(t *testing.T) {
 			if c := entry["course_dir"]; c != "" {
 				copied["course_dir"] = filepath.Join(help, filepath.FromSlash(c))
 			}
-			if !isDir(entry["install_dir"]) {
+			if !pycompat.IsDir(entry["install_dir"]) {
 				t.Logf("%s: install %s not mounted (the PDF step reports it on both sides)", vid, entry["install_dir"])
 			}
 			regData, err := json.Marshal(map[string]any{"default": vid, "versions": map[string]any{vid: copied}})

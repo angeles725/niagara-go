@@ -9,6 +9,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // rebuildRun runs RebuildAll on root and returns its stdout and stderr.
@@ -219,11 +221,11 @@ func TestRebuildAllRunsAndStamps(t *testing.T) {
 		t.Errorf("result %+v", res)
 	}
 	for _, name := range []string{"source-index.json", "slots-index.json", "xref-index.json", ".manifest.json"} {
-		if !isRegular(filepath.Join(root, "indexes", name)) {
+		if !pycompat.IsFile(filepath.Join(root, "indexes", name)) {
 			t.Errorf("indexes/%s not written", name)
 		}
 	}
-	if isRegular(filepath.Join(root, "indexes", "call-index.json")) {
+	if pycompat.IsFile(filepath.Join(root, "indexes", "call-index.json")) {
 		t.Error("call-index.json is retired (I3-5) but was written")
 	}
 }

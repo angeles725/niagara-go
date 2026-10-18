@@ -118,7 +118,7 @@ func BuildInheritance(baseDir string) (*IndexResult, error) {
 	res := &IndexResult{}
 	cleanDir := pycompat.Join(baseDir, "bajadoc-clean")
 	outDir := pycompat.Join(baseDir, "indexes")
-	if !isDir(cleanDir) {
+	if !pycompat.IsDir(cleanDir) {
 		res.out("ERROR: bajadoc-clean/ not found at %s", cleanDir)
 		res.Status = 1
 		return res, nil
@@ -198,7 +198,7 @@ func BuildInheritance(baseDir string) (*IndexResult, error) {
 			pyjson.Field{Key: "package", Value: optValue(info.Package)},
 			pyjson.Field{Key: "subclasses", Value: pyjson.StringList(info.Subclasses)}))
 	}
-	if !isDir(outDir) {
+	if !pycompat.IsDir(outDir) {
 		if err := os.MkdirAll(outDir, 0o777); err != nil {
 			return res, err
 		}

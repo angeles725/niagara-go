@@ -1,4 +1,4 @@
-package helpbuild
+package atomicfile
 
 import (
 	"errors"
@@ -8,8 +8,6 @@ import (
 	"sort"
 	"strings"
 	"testing"
-
-	"github.com/angeles725/niagara-go/internal/pyjson"
 )
 
 func listDir(t *testing.T, dir string) []string {
@@ -53,23 +51,18 @@ func failRename(t *testing.T, n int) error {
 	return errInjected
 }
 
-func okObject() pyjson.Value {
-	v := pyjson.NewObject()
-	v.Set("ok", pyjson.IntValue(1))
-	return v
-}
-
-// test_atomic_writes.TestAtomicWrite.setUp: write_json(path, {"ok": 1}).
+// test_atomic_writes.TestAtomicWrite.setUp: write_json(path, {"ok": 1}), written here as
+// the text json.dumps gives (helpbuild.WriteJSON is that text through WriteText).
 func atomicFixture(t *testing.T) string {
 	t.Helper()
 	path := filepath.Join(t.TempDir(), "indexes", "x.json")
-	if err := WriteJSON(path, okObject(), DumpDefault); err != nil {
+	if err := WriteText(path, `{"ok": 1}`); err != nil {
 		t.Fatal(err)
 	}
 	return path
 }
 
-func TestWriteJSONCreatesParentsWithPythonDefaultDump(t *testing.T) {
+func TestWriteTextCreatesTheParentDirectories(t *testing.T) {
 	path := atomicFixture(t)
 	if got := readText(t, path); got != `{"ok": 1}` {
 		t.Fatalf("content %q, want {\"ok\": 1}", got)
