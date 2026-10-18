@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"sort"
@@ -194,24 +195,53 @@ func (e *PDFError) Unwrap() error { return e.Err }
 // errTimedOut marks a run stopped by its timeout.
 var errTimedOut = errors.New("timed out")
 
+// interruptError is a SIGINT or SIGTERM that came while pdftotext ran (on
+// Unix, see relayInterrupts): Python's KeyboardInterrupt, which
+// pdf_extractor does not catch, so the run stops instead of counting a
+// failed PDF.
+type interruptError struct{ sig os.Signal }
+
+func (e *interruptError) Error() string { return "interrupted by " + e.sig.String() }
+
 // runCapture runs argv (no shell) and returns its stdout; stderr is
 // dropped (Python captures it and never reads it) and stdin is the null
 // device (Python lets the child inherit it; pdftotext never reads it). On
 // the timeout the child's process group is killed (killGroupOnCancel) and
-// errTimedOut returned.
+// errTimedOut returned. A SIGINT or SIGTERM meanwhile kills the group too,
+// then is raised again on this process (reraise) and, should it survive,
+// returned as an *interruptError.
 func runCapture(argv []string, timeout time.Duration) ([]byte, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	base, interrupt := context.WithCancelCause(context.Background())
+	defer interrupt(nil)
+	ctx, cancel := context.WithTimeout(base, timeout)
 	defer cancel()
 	cmd := exec.CommandContext(ctx, argv[0], argv[1:]...)
 	killGroupOnCancel(cmd)
 	cmd.WaitDelay = time.Second
 	var out bytes.Buffer
 	cmd.Stdout = &out
+	stop := relayInterrupts(interrupt)
 	err := cmd.Run()
-	if ctx.Err() == context.DeadlineExceeded {
-		return nil, errTimedOut
+	stop()
+	var in *interruptError
+	if errors.As(context.Cause(base), &in) {
+		reraise(in.sig)
+		return nil, in
 	}
-	return out.Bytes(), err
+	if err := runFailure(ctx, err); err != nil {
+		return nil, err
+	}
+	return out.Bytes(), nil
+}
+
+// runFailure is the error of a finished run: errTimedOut only when the run
+// failed and its context is done (the cancel killed it); a run that
+// succeeded as the deadline passed is a success.
+func runFailure(ctx context.Context, runErr error) error {
+	if runErr != nil && ctx.Err() != nil {
+		return errTimedOut
+	}
+	return runErr
 }
 
 // ExtractPDFText is extract_text: `<pdftotext> -layout -enc UTF-8 <pdf> -`
@@ -222,7 +252,10 @@ func ExtractPDFText(pdftotext, pdfPath string, timeout time.Duration) (text stri
 	out, err := runCapture([]string{pdftotext, "-layout", "-enc", "UTF-8", pdfPath, "-"}, timeout)
 	if err != nil {
 		var exit *exec.ExitError
+		var in *interruptError
 		switch {
+		case errors.As(err, &in):
+			return "", 0, err // not a failed PDF: the run stops
 		case errors.Is(err, errTimedOut):
 			return "", 0, &PDFError{Path: pdfPath, Failure: PDFTimedOut}
 		case errors.As(err, &exit):

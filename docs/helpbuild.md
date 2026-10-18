@@ -211,7 +211,7 @@ S2 additions (none changes an output Python produces from a well-formed install)
 |---|---|---|
 | `pdftext.go` | `classify`, `sanitize`, `top_folder`, `find_pdfs`, `fix_unmapped_bullets`, `extract_text`, `resolve_name` | one pdftotext run: argv list, no shell, `PDFTimeout` (120 s); a failure is a `*PDFError` whose `Failure` says which of the four cases `extract_text` catches (exit status, timeout, output not UTF-8, could not start) |
 | `pdfindex.go` | `pdf_extractor.main()` | `ExtractPDFs`; the early exits, the `-v` probe, keep-last-good, the index save, the prune after a clean run, the summary |
-| `procgroup_unix.go`, `procgroup_other.go` | — | the child runs in its own process group; the timeout kills the group |
+| `procgroup_unix.go`, `procgroup_other.go` | — | the child runs in its own process group; the timeout or a relayed SIGINT/SIGTERM kills the group (a copy of `internal/secaudit`'s relay) |
 | `registry.go` | `versions.identify`, `versions.install_dir`, `course.course_dir` | read with pyjson so every malformed entry takes Python's branch: skipped where Python catches, an error where it raises |
 | `pyfs.go` | `os.walk`, `os.remove`, `shutil.copyfile`, `json.load` | `pyWalk` lists a symlinked folder without entering it and skips unreadable ones; `removeFile` refuses a directory; `pyCopyfile` refuses a named pipe before opening it; `loadJSON` returns a `*JSONLoadError` (Python's `str(e)`) for what the builders catch |
 | `course.go` | `course.course_dir`, `_files`, `_text_dest`, `plan`, `remove_copies`, `build`, `course_extractor.main()` | both trees staged with `RebuiltDir`, nested like Python's `with` (devguide-examples/course/ swaps first) |
@@ -251,9 +251,16 @@ S3/S4 intended differences (none changes an output Python produces):
 
 - **The pdftotext child runs in its own process group** and the timeout kills the group;
   `subprocess.run` kills only the direct child (a wrapper that forks would leave the real
-  program running). The group does not get the terminal's Ctrl-C: an interrupted run
-  leaves pdftotext to finish its one PDF (its pipe is gone, so it dies on the next write).
-  On Windows the direct child is killed, as in Python.
+  program running). The group does not get the terminal's Ctrl-C, so while it runs
+  SIGINT and SIGTERM to the extractor are relayed: the group is killed, then the signal
+  is raised again so the process dies of it (130/143), as Python dies of an uncaught
+  `KeyboardInterrupt`; a caller that catches the signal itself gets the interrupt back
+  from `ExtractPDFs` (no index saved, nothing pruned). On SIGTERM Python dies at once
+  and leaves pdftotext running; Go kills it. On Windows the direct child is killed and
+  the console's Ctrl-C reaches it, as in Python.
+- **A pdftotext run that succeeds as its deadline passes** keeps its output; it is a
+  timeout only when the run failed and the deadline is past (`subprocess.run` raises
+  `TimeoutExpired` only while it is still waiting).
 - **stdin** of pdftotext is the null device; Python lets it inherit stdin. pdftotext never
   reads it with `-` as the output file. stderr is dropped on both sides.
 - **`PDFOptions.DocsDir` ""** means "not given" (registry lookup); `--docs-dir ''` in Python
@@ -282,6 +289,12 @@ Found while porting (the Python code wins, kept for parity):
 (`shutil.rmtree(ignore_errors=True)`) and `commas` (`format(n, ",")`) are local to this
 package; `pyJoin`/`pyAbspath`/`pyBasename` belong next to `pycompat.PosixJoin` once a
 second package needs them.
+
+`relayInterrupts`, `reraise` and the group kill in `procgroup_unix.go` are a copy of
+`internal/secaudit/procgroup_unix.go`. Proposed: one `internal/procgroup` package
+(`KillGroupOnCancel(cmd)`, `RelayInterrupts(cancel) (stop func())`, `Reraise(sig)` and
+an `*InterruptError`) with the forking-child and signal tests once, used by secaudit and
+helpbuild; until it exists both packages keep their copy.
 
 ## Dead code not ported
 

@@ -99,7 +99,9 @@ func needPdftotext(t *testing.T) string {
 }
 
 // fakeScript is a fake pdftotext for one PDF argument ($4): "-v" answers;
-// <pdf>.sleep execs a long sleep (the timeout case), <pdf>.fail exits 1,
+// <pdf>.sleep execs a long sleep (the timeout case), <pdf>.fork forks a
+// long sleep, writes its pid to <pdf>.pid and waits for it (a wrapper that
+// does not exec the real program), <pdf>.fail exits 1,
 // <pdf>.out prints that file's bytes (any output, also not UTF-8);
 // anything else goes to real (exit 9 without one). Every call's arguments
 // are appended to <script>.argv.
@@ -112,6 +114,7 @@ func fakeScript(real string) string {
 		"printf '%s\\n' \"$*\" >> \"$0.argv\"\n" +
 		"[ \"$1\" = -v ] && { echo 'fake pdftotext' >&2; exit 0; }\n" +
 		"[ -e \"$4.sleep\" ] && exec sleep 30\n" +
+		"[ -e \"$4.fork\" ] && { sleep 30 & echo $! > \"$4.pid\"; wait; exit 0; }\n" +
 		"[ -e \"$4.fail\" ] && exit 1\n" +
 		"[ -e \"$4.out\" ] && exec cat \"$4.out\"\n" + tail
 }

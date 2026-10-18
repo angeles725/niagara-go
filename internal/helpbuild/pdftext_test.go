@@ -1,6 +1,7 @@
 package helpbuild
 
 import (
+	"context"
 	"errors"
 	"os"
 	"path/filepath"
@@ -147,6 +148,28 @@ func TestExtractPDFTextFailures(t *testing.T) {
 	check("timeout", script, 300*time.Millisecond, PDFTimedOut)
 	if d := time.Since(start); d > 5*time.Second {
 		t.Errorf("the timeout took %v", d)
+	}
+}
+
+// A run is a timeout only when it failed and its context is done: one that
+// succeeded as the deadline passed keeps its output.
+func TestRunFailure(t *testing.T) {
+	expired, cancel := context.WithTimeout(context.Background(), 0)
+	defer cancel()
+	<-expired.Done()
+	exitErr := errors.New("exit status 1")
+	for _, c := range []struct {
+		ctx      context.Context
+		run, err error
+	}{
+		{expired, nil, nil},
+		{expired, exitErr, errTimedOut},
+		{context.Background(), exitErr, exitErr},
+		{context.Background(), nil, nil},
+	} {
+		if got := runFailure(c.ctx, c.run); got != c.err {
+			t.Errorf("runFailure(ctx err %v, %v) = %v, want %v", c.ctx.Err(), c.run, got, c.err)
+		}
 	}
 }
 

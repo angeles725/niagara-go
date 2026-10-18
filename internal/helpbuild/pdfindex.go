@@ -254,6 +254,10 @@ func extractAll(res *PDFResult, docs, outputDir, indexPath string, previous pyjs
 		res.add(fmt.Sprintf("\r[%3d%%] %d/%d  %s", (i+1)*100/total, i+1, total, firstRunes(name, 60)))
 		textPath := filepath.Join(outputDir, stem+".txt")
 		text, pages, err := ExtractPDFText(prog, pdfPath, timeout)
+		var in *interruptError
+		if errors.As(err, &in) {
+			return err // KeyboardInterrupt: nothing is saved or pruned
+		}
 		if err != nil {
 			res.Stats.Failed++
 			res.Failed = append(res.Failed, name)
