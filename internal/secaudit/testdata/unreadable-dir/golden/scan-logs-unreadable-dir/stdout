@@ -1,5 +1,5 @@
 
   Log-IOC harvest — 0 indicator(s) in 1 log file(s) under inputs/logs-locked
 
-  no signature-bypass / unsigned-load IOCs found (clean).
+  no signature-bypass / unsigned-load IOCs in the readable files; 0 unreadable file(s) and 1 unreadable directory(ies) not scanned (incomplete, not clean).
 

@@ -1,6 +1,0 @@
-{
-  "reason": "Python's os.walk skips a log directory it cannot list without a word, so a scan with an unreadable directory reported clean with exit 0; Go names each unreadable directory on stderr and reports the scan as incomplete (exit 2), like an unreadable log file",
-  "stdout": "\n  Log-IOC harvest — 0 indicator(s) in 1 log file(s) under inputs/logs-locked\n\n  no signature-bypass / unsigned-load IOCs in the readable files; 0 unreadable file(s) and 1 unreadable directory(ies) not scanned (incomplete, not clean).\n\n",
-  "stderr": "WARNING: --scan-logs: 1 unreadable directory(ies) not scanned:\n  inputs/logs-locked/locked: Permission denied\n",
-  "exit": 2
-}

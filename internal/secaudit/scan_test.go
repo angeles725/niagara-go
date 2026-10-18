@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/angeles725/niagara-go/internal/cli"
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // lockedDir is a directory under a temp root that this user cannot list (removed after the test).
@@ -25,6 +26,22 @@ func lockedDir(t *testing.T, root, name string) string {
 		t.Skip("mode 000 does not stop this user listing a directory (root?)")
 	}
 	return d
+}
+
+// A directory os.walk cannot list is named with Python's text: strerror on Linux, the Win32 text of
+// FindFirstFileW ("<dir>\\*.*") on Windows, where a missing directory is ERROR_PATH_NOT_FOUND (3) in
+// the system language, as Python 3.13 on Windows prints it ("El sistema no puede encontrar la ruta
+// especificada" on a Spanish host; Go's own text was "No such file or directory").
+func TestScanLogsUnlistableDirUsesPythonsErrorText(t *testing.T) {
+	missing := filepath.Join(t.TempDir(), "gone")
+	want := "No such file or directory"
+	if runtime.GOOS == "windows" {
+		want = pycompat.WinErrorText(3)
+	}
+	_, _, _, badDirs := scanLogs(missing)
+	if len(badDirs) != 1 || badDirs[0].why != want {
+		t.Fatalf("badDirs = %v, want one with %q", badDirs, want)
+	}
 }
 
 // An unlistable root scans nothing: an error that counts it, never a clean verdict.

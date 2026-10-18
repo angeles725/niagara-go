@@ -135,8 +135,8 @@ func scanLogs(root string) (hits []hit, nfiles int, bad, badDirs []unreadable) {
 	var walk func(dir string)
 	walk = func(dir string) {
 		entries, err := os.ReadDir(dir)
-		if err != nil {
-			badDirs = append(badDirs, unreadable{dir, pycompat.StrerrorOf(err)})
+		if err != nil { // os.walk's os.scandir error: the Win32 text of FindFirstFileW on Windows
+			badDirs = append(badDirs, unreadable{dir, pycompat.WinStrerrorOf(pycompat.WinListdirError(err))})
 		}
 		var subdirs []string
 		for _, ent := range entries {

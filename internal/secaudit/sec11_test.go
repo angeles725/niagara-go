@@ -9,7 +9,7 @@ import (
 )
 
 // SEC-11 (weak signing keys / FIPS), ported from niagara-research tools/tests/test_secaudit_sec11.py
-// (526526c72, 85475d27c). It PASSes only on keys keytool listed, or on a store keytool says is
+// (526526c72, 85475d27c, bdc5e24a1). It PASSes only on keys keytool listed, or on a store keytool says is
 // empty; each key is judged by its own algorithm, and a key it cannot judge is a SKIP. The keytool
 // lines are the real JDK 8 and JDK 21 texts.
 
@@ -39,7 +39,59 @@ const (
 	keyFoo        = "Subject Public Key Algorithm: 512-bit FOO key\n"
 	fipsAbsent    = "; FIPS keystore absent"
 	notParsedText = "key sizes not parsed from keytool -list -v ("
+	stars         = "\n\n*******************************************\n*******************************************\n\n\n"
 )
+
+// entry is one keytool -list -v entry block as JDK 8 and JDK 21 print it: "Alias name:", "Creation
+// date:", "Entry type:"; a PrivateKeyEntry then prints "Certificate chain length: N" and one
+// "Certificate[i]:" per chain certificate, a trustedCertEntry its one certificate, a SecretKeyEntry
+// nothing.
+func entry(alias, etype string, certs ...string) string {
+	return privateEntry(alias, etype, strconv.Itoa(len(certs)), certs...)
+}
+
+// privateEntry is entry with chain as the "Certificate chain length:" value of a PrivateKeyEntry
+// ("" prints no such line).
+func privateEntry(alias, etype, chain string, certs ...string) string {
+	text := "Alias name: " + alias + "\nCreation date: Oct 17, 2026\nEntry type: " + etype + "\n"
+	if etype == "PrivateKeyEntry" {
+		if chain != "" {
+			text += "Certificate chain length: " + chain + "\n"
+		}
+		for i, c := range certs {
+			text += "Certificate[" + strconv.Itoa(i+1) + "]:\nOwner: CN=" + alias + "\n" + c
+		}
+	} else {
+		for _, c := range certs {
+			text += "\nOwner: CN=" + alias + "\n" + c
+		}
+	}
+	return text + stars
+}
+
+// asEntries is keys (key lines and the text between them) as one trustedCertEntry block per
+// "Subject Public Key Algorithm:" line; text after the last key line stays in the last block, like
+// keytool's Warning.
+func asEntries(keys string) string {
+	var blocks []string
+	cur := ""
+	for _, line := range strings.SplitAfter(keys, "\n") {
+		cur += line
+		if strings.HasPrefix(line, "Subject Public Key Algorithm:") {
+			blocks = append(blocks, cur)
+			cur = ""
+		}
+	}
+	if len(blocks) == 0 {
+		return cur
+	}
+	blocks[len(blocks)-1] += cur
+	out := ""
+	for i, b := range blocks {
+		out += entry("a"+strconv.Itoa(i+1), "trustedCertEntry", b)
+	}
+	return out
+}
 
 // sec11Row is the SEC-11 row of a home whose truststore keytool -list -v lists as listing; a nil
 // listing is a home without a truststore.
@@ -54,20 +106,27 @@ func sec11Row(t *testing.T, listing *string) row {
 	return rowsByID(t, probeEnv("", out, "", nil), home, "")["SEC-11"]
 }
 
-// judged is the SEC-11 row of a store listing keys, with one entry per key line.
+// judged is the SEC-11 row of a store listing keys, one trustedCertEntry per key line (asEntries).
 func judged(t *testing.T, keys string) row {
 	t.Helper()
 	return judgedN(t, keys, strings.Count(keys, "Subject Public Key Algorithm:"))
 }
 
-// judgedN is the SEC-11 row of a store of entries entries listing keys.
+// judgedN is the SEC-11 row of a store of entries entries listing keys, one trustedCertEntry per
+// key line (asEntries).
 func judgedN(t *testing.T, keys string, entries int) row {
+	t.Helper()
+	return listed(t, asEntries(keys), entries)
+}
+
+// listed is the SEC-11 row of a listing of entry blocks under "Your keystore contains <entries> ...".
+func listed(t *testing.T, blocks string, entries int) row {
 	t.Helper()
 	word := "1 entry"
 	if entries != 1 {
 		word = strconv.Itoa(entries) + " entries"
 	}
-	l := ktHead + "Your keystore contains " + word + "\n\n" + keys
+	l := ktHead + "Your keystore contains " + word + "\n\n" + blocks
 	return sec11Row(t, &l)
 }
 
@@ -166,22 +225,93 @@ func TestSec11NeverPassesOnAKeyItCannotJudge(t *testing.T) {
 	}
 }
 
-// keytool -list -v prints one key line per certificate: an entry whose key line was not read
-// could hold a weak key, so fewer key lines than entries (or no entry count) is no PASS; a weak
-// key still FAILs (niagara-research 4dfd250f6).
+// An entry keytool listed without its block could hold a weak key: fewer alias blocks than
+// entries (or no entry count) is no PASS; a weak key still FAILs (niagara-research 4dfd250f6).
 func TestSec11UnreadEntriesAreNoPass(t *testing.T) {
-	assertSec11(t, judgedN(t, keyEC256, 2), "key sizes EC [256]; only 1 key line for 2 entries"+fipsAbsent,
+	assertSec11(t, judgedN(t, keyEC256, 2), "key sizes EC [256]; 1 alias block for 2 entries"+fipsAbsent,
 		"SKIP", sec11RunNote)
 	assertSec11(t, judgedN(t, keyEC256+keyEd25519, 3),
-		"key sizes EC [256], Ed25519 [255]; only 2 key lines for 3 entries"+fipsAbsent, "SKIP", sec11RunNote)
+		"key sizes EC [256], Ed25519 [255]; 2 alias blocks for 3 entries"+fipsAbsent, "SKIP", sec11RunNote)
 	assertSec11(t, judgedN(t, key1024+warn1024, 3), "key sizes RSA [1024]; weak RSA [1024]"+fipsAbsent,
 		"FAIL", sec11Pass)
 	l := ktHead + keyEC256
 	assertSec11(t, sec11Row(t, &l), "key sizes EC [256]; entry count not found"+fipsAbsent, "SKIP", sec11RunNote)
 	// A count padded with zeros is read as Python's int() does.
-	l = ktHead + "Your keystore contains 02 entries\n\n" + keyEC256
-	assertSec11(t, sec11Row(t, &l), "key sizes EC [256]; only 1 key line for 2 entries"+fipsAbsent,
+	l = ktHead + "Your keystore contains 02 entries\n\n" + asEntries(keyEC256)
+	assertSec11(t, sec11Row(t, &l), "key sizes EC [256]; 1 alias block for 2 entries"+fipsAbsent,
 		"SKIP", sec11RunNote)
+}
+
+// Completeness is per entry block and per chain certificate (niagara-research bdc5e24a1; the chain
+// rule is Go-only, decision D34): a chain's extra key lines used to cover an entry whose key line
+// was not read; a SecretKeyEntry has no public key and needs none; an entry of another type is no
+// PASS. Only counts are printed: alias names can be sensitive.
+func TestSec11CompletenessIsPerEntry(t *testing.T) {
+	noKey := "Signature algorithm name: SHA256withRSA\n"
+	for _, tc := range []struct {
+		name, listing           string
+		entries                 int
+		observed, verdict, note string
+	}{
+		{"chain cannot offset a trusted cert without a key line",
+			entry("chain", "PrivateKeyEntry", key2048, key2048) + entry("ca", "trustedCertEntry", noKey), 2,
+			"key sizes RSA [2048]; 1 entry without a key line", "SKIP", sec11RunNote},
+		{"private key entry without a key line",
+			entry("k", "PrivateKeyEntry", noKey) + entry("ca", "trustedCertEntry", key2048), 2,
+			"key sizes RSA [2048]; 1 entry without a key line", "SKIP", sec11RunNote},
+		// A PrivateKeyEntry prints one key line per certificate of its chain, a trustedCertEntry
+		// exactly one (JDK 8 and JDK 21 stores with chains of 1, 2 and 3): any other count leaves a
+		// certificate unread or is another format.
+		{"chain of 3 with 2 key lines",
+			privateEntry("k", "PrivateKeyEntry", "3", key2048, key2048) + entry("ca", "trustedCertEntry", key2048), 2,
+			"key sizes RSA [2048]; 1 entry with unread chain certificates", "SKIP", sec11RunNote},
+		{"no chain length line",
+			privateEntry("k", "PrivateKeyEntry", "", key2048) + entry("ca", "trustedCertEntry", key2048), 2,
+			"key sizes RSA [2048]; 1 entry without a certificate chain length", "SKIP", sec11RunNote},
+		{"more key lines than the chain length",
+			privateEntry("k", "PrivateKeyEntry", "1", key2048, key2048) + entry("ca", "trustedCertEntry", key2048), 2,
+			"key sizes RSA [2048]; 1 entry with more key lines than certificates", "SKIP", sec11RunNote},
+		{"chain length with a padded or huge count",
+			privateEntry("a", "PrivateKeyEntry", "02", key2048, key2048) +
+				privateEntry("b", "PrivateKeyEntry", "99999999999999999999999", key2048), 2,
+			"key sizes RSA [2048]; 1 entry with unread chain certificates", "SKIP", sec11RunNote},
+		{"trusted cert with two key lines", entry("ca", "trustedCertEntry", key2048, keyEC256), 1,
+			"key sizes EC [256], RSA [2048]; 1 entry with more key lines than certificates", "SKIP", sec11RunNote},
+		{"full chains of 2 and 3",
+			entry("inter", "PrivateKeyEntry", keyEC256, key2048) +
+				entry("leaf", "PrivateKeyEntry", key2048, keyEC256, key2048) + entry("ca", "trustedCertEntry", key2048), 3,
+			"key sizes EC [256], RSA [2048]", "PASS", sec11Pass},
+		{"windows line ends keep the chain length",
+			strings.ReplaceAll(entry("leaf", "PrivateKeyEntry", key2048, keyEC256), "\n", "\r\n"), 1,
+			"key sizes EC [256], RSA [2048]", "PASS", sec11Pass},
+		{"secret key entry needs no public key",
+			entry("s", "SecretKeyEntry") + entry("k", "PrivateKeyEntry", key2048), 2,
+			"key sizes RSA [2048]; 1 secret key entry (no public key)", "PASS", sec11Pass},
+		{"windows line ends keep the entry types",
+			strings.ReplaceAll(entry("s", "SecretKeyEntry")+entry("k", "PrivateKeyEntry", key2048), "\n", "\r\n"), 2,
+			"key sizes RSA [2048]; 1 secret key entry (no public key)", "PASS", sec11Pass},
+		{"secret key entries alone", entry("s1", "SecretKeyEntry") + entry("s2", "SecretKeyEntry"), 2,
+			"2 secret key entries (no public key)", "PASS", sec11Pass},
+		{"weak intermediate in a chain of 3", entry("leaf", "PrivateKeyEntry", key2048, key1024, key2048) + warn1024, 1,
+			"key sizes RSA [1024, 2048]; weak RSA [1024]", "FAIL", sec11Pass},
+		{"unknown entry type", entry("x", "FooEntry", key2048) + entry("ca", "trustedCertEntry", key2048), 2,
+			"key sizes RSA [2048]; 1 entry of unknown type", "SKIP", sec11RunNote},
+		{"block without an entry type", "Alias name: x\nCreation date: Oct 17, 2026\n\n" + key2048 + stars, 1,
+			"key sizes RSA [2048]; 1 entry of unknown type", "SKIP", sec11RunNote},
+		{"gaps are counted",
+			entry("secret-alias-1", "trustedCertEntry") + entry("secret-alias-2", "trustedCertEntry") +
+				entry("secret-alias-3", "BarEntry") + entry("k", "PrivateKeyEntry", key2048), 3,
+			"key sizes RSA [2048]; 4 alias blocks for 3 entries; 2 entries without a key line; " +
+				"1 entry of unknown type", "SKIP", sec11RunNote},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			r := listed(t, tc.listing, tc.entries)
+			assertSec11(t, r, tc.observed+fipsAbsent, tc.verdict, tc.note)
+			if strings.Contains(r.observed+r.note, "secret-alias") {
+				t.Errorf("SEC-11 printed an alias name: %q", r.observed)
+			}
+		})
+	}
 }
 
 // Sizes are compared as numbers of any length, printed without leading zeros (Python int()).
