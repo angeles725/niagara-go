@@ -1,0 +1,8 @@
+usage: module-nav search [-h] [-n N] pattern
+
+positional arguments:
+  pattern     Glob pattern (e.g. '*Dialog*', 'BLink*')
+
+options:
+  -h, --help  show this help message and exit
+  -n N        Max results to show (default 50)

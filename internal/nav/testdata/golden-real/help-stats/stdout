@@ -1,0 +1,5 @@
+usage: module-nav stats [-h] [--json]
+
+options:
+  -h, --help  show this help message and exit
+  --json      Output in JSON format
