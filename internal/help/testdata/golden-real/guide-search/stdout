@@ -1,0 +1,43 @@
+14 guides files matching 'discovery timeout' (all terms):
+
+  [Mbus] Discovery modes
+    L7: These modes provide ways to customize the discovery of Mbus devices. Using them can shorten the time required by the discovery process.
+    path: guides-clean/Mbus/DiscoveryModesMbus.txt
+
+  [Mbus] Customized Comm Timings window
+    L18: | Response Timeout | hours, minutes, seconds, milliseconds (defaults to <T>) | Configures the length of time before the system times out when interrogatin...
+    path: guides-clean/Mbus/CustomizedCommTimingsWindow-Mbus-354A005F.txt
+
+  [Mbus] Configuring network properties
+    L22: - Response Timeout to <T>.
+    path: guides-clean/Mbus/ConfiguringDeviceProperties-Mbus-342CF9B0.txt
+
+  [Videoframework] naxisVideo-AxisVideoNetwork
+    L22: | Discovery Preferences, Timeout | hours minutes seconds (defaults to <T>) | Specifies how long to attempt the discover of an Axis camera before timing o...
+    path: guides-clean/Videoframework/naxisVideo-AxisVideoNetwork.txt
+
+  [Mbus] Frequently-asked questions
+    L49: ...devices require more time for initialisation and discovery. If you reduced the values for Inter Message Delay, Response Timeout and Initialisation Delay, set th...
+    path: guides-clean/Mbus/Frequently-askedQuestions-Mbus-3488EC35.txt
+
+  [Ccn] ccn-CcnNetwork
+    L20: | Response Timeout (sec) | hours, minutes, seconds (recommended 2-<T>) | Indicates how long the driver waits for a response before declaring the CCN non-r...
+    path: guides-clean/Ccn/ccn-CcnNetwork.txt
+
+  [Nsnmp] SnmpDevice
+    L25: | Response Timeout | hours, minutes, seconds, milliseconds (defaults to <T>) | Configures the length of time before the system times out when interrogatin...
+    path: guides-clean/Nsnmp/nSnmp-SnmpDevice.txt
+
+  [Mbus] MbusTcpIPNetwork
+    L25: | Response Timeout | hours, minutes, seconds, milliseconds (defaults to <T>) | Configures the length of time before the system times out when interrogatin...
+    path: guides-clean/Mbus/AboutMbusTcpIPNetworkComponent-33DAFC02.txt
+
+  [Bacnet] Network (bacnet-BacnetNetworkLayer)
+    L23: | Router Discovery Timeout | milliseconds (defaults to <T>) | Sets how long the system waits to discover the router. When this time passes, the system repor...
+    path: guides-clean/Bacnet/bacnet-BacnetNetworkLayer.txt
+
+  [Mbus] MbusSerialNetwork
+    L25: | Response Timeout | hours, minutes, seconds, milliseconds (defaults to <T>) | Configures the length of time before the system times out when interrogatin...
+    path: guides-clean/Mbus/AboutMbusSerialNetwork-33DC4A54.txt
+
+  ... and 4 more files

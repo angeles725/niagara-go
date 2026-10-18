@@ -1,0 +1,40 @@
+42 files matching 'bbmd wiretap' (any term, ranked by how many terms match):
+by source: guides-clean 26, bajadoc-clean 8, docs-text 4, devguide-clean 3, source 1
+
+  [docs-text] docBacnet
+    L3430: •   One-hop: the BBMD sends the message using a directed broadcast, whereby the IP router for the desti-
+    path: docs-text/docBacnet.txt
+
+  [docs-text] docEngNotes
+    L4179: Step 4    To add the wiretap components, open the b a c n e t U t i l palette, expand the W i r e t a p s container in
+    path: docs-text/docEngNotes.txt
+
+  [guides-clean] Setting up a wiretap
+    L7: Wiretaps evaluate (sniff) messages after they have been processed by a network port. You add wiretaps as children of the NetworkPorts container in the same way ...
+    path: guides-clean/EngNotes/BACnetSettingUpAWiretap.txt
+
+  [guides-clean] Processing a forwarded wiretap
+    L7: The ForwardingWiretap component sends each captured message to a specified IP address. The intent is to provide a way to forward MS/TP packets from a controller...
+    path: guides-clean/EngNotes/BACnetProcessingAForwardedWiretap.txt
+
+  [bajadoc-clean] BBroadcastDistributionTable (com.tridium.bacnet.stack.link.ip)
+    L8: of a Bacnet Broadcast Management Device (BBMD).
+    path: bajadoc-clean/com/tridium/bacnet/stack/link/ip/BBroadcastDistributionTable.txt
+
+  [bajadoc-clean] BForeignDeviceTable (com.tridium.bacnet.stack.link.ip)
+    L8: Broadcast Management Device (BBMD).
+    path: bajadoc-clean/com/tridium/bacnet/stack/link/ip/BForeignDeviceTable.txt
+
+  [source] BBacnetPropertyIdentifier
+    L427: @Range(value = "bbmdAcceptFdRegistrations", ordinal = 413),
+    path: source/bacnet-rt/javax/baja/bacnet/enums/BBacnetPropertyIdentifier.java
+
+  [devguide-clean] changes33.txt
+    L38: 10194 BBMD rebroadcasts received broadcasts to local subnet
+    path: devguide-clean/changes33.txt
+
+  [devguide-clean] changes30.txt
+    L1958: 4894 ability to set both the bbmd active and is Foreign Device to true
+    path: devguide-clean/changes30.txt
+
+  ... and 33 more files

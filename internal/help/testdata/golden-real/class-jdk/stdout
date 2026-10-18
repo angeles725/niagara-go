@@ -1,0 +1,116 @@
+CLASS: String
+PACKAGE: java.lang
+TYPE: class
+MODULE: jdk-se
+XML: jdk/jdk-se/java/lang/String.bajadoc
+
+CLASS: String
+PACKAGE: java.lang
+SINCE: JDK1.0
+EXTENDS: java.lang.Object
+IMPLEMENTS: java.io.Serializable
+
+DESCRIPTION:
+The String class represents character strings. All string literals in Java
+programs, such as &#x22;abc&#x22;, are implemented as instances of this class.
+Strings are constant; their values cannot be changed after they are created.
+String buffers support mutable strings. Because String objects are immutable
+they can be shared. For example: String str = "abc"; is equivalent to: char
+data[] = {'a', 'b', 'c'}; String str = new String(data); Here are some more
+examples of how strings can be used: System.out.println("abc"); String cde =
+"cde"; System.out.println("abc" + cde); String c = "abc".substring(2,3);
+String d = cde.substring(1, 2); The class String includes methods for
+examining individual characters of the sequence, for comparing strings, for
+searching strings, for extracting substrings, and for creating a copy of a
+string with all characters translated to uppercase or to lowercase. Case
+mapping is based on the Unicode Standard version specified by the
+
+FIELDS:
+  static java.util.Comparator<java.lang.String> CASE_INSENSITIVE_ORDER
+
+CONSTRUCTORS:
+  String()
+  String(java.lang.String original)
+  String(char[] value)
+  String(char[] value, int offset, int count)
+  String(int[] codePoints, int offset, int count)
+  String(byte[] ascii, int hibyte, int offset, int count)
+  String(byte[] ascii, int hibyte)
+  String(byte[] bytes, int offset, int length, java.lang.String charsetName)
+  String(byte[] bytes, int offset, int length, java.nio.charset.Charset charset)
+  String(byte[] bytes, java.lang.String charsetName)
+  String(byte[] bytes, java.nio.charset.Charset charset)
+  String(byte[] bytes, int offset, int length)
+  String(byte[] bytes)
+  String(java.lang.StringBuffer buffer)
+  String(java.lang.StringBuilder builder)
+
+METHODS:
+  char charAt(int index)
+  int codePointAt(int index)
+  int codePointBefore(int index)
+  int codePointCount(int beginIndex, int endIndex)
+  int compareTo(java.lang.String anotherString)
+  int compareToIgnoreCase(java.lang.String str)
+  java.lang.String concat(java.lang.String str)
+  boolean contains(java.lang.CharSequence s)
+  boolean contentEquals(java.lang.StringBuffer sb)
+  boolean contentEquals(java.lang.CharSequence cs)
+  static java.lang.String copyValueOf(char[] data, int offset, int count)
+  static java.lang.String copyValueOf(char[] data)
+  boolean endsWith(java.lang.String suffix)
+  boolean equals(java.lang.Object anObject)
+  boolean equalsIgnoreCase(java.lang.String anotherString)
+  static java.lang.String format(java.lang.String format, java.lang.Object[] args)
+  static java.lang.String format(java.util.Locale l, java.lang.String format, java.lang.Object[] args)
+  void getBytes(int srcBegin, int srcEnd, byte[] dst, int dstBegin)
+  byte[] getBytes(java.lang.String charsetName)
+  byte[] getBytes(java.nio.charset.Charset charset)
+  byte[] getBytes()
+  void getChars(int srcBegin, int srcEnd, char[] dst, int dstBegin)
+  int hashCode()
+  int indexOf(int ch)
+  int indexOf(int ch, int fromIndex)
+  int indexOf(java.lang.String str)
+  int indexOf(java.lang.String str, int fromIndex)
+  java.lang.String intern()
+  boolean isEmpty()
+  static java.lang.String join(java.lang.CharSequence delimiter, java.lang.CharSequence[] elements)
+  static java.lang.String join(java.lang.CharSequence delimiter, java.lang.Iterable<? extends java.lang.CharSequence> elements)
+  int lastIndexOf(int ch)
+  int lastIndexOf(int ch, int fromIndex)
+  int lastIndexOf(java.lang.String str)
+  int lastIndexOf(java.lang.String str, int fromIndex)
+  int length()
+  boolean matches(java.lang.String regex)
+  int offsetByCodePoints(int index, int codePointOffset)
+  boolean regionMatches(int toffset, java.lang.String other, int ooffset, int len)
+  boolean regionMatches(boolean ignoreCase, int toffset, java.lang.String other, int ooffset, int len)
+  java.lang.String replace(char oldChar, char newChar)
+  java.lang.String replace(java.lang.CharSequence target, java.lang.CharSequence replacement)
+  java.lang.String replaceAll(java.lang.String regex, java.lang.String replacement)
+  java.lang.String replaceFirst(java.lang.String regex, java.lang.String replacement)
+  java.lang.String[] split(java.lang.String regex, int limit)
+  java.lang.String[] split(java.lang.String regex)
+  boolean startsWith(java.lang.String prefix, int toffset)
+  boolean startsWith(java.lang.String prefix)
+  java.lang.CharSequence subSequence(int beginIndex, int endIndex)
+  java.lang.String substring(int beginIndex)
+  java.lang.String substring(int beginIndex, int endIndex)
+  char[] toCharArray()
+  java.lang.String toLowerCase(java.util.Locale locale)
+  java.lang.String toLowerCase()
+  java.lang.String toString()
+  java.lang.String toUpperCase(java.util.Locale locale)
+  java.lang.String toUpperCase()
+  java.lang.String trim()
+  static java.lang.String valueOf(java.lang.Object obj)
+  static java.lang.String valueOf(char[] data)
+  static java.lang.String valueOf(char[] data, int offset, int count)
+  static java.lang.String valueOf(boolean b)
+  static java.lang.String valueOf(char c)
+  static java.lang.String valueOf(int i)
+  static java.lang.String valueOf(long l)
+  static java.lang.String valueOf(float f)
+  static java.lang.String valueOf(double d)
+

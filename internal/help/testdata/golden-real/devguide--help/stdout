@@ -1,0 +1,7 @@
+usage: niagara_help devguide [-h] query
+
+positional arguments:
+  query       Search term (e.g. 'component model')
+
+options:
+  -h, --help  show this help message and exit

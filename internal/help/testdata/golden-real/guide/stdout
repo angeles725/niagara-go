@@ -1,0 +1,68 @@
+16 guide folders matching 'bacnet':
+
+  Bacnet (316 topics, docBacnet-doc.jar)
+    matching topics: AWS and OWS Supervisors (AWSAndOWSSupervisors-BACnet-55829C32), About this guide (AboutThisGuide-BACnet-4D690FA1), New (and Edit) window for schedule import (AddEditScheduleAndCalendarBACnet-5114711B), New (Edit) window for schedule export (AddWindowForScheduleExportBACnet-511837FA), New (and Edit) device history window (AddandEditDeviceHistoryWindowBACnet-537DD990)
+    ... and 256 more
+    path: guides/Bacnet/
+
+  honBACnetUtilities (99 topics, honBACnetUtilities-doc.jar)
+    matching topics: Assign_Niagara_Alarm_Classes_to_BACnet_Notification_Classes, BACNET UTILITIES DRIVER- Introduction, BACnet_Trending_Object_Handling, Create_BACnet_Network, Enable_Honeywell_BACnet_Service
+    ... and 4 more
+    path: guides/honBACnetUtilities/
+
+  EngNotes (151 topics, docEngNotes-doc.jar)
+    matching topics: BACnet and Niagara 4 (BACnetAndN4), Network (BACnetBacnetCommNetwork), Device metrics (BACnetDeviceMetrics), Diagnosing network problems with metrics (BACnetDiagnosingNetworkProblemsWith), NetworkPort metrics (BACnetMessagesSentOrReceivedPerSeco)
+    ... and 18 more
+    path: guides/EngNotes/
+
+  bacnetAlarmRouter (8 topics, bacnetAlarmRouter-doc.jar)
+    matching topics: Alarm Filter (bacnetAlarmRouter-AlarmFilter), Bacnet AlarmClass Reassigner (bacnetAlarmRouter-BacnetAlarmClassReassigner), Batching (bacnetAlarmRouter-CollectorBatching), Metrics (bacnetAlarmRouter-CollectorMetrics), Escalation Filter (bacnetAlarmRouter-EscalationFilter)
+    ... and 3 more
+    path: guides/bacnetAlarmRouter/
+
+  ascBacnet (3 topics, ascBacnet.jar)
+    matching topics: ascBacnet-AscBacnetPointManager, ascBacnet-BacnetStrykerBatchOperationsView, ascBacnet-TimeSyncView
+    path: guides/ascBacnet/
+
+  HoneywellSpyder (175 topics, docHoneywellSpyder.jar)
+    matching topics: ApplicationBacnetObjectConfigurationView, Binding Bacnet Devices (BindingsorDatasharing/BindingBacnetDevices), Actions On Bacnet (Device/ActionsOnBacnet), Diagnostics/DiagnosticsOfBacnetDevice, Miscellaneous/ActionsOnBacnet
+    ... and 8 more
+    path: guides/HoneywellSpyder/
+
+  honIrmControl (134 topics, honIrmControl-doc.jar)
+    matching topics: honIrmControl-BacnetBooleanInput, honIrmControl-BacnetBooleanOutput, honIrmControl-BacnetBooleanValue, honIrmControl-BacnetEnumOutput, honIrmControl-BacnetEnumValue
+    ... and 4 more
+    path: guides/honIrmControl/
+
+  Platform (211 topics, docPlatform-doc.jar)
+    matching topics: Reverting to the legacy CPU usage for BACnet networks (RevertingToLegacyMSTPProcessorBacnetMs-51BB65AF), Platform Service Properties (platMstp-BacnetMstpPlatformServiceQnx) (platMstp-BacnetMstpPlatformServiceQnx)
+    path: guides/Platform/
+
+  User (726 topics, docUser-doc.jar)
+    matching topics: BacnetEDE-BA3D05C0-VA51LT3F4F3J3, Bacnet EDE (BacnetEDE-BA3D05C0)
+    path: guides/User/
+
+  datasharing (5 topics, datasharing.jar)
+    matching topics: BindingBacnetDevices, datasharing-BacnetLinkManager
+    path: guides/datasharing/
+
+  Aapup (62 topics, docAapup-doc.jar)
+    matching topics: PupDevice properties (aBacnetDeviceProperties)
+    path: guides/Aapup/
+
+  AnalyticsGuide (100 topics, docAnalyticsGuide-doc.jar)
+    matching topics: BACnet Network points with n:history (BACnetNetworkPointsWithNhistory-DC5C67B1)
+    path: guides/AnalyticsGuide/
+
+  Drivers (183 topics, docDrivers-doc.jar)
+    matching topics: BACnet and Rdbms (HistoryImportAndExportDriversGuide-6D3C8E01)
+    path: guides/Drivers/
+
+  ascCommon (42 topics, ascCommon.jar)
+    matching topics: About-AscBACnetVAV
+    path: guides/ascCommon/
+
+  clCBus (69 topics, clCBus-doc.jar)
+    matching topics: CBUS_–_BACnet_Export
+    path: guides/clCBus/
+

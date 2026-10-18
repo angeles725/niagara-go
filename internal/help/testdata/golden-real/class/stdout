@@ -1,0 +1,40 @@
+CLASS: BWebServlet
+PACKAGE: javax.baja.web
+TYPE: class
+MODULE: web-rt
+HTML: bajadoc/javax/baja/web/BWebServlet.html
+
+CLASS: BWebServlet
+PACKAGE: javax.baja.web
+SINCE: Baja 1.0
+EXTENDS: BAbstractService
+IMPLEMENTS: BINiagaraWebServlet
+SUBCLASSES: BObixServer
+
+DESCRIPTION:
+BWebServlet is a server side plugin into BWebService which process HTTP
+requests to a URIs with a specified prefix. It is the Baja wrapper for the
+javax.servlet.http.HttpServlet API.
+
+FIELDS:
+  static Property servletName - Slot for the servletName property.
+  static Type TYPE
+
+CONSTRUCTORS:
+  BWebServlet()
+
+METHODS:
+  void doDelete(WebOp c)
+  void doGet(WebOp c)
+  void doPost(WebOp op)
+  void doPut(WebOp op)
+  java.lang.Object fw(int x, java.lang.Object a, java.lang.Object b, java.lang.Object c, java.lang.Object d)
+  javax.servlet.http.HttpServlet getHttpServlet()
+  Type[] getServiceTypes()
+  java.lang.String getServletName()
+  Type getType()
+  OrdTarget resolve(WebOp op)
+  void service(WebOp op)
+  void setServletName(java.lang.String v)
+  void setValidServletName(boolean valid)
+
