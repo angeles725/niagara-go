@@ -25,7 +25,7 @@ document disagree, the code wins and this document is corrected.
 | **S9** (done) | source / slots / xref indexes; `call-index.json` is retired (decision I3-5), not ported | `source_indexer.py`, `slots_indexer.py`, `xref_builder.py` | ~2,000 with tests |
 | S10 | orchestration (`extract`, `versions add`, `rebuild-all`, `freshness`) | `extract_version.py`, `version_setup.py`, `version_report.py`, `maintenance.py` | ~750 |
 | **S10b-1** (done) | the coverage reports: `coverage`, `coverage <module>`, `coverage --doc-jars` (library + printers; the nh wiring is a later slice) | `coverage_report.py`, `doc_coverage.py` (+ `doc_types.classify`, `classify_unmapped`, `content_type`, `example_skip_reason`) | ~1,300 + tests |
-| (S11) | whole-install sweep gate, if it moves to Go | `install_sweep.py` | — |
+| **S11a** (done) | whole-install sweep gate (`coverage --sweep`, a `versions add` gate) as a library + report, on S10b-1's `Classify` and `Indexed`; nh wiring is a later slice | `install_sweep.py`, `course.gate` / `print_gate` | ~1,700 with tests |
 
 `fulltext.sqlite` is outside this plan (owned by the full-text port).
 
@@ -704,6 +704,67 @@ over /mnt/c, so the page cache (cold or warm) decides most of them.
 - **A registry of an unexpected shape** (`versions` missing or not an object, an entry or
   `install_dir` of another type) is an error, where Python raises or, for a non-string
   `install_dir`, calls `os.path.isdir` on it.
+
+## S11a files
+
+The whole-install sweep (`coverage --sweep`, and with `coverage --doc-jars` a required
+gate of `versions add`, niagara-help TOOLING-GUIDELINES.md): every documentation-like
+entry of every jar of the install, and every file of its `docs/`, is indexed, excluded
+with a reason, or UNCLASSIFIED; a directory the walk cannot list is UNCLASSIFIED too.
+
+| File | Ports | Notes |
+|---|---|---|
+| `sweep.go` | `install_sweep.find_jars`, `location`, `is_installed`, `Sweep` (`installed_entry`, `_mapped`, `classify`, `_shadowed`, `shadowed_entries`, `classify_loose_doc`), `scan` | the walks are `os.walk(onerror=...)` (`pyWalkFn`, sorted folders and files); in-jar collisions use `MappedEntries`, the extractor's rule |
+| `sweepreport.go` | `install_sweep.cmd_sweep`, `print_report`, `_print_pdf_line`; `course.gate`, `print_gate`; the read-only side of `open_index` (`FreshFulltextPath`, `FreshFulltextDocs`) | widths and comma groups through `pyFmt` (code points, as `str.format`); reasons sort by (-count, rule, reason) |
+
+One rule per concept, shared with the S10b-1 coverage gate: `Classify` and `Reasons`
+(`doccoverageclassify.go`), `doc_coverage.Indexed` (`indexedViews.check`,
+`doccoverage.go`), the `FulltextDocs` reader type and `FulltextDocsAt`,
+`loadReportIndex` / `IndexShapeError` for the index files, and `registeredInstall`, the
+`reg["versions"].get(vid, {}).get("install_dir", "")` read both `cmd_sweep` and
+`cmd_doc_jar_coverage` make.
+
+API for the wiring slice (nh `coverage --sweep`, and the `versions add` gate of S10):
+
+```go
+status, err := helpbuild.RunSweep(repo, baseDir, versionID, os.Stdout, helpbuild.SweepOptions{
+	Fulltext: rebuildingDocs, // a FulltextDocs; nil: FreshFulltextDocs (read only, *fts.StaleIndexError when stale)
+})
+// status: helpbuild.SweepPass (0), SweepFail (1, at least one UNCLASSIFIED entry),
+// SweepUnavailable (2, one "INSTALL SWEEP <vid>: install not available (...)" line).
+// The report ends with the RESULT line: "RESULT: PASS - every documentation-like entry is
+// indexed or excluded with a reason" or "RESULT: FAIL - <n> unclassified entr{y,ies}".
+// err != nil is what Python raises (a traceback, exit 1); the lines printed before it
+// were written to w.
+```
+
+`versionID` "" is identified from `baseDir` (`versions.identify`; an unregistered root
+prints `None`). The jar listings go through `<repo>/.cache/jar-listings/` (the S1 cache,
+byte-identical with Python's). `SweepOptions.Rules` replaces `install_rules.default()`
+everywhere `cmd_sweep` reads it (scan, course gate, the documentation-like line). The
+lower-level pieces are exported for `coverage --doc-jars` and tests: `Scan` (the `scan`
+dict as `*SweepResult`), `SweepReport` (the report lines), `GateCourse`, `FindJars`,
+`FreshFulltextDocs`.
+
+`SweepOptions.Fulltext` exists because Python's `open_index` **builds** a missing or
+stale full-text index (in `indexes/`, then the user cache, then memory) before the course
+gate or an `example` check reads it, printing notes on stderr. The library prints nothing
+and does not build: the default `FreshFulltextDocs` reads the up-to-date database or
+returns `*fts.StaleIndexError`. nh should pass the same rebuilding `FulltextDocs` it
+gives `DocJarCoverage` (backed by `internal/help/scope`'s opener: a path-returning export
+of its `ensure`, then `FulltextDocsAt`), which keeps Python's behaviour and adds the build
+lock. The index is opened only when a course is bound or an `example` entry has
+its corpus file, as in Python.
+
+### S11a intended differences
+
+- **A stale or missing full-text index** with the default finder is an error (exit 1)
+  where Python rebuilds it; with nh's rebuilding finder the behaviour is Python's except
+  the in-memory last resort (see `scope.UnwritableIndexError`).
+- **Registry and index shapes Python trips over**: as in S10b-1 (the shared
+  `registeredInstall` and `loadReportIndex`), plus a `pdf-index.json` row that is not an
+  object or a non-string truthy `source_pdf`, which are an error naming the file.
+- **File names that are not UTF-8** are not modelled (as in S7a and S9).
 
 ## Real-data parity
 

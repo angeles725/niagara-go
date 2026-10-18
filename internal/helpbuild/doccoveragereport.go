@@ -180,9 +180,11 @@ func (s *DocJarScan) scanEntry(indexed *indexedViews, name, entry string, rules 
 	return nil
 }
 
-// docJarInstall is the install_dir cmd_doc_jar_coverage reads from the
-// registry of repoRoot: reg["versions"].get(vid, {}).get("install_dir", "").
-func docJarInstall(repoRoot, vid string, known bool) (string, error) {
+// registeredInstall is the install_dir cmd_doc_jar_coverage and
+// install_sweep.cmd_sweep read from the registry of repoRoot:
+// reg["versions"].get(vid, {}).get("install_dir", ""); known is false for
+// a vid of None.
+func registeredInstall(repoRoot, vid string, known bool) (string, error) {
 	reg, ok, err := loadRegistry(repoRoot)
 	if err != nil {
 		return "", err
@@ -238,7 +240,7 @@ func DocJarCoverage(w io.Writer, repoRoot, baseDir, versionID string, docs Fullt
 	if !known {
 		shown = "None"
 	}
-	install, err := docJarInstall(repoRoot, vid, known)
+	install, err := registeredInstall(repoRoot, vid, known)
 	if err != nil {
 		return 0, err
 	}
