@@ -71,7 +71,7 @@ wintest:
 # The search-quality gate of tools/searchdoor/golden.py: hit@1/hit@5 per source must not fall
 # below the floor in internal/searchdoor/quality_test.go. See docs/goldens.md.
 NIAGARA_RESEARCH ?= $(HOME)/niagara-research
-parity:
+parity: parity-helpbuild
 	NSEARCH_QUALITY_ROOT=$(abspath $(NIAGARA_RESEARCH)) $(GO) test -count=1 -v -timeout 30m \
 		-run '^(TestSearchQuality|TestQualityFixtureMatchesResearch)$$' ./internal/searchdoor
 	MODULE_NAVIGATOR_DIR=$(abspath $(NIAGARA_RESEARCH))/module-navigator $(GO) test -count=1 -timeout 30m \
@@ -84,3 +84,18 @@ hooks:
 
 clean:
 	rm -rf $(BIN)
+
+# Real-corpus parity (Python vs Go on the installs under /mnt/c and the niagara-help
+# versions/ trees): off in `test` and `ci`; `make parity` runs it first, then the search gate.
+# A green run prints the result lines (subtests included) and the skips; a failing run
+# prints the whole -v output but the === progress lines, so every failure message and
+# diff is kept. The exit status is go test's.
+.PHONY: parity-helpbuild
+parity-helpbuild:
+	@out=$$(HELPBUILD_PARITY_REAL=1 HELPBUILD_PARITY_FULL=1 HELPBUILD_PARITY_415=1 \
+		$(GO) test -count=1 -timeout 60m -run Parity -v ./internal/helpbuild/ 2>&1); st=$$?; \
+		if [ $$st -eq 0 ]; then \
+			printf '%s\n' "$$out" | grep -E '^ *(--- |ok|FAIL|PASS)|real-data parity|not mounted|not found|parity driver python'; \
+		else \
+			printf '%s\n' "$$out" | grep -vE '^ *=== (RUN|PAUSE|CONT|NAME)'; \
+		fi; exit $$st

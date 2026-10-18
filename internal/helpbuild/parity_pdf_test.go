@@ -297,9 +297,7 @@ var realPDFs = []string{
 // only read) with the real pdftotext on both sides.
 // $HELPBUILD_PARITY_PDF_DOCS names a docs dir to convert whole instead.
 func TestParityPDFReal(t *testing.T) {
-	if testing.Short() {
-		t.Skip("real-data parity skipped with -short")
-	}
+	needRealParity(t, "HELPBUILD_PARITY_PDF_DOCS")
 	driver(t)
 	real := needPdftotext(t)
 	dir := t.TempDir()
@@ -312,7 +310,11 @@ func TestParityPDFReal(t *testing.T) {
 	}
 	t.Setenv("PATH", bin+string(os.PathListSeparator)+os.Getenv("PATH"))
 	docs := os.Getenv("HELPBUILD_PARITY_PDF_DOCS")
-	if docs == "" {
+	if docs != "" {
+		if n := countFiles(docs, func(name string) bool { return strings.EqualFold(filepath.Ext(name), ".pdf") }); n == 0 {
+			t.Fatalf("HELPBUILD_PARITY_PDF_DOCS=%q holds no PDF: nothing to compare", docs)
+		}
+	} else {
 		src := "/mnt/c/Niagara/EC-Net4-4.3.58.18/docs"
 		if !isDir(src) {
 			t.Skip("EC-Net 4.3.58.18 docs not mounted: real PDF parity not checked")
@@ -330,6 +332,19 @@ func TestParityPDFReal(t *testing.T) {
 	}
 	pdfStep(t, "real manuals", pyRoot, goRoot, pyRoot, goRoot, docs)
 	logTreeSize(t, goRoot)
+}
+
+// countFiles is the number of regular files under root whose base name
+// keep accepts (0 when root is missing or not a folder).
+func countFiles(root string, keep func(name string) bool) int {
+	n := 0
+	_ = filepath.Walk(root, func(_ string, info os.FileInfo, err error) error {
+		if err == nil && info.Mode().IsRegular() && keep(info.Name()) {
+			n++
+		}
+		return nil
+	})
+	return n
 }
 
 // logTreeSize logs the number of files and bytes under root.

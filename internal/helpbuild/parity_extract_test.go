@@ -334,9 +334,7 @@ var realSubset = []string{"docDeveloper-doc.jar", "docDeveloper-ux.jar", "docDev
 const install43 = "/mnt/c/Niagara/EC-Net4-4.3.58.18"
 
 func TestParityExtractReal(t *testing.T) {
-	if testing.Short() {
-		t.Skip("-short: real install jars over /mnt/c not read")
-	}
+	needRealParity(t)
 	driver(t)
 	if _, err := os.Stat(filepath.Join(install43, "modules")); err != nil {
 		t.Skipf("4.3 install not mounted (%v): parity not checked", err)
@@ -367,7 +365,7 @@ func TestParityExtractReal(t *testing.T) {
 // The whole 4.3 install: help_jars lists every module jar (~25 s per side
 // over /mnt/c), so it runs only with HELPBUILD_PARITY_FULL=1.
 func TestParityHelpJarsFullInstall(t *testing.T) {
-	if os.Getenv("HELPBUILD_PARITY_FULL") == "" {
+	if !parityOn(t, "HELPBUILD_PARITY_FULL") {
 		t.Skip("HELPBUILD_PARITY_FULL unset: the whole-install help_jars sweep is not run")
 	}
 	driver(t)

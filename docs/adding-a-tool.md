@@ -112,3 +112,20 @@ prove. Each unit is reviewed with the receipt-driven review driver
 less, fixtures included. A unit near 1,200 lines fails review START with
 `lens_context_budget_exceeded`, and a golden set with hundreds of files can fail well below
 that. When fixtures and code are split into two commits, review them as one slice.
+
+## 7. Real-corpus parity (`make parity`)
+
+Builder ports (`internal/helpbuild`) compare Python and Go on real data: the EC-Net
+4.3.58.18 and Niagara 4.15.6.20 installs under `/mnt/c`, their niagara-help `versions/`
+trees, the real PDFs and the developer course. These tests read gigabytes, so `go test`,
+`make test` and `make ci` skip them, each skip naming the variable that turns it on.
+`make parity` sets every one (`HELPBUILD_PARITY_REAL=1`, `HELPBUILD_PARITY_FULL=1`,
+`HELPBUILD_PARITY_415=1`) and runs the package's `Parity` tests, synthetic ones included;
+it takes several minutes (see [helpbuild.md](helpbuild.md#real-data-parity) for the list
+and the timing). Run it before handing any builder PR for review, and after changing a
+helper the builders share. A real install that is not mounted skips visibly; it never
+passes without comparing. The Python reference is not optional under `make parity`: a
+missing `python3` or niagara-help checkout fails every parity test with a message, where
+plain `go test` skips naming the variable. After Phase 5 the Python reference lives in a
+`pre-go-retire` worktree of niagara-research; point `NIAGARA_HELP_DIR` at its
+`niagara-help` folder before running `make parity`.

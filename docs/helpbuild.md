@@ -17,8 +17,8 @@ document disagree, the code wins and this document is corrected.
 | **S2** (done) | doc-jar extract + fidelity (dest paths, mapped entries, fill-missing, sha256 + EOL-only class), the raw steps of `extract_and_index`, `jar_manifest`, the version manifest, `_empty_indexes` | `doc_jars.py`, `version_setup.py` (part), `extract_version.py` (as library options) | ~1,500 with tests |
 | **S3** (done) | PDF text (`pdftotext -layout -enc UTF-8`, `docs-text/`, `pdf-index.json`) | `pdf_extractor.py` (+ the `os`/`shutil`/`json` and registry helpers S4 shares) | ~1,970 with tests |
 | **S4** (done) | developer course (`course-text/`, `devguide-examples/course/`); `gate()` waits for S10 (it reads the full-text index) | `course_extractor.py`, `course.py` (part) | ~670 with tests |
-| S5 | `html_text` (html.parser with `convert_charrefs`) + guides/devguide parsers | `html_text.py`, `guides_parser.py`, `guide_toc.py`, `devguide_parser.py` | ~750 |
-| S6 | `guides-index.json` + `devguide-toc.json` | `build_guides_index.py`, `build_devguide_toc.py` | ~350 |
+| **S5** (done) | `html_text` (html.parser with `convert_charrefs`) + guides/devguide parsers | `html_text.py`, `guides_parser.py`, `guide_toc.py`, `devguide_parser.py` | ~2,100 with tests |
+| **S6** (done) | `guides-index.json` + `devguide-toc.json` | `build_guides_index.py`, `build_devguide_toc.py` | ~930 with tests |
 | S7 | bajadoc text (`bajadoc-clean/`) | `bajadoc_parser.py`, `bajadoc_xml_parser.py`, `bajadoc_xml.py` | ~800 |
 | S8 | class / inheritance / method indexes | `build_class_index.py`, `inheritance_builder.py`, `method_indexer.py` | ~550 |
 | S9 | source / slots / xref / call indexes | `source_indexer.py`, `slots_indexer.py`, `xref_builder.py`, `build_call_index.py` | ~800 |
@@ -100,7 +100,16 @@ niagara-help checkout — `$NIAGARA_HELP_DIR`; else `$NIAGARA_RESEARCH/niagara-h
 holds the data file (the variable the glossary and version drift tests read); else the
 first one met walking up from the test directory as `<dir>/niagara-help` or
 `<dir>/niagara-research/niagara-help` (a worktree under `~/niagara-go-worktrees` finds
-`~/niagara-research/niagara-help`) — and skips visibly only when there is none. The drift
+`~/niagara-research/niagara-help`) — and skips visibly only when there is none. A run
+that set any `HELPBUILD_PARITY_*` variable (`make parity` sets three) fails instead of
+skipping when `python3`, the checkout, its tools or a real version's `versions/` tree are
+missing, the message naming the variable. The interpreter must be CPython 3.15.x
+(`html.parser` and the other stdlib behaviour the drivers compare change between minor
+releases): another version fails every parity test, and `-v` logs the version used
+(`parity driver python: CPython 3.15.0 (...)`). After Phase 5 retires the Python tools from
+niagara-research, the reference lives in a `pre-go-retire` worktree of niagara-research:
+point `NIAGARA_HELP_DIR` at its `niagara-help` folder (for example
+`NIAGARA_HELP_DIR=~/niagara-research-worktrees/pre-go-retire/niagara-help make parity`). The drift
 test `TestEmbeddedRulesMatchCanonical` uses the same lookup; `$NIAGARA_HELP_DIR` pointing
 at a folder without the data file fails it, a `$NIAGARA_RESEARCH` without one falls
 through to the walk.
@@ -108,7 +117,7 @@ through to the walk.
 | Test | Driver mode | Compares |
 |---|---|---|
 | `TestParitySyntheticJars` | `classify` | per jar the compact listing JSON, per entry: `is_doc_like`, extract rule, exclude rule + reason, the `(course)` exclude rule, `course_kind`, `is_guide_page`, `is_licence`, `is_source_archive("guides/"+entry)`, `clean_text_name(entry, src)` (with a sibling tree) |
-| `TestParityRealJars` | `classify` | the same on five EC-Net 4.3.58.18 jars (`docDeveloper-doc` the biggest doc jar, `docLinuxN4-doc`, `alarm-rt`, `workbench-wb`, `batchJob-ux`) plus `ffmpeg-wb.jar` of 4.15.6.20 (the only source archive); `HELPBUILD_PARITY_JARS` replaces the list; skipped with `-short` |
+| `TestParityRealJars` | `classify` | the same on five EC-Net 4.3.58.18 jars (`docDeveloper-doc` the biggest doc jar, `docLinuxN4-doc`, `alarm-rt`, `workbench-wb`, `batchJob-ux`) plus `ffmpeg-wb.jar` of 4.15.6.20 (the only source archive); `HELPBUILD_PARITY_JARS` replaces the list; only with `HELPBUILD_PARITY_REAL=1` (see Real-data parity) |
 | `TestParityListingCache` | `cache` | a fresh cache written by each side (byte-identical), each side reading the other's cache (0 jars opened), an update of a Python cache by each side (byte-identical, dict order kept) |
 | `TestParityCachePath` | `path` | `cache_path` for absolute, relative, `..`, double-slash and non-ASCII install paths |
 | `TestParityGlob` | `glob` | 468 pattern/path pairs through `glob_re` |
@@ -121,7 +130,7 @@ Python exception becomes `["raise"]`, compared against a Go error):
 | `TestParityExtractSynthetic` | `extract_and_index` result lines and both whole repo trees (path, kind, permission bits, size, sha256; manifests inline with `generated_utc` normalized) after each of: install not mounted, repo-root refusal, verify-only over the repo root, extract, already-extracted refusal, verify after mismatched / EOL-only / missing edits, fill-missing, force |
 | `TestParityDocJarCorners` | `extract`, `fill_missing`, `fidelity` (also over what extract left) and the trees (a root one side did not create counts as a difference) on twelve one-jar installs: bad CRC, local name ≠ central name, encrypted, unknown method, overlapped entries, a shared local header, `file_size` shorter than the data, cp437 and NUL names, prepended data, a zip64 end record, not a zip, a folder named like a jar |
 | `TestParityDocJarMapping` | `is_doc_jar` … `guide_folder`, `dest_path`, `is_help_entry`, `mapped_entries` over every synthetic jar plus a grid of 27 jar kinds × 32 entry shapes; `help_jars` / `list_doc_jars` of the synthetic install |
-| `TestParityExtractReal` | extract + verify of a copied EC-Net 4.3.58.18 subset (`docDeveloper-doc`, `docDeveloper-ux`, `docDeveloper-rt`, `docLinuxN4-doc`, `docObix-doc`, plus `workbench-wb`, `batchJob-ux`, `alarm-rt`); skipped with `-short` |
+| `TestParityExtractReal` | extract + verify of a copied EC-Net 4.3.58.18 subset (`docDeveloper-doc`, `docDeveloper-ux`, `docDeveloper-rt`, `docLinuxN4-doc`, `docObix-doc`, plus `workbench-wb`, `batchJob-ux`, `alarm-rt`); only with `HELPBUILD_PARITY_REAL=1` (see Real-data parity) |
 | `TestParityHelpJarsFullInstall` | `help_jars` / `list_doc_jars` of the whole 4.3 install (578 module jars, ~25 s a side); only with `HELPBUILD_PARITY_FULL=1` |
 | `TestParityEmptyIndexes` | `_empty_indexes` lines and tree |
 
@@ -241,10 +250,10 @@ S3/S4 parity (`testdata/parity/textdriver.py`, modes `pdf`, `course`, `plan`):
 | Test | Compares |
 |---|---|
 | `TestParityPDFSynthetic` | stdout (data root relabeled, the `Time:` value normalized), exit status and both whole repo trees after each of: unregistered root (SKIP, docs dir `None`), unregistered root with manuals, corrupt index (bad JSON, not an object, not UTF-8) with nothing to rebuild from, install not mounted, a docs dir with no PDF, pdftotext not on PATH, then 13 hand-written PDFs (two pages with an unmapped bullet, a WinAnsi degree sign, short and blank pages, a stem collision, hardware, top-level, nested, non-ASCII and punctuated names, a symlinked folder) with a corrupt PDF, output that is not UTF-8 and a timeout (fake pdftotext, 1 s on both sides for that PDF only): failures keep the last good text and its re-dumped entry, a corrupt index is rebuilt, a clean run prunes |
-| `TestParityPDFReal` | the same on five EC-Net 4.3.58.18 manuals (the largest, `Getting Started`, 9.6 MB; `Station Security`, whose bullets come out as U+FFFD; the smallest; a hardware guide; the platform guide); `HELPBUILD_PARITY_PDF_DOCS` converts a whole docs dir instead; skipped with `-short` |
+| `TestParityPDFReal` | the same on five EC-Net 4.3.58.18 manuals (the largest, `Getting Started`, 9.6 MB; `Station Security`, whose bullets come out as U+FFFD; the smallest; a hardware guide; the platform guide); `HELPBUILD_PARITY_PDF_DOCS` converts a whole docs dir instead; only with `HELPBUILD_PARITY_REAL=1` (see Real-data parity) |
 | `TestParityCoursePlanSynthetic` | every `plan` row plus the `(course)` exclude rule id over the test_course_source fixture and 18 more files (nested text, upper-case extension, dev readme.md, .js and doc pages, key material, solutions, PDFs, non-ASCII names, a symlinked folder) |
 | `TestParityCourseExtractorSynthetic` | stdout, stderr, exit status and both repo trees: bound by a relative and an absolute `course_dir`, unbound (earlier copies removed; a symlink in their place refused), `course_dir` missing, unregistered root, rebuilt after the course changed, a copy that fails (mode 000 file), a named pipe in the course, a registry that is not JSON |
-| `TestParityCourseReal` | plan rows and the copy of `sources/n4-dev-course` (334 files: 20 text, 169 code, 17 PDFs, 128 not copied; `HELPBUILD_PARITY_COURSE` replaces it); skipped with `-short` |
+| `TestParityCourseReal` | plan rows and the copy of `sources/n4-dev-course` (334 files: 20 text, 169 code, 17 PDFs, 128 not copied; `HELPBUILD_PARITY_COURSE` replaces it); only with `HELPBUILD_PARITY_REAL=1` (see Real-data parity) |
 
 S3/S4 intended differences (none changes an output Python produces):
 
@@ -300,6 +309,111 @@ Found while porting (the Python code wins, kept for parity):
 (`shutil.rmtree(ignore_errors=True)`) and `commas` (`format(n, ",")`) are local to this
 package; `pyJoin`/`pyAbspath`/`pyBasename` belong next to `pycompat.PosixJoin` once a
 second package needs them.
+
+## S5 and S6 files
+
+| File | Ports | Notes |
+|---|---|---|
+| `pyhtml.go`, `pyhtmlref.go` | `html.parser.HTMLParser` (CPython 3.15), `convert_charrefs=True` | the tokenizer below; reports only the callbacks `html_text` overrides |
+| `htmltext.go` | `html_text.convert` as `HTMLToText(page) (title, text)` | Python's Unicode `\s`, `strip` and `\w` (`pycompat.IsSpace`, `IsWordRune`) |
+| `guidetoc.go` | `guide_toc.find_toc`, `parse_toc`, `count_items` | ElementTree is `internal/pyxml` in ETree mode; the warning is returned, not printed |
+| `guidesparser.go` | `guides_parser.parse_guides`, `_markdown_title`, `devguide_parser.parse_devguide` | `RebuiltDir`; `TextResult.Log` = stdout lines, `.Warnings` = stderr lines |
+| `guidesindex.go` | `build_guides_index` (`topic_name`, `known_jar_names`, `modules_dir_of`, `jar_for_folder`, `previous_jars`, `build`, `main`) | `JarSources` replaces the `_MANIFEST` sentinels; `Unknown` is `jar_names=None`; the walk, `json.load` and registry lookups are S3's (`pyfs.go`, `registry.go`) |
+| `devguidetoc.go` | `build_devguide_toc.build`, `main` | its regexes run through `internal/pyre` (Python semantics, code-point offsets) |
+
+API for S10 (`maintenance.BUILDERS` runs these as subprocesses; the Go orchestration calls
+them in process and prints `Log`, then `Warnings` on stderr):
+
+```go
+res, err := helpbuild.ParseGuides(root)        // guides-clean/
+res, err := helpbuild.ParseDevguide(root)      // devguide-clean/
+res, err := helpbuild.BuildGuidesIndex(root)   // indexes/guides-index.json
+res, err := helpbuild.BuildDevguideTOC(root)   // indexes/devguide-toc.json
+// err != nil is where Python raises (traceback, non-zero exit).
+```
+
+Both indexes are `json.dumps(indent=2)` with `ensure_ascii` on (`DumpIndent2`).
+
+### The html.parser port
+
+One `feed()` of the whole page and `close()` parse exactly like one `goahead(end=1)`: each
+early stop of the feed pass leaves the state unchanged and `close()` resumes there, and
+the text after the last `<` is handed over whole either way, so the `&` look-back that
+waits for a cut reference changes nothing. With `convert_charrefs` the `&` branches of
+`goahead` are unreachable; data is unescaped chunk by chunk except in the raw-text
+elements (`script`, `style`, `xmp`, `iframe`, `noembed`, `noframes`, `plaintext`;
+`title` and `textarea` are RCDATA, unescaped). Chunk boundaries matter (`html_text`
+collapses whitespace per chunk) and are the same: data before a tag, a malformed start tag
+reported as text, a lone `<`, a trailing `</`. Unterminated constructs at the end of the
+page are dropped (`<a href='x`, `</a`, `<!--`), as in Python.
+
+`locatetagend`, `tagfind_tolerant` and `attrfind_tolerant` are hand-ported: every part
+after the tag name is optional, so sre's first path is the greedy one, except the value
+indicator, which backtracks one space before a quote that is never closed (`x= 'y` is
+`x=""` plus an attribute `'y`). Tag and attribute names use Python's `str.lower`; the
+CDATA end tag folds ASCII letters only (`re.ASCII`). Offsets are byte offsets into valid
+UTF-8: every delimiter is ASCII and every class excludes ASCII bytes only.
+
+`html.unescape` is `pycompat.HTMLUnescape` plus `&nGt;` and `&nLt;`: Go's `html` entity
+table lacks these two WHATWG names (found by the parity test over all 2,231 names of
+`html.entities.html5`). The attribute rule (`_unescape_attrvalue`) needs `name in html5`;
+Go does not export its table, so `isHTML5Entity` reads it through `html.UnescapeString`
+(an exact name decodes to 1 or 2 code points, a prefix match leaves the rest of the name).
+
+### Parity tests (`testdata/parity/htmldriver.py`)
+
+| Test | Compares |
+|---|---|
+| `TestParityHTMLCorners` | the parser callbacks and `convert()` of 60 hand-written pages (the Python tests' fixtures, unterminated constructs, raw text, attribute quoting, charrefs) |
+| `TestParityHTMLFuzz` | the same on 5,000 seeded random snippets of tag/charref/whitespace fragments, some cut at a random point (400 with `-short`) |
+| `TestParityHTML5Entities` | `isHTML5Entity` on every `html5` name and its near misses, `htmlUnescape` against `html.unescape` on 46,851 texts |
+| `TestParityTocFiles` | `parse_toc` (order, titles, trails), `count_items` and the stderr warning on the synthetic toc.xml files and corners (namespaced, root `tocitem`, empty, undefined entity, BOM + ISO-8859-1 / US-ASCII / UTF-8 / UTF-16 (one real 4.3/4.15 toc.xml is BOM + ISO-8859-1; `pyxml` applies the declared encoding after a BOM as expat does), junk, missing file) |
+| `TestParityGuidesSynthetic` | stdout/stderr lines, return value and both whole trees after each builder (and a second run) on a synthetic root: the `test_extraction` pages, toc.xml corners, Markdown, `.txt` beside `.html`, licence texts, a non-UTF-8 page body, CRLF, a broken toc, `TOC.XML` |
+| `TestParityGuidesIndexSources` | `guides-index.json` of a registered root with a manifest and a mounted install, an unmounted install, and no manifest (values kept from an earlier index) |
+| `TestParityNonUTF8Names` | page and folder names that are not UTF-8 |
+| `TestParityGuidesReal` | all four builders on EC-Net 4.3.58.18 (guides/ and devguide/ linked into a temporary registered root): 5,077 files, 15,528,757 bytes; `HELPBUILD_PARITY_415=1` adds 4.15.6.20 (6,640 files, 34,680,193 bytes); only with `HELPBUILD_PARITY_REAL=1` (see Real-data parity) |
+
+### S5/S6 intended differences
+
+- **A page or folder name that is not UTF-8**: `os.walk` decodes it with
+  surrogateescape and `write_text` raises `UnicodeEncodeError` on the header, so
+  `parse_guides` / `parse_devguide` fail and the old clean tree is kept. Go returns an
+  error at the same point (same outcome, an error instead of a traceback);
+  `guides-index.json` spells such names as Python does (`\udcXX`, sorted as decoded
+  names). A licence text with such a name is printed raw in the `excluded` line.
+
+### S5/S6 shared-helper candidates
+
+- **`internal/pyhtml`**: `pyhtml.go` + `pyhtmlref.go` have no helpbuild dependency and
+  bajadoc (S7) needs the same parser; moving them to a shared package (exporting the
+  handler interface) is a rename.
+- **`pycompat.HTMLUnescape`** should learn `&nGt;` / `&nLt;`; `htmlUnescape` and
+  `goMissingEntities` then go away. `isHTML5Entity` would sit well next to it.
+
+## Real-data parity
+
+Every test that reads a real install or the real corpus runs only on request, `-short`
+or not; without its variable it skips and the message names the variable. A switch
+(`REAL`, `FULL`, `415`) counts only when set to `1`: any other value fails the test,
+naming the variable and the accepted value. A selection that leaves nothing to compare
+(no version for `TestParityGuidesReal`, a `HELPBUILD_PARITY_JARS` naming no jar, a
+`HELPBUILD_PARITY_PDF_DOCS` without a PDF, a `HELPBUILD_PARITY_COURSE` without files)
+fails too, and an explicit jar list or course never skips as "not mounted". The synthetic,
+cache, glob, toc and fuzz parity tests (5,000 snippets) stay on in `go test`.
+
+| Variable | Turns on |
+|---|---|
+| `HELPBUILD_PARITY_REAL=1` | the umbrella: `TestParityRealJars` (five 4.3 jars + 4.15 `ffmpeg-wb.jar`), `TestParityExtractReal` (the 4.3 subset), `TestParityPDFReal` (five 4.3 manuals), `TestParityCourseReal`, `TestParityGuidesReal` (4.3.58.18) |
+| `HELPBUILD_PARITY_JARS=a.jar:b.jar` | `TestParityRealJars` on that list instead |
+| `HELPBUILD_PARITY_FULL=1` | `TestParityHelpJarsFullInstall` (all 578 module jars of 4.3) |
+| `HELPBUILD_PARITY_PDF_DOCS=<dir>` | `TestParityPDFReal` over a whole docs folder (the 66-PDF run) |
+| `HELPBUILD_PARITY_COURSE=<dir>` | `TestParityCourseReal` on that course tree |
+| `HELPBUILD_PARITY_415=1` | `TestParityGuidesReal` on 4.15.6.20 too |
+
+`make parity` sets `REAL`, `FULL` and `415` and runs every `Parity` test of the package.
+Timings on the development laptop: `go test ./internal/helpbuild/` about 20 s without the
+variables (about 170 s when the real tests ran by default); `HELPBUILD_PARITY_REAL=1 go test ./internal/helpbuild/` about 60 s; `make parity`
+4.5 to 6 min (the full-install sweep 80 s or more over /mnt/c, 4.3 + 4.15 guides about 135 s).
 
 ## Dead code not ported
 
