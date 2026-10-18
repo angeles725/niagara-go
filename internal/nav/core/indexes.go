@@ -70,16 +70,7 @@ func (r *Runtime) Load(name string, opts LoadOpts) *index.Object {
 	if opts.Optional && r.absentOptional(key, name) {
 		return nil
 	}
-	sizeMB := 0.0
-	if !opts.Quiet {
-		if st, err := os.Stat(key); err == nil && st.Mode().IsRegular() {
-			sizeMB = float64(st.Size()) / (1024 * 1024)
-		}
-	}
-	progress := sizeMB >= progressMB
-	if progress {
-		fmt.Fprintf(r.Err, "  Loading %s (%s MB)...", name, Fixed(sizeMB, 1))
-	}
+	progress := !opts.Quiet && r.progress(key, name)
 	data := r.LoadJSON(key, what(name))
 	if progress {
 		if data != nil {
@@ -98,6 +89,31 @@ func (r *Runtime) Load(name string, opts LoadOpts) *index.Object {
 	}
 	r.json[key] = data
 	return data
+}
+
+// progress prints Load's "  Loading <name> (N.N MB)..." line when the index
+// at key is a file of 20 MB or more; true when it did.
+func (r *Runtime) progress(key, name string) bool {
+	st, err := os.Stat(key)
+	if err != nil || !st.Mode().IsRegular() {
+		return false
+	}
+	sizeMB := float64(st.Size()) / (1024 * 1024)
+	if sizeMB < progressMB {
+		return false
+	}
+	fmt.Fprintf(r.Err, "  Loading %s (%s MB)...", name, Fixed(sizeMB, 1))
+	return true
+}
+
+// LoadedFromCache prints what Load prints on stderr when it parses
+// indexes/<name> successfully (its progress line), for an index a command
+// took from its own cache instead, so stderr is the same on a hit and on a
+// miss. The class index, whose Load also warns about staleness, is not one.
+func (r *Runtime) LoadedFromCache(name string) {
+	if r.progress(absPath(IndexPath(r.BaseDir, name)), name) {
+		fmt.Fprint(r.Err, " OK\n")
+	}
 }
 
 // LoadJSON is outcome.load_json: the JSON object at path, or nil after an

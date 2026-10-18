@@ -14,15 +14,26 @@ import (
 // callers and callees (callgraph.py cmd_callers, cmd_callees): the CLI view of
 // the nav/callgraph lookups.
 
+// callgraphIndex is the call graph index under indexes/.
+const callgraphIndex = "callgraph-index.json"
+
 // load is load_callgraph plus `if not cg: return` and the class table
 // (`ci_data.get("classes", {}) if ci_data else {}`): nil when the call graph
-// is missing, unreadable or empty.
+// is missing, unreadable or empty. The graph comes from its cache
+// (callgraph.Cache) when the index is unchanged, with the same stderr.
 func load(env *registry.Env) (*callgraph.Graph, *index.Object) {
-	cg := env.Load("callgraph-index.json", core.LoadOpts{})
-	if cg == nil || cg.Len() == 0 {
-		return nil, nil
+	cache := callgraph.NewCache(core.IndexPath(env.BaseDir, callgraphIndex), callgraph.CachePath(env.BaseDir))
+	g := cache.Load()
+	if g != nil {
+		env.LoadedFromCache(callgraphIndex)
+	} else {
+		cg := env.Load(callgraphIndex, core.LoadOpts{})
+		if cg == nil || cg.Len() == 0 {
+			return nil, nil
+		}
+		g = callgraph.New(cg)
+		cache.Store(g)
 	}
-	g := callgraph.New(cg)
 	var classes *index.Object
 	if ci := env.LoadClassIndex(); ci != nil {
 		classes = ci.Object("classes")
