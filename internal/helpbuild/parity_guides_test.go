@@ -323,13 +323,15 @@ func realBase(t *testing.T, vid string) string {
 
 // TestParityGuidesReal builds guides-clean/, devguide-clean/,
 // guides-index.json and devguide-toc.json of EC-Net 4.3.58.18 on both
-// sides (with HELPBUILD_PARITY_415=1 also 4.15.6.20); skipped with -short.
+// sides with HELPBUILD_PARITY_REAL=1; HELPBUILD_PARITY_415=1 adds
+// 4.15.6.20.
 func TestParityGuidesReal(t *testing.T) {
-	if testing.Short() {
-		t.Skip("real-corpus parity skipped with -short")
-	}
+	needRealParity(t, "HELPBUILD_PARITY_415")
 	driver(t)
-	vids := []string{"4.3.58.18"}
+	var vids []string
+	if os.Getenv(realParityVar) == "1" {
+		vids = append(vids, "4.3.58.18")
+	}
 	if os.Getenv("HELPBUILD_PARITY_415") == "1" {
 		vids = append(vids, "4.15.6.20")
 	}

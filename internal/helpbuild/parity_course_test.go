@@ -227,9 +227,7 @@ func realCourse(t *testing.T) string {
 // TestParityCourseReal plans and copies the real course (only read) into
 // twin repositories.
 func TestParityCourseReal(t *testing.T) {
-	if testing.Short() {
-		t.Skip("real-data parity skipped with -short")
-	}
+	needRealParity(t, "HELPBUILD_PARITY_COURSE")
 	driver(t)
 	src := realCourse(t)
 	if src == "" || !isDir(src) {

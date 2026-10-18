@@ -297,9 +297,7 @@ var realPDFs = []string{
 // only read) with the real pdftotext on both sides.
 // $HELPBUILD_PARITY_PDF_DOCS names a docs dir to convert whole instead.
 func TestParityPDFReal(t *testing.T) {
-	if testing.Short() {
-		t.Skip("real-data parity skipped with -short")
-	}
+	needRealParity(t, "HELPBUILD_PARITY_PDF_DOCS")
 	driver(t)
 	real := needPdftotext(t)
 	dir := t.TempDir()

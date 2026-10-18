@@ -276,10 +276,30 @@ func defaultRealJars() []string {
 		m43 + "workbench-wb.jar", m43 + "batchJob-ux.jar", "/mnt/c/Niagara/Niagara-4.15.6.20/modules/ffmpeg-wb.jar"}
 }
 
-func TestParityRealJars(t *testing.T) {
-	if testing.Short() {
-		t.Skip("-short: real install jars over /mnt/c not read")
+// realParityVar is the umbrella switch of every test that reads a real
+// install or the real corpus (minutes of work, so off by default, -short or
+// not); the finer HELPBUILD_PARITY_* variables of a test also turn it on.
+const realParityVar = "HELPBUILD_PARITY_REAL"
+
+// needRealParity skips t, naming the variables, unless
+// HELPBUILD_PARITY_REAL=1 or one of the finer variables is set.
+func needRealParity(t *testing.T, finer ...string) {
+	t.Helper()
+	if os.Getenv(realParityVar) == "1" {
+		return
 	}
+	names := realParityVar + "=1"
+	for _, v := range finer {
+		if os.Getenv(v) != "" {
+			return
+		}
+		names += " or " + v
+	}
+	t.Skipf("real-data parity runs only on request: set %s", names)
+}
+
+func TestParityRealJars(t *testing.T) {
+	needRealParity(t, "HELPBUILD_PARITY_JARS")
 	driver(t)
 	jars := defaultRealJars()
 	if _, err := os.Stat(jars[0]); err != nil {

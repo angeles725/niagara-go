@@ -334,9 +334,7 @@ var realSubset = []string{"docDeveloper-doc.jar", "docDeveloper-ux.jar", "docDev
 const install43 = "/mnt/c/Niagara/EC-Net4-4.3.58.18"
 
 func TestParityExtractReal(t *testing.T) {
-	if testing.Short() {
-		t.Skip("-short: real install jars over /mnt/c not read")
-	}
+	needRealParity(t)
 	driver(t)
 	if _, err := os.Stat(filepath.Join(install43, "modules")); err != nil {
 		t.Skipf("4.3 install not mounted (%v): parity not checked", err)
