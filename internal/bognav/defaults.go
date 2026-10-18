@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"github.com/angeles725/niagara-go/internal/bog"
+	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/slotomatic"
 	"github.com/angeles725/niagara-go/internal/textfold"
 )
@@ -58,7 +59,7 @@ func sourceDirs(moduleDir string) []string {
 	var out []string
 	for _, part := range parts {
 		for _, dec := range decompilers {
-			if d := slotomatic.Join(slotomatic.Join(moduleDir, part), dec); isDir(d) {
+			if d := slotomatic.Join(slotomatic.Join(moduleDir, part), dec); pycompat.IsDir(d) {
 				out = append(out, d)
 				break
 			}

@@ -66,7 +66,7 @@ func OrganizedRoot() string {
 		case "", "off", "0":
 			return ""
 		}
-		if isDir(env) {
+		if pycompat.IsDir(env) {
 			return env
 		}
 		return ""
@@ -79,9 +79,4 @@ func OrganizedRoot() string {
 		return filepath.Join(dir, "organized")
 	}
 	return ""
-}
-
-func isDir(p string) bool {
-	st, err := os.Stat(p)
-	return err == nil && st.IsDir()
 }

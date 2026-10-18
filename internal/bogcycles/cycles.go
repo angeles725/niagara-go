@@ -184,7 +184,7 @@ func Main(args []string, s cli.Stdio) int {
 	}
 	res := Find(b)
 	if ns.Bool("json") {
-		fmt.Fprintln(s.Out, pyjson.Dumps(res.json(), indent1))
+		fmt.Fprintln(s.Out, pyjson.Dumps(res.json(), pyjson.Defaults(1)))
 	} else {
 		res.print(s.Out)
 	}
@@ -241,9 +241,6 @@ func head[T any](s []T, n int) []T {
 	return s
 }
 
-// indent1 is json.dumps(obj, indent=1).
-var indent1 = pyjson.DumpOpts{EnsureASCII: true, Indent: 1, ItemSep: ",", KeySep: ": "}
-
 // object is a dict in insertion order from key, value pairs.
 func object(kv ...any) pyjson.Value {
 	o := pyjson.NewObject()
@@ -260,14 +257,6 @@ func optStr(s *string) pyjson.Value {
 	return pyjson.String(*s)
 }
 
-func strList(ss []string) pyjson.Value {
-	a := pyjson.Value{Kind: pyjson.Array, A: []pyjson.Value{}}
-	for _, s := range ss {
-		a.A = append(a.A, pyjson.String(s))
-	}
-	return a
-}
-
 func (r Result) json() pyjson.Value {
 	cycles := pyjson.Value{Kind: pyjson.Array, A: []pyjson.Value{}}
 	for _, c := range r.Cycles {
@@ -276,7 +265,7 @@ func (r Result) json() pyjson.Value {
 			edges.A = append(edges.A, object("source", pyjson.String(e.Source), "sourceSlot", optStr(e.SourceSlot),
 				"target", pyjson.String(e.Target), "targetSlot", optStr(e.TargetSlot), "link", pyjson.String(e.Link)))
 		}
-		cycles.A = append(cycles.A, object("components", strList(c.Components), "handles", strList(c.Handles), "edges", edges))
+		cycles.A = append(cycles.A, object("components", pyjson.StringList(c.Components), "handles", pyjson.StringList(c.Handles), "edges", edges))
 	}
 	dangling := pyjson.Value{Kind: pyjson.Array, A: []pyjson.Value{}}
 	for _, d := range r.Dangling {

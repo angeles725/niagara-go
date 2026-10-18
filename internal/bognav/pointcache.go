@@ -137,8 +137,8 @@ func cmdPointcache(e *env) (int, int) {
 		return 0, -1
 	}
 	e.render(rows, func(r row) string {
-		return ljust(r.s("coordinate"), 24) + " " + ljust(r.s("property"), 16) + " = " + ljust(head(r.s("value"), 14), 14) +
-			" polled " + ljust(head(r.s("polled"), 10), 11) + " " + r.s("fresh")
+		return pycompat.LJust(r.s("coordinate"), 24, ' ') + " " + pycompat.LJust(r.s("property"), 16, ' ') + " = " + pycompat.LJust(head(r.s("value"), 14), 14, ' ') +
+			" polled " + pycompat.LJust(head(r.s("polled"), 10), 11, ' ') + " " + r.s("fresh")
 	}, "(no matching PointCache objects)",
 		[]string{"coordinate", "device", "obj_type", "obj_inst", "property", "value", "polled", "fresh"})
 	return 0, -1

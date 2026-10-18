@@ -1,10 +1,10 @@
 package bognav
 
 import (
-	"os"
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/bog"
+	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/slotomatic"
 )
 
@@ -29,7 +29,7 @@ var (
 // The first declaration of a name wins, in os.walk order (dot directories skipped).
 func sourceTypes(root string) map[string]string {
 	m := map[string]string{}
-	if root == "" || !isDir(root) {
+	if root == "" || !pycompat.IsDir(root) {
 		return m
 	}
 	slotomatic.Walk(root, false, func(dir string, dirs *[]string, files []string) {
@@ -124,9 +124,4 @@ func writability(slotType string) (string, string) {
 		return "simple", `plain simple value; carries writable="true" externally`
 	}
 	return "other", t
-}
-
-func isDir(p string) bool {
-	st, err := os.Stat(p)
-	return err == nil && st.IsDir()
 }

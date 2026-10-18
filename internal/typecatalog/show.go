@@ -6,9 +6,9 @@ import (
 	"regexp"
 	"sort"
 	"strings"
-	"unicode/utf8"
 
 	"github.com/angeles725/niagara-go/internal/cli"
+	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/slotomatic"
 	"github.com/angeles725/niagara-go/internal/textfold"
 )
@@ -143,8 +143,8 @@ func show(out, errw io.Writer, cat *Catalog, path, name string) int {
 		fmt.Fprintf(out, "%s  extends %s   (%s)\n", k, views[i].extends, views[i].source)
 		for g, decls := range views[i].groups {
 			for _, d := range decls {
-				fmt.Fprintf(out, "  %s %s flags=%s %s default=%s facets=%s\n", ljust(labels[g], 8),
-					ljust(d.name, 24), ljust(d.flags, 6), ljust(d.letters, 8), d.def, d.facets)
+				fmt.Fprintf(out, "  %s %s flags=%s %s default=%s facets=%s\n", pycompat.LJust(labels[g], 8, ' '),
+					pycompat.LJust(d.name, 24, ' '), pycompat.LJust(d.flags, 6, ' '), pycompat.LJust(d.letters, 8, ' '), d.def, d.facets)
 			}
 		}
 	}
@@ -152,11 +152,3 @@ func show(out, errw io.Writer, cat *Catalog, path, name string) int {
 }
 
 type declView struct{ name, flags, letters, def, facets string }
-
-// ljust is Python's "%-Ns": s padded with spaces to n code points.
-func ljust(s string, n int) string {
-	if k := utf8.RuneCountInString(s); k < n {
-		return s + strings.Repeat(" ", n-k)
-	}
-	return s
-}

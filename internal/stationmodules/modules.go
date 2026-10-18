@@ -85,13 +85,13 @@ func Main(args []string, s cli.Stdio) int {
 
 func autodetect(explicit string) (string, error) {
 	if explicit != "" {
-		if !isDir(explicit) {
+		if !pycompat.IsDir(explicit) {
 			return "", fail(1, "error: install root not found: %s", pycompat.StrRepr(explicit))
 		}
 		return explicit, nil
 	}
 	for _, c := range installCandidates {
-		if isDir(pycompat.Join(c, "modules")) {
+		if pycompat.IsDir(pycompat.Join(c, "modules")) {
 			return c, nil
 		}
 	}
@@ -187,8 +187,8 @@ func check(o options, w io.Writer) (int, error) {
 		mods := pyjson.NewObject()
 		for _, r := range rows {
 			m := pyjson.NewObject()
-			m.Set("installed", strList(r.installed))
-			m.Set("types", strList(r.refs))
+			m.Set("installed", pyjson.StringList(r.installed))
+			m.Set("types", pyjson.StringList(r.refs))
 			mods.Set(r.module, m)
 		}
 		out := pyjson.NewObject()
@@ -197,7 +197,7 @@ func check(o options, w io.Writer) (int, error) {
 		out.Set("modules", mods)
 		out.Set("missing", missing.json())
 		out.Set("fixes", fixes.json())
-		fmt.Fprintln(w, pyjson.Dumps(out, indent2))
+		fmt.Fprintln(w, pyjson.Dumps(out, pyjson.Indent2))
 	} else {
 		fmt.Fprintf(w, "install : %s\nstation : %s\nmodules referenced: %d\n", in.root, o.target, len(rows))
 		for _, r := range rows {
@@ -287,7 +287,7 @@ func doctor(o options, w io.Writer) (int, error) {
 		out.Set("installed_parts", pyjson.IntValue(int64(len(in.parts.order))))
 		out.Set("missing", missing.json())
 		out.Set("fixes", fixes.json())
-		fmt.Fprintln(w, pyjson.Dumps(out, indent2))
+		fmt.Fprintln(w, pyjson.Dumps(out, pyjson.Indent2))
 	} else {
 		fmt.Fprintf(w, "install : %s\ninstalled module-parts: %d\n", in.root, len(in.parts.order))
 		printMissing(w, missing, fixes)
@@ -308,15 +308,4 @@ func (m *missingSet) json() pyjson.Value {
 		out.Set(p, pyjson.String(m.reason[p]))
 	}
 	return out
-}
-
-// indent2 is json.dumps(obj, indent=2).
-var indent2 = pyjson.DumpOpts{EnsureASCII: true, Indent: 2, ItemSep: ",", KeySep: ": "}
-
-func strList(ss []string) pyjson.Value {
-	a := pyjson.Value{Kind: pyjson.Array, A: []pyjson.Value{}}
-	for _, s := range ss {
-		a.A = append(a.A, pyjson.String(s))
-	}
-	return a
 }
