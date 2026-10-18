@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/angeles725/niagara-go/internal/golden"
+	"github.com/angeles725/niagara-go/internal/pyjson"
 )
 
 // The golden cases were frozen from tools/bacnet-bbmd-verify.py (Python 3.15)
@@ -206,11 +207,11 @@ func TestInvalidNetworkMessages(t *testing.T) {
 	}
 }
 
-// TestJSONStringMatchesPython checks jsonStr against json.dumps output frozen
+// TestJSONStringMatchesPython checks the report's string encoder against json.dumps output frozen
 // from Python 3.15: json.dumps("a\bb\fc\x01\x7f\u00e9\U0001F600\"\\\n\r\t").
 func TestJSONStringMatchesPython(t *testing.T) {
 	const want = `"a\bb\fc\u0001\u007f\u00e9\ud83d\ude00\"\\\n\r\t"`
-	if got := jsonStr("a\bb\fc\x01\x7f\u00e9\U0001F600\"\\\n\r\t"); got != want {
-		t.Errorf("jsonStr: %s, want %s", got, want)
+	if got := pyjson.DumpsAny("a\bb\fc\x01\x7f\u00e9\U0001F600\"\\\n\r\t", pyjson.Indent2); got != want {
+		t.Errorf("json.dumps: %s, want %s", got, want)
 	}
 }
