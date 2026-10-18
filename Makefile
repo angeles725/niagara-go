@@ -38,9 +38,11 @@ fmt-check:
 check: fmt-check vet test
 
 # Lints the host build, then the Windows build so *_windows.go files are
-# checked too (they are invisible to a Linux-only pass).
+# checked too (they are invisible to a Linux-only pass). The pinned staticcheck is
+# installed into bin/tools only when missing or a different version, so lint works offline.
 lint:
-	GOOS= GOARCH= GOBIN=$(TOOLBIN) $(GO) install $(STATICCHECK)
+	@$(TOOLBIN)/staticcheck -version 2>/dev/null | grep -qF "($(patsubst v%,%,$(lastword $(subst @, ,$(STATICCHECK)))))" || \
+		GOOS= GOARCH= GOBIN=$(TOOLBIN) $(GO) install $(STATICCHECK)
 	$(TOOLBIN)/staticcheck ./...
 	GOOS=windows GOARCH=amd64 $(TOOLBIN)/staticcheck ./...
 
