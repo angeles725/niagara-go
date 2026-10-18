@@ -15,9 +15,10 @@ import (
 // The raw-extraction steps of version_setup.extract_and_index for one
 // registered version: (1) unzip every doc jar into the data root, (3) the
 // sha256 fidelity check and (4) the tracked manifest
-// versions/<id>.manifest.json. Step (2), rebuild-all, is the Rebuild hook:
-// the index builders are later slices, and the CLI wiring of
-// extract_version.py (--force, --verify-only, --fill-missing) is S10. Like
+// versions/<id>.manifest.json. Step (2), rebuild-all, is the Rebuild hook
+// (RebuildToLog runs RebuildAll with its stdout in build.log); the CLI
+// wiring of extract_version.py (--force, --verify-only, --fill-missing) is
+// S10. Like
 // the rest of the package nothing is printed: the lines Python passes to
 // out() are returned in SetupResult.Log, in order.
 
@@ -46,7 +47,8 @@ var DumpManifest = pyjson.DumpOpts{EnsureASCII: true, Indent: 1, ItemSep: ",", K
 // a full extraction as rebuild-all on the data root, writing root/build.log
 // and returning its "  SKIP", "  FAIL" and "Ran " lines; ExtractAndIndex
 // writes the indexes/pdf-index.json stub before it and the empty indexes
-// after it. A nil Rebuild skips the step (extract_and_index no_index=True).
+// after it. RebuildToLog(os.Stderr) is _rebuild's hook; a nil Rebuild
+// skips the step (extract_and_index no_index=True).
 // Now stamps generated_utc (nil = time.Now).
 type SetupOptions struct {
 	Force, VerifyOnly, FillMissing bool
@@ -283,13 +285,14 @@ func extractStep(res *SetupResult, repo, root, dataRootRel, install string, ls *
 
 // rebuild is _rebuild around the hook: indexes/ and the pdf-index.json
 // stub first (pdf_extractor replaces it when docs/ exists), the empty
-// indexes after.
+// indexes after. The stub is written atomically (Python's open("w") is
+// not), so a reader never sees a half-written index.
 func rebuild(root string, hook func(string) ([]string, error)) ([]string, error) {
 	if err := os.MkdirAll(pycompat.Join(root, "indexes"), 0o777); err != nil {
 		return nil, err
 	}
 	if pdf := pycompat.Join(root, "indexes", "pdf-index.json"); !isRegular(pdf) {
-		if err := os.WriteFile(pdf, []byte("{}\n"), 0o666); err != nil {
+		if err := WriteText(pdf, "{}\n"); err != nil {
 			return nil, err
 		}
 	}
