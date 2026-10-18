@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bajadoc><class qualifiedName="com.acme.BGuideThing" name="BGuideThing" packageName="com.acme" module="acme" runtimeProfile="ux">
+<extends><type class="com.acme.BBase"/></extends>
+<implements><type class="com.acme.BIThing$Inner"/></implements>
+</class>
+<class qualifiedName="com.acme.BBase" name="BBase" packageName="com.acme" module="acme">
+<extends><type class="javax.baja.sys.BDynamicEnum"/></extends>
+</class></bajadoc>

@@ -1,0 +1,11 @@
+SOURCE: BCrlf
+MODULE: x-rt
+PACKAGE: x
+LINES: 4
+PATH: source/x/BCrlf.java
+
+Grep 'a|�':
+  L1: class BCrlf {
+  L2:   int a;
+  L3: �� bad
+  L4:  last line

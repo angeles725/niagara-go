@@ -1,0 +1,28 @@
+{
+ "BAckState": {
+  "package": "javax.baja.alarm",
+  "extends": "BFrozenEnum"
+ },
+ "BFrozenEnum": {
+  "package": "javax.baja.sys",
+  "extends": "BEnum"
+ },
+ "BAlarmRecord&lt;T&gt;": {
+  "package": "javax.baja.alarm",
+  "extends": "BStruct",
+  "implements": [
+   "javax.baja.alarm.BIAlarmSource"
+  ]
+ },
+ "javax.baja.alarm.BAlarmService": {
+  "package": "javax.baja.alarm",
+  "extends": "BAbstractService"
+ },
+ "BGuideThing": {
+  "package": "com.acme",
+  "extends": "BBase",
+  "implements": [
+   "com.acme.BIThing.Inner"
+  ]
+ }
+}

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bajadoc>
+<!-- a comment before the classes -->
+<class qualifiedName="javax.baja.alarm.BAckState" name="BAckState" packageName="javax.baja.alarm" module="alarm" runtimeProfile="rt" public="true" final="true" category="enum">
+<extends><type class="javax.baja.sys.BFrozenEnum"/></extends>
+<description>Ack state of an <b>alarm</b>
+  record.</description>
+<tag name="@since">Niagara 3.0</tag>
+<field name="acked" public="true" static="true" final="true"><type class="javax.baja.alarm.BAckState"/></field>
+<field name="ACKED" public="true" static="true" final="true"><type class="int"/></field>
+<method name="make" public="true" static="true"><parameter name="ordinal"><type class="int"/></parameter><return><type class="javax.baja.alarm.BAckState"/></return></method>
+</class>
+<class qualifiedName="javax.baja.alarm.BAlarmRecord" name="BAlarmRecord" packageName="javax.baja.alarm" module="alarm" public="true">
+<extends><type class="javax.baja.sys.BStruct"/></extends>
+<implements><type class="javax.baja.alarm.BIAlarmSource"/><parameterizedType class="java.lang.Comparable"><args><typeVariable name="T"/></args></parameterizedType></implements>
+<property name="ackState"><type class="javax.baja.alarm.BAckState"/></property>
+<action name="ack"><parameter name="who"><type class="java.lang.String"/></parameter></action>
+<topic name="acked"><eventType><type class="javax.baja.sys.BValue"/></eventType></topic>
+<method name="ackAlarm" public="true"><return><type class="void"/></return></method>
+<method name="getAlarms" public="true"><return><type class="javax.baja.alarm.BAlarmRecord" dimension="2"/></return></method>
+<constructor name="BAlarmRecord" public="true"><parameter name="args" isVarargs="true"><type class="java.lang.String" dimension="1"/></parameter></constructor>
+</class>
+<class qualifiedName="javax.baja.alarm.BIAlarmSource" name="BIAlarmSource" packageName="javax.baja.alarm" module="alarm" interface="true" public="true">
+<method name="ackAlarm" public="true" abstract="true"><return><type class="void"/></return></method>
+</class>
+<class name="NoQualified" packageName="x"/>
+</bajadoc>

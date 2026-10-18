@@ -1,0 +1,14 @@
+{
+ "BAlarmService": {
+  "package": "javax.baja.alarm",
+  "used_by": []
+ },
+ "BFoo": {
+  "used_by": [
+   "X"
+  ]
+ },
+ "Example": {
+  "package": ""
+ }
+}

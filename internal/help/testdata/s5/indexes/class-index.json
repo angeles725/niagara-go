@@ -1,0 +1,38 @@
+{
+ "BAlarmService": {
+  "package": "javax.baja.alarm",
+  "type": "class",
+  "module": "alarm-rt",
+  "path": "javax/baja/alarm/BAlarmService.html"
+ },
+ "BAckState": {
+  "package": "javax.baja.alarm",
+  "type": "enum",
+  "module": "alarm-rt",
+  "path": "../devguide/alarm/alarm.bajadoc"
+ },
+ "BAlarmRecord": {
+  "package": "javax.baja.alarm",
+  "type": "class",
+  "path": "../devguide/alarm/alarm.bajadoc",
+  "others": [
+   {
+    "package": "com.acme.real",
+    "type": "class",
+    "module": "acme",
+    "path": "com/acme/BMoved.html"
+   }
+  ]
+ },
+ "BMoved": {
+  "package": "com.acme.real",
+  "type": "class",
+  "path": "com/acme/BMoved.html"
+ },
+ "BGuideThing": {
+  "package": "com.acme",
+  "type": "class",
+  "module": "acme-ux",
+  "path": "../guides/Acme/acme.bajadoc"
+ }
+}

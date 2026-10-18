@@ -1,0 +1,17 @@
+FUZZY SEARCH: 'alarm' (6 total matches)
+============================================================
+
+CLASSES (4 matches, showing top 4):
+
+  1.5  BAlarmRecord (javax.baja.alarm, class)
+  1.5  BAlarmService (javax.baja.alarm, class)
+  1.0  BAckState (javax.baja.alarm, enum)
+  0.5  BMoved (com.acme.real, class)
+
+METHODS (1 matches, showing top 1):
+
+  1.0  ackAlarm (2 classes, e.g. BAlarmRecord)
+
+GUIDES (1 matches, showing top 1):
+
+  1.0  Alarm

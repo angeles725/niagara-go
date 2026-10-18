@@ -1,3 +1,0 @@
-Inheritance chain for BAlarmService:
-  java.lang.Object > BObject > BValue > BComplex > BComponent > BAbstractService > BAlarmService
-  implements: BIAlarmSource, BIRestrictedComponent

@@ -1,8 +1,0 @@
-usage: niagara_help api [-h] [--inherited] name
-
-positional arguments:
-  name         Class name (e.g. BAlarmService)
-
-options:
-  -h, --help   show this help message and exit
-  --inherited  Also show inherited methods from non-framework parents

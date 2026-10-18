@@ -21,23 +21,23 @@ case; `PYTHONHASHSEED=0` only fixes Python set order and has no Go counterpart.
 A lookup that misses prints the absolute data root, so miss outputs live in
 `misses/*.txt` with `<TESTDATA>` for that root and are checked by `miss_test.go`.
 
-`compat/` is a second checkout (same registry entry, `data_root` `.`) for the `compatible`
-cases, which run with `"cwd_fixture": "compat"` and were captured with
-`NIAGARA_HELP_DIR=<testdata>/compat`: its class names reach every branch of the name
-heuristics without changing the class-index counts the other cases print.
+Three cases are no longer Python output: `help`, `no-command` and
+`parse-optional-positional-extra` print the subcommand list, which no longer names the
+commands retired in the Go port (decision D32, `docs/retired-commands.md`); they hold what
+nh prints. The cases of retired commands (and their `--help`) were removed with them.
 
-`s4/` is a third checkout (same registry entry) for the S4 commands (module, module-deps,
-module-summary, related, profile, graph, hotspots, stats, guide, devguide): its indexes
+`s4/` is a second checkout (same registry entry) for the S4 commands (of which stats, guide
+and devguide remain; module, module-deps, module-summary, related, profile, graph and hotspots
+are retired): its indexes
 add source-index, guides-index, devguide-toc, pdf-index and call-index, and its text
 directories (with a dangling link and a link to a directory) feed `stats` and the guides /
 devguide miss scopes. Its cases run with `"cwd_fixture": "s4"`, captured with
 `NIAGARA_HELP_DIR=<testdata>/s4`; misses and `stats` print the absolute data root, so they
-live in `misses/s4-*.txt` and are checked by `s4miss_test.go`. `pyset.json` holds `hash()`
-values and a `set()` iteration order printed by Python 3.15 with `PYTHONHASHSEED=0`.
+live in `misses/s4-*.txt` and are checked by `s4miss_test.go`.
 
 `s3adv/` (no method-index.json; cyclic and self-extending chains, an untyped property, a
-class named `B`) and `s3adv-enum/` (an enum for `contract`) are two more checkouts for the
-S3 review advisories, captured the same way with their own `NIAGARA_HELP_DIR`.
+class named `B`) is one more checkout for the S3 review advisories of `slots --inherited`,
+captured the same way with its own `NIAGARA_HELP_DIR`.
 
 ## Full-text fixture
 
@@ -60,3 +60,16 @@ The Go tests (`fts/ftsfixture`) copy `fulltext/` to a temporary folder with the 
 install the databases with `<ROOT>` replaced by that folder; the fingerprint test then proves
 that Go computes exactly the fingerprint Python stored. Regenerate everything after changing
 `fulltext/`.
+
+## s5 fixture
+
+`s5/` is a checkout for the commands ported after S6 (source, method, freshness, class --jdk,
+selftest --recall): javadoc HTML pages under `bajadoc/` (navigation, `class-use/`, `doc-files/`
+and `index-files/` pages the recall skips, a page declaring another package), `.bajadoc` XML
+under `devguide/`, `guides/` and `jdk/` (an unparseable file, a `&#x0;` reference only the
+sanitizer gets past), Java sources (CRLF, invalid UTF-8, trailing whitespace, a colliding simple
+name, a missing file), guide and devguide pages, a stamped `indexes/.manifest.json` with every
+freshness status, and `install/` with doc jars against `versions/4.14.0.162.manifest.json`.
+`s5_gen.py` (`python3 -I internal/help/testdata/s5_gen.py`) runs the Python niagara-help on a
+fresh copy per case and writes `s5-cli/<case>.txt` (stdout, `<ROOT>` for the checkout) and
+`s5-cli/cases.json` (arguments, exit status, stderr), checked by `s5_test.go`.

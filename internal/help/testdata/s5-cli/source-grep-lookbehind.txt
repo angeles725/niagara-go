@@ -1,0 +1,5 @@
+2 matches for '(?<=void )alarm' in 1 classes:
+
+  BGrep (g-rt, g):
+    L7: void alarmOne() {}
+    L8: void ALARMTwo() {}

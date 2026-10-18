@@ -1,0 +1,11 @@
+{
+ "ackAlarm": [
+  {"class": "Zebra", "package": "com.acme", "section": "methods", "signature": "void ackAlarm()"},
+  {"class": "Device", "package": "com.acme", "section": "constructors", "signature": "Device ackAlarm()"},
+  {"class": "BAlarmRecord", "package": "javax.baja.alarm", "section": "fields", "signature": "int ackAlarm"},
+  {"class": "Device", "package": "com.acme", "section": "methods", "signature": "void ackAlarm(int x)"},
+  {"class": "Modbus&lt;T&gt;", "package": null, "section": "methods", "signature": "T ackAlarm()"},
+  {"class": "BAlarmRecord", "package": "javax.baja.alarm", "section": "methods", "signature": "void ackAlarm()"},
+  {"class": "Wiretaps", "package": "com.acme.ack", "section": "methods", "signature": "void ackAlarm()"}
+ ]
+}

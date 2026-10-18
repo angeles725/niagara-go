@@ -1,0 +1,4 @@
+No match for 'zzqq' (source-grep) in this scope.
+  searched: Niagara 4.14.0.162 (<ROOT>) -- source-index.json: 30 entries
+  excluded from this scope: classes shipped without source (use class/method for their API)
+  not proof of absence; try: class 'zzqq', source-grep 'zzqq', find 'zzqq'

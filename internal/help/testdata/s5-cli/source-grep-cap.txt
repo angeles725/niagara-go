@@ -1,0 +1,7 @@
+7 matches for 'alarm' in 2 classes:
+
+  BAlarmService (alarm-rt, javax.baja.alarm):
+    L3: public class BAlarmService
+    L5: void ackAlarm() {}
+
+  ... and 5 more matches

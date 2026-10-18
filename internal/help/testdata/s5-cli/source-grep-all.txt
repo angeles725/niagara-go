@@ -1,0 +1,12 @@
+7 matches for 'alarm' in 2 classes:
+
+  BAlarmService (alarm-rt, javax.baja.alarm):
+    L3: public class BAlarmService
+    L5: void ackAlarm() {}
+
+  BGrep (g-rt, g):
+    L7: void alarmOne() {}
+    L8: void ALARMTwo() {}
+    L9: String note = "alarm alarm alarm alarm alarm alarm alarm alarm alarm alarm alarm alarm alarm alarm alarm alarm alarm alarm alar...
+    L10: // ackAlarm() in a comment
+    L11: int alarmé = 1;

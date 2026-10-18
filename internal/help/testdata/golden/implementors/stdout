@@ -1,8 +1,0 @@
-6 classes implement 'BIAlarmSource':
-
-  BAlarmRecipient (javax.baja.alarm)
-  BAlarmRecipient (com.tridium.event.recipients)
-  BAlarmService (javax.baja.alarm)
-  BDevice (javax.baja.driver)
-  BLegacy (com.acme)
-  BWebServlet (javax.baja.web)

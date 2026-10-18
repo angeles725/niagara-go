@@ -1,0 +1,24 @@
+{
+ "ackAlarm": [
+  {
+   "class": "BAlarmRecord",
+   "package": "javax.baja.alarm",
+   "section": "methods",
+   "signature": "void ackAlarm()"
+  },
+  {
+   "class": "BIAlarmSource&lt;T&gt;",
+   "package": "javax.baja.alarm",
+   "section": "methods",
+   "signature": "void ackAlarm()"
+  }
+ ],
+ "make": [
+  {
+   "class": "BAckState",
+   "package": "javax.baja.other",
+   "section": "methods",
+   "signature": "BAckState make(int)"
+  }
+ ]
+}

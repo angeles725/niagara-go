@@ -1,0 +1,5 @@
+SOURCE: BGrep
+MODULE: g-rt
+PACKAGE: g
+LINES: 12
+PATH: source/g/BGrep.java

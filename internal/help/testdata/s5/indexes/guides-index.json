@@ -1,0 +1,17 @@
+{
+ "Alarm": {
+  "topics": [
+   "ack",
+   "sub/deep.htm"
+  ],
+  "all_topics": [
+   "ack",
+   "readme.md"
+  ]
+ },
+ "Other": {
+  "topics": [
+   "x"
+  ]
+ }
+}

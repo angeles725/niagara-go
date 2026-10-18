@@ -1,8 +1,0 @@
-usage: niagara_help diff-api [-h] file1 file2
-
-positional arguments:
-  file1       First JSON file
-  file2       Second JSON file
-
-options:
-  -h, --help  show this help message and exit

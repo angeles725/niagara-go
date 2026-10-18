@@ -175,3 +175,22 @@ func readText(path string) (text string, ok bool, err error) {
 	s := strings.ReplaceAll(string(data), "\r\n", "\n")
 	return strings.ReplaceAll(s, "\r", "\n"), true, nil
 }
+
+// pyHead is items[:n] with Python's slice bounds: a negative n counts from
+// the end, and the result is clamped to the list.
+func pyHead[T any](items []T, n int) []T {
+	if n < 0 {
+		n += len(items)
+	}
+	return items[:max(0, min(n, len(items)))]
+}
+
+// pyInt is a decoded JSON integer as a Go int (0 for anything else).
+func pyInt(v any) int {
+	if n, ok := v.(json.Number); ok {
+		if i, err := n.Int64(); err == nil {
+			return int(i)
+		}
+	}
+	return 0
+}

@@ -1,0 +1,2 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bajadoc><class qualifiedName="java.lang.Bad" name="Bad" packageName="java.lang" module="jdk" annotation="true"><description>default &#x0; value</description><field name="F"><type class="int"/></field></class></bajadoc>

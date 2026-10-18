@@ -1,8 +1,0 @@
-usage: niagara_help xref [-h] [--direction {uses,used_by,both}] name
-
-positional arguments:
-  name                  Class name
-
-options:
-  -h, --help            show this help message and exit
-  --direction {uses,used_by,both}

@@ -45,6 +45,10 @@ func Main(args []string, s cli.Stdio) int {
 		fmt.Fprintf(s.Out, "ERROR: %v\n", err)
 		return cli.ExitCannotSearch
 	}
+	if len(argv) > 0 && retired[argv[0]] {
+		fmt.Fprintln(s.Err, retiredMessage(argv[0]))
+		return cli.ExitCannotSearch
+	}
 	env := &Env{In: s.In, Out: s.Out, Err: s.Err, RepoRoot: repo}
 	if len(argv) == 0 || !noVersion[argv[0]] {
 		if code, ok := env.resolveVersion(requested); !ok {

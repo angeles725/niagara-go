@@ -1,8 +1,0 @@
-usage: niagara_help module-deps [-h] [--reverse] name
-
-positional arguments:
-  name        Module name (e.g. alarm-rt)
-
-options:
-  -h, --help  show this help message and exit
-  --reverse   Show modules that depend on this one

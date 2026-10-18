@@ -1,0 +1,6 @@
+  PASS  guide-search 'alarm' → 3 file(s)
+  PASS  guide-search 'alarm fault' (AND) → 3 file(s)
+  PASS  single-word coverage: 'alarm'=3 >= 'alarm fault'=3
+  PASS  devguide-search 'servlet override' → 4 file(s)
+  PASS  'alarma' does not match inside 'alarmAck'
+selftest: all assertions passed.

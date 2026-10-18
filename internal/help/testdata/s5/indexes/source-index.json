@@ -1,0 +1,182 @@
+{
+ "BAlarmService": {
+  "module": "alarm-rt",
+  "path": "alarm-rt/javax/baja/alarm/BAlarmService.java",
+  "package": "javax.baja.alarm",
+  "lines": 6
+ },
+ "BCrlf": {
+  "module": "x-rt",
+  "path": "x/BCrlf.java",
+  "package": "x",
+  "lines": 4
+ },
+ "BFoo": {
+  "module": "a-rt",
+  "path": "a/BFoo.java",
+  "package": "a",
+  "lines": 1
+ },
+ "BFoo (b-rt)": {
+  "module": "b-rt",
+  "path": "b/BFoo.java",
+  "package": "b",
+  "lines": 1
+ },
+ "BMissing": {
+  "module": "m-rt",
+  "path": "m/BMissing.java",
+  "package": "m",
+  "lines": 3
+ },
+ "Example": {
+  "module": "docDeveloper",
+  "path": "../devguide-rc/Example.java",
+  "package": "",
+  "lines": 1
+ },
+ "BAckState": {
+  "module": "alarm-rt",
+  "path": "alarm-rt/javax/baja/alarm/BAckState.java",
+  "package": "javax.baja.alarm",
+  "lines": 9
+ },
+ "BUser01": {
+  "module": "u-rt",
+  "path": "u/BUser01.java",
+  "package": "u",
+  "lines": 1
+ },
+ "BUser02": {
+  "module": "u-rt",
+  "path": "u/BUser02.java",
+  "package": "u",
+  "lines": 2
+ },
+ "BUser03": {
+  "module": "u-rt",
+  "path": "u/BUser03.java",
+  "package": "u",
+  "lines": 3
+ },
+ "BUser04": {
+  "module": "u-rt",
+  "path": "u/BUser04.java",
+  "package": "u",
+  "lines": 4
+ },
+ "BUser05": {
+  "module": "u-rt",
+  "path": "u/BUser05.java",
+  "package": "u",
+  "lines": 5
+ },
+ "BUser06": {
+  "module": "u-rt",
+  "path": "u/BUser06.java",
+  "package": "u",
+  "lines": 6
+ },
+ "BUser07": {
+  "module": "u-rt",
+  "path": "u/BUser07.java",
+  "package": "u",
+  "lines": 7
+ },
+ "BUser08": {
+  "module": "u-rt",
+  "path": "u/BUser08.java",
+  "package": "u",
+  "lines": 8
+ },
+ "BUser09": {
+  "module": "u-rt",
+  "path": "u/BUser09.java",
+  "package": "u",
+  "lines": 9
+ },
+ "BUser10": {
+  "module": "u-rt",
+  "path": "u/BUser10.java",
+  "package": "u",
+  "lines": 10
+ },
+ "BUser11": {
+  "module": "u-rt",
+  "path": "u/BUser11.java",
+  "package": "u",
+  "lines": 11
+ },
+ "BUser12": {
+  "module": "u-rt",
+  "path": "u/BUser12.java",
+  "package": "u",
+  "lines": 12
+ },
+ "BUser13": {
+  "module": "u-rt",
+  "path": "u/BUser13.java",
+  "package": "u",
+  "lines": 13
+ },
+ "BUser14": {
+  "module": "u-rt",
+  "path": "u/BUser14.java",
+  "package": "u",
+  "lines": 14
+ },
+ "BUser15": {
+  "module": "u-rt",
+  "path": "u/BUser15.java",
+  "package": "u",
+  "lines": 15
+ },
+ "BUser16": {
+  "module": "u-rt",
+  "path": "u/BUser16.java",
+  "package": "u",
+  "lines": 16
+ },
+ "BUser17": {
+  "module": "u-rt",
+  "path": "u/BUser17.java",
+  "package": "u",
+  "lines": 17
+ },
+ "BUser18": {
+  "module": "u-rt",
+  "path": "u/BUser18.java",
+  "package": "u",
+  "lines": 18
+ },
+ "BUser19": {
+  "module": "u-rt",
+  "path": "u/BUser19.java",
+  "package": "u",
+  "lines": 19
+ },
+ "BUser20": {
+  "module": "u-rt",
+  "path": "u/BUser20.java",
+  "package": "u",
+  "lines": 20
+ },
+ "BUser21": {
+  "module": "u-rt",
+  "path": "u/BUser21.java",
+  "package": "u",
+  "lines": 21
+ },
+ "BUser22": {
+  "module": "u-rt",
+  "path": "u/BUser22.java",
+  "package": "u",
+  "lines": 22
+ },
+ "BGrep": {
+  "module": "g-rt",
+  "path": "g/BGrep.java",
+  "package": "g",
+  "lines": 12
+ }
+}

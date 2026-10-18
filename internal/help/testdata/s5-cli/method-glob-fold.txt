@@ -1,0 +1,5 @@
+1 member names matching 'ACK*' (2 total entries):
+
+  ackAlarm (2 classes)
+    e.g.: void ackAlarm()
+    in: BAlarmRecord, BIAlarmSource&lt;T&gt;

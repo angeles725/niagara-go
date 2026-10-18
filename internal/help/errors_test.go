@@ -8,8 +8,8 @@ import (
 	"github.com/angeles725/niagara-go/internal/index"
 )
 
-// TestCannotSearchPaths pins the exit-2 paths that print ERROR (or the
-// not-ported note) on stderr and nothing on stdout.
+// TestCannotSearchPaths pins the exit-2 paths that print ERROR on stderr and
+// nothing on stdout.
 func TestCannotSearchPaths(t *testing.T) {
 	missing := func(dir, name string) string {
 		return "ERROR: index indexes/" + name + " is missing under " + dir +
@@ -21,14 +21,12 @@ func TestCannotSearchPaths(t *testing.T) {
 		args       []string
 		stderr     func(dir string) string
 	}{
-		{"hierarchy --interface needs inheritance.json", "{}", []string{"hierarchy", "BX", "--interface"},
-			func(dir string) string { return missing(dir, "inheritance.json") }},
-		{"xref needs xref-index.json", "{}", []string{"xref", "BX"},
-			func(dir string) string { return missing(dir, "xref-index.json") }},
-		{"class --jdk is not ported", "{}", []string{"class", "BX", "--jdk"},
-			func(string) string { return "nh: 'class --jdk' is not ported yet\n" }},
-		{"topics is not ported (it is not profile)", "{}", []string{"topics", "BX"},
-			func(string) string { return "nh: 'topics' is not ported yet\n" }},
+		{"guide needs guides-index.json", "{}", []string{"guide", "bacnet"},
+			func(dir string) string { return missing(dir, "guides-index.json") }},
+		{"source-grep with an invalid regex", "{}", []string{"source-grep", "("},
+			func(string) string {
+				return "ERROR: invalid regex '(': missing ), unterminated subpattern at position 0\n"
+			}},
 		{"others item that is not an object", `{"BX": {"package": "p", "type": "class", "others": ["oops"]}}`,
 			[]string{"class", "BX"},
 			func(string) string { return "ERROR: malformed class index: \"others\"[0] of BX is not an object\n" }},
@@ -58,17 +56,6 @@ func TestTypoSimilarityEmptyStrings(t *testing.T) {
 	}
 	if got := suggest([]string{"", "a", ""}, "", 5); len(got) != 0 {
 		t.Errorf("suggest for an empty query = %q, want none (an empty name is no typo of it)", got)
-	}
-}
-
-func TestClampTopIsPythonSliceEnd(t *testing.T) {
-	tests := []struct{ top, n, want int }{
-		{3, 5, 3}, {9, 5, 5}, {0, 5, 0}, {-1, 5, 4}, {-5, 5, 0}, {-9, 5, 0}, {-1, 0, 0},
-	}
-	for _, tt := range tests {
-		if got := clampTop(tt.top, tt.n); got != tt.want {
-			t.Errorf("clampTop(%d, %d) = %d, want %d", tt.top, tt.n, got, tt.want)
-		}
 	}
 }
 

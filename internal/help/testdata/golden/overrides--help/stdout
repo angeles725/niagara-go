@@ -1,7 +1,0 @@
-usage: niagara_help overrides [-h] name
-
-positional arguments:
-  name        Class name
-
-options:
-  -h, --help  show this help message and exit

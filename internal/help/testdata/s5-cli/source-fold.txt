@@ -1,0 +1,6 @@
+SOURCE: BFoo
+MODULE: a-rt
+PACKAGE: a
+LINES: 1
+PATH: source/a/BFoo.java
+ALSO: BFoo (b-rt)

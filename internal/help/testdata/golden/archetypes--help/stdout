@@ -1,7 +1,0 @@
-usage: niagara_help archetypes [-h] [type]
-
-positional arguments:
-  type        Archetype type (services, points, extensions, converters, etc.)
-
-options:
-  -h, --help  show this help message and exit

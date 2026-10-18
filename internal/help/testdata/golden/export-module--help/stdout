@@ -1,8 +1,0 @@
-usage: niagara_help export-module [-h] name file
-
-positional arguments:
-  name        Module name (e.g. alarm-rt)
-  file        Output .md file path
-
-options:
-  -h, --help  show this help message and exit

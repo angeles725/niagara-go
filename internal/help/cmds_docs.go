@@ -12,8 +12,8 @@ func andOr(p *argparse.Parser, dest string) {
 		Help: "ANY term in file"}, "--or")
 }
 
-// Documentation search commands (cli/cmd_docs.py): guide, guide-search,
-// devguide, devguide-search, pdf, find, fuzzy.
+// Documentation search commands (cli/cmd_docs.py) the Go port keeps: guide,
+// guide-search, devguide, devguide-search, pdf, find.
 var docCommands = []command{
 	{name: "guide", help: "Search guides by topic/folder",
 		args: func(p *argparse.Parser) { positional(p, "query", "Search term (e.g. 'bacnet')") },
@@ -62,52 +62,27 @@ var docCommands = []command{
 		run: func(e *Env, ns *argparse.Namespace) error {
 			return e.Find(FulltextParams{Query: ns.String("query"), Max: ns.Int("max_per_source"), Or: ns.Bool("find_mode_or")})
 		}},
-	{name: "fuzzy", help: "Approximate search across classes, methods, slots, guides",
-		args: func(p *argparse.Parser) {
-			positional(p, "query", "Search query (multiple words OK)")
-			intOpt(p, 15, "Number of top results per category (default: 15)", "-n", "--top")
-		}},
 }
 
-// Java source commands (cli/cmd_source.py): source, source-grep, snippet,
-// callers, chain, examples, annotations.
+// Java source commands (cli/cmd_source.py) the Go port keeps: source,
+// source-grep.
 var sourceCommands = []command{
 	{name: "source", help: "Look up or view Java source code",
 		args: func(p *argparse.Parser) {
 			positional(p, "name", "Class name or glob")
 			flag(p, "Show full source code", "--code")
 			p.Add(argparse.Arg{Dest: "grep_pattern", Help: "Grep pattern in source file"}, "--grep")
+		},
+		run: func(e *Env, ns *argparse.Namespace) error {
+			return e.Source(SourceParams{Name: ns.String("name"), Code: ns.Bool("code"),
+				Grep: ns.String("grep_pattern")})
 		}},
 	{name: "source-grep", help: "Full-text regex search across ALL source files",
 		args: func(p *argparse.Parser) {
 			positional(p, "pattern", "Regex pattern (e.g. 'getSession\\(\\)')")
 			intOpt(p, 30, "", "-n", "--max-results")
-		}},
-	{name: "snippet", help: "Extract a single method's source code",
-		args: func(p *argparse.Parser) {
-			positional(p, "class_name", "Class name")
-			positional(p, "method", "Method name")
-		}},
-	{name: "callers", help: "Find classes that call a specific method",
-		args: func(p *argparse.Parser) {
-			positional(p, "method", "Method name (e.g. doRouteAlarm)")
-			intOpt(p, 30, "", "-n", "--max-results")
-		}},
-	{name: "chain", help: "Multi-hop call chain tracing for a method",
-		args: func(p *argparse.Parser) {
-			positional(p, "method", "Method name (e.g. doRouteAlarm)")
-			intOpt(p, 3, "Max recursion depth (default: 3)", "--depth")
-			intOpt(p, 10, "Max callers per level (default: 10)", "--max-per-level")
-		}},
-	{name: "examples", help: "Find usage examples of a class across source files",
-		args: func(p *argparse.Parser) {
-			positional(p, "name", "Class name (e.g. BWebServlet)")
-			intOpt(p, 15, "", "-n", "--max-results")
-		}},
-	{name: "annotations", help: "Search source files for Niagara annotations",
-		args: func(p *argparse.Parser) {
-			positional(p, "annotation", "Annotation name (e.g. NiagaraAction, @NiagaraProperty)")
-			p.Add(argparse.Arg{Help: "Filter by type= value inside annotation"}, "--type-filter")
-			intOpt(p, 30, "", "-n", "--max-results")
+		},
+		run: func(e *Env, ns *argparse.Namespace) error {
+			return e.SourceGrep(SourceGrepParams{Pattern: ns.String("pattern"), Max: ns.Int("max_results")})
 		}},
 }
