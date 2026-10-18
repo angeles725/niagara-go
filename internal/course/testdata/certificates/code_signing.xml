@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+<comment>Code Signing Properties (synthetic fixture: no real passwords)</comment>
+<entry key="niagara.signing.storepass">fixture</entry>
+<entry key="niagara.signing.dname">C=XX,ST=State,L=City,O=Company,CN=${alias}</entry>
+<entry key="niagara.signing.profileType">com.tridium.gradle.plugins.signing.profile.RestrictedSigningProfile</entry>
+<entry key="niagara.signing.standardtsa">
+  http://timestamp.digicert.com
+</entry>
+</properties>

@@ -9,4 +9,4 @@ C4.7   4    PASS     Reference Tstat nullOnInControl = false [L4.7]             
 C4.8   4    PASS     SpaceTemp Out text has the unit (audit) [L4.8]                     history/station/seg7/AuditHistory.hdb: 1 of 12 audit records match; first 2026-10-15T18:42:34.959Z Invoked /Lab4/SpaceTemp.set = 22,0 °C
 C4.9   4    SKIP     BLoopAction enum: DIRECT 0, REVERSE 1, default direct [L4.1 L4.2]  no --labsrc DIR: training/training-rt/src/com/tridiumuniversity/training/kitControl/BLoopAction.java not checked
 C4.10  4    SKIP     BTstat flags: out rs, cv/sp/diff/action none [L4.3]                no --labsrc DIR: training/training-rt/src/com/tridiumuniversity/training/kitControl/BTstat.java not checked
-checked 10: PASS 8, FAIL 0, SKIP 2; station GoodStation (237 components, 16 links), install install, labsrc (none: annotation checks skipped)
+checked 10: PASS 8, FAIL 0, SKIP 2; station GoodStation (237 components, 16 links), install install, labsrc (none: lab-source checks skipped)

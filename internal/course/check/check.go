@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -379,15 +380,15 @@ func (s *Station) checkLink(ck *Check) (string, string) {
 }
 
 func (s *Station) checkFiles(ck *Check) (string, string) {
-	pattern := strings.ReplaceAll(ck.Glob, "{station}", globEscape(s.Name))
-	matches, err := filepath.Glob(filepath.Join(globEscape(s.dir), filepath.FromSlash(pattern)))
-	if err != nil {
-		return Skip, fmt.Sprintf("bad pattern %s: %v", pattern, err)
+	pattern, rels, skip := s.rootFiles(ck)
+	if skip != "" {
+		return Skip, skip
 	}
-	var files []string
-	for _, m := range matches {
-		if st, err := os.Stat(m); err == nil && st.Mode().IsRegular() {
-			files = append(files, filepath.Base(m))
+	files := make([]string, len(rels))
+	for i, rel := range rels {
+		files[i] = path.Base(rel)
+		if strings.HasSuffix(rel, "/") {
+			files[i] += "/"
 		}
 	}
 	ok := countOK(ck.Op, len(files), ck.N)

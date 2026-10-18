@@ -108,11 +108,11 @@ func Decide(results []LinkedResult) (string, string) {
 }
 
 // Evidence is the evidence kind of the marker the checks of an item give it: live only when every
-// one of them reads a station (evidenceOf), offline otherwise (a jar, the source tree or the lab
+// one of them reads a station (checkEvidence), offline otherwise (a jar, the source tree or the lab
 // sources decided at least part of it).
 func Evidence(results []LinkedResult) string {
 	for _, r := range results {
-		if evidenceOf[r.Kind] != key.EvidenceLive {
+		if checkEvidence(r.Check) != key.EvidenceLive {
 			return key.EvidenceOffline
 		}
 	}

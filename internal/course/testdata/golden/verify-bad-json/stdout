@@ -2,8 +2,24 @@
   {
     "id": "L1.4",
     "verdict": "UNDECIDED",
-    "reason": "no check covers it",
-    "checks": [],
+    "reason": "C1.9 SKIP: no --labsrc DIR: {settings.gradle.kts,build.gradle.kts,gradle.properties,gradlew,gradlew.bat,gradle/wrapper/gradle-wrapper.properties} not checked; C1.10 SKIP: no --labsrc DIR: training/training-rt/{src/,srcTest/,training-rt.gradle.kts,module.lexicon,module-permissions.xml,module.palette} not checked; C1.11 SKIP: no --labsrc DIR: training/training-wb/{src/,srcTest/,training-wb.gradle.kts,module.lexicon,module-permissions.xml} not checked",
+    "checks": [
+      {
+        "id": "C1.9",
+        "verdict": "SKIP",
+        "evidence": "no --labsrc DIR: {settings.gradle.kts,build.gradle.kts,gradle.properties,gradlew,gradlew.bat,gradle/wrapper/gradle-wrapper.properties} not checked"
+      },
+      {
+        "id": "C1.10",
+        "verdict": "SKIP",
+        "evidence": "no --labsrc DIR: training/training-rt/{src/,srcTest/,training-rt.gradle.kts,module.lexicon,module-permissions.xml,module.palette} not checked"
+      },
+      {
+        "id": "C1.11",
+        "verdict": "SKIP",
+        "evidence": "no --labsrc DIR: training/training-wb/{src/,srcTest/,training-wb.gradle.kts,module.lexicon,module-permissions.xml} not checked"
+      }
+    ],
     "file": "docs/n4-dev-course-solutions/labs.md",
     "line": 11,
     "suggestion": null
@@ -11,12 +27,17 @@
   {
     "id": "L1.14",
     "verdict": "UNDECIDED",
-    "reason": "C1.6 SKIP: no --install DIR: modules/training-rt.jar not checked",
+    "reason": "C1.6 SKIP: no --install DIR: modules/training-rt.jar not checked; C1.12 SKIP: no --labsrc DIR: training/training-rt/module-include.xml not checked",
     "checks": [
       {
         "id": "C1.6",
         "verdict": "SKIP",
         "evidence": "no --install DIR: modules/training-rt.jar not checked"
+      },
+      {
+        "id": "C1.12",
+        "verdict": "SKIP",
+        "evidence": "no --labsrc DIR: training/training-rt/module-include.xml not checked"
       }
     ],
     "file": "docs/n4-dev-course-solutions/labs.md",

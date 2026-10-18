@@ -35,9 +35,10 @@ const (
 
 var annotationFacts = []string{factFlags, factEnum, factSlots, factFacets}
 
-// NeedsLabSources reports whether a check reads the lab module sources, so a summary names it.
+// NeedsLabSources reports whether a check reads the lab module sources (an annotation row, or a
+// files or file-text row whose Root is the lab sources), so a summary names it.
 func NeedsLabSources(checks []*Check) bool {
-	return slices.ContainsFunc(checks, func(ck *Check) bool { return ck.Kind == kindAnnotation })
+	return slices.ContainsFunc(checks, func(ck *Check) bool { return ck.Kind == kindAnnotation || ck.Root == rootLabsrc })
 }
 
 // checkAnnotation renders Fact from the annotations of the file Glob of the lab module sources

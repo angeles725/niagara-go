@@ -120,7 +120,7 @@ func (o stationOpts) labsrcDir() string {
 }
 
 // scope is the summary's "station ..., install <dir>", with ", source <dir>" when a check reads the
-// source tree and ", labsrc <dir>" when one reads the course sources.
+// source tree and ", labsrc <dir>" when one reads the lab sources (an annotation row, or a files or file-text row over them).
 func (o stationOpts) scope(ss *check.Stations, checks []*check.Check) string {
 	out := fmt.Sprintf("%s, install %s", ss.Scope(), orNone(o.installDir()))
 	if check.NeedsSource(checks) {
@@ -134,7 +134,7 @@ func (o stationOpts) scope(ss *check.Stations, checks []*check.Check) string {
 
 func orNoLabsrc(s string) string {
 	if s == "" {
-		return "(none: annotation checks skipped)"
+		return "(none: lab-source checks skipped)"
 	}
 	return s
 }

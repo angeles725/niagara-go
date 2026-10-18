@@ -1,1 +1,1 @@
-checked 15: PASS 12, FAIL 0, SKIP 3; station GoodStation (237 components, 16 links), install install, labsrc (none: annotation checks skipped)
+checked 15: PASS 12, FAIL 0, SKIP 3; station GoodStation (237 components, 16 links), install install, labsrc (none: lab-source checks skipped)

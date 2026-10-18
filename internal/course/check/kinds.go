@@ -7,12 +7,12 @@ const (
 	kindType       = "type"        // components of Type (under a Within ancestor) counted against N
 	kindSlot       = "slot"        // the effective value of Slot on every Type component
 	kindLink       = "link"        // links From.FromSlot -> Type.Slot counted against N
-	kindFiles      = "files"       // files matching Glob under the station directory
+	kindFiles      = "files"       // files matching Glob under the row's Root (the station directory by default)
 	kindJar        = "jar"         // <install>/modules/<Jar>.jar exists
 	kindJarEntry   = "jar-entry"   // entries of the jar matching Glob counted against N
 	kindJarText    = "jar-text"    // the jar entry Glob holds every Contains string
 	kindJarSigned  = "jar-signed"  // the jar has a META-INF signature file and signature block
-	kindFileText   = "file-text"   // every file matching Glob has Line (or N lines) matching Match
+	kindFileText   = "file-text"   // every file matching Glob under Root has Line (or N lines, or Whole: N matches) matching Match
 	kindAudit      = "audit"       // audit records of the Glob history files matching Hist, counted against N
 	kindLog        = "log"         // log records of the Glob history files matching Hist, counted against N
 	kindTrend      = "trend"       // every Glob trend history: N records (Distinct: N values), values in Hist's range
@@ -23,7 +23,8 @@ const (
 // evidenceOf is the evidence kind of a verified marker each check kind gives (key.EvidenceLive,
 // key.EvidenceOffline): live for what a station stores (its bog, the files in its directory, its
 // histories), offline for what holds no station (a jar of the install, the source tree, the lab
-// sources). TestEvidenceOfEveryKind fails on a spec kind missing here.
+// sources). A files or file-text row with an install or lab-source Root is offline whatever its
+// kind says (checkEvidence). TestEvidenceOfEveryKind fails on a spec kind missing here.
 var evidenceOf = map[string]string{
 	kindType: key.EvidenceLive, kindSlot: key.EvidenceLive, kindLink: key.EvidenceLive,
 	kindFiles: key.EvidenceLive, kindFileText: key.EvidenceLive,
@@ -67,12 +68,14 @@ type Check struct {
 	From     string // link: source type "module:Type"
 	FromSlot string // link: source slot
 
-	Glob     string   // files, file-text, audit, log, trend: path under the station dir ({station} = station name); jar-*: entry; source-text: path under the source tree; annotation: path under the lab module sources
+	Glob     string   // files, file-text: path under Root ({a,b} exact names; a name ending in "/" a directory); audit, log, trend: path under the station dir ({station} = station name); jar-*: entry; source-text: path under the source tree; annotation: path under the lab module sources
+	Root     string   // files, file-text: rootStation (default), rootInstall or rootLabsrc (roots.go)
 	Jar      string   // jar-*: module part name, e.g. training-rt
 	Contains []string // jar-text
 
 	Line  int    // file-text: the 1-based line that must match (a BOM and CR line ends dropped); 0 = count lines
-	Match string // file-text: a Go regexp; {station} = the station name, quoted; source-text: a Go regexp over the whole file
+	Match string // file-text: a Go regexp; {station} = the station name, quoted (station root); source-text: a Go regexp over the whole file
+	Whole bool   // file-text: Match runs over the whole text (lines joined with "\n"), its matches counted against N
 
 	Hist *HistMatch // audit, log: the record fields to match; trend: the value range
 }

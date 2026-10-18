@@ -1,15 +1,19 @@
-ID    LAB  VERDICT  DESCRIPTION                                                     EVIDENCE
-C1.1  1    PASS     a FirstComponent in the station [L1.24]                         found 1: Lab1/FirstComponent
-C1.2  1    PASS     FirstComponent executed (timeExecuted stored) [L1.25]           Lab1/FirstComponent.timeExecuted = 2026-10-12T08:38:42.774-06:00 (stored)
-C1.3  1    SKIP     training-rt jar built [L1.13 L1.15]                             no --install DIR: modules/training-rt.jar not checked
-C1.4  1    SKIP     training-wb jar built [L1.15]                                   no --install DIR: modules/training-wb.jar not checked
-C1.5  1    SKIP     BFirstComponent.class in training-rt [L1.16]                    no --install DIR: modules/training-rt.jar not checked
-C1.6  1    SKIP     module.xml registers FirstComponent [L1.14]                     no --install DIR: modules/training-rt.jar not checked
-C1.7  1    SKIP     palette lists FirstComponent [L1.11 L1.18]                      no --install DIR: modules/training-rt.jar not checked
-C1.8  1    SKIP     BFirstComponent declares timeExecuted and execute [L1.9 L1.12]  no --labsrc DIR: training/training-rt/src/com/tridiumuniversity/training/BFirstComponent.java not checked
-C3.1  3    PASS     NumericWritable.out -> Add.in1 [L3.5]                           found 1: Lab2/Point1.out -> Lab2/Add.in1
-C3.2  3    PASS     NumericWritable.out -> Add.in2 [L3.5]                           found 1: Lab2/Point2.out -> Lab2/Add.in2
-C3.3  3    PASS     NumericWritable.out -> Add.in3 (link dialog) [L3.6]             found 1: Lab2/Point3.out -> Lab2/Add.in3
-C3.4  3    PASS     Add.out -> NumericWritable.in10 (Output) [L3.7]                 found 1: Lab2/Add.out -> Lab2/Output.in10
-C3.5  3    PASS     Add computed a sum (out stored) [L3.8]                          Lab2/Add.out = 6.0 (stored)
-checked 13: PASS 7, FAIL 0, SKIP 6; station GoodStation (237 components, 16 links), install (none: jar checks skipped), labsrc (none: annotation checks skipped)
+ID     LAB  VERDICT  DESCRIPTION                                                                           EVIDENCE
+C1.1   1    PASS     a FirstComponent in the station [L1.24]                                               found 1: Lab1/FirstComponent
+C1.2   1    PASS     FirstComponent executed (timeExecuted stored) [L1.25]                                 Lab1/FirstComponent.timeExecuted = 2026-10-12T08:38:42.774-06:00 (stored)
+C1.3   1    SKIP     training-rt jar built [L1.13 L1.15]                                                   no --install DIR: modules/training-rt.jar not checked
+C1.4   1    SKIP     training-wb jar built [L1.15]                                                         no --install DIR: modules/training-wb.jar not checked
+C1.5   1    SKIP     BFirstComponent.class in training-rt [L1.16]                                          no --install DIR: modules/training-rt.jar not checked
+C1.6   1    SKIP     module.xml registers FirstComponent [L1.14]                                           no --install DIR: modules/training-rt.jar not checked
+C1.7   1    SKIP     palette lists FirstComponent [L1.11 L1.18]                                            no --install DIR: modules/training-rt.jar not checked
+C1.8   1    SKIP     BFirstComponent declares timeExecuted and execute [L1.9 L1.12]                        no --labsrc DIR: training/training-rt/src/com/tridiumuniversity/training/BFirstComponent.java not checked
+C1.9   1    SKIP     dev home: the Gradle build and wrapper files [L1.4]                                   no --labsrc DIR: {settings.gradle.kts,build.gradle.kts,gradle.properties,gradlew,gradlew.bat,gradle/wrapper/gradle-wrapper.properties} not checked
+C1.10  1    SKIP     training-rt: src/, srcTest/, its Gradle script, lexicon, permissions, palette [L1.4]  no --labsrc DIR: training/training-rt/{src/,srcTest/,training-rt.gradle.kts,module.lexicon,module-permissions.xml,module.palette} not checked
+C1.11  1    SKIP     training-wb: src/, srcTest/, its Gradle script, lexicon, permissions [L1.4]           no --labsrc DIR: training/training-wb/{src/,srcTest/,training-wb.gradle.kts,module.lexicon,module-permissions.xml} not checked
+C1.12  1    SKIP     module-include.xml has the FirstComponent <type> [L1.14]                              no --labsrc DIR: training/training-rt/module-include.xml not checked
+C3.1   3    PASS     NumericWritable.out -> Add.in1 [L3.5]                                                 found 1: Lab2/Point1.out -> Lab2/Add.in1
+C3.2   3    PASS     NumericWritable.out -> Add.in2 [L3.5]                                                 found 1: Lab2/Point2.out -> Lab2/Add.in2
+C3.3   3    PASS     NumericWritable.out -> Add.in3 (link dialog) [L3.6]                                   found 1: Lab2/Point3.out -> Lab2/Add.in3
+C3.4   3    PASS     Add.out -> NumericWritable.in10 (Output) [L3.7]                                       found 1: Lab2/Add.out -> Lab2/Output.in10
+C3.5   3    PASS     Add computed a sum (out stored) [L3.8]                                                Lab2/Add.out = 6.0 (stored)
+checked 17: PASS 7, FAIL 0, SKIP 10; station GoodStation (237 components, 16 links), install (none: jar checks skipped), labsrc (none: lab-source checks skipped)

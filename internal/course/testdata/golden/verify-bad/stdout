@@ -1,6 +1,6 @@
 ID             VERDICT       EVIDENCE
-L1.4           UNDECIDED     no check covers it
-L1.14          PARTIAL       C1.6 PASS: modules/training-rt.jar!META-INF/module.xml has name="FirstComponent"; not observed: module-include.xml itself and the class attribute (the jar holds the built module.xml)
+L1.4           UNDECIDED     C1.9 SKIP: no --labsrc DIR: {settings.gradle.kts,build.gradle.kts,gradle.properties,gradlew,gradlew.bat,gradle/wrapper/gradle-wrapper.properties} not checked; C1.10 SKIP: no --labsrc DIR: training/training-rt/{src/,srcTest/,training-rt.gradle.kts,module.lexicon,module-permissions.xml,module.palette} not checked; C1.11 SKIP: no --labsrc DIR: training/training-wb/{src/,srcTest/,training-wb.gradle.kts,module.lexicon,module-permissions.xml} not checked
+L1.14          UNDECIDED     C1.12 SKIP: no --labsrc DIR: training/training-rt/module-include.xml not checked
 L1.25          CONTRADICTED  C1.2 FAIL: no training:FirstComponent component (searched 236 components)
 L3.9           UNDECIDED     no check covers it
 L4.13          CONTRADICTED  C4.5 FAIL: 0 of 1 pass, want 2.0: Lab4/My Tstat.diff = 0.0 (default)
@@ -14,4 +14,4 @@ L11.32         CONTRADICTED  C11.13 FAIL: 3 of 4 pass, want it stored: Drivers/T
 
 suggested updates (CONFIRMED only; course never edits the answer key):
 L10.6–L10.7: *(verified offline 2026-10-17)* evidence: C10.7 modules/training-rt.jar!META-INF/module.xml has name="history-rt", name="file-rt", name="bql-rt"
-predicted 12: CONFIRMED 1, PARTIAL 3, CONTRADICTED 6, UNDECIDED 2; 18 checks run; station BadStation (236 components, 15 links), install install
+predicted 12: CONFIRMED 1, PARTIAL 2, CONTRADICTED 6, UNDECIDED 3; 22 checks run; station BadStation (236 components, 15 links), install install, labsrc (none: lab-source checks skipped)

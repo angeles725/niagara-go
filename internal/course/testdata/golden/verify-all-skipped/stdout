@@ -1,5 +1,5 @@
 ID    VERDICT    EVIDENCE
-L1.4  UNDECIDED  no check covers it
+L1.4  UNDECIDED  C1.9 SKIP: no --labsrc DIR: {settings.gradle.kts,build.gradle.kts,gradle.properties,gradlew,gradlew.bat,gradle/wrapper/gradle-wrapper.properties} not checked; C1.10 SKIP: no --labsrc DIR: training/training-rt/{src/,srcTest/,training-rt.gradle.kts,module.lexicon,module-permissions.xml,module.palette} not checked; C1.11 SKIP: no --labsrc DIR: training/training-wb/{src/,srcTest/,training-wb.gradle.kts,module.lexicon,module-permissions.xml} not checked
 L2.6  UNDECIDED  C2.3 SKIP: no --install DIR: modules/training-rt.jar not checked
 LB.1  UNDECIDED  CB.5 SKIP: no --labsrc DIR: trafficLightDriver/trafficLightDriver-rt/src/com/tridiumuniversity/trafficLightDriver/BTrafficLightDriverDevice.java not checked
-predicted 3: CONFIRMED 0, PARTIAL 0, CONTRADICTED 0, UNDECIDED 3; 2 checks run; station GoodStation (237 components, 16 links), install (none: jar checks skipped), labsrc (none: annotation checks skipped)
+predicted 3: CONFIRMED 0, PARTIAL 0, CONTRADICTED 0, UNDECIDED 3; 5 checks run; station GoodStation (237 components, 16 links), install (none: jar checks skipped), labsrc (none: lab-source checks skipped)

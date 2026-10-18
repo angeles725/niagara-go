@@ -32,11 +32,11 @@ func runAll(t *testing.T, stationPath, install, source, labsrc, role string) []R
 	return out
 }
 
-// mostChecks are the labs with more than 8 checks: lab 4 (C4.9 and C4.10 read the annotations of
+// mostChecks are the labs with more than 8 checks: lab 1 (C1.9-C1.12 read the dev home), lab 4 (C4.9 and C4.10 read the annotations of
 // BLoopAction and BTstat), lab 10 (three file-text checks of one CSV, three of
 // its history files, the job's lexicon) and
 // lab 11 (its nested Tcp Config and ping-health slots are one check each).
-var mostChecks = map[string]int{"4": 10, "10": 14, "11": 17}
+var mostChecks = map[string]int{"1": 12, "4": 10, "10": 14, "11": 17}
 
 // keyGroups are the ID prefixes a check of the lab may key: the lab's own items; for a review
 // assignment also the needs-a-run checks X<n>; for the exam the problems P<n>.
@@ -162,7 +162,9 @@ func TestCheckKeysReal(t *testing.T) {
 // audited as observing the whole prediction. 2026-10-17: only L10.24 (open one CSV), whose answer is
 // the file content the three file-text checks read; every other predicted item a check links also
 // predicts a console line, a log, a view or a runtime status.
-var fullyObserved = map[string]bool{"C10.8 L10.24": true, "C10.9 L10.24": true, "C10.10 L10.24": true}
+// 2026-10-18: L1.14 (module-include.xml has the <type> of BFirstComponent), whose answer is the
+// line C1.12 reads; the attribute order of the prediction is not significant in XML.
+var fullyObserved = map[string]bool{"C10.8 L10.24": true, "C10.9 L10.24": true, "C10.10 L10.24": true, "C1.12 L1.14": true}
 
 // liveStations are the real stations of each role and the checks each fails because it really
 // differs from the course, with the evidence read from its config.bog and jars (2026-10-17).
@@ -202,9 +204,9 @@ func TestCheckLiveStations(t *testing.T) {
 			}
 			for _, r := range results {
 				switch {
-				case r.Verdict == Skip && install == "" && strings.HasPrefix(r.Kind, "jar"):
+				case r.Verdict == Skip && install == "" && (strings.HasPrefix(r.Kind, "jar") || r.Root == rootInstall):
 				case r.Verdict == Skip && source == "" && r.Kind == kindSourceText:
-				case r.Verdict == Skip && labsrc == "" && r.Kind == kindAnnotation:
+				case r.Verdict == Skip && labsrc == "" && (r.Kind == kindAnnotation || r.Root == rootLabsrc):
 				case r.Verdict == Fail && live.differs[r.ID] != "":
 					got[r.ID] = r.Evidence
 				case r.Verdict != Pass:

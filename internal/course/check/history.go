@@ -1,6 +1,7 @@
 package check
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"path/filepath"
@@ -103,9 +104,9 @@ func describeRecord(r hdbread.Record) string {
 // histories reads every history file matching the check's Glob. A file that cannot be read, or holds
 // another record type than the kind reads, is an error: the check cannot run (SKIP).
 func (s *Station) histories(ck *Check) (pattern string, rels []string, hs []*hdbread.History, err error) {
-	pattern, rels, err = s.stationFiles(ck.Glob)
-	if err != nil {
-		return pattern, nil, nil, fmt.Errorf("bad pattern %s: %v", pattern, err)
+	pattern, rels, skip := s.rootFiles(ck) // the histories are always the station's (Root unset)
+	if skip != "" {
+		return pattern, nil, nil, errors.New(skip)
 	}
 	for _, rel := range rels {
 		h, err := hdbread.ReadRecords(filepath.Join(s.dir, filepath.FromSlash(rel)))

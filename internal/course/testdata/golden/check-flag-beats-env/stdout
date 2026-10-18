@@ -1,5 +1,12 @@
-ID    LAB  VERDICT  DESCRIPTION                                      EVIDENCE
-C5.1  5    PASS     training-rt is signed [L5.21 L5.24]              modules/training-rt.jar: META-INF/CODESIGN.SF, META-INF/CODESIGN.RSA
-C5.2  5    PASS     training-wb is signed [L5.24]                    modules/training-wb.jar: META-INF/CODESIGN.SF, META-INF/CODESIGN.RSA
-C5.3  5    PASS     signed with the CodeSigning alias [L5.13 L5.14]  modules/training-rt.jar: 1 entry matches META-INF/CODESIGN.SF
-checked 3: PASS 3, FAIL 0, SKIP 0; station GoodStation (237 components, 16 links), install install
+ID     LAB  VERDICT  DESCRIPTION                                                   EVIDENCE
+C5.1   5    PASS     training-rt is signed [L5.21 L5.24]                           modules/training-rt.jar: META-INF/CODESIGN.SF, META-INF/CODESIGN.RSA
+C5.2   5    PASS     training-wb is signed [L5.24]                                 modules/training-wb.jar: META-INF/CODESIGN.SF, META-INF/CODESIGN.RSA
+C5.3   5    PASS     signed with the CodeSigning alias [L5.13 L5.14]               modules/training-rt.jar: 1 entry matches META-INF/CODESIGN.SF
+C5.4   5    PASS     system.properties: moduleVerificationMode=high [L5.2]         defaults/system.properties: 1 match (first at line 3: niagara.moduleVerificationMode=high)
+C5.5   5    PASS     system.properties sets moduleVerificationMode once [L5.2]     defaults/system.properties: 1 match (first at line 3: niagara.moduleVerificationMode=high)
+C5.6   5    SKIP     ../certificates: the keystore and its profile [L5.8 L5.9]     no --labsrc DIR: ../certificates/{code_signing.jceks,code_signing.xml} not checked
+C5.7   5    SKIP     dname: five attributes among C, ST, L, O, CN (no OU) [L5.10]  no --labsrc DIR: ../certificates/code_signing.xml not checked
+C5.8   5    SKIP     dname: CN=${alias} [L5.10]                                    no --labsrc DIR: ../certificates/code_signing.xml not checked
+C5.9   5    SKIP     standardtsa = http://timestamp.digicert.com [L5.11]           no --labsrc DIR: ../certificates/code_signing.xml not checked
+C5.10  5    SKIP     profileType RestrictedSigningProfile [L5.11]                  no --labsrc DIR: ../certificates/code_signing.xml not checked
+checked 10: PASS 5, FAIL 0, SKIP 5; station GoodStation (237 components, 16 links), install install, labsrc (none: lab-source checks skipped)

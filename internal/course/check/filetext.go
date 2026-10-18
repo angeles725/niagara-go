@@ -4,9 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 	"regexp"
-	"sort"
 	"strings"
 )
 
@@ -40,30 +38,27 @@ func fileLines(path string) ([]string, error) {
 	return strings.Split(text, "\n"), nil
 }
 
-// stationFiles lists the regular files matching a Glob under the station directory, sorted, as
-// paths relative to it with "/".
-func (s *Station) stationFiles(glob string) (pattern string, files []string, err error) {
-	pattern = strings.ReplaceAll(glob, "{station}", globEscape(s.Name))
-	matches, err := filepath.Glob(filepath.Join(globEscape(s.dir), filepath.FromSlash(pattern)))
-	if err != nil {
-		return pattern, nil, err
-	}
-	for _, m := range matches {
-		if st, err := os.Stat(m); err == nil && st.Mode().IsRegular() {
-			rel, _ := filepath.Rel(s.dir, m)
-			files = append(files, filepath.ToSlash(rel))
-		}
-	}
-	sort.Strings(files)
-	return pattern, files, nil
-}
-
-// fileText checks one file: Line must match re, or (Line 0) the matching lines must reach N.
-// It returns whether the file passes and what was found.
+// fileText checks one file: Line must match re, or (Line 0) the matching lines must reach N, or
+// (Whole) the matches of re over the whole text must reach N. It returns whether the file passes
+// and what was found.
 func (s *Station) fileText(ck *Check, re *regexp.Regexp, rel string) (bool, string, error) {
-	lines, err := fileLines(filepath.Join(s.dir, filepath.FromSlash(rel)))
+	lines, err := fileLines(s.rootPath(ck, rel))
 	if err != nil {
 		return false, "", err
+	}
+	if ck.Whole {
+		text := strings.Join(lines, "\n")
+		found := re.FindAllStringIndex(text, -1)
+		noun := "matches"
+		if len(found) == 1 {
+			noun = "match"
+		}
+		ev := fmt.Sprintf("%s: %d %s", rel, len(found), noun)
+		if len(found) > 0 {
+			at := found[0][0]
+			ev += fmt.Sprintf(" (first at line %d: %s)", strings.Count(text[:at], "\n")+1, excerpt(text[at:found[0][1]]))
+		}
+		return countOK(ck.Op, len(found), ck.N), ev, nil
 	}
 	if ck.Line > 0 {
 		if ck.Line > len(lines) {
@@ -93,13 +88,17 @@ func lineCount(n int) string {
 }
 
 func (s *Station) checkFileText(ck *Check) (string, string) {
-	re, err := regexp.Compile(strings.ReplaceAll(ck.Match, "{station}", regexp.QuoteMeta(s.Name)))
+	match := ck.Match
+	if ck.Root == rootStation {
+		match = strings.ReplaceAll(match, "{station}", regexp.QuoteMeta(s.Name))
+	}
+	re, err := regexp.Compile(match)
 	if err != nil {
 		return Skip, fmt.Sprintf("bad pattern %s: %v", ck.Match, err)
 	}
-	pattern, files, err := s.stationFiles(ck.Glob)
-	if err != nil {
-		return Skip, fmt.Sprintf("bad pattern %s: %v", pattern, err)
+	pattern, files, skip := s.rootFiles(ck)
+	if skip != "" {
+		return Skip, skip
 	}
 	if len(files) == 0 {
 		return Fail, "no file " + pattern
@@ -127,7 +126,10 @@ func (s *Station) checkFileText(ck *Check) (string, string) {
 		return Pass, fmt.Sprintf("%d of %d files: %s", pass, len(files), first)
 	}
 	target := fmt.Sprintf("line %d =~ %s", ck.Line, ck.Match)
-	if ck.Line == 0 {
+	switch {
+	case ck.Whole:
+		target = fmt.Sprintf("%s matches of %s", want(ck.Op, ck.N), ck.Match)
+	case ck.Line == 0:
 		noun := "lines"
 		if ck.N == 1 {
 			noun = "line"
