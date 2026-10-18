@@ -32,6 +32,10 @@ type Comp struct {
 	// Present holds every direct <p n=..> child name the bog stores (platform slots included):
 	// the slots whose value is not the type default.
 	Present map[string]struct{}
+	// Nested maps the dot path of every value stored below a composite property (a slot in Slots)
+	// to that value, in document order: "tcpConfig.address.port" -> "4911". It is filled only by
+	// ParseOptions and LoadOptions with Options.NestedSlots; model.py has no equivalent.
+	Nested Ordered[string]
 }
 
 // SimpleType is the type name after the last ':'.
@@ -83,11 +87,16 @@ type Bog struct {
 
 // Load reads and parses the bog file at path. The error is a *ReadError for an unreadable input.
 func Load(path string) (*Bog, error) {
+	return LoadOptions(path, Options{})
+}
+
+// LoadOptions is Load with the opt-in additions of opts (see ParseOptions).
+func LoadOptions(path string, opts Options) (*Bog, error) {
 	text, err := ReadText(path)
 	if err != nil {
 		return nil, err
 	}
-	return Parse(path, text), nil
+	return ParseOptions(path, text, opts), nil
 }
 
 // Resolve finds a component by "h:<handle>", by exact path (leading/trailing '/' ignored, escaped
