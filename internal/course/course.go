@@ -29,6 +29,7 @@ exit: 0 found; 1 searched, no match (show: any unknown ID, even when the
 others were printed; find: no item matches); 2 cannot search (no root, a missing or ambiguous answer
 key, a missing text file). check: 0 no FAIL (SKIPs are counted, never passed);
 1 at least one FAIL; 2 the station cannot be read, or every check was skipped.
+quiz: 0 drawn; 1 an unknown group or no question in it; 2 cannot search.
 verify, verify-predictions (= verify --status predicted), progress: 0 no item
 contradicted; 1 at least one CONTRADICTED; 2 cannot search, the station
 cannot be read, or every linked check was skipped.
@@ -49,6 +50,7 @@ examples:
   course verify-predictions --station ~/Niagara4.15/tridium/stations/TrainingStation
   course verify --status written --lab RA1
   course progress --lab 3
+  course quiz --lab 3 --seed 1 --answers
   course find -i 'history:'`
 
 // rootParent holds --root: None on the main parser, SUPPRESS on the subcommands, so the
@@ -136,6 +138,13 @@ func buildParser() (*argparse.Parser, map[string]*argparse.Parser) {
 	pg.Add(labsrcArg, "--labsrc")
 	pg.Add(argparse.Arg{Metavar: "YYYY-MM-DD", Help: "date written in the suggested *(verified live|offline ...)* lines (default: today)"}, "--date")
 	pg.Add(jsonHelp, "--json")
+	qz := add("quiz", "draw why, decision and trap questions from the answer keys; --answers prints the answers after them")
+	qz.Add(argparse.Arg{Metavar: "GROUP", Help: "one group: a lab number (3 or L3), B, A, RA1, RA2, RAX, RA (all three), EXAM"}, "--lab")
+	qz.Add(argparse.Arg{Choices: []any{quizWhy, quizDecision, quizTrap}, Help: "one kind: why (a lab *Why ...?* question), " +
+		"decision (a review-assignment design decision), trap (a review-assignment trap)"}, "--kind")
+	qz.Add(argparse.Arg{Type: argparse.Int, Default: 5, Metavar: "N", Help: "questions to draw (default: 5; fewer when the selection holds fewer)"}, "-n")
+	qz.Add(argparse.Arg{Type: argparse.Int, Metavar: "S", Help: "the draw's seed: the same seed draws the same quiz (default: from the clock, printed)"}, "--seed")
+	qz.Add(argparse.Arg{Action: argparse.StoreTrue, Help: "print every answer and its status after the questions"}, "--answers")
 	return p, subs
 }
 
@@ -189,6 +198,9 @@ func Main(args []string, s cli.Stdio) int {
 			return cmdProgress(c, s, o, groups, ns.String("date"), ns.Bool("json"))
 		}
 		return cmdVerify(c, s, o, ns.String("status"), groups, ns.String("date"), ns.Bool("json"))
+	case "quiz":
+		return cmdQuiz(c, s, root, quizOpts{lab: ns.String("lab"), hasLab: ns.Get("lab") != nil, kind: ns.String("kind"),
+			count: ns.Int("n"), seed: ns.Int("seed"), hasSeed: ns.Get("seed") != nil, answers: ns.Bool("answers")})
 	case "status":
 		return cmdStatus(c, s, ns.Get("lab") != nil, ns.String("lab"), ns.String("status"), ns.Bool("json"))
 	default:
