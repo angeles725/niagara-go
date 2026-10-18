@@ -47,9 +47,17 @@ const (
 // "Certificate[i]:" per chain certificate, a trustedCertEntry its one certificate, a SecretKeyEntry
 // nothing.
 func entry(alias, etype string, certs ...string) string {
+	return privateEntry(alias, etype, strconv.Itoa(len(certs)), certs...)
+}
+
+// privateEntry is entry with chain as the "Certificate chain length:" value of a PrivateKeyEntry
+// ("" prints no such line).
+func privateEntry(alias, etype, chain string, certs ...string) string {
 	text := "Alias name: " + alias + "\nCreation date: Oct 17, 2026\nEntry type: " + etype + "\n"
 	if etype == "PrivateKeyEntry" {
-		text += "Certificate chain length: " + strconv.Itoa(len(certs)) + "\n"
+		if chain != "" {
+			text += "Certificate chain length: " + chain + "\n"
+		}
 		for i, c := range certs {
 			text += "Certificate[" + strconv.Itoa(i+1) + "]:\nOwner: CN=" + alias + "\n" + c
 		}
@@ -234,9 +242,10 @@ func TestSec11UnreadEntriesAreNoPass(t *testing.T) {
 		"SKIP", sec11RunNote)
 }
 
-// Completeness is per entry block (niagara-research bdc5e24a1): a chain's extra key lines used to cover
-// an entry whose key line was not read; a SecretKeyEntry has no public key and needs none; an entry
-// of another type is no PASS. Only counts are printed: alias names can be sensitive.
+// Completeness is per entry block and per chain certificate (niagara-research bdc5e24a1; the chain
+// rule is Go-only, decision D34): a chain's extra key lines used to cover an entry whose key line
+// was not read; a SecretKeyEntry has no public key and needs none; an entry of another type is no
+// PASS. Only counts are printed: alias names can be sensitive.
 func TestSec11CompletenessIsPerEntry(t *testing.T) {
 	noKey := "Signature algorithm name: SHA256withRSA\n"
 	for _, tc := range []struct {
@@ -248,8 +257,33 @@ func TestSec11CompletenessIsPerEntry(t *testing.T) {
 			entry("chain", "PrivateKeyEntry", key2048, key2048) + entry("ca", "trustedCertEntry", noKey), 2,
 			"key sizes RSA [2048]; 1 entry without a key line", "SKIP", sec11RunNote},
 		{"private key entry without a key line",
-			entry("k", "PrivateKeyEntry", noKey) + entry("ca", "trustedCertEntry", key2048, key2048), 2,
+			entry("k", "PrivateKeyEntry", noKey) + entry("ca", "trustedCertEntry", key2048), 2,
 			"key sizes RSA [2048]; 1 entry without a key line", "SKIP", sec11RunNote},
+		// A PrivateKeyEntry prints one key line per certificate of its chain, a trustedCertEntry
+		// exactly one (JDK 8 and JDK 21 stores with chains of 1, 2 and 3): any other count leaves a
+		// certificate unread or is another format.
+		{"chain of 3 with 2 key lines",
+			privateEntry("k", "PrivateKeyEntry", "3", key2048, key2048) + entry("ca", "trustedCertEntry", key2048), 2,
+			"key sizes RSA [2048]; 1 entry with unread chain certificates", "SKIP", sec11RunNote},
+		{"no chain length line",
+			privateEntry("k", "PrivateKeyEntry", "", key2048) + entry("ca", "trustedCertEntry", key2048), 2,
+			"key sizes RSA [2048]; 1 entry without a certificate chain length", "SKIP", sec11RunNote},
+		{"more key lines than the chain length",
+			privateEntry("k", "PrivateKeyEntry", "1", key2048, key2048) + entry("ca", "trustedCertEntry", key2048), 2,
+			"key sizes RSA [2048]; 1 entry with more key lines than certificates", "SKIP", sec11RunNote},
+		{"chain length with a padded or huge count",
+			privateEntry("a", "PrivateKeyEntry", "02", key2048, key2048) +
+				privateEntry("b", "PrivateKeyEntry", "99999999999999999999999", key2048), 2,
+			"key sizes RSA [2048]; 1 entry with unread chain certificates", "SKIP", sec11RunNote},
+		{"trusted cert with two key lines", entry("ca", "trustedCertEntry", key2048, keyEC256), 1,
+			"key sizes EC [256], RSA [2048]; 1 entry with more key lines than certificates", "SKIP", sec11RunNote},
+		{"full chains of 2 and 3",
+			entry("inter", "PrivateKeyEntry", keyEC256, key2048) +
+				entry("leaf", "PrivateKeyEntry", key2048, keyEC256, key2048) + entry("ca", "trustedCertEntry", key2048), 3,
+			"key sizes EC [256], RSA [2048]", "PASS", sec11Pass},
+		{"windows line ends keep the chain length",
+			strings.ReplaceAll(entry("leaf", "PrivateKeyEntry", key2048, keyEC256), "\n", "\r\n"), 1,
+			"key sizes EC [256], RSA [2048]", "PASS", sec11Pass},
 		{"secret key entry needs no public key",
 			entry("s", "SecretKeyEntry") + entry("k", "PrivateKeyEntry", key2048), 2,
 			"key sizes RSA [2048]; 1 secret key entry (no public key)", "PASS", sec11Pass},

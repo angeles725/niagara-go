@@ -32,20 +32,26 @@ var keyLineRE = regexp.MustCompile(pycompat.RE2Space(
 // the first being the entry's own key; a trustedCertEntry prints one; a SecretKeyEntry none (it has
 // no public key). The entry type is the rest of its line (a Windows "\r" stripped): any other text
 // is another type.
+// A PrivateKeyEntry's "Certificate chain length: N" line, which keytool -list -v (English) always
+// prints, with one key line per certificate (a Windows "\r" allowed): JDK 8 and JDK 21 stores with
+// chains of 1, 2 and 3 printed exactly N key lines, a trustedCertEntry exactly one (decision D34).
 var (
-	aliasRE     = regexp.MustCompile(`(?m)^Alias name: `)
-	entryTypeRE = regexp.MustCompile(`(?m)^Entry type: (.*)$`)
+	aliasRE       = regexp.MustCompile(`(?m)^Alias name: `)
+	entryTypeRE   = regexp.MustCompile(`(?m)^Entry type: (.*)$`)
+	chainLengthRE = regexp.MustCompile(`(?m)^Certificate chain length: ([0-9]+)\r?$`)
 )
 
 // sec11EntryNeedsKey lists the entry types keytool prints, and whether each must print a key line.
 var sec11EntryNeedsKey = map[string]bool{"PrivateKeyEntry": true, "trustedCertEntry": true, "SecretKeyEntry": false}
 
 // entryBlock is one "Alias name:" block: its entry type (typed false when the block has no "Entry
-// type:" line) and its number of key lines.
+// type:" line), its number of key lines and its certificate chain length ("" when the block has no
+// "Certificate chain length:" line).
 type entryBlock struct {
 	typ   string
 	typed bool
 	keys  int
+	chain digits
 }
 
 // digits is a non-negative decimal integer as Python's str(int(s)) prints it: no leading zeros
@@ -92,6 +98,9 @@ func parseKeys(stdout string) (keys []key, entries digits, blocks []entryBlock) 
 		b := entryBlock{keys: len(keyLineRE.FindAllStringIndex(text, -1))}
 		if m := entryTypeRE.FindStringSubmatch(text); m != nil {
 			b.typ, b.typed = strings.TrimRight(m[1], "\r"), true
+		}
+		if m := chainLengthRE.FindStringSubmatch(text); m != nil {
+			b.chain = toDigits(m[1])
 		}
 		blocks = append(blocks, b)
 	}
@@ -228,7 +237,10 @@ func entriesText(n digits, what string) string {
 
 // sec11Gaps names what keeps a listing from proving every key read, nil when nothing does: no entry
 // count, alias blocks other than entries, a PrivateKeyEntry or trustedCertEntry block without a key
-// line, a block of another (or no) entry type. Counts only: alias names can be sensitive.
+// line, a PrivateKeyEntry without its chain length or with fewer key lines than it, a block with
+// more key lines than certificates (a trustedCertEntry has one: another format), a block of another
+// (or no) entry type. Each block lands in one count at most. Counts only: alias names can be
+// sensitive.
 func sec11Gaps(entries digits, blocks []entryBlock) []string {
 	var gaps []string
 	n := toDigits(strconv.Itoa(len(blocks)))
@@ -238,21 +250,34 @@ func sec11Gaps(entries digits, blocks []entryBlock) []string {
 	case n != entries:
 		gaps = append(gaps, string(n)+pick(n == "1", " alias block", " alias blocks")+" for "+entriesText(entries, ""))
 	}
-	missing, unknown := 0, 0
+	kinds := []string{"without a key line", "without a certificate chain length", "with unread chain certificates",
+		"with more key lines than certificates", "of unknown type"}
+	counts := map[string]int{}
 	for _, b := range blocks {
 		needs, known := sec11EntryNeedsKey[b.typ]
+		certs := digits("1")
+		if b.typ == "PrivateKeyEntry" {
+			certs = b.chain
+		}
+		lines := toDigits(strconv.Itoa(b.keys))
 		switch {
 		case !b.typed || !known:
-			unknown++
-		case needs && b.keys == 0:
-			missing++
+			counts["of unknown type"]++
+		case !needs:
+		case b.keys == 0:
+			counts["without a key line"]++
+		case certs == "":
+			counts["without a certificate chain length"]++
+		case lines.less(certs):
+			counts["with unread chain certificates"]++
+		case certs.less(lines):
+			counts["with more key lines than certificates"]++
 		}
 	}
-	if missing > 0 {
-		gaps = append(gaps, entriesText(toDigits(strconv.Itoa(missing)), "")+" without a key line")
-	}
-	if unknown > 0 {
-		gaps = append(gaps, entriesText(toDigits(strconv.Itoa(unknown)), "")+" of unknown type")
+	for _, k := range kinds {
+		if counts[k] > 0 {
+			gaps = append(gaps, entriesText(toDigits(strconv.Itoa(counts[k])), "")+" "+k)
+		}
 	}
 	return gaps
 }
