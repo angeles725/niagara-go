@@ -17,9 +17,10 @@ import (
 // The data rules of the whole-install documentation sweep
 // (niagara_help_lib/install_rules.py over install_docs.json): doc_like,
 // skip_dirs, extract, exclude (first matching rule wins) and course. The
-// data file is embedded as a byte-for-byte copy of niagara-help's
-// tools/niagara_help_lib/install_docs.json; TestEmbeddedRulesMatchCanonical
-// fails when the two drift.
+// embedded install_docs.json is the canonical data file (decision D44): it
+// started as a byte-for-byte copy of niagara-help's
+// tools/niagara_help_lib/install_docs.json, which the Go port retires, so a
+// rule changes here and nowhere else.
 //
 // As in the Python code, "@name" glob lists are expanded only in "unless";
 // "jar" and "entry" take globs or lists of globs.

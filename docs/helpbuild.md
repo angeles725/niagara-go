@@ -86,13 +86,12 @@ other's cache without opening a jar.
 
 ### The rules data file
 
-`internal/helpbuild/install_docs.json` is a **copy** of niagara-help
-`tools/niagara_help_lib/install_docs.json`, kept equal by a drift test
-(`TestEmbeddedRulesMatchCanonical`, skipped visibly when the checkout is absent). A copy
-was chosen over generation because the established pattern (`internal/glossary`) is a
-copy plus a drift test, it needs no `go generate` step or build-time access to the
-niagara-research checkout, and the drift test fails on the first commit that forgets to
-copy. When the data file changes upstream: copy it, run `go test ./internal/helpbuild/`.
+`internal/helpbuild/install_docs.json` is the **canonical** rules data file (D44). It began
+as a byte-for-byte copy of niagara-help `tools/niagara_help_lib/install_docs.json`, kept equal
+by a drift test; with the Python tools retired the Go copy is the only one maintained, so the
+drift test is gone and a rule changes here, followed by `go test ./internal/helpbuild/`. The
+parity drivers still load the tag's own `install_docs.json` through the Python reference, so a
+rule changed here diverges from the Python on purpose and the parity cases it touches must say so.
 
 ## Parity harness
 
