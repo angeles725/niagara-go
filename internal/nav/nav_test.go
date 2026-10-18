@@ -15,24 +15,87 @@ import (
 	"github.com/angeles725/niagara-go/internal/nav/registry"
 )
 
-func TestEveryOrderedCommandIsRegistered(t *testing.T) {
-	if len(Order) != 134 {
-		t.Fatalf("Order has %d commands, want 134", len(Order))
+// TestKeptAndRetiredCover134Commands: the kept commands (Order) and the
+// retired ones (Retired) are Python's 134 commands, each once; every kept
+// command is registered.
+func TestKeptAndRetiredCover134Commands(t *testing.T) {
+	if len(Order) != 21 || len(Retired) != 113 {
+		t.Fatalf("%d kept and %d retired commands, want 21 and 113", len(Order), len(Retired))
 	}
-	if got := registry.Names(); len(got) != len(Order) {
-		t.Fatalf("%d commands registered, want %d", len(got), len(Order))
+	seen := map[string]bool{}
+	for _, n := range append(append([]string(nil), Order...), Retired...) {
+		if seen[n] {
+			t.Errorf("%s named twice", n)
+		}
+		seen[n] = true
+	}
+	for _, n := range Order {
+		if _, ok := registry.Lookup(n); !ok {
+			t.Errorf("kept command %s is not registered", n)
+		}
 	}
 	if _, err := BuildParser(); err != nil {
 		t.Fatal(err)
 	}
 }
 
-func TestUnportedCommandExitsTwo(t *testing.T) {
-	t.Setenv("COLUMNS", "100")
+// TestRetiredCommandExitsTwo: a retired command, whatever its arguments and
+// however the global options are spelled, prints one line on stderr and
+// exits 2; it is in neither the --help list nor the parser's choices.
+func TestRetiredCommandExitsTwo(t *testing.T) {
+	base := t.TempDir()
+	for _, args := range [][]string{
+		{"--base-dir", base, "xref", "BFoo"},
+		{"-d", base, "ui", "dialogs"},
+		{"-d" + base, "method", "--help"},
+		{"--base=" + base, "package", "-n", "x"},
+		{"--base-d", base, "--", "session"},
+		{"repl"},
+	} {
+		var out, errb bytes.Buffer
+		code := Main(args, cli.Stdio{Out: &out, Err: &errb})
+		name := args[len(args)-1]
+		for i, a := range args {
+			if retired[a] {
+				name = args[i]
+				break
+			}
+		}
+		want := "mnav: '" + name + "' was retired in the Go port (no recorded use); see docs/retired-commands.md\n"
+		if code != cli.ExitCannotSearch || out.Len() != 0 || errb.String() != want {
+			t.Errorf("%q: code=%d stdout=%q stderr=%q", args, code, out.String(), errb.String())
+		}
+	}
 	var out, errb bytes.Buffer
-	code := Main([]string{"--base-dir", t.TempDir(), "xref", "BFoo"}, cli.Stdio{Out: &out, Err: &errb})
-	if code != cli.ExitCannotSearch || out.Len() != 0 || errb.String() != "mnav: 'xref' is not ported yet\n" {
-		t.Fatalf("code=%d stdout=%q stderr=%q", code, out.String(), errb.String())
+	if code := Main([]string{"--base-dir", base, "xrefs"}, cli.Stdio{Out: &out, Err: &errb}); code != 2 ||
+		strings.Contains(errb.String(), "'xref'") || strings.Contains(errb.String(), "retired") {
+		t.Errorf("unknown command: code=%d stderr=%q", code, errb.String())
+	}
+	epilog, err := groupedCommands()
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, n := range Retired {
+		if strings.Contains(epilog, "    "+n+" ") {
+			t.Errorf("--help lists retired %s", n)
+		}
+	}
+}
+
+func TestCommandWord(t *testing.T) {
+	cases := map[string][]string{
+		"class": {"class", "X"}, "stats": {"-d", "/b", "stats"}, "inventory": {"--base-dir=/b", "inventory"},
+		"x": {"--", "x"}, "": {"--help", "xref"}, "-": {"-"},
+	}
+	for want, args := range cases {
+		if got := commandWord(args); got != want {
+			t.Errorf("commandWord(%q) = %q, want %q", args, got, want)
+		}
+	}
+	for _, args := range [][]string{{"-h", "xref"}, {"--bogus", "xref"}, {}} {
+		if got := commandWord(args); got != "" {
+			t.Errorf("commandWord(%q) = %q, want none", args, got)
+		}
 	}
 }
 

@@ -1,0 +1,6 @@
+{
+ "reason": "D32: the invalid-choice list names only the 21 kept commands",
+ "stdout": "",
+ "stderr": "usage: module-nav [-h] [--base-dir DIR] <command> [<args>]\nmodule-nav: error: argument <command>: invalid choice: 'clas', maybe you meant 'class'? (choose from 'selftest', 'inventory', 'module', 'modules', 'class', 'search', 'grep', 'rank', 'source', 'license-feature', 'license-features', 'hierarchy', 'implementors', 'drivers', 'stats', 'resources', 'callers', 'callees', 'token', 'ask', 'palette-lexicon-agents')\n",
+ "exit": 2
+}

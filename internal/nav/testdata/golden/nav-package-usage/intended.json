@@ -1,0 +1,6 @@
+{
+ "reason": "D32: 'package' is retired in the Go port (no recorded use); any invocation prints one stderr line pointing to docs/retired-commands.md and exits 2",
+ "stdout": "",
+ "stderr": "mnav: 'package' was retired in the Go port (no recorded use); see docs/retired-commands.md\n",
+ "exit": 2
+}

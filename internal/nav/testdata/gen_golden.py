@@ -842,8 +842,15 @@ def capture(cid, args, env, base=BASE):
     p = subprocess.run([sys.executable, CLI] + argv, cwd=HERE, env=full_env,
                        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     d = os.path.join(HERE, "golden", cid)
+    kept = None  # an intended.json written by hand (e.g. a D32 retired command) survives a re-capture
+    if os.path.isfile(os.path.join(d, "intended.json")):
+        with open(os.path.join(d, "intended.json"), encoding="utf-8") as f:
+            kept = f.read()
     shutil.rmtree(d, ignore_errors=True)
     os.makedirs(d)
+    if kept is not None and cid[len("nav-"):] not in INTENDED:
+        with open(os.path.join(d, "intended.json"), "w", encoding="utf-8") as f:
+            f.write(kept)
     with open(os.path.join(d, "cmd.json"), "w", encoding="utf-8") as f:
         json.dump({"args": argv, "env": env} if env else {"args": argv}, f)
         f.write("\n")

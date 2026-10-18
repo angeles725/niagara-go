@@ -31,6 +31,10 @@ import (
 
 // Main runs one module-nav command line and returns the process exit code.
 func Main(args []string, s cli.Stdio) int {
+	if name := commandWord(args); retired[name] {
+		fmt.Fprintf(s.Err, "mnav: '%s' was retired in the Go port (no recorded use); see docs/retired-commands.md\n", name)
+		return cli.ExitCannotSearch
+	}
 	parser, err := BuildParser()
 	if err != nil {
 		fmt.Fprintf(s.Err, "mnav: %v\n", err)
@@ -71,6 +75,48 @@ func Main(args []string, s cli.Stdio) int {
 	return status
 }
 
+// retired is the set of Retired.
+var retired = func() map[string]bool {
+	m := map[string]bool{}
+	for _, n := range Retired {
+		m[n] = true
+	}
+	return m
+}()
+
+// commandWord is the command name of a module-nav command line: the first
+// word after the global options (--base-dir/-d DIR in any of argparse's
+// spellings, "--"); "" when an option comes first that is not one of them
+// (help or a usage error, which the parser reports).
+func commandWord(args []string) string {
+	for i := 0; i < len(args); i++ {
+		a := args[i]
+		switch {
+		case a == "--":
+			if i+1 < len(args) {
+				return args[i+1]
+			}
+			return ""
+		case a == "-d":
+			i++
+		case strings.HasPrefix(a, "-d"):
+		case strings.HasPrefix(a, "--") && len(a) > 2:
+			name, _, hasValue := strings.Cut(a, "=")
+			if !strings.HasPrefix("--base-dir", name) {
+				return ""
+			}
+			if !hasValue {
+				i++
+			}
+		case strings.HasPrefix(a, "-") && a != "-":
+			return ""
+		default:
+			return a
+		}
+	}
+	return ""
+}
+
 // orderedErr is a command's stderr: it flushes the buffered stdout before each
 // write, so a terminal showing both streams sees them in the order the command
 // wrote them, as with Python's line-buffered stdout. A failed flush is sticky
@@ -97,7 +143,7 @@ func BuildParser() (*argparse.Parser, error) {
 	// The grouped list in the epilog replaces argparse's one-line {a,b,...} usage
 	// and its flat command list.
 	sub := parser.AddSubparsers(argparse.SubparsersConfig{Dest: "command", Metavar: "<command>", Help: argparse.Suppress})
-	if err := registry.AddParsers(sub, Order); err != nil {
+	if err := registry.AddParsers(sub, Order, Retired); err != nil {
 		return nil, err
 	}
 	epilog, err := groupedCommands()
