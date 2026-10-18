@@ -8,6 +8,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/angeles725/niagara-go/internal/atomicfile"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 )
@@ -127,7 +128,7 @@ type CourseCounts struct {
 
 // BuildCourse is course.build: copy the bound course into baseDir,
 // replacing earlier copies. Both trees are built in staging directories
-// and swapped in at the end (RebuiltDir, devguide-examples/course/ first
+// and swapped in at the end (atomicfile.RebuiltDir, devguide-examples/course/ first
 // as Python's nested with-statement exits it first): a failed copy keeps
 // the previous copies. It returns nil when no course is bound (copies
 // left from an earlier binding are removed), a *CourseDirMissingError when
@@ -146,8 +147,8 @@ func BuildCourse(baseDir string, rules *Rules) (*CourseCounts, error) {
 		return nil, &CourseDirMissingError{src}
 	}
 	counts := &CourseCounts{CourseDir: src}
-	err = RebuiltDir(filepath.Join(baseDir, CourseTextDir), func(textTmp string) error {
-		return RebuiltDir(filepath.Join(baseDir, CourseCodeDir), func(codeTmp string) error {
+	err = atomicfile.RebuiltDir(filepath.Join(baseDir, CourseTextDir), func(textTmp string) error {
+		return atomicfile.RebuiltDir(filepath.Join(baseDir, CourseCodeDir), func(codeTmp string) error {
 			for _, row := range CoursePlan(src, rules) {
 				var top, tmp string
 				switch row.Kind {

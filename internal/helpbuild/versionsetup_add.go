@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/angeles725/niagara-go/internal/atomicfile"
 	"github.com/angeles725/niagara-go/internal/index"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyjson"
@@ -158,7 +159,7 @@ func Register(repo, vid, install, label string, makeDefault bool) error {
 	if def, _ := reg.Get("default"); makeDefault || !def.Truthy() {
 		reg.Set("default", pyjson.String(vid))
 	}
-	return WriteText(pycompat.Join(repo, index.RegistryRel), pyjson.Dumps(*reg, pyjson.Indent2)+"\n")
+	return atomicfile.WriteText(pycompat.Join(repo, index.RegistryRel), pyjson.Dumps(*reg, pyjson.Indent2)+"\n")
 }
 
 // AddOptions are add_version's arguments past the install, and the hooks
@@ -309,7 +310,7 @@ func rollback(regPath string, before []byte, root string, rootExisted bool, out 
 			err = os.Remove(regPath)
 		}
 	} else {
-		err = WriteBytes(regPath, before)
+		err = atomicfile.WriteBytes(regPath, before)
 	}
 	if err != nil {
 		ok = false

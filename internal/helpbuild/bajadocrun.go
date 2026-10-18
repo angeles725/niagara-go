@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/angeles725/niagara-go/internal/atomicfile"
 	"github.com/angeles725/niagara-go/internal/bajadocxml"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyhtml"
@@ -130,7 +131,7 @@ func writeCleanClass(outDir, pkg, className, text string) error {
 			return fmt.Errorf("%w: %q", ErrUnsafeClassName, className)
 		}
 	}
-	if err := WriteText(path, text); err != nil {
+	if err := atomicfile.WriteText(path, text); err != nil {
 		return err
 	}
 	if _, err := os.Stat(legacy); legacy != path && err == nil {

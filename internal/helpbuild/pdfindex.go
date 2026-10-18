@@ -13,6 +13,7 @@ import (
 	"time"
 	"unicode/utf8"
 
+	"github.com/angeles725/niagara-go/internal/atomicfile"
 	"github.com/angeles725/niagara-go/internal/procgroup"
 
 	"github.com/angeles725/niagara-go/internal/pycompat"
@@ -83,7 +84,7 @@ var writePDFIndex = func(path string, v pyjson.Value) error {
 	if !utf8.ValidString(text) {
 		return fmt.Errorf("%s: 'utf-8' codec can't encode a surrogate of the index", path)
 	}
-	return WriteText(path, text)
+	return atomicfile.WriteText(path, text)
 }
 
 // pyRound1 is round(x, 1): correctly rounded to one decimal, ties to even
@@ -297,7 +298,7 @@ func extractAll(res *PDFResult, docs string, pdfs []string, outputDir, indexPath
 		} else {
 			res.Stats.Extracted++
 		}
-		if err := WriteText(textPath, text); err != nil {
+		if err := atomicfile.WriteText(textPath, text); err != nil {
 			return err
 		}
 		written[stem] = true

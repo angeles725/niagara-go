@@ -36,7 +36,7 @@ document disagree, the code wins and this document is corrected.
 
 | File | Ports | Notes |
 |---|---|---|
-| `atomic.go` | `atomic.write_bytes/write_text/write_json/rebuilt_dir` | temp file + rename in the same directory; no fsync (atomic.py has none: the guarantee is against an interrupted builder, not power loss); modes 0644 / 0755 like the explicit `chmod` calls; removing the old tree after a good swap ignores errors like `shutil.rmtree(old, ignore_errors=True)` (the rebuild succeeded; a leftover `.old-<pid>` tree is not reported) |
+| `internal/atomicfile` (`WriteBytes`, `WriteText`, `RebuiltDir`) and `jsonwrite.go` (`WriteJSON`) | `atomic.write_bytes/write_text/write_json/rebuilt_dir` | `atomicfile` is a leaf package (no module imports) so other commands can share it; temp file + rename in the same directory; no fsync (atomic.py has none: the guarantee is against an interrupted builder, not power loss); modes 0644 / 0755 like the explicit `chmod` calls; removing the old tree after a good swap ignores errors like `shutil.rmtree(old, ignore_errors=True)` (the rebuild succeeded; a leftover `.old-<pid>` tree is not reported) |
 | `zipdir.go` | `zipfile.ZipFile(path).infolist()` (3.15) | `_EndRecData`, `_EndRecData64`, `_RealGetContents`, `ZipInfo._decodeExtra` ported, see below |
 | `jarlisting.go` | `jar_listing.cache_path/read_listing/Listings` | the cache file is byte-identical to Python's |
 | `rules.go` | `install_rules.glob_re/Rule/Rules/load/default` | `install_docs.json` embedded with `//go:embed` |
@@ -903,10 +903,10 @@ data root. Every index file is replaced by rename, never truncated in place:
 
 | Output | Written by | A reader during the run sees |
 |---|---|---|
-| `indexes/*.json` (class, jdk-class, inheritance, method, source, slots, xref, guides, devguide-toc, pdf) and `indexes/.manifest.json` | `WriteJSON` / `WriteText` (temp file + rename in the same folder) | the old file or the new one |
-| `guides-clean/`, `devguide-clean/`, `course-text/`, `devguide-examples/course/` | `RebuiltDir` (a sibling temp tree swapped in) | the old tree or the new one, and for the moment between the two renames (old aside, new in) no folder at all, as Python's `rebuilt_dir` |
-| `bajadoc-clean/`, `docs-text/` | page by page with `WriteText` (both are shared by two builders or kept page by page on failure) | whole pages only, old and new mixed while the builder runs; `docs-text/` drops stale pages after a clean run |
-| `indexes/pdf-index.json` stub (`ExtractAndIndex` only, when the file is absent) | `WriteText` (Python: a plain `open("w")`) | no file or `{}` |
+| `indexes/*.json` (class, jdk-class, inheritance, method, source, slots, xref, guides, devguide-toc, pdf) and `indexes/.manifest.json` | `WriteJSON` / `atomicfile.WriteText` (temp file + rename in the same folder) | the old file or the new one |
+| `guides-clean/`, `devguide-clean/`, `course-text/`, `devguide-examples/course/` | `atomicfile.RebuiltDir` (a sibling temp tree swapped in) | the old tree or the new one, and for the moment between the two renames (old aside, new in) no folder at all, as Python's `rebuilt_dir` |
+| `bajadoc-clean/`, `docs-text/` | page by page with `atomicfile.WriteText` (both are shared by two builders or kept page by page on failure) | whole pages only, old and new mixed while the builder runs; `docs-text/` drops stale pages after a clean run |
+| `indexes/pdf-index.json` stub (`ExtractAndIndex` only, when the file is absent) | `atomicfile.WriteText` (Python: a plain `open("w")`) | no file or `{}` |
 | `build.log` (`RebuildToLog` only) | plain truncating write, as Python | a growing log; nh reads none |
 
 ### S10a parity (`testdata/rebuild/driver.py`, modes `plan`, `run`, `log`)

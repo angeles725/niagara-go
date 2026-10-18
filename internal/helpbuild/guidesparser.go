@@ -8,6 +8,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
+	"github.com/angeles725/niagara-go/internal/atomicfile"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/textfold"
 )
@@ -16,7 +17,7 @@ import (
 // tools/devguide_parser.py (devguide/ -> devguide-clean/). Each page
 // becomes one text file with a TITLE / [TOC / PAGE TITLE] / SOURCE header;
 // the clean tree is rebuilt from scratch in a sibling directory swapped in
-// at the end (RebuiltDir). Nothing is printed: Log holds the lines Python
+// at the end (atomicfile.RebuiltDir). Nothing is printed: Log holds the lines Python
 // prints on stdout, Warnings the ones it prints on stderr.
 
 // TextResult is what a text builder reports.
@@ -53,7 +54,7 @@ func writeClean(path, text string) error {
 	if err := os.MkdirAll(filepath.Dir(path), 0o777); err != nil {
 		return err
 	}
-	return WriteText(path, text)
+	return atomicfile.WriteText(path, text)
 }
 
 // mdClosing is the closing-sequence regex of _markdown_title.
@@ -79,7 +80,7 @@ func markdownTitle(text string) string {
 func ParseGuides(baseDir string) (*TextResult, error) {
 	res := &TextResult{}
 	guidesDir := pycompat.Join(baseDir, "guides")
-	err := RebuiltDir(pycompat.Join(baseDir, "guides-clean"), func(out string) error {
+	err := atomicfile.RebuiltDir(pycompat.Join(baseDir, "guides-clean"), func(out string) error {
 		return parseGuidesInto(res, guidesDir, out)
 	})
 	if err != nil {
@@ -183,7 +184,7 @@ func guidePageText(fname, raw string) (title, text string) {
 func ParseDevguide(baseDir string) (*TextResult, error) {
 	res := &TextResult{}
 	devguideDir := pycompat.Join(baseDir, "devguide")
-	err := RebuiltDir(pycompat.Join(baseDir, "devguide-clean"), func(out string) error {
+	err := atomicfile.RebuiltDir(pycompat.Join(baseDir, "devguide-clean"), func(out string) error {
 		return parseDevguideInto(res, baseDir, devguideDir, out)
 	})
 	if err != nil {

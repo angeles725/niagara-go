@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/angeles725/niagara-go/internal/atomicfile"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
@@ -210,7 +211,7 @@ func writeEntry(z *zipFile, x *zipInfo, out string) error {
 
 // FillMissing writes only the mapped entries whose destination is absent
 // (doc_jars.fill_missing): an existing path, even a dangling symlink, is
-// never touched; each file is written atomically (WriteBytes, 0644).
+// never touched; each file is written atomically (atomicfile.WriteBytes, 0644).
 // It returns the corpus paths written, in jar order.
 func FillMissing(installDir, root string, ls *Listings) ([]string, error) {
 	written := []string{}
@@ -231,7 +232,7 @@ func FillMissing(installDir, root string, ls *Listings) ([]string, error) {
 			if err != nil {
 				return err
 			}
-			if err := WriteBytes(out, data); err != nil {
+			if err := atomicfile.WriteBytes(out, data); err != nil {
 				return err
 			}
 			written = append(written, rel)

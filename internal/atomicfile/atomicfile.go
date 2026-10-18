@@ -1,30 +1,26 @@
-package helpbuild
+// Package atomicfile writes files and directory trees so that an interrupted writer never
+// leaves a half-written result behind (the Go side of niagara_help_lib/atomic.py).
+//
+// A file write goes to a temp file in the same directory (".tmp-*<last 40 code points of
+// the name>"), then a rename swaps it in; on error or panic the temp file is removed and the
+// previous file is untouched. A rebuilt tree is built in an empty sibling temp directory
+// and swapped in the same way, the old tree renamed aside and restored when the swap fails.
+//
+// Mode rules: a written file ends with mode 0644 and a rebuilt tree's root with 0755 (the
+// explicit chmod calls of atomic.py; CreateTemp/MkdirTemp would leave 0600/0700); missing
+// parent directories are created with 0777 less the umask. There is no fsync, like
+// atomic.py: the guarantee is against an interrupted writer, not against power loss. The
+// rename is os.Rename, which on Windows is MoveFileEx(MOVEFILE_REPLACE_EXISTING), the call
+// behind Python's os.replace, so replacing an existing file works on both systems.
+//
+// The package imports nothing from this module, so any command can use it.
+package atomicfile
 
 import (
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
-
-	"github.com/angeles725/niagara-go/internal/pyjson"
-)
-
-// Atomic file writes for the builders (niagara_help_lib/atomic.py).
-//
-// A builder that dies mid-write must leave the previous file intact, never a
-// truncated index that every later query trusts. Each write goes to a temp
-// file in the same directory, then a rename swaps it in; on error the temp
-// file is removed. Like atomic.py there is no fsync: the guarantee is
-// against an interrupted builder, not against power loss. The rename is
-// os.Rename, which on Windows is MoveFileEx(MOVEFILE_REPLACE_EXISTING),
-// the call behind Python's os.replace, so replacing an existing file works
-// on both systems.
-
-// DumpDefault is json.dumps with no keyword arguments; DumpCompact is
-// json.dumps(separators=(",", ":")), the jar-listing cache format.
-var (
-	DumpDefault = pyjson.DumpOpts{EnsureASCII: true, Indent: -1, ItemSep: ", ", KeySep: ": "}
-	DumpCompact = pyjson.DumpOpts{EnsureASCII: true, Indent: -1, ItemSep: ",", KeySep: ":"}
 )
 
 // rename is os.Rename and removeOld os.RemoveAll, replaceable by the tests
@@ -90,11 +86,6 @@ func WriteBytes(path string, data []byte) (err error) {
 
 // WriteText writes text to path atomically, UTF-8, no newline translation.
 func WriteText(path, text string) error { return WriteBytes(path, []byte(text)) }
-
-// WriteJSON writes pyjson.Dumps(v, o) to path atomically (atomic.write_json).
-func WriteJSON(path string, v pyjson.Value, o pyjson.DumpOpts) error {
-	return WriteText(path, pyjson.Dumps(v, o))
-}
 
 // RestoreError reports a failed swap whose restore failed too: neither error
 // hides the other, and the previous tree is still at Kept. It unwraps to the

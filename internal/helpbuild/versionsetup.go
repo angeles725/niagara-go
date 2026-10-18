@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/angeles725/niagara-go/internal/atomicfile"
 	"github.com/angeles725/niagara-go/internal/index"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyjson"
@@ -292,7 +293,7 @@ func rebuild(root string, hook func(string) ([]string, error)) ([]string, error)
 		return nil, err
 	}
 	if pdf := pycompat.Join(root, "indexes", "pdf-index.json"); !pycompat.IsFile(pdf) {
-		if err := WriteText(pdf, "{}\n"); err != nil {
+		if err := atomicfile.WriteText(pdf, "{}\n"); err != nil {
 			return nil, err
 		}
 	}
