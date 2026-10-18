@@ -266,6 +266,9 @@ func parse(data []byte) (*Rules, error) {
 	if err != nil {
 		return nil, err
 	}
+	if skip.Kind != pyjson.Array {
+		return nil, fmt.Errorf("skip_dirs: want a list, got %s", skip.TypeName())
+	}
 	for _, d := range skip.A {
 		dir, err1 := getStr(d, "dir")
 		reason, err2 := getStr(d, "reason")
@@ -281,7 +284,10 @@ func parse(data []byte) (*Rules, error) {
 		r.SkipDirs[i].Reason = r.skip[r.SkipDirs[i].Dir]
 	}
 	globs := map[string][]string{}
-	if g, ok := doc.Get("globs"); ok && g.Truthy() {
+	if g, ok := doc.Get("globs"); ok && g.Truthy() { // data.get("globs") or {}
+		if g.Kind != pyjson.Object {
+			return nil, fmt.Errorf("globs: want a dict, got %s", g.TypeName())
+		}
 		for _, k := range g.Keys {
 			list, err := strList(g.M[k], false)
 			if err != nil {
@@ -293,7 +299,10 @@ func parse(data []byte) (*Rules, error) {
 	if r.Extract, err = rules(doc, "extract", globs); err != nil {
 		return nil, err
 	}
-	if c, ok := doc.Get("course"); ok && c.Truthy() {
+	if c, ok := doc.Get("course"); ok && c.Truthy() { // data.get("course") or {}
+		if c.Kind != pyjson.Object {
+			return nil, fmt.Errorf("course: want a dict, got %s", c.TypeName())
+		}
 		for _, kind := range courseKinds {
 			if v, ok := c.Get(kind); ok {
 				list, err := strList(v, false)

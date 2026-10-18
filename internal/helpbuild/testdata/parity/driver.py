@@ -18,6 +18,22 @@ Go test rebuilds from internal/helpbuild and compares line by line.
   path REPO INSTALL...     cache_path(REPO, INSTALL) per install
   glob                     stdin: [[pattern, path], ...]; prints
                            [glob_re(pattern).match(path) is not None, ...]
+  map                      stdin: [[jar, [entry, ...]], ...]; per jar
+                           ["jar", jar, is_doc_jar, is_module_jar, jar_stem,
+                           guide_folder], per entry ["entry", entry,
+                           dest_path, is_help_entry], then the
+                           mapped_entries rows ["mapped", pos, entry, rel,
+                           first]
+  helpjars INSTALL         ["help", help_jars(INSTALL)] and
+                           ["doc", list_doc_jars(INSTALL, True)]
+  docjars OP INSTALL ROOT  OP extract | fill | fidelity: ["ok", result] or
+                           ["raise", exception class name]
+  setup REPO VID OP        version_setup.extract_and_index(REPO, VID,
+                           no_index=True, ...) with OP extract | force |
+                           verify | fill: ["out", line] per out() line, then
+                           ["result", status, error, extracted, fidelity] or
+                           ["raise", exception class name]
+  emptyindexes ROOT        version_setup._empty_indexes(ROOT) lines
 """
 
 import json
@@ -26,7 +42,8 @@ import sys
 
 sys.path.insert(0, sys.argv[1])
 
-from niagara_help_lib import doc_types, install_rules, jar_listing  # noqa: E402
+from niagara_help_lib import (doc_jars, doc_types, install_rules,  # noqa: E402
+                              jar_listing, version_setup)
 
 
 def _id(rule):
@@ -63,6 +80,47 @@ def cache(path, jars):
     print(json.dumps(listings.reads))
 
 
+def mapping(pairs):
+    for jar, entries in pairs:
+        print(json.dumps(["jar", jar, doc_jars.is_doc_jar(jar),
+                          doc_jars.is_module_jar(jar), doc_jars.jar_stem(jar),
+                          doc_jars.guide_folder(jar)]))
+        for e in entries:
+            print(json.dumps(["entry", e, doc_jars.dest_path(jar, e),
+                              doc_jars.is_help_entry(jar, e)]))
+        for row in doc_jars.mapped_entries(jar, entries):
+            print(json.dumps(["mapped"] + list(row)))
+
+
+def docjars(op, install, root):
+    fn = {"extract": doc_jars.extract, "fill": doc_jars.fill_missing,
+          "fidelity": doc_jars.fidelity}[op]
+    try:
+        result = fn(install, root)
+    except Exception as e:  # noqa: BLE001 - the class is the result
+        print(json.dumps(["raise", type(e).__name__]))
+        return
+    print(json.dumps(["ok", result]))
+
+
+def setup(repo, vid, op):
+    lines = []
+    try:
+        status, stats = version_setup.extract_and_index(
+            repo, vid, force=op == "force", no_index=True,
+            verify_only=op == "verify", fill_missing=op == "fill",
+            out=lines.append)
+    except Exception as e:  # noqa: BLE001 - the class is the result
+        for line in lines:
+            print(json.dumps(["out", line]))
+        print(json.dumps(["raise", type(e).__name__]))
+        return
+    for line in lines:
+        print(json.dumps(["out", line]))
+    print(json.dumps(["result", status, stats.get("error"),
+                      stats.get("extracted"), stats.get("fidelity")]))
+
+
 def main():
     mode, args = sys.argv[2], sys.argv[3:]
     if mode == "classify":
@@ -76,6 +134,17 @@ def main():
         pairs = json.load(sys.stdin)
         print(json.dumps([install_rules.glob_re(p).match(s) is not None
                           for p, s in pairs]))
+    elif mode == "map":
+        mapping(json.load(sys.stdin))
+    elif mode == "helpjars":
+        print(json.dumps(["help", doc_jars.help_jars(args[0])]))
+        print(json.dumps(["doc", doc_jars.list_doc_jars(args[0], True)]))
+    elif mode == "docjars":
+        docjars(*args)
+    elif mode == "setup":
+        setup(*args)
+    elif mode == "emptyindexes":
+        print(json.dumps(version_setup._empty_indexes(args[0])))
     else:
         sys.exit("unknown mode " + mode)
 

@@ -71,11 +71,18 @@ func TestShippedRulesAreWellFormed(t *testing.T) {
 
 // TestEmbeddedRulesMatchCanonical is the drift test: the embedded copy must
 // equal niagara-help tools/niagara_help_lib/install_docs.json byte for byte.
+// $NIAGARA_HELP_DIR set to a folder without the file is a failure, not a
+// skip; only when neither the variable nor a checkout exists does it skip.
 func TestEmbeddedRulesMatchCanonical(t *testing.T) {
-	canon, err := os.ReadFile(filepath.Join(niagaraHelpTools(), "niagara_help_lib", "install_docs.json"))
-	if err != nil {
-		t.Skipf("canonical install_docs.json not available: %v", err)
+	tools := niagaraHelpTools()
+	if tools == "" {
+		t.Skip("no niagara-help checkout ($NIAGARA_HELP_DIR unset, none under $NIAGARA_RESEARCH or walking up): drift not checked")
 	}
+	canon, err := os.ReadFile(filepath.Join(filepath.Dir(tools), canonicalRules))
+	if err != nil {
+		t.Fatalf("canonical install_docs.json: %v", err)
+	}
+	t.Logf("canonical %s", filepath.Join(filepath.Dir(tools), canonicalRules))
 	if !bytes.Equal(canon, embeddedRules) {
 		t.Fatal("internal/helpbuild/install_docs.json drifted from niagara-help " +
 			"tools/niagara_help_lib/install_docs.json: copy it again")
@@ -165,11 +172,27 @@ func TestBadRulesAreErrors(t *testing.T) {
 		"missing reason": `{"doc_like": {"extensions": [], "names": []}, "skip_dirs": [], "extract": [],
 			"exclude": [{"id": "a", "entry": "x"}]}`,
 		"missing doc_like": `{"skip_dirs": [], "extract": [], "exclude": []}`,
-		"not JSON":         `{`,
+		"skip_dirs not a list": `{"doc_like": {"extensions": [], "names": []}, "skip_dirs": {"jre": "r"},
+			"extract": [], "exclude": []}`,
+		"skip_dirs a string": `{"doc_like": {"extensions": [], "names": []}, "skip_dirs": "jre",
+			"extract": [], "exclude": []}`,
+		"globs a list": `{"doc_like": {"extensions": [], "names": []}, "skip_dirs": [], "globs": ["web"],
+			"extract": [], "exclude": []}`,
+		"course a string": `{"doc_like": {"extensions": [], "names": []}, "skip_dirs": [], "course": "text",
+			"extract": [], "exclude": []}`,
+		"not JSON": `{`,
 	}
 	for name, data := range bad {
 		if _, err := Parse([]byte(data), "rules.json"); err == nil {
 			t.Errorf("%s: parsed without error", name)
+		}
+	}
+	// data.get(...) or {}: a falsy globs or course of any type is no data.
+	for _, falsy := range []string{`[]`, `""`, `0`, `null`, `{}`} {
+		data := `{"doc_like": {"extensions": [], "names": []}, "skip_dirs": [], "globs": ` + falsy +
+			`, "course": ` + falsy + `, "extract": [], "exclude": []}`
+		if _, err := Parse([]byte(data), "rules.json"); err != nil {
+			t.Errorf("falsy %s: %v", falsy, err)
 		}
 	}
 	_, err := Parse([]byte(bad["unknown glob list"]), "rules.json")
@@ -178,12 +201,64 @@ func TestBadRulesAreErrors(t *testing.T) {
 	}
 }
 
-// niagaraHelpTools is niagara-help tools/ ($NIAGARA_RESEARCH/niagara-help,
-// default /home/cristian/niagara-research/niagara-help).
+// canonicalRules is the data file inside a niagara-help checkout.
+var canonicalRules = filepath.Join("tools", "niagara_help_lib", "install_docs.json")
+
+// niagaraHelpTools is niagara-help tools/: $NIAGARA_HELP_DIR/tools when the
+// variable is set; else $NIAGARA_RESEARCH/niagara-help/tools when that
+// checkout holds the data file; else the first checkout met walking up
+// from the test directory, at each level as <dir>/niagara-help or
+// <dir>/niagara-research/niagara-help (a worktree under
+// ~/niagara-go-worktrees finds ~/niagara-research/niagara-help). "" when
+// there is none.
 func niagaraHelpTools() string {
-	root := os.Getenv("NIAGARA_RESEARCH")
-	if root == "" {
-		root = "/home/cristian/niagara-research"
+	if env := os.Getenv("NIAGARA_HELP_DIR"); env != "" {
+		return filepath.Join(env, "tools")
 	}
-	return filepath.Join(root, "niagara-help", "tools")
+	if env := os.Getenv("NIAGARA_RESEARCH"); env != "" {
+		help := filepath.Join(env, "niagara-help")
+		if st, err := os.Stat(filepath.Join(help, canonicalRules)); err == nil && st.Mode().IsRegular() {
+			return filepath.Join(help, "tools")
+		}
+	}
+	dir, err := os.Getwd()
+	if err != nil {
+		return ""
+	}
+	for {
+		for _, sub := range []string{"niagara-help", filepath.Join("niagara-research", "niagara-help")} {
+			if st, err := os.Stat(filepath.Join(dir, sub, canonicalRules)); err == nil && st.Mode().IsRegular() {
+				return filepath.Join(dir, sub, "tools")
+			}
+		}
+		up := filepath.Dir(dir)
+		if up == dir {
+			return ""
+		}
+		dir = up
+	}
+}
+
+// The checkout lookup: $NIAGARA_HELP_DIR wins; $NIAGARA_RESEARCH (the
+// variable the glossary and version drift tests read) is used when
+// <it>/niagara-help holds the data file, else the walk up decides.
+func TestNiagaraHelpToolsLookup(t *testing.T) {
+	help := filepath.Join(t.TempDir(), "nh")
+	t.Setenv("NIAGARA_HELP_DIR", help)
+	t.Setenv("NIAGARA_RESEARCH", "")
+	if got := niagaraHelpTools(); got != filepath.Join(help, "tools") {
+		t.Fatalf("NIAGARA_HELP_DIR: %q", got)
+	}
+	research := t.TempDir()
+	writeFile(t, filepath.Join(research, "niagara-help", canonicalRules), []byte("{}"))
+	t.Setenv("NIAGARA_HELP_DIR", "")
+	t.Setenv("NIAGARA_RESEARCH", research)
+	if got := niagaraHelpTools(); got != filepath.Join(research, "niagara-help", "tools") {
+		t.Fatalf("NIAGARA_RESEARCH: %q", got)
+	}
+	empty := t.TempDir()
+	t.Setenv("NIAGARA_RESEARCH", empty)
+	if got := niagaraHelpTools(); strings.HasPrefix(got, empty) {
+		t.Fatalf("NIAGARA_RESEARCH without a checkout: %q", got)
+	}
 }

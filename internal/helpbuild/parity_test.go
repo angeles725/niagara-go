@@ -16,8 +16,8 @@ import (
 // The Python-vs-Go parity harness: testdata/parity/driver.py runs the real
 // niagara-help functions and prints JSON lines; the tests below rebuild
 // every line from this package and require an empty diff. It needs python3
-// and a niagara-help checkout ($NIAGARA_RESEARCH/niagara-help, default
-// /home/cristian/niagara-research/niagara-help) and skips visibly without.
+// and a niagara-help checkout (niagaraHelpTools: $NIAGARA_HELP_DIR, else
+// found walking up from the test directory) and skips visibly without.
 
 func driver(t *testing.T) (python, tools string) {
 	t.Helper()
@@ -26,6 +26,9 @@ func driver(t *testing.T) (python, tools string) {
 		t.Skip("python3 not on PATH: parity not checked")
 	}
 	tools = niagaraHelpTools()
+	if tools == "" {
+		t.Skip("no niagara-help checkout ($NIAGARA_HELP_DIR unset, none under $NIAGARA_RESEARCH or walking up): parity not checked")
+	}
 	if _, err := os.Stat(filepath.Join(tools, "niagara_help_lib", "jar_listing.py")); err != nil {
 		t.Skipf("niagara-help tools not available (%v): parity not checked", err)
 	}
@@ -206,6 +209,13 @@ func syntheticJars(t *testing.T, dir string) []string {
 		{"badextra.jar", rawZip("", []rawEntry{{name: "a.txt", extra: []byte{0x99, 0x99, 0x10, 0}}}, "")},
 		{"prepended.jar", rawZip(strings.Repeat("#", 100), []rawEntry{ok}, "")},
 		{"comment.jar", rawZip("", []rawEntry{ok}, "a comment")},
+		{"zip64eocd.jar", zip64Zip("", []rawEntry{ok, {name: "doc/b.html", data: "b"}}, 1, 0)},
+		{"zip64prepended.jar", zip64Zip(strings.Repeat("#", 50), []rawEntry{ok}, 1, 0)},
+		{"zip64disks.jar", zip64Zip("", []rawEntry{ok}, 2, 0)},
+		{"zip64reloffpast.jar", zip64Zip("", []rawEntry{ok}, 1, 1000)},
+		{"zip64reloffshort.jar", zip64Zip("", []rawEntry{ok}, 1, -1)},
+		{"countone.jar", withEntryCount(rawZip("", []rawEntry{ok, {name: "doc/b.txt", data: "b"}, {name: "doc/c/", data: ""},
+			{name: "doc/d.txt", data: "d"}}, ""), 1)},
 		{"notazip.jar", []byte("plain text, no zip at all")},
 		{"empty.jar", nil},
 		{"truncated.jar", rawZip("", []rawEntry{ok}, "")[:40]},
@@ -220,6 +230,19 @@ func syntheticJars(t *testing.T, dir string) []string {
 		t.Fatal(err)
 	}
 	return append(paths, d)
+}
+
+// jarNamed picks a synthetic jar by base name, so adding a fixture never
+// shifts which jar a test uses.
+func jarNamed(t *testing.T, jars []string, name string) string {
+	t.Helper()
+	for _, j := range jars {
+		if filepath.Base(j) == name {
+			return j
+		}
+	}
+	t.Fatalf("no synthetic jar %s", name)
+	return ""
 }
 
 // siblingSrc is a source tree for clean_text_name's X.html sibling check.
@@ -299,7 +322,8 @@ func TestParityListingCache(t *testing.T) {
 	driver(t)
 	dir := t.TempDir()
 	all := syntheticJars(t, filepath.Join(dir, "jars"))
-	a, b, c, bad := all[0], all[7], all[8], all[len(all)-3]
+	a, b, c, bad := jarNamed(t, all, "docClHVACTest-doc.jar"), jarNamed(t, all, "odd-names.jar"),
+		jarNamed(t, all, "cp437.jar"), jarNamed(t, all, "notazip.jar")
 	pyPath, goPath := filepath.Join(dir, "py", "c.json"), filepath.Join(dir, "go", "c.json")
 	if got := runDriver(t, "", "cache", pyPath, a, b, bad); got[0] != "3" {
 		t.Fatalf("python reads %q", got)
@@ -310,15 +334,23 @@ func TestParityListingCache(t *testing.T) {
 	if !bytes.Equal(readBytes(t, pyPath), readBytes(t, goPath)) {
 		t.Fatalf("fresh caches differ:\npython %s\n    go %s", readBytes(t, pyPath), readBytes(t, goPath))
 	}
-	if n := goCache(t, pyPath, a, b, bad); n != 0 {
+	// Go's cross-read starts from a copy of the Python-written file, which it
+	// must neither re-list nor rewrite.
+	pyFresh := readBytes(t, pyPath)
+	goRead := filepath.Join(dir, "go", "from-python.json")
+	writeFile(t, goRead, pyFresh)
+	if n := goCache(t, goRead, a, b, bad); n != 0 {
 		t.Fatalf("go opened %d jars reading the Python cache", n)
+	}
+	if !bytes.Equal(readBytes(t, goRead), pyFresh) {
+		t.Fatal("go rewrote the Python cache it only read")
 	}
 	if got := runDriver(t, "", "cache", goPath, a, b, bad); got[0] != "0" {
 		t.Fatalf("python opened %s jars reading the Go cache", got[0])
 	}
 	pyNext, goNext := filepath.Join(dir, "py", "next.json"), filepath.Join(dir, "go", "next.json")
-	writeFile(t, pyNext, readBytes(t, pyPath))
-	writeFile(t, goNext, readBytes(t, pyPath))
+	writeFile(t, pyNext, pyFresh)
+	writeFile(t, goNext, pyFresh)
 	if got := runDriver(t, "", "cache", pyNext, c, a); got[0] != "1" {
 		t.Fatalf("python update reads %q", got)
 	}

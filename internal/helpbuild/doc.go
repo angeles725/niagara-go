@@ -2,8 +2,12 @@
 // niagara-help tools/niagara_help_lib: atomic writes (atomic.go), the
 // Python-faithful zip central-directory reader and the jar-listing cache
 // (zipdir.go, jarlisting.go), the whole-install sweep rules with the
-// embedded install_docs.json (rules.go) and the doc_types predicates the
-// builders share (doctypes.go).
+// embedded install_docs.json (rules.go), the doc_types predicates the
+// builders share (doctypes.go) and, from S2, the doc-jar extraction:
+// entry reading like ZipFile.open (zipread.go), the jar-entry mapping
+// (docjars.go), extract / fill-missing / fidelity (extract.go) and the raw
+// steps of version_setup.extract_and_index with the version manifest
+// (versionsetup.go, manifest.go).
 //
 // It is a non-printing library: every function returns typed values or
 // errors and writes nothing to stdout or stderr. Behaviour matches the
