@@ -19,11 +19,18 @@ var processStart = time.Now()
 // exec alone when $NSEARCH_EXEC is 1.
 func newDoor() *door {
 	var b Backend = execBackend{python: pythonInterpreter}
-	if os.Getenv(ExecEnv) != "1" {
+	switch {
+	case testBackend != nil:
+		b = testBackend
+	case os.Getenv(ExecEnv) != "1":
 		b = &inprocBackend{exec: b, clock: time.Now}
 	}
 	return &door{backend: b, now: func() float64 { return time.Since(processStart).Seconds() }}
 }
+
+// testBackend, when set (tests only), answers every backend call of newDoor: the hermetic
+// goldens' fake backends (fake_test.go).
+var testBackend Backend
 
 // execBackend runs `<python> <script> <args...>` like backend.run_tool.
 type execBackend struct {

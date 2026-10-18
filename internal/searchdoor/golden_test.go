@@ -8,17 +8,27 @@ import (
 )
 
 // The frozen nsearch/find3 CLI goldens of niagara-research (convert_goldens.py),
-// run against fake backend scripts (testdata/fake) and a four-file course tree:
-// every case needs a python3 on PATH (or $NSEARCH_PYTHON) for the fakes.
-// Exec mode: GOLDEN_BIN=<nsearch> runs the nsearch cases, GOLDEN_BIN_FIND3=<find3>
-// the find3 ones; build both with -buildvcs=false so --version prints the plain
-// "nsearch 3.0.0" the Python checkout printed with GIT_DIR=/nonexistent (D18).
+// recorded against fake backend scripts (testdata/fake) and a four-file course
+// tree. In process the backends are scriptFakes, the Go port of those scripts
+// (no Python). Exec mode: GOLDEN_BIN=<nsearch> runs the nsearch cases,
+// GOLDEN_BIN_FIND3=<find3> the find3 ones, against the Python fake scripts (a
+// python3 on PATH or $NSEARCH_PYTHON); build both with -buildvcs=false so
+// --version prints the plain "nsearch 3.0.0" the Python checkout printed with
+// GIT_DIR=/nonexistent (D18).
 
-func TestGoldenNsearch(t *testing.T) { golden.Run(t, "testdata", Main) }
+// useFakes answers every backend call of the test with scriptFakes.
+func useFakes(t *testing.T) {
+	testBackend = scriptFakes{}
+	t.Cleanup(func() { testBackend = nil })
+}
+
+func TestGoldenNsearch(t *testing.T) {
+	useFakes(t)
+	golden.Run(t, "testdata", Main)
+}
 
 // TestGoldenNsearchExec runs the same cases with every backend forced through
-// exec (NSEARCH_EXEC=1): the fakes have no data an in-process backend can read,
-// so both modes must print the same bytes.
+// exec (NSEARCH_EXEC=1) to the Python fake scripts: the oracle of scriptFakes.
 func TestGoldenNsearchExec(t *testing.T) {
 	t.Setenv(ExecEnv, "1")
 	golden.Run(t, "testdata", Main)
@@ -28,6 +38,7 @@ func TestGoldenNsearchTimeouts(t *testing.T) {
 	if testing.Short() {
 		t.Skip("each case waits for a --timeout 1 backend")
 	}
+	useFakes(t)
 	golden.Run(t, "testdata/timeouts", Main)
 }
 
@@ -39,5 +50,6 @@ func TestGoldenFind3(t *testing.T) {
 		}
 		t.Setenv(golden.BinEnv, bin)
 	}
+	useFakes(t)
 	golden.Run(t, "testdata/find3", Find3Main)
 }
