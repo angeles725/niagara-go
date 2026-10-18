@@ -36,7 +36,10 @@ type Station struct {
 	install string // "" when --install was not given
 	source  string // the source tree of the source-text kind; "" when --source was not given
 	labsrc  string // the lab module sources of the annotation kind; "" when --labsrc was not given
-	jars    map[string]*jarFile
+	// solutions is the corpus solutions tree of the rows with Root solutions; "" when --solutions
+	// was not given.
+	solutions string
+	jars      map[string]*jarFile
 }
 
 type jarFile struct {

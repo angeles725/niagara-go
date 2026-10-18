@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"sort"
 	"strings"
 
@@ -19,10 +20,14 @@ const (
 	rootStation = ""        // the station directory ({station} = the station name)
 	rootInstall = "install" // --install, COURSE_NIAGARA_INSTALL
 	rootLabsrc  = "labsrc"  // --labsrc, COURSE_LAB_SOURCES
+	// rootSolutions: --solutions, COURSE_SOLUTIONS: the participant's own module sources as the
+	// niagara-research corpus keeps them (sources/n4-dev-course/solutions: review/, cert-exam/),
+	// read by the annotation rows of the review assignments.
+	rootSolutions = "solutions"
 )
 
 // checkEvidence is the evidence kind of a verified marker one check gives: the kind's (evidenceOf),
-// except that a files or file-text row over the install or the lab sources is offline.
+// except that a files or file-text row over another root than the station is offline.
 func checkEvidence(ck *Check) string {
 	if ck.Root != rootStation && (ck.Kind == kindFiles || ck.Kind == kindFileText) {
 		return key.EvidenceOffline
@@ -40,6 +45,8 @@ func (s *Station) rootDir(ck *Check) (dir, skip string) {
 		dir = s.install
 	case rootLabsrc:
 		dir = s.labsrc
+	case rootSolutions:
+		dir = s.solutions
 	default:
 		return "", "unknown root " + ck.Root
 	}
@@ -122,4 +129,9 @@ func (s *Station) rootFiles(ck *Check) (pattern string, files []string, skip str
 func (s *Station) rootPath(ck *Check, rel string) string {
 	dir, _ := s.rootDir(ck)
 	return filepath.Join(dir, filepath.FromSlash(rel))
+}
+
+// NeedsSolutions reports whether a check reads the corpus solutions, so a summary names it.
+func NeedsSolutions(checks []*Check) bool {
+	return slices.ContainsFunc(checks, func(ck *Check) bool { return ck.Root == rootSolutions })
 }

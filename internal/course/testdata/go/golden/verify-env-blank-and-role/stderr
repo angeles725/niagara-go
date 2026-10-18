@@ -1,5 +1,5 @@
 usage: course verify [-h] [--root DIR]
                      --status {predicted,unverified,corrected,identical,verified,written}
                      [--lab GROUP] [--station PATH] [--install DIR] [--source DIR] [--labsrc DIR]
-                     [--date YYYY-MM-DD] [--json]
+                     [--solutions DIR] [--date YYYY-MM-DD] [--json]
 course verify: error: the following arguments are required: --station (the labs need --station or COURSE_TRAINING_STATION)

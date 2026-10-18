@@ -1,1 +1,1 @@
-{"args": ["check", "--lab", "RA1", "--lab", "ra2"], "env": {"COURSE_REVIEW_STATION": "stations/review", "COURSE_TRAINING_STATION": "stations/nosuch", "COURSE_NIAGARA_INSTALL": "install"}}
+{"args": ["check", "--lab", "RA1", "--lab", "ra2", "--solutions", "solutions"], "env": {"COURSE_REVIEW_STATION": "stations/review", "COURSE_TRAINING_STATION": "stations/nosuch", "COURSE_NIAGARA_INSTALL": "install"}}

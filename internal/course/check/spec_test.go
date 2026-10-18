@@ -14,14 +14,14 @@ import (
 const goodStation = "../testdata/stations/good"
 
 // runAll runs every check of one station role (the labs: RoleTraining) on a station, with the
-// install, the source tree and the course sources ("" = none).
-func runAll(t *testing.T, stationPath, install, source, labsrc, role string) []Result {
+// install and the trees ("" = none).
+func runAll(t *testing.T, stationPath, install string, trees Trees, role string) []Result {
 	t.Helper()
 	st, err := Open(stationPath, install, true)
 	if err != nil {
 		t.Fatal(err)
 	}
-	st.source, st.labsrc = source, labsrc
+	st.source, st.labsrc, st.solutions = trees.Source, trees.Labsrc, trees.Solutions
 	defer st.Close()
 	var out []Result
 	for i := range Spec {
@@ -208,8 +208,9 @@ func TestCheckLiveStations(t *testing.T) {
 				t.Skipf("%s is not set: the live %s station is not checked", live.env, live.role)
 			}
 			install, source, labsrc := os.Getenv("COURSE_NIAGARA_INSTALL"), os.Getenv("COURSE_NIAGARA_SOURCE"), os.Getenv("COURSE_LAB_SOURCES")
+			solutions := os.Getenv("COURSE_SOLUTIONS")
 			got := map[string]string{}
-			results := runAll(t, path, install, source, labsrc, live.role)
+			results := runAll(t, path, install, Trees{Source: source, Labsrc: labsrc, Solutions: solutions}, live.role)
 			if len(results) == 0 {
 				// A role with no rows would pass without checking anything.
 				t.Fatalf("no check runs on the %s station: the spec has no row of this role", live.role)
@@ -218,7 +219,8 @@ func TestCheckLiveStations(t *testing.T) {
 				switch {
 				case r.Verdict == Skip && install == "" && (strings.HasPrefix(r.Kind, "jar") || r.Root == rootInstall):
 				case r.Verdict == Skip && source == "" && r.Kind == kindSourceText:
-				case r.Verdict == Skip && labsrc == "" && (r.Kind == kindAnnotation || r.Root == rootLabsrc):
+				case r.Verdict == Skip && labsrc == "" && NeedsLabSources([]*Check{r.Check}):
+				case r.Verdict == Skip && solutions == "" && r.Root == rootSolutions:
 				case r.Verdict == Fail && live.differs[r.ID] != "":
 					got[r.ID] = r.Evidence
 				case r.Verdict != Pass:

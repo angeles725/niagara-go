@@ -3,7 +3,7 @@ package check
 import (
 	"fmt"
 	"os"
-	"path/filepath"
+	"regexp"
 	"slices"
 	"strings"
 
@@ -31,14 +31,22 @@ const (
 	factSlots = "slots"
 	// factFacets: each declared slot with facets as name=facet;facet.
 	factFacets = "facets"
+	// factDefaults: each declared property as "name: Type = default" (a missing or empty
+	// defaultValue as ""), joined with ", ".
+	factDefaults = "defaults"
+	// factExtends: the superclass of the class declaration after the annotations, as written
+	// (BAbstractService, BList<BObject>): the one fact read past the annotations.
+	factExtends = "extends"
 )
 
-var annotationFacts = []string{factFlags, factEnum, factSlots, factFacets}
+var annotationFacts = []string{factFlags, factEnum, factSlots, factFacets, factDefaults, factExtends}
 
-// NeedsLabSources reports whether a check reads the lab module sources (an annotation row, or a
-// files or file-text row whose Root is the lab sources), so a summary names it.
+// NeedsLabSources reports whether a check reads the lab module sources (an annotation row without
+// a Root, or any row whose Root is the lab sources), so a summary names it.
 func NeedsLabSources(checks []*Check) bool {
-	return slices.ContainsFunc(checks, func(ck *Check) bool { return ck.Kind == kindAnnotation || ck.Root == rootLabsrc })
+	return slices.ContainsFunc(checks, func(ck *Check) bool {
+		return (ck.Kind == kindAnnotation && ck.Root == rootStation) || ck.Root == rootLabsrc
+	})
 }
 
 // checkAnnotation renders Fact from the annotations of the file Glob of the lab module sources
@@ -46,17 +54,17 @@ func NeedsLabSources(checks []*Check) bool {
 // that is not a readable directory, or with annotations the parser cannot decide, the check is
 // SKIP; a missing file, a missing slot or a different fact is FAIL.
 func (s *Station) checkAnnotation(ck *Check) (string, string) {
-	if s.labsrc == "" {
-		return Skip, "no --labsrc DIR: " + ck.Glob + " not checked"
+	src := *ck
+	if src.Root == rootStation {
+		src.Root = rootLabsrc // an annotation row reads the lab sources unless it names a root
 	}
-	if fi, err := os.Stat(s.labsrc); err != nil {
-		return Skip, fmt.Sprintf("cannot read %s: %v", s.labsrc, err)
-	} else if !fi.IsDir() {
-		return Skip, fmt.Sprintf("cannot read %s: not a directory", s.labsrc)
+	dir, skip := s.rootDir(&src)
+	if skip != "" {
+		return Skip, skip
 	}
-	text, err := readText(filepath.Join(s.labsrc, filepath.FromSlash(ck.Glob)))
+	text, err := readText(s.rootPath(&src, ck.Glob))
 	if os.IsNotExist(err) {
-		return Fail, "missing " + ck.Glob + " under " + s.labsrc
+		return Fail, "missing " + ck.Glob + " under " + dir
 	}
 	if err != nil {
 		return Skip, fmt.Sprintf("cannot read %s: %v", ck.Glob, err)
@@ -73,7 +81,7 @@ func (s *Station) checkAnnotation(ck *Check) (string, string) {
 		}
 		slots = []niagaraannot.Slot{*sl}
 	}
-	got, err := annotationFact(ck.Fact, ty, slots)
+	got, err := annotationFact(ck.Fact, ty, slots, text)
 	if err != nil {
 		return Skip, fmt.Sprintf("%s: %s %s not decided: %v", ck.Glob, ty.Name, ck.Fact, err)
 	}
@@ -84,10 +92,24 @@ func (s *Station) checkAnnotation(ck *Check) (string, string) {
 	return Pass, ev
 }
 
-// annotationFact renders one fact of a parsed type over the given slots.
-func annotationFact(fact string, ty *niagaraannot.Type, slots []niagaraannot.Slot) (string, error) {
+// annotationFact renders one fact of a parsed type over the given slots (text is the source, for
+// the extends fact).
+func annotationFact(fact string, ty *niagaraannot.Type, slots []niagaraannot.Slot, text string) (string, error) {
 	var parts []string
 	switch fact {
+	case factExtends:
+		return superclass(ty, text)
+	case factDefaults:
+		for _, sl := range slots {
+			if sl.Kind == niagaraannot.Property {
+				d := sl.Default
+				if d == "" {
+					d = `""`
+				}
+				parts = append(parts, sl.Name+": "+sl.Type+" = "+d)
+			}
+		}
+		return strings.Join(parts, ", "), nil
 	case factFlags:
 		for _, sl := range slots {
 			l, err := niagaraannot.FlagLetters(sl.Flags)
@@ -150,3 +172,23 @@ func slotText(sl niagaraannot.Slot) string {
 	}
 	return "topic " + sl.Name + "(" + sl.Type + ")"
 }
+
+// superclass reads the extends clause of the class declaration that starts on the type's line: the
+// type name and its type arguments as written, without spaces.
+func superclass(ty *niagaraannot.Type, text string) (string, error) {
+	lines := strings.Split(text, "\n")
+	if ty.Line < 1 || ty.Line > len(lines) {
+		return "", fmt.Errorf("no class declaration at line %d", ty.Line)
+	}
+	decl := strings.Join(lines[ty.Line-1:], "\n")
+	if i := strings.IndexByte(decl, '{'); i >= 0 {
+		decl = decl[:i]
+	}
+	m := extendsRe.FindStringSubmatch(decl)
+	if m == nil {
+		return "", fmt.Errorf("no extends clause")
+	}
+	return strings.Join(strings.Fields(m[1]), ""), nil
+}
+
+var extendsRe = regexp.MustCompile(`\bextends\s+([A-Za-z_][\w.]*(?:\s*<[^{]*?>)?)(?:\s+implements\b|\s*$)`)

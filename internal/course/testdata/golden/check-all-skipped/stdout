@@ -13,4 +13,4 @@ C5.11  5    SKIP     signer issued by the Tridium University root [L5.18]       
 C5.12  5    SKIP     chain of two: CodeSigning -> self-signed root [L5.18]                             no --install DIR: modules/training-rt.jar not checked
 C5.13  5    SKIP     signature timestamped by DigiCert [L5.11]                                         no --install DIR: modules/training-rt.jar not checked
 C5.14  5    SKIP     signer = the first certificate of ../certificates/code_signing.pem [L5.17 L5.25]  no --install DIR: modules/training-rt.jar not checked
-checked 14: PASS 0, FAIL 0, SKIP 14; station GoodStation (237 components, 16 links), install (none: jar checks skipped), labsrc (none: lab-source checks skipped)
+checked 14: PASS 0, FAIL 0, SKIP 14; station GoodStation (237 components, 16 links), install (none: jar and install-file checks skipped), labsrc (none: lab-source checks skipped)

@@ -16,7 +16,7 @@ func Predicted(it *key.Item) bool { return it.HasStatus("predicted") }
 // verifyOn decides the predicted items of c with every check run on one station.
 func verifyOn(t *testing.T, c *key.Corpus, path, install string) []Prediction {
 	t.Helper()
-	ss, err := OpenStations(LinkedChecks(c, Predicted), func(string) string { return path }, install, "", "")
+	ss, err := OpenStations(LinkedChecks(c, Predicted), func(string) string { return path }, install, Trees{})
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -72,7 +72,7 @@ func cmdCheck(s cli.Stdio, o stationOpts, labs []string, asJSON bool) int {
 
 func orNone(s string) string {
 	if s == "" {
-		return "(none: jar checks skipped)"
+		return "(none: jar and install-file checks skipped)"
 	}
 	return s
 }

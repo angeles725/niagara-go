@@ -23,6 +23,10 @@ const sourceEnv = "COURSE_NIAGARA_SOURCE"
 // (the Niagara dev home holding training/ and trafficLightDriver/).
 const labsrcEnv = "COURSE_LAB_SOURCES"
 
+// solutionsEnv stands in for --solutions: the participant's own module sources as the
+// niagara-research corpus keeps them (sources/n4-dev-course/solutions), read by the review rows.
+const solutionsEnv = "COURSE_SOLUTIONS"
+
 var stationEnv = map[string]string{
 	check.RoleTraining: "COURSE_TRAINING_STATION",
 	check.RoleReview:   "COURSE_REVIEW_STATION",
@@ -33,14 +37,16 @@ func getenv(name string) string { return strings.TrimSpace(os.Getenv(name)) }
 
 // stationOpts are the --station and --install of check, verify-predictions and verify.
 type stationOpts struct {
-	station    string
-	hasStation bool
-	install    string
-	hasInstall bool
-	source     string
-	hasSource  bool
-	labsrc     string
-	hasLabsrc  bool
+	station      string
+	hasStation   bool
+	install      string
+	hasInstall   bool
+	source       string
+	hasSource    bool
+	labsrc       string
+	hasLabsrc    bool
+	solutions    string
+	hasSolutions bool
 	// usage prints the subcommand's usage error and returns its exit (2).
 	usage func(message string) int
 }
@@ -119,6 +125,14 @@ func (o stationOpts) labsrcDir() string {
 	return getenv(labsrcEnv)
 }
 
+// solutionsDir is --solutions, else COURSE_SOLUTIONS, else "" (the solutions rows SKIP).
+func (o stationOpts) solutionsDir() string {
+	if o.hasSolutions {
+		return o.solutions
+	}
+	return getenv(solutionsEnv)
+}
+
 // scope is the summary's "station ..., install <dir>", with ", source <dir>" when a check reads the
 // source tree and ", labsrc <dir>" when one reads the lab sources (an annotation row, or a files or file-text row over them).
 func (o stationOpts) scope(ss *check.Stations, checks []*check.Check) string {
@@ -129,12 +143,22 @@ func (o stationOpts) scope(ss *check.Stations, checks []*check.Check) string {
 	if check.NeedsLabSources(checks) {
 		out += ", labsrc " + orNoLabsrc(o.labsrcDir())
 	}
+	if check.NeedsSolutions(checks) {
+		out += ", solutions " + orNoSolutions(o.solutionsDir())
+	}
 	return out
 }
 
 func orNoLabsrc(s string) string {
 	if s == "" {
 		return "(none: lab-source checks skipped)"
+	}
+	return s
+}
+
+func orNoSolutions(s string) string {
+	if s == "" {
+		return "(none: solutions checks skipped)"
 	}
 	return s
 }
@@ -161,7 +185,8 @@ func (o stationOpts) open(s cli.Stdio, checks []*check.Check) (*check.Stations, 
 			return nil, o.missingStation(r, checks)
 		}
 	}
-	ss, err := check.OpenStations(checks, path, o.installDir(), o.sourceDir(), o.labsrcDir())
+	ss, err := check.OpenStations(checks, path, o.installDir(),
+		check.Trees{Source: o.sourceDir(), Labsrc: o.labsrcDir(), Solutions: o.solutionsDir()})
 	if err != nil {
 		fmt.Fprintf(s.Err, "course: cannot check the station: %v\n", err)
 		return nil, cli.ExitCannotSearch

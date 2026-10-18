@@ -25,6 +25,8 @@ const (
 	// What no check of RA2.V10–V15 reads: that the summary lists every point (CRA2.10 counts lines,
 	// it does not compare them with the station's NumericWritables).
 	ra2Listing = "that Review.txt lists every NumericWritable of the station (CRA2.10 wants two lines or more)"
+	// The participant's review sources in the corpus solutions (--solutions), as the module was built.
+	reviewSrc = "review/Cristian_Angeles_Review/Cristian_Angeles_Review-rt/src/com/review/Cristian_Angeles_Review/"
 	// What a jar entry does not say about the written listing (X1).
 	writtenListing = "the written listing of review-assignments.md (the jar holds the participant's built code, not the listing)"
 )
@@ -61,6 +63,24 @@ var reviewSpec = []Check{
 		Unobserved: map[string]string{"RA1.V10": ra1UISteps}, Kind: kindType, Desc: "ComponentWithId in the folder Config/Review",
 		Type: componentWithID, Under: "Review", Op: opMin, N: 1},
 
+	// RA1 requirements from the participant's sources (corpus solutions; review-assignments.md §1.4
+	// traceability: extends BComponent, the id property, its flags, the regenerateId action).
+	{ID: "CRA1.11", Lab: "RA1", Keys: []string{"RA1.R1"}, Kind: kindAnnotation, Desc: "BComponentWithId extends BComponent",
+		Root: rootSolutions, Glob: reviewSrc + "BComponentWithId.java", Fact: factExtends, Want: "BComponent"},
+	{ID: "CRA1.12", Lab: "RA1", Keys: []string{"RA1.R2"}, Kind: kindAnnotation, Desc: `frozen property id: String = ""`,
+		Root: rootSolutions, Glob: reviewSrc + "BComponentWithId.java", Fact: factDefaults, Slot: "id", Want: `id: String = ""`},
+	{ID: "CRA1.13", Lab: "RA1", Keys: []string{"RA1.R3a", "RA1.R3b", "RA1.R3c"},
+		Unobserved: map[string]string{"RA1.R3a": "the Wire Sheet by hand (the row reads SUMMARY, s)",
+			"RA1.R3b": "the checkSetFlags guard and the Property Sheet by hand (the row reads READONLY, r)",
+			"RA1.R3c": "a paste by hand (the row reads DEFAULT_ON_CLONE, d)"}, Kind: kindAnnotation,
+		Desc: "id flags: SUMMARY, READONLY, DEFAULT_ON_CLONE", Root: rootSolutions, Glob: reviewSrc + "BComponentWithId.java",
+		Fact: factFlags, Slot: "id", Want: "id=rsd"},
+	{ID: "CRA1.14", Lab: "RA1", Keys: []string{"RA1.R4"}, Kind: kindAnnotation, Desc: "frozen action regenerateId",
+		Root: rootSolutions, Glob: reviewSrc + "BComponentWithId.java", Fact: factSlots, Slot: "regenerateId", Want: "action regenerateId()"},
+	{ID: "CRA1.15", Lab: "RA1", Keys: []string{"RA1.R5"}, Unobserved: map[string]string{"RA1.R5": "the confirmation dialog by hand (the row reads CONFIRM_REQUIRED, c)"},
+		Kind: kindAnnotation, Desc: "regenerateId flags: CONFIRM_REQUIRED", Root: rootSolutions, Glob: reviewSrc + "BComponentWithId.java",
+		Fact: factFlags, Slot: "regenerateId", Want: "regenerateId=c"},
+
 	// RA2. The service and its summary file.
 	{ID: "CRA2.1", Lab: "RA2", Keys: []string{"RA2.R1"}, Kind: kindJarText, Desc: "depends on control-rt",
 		Jar: reviewRT, Glob: trainingXML, Contains: []string{`name="control-rt"`}},
@@ -73,10 +93,6 @@ var reviewSpec = []Check{
 		Unobserved: map[string]string{"RA2.R8": "that the certificate is the one of the Code Signing lab",
 			"X10": "Module Info's green check at moduleVerificationMode=high (runtime)"}, Kind: kindJarSigned,
 		Desc: "Cristian_Angeles_Review-rt is signed", Jar: reviewRT},
-	// RA2.R8: the review module is signed with the Code Signing lab's certificate, the signer of
-	// training-rt (C5.11-C5.14).
-	{ID: "CRA2.12", Lab: "RA2", Keys: []string{"RA2.R8"}, Kind: kindJarCert, Desc: "signed with the certificate of training-rt (Lab 5)",
-		Jar: reviewRT, Fact: certSame, CertOf: trainingRT},
 	{ID: "CRA2.5", Lab: "RA2", Keys: []string{"RA2.R9"}, Kind: kindJar, Desc: "Cristian_Angeles_Review-rt jar built", Jar: reviewRT},
 	{ID: "CRA2.6", Lab: "RA2", Keys: []string{"RA2.V10"},
 		Unobserved: map[string]string{"RA2.V10": ra2Listing}, Kind: kindType, Desc: "NumericWritables in Config/Review2",
@@ -102,4 +118,20 @@ var reviewSpec = []Check{
 		Unobserved: map[string]string{"RA2.V11": ra2Listing}, Kind: kindSlot,
 		Desc: "distinct fallback values in Config/Review2", Type: numericWritable, Under: "Review2",
 		Slot: "fallback.value", Default: "0.0", Distinct: true, Op: opMin, N: 2},
+	// RA2.R8: the review module is signed with the Code Signing lab's certificate, the signer of
+	// training-rt (C5.11-C5.14).
+	{ID: "CRA2.12", Lab: "RA2", Keys: []string{"RA2.R8"}, Kind: kindJarCert, Desc: "signed with the certificate of training-rt (Lab 5)",
+		Jar: reviewRT, Fact: certSame, CertOf: trainingRT},
+	// RA2 requirements from the participant's sources (review-assignments.md §2.4 traceability). The
+	// key's design adds what the participant's service does not declare: noted, never checked.
+	{ID: "CRA2.13", Lab: "RA2", Keys: []string{"RA2.R2"},
+		Unobserved: map[string]string{"RA2.R2": "the key's implements BIRestrictedComponent and getServiceTypes() (the participant's class declares only the superclass)"},
+		Kind:       kindAnnotation, Desc: "BPointSummaryService extends BAbstractService", Root: rootSolutions,
+		Glob: reviewSrc + "BPointSummaryService.java", Fact: factExtends, Want: "BAbstractService"},
+	{ID: "CRA2.14", Lab: "RA2", Keys: []string{"RA2.R3"}, Kind: kindAnnotation, Desc: "frozen property summaryFile: BOrd = BOrd.DEFAULT",
+		Root: rootSolutions, Glob: reviewSrc + "BPointSummaryService.java", Fact: factDefaults, Slot: "summaryFile", Want: "summaryFile: BOrd = BOrd.DEFAULT"},
+	{ID: "CRA2.15", Lab: "RA2", Keys: []string{"RA2.R4"},
+		Unobserved: map[string]string{"RA2.R4": "the key's flags = Flags.ASYNC (the participant's action declares no flags; RA2.R6 leaves the thread technique free)"},
+		Kind:       kindAnnotation, Desc: "frozen action createSummaryFile", Root: rootSolutions,
+		Glob: reviewSrc + "BPointSummaryService.java", Fact: factSlots, Slot: "createSummaryFile", Want: "action createSummaryFile()"},
 }

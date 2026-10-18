@@ -120,16 +120,18 @@ class BAdd {}
 }
 
 // TestAnnotationReal runs the annotation rows on the participant's real lab modules when
-// COURSE_LAB_SOURCES names them (the Niagara dev home holding training/ and trafficLightDriver/).
+// COURSE_LAB_SOURCES names them (the Niagara dev home holding training/ and trafficLightDriver/),
+// and the solutions rows on the corpus solutions when COURSE_SOLUTIONS names them.
 func TestAnnotationReal(t *testing.T) {
 	labsrc := os.Getenv("COURSE_LAB_SOURCES")
 	if labsrc == "" {
 		t.Skip("COURSE_LAB_SOURCES is not set: the real lab modules are not checked")
 	}
-	st := &Station{labsrc: labsrc}
+	solutions := os.Getenv("COURSE_SOLUTIONS")
+	st := &Station{labsrc: labsrc, solutions: solutions}
 	n := 0
 	for i := range Spec {
-		if Spec[i].Kind == kindAnnotation {
+		if Spec[i].Kind == kindAnnotation && (solutions != "" || Spec[i].Root != rootSolutions) {
 			n++
 			if r := st.Run(&Spec[i]); r.Verdict != Pass {
 				t.Errorf("%s %s: %s", r.ID, r.Verdict, r.Evidence)

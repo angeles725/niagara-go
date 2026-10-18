@@ -11,7 +11,6 @@ CRA2.1    RA2   SKIP     depends on control-rt [RA2.R1]                         
 CRA2.2    RA2   SKIP     BPointSummaryService.class built [RA2.R2 X1]                         no --install DIR: modules/Cristian_Angeles_Review-rt.jar not checked
 CRA2.3    RA2   SKIP     palette lists PointSummaryService [RA2.R7]                           no --install DIR: modules/Cristian_Angeles_Review-rt.jar not checked
 CRA2.4    RA2   SKIP     Cristian_Angeles_Review-rt is signed [RA2.R8 X10]                    no --install DIR: modules/Cristian_Angeles_Review-rt.jar not checked
-CRA2.12   RA2   SKIP     signed with the certificate of training-rt (Lab 5) [RA2.R8]          no --install DIR: modules/Cristian_Angeles_Review-rt.jar not checked
 CRA2.5    RA2   SKIP     Cristian_Angeles_Review-rt jar built [RA2.R9]                        no --install DIR: modules/Cristian_Angeles_Review-rt.jar not checked
 CRA2.6    RA2   PASS     NumericWritables in Config/Review2 [RA2.V10]                         found 2 in Review2: Review2/NumericWritable, Review2/NumericWritable1
 CRA2.7    RA2   PASS     one PointSummaryService, under Services [RA2.V12 RA2.R2]             found 1 under baja:ServiceContainer: Services/PointSummaryService
@@ -19,6 +18,10 @@ CRA2.8    RA2   PASS     summaryFile = file:^Review.txt [RA2.V13 RA2.R3]        
 CRA2.9    RA2   PASS     Review.txt in the station's Files space [RA2.V15 X6]                 found 1 shared/Review.txt: Review.txt
 CRA2.10   RA2   PASS     Review.txt lines: name: value {status} @ priority [RA2.R5b RA2.V15]  shared/Review.txt: 2 lines match
 CRA2.11   RA2   PASS     distinct fallback values in Config/Review2 [RA2.V11]                 2 distinct fallback.value over 2 components: 33.0, 54.0
+CRA2.12   RA2   SKIP     signed with the certificate of training-rt (Lab 5) [RA2.R8]          no --install DIR: modules/Cristian_Angeles_Review-rt.jar not checked
+CRA2.13   RA2   SKIP     BPointSummaryService extends BAbstractService [RA2.R2]               no --solutions DIR: review/Cristian_Angeles_Review/Cristian_Angeles_Review-rt/src/com/review/Cristian_Angeles_Review/BPointSummaryService.java not checked
+CRA2.14   RA2   SKIP     frozen property summaryFile: BOrd = BOrd.DEFAULT [RA2.R3]            no --solutions DIR: review/Cristian_Angeles_Review/Cristian_Angeles_Review-rt/src/com/review/Cristian_Angeles_Review/BPointSummaryService.java not checked
+CRA2.15   RA2   SKIP     frozen action createSummaryFile [RA2.R4]                             no --solutions DIR: review/Cristian_Angeles_Review/Cristian_Angeles_Review-rt/src/com/review/Cristian_Angeles_Review/BPointSummaryService.java not checked
 CEXAM.1   EXAM  PASS     a Limiter in Config/Test [P1]                                        found 1 in Test: Test/Limiter
 CEXAM.2   EXAM  PASS     Limiter min = 25 [P1]                                                Test/Limiter.min = 25.0 (stored)
 CEXAM.3   EXAM  PASS     Limiter max = 75 [P1]                                                Test/Limiter.max = 75.0 (stored)
@@ -38,4 +41,4 @@ CEXAM.16  EXAM  PASS     device pinged ok (health.lastOkTime stored) [P3]       
 CEXAM.17  EXAM  SKIP     websiteDriver-rt is signed [P3]                                      no --install DIR: modules/websiteDriver-rt.jar not checked
 CEXAM.18  EXAM  SKIP     network, device and folder classes built [P3]                        no --install DIR: modules/websiteDriver-rt.jar not checked
 CEXAM.19  EXAM  SKIP     websiteDriver requests NETWORK_COMMUNICATION [P3]                    no --install DIR: modules/websiteDriver-rt.jar not checked
-checked 39: PASS 20, FAIL 0, SKIP 19; station GoodStation (237 components, 16 links), station ReviewStation (9 components, 0 links), station CertStation (9 components, 1 link), install (none: jar checks skipped), source (none: source checks skipped)
+checked 42: PASS 20, FAIL 0, SKIP 22; station GoodStation (237 components, 16 links), station ReviewStation (9 components, 0 links), station CertStation (9 components, 1 link), install (none: jar and install-file checks skipped), source (none: source checks skipped), solutions (none: solutions checks skipped)
