@@ -79,9 +79,9 @@ func classMatches(idx *index.Object, name string) ([]classEntry, error) {
 		}
 	}
 	var out []classEntry
-	want := lowerStr(name)
+	want := pycompat.Lower(name)
 	for _, key := range idx.Keys() {
-		if lowerStr(key) == want {
+		if pycompat.Lower(key) == want {
 			all, err := expand(key, idx.Object(key))
 			if err != nil {
 				return nil, err

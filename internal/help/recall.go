@@ -272,7 +272,7 @@ func (e *Env) checkAll(samples bool) ([]recallRow, float64, error) {
 
 	sk := slotKeys(si)
 	rows = append(rows, newRow("slots", truth.slots, memberLabel, func(m memberKey) bool {
-		for _, k := range sk[lowerStr(m.class)] {
+		for _, k := range sk[pycompat.Lower(m.class)] {
 			data := si.Object(k)
 			if !strEq(get(data, "package", nil), m.pkg) {
 				continue

@@ -127,7 +127,7 @@ var guidePageExt = []string{".html", ".htm", ".txt", ".md"}
 
 // isLicence is doc_types.is_licence.
 func isLicence(name string) bool {
-	low := lowerStr(filepath.Base(name))
+	low := pycompat.Lower(filepath.Base(name))
 	for _, p := range []string{"license", "licence", "copying", "notice"} {
 		if strings.HasPrefix(low, p) {
 			return true
@@ -143,7 +143,7 @@ func isLicence(name string) bool {
 
 // isGuidePage is doc_types.is_guide_page.
 func isGuidePage(name string) bool {
-	low := lowerStr(name)
+	low := pycompat.Lower(name)
 	for _, ext := range guidePageExt {
 		if strings.HasSuffix(low, ext) {
 			return !(strings.HasSuffix(low, ".txt") && isLicence(name))
@@ -154,7 +154,7 @@ func isGuidePage(name string) bool {
 
 // isDevguidePage is recall.is_devguide_page.
 func isDevguidePage(name string) bool {
-	low := lowerStr(name)
+	low := pycompat.Lower(name)
 	if strings.HasSuffix(low, ".html") {
 		return true
 	}
@@ -164,7 +164,7 @@ func isDevguidePage(name string) bool {
 // cleanTextName is doc_types.clean_text_name: the guides-clean /
 // devguide-clean path of a page path relative to srcDir.
 func cleanTextName(rel, srcDir string) string {
-	low := lowerStr(rel)
+	low := pycompat.Lower(rel)
 	switch {
 	case strings.HasSuffix(low, ".html"):
 		return rel[:len(rel)-len(".html")] + ".txt"
@@ -181,13 +181,13 @@ func cleanTextName(rel, srcDir string) string {
 // in any letter case.
 func hasHTMLSibling(srcDir, stem string) bool {
 	folder, base := filepath.Split(filepath.Join(srcDir, stem))
-	want := lowerStr(base + ".html")
+	want := pycompat.Lower(base + ".html")
 	entries, err := os.ReadDir(folder)
 	if err != nil {
 		return false
 	}
 	for _, d := range entries {
-		if lowerStr(d.Name()) == want {
+		if pycompat.Lower(d.Name()) == want {
 			return true
 		}
 	}

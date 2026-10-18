@@ -107,10 +107,10 @@ func (e *Env) Source(p SourceParams) error {
 	}
 	name := p.Name
 	if !idx.Has(name) {
-		want := lowerStr(name)
+		want := pycompat.Lower(name)
 		var fold []string
 		for _, k := range idx.Keys() {
-			if lowerStr(k) == want {
+			if pycompat.Lower(k) == want {
 				fold = append(fold, k)
 			}
 		}

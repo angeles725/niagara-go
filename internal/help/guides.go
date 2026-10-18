@@ -46,21 +46,21 @@ func (e *Env) Guide(query string) error {
 	if err != nil {
 		return err
 	}
-	q := lowerStr(query)
+	q := pycompat.Lower(query)
 	var hits []guideHit
 	for _, folder := range idx.Keys() {
 		data := idx.Object(folder)
 		h := guideHit{folder: folder, data: data}
-		if strings.Contains(lowerStr(folder), q) {
+		if strings.Contains(pycompat.Lower(folder), q) {
 			h.score += 10
 		}
-		if strings.Contains(lowerStr(truthyStr(data, "source_jar")), q) {
+		if strings.Contains(pycompat.Lower(truthyStr(data, "source_jar")), q) {
 			h.score += 5
 		}
 		titles := getObj(data, "titles")
 		for _, topic := range strList(data, "topics") {
 			title := getStr(titles, topic, "")
-			if strings.Contains(lowerStr(topic), q) || strings.Contains(lowerStr(title), q) {
+			if strings.Contains(pycompat.Lower(topic), q) || strings.Contains(pycompat.Lower(title), q) {
 				if title != "" {
 					topic = title + " (" + topic + ")"
 				}
@@ -105,14 +105,14 @@ func (e *Env) Devguide(query string) error {
 	if err != nil {
 		return err
 	}
-	q := lowerStr(query)
+	q := pycompat.Lower(query)
 	var hits []devguideHit
 	for _, section := range objList(toc, "sections") {
 		secTitle := getStr(section, "title", "")
 		for _, item := range objList(section, "items") {
-			title := lowerStr(getStr(item, "title", ""))
-			desc := lowerStr(getStr(item, "description", ""))
-			file := lowerStr(getStr(item, "file", ""))
+			title := pycompat.Lower(getStr(item, "title", ""))
+			desc := pycompat.Lower(getStr(item, "description", ""))
+			file := pycompat.Lower(getStr(item, "file", ""))
 			score := 0
 			if strings.Contains(title, q) {
 				score += 10

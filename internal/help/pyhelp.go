@@ -14,7 +14,6 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/index"
 	"github.com/angeles725/niagara-go/internal/pycompat"
-	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
 // pyStr is str(v) for a decoded JSON value, as format() prints it.
@@ -88,9 +87,6 @@ func listLen(o *index.Object, k string) int {
 
 // runeLen is len(s) for a Python str.
 func runeLen(s string) int { return utf8.RuneCountInString(s) }
-
-// lowerStr is str.lower().
-func lowerStr(s string) string { return textfold.Lower(s) }
 
 // readText is open(path, encoding="utf-8").read(): universal newlines turn
 // \r\n and \r into \n. ok is false when path is not a regular file.
