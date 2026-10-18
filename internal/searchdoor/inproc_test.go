@@ -360,3 +360,26 @@ func TestInprocBudget(t *testing.T) {
 		t.Errorf("fallback with no budget left: %+v, exec timeouts %v", raw, exec.timeouts)
 	}
 }
+
+// timeoutBackend is the exec stand-in that times out on whatever budget it gets.
+type timeoutBackend struct{}
+
+func (timeoutBackend) Run(_ []string, timeout float64) Raw {
+	return Raw{State: Unavailable, Reason: "unavailable: timed out after " + formatG3(timeout) + "s",
+		MS: int(timeout * 1000)}
+}
+
+// TestInprocFallbackTimeoutNamesTheCallBudget: an exec fallback that times out on
+// the budget left still reports the call's timeout, as the Python door does.
+func TestInprocFallbackTimeoutNamesTheCallBudget(t *testing.T) {
+	script := stubScript(t, filepath.Join(t.TempDir(), "tools", "module_nav.py"))
+	now := time.Unix(0, 0)
+	b := &inprocBackend{exec: timeoutBackend{}, clock: func() time.Time { return now },
+		pick: func(Paths, []string) func([]string) answer {
+			return func([]string) answer { now = now.Add(time.Millisecond); return viaExec }
+		}}
+	raw := b.Run([]string{script, "token", "BAlarm", "-n", "5"}, 1)
+	if raw.State != Unavailable || raw.Reason != "unavailable: timed out after 1s" || raw.MS != 1000 {
+		t.Errorf("fallback timeout: %+v, want the call budget 1s", raw)
+	}
+}
