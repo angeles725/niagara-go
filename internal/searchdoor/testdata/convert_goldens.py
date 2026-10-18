@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 """Convert the frozen nsearch/find3 CLI goldens of niagara-research into this package's D7 cases.
 
-  python3 -I internal/searchdoor/testdata/convert_goldens.py <niagara-research checkout>
+  python3 -I internal/searchdoor/testdata/convert_goldens.py
+
+The goldens are read from niagara-research tag pre-go-retire (NIAGARA_RESEARCH_PY_REF names its worktree,
+D47 in docs/goldens.md); the Phase 5 retire deleted them from the live checkout.
 
 Reads tools/tests/fixtures/golden-cli/{nsearch,nsearch-old-nav,nsearch-missing,nsearch-timeouts,find3}.json
 (frozen from the Python tools by tools/tests/test_golden_nsearch.py) and writes, under this directory:
@@ -16,6 +19,7 @@ import os
 import re
 import shlex
 import shutil
+import subprocess
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -80,7 +84,15 @@ def main(research):
                 fh.write(f"{want['rc']}\n")
 
 
+def py_ref(repo, env, rev):  # D47: a clean worktree of <repo> tag pre-go-retire (docs/goldens.md)
+    root = os.environ.get(env) or os.path.expanduser("~/niagara-research-worktrees/pre-go-retire-" + repo)
+    git = lambda *a: subprocess.run(["git", "-C", root, *a], capture_output=True, text=True).stdout.strip()  # noqa: E731
+    if git("rev-parse", "HEAD") != rev or git("status", "--porcelain", "--untracked-files=no"):
+        sys.exit(f"{env}={root}: not a clean worktree of {repo} tag pre-go-retire ({rev[:9]}); see docs/goldens.md")
+    return root
+
+
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
+    if len(sys.argv) != 1:
         sys.exit(__doc__)
-    main(sys.argv[1])
+    main(py_ref("niagara-research", "NIAGARA_RESEARCH_PY_REF", "c846ce1e5eb92ee6d938efbb3585473a545f7e50"))
