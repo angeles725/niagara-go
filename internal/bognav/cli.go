@@ -11,9 +11,7 @@
 package bognav
 
 import (
-	"errors"
 	"fmt"
-	"math"
 	"sort"
 	"strings"
 
@@ -21,7 +19,6 @@ import (
 	"github.com/angeles725/niagara-go/internal/bog"
 	"github.com/angeles725/niagara-go/internal/cli"
 	"github.com/angeles725/niagara-go/internal/honest"
-	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/version"
 )
 
@@ -41,34 +38,8 @@ var searchCommands = map[string]bool{"find": true, "links": true, "grep": true, 
 // limitCommands are the row-listing commands --limit caps; any other command rejects it (exit 2).
 var limitCommands = []string{"find", "types", "grep", "links", "writable", "relays", "hoa", "tiles", "pointcache"}
 
-// positiveInt is cliflags.positive_int: a whole number >= 1.
-var positiveInt = &argparse.Type{Name: "positive_int", Convert: func(text string) (any, error) {
-	n, err := pycompat.ParseInt(text)
-	if errors.Is(err, pycompat.ErrRange) && !strings.HasPrefix(pycompat.Strip(text), "-") {
-		return math.MaxInt, nil // Python's int has no bound: a huge --limit caps nothing
-	}
-	if err != nil {
-		return nil, argparse.NewTypeError("invalid int value: %s", pycompat.StrRepr(text))
-	}
-	if n < 1 {
-		return nil, argparse.NewTypeError("must be at least 1, not %d", n)
-	}
-	return int(n), nil
-}}
-
-// outputParent is one of cliflags.output_parents: --json, --csv and --limit, with the given
-// defaults (the subcommand copies default to SUPPRESS so they never reset the main parser's).
-func outputParent(boolDefault, limitDefault any) *argparse.Parser {
-	p := argparse.New(argparse.Config{NoHelp: true})
-	p.Add(argparse.Arg{Action: argparse.StoreTrue, Default: boolDefault, Help: "machine JSON output"}, "--json")
-	p.Add(argparse.Arg{Action: argparse.StoreTrue, Default: boolDefault, Help: "CSV output (header + rows)"}, "--csv")
-	p.Add(argparse.Arg{Type: positiveInt, Default: limitDefault, Metavar: "N",
-		Help: "print at most N rows (default: all); the cut is reported"}, "--limit", "-n")
-	return p
-}
-
 func newParser() *argparse.Parser {
-	top, common := outputParent(false, nil), outputParent(argparse.Suppress, argparse.Suppress)
+	top, common := argparse.OutputParent(false), argparse.OutputParent(true)
 	p := argparse.New(argparse.Config{Prog: "bog-nav.py", Description: description,
 		Formatter: argparse.RawDescriptionHelpFormatter, Parents: []*argparse.Parser{top}})
 	p.Add(argparse.Arg{Action: argparse.Custom, Nargs: argparse.NoArgs, Default: argparse.Suppress,

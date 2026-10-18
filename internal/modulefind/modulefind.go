@@ -8,7 +8,6 @@ package modulefind
 
 import (
 	"fmt"
-	"math"
 	"os"
 	"sort"
 	"strings"
@@ -28,21 +27,6 @@ var (
 	limitCommands = append(append([]string(nil), searchCommands...), "slot-types", "ext-writable", "compare")
 )
 
-// positiveInt is cliflags.positive_int: a whole number >= 1.
-var positiveInt = &argparse.Type{Name: "positive_int", Convert: func(s string) (any, error) {
-	n, err := pycompat.ParseBigInt(s)
-	if err != nil {
-		return nil, argparse.NewTypeError("invalid int value: %s", pycompat.StrRepr(s))
-	}
-	if n.Sign() < 1 {
-		return nil, argparse.NewTypeError("must be at least 1, not %s", n)
-	}
-	if !n.IsInt64() || n.Int64() > math.MaxInt {
-		return math.MaxInt, nil // Python's int has no bound: a huge --limit caps nothing
-	}
-	return int(n.Int64()), nil
-}}
-
 // regexType is modulefind.sources.regex_type: a Python regex that compiles (IGNORECASE).
 var regexType = &argparse.Type{Name: "regex_type", Convert: func(s string) (any, error) {
 	re, err := pyre.Compile(s, pyre.IGNORECASE)
@@ -52,23 +36,8 @@ var regexType = &argparse.Type{Name: "regex_type", Convert: func(s string) (any,
 	return re, nil
 }}
 
-// outputParent is one of cliflags.output_parents: --json/--csv/--limit, with None
-// defaults on the main parser and SUPPRESS on the subcommands.
-func outputParent(suppress bool) *argparse.Parser {
-	var flag, limit any = false, nil
-	if suppress {
-		flag, limit = argparse.Suppress, argparse.Suppress
-	}
-	p := argparse.New(argparse.Config{NoHelp: true})
-	p.Add(argparse.Arg{Action: argparse.StoreTrue, Default: flag, Help: "machine JSON output"}, "--json")
-	p.Add(argparse.Arg{Action: argparse.StoreTrue, Default: flag, Help: "CSV output (header + rows)"}, "--csv")
-	p.Add(argparse.Arg{Type: positiveInt, Default: limit, Metavar: "N",
-		Help: "print at most N rows (default: all); the cut is reported"}, "--limit", "-n")
-	return p
-}
-
 func buildParser() *argparse.Parser {
-	top, common := outputParent(false), outputParent(true)
+	top, common := argparse.OutputParent(false), argparse.OutputParent(true)
 	p := argparse.New(argparse.Config{Prog: "module-find.py", Description: description,
 		Formatter: argparse.RawDescriptionHelpFormatter, Parents: []*argparse.Parser{top}})
 	p.Add(argparse.Arg{Action: argparse.Custom, Nargs: argparse.NoArgs, Default: argparse.Suppress,

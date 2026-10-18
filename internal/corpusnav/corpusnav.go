@@ -11,14 +11,12 @@ package corpusnav
 
 import (
 	"fmt"
-	"math"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/argparse"
 	"github.com/angeles725/niagara-go/internal/cli"
-	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/version"
 )
 
@@ -33,21 +31,6 @@ var defaultRoot = func() (string, error) {
 	}
 	return filepath.Dir(filepath.Dir(exe)), nil
 }
-
-// positiveInt is cliflags.positive_int: a whole number >= 1.
-var positiveInt = &argparse.Type{Name: "positive_int", Convert: func(s string) (any, error) {
-	n, err := pycompat.ParseBigInt(s)
-	if err != nil {
-		return nil, argparse.NewTypeError("invalid int value: %s", pycompat.StrRepr(s))
-	}
-	if n.Sign() < 1 {
-		return nil, argparse.NewTypeError("must be at least 1, not %s", n)
-	}
-	if !n.IsInt64() || n.Int64() > math.MaxInt {
-		return math.MaxInt, nil // Python's int has no bound: a huge --limit caps nothing
-	}
-	return int(n.Int64()), nil
-}}
 
 func buildParser() *argparse.Parser {
 	p := argparse.New(argparse.Config{Prog: "corpus-nav.py", Formatter: argparse.RawDescriptionHelpFormatter,
@@ -64,7 +47,7 @@ func buildParser() *argparse.Parser {
 	scope := func(q *argparse.Parser) {
 		q.Add(argparse.Arg{Dest: "scope", Choices: []any{"blocks", "docs", "retros", "all"}, Default: "blocks",
 			Help: "corpus subset to search (default: blocks)"}, "--in")
-		q.Add(argparse.Arg{Type: positiveInt, Default: 50, Help: "max matching lines to print (default: 50)"},
+		q.Add(argparse.Arg{Type: argparse.PositiveInt, Default: 50, Help: "max matching lines to print (default: 50)"},
 			"--limit", "-n")
 	}
 	bare := func(q *argparse.Parser) {
@@ -89,7 +72,7 @@ func buildParser() *argparse.Parser {
 	bare(conn)
 	g := add("graph", "whole citation graph (summary, or --json adjacency)")
 	g.Add(argparse.Arg{Action: argparse.StoreTrue, Help: "emit {nodes, forward, reverse, dangling, stats} as JSON"}, "--json")
-	g.Add(argparse.Arg{Dest: "top", Type: positiveInt, Default: 10,
+	g.Add(argparse.Arg{Dest: "top", Type: argparse.PositiveInt, Default: 10,
 		Help: "most-cited blocks to list in the summary (default: 10; --top is the old name)"}, "--limit", "--top", "-n")
 	bare(g)
 	path := add("path", "shortest citation chain between two blocks")
@@ -100,13 +83,13 @@ func buildParser() *argparse.Parser {
 	lint := add("lint-refs", "flag non-canonical citations (exit 1 if any)")
 	lint.Add(argparse.Arg{Nargs: argparse.ZeroOrMore, Metavar: "FILE", Help: "files to lint (default: every block)"}, "files")
 	lint.Add(argparse.Arg{Action: argparse.StoreTrue, Help: "report only; always exit 0"}, "--warn")
-	lint.Add(argparse.Arg{Type: positiveInt, Default: 50, Help: "max findings to print (default: 50; the summary counts all)"},
+	lint.Add(argparse.Arg{Type: argparse.PositiveInt, Default: 50, Help: "max findings to print (default: 50; the summary counts all)"},
 		"--limit", "-n")
 	add("stats", "corpus totals + marker counts")
 	add("selftest", "assert core search behaviours (exits non-zero on failure)")
 	sem := add("semantic", "rank blocks by embedding similarity (fastembed), TF-IDF fallback", "rank")
 	sem.Add(argparse.Arg{Nargs: argparse.Optional, Help: "natural-language query string"}, "query")
-	sem.Add(argparse.Arg{Type: positiveInt, Default: 15, Help: "number of top results to show (default: 15)"}, "--limit", "-n")
+	sem.Add(argparse.Arg{Type: argparse.PositiveInt, Default: 15, Help: "number of top results to show (default: 15)"}, "--limit", "-n")
 	sem.Add(argparse.Arg{Action: argparse.StoreTrue, Help: "embed changed blocks into tools/.corpus-index/ (needs fastembed)"}, "--build-index")
 	sem.Add(argparse.Arg{Help: "fastembed model (default: $CORPUS_NAV_MODEL or BAAI/bge-small-en-v1.5)"}, "--model")
 	sem.Add(argparse.Arg{Action: argparse.StoreTrue, Help: "force the stdlib TF-IDF ranking"}, "--tfidf")
