@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"sort"
 
+	"github.com/angeles725/niagara-go/internal/locate"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/textfold"
 )
@@ -70,28 +71,12 @@ func OrganizedRoot() string {
 		}
 		return ""
 	}
-	var starts []string
-	if wd, err := os.Getwd(); err == nil {
-		starts = append(starts, wd)
-	}
-	if exe, err := os.Executable(); err == nil {
-		if real, err := filepath.EvalSymlinks(exe); err == nil {
-			exe = real
-		}
-		starts = append(starts, filepath.Dir(exe))
-	}
-	for _, dir := range starts {
-		for {
-			cand := filepath.Join(dir, "organized")
-			if _, err := os.Stat(filepath.Join(dir, ".git")); err == nil && isDir(cand) {
-				return cand
-			}
-			parent := filepath.Dir(dir)
-			if parent == dir {
-				break
-			}
-			dir = parent
-		}
+	dir, ok := locate.Find(locate.Options{
+		Starts: []locate.Start{locate.FromCwd, locate.FromExecutable},
+		Marker: locate.All(locate.Exists(".git"), locate.HasDir("organized")),
+	})
+	if ok {
+		return filepath.Join(dir, "organized")
 	}
 	return ""
 }
