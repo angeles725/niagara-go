@@ -145,7 +145,8 @@ func TestVersionsAddRefusesNonInstall(t *testing.T) {
 		t.Fatal(err)
 	}
 	out, errs, code := run(t, dir, "versions", "add", "inst")
-	if code != 2 || out != "" || errs != "nh: 'versions add' is not ported yet\n" {
+	if code != 2 || errs != "" || out != "ERROR: cannot detect the Niagara version of "+filepath.Join(dir, "inst")+
+		" (no modules/baja.jar vendorVersion, no a.b.c.d in the folder name); pass --id\n" {
 		t.Errorf("install: code %d out %q err %q", code, out, errs)
 	}
 }

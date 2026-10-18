@@ -6,14 +6,17 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/argparse"
 	"github.com/angeles725/niagara-go/internal/cli"
+	"github.com/angeles725/niagara-go/internal/help/scope"
 	"github.com/angeles725/niagara-go/internal/helpbuild"
 	"github.com/angeles725/niagara-go/internal/index"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
-// The writers of `versions`: extract (tools/extract_version.py, a Go-only
-// subcommand: the script had no nh entry), in process through
-// internal/helpbuild.
+// The writers of `versions`: add (cli/cmd_versions.py over
+// version_setup.add_version) and extract (tools/extract_version.py, a Go-only
+// subcommand: the script had no nh entry). Both run in process through
+// internal/helpbuild; the full-text index the gates and the summary read is
+// built through scope.OpenFulltext, so under its build lock.
 
 // versionsExtractArgs is extract_version.py's argument parser as the
 // `versions extract` subcommand.
@@ -29,6 +32,46 @@ func versionsExtractArgs(sub *argparse.Subparsers) {
 	ext.Add(argparse.Arg{Action: argparse.StoreTrue, Help: "Extract without running rebuild-all"}, "--no-index")
 	ext.Add(argparse.Arg{Action: argparse.StoreTrue, Help: "only write jar entries whose file is absent " +
 		"(never overwrites; allowed on the repo root)"}, "--fill-missing")
+}
+
+// fulltextDocs is the FulltextDocs of nh: open_index(root).docs(), the index
+// built first when it is missing or stale (scope.OpenFulltext: the building
+// notes on stderr, the build lock).
+func (e *Env) fulltextDocs(root string) (map[string]bool, error) {
+	x, err := scope.OpenFulltext(e.Err)(root, "")
+	if err != nil {
+		return nil, err
+	}
+	if err := x.Close(); err != nil {
+		return nil, err
+	}
+	path, err := helpbuild.FreshFulltextPath(root)
+	if err != nil {
+		return nil, err
+	}
+	return helpbuild.FulltextDocsAt(path)
+}
+
+// addVersion is `versions add <install>`: version_setup.add_version on the
+// repository, its lines on stdout, the builders' stderr on stderr; the exit
+// status is add_version's return value.
+func (e *Env) addVersion(ns *argparse.Namespace) error {
+	opt := helpbuild.AddOptions{
+		Label:    ns.String("label"),
+		Default:  ns.Bool("default"),
+		Force:    ns.Bool("force"),
+		Rebuild:  helpbuild.RebuildToLog(e.Err),
+		Fulltext: e.fulltextDocs,
+	}
+	if ns.Get("version_id") != nil { // an explicit --id, even "", is validated, never detected
+		id := ns.String("version_id")
+		opt.ID = &id
+	}
+	status, err := helpbuild.AddVersion(e.RepoRoot, ns.String("install"), e.Out, opt)
+	if err != nil {
+		return err
+	}
+	return ExitCode(status)
 }
 
 // extractVersion is extract_version.py main(): the version resolved against

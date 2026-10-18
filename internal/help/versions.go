@@ -3,7 +3,6 @@ package help
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 
 	"github.com/angeles725/niagara-go/internal/argparse"
 	"github.com/angeles725/niagara-go/internal/cli"
@@ -40,27 +39,11 @@ func versionsArgs(p *argparse.Parser) {
 func runVersions(e *Env, ns *argparse.Namespace) error {
 	switch ns.String("action") {
 	case "add":
-		return e.addVersion(ns.String("install"))
+		return e.addVersion(ns)
 	case "extract":
 		return e.extractVersion(ns)
 	}
 	return e.listVersions()
-}
-
-// addVersion is version_setup.add_version up to its first refusal: the path
-// must be a Niagara install (hold modules/). Registering, extracting and
-// indexing are writers ported in a later phase.
-func (e *Env) addVersion(install string) error {
-	abs, err := filepath.Abs(install)
-	if err != nil {
-		return err
-	}
-	if st, err := os.Stat(filepath.Join(abs, "modules")); err != nil || !st.IsDir() {
-		fmt.Fprintf(e.Out, "ERROR: %s is not a Niagara install (no modules/ folder)\n", abs)
-		return ExitCode(cli.ExitCannotSearch)
-	}
-	fmt.Fprintln(e.Err, "nh: 'versions add' is not ported yet")
-	return ExitCode(cli.ExitCannotSearch)
 }
 
 // listVersions prints every registered version, its install (and whether it

@@ -42,7 +42,7 @@ func writeTestJar(t *testing.T, path string, files ...[2]string) {
 }
 
 // versionsInstall is an install whose baja.jar declares 1.2.3.4, with one
-// guide jar, and a checkout with an empty registry.
+// guide jar, and a checkout with an empty registry; it returns the checkout.
 func versionsInstall(t *testing.T) (dir, install string) {
 	t.Helper()
 	dir = repo(t, `{"default": null, "versions": {}}`)
@@ -52,6 +52,42 @@ func versionsInstall(t *testing.T) (dir, install string) {
 	writeTestJar(t, filepath.Join(install, "modules", "docFoo-doc.jar"),
 		[2]string{"doc/a.html", "<html><title>A</title>quokka</html>"}, [2]string{"doc/b.html", "<html>b</html>"})
 	return dir, install
+}
+
+// `versions add` end to end: registered, extracted, indexed, the full-text
+// index built through scope (its notice on stderr), both gates passed,
+// exit 0; the same add again is refused with exit 2.
+func TestVersionsAddEndToEnd(t *testing.T) {
+	dir, install := versionsInstall(t)
+	out, errs, code := run(t, dir, "versions", "add", install, "--label", "Nine")
+	root := filepath.Join(dir, "versions", "1.2.3.4")
+	for _, want := range []string{"registered 1.2.3.4 (Nine) -> versions/1.2.3.4/\nextracted 2 files",
+		"\nSUMMARY 1.2.3.4\n", "    guides-clean             2  guide and module help pages\n",
+		"RESULT: READY - every page is searchable and both gates pass; query it with --niagara-version 1.2.3.4\n"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("stdout lacks %q:\n%s", want, out)
+		}
+	}
+	if code != 0 || !strings.Contains(errs, "building the full-text index for "+root) {
+		t.Errorf("code %d stderr %q", code, errs)
+	}
+	for _, f := range []string{"build.log", "gates.log", filepath.Join("indexes", "fulltext.sqlite")} {
+		if _, err := os.Stat(filepath.Join(root, f)); err != nil {
+			t.Error(err)
+		}
+	}
+	out, _, code = run(t, dir, "versions", "add", install)
+	if code != 2 || out != "ERROR: version 1.2.3.4 is already registered; pass --force to extract and index it again\n" {
+		t.Errorf("again: code %d out %q", code, out)
+	}
+	out, _, code = run(t, dir, "versions", "add", install, "--id", "")
+	if code != 2 || !strings.HasPrefix(out, "ERROR: cannot detect the Niagara version of ") {
+		t.Errorf("empty --id: code %d out %q", code, out)
+	}
+	out, _, code = run(t, dir, "versions", "list")
+	if code != 0 || !strings.HasPrefix(out, "1.2.3.4 (default)  Nine\n") || !strings.Contains(out, "(extracted)") {
+		t.Errorf("list: code %d out %q", code, out)
+	}
 }
 
 // `versions extract` (extract_version.py): a refusal on stderr with exit
