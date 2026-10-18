@@ -1,4 +1,4 @@
-package help
+package bajadocxml
 
 // Reader for Niagara .bajadoc XML (bajadoc_xml.py): the class and member
 // model class --jdk renders and selftest --recall takes its ground truth
@@ -16,6 +16,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/angeles725/niagara-go/internal/pycompat"
 )
@@ -116,23 +117,23 @@ func qname(n xml.Name) string {
 var bajadocModifiers = []string{"public", "protected", "private", "abstract", "static", "final",
 	"synchronized", "native"}
 
-// bajadocMember is the member dict of _member.
-type bajadocMember struct {
-	kind, name     string
-	modifiers      []string
-	params         [][2]string // (type, name)
-	ret, typ, desc string
+// Member is the member dict of _member.
+type Member struct {
+	Kind, Name     string
+	Modifiers      []string
+	Params         [][2]string // (type, name)
+	Ret, Typ, Desc string
 }
 
-// bajadocClass is the class dict of parse_class.
-type bajadocClass struct {
-	qualifiedName, name, pkg, module, kind string
-	modifiers                              []string
-	extends                                string
-	implements                             []string
-	since, desc                            string
-	members                                []bajadocMember
-	file                                   string // iter_classes: the .bajadoc it came from
+// Class is the class dict of parse_class.
+type Class struct {
+	QualifiedName, Name, Pkg, Module, Kind string
+	Modifiers                              []string
+	Extends                                string
+	Implements                             []string
+	Since, Desc                            string
+	Members                                []Member
+	File                                   string // iter_classes: the .bajadoc it came from
 }
 
 // renderType is render_type.
@@ -211,24 +212,24 @@ func xmlText(el *xmlElem) string {
 	return strings.Join(pycompat.Fields(markupTag.ReplaceAllString(*el.text, "")), " ")
 }
 
-func parseMember(el *xmlElem, kind string) bajadocMember {
-	m := bajadocMember{kind: kind, name: el.get("name", ""), modifiers: xmlMods(el),
-		desc: xmlText(el.find("description"))}
+func parseMember(el *xmlElem, kind string) Member {
+	m := Member{Kind: kind, Name: el.get("name", ""), Modifiers: xmlMods(el),
+		Desc: xmlText(el.find("description"))}
 	for _, p := range el.findAll("parameter") {
 		t := renderType(firstType(p))
 		if p.attrs["isVarargs"] == "true" && strings.HasSuffix(t, "[]") {
 			t = t[:len(t)-2] + "..."
 		}
-		m.params = append(m.params, [2]string{t, p.get("name", "")})
+		m.Params = append(m.Params, [2]string{t, p.get("name", "")})
 	}
 	if ret := el.find("return"); ret != nil {
-		m.ret = renderType(firstType(ret))
+		m.Ret = renderType(firstType(ret))
 	}
 	switch kind {
 	case "topic":
-		m.typ = renderType(firstType(el.find("eventType")))
+		m.Typ = renderType(firstType(el.find("eventType")))
 	case "field", "property":
-		m.typ = renderType(firstType(el))
+		m.Typ = renderType(firstType(el))
 	}
 	return m
 }
@@ -247,32 +248,32 @@ func classKind(el *xmlElem) string {
 }
 
 // parseBajadocClass is parse_class.
-func parseBajadocClass(el *xmlElem) bajadocClass {
-	c := bajadocClass{qualifiedName: el.get("qualifiedName", ""), name: el.get("name", ""),
-		pkg: el.get("packageName", ""), kind: classKind(el), modifiers: xmlMods(el),
-		desc: xmlText(el.find("description"))}
+func parseBajadocClass(el *xmlElem) Class {
+	c := Class{QualifiedName: el.get("qualifiedName", ""), Name: el.get("name", ""),
+		Pkg: el.get("packageName", ""), Kind: classKind(el), Modifiers: xmlMods(el),
+		Desc: xmlText(el.find("description"))}
 	for _, tag := range el.findAll("tag") {
 		if tag.attrs["name"] == "@since" {
-			c.since = xmlText(tag)
+			c.Since = xmlText(tag)
 		}
 	}
-	c.module = el.get("module", "")
+	c.Module = el.get("module", "")
 	if profile := el.get("runtimeProfile", ""); profile != "" {
-		c.module += "-" + profile
+		c.Module += "-" + profile
 	}
 	if ext := el.find("extends"); ext != nil {
-		c.extends = renderType(firstType(ext))
+		c.Extends = renderType(firstType(ext))
 	}
-	c.implements = []string{}
+	c.Implements = []string{}
 	if impl := el.find("implements"); impl != nil {
 		for _, t := range impl.children {
-			c.implements = append(c.implements, renderType(t))
+			c.Implements = append(c.Implements, renderType(t))
 		}
 	}
 	for _, child := range el.children {
 		switch child.tag {
 		case "method", "constructor", "field", "property", "action", "topic":
-			c.members = append(c.members, parseMember(child, child.tag))
+			c.Members = append(c.Members, parseMember(child, child.tag))
 		}
 	}
 	return c
@@ -303,10 +304,10 @@ func sanitizeXML(data []byte) []byte {
 	})
 }
 
-// parseBajadocFile is parse_file: the classes of one .bajadoc file (none
+// ParseFile is parse_file: the classes of one .bajadoc file (none
 // for an index file). ok is false when the file stayed unparseable after
 // sanitizing (a PARSE_FAILURES entry).
-func parseBajadocFile(path string) (classes []bajadocClass, ok bool) {
+func ParseFile(path string) (classes []Class, ok bool) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, false
@@ -338,24 +339,24 @@ func simpleType(name string) string {
 	return strings.ReplaceAll(strings.Join(parts, " "), ",  ", ", ")
 }
 
-// cleanInfo is the dict of to_clean_info that format_output renders.
-type cleanInfo struct {
-	className, kind, pkg, since, extends, desc string
-	implements, fields, ctors, methods         []string
+// CleanInfo is the dict of to_clean_info that format_output renders.
+type CleanInfo struct {
+	ClassName, Kind, Pkg, Since, Extends, Desc string
+	Implements, Fields, Ctors, Methods         []string
 }
 
-// toCleanInfo is to_clean_info.
-func toCleanInfo(c bajadocClass) cleanInfo {
-	info := cleanInfo{className: c.name, kind: c.kind, pkg: c.pkg, since: c.since, desc: c.desc}
-	if c.extends != "" {
-		info.extends = simpleType(c.extends)
+// ToCleanInfo is to_clean_info.
+func ToCleanInfo(c Class) CleanInfo {
+	info := CleanInfo{ClassName: c.Name, Kind: c.Kind, Pkg: c.Pkg, Since: c.Since, Desc: c.Desc}
+	if c.Extends != "" {
+		info.Extends = simpleType(c.Extends)
 	}
-	for _, i := range c.implements {
-		info.implements = append(info.implements, simpleType(i))
+	for _, i := range c.Implements {
+		info.Implements = append(info.Implements, simpleType(i))
 	}
-	for _, m := range c.members {
+	for _, m := range c.Members {
 		var mods []string
-		for _, x := range m.modifiers {
+		for _, x := range m.Modifiers {
 			if x == "static" || x == "abstract" {
 				mods = append(mods, x)
 			}
@@ -364,23 +365,23 @@ func toCleanInfo(c bajadocClass) cleanInfo {
 		if len(mods) > 0 {
 			prefix = strings.Join(mods, " ") + " "
 		}
-		ps := make([]string, len(m.params))
-		for i, p := range m.params {
+		ps := make([]string, len(m.Params))
+		for i, p := range m.Params {
 			ps[i] = simpleType(p[0]) + " " + p[1]
 		}
 		params := strings.Join(ps, ", ")
-		switch m.kind {
+		switch m.Kind {
 		case "constructor":
-			info.ctors = append(info.ctors, "  "+m.name+"("+params+")")
+			info.Ctors = append(info.Ctors, "  "+m.Name+"("+params+")")
 		case "method":
-			info.methods = append(info.methods, "  "+prefix+simpleType(m.ret)+" "+m.name+"("+params+")")
+			info.Methods = append(info.Methods, "  "+prefix+simpleType(m.Ret)+" "+m.Name+"("+params+")")
 		case "field":
-			info.fields = append(info.fields, "  "+prefix+simpleType(m.typ)+" "+m.name)
+			info.Fields = append(info.Fields, "  "+prefix+simpleType(m.Typ)+" "+m.Name)
 		}
 	}
-	sort.Strings(info.fields)
-	sort.SliceStable(info.methods, func(i, j int) bool {
-		return methodSortKey(info.methods[i]) < methodSortKey(info.methods[j])
+	sort.Strings(info.Fields)
+	sort.SliceStable(info.Methods, func(i, j int) bool {
+		return methodSortKey(info.Methods[i]) < methodSortKey(info.Methods[j])
 	})
 	return info
 }
@@ -394,26 +395,26 @@ func methodSortKey(s string) string {
 	return f[len(f)-1]
 }
 
-// formatCleanInfo is format_output: the bajadoc-clean text of a class.
-func formatCleanInfo(info cleanInfo) string {
+// FormatCleanInfo is format_output: the bajadoc-clean text of a class.
+func FormatCleanInfo(info CleanInfo) string {
 	lines := []string{
-		strings.ReplaceAll(strings.ToUpper(info.kind), "_", " ") + ": " + info.className,
-		"PACKAGE: " + info.pkg,
+		strings.ReplaceAll(strings.ToUpper(info.Kind), "_", " ") + ": " + info.ClassName,
+		"PACKAGE: " + info.Pkg,
 	}
-	if info.since != "" {
-		lines = append(lines, "SINCE: "+info.since)
+	if info.Since != "" {
+		lines = append(lines, "SINCE: "+info.Since)
 	}
-	if info.extends != "" {
-		lines = append(lines, "EXTENDS: "+info.extends)
+	if info.Extends != "" {
+		lines = append(lines, "EXTENDS: "+info.Extends)
 	}
-	if len(info.implements) > 0 {
-		lines = append(lines, "IMPLEMENTS: "+strings.Join(info.implements, ", "))
+	if len(info.Implements) > 0 {
+		lines = append(lines, "IMPLEMENTS: "+strings.Join(info.Implements, ", "))
 	}
 	lines = append(lines, "")
-	if info.desc != "" {
+	if info.Desc != "" {
 		lines = append(lines, "DESCRIPTION:")
 		current := ""
-		for _, w := range pycompat.Fields(info.desc) {
+		for _, w := range pycompat.Fields(info.Desc) {
 			if current != "" && runeLen(current)+1+runeLen(w) > 78 {
 				lines = append(lines, current)
 				current = w
@@ -429,7 +430,7 @@ func formatCleanInfo(info cleanInfo) string {
 	for _, sec := range []struct {
 		title string
 		items []string
-	}{{"FIELDS:", info.fields}, {"CONSTRUCTORS:", info.ctors}, {"METHODS:", info.methods}} {
+	}{{"FIELDS:", info.Fields}, {"CONSTRUCTORS:", info.Ctors}, {"METHODS:", info.Methods}} {
 		if len(sec.items) > 0 {
 			lines = append(lines, sec.title)
 			lines = append(lines, sec.items...)
@@ -438,3 +439,6 @@ func formatCleanInfo(info cleanInfo) string {
 	}
 	return strings.Join(lines, "\n")
 }
+
+// runeLen is len(s) for a Python str.
+func runeLen(s string) int { return utf8.RuneCountInString(s) }
