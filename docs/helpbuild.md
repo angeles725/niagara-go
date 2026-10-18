@@ -756,6 +756,30 @@ of its `ensure`, then `FulltextDocsAt`), which keeps Python's behaviour and adds
 lock. The index is opened only when a course is bound or an `example` entry has
 its corpus file, as in Python.
 
+S11a parity (`testdata/parity/sweepdriver.py`, modes `fixture` and `sweep`; each side gets
+a repository of its own, a copy of the registry, so each writes its own jar-listing cache):
+
+| Test | Compares |
+|---|---|
+| `TestSweepClassifiesEveryEntry`, `TestRunSweepReport`, `TestSweepListingCache`, `TestSweepCorners`, `TestSweepShadowedEntries`, `TestFreshFulltextDocs`, `TestIndexedViewsCheck` (every `check` kind) | no Python needed: the assertions of niagara-help `test_install_sweep.py` (12 tests) and the sweep cases of `test_t3a_advisories.py` / `test_n3_advisories.py` on a Go-extracted fixture, plus the whole report of that fixture |
+| `TestParitySweepSynthetic` | the report lines, the exit status and both jar-listing caches (byte for byte), cold then warm, on the driver's fixture (extracted and rebuilt by Python's rebuild-all, full-text index built by `open_index`): every content kind, installed copies identical and changed, in-jar duplicates identical and different, empty, corrupt, upper-case and non-ASCII jars, a root jar, a location longer than its column, more than 25 gaps, loose PDFs in and out of `pdf-index.json` in any case, unreadable folders in the install and under `docs/`, the course row; for version 1.0 with the shipped and the test rules, an identified version, a version sharing the install but never extracted (PDF fallback and course note), an install that is not registered, an unknown version and an unregistered data root |
+| `TestParitySweepReal` | the same on real registered versions (`HELPBUILD_PARITY_SWEEP`); nothing is written into niagara-help: the repositories are temporary (seeded with niagara-help's jar-listing cache of the install when it has one), and a stale `indexes/fulltext.sqlite` (Python would rebuild it in place) is replaced by an index the Go builder writes in a temporary `XDG_CACHE_HOME`, open_index's second place |
+
+Measured 2026-10-18 (report and cache byte-identical; RESULT PASS on both versions; the
+gate's own time, a shared laptop, installs over /mnt/c):
+
+| Version | Jar-listing cache | Python | Go |
+|---|---|---|---|
+| 4.15.6.20 | cold (every jar listed) | 255.5 s | 67.3 s |
+| 4.15.6.20 | warm (niagara-help's cache) | 24 to 33 s | 25 to 35 s |
+| 4.3.58.18 | cold | 36.3 s | 13.7 s |
+| 4.3.58.18 | warm | 15 to 20 s | 12 to 13 s |
+
+A warm sweep is bound by the walk and the per-jar `stat` over /mnt/c, so both sides take
+about the same time; Go wins on listing the jars. `indexes/fulltext.sqlite` of 4.3.58.18
+(and 4.13.2.18) is stale in niagara-help (Python's fingerprint agrees), which is why the
+real test builds a temporary one.
+
 ### S11a intended differences
 
 - **A stale or missing full-text index** with the default finder is an error (exit 1)
@@ -789,8 +813,9 @@ cache, glob, toc and fuzz parity tests (5,000 snippets) stay on in `go test`.
 | `HELPBUILD_PARITY_BAJADOCXML=a:b` | `TestParityBajadocXMLReal` on that list of version ids instead |
 | `HELPBUILD_PARITY_INDEXES=a:b` | `TestParityS8Real` and `TestParityS9Real` on that list of version ids instead |
 | `HELPBUILD_PARITY_COVERAGE=a:b` | `TestParityCoverageReal` on that list of version ids instead; an install that is not mounted then fails instead of skipping `--doc-jars` |
+| `HELPBUILD_PARITY_SWEEP=a:b` | `TestParitySweepReal` on that list of version ids (only this variable turns it on; a list naming no version fails) |
 
-`make parity` sets `REAL`, `FULL`, `415`, `INDEXES=4.14.0.162:4.15.6.20:4.3.58.18` and `COVERAGE=4.14.0.162:4.15.6.20` and runs every `Parity` test of the package.
+`make parity` sets `REAL`, `FULL`, `415`, `INDEXES=4.14.0.162:4.15.6.20:4.3.58.18`, `COVERAGE=4.14.0.162:4.15.6.20` and `SWEEP=4.15.6.20:4.3.58.18` and runs every `Parity` test of the package (the sweep adds about 100 s over a warm jar-listing cache).
 Timings on the development laptop: `go test ./internal/helpbuild/` about 20 s without the
 variables (about 170 s when the real tests ran by default); `HELPBUILD_PARITY_REAL=1 go test ./internal/helpbuild/` about 2.5 min (the 4.14 coverage reports
 about 80 s of it); `make parity` 8 to 10 min (the full-install sweep 80 s or more over /mnt/c,
