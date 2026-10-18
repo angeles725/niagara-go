@@ -12,21 +12,16 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/argparse"
 	"github.com/angeles725/niagara-go/internal/cli"
-	_ "github.com/angeles725/niagara-go/internal/nav/architecture" // registers its commands
-	_ "github.com/angeles725/niagara-go/internal/nav/audits"
+	_ "github.com/angeles725/niagara-go/internal/nav/audits" // registers its commands
 	"github.com/angeles725/niagara-go/internal/nav/core"
 	_ "github.com/angeles725/niagara-go/internal/nav/domain"
 	_ "github.com/angeles725/niagara-go/internal/nav/flow"
 	_ "github.com/angeles725/niagara-go/internal/nav/inventory"
 	_ "github.com/angeles725/niagara-go/internal/nav/lookup"
-	_ "github.com/angeles725/niagara-go/internal/nav/patching"
-	_ "github.com/angeles725/niagara-go/internal/nav/quality"
 	"github.com/angeles725/niagara-go/internal/nav/registry"
 	_ "github.com/angeles725/niagara-go/internal/nav/security"
-	_ "github.com/angeles725/niagara-go/internal/nav/session"
 	_ "github.com/angeles725/niagara-go/internal/nav/source"
 	_ "github.com/angeles725/niagara-go/internal/nav/structure"
-	_ "github.com/angeles725/niagara-go/internal/nav/ui"
 )
 
 // Main runs one module-nav command line and returns the process exit code.
