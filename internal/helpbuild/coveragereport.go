@@ -23,7 +23,7 @@ type MissingIndexError struct{ Name, BaseDir string }
 
 func (e *MissingIndexError) Error() string {
 	return fmt.Sprintf("index indexes/%s is missing under %s; rebuild the indexes "+
-		"with: python3 tools/niagara_help.py rebuild-all", e.Name, e.BaseDir)
+		"with: nh rebuild-all", e.Name, e.BaseDir)
 }
 
 // IndexShapeError is the AttributeError, TypeError or KeyError Python

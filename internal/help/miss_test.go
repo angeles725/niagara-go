@@ -49,7 +49,7 @@ func TestMissingRequiredIndex(t *testing.T) {
 	e := &Env{Out: &out, Err: &errb, BaseDir: t.TempDir()}
 	_, err := e.loadIndex("inheritance.json", true)
 	want := "index indexes/inheritance.json is missing under " + e.BaseDir +
-		"; rebuild the indexes with: python3 tools/niagara_help.py rebuild-all"
+		"; rebuild the indexes with: nh rebuild-all"
 	if err == nil || err.Error() != want {
 		t.Errorf("err %v, want %q", err, want)
 	}

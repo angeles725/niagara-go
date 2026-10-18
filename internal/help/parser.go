@@ -33,7 +33,7 @@ func (c *command) helpText() string {
 // the commands the Go port keeps.
 var commandGroups = [][]command{
 	classCommands, memberCommands, docCommands, sourceCommands, adminCommands,
-	versionCommands,
+	versionCommands, maintCommands,
 }
 
 // registry maps a command name to its definition (registry.py COMMANDS).
@@ -58,7 +58,7 @@ func buildRegistry() map[string]*command {
 var order = []string{
 	"class", "search", "guide", "guide-search", "devguide", "pdf", "method",
 	"source", "package", "slots", "find", "devguide-search", "stats",
-	"source-grep", "freshness", "selftest", "versions",
+	"source-grep", "coverage", "freshness", "rebuild-all", "selftest", "versions",
 }
 
 // retired are the niagara_help.py commands the Go port does not carry
@@ -75,7 +75,6 @@ func init() {
 		"action-params", "diff-api", "build-call-index", "interface-hierarchy",
 		"inherited-slots", "topics", "recipe", "event-flow", "examples", "fuzzy",
 		"enum", "method-sig", "export", "export-html", "export-module", "repl",
-		"coverage", "rebuild-all",
 	} {
 		retired[n] = true
 	}

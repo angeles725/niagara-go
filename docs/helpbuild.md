@@ -28,6 +28,7 @@ document disagree, the code wins and this document is corrected.
 | **S10b-2** (done) | `versions add` (detect, register, extract and index, both gates, the summary, the rollback) and the nh wiring of `versions add` and `versions extract` | `version_setup.py` (rest), `version_report.py`, `extract_version.py` (CLI) | ~1,300 with tests |
 | **S10b-1** (done) | the coverage reports: `coverage`, `coverage <module>`, `coverage --doc-jars` (library + printers; the nh wiring is a later slice) | `coverage_report.py`, `doc_coverage.py` (+ `doc_types.classify`, `classify_unmapped`, `content_type`, `example_skip_reason`) | ~1,300 + tests |
 | **S11a** (done) | whole-install sweep gate (`coverage --sweep`, a `versions add` gate) as a library + report, on S10b-1's `Classify` and `Indexed`; nh wiring is a later slice | `install_sweep.py`, `course.gate` / `print_gate` | ~1,700 with tests |
+| **S11** (done) | nh wiring: `coverage [module]`, `--doc-jars`, `--sweep`, and `rebuild-all` under the build lock (`internal/help/cmds_maint.go`, `internal/help/scope/buildlock.go`) | `cli/cmd_export.py` `run_coverage`, `cli/cmd_admin.py` `run_rebuild_all` | ~600 with tests |
 
 `fulltext.sqlite` is outside this plan (owned by the full-text port).
 
@@ -794,6 +795,61 @@ real test builds a temporary one.
   object or a non-string truthy `source_pdf`, which are an error naming the file.
 - **File names that are not UTF-8** are not modelled (as in S7a and S9).
 
+## S11: nh coverage and rebuild-all wiring
+
+`internal/help/cmds_maint.go` is `run_coverage`: `Coverage` (exit 1 on a guide folder with
+unindexed pages; a module that matches no class prints `scope.Miss(..., "coverage", module,
+"modules")` and exits 1), `DocJarCoverage` for `--doc-jars` (its status), and for `--sweep`
+the doc-jar gate first when `--doc-jars` is given (then a blank line, exit 2 at once when the
+install is not available) and `RunSweep`, exiting with the worse status. `--sweep` ignores the
+module, as Python does. Both gates get nh's rebuilding `FulltextDocs`: `scope.OpenFulltext`
+(open_index's notice on stderr, the build lock next to the database), then
+`FreshFulltextDocs`. `helpbuild.MissingIndexError` is the one missing-index type; nh's
+`MissingIndexError` is an alias of it.
+
+`TestParityMaintReal` (`NH_PARITY_MAINT=<version id>[:...]`, with the pinned reference of
+`NIAGARA_HELP_PY_REF`) runs `coverage --help`, `coverage`, `coverage alarm-rt`, a module
+miss, `--doc-jars`, `--sweep` and `--sweep --doc-jars` through the pinned `niagara_help.py`
+(`NIAGARA_HELP_PYTHON=1`) and through nh's `Main`, on a temporary checkout whose registry
+holds the version with its absolute data root, and compares stdout, stderr, the exit status
+and the jar-listing cache (both seeded from niagara-help's). Measured 2026-10-18 on
+4.3.58.18 (all seven identical, warm cache): `--doc-jars` 25.4 / 21.9 s, `--sweep` 42.7 /
+45.5 s, both 64.6 / 74.5 s (Python / Go); the reports alone take under 1.1 s on either side.
+
+`rebuild-all` is `run_rebuild_all`: `RebuildAll` on the data root with nh's streams, exit 0
+(failed builders included) and `ERROR: ...` with exit 2 on an error. A build or
+`--stamp-only` runs inside `scope.WithBuildLock`: the lock file of the full-text build
+(`indexes/fulltext.sqlite.lock`), so a search that must build the index waits for the
+rebuild (up to the lock's wait, two minutes, then it builds anyway as before). A heartbeat
+refreshes the lock's mtime every lockStale/4 while the rebuild runs, so a rebuild longer than
+lockStale is not taken over; a crashed holder's lock still is. A live lock still held after
+the wait is `*scope.LockBusyError` and the rebuild does not run. A dry run writes nothing
+and takes no lock.
+
+`TestParityRebuildReal` (`NH_PARITY_REBUILD=<version id>[:...]`) runs `rebuild-all --help`,
+`--dry-run`, `--only build_ --dry-run` and `--dry-run --only zzz` on the live data root,
+then a real `--only build_class` and `--stamp-only` on a copy of the data root's
+`devguide/` and `indexes/` in a temporary folder under `$HOME` (removed afterwards), through
+the pinned `niagara_help.py` (stdout unbuffered: run order) and nh's `Main`. Elapsed and
+stamp times are folded and Python's `build_call_index.py` row is dropped (I3-5); stdout,
+stderr, exit status and the rewritten `class-index.json`, `jdk-class-index.json` and
+manifest are compared. Measured 2026-10-18 on 4.3.58.18: all six identical (3.8 s in all).
+
+### S11 intended differences
+
+- **The hints name nh** (D34): a missing index says `rebuild the indexes with: nh
+  rebuild-all`, a stale full-text index `rebuild it with: nh [--niagara-version <id> ]find
+  index`, an unextracted version `Run: nh versions extract <id>` (and `freshness --all`
+  `NOT EXTRACTED (nh versions extract <id>)`). The coverage parity drivers map Python's
+  rebuild hint to Go's before comparing.
+- **An index of an unexpected shape or a registry Python trips over**, and a rebuild-all
+  error (a stream or the manifest that cannot be written), is nh's `ERROR:` line and exit
+  2, where Python prints a traceback and exits 1 (the nh convention for a malformed
+  registry).
+- **The build lock** has no Python counterpart: a rebuild-all while another process holds
+  the lock waits for it, and fails with `*scope.LockBusyError` (exit 2) when it is still
+  held after two minutes; Python would run both at once.
+
 ## S10a: rebuild-all
 
 | File | Ports | Notes |
@@ -841,7 +897,7 @@ built on demand by the search scope when its own fingerprint changes (Integrante
 
 ### What a concurrent reader sees
 
-nh calls RebuildAll under the full-text scope lock, while other nh commands may read the
+nh calls RebuildAll under the full-text build lock (`scope.WithBuildLock`), while other nh commands may read the
 data root. Every index file is replaced by rename, never truncated in place:
 
 | Output | Written by | A reader during the run sees |

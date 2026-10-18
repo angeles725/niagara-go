@@ -13,7 +13,7 @@ import (
 func TestCannotSearchPaths(t *testing.T) {
 	missing := func(dir, name string) string {
 		return "ERROR: index indexes/" + name + " is missing under " + dir +
-			"; rebuild the indexes with: python3 tools/niagara_help.py rebuild-all\n"
+			"; rebuild the indexes with: nh rebuild-all\n"
 	}
 	tests := []struct {
 		name       string

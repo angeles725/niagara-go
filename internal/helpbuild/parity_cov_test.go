@@ -44,8 +44,17 @@ func runCovDriver(t *testing.T, args ...string) []string {
 	if err != nil {
 		t.Fatalf("covdriver %v: %v\n%s", args, err, stderr.String())
 	}
-	return strings.Split(strings.TrimSuffix(string(out), "\n"), "\n")
+	// Intended difference (D34): the MissingIndexError hint names the Go
+	// command, nh rebuild-all, where Python names its own script.
+	text := strings.ReplaceAll(string(out), pyRebuildHint, goRebuildHint)
+	return strings.Split(strings.TrimSuffix(text, "\n"), "\n")
 }
+
+// The rebuild hint of MissingIndexError, as Python and as Go spell it.
+const (
+	pyRebuildHint = "with: python3 tools/niagara_help.py rebuild-all"
+	goRebuildHint = "with: nh rebuild-all"
+)
 
 // covResult renders a Go run as the driver's lines.
 func covResult(out string, status pyjson.Value, err error) []string {

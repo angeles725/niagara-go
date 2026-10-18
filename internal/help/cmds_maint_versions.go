@@ -6,7 +6,6 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/argparse"
 	"github.com/angeles725/niagara-go/internal/cli"
-	"github.com/angeles725/niagara-go/internal/help/scope"
 	"github.com/angeles725/niagara-go/internal/helpbuild"
 	"github.com/angeles725/niagara-go/internal/index"
 	"github.com/angeles725/niagara-go/internal/pycompat"
@@ -32,27 +31,6 @@ func versionsExtractArgs(sub *argparse.Subparsers) {
 	ext.Add(argparse.Arg{Action: argparse.StoreTrue, Help: "Extract without running rebuild-all"}, "--no-index")
 	ext.Add(argparse.Arg{Action: argparse.StoreTrue, Help: "only write jar entries whose file is absent " +
 		"(never overwrites; allowed on the repo root)"}, "--fill-missing")
-}
-
-// fulltextDocs is the FulltextDocs of nh: open_index(root).docs(), the index
-// built first when it is missing or stale (scope.OpenFulltext: the building
-// notes on stderr, the build lock). The handle is closed, releasing the lock,
-// before the docs are read: safe because every fulltext build writes a temp
-// file and renames it into place (helpbuild/fulltext build.go), so a reader
-// never sees a half-written index.
-func (e *Env) fulltextDocs(root string) (map[string]bool, error) {
-	x, err := scope.OpenFulltext(e.Err)(root, "")
-	if err != nil {
-		return nil, err
-	}
-	if err := x.Close(); err != nil {
-		return nil, err
-	}
-	path, err := helpbuild.FreshFulltextPath(root)
-	if err != nil {
-		return nil, err
-	}
-	return helpbuild.FulltextDocsAt(path)
 }
 
 // addVersion is `versions add <install>`: version_setup.add_version on the

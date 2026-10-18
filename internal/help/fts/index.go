@@ -1,11 +1,11 @@
 package fts
 
-// Reading the full-text index (fulltext_index.py). The Python tool keeps one
-// contentless FTS5 database per data root, indexes/fulltext.sqlite, or a copy
-// in the user cache directory when the data root is not writable, and
-// rebuilds it whenever the text sources change. This package only reads it: a
-// database is used when its stored fingerprint equals the fingerprint Python
-// computes for the current sources. Open refuses a missing or stale index
+// Reading the full-text index (fulltext_index.py). Each data root has one
+// contentless FTS5 database, indexes/fulltext.sqlite, or a copy in the user
+// cache directory when the data root is not writable, rebuilt whenever the
+// text sources change. This package only reads it: a database is used when
+// its stored fingerprint equals the fingerprint of the current sources (the
+// same value fulltext_index.py computes). Open refuses a missing or stale index
 // (*StaleIndexError); nh searches through internal/help/scope.OpenFulltext,
 // which rebuilds it first like open_index (decision D38).
 
@@ -91,8 +91,8 @@ func (e *StaleIndexError) Error() string {
 	if e.VersionID != "" {
 		version = "--niagara-version " + e.VersionID + " "
 	}
-	return fmt.Sprintf("full-text index indexes/%s under %s %s; this port reads it but "+
-		"never builds it, rebuild it with: python3 tools/niagara_help.py %sfind index",
+	return fmt.Sprintf("full-text index indexes/%s under %s %s; this reader never "+
+		"builds it, rebuild it with: nh %sfind index",
 		DBName, e.BaseDir, state, version)
 }
 
