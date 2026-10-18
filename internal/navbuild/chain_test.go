@@ -26,6 +26,10 @@ var laterBuilders = []laterBuilder{
 		_, err := BuildTokenIndex(base, organized, DefaultMinTokenLen)
 		return err
 	}},
+	{"build_method_index.py", MethodFile, nil, func(base, organized string) error {
+		_, err := BuildMethodIndex(base, organized)
+		return err
+	}},
 }
 
 // TestParityLaterIndexes builds the whole chain on each side (inventory, class

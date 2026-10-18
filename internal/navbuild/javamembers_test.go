@@ -89,3 +89,37 @@ func TestParseMethods(t *testing.T) {
 		t.Errorf("parseMethods =\n%q\nwant\n%q", got, want)
 	}
 }
+
+// TestMaxClassTieBreak pins _meta.max_methods_class: the first class, in
+// first-seen order, whose count is strictly greater than the running maximum
+// after each file (Python rescans every class after each file).
+func TestMaxClassTieBreak(t *testing.T) {
+	rec := func(class string, names ...string) []methodRecord {
+		var out []methodRecord
+		for _, n := range names {
+			out = append(out, methodRecord{n, class, "{}"})
+		}
+		return out
+	}
+	for _, tc := range []struct {
+		name  string
+		files [][]methodRecord
+		max   int
+		class string
+	}{
+		{"equal counts in one file: first seen wins", [][]methodRecord{append(rec("A", "a", "b"), rec("B", "a", "b")...)}, 2, "A"},
+		{"within a file first-seen order wins, not the record order", [][]methodRecord{rec("B", "a"), rec("A", "a"), append(rec("A", "b", "c"), rec("B", "b", "c")...)}, 3, "B"},
+		{"reaching the maximum later does not take it", [][]methodRecord{append(rec("B", "a"), rec("A", "a")...), rec("A", "b", "c"), rec("B", "b", "c")}, 3, "A"},
+		{"a repeated name does not count", [][]methodRecord{rec("A", "a", "a", "a"), rec("B", "a", "b")}, 2, "B"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			mi := newMethodIndex()
+			for _, f := range tc.files {
+				mi.add(f)
+			}
+			if mi.MaxPerClass != tc.max || mi.MaxClass != tc.class {
+				t.Errorf("max = %d (%s), want %d (%s)", mi.MaxPerClass, mi.MaxClass, tc.max, tc.class)
+			}
+		})
+	}
+}

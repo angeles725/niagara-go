@@ -153,6 +153,26 @@ Intended difference: `extract_param_type` raises `IndexError` on an annotation w
 arguments and nothing after it (`@A(x y)`); here the type is empty and dropped like any
 empty type.
 
+## Method index
+
+`BuildMethodIndex(base, organized)` is `build_method_index`: the top-level files of the
+class index (a missing or unreadable one counts in `files_failed`), parsed by four workers
+and merged in index order. Each declaration is encoded to its compact JSON entry
+(`class, module, signature, line, modifiers, return_type, params`) in the worker, so the
+merge holds the 143 MB of entries as strings that do not pin the sources; `class_methods`
+holds sorted name lists. The index is streamed to a temp file through a 1 MiB buffer
+(`writeIndexStream`, temp + rename, mode 0644), never built as one string.
+
+`_meta.max_methods_class` keeps Python's tie-break without its rescan of every class after
+every file: after each file only the classes it touched can exceed the running maximum,
+and they are visited in first-seen order, so the result is the first class in first-seen
+order whose count is strictly greater than the maximum when that file was merged
+(`TestMaxClassTieBreak`). An average over nothing is the int `0`, as Python's `else 0`.
+
+The field index is not ported: no kept command reads `field-index.json` (D32/D33; `stats`
+then shows it missing, an accepted difference). The method index stays because
+`license-feature`'s miss hints read the `methods` keys.
+
 ## Gates
 
 | Gate | Result (2026-10-17) |

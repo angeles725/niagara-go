@@ -1,7 +1,9 @@
 package navbuild
 
 import (
+	"bufio"
 	"math"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -88,6 +90,17 @@ func stamped(fields []Field, elapsed time.Duration, at time.Time) []Field {
 type jsonWriter struct {
 	b strings.Builder
 	o pyjson.DumpOpts
+	// dst, when set, receives the text instead of b (writeIndexStream).
+	dst *bufio.Writer
+}
+
+// put appends s to the document.
+func (w *jsonWriter) put(s string) {
+	if w.dst != nil {
+		w.dst.WriteString(s) //nolint:errcheck // sticky: reported by Flush
+		return
+	}
+	w.b.WriteString(s)
 }
 
 // value writes v as json.dump writes it at nesting depth level.
@@ -96,33 +109,33 @@ func (w *jsonWriter) value(v pyjson.Value, level int) {
 	if w.o.Indent > 0 && level > 0 {
 		s = strings.ReplaceAll(s, "\n", "\n"+strings.Repeat(" ", w.o.Indent*level))
 	}
-	w.b.WriteString(s)
+	w.put(s)
 }
 
 // object writes an object of n members at depth level: member i has key
 // key(i) and its value is written by val(i, level+1).
 func (w *jsonWriter) object(level, n int, key func(i int) string, val func(i, level int)) {
 	if n == 0 {
-		w.b.WriteString("{}")
+		w.put("{}")
 		return
 	}
 	nl := ""
 	if w.o.Indent >= 0 {
 		nl = "\n" + strings.Repeat(" ", w.o.Indent*(level+1))
 	}
-	w.b.WriteString("{" + nl)
+	w.put("{" + nl)
 	for i := 0; i < n; i++ {
 		if i > 0 {
-			w.b.WriteString(w.o.ItemSep + nl)
+			w.put(w.o.ItemSep + nl)
 		}
-		w.b.WriteString(pyjson.EncodeString(key(i), w.o.EnsureASCII))
-		w.b.WriteString(w.o.KeySep)
+		w.put(pyjson.EncodeString(key(i), w.o.EnsureASCII))
+		w.put(w.o.KeySep)
 		val(i, level+1)
 	}
 	if w.o.Indent >= 0 {
-		w.b.WriteString("\n" + strings.Repeat(" ", w.o.Indent*level))
+		w.put("\n" + strings.Repeat(" ", w.o.Indent*level))
 	}
-	w.b.WriteString("}")
+	w.put("}")
 }
 
 // fields writes the members fs as an object at depth level.
@@ -134,6 +147,39 @@ func (w *jsonWriter) fields(level int, fs []Field) {
 // IndexPath is <baseDir>/indexes/<name>, where every builder writes.
 func IndexPath(baseDir, name string) string {
 	return filepath.Join(baseDir, "indexes", name)
+}
+
+// writeIndexStream writes <baseDir>/indexes/<name> atomically like
+// writeIndex, streaming: fill writes the document into a buffered temp file
+// beside the index, which is renamed into place (mode 0644) only when fill and
+// every write succeeded.
+func writeIndexStream(baseDir, name string, fill func(w *bufio.Writer) error) (err error) {
+	path := IndexPath(baseDir, name)
+	f, err := os.CreateTemp(filepath.Dir(path), ".tmp-*"+name)
+	if err != nil {
+		return err
+	}
+	tmp := f.Name()
+	defer func() {
+		if err != nil {
+			f.Close()
+			os.Remove(tmp)
+		}
+	}()
+	w := bufio.NewWriterSize(f, 1<<20)
+	if err = fill(w); err != nil {
+		return err
+	}
+	if err = w.Flush(); err != nil {
+		return err
+	}
+	if err = f.Close(); err != nil {
+		return err
+	}
+	if err = os.Chmod(tmp, 0o644); err != nil { // CreateTemp makes 0600
+		return err
+	}
+	return os.Rename(tmp, path)
 }
 
 // writeIndex writes data to <baseDir>/indexes/<name> atomically (build.write_json:

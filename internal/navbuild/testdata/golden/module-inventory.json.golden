@@ -100,7 +100,7 @@
       "type": "rt",
       "jar": "epsilon-rt.jar",
       "class_count": 0,
-      "java_files": 7,
+      "java_files": 8,
       "zkm": false,
       "bytecode": 0,
       "has_vineflower": true,

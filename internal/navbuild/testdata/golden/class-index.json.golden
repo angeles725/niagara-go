@@ -2,12 +2,12 @@
   "_meta": {
     "description": "Class index for Niagara N4 decompiled modules",
     "source": "<SOURCE>",
-    "files_processed": 31,
+    "files_processed": 32,
     "modules": 7,
-    "top_classes": 45,
-    "inner_classes": 7,
-    "total_entries": 52,
-    "unique_names": 49,
+    "top_classes": 47,
+    "inner_classes": 12,
+    "total_entries": 59,
+    "unique_names": 53,
     "interfaces": 2,
     "enums": 0,
     "annotation_types": 1,
@@ -138,6 +138,19 @@
         "zkm": true,
         "inner_classes": [],
         "outer_class": null
+      },
+      {
+        "package": "com.tridium.eps",
+        "module": "epsilon-rt",
+        "kind": "record",
+        "extends": null,
+        "implements": [],
+        "modifiers": [],
+        "lines": 0,
+        "path": "epsilon/epsilon-rt/vineflower/com/tridium/eps/Members.java",
+        "zkm": false,
+        "inner_classes": [],
+        "outer_class": "Members"
       }
     ],
     "Shape": [
@@ -316,6 +329,19 @@
         "zkm": true,
         "inner_classes": [],
         "outer_class": "Rec"
+      },
+      {
+        "package": "com.tridium.eps",
+        "module": "epsilon-rt",
+        "kind": "class",
+        "extends": null,
+        "implements": [],
+        "modifiers": [],
+        "lines": 0,
+        "path": "epsilon/epsilon-rt/vineflower/com/tridium/eps/Members.java",
+        "zkm": false,
+        "inner_classes": [],
+        "outer_class": "Members"
       }
     ],
     "Deep": [
@@ -389,6 +415,19 @@
         "lines": 27,
         "path": "alpha/alpha-rt/vineflower/com/tridium/deep/pkg/Generic.java",
         "zkm": true,
+        "inner_classes": [],
+        "outer_class": null
+      },
+      {
+        "package": "com.tridium.eps",
+        "module": "epsilon-rt",
+        "kind": "class",
+        "extends": null,
+        "implements": [],
+        "modifiers": [],
+        "lines": 97,
+        "path": "epsilon/epsilon-rt/vineflower/com/tridium/eps/Members.java",
+        "zkm": false,
         "inner_classes": [],
         "outer_class": null
       }
@@ -909,6 +948,76 @@
         "zkm": false,
         "inner_classes": [],
         "outer_class": null
+      }
+    ],
+    "Members": [
+      {
+        "package": "com.tridium.eps",
+        "module": "epsilon-rt",
+        "kind": "class",
+        "extends": "com.tridium.eps.Edge<String>",
+        "implements": [
+          "Runnable"
+        ],
+        "modifiers": [
+          "public"
+        ],
+        "lines": 97,
+        "path": "epsilon/epsilon-rt/vineflower/com/tridium/eps/Members.java",
+        "zkm": false,
+        "inner_classes": [
+          "Ann",
+          "Kind",
+          "Inner",
+          "Iface",
+          "Point"
+        ],
+        "outer_class": null
+      }
+    ],
+    "Ann": [
+      {
+        "package": "com.tridium.eps",
+        "module": "epsilon-rt",
+        "kind": "@interface",
+        "extends": null,
+        "implements": [],
+        "modifiers": [],
+        "lines": 0,
+        "path": "epsilon/epsilon-rt/vineflower/com/tridium/eps/Members.java",
+        "zkm": false,
+        "inner_classes": [],
+        "outer_class": "Members"
+      }
+    ],
+    "Kind": [
+      {
+        "package": "com.tridium.eps",
+        "module": "epsilon-rt",
+        "kind": "enum",
+        "extends": null,
+        "implements": [],
+        "modifiers": [],
+        "lines": 0,
+        "path": "epsilon/epsilon-rt/vineflower/com/tridium/eps/Members.java",
+        "zkm": false,
+        "inner_classes": [],
+        "outer_class": "Members"
+      }
+    ],
+    "Iface": [
+      {
+        "package": "com.tridium.eps",
+        "module": "epsilon-rt",
+        "kind": "interface",
+        "extends": null,
+        "implements": [],
+        "modifiers": [],
+        "lines": 0,
+        "path": "epsilon/epsilon-rt/vineflower/com/tridium/eps/Members.java",
+        "zkm": false,
+        "inner_classes": [],
+        "outer_class": "Members"
       }
     ],
     "Self": [
