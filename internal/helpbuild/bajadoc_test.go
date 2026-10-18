@@ -101,6 +101,32 @@ func TestParseBajadocFixture(t *testing.T) {
 	}
 }
 
+// write_clean_class removes the page an older run left under the escaped
+// class name ("Cursor&lt;E&gt;.txt") once the clean one is written, and
+// leaves the other files of bajadoc-clean/ (bajadoc_xml_parser.py's) alone.
+func TestParseBajadocRemovesLegacyName(t *testing.T) {
+	base := t.TempDir()
+	copyTree(t, filepath.Join("testdata", "bajadoc", "root"), base)
+	util := filepath.Join(base, "bajadoc-clean", "javax", "baja", "util")
+	legacy := filepath.Join(util, "Cursor&lt;E&gt;.txt")
+	other := filepath.Join(util, "BXmlOnly.txt")
+	writeFile(t, legacy, []byte("CLASS: Cursor&lt;E&gt;\n"))
+	writeFile(t, other, []byte("CLASS: BXmlOnly\n"))
+	res, err := ParseBajadoc(base)
+	if err != nil || res.Status != 0 || res.Parsed != 12 {
+		t.Fatalf("ParseBajadoc: %v, %+v", err, res)
+	}
+	if _, err := os.Stat(legacy); !os.IsNotExist(err) {
+		t.Errorf("escaped-name page kept: %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(util, "Cursor.txt")); err != nil {
+		t.Errorf("clean-name page: %v", err)
+	}
+	if data, err := os.ReadFile(other); err != nil || string(data) != "CLASS: BXmlOnly\n" {
+		t.Errorf("unrelated page: %q, %v; want it untouched", data, err)
+	}
+}
+
 // Without bajadoc/javax/baja the run prints one ERROR line and exits 1.
 func TestParseBajadocMissingDir(t *testing.T) {
 	base := t.TempDir()
