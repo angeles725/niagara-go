@@ -1,0 +1,11 @@
+prior-coverage gate — scanned 21 block(s)
+
+  [CLEAR]   zzqq — no prior block mentions it. Safe to open as net-new.
+  [COVERED] bacnet:
+      SUBJECT  niagara-reflow-block2.md — Reflow 2 — bacnet COV
+      body     BTI — Bloque TI — test harness
+      body     examinacion-optimizer-4.13/os413-bloque3.md — OS413 bloque 3 — QNX
+
+VERDICT: prior coverage found. DO NOT declare "extends X, never re-derives" blindly.
+For each covered module, decide in the bootstrap: net-new / deepening of B<n> (cite it) /
+already covered -> out of scope. A focus that is entirely covered does NOT open.

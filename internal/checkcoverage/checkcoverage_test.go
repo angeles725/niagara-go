@@ -10,8 +10,9 @@ import (
 	"github.com/angeles725/niagara-go/internal/golden"
 )
 
-// The cases are a subset of niagara-research tools/tests/fixtures/golden-cli/check-coverage.json
-// (the Python output); the repository root is the case's working directory (testdata/corpus).
+// The cases are niagara-research tools/tests/fixtures/golden-cli/check-coverage.json and
+// check-coverage-empty.json (the Python output, converted by testdata/convert_golden.py); the
+// repository root is the case's working directory (testdata/corpus).
 
 func useRoot(t *testing.T, root func() (string, error)) {
 	t.Helper()
@@ -23,6 +24,16 @@ func useRoot(t *testing.T, root func() (string, error)) {
 func TestGolden(t *testing.T) {
 	useRoot(t, os.Getwd)
 	golden.Run(t, "testdata", Main)
+}
+
+// TestGoldenNoBlocks runs check-coverage-empty.json: the root is the case's empty {tmp},
+// passed in GOLDEN_REPO_ROOT (in process only: a binary resolves its own root).
+func TestGoldenNoBlocks(t *testing.T) {
+	if os.Getenv(golden.BinEnv) != "" {
+		t.Skip("the root is injected in process; " + golden.BinEnv + " resolves its own")
+	}
+	useRoot(t, func() (string, error) { return os.Getenv("GOLDEN_REPO_ROOT"), nil })
+	golden.Run(t, "testdata/empty", Main)
 }
 
 // TestNoBlocksExits3 is check-coverage-empty.json: zero block files means the gate did
