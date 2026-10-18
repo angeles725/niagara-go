@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/index"
-	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
 // progressMB is the size from which loading an index prints a progress line.
@@ -140,19 +139,4 @@ func (r *Runtime) Connect(name string, optional bool) *sql.DB {
 	}
 	r.db[key] = db
 	return db
-}
-
-// AnyCase is outcome.any_case: key when present, else the first key equal to
-// it ignoring case, else key.
-func AnyCase(o *index.Object, key string) string {
-	if o.Has(key) {
-		return key
-	}
-	lower := textfold.Lower(key)
-	for _, k := range o.Keys() {
-		if textfold.Lower(k) == lower {
-			return k
-		}
-	}
-	return key
 }

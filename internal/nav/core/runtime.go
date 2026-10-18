@@ -71,9 +71,6 @@ func (r *Runtime) Unreadable(err error) {
 // ExitCode is outcome.exit_code: the highest status raised.
 func (r *Runtime) ExitCode() int { return r.status }
 
-// Reset is outcome.reset: forget earlier outcomes (one REPL command at a time).
-func (r *Runtime) Reset() { r.status = 0 }
-
 // Built is outcome.built: "index built <timestamp>" from an index _meta block.
 func Built(meta *index.Object) string {
 	if meta != nil {

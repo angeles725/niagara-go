@@ -14,7 +14,7 @@ import (
 	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
-// The class lookups of class_search.py: class, search and package.
+// The class lookups of class_search.py: class and search (package is retired).
 
 func runClass(env *registry.Env, ns *argparse.Namespace) int {
 	cmdClass(env, ns.String("name"))
@@ -23,11 +23,6 @@ func runClass(env *registry.Env, ns *argparse.Namespace) int {
 
 func runSearch(env *registry.Env, ns *argparse.Namespace) int {
 	cmdSearch(env, ns.String("pattern"), ns.Int("n"))
-	return env.ExitCode()
-}
-
-func runPackage(env *registry.Env, ns *argparse.Namespace) int {
-	cmdPackage(env, ns.String("name"), ns.Bool("show_all"), ns.Int("n"))
 	return env.ExitCode()
 }
 
