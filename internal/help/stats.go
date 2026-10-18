@@ -12,6 +12,7 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/help/scope"
 	"github.com/angeles725/niagara-go/internal/index"
+	"github.com/angeles725/niagara-go/internal/pyjson"
 )
 
 // fileCount is stats._count_files: files ending in ext under dir (as
@@ -113,30 +114,30 @@ func (e *Env) Stats(asJSON bool) error {
 		if vid != "" {
 			version = vid
 		}
-		dirs := jsonObj{}
+		dirs := pyjson.Obj{}
 		for _, d := range textDirs {
-			dirs = append(dirs, jsonKV{d, jsonObj{{"files", text[d].files}, {"bytes", text[d].bytes}}})
+			dirs = append(dirs, pyjson.KV{d, pyjson.Obj{{"files", text[d].files}, {"bytes", text[d].bytes}}})
 		}
-		data := jsonObj{
+		data := pyjson.Obj{
 			{"niagara_version", version},
 			{"base_dir", abs},
-			{"indexes", jsonObj{
+			{"indexes", pyjson.Obj{
 				{"class-index", n("class-index")},
 				{"devguide-toc", dgItems},
 				{"guides-index", n("guides-index")},
 				{"inheritance", n("inheritance")},
 				{"pdf-index", n("pdf-index")},
-				{"method-index", jsonObj{{"names", n("method-index")}, {"entries", methods}}},
-				{"source-index", jsonObj{{"classes", n("source-index")}, {"lines", lines}}},
-				{"xref-index", jsonObj{{"classes", n("xref-index")}, {"edges", edges}}},
-				{"slots-index", jsonObj{{"classes", n("slots-index")}, {"properties", props},
+				{"method-index", pyjson.Obj{{"names", n("method-index")}, {"entries", methods}}},
+				{"source-index", pyjson.Obj{{"classes", n("source-index")}, {"lines", lines}}},
+				{"xref-index", pyjson.Obj{{"classes", n("xref-index")}, {"edges", edges}}},
+				{"slots-index", pyjson.Obj{{"classes", n("slots-index")}, {"properties", props},
 					{"actions", actions}, {"topics", topics}}},
-				{"call-index", jsonObj{{"methods", calls.Len()}, {"entries", callEntries}}},
+				{"call-index", pyjson.Obj{{"methods", calls.Len()}, {"entries", callEntries}}},
 			}},
 			{"text_dirs", dirs},
 			{"packages", len(packages)},
 		}
-		fmt.Fprintln(e.Out, dumpsIndent2(data))
+		fmt.Fprintln(e.Out, pyjson.DumpsAny(data, pyjson.Indent2))
 		return nil
 	}
 	w := func(n int) string { return rjust(thousands(n), 6) }

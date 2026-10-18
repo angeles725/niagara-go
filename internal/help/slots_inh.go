@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/index"
+	"github.com/angeles725/niagara-go/internal/pyjson"
 )
 
 // inheritanceEntry is the entry _get_chain follows for name: the exact key
@@ -134,15 +135,15 @@ func (e *Env) InheritedSlots(p InheritedSlotsParams) error {
 		}
 	}
 	if p.JSON {
-		out := jsonObj{{"class", name}, {"chain", chain}}
+		out := pyjson.Obj{{"class", name}, {"chain", chain}}
 		for i, k := range inheritedKinds {
 			rows := make([]any, len(merged[i]))
 			for j, s := range merged[i] {
-				rows[j] = jsonObj{{"name", s.name}, {k.typeKey, s.typ}, {"declared_in", s.origin}, {"slot", slotValue(s.slot)}}
+				rows[j] = pyjson.Obj{{"name", s.name}, {k.typeKey, s.typ}, {"declared_in", s.origin}, {"slot", slotValue(s.slot)}}
 			}
-			out = append(out, jsonKV{k.section, rows})
+			out = append(out, pyjson.KV{k.section, rows})
 		}
-		fmt.Fprintln(e.Out, dumpsIndent2(out))
+		fmt.Fprintln(e.Out, pyjson.DumpsAny(out, pyjson.Indent2))
 		return nil
 	}
 	e.printInheritedSlots(name, chain, merged)
