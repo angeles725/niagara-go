@@ -241,8 +241,8 @@ func runPaletteLexiconAgents(env *registry.Env, ns *argparse.Namespace) int {
 	w := env.Out
 	base := env.BaseDir
 	if ns.String("base_dir") == "" {
-		// The script's default is the corpus, not the checkout (D39 e). TODO: env.OrganizedDir() after i2/nav-runat.
-		base = core.OrganizedDir()
+		// The script's default is the corpus, not the checkout (D39 e); pinned under nav.RunAt.
+		base = env.OrganizedDir()
 	}
 	if !isDir(base) {
 		fmt.Fprintf(env.Err, "ERROR: base-dir not found: %s\n", base)
