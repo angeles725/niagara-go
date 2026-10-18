@@ -1,1 +1,1 @@
-{"args": ["show", "javasrc", "acme-extras:NumericWritable"]}
+{"args": ["show", "javasrc", "acme-extras:NumericWritable"], "requires": {"goos": ["linux"]}}

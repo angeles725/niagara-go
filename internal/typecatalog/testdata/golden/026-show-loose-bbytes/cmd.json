@@ -1,1 +1,1 @@
-{"args": ["show", "loose", "BBytes"]}
+{"args": ["show", "loose", "BBytes"], "requires": {"goos": ["linux"]}}

@@ -1,1 +1,1 @@
-{"args": ["show", "javasrc", "kitControl:InterstartDelayControl"]}
+{"args": ["show", "javasrc", "kitControl:InterstartDelayControl"], "requires": {"goos": ["linux"]}}

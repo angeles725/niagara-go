@@ -1,1 +1,1 @@
-{"args": ["show", "javasrc", "javax.baja.control.BNumericWritable"]}
+{"args": ["show", "javasrc", "javax.baja.control.BNumericWritable"], "requires": {"goos": ["linux"]}}
