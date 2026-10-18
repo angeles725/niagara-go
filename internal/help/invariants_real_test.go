@@ -16,6 +16,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 
@@ -158,7 +159,7 @@ func TestInvariantRealInheritance(t *testing.T) {
 	if got := strings.Join(chain, " > "); !strings.Contains(got, "BComponent > BAbstractService > BAlarmService") {
 		t.Errorf("BAlarmService ancestry %q lacks BComponent > BAbstractService > BAlarmService", got)
 	}
-	if !contains(inh["BComponent"].Subclasses, "BAbstractService") {
+	if !slices.Contains(inh["BComponent"].Subclasses, "BAbstractService") {
 		t.Errorf("BComponent subclasses lack BAbstractService: %q", inh["BComponent"].Subclasses)
 	}
 	if bare(inh["BAbstractService"].Extends) != "BComponent" {
@@ -177,7 +178,7 @@ func TestInvariantRealImplementors(t *testing.T) {
 			}
 		}
 	}
-	if !contains(impl, "BAlarmSourceExt") {
+	if !slices.Contains(impl, "BAlarmSourceExt") {
 		t.Errorf("implementors of BIAlarmSource lack BAlarmSourceExt: %q", impl)
 	}
 }

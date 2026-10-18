@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"sort"
 	"strings"
 	"time"
@@ -94,8 +95,8 @@ func htmlClassPages(baseDir string) []classKey {
 	var out []classKey
 	for _, path := range walkMatching(root, func(n string) bool { return strings.HasSuffix(n, ".html") }) {
 		parts := strings.Split(relSlash(path, root), "/")
-		if len(parts) < 2 || javadocNavPages[parts[len(parts)-1]] || contains(parts, "class-use") ||
-			contains(parts, "doc-files") || parts[0] == "index-files" {
+		if len(parts) < 2 || javadocNavPages[parts[len(parts)-1]] || slices.Contains(parts, "class-use") ||
+			slices.Contains(parts, "doc-files") || parts[0] == "index-files" {
 			continue
 		}
 		pkg := ""
@@ -111,15 +112,6 @@ func htmlClassPages(baseDir string) []classKey {
 		out = append(out, classKey{pkg, last[:len(last)-len(".html")]})
 	}
 	return out
-}
-
-func contains(xs []string, x string) bool {
-	for _, y := range xs {
-		if y == x {
-			return true
-		}
-	}
-	return false
 }
 
 // guidePageExt is doc_types.GUIDE_PAGE_EXT.

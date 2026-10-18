@@ -42,18 +42,11 @@ func Checkout(t testing.TB, testdata string, withoutIndexes bool) string {
 }
 
 // Install copies a fixture database to dest with <ROOT> in its stored
-// fingerprint replaced by root (rawfixture.Install). Refresh makes it up to
-// date on Windows.
+// fingerprint replaced by root (rawfixture.Install); rawfixture.Refresh makes
+// it up to date on Windows.
 func Install(t testing.TB, fixture, dest, root string) {
 	t.Helper()
 	rawfixture.Install(t, fixture, dest, root)
-}
-
-// Refresh rewrites, on Windows only, the stored fingerprint of db (the index
-// of the data root base) to HostFingerprint(base).
-func Refresh(t testing.TB, db, base string) {
-	t.Helper()
-	rawfixture.Refresh(t, db, base, HostFingerprint)
 }
 
 // SetFingerprint rewrites the stored fingerprint of db: to value, or (value
