@@ -318,13 +318,11 @@ func TestSearchQuality(t *testing.T) {
 // TestQualityFixtureMatchesResearch keeps the copied question set equal to niagara-research
 // tools/tests/fixtures/golden-queries.jsonl while that file exists (skipped without a checkout).
 func TestQualityFixtureMatchesResearch(t *testing.T) {
+	// Opt-in like the other real-corpus checks (make parity sets it): the live
+	// checkout moves independently of this branch, so make check must not read it.
 	root := os.Getenv(QualityRootEnv)
 	if root == "" {
-		home, err := os.UserHomeDir()
-		if err != nil {
-			t.Skip("no " + QualityRootEnv + " and no home directory")
-		}
-		root = filepath.Join(home, "niagara-research")
+		t.Skip(QualityRootEnv + " unset: the fixture is compared with the live checkout only under make parity")
 	}
 	research, err := os.ReadFile(filepath.Join(root, "tools", "tests", "fixtures", "golden-queries.jsonl"))
 	if os.IsNotExist(err) {
