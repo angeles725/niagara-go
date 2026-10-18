@@ -26,7 +26,9 @@
   [90m[MANUAL][0m SEC-10 (high) syslog offload to SIEM  [B75/B396]
            observed: not checked (no --station config.bog)
            note    : pass --station <config.bog>
-  [92m[PASS  ][0m SEC-11 (med) weak signing keys / FIPS  [B113/B392]
+  [90m[SKIP  ][0m SEC-11 (med) weak signing keys / FIPS  [B113/B392]
+           observed: not checked (no security/truststore.jks); FIPS keystore absent
+           note    : run: keytool -list -v -keystore <home>/security/truststore.jks with the store password
   [96m[FAIL  ][0m SEC-15 (med) KeyRingPermission wildcard in unsigned module  [B114]
            observed: 3 modules declare it, 2 wildcard(name=*), 1 of those UNSIGNED
            secure  : no wildcard KeyRingPermission in an unsigned/attacker module

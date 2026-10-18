@@ -73,11 +73,11 @@
     "id": "SEC-11",
     "sev": "med",
     "title": "weak signing keys / FIPS",
-    "observed": "key sizes n/a; FIPS keystore absent",
-    "secure": "all keys >= 2048; FIPS suppresses RSA-1024 option",
-    "verdict": "PASS",
+    "observed": "not checked (no security/truststore.jks); FIPS keystore absent",
+    "secure": "RSA/DSA keys >= 2048 bits, EC keys >= 224 bits; FIPS suppresses RSA-1024 option",
+    "verdict": "SKIP",
     "block": "B113/B392",
-    "note": "RSA-1024 allowed with click-through warning"
+    "note": "run: keytool -list -v -keystore <home>/security/truststore.jks with the store password"
   },
   {
     "id": "SEC-15",

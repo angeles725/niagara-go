@@ -19,7 +19,9 @@
   [90m[MANUAL][0m SEC-10 (high) syslog offload to SIEM  [B75/B396]
            observed: not checked (no --station config.bog)
            note    : pass --station <config.bog>
-  [92m[PASS  ][0m SEC-11 (med) weak signing keys / FIPS  [B113/B392]
+  [90m[SKIP  ][0m SEC-11 (med) weak signing keys / FIPS  [B113/B392]
+           observed: not checked (no security/truststore.jks); FIPS keystore absent
+           note    : run: keytool -list -v -keystore <home>/security/truststore.jks with the store password
   [96m[FAIL  ][0m SEC-16 (med) local data record integrity (audit/history/backup/.bog)  [B393/B396]
            observed: unsigned by design (architectural)
            secure  : syslog offload (SEC-10) = resistance, not evidence
