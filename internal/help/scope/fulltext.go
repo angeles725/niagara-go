@@ -40,6 +40,9 @@ var (
 	lockPoll  = 100 * time.Millisecond // how often a waiting process retries the lock
 	lockWait  = 2 * time.Minute        // how long it waits before building anyway
 	lockStale = 10 * time.Minute       // a lock older than this is taken over, live pid or not
+	// lockFollowMax caps how long a search follows a heartbeating rebuild
+	// (a holder whose heartbeat outlives its hung work): then it builds anyway.
+	lockFollowMax = 30 * time.Minute
 	// guardStale is the age after which a takeover guard is abandoned.
 	guardStale = time.Minute
 )
@@ -160,13 +163,15 @@ func acquire(lock string) (mine []byte, err error) { return acquireLock(lock, ni
 // search never indexes a half-rewritten corpus; onWait runs once, when
 // that extra wait starts. A lock that stops moving (a plain index build, a
 // hung or remote holder) gets acquire's build-anyway lockWait after its last
-// move, and a dead holder's lock is still taken over (stale).
+// move, a new holder gets a fresh lockWait, a dead holder's lock is still
+// taken over (stale), and after lockFollowMax the search builds anyway.
 func acquireFollowing(lock string, onWait func(holder []byte)) ([]byte, error) {
 	return acquireLock(lock, onWait)
 }
 
 func acquireLock(lock string, onWait func(holder []byte)) (mine []byte, err error) {
-	deadline := time.Now().Add(lockWait)
+	start := time.Now()
+	deadline := start.Add(lockWait)
 	var lastSeen []byte
 	var lastMtime, lastMove time.Time
 	waiting := false
@@ -198,13 +203,16 @@ func acquireLock(lock string, onWait func(holder []byte)) (mine []byte, err erro
 		now := time.Now()
 		if rerr == nil && serr == nil {
 			if !bytes.Equal(seen, lastSeen) { // another holder: its moves count from now
+				if lastSeen != nil && onWait != nil {
+					deadline = now.Add(lockWait) // and it gets a full wait of its own
+				}
 				lastSeen, lastMtime, lastMove = seen, st.ModTime(), time.Time{}
 			} else if st.ModTime().After(lastMtime) {
 				lastMtime, lastMove = st.ModTime(), now
 			}
 		}
 		if now.After(deadline) {
-			if onWait == nil || lastMove.IsZero() || now.Sub(lastMove) > lockWait {
+			if onWait == nil || lastMove.IsZero() || now.Sub(lastMove) > lockWait || now.Sub(start) > lockFollowMax {
 				return nil, nil
 			}
 			if !waiting {
