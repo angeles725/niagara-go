@@ -29,10 +29,11 @@ recovered from this repository's history (the commit that retired it names the f
 
 Kept: class (with --jdk), search, package, method, slots (all modes), guide, guide-search,
 devguide, devguide-search, pdf, find, source (with --code, --grep), source-grep, stats,
-coverage (with --doc-jars, --sweep), freshness (with --all), selftest (with --recall), versions.
+coverage (with --doc-jars, --sweep), freshness (with --all), rebuild-all (with --only,
+--dry-run, --stamp-only), selftest (with --recall), versions.
 
-`coverage` was retired here first and then ported (S11: nh runs the reports and gates of
-`internal/helpbuild` in process, `docs/helpbuild.md`).
+`coverage` and `rebuild-all` were retired here first and then ported (S11: nh runs the
+reports, gates and index builders of `internal/helpbuild` in process, `docs/helpbuild.md`).
 
 Paths are under `tools/niagara_help_lib/` of the niagara-help repository.
 
@@ -76,7 +77,6 @@ Paths are under `tools/niagara_help_lib/` of the niagara-help repository.
 | `export-module` | `cli/cmd_export.py`, `module_export.py` | `pre-go-retire` (8410d7451) | alias of `export --module`; never ported |
 | `diff-api` | `cli/cmd_export.py`, `api_diff.py` | `pre-go-retire` (8410d7451) | never ported |
 | `build-call-index` | `cli/cmd_admin.py`, `../build_call_index.py` | `pre-go-retire` (8410d7451) | index builder: stays in Python until the Phase 4 builders |
-| `rebuild-all` | `cli/cmd_admin.py`, `maintenance.py` | `pre-go-retire` (8410d7451) | index maintenance: stays in Python until the Phase 4 builders (freshness is kept) |
 | `repl` | `cli/cmd_admin.py`, `cli/repl.py` | `pre-go-retire` (8410d7451) | never ported |
 
 ## mnav (module-navigator)

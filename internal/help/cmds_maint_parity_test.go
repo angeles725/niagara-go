@@ -188,7 +188,9 @@ func maintRun(t *testing.T, repo, install, seed string, side func() (string, str
 }
 
 // runPython runs the pinned niagara_help.py (its Python, not the Go shim:
-// NIAGARA_HELP_PYTHON=1, and no Go binary to exec) on repo.
+// NIAGARA_HELP_PYTHON=1, and no Go binary to exec) on repo. Its stdout is
+// unbuffered, so its own lines and a child builder's come in run order, as
+// on a terminal and as nh writes them.
 func runPython(t *testing.T, python, tools, repo string, argv []string) (string, string, int) {
 	t.Helper()
 	cmd := exec.Command(python, append([]string{"-B", filepath.Join(tools, "niagara_help.py")}, argv...)...)
@@ -201,7 +203,7 @@ func runPython(t *testing.T, python, tools, repo string, argv []string) (string,
 		}
 	}
 	cmd.Env = append(append(env, pyref.Env("niagara-help")...), EnvDir+"="+repo, "COLUMNS=100",
-		"NIAGARA_GO_BIN_DIR=/nonexistent", "PYTHONHASHSEED=0")
+		"NIAGARA_GO_BIN_DIR=/nonexistent", "PYTHONHASHSEED=0", "PYTHONUNBUFFERED=1")
 	var out, errb bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &out, &errb
 	code := 0

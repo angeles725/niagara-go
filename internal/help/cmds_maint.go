@@ -1,11 +1,13 @@
 package help
 
-// coverage (cli/cmd_export.py run_coverage), run in process through
+// coverage (cli/cmd_export.py run_coverage) and rebuild-all
+// (cli/cmd_admin.py run_rebuild_all), run in process through
 // internal/helpbuild: the class and guide coverage report (overview or one
-// module), the doc-jar gate (--doc-jars) and the whole-install sweep
-// (--sweep, after the doc-jar gate when both are given). helpbuild prints
-// the reports byte for byte as Python does; this file only maps them to
-// run_coverage's exit statuses. The dependency goes one way: help imports
+// module), the doc-jar gate (--doc-jars), the whole-install sweep (--sweep,
+// after the doc-jar gate when both are given) and the index rebuild with
+// its manifest stamp. helpbuild prints byte for byte what Python prints;
+// this file maps the results to Python's exit statuses and takes the build
+// lock around a rebuild. The dependency goes one way: help imports
 // helpbuild, never the reverse.
 
 import (
@@ -33,6 +35,16 @@ var maintCommands = []command{
 		run: func(e *Env, ns *argparse.Namespace) error {
 			return e.Coverage(CoverageParams{Module: ns.String("module"),
 				DocJars: ns.Bool("doc_jars"), Sweep: ns.Bool("sweep")})
+		}},
+	{name: "rebuild-all", help: "Rebuild all indexes in dependency order, then stamp the manifest",
+		args: func(p *argparse.Parser) {
+			p.Add(argparse.Arg{Help: "Only run builders whose script starts with this"}, "--only")
+			flag(p, "Print the build plan without executing", "--dry-run")
+			flag(p, "Record current corpus as the baseline without rebuilding", "--stamp-only")
+		},
+		run: func(e *Env, ns *argparse.Namespace) error {
+			return e.RebuildAll(helpbuild.RebuildOptions{Only: ns.String("only"),
+				DryRun: ns.Bool("dry_run"), StampOnly: ns.Bool("stamp_only")})
 		}},
 }
 
@@ -103,4 +115,24 @@ func (e *Env) fulltextDocs(root string) (map[string]bool, error) {
 		return nil, err
 	}
 	return helpbuild.FreshFulltextDocs(root)
+}
+
+// RebuildAll is run_rebuild_all: helpbuild.RebuildAll on the data root,
+// printing on nh's streams. Anything that writes (a build, --stamp-only)
+// runs under the build lock of the full-text index, so a search waits
+// instead of indexing a half-rewritten corpus; a dry run writes nothing and
+// takes no lock. --stamp-only wins over --dry-run, as in Python. Failed
+// builders still exit 0 (they are counted and the manifest is kept);
+// an error (a stream or the manifest that cannot be written, the lock held
+// by a live process) is "ERROR: ..." and exit 2.
+func (e *Env) RebuildAll(opt helpbuild.RebuildOptions) error {
+	opt.Stdout, opt.Stderr = e.Out, e.Err
+	rebuild := func() error {
+		_, err := helpbuild.RebuildAll(e.BaseDir, opt)
+		return err
+	}
+	if opt.DryRun && !opt.StampOnly {
+		return rebuild()
+	}
+	return scope.WithBuildLock(e.BaseDir, rebuild)
 }
