@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/nav/core"
+	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
@@ -40,11 +41,9 @@ func (r *Report) Scope() string {
 	}
 	return fmt.Sprintf("%s licensing calls (%s resolved to %s feature names, %s unresolved) in %s "+
 		"candidate files%s from %s submodules, token index built %s",
-		commas(len(r.Calls)), commas(resolved), commas(len(names)), commas(len(r.Calls)-resolved),
-		commas(r.Files), unreadable, commas(r.Modules), r.IndexBuilt)
+		pycompat.Commas(len(r.Calls)), pycompat.Commas(resolved), pycompat.Commas(len(names)), pycompat.Commas(len(r.Calls)-resolved),
+		pycompat.Commas(r.Files), unreadable, pycompat.Commas(r.Modules), r.IndexBuilt)
 }
-
-func commas(n int) string { return core.Commas(int64(n)) }
 
 // FeatureCalls is the license-feature match: the calls whose feature equals
 // name ignoring case, in submodule or module m when m is not empty.

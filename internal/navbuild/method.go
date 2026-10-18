@@ -59,7 +59,7 @@ func sourceFiles(entries []classIndexEntry, organized string) []sourceFile {
 // readSource is the builders' isfile check and open(errors="replace").read();
 // ok is false for a file that counts as failed.
 func readSource(path string) (string, bool) {
-	if !isFile(path) {
+	if !pycompat.IsFile(path) {
 		return "", false
 	}
 	content, err := pycompat.ReadTextReplace(path)

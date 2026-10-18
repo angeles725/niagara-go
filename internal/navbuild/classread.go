@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/index"
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // What the builders after the class index share: its entries read back, and
@@ -34,7 +35,7 @@ type classIndexEntry struct {
 // unexpected type are errors too (Python would die or index them oddly).
 func readClassIndex(baseDir string) ([]classIndexEntry, error) {
 	path := IndexPath(baseDir, ClassIndexFile)
-	if !isFile(path) {
+	if !pycompat.IsFile(path) {
 		return nil, fmt.Errorf("%s not found at %s. Run ./reindex.sh (it builds the indexes in dependency order)", ClassIndexFile, path)
 	}
 	v, err := index.LoadPython(path)

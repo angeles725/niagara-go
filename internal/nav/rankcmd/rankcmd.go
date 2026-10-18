@@ -14,6 +14,7 @@ import (
 	"github.com/angeles725/niagara-go/internal/nav/core"
 	"github.com/angeles725/niagara-go/internal/nav/lib/classrank"
 	"github.com/angeles725/niagara-go/internal/nav/registry"
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 const (
@@ -21,12 +22,6 @@ const (
 	xrefIndex  = classrank.XrefIndexFile
 	progressMB = 20 // indexes this large print a progress line (indexes.py)
 )
-
-// isFile is os.path.isfile.
-func isFile(p string) bool {
-	st, err := os.Stat(p)
-	return err == nil && st.Mode().IsRegular()
-}
 
 // progressStart is _progress_start: the progress line of a large index.
 func progressStart(env *registry.Env, path, name string) bool {
@@ -62,7 +57,7 @@ func warnStale(env *registry.Env, meta *index.Object, path string) {
 // xrefAbsent is _note_absent: true, after the NOTE indexes.load prints, when
 // the optional xref index does not exist.
 func xrefAbsent(env *registry.Env, src classrank.Source) bool {
-	if isFile(src.XrefIndex) {
+	if pycompat.IsFile(src.XrefIndex) {
 		return false
 	}
 	env.Load(xrefIndex, core.LoadOpts{Optional: true})

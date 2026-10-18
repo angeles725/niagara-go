@@ -27,11 +27,6 @@ func contains(xs []string, x string) bool {
 	return false
 }
 
-func isDir(p string) bool {
-	st, err := os.Stat(p)
-	return err == nil && st.IsDir()
-}
-
 func runeAt(s string, i int) (rune, int) {
 	if i < 0 || i >= len(s) {
 		return utf8.RuneError, 0
@@ -124,7 +119,7 @@ func (d *docIndex) target(organized, dir, sub string) docTarget {
 		}
 	}
 	if t.target != nil {
-		exists := isDir(filepath.Join(organized, *t.target))
+		exists := pycompat.IsDir(filepath.Join(organized, *t.target))
 		t.exists = &exists
 		if doc, ok := d.byModule[*t.target]; exists && ok {
 			t.doc = &doc

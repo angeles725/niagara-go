@@ -14,6 +14,8 @@ import (
 	"time"
 
 	"github.com/angeles725/niagara-go/internal/bajadocxml"
+	"github.com/angeles725/niagara-go/internal/help/fts"
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // classKey is a (package, simple name) pair; keys sort like Python tuples.
@@ -67,11 +69,11 @@ func relSlash(path, base string) string {
 // in sorted walk order (nothing when root is not a directory).
 func walkMatching(root string, pred func(name string) bool) []string {
 	var out []string
-	if !isDir(root) {
+	if !pycompat.IsDir(root) {
 		return out
 	}
-	walkSorted(root, func(path, name string) {
-		if pred(name) {
+	fts.WalkFiles(root, func(path string) {
+		if pred(filepath.Base(path)) {
 			out = append(out, path)
 		}
 	})
@@ -198,7 +200,7 @@ func groundTruth(baseDir string) recallTruth {
 	t := recallTruth{xmlFailed: map[string]bool{}}
 	failed := func(path string) { t.xmlFailed[relSlash(path, baseDir)] = true }
 	for _, d := range []string{"devguide", "guides"} {
-		if root := filepath.Join(baseDir, d); isDir(root) {
+		if root := filepath.Join(baseDir, d); pycompat.IsDir(root) {
 			t.xml = append(t.xml, iterBajadocClasses(root, failed)...)
 		}
 	}
@@ -243,7 +245,7 @@ func groundTruth(baseDir string) recallTruth {
 	for _, p := range walkMatching(droot, isDevguidePage) {
 		t.devguide = append(t.devguide, relSlash(p, droot))
 	}
-	if root := filepath.Join(baseDir, "jdk"); isDir(root) {
+	if root := filepath.Join(baseDir, "jdk"); pycompat.IsDir(root) {
 		t.jdk = iterBajadocClasses(root, failed)
 	}
 	for _, d := range []string{"devguide", "guides", "jdk"} {
@@ -265,43 +267,13 @@ func sortedMembers(set map[memberKey]bool) []memberKey {
 	return out
 }
 
-// walkSorted calls fn for every file under root in os.walk order with
-// sorted directories and sorted names (the _walk / iter_classes order).
-func walkSorted(root string, fn func(path, name string)) {
-	entries, err := os.ReadDir(root)
-	if err != nil {
-		return
-	}
-	var dirs, files []string
-	for _, d := range entries {
-		p := filepath.Join(root, d.Name())
-		if d.IsDir() || (d.Type()&os.ModeSymlink != 0 && isDir(p)) {
-			dirs = append(dirs, d.Name())
-		} else {
-			files = append(files, d.Name())
-		}
-	}
-	sort.Strings(dirs)
-	sort.Strings(files)
-	for _, n := range files {
-		fn(filepath.Join(root, n), n)
-	}
-	for _, d := range dirs {
-		p := filepath.Join(root, d)
-		if st, err := os.Lstat(p); err == nil && st.Mode()&os.ModeSymlink != 0 {
-			continue // os.walk lists a link to a directory but does not enter it
-		}
-		walkSorted(p, fn)
-	}
-}
-
 // iterBajadocClasses is iter_classes: every class of the .bajadoc files
 // under root (module-index.bajadoc excluded), each with its file. failed
 // receives every file that could not be parsed.
 func iterBajadocClasses(root string, failed func(path string)) []bajadocxml.Class {
 	var out []bajadocxml.Class
-	walkSorted(root, func(path, name string) {
-		if !strings.HasSuffix(name, ".bajadoc") || name == "module-index.bajadoc" {
+	fts.WalkFiles(root, func(path string) {
+		if name := filepath.Base(path); !strings.HasSuffix(name, ".bajadoc") || name == "module-index.bajadoc" {
 			return
 		}
 		classes, ok := bajadocxml.ParseFile(path)

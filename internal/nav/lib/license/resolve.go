@@ -2,7 +2,6 @@ package license
 
 import (
 	"database/sql"
-	"os"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -24,25 +23,11 @@ func newResolver(root string, db *sql.DB) *resolver {
 	return &resolver{root: root, db: db, files: map[string]*string{}, byClass: map[string][]string{}}
 }
 
-// ReadText is open(path, encoding="utf-8", errors="replace").read(): invalid
-// bytes as U+FFFD, universal newlines.
-func ReadText(p string) (string, bool) {
-	b, err := os.ReadFile(p)
-	if err != nil {
-		return "", false
-	}
-	s := pycompat.DecodeReplace(b)
-	if strings.IndexByte(s, '\r') >= 0 {
-		s = strings.ReplaceAll(strings.ReplaceAll(s, "\r\n", "\n"), "\r", "\n")
-	}
-	return s, true
-}
-
 // text is _text: the source of rel, ok=false when it cannot be read.
 func (r *resolver) text(rel string) (string, bool) {
 	t, seen := r.files[rel]
 	if !seen {
-		if s, ok := ReadText(filepath.Join(r.root, rel)); ok {
+		if s, err := pycompat.ReadTextReplace(filepath.Join(r.root, rel)); err == nil {
 			t = &s
 		}
 		r.files[rel] = t

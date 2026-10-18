@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/angeles725/niagara-go/internal/index"
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // The call graph index (build_callgraph_index.py): "Class.method" -> the
@@ -35,7 +36,7 @@ type Callgraph struct {
 func readParentMap(baseDir string) (map[string]string, bool, error) {
 	path := IndexPath(baseDir, InheritanceFile)
 	parents := map[string]string{}
-	if !isFile(path) {
+	if !pycompat.IsFile(path) {
 		return parents, false, nil
 	}
 	v, err := index.LoadPython(path)

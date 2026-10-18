@@ -6,7 +6,6 @@
 package codesearch
 
 import (
-	"os"
 	"strings"
 	"unicode/utf8"
 
@@ -17,39 +16,15 @@ import (
 // invalid bytes become U+FFFD, "\r\n" and a lone "\r" become "\n" (universal
 // newlines), and every line but possibly the last keeps its "\n".
 func ReadLines(path string) ([]string, error) {
-	b, err := os.ReadFile(path)
+	text, err := pycompat.ReadTextReplace(path)
 	if err != nil {
 		return nil, err
 	}
-	return splitKeep(pycompat.DecodeReplace(b)), nil
-}
-
-// splitKeep is the universal-newline readlines() of decoded text.
-func splitKeep(s string) []string {
-	if strings.IndexByte(s, '\r') >= 0 {
-		s = strings.ReplaceAll(strings.ReplaceAll(s, "\r\n", "\n"), "\r", "\n")
-	}
-	lines := strings.SplitAfter(s, "\n")
-	if lines[len(lines)-1] == "" {
-		lines = lines[:len(lines)-1]
-	}
-	return lines
+	return pycompat.Lines(text), nil
 }
 
 // RStrip is str.rstrip() with no argument (Python's Unicode whitespace).
 func RStrip(s string) string { return strings.TrimRightFunc(s, pycompat.IsSpace) }
-
-// cut is s[:n] in code points.
-func cut(s string, n int) string {
-	i := 0
-	for j := range s {
-		if i == n {
-			return s[:j]
-		}
-		i++
-	}
-	return s
-}
 
 // Ellipsis is the display cut of a source line or a name: s when it has at
 // most max code points, else its first max-3 code points and "...".
@@ -57,5 +32,5 @@ func Ellipsis(s string, max int) string {
 	if len(s) <= max || utf8.RuneCountInString(s) <= max {
 		return s
 	}
-	return cut(s, max-3) + "..."
+	return pycompat.Cut(s, max-3) + "..."
 }

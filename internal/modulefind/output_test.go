@@ -43,10 +43,4 @@ func TestJSONDumpsEnsureASCII(t *testing.T) {
 	if got := jsonDumps("a\"\\\n\x7fñ😀\xffabc"); got != `"a\"\\\n\u007f\u00f1\ud83d\ude00\ufffdabc"` {
 		t.Errorf("jsonDumps = %q", got)
 	}
-	var buf bytes.Buffer
-	writeCSV(&buf, []string{""})
-	writeCSV(&buf, []string{"a,b", `q"`, " lead"})
-	if buf.String() != "\"\"\r\n\"a,b\",\"q\"\"\", lead\r\n" {
-		t.Errorf("csv quoting: %q", buf.String())
-	}
 }

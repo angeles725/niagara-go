@@ -11,8 +11,10 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/angeles725/niagara-go/internal/help/fts"
 	"github.com/angeles725/niagara-go/internal/help/scope"
 	"github.com/angeles725/niagara-go/internal/index"
+	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 )
 
@@ -23,10 +25,10 @@ type fileCount struct{ files, bytes int }
 
 func countFiles(dir, ext string) fileCount {
 	var c fileCount
-	if !isDir(dir) {
+	if !pycompat.IsDir(dir) {
 		return c
 	}
-	pyWalkFiles(dir, func(path string) {
+	fts.WalkFiles(dir, func(path string) {
 		if strings.HasSuffix(filepath.Base(path), ext) {
 			c.files++
 			if st, err := os.Stat(path); err == nil {
@@ -87,7 +89,10 @@ func (e *Env) Stats(asJSON bool) error {
 	props, actions, topics := sum("slots-index", listOf("properties")), sum("slots-index", listOf("actions")), sum("slots-index", listOf("topics"))
 	methods := sum("method-index", func(o *index.Object, k string) int { v, _ := o.Get(k); return pyLen(v) })
 	edges := sum("xref-index", listOf("uses"))
-	lines := sum("source-index", func(o *index.Object, k string) int { return pyInt(get(o.Object(k), "lines", nil)) })
+	lines := sum("source-index", func(o *index.Object, k string) int {
+		n, _ := index.Int(get(o.Object(k), "lines", nil))
+		return int(n)
+	})
 	dgItems := 0
 	for _, s := range objList(idx["devguide-toc"], "sections") {
 		dgItems += listLen(s, "items")
@@ -131,7 +136,7 @@ func (e *Env) Stats(asJSON bool) error {
 		fmt.Fprintln(e.Out, pyjson.DumpsAny(data, pyjson.Indent2))
 		return nil
 	}
-	w := func(n int) string { return rjust(thousands(n), 6) }
+	w := func(n int) string { return pycompat.RJust(pycompat.Commas(n), 6, ' ') }
 	if vid == "" {
 		vid = "unregistered"
 	}
@@ -149,18 +154,18 @@ func (e *Env) Stats(asJSON bool) error {
 	fmt.Fprintf(out, "  guides-index.json      %s folders\n", w(n("guides-index")))
 	fmt.Fprintf(out, "  inheritance.json       %s entries\n", w(n("inheritance")))
 	fmt.Fprintf(out, "  pdf-index.json         %s PDFs\n", w(n("pdf-index")))
-	fmt.Fprintf(out, "  method-index.json      %s names (%s entries)\n", w(n("method-index")), thousands(methods))
-	fmt.Fprintf(out, "  source-index.json      %s classes (%s lines)\n", w(n("source-index")), thousands(lines))
-	fmt.Fprintf(out, "  xref-index.json        %s classes (%s edges)\n", w(n("xref-index")), thousands(edges))
+	fmt.Fprintf(out, "  method-index.json      %s names (%s entries)\n", w(n("method-index")), pycompat.Commas(methods))
+	fmt.Fprintf(out, "  source-index.json      %s classes (%s lines)\n", w(n("source-index")), pycompat.Commas(lines))
+	fmt.Fprintf(out, "  xref-index.json        %s classes (%s edges)\n", w(n("xref-index")), pycompat.Commas(edges))
 	fmt.Fprintf(out, "  slots-index.json       %s classes (%s props, %d actions, %d topics)\n",
-		w(n("slots-index")), thousands(props), actions, topics)
+		w(n("slots-index")), pycompat.Commas(props), actions, topics)
 	fmt.Fprintf(out, "\nTEXT SOURCES (%s MB total):\n\n", mb(totalBytes))
 	for _, d := range textDirs {
-		fmt.Fprintf(out, "  %s %s files  (%s MB)\n", ljust(d+"/", 17), w(text[d].files), mb(text[d].bytes))
+		fmt.Fprintf(out, "  %s %s files  (%s MB)\n", pycompat.LJust(d+"/", 17, ' '), w(text[d].files), mb(text[d].bytes))
 	}
 	fmt.Fprint(out, "\nRAW HTML:\n\n")
 	for _, d := range []string{"bajadoc", "devguide", "guides"} {
-		fmt.Fprintf(out, "  %s %s HTML\n", ljust(d+"/", 17), w(countFiles(filepath.Join(e.BaseDir, d), ".html").files))
+		fmt.Fprintf(out, "  %s %s HTML\n", pycompat.LJust(d+"/", 17, ' '), w(countFiles(filepath.Join(e.BaseDir, d), ".html").files))
 	}
 	fmt.Fprintf(out, "\nINDEXES: %d\nCLI: 53 commands + REPL\n", indexCount)
 	return nil

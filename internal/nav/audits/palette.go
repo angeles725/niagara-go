@@ -209,20 +209,15 @@ func findArtifacts(moduleDir string) []string {
 	var out []string
 	for _, n := range names {
 		dir := filepath.Join(moduleDir, n)
-		if !isDir(dir) {
+		if !pycompat.IsDir(dir) {
 			continue
 		}
 		if st, err := os.Stat(filepath.Join(dir, n+".jar")); (err == nil && st.Mode().IsRegular()) ||
-			isDir(filepath.Join(dir, "extracted")) {
+			pycompat.IsDir(filepath.Join(dir, "extracted")) {
 			out = append(out, n)
 		}
 	}
 	return out
-}
-
-func isDir(p string) bool {
-	st, err := os.Stat(p)
-	return err == nil && st.IsDir()
 }
 
 // collectModule is collect_module: the data of every artifact of
@@ -244,7 +239,7 @@ func runPaletteLexiconAgents(env *registry.Env, ns *argparse.Namespace) int {
 		// The script's default is the corpus, not the checkout (D39 e); pinned under nav.RunAt.
 		base = env.OrganizedDir()
 	}
-	if !isDir(base) {
+	if !pycompat.IsDir(base) {
 		fmt.Fprintf(env.Err, "ERROR: base-dir not found: %s\n", base)
 		return core.StatusError
 	}

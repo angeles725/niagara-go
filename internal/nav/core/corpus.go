@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/index"
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // The organized/ corpus (module_nav_lib/corpus.py):
@@ -24,7 +25,7 @@ func (r *Runtime) ResolveOrganized() (path, tried string) { return resolveDir(r.
 
 // resolveDir is (p, "") when p is a directory, else ("", p).
 func resolveDir(p string) (path, tried string) {
-	if isDir(p) {
+	if pycompat.IsDir(p) {
 		return p, ""
 	}
 	return "", p
@@ -55,7 +56,7 @@ func FindSourceRootAt(organized string, meta *index.Object) (path, message, hint
 		return path, "", ""
 	}
 	hint = "Set NAV_CORPUS_BASE to the organized/ directory."
-	if rec := metaSource(meta); rec != "" && isDir(rec) && realpath(rec) != realpath(tried) {
+	if rec := metaSource(meta); rec != "" && pycompat.IsDir(rec) && realpath(rec) != realpath(tried) {
 		hint = "The index was built from " + rec + ", which exists: export NAV_CORPUS_BASE=" + rec
 	}
 	return "", "corpus not found: " + tried, hint
@@ -69,7 +70,7 @@ var typeSuffixes = []string{"rt", "wb", "ux", "doc", "se"}
 
 // IsSubmodule is corpus.is_submodule: path holds pipeline output or its own JAR.
 func IsSubmodule(path string) bool {
-	if isFile(filepath.Join(path, filepath.Base(path)+".jar")) {
+	if pycompat.IsFile(filepath.Join(path, filepath.Base(path)+".jar")) {
 		return true
 	}
 	for _, m := range submoduleMarkers {
@@ -116,12 +117,12 @@ func IterSubmodules(organized string, skipped *[]string) []Submodule {
 	var out []Submodule
 	for _, module := range sortedNames(organized) {
 		mpath := filepath.Join(organized, module)
-		if !isDir(mpath) {
+		if !pycompat.IsDir(mpath) {
 			continue
 		}
 		for _, sub := range sortedNames(mpath) {
 			spath := filepath.Join(mpath, sub)
-			if !isDir(spath) {
+			if !pycompat.IsDir(spath) {
 				continue
 			}
 			if IsSubmodule(spath) {
@@ -168,7 +169,7 @@ func WalkJava(organized string, keep func(Submodule) bool, fn func(JavaFile) boo
 			switch {
 			case e.IsDir():
 				dirs = append(dirs, name)
-			case e.Type()&os.ModeSymlink != 0 && isDir(filepath.Join(dir, name)):
+			case e.Type()&os.ModeSymlink != 0 && pycompat.IsDir(filepath.Join(dir, name)):
 				dirs = append(dirs, name)
 				links[name] = true
 			default:

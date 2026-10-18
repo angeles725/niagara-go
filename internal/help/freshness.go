@@ -13,7 +13,9 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/angeles725/niagara-go/internal/help/fts"
 	"github.com/angeles725/niagara-go/internal/index"
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // freshnessDirs are SOURCE_DIRS: the raw corpus directories whose change
@@ -30,11 +32,11 @@ type dirPrint struct{ files, bytes int64 }
 // ext is given and no file has it. A file whose size cannot be read (a
 // dangling link) is not counted.
 func fingerprintDir(path, ext string) *dirPrint {
-	if !isDir(path) {
+	if !pycompat.IsDir(path) {
 		return nil
 	}
 	fp := &dirPrint{}
-	pyWalkFiles(path, func(p string) {
+	fts.WalkFiles(path, func(p string) {
 		if ext != "" && !strings.HasSuffix(lowerStr(filepath.Base(p)), ext) {
 			return
 		}
@@ -110,7 +112,7 @@ func fmtPrint(fp *dirPrint) string {
 	if fp == nil {
 		return "(absent)"
 	}
-	return fmt.Sprintf("%s files, %s bytes", thousands(int(fp.files)), thousands(int(fp.bytes)))
+	return fmt.Sprintf("%s files, %s bytes", pycompat.Commas(int(fp.files)), pycompat.Commas(int(fp.bytes)))
 }
 
 // fmtRecorded is _fmt of a recorded value that is not a plain fingerprint.
@@ -149,7 +151,7 @@ func (e *Env) freshness() error {
 		fmt.Fprintln(e.Out)
 		fmt.Fprintln(e.Out, "Current corpus:")
 		for _, d := range freshnessDirs {
-			fmt.Fprintf(e.Out, "  %s %s\n", ljust(d, 12), fmtPrint(current[d]))
+			fmt.Fprintf(e.Out, "  %s %s\n", pycompat.LJust(d, 12, ' '), fmtPrint(current[d]))
 		}
 		fmt.Fprintln(e.Out)
 		fmt.Fprintln(e.Out, "Run 'rebuild-all --stamp-only' to record the current indexes")
@@ -174,9 +176,9 @@ func (e *Env) freshness() error {
 		if status != "OK" {
 			stale = append(stale, d)
 		}
-		fmt.Fprintf(e.Out, "  %s %s now: %s\n", ljust(status, 14), ljust(d, 12), fmtPrint(now))
+		fmt.Fprintf(e.Out, "  %s %s now: %s\n", pycompat.LJust(status, 14, ' '), pycompat.LJust(d, 12, ' '), fmtPrint(now))
 		if status == "CHANGED" {
-			fmt.Fprintf(e.Out, "  %s %s was: %s\n", ljust("", 14), ljust("", 12), fmtRecorded(recorded, d))
+			fmt.Fprintf(e.Out, "  %s %s was: %s\n", pycompat.LJust("", 14, ' '), pycompat.LJust("", 12, ' '), fmtRecorded(recorded, d))
 		}
 	}
 	fmt.Fprintln(e.Out)
@@ -230,7 +232,7 @@ func isDocJar(name string) bool {
 func docJarSizes(install string) (map[string]int64, error) {
 	out := map[string]int64{}
 	modules := filepath.Join(install, "modules")
-	if isDir(modules) {
+	if pycompat.IsDir(modules) {
 		entries, err := os.ReadDir(modules)
 		if err != nil {
 			return nil, err
@@ -260,7 +262,7 @@ func installStatus(repoRoot, vid, install string) (string, error) {
 	if st, err := os.Stat(path); err != nil || !st.Mode().IsRegular() {
 		return "no jar manifest", nil
 	}
-	if install == "" || !isDir(install) {
+	if install == "" || !pycompat.IsDir(install) {
 		return "install absent", nil
 	}
 	m, err := index.LoadObject(path)
@@ -324,7 +326,7 @@ func (e *Env) freshnessAll() error {
 			return errs[i]
 		}
 		entry, _ := reg.Entry(vid)
-		fmt.Fprintf(e.Out, "  %s %s %s\n", ljust(vid, 12), ljust(entry.DataRoot, 20), statuses[i])
+		fmt.Fprintf(e.Out, "  %s %s %s\n", pycompat.LJust(vid, 12, ' '), pycompat.LJust(entry.DataRoot, 20, ' '), statuses[i])
 	}
 	return nil
 }

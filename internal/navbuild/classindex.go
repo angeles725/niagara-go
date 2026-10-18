@@ -239,7 +239,7 @@ func ScanClasses(organized string, zkmModules map[string]bool) (*ClassIndex, err
 // inventory's JSON shape is an error, where Python dies with a traceback.
 func LoadZKMModules(baseDir string) (map[string]bool, bool, error) {
 	path := IndexPath(baseDir, InventoryFile)
-	if !isFile(path) {
+	if !pycompat.IsFile(path) {
 		return map[string]bool{}, false, nil
 	}
 	text, err := pycompat.ReadText(path)

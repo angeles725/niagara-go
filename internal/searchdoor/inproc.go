@@ -1,7 +1,6 @@
 package searchdoor
 
 import (
-	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -9,6 +8,7 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/cli"
 	"github.com/angeles725/niagara-go/internal/corpusnav/blocksearch"
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // The backends, all in process (decisions D29, D30, D38, D42): the blocks source
@@ -218,9 +218,11 @@ func toolDir(script string, resolve bool) string {
 	return filepath.Dir(dir)
 }
 
-func isFile(p string) bool { st, err := os.Stat(p); return err == nil && st.Mode().IsRegular() }
-
-func isDir(p string) bool { st, err := os.Stat(p); return err == nil && st.IsDir() }
+// isFile and isDir are os.path.isfile/isdir for the inproc*.go handlers.
+var (
+	isFile = pycompat.IsFile
+	isDir  = pycompat.IsDir
+)
 
 // blocksFind is `corpus-nav find <query> --limit N [--and|--or]` (blocksJob) through
 // blocksearch, on the corpus corpus-nav.py would use: $CORPUS_NAV_ROOT, else the

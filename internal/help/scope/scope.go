@@ -21,6 +21,7 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/help/fts"
 	"github.com/angeles725/niagara-go/internal/index"
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 const docTypesExcluded = "images, fonts/css, JavaHelp .dat search indexes, " +
@@ -160,9 +161,9 @@ func indexCount(baseDir, name string, load Loader) (string, error) {
 			others, _ := getAny(data.Object(k), "others").([]any)
 			total += 1 + len(others)
 		}
-		return fmt.Sprintf("%s: %s names / %s classes", name, thousands(data.Len()), thousands(total)), nil
+		return fmt.Sprintf("%s: %s names / %s classes", name, pycompat.Commas(data.Len()), pycompat.Commas(total)), nil
 	}
-	return fmt.Sprintf("%s: %s entries", name, thousands(data.Len())), nil
+	return fmt.Sprintf("%s: %s entries", name, pycompat.Commas(data.Len())), nil
 }
 
 // dirCount is scope._dir_count: "<name>/: absent" or "<name>/: N files"
@@ -173,7 +174,7 @@ func dirCount(baseDir string, sources []fts.SourceDir, name string) string {
 	if path == "" {
 		path = filepath.Join(baseDir, name)
 	}
-	if !isDir(path) {
+	if !pycompat.IsDir(path) {
 		return name + "/: absent"
 	}
 	shared := ""
@@ -182,7 +183,7 @@ func dirCount(baseDir string, sources []fts.SourceDir, name string) string {
 			shared = " (shared from Niagara " + owner + ")"
 		}
 	}
-	return fmt.Sprintf("%s/: %s files%s", name, thousands(walkCount(path)), shared)
+	return fmt.Sprintf("%s/: %s files%s", name, pycompat.Commas(fts.CountFiles(path)), shared)
 }
 
 // Identify is versions.identify: the registered version whose data root is

@@ -22,14 +22,3 @@ func TestSuggestMatchesPython(t *testing.T) {
 		}
 	}
 }
-
-func TestPythonFormatting(t *testing.T) {
-	for n, want := range map[int]string{0: "0", 999: "999", 1000: "1,000", 6310: "6,310", -1234567: "-1,234,567"} {
-		if got := thousands(n); got != want {
-			t.Errorf("thousands(%d) = %q, want %q", n, got, want)
-		}
-	}
-	if got := ljust("é", 3) + "|" + rjust("é", 3) + "|" + headRunes("añbc", 2); got != "é  |  é|añ" {
-		t.Errorf("padding by code points: %q", got)
-	}
-}

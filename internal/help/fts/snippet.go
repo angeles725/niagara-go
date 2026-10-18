@@ -5,7 +5,6 @@ package fts
 // match.
 
 import (
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -14,18 +13,6 @@ import (
 
 // SnippetWidth is the default width of snippet and clip.
 const SnippetWidth = 160
-
-// readText is open(path, encoding="utf-8", errors="replace").read():
-// invalid UTF-8 becomes U+FFFD and universal newlines turn \r\n and \r into
-// \n. ok is false when the file cannot be read.
-func readText(path string) (string, bool) {
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return "", false
-	}
-	s := strings.ReplaceAll(pycompat.DecodeReplace(data), "\r\n", "\n")
-	return strings.ReplaceAll(s, "\r", "\n"), true
-}
 
 // isHeaderLine is fulltext_index._HEADER (`^([A-Z][A-Z ]*):\s?(.*)$`)
 // matching a line split at "\n": an upper-case key, then a colon.
@@ -66,8 +53,8 @@ func candidateLines(dirs []SourceDir, h *Hit) []numbered {
 	if dir == "" {
 		return nil
 	}
-	text, ok := readText(filepath.Join(dir, filepath.FromSlash(h.Path)))
-	if !ok {
+	text, err := pycompat.ReadTextReplace(filepath.Join(dir, filepath.FromSlash(h.Path)))
+	if err != nil {
 		return nil
 	}
 	lines := strings.Split(text, "\n")

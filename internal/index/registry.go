@@ -3,10 +3,11 @@ package index
 import (
 	"errors"
 	"fmt"
-	"os"
 	"path/filepath"
 	"sort"
 	"strings"
+
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // RegistryRel is the registry path relative to the repository root
@@ -44,7 +45,7 @@ type Entry struct {
 // when the file does not exist, like versions.load_registry returning None.
 func LoadRegistry(repoRoot string) (*Registry, error) {
 	path := filepath.Join(repoRoot, RegistryRel)
-	if !isFile(path) {
+	if !pycompat.IsFile(path) {
 		return nil, nil
 	}
 	o, err := LoadObject(path)
@@ -183,10 +184,4 @@ func Path(root, name string) string { return filepath.Join(root, "indexes", name
 
 // IsExtracted reports whether a data root holds a usable corpus: its
 // indexes/class-index.json exists (versions.py is_extracted).
-func IsExtracted(root string) bool { return isFile(Path(root, "class-index.json")) }
-
-// isFile is os.path.isfile: true for a regular file, following symlinks.
-func isFile(path string) bool {
-	st, err := os.Stat(path)
-	return err == nil && st.Mode().IsRegular()
-}
+func IsExtracted(root string) bool { return pycompat.IsFile(Path(root, "class-index.json")) }
