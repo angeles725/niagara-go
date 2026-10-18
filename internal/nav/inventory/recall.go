@@ -225,26 +225,24 @@ func runSelftest(env *registry.Env, ns *argparse.Namespace) int {
 		mode = ", sampled"
 	}
 	fmt.Fprintf(w, "recall %s%% (%s/%s declarations in %s files%s; 0 excluded; index %s entries built %s)\n",
-		core.Fixed(pct, 2), commas(found), commas(checked), commas(r.files), mode, commas(r.indexEntries), r.indexBuilt)
+		core.Fixed(pct, 2), pycompat.Commas(found), pycompat.Commas(checked), pycompat.Commas(r.files), mode, pycompat.Commas(r.indexEntries), r.indexBuilt)
 	for _, m := range r.missing[:min(20, len(r.missing))] {
 		fmt.Fprintf(w, "  MISSING %s  %s\n", m[0], m[1])
 	}
 	if len(r.missing) > 20 {
-		fmt.Fprintf(w, "  ... and %s more\n", commas(len(r.missing)-20))
+		fmt.Fprintf(w, "  ... and %s more\n", pycompat.Commas(len(r.missing)-20))
 	}
 	lost := r.lostSupertypes
 	fmt.Fprintf(w, "supertypes %s/%s declarations whose header names extends/implements have them in the index\n",
-		commas(r.withSupertypes-len(lost)), commas(r.withSupertypes))
+		pycompat.Commas(r.withSupertypes-len(lost)), pycompat.Commas(r.withSupertypes))
 	for _, l := range lost[:min(20, len(lost))] {
 		fmt.Fprintf(w, "  NO %s %s  %s\n", strings.ToUpper(strings.Join(l.keywords, "/")), l.name, l.rel)
 	}
 	if len(lost) > 20 {
-		fmt.Fprintf(w, "  ... and %s more\n", commas(len(lost)-20))
+		fmt.Fprintf(w, "  ... and %s more\n", pycompat.Commas(len(lost)-20))
 	}
 	if checked > 0 && len(r.missing) == 0 && len(lost) == 0 {
 		return 0
 	}
 	return core.StatusMiss
 }
-
-func commas(n int) string { return core.Commas(int64(n)) }

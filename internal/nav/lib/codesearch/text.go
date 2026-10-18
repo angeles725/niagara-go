@@ -26,23 +26,11 @@ func ReadLines(path string) ([]string, error) {
 // RStrip is str.rstrip() with no argument (Python's Unicode whitespace).
 func RStrip(s string) string { return strings.TrimRightFunc(s, pycompat.IsSpace) }
 
-// cut is s[:n] in code points.
-func cut(s string, n int) string {
-	i := 0
-	for j := range s {
-		if i == n {
-			return s[:j]
-		}
-		i++
-	}
-	return s
-}
-
 // Ellipsis is the display cut of a source line or a name: s when it has at
 // most max code points, else its first max-3 code points and "...".
 func Ellipsis(s string, max int) string {
 	if len(s) <= max || utf8.RuneCountInString(s) <= max {
 		return s
 	}
-	return cut(s, max-3) + "..."
+	return pycompat.Cut(s, max-3) + "..."
 }

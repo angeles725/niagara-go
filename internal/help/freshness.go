@@ -111,7 +111,7 @@ func fmtPrint(fp *dirPrint) string {
 	if fp == nil {
 		return "(absent)"
 	}
-	return fmt.Sprintf("%s files, %s bytes", thousands(int(fp.files)), thousands(int(fp.bytes)))
+	return fmt.Sprintf("%s files, %s bytes", pycompat.Commas(int(fp.files)), pycompat.Commas(int(fp.bytes)))
 }
 
 // fmtRecorded is _fmt of a recorded value that is not a plain fingerprint.
@@ -150,7 +150,7 @@ func (e *Env) freshness() error {
 		fmt.Fprintln(e.Out)
 		fmt.Fprintln(e.Out, "Current corpus:")
 		for _, d := range freshnessDirs {
-			fmt.Fprintf(e.Out, "  %s %s\n", ljust(d, 12), fmtPrint(current[d]))
+			fmt.Fprintf(e.Out, "  %s %s\n", pycompat.LJust(d, 12, ' '), fmtPrint(current[d]))
 		}
 		fmt.Fprintln(e.Out)
 		fmt.Fprintln(e.Out, "Run 'rebuild-all --stamp-only' to record the current indexes")
@@ -175,9 +175,9 @@ func (e *Env) freshness() error {
 		if status != "OK" {
 			stale = append(stale, d)
 		}
-		fmt.Fprintf(e.Out, "  %s %s now: %s\n", ljust(status, 14), ljust(d, 12), fmtPrint(now))
+		fmt.Fprintf(e.Out, "  %s %s now: %s\n", pycompat.LJust(status, 14, ' '), pycompat.LJust(d, 12, ' '), fmtPrint(now))
 		if status == "CHANGED" {
-			fmt.Fprintf(e.Out, "  %s %s was: %s\n", ljust("", 14), ljust("", 12), fmtRecorded(recorded, d))
+			fmt.Fprintf(e.Out, "  %s %s was: %s\n", pycompat.LJust("", 14, ' '), pycompat.LJust("", 12, ' '), fmtRecorded(recorded, d))
 		}
 	}
 	fmt.Fprintln(e.Out)
@@ -325,7 +325,7 @@ func (e *Env) freshnessAll() error {
 			return errs[i]
 		}
 		entry, _ := reg.Entry(vid)
-		fmt.Fprintf(e.Out, "  %s %s %s\n", ljust(vid, 12), ljust(entry.DataRoot, 20), statuses[i])
+		fmt.Fprintf(e.Out, "  %s %s %s\n", pycompat.LJust(vid, 12, ' '), pycompat.LJust(entry.DataRoot, 20, ' '), statuses[i])
 	}
 	return nil
 }

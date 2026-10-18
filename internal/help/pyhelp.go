@@ -10,8 +10,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"strconv"
-	"strings"
 	"unicode/utf8"
 
 	"github.com/angeles725/niagara-go/internal/index"
@@ -88,56 +86,8 @@ func listLen(o *index.Object, k string) int {
 	return len(arr)
 }
 
-// thousands is "{:,}".format(n).
-func thousands(n int) string {
-	s := strconv.Itoa(n)
-	neg := strings.HasPrefix(s, "-")
-	if neg {
-		s = s[1:]
-	}
-	var b strings.Builder
-	for i, c := range s {
-		if i > 0 && (len(s)-i)%3 == 0 {
-			b.WriteByte(',')
-		}
-		b.WriteRune(c)
-	}
-	if neg {
-		return "-" + b.String()
-	}
-	return b.String()
-}
-
 // runeLen is len(s) for a Python str.
 func runeLen(s string) int { return utf8.RuneCountInString(s) }
-
-// ljust is "{:<w}".format(s): padded by code points, never truncated.
-func ljust(s string, w int) string {
-	if n := runeLen(s); n < w {
-		return s + strings.Repeat(" ", w-n)
-	}
-	return s
-}
-
-// rjust is "{:>w}".format(s).
-func rjust(s string, w int) string {
-	if n := runeLen(s); n < w {
-		return strings.Repeat(" ", w-n) + s
-	}
-	return s
-}
-
-// headRunes is s[:n] by code points.
-func headRunes(s string, n int) string {
-	i := 0
-	for pos := range s {
-		if i == n {
-			return s[:pos]
-		}
-		i++
-	}
-	return s
-}
 
 // lowerStr is str.lower().
 func lowerStr(s string) string { return textfold.Lower(s) }

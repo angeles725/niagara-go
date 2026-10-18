@@ -4,8 +4,6 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
-	"strconv"
-	"strings"
 
 	"github.com/angeles725/niagara-go/internal/pycompat"
 )
@@ -31,17 +29,4 @@ func walkCount(dir string) int {
 		}
 	}
 	return n
-}
-
-// thousands is "{:,}".format(n) for n >= 0.
-func thousands(n int) string {
-	s := strconv.Itoa(n)
-	var b strings.Builder
-	for i, c := range s {
-		if i > 0 && (len(s)-i)%3 == 0 {
-			b.WriteByte(',')
-		}
-		b.WriteRune(c)
-	}
-	return b.String()
 }

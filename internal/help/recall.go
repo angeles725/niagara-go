@@ -391,12 +391,12 @@ func (e *Env) Recall(samples bool) error {
 		vid = e.BaseDir
 	}
 	fmt.Fprintf(e.Out, "RECALL %s (ground truth from raw sources, parsed in %.0fs)\n", vid, seconds)
-	fmt.Fprintf(e.Out, "  %s %s %s %s  note\n", ljust("command", 18), rjust("expected", 9),
-		rjust("found", 9), rjust("missed", 8))
+	fmt.Fprintf(e.Out, "  %s %s %s %s  note\n", pycompat.LJust("command", 18, ' '), pycompat.RJust("expected", 9, ' '),
+		pycompat.RJust("found", 9, ' '), pycompat.RJust("missed", 8, ' '))
 	bad := 0
 	for _, r := range rows {
-		fmt.Fprintf(e.Out, "  %s %s %s %s  %s\n", ljust(r.command, 18), rjust(thousands(r.expected), 9),
-			rjust(thousands(r.found), 9), rjust(thousands(r.missed), 8), r.note)
+		fmt.Fprintf(e.Out, "  %s %s %s %s  %s\n", pycompat.LJust(r.command, 18, ' '), pycompat.RJust(pycompat.Commas(r.expected), 9, ' '),
+			pycompat.RJust(pycompat.Commas(r.found), 9, ' '), pycompat.RJust(pycompat.Commas(r.missed), 8, ' '), r.note)
 		for _, m := range r.first {
 			fmt.Fprintf(e.Out, "      miss: %s\n", m)
 		}

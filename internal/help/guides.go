@@ -148,7 +148,7 @@ func (e *Env) Devguide(query string) error {
 		fmt.Fprintf(e.Out, "  [%s] %s\n", h.section, getStr(h.item, "title", "?"))
 		desc := pycompat.Strip(strings.ReplaceAll(getStr(h.item, "description", ""), "\n", " "))
 		if desc != "" {
-			fmt.Fprintf(e.Out, "    %s\n", headRunes(desc, 120))
+			fmt.Fprintf(e.Out, "    %s\n", pycompat.Cut(desc, 120))
 		}
 		fmt.Fprintf(e.Out, "    file: devguide/%s\n\n", getStr(h.item, "file", "?"))
 	}

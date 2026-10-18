@@ -11,6 +11,7 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/fnmatch"
 	"github.com/angeles725/niagara-go/internal/index"
+	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 )
 
@@ -178,7 +179,7 @@ func (e *Env) slotsByName(idx *index.Object, query, slotType string, asJSON bool
 // ellipsis shortens s to max code points: its first max-3 and "...".
 func ellipsis(s string, max int) string {
 	if runeLen(s) > max {
-		return headRunes(s, max-3) + "..."
+		return pycompat.Cut(s, max-3) + "..."
 	}
 	return s
 }

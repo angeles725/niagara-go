@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"strconv"
 	"strings"
-	"unicode/utf8"
 
 	"github.com/angeles725/niagara-go/internal/index"
 	"github.com/angeles725/niagara-go/internal/pycompat"
@@ -63,54 +62,17 @@ func numberRepr(n json.Number) string {
 	return pycompat.FloatRepr(f)
 }
 
-// Commas is "{:,}".format(n).
-func Commas(n int64) string {
-	s := strconv.FormatInt(n, 10)
-	neg := strings.HasPrefix(s, "-")
-	s = strings.TrimPrefix(s, "-")
-	var b strings.Builder
-	for i, c := range s {
-		if i > 0 && (len(s)-i)%3 == 0 {
-			b.WriteByte(',')
-		}
-		b.WriteRune(c)
-	}
-	if neg {
-		return "-" + b.String()
-	}
-	return b.String()
-}
+// Commas is "{:,}".format(n) (pycompat.Commas).
+func Commas(n int64) string { return pycompat.Commas(n) }
 
 // Fixed is "{:.Nf}".format(f) (round half to even on exact ties, like Python).
 func Fixed(f float64, prec int) string { return strconv.FormatFloat(f, 'f', prec, 64) }
 
 // LJust is "{:<w}"/"{:w}" of a string: padded on the right to w code points.
-func LJust(s string, w int) string {
-	if n := utf8.RuneCountInString(s); n < w {
-		return s + strings.Repeat(" ", w-n)
-	}
-	return s
-}
+func LJust(s string, w int) string { return pycompat.LJust(s, w, ' ') }
 
 // RJust is "{:>w}": padded on the left to w code points.
-func RJust(s string, w int) string {
-	if n := utf8.RuneCountInString(s); n < w {
-		return strings.Repeat(" ", w-n) + s
-	}
-	return s
-}
+func RJust(s string, w int) string { return pycompat.RJust(s, w, ' ') }
 
 // Cut is s[:n] in code points.
-func Cut(s string, n int) string {
-	if len(s) <= n {
-		return s
-	}
-	i := 0
-	for j := range s {
-		if i == n {
-			return s[:j]
-		}
-		i++
-	}
-	return s
-}
+func Cut(s string, n int) string { return pycompat.Cut(s, n) }
