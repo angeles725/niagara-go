@@ -1,0 +1,2 @@
+["out", ""]
+["missing", "index indexes/class-index.json is missing under <dir>; rebuild the indexes with: python3 tools/niagara_help.py rebuild-all"]
