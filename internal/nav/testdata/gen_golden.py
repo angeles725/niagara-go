@@ -34,6 +34,9 @@ LIC_BASE = "fixture/lic"
 CG_BASE = "fixture/cg"
 STATS_BASE = "fixture/stats/base"
 PLA_BASE = "fixture/pla"
+RECALL = {"NAV_CORPUS_BASE": "fixture/recall/organized"}
+RECALL_CLEAN = {"NAV_CORPUS_BASE": "fixture/recall/clean"}
+RECALL_BASE = "fixture/recall/base"
 
 CLASS_NAMES = ["BAlarmService", "BAlarmClass", "BAlarmRecord", "AlarmDbConnection", "BAckState",
                "AlarmSupport", "BAlarmArchive", "BAlarmablePointMarkerTag", "BAlarm", "Entry",
@@ -220,6 +223,14 @@ CASES = [
     ("palette-lexicon-agents-empty-json", ["palette-lexicon-agents", "empty", "--json"], NO_CORPUS, PLA_BASE),
     ("palette-lexicon-agents-missing", ["palette-lexicon-agents", "nope"], NO_CORPUS, PLA_BASE),
     ("palette-lexicon-agents-missing-json", ["palette-lexicon-agents", "nope", "--json"], NO_CORPUS, PLA_BASE),
+    ("selftest", ["selftest", "--recall"], RECALL, RECALL_BASE),
+    ("selftest-sample", ["selftest", "--recall", "--sample", "3"], RECALL, RECALL_BASE),
+    ("selftest-sample-all", ["selftest", "--recall", "--sample", "50"], RECALL, RECALL_BASE),
+    ("selftest-clean", ["selftest", "--recall"], RECALL_CLEAN, RECALL_BASE),
+    ("selftest-none", ["selftest", "--sample", "2"], RECALL, RECALL_BASE),
+    ("selftest-no-corpus", ["selftest", "--recall"], NO_CORPUS, RECALL_BASE),
+    ("selftest-no-index", ["selftest", "--recall"], RECALL, "fixture/recall/no-base"),
+    ("selftest-bad-index", ["selftest", "--recall"], RECALL, "fixture/recall/bad-base"),
 ]
 
 
@@ -744,6 +755,55 @@ def build_pla():
         f.write("no jar, no extracted/\n")
 
 
+# selftest --recall: one .java file per directory (os.walk order is the
+# file system's, so a directory never holds two) with annotated, modified,
+# record and @interface declarations, a header split over lines with type
+# arguments and comments, a declaration missing from the index, one indexed
+# without its supertypes, an original docSource source checked through its
+# vineflower path, and a corpus where everything is indexed (exit 0); a
+# missing and a malformed class index.
+RECALL_SOURCES = {
+    "m/m-rt/vineflower/a/A.java": "@Deprecated @SuppressWarnings(\"x\")\npublic final class A extends B {}\n"
+                                  "class A2 {}\n",
+    "m/m-rt/vineflower/a/b/C.java": "public non-sealed class C<T extends X>\n  // implements nothing\n"
+                                    "  extends D<Y> /* implements */ implements E {\n}\n",
+    "m/m-rt/vineflower/a/b/c/R.java": "public record R(int x) implements Q {}\n@interface Note {}\n",
+    "m/m-rt/vineflower/a/b/c/d/Missing.java": "enum Missing { A }\n",
+    "m/m-rt/vineflower/a/b/c/d/e/Lost.java": "abstract class Lost extends Base implements I {}\n",
+    "docSource/docSource-doc/extracted/x/Orig.java": "public interface Orig extends Base {}\n",
+}
+RECALL_INDEX = {
+    "A": [{"path": "m/m-rt/vineflower/a/A.java", "extends": "B"}],
+    "A2": [{"path": "m/m-rt/vineflower/a/A.java"}],
+    "C": [{"path": "m/m-rt/vineflower/a/b/C.java", "extends": "D", "implements": ["E"]}],
+    "R": [{"path": "m/m-rt/vineflower/a/b/c/R.java", "implements": ["Q"]}],
+    "Note": [{"path": "m/m-rt/vineflower/a/b/c/R.java"}],
+    "Lost": [{"path": "m/m-rt/vineflower/a/b/c/d/e/Lost.java", "extends": "Base"},
+             {"path": "m/m-rt/vineflower/a/b/c/d/e/Lost.java", "implements": ["I"], "outer_class": "X"}],
+    "Orig": [{"path": "docSource/docSource-doc/vineflower/x/Orig.java", "extends": "Base"}],
+}
+
+
+def build_recall():
+    fx = os.path.join(HERE, "fixture", "recall")
+    shutil.rmtree(fx, ignore_errors=True)
+    for corpus, sources in (("organized", RECALL_SOURCES),
+                            ("clean", {k: v for k, v in RECALL_SOURCES.items()
+                                       if "Missing" not in k and "Lost" not in k})):
+        for rel, text in sources.items():
+            path = os.path.join(fx, corpus, rel)
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            with open(path, "w", encoding="utf-8") as f:
+                f.write(text)
+    os.makedirs(os.path.join(fx, "base", "indexes"))
+    with open(os.path.join(fx, "base", "indexes", "class-index.json"), "w", encoding="utf-8") as f:
+        json.dump({"_meta": {"timestamp": "2026-05-06T07:08:09"}, "classes": RECALL_INDEX}, f)
+    os.makedirs(os.path.join(fx, "no-base"))
+    os.makedirs(os.path.join(fx, "bad-base", "indexes"))
+    with open(os.path.join(fx, "bad-base", "indexes", "class-index.json"), "w", encoding="utf-8") as f:
+        f.write('{"_meta": {}, "classes": ')
+
+
 def build_fixture():
     fx = os.path.join(HERE, "fixture")
     shutil.rmtree(fx, ignore_errors=True)
@@ -802,7 +862,8 @@ def capture(cid, args, env, base=BASE):
 def main():
     """--fixture rebuilds every fixture; --search only the grep/source/token one,
     --lic only the license/resources one, --cg only the call graph one, --stats
-    only the stats ones, --pla only the palette-lexicon-agents one.
+    only the stats ones, --pla only the palette-lexicon-agents one, --recall
+    only the selftest one.
     --only a,b captures just those case ids (without the nav- prefix)."""
     if "--fixture" in sys.argv:
         build_fixture()
@@ -817,6 +878,8 @@ def main():
         build_stats()
     if "--fixture" in sys.argv or "--pla" in sys.argv:
         build_pla()
+    if "--fixture" in sys.argv or "--recall" in sys.argv:
+        build_recall()
     only = set(sys.argv[sys.argv.index("--only") + 1].split(",")) if "--only" in sys.argv else None
     fresh_class_index()
     for cid, args, env, *base in CASES:
