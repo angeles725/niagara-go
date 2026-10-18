@@ -201,7 +201,8 @@ func TestRecallReal(t *testing.T) {
 	}
 	got := *rows["total"]
 	// 2026-10-17: L10.24 is verified live (from the exported CSV), no longer predicted.
-	pinned := Counts{Items: 370, Predicted: 39, Unverified: 20, Corrected: 10, Identical: 50, Verified: 5, Written: 258}
+	// 2026-10-18: every verified marker is live (L10.23, L10.24 and the exam's file status); none offline yet.
+	pinned := Counts{Items: 370, Predicted: 39, Unverified: 20, Corrected: 10, Identical: 50, Verified: 5, Live: 5, Written: 258}
 	if got != pinned {
 		t.Errorf("totals = %+v, want %+v", got, pinned)
 	}

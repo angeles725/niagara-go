@@ -113,7 +113,7 @@ func buildParser() (*argparse.Parser, map[string]*argparse.Parser) {
 	vp.Add(installArg, "--install")
 	vp.Add(sourceArg, "--source")
 	vp.Add(labsrcArg, "--labsrc")
-	vp.Add(argparse.Arg{Metavar: "YYYY-MM-DD", Help: "date written in the suggested *(verified live ...)* lines (default: today)"}, "--date")
+	vp.Add(argparse.Arg{Metavar: "YYYY-MM-DD", Help: "date written in the suggested *(verified live|offline ...)* lines (default: today)"}, "--date")
 	vp.Add(jsonHelp, "--json")
 	fd := add("find", "items whose step or answer matches a regexp: group, ID, status and the first matching line")
 	fd.Add(argparse.Arg{Metavar: "REGEXP", Help: "a Go regexp (RE2), matched line by line"}, "query")
@@ -125,7 +125,7 @@ func buildParser() (*argparse.Parser, map[string]*argparse.Parser) {
 	vf.Add(installArg, "--install")
 	vf.Add(sourceArg, "--source")
 	vf.Add(labsrcArg, "--labsrc")
-	vf.Add(argparse.Arg{Metavar: "YYYY-MM-DD", Help: "date written in the suggested *(verified live ...)* lines (default: today)"}, "--date")
+	vf.Add(argparse.Arg{Metavar: "YYYY-MM-DD", Help: "date written in the suggested *(verified live|offline ...)* lines (default: today)"}, "--date")
 	vf.Add(jsonHelp, "--json")
 	return p, subs
 }

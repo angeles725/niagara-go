@@ -56,8 +56,41 @@ func TestDecidePrediction(t *testing.T) {
 		}
 	}
 	if got := Suggestion("L1.1", "2026-10-17", []LinkedResult{pass, pass2}); got !=
-		"L1.1: *(verified live 2026-10-17)* evidence: C1.1 found 1; C1.2 x = 1 (stored)" {
-		t.Errorf("suggestion %q", got)
+		"L1.1: *(verified offline 2026-10-17)* evidence: C1.1 found 1; C1.2 x = 1 (stored)" {
+		t.Errorf("suggestion %q (checks of no station kind: offline)", got)
+	}
+}
+
+// The marker is live only when every linked check reads a station; a jar, source-text or
+// annotation check makes it offline.
+func TestSuggestionEvidence(t *testing.T) {
+	r := func(id, kind string) LinkedResult {
+		return LinkedResult{Result: Result{Check: &Check{ID: id, Kind: kind}, Verdict: Pass, Evidence: "ok"}}
+	}
+	cases := []struct {
+		results []LinkedResult
+		want    string
+	}{
+		{[]LinkedResult{r("C1", kindSlot), r("C2", kindLink), r("C3", kindFileText), r("C4", kindTrend)}, "live"},
+		{[]LinkedResult{r("C1", kindFiles), r("C2", kindAudit), r("C3", kindLog), r("C4", kindType)}, "live"},
+		{[]LinkedResult{r("C1", kindJarText)}, "offline"},
+		{[]LinkedResult{r("C1", kindSourceText)}, "offline"},
+		{[]LinkedResult{r("C1", kindAnnotation)}, "offline"},
+		{[]LinkedResult{r("C1", kindSlot), r("C2", kindJarSigned)}, "offline"},
+	}
+	for i, c := range cases {
+		if got := Suggestion("L1.1", "2026-10-18", c.results); !strings.HasPrefix(got, "L1.1: *(verified "+c.want+" 2026-10-18)*") {
+			t.Errorf("case %d: %q, want the %s marker", i, got, c.want)
+		}
+	}
+}
+
+// Every kind the spec uses has an evidence kind: a new kind cannot default to live silently.
+func TestEvidenceOfEveryKind(t *testing.T) {
+	for _, ck := range Spec {
+		if e := evidenceOf[ck.Kind]; e != key.EvidenceLive && e != key.EvidenceOffline {
+			t.Errorf("%s: kind %s has no evidence kind", ck.ID, ck.Kind)
+		}
 	}
 }
 

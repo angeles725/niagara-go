@@ -1,11 +1,12 @@
-group  items  predicted  unverified  corrected  identical  verified  written
-L1         6          1           1          0          1         0        4
-L2         4          1           1          1          1         0        2
-LB         1          1           0          0          0         0        0
-LA         2          0           0          0          0         1        1
-RA1        7          0           0          0          0         0        7
-RA2        1          0           0          0          0         0        1
-RAX        1          0           1          0          0         0        0
-EXAM       2          0           0          0          0         2        0
-total     24          3           3          1          2         3       15
-an item counts under every status it carries; written = none of them
+group  items  predicted  unverified  corrected  identical  verified  live  offline  written
+L1         6          1           1          0          1         0     0        0        4
+L2         4          1           1          1          1         0     0        0        2
+LB         1          1           0          0          0         0     0        0        0
+LA         2          0           0          0          0         2     1        1        0
+RA1        7          0           0          0          0         0     0        0        7
+RA2        1          0           0          0          0         0     0        0        1
+RAX        1          0           1          0          0         0     0        0        0
+EXAM       2          0           0          0          0         2     2        0        0
+total     24          3           3          1          2         4     3        1       14
+an item counts under every status it carries; written = none of them;
+live, offline: the verified items by the evidence of their markers (station, or jar/source)

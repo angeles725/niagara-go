@@ -14,7 +14,7 @@ L11.32         PARTIAL    C11.13 PASS: 3 of 3: Drivers/TrafficLightDriverNetwork
 
 suggested updates (CONFIRMED only; course never edits the answer key):
 L4.13: *(verified live 2026-10-17)* evidence: C4.5 Lab4/My Tstat.diff = 2.0 (stored)
-L10.6–L10.7: *(verified live 2026-10-17)* evidence: C10.7 modules/training-rt.jar!META-INF/module.xml has name="history-rt", name="file-rt", name="bql-rt"
+L10.6–L10.7: *(verified offline 2026-10-17)* evidence: C10.7 modules/training-rt.jar!META-INF/module.xml has name="history-rt", name="file-rt", name="bql-rt"
 L10.24: *(verified live 2026-10-17)* evidence: C10.8 10 of 10 files: shared/GoodStation_NumericWritable.csv:1 = history:GoodStation/NumericWritable; C10.9 10 of 10 files: shared/GoodStation_NumericWritable.csv:3 = Timestamp,Trend Flags,Status,Value; C10.10 10 of 10 files: shared/GoodStation_NumericWritable.csv: 2 lines match
 L11.25: *(verified live 2026-10-17)* evidence: C11.9 Drivers/TrafficLightDriverNetwork/tcpConfig.address.ipAddress = localhost (stored); C11.10 Drivers/TrafficLightDriverNetwork/tcpConfig.address.port = 23 (stored)
 predicted 12: CONFIRMED 4, PARTIAL 6, CONTRADICTED 0, UNDECIDED 2; 18 checks run; station GoodStation (237 components, 16 links), install install

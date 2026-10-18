@@ -1,5 +1,7 @@
 package check
 
+import "github.com/angeles725/niagara-go/internal/course/key"
+
 // Check kinds.
 const (
 	kindType       = "type"        // components of Type (under a Within ancestor) counted against N
@@ -17,6 +19,18 @@ const (
 	kindSourceText = "source-text" // the matches of Match in the source-tree file Glob counted against N
 	kindAnnotation = "annotation"  // the Fact the annotations of the lab-source file Glob declare equals Want
 )
+
+// evidenceOf is the evidence kind of a verified marker each check kind gives (key.EvidenceLive,
+// key.EvidenceOffline): live for what a station stores (its bog, the files in its directory, its
+// histories), offline for what holds no station (a jar of the install, the source tree, the lab
+// sources). TestEvidenceOfEveryKind fails on a spec kind missing here.
+var evidenceOf = map[string]string{
+	kindType: key.EvidenceLive, kindSlot: key.EvidenceLive, kindLink: key.EvidenceLive,
+	kindFiles: key.EvidenceLive, kindFileText: key.EvidenceLive,
+	kindAudit: key.EvidenceLive, kindLog: key.EvidenceLive, kindTrend: key.EvidenceLive,
+	kindJar: key.EvidenceOffline, kindJarEntry: key.EvidenceOffline, kindJarText: key.EvidenceOffline,
+	kindJarSigned: key.EvidenceOffline, kindSourceText: key.EvidenceOffline, kindAnnotation: key.EvidenceOffline,
+}
 
 // Count operators.
 const (

@@ -107,14 +107,26 @@ func Decide(results []LinkedResult) (string, string) {
 	return Partial, joinResults(results, "") + "; not observed: " + strings.Join(notes, "; ")
 }
 
-// suggestion is the line a human (or an agent) applies to a CONFIRMED item; course never edits
-// the answer key.
+// Evidence is the evidence kind of the marker the checks of an item give it: live only when every
+// one of them reads a station (evidenceOf), offline otherwise (a jar, the source tree or the lab
+// sources decided at least part of it).
+func Evidence(results []LinkedResult) string {
+	for _, r := range results {
+		if evidenceOf[r.Kind] != key.EvidenceLive {
+			return key.EvidenceOffline
+		}
+	}
+	return key.EvidenceLive
+}
+
+// Suggestion is the line a human (or an agent) applies to a CONFIRMED item, with the marker of
+// its Evidence; course never edits the answer key.
 func Suggestion(id, date string, results []LinkedResult) string {
 	ev := make([]string, len(results))
 	for i, r := range results {
 		ev[i] = r.ID + " " + r.Evidence
 	}
-	return fmt.Sprintf("%s: *(verified live %s)* evidence: %s", id, date, strings.Join(ev, "; "))
+	return fmt.Sprintf("%s: *(verified %s %s)* evidence: %s", id, Evidence(results), date, strings.Join(ev, "; "))
 }
 
 // LinkedChecks are the checks linked to at least one item keep selects, once each, in item order.

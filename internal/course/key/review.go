@@ -155,6 +155,7 @@ func parseReview(c *Corpus, lines []string) {
 				it.Ranges = nil
 			}
 			it.Status = markers(strings.Join(cells, " "), inherited...)
+			it.Verified = evidence(strings.Join(cells, " "))
 			c.add(it)
 		}
 	}
@@ -255,7 +256,7 @@ func joinTraces(c *Corpus, traces []traceRow) {
 // line marks every problem verified.
 func parseExam(c *Corpus, lines []string) {
 	g := c.addGroup(&Group{Key: "EXAM", Title: "Certification exam"})
-	var fileStatus []string
+	var fileStatus, fileEvidence []string
 	var cur *Item
 	var body []string
 	fence := false
@@ -271,6 +272,7 @@ func parseExam(c *Corpus, lines []string) {
 		}
 		cur.Answer = strings.Join(body, "\n")
 		cur.Status = markers(cur.Answer, fileStatus...)
+		cur.Verified = evidence(cur.Answer, fileEvidence...)
 		c.add(cur)
 		cur, body = nil, nil
 	}
@@ -292,6 +294,9 @@ func parseExam(c *Corpus, lines []string) {
 			s := strings.ToLower(m[1])
 			if strings.HasPrefix(s, "verified") {
 				fileStatus = []string{"verified"}
+				if e := strings.Fields(strings.TrimRight(s, ".")); len(e) > 1 && (e[1] == EvidenceLive || e[1] == EvidenceOffline) {
+					fileEvidence = []string{e[1]} // "verified live." / "verified offline"; plain "verified" states none
+				}
 			} else if strings.Contains(s, "unverified") {
 				fileStatus = []string{"unverified"}
 			}

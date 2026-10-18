@@ -1,4 +1,5 @@
-group  items  predicted  unverified  corrected  identical  verified  written
-LA         2          0           0          0          0         1        1
-total      2          0           0          0          0         1        1
-an item counts under every status it carries; written = none of them
+group  items  predicted  unverified  corrected  identical  verified  live  offline  written
+LA         2          0           0          0          0         2     1        1        0
+total      2          0           0          0          0         2     1        1        0
+an item counts under every status it carries; written = none of them;
+live, offline: the verified items by the evidence of their markers (station, or jar/source)

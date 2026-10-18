@@ -43,6 +43,7 @@ func TestParseLabsFixture(t *testing.T) {
 		{"l2.3", nil, false, []Range{{15, 16}}},
 		{"L2.5", []string{"unverified", "corrected", "identical"}, true, []Range{{17, 18}}},
 		{"L2.6", []string{"predicted"}, true, []Range{{19, 20}}},
+		{"LA.1", []string{"verified"}, false, []Range{{25, 26}}},
 		{"LA.2", []string{"verified"}, false, []Range{{26, 26}}},
 	}
 	for _, ck := range checks {
@@ -54,6 +55,11 @@ func TestParseLabsFixture(t *testing.T) {
 		if !reflect.DeepEqual(it.Status, ck.status) || it.LiveRun != ck.live || !reflect.DeepEqual(it.Ranges, ck.ranges) {
 			t.Errorf("%s: status %v live %v ranges %v; want %v %v %v", ck.id, it.Status, it.LiveRun, it.Ranges,
 				ck.status, ck.live, ck.ranges)
+		}
+	}
+	for id, want := range map[string][]string{"LA.1": {"offline"}, "LA.2": {"live"}, "L1.3": nil} {
+		if it := c.Lookup(id); it == nil || !reflect.DeepEqual(it.Verified, want) {
+			t.Errorf("%s: verified evidence %v, want %v", id, it, want)
 		}
 	}
 	g, lb := c.Group("LB"), c.Lookup("LB.1")
@@ -109,5 +115,38 @@ func TestExpandRange(t *testing.T) {
 		if ok != (want != nil) || !reflect.DeepEqual(got, want) {
 			t.Errorf("expandRange(%q) = %v, %v; want %v", id, got, ok, want)
 		}
+	}
+}
+
+// A verified marker is live or offline; both are the verified status, each counted in its own column.
+func TestVerifiedEvidence(t *testing.T) {
+	cases := []struct {
+		text     string
+		verified bool
+		evidence []string
+	}{
+		{"*(verified live 2026-10-15)* two files", true, []string{"live"}},
+		{"*(verified offline 2026-10-18)* the jar", true, []string{"offline"}},
+		{"*(verified offline 2026-10-18)* then *(verified live 2026-10-19)*", true, []string{"live", "offline"}},
+		{"*(verified online 2026-10-18)*", false, nil},
+		{"*(verified offline 18-10-2026)*", false, nil},
+		{"verified offline 2026-10-18", false, nil},
+	}
+	for _, c := range cases {
+		st, ev := markers(c.text), evidence(c.text)
+		if hasVerified := reflect.DeepEqual(st, []string{"verified"}); hasVerified != c.verified || !reflect.DeepEqual(ev, c.evidence) {
+			t.Errorf("%q: status %v evidence %v; want verified %v evidence %v", c.text, st, ev, c.verified, c.evidence)
+		}
+	}
+	var n Counts
+	for _, ev := range [][]string{{"live"}, {"offline"}, {"live", "offline"}, nil} {
+		n.Add(&Item{Status: []string{"verified"}, Verified: ev})
+	}
+	if n.Verified != 4 || n.Live != 2 || n.Offline != 2 {
+		t.Errorf("counts %+v, want verified 4, live 2, offline 2", n)
+	}
+	it := &Item{Status: []string{"identical", "verified"}, Verified: []string{"live", "offline"}}
+	if got := it.StatusLabels(); !reflect.DeepEqual(got, []string{"identical", "verified (live, offline)"}) {
+		t.Errorf("labels %v", got)
 	}
 }

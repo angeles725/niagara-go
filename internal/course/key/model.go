@@ -45,6 +45,7 @@ type Item struct {
 	TextFile   string // relative path of the text the ranges point into, "" if none
 	Ranges     []Range
 	Status     []string // markers in vocabulary order; empty = written
+	Verified   []string // the evidence of the verified markers, in EvidenceKinds order ("live", "offline"); nil = none or unstated
 	LiveRun    bool
 	File       string
 	Line       int
@@ -70,8 +71,32 @@ func (it *Item) StatusList() []string {
 	return it.Status
 }
 
+// StatusLabels is StatusList with the evidence of a verified item spelled out: "verified (live)",
+// "verified (live, offline)"; a verified status of unstated evidence stays "verified".
+func (it *Item) StatusLabels() []string {
+	out := append([]string(nil), it.StatusList()...)
+	for i, s := range out {
+		if s == "verified" && len(it.Verified) > 0 {
+			out[i] = "verified (" + strings.Join(it.Verified, ", ") + ")"
+		}
+	}
+	return out
+}
+
+// HasEvidence reports whether one of the item's verified markers is of evidence kind e.
+func (it *Item) HasEvidence(e string) bool {
+	for _, x := range it.Verified {
+		if x == e {
+			return true
+		}
+	}
+	return false
+}
+
 // Counts is one row of course status: the items, then the items per status. An item counts under
-// every status it carries (the columns overlap); written = none of the others.
+// every status it carries (the columns overlap); written = none of the others. Live and Offline
+// split Verified by the evidence of the markers (an item with both counts in both; one whose
+// evidence is unstated, in neither).
 type Counts struct {
 	Items      int `json:"items"`
 	Predicted  int `json:"predicted"`
@@ -79,6 +104,8 @@ type Counts struct {
 	Corrected  int `json:"corrected"`
 	Identical  int `json:"identical"`
 	Verified   int `json:"verified"`
+	Live       int `json:"verified_live"`
+	Offline    int `json:"verified_offline"`
 	Written    int `json:"written"`
 }
 
@@ -101,11 +128,21 @@ func (r *Counts) Add(it *Item) {
 			r.Written++
 		}
 	}
+	if it.HasEvidence(EvidenceLive) {
+		r.Live++
+	}
+	if it.HasEvidence(EvidenceOffline) {
+		r.Offline++
+	}
 }
 
-// Values are the counts in column order: items, then Statuses.
+// CountColumns are the column names of Values.
+var CountColumns = []string{"items", "predicted", "unverified", "corrected", "identical", "verified", "live", "offline", "written"}
+
+// Values are the counts in column order: items, then Statuses with verified split into live and
+// offline right after it.
 func (r *Counts) Values() []int {
-	return []int{r.Items, r.Predicted, r.Unverified, r.Corrected, r.Identical, r.Verified, r.Written}
+	return []int{r.Items, r.Predicted, r.Unverified, r.Corrected, r.Identical, r.Verified, r.Live, r.Offline, r.Written}
 }
 
 // Group is a lab, a review assignment, the needs-a-run section or the exam.
@@ -226,9 +263,39 @@ var (
 	unverifiedRe = regexp.MustCompile(`\*\(unverified — not compiled\)\*`)
 	correctedRe  = regexp.MustCompile(`(?i)\*\*corrected\*\*`)
 	identicalRe  = regexp.MustCompile(`(?i)\*\*identical\*\*`)
-	// verifiedRe is an item confirmed on a live station after the key was written.
-	verifiedRe = regexp.MustCompile(`\*\(verified live \d{4}-\d{2}-\d{2}\)\*`)
+	// verifiedRe is an item confirmed after the key was written: live (from what a station
+	// stores: its bog, its files, its histories) or offline (from a jar, the source tree or the lab
+	// sources); the group is the evidence kind.
+	verifiedRe = regexp.MustCompile(`\*\(verified (live|offline) \d{4}-\d{2}-\d{2}\)\*`)
 )
+
+// The evidence kinds of a verified marker, in print order.
+const (
+	EvidenceLive    = "live"
+	EvidenceOffline = "offline"
+)
+
+// EvidenceKinds is the print order of Item.Verified.
+var EvidenceKinds = []string{EvidenceLive, EvidenceOffline}
+
+// evidence returns the evidence kinds of the verified markers in text, plus the inherited ones,
+// in EvidenceKinds order.
+func evidence(text string, inherited ...string) []string {
+	found := map[string]bool{}
+	for _, e := range inherited {
+		found[e] = true
+	}
+	for _, m := range verifiedRe.FindAllStringSubmatch(text, -1) {
+		found[m[1]] = true
+	}
+	var out []string
+	for _, e := range EvidenceKinds {
+		if found[e] {
+			out = append(out, e)
+		}
+	}
+	return out
+}
 
 // markers returns the Statuses whose marker occurs in text, plus the inherited ones.
 func markers(text string, inherited ...string) []string {

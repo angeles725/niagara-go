@@ -9,6 +9,6 @@ T1.1          UNDECIDED     no check covers it
 RA2.R1        CONFIRMED     CRA2.1 PASS: modules/Cristian_Angeles_Review-rt.jar!META-INF/module.xml has name="control-rt"
 
 suggested updates (CONFIRMED only; course never edits the answer key):
-RA1.M2: *(verified live 2026-10-17)* evidence: CRA1.1 modules/Cristian_Angeles_Review-rt.jar!META-INF/module.xml has moduleName="Cristian_Angeles_Review"
-RA2.R1: *(verified live 2026-10-17)* evidence: CRA2.1 modules/Cristian_Angeles_Review-rt.jar!META-INF/module.xml has name="control-rt"
+RA1.M2: *(verified offline 2026-10-17)* evidence: CRA1.1 modules/Cristian_Angeles_Review-rt.jar!META-INF/module.xml has moduleName="Cristian_Angeles_Review"
+RA2.R1: *(verified offline 2026-10-17)* evidence: CRA2.1 modules/Cristian_Angeles_Review-rt.jar!META-INF/module.xml has name="control-rt"
 written 8: CONFIRMED 2, PARTIAL 1, CONTRADICTED 1, UNDECIDED 4; 6 checks run; station ReviewStation (9 components, 0 links), install install
