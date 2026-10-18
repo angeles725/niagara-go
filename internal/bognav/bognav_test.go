@@ -221,11 +221,11 @@ func TestJSONEncoderErrorExits2WithEmptyStdout(t *testing.T) {
 	orig := commands["path"]
 	t.Cleanup(func() { commands["path"] = orig })
 	commands["path"] = func(e *env) (int, int) {
-		e.printJSON(row{{"ok", "x"}, {"bad", 1.5}}, 2)
+		e.printJSON(row{{"ok", "x"}, {"bad", []int{1}}}, 2)
 		return 0, -1
 	}
 	out, errOut, code := runMain(t, writeFile(t, "x.xml", []byte(testXML)), "path", "h:1", "--json")
-	if code != cli.ExitCannotSearch || out != "" || errOut != "bog-nav: json: unsupported value of type float64\n" {
+	if code != cli.ExitCannotSearch || out != "" || errOut != "bog-nav: pyjson.FromAny: unsupported []int\n" {
 		t.Errorf("code %d out %q err %q", code, out, errOut)
 	}
 }

@@ -33,9 +33,9 @@ func TestPyRepr(t *testing.T) {
 	}
 }
 
-// An unsupported value is an error, never a panic (until internal/pyjson replaces this encoder).
+// An unsupported value is an error, never a panic.
 func TestDumpsRejectsUnsupportedTypes(t *testing.T) {
-	if _, err := dumps(row{{"x", 1.5}}, 2); err == nil || err.Error() != "json: unsupported value of type float64" {
+	if _, err := dumps(row{{"x", []int{1}}}, 2); err == nil || err.Error() != "pyjson.FromAny: unsupported []int" {
 		t.Errorf("err = %v", err)
 	}
 	if got, err := dumps([]any{"a", 1}, -1); err != nil || got != `["a", 1]` {

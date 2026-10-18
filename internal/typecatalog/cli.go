@@ -77,11 +77,7 @@ func build(s cli.Stdio, dirs []string, out string) int {
 			tool, nfiles, strings.Join(dirs, ", "))
 		return cli.ExitNoMatch
 	}
-	data, err := cat.JSON()
-	if err != nil {
-		fmt.Fprintf(s.Err, "%s: %v\n", tool, err)
-		return cli.ExitCannotSearch
-	}
+	data := cat.JSON()
 	if out == "" { // Python: `if args.out:`
 		io.WriteString(s.Out, data+"\n")
 		return cli.ExitFound

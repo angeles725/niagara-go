@@ -2,7 +2,6 @@ package typecatalog
 
 import (
 	"bytes"
-	"math/big"
 	"os"
 	"path/filepath"
 	"strings"
@@ -125,15 +124,11 @@ func TestBuildKeepsBigFlagValues(t *testing.T) {
 func TestZeroDeclIsFlagsZero(t *testing.T) {
 	cat := &Catalog{}
 	cat.setDefault("p.BZ", &Record{Type: slotomatic.Type{Package: "p", Class: "BZ", Properties: []slotomatic.Decl{{Name: "z"}}}})
-	data, err := cat.JSON()
-	if err != nil || !strings.Contains(data, `"flags": 0,`) {
-		t.Errorf("JSON err %v\n%s", err, data)
+	if data := cat.JSON(); !strings.Contains(data, `"flags": 0,`) {
+		t.Errorf("JSON:\n%s", data)
 	}
 	if v, err := cat.view("p.BZ"); err != nil || v.groups[0][0].flags != "0" {
 		t.Errorf("view %+v err %v", v, err)
-	}
-	if _, err := dumps([]any{(*big.Int)(nil)}, 1); err == nil {
-		t.Error("a nil *big.Int was encoded")
 	}
 	if got := (slotomatic.Decl{}).FlagValue().Int64(); got != 0 {
 		t.Errorf("FlagValue = %d", got)

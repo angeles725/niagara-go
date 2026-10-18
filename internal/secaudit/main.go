@@ -109,11 +109,9 @@ func runScanLogs(dir string, asJSON bool, s cli.Stdio) int {
 		return cli.ExitCannotSearch
 	}
 	if asJSON {
-		keys := []string{"sev", "ioc", "file", "line", "text"}
-		objs := make([]pyjson.Value, len(hits))
+		objs := make([]any, len(hits))
 		for i, h := range hits {
-			objs[i] = jsonRecord(keys, jsonStr(h.sev), jsonStr(h.label), jsonStr(h.file),
-				pyjson.IntValue(int64(h.line)), jsonStr(h.text))
+			objs[i] = pyjson.Obj{{"sev", h.sev}, {"ioc", h.label}, {"file", h.file}, {"line", h.line}, {"text", h.text}}
 		}
 		fmt.Fprintln(s.Out, jsonDumps(objs))
 	} else {

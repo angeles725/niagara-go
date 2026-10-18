@@ -30,11 +30,10 @@ func (r *report) add(id, sev, title, observed, secure, verdict, block, note stri
 // dump prints the rows as JSON (in check order) or as the sorted text report.
 func (r *report) dump(w io.Writer, asJSON bool) {
 	if asJSON {
-		keys := []string{"id", "sev", "title", "observed", "secure", "verdict", "block", "note"}
-		objs := make([]pyjson.Value, len(r.rows))
+		objs := make([]any, len(r.rows))
 		for i, x := range r.rows {
-			objs[i] = jsonRecord(keys, jsonStr(x.id), jsonStr(x.sev), jsonStr(x.title), jsonStr(x.observed),
-				jsonStr(x.secure), jsonStr(x.verdict), jsonStr(x.block), jsonStr(x.note))
+			objs[i] = pyjson.Obj{{"id", x.id}, {"sev", x.sev}, {"title", x.title}, {"observed", x.observed},
+				{"secure", x.secure}, {"verdict", x.verdict}, {"block", x.block}, {"note", x.note}}
 		}
 		fmt.Fprintln(w, jsonDumps(objs))
 		return
@@ -89,21 +88,7 @@ func (r *report) dump(w io.Writer, asJSON bool) {
 		count("crit"), count("high"), count("med"), len(fails))
 }
 
-// jsonDumps is json.dumps(objs, indent=2) with the default ensure_ascii=True.
-func jsonDumps(objs []pyjson.Value) string {
-	return pyjson.Dumps(pyjson.Value{Kind: pyjson.Array, A: objs},
-		pyjson.DumpOpts{EnsureASCII: true, Indent: 2, ItemSep: ",", KeySep: ": "})
-}
-
-// jsonRecord is a JSON object with keys[i] mapped to vals[i], in that order.
-func jsonRecord(keys []string, vals ...pyjson.Value) pyjson.Value {
-	o := pyjson.NewObject()
-	for i, k := range keys {
-		o.Set(k, vals[i])
-	}
-	return o
-}
-
-// jsonStr is a JSON string. Text that is not valid UTF-8 (a file name) reads as one U+FFFD per
-// invalid byte, as the audit has always printed it (Python would show \udcXX surrogates).
-func jsonStr(s string) pyjson.Value { return pyjson.String(string([]rune(s))) }
+// jsonDumps is json.dumps(objs, indent=2) with the default ensure_ascii=True. A Go string that is
+// not valid UTF-8 (a file name) reads as one U+FFFD per invalid byte, as the audit has always
+// printed it (Python would show \udcXX surrogates).
+func jsonDumps(objs []any) string { return pyjson.DumpsAny(objs, pyjson.Indent2) }
