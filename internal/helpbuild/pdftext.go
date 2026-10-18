@@ -244,9 +244,23 @@ func runFailure(ctx context.Context, runErr error) error {
 	return runErr
 }
 
+// pageCount is the pages of text that is not only whitespace: every form
+// feed ends a page and text after the last one is one more page. pdftotext
+// 26.10.0 ends every page with a form feed, the last one too; extract_text
+// counts form feeds + 1, one page too many for it (an intended difference,
+// docs/helpbuild.md). Text without the trailing form feed counts the same
+// on both sides.
+func pageCount(text string) int {
+	n := strings.Count(text, "\f")
+	if !strings.HasSuffix(text, "\f") {
+		n++
+	}
+	return n
+}
+
 // ExtractPDFText is extract_text: `<pdftotext> -layout -enc UTF-8 <pdf> -`
 // with the timeout, the output decoded strictly as UTF-8, the bullet fix
-// applied, and the page count (form feeds + 1, 0 for text that is only
+// applied, and the page count (pageCount, 0 for text that is only
 // whitespace). A failure is a *PDFError.
 func ExtractPDFText(pdftotext, pdfPath string, timeout time.Duration) (text string, pages int, err error) {
 	out, err := runCapture([]string{pdftotext, "-layout", "-enc", "UTF-8", pdfPath, "-"}, timeout)
@@ -268,7 +282,7 @@ func ExtractPDFText(pdftotext, pdfPath string, timeout time.Duration) (text stri
 	}
 	text = FixUnmappedBullets(string(out))
 	if pycompat.Strip(text) != "" {
-		pages = strings.Count(text, "\f") + 1
+		pages = pageCount(text)
 	}
 	return text, pages, nil
 }

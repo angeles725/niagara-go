@@ -2,6 +2,8 @@ package helpbuild
 
 import (
 	"bytes"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -11,6 +13,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/angeles725/niagara-go/internal/pyjson"
 )
 
 // S3 parity: pdf_extractor.main() (testdata/parity/textdriver.py pdf) and
@@ -99,7 +103,51 @@ func pdfStep(t *testing.T, what, pyRoot, goRoot, pyBase, goBase, docs string, ti
 	}
 	gol := toolLines(goRoot, map[string]string{"stdout": res.Stdout()}, []string{"stdout"}, outcome)
 	diffLines(t, what+" stdout", py, gol)
-	diffLines(t, what+" tree", treeLines(t, pyRoot), treeLines(t, goRoot))
+	diffLines(t, what+" tree", pyPDFTreeLines(t, pyRoot, pyBase), treeLines(t, goRoot))
+}
+
+// pyPDFTreeLines is treeLines of the Python tree root with the intended
+// page-count difference taken out: in base's pdf-index.json every entry
+// whose docs-text/<stem>.txt ends with a form feed has one page less
+// (Python counts that trailing form feed as a page, Go does not). The file
+// on disk is left as Python wrote it, since the next step reads it back.
+func pyPDFTreeLines(t *testing.T, root, base string) []string {
+	t.Helper()
+	lines := treeLines(t, root)
+	path := filepath.Join(base, "indexes", "pdf-index.json")
+	v, err := loadJSON(path)
+	if err != nil || v.Kind != pyjson.Object {
+		return lines // missing or not an index: compared as it is
+	}
+	changed := false
+	for _, stem := range v.Keys {
+		e := v.M[stem]
+		p, ok := e.Get("pages")
+		if !ok || p.Kind != pyjson.Int || p.I.Sign() <= 0 {
+			continue
+		}
+		text, err := os.ReadFile(filepath.Join(base, "docs-text", stem+".txt"))
+		if err != nil || !bytes.HasSuffix(text, []byte("\f")) {
+			continue
+		}
+		e.Set("pages", pyjson.IntValue(p.I.Int64()-1))
+		changed = true
+	}
+	if !changed {
+		return lines // byte for byte: also an index the test wrote itself
+	}
+	data := []byte(pyjson.Dumps(v, DumpPDFIndex))
+	sum := sha256.Sum256(data)
+	rel, err := filepath.Rel(root, path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for i, l := range lines {
+		if f := strings.Fields(l); len(f) == 5 && f[0] == filepath.ToSlash(rel) {
+			lines[i] = fmt.Sprintf("%s %s %s %d %s", f[0], f[1], f[2], len(data), hex.EncodeToString(sum[:]))
+		}
+	}
+	return lines
 }
 
 // syntheticDocs writes the docs/ tree of the synthetic install: text over

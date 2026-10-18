@@ -266,6 +266,15 @@ S3/S4 intended differences (none changes an output Python produces):
   only, so once `a b.pdf` is removed, a failing `a_b.pdf` that takes its stem `a_b`
   would be indexed with the removed manual's text (safety over parity). The stale
   `.txt` stays until the next clean run prunes it, as in Python.
+- **Page count**: pdftotext 26.10.0 ends **every** page with a form feed, the last one
+  too, so `extract_text`'s `count('\f') + 1` reports one page more than the PDF has (its
+  comment says the last page has none; niagara-help keeps it, team decision D34). Go
+  counts `count('\f') + (0 if text.endswith('\f') else 1)`, right for both pdftotext
+  behaviours; text that is only whitespace is 0 pages on both sides. Measured: 4.14
+  `MtgWiring/12997(LON)-C.pdf` is 4 pages in `pdfinfo`, 5 in Python's index, 4 in Go's;
+  on EC-Net 4.3.58.18 every one of the 66 manuals drops by exactly 1 (3407 → 3341). The
+  parity tests compare Python's `pdf-index.json` with `pages` lowered by one wherever
+  the entry's `docs-text/<stem>.txt` ends with a form feed (`pyPDFTreeLines`).
 - **stdin** of pdftotext is the null device; Python lets it inherit stdin. pdftotext never
   reads it with `-` as the output file. stderr is dropped on both sides.
 - **`PDFOptions.DocsDir` ""** means "not given" (registry lookup); `--docs-dir ''` in Python
@@ -281,10 +290,6 @@ S3/S4 intended differences (none changes an output Python produces):
 
 Found while porting (the Python code wins, kept for parity):
 
-- pdftotext 26.10.0 ends **every** page with a form feed, the last one too, so
-  `extract_text`'s `count('\f') + 1` reports one page more than the PDF has; its comment
-  says the last page has none. `pages` in `pdf-index.json` is therefore N+1 (a blank
-  one-page PDF is 0: its text strips to nothing).
 - The parity driver shortens the 120 s timeout only for the timeout fixture
   (`HB_PDF_TIMEOUT` replaces `timeout=120` in the one `subprocess.run` call that passes it).
 

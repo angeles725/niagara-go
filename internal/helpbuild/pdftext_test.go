@@ -173,12 +173,15 @@ func TestRunFailure(t *testing.T) {
 	}
 }
 
-// Text that is only whitespace has no pages; the page count is the form
-// feeds + 1 otherwise.
+// Text that is only whitespace has no pages; otherwise every form feed
+// ends a page and text after the last one is one more page, so a trailing
+// form feed (pdftotext 26.10.0 ends every page with one) is not an extra
+// page (Python counts form feeds + 1: an intended difference).
 func TestExtractPDFTextPages(t *testing.T) {
 	script, dir := fakePdftotext(t)
 	pdf := filepath.Join(dir, "x.pdf")
-	for out, want := range map[string]int{"\f": 0, " \n\f\u00a0": 0, "a\f\f": 3, "a": 1} {
+	for out, want := range map[string]int{"\f": 0, " \n\f\u00a0": 0, "a": 1, "a\f": 1, "a\fb": 2, "a\fb\f": 2,
+		"a\f\f": 2, "a\f\fb": 3, "a\f \n": 2} {
 		writeFile(t, pdf+".out", []byte(out))
 		if _, pages, err := ExtractPDFText(script, pdf, PDFTimeout); err != nil || pages != want {
 			t.Errorf("pages of %q = %d, %v; want %d", out, pages, err, want)
@@ -203,10 +206,9 @@ func TestExtractPDFTextRealPdftotext(t *testing.T) {
 			t.Errorf("text %q lacks %q", text, want)
 		}
 	}
-	// pdftotext ends every page with a form feed, the last one too, so
-	// extract_text's "form feeds + 1" counts one page more than the PDF
-	// has (its comment says the last page has none): kept for parity.
-	if pages != 4 || strings.Contains(text, "\ufffd") {
+	// pdftotext ends every page with a form feed, the last one too: the
+	// three pages are three, where extract_text's "form feeds + 1" says 4.
+	if pages != 3 || !strings.HasSuffix(text, "\f") || strings.Contains(text, "\ufffd") {
 		t.Errorf("pages %d, text %q", pages, text)
 	}
 }
