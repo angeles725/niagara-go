@@ -17,9 +17,9 @@ document disagree, the code wins and this document is corrected.
 | B2 | `declaration_header` / `strip_comments` + class index | `build_class_index.py`, `module_nav_lib/java_text.py` |
 | B3 | inheritance + xref | `build_inheritance.py`, `build_xref.py` |
 | B4 | token index (SQLite) | `build_token_index.py` |
-| **B5** | Java member scanner + method index | `build_method_index.py` |
+| B5 | Java member scanner + method index | `build_method_index.py` |
 | ~~B6~~ | field index: dropped, no kept reader (D32) | `build_field_index.py` |
-| B7 | call graph | `build_callgraph_index.py` |
+| **B7** | call graph | `build_callgraph_index.py` |
 | B8 | `mnav reindex` orchestration | `reindex.sh` |
 
 ## Foundations
@@ -174,6 +174,24 @@ order whose count is strictly greater than the maximum when that file was merged
 The field index is not ported: no kept command reads `field-index.json` (D32/D33; `stats`
 then shows it missing, an accepted difference). The method index stays because
 `license-feature`'s miss hints read the `methods` keys.
+
+## Call graph
+
+`BuildCallgraph(base, organized)` is `build_callgraph_index`: `parent_map` from
+`class_to_chain` of `inheritance.json` (absent = super calls resolve to the caller's own
+class, as Python's warning path), then for each top-level file the method zones of
+`parseMethods` (from a declaration line to the next one) scanned by `zoneCalls`
+(`extract_calls_from_zone`): comments dropped, string and char literals emptied (the two
+`re.sub`), then `this.m(`, `super.m(`, `super(`/`this(` not after a `.`, `new Name(`/`<`
+with an upper-case first letter, and `Recv.m(` with an upper-case receiver outside
+`SKIP_RECEIVERS`. The regular expressions are hand matchers with Python's Unicode `\w`,
+`\s` and `\b`; each is unambiguous, so trying every start position and resuming after a
+match is `re.finditer` (a receiver can start mid-word: `Members.this.run(` yields
+`this.run`). The import map Python builds is never used and is not ported. Keys and
+callee lists are sorted; the index is streamed like the method index.
+
+Intended difference: a `class_to_chain` value that is not a list (Python would take the
+first character of a string) or a chain whose first element is not a string is an error.
 
 ## Gates
 

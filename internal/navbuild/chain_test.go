@@ -30,6 +30,10 @@ var laterBuilders = []laterBuilder{
 		_, err := BuildMethodIndex(base, organized)
 		return err
 	}},
+	{"build_callgraph_index.py", CallgraphFile, nil, func(base, organized string) error {
+		_, err := BuildCallgraph(base, organized)
+		return err
+	}},
 }
 
 // TestParityLaterIndexes builds the whole chain on each side (inventory, class
