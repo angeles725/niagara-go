@@ -3,6 +3,11 @@
 // lives in its own package under nav/ and registers itself; importing them here is
 // what makes them part of the CLI.
 //
+// Main locates the checkout per process (--base-dir, MODULE_NAVIGATOR_DIR or
+// NAV_DIR, the working directory, the executable); RunAt runs the same command
+// line pinned to a given checkout (core.NewAt), so another command (nsearch)
+// gets mnav's exact output in-process, concurrently for different checkouts.
+//
 // # Libraries and commands
 //
 // The packages under internal/nav split into two kinds, by path:

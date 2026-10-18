@@ -73,15 +73,23 @@ func searchNavDir() string {
 
 // OrganizedDir is corpus.organized_dir(): $NAV_CORPUS_BASE when set (the only path
 // tried, so a wrong override is an error, never a silent fallback), else the
-// organized/ directory next to the module-navigator checkout. It returns "" when
-// neither is known. The path may not exist.
+// organized/ directory next to the module-navigator checkout (FindNavDir). It
+// returns "" when neither is known. The path may not exist.
 func OrganizedDir() string {
 	if v := os.Getenv("NAV_CORPUS_BASE"); v != "" {
 		return v
 	}
-	nav := FindNavDir()
-	if nav == "" {
+	return OrganizedDirAt(FindNavDir())
+}
+
+// OrganizedDirAt is OrganizedDir for the checkout navDir instead of the one
+// FindNavDir locates: $NAV_CORPUS_BASE still wins; "" when navDir is "".
+func OrganizedDirAt(navDir string) string {
+	if v := os.Getenv("NAV_CORPUS_BASE"); v != "" {
+		return v
+	}
+	if navDir == "" {
 		return ""
 	}
-	return filepath.Join(filepath.Dir(nav), "organized")
+	return filepath.Join(filepath.Dir(navDir), "organized")
 }

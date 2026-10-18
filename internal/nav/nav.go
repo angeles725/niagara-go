@@ -21,7 +21,11 @@ import (
 )
 
 // Main runs one module-nav command line and returns the process exit code.
-func Main(args []string, s cli.Stdio) int {
+func Main(args []string, s cli.Stdio) int { return run("", args, s) }
+
+// run is Main, or RunAt when navDir (absolute) pins the checkout: the default
+// base directory and the runtime's corpus location.
+func run(navDir string, args []string, s cli.Stdio) int {
 	if name := commandWord(args); retired[name] {
 		fmt.Fprintf(s.Err, "mnav: '%s' was retired in the Go port (no recorded use); see docs/retired-commands.md\n", name)
 		return cli.ExitCannotSearch
@@ -41,6 +45,9 @@ func Main(args []string, s cli.Stdio) int {
 		return cli.ExitFound
 	}
 	baseDir := ns.String("base_dir")
+	if baseDir == "" && navDir != "" {
+		baseDir = navDir
+	}
 	if baseDir == "" {
 		var err error
 		if baseDir, err = DetectBaseDir(); err != nil {
@@ -60,7 +67,7 @@ func Main(args []string, s cli.Stdio) int {
 	}
 	out := bufio.NewWriter(s.Out)
 	errw := orderedErr{out, s.Err}
-	rt := core.New(baseDir, out, errw)
+	rt := core.NewAt(navDir, baseDir, out, errw)
 	defer rt.Close()
 	status := c.Run(&registry.Env{Stdio: cli.Stdio{In: s.In, Out: out, Err: errw}, Runtime: rt}, ns)
 	if err := out.Flush(); err != nil {

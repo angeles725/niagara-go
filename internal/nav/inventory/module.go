@@ -66,7 +66,8 @@ func runModule(env *registry.Env, ns *argparse.Namespace) int {
 	v := inv.Object(resolved)
 	perms, deps := ns.Bool("mod_show_perms"), ns.Bool("mod_show_deps")
 	if perms || deps {
-		printModuleXMLView(w, resolved, v, perms, deps)
+		corpus, _ := env.ResolveOrganized()
+		printModuleXMLView(w, corpus, resolved, v, perms, deps)
 		return env.ExitCode()
 	}
 	printModuleDetail(w, resolved, v)
@@ -123,9 +124,9 @@ func yesNo(b bool) string {
 }
 
 // findModuleXML is _find_module_xml: <corpus>/<parent or *>/<sub>/extracted/
-// META-INF/module.xml, then any module directory; the first sorted hit.
-func findModuleXML(sub, parent string) string {
-	root, _ := core.ResolveOrganized()
+// META-INF/module.xml, then any module directory; the first sorted hit (""
+// when root, the corpus, is "").
+func findModuleXML(root, sub, parent string) string {
 	if root == "" {
 		return ""
 	}
@@ -159,12 +160,12 @@ func visible(hits []string, root, mod string) []string {
 	return out
 }
 
-func printModuleXMLView(w io.Writer, name string, v *index.Object, perms, deps bool) {
+func printModuleXMLView(w io.Writer, corpus, name string, v *index.Object, perms, deps bool) {
 	parent := ""
 	if core.Truthy(v, "module") {
 		parent = core.Str(v, "module")
 	}
-	path := findModuleXML(name, parent)
+	path := findModuleXML(corpus, name, parent)
 	if path == "" {
 		fmt.Fprintln(w)
 		fmt.Fprintf(w, "  module.xml not found for '%s' (parent='%s')\n", name, core.Str(v, "module"))

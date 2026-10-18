@@ -22,7 +22,7 @@ import (
 
 func runResources(env *registry.Env, ns *argparse.Namespace) int {
 	name, typeFilter, limit := ns.String("name"), ns.String("res_type"), ns.Int("n")
-	organized, tried := core.ResolveOrganized()
+	organized, tried := env.ResolveOrganized()
 	if organized == "" {
 		env.Error("corpus not found: "+tried, "")
 		return env.ExitCode()

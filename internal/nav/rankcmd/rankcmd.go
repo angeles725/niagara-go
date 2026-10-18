@@ -54,7 +54,7 @@ func progressEnd(env *registry.Env, started, ok bool) {
 }
 
 func warnStale(env *registry.Env, meta *index.Object, path string) {
-	for _, w := range core.Staleness(meta, path) {
+	for _, w := range env.Staleness(meta, path) {
 		fmt.Fprintf(env.Err, "WARNING: %s\n", w)
 	}
 }
