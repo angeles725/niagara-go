@@ -13,7 +13,7 @@ const sec03Run = `run: icacls <home>\security`
 // Any listing that is missing, empty or only partly understood is a SKIP, never a PASS. The error
 // is an interrupt that came while icacls ran.
 func (e *env) sec03(home string, rep *report) error {
-	secdir := pycompat.PosixJoin(home, "security")
+	secdir := pycompat.Join(home, "security")
 	if !pycompat.IsDir(secdir) {
 		return nil
 	}

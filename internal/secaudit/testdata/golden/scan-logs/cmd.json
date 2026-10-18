@@ -3,5 +3,10 @@
   "inputs/home-empty",
   "--scan-logs",
   "inputs/logs"
- ]
+ ],
+ "requires": {
+  "goos": [
+   "linux"
+  ]
+ }
 }

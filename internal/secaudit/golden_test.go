@@ -9,7 +9,10 @@ import (
 	"github.com/angeles725/niagara-go/internal/golden"
 )
 
-// TestGolden runs every frozen Python case (usage errors included) through Main.
+// TestGolden runs every frozen Python case (usage errors included) through Main. The
+// scan-logs cases that print a log path joined under the --scan-logs directory carry
+// requires.goos ["linux"]: they were captured with posixpath.join, and on Windows
+// os.path.join puts a backslash there (TestScanLogsNamesFilesWithTheHostSeparator).
 func TestGolden(t *testing.T) { golden.Run(t, "testdata", Main) }
 
 // TestGoldenDanglingLinks runs the cases whose log directories hold a symlink to a missing file

@@ -140,7 +140,7 @@ func scanLogs(root string) (hits []hit, nfiles int, bad, badDirs []unreadable) {
 		}
 		var subdirs []string
 		for _, ent := range entries {
-			p := pycompat.PosixJoin(dir, ent.Name())
+			p := pycompat.Join(dir, ent.Name())
 			if isDirEntry(p, ent) {
 				if ent.Type()&os.ModeSymlink == 0 {
 					subdirs = append(subdirs, p)

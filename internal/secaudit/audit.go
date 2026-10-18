@@ -87,7 +87,7 @@ func (e *env) audit(home, stationXML, host string, rawHead []byte, rep *report) 
 		"high", verdict(bad), "B75/B397",
 		"low lets an UNSIGNED module requesting NETWORK_COMMUNICATION load (the 443 incident)")
 
-	ts := pycompat.PosixJoin(home, "security", "truststore.jks")
+	ts := pycompat.Join(home, "security", "truststore.jks")
 	d, err := e.keytoolDefault(ts)
 	if err != nil {
 		return fmt.Errorf("keytool: %w", err)
