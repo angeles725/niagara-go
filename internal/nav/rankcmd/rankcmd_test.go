@@ -40,7 +40,7 @@ func newBase(t *testing.T, files map[string][]byte) string {
 
 func envFor(base string) *registry.Env {
 	var out, errb bytes.Buffer
-	return &registry.Env{Stdio: cli.Stdio{Out: &out, Err: &errb}, Runtime: core.New(base, &out, &errb)}
+	return &registry.Env{Stdio: cli.Stdio{Out: &out, Err: &errb}, Runtime: core.NewAt("", base, &out, &errb)}
 }
 
 func run(t *testing.T, base, question string, limit int) (stdout, stderr string, code int) {

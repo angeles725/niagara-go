@@ -1,5 +1,6 @@
 // Package license is the licensing-call scan of module-navigator
-// license_features.py (and the java_text.py helpers it uses): which
+// license_features.py (and the java_text.py helpers only it uses; the shared
+// ones are internal/nav/lib/javatext): which
 // vendor:feature pairs the corpus asks Sys.getLicenseManager() for, and where.
 //
 // The Python scanner is built on `re`; Go's regexp differs in \w, \s and \b
@@ -13,57 +14,11 @@ import (
 	"strings"
 	"unicode/utf8"
 
+	"github.com/angeles725/niagara-go/internal/nav/lib/javatext"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
-// Span is a [Start, End) byte range.
-type Span struct{ Start, End int }
-
-// CommentSpans is java_text.comment_spans: every // and /* */ comment,
-// skipping string and char literals (which end at a newline). The nav
-// builders (internal/navbuild) share it.
-func CommentSpans(text string) []Span {
-	var spans []Span
-	n := len(text)
-	for i := 0; i < n; {
-		c := text[i]
-		switch {
-		case c == '"' || c == '\'':
-			j := i + 1
-			for j < n && text[j] != c && text[j] != '\n' {
-				if text[j] == '\\' {
-					j += 2
-				} else {
-					j++
-				}
-			}
-			i = j + 1
-		case strings.HasPrefix(text[i:], "//"):
-			j := strings.IndexByte(text[i:], '\n')
-			if j < 0 {
-				j = n
-			} else {
-				j += i
-			}
-			spans = append(spans, Span{i, j})
-			i = j
-		case strings.HasPrefix(text[i:], "/*"):
-			j := strings.Index(text[i+2:], "*/")
-			if j < 0 {
-				j = n
-			} else {
-				j += i + 4
-			}
-			spans = append(spans, Span{i, j})
-			i = j
-		default:
-			i++
-		}
-	}
-	return spans
-}
-
-func inSpans(pos int, spans []Span) bool {
+func inSpans(pos int, spans []javatext.Span) bool {
 	for _, s := range spans {
 		if s.Start <= pos && pos < s.End {
 			return true
@@ -122,42 +77,8 @@ func callArgs(text string, openParen int) (args []string, ok bool) {
 func isWord(r rune) bool  { return pycompat.IsWordRune(r) }
 func isIdent(r rune) bool { return r == '$' || isWord(r) }
 
-func runeAt(s string, i int) (rune, int) {
-	if i < 0 || i >= len(s) {
-		return utf8.RuneError, 0
-	}
-	return utf8.DecodeRuneInString(s[i:])
-}
-
-// wordAt and wordBefore tell whether the character at / before byte i is a
-// word character (false outside the text).
-func wordAt(s string, i int) bool {
-	r, n := runeAt(s, i)
-	return n > 0 && isWord(r)
-}
-
-func wordBefore(s string, i int) bool {
-	if i <= 0 {
-		return false
-	}
-	r, _ := utf8.DecodeLastRuneInString(s[:i])
-	return isWord(r)
-}
-
 // boundary is re's \b at byte i.
-func boundary(s string, i int) bool { return wordBefore(s, i) != wordAt(s, i) }
-
-// skipSpace is \s* from byte i.
-func skipSpace(s string, i int) int {
-	for i < len(s) {
-		r, n := utf8.DecodeRuneInString(s[i:])
-		if !pycompat.IsSpace(r) {
-			break
-		}
-		i += n
-	}
-	return i
-}
+func boundary(s string, i int) bool { return javatext.WordBefore(s, i) != javatext.WordAt(s, i) }
 
 // skipRun is [class]* from byte i.
 func skipRun(s string, i int, class func(rune) bool) int {
@@ -190,7 +111,7 @@ func stringBody(s string, i int) (content string, end int, ok bool) {
 		case '"':
 			return s[i+1 : j], j + 1, true
 		case '\\':
-			r, n := runeAt(s, j+1)
+			r, n := javatext.RuneAt(s, j+1)
 			if n == 0 || r == '\n' {
 				return "", -1, false
 			}

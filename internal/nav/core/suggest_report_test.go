@@ -12,7 +12,7 @@ import (
 func newRuntime(t *testing.T, base string) (*Runtime, *bytes.Buffer, *bytes.Buffer) {
 	t.Helper()
 	var out, errb bytes.Buffer
-	return New(base, &out, &errb), &out, &errb
+	return NewAt("", base, &out, &errb), &out, &errb
 }
 
 // The expected strings below were printed by module_nav_lib (suggest.py,
@@ -90,16 +90,16 @@ func TestModuleMiss(t *testing.T) {
 func TestResolveOrganizedAndSourceRoot(t *testing.T) {
 	corpus := t.TempDir()
 	t.Setenv("NAV_CORPUS_BASE", corpus)
-	if p, tried := ResolveOrganized(); p != corpus || tried != "" {
+	r, _, errb := newRuntime(t, t.TempDir())
+	if p, tried := r.ResolveOrganized(); p != corpus || tried != "" {
 		t.Errorf("ResolveOrganized() = %q, %q", p, tried)
 	}
-	r, _, errb := newRuntime(t, t.TempDir())
 	if got := r.SourceRoot(nil); got != corpus || errb.Len() != 0 {
 		t.Errorf("SourceRoot = %q, stderr %q", got, errb.String())
 	}
 	missing := filepath.Join(corpus, "nope")
 	t.Setenv("NAV_CORPUS_BASE", missing)
-	if p, tried := ResolveOrganized(); p != "" || tried != missing {
+	if p, tried := r.ResolveOrganized(); p != "" || tried != missing {
 		t.Errorf("ResolveOrganized() = %q, %q", p, tried)
 	}
 	for _, c := range []struct{ meta, hint string }{

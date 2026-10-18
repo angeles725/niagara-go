@@ -4,59 +4,13 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/angeles725/niagara-go/internal/nav/lib/license"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
-// Plain-text helpers for Java sources (module_nav_lib/java_text.py and the
-// declaration parsing of build_class_index.py). Offsets are byte offsets: the
-// Python code compares only ASCII characters, so stepping bytes instead of
-// code points finds the same positions.
-
-// stripComments is java_text.strip_comments: text with every comment replaced
-// by one space.
-func stripComments(text string) string {
-	spans := license.CommentSpans(text)
-	if len(spans) == 0 {
-		return text
-	}
-	var b strings.Builder
-	last := 0
-	for _, s := range spans {
-		b.WriteString(text[last:s.Start])
-		b.WriteByte(' ')
-		last = s.End
-	}
-	b.WriteString(text[last:])
-	return b.String()
-}
-
-// maxHeaderLines is java_text.MAX_HEADER_LINES: a declaration header spans a
-// handful of lines; the cap only stops a malformed file from joining the rest
-// of itself.
-const maxHeaderLines = 40
-
-// declarationHeader is java_text.declaration_header(lines, index, start): the
-// declaration in lines[index] from byte start up to its opening brace, joined
-// across at most maxHeaderLines lines, comments removed and whitespace
-// collapsed. lines keep their "\n" (readlines()).
-func declarationHeader(lines []string, index, start int) string {
-	raw := lines[index][start:]
-	end := min(len(lines), index+maxHeaderLines)
-	var text string
-	for j := index + 1; ; j++ {
-		text = stripComments(raw)
-		if brace := strings.IndexByte(text, '{'); brace >= 0 {
-			text = text[:brace]
-			break
-		}
-		if j >= end {
-			break
-		}
-		raw += "\n" + lines[j]
-	}
-	return strings.Join(pycompat.Fields(text), " ")
-}
+// The declaration parsing of build_class_index.py (java_text.py itself is
+// internal/nav/lib/javatext). Offsets are byte offsets: the Python code
+// compares only ASCII characters, so stepping bytes instead of code points
+// finds the same positions.
 
 // spanFunc advances over the runes of s from i that satisfy ok.
 func spanFunc(s string, i int, ok func(rune) bool) int {

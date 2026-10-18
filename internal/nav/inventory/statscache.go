@@ -5,6 +5,8 @@ import (
 	"encoding/gob"
 	"os"
 	"path/filepath"
+
+	"github.com/angeles725/niagara-go/internal/nav/core"
 )
 
 // The stats summary cache, indexes/.mnav-cache/stats.gob: Python's stats reads
@@ -61,7 +63,7 @@ func (c *statsCache) summary(path string, full bool) summary {
 	if err != nil || !st.Mode().IsRegular() {
 		return summary{}
 	}
-	key := realPath(path)
+	key := core.ResolvedPath(path)
 	cacheable := st.Size() >= statsCacheMinBytes
 	if e, ok := c.entries[key]; ok && cacheable && e.Size == st.Size() && e.MtimeNs == st.ModTime().UnixNano() &&
 		(e.Summary.Full || !full) {
@@ -77,18 +79,6 @@ func (c *statsCache) summary(path string, full bool) summary {
 	return s
 }
 
-// realPath is the absolute path with symlinks resolved: the cache key, so a
-// base directory reached through a link shares the entries of the real one.
-func realPath(p string) string {
-	if abs, err := filepath.Abs(p); err == nil {
-		p = abs
-	}
-	if real, err := filepath.EvalSymlinks(p); err == nil {
-		return real
-	}
-	return p
-}
-
 // save writes the cache back when a summary was added (atomically; mode
 // 0600), dropping the entries of files that no longer exist.
 func (c *statsCache) save() {
@@ -100,27 +90,6 @@ func (c *statsCache) save() {
 			delete(c.entries, k)
 		}
 	}
-	var buf bytes.Buffer
-	if gob.NewEncoder(&buf).Encode(statsCacheFile{statsCacheFormat, c.entries}) != nil {
-		return
-	}
-	dir := filepath.Dir(c.path)
-	if os.MkdirAll(dir, 0o700) != nil {
-		return
-	}
-	f, err := os.CreateTemp(dir, statsCacheName+".*.tmp")
-	if err != nil {
-		return
-	}
-	_, werr := f.Write(buf.Bytes())
-	if cerr := f.Close(); werr == nil {
-		werr = cerr
-	}
-	if werr == nil {
-		werr = os.Rename(f.Name(), c.path)
-	}
-	if werr != nil {
-		os.Remove(f.Name())
-	}
+	core.WriteGob(c.path, statsCacheFile{statsCacheFormat, c.entries})
 	c.dirty = false
 }

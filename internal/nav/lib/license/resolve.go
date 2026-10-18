@@ -6,6 +6,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/angeles725/niagara-go/internal/nav/lib/javatext"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
@@ -122,11 +123,11 @@ func returnedLiteral(text, method string) (string, bool) {
 	var out string
 	found := false
 	occurrences(text, "String", func(p int) bool {
-		if wordBefore(text, p) {
+		if javatext.WordBefore(text, p) {
 			return false
 		}
 		i := p + len("String")
-		j := skipSpace(text, i)
+		j := javatext.SkipSpace(text, i)
 		if j == i {
 			return false
 		}
@@ -135,17 +136,17 @@ func returnedLiteral(text, method string) (string, bool) {
 			if i < 0 {
 				return false
 			}
-			i = lit(text, skipSpace(text, i), tok)
+			i = lit(text, javatext.SkipSpace(text, i), tok)
 		}
 		if i < 0 {
 			return false
 		}
-		j = skipSpace(text, i)
+		j = javatext.SkipSpace(text, i)
 		if j == i {
 			return false
 		}
 		content, end, ok := stringBody(text, j)
-		if !ok || lit(text, skipSpace(text, end), ";") < 0 {
+		if !ok || lit(text, javatext.SkipSpace(text, end), ";") < 0 {
 			return false
 		}
 		out, found = content, true
@@ -159,11 +160,11 @@ func returnedLiteral(text, method string) (string, bool) {
 func superclass(text string) string {
 	out := ""
 	occurrences(text, "class", func(p int) bool {
-		if wordBefore(text, p) {
+		if javatext.WordBefore(text, p) {
 			return false
 		}
 		i := p + len("class")
-		j := skipSpace(text, i)
+		j := javatext.SkipSpace(text, i)
 		if j == i {
 			return false
 		}
@@ -172,7 +173,7 @@ func superclass(text string) string {
 			return false
 		}
 		// (?:\s*<[^{]*?>)? first, the shortest type parameters first.
-		if m := skipSpace(text, k); m < len(text) && text[m] == '<' {
+		if m := javatext.SkipSpace(text, k); m < len(text) && text[m] == '<' {
 			for q := m + 1; q < len(text) && text[q] != '{'; q++ {
 				if text[q] == '>' {
 					if out = extendsAt(text, q+1); out != "" {
@@ -189,7 +190,7 @@ func superclass(text string) string {
 
 // extendsAt is \s+extends\s+([\w$.]+) at byte i.
 func extendsAt(text string, i int) string {
-	j := skipSpace(text, i)
+	j := javatext.SkipSpace(text, i)
 	if j == i {
 		return ""
 	}
@@ -197,7 +198,7 @@ func extendsAt(text string, i int) string {
 	if k < 0 {
 		return ""
 	}
-	l := skipSpace(text, k)
+	l := javatext.SkipSpace(text, k)
 	if l == k {
 		return ""
 	}
@@ -212,12 +213,12 @@ func constant(text, name string) *string {
 		if !boundary(text, p) {
 			return false
 		}
-		eq := skipSpace(text, p+len(name))
+		eq := javatext.SkipSpace(text, p+len(name))
 		if eq >= len(text) || text[eq] != '=' {
 			return false
 		}
-		content, end, ok := stringBody(text, skipSpace(text, eq+1))
-		if !ok || lit(text, skipSpace(text, end), ";") < 0 {
+		content, end, ok := stringBody(text, javatext.SkipSpace(text, eq+1))
+		if !ok || lit(text, javatext.SkipSpace(text, end), ";") < 0 {
 			return false
 		}
 		out = &content

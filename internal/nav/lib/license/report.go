@@ -34,8 +34,6 @@ type Report struct {
 // prints "ERROR: <Message>" and, when set, "  <Hint>" on stderr.
 type Failure struct{ Message, Hint string }
 
-func (f *Failure) Error() string { return f.Message }
-
 // unreadableIndex is the CLI's message for a database error met mid-scan.
 func unreadableIndex(err error) *Failure {
 	return &Failure{fmt.Sprintf("unreadable index: %v", err), "Run: ./reindex.sh"}
@@ -45,8 +43,7 @@ func unreadableIndex(err error) *Failure {
 // organized/ corpus at organized (core.OrganizedDir or OrganizedDirAt): the report,
 // or the Failure that stopped it (missing token index or corpus, a database
 // error, or no candidate file readable). When only some candidate files
-// cannot be read the report carries Warning. It is ScanIndex with the paths
-// module-nav uses.
+// cannot be read the report carries Warning.
 func Scan(baseDir, organized string) (*Report, *Failure) {
 	dbPath := filepath.Join(baseDir, "indexes", "token-index.db")
 	if st, err := os.Stat(dbPath); err != nil || !st.Mode().IsRegular() {
@@ -66,24 +63,6 @@ func Scan(baseDir, organized string) (*Report, *Failure) {
 		return nil, &Failure{message, hint}
 	}
 	return ScanDB(db, meta, root)
-}
-
-// ScanIndex is Scan with explicit inputs: the token index at dbPath and the
-// corpus root organized (no environment lookup).
-func ScanIndex(dbPath, organized string) (*Report, *Failure) {
-	if st, err := os.Stat(dbPath); err != nil || !st.Mode().IsRegular() {
-		return nil, &Failure{fmt.Sprintf("token index not found: %s", dbPath), "Run: ./reindex.sh"}
-	}
-	db, err := index.OpenSQLite(dbPath)
-	if err != nil {
-		return nil, unreadableIndex(err)
-	}
-	defer db.Close()
-	meta, err := metaTable(db)
-	if err != nil {
-		return nil, unreadableIndex(err)
-	}
-	return ScanDB(db, meta, organized)
 }
 
 // ScanDB scans an open token index (its meta table already read) against

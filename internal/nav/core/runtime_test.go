@@ -16,7 +16,7 @@ func newTestRuntime(t *testing.T) (*Runtime, *bytes.Buffer, *bytes.Buffer, strin
 		t.Fatal(err)
 	}
 	var out, errb bytes.Buffer
-	return New(base, &out, &errb), &out, &errb, base
+	return NewAt("", base, &out, &errb), &out, &errb, base
 }
 
 func writeIndex(t *testing.T, base, name, body string) {
@@ -114,14 +114,14 @@ func TestStalenessWarnings(t *testing.T) {
 	if err := os.WriteFile(idx, []byte("{}"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if w := Staleness(nil, idx); len(w) != 0 {
+	if w := StalenessAt(OrganizedDir(), nil, idx); len(w) != 0 {
 		t.Errorf("fresh index warned: %q", w)
 	}
 	old := root + "/old-organized"
 	meta := NewTestMeta(t, `{"source": `+strconv.Quote(old)+`}`) // a JSON string on Windows too
 	past := mustMtime(t, idx) - 100
 	setMtime(t, idx, past)
-	w := Staleness(meta, idx)
+	w := StalenessAt(OrganizedDir(), meta, idx)
 	want := []string{
 		"index class-index.json was built from " + old + " but the corpus is " + organized,
 		"3 corpus modules had directories added, removed or re-created after class-index.json was built (e.g. organized/, alarm, baja)",

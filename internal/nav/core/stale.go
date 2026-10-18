@@ -88,15 +88,10 @@ func changedDirs(organized string, built float64) []string {
 	return changed
 }
 
-// Staleness is corpus.staleness: the warnings when an index no longer
-// describes the corpus (built from another corpus path, or older than a
-// module, submodule or vineflower/ directory), ending with the rebuild advice.
-func Staleness(meta *index.Object, indexPath string) []string {
-	return StalenessAt(OrganizedDir(), meta, indexPath)
-}
-
-// Staleness is the package-level Staleness against the runtime's corpus
-// (OrganizedDir).
+// Staleness is corpus.staleness against the runtime's corpus (OrganizedDir):
+// the warnings when an index no longer describes the corpus (built from
+// another corpus path, or older than a module, submodule or vineflower/
+// directory), ending with the rebuild advice.
 func (r *Runtime) Staleness(meta *index.Object, indexPath string) []string {
 	return StalenessAt(r.OrganizedDir(), meta, indexPath)
 }

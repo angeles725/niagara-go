@@ -5,9 +5,9 @@ import (
 	"testing"
 )
 
-// TestCallArgsAndCommentSpans pins java_text.call_args and comment_spans
-// (values printed by Python on the same texts).
-func TestCallArgsAndCommentSpans(t *testing.T) {
+// TestCallArgs pins java_text.call_args (values printed by Python on the
+// same texts).
+func TestCallArgs(t *testing.T) {
 	for _, c := range []struct {
 		text string
 		want []string
@@ -23,10 +23,5 @@ func TestCallArgsAndCommentSpans(t *testing.T) {
 		if ok != c.ok || !reflect.DeepEqual(got, c.want) {
 			t.Errorf("callArgs(%q) = %q %v, want %q %v", c.text, got, ok, c.want, c.ok)
 		}
-	}
-	text := "a // x\n\"//no\" /* y */ '/' /* open"
-	want := []Span{{2, 6}, {14, 21}, {26, len(text)}}
-	if got := CommentSpans(text); !reflect.DeepEqual(got, want) {
-		t.Errorf("commentSpans = %v, want %v", got, want)
 	}
 }

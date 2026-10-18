@@ -29,7 +29,7 @@ var guarded = map[string]string{navPath + "/core": "core", "os": "os", "fmt": "f
 
 // forbiddenSelectors are the runtime and printing calls a library never uses.
 var forbiddenSelectors = map[string]bool{
-	"core.Runtime": true, "core.New": true,
+	"core.Runtime": true, "core.NewAt": true,
 	"os.Stdout": true, "os.Stderr": true,
 	"fmt.Print": true, "fmt.Println": true, "fmt.Printf": true,
 }
@@ -104,8 +104,8 @@ func TestLibraryGuardCatchesViolations(t *testing.T) {
 	}{
 		"registry import": {`package x; import _ "` + navPath + `/registry"`, 1},
 		"runtime and prints": {`package x; import ("fmt"; "os"; "` + navPath + `/core")
-			func f() { fmt.Println(core.New, os.Stdout); fmt.Printf(""); _ = core.Runtime{} }`, 5},
-		"aliased":    {`package x; import (f "fmt"; c "` + navPath + `/core"); func g() { f.Print(c.New) }`, 2},
+			func f() { fmt.Println(core.NewAt, os.Stdout); fmt.Printf(""); _ = core.Runtime{} }`, 5},
+		"aliased":    {`package x; import (f "fmt"; c "` + navPath + `/core"); func g() { f.Print(c.NewAt) }`, 2},
 		"log import": {`package x; import "log"; func g() { log.Print() }`, 1},
 		"clean":      {`package x; import ("fmt"; "` + navPath + `/core"); func g() string { return fmt.Sprint(core.Commas(1)) }`, 0},
 	} {

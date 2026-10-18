@@ -2,11 +2,13 @@ package drivers
 
 import (
 	"path/filepath"
+	"slices"
 	"sort"
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/index"
 	"github.com/angeles725/niagara-go/internal/nav/core"
+	"github.com/angeles725/niagara-go/internal/nav/lib/javatext"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
@@ -108,7 +110,7 @@ func sortedSet(xs []string) []string {
 func (cx *corpus) subclasses(items []item, base string) []string {
 	var names []string
 	for _, it := range items {
-		if contains(cx.chain(it.e), base) {
+		if slices.Contains(cx.chain(it.e), base) {
 			names = append(names, it.name)
 		}
 	}
@@ -137,7 +139,7 @@ func (cx *corpus) inherited(e *index.Object, base string) ([]string, string) {
 
 func family(chain []string) string {
 	for _, f := range families {
-		if contains(chain, f[0]) {
+		if slices.Contains(chain, f[0]) {
 			return f[1]
 		}
 	}
@@ -167,30 +169,30 @@ func deviceTypes(organized, path string) []string {
 }
 
 func deviceTypeAt(text string, p int) (string, int, bool) {
-	if wordBefore(text, p) {
+	if javatext.WordBefore(text, p) {
 		return "", 0, false
 	}
 	i := p + len("getDeviceType")
 	for _, tok := range []string{"(", ")", "{", "return"} {
-		i = skipSpace(text, i)
+		i = javatext.SkipSpace(text, i)
 		if !strings.HasPrefix(text[i:], tok) {
 			return "", 0, false
 		}
 		i += len(tok)
 	}
-	j := skipSpace(text, i)
+	j := javatext.SkipSpace(text, i)
 	if j == i {
 		return "", 0, false
 	}
 	k := j
 	for k < len(text) {
-		r, n := runeAt(text, k)
+		r, n := javatext.RuneAt(text, k)
 		if r != '$' && !pycompat.IsWordRune(r) {
 			break
 		}
 		k += n
 	}
-	if k == j || !strings.HasPrefix(text[k:], ".TYPE") || wordAt(text, k+len(".TYPE")) {
+	if k == j || !strings.HasPrefix(text[k:], ".TYPE") || javatext.WordAt(text, k+len(".TYPE")) {
 		return "", 0, false
 	}
 	return text[j:k], k + len(".TYPE"), true
@@ -201,7 +203,7 @@ func anatomy(cx *corpus, it item, organized string, features map[string][]string
 	fam := cx.byFamily[dir]
 	declared := sortedSet(deviceTypes(organized, it.path()))
 	r := &DriverRow{Network: it.name, Module: sub, Package: core.Str(it.e, "package"), Path: it.path(),
-		Abstract: contains(core.Strs(it.e, "modifiers"), "abstract"), Extends: simple(extendsOf(it.e)),
+		Abstract: slices.Contains(core.Strs(it.e, "modifiers"), "abstract"), Extends: simple(extendsOf(it.e)),
 		Family: family(append([]string{it.name}, cx.chain(it.e)...))}
 	r.Devices, r.DevicesFrom = cx.inherited(it.e, "BDevice")
 	r.DevicesVia = "subclasses"
@@ -215,7 +217,7 @@ func anatomy(cx *corpus, it item, organized string, features map[string][]string
 		ch := cx.chain(f.e)
 		isManager := false
 		for _, b := range managerBases {
-			isManager = isManager || contains(ch, b)
+			isManager = isManager || slices.Contains(ch, b)
 		}
 		if isManager || (strings.HasSuffix(f.module(), "-ux") && strings.HasPrefix(f.name, "B") &&
 			strings.HasSuffix(f.name, "Manager")) {

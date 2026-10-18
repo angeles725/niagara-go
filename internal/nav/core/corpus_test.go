@@ -87,23 +87,6 @@ func TestWalkJavaFiltersSubmodulesAndStopsEarly(t *testing.T) {
 	}
 }
 
-func TestTopLevelFiles(t *testing.T) {
-	classes := NewTestMeta(t, `{
-		"A": [{"path": "p/A.java", "outer_class": null}, {"path": "q/A.java", "outer_class": "None"}],
-		"A$In": [{"path": "p/A.java", "outer_class": "A"}],
-		"B": [{"path": "p/A.java", "outer_class": ""}, {"path": "", "outer_class": null}],
-		"C": [{"path": "p/C.java", "inner": true}, {"path": "p/C2.java"}]}`)
-	var got []string
-	for _, e := range TopLevelFiles(classes) {
-		p, _ := e.Entry.String("path")
-		got = append(got, e.Name+"="+p)
-	}
-	want := []string{"A=p/A.java", "A=q/A.java", "C=p/C2.java"}
-	if !reflect.DeepEqual(got, want) {
-		t.Errorf("got %q, want %q", got, want)
-	}
-}
-
 func TestPyFormatting(t *testing.T) {
 	if Commas(1234567) != "1,234,567" || Commas(-1000) != "-1,000" || Commas(999) != "999" {
 		t.Error("Commas")

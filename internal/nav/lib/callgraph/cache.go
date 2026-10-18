@@ -69,19 +69,7 @@ func NewCache(indexPath, cachePath string) *Cache {
 		return &Cache{}
 	}
 	return &Cache{path: cachePath,
-		key: cacheKey{Format: cacheFormat, Path: realPath(indexPath), Size: st.Size(), MtimeNs: st.ModTime().UnixNano()}}
-}
-
-// realPath is the absolute path with symlinks resolved, so a base directory
-// reached through a link shares the cache of the real one.
-func realPath(p string) string {
-	if abs, err := filepath.Abs(p); err == nil {
-		p = abs
-	}
-	if real, err := filepath.EvalSymlinks(p); err == nil {
-		return real
-	}
-	return p
+		key: cacheKey{Format: cacheFormat, Path: core.ResolvedPath(indexPath), Size: st.Size(), MtimeNs: st.ModTime().UnixNano()}}
 }
 
 // Load is the cached Graph of the index, else nil.
@@ -162,34 +150,5 @@ func (c *Cache) Store(g *Graph) bool {
 	if g.meta != nil {
 		cf.Meta = []byte(core.Dumps(g.meta, -1))
 	}
-	var buf bytes.Buffer
-	if gob.NewEncoder(&buf).Encode(&cf) != nil {
-		return false
-	}
-	return writeAtomic(c.path, buf.Bytes())
-}
-
-// writeAtomic writes data to path through a temporary file in its directory
-// (mode 0600) and a rename; false, removing the temporary file, on failure.
-func writeAtomic(path string, data []byte) bool {
-	dir := filepath.Dir(path)
-	if os.MkdirAll(dir, 0o700) != nil {
-		return false
-	}
-	f, err := os.CreateTemp(dir, cacheName+".*.tmp")
-	if err != nil {
-		return false
-	}
-	_, werr := f.Write(data)
-	if cerr := f.Close(); werr == nil {
-		werr = cerr
-	}
-	if werr == nil {
-		werr = os.Rename(f.Name(), path)
-	}
-	if werr != nil {
-		os.Remove(f.Name())
-		return false
-	}
-	return true
+	return core.WriteGob(c.path, &cf)
 }
