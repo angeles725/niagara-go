@@ -32,13 +32,11 @@ type Runtime struct {
 	noted  map[string]bool // optional indexes already reported absent
 }
 
-// New returns the runtime of a command run against baseDir; its corpus is
-// next to the checkout FindNavDir locates.
-func New(baseDir string, out, errw io.Writer) *Runtime { return NewAt("", baseDir, out, errw) }
-
-// NewAt is New pinned to the checkout navDir (made absolute): its corpus is
-// OrganizedDirAt(navDir), never looked up from the environment's checkout
-// variables, working directory or executable. "" is New.
+// NewAt returns the runtime of a command run against baseDir, pinned to the
+// checkout navDir (made absolute): its corpus is OrganizedDirAt(navDir), never
+// looked up from the environment's checkout variables, working directory or
+// executable. With navDir "" the corpus is next to the checkout FindNavDir
+// locates.
 func NewAt(navDir, baseDir string, out, errw io.Writer) *Runtime {
 	if navDir != "" {
 		navDir = absPath(navDir)

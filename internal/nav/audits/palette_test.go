@@ -45,7 +45,7 @@ func runPalette(t *testing.T, nav string, args []string) (stdout, stderr string,
 		if baseDir != "" {
 			ns.Set("base_dir", baseDir)
 		}
-		env := &registry.Env{Stdio: stdio, Runtime: core.New(nav, &out, &errb)}
+		env := &registry.Env{Stdio: stdio, Runtime: core.NewAt("", nav, &out, &errb)}
 		code = runPaletteLexiconAgents(env, ns)
 	}
 	return out.String(), errb.String(), code

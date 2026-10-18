@@ -15,12 +15,8 @@ import (
 //	<parent>/module-navigator/        the checkout
 //	<parent>/organized/<module>/<submodule>/{vineflower,extracted,<submodule>.jar,...}
 
-// ResolveOrganized returns the corpus root when it exists, else "" and the
-// path tried.
-func ResolveOrganized() (path, tried string) { return resolveDir(OrganizedDir()) }
-
-// ResolveOrganized is the package-level ResolveOrganized for the runtime's
-// checkout (OrganizedDir).
+// ResolveOrganized returns the corpus root of the runtime's checkout
+// (OrganizedDir) when it exists, else "" and the path tried.
 func (r *Runtime) ResolveOrganized() (path, tried string) { return resolveDir(r.OrganizedDir()) }
 
 // resolveDir is (p, "") when p is a directory, else ("", p).
@@ -42,14 +38,9 @@ func (r *Runtime) SourceRoot(meta *index.Object) string {
 	return path
 }
 
-// FindSourceRoot is SourceRoot without a runtime: the corpus root, or "" with
-// the error message and hint to report.
-func FindSourceRoot(meta *index.Object) (path, message, hint string) {
-	return FindSourceRootAt(OrganizedDir(), meta)
-}
-
-// FindSourceRootAt is FindSourceRoot with the corpus location given
-// (organized, which may not exist) instead of looked up.
+// FindSourceRootAt is SourceRoot without a runtime, with the corpus location
+// given (organized, which may not exist): the corpus root, or "" with the
+// error message and hint to report.
 func FindSourceRootAt(organized string, meta *index.Object) (path, message, hint string) {
 	path, tried := resolveDir(organized)
 	if path != "" {
@@ -206,46 +197,6 @@ func WalkJava(organized string, keep func(Submodule) bool, fn func(JavaFile) boo
 			return
 		}
 	}
-}
-
-// ClassEntry is one class-index entry with its class name.
-type ClassEntry struct {
-	Name  string
-	Entry *index.Object
-}
-
-// TopLevelFiles is corpus.top_level_files: one top-level class-index entry per
-// source file, in index order. An entry is inner when it has a truthy `inner`
-// or an `outer_class` other than null, "" and "None".
-func TopLevelFiles(classes *index.Object) []ClassEntry {
-	seen := map[string]bool{}
-	var out []ClassEntry
-	for i, name := range classes.Keys() {
-		entries, _ := classes.Values()[i].([]any)
-		for _, ev := range entries {
-			e, ok := ev.(*index.Object)
-			if !ok {
-				continue
-			}
-			pv, _ := e.Get("path")
-			path, _ := pv.(string)
-			inner := false
-			if v, ok := e.Get("inner"); ok && index.Truthy(v) {
-				inner = true
-			}
-			if v, ok := e.Get("outer_class"); ok {
-				if s, isStr := v.(string); v != nil && (!isStr || (s != "" && s != "None")) {
-					inner = true
-				}
-			}
-			if inner || !index.Truthy(pv) || seen[path] {
-				continue
-			}
-			seen[path] = true
-			out = append(out, ClassEntry{name, e})
-		}
-	}
-	return out
 }
 
 // sortedEntries is sorted(os.scandir(dir)) by name; nil when dir cannot be read.

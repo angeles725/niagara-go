@@ -17,7 +17,7 @@
 //     in internal/searchdoor, the builders in internal/navbuild) import them.
 //     A library package never imports internal/nav/registry, this package or
 //     any command package: from internal/nav it imports only core and other
-//     library packages. It never uses the runtime (core.Runtime, core.New),
+//     library packages. It never uses the runtime (core.Runtime, core.NewAt),
 //     never prints (no os.Stdout, os.Stderr, fmt.Print*, log), takes explicit
 //     paths and decoded indexes, returns typed rows and errors, and exports the
 //     formatters of the exact lines the command prints (decision D29).
