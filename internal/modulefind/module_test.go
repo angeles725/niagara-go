@@ -2,6 +2,7 @@ package modulefind
 
 import (
 	"reflect"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -52,6 +53,26 @@ func TestPyFloat(t *testing.T) {
 	for in, ok := range map[string]bool{"-40.0": true, "1.": true, ".5": true, "1.2.3": false, ".": false} {
 		if _, got := pyFloat(in); got != ok {
 			t.Errorf("pyFloat(%q) ok = %v", in, got)
+		}
+	}
+}
+
+// TestWalkJavaJoinsForTheHost: java_lines builds each path with os.path.join over os.walk,
+// so on Windows a nested file is "root\\pkg\\X.java" ("root" spelled as given).
+func TestWalkJavaJoinsForTheHost(t *testing.T) {
+	var got []string
+	walkJava("testdata/srcA", func(path, _ string) { got = append(got, path) })
+	if len(got) == 0 {
+		t.Fatal("no .java files under testdata/srcA")
+	}
+	sep := "/"
+	if runtime.GOOS == "windows" {
+		sep = `\`
+	}
+	for _, p := range got {
+		rest := strings.TrimPrefix(p, "testdata/srcA"+sep)
+		if rest == p || strings.Contains(rest, map[string]string{"/": `\`, `\`: "/"}[sep]) {
+			t.Errorf("path %q is not os.path.join(%q, ...) for %s", p, "testdata/srcA", runtime.GOOS)
 		}
 	}
 }

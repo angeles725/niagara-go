@@ -130,7 +130,7 @@ func tokenContext(env *registry.Env, hits []codesearch.TokenHit, limit, ctx int)
 			break
 		}
 		if i == 0 || h.Path != prev {
-			lines, err = codesearch.ReadLines(pycompat.PosixJoin(root, h.Path))
+			lines, err = codesearch.ReadLines(pycompat.Join(root, h.Path))
 			if err != nil {
 				lines = nil
 			}

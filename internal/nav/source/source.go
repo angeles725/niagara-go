@@ -130,7 +130,7 @@ func sourceClass(env *registry.Env, name string, code bool, grep string) {
 	out := env.Stdio.Out
 	path := "None"
 	if root != "" {
-		path = pycompat.PosixJoin(root, core.Str(entry, "path"))
+		path = pycompat.Join(root, core.Str(entry, "path"))
 	}
 	if !code && grep == "" {
 		fmt.Fprintf(out, "\n  Class:    %s\n", resolved)

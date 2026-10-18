@@ -54,7 +54,7 @@ func (e *Env) grepSource(data *index.Object, pattern string) error {
 	}
 	fmt.Fprintln(e.Out)
 	fmt.Fprintf(e.Out, "Grep '%s':\n", pattern)
-	file := pycompat.PosixJoin(e.BaseDir, "source", getStr(data, "path", ""))
+	file := pycompat.Join(e.BaseDir, "source", getStr(data, "path", ""))
 	lines, err := sourceLinesKeepEnds(file)
 	if err != nil {
 		fmt.Fprintf(e.Out, "  Error reading source: %s\n", index.OSError(err, file))
@@ -108,7 +108,7 @@ func (e *Env) SourceGrep(p SourceGrepParams) error {
 	total := 0
 	for _, cls := range idx.Keys() {
 		data := idx.Object(cls)
-		file := pycompat.PosixJoin(e.BaseDir, "source", getStr(data, "path", ""))
+		file := pycompat.Join(e.BaseDir, "source", getStr(data, "path", ""))
 		if !pycompat.IsFile(file) {
 			continue
 		}
