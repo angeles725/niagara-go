@@ -1,0 +1,12 @@
+
+  source BAlarmService --grep /ackAlarm/ (alarm-rt)
+
+   113 |       name = "ackAlarm",
+   162 |    public static final Action ackAlarm = newAction(4, new BAlarmRecord(), null);
+   248 |    public void ackAlarm(BAlarmRecord parameter) {
+   249 |       this.invoke(ackAlarm, parameter, null);
+   625 |                   ((BIAlarmSource)source).ackAlarm(alarm);
+   656 |             ((BIAlarmablePlatformService)source).ackAlarm(record);
+
+  6 matches in 1027 lines
+

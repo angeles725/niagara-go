@@ -1,0 +1,19 @@
+
+  LICENSE FEATURES — aggregate
+  352 licensing calls (326 resolved to 121 feature names, 26 unresolved) in 272 candidate files from 138 submodules, token index built <DATE>
+  getLicenseManager() sites: 384 (319 lead to a feature, 65 unresolved: license-features --unresolved)
+
+  FEATURE                        VENDOR        HITS    CLS    MOD
+  ----------------------------------------------------------------------
+  brand                          tridium         37     26     26
+  honEasyBinding                 alerton,hone    22      2      2
+  reflow                         ?,niagaramod    16      2      2
+  honHit                         hbs_cp,honey     9      3      3
+  HBDashboard                    alerton,hone     8      1      1
+  honEasyDatabaseManager         alerton,hone     8      1      1
+  honEasyTemplate                alerton,hone     8      1      1
+  honPointListView               alerton,hone     8      1      1
+  fips140-2                      tridium          7      5      5
+  developer                      tridium          6      5      2
+    ... limit reached (10) — use -n to increase
+

@@ -1,0 +1,13 @@
+
+  Inheritance chain for BAlarmService (depth 5):
+
+     BAlarmService  (alarm-rt (+doc source), javax.baja.alarm)
+    ^-- BAbstractService  (baja (+doc source), javax.baja.sys)
+      ^-- BComponent  (baja (+doc source), javax.baja.sys)
+        ^-- BComplex  (baja (+doc source), javax.baja.sys)
+          ^-- BValue  (baja (+doc source), javax.baja.sys)
+            ^-- BObject  (baja (+doc source), javax.baja.sys)
+
+  Implements: BIAlarmClassFolder, BIDataRecoverySourceService, BIRestrictedComponent
+  Siblings under BAbstractService: 57
+

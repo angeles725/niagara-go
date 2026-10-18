@@ -1,0 +1,41 @@
+============================================================
+MODULE INVENTORY
+============================================================
+
+  Total submodules (JARs):      956
+  Unique modules:               685
+  With Java code:               566
+  Without code (docs/res):      390
+  With vineflower/:             574
+  ZKM obfuscated:                81
+  Total .java files:         53,485
+  Total .class files:        68,116
+  Unique 3rd-party libs:        146
+
+  Type breakdown:
+    doc            103
+    rt             516
+    se               5
+    standalone      22
+    ux             106
+    wb             204
+
+  Bytecode versions:
+    v52 (Java 8  ):   532
+    v53 (Java 9  ):    10
+
+  Index built: <DATE>
+  Build time:  <T>
+
+  Top 10 by .java files:
+    apachePoi-rt                             6,337 files  8,244 classes
+    opcUaCore-rt                             3,114 files  4,496 classes
+    docSource-doc                            2,603 files      0 classes
+    abstractMqttDriver-rt                    1,975 files  2,796 classes
+    nmodsreflow77-rt                         1,919 files  2,856 classes
+    nmodsreflow-rt                           1,918 files  2,853 classes
+    ascCommon                                1,741 files  2,016 classes
+    honeywellSpyderTool                      1,504 files  1,619 classes
+    cloudLink-rt                             1,297 files      0 classes
+    gx-wb                                    1,075 files  1,532 classes
+

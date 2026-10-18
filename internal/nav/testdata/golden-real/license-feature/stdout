@@ -1,0 +1,8 @@
+
+  LICENSE FEATURE 'bacnet': 2 call site(s) in 2 submodule(s)
+
+  CLASS                                  LINE  VENDOR    FORM         MODULE                 PATH
+  --------------------------------------------------------------------------------------------------------------
+  BBacnetNetwork                          340  tridium   getFeature   bacnet-rt              bacnet/bacnet-rt/vineflower/javax/baja/bacnet/BBacnetNetwork.java
+  BBacnetNetwork                          732  tridium   getFeature   docSource-doc          docSource/docSource-doc/vineflower/bacnet-rt/javax/baja/bacnet/BBacnetNetwork.java
+

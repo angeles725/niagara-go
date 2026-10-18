@@ -1,0 +1,12 @@
+
+  Modules (ZKM): 5 results
+  NAME                                     TYPE    JAVA   CLASS  ZKM   BC
+  ----------------------------------------------------------------------
+  apachePoi-rt                               rt   6,337   8,244  YES  v53
+  opcUaCore-rt                               rt   3,114   4,496  YES  v52
+  docSource-doc                             doc   2,603       0  YES  v?
+  abstractMqttDriver-rt                      rt   1,975   2,796  YES  v52
+  nmodsreflow77-rt                           rt   1,919   2,856  YES  v52
+
+  Total: 5 modules, 15,948 java files, 18,392 classes
+

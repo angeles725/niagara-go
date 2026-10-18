@@ -1,0 +1,12 @@
+
+  Rank 'como funciona el ack de alarmas': 904 matching classes (terms: ack, alarm)
+  Classes named in the question first, then BM25 x importer prior; columns: rank, score, class, module, path
+
+1	43.032	BAckState	alarm-rt	alarm/alarm-rt/vineflower/javax/baja/alarm/BAckState.java
+2	33.872	AckAlarmResult	cloudLink-rt	cloudLink/cloudLink-rt/vineflower/com/tridium/cloudLink/msg/AckAlarmResult.java
+3	33.462	RequestAlarmAckMessage	honPlantControllerHMI-rt	honPlantControllerHMI/honPlantControllerHMI-rt/vineflower/com/honeywell/honplantcontroller/hmi/messages/RequestAlarmAckMessage.java
+4	31.983	IForgeAckAlarmCommandHandler	cloudLinkForge-rt	cloudLinkForge/cloudLinkForge-rt/vineflower/com/tridium/cloudLink/forge/msg/IForgeAckAlarmCommandHandler.java
+5	30.815	BAckAlarmCommand	cloudLink-rt	cloudLink/cloudLink-rt/vineflower/com/tridium/cloudLink/command/BAckAlarmCommand.java
+
+  ... and 899 more (use -n to show more)
+
