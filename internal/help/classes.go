@@ -11,6 +11,7 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/index"
 	"github.com/angeles725/niagara-go/internal/pycompat"
+	"github.com/angeles725/niagara-go/internal/pyhtml"
 )
 
 // classEntry is one class behind a class-index key (_expand): the primary
@@ -104,7 +105,7 @@ var typeParams = regexp.MustCompile(`<.*?>`)
 // cleanClassName is doc_types.clean_class_name: entities decoded and type
 // parameters dropped ("Cursor&lt;E&gt;" -> "Cursor").
 func cleanClassName(name string) string {
-	return pycompat.Strip(typeParams.ReplaceAllString(pycompat.HTMLUnescape(name), ""))
+	return pycompat.Strip(typeParams.ReplaceAllString(pyhtml.Unescape(name), ""))
 }
 
 // readCleanClass is class_search.read_clean_class: the bajadoc-clean text

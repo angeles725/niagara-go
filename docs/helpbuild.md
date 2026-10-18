@@ -19,7 +19,8 @@ document disagree, the code wins and this document is corrected.
 | **S4** (done) | developer course (`course-text/`, `devguide-examples/course/`); `gate()` waits for S10 (it reads the full-text index) | `course_extractor.py`, `course.py` (part) | ~670 with tests |
 | **S5** (done) | `html_text` (html.parser with `convert_charrefs`) + guides/devguide parsers | `html_text.py`, `guides_parser.py`, `guide_toc.py`, `devguide_parser.py` | ~2,100 with tests |
 | **S6** (done) | `guides-index.json` + `devguide-toc.json` | `build_guides_index.py`, `build_devguide_toc.py` | ~930 with tests |
-| S7 | bajadoc text (`bajadoc-clean/`) | `bajadoc_parser.py`, `bajadoc_xml_parser.py`, `bajadoc_xml.py` | ~800 |
+| **S7a** (done) | bajadoc text of the javadoc HTML pages (`bajadoc-clean/`) | `bajadoc_parser.py` (+ `bajadoc_xml.format_output`, `write_clean_class`, `doc_types.clean_class_name`) | ~1,000 with tests |
+| S7b | bajadoc text from `.bajadoc` XML for the classes without an HTML page | `bajadoc_xml_parser.py`, `bajadoc_xml.py` (rest) | ~500 |
 | S8 | class / inheritance / method indexes | `build_class_index.py`, `inheritance_builder.py`, `method_indexer.py` | ~550 |
 | S9 | source / slots / xref / call indexes | `source_indexer.py`, `slots_indexer.py`, `xref_builder.py`, `build_call_index.py` | ~800 |
 | S10 | orchestration (`extract`, `versions add`, `rebuild-all`, `freshness`) | `extract_version.py`, `version_setup.py`, `version_report.py`, `maintenance.py` | ~750 |
@@ -105,8 +106,9 @@ that set any `HELPBUILD_PARITY_*` variable (`make parity` sets three) fails inst
 skipping when `python3`, the checkout, its tools or a real version's `versions/` tree are
 missing, the message naming the variable. The interpreter must be CPython 3.15.x
 (`html.parser` and the other stdlib behaviour the drivers compare change between minor
-releases): another version fails every parity test, and `-v` logs the version used
-(`parity driver python: CPython 3.15.0 (...)`). After Phase 5 retires the Python tools from
+releases): another version is a missing reference like the rest (skipped visibly in a
+plain run, every parity test failing when a `HELPBUILD_PARITY_*` variable is set), and `-v`
+logs the version used (`parity driver python: CPython 3.15.0 (...)`). After Phase 5 retires the Python tools from
 niagara-research, the reference lives in a `pre-go-retire` worktree of niagara-research:
 point `NIAGARA_HELP_DIR` at its `niagara-help` folder (for example
 `NIAGARA_HELP_DIR=~/niagara-research-worktrees/pre-go-retire/niagara-help make parity`). The drift
@@ -314,7 +316,7 @@ second package needs them.
 
 | File | Ports | Notes |
 |---|---|---|
-| `pyhtml.go`, `pyhtmlref.go` | `html.parser.HTMLParser` (CPython 3.15), `convert_charrefs=True` | the tokenizer below; reports only the callbacks `html_text` overrides |
+| `internal/pyhtml` (shared package, D37) | `html.parser.HTMLParser` (CPython 3.15), `convert_charrefs=True`; `html.unescape`; `name in html.entities.html5` | the tokenizer below (`pyhtml.Parse`, a `pyhtml.Handler`); reports only the callbacks the tools override |
 | `htmltext.go` | `html_text.convert` as `HTMLToText(page) (title, text)` | Python's Unicode `\s`, `strip` and `\w` (`pycompat.IsSpace`, `IsWordRune`) |
 | `guidetoc.go` | `guide_toc.find_toc`, `parse_toc`, `count_items` | ElementTree is `internal/pyxml` in ETree mode; the warning is returned, not printed |
 | `guidesparser.go` | `guides_parser.parse_guides`, `_markdown_title`, `devguide_parser.parse_devguide` | `RebuiltDir`; `TextResult.Log` = stdout lines, `.Warnings` = stderr lines |
@@ -336,6 +338,11 @@ Both indexes are `json.dumps(indent=2)` with `ensure_ascii` on (`DumpIndent2`).
 
 ### The html.parser port
 
+The port lives in the shared `internal/pyhtml` package (decision D37, owner Integrante3;
+its `doc.go` holds the contract), which depends on `textfold` only so that
+`pycompat.HTMLUnescape` can forward to it. Its parity tests stay here, next to their
+driver.
+
 One `feed()` of the whole page and `close()` parse exactly like one `goahead(end=1)`: each
 early stop of the feed pass leaves the state unchanged and `close()` resumes there, and
 the text after the last `<` is handed over whole either way, so the `&` look-back that
@@ -347,6 +354,13 @@ collapses whitespace per chunk) and are the same: data before a tag, a malformed
 reported as text, a lone `<`, a trailing `</`. Unterminated constructs at the end of the
 page are dropped (`<a href='x`, `</a`, `<!--`), as in Python.
 
+`pyhtml.Feed` is one `feed()` alone (`goahead(end=0)`), which bajadoc's `strip_tags` uses
+(it never calls `close()`): what would wait for more input is dropped, that is an
+unterminated construct or a lone `<` at the end with everything after it, raw text
+without its end tag, and the data after the last `<` when an `&` in its last 34 code
+points has no `[\t\n\r\f ;]` after it (the window counts code points, as Python's
+`n-34` does).
+
 `locatetagend`, `tagfind_tolerant` and `attrfind_tolerant` are hand-ported: every part
 after the tag name is optional, so sre's first path is the greedy one, except the value
 indicator, which backtracks one space before a quote that is never closed (`x= 'y` is
@@ -354,11 +368,11 @@ indicator, which backtracks one space before a quote that is never closed (`x= '
 CDATA end tag folds ASCII letters only (`re.ASCII`). Offsets are byte offsets into valid
 UTF-8: every delimiter is ASCII and every class excludes ASCII bytes only.
 
-`html.unescape` is `pycompat.HTMLUnescape` plus `&nGt;` and `&nLt;`: Go's `html` entity
-table lacks these two WHATWG names (found by the parity test over all 2,231 names of
-`html.entities.html5`). The attribute rule (`_unescape_attrvalue`) needs `name in html5`;
-Go does not export its table, so `isHTML5Entity` reads it through `html.UnescapeString`
-(an exact name decodes to 1 or 2 code points, a prefix match leaves the rest of the name).
+`html.unescape` is `pyhtml.Unescape` (`pycompat.HTMLUnescape` forwards to it): Go's
+`html` entity table plus `&nGt;` and `&nLt;`, the two WHATWG names it lacks (found by the
+parity test over all 2,231 names of `html.entities.html5`). The attribute rule
+(`_unescape_attrvalue`) needs `name in html5`; Go does not export its table, so
+`pyhtml.IsHTML5Entity` reads it through `html.UnescapeString` (an exact name decodes to 1 or 2 code points, a prefix match leaves the rest of the name).
 
 ### Parity tests (`testdata/parity/htmldriver.py`)
 
@@ -366,7 +380,8 @@ Go does not export its table, so `isHTML5Entity` reads it through `html.Unescape
 |---|---|
 | `TestParityHTMLCorners` | the parser callbacks and `convert()` of 60 hand-written pages (the Python tests' fixtures, unterminated constructs, raw text, attribute quoting, charrefs) |
 | `TestParityHTMLFuzz` | the same on 5,000 seeded random snippets of tag/charref/whitespace fragments, some cut at a random point (400 with `-short`) |
-| `TestParityHTML5Entities` | `isHTML5Entity` on every `html5` name and its near misses, `htmlUnescape` against `html.unescape` on 46,851 texts |
+| `TestParityHTMLFeed` | `pyhtml.Feed` (one `feed()` without `close()`, bajadoc's `strip_tags`) against the same on the corner pages plus held-back ends (cut references inside and outside the 34-code-point look-back, raw text without its end tag, a lone `<`) and on 5,000 seeded random snippets (400 with `-short`) |
+| `TestParityHTML5Entities` | `pyhtml.IsHTML5Entity` on every `html5` name and its near misses, `pyhtml.Unescape` against `html.unescape` on 46,851 texts |
 | `TestParityTocFiles` | `parse_toc` (order, titles, trails), `count_items` and the stderr warning on the synthetic toc.xml files and corners (namespaced, root `tocitem`, empty, undefined entity, BOM + ISO-8859-1 / US-ASCII / UTF-8 / UTF-16 (one real 4.3/4.15 toc.xml is BOM + ISO-8859-1; `pyxml` applies the declared encoding after a BOM as expat does), junk, missing file) |
 | `TestParityGuidesSynthetic` | stdout/stderr lines, return value and both whole trees after each builder (and a second run) on a synthetic root: the `test_extraction` pages, toc.xml corners, Markdown, `.txt` beside `.html`, licence texts, a non-UTF-8 page body, CRLF, a broken toc, `TOC.XML` |
 | `TestParityGuidesIndexSources` | `guides-index.json` of a registered root with a manifest and a mounted install, an unmounted install, and no manifest (values kept from an earlier index) |
@@ -386,13 +401,48 @@ Go does not export its table, so `isHTML5Entity` reads it through `html.Unescape
 - **The `excluded (licence text)` line** is `os.path.relpath` unchanged, so it keeps the
   host separator (`devguide\sub\lgpl-2.1.txt` on Windows) while `SOURCE:` headers use `/`.
 
-### S5/S6 shared-helper candidates
+## S7a files
 
-- **`internal/pyhtml`**: `pyhtml.go` + `pyhtmlref.go` have no helpbuild dependency and
-  bajadoc (S7) needs the same parser; moving them to a shared package (exporting the
-  handler interface) is a rename.
-- **`pycompat.HTMLUnescape`** should learn `&nGt;` / `&nLt;`; `htmlUnescape` and
-  `goMissingEntities` then go away. `isHTML5Entity` would sit well next to it.
+| File | Ports | Notes |
+|---|---|---|
+| `bajadoc.go` | `parse_bajadoc_html` and its `extract_*` / `parse_*_summary` helpers, `strip_tags`, `normalize_ws` | the regexes are Python's, run by `internal/pyre` on code points (Unicode `\s` `\S` `\w` `\b`, lazy quantifiers, backtracking); `_find_summary_section` searches the end markers from 10 code points past the marker; `strip_tags` is `pyhtml.Feed` (one `feed()`, never `close()`) |
+| `bajadocrun.go` | `bajadoc_parser.main`, `bajadoc_xml.format_output`, `bajadoc_xml.write_clean_class`, `doc_types.clean_class_name` | the walk skips the index pages and the files of a folder whose path holds `/class-use/` (so `class-use/` itself is read, its pages skipped as no class); pages are read with `errors="replace"` and universal newlines; `bajadoc-clean/` is written in place with atomic writes (it also holds what S7b writes), a page left under its escaped name (`Cursor&lt;E&gt;.txt`) is removed |
+
+API for S10 (`maintenance.BUILDERS` runs `bajadoc_parser.py <data root>`):
+
+```go
+res, err := helpbuild.ParseBajadoc(root)
+// print res.Log line by line, exit res.Status (1: bajadoc/javax/baja missing);
+// err != nil is a Python traceback (exit 1), res.Log holds what was printed before it.
+```
+
+The `Done in %.1fs` line is the real elapsed time on both sides; the parity tests print it
+as `Done in <t>s` (as S3 does with `Time:`).
+
+S7a parity (`testdata/parity/bajadocdriver.py`, mode `run`):
+
+| Test | Compares |
+|---|---|
+| `TestParseBajadocFixture` | no Python needed: `ParseBajadoc` on `testdata/bajadoc/root/` against the golden `testdata/bajadoc/clean/` and `stdout.txt` (Python's output, regenerated with the driver's `run` mode; the driver's docstring says how) |
+| `TestParityBajadocSynthetic` | stdout lines, exit status and both whole trees: the fixture (classes, an interface with subinterfaces, an enum, an annotation type, a generic class name, the `<title>` fallback, skipped pages, `class-use/` folders, no package, CRLF and bytes that are not UTF-8, a 78-code-point wrap, member rows whose fragments `feed()` holds back), then an unreadable page, a dangling link, links to a page and to a folder, a page under its escaped name, an unrelated S7b page, a second run, and a root without `bajadoc/javax/baja` (exit 1); it also fails when the golden files are no longer Python's output |
+| `TestParityBajadocReal` | the same on a real version's `bajadoc/` (linked into a temporary data root): 4.14.0.162 with `HELPBUILD_PARITY_REAL=1`, 4.15.6.20 with `HELPBUILD_PARITY_415=1`, or the `HELPBUILD_PARITY_BAJADOC` list; logs both run times |
+
+Measured 2026-10-17 (whole trees identical, Python 3.15 vs Go, wall time of one run):
+
+| Version | Pages parsed | Files written (bytes) | Python | Go |
+|---|---|---|---|---|
+| 4.14.0.162 (data root `.`) | 2,761 (none skipped) | 2,759 (2,953,078): two classes are under both `webChart/ux/` and `webchart/ux/` with one package name, the later page wins on both sides | 5.4 s | 5.0 s |
+| 4.15.6.20 | 2,839 | 2,839 (3,129,292) | 7.2 s | 5.4 s |
+| 4.13.2.18 | 2,714 | 2,714 (2,886,701) | 12.8 s | 5.5 s |
+
+### S7a intended differences
+
+- **A class name that would put its page outside `bajadoc-clean/`** (absolute, or `..`
+  segments that climb above it): Python writes wherever `os.path.join` points;
+  `ParseBajadoc` stops with `ErrUnsafeClassName` before writing (safety over parity, as
+  S2's `ErrUnsafeEntry`). Javadoc class names hold no `/`.
+- **Page names that are not UTF-8** (Python's surrogateescape, sorted as decoded names) are
+  not modelled; parity runs on Linux with UTF-8 names.
 
 ## Real-data parity
 
@@ -400,19 +450,20 @@ Every test that reads a real install or the real corpus runs only on request, `-
 or not; without its variable it skips and the message names the variable. A switch
 (`REAL`, `FULL`, `415`) counts only when set to `1`: any other value fails the test,
 naming the variable and the accepted value. A selection that leaves nothing to compare
-(no version for `TestParityGuidesReal`, a `HELPBUILD_PARITY_JARS` naming no jar, a
+(no version for `TestParityGuidesReal` or `TestParityBajadocReal`, a `HELPBUILD_PARITY_JARS` naming no jar, a
 `HELPBUILD_PARITY_PDF_DOCS` without a PDF, a `HELPBUILD_PARITY_COURSE` without files)
 fails too, and an explicit jar list or course never skips as "not mounted". The synthetic,
 cache, glob, toc and fuzz parity tests (5,000 snippets) stay on in `go test`.
 
 | Variable | Turns on |
 |---|---|
-| `HELPBUILD_PARITY_REAL=1` | the umbrella: `TestParityRealJars` (five 4.3 jars + 4.15 `ffmpeg-wb.jar`), `TestParityExtractReal` (the 4.3 subset), `TestParityPDFReal` (five 4.3 manuals), `TestParityCourseReal`, `TestParityGuidesReal` (4.3.58.18) |
+| `HELPBUILD_PARITY_REAL=1` | the umbrella: `TestParityRealJars` (five 4.3 jars + 4.15 `ffmpeg-wb.jar`), `TestParityExtractReal` (the 4.3 subset), `TestParityPDFReal` (five 4.3 manuals), `TestParityCourseReal`, `TestParityGuidesReal` (4.3.58.18), `TestParityBajadocReal` (4.14.0.162) |
 | `HELPBUILD_PARITY_JARS=a.jar:b.jar` | `TestParityRealJars` on that list instead |
 | `HELPBUILD_PARITY_FULL=1` | `TestParityHelpJarsFullInstall` (all 578 module jars of 4.3) |
 | `HELPBUILD_PARITY_PDF_DOCS=<dir>` | `TestParityPDFReal` over a whole docs folder (the 66-PDF run) |
 | `HELPBUILD_PARITY_COURSE=<dir>` | `TestParityCourseReal` on that course tree |
-| `HELPBUILD_PARITY_415=1` | `TestParityGuidesReal` on 4.15.6.20 too |
+| `HELPBUILD_PARITY_415=1` | `TestParityGuidesReal` and `TestParityBajadocReal` on 4.15.6.20 too |
+| `HELPBUILD_PARITY_BAJADOC=a:b` | `TestParityBajadocReal` on that list of version ids instead (for example `4.13.2.18`) |
 
 `make parity` sets `REAL`, `FULL` and `415` and runs every `Parity` test of the package.
 Timings on the development laptop: `go test ./internal/helpbuild/` about 20 s without the
@@ -427,3 +478,5 @@ variables (about 170 s when the real tests ran by default); `HELPBUILD_PARITY_RE
 - `bajadoc_parser.format_output` exists only as a re-export for `bajadoc_xml_parser`; both
   are retired in Phase 5.
 - `doc_jars.fidelity_jar(report=None)` default is used only by tests.
+- `bajadoc_parser._TagStripper.handle_entityref` / `handle_charref` (never called with
+  `convert_charrefs`) and `strip_tags`'s regex fallback (`feed()` does not raise).

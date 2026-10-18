@@ -1,0 +1,6 @@
+CLASS: CrLf
+PACKAGE: javax.baja.util
+EXTENDS: BObject
+
+DESCRIPTION:
+Line one line two �� bad bytes and a lone CR.

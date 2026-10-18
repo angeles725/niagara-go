@@ -9,6 +9,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
+	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 	"github.com/angeles725/niagara-go/internal/textfold"
 )
@@ -89,7 +90,7 @@ func KnownJarNames(baseDir string) (names []string, ok bool, err error) {
 		return nil, false, err
 	}
 	for _, repo := range []string{baseDir, filepath.Dir(filepath.Dir(abs))} {
-		manifest := pyJoin(repo, "versions", vid+".manifest.json")
+		manifest := pycompat.Join(repo, "versions", vid+".manifest.json")
 		if !isRegular(manifest) {
 			continue
 		}
@@ -129,7 +130,7 @@ func ModulesDirOf(baseDir string) (string, error) {
 	if err != nil || install == "" {
 		return "", err
 	}
-	if modules := pyJoin(install, "modules"); isDir(modules) {
+	if modules := pycompat.Join(install, "modules"); isDir(modules) {
 		return modules, nil
 	}
 	return "", nil
@@ -165,7 +166,7 @@ func jarForFolder(folder, rawFolder string, src JarSources, rules *Rules) (jar p
 	if src.ModulesDir == "" {
 		return pyjson.Value{}, false
 	}
-	if isRegular(pyJoin(src.ModulesDir, rawFolder+".jar")) {
+	if isRegular(pycompat.Join(src.ModulesDir, rawFolder+".jar")) {
 		return pyjson.String(folder + ".jar"), true
 	}
 	return pyjson.Value{}, true
@@ -175,7 +176,7 @@ func jarForFolder(folder, rawFolder string, src JarSources, rules *Rules) (jar p
 // under baseDir; empty when it is absent or unreadable (what Python
 // catches: an OSError, a ValueError, a top level that is not a dict).
 func previousJars(baseDir string) (map[string]pyjson.Value, error) {
-	data, err := loadJSON(pyJoin(baseDir, "indexes", "guides-index.json"))
+	data, err := loadJSON(pycompat.Join(baseDir, "indexes", "guides-index.json"))
 	var le *JSONLoadError
 	if errors.As(err, &le) {
 		return nil, nil
@@ -205,7 +206,7 @@ func GuidesIndex(baseDir string, src JarSources) (index pyjson.Value, kept, warn
 	if err != nil {
 		return index, nil, nil, err
 	}
-	guides := pyJoin(baseDir, "guides")
+	guides := pycompat.Join(baseDir, "guides")
 	listed, err := sortedNames(guides)
 	if err != nil {
 		return index, nil, nil, err
@@ -214,7 +215,7 @@ func GuidesIndex(baseDir string, src JarSources) (index pyjson.Value, kept, warn
 	index = pyjson.NewObject()
 	for fi, rawFolder := range folders {
 		folder := keys[fi]
-		path := pyJoin(guides, rawFolder)
+		path := pycompat.Join(guides, rawFolder)
 		if !isDir(path) {
 			continue
 		}
@@ -227,7 +228,7 @@ func GuidesIndex(baseDir string, src JarSources) (index pyjson.Value, kept, warn
 					htmlCount++
 				}
 				if IsGuidePage(f) {
-					rel, err := filepath.Rel(path, pyJoin(dir, f))
+					rel, err := filepath.Rel(path, pycompat.Join(dir, f))
 					if err != nil {
 						werr = err
 					}
@@ -290,7 +291,7 @@ func BuildGuidesIndex(baseDir string) (*TextResult, error) {
 	if err != nil {
 		return nil, err
 	}
-	out := pyJoin(baseDir, "indexes", "guides-index.json")
+	out := pycompat.Join(baseDir, "indexes", "guides-index.json")
 	if err := os.MkdirAll(filepath.Dir(out), 0o777); err != nil {
 		return nil, err
 	}

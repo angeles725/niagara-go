@@ -78,8 +78,8 @@ func markdownTitle(text string) string {
 // ParseGuides is guides_parser.parse_guides(baseDir).
 func ParseGuides(baseDir string) (*TextResult, error) {
 	res := &TextResult{}
-	guidesDir := pyJoin(baseDir, "guides")
-	err := RebuiltDir(pyJoin(baseDir, "guides-clean"), func(out string) error {
+	guidesDir := pycompat.Join(baseDir, "guides")
+	err := RebuiltDir(pycompat.Join(baseDir, "guides-clean"), func(out string) error {
 		return parseGuidesInto(res, guidesDir, out)
 	})
 	if err != nil {
@@ -96,7 +96,7 @@ func parseGuidesInto(res *TextResult, guidesDir, outDir string) error {
 	chars, errs, titled := 0, 0, 0
 	var werr error
 	for _, folder := range folders {
-		folderPath := pyJoin(guidesDir, folder)
+		folderPath := pycompat.Join(guidesDir, folder)
 		if !isDir(folderPath) {
 			continue
 		}
@@ -112,7 +112,7 @@ func parseGuidesInto(res *TextResult, guidesDir, outDir string) error {
 				if werr != nil || !IsGuidePage(fname) {
 					continue
 				}
-				pagePath := pyJoin(dir, fname)
+				pagePath := pycompat.Join(dir, fname)
 				rel, err := filepath.Rel(guidesDir, pagePath)
 				if err != nil {
 					werr = err
@@ -142,7 +142,7 @@ func parseGuidesInto(res *TextResult, guidesDir, outDir string) error {
 					header = "TITLE: " + title + "\n"
 				}
 				header += "SOURCE: guides/" + rel + "\n\n"
-				if werr = writeClean(pyJoin(outDir, CleanTextName(rel, guidesDir)), cleanFileText(header, text)); werr != nil {
+				if werr = writeClean(pycompat.Join(outDir, CleanTextName(rel, guidesDir)), cleanFileText(header, text)); werr != nil {
 					continue
 				}
 				res.Files++
@@ -182,8 +182,8 @@ func guidePageText(fname, raw string) (title, text string) {
 // are listed as excluded.
 func ParseDevguide(baseDir string) (*TextResult, error) {
 	res := &TextResult{}
-	devguideDir := pyJoin(baseDir, "devguide")
-	err := RebuiltDir(pyJoin(baseDir, "devguide-clean"), func(out string) error {
+	devguideDir := pycompat.Join(baseDir, "devguide")
+	err := RebuiltDir(pycompat.Join(baseDir, "devguide-clean"), func(out string) error {
 		return parseDevguideInto(res, baseDir, devguideDir, out)
 	})
 	if err != nil {
@@ -206,7 +206,7 @@ func parseDevguideInto(res *TextResult, baseDir, devguideDir, outDir string) err
 			if !isHTML {
 				isTxt := strings.HasSuffix(low, ".txt")
 				if isTxt && IsLicence(fname) {
-					rel, err := filepath.Rel(baseDir, pyJoin(dir, fname))
+					rel, err := filepath.Rel(baseDir, pycompat.Join(dir, fname))
 					if werr = err; err != nil {
 						break
 					}
@@ -231,7 +231,7 @@ func parseDevguideInto(res *TextResult, baseDir, devguideDir, outDir string) err
 }
 
 func devguidePage(res *TextResult, chars *int, baseDir, devguideDir, outDir, dir, fname string, isHTML bool) error {
-	pagePath := pyJoin(dir, fname)
+	pagePath := pycompat.Join(dir, fname)
 	relDir, err := filepath.Rel(devguideDir, dir)
 	if err != nil {
 		return err
@@ -248,7 +248,7 @@ func devguidePage(res *TextResult, chars *int, baseDir, devguideDir, outDir, dir
 	}
 	outSub := outDir
 	if relDir != "." {
-		outSub = pyJoin(outDir, relDir)
+		outSub = pycompat.Join(outDir, relDir)
 	}
 	relSource, err := filepath.Rel(baseDir, pagePath)
 	if err != nil {
@@ -258,7 +258,7 @@ func devguidePage(res *TextResult, chars *int, baseDir, devguideDir, outDir, dir
 		return errNotUTF8Name(pagePath)
 	}
 	header := "TITLE: " + title + "\nSOURCE: " + strings.ReplaceAll(relSource, `\`, "/") + "\n\n"
-	if err := writeClean(pyJoin(outSub, CleanTextName(fname, dir)), cleanFileText(header, text)); err != nil {
+	if err := writeClean(pycompat.Join(outSub, CleanTextName(fname, dir)), cleanFileText(header, text)); err != nil {
 		return err
 	}
 	res.Files++

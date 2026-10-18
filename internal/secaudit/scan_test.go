@@ -95,3 +95,22 @@ func TestScanLogsHitsBesideAnUnreadableDir(t *testing.T) {
 		})
 	}
 }
+
+// A log file is named as os.walk names it, joined with the host's os.path.join: a backslash on
+// Windows (ntpath), a slash elsewhere, in the subdirectory as at the root.
+func TestScanLogsNamesFilesWithTheHostSeparator(t *testing.T) {
+	root := t.TempDir()
+	if err := os.Mkdir(filepath.Join(root, "sub"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	for _, p := range []string{filepath.Join(root, "nre.log"), filepath.Join(root, "sub", "nre.log")} {
+		if err := os.WriteFile(p, []byte("No code signers for entry x\n"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	hits, _, _, _ := scanLogs(root)
+	want := []string{filepath.Join(root, "nre.log"), filepath.Join(root, "sub", "nre.log")}
+	if len(hits) != 2 || hits[0].file != want[0] || hits[1].file != want[1] {
+		t.Fatalf("hits %+v, want files %q", hits, want)
+	}
+}

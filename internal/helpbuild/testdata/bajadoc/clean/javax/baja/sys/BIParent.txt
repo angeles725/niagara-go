@@ -1,0 +1,6 @@
+INTERFACE: BIParent
+PACKAGE: javax.baja.sys
+SUBCLASSES: BIChild
+
+DESCRIPTION:
+Has subinterfaces.

@@ -4,5 +4,10 @@
   "--scan-logs",
   "inputs/logs/sub",
   "--json"
- ]
+ ],
+ "requires": {
+  "goos": [
+   "linux"
+  ]
+ }
 }

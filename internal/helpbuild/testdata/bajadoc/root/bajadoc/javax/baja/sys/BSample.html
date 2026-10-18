@@ -1,0 +1,141 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<!-- NewPage -->
+<html lang="en">
+<head>
+<title>BSample (Niagara API)</title>
+</head>
+<body>
+<div class="header">
+<div class="subTitle">javax.baja.sys</div>
+<h2 title="Class BSample" class="title">Class BSample</h2>
+</div>
+<div class="contentContainer">
+<div class="description">
+<ul class="blockList">
+<li class="blockList">
+<dl>
+<dt>Direct Known Subclasses:</dt>
+<dd><a href="../../../javax/baja/sys/BSampleChild.html" title="class in javax.baja.sys">BSampleChild</a>, <a href="../../../javax/baja/sys/BSampleOther.html" title="class in javax.baja.sys">BSampleOther</a></dd>
+</dl>
+<hr>
+<br>
+<pre>public class <span class="typeNameLabel">BSample</span>
+extends <a href="../../../javax/baja/sys/BComponent.html" title="class in javax.baja.sys">BComponent</a>
+implements <a href="../../../javax/baja/sys/BIThing.html" title="interface in javax.baja.sys">BIThing</a>, <a href="../../../javax/baja/util/BIOther.html" title="interface in javax.baja.util">BIOther</a>, java.io.Serializable</pre>
+<div class="block">BSample is a sample component whose description is long enough to be wrapped at seventy-eight characters by format_output; it mentions <code>BObject</code>, &lt;generics&gt; &amp; entities, &#169; and &#x2014; dashes, café crème brûlée été à la française, and averyveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryverylongwordthatexceedsseventyeight end.
+ with a <a href="x">link</a> and spaces.</div>
+<dl>
+<dt><span class="simpleTagLabel">Since:</span></dt>
+<dd>Niagara  4.0
+  r2</dd>
+</dl>
+</li>
+</ul>
+</div>
+<div class="summary">
+<ul class="blockList">
+<li class="blockList">
+<!-- =========== FIELD SUMMARY =========== -->
+<ul class="blockList">
+<li class="blockList"><a name="field.summary">
+<!--   -->
+</a>
+<h3>Field Summary</h3>
+<table class="memberSummary">
+<tr class="altColor">
+<td class="colFirst"><code>static <a href="../../../javax/baja/sys/BSample.html" title="class in javax.baja.sys">BSample</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="X.html#DEFAULT">DEFAULT</a></span></code>
+<div class="block">The default &amp; only <b>instance</b>.</div>
+</td>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><code>static final int</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="X.html#MAX_COUNT">MAX_COUNT</a></span></code>
+</td>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><code>java.util.List&lt;<a href="../../../javax/baja/sys/BObject.html" title="class in javax.baja.sys">BObject</a>&gt;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="X.html#items">items</a></span></code>
+<div class="block">Cut reference at the end &amp</div>
+</td>
+</tr>
+</table>
+</li>
+</ul>
+<!-- ======== CONSTRUCTOR SUMMARY ======== -->
+<ul class="blockList">
+<li class="blockList"><a name="constructor.summary">
+<!--   -->
+</a>
+<h3>Constructor Summary</h3>
+<table class="memberSummary">
+<tr class="altColor">
+<td class="colOne"><code><span class="memberNameLink"><a href="X.html#BSample--">BSample</a></span>()</code>
+<div class="block">No-arg constructor.</div>
+</td>
+</tr>
+<tr class="altColor">
+<td class="colOne"><code><span class="memberNameLink"><a href="X.html#BSample--">BSample</a></span>(int&nbsp;count,
+ <a href="../../../javax/baja/sys/BObject.html" title="class in javax.baja.sys">BObject</a>&nbsp;parent)</code>
+<div class="block">With a count.</div>
+</td>
+</tr>
+</table>
+</li>
+</ul>
+<!-- ========== METHOD SUMMARY =========== -->
+<ul class="blockList">
+<li class="blockList"><a name="method.summary">
+<!--   -->
+</a>
+<h3>Method Summary</h3>
+<table class="memberSummary">
+<tr id="i0" class="altColor">
+<td class="colFirst"><code>&lt;T&gt;&nbsp;T</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="X.html#get-">get</a></span>(java.lang.Class&lt;T&gt;&nbsp;type)</code>
+<div class="block">Generic getter.</div>
+</td>
+</tr>
+<tr id="i0" class="altColor">
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="X.html#set-">set</a></span>(<a href="../../../javax/baja/sys/BObject.html" title="class in javax.baja.sys">BObject</a>&nbsp;value,
+            <a href="../../../javax/baja/sys/Context.html" title="class in javax.baja.sys">Context</a>&nbsp;cx)</code>
+<div class="block">Setter.</div>
+</td>
+</tr>
+<tr id="i0" class="altColor">
+<td class="colFirst"><code>static <a href="../../../javax/baja/sys/BSample.html" title="class in javax.baja.sys">BSample</a></code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="X.html#make-">make</a></span>()</code>
+<div class="block">Factory.</div>
+</td>
+</tr>
+<tr id="i0" class="altColor">
+<td class="colFirst"><code>protected boolean</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="X.html#isOk-">isOk</a></span>(java.lang.String[]&nbsp;args)</code>
+<div class="block">Check é.</div>
+</td>
+</tr>
+<tr id="i0" class="altColor">
+<td class="colFirst"><code>int</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="X.html#cut-">cut</a></span>(x&amp)</code>
+<div class="block">The params fragment ends in a reference feed() holds back.</div>
+</td>
+</tr>
+<tr id="i0" class="altColor">
+<td class="colFirst"><code>java.util.Map&lt;K,V&gt;</code></td>
+<td class="colLast"><code><span class="memberNameLink"><a href="X.html#map-">map</a></span>(<a href="x">K</a>&nbsp;k &copy)</code>
+<div class="block">Held after the last tag.</div>
+</td>
+</tr>
+</table>
+</li>
+</ul>
+<!-- ============ METHOD DETAIL ========== -->
+<td class="colFirst"><code>void</code></td>
+<td class="colLast"><code><a href="#">detailOnly</a>()</code></td>
+</li>
+</ul>
+</div>
+</div>
+</body>
+</html>

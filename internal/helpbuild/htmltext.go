@@ -5,6 +5,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/angeles725/niagara-go/internal/pycompat"
+	"github.com/angeles725/niagara-go/internal/pyhtml"
 )
 
 // The port of niagara_help_lib/html_text.py: an HTML help page to readable
@@ -60,7 +61,7 @@ func (c *htmlConverter) boundary() {
 	}
 }
 
-func (c *htmlConverter) startTag(tag string, attrs []htmlAttr) {
+func (c *htmlConverter) StartTag(tag string, attrs []pyhtml.Attr) {
 	if tag == "title" {
 		c.inTitle = true
 	}
@@ -115,7 +116,7 @@ func (c *htmlConverter) startTag(tag string, attrs []htmlAttr) {
 }
 
 // attrGet is (dict(attrs).get(name) or "").strip(): the last value wins.
-func attrGet(attrs []htmlAttr, name string) string {
+func attrGet(attrs []pyhtml.Attr, name string) string {
 	v := ""
 	for _, a := range attrs {
 		if a.Name == name {
@@ -125,14 +126,14 @@ func attrGet(attrs []htmlAttr, name string) string {
 	return pycompat.Strip(v)
 }
 
-func (c *htmlConverter) startEndTag(tag string, attrs []htmlAttr) {
-	c.startTag(tag, attrs)
+func (c *htmlConverter) StartEndTag(tag string, attrs []pyhtml.Attr) {
+	c.StartTag(tag, attrs)
 	if tag != "img" && tag != "br" && tag != "hr" {
-		c.endTag(tag)
+		c.EndTag(tag)
 	}
 }
 
-func (c *htmlConverter) endTag(tag string) {
+func (c *htmlConverter) EndTag(tag string) {
 	if tag == "title" {
 		c.inTitle = false
 	}
@@ -208,7 +209,7 @@ func (c *htmlConverter) closeTable() {
 	c.emit("\n" + strings.Join(lines, "\n") + "\n")
 }
 
-func (c *htmlConverter) data(data string) {
+func (c *htmlConverter) Data(data string) {
 	if c.inTitle {
 		c.title.WriteString(data)
 	}
@@ -247,7 +248,7 @@ func collapseSpace(s string) string {
 // HTMLToText is html_text.convert: the (title, text) of one HTML page.
 func HTMLToText(page string) (title, text string) {
 	c := &htmlConverter{}
-	parseHTML(page, c)
+	pyhtml.Parse(page, c)
 	for len(c.tables) > 0 { // a table left open at the end of the page
 		c.closeTable()
 	}

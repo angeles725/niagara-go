@@ -52,10 +52,10 @@ func courseFiles(src string) []courseFile {
 		sort.Strings(dirs)
 		sort.Strings(files)
 		for _, f := range files {
-			out = append(out, courseFile{prefix[dir] + f, pyJoin(dir, f)})
+			out = append(out, courseFile{prefix[dir] + f, pycompat.Join(dir, f)})
 		}
 		for _, d := range dirs {
-			prefix[pyJoin(dir, d)] = prefix[dir] + d + "/"
+			prefix[pycompat.Join(dir, d)] = prefix[dir] + d + "/"
 		}
 		return dirs
 	})
@@ -166,7 +166,7 @@ func BuildCourse(baseDir string, rules *Rules) (*CourseCounts, error) {
 				if err := os.MkdirAll(filepath.Dir(out), 0o777); err != nil {
 					return err
 				}
-				if err := pyCopyfile(pyJoin(src, row.Rel), out); err != nil {
+				if err := pyCopyfile(pycompat.Join(src, row.Rel), out); err != nil {
 					return err
 				}
 				if row.Kind == "text" {

@@ -2,8 +2,6 @@ package helpbuild
 
 import (
 	"os"
-	"path/filepath"
-	"runtime"
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/pycompat"
@@ -139,15 +137,6 @@ func DestPath(jarName, entry string, rules *Rules) (rel string, ok bool) {
 	return "guides/" + GuideFolder(jarName) + "/" + strings.TrimPrefix(entry, "doc/"), true
 }
 
-// pyJoin is os.path.join: posixpath's on POSIX (no cleaning, so a "//"
-// install keeps the jar key the listing cache has), filepath's on Windows.
-func pyJoin(first string, rest ...string) string {
-	if runtime.GOOS == "windows" {
-		return filepath.Join(append([]string{first}, rest...)...)
-	}
-	return pycompat.PosixJoin(first, rest...)
-}
-
 func isDir(p string) bool {
 	st, err := os.Stat(p)
 	return err == nil && st.IsDir()
@@ -177,7 +166,7 @@ func sortedNames(dir string) ([]string, error) {
 // module jar is listed (through ls, nil = in memory); an unreadable jar
 // has no entries.
 func HelpJars(installDir string, ls *Listings, rules *Rules) ([]string, error) {
-	modules := pyJoin(installDir, "modules")
+	modules := pycompat.Join(installDir, "modules")
 	if !isDir(modules) {
 		return nil, nil
 	}
@@ -193,7 +182,7 @@ func HelpJars(installDir string, ls *Listings, rules *Rules) ([]string, error) {
 		if !strings.HasSuffix(n, ".jar") || IsDocJar(n) {
 			continue
 		}
-		path := pyJoin(modules, n)
+		path := pycompat.Join(modules, n)
 		entries, _ := ls.Names(path)
 		for _, e := range entries {
 			if IsHelpEntry(n, e, rules) {
@@ -209,7 +198,7 @@ func HelpJars(installDir string, ls *Listings, rules *Rules) ([]string, error) {
 // then (withHelpJars) the module jars with help pages, default rules.
 func ListDocJars(installDir string, withHelpJars bool, ls *Listings) ([]string, error) {
 	var jars []string
-	modules := pyJoin(installDir, "modules")
+	modules := pycompat.Join(installDir, "modules")
 	if isDir(modules) {
 		names, err := sortedNames(modules)
 		if err != nil {
@@ -217,11 +206,11 @@ func ListDocJars(installDir string, withHelpJars bool, ls *Listings) ([]string, 
 		}
 		for _, n := range names {
 			if IsDocJar(n) {
-				jars = append(jars, pyJoin(modules, n))
+				jars = append(jars, pycompat.Join(modules, n))
 			}
 		}
 	}
-	if javadoc := pyJoin(installDir, "javadoc", JavadocJar); isRegular(javadoc) {
+	if javadoc := pycompat.Join(installDir, "javadoc", JavadocJar); isRegular(javadoc) {
 		jars = append(jars, javadoc)
 	}
 	if withHelpJars {

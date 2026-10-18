@@ -1,0 +1,6 @@
+CLASS: Ünicode
+PACKAGE: javax.baja.util
+EXTENDS: Élément
+
+DESCRIPTION:
+日本語 été

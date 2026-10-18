@@ -1,0 +1,30 @@
+CLASS: BSample
+PACKAGE: javax.baja.sys
+SINCE: Niagara 4.0 r2
+EXTENDS: BComponent
+IMPLEMENTS: BIThing, BIOther, Serializable
+SUBCLASSES: BSampleChild, BSampleOther
+
+DESCRIPTION:
+BSample is a sample component whose description is long enough to be wrapped
+at seventy-eight characters by format_output; it mentions BObject, <generics>
+& entities, © and — dashes, café crème brûlée été à la française, and
+averyveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryverylongwordthatexceedsseventyeight
+end. with a link and spaces.
+
+FIELDS:
+  static BSample DEFAULT - The default & only instance.
+  static final int MAX_COUNT
+  java.util.List<BObject> items - Cut reference at the end &
+
+CONSTRUCTORS:
+  BSample()
+  BSample(int count, BObject parent)
+
+METHODS:
+  <T> T get(java.lang.Class<T> type)
+  void set(BObject value, Context cx)
+  static BSample make()
+  protected boolean isOk(java.lang.String[] args)
+  int cut()
+  java.util.Map<K,V> map(K)

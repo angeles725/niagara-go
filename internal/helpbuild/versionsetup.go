@@ -241,7 +241,7 @@ func extractStep(res *SetupResult, repo, root, dataRootRel, install string, ls *
 	}
 	var present []string
 	for _, d := range RawDirs {
-		if isDir(pyJoin(root, d)) {
+		if isDir(pycompat.Join(root, d)) {
 			present = append(present, d)
 		}
 	}
@@ -250,7 +250,7 @@ func extractStep(res *SetupResult, repo, root, dataRootRel, install string, ls *
 		return true, nil
 	}
 	for _, d := range append(append([]string{}, RawDirs...), DerivedDirs...) {
-		rmtreeIgnore(pyJoin(root, d))
+		rmtreeIgnore(pycompat.Join(root, d))
 	}
 	if err := os.MkdirAll(root, 0o777); err != nil {
 		return false, err
@@ -283,10 +283,10 @@ func extractStep(res *SetupResult, repo, root, dataRootRel, install string, ls *
 // stub first (pdf_extractor replaces it when docs/ exists), the empty
 // indexes after.
 func rebuild(root string, hook func(string) ([]string, error)) ([]string, error) {
-	if err := os.MkdirAll(pyJoin(root, "indexes"), 0o777); err != nil {
+	if err := os.MkdirAll(pycompat.Join(root, "indexes"), 0o777); err != nil {
 		return nil, err
 	}
-	if pdf := pyJoin(root, "indexes", "pdf-index.json"); !isRegular(pdf) {
+	if pdf := pycompat.Join(root, "indexes", "pdf-index.json"); !isRegular(pdf) {
 		if err := os.WriteFile(pdf, []byte("{}\n"), 0o666); err != nil {
 			return nil, err
 		}
@@ -306,7 +306,7 @@ func rebuild(root string, hook func(string) ([]string, error)) ([]string, error)
 func EmptyIndexes(root string) ([]string, error) {
 	var lines []string
 	for _, name := range BuilderIndexes {
-		path := pyJoin(root, "indexes", name)
+		path := pycompat.Join(root, "indexes", name)
 		if isRegular(path) {
 			continue
 		}

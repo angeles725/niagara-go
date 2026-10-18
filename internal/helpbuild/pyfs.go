@@ -31,7 +31,7 @@ func pyWalk(top string, visit func(dir string, dirs, files []string) []string) {
 	for _, e := range ents {
 		isDirEntry := e.IsDir()
 		if e.Type()&fs.ModeSymlink != 0 {
-			st, err := os.Stat(pyJoin(top, e.Name()))
+			st, err := os.Stat(pycompat.Join(top, e.Name()))
 			isDirEntry = err == nil && st.IsDir()
 		}
 		if isDirEntry {
@@ -41,7 +41,7 @@ func pyWalk(top string, visit func(dir string, dirs, files []string) []string) {
 		}
 	}
 	for _, d := range visit(top, dirs, files) {
-		sub := pyJoin(top, d)
+		sub := pycompat.Join(top, d)
 		if st, err := os.Lstat(sub); err == nil && st.Mode()&fs.ModeSymlink != 0 {
 			continue
 		}

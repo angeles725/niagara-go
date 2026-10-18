@@ -1,0 +1,10 @@
+INTERFACE: BIThing
+PACKAGE: javax.baja.sys
+EXTENDS: BInterface
+SUBCLASSES: BSample, BOther
+
+DESCRIPTION:
+A thing.
+
+METHODS:
+  boolean isThing()

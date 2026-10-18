@@ -19,11 +19,11 @@ import (
 // every line from this package and require an empty diff. It needs python3
 // and a niagara-help checkout (niagaraHelpTools: $NIAGARA_HELP_DIR, else
 // found walking up from the test directory): plain `go test` skips visibly
-// without them, a run that set a HELPBUILD_PARITY_* variable (make parity)
-// fails (missingReference).
+// without them or with a python3 that is not CPython 3.15, a run that set a
+// HELPBUILD_PARITY_* variable (make parity) fails (missingReference).
 
 // parityDrivers are the Python sides of the parity tests.
-var parityDrivers = []string{"driver.py", "htmldriver.py", "textdriver.py"}
+var parityDrivers = []string{"driver.py", "htmldriver.py", "textdriver.py", "bajadocdriver.py"}
 
 func driver(t *testing.T) (python, tools string) {
 	t.Helper()
@@ -48,7 +48,7 @@ func driver(t *testing.T) (python, tools string) {
 		err = checkPythonMinor(v)
 	}
 	if err != nil {
-		t.Fatalf("parity driver interpreter %s: %v", python, err)
+		missingReference(t, fmt.Sprintf("parity driver interpreter %s: %v", python, err))
 	}
 	pythonLogged.Do(func() { t.Logf("parity driver python: CPython %s (%s)", v, python) })
 	return python, tools
