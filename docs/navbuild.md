@@ -113,6 +113,8 @@ transaction (300-row multi-value `INSERT`s), then creates the three indexes, wri
 (`timestamp` as `%Y-%m-%d %H:%M:%S`, `build_time_sec` as `str(round(x, 1))`), runs
 `ANALYZE` and `VACUUM`, and renames `<index>.tmp` into place (a stale temp database of a
 killed build is removed first; a failed build removes its own and leaves the old index).
+Like Python's fixed `.tmp` name, this means two token builds into one base dir at once
+break each other; `mnav reindex` runs the builders one at a time.
 As in Python, `temp_store=MEMORY` keeps the index sorts in RAM: the full-corpus build
 peaks at about 2 GB.
 
