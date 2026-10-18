@@ -228,10 +228,10 @@ func isDir(p string) bool {
 // collectModule is collect_module: the data of every artifact of
 // <base>/<module>, none when it is not a directory.
 func collectModule(base, module string) []artifactData {
-	moduleDir := pycompat.PosixJoin(base, module)
+	moduleDir := pycompat.Join(base, module)
 	var all []artifactData
 	for _, a := range findArtifacts(moduleDir) {
-		all = append(all, collectArtifact(pycompat.PosixJoin(moduleDir, a), a))
+		all = append(all, collectArtifact(pycompat.Join(moduleDir, a), a))
 	}
 	return all
 }

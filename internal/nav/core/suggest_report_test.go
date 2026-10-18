@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"strconv"
 	"testing"
 )
 
@@ -104,7 +105,7 @@ func TestResolveOrganizedAndSourceRoot(t *testing.T) {
 	for _, c := range []struct{ meta, hint string }{
 		{`{}`, "Set NAV_CORPUS_BASE to the organized/ directory."},
 		{`{"source": "/does/not/exist"}`, "Set NAV_CORPUS_BASE to the organized/ directory."},
-		{`{"source_root": "` + corpus + `"}`, "The index was built from " + corpus +
+		{`{"source_root": ` + strconv.Quote(corpus) + `}`, "The index was built from " + corpus +
 			", which exists: export NAV_CORPUS_BASE=" + corpus},
 	} {
 		r, _, errb := newRuntime(t, t.TempDir())

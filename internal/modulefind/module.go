@@ -98,7 +98,7 @@ func walkJava(root string, fn func(path, name string)) {
 	}
 	var dirs []string
 	for _, e := range entries { // os.ReadDir sorts by name
-		name, path := e.Name(), pycompat.PosixJoin(root, e.Name())
+		name, path := e.Name(), pycompat.Join(root, e.Name())
 		if e.IsDir() {
 			if !strings.HasPrefix(name, ".") {
 				dirs = append(dirs, path)

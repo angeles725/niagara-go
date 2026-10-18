@@ -10,6 +10,8 @@ import (
 	"runtime"
 	"strings"
 	"testing"
+
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // TestPythonErrorTexts compares every error with the text Python printed for
@@ -116,7 +118,7 @@ func TestDecodeValues(t *testing.T) {
 func TestOSErrorText(t *testing.T) {
 	dir := t.TempDir()
 	_, err := LoadPython(filepath.Join(dir, "missing.json"))
-	want := "[Errno 2] No such file or directory: '" + filepath.Join(dir, "missing.json") + "'"
+	want := "[Errno 2] No such file or directory: " + pycompat.FSRepr(filepath.Join(dir, "missing.json"))
 	if err == nil || err.Error() != want {
 		t.Errorf("got %v, want %q", err, want)
 	}

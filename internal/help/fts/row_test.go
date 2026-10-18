@@ -3,8 +3,6 @@ package fts
 import (
 	"fmt"
 	"testing"
-
-	"github.com/angeles725/niagara-go/internal/help/fts/ftsfixture"
 )
 
 func TestFormatHitWithoutSnippet(t *testing.T) {
@@ -20,7 +18,7 @@ func TestFormatHitWithoutSnippet(t *testing.T) {
 // search and checks its snippet line against the one Python recorded.
 func TestFormatHitPrintsPythonSnippet(t *testing.T) {
 	t.Setenv("XDG_CACHE_HOME", t.TempDir())
-	checkout := ftsfixture.Checkout(t, testdata, false)
+	checkout := indexedCheckout(t)
 	for _, c := range loadSearchFixture(t).Searches {
 		if len(c.Hits) == 0 {
 			continue

@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"runtime"
 	"sort"
 	"strconv"
 	"strings"
@@ -157,7 +158,7 @@ func printStats(env *registry.Env, stats *index.Object, ci summary, files []inde
 // get_help_nav_status): niagara-help/ next to the base directory.
 func printHelpStatus(w io.Writer, baseDir string, reader *statsCache) {
 	fmt.Fprintln(w, "  HELP NAVIGATOR INTEGRATION:")
-	help := pycompat.PosixJoin(posixDirname(baseDir), "niagara-help")
+	help := pycompat.Join(hostDirname(baseDir), "niagara-help")
 	idx := filepath.Join(help, "indexes")
 	if !isDir(help) || !isDir(idx) {
 		fmt.Fprintln(w, "    Status:      NOT AVAILABLE")
@@ -186,6 +187,21 @@ func printHelpStatus(w io.Writer, baseDir string, reader *statsCache) {
 	fmt.Fprintf(w, "    Source files: %s\n", core.RJust(core.Commas(count("source-index.json")), 6))
 	fmt.Fprintf(w, "    With slots:  %s\n", core.RJust(core.Commas(count("slots-index.json")), 7))
 	fmt.Fprintf(w, "    Indexes:     %s\n\n", core.RJust(strconv.Itoa(jsons), 7))
+}
+
+// hostDirname is os.path.dirname for the host: posixDirname off Windows; ntpath.dirname on
+// Windows, where either separator splits and the drive (or UNC share) and root are kept.
+func hostDirname(p string) string {
+	if runtime.GOOS != "windows" {
+		return posixDirname(p)
+	}
+	vol := filepath.VolumeName(p)
+	rest, root := p[len(vol):], ""
+	if rest != "" && (rest[0] == '/' || rest[0] == '\\') {
+		root, rest = rest[:1], rest[1:]
+	}
+	head := rest[:strings.LastIndexAny(rest, `/\`)+1]
+	return vol + root + strings.TrimRight(head, `/\`)
 }
 
 // posixDirname is os.path.dirname (posixpath).

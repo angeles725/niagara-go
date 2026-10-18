@@ -4,13 +4,29 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"strings"
 	"testing"
 
 	"github.com/angeles725/niagara-go/internal/help/fts"
 	"github.com/angeles725/niagara-go/internal/help/fts/ftsfixture"
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
+
+// rootSourceRepr is a quoted source file path, os.path.join(base_dir,
+// "source", data["path"]) in source_search.py: on Windows only the joins are
+// "\" (the index path keeps its "/").
+var rootSourceRepr = regexp.MustCompile(`'<ROOT>/source/([^']*)'`)
+
+// atRoot is ftsfixture.AtRoot after rootSourceRepr: a recorded Linux output
+// with <ROOT> replaced by the checkout, its os.path.join paths for the host.
+func atRoot(recorded, checkout string) string {
+	s := rootSourceRepr.ReplaceAllStringFunc(recorded, func(m string) string {
+		return pycompat.FSRepr(pycompat.Join(checkout, "source", rootSourceRepr.FindStringSubmatch(m)[1]))
+	})
+	return ftsfixture.AtRoot(s, checkout)
+}
 
 // TestFulltextCommandsMatchPython runs find, guide-search, devguide-search
 // and pdf over the full-text fixture checkout and compares them with what
@@ -43,8 +59,7 @@ func TestFulltextCommandsMatchPython(t *testing.T) {
 				t.Fatal(err)
 			}
 			out, errs, code := run(t, checkout, c.Args...)
-			wantOut := strings.ReplaceAll(string(want), ftsfixture.Root, checkout)
-			wantErr := strings.ReplaceAll(c.Stderr, ftsfixture.Root, checkout)
+			wantOut, wantErr := atRoot(string(want), checkout), atRoot(c.Stderr, checkout)
 			if code != c.Exit || errs != wantErr || out != wantOut {
 				t.Errorf("exit %d (want %d) stderr %q (want %q) stdout:\n%s\nwant:\n%s",
 					code, c.Exit, errs, wantErr, out, wantOut)
@@ -123,11 +138,11 @@ func TestFulltextRebuildMatchesPython(t *testing.T) {
 			out, errs, code := run(t, checkout, c.Args...)
 			cacheDB := fts.CachePath(base)
 			norm := strings.NewReplacer("<CACHEDB>", cacheDB, "<CACHEDIR>", filepath.Dir(cacheDB),
-				"<CACHE>", cache, ftsfixture.Root, checkout)
-			if wantErr := norm.Replace(c.Stderr); code != c.Exit || errs != wantErr {
+				"<CACHE>", cache)
+			if wantErr := atRoot(norm.Replace(c.Stderr), checkout); code != c.Exit || errs != wantErr {
 				t.Errorf("exit %d (want %d) stderr:\n%s\nwant:\n%s", code, c.Exit, errs, wantErr)
 			}
-			if wantOut := norm.Replace(*c.Stdout); out != wantOut {
+			if wantOut := atRoot(norm.Replace(*c.Stdout), checkout); out != wantOut {
 				t.Errorf("stdout:\n%s\nwant:\n%s", out, wantOut)
 			}
 			if got := builtAt(base); got != c.Built {

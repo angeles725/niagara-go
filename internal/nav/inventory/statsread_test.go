@@ -3,6 +3,7 @@ package inventory
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 )
 
@@ -59,6 +60,21 @@ func TestPosixDirname(t *testing.T) {
 	for in, want := range map[string]string{"a/b": "a", "a/b/": "a/b", "base": "", "/x": "/", "//x": "//", "/a//b": "/a"} {
 		if got := posixDirname(in); got != want {
 			t.Errorf("posixDirname(%q) = %q, want %q", in, got, want)
+		}
+	}
+}
+
+// TestHostDirname: os.path.dirname is ntpath.dirname on Windows (either separator splits,
+// the drive and root stay), posixpath.dirname elsewhere.
+func TestHostDirname(t *testing.T) {
+	want := map[string]string{"a/b": "a", "/x": "/", "base": ""}
+	if runtime.GOOS == "windows" {
+		want = map[string]string{`C:\a\b`: `C:\a`, `C:\x`: `C:\`, "fixture/stats/nav": "fixture/stats",
+			`a/b\c`: "a/b", "base": "", `\\srv\share\x`: `\\srv\share\`}
+	}
+	for in, w := range want {
+		if got := hostDirname(in); got != w {
+			t.Errorf("hostDirname(%q) = %q, want %q", in, got, w)
 		}
 	}
 }

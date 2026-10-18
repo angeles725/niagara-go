@@ -3,6 +3,7 @@ package help
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -42,6 +43,12 @@ func TestS4Misses(t *testing.T) {
 
 // TestS4Stats checks stats, which prints the absolute data root.
 func TestS4Stats(t *testing.T) {
+	if st, err := os.Lstat(filepath.Join("testdata", "s4", "bajadoc-clean", "dangling.txt")); err != nil || st.Mode()&os.ModeSymlink == 0 {
+		if runtime.GOOS != "windows" {
+			t.Fatalf("testdata/s4/bajadoc-clean/dangling.txt must be a symlink (err %v)", err)
+		}
+		t.Skip("testdata/s4 has no dangling.txt symlink here (Windows checkouts without the symlink privilege drop it); the recorded counts include it")
+	}
 	t.Run("text", func(t *testing.T) { s4Case(t, "stats", 0, "stats") })
 	t.Run("json", func(t *testing.T) { s4Case(t, "stats-json", 0, "stats", "--json") })
 }

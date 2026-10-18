@@ -56,20 +56,21 @@ func TestReadTextStrerror(t *testing.T) {
 		}
 		return p
 	}())
+	dirWant := "Is a directory"
+	if runtime.GOOS == "windows" {
+		dirWant = "Permission denied" // the C runtime's open() refuses a directory with EACCES
+	}
 	tests := []struct {
 		name string
 		err  error
 		want string
 	}{
 		{"missing file", missing, "No such file or directory"},
-		{"directory", isDir, "Is a directory"},
+		{"directory", isDir, dirWant},
 		{"error without errno keeps its text", notUTF8, "not valid UTF-8"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if tt.name == "directory" && runtime.GOOS == "windows" {
-				t.Skip("reading a directory fails differently on Windows")
-			}
 			if got := StrerrorOf(tt.err); got != tt.want {
 				t.Errorf("StrerrorOf(%v) = %q; want %q", tt.err, got, tt.want)
 			}

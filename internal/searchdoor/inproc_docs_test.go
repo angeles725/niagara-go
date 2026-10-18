@@ -140,9 +140,10 @@ func TestDocsFindRebuildsTheFulltextIndex(t *testing.T) {
 			script := stubScript(t, filepath.Join(checkout, "tools", "niagara_help.py"))
 			cacheDB := fts.CachePath(base)
 			norm := strings.NewReplacer("<CACHEDB>", cacheDB, "<CACHEDIR>", filepath.Dir(cacheDB),
-				"<CACHE>", cache, ftsfixture.Root, checkout)
+				"<CACHE>", cache)
+			at := func(s string) string { return ftsfixture.AtRoot(norm.Replace(s), checkout) }
 			checkAnswer(t, docsFind(envOf(nil), append([]string{script}, docsArgv(c.Args)...)),
-				oracle{c.Exit, norm.Replace(*c.Stdout), norm.Replace(c.Stderr)})
+				oracle{c.Exit, at(*c.Stdout), at(c.Stderr)})
 			if p, _ := fts.FreshPath(base, fts.Fingerprint(fts.SourceDirs(base))); c.Exit != 2 && p == "" {
 				t.Error("no up-to-date index after the answer")
 			}

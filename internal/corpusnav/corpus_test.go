@@ -2,7 +2,10 @@ package corpusnav
 
 import (
 	"bytes"
+	"path/filepath"
 	"reflect"
+	"runtime"
+	"strings"
 	"testing"
 
 	"github.com/angeles725/niagara-go/internal/corpusnav/blocksearch"
@@ -18,11 +21,14 @@ func testCorpus(t *testing.T) (*corpus, *bytes.Buffer, *bytes.Buffer) {
 func TestPyPath(t *testing.T) {
 	for in, want := range map[string]string{"a//b/./c/": "a/b/c", "./a": "a", ".": ".", "": ".", "/x/../y": "/x/../y",
 		"//srv/x": "/srv/x"} {
-		if got := pyPath(in); got != want {
-			t.Errorf("pyPath(%q) = %q, want %q", in, got, want)
+		if runtime.GOOS == "windows" && strings.HasPrefix(in, "//") {
+			continue // a UNC share on Windows (blocksearch TestWindowsPathlib)
+		}
+		if got := pyPath(in); got != filepath.FromSlash(want) {
+			t.Errorf("pyPath(%q) = %q, want %q", in, got, filepath.FromSlash(want))
 		}
 	}
-	if !blocksearch.PathLess("docs/a/x.md", "docs/a-b.md") {
+	if !blocksearch.PathLess(filepath.FromSlash("docs/a/x.md"), filepath.FromSlash("docs/a-b.md")) {
 		t.Error("Path order compares components, not strings")
 	}
 }
@@ -32,7 +38,7 @@ func TestTargets(t *testing.T) {
 	c, _, _ := testCorpus(t)
 	var got [][2]string
 	for _, tg := range c.targets("all") {
-		got = append(got, [2]string{tg.display, relTo(tg.path, c.root)})
+		got = append(got, [2]string{tg.display, filepath.ToSlash(relTo(tg.path, c.root))})
 	}
 	want := [][2]string{{"B1-3", "niagara-mental-model.md"}, {"B4", "niagara-mental-model-bloque4.md"},
 		{"B5", "niagara-mental-model-bloque5.md"}, {"B6", "niagara-mental-model-bloque6-security-incident.md"},
@@ -41,6 +47,11 @@ func TestTargets(t *testing.T) {
 		{"os413-B3", "examinacion-optimizer-4.13/os413-bloque3.md"}, {"R2", "niagara-reflow-block2.md"},
 		{"docs/guide-alarms.md", "docs/guide-alarms.md"}, {"docs/sub/deep.md", "docs/sub/deep.md"},
 		{"retros/2026-01-01-retro.md", "retros/2026-01-01-retro.md"}}
+	for i, w := range want {
+		if strings.HasPrefix(w[0], "docs/") || strings.HasPrefix(w[0], "retros/") {
+			want[i][0] = filepath.FromSlash(w[0]) // a docs/retros id is str(path.relative_to(root))
+		}
+	}
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("targets =\n%v\nwant\n%v", got, want)
 	}

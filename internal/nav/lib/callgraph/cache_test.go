@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -72,7 +73,7 @@ func TestCacheRoundTrip(t *testing.T) {
 		t.Fatal("Store failed")
 	}
 	st, err := os.Stat(CachePath(base))
-	if err != nil || st.Mode().Perm() != 0o600 {
+	if err != nil || runtime.GOOS != "windows" && st.Mode().Perm() != 0o600 { // NTFS keeps no POSIX mode
 		t.Fatalf("cache file: %v, %v (want mode 0600)", st, err)
 	}
 	sameGraph(t, NewCache(path, CachePath(base)).Load(), want)
@@ -88,6 +89,9 @@ func TestCacheSharedThroughSymlink(t *testing.T) {
 	NewCache(path, CachePath(base)).Store(decoded(t, path))
 	link := filepath.Join(t.TempDir(), "link")
 	if err := os.Symlink(base, link); err != nil {
+		if runtime.GOOS == "windows" {
+			t.Skipf("no symlink privilege: %v", err)
+		}
 		t.Fatal(err)
 	}
 	linked := filepath.Join(link, "indexes", "callgraph-index.json")

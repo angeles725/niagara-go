@@ -145,7 +145,7 @@ func (e *Env) Source(p SourceParams) error {
 		return nil
 	}
 	fmt.Fprintln(e.Out)
-	file := pycompat.PosixJoin(e.BaseDir, "source", getStr(data, "path", ""))
+	file := pycompat.Join(e.BaseDir, "source", getStr(data, "path", ""))
 	lines, err := sourceLines(file)
 	if err != nil {
 		fmt.Fprintf(e.Out, "Error reading source: %s\n", index.OSError(err, file))

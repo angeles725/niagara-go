@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"os"
 	"path/filepath"
+	"runtime"
 	"sync"
 	"testing"
 	"time"
@@ -50,6 +51,9 @@ func runAtCheckout(t *testing.T, c runAtCase) string {
 	}
 	for link, target := range links {
 		if err := os.Symlink(target, link); err != nil {
+			if runtime.GOOS == "windows" {
+				t.Skipf("no symlink privilege: %v", err)
+			}
 			t.Fatal(err)
 		}
 	}

@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -95,6 +96,9 @@ func TestGrepMatchesTheLineWithItsNewline(t *testing.T) {
 func TestGrepCountsAnUnreadableFile(t *testing.T) {
 	org := corpus(t, map[string]string{"m/m-rt/vineflower/B.java": "ack\n"})
 	if err := os.Symlink(filepath.Join(org, "gone"), filepath.Join(org, "m", "m-rt", "vineflower", "A.java")); err != nil {
+		if runtime.GOOS == "windows" {
+			t.Skipf("no symlink privilege: %v", err)
+		}
 		t.Fatal(err)
 	}
 	r := Grep(org, pyre.MustCompile("ack", 0), 30, GrepFilter{})

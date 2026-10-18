@@ -13,8 +13,8 @@ func TestFindCache(t *testing.T) {
 	t.Setenv("CORPUS_NAV_FIND_INDEX", "")
 	c, out, errb := testCorpus(t)
 	c.indexDir = t.TempDir()
-	want := "docs/guide-alarms.md · Alarm guide\n       1: # Alarm guide\n       3: How alarms are acknowledged.\n\n" +
-		"docs/sub/deep.md · Deep doc in a subfolder\n       3: Alarm escalation details.\n" // find alarm --in docs
+	want := filepath.FromSlash("docs/guide-alarms.md") + " · Alarm guide\n       1: # Alarm guide\n       3: How alarms are acknowledged.\n\n" +
+		filepath.FromSlash("docs/sub/deep.md") + " · Deep doc in a subfolder\n       3: Alarm escalation details.\n" // find alarm --in docs
 	run := func(state string) {
 		t.Helper()
 		out.Reset()

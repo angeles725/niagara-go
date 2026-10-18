@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -26,13 +27,19 @@ func abs(t *testing.T, path string) string {
 }
 
 // recorded is a recorded nh stdout with its root placeholder replaced.
+// The outputs were recorded on Linux: placeholder/a/b is root joined with a
+// and b by os.path.join, so on Windows its "/" become "\".
 func recorded(t *testing.T, file, placeholder, root string) string {
 	t.Helper()
 	raw, err := os.ReadFile(filepath.Join(helpTestdata, file))
 	if err != nil {
 		t.Fatal(err)
 	}
-	return strings.ReplaceAll(string(raw), placeholder, root)
+	rest := regexp.MustCompile(regexp.QuoteMeta(placeholder) + `(/[^\s)'"]*)`)
+	s := rest.ReplaceAllStringFunc(string(raw), func(m string) string {
+		return root + filepath.FromSlash(m[len(placeholder):])
+	})
+	return strings.ReplaceAll(s, placeholder, root)
 }
 
 func joined(lines []string) string { return strings.Join(lines, "\n") + "\n" }

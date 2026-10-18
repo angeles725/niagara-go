@@ -3,6 +3,7 @@ package rankcmd
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -34,7 +35,7 @@ func TestCacheHitPrintsWhatABuildPrints(t *testing.T) {
 		if err != nil {
 			t.Fatalf("xref=%v: no cache written: %v", withXref, err)
 		}
-		if st.Mode().Perm() != 0o600 {
+		if runtime.GOOS != "windows" && st.Mode().Perm() != 0o600 { // NTFS keeps no POSIX mode
 			t.Errorf("cache mode %v, want 0600", st.Mode().Perm())
 		}
 		out2, err2, code2 := run(t, base, "alarm service", 2)
@@ -84,6 +85,9 @@ func TestCacheRebuildsWhenStaleOrCorrupt(t *testing.T) {
 
 // TestCacheUnwritableIsSkipped: a read-only indexes/ never fails rank.
 func TestCacheUnwritableIsSkipped(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("chmod 0555 does not make a directory read-only on Windows")
+	}
 	base := cachedBase(t, true)
 	dir := filepath.Join(base, "indexes")
 	if err := os.Chmod(dir, 0o555); err != nil {

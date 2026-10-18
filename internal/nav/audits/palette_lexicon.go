@@ -162,7 +162,7 @@ func paletteCensus(env *registry.Env, base string, asJSON bool) int {
 	sort.Strings(names)
 	var rows []censusRow
 	for _, m := range names {
-		dir := pycompat.PosixJoin(base, m)
+		dir := pycompat.Join(base, m)
 		if !isDir(dir) || len(findArtifacts(dir)) == 0 {
 			continue
 		}

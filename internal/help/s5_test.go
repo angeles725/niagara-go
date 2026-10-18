@@ -50,13 +50,13 @@ func TestS5CommandsMatchPython(t *testing.T) {
 			} else {
 				out, errs, code = run(t, root, c.Args...)
 			}
-			wantOut := strings.ReplaceAll(string(want), "<ROOT>", root)
+			wantOut := atRoot(string(want), root)
 			// The recall header prints the parse time, rounded to seconds.
 			out = strings.Replace(out, "parsed in 1s)", "parsed in 0s)", 1)
 			if code != c.Exit || out != wantOut {
 				t.Errorf("exit %d (want %d) stdout:\n%s\nwant:\n%s", code, c.Exit, out, wantOut)
 			}
-			if wantErr := strings.ReplaceAll(c.Stderr, "<ROOT>", root); errs != wantErr {
+			if wantErr := atRoot(c.Stderr, root); errs != wantErr {
 				t.Errorf("stderr %q, want %q", errs, wantErr)
 			}
 		})

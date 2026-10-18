@@ -64,16 +64,7 @@ func (e *UnwritableIndexError) Error() string {
 // repeating the notes (Python's note() prints each one once per process).
 var failed sync.Map
 
-// EnsureFulltext makes sure baseDir has an up-to-date full-text index before
-// a search: when indexes/fulltext.sqlite and the cache copy are both missing
-// or stale it builds one, printing Python's lines on stderr, and reports
-// rebuilt. An error means no index could be built (*UnwritableIndexError).
-func EnsureFulltext(baseDir string, stderr io.Writer) (rebuilt bool, err error) {
-	_, rebuilt, err = ensure(baseDir, stderr)
-	return rebuilt, err
-}
-
-// OpenFulltext is the fts.Opener of nh's searches: EnsureFulltext, then the
+// OpenFulltext is the fts.Opener of nh's searches: ensure, then the
 // up-to-date database, opened at the point fulltext.search opens it.
 func OpenFulltext(stderr io.Writer) fts.Opener {
 	return func(baseDir, _ string) (*fts.Index, error) {

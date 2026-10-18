@@ -38,42 +38,6 @@ func New(root, indexDir string) *Corpus {
 		Retros: PyJoin(root, "retros"), IndexDir: PyPath(indexDir)}
 }
 
-// PyPath is str(pathlib.PurePosixPath(p)): repeated and trailing slashes and "."
-// components dropped, ".." kept.
-func PyPath(p string) string {
-	abs := strings.HasPrefix(p, "/")
-	var parts []string
-	for _, c := range strings.Split(p, "/") {
-		if c != "" && c != "." {
-			parts = append(parts, c)
-		}
-	}
-	s := strings.Join(parts, "/")
-	switch {
-	case abs:
-		return "/" + s
-	case s == "":
-		return "."
-	}
-	return s
-}
-
-// PyJoin is Path(a) / b for a relative b: posixpath.join, except that Path(".") / b is b.
-func PyJoin(a, b string) string {
-	if a == "." {
-		return b
-	}
-	return pycompat.PosixJoin(a, b)
-}
-
-// RelTo is str(path.relative_to(root)) for a path below root.
-func RelTo(path, root string) string {
-	if root == "." {
-		return path
-	}
-	return strings.TrimPrefix(path, strings.TrimSuffix(root, "/")+"/")
-}
-
 // DisplayID is corpus.display_id: B720, B1-3, BTI; sub-corpus labels as they are.
 func DisplayID(label string) string {
 	if blockfiles.IsMainLabel(label) {
@@ -115,17 +79,6 @@ func DirFiles(dir string) []string {
 	}
 	sort.Slice(out, func(i, j int) bool { return PathLess(out[i], out[j]) })
 	return out
-}
-
-// PathLess is PurePosixPath ordering: by the list of components.
-func PathLess(a, b string) bool {
-	pa, pb := strings.Split(a, "/"), strings.Split(b, "/")
-	for i := 0; i < len(pa) && i < len(pb); i++ {
-		if pa[i] != pb[i] {
-			return pa[i] < pb[i]
-		}
-	}
-	return len(pa) < len(pb)
 }
 
 var catalogRowRe = pyre.MustCompile(`^\|\s*([^|]+?)\s*\|\s*\[[^\]]+\]\([^)]+\)\s*\|\s*(.*?)\s*\|\s*$`, 0)

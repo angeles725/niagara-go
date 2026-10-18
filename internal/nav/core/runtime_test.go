@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -65,13 +66,14 @@ func TestLoadMessages(t *testing.T) {
 		}
 	}
 	idx := filepath.Join(base, "indexes")
-	want := "  Loading class-index.json (21.0 MB)...ERROR: class index is unreadable: " + idx +
-		"/class-index.json (Illegal trailing comma before end of array: line 2 column 10 (char 22020148))\n" +
+	in := func(name string) string { return filepath.Join(idx, name) }
+	want := "  Loading class-index.json (21.0 MB)...ERROR: class index is unreadable: " + in("class-index.json") +
+		" (Illegal trailing comma before end of array: line 2 column 10 (char 22020148))\n" +
 		"  Run: ./reindex.sh\n\n" +
-		"ERROR: module inventory is unreadable: " + idx + "/module-inventory.json (Expecting ',' delimiter: line 1 column 15 (char 14))\n" +
+		"ERROR: module inventory is unreadable: " + in("module-inventory.json") + " (Expecting ',' delimiter: line 1 column 15 (char 14))\n" +
 		"  Run: ./reindex.sh\n" +
-		"ERROR: missing index not found: " + idx + "/missing-index.json\n  Run: ./reindex.sh\n" +
-		"NOTE: optional opt index not found (" + idx + "/opt-index.json); the output omits what it adds. Build it with ./reindex.sh\n"
+		"ERROR: missing index not found: " + in("missing-index.json") + "\n  Run: ./reindex.sh\n" +
+		"NOTE: optional opt index not found (" + in("opt-index.json") + "); the output omits what it adds. Build it with ./reindex.sh\n"
 	if errb.String() != want {
 		t.Errorf("stderr:\n%s\nwant:\n%s", errb.String(), want)
 	}
@@ -116,7 +118,7 @@ func TestStalenessWarnings(t *testing.T) {
 		t.Errorf("fresh index warned: %q", w)
 	}
 	old := root + "/old-organized"
-	meta := NewTestMeta(t, `{"source": "`+old+`"}`)
+	meta := NewTestMeta(t, `{"source": `+strconv.Quote(old)+`}`) // a JSON string on Windows too
 	past := mustMtime(t, idx) - 100
 	setMtime(t, idx, past)
 	w := Staleness(meta, idx)

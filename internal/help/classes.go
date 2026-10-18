@@ -195,7 +195,7 @@ func (e *Env) Class(p ClassParams) error {
 // class of that name or cannot be parsed).
 func (e *Env) printJDKMembers(h classEntry) {
 	rel, _ := strings.CutPrefix(h.Path, "../")
-	classes, _ := bajadocxml.ParseFile(pycompat.PosixJoin(e.BaseDir, rel))
+	classes, _ := bajadocxml.ParseFile(pycompat.Join(e.BaseDir, rel))
 	for _, c := range classes {
 		if c.Name == h.Name {
 			fmt.Fprintf(e.Out, "\n%s\n", bajadocxml.FormatCleanInfo(bajadocxml.ToCleanInfo(c)))

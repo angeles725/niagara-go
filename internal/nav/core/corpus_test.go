@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"runtime"
 	"testing"
 )
 
@@ -27,6 +28,9 @@ func TestIterJavaOrderAndSubmodules(t *testing.T) {
 	touch(t, filepath.Join(org, "a", "docs", "readme"))
 	if err := os.Symlink(filepath.Join(org, "b", "b-rt", "vineflower", "z"),
 		filepath.Join(org, "b", "b-rt", "vineflower", "link")); err != nil {
+		if runtime.GOOS == "windows" {
+			t.Skipf("no symlink privilege: %v", err)
+		}
 		t.Fatal(err)
 	}
 	var skipped []string
