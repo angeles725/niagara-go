@@ -1,8 +1,8 @@
 // Package procgroup runs a child process so that stopping it stops
 // everything it started.
 //
-// CommandContext returns a *Cmd, an *exec.Cmd whose Start, Wait, Run,
-// Output and CombinedOutput add, on Unix:
+// CommandContext returns a *Cmd, an *exec.Cmd whose Start, Wait and Run
+// add, on Unix:
 //
 //   - The child runs in its own process group (Setpgid; an existing
 //     SysProcAttr is kept) and the context's cancel (a timeout or the
@@ -41,6 +41,6 @@
 // nothing is relayed (the console's Ctrl-C reaches every child directly)
 // and Wait never returns an *InterruptError.
 //
-// A *Cmd must be run (Run, Output, CombinedOutput, or Start then Wait):
+// A *Cmd must be run (Run, or Start then Wait):
 // Wait releases the context and the relay that Start set up.
 package procgroup

@@ -30,16 +30,6 @@ func (w *Writer) WriteRow(fields []any) error {
 	return err
 }
 
-// WriteRows is writer.writerows(rows).
-func (w *Writer) WriteRows(rows [][]any) error {
-	for _, row := range rows {
-		if err := w.WriteRow(row); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 // FormatRow returns the text WriteRow writes for fields, line terminator included.
 func (w *Writer) FormatRow(fields []any) string {
 	var b strings.Builder

@@ -2,6 +2,7 @@ package procgroup
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -104,25 +105,17 @@ func helper(t *testing.T, ctx context.Context, mode string, env ...string) *Cmd 
 	return c
 }
 
-// A child's own outcome passes through: its exit status, and its stderr in
-// the *exec.ExitError of Output.
+// A child's own outcome passes through Run: its exit status, stdout and
+// stderr.
 func TestRunPassesTheChildOutcome(t *testing.T) {
-	out, err := helper(t, context.Background(), "exit").Output()
+	var stdout, stderr bytes.Buffer
+	c := helper(t, context.Background(), "exit")
+	c.Stdout, c.Stderr = &stdout, &stderr
+	err := c.Run()
 	var ee *exec.ExitError
-	if !errors.As(err, &ee) || ee.ExitCode() != 7 || string(ee.Stderr) != "boom" || string(out) != "out" {
-		t.Fatalf("Output = %q, %v (stderr %q), want exit 7 with out/boom", out, err, stderrOf(ee))
+	if !errors.As(err, &ee) || ee.ExitCode() != 7 || stderr.String() != "boom" || stdout.String() != "out" {
+		t.Fatalf("Run = %v (stdout %q, stderr %q), want exit 7 with out/boom", err, stdout.String(), stderr.String())
 	}
-	both, err := helper(t, context.Background(), "exit").CombinedOutput()
-	if !errors.As(err, &ee) || ee.ExitCode() != 7 || !strings.Contains(string(both), "boom") || !strings.Contains(string(both), "out") {
-		t.Fatalf("CombinedOutput = %q, %v", both, err)
-	}
-}
-
-func stderrOf(ee *exec.ExitError) []byte {
-	if ee == nil {
-		return nil
-	}
-	return ee.Stderr
 }
 
 // A program that does not start returns exec's error, not an interrupt,
