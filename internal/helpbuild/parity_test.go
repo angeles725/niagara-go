@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/angeles725/niagara-go/internal/pyjson"
@@ -42,7 +43,51 @@ func driver(t *testing.T) (python, tools string) {
 			t.Fatalf("parity driver missing from the checkout: %v", err)
 		}
 	}
+	v, err := pythonVersion(python)
+	if err == nil {
+		err = checkPythonMinor(v)
+	}
+	if err != nil {
+		t.Fatalf("parity driver interpreter %s: %v", python, err)
+	}
+	pythonLogged.Do(func() { t.Logf("parity driver python: CPython %s (%s)", v, python) })
 	return python, tools
+}
+
+// parityPythonMinor is the CPython release the drivers' reference
+// behaviour (html.parser above all) was pinned against.
+const parityPythonMinor = "3.15"
+
+var (
+	pythonVersions sync.Map // interpreter path -> version string
+	pythonLogged   sync.Once
+)
+
+// pythonVersion is the X.Y.Z of the interpreter at python, run once per
+// path with the flags the drivers use.
+func pythonVersion(python string) (string, error) {
+	if v, ok := pythonVersions.Load(python); ok {
+		return v.(string), nil
+	}
+	out, err := exec.Command(python, "-I", "-B", "-c",
+		"import sys; print('%d.%d.%d' % sys.version_info[:3])").Output()
+	if err != nil {
+		return "", fmt.Errorf("cannot run it to read its version: %v", err)
+	}
+	v := strings.TrimSpace(string(out))
+	pythonVersions.Store(python, v)
+	return v, nil
+}
+
+// checkPythonMinor accepts a CPython parityPythonMinor.x version only.
+func checkPythonMinor(v string) error {
+	rest, ok := strings.CutPrefix(v, parityPythonMinor+".")
+	if ok && rest != "" && strings.Trim(rest, "0123456789") == "" {
+		return nil
+	}
+	return fmt.Errorf("it is CPython %q, the parity reference is CPython %s.x (html.parser and the other "+
+		"stdlib behaviour the drivers compare change between minor releases): put a %s python3 first on PATH",
+		v, parityPythonMinor, parityPythonMinor)
 }
 
 func runDriver(t *testing.T, stdin string, args ...string) []string {

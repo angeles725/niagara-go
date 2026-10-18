@@ -188,3 +188,19 @@ func TestParityRequested(t *testing.T) {
 		t.Errorf("FULL and COURSE set: %q", got)
 	}
 }
+
+// html.parser and the other stdlib behaviour the drivers pin change between
+// CPython minor releases: only a 3.15.x interpreter is a valid reference.
+func TestParityPythonMinor(t *testing.T) {
+	for _, c := range []struct {
+		version string
+		ok      bool
+	}{
+		{"3.15.0", true}, {"3.15.12", true}, {"3.14.3", false}, {"3.16.0", false},
+		{"3.1.5", false}, {"3.150.0", false}, {"", false}, {"Python 3.15.0", false},
+	} {
+		if err := checkPythonMinor(c.version); (err == nil) != c.ok {
+			t.Errorf("%q: %v", c.version, err)
+		}
+	}
+}
