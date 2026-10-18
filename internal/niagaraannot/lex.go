@@ -179,34 +179,53 @@ func unescape(s string) string {
 	return b.String()
 }
 
+// javaSpace is Character.isWhitespace, the test javac's text-block stripping applies (String.stripIndent):
+// the Unicode space, line and paragraph separators except the no-break spaces U+00A0, U+2007 and
+// U+202F, plus \t \n \v \f \r and U+001C..U+001F. Go's unicode.IsSpace differs (U+0085, U+00A0).
+func javaSpace(r rune) bool {
+	switch {
+	case r >= '\t' && r <= '\r', r >= 0x1c && r <= 0x1f:
+		return true
+	case r == 0xa0, r == 0x2007, r == 0x202f:
+		return false
+	}
+	return unicode.Is(unicode.Zs, r) || r == 0x2028 || r == 0x2029
+}
+
 // textBlock is the value of a text block whose body follows the opening delimiter: as javac
 // builds it (JLS 3.10.6), the opening line is dropped, the incidental indentation (the smallest
 // indentation of the non-blank lines and of the closing-delimiter line) and each line's trailing
-// white space are stripped, and only then are the escapes decoded.
+// white space are stripped, and only then are the escapes decoded. White space is
+// Character.isWhitespace, counted in characters.
 func textBlock(body string) string {
 	_, body, _ = strings.Cut(strings.ReplaceAll(body, "\r\n", "\n"), "\n")
 	lines := strings.Split(body, "\n")
 	last := len(lines) - 1
 	indent := -1
 	for k, l := range lines {
-		blank := strings.TrimSpace(l) == ""
-		if blank && k != last {
-			continue
+		rs := []rune(l)
+		n := 0
+		for n < len(rs) && javaSpace(rs[n]) {
+			n++
 		}
-		n := len(l) - len(strings.TrimLeft(l, " \t\f"))
-		if blank {
-			n = len(l)
+		if n == len(rs) && k != last {
+			continue
 		}
 		if indent < 0 || n < indent {
 			indent = n
 		}
 	}
 	for k, l := range lines {
-		if strings.TrimSpace(l) == "" {
+		rs := []rune(l)
+		end := len(rs)
+		for end > 0 && javaSpace(rs[end-1]) {
+			end--
+		}
+		if end == 0 {
 			lines[k] = ""
 			continue
 		}
-		lines[k] = strings.TrimRight(l[indent:], " \t\f")
+		lines[k] = string(rs[indent:end])
 	}
 	return unescape(strings.Join(lines, "\n"))
 }
