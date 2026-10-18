@@ -13,6 +13,7 @@ CRA2.1   RA2  PASS     depends on control-rt [RA2.R1]                           
 CRA2.2   RA2  PASS     BPointSummaryService.class built [RA2.R2 X1]                         modules/Cristian_Angeles_Review-rt.jar: 1 entry matches **/BPointSummaryService.class
 CRA2.3   RA2  PASS     palette lists PointSummaryService [RA2.R7]                           modules/Cristian_Angeles_Review-rt.jar!module.palette has n="PointSummaryService"
 CRA2.4   RA2  PASS     Cristian_Angeles_Review-rt is signed [RA2.R8 X10]                    modules/Cristian_Angeles_Review-rt.jar: META-INF/CODESIGN.SF, META-INF/CODESIGN.RSA
+CRA2.12  RA2  PASS     signed with the certificate of training-rt (Lab 5) [RA2.R8]          modules/Cristian_Angeles_Review-rt.jar!META-INF/CODESIGN.RSA: signer CN=(CodeSigning),O=Fixture,C=XX (serial 45e7), the same as modules/training-rt.jar!META-INF/CODESIGN.RSA
 CRA2.5   RA2  PASS     Cristian_Angeles_Review-rt jar built [RA2.R9]                        modules/Cristian_Angeles_Review-rt.jar (6 entries)
 CRA2.6   RA2  PASS     NumericWritables in Config/Review2 [RA2.V10]                         found 2 in Review2: Review2/NumericWritable, Review2/NumericWritable1
 CRA2.7   RA2  PASS     one PointSummaryService, under Services [RA2.V12 RA2.R2]             found 1 under baja:ServiceContainer: Services/PointSummaryService
@@ -20,4 +21,4 @@ CRA2.8   RA2  PASS     summaryFile = file:^Review.txt [RA2.V13 RA2.R3]          
 CRA2.9   RA2  PASS     Review.txt in the station's Files space [RA2.V15 X6]                 found 1 shared/Review.txt: Review.txt
 CRA2.10  RA2  PASS     Review.txt lines: name: value {status} @ priority [RA2.R5b RA2.V15]  shared/Review.txt: 2 lines match
 CRA2.11  RA2  PASS     distinct fallback values in Config/Review2 [RA2.V11]                 2 distinct fallback.value over 2 components: 33.0, 54.0
-checked 21: PASS 20, FAIL 1, SKIP 0; station ReviewStation (9 components, 0 links), install install
+checked 22: PASS 21, FAIL 1, SKIP 0; station ReviewStation (9 components, 0 links), install install

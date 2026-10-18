@@ -228,6 +228,7 @@ own prefixes (`t:`, `tld:`) are resolved through its `m=` declarations.
 | `jar-entry` | entries matching a glob (`**` crosses `/`; `{A,B}` is one of the exact names A or B) | the count reaches N |
 | `jar-text` | the first entry matching a glob | it holds every listed string |
 | `jar-signed` | `META-INF/*.SF` and `META-INF/*.RSA`, `.DSA` or `.EC` | both exist |
+| `jar-cert` | the signer certificate of the jar's first signature block (`META-INF/*.RSA`, `.DSA`, `.EC`: a PKCS#7 SignedData, below); `Fact` `subject`, `issuer` (the DN, RFC 2253 order, CN first), `chain`, `timestamp`, `same` (`CertOf`: another jar part), `pem` (`Glob` under `Root`) | `subject`/`issuer`: the DN matches `Match`; `chain`: the signer's path inside the block (each next certificate is the issuer by name and signed the one before, up to a self-signed root) has at least / exactly N certificates; `timestamp`: the signer carries an RFC 3161 token (`id-aa-timeStampToken`) whose signer's subject matches `Match`; `same`: both jars' signer certificates are the same DER; `pem`: the signer is the first `CERTIFICATE` of the PEM file. No jar or no block is FAIL; a block that cannot be read is SKIP |
 | `file-text` | every file matching a glob under the row's root (globs as for `files`), read as text: a UTF-8 BOM and CRLF line ends dropped; `Match` is a Go regexp (`{station}` = the station name, quoted, station root only) | `Line` > 0: that line matches; `Line` 0: the matching lines are at least / exactly N; `Whole`: the matches over the whole text (lines joined with `\n`, so `\s*` crosses them; `(?m)` for `^`/`$` per line) are at least / exactly N, the evidence gives the first one's line and text. No matching file is FAIL; a file over 16 MiB is SKIP (`cannot read`), never checked on its first part |
 | `audit` | the records of every history file matching a glob under the station dir (`history/*/*/AuditHistory.hdb`), decoded by `internal/hdbread`; `Hist` holds Go regexps on `operation`, `target`, `slotName`, `oldValue`, `value` (empty = any) | the matching records, summed over the files, are at least / exactly N |
 | `log` | as `audit`, over `history:LogRecord` files; regexps on `logName`, `level` (`INFO`, `SEVERE`, ...), `message` | as `audit` |
@@ -255,6 +256,27 @@ SKIP. Install and lab-source rows are offline evidence (no station holds those f
 The profile holds the keystore passwords in plain text (L5.12): the rows match only the entries
 named above, and their evidence prints only the matched text.
 
+Signature blocks. Go has no PKCS#7, so `check/pkcs7.go` walks the SignedData with `encoding/asn1`
+after `berToDER` rewrites BER indefinite lengths as definite ones (the 4.15 build's blocks open their
+ContentInfo, SignedData and certificate set with indefinite lengths; a primitive's contents, and so
+every DER certificate, are copied as they are). It keeps the certificates, the certificate the first
+SignerInfo names (issuer and serial number, or subject key identifier) and the timestamp token's
+SignedData; it verifies only the certificate chain (`CheckSignatureFrom`), never the jar signature.
+A malformed block is an error, never a panic (`FuzzParseSignedData`). The rows (2026-10-18):
+
+| Row | Item | Reads (`training-rt`, live) |
+|---|---|---|
+| C5.11 | L5.18 (PARTIAL: the Owner of the self-signed certificate, and the trust-store validation, are not in the jar) | issuer `CN=Tridium University Root Certification Authority,O=Tridium University,L=Richmond,ST=Virginia,C=US` |
+| C5.12 | L5.18 | the chain `CN=(CodeSigning),O=VeytrixControls,...` -> the root (self-signed): 2 of 2 certificates |
+| C5.13 | L5.11 (PARTIAL, with C5.9 and C5.10) | timestamped by `CN=DigiCert SHA256 RSA4096 Timestamp Responder 2026 1,O=DigiCert\, Inc.,C=US` |
+| C5.14 | L5.17, L5.25 (PARTIAL: the Module Info view) | the signer (serial `45e7056ff7ac1091bcfa953b`) is the first certificate of `../certificates/code_signing.pem`, the file L5.17 imports into the keystore |
+| CRA2.12 | RA2.R8 | `Cristian_Angeles_Review-rt`'s signer is `training-rt`'s (the same DER): the Code Signing lab's certificate |
+
+Not decided by the jar: L5.14 (the keystore listing of the self-signed certificate: the jar holds only
+the CA-issued one; its alias is in `code_signing.jceks`, which no row reads). The certificate's CN is
+`(CodeSigning)`, with the parentheses, though the dname is `CN=${alias}` and the alias `CodeSigning`
+(L5.10): no row asserts the CN.
+
 Nested slots: the bog reader keeps only a composite slot's direct `value` and `status`, so a
 dotted slot is read from `Comp.Nested`, which `bog.LoadOptions` fills only with
 `bog.Options{NestedSlots: true}`. `course check` turns the option on only when a selected check
@@ -263,8 +285,9 @@ it is SKIP, never PASS on the type default. The path is from the component that 
 composite slot: the Tcp Config of a driver network is its own component (`tcpConfig`, with a
 handle), so its port is `address.port` on `trafficLightDriver:TrafficLightDriverTcpCommConfig`.
 
-Checks per lab: 1: 12 (C1.9-C1.12 read the dev home), 2: 5, 3: 5, 4: 10 (C4.8 an `audit`, C4.9 and C4.10 `annotation`), 5: 10 (the station
-holds nothing of code signing: the jars, the install's `system.properties` and the signing profile), 6: 8, 7: 8 (C7.6-C7.8 `source-text`), 9: 7, 10: 14 (three of them `file-text` on the
+Checks per lab: 1: 12 (C1.9-C1.12 read the dev home), 2: 5, 3: 5, 4: 10 (C4.8 an `audit`, C4.9 and C4.10 `annotation`), 5: 14 (the station
+holds nothing of code signing: the jars and their signer certificate, the install's `system.properties`
+and the signing profile), 6: 8, 7: 8 (C7.6-C7.8 `source-text`), 9: 7, 10: 14 (three of them `file-text` on the
 exported CSVs, three on the history files, C10.14 the job's lexicon), 11: 17 (8 of them nested: C11.9-C11.16, the driver and server
 Tcp Config addresses and the ping health of the network and of every driver device; C11.17
 `serverEnabled` is a plain slot), B: 5. C1.8, C2.5, C4.9, C4.10, C6.7, C6.8 and CB.5 are `annotation` rows. Lab 8 (ORDs) writes no code and changes nothing, so it
@@ -363,6 +386,7 @@ signed).
 | CRA2.1-CRA2.5 | `control-rt` dependency, `BPointSummaryService.class`, palette entry, signed, built |
 | CRA2.6-CRA2.10 | NumericWritables in `Review2`, one PointSummaryService under Services, `summaryFile = file:^Review.txt`, `shared/Review.txt` with `name: value {status} @ priority` lines |
 | CRA2.11 | the `Review2` NumericWritables hold at least two distinct values (RA2.V11): the nested `fallback.value` (the value the set action writes; default 0.0), read with nested values |
+| CRA2.12 | the module's signer certificate is `training-rt`'s (RA2.R8, the Code Signing lab's certificate: `jar-cert` `same`) |
 
 What no row observes is an `Unobserved` note: flags, the confirmation dialog and other UI steps,
 superclasses, and that `Review.txt` lists every NumericWritable of the station (CRA2.10 counts two
@@ -464,7 +488,7 @@ The marker's evidence comes from the kinds of the item's linked checks (`check.E
 | live | `files`, `file-text` | files in the station directory (`shared/`), the default root |
 | offline | `files`, `file-text` with `Root` `install` or `labsrc` | a file of the install or of the lab sources (`checkEvidence`) |
 | live | `audit`, `log`, `trend` | the station's histories |
-| offline | `jar`, `jar-entry`, `jar-text`, `jar-signed` | a jar of the install |
+| offline | `jar`, `jar-entry`, `jar-text`, `jar-signed`, `jar-cert` | a jar of the install |
 | offline | `source-text` | the Niagara source tree |
 | offline | `annotation` | the participant's lab sources |
 
@@ -578,16 +602,16 @@ beside it), and the niagara-research answer keys at `9e7c8a7eb`.
 
 | Command (2026-10-18) | Result |
 |---|---|
-| `course check` (the labs) | 101 checked: PASS 100, FAIL 1 (C3.4), SKIP 0 |
-| `course check --lab RA1 --lab RA2` | 21 checked: PASS 19, FAIL 2 (CRA1.2, CRA1.10) |
+| `course check` (the labs) | 105 checked: PASS 104, FAIL 1 (C3.4), SKIP 0 |
+| `course check --lab RA1 --lab RA2` | 22 checked: PASS 20, FAIL 2 (CRA1.2, CRA1.10) |
 | `course check --lab EXAM` | 19 checked: PASS 19 |
 | `course verify --status predicted` | 39: CONFIRMED 1 (L1.14, offline), PARTIAL 14, CONTRADICTED 0, UNDECIDED 24; 30 checks run |
-| `course verify --status written` | 201: CONFIRMED 3 (L5.2, L5.8, L5.9, offline), PARTIAL 11, CONTRADICTED 3 (L3.7, RA1.M3, RA1.V9–V14), UNDECIDED 184; 24 checks run |
+| `course verify --status written` | 201: CONFIRMED 5 (L5.2, L5.8, L5.9, L5.17, RA2.R8, offline), PARTIAL 12, CONTRADICTED 3 (L3.7, RA1.M3, RA1.V9–V14), UNDECIDED 181; 29 checks run |
 | `course verify --status identical` | 50: CONFIRMED 9 (offline), PARTIAL 7, CONTRADICTED 0, UNDECIDED 34; 16 checks run |
 | `course verify --status corrected` | 10: CONFIRMED 2 (offline), UNDECIDED 8; 2 checks run |
 | `course verify --status unverified` | 20: CONFIRMED 1 (live), PARTIAL 5, UNDECIDED 14; 7 checks run |
 | `course verify --status verified` | 72: CONFIRMED 72 (30 live, 42 offline lines); 90 checks run |
-| `course progress` | 370 items: checked 114, CONFIRMED 76, PARTIAL 35, CONTRADICTED 3, UNDECIDED 256; 141 checks run; 3 `redo` (C3.4, CRA1.2, CRA1.10), 4 `mark` (offline: L1.14, L5.2, L5.8, L5.9) |
+| `course progress` | 370 items: checked 117, CONFIRMED 78, PARTIAL 36, CONTRADICTED 3, UNDECIDED 253; 146 checks run; 3 `redo` (C3.4, CRA1.2, CRA1.10), 6 `mark` (offline: L1.14, L5.2, L5.8, L5.9, L5.17, RA2.R8) |
 | `course status` | verified 72: live 33, offline 39 |
 | `course quiz -n 500` | 89 questions: why 34, decision 29, trap 26 |
 
@@ -659,6 +683,17 @@ FAILs, no CONTRADICTED prediction, the item and status counts), not this table.
   `system.properties`: FAIL). The fixtures `testdata/install/defaults/system.properties`,
   `testdata/certificates/` (no real password) and the Gradle files of `testdata/labsrc/` are
   synthetic; `testdata/` stands for `N4_Labs`.
+- `check/jarcert_test.go`: the PKCS#7 reader over blocks built by `check/fixturecert_test.go` (a
+  test-only generator: Ed25519 keys from fixed seeds, whose signatures are deterministic, so the
+  certificates, the blocks and `testdata/certificates/code_signing.pem` are the same on every run and
+  `TestFixtureCerts` and `TestFixtureJars` catch a drift; the SignerInfo's signature is a stand-in):
+  the signer, the timestamp token, the chain (a same-named root that did not sign is not the issuer),
+  a BER copy (`TestBERToDER`, and the fixture `training-rt` block is BER, as the live one), malformed
+  blocks (not DER, truncated, trailing data, another content type, the signer's certificate absent, a
+  token that is not a SignedData: errors), and every fact PASS and FAIL over an install built in the
+  test (a self-signed jar, an unsigned one, a block that is not DER: SKIP). `FuzzParseSignedData`
+  (`go test -run '^$' -fuzz=FuzzParseSignedData -fuzztime=30s -fuzzminimizetime=2s
+  ./internal/course/check/`; without the last flag the display stalls while a new input is minimised).
 - `check/filetext_test.go`: the `file-text` kind over a BOM + CRLF trend CSV, an old-format CSV, a
   short file, a line count, no matching file, a bad regexp and a file over the read bound (SKIP).
 - `check/check_test.go` and the `check-*` goldens: synthetic stations under

@@ -182,6 +182,8 @@ func (s *Station) Run(ck *Check) Result {
 		r.Verdict, r.Evidence = s.checkSourceText(ck)
 	case kindAnnotation:
 		r.Verdict, r.Evidence = s.checkAnnotation(ck)
+	case kindJarCert:
+		r.Verdict, r.Evidence = s.checkJarCert(ck)
 	default:
 		r.Verdict, r.Evidence = s.checkJar(ck)
 	}

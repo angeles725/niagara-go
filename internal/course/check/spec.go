@@ -39,6 +39,7 @@ const (
 	systemProperties = "defaults/system.properties" // under the install (the System Home)
 	signingProfile   = "../certificates/code_signing.xml"
 	ownDname         = "that C, ST, L and O hold your own country, state, city and company (the rows read the attribute names and CN)"
+	ownerUnchanged   = "that the Owner is the one of the self-signed certificate (L5.14; the jar holds only the CA-issued one) and that the chain validates against the trust store (runtime)"
 	tsaAfterExpiry   = "that the timestamp keeps the jar verifiable after the certificate expires (the profile is read, not a verification after expiry)"
 )
 
@@ -187,6 +188,19 @@ var labSpec = []Check{
 	{ID: "C5.10", Lab: "5", Keys: []string{"L5.11"}, Unobserved: map[string]string{"L5.11": tsaAfterExpiry}, Kind: kindFileText,
 		Desc: "profileType RestrictedSigningProfile", Root: rootLabsrc, Glob: signingProfile, Whole: true,
 		Match: `<entry key="niagara\.signing\.profileType">\s*com\.tridium\.gradle\.plugins\.signing\.profile\.RestrictedSigningProfile\s*</entry>`, Op: opEq, N: 1},
+	// L5.11, L5.17, L5.18, L5.25: the signer certificate of training-rt's signature block (the
+	// PKCS#7 META-INF/CODESIGN.RSA, jarcert.go), what Tools > Module Info links to.
+	{ID: "C5.11", Lab: "5", Keys: []string{"L5.18"}, Unobserved: map[string]string{"L5.18": ownerUnchanged}, Kind: kindJarCert,
+		Desc: "signer issued by the Tridium University root", Jar: trainingRT, Fact: certIssuer,
+		Match: `^CN=Tridium University Root Certification Authority(?:,|$)`},
+	{ID: "C5.12", Lab: "5", Keys: []string{"L5.18"}, Unobserved: map[string]string{"L5.18": ownerUnchanged}, Kind: kindJarCert,
+		Desc: "chain of two: CodeSigning -> self-signed root", Jar: trainingRT, Fact: certChain, Op: opEq, N: 2},
+	{ID: "C5.13", Lab: "5", Keys: []string{"L5.11"}, Unobserved: map[string]string{"L5.11": tsaAfterExpiry}, Kind: kindJarCert,
+		Desc: "signature timestamped by DigiCert", Jar: trainingRT, Fact: certTimestamp, Match: `(?:^|,)O=DigiCert`},
+	{ID: "C5.14", Lab: "5", Keys: []string{"L5.17", "L5.25"},
+		Unobserved: map[string]string{"L5.25": "the Module Info view and its certificate link (UI); the keystore is read through the code_signing.pem L5.17 imports into it"},
+		Kind:       kindJarCert, Desc: "signer = the first certificate of ../certificates/code_signing.pem", Jar: trainingRT, Fact: certPEM,
+		Root: rootLabsrc, Glob: "../certificates/code_signing.pem"},
 
 	// Lab 6. BWorkOrderServiceWithSerialization.java:55-59 lastSuccess default BAbsTime.DEFAULT;
 	// BIRestrictedComponent: one instance, under Services (L6.7).

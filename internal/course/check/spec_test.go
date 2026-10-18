@@ -95,6 +95,18 @@ func TestCheckSpecShape(t *testing.T) {
 			ok = ck.Glob != "" && ck.N > 0
 		case kindJar, kindJarSigned:
 			ok = ck.Jar != ""
+		case kindJarCert:
+			_, err := regexp.Compile(ck.Match)
+			switch ck.Fact {
+			case certSubject, certIssuer, certTimestamp:
+				ok = ck.Jar != "" && ck.Match != "" && err == nil
+			case certChain:
+				ok = ck.Jar != "" && ck.Op != "" && ck.N > 0
+			case certSame:
+				ok = ck.Jar != "" && ck.CertOf != "" && ck.CertOf != ck.Jar
+			case certPEM:
+				ok = ck.Jar != "" && ck.Glob != "" && ck.Root != rootStation
+			}
 		case kindJarEntry:
 			ok = ck.Jar != "" && ck.Glob != "" && ck.N > 0
 		case kindJarText:

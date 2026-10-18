@@ -11,6 +11,7 @@ CRA2.1    RA2   SKIP     depends on control-rt [RA2.R1]                         
 CRA2.2    RA2   SKIP     BPointSummaryService.class built [RA2.R2 X1]                         no --install DIR: modules/Cristian_Angeles_Review-rt.jar not checked
 CRA2.3    RA2   SKIP     palette lists PointSummaryService [RA2.R7]                           no --install DIR: modules/Cristian_Angeles_Review-rt.jar not checked
 CRA2.4    RA2   SKIP     Cristian_Angeles_Review-rt is signed [RA2.R8 X10]                    no --install DIR: modules/Cristian_Angeles_Review-rt.jar not checked
+CRA2.12   RA2   SKIP     signed with the certificate of training-rt (Lab 5) [RA2.R8]          no --install DIR: modules/Cristian_Angeles_Review-rt.jar not checked
 CRA2.5    RA2   SKIP     Cristian_Angeles_Review-rt jar built [RA2.R9]                        no --install DIR: modules/Cristian_Angeles_Review-rt.jar not checked
 CRA2.6    RA2   PASS     NumericWritables in Config/Review2 [RA2.V10]                         found 2 in Review2: Review2/NumericWritable, Review2/NumericWritable1
 CRA2.7    RA2   PASS     one PointSummaryService, under Services [RA2.V12 RA2.R2]             found 1 under baja:ServiceContainer: Services/PointSummaryService
@@ -37,4 +38,4 @@ CEXAM.16  EXAM  PASS     device pinged ok (health.lastOkTime stored) [P3]       
 CEXAM.17  EXAM  SKIP     websiteDriver-rt is signed [P3]                                      no --install DIR: modules/websiteDriver-rt.jar not checked
 CEXAM.18  EXAM  SKIP     network, device and folder classes built [P3]                        no --install DIR: modules/websiteDriver-rt.jar not checked
 CEXAM.19  EXAM  SKIP     websiteDriver requests NETWORK_COMMUNICATION [P3]                    no --install DIR: modules/websiteDriver-rt.jar not checked
-checked 38: PASS 20, FAIL 0, SKIP 18; station GoodStation (237 components, 16 links), station ReviewStation (9 components, 0 links), station CertStation (9 components, 1 link), install (none: jar checks skipped), source (none: source checks skipped)
+checked 39: PASS 20, FAIL 0, SKIP 19; station GoodStation (237 components, 16 links), station ReviewStation (9 components, 0 links), station CertStation (9 components, 1 link), install (none: jar checks skipped), source (none: source checks skipped)

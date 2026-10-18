@@ -73,6 +73,10 @@ var reviewSpec = []Check{
 		Unobserved: map[string]string{"RA2.R8": "that the certificate is the one of the Code Signing lab",
 			"X10": "Module Info's green check at moduleVerificationMode=high (runtime)"}, Kind: kindJarSigned,
 		Desc: "Cristian_Angeles_Review-rt is signed", Jar: reviewRT},
+	// RA2.R8: the review module is signed with the Code Signing lab's certificate, the signer of
+	// training-rt (C5.11-C5.14).
+	{ID: "CRA2.12", Lab: "RA2", Keys: []string{"RA2.R8"}, Kind: kindJarCert, Desc: "signed with the certificate of training-rt (Lab 5)",
+		Jar: reviewRT, Fact: certSame, CertOf: trainingRT},
 	{ID: "CRA2.5", Lab: "RA2", Keys: []string{"RA2.R9"}, Kind: kindJar, Desc: "Cristian_Angeles_Review-rt jar built", Jar: reviewRT},
 	{ID: "CRA2.6", Lab: "RA2", Keys: []string{"RA2.V10"},
 		Unobserved: map[string]string{"RA2.V10": ra2Listing}, Kind: kindType, Desc: "NumericWritables in Config/Review2",

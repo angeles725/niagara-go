@@ -13,14 +13,15 @@ import (
 )
 
 // fixtureJars is the content of the synthetic install testdata/install/modules/*.jar: the
-// entries the check spec reads, with stand-in bytes. The jars are generated from this table
+// entries the check spec reads, with stand-in bytes (the signature blocks the jar-cert rows read are
+// generated PKCS#7 blocks). The jars are generated from this table
 // (COURSE_UPDATE_FIXTURES=1 go test -run TestFixtureJars) and TestFixtureJars fails when a
 // committed jar drifts from it.
 var fixtureJars = map[string]map[string]string{
 	"training-rt": {
 		"META-INF/MANIFEST.MF":  "Manifest-Version: 1.0\n",
 		"META-INF/CODESIGN.SF":  "Signature-Version: 1.0\n",
-		"META-INF/CODESIGN.RSA": "stand-in signature block\n",
+		"META-INF/CODESIGN.RSA": string(indefinite(fixtureBlock)), // a BER PKCS#7 block, as the 4.15 build writes (fixturecert_test.go)
 		"META-INF/module.xml":   fixtureModuleXML,
 		"module.palette":        `<p n="FirstComponent"/><p n="kitControl"><p n="Add"/></p>` + "\n",
 		"training-rt.lexicon": "url=Url\nhistoriesToCsvJob.beginningHistoriesExport=Beginning export of {0} histories\n" +
@@ -49,7 +50,7 @@ var fixtureJars = map[string]map[string]string{
 	},
 	"Cristian_Angeles_Review-rt": {
 		"META-INF/CODESIGN.SF":  "Signature-Version: 1.0\n",
-		"META-INF/CODESIGN.RSA": "stand-in signature block\n",
+		"META-INF/CODESIGN.RSA": string(fixtureBlock), // signed as training-rt (RA2.R8)
 		"META-INF/module.xml":   fixtureReviewXML,
 		"module.palette":        `<p t="c:ComponentWithId" n="ComponentWithId"/><p t="c:PointSummaryService" n="PointSummaryService"/>` + "\n",
 		"com/review/Cristian_Angeles_Review/BComponentWithId.class":     "stand-in class\n",

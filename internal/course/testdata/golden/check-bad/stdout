@@ -41,6 +41,10 @@ C5.7    5    SKIP     dname: five attributes among C, ST, L, O, CN (no OU) [L5.1
 C5.8    5    SKIP     dname: CN=${alias} [L5.10]                                                            no --labsrc DIR: ../certificates/code_signing.xml not checked
 C5.9    5    SKIP     standardtsa = http://timestamp.digicert.com [L5.11]                                   no --labsrc DIR: ../certificates/code_signing.xml not checked
 C5.10   5    SKIP     profileType RestrictedSigningProfile [L5.11]                                          no --labsrc DIR: ../certificates/code_signing.xml not checked
+C5.11   5    PASS     signer issued by the Tridium University root [L5.18]                                  modules/training-rt.jar!META-INF/CODESIGN.RSA: issuer CN=Tridium University Root Certification Authority,O=Tridium University,C=US
+C5.12   5    PASS     chain of two: CodeSigning -> self-signed root [L5.18]                                 modules/training-rt.jar!META-INF/CODESIGN.RSA: 2 of 2 certificates in the chain: CN=(CodeSigning),O=Fixture,C=XX -> CN=Tridium University Root Certification Authority,O=Tridium University,C=US (self-signed)
+C5.13   5    PASS     signature timestamped by DigiCert [L5.11]                                             modules/training-rt.jar!META-INF/CODESIGN.RSA: timestamped by CN=Fixture Timestamp Responder,O=DigiCert\, Inc.
+C5.14   5    SKIP     signer = the first certificate of ../certificates/code_signing.pem [L5.17 L5.25]      no --labsrc DIR: ../certificates/code_signing.pem not checked
 C6.1    6    PASS     one WorkOrderService, under Services [L6.16 L6.17]                                    found 1 under baja:ServiceContainer: Services/WorkOrderService
 C6.2    6    PASS     a submit succeeded (lastSuccess stored) [L6.23 L6.33]                                 Services/WorkOrderService.lastSuccess = 2026-10-14T11:31:12.108-06:00 (stored)
 C6.3    6    PASS     training-rt depends on net-rt [L6.9]                                                  modules/training-rt.jar!META-INF/module.xml has name="net-rt"
@@ -100,4 +104,4 @@ CB.2    B    PASS     device discovery leaf in trafficLightDriver-rt [LB.16]    
 CB.3    B    PASS     point discovery leaf in trafficLightDriver-rt [LB.19]                                 modules/trafficLightDriver-rt.jar: 1 entry matches com/tridiumuniversity/trafficLightDriver/point/BTrafficLightDriverPointDiscoveryLeaf.class
 CB.4    B    PASS     point manager in trafficLightDriver-wb [LB.8]                                         modules/trafficLightDriver-wb.jar: 1 entry matches **/BTrafficLightDriverPointManager*.class
 CB.5    B    SKIP     intersectionId has the facet SfUtil.incl(SfUtil.MGR_EDIT) [LB.1 LB.3]                 no --labsrc DIR: trafficLightDriver/trafficLightDriver-rt/src/com/tridiumuniversity/trafficLightDriver/BTrafficLightDriverDevice.java not checked
-checked 101: PASS 65, FAIL 17, SKIP 19; station BadStation (236 components, 15 links), install install, source (none: source checks skipped), labsrc (none: lab-source checks skipped)
+checked 105: PASS 68, FAIL 17, SKIP 20; station BadStation (236 components, 15 links), install install, source (none: source checks skipped), labsrc (none: lab-source checks skipped)
