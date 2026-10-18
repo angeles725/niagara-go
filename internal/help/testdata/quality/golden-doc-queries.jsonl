@@ -1,0 +1,72 @@
+# Source: niagara-research tools/tests/fixtures/golden-queries.jsonl at commit 8abdf8110, copied 2026-10-18.
+# Only the rows with an expected doc answer (the set niagara-help tests/test_search_quality.py TestGoldenSet scores), trimmed to id, question and expected.doc.
+# Lines starting with # are comments; every other line is one JSON row.
+{"id": "q01", "question": "como funciona el ack de alarmas en N4", "expected": {"doc": ["docs-text/docAlarms.txt", "bajadoc-clean/javax/baja/alarm/BAlarmService.txt"]}}
+{"id": "q02", "question": "alarm database file format adb magic", "expected": {"doc": ["docs-text/docAlarms.txt"]}}
+{"id": "q03", "question": "alarm escalation and filtering mechanisms", "expected": {"doc": ["docs-text/docAlarms.txt"]}}
+{"id": "q04", "question": "que es un BAlarmRecipient y que tipos hay", "expected": {"doc": ["bajadoc-clean/javax/baja/alarm/BAlarmRecord.txt", "bajadoc-clean/com/tridium/event/recipients/BAlarmRecipient.txt", "bajadoc-clean/javax/baja/alarm/BAlarmRecipient.txt"]}}
+{"id": "q05", "question": "como mandar alarmas por email BEmailRecipient", "expected": {"doc": ["docs-text/docAlarms.txt", "bajadoc-clean/com/tridium/email/alarm/BEmailRecipient.txt", "bajadoc-clean/com/tridium/event/recipients/BEmailRecipient.txt"]}}
+{"id": "q06", "question": "history service y como se guardan las trends", "expected": {"doc": ["docs-text/docHistories.txt", "bajadoc-clean/javax/baja/history/BHistoryService.txt"]}}
+{"id": "q07", "question": "rdbms history export high watermark", "expected": {"doc": ["docs-text/docRdbms.txt"]}}
+{"id": "q09", "question": "como se almacena un BTrendRecord bacnet", "expected": {"doc": ["docs-text/docBacnet.txt", "bajadoc-clean/javax/baja/history/BTrendRecord.txt"]}}
+{"id": "q10", "question": "bacnet point discovery objectTypes xml numeric boolean enum", "expected": {"doc": ["docs-text/docBacnet.txt"]}}
+{"id": "q11", "question": "bacnet apdu encoding asn1 service pdu", "expected": {"doc": ["docs-text/docBacnet.txt"]}}
+{"id": "q12", "question": "bacnet ip addressing device instance BAC0", "expected": {"doc": ["docs-text/docBacnet.txt"]}}
+{"id": "q13", "question": "bacnet priority array export write back", "expected": {"doc": ["docs-text/docBacnet.txt"]}}
+{"id": "q14", "question": "que es bacnet/SC secure connect", "expected": {"doc": ["docs-text/docBacnet.txt"]}}
+{"id": "q19", "question": "obix driver network client proxy rest", "expected": {"doc": ["docs-text/docObix.txt"]}}
+{"id": "q20", "question": "obix server BObixServer soaplet lobby", "expected": {"doc": ["docs-text/docObix.txt", "bajadoc-clean/javax/baja/obix/driver/BObixServer.txt"]}}
+{"id": "q21", "question": "bulk data extraction live station over obix history query", "expected": {"doc": ["docs-text/docObix.txt"]}}
+{"id": "q22", "question": "web tier servlet jetty filter chain", "expected": {"doc": ["bajadoc-clean/javax/baja/web/BWebServlet.txt", "devguide-clean/servlets/webModules.txt", "devguide-clean/web.txt", "bajadoc-clean/javax/baja/web/filters/"]}}
+{"id": "q23", "question": "que es un BWebServlet y como montar uno", "expected": {"doc": ["bajadoc-clean/javax/baja/web/BWebServlet.txt"]}}
+{"id": "q25", "question": "bajaux widget runtime spandrel rt web bridge", "expected": {"doc": ["devguide-clean/ui/introUI.txt", "devguide-clean/jsdoc/bajaux-ux/module-bajaux_spandrel.txt", "devguide-clean/jsdoc/bajaux-ux/tutorial-50-spandrel.txt"]}}
+{"id": "q27", "question": "como hago un menu desplegable dropdown en px", "expected": {"doc": ["guides-clean/Graphics/AboutPopupBindings.txt", "guides-clean/Graphics/UsingthePopupBinding.txt", "docs-text/docGraphics.txt"]}}
+{"id": "q28", "question": "px editor workflow crear vista paleta bindear", "expected": {"doc": ["docs-text/docGraphics.txt"]}}
+{"id": "q30", "question": "embeber una px en otra BPxInclude", "expected": {"doc": ["docs-text/docGraphics.txt", "bajadoc-clean/javax/baja/ui/px/BPxInclude.txt"]}}
+{"id": "q31", "question": "por que la misma px se ve distinto media profile Hx mobile", "expected": {"doc": ["docs-text/docGraphics.txt"]}}
+{"id": "q32", "question": "webChart d3 render engine charting bajaux", "expected": {"doc": ["docs-text/docWebCharts.txt"]}}
+{"id": "q34", "question": "kitControl catalogo de function blocks PID loop", "expected": {"doc": ["docs-text/docKitControl.txt"]}}
+{"id": "q35", "question": "como funciona el BLoopPoint anti windup PID", "expected": {"doc": ["docs-text/docKitControl.txt", "bajadoc-clean/com/tridium/kitControl/BLoopPoint.txt"]}}
+{"id": "q36", "question": "kitControl enums BReliability sensor fault", "expected": {"doc": ["docs-text/docKitControl.txt", "bajadoc-clean/com/tridium/kitControl/enums/BReliability.txt"]}}
+{"id": "q38", "question": "anatomia de una licencia niagara feature signature", "expected": {"doc": ["docs-text/docPlatform.txt"]}}
+{"id": "q39", "question": "niagara license tool signer verifier byte compatible", "expected": {"doc": ["docs-text/docPlatform.txt"]}}
+{"id": "q40", "question": "license limit enforcement point count metrics feature", "expected": {"doc": ["docs-text/docPlatform.txt", "guides-clean/Platform/CheckingCapacityLicensingStatus-2DBFB22B.txt"]}}
+{"id": "q41", "question": "modbus no tiene feature de licencia hay cuatro", "expected": {"doc": ["docs-text/docModbus.txt"]}}
+{"id": "q42", "question": "plataforma daemon niagarad plat.exe 3011 5011", "expected": {"doc": ["docs-text/docPlatform.txt"]}}
+{"id": "q43", "question": "platform admin ui connect platDaemon wb", "expected": {"doc": ["docs-text/docPlatform.txt"]}}
+{"id": "q44", "question": "station lifecycle save dirty flag BStationSaveJob", "expected": {"doc": ["docs-text/docPlatform.txt", "docs-text/docUser.txt"]}}
+{"id": "q45", "question": "system passphrase at rest encryption jace", "expected": {"doc": ["docs-text/docStationSecurity.txt", "docs-text/docPlatform.txt", "docs-text/docJ8Startup.txt"]}}
+{"id": "q46", "question": "como funciona RBAC roles categorias en N4", "expected": {"doc": ["docs-text/docUser.txt", "bajadoc-clean/javax/baja/user/BUser.txt"]}}
+{"id": "q47", "question": "password policy BPasswordStrength enforcement", "expected": {"doc": ["docs-text/docUser.txt", "bajadoc-clean/javax/baja/user/BPasswordStrength.txt", "docs-text/docHardening.txt"]}}
+{"id": "q48", "question": "password encoder hashed vs encrypted pbkdf2", "expected": {"doc": ["docs-text/docStationSecurity.txt"]}}
+{"id": "q49", "question": "audit trail config AuditEvent security history", "expected": {"doc": ["docs-text/docStationSecurity.txt"]}}
+{"id": "q50", "question": "BRoleHierarchies custom role hierarchy tags", "expected": {"doc": ["docs-text/docUser.txt", "bajadoc-clean/javax/baja/hierarchy/BRoleHierarchies.txt"]}}
+{"id": "q51", "question": "autenticacion saml ldap kerberos gauth totp", "expected": {"doc": ["docs-text/docLdap.txt"]}}
+{"id": "q52", "question": "drivers framework device network proxy ext", "expected": {"doc": ["devguide-clean/arch-driverHierarchy.txt", "bajadoc-clean/javax/baja/driver/BDeviceNetwork.txt", "devguide-clean/driverFramework.txt", "devguide-clean/driverPoint.txt"]}}
+{"id": "q53", "question": "modbus driver architecture device poll point poll", "expected": {"doc": ["docs-text/docModbus.txt"]}}
+{"id": "q54", "question": "spyder honeywell driver bacnet lon deofuscado", "expected": {"doc": ["docs-text/Spyder_Model_5_and_Spyder_Model_7_Function_Blocks_User_Guide_-_31-00364.txt", "docs-text/Spyder_Tool_for_WEBs-N4_User_Guide_-_31-00089.txt"]}}
+{"id": "q55", "question": "opc ua client driver prosys uaclient", "expected": {"doc": ["docs-text/docOpcUa.txt"]}}
+{"id": "q56", "question": "basicDriver base serial message dispatch", "expected": {"doc": ["devguide-clean/basicDriver.txt"]}}
+{"id": "q57", "question": "baja object model component slot complex", "expected": {"doc": ["devguide-clean/componentModel.txt"]}}
+{"id": "q58", "question": "que es un slot y los flags NiagaraProperty operator", "expected": {"doc": ["devguide-clean/componentModel.txt", "bajadoc-clean/javax/baja/sys/Flags.txt", "devguide-clean/slot-o-matic.txt"]}}
+{"id": "q59", "question": "ord bog queries bql neql hierarchy tags", "expected": {"doc": ["devguide-clean/bog.txt", "devguide-clean/bql.txt", "docs-text/docHierarchies.txt"]}}
+{"id": "q60", "question": "config.bog offline diagnostic leer station por http", "expected": {"doc": ["devguide-clean/bog.txt", "docs-text/docStationSecurity.txt"]}}
+{"id": "q61", "question": "bog version migration converter registry", "expected": {"doc": ["devguide-clean/bog.txt", "bajadoc-clean/javax/baja/migration/BIBogElementConverter.txt", "bajadoc-clean/javax/baja/migration/ConverterRegistry.txt"]}}
+{"id": "q62", "question": "bog boot crash recovery working file backup rename", "expected": {"doc": ["docs-text/docDataRecovery.txt"]}}
+{"id": "q63", "question": "build system module development slotomatic gradle", "expected": {"doc": ["devguide-clean/build.txt"]}}
+{"id": "q64", "question": "como se firma un modulo module signing standalone", "expected": {"doc": ["docs-text/docModuleSign.txt"]}}
+{"id": "q65", "question": "schedule framework weekly schedule bacnet encoding", "expected": {"doc": ["docs-text/docScheduling.txt"]}}
+{"id": "q66", "question": "tag framework haystack neql dictionary", "expected": {"doc": ["docs-text/docTagging.txt"]}}
+{"id": "q67", "question": "provisioning service backup supervisor replication", "expected": {"doc": ["docs-text/docProvisioning.txt"]}}
+{"id": "q68", "question": "template ntpl deploy upgrade bulk excel", "expected": {"doc": ["docs-text/docTemplates.txt"]}}
+{"id": "q69", "question": "lon network variable snvt encoding nrio", "expected": {"doc": ["docs-text/docLonworks.txt"]}}
+{"id": "q70", "question": "csrf guard server side session cookie niagara_userid", "expected": {"doc": ["docs-text/docStationSecurity.txt", "devguide-clean/security/csrfProtection.txt", "devguide-rc/com/tridium/example/auth/client/AuthClientExample.java", "docs-text/docUser.txt"]}}
+{"id": "q74", "question": "all subclasses of BDeviceNetwork including BNiagaraNetwork", "expected": {"doc": ["bajadoc-clean/javax/baja/driver/BDeviceNetwork.txt", "bajadoc-clean/com/tridium/nd/BNiagaraNetwork.txt"]}}
+{"id": "q75", "question": "como funciona el ping de salud de un dispositivo pingFail pingOk", "expected": {"doc": ["bajadoc-clean/javax/baja/driver/BDevice.txt", "bajadoc-clean/javax/baja/driver/ping/BPingMonitor.txt"]}}
+{"id": "q76", "question": "driver device discovery job for the device manager", "expected": {"doc": ["docs-text/docDrivers.txt"]}}
+{"id": "q77", "question": "politica de tuning de los proxy points stale time y min write time", "expected": {"doc": ["bajadoc-clean/javax/baja/driver/point/BTuningPolicy.txt", "guides-clean/Drivers/driver-TuningPolicy.txt"]}}
+{"id": "q78", "question": "proxy point conversion between device value and point value BProxyConversion", "expected": {"doc": ["bajadoc-clean/javax/baja/driver/point/BProxyConversion.txt"]}}
+{"id": "q80", "question": "chasis de drivers DDF devDriver red y dispositivo BDdfNetwork", "expected": {"doc": ["bajadoc-clean/com/tridium/ddf/BDdfNetwork.txt", "bajadoc-clean/com/tridium/ddf/BDdfDevice.txt"]}}
+{"id": "q81", "question": "NDriver link layer LinkMessage framing over TCP from the course lab", "expected": {"doc": ["bajadoc-clean/com/tridium/ndriver/comm/ILinkLayer.txt", "bajadoc-clean/com/tridium/ndriver/comm/LinkMessage.txt"]}}
+{"id": "q85", "question": "why set nullOnInControl to false on the kitControl reference Tstat when comparing it with the lab Tstat", "expected": {"doc": ["guides-clean/KitControl/kitControl-Tstat.txt", "docs-text/docKitControl.txt"]}}
+{"id": "q86", "question": "por qué el modo de verificación high rechaza el certificado de firma autofirmado con Owner igual a Issuer", "expected": {"doc": ["guides-clean/ModuleSign/VerificationModesModuleSigning-182D0E86.txt"]}}

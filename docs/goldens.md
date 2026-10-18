@@ -234,6 +234,16 @@ MODULE_NAVIGATOR_DIR=~/niagara-research/module-navigator go test ./internal/nav 
 NIAGARA_HELP_DIR=~/niagara-research/niagara-help go test ./internal/help -run TestGoldenReal
 ```
 
+The same `NIAGARA_HELP_DIR` gates the nh checks carried over from niagara-help
+`tests/test_search_quality.py` and `tests/test_corpus_invariants.py` before their deletion
+(`go test ./internal/help -run 'Quality|Invariant'`, on the 4.14.0.162 root corpus).
+`TestQualityReal*` score the golden doc questions (a hermetic copy in
+`internal/help/testdata/quality/`, its header names the source commit) and fail when hit@1 /
+hit@5 fall below the Python engine's floors; `TestInvariantReal*` assert the Baja bedrock facts
+through `class`, `slots`, `find` and `stats`, and through `inheritance.json` for the retired
+`hierarchy` and `implementors`. The synthetic ranking rules of the first file live in
+`internal/help/fts/ranking_test.go` and need no corpus.
+
 mnav also needs the `organized/` corpus (`$NAV_CORPUS_BASE`, else next to the checkout) and
 uses `niagara-help/` next to the checkout when it exists. nh must be the main checkout
 (untracked files there change several counts, see the harness docstring).
