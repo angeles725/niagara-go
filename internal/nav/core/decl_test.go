@@ -35,7 +35,9 @@ func TestDeclScannersMatchPython(t *testing.T) {
 			if !ok || d.Indent != want[0] || d.Modifiers != want[1] || d.Kind != want[2] || d.Name != want[3] {
 				t.Errorf("MatchDecl(%q) = %+v %v, Python %q", c.Line, d, ok, want)
 			}
-			if end := len(string([]rune(c.Line)[:*c.End])); ok && d.End != end {
+			if c.End == nil || *c.End < 0 || *c.End > len([]rune(c.Line)) {
+				t.Errorf("decl.json %q: decl without a valid end %v (rerun gen_decl.py)", c.Line, c.End)
+			} else if end := len(string([]rune(c.Line)[:*c.End])); ok && d.End != end {
 				t.Errorf("MatchDecl(%q).End = %d, Python m.end() %d (byte %d)", c.Line, d.End, *c.End, end)
 			}
 		}

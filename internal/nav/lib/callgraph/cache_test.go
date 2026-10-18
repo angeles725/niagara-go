@@ -168,22 +168,24 @@ func TestCacheSkipsSmallIndexes(t *testing.T) {
 	}
 }
 
+// TestCacheUnwritableIsSkipped: a regular file where the cache directory
+// belongs makes the cache unwritable (also as root); Store reports it and
+// leaves nothing behind.
 func TestCacheUnwritableIsSkipped(t *testing.T) {
 	base, path := newCachedBase(t)
-	dir := filepath.Join(base, "indexes")
-	if err := os.Chmod(dir, 0o555); err != nil {
+	blocker := filepath.Dir(CachePath(base))
+	if err := os.WriteFile(blocker, []byte("not a directory"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	t.Cleanup(func() { os.Chmod(dir, 0o755) })
 	if NewCache(path, CachePath(base)).Store(decoded(t, path)) {
-		t.Error("Store reported success in a read-only directory")
+		t.Error("Store reported success with no cache directory")
 	}
-	entries, _ := os.ReadDir(dir)
+	entries, _ := os.ReadDir(filepath.Join(base, "indexes"))
 	var names []string
 	for _, e := range entries {
 		names = append(names, e.Name())
 	}
-	if strings.Join(names, ",") != "callgraph-index.json" {
-		t.Errorf("indexes/ holds %v, want only the index", names)
+	if strings.Join(names, ",") != ".mnav-cache,callgraph-index.json" {
+		t.Errorf("indexes/ holds %v, want only the index and the blocking file", names)
 	}
 }

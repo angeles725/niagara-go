@@ -31,7 +31,8 @@ func TestCallgraphCacheKeepsOutput(t *testing.T) {
 		}
 	}
 	cache := filepath.Join(base, "indexes", ".mnav-cache", "callgraph.gob")
-	for _, args := range [][]string{{"callers", "BTarget", "run"}, {"callers", "BTarget"}, {"callees", "BCaller"}} {
+	for _, args := range [][]string{{"callers", "BTarget", "run"}, {"callers", "BTarget"}, {"callees", "BCaller"},
+		{"callees", "BCaller", "work"}} {
 		run := func() (string, string, int) {
 			var out, errb bytes.Buffer
 			code := Main(append([]string{"--base-dir", base}, args...), cli.Stdio{Out: &out, Err: &errb})
