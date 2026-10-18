@@ -40,6 +40,7 @@ func TestFindMatchesCorpusNavGoldens(t *testing.T) {
 // TestFindUnreadableAndCacheTag: an unreadable target fails the find (exit 2, one
 // stderr line), and a CacheTag names its own cache file next to corpus-nav's.
 func TestFindUnreadableAndCacheTag(t *testing.T) {
+	t.Setenv("CORPUS_NAV_FIND_INDEX", "") // the cache is on, whatever the outer environment says
 	root := t.TempDir()
 	if err := os.CopyFS(root, os.DirFS(filepath.Join("..", "testdata", "corpus"))); err != nil {
 		t.Fatal(err)
