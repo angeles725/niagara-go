@@ -19,8 +19,8 @@ import (
 // another temp base dir over the same organized/ tree, then byte-diffs the two
 // indexes after NormalizeVolatile. It needs python3 and a module-navigator
 // checkout whose builders take --base-dir (fix/deterministic-xref-base-dir):
-// $NAVBUILD_PY_NAV, else $NIAGARA_RESEARCH/module-navigator (default
-// /home/cristian/niagara-research/module-navigator). It skips visibly without.
+// $NAVBUILD_PY_NAV, else $NIAGARA_RESEARCH/module-navigator (`make parity` sets
+// NIAGARA_RESEARCH). It skips visibly without.
 //
 // Corpora: testdata/organized (synthetic, always); a few real modules of the
 // organized/ corpus linked into a temp tree ($NAVBUILD_PARITY_MODULES, comma
@@ -36,11 +36,15 @@ var update = flag.Bool("update", false, "rewrite testdata/golden from the Python
 // (CentralineAhuPx), and two ordinary ones.
 const defaultRealModules = "alarm,backup,ColdRoomPan,CentralineAhuPx,kitControl"
 
-func researchRoot() string {
-	if root := os.Getenv("NIAGARA_RESEARCH"); root != "" {
-		return root
+// researchRoot is $NIAGARA_RESEARCH, the niagara-research checkout; the test
+// skips when it is unset.
+func researchRoot(t *testing.T) string {
+	t.Helper()
+	root := os.Getenv("NIAGARA_RESEARCH")
+	if root == "" {
+		t.Skip("NIAGARA_RESEARCH (the niagara-research checkout) is not set: parity not checked")
 	}
-	return "/home/cristian/niagara-research"
+	return root
 }
 
 func pythonNav(t *testing.T) (python, nav string) {
@@ -51,7 +55,7 @@ func pythonNav(t *testing.T) (python, nav string) {
 	}
 	nav = os.Getenv("NAVBUILD_PY_NAV")
 	if nav == "" {
-		nav = filepath.Join(researchRoot(), "module-navigator")
+		nav = filepath.Join(researchRoot(t), "module-navigator")
 	}
 	src, err := os.ReadFile(filepath.Join(nav, "tools", "build_module_inventory.py"))
 	if err != nil {
@@ -181,7 +185,7 @@ func realOrganized(t *testing.T) string {
 	pythonNav(t)
 	org := os.Getenv("NAV_CORPUS_BASE")
 	if org == "" {
-		org = filepath.Join(researchRoot(), "organized")
+		org = filepath.Join(researchRoot(t), "organized")
 	}
 	if !isDir(org) {
 		t.Skipf("organized/ corpus not found at %s", org)

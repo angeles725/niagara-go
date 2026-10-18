@@ -62,7 +62,7 @@ func same(a, b []string) bool { return len(a) == 0 && len(b) == 0 || reflect.Dee
 func TestEmbeddedCopyMatchesCanonical(t *testing.T) {
 	root := os.Getenv("NIAGARA_RESEARCH")
 	if root == "" {
-		root = "/home/cristian/niagara-research"
+		t.Skip("NIAGARA_RESEARCH (the niagara-research checkout) is not set: canonical glossary not checked")
 	}
 	canon, err := os.ReadFile(filepath.Join(root, "tools", "lib", "glossary_es_en.json"))
 	if err != nil {
