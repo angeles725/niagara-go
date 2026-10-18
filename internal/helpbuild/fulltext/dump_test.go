@@ -14,8 +14,11 @@ import (
 	"fmt"
 	"iter"
 	"net/url"
+	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/angeles725/niagara-go/internal/help/fts"
 )
 
 // dumpQueries are the sections, each a query whose columns are joined by
@@ -56,23 +59,29 @@ func dump(path string, rewrite func(string) string) iter.Seq[string] {
 		}
 		defer db.Close()
 		for _, q := range dumpQueries {
-			if err := section(db, q.name, q.query, rewrite, yield); err != nil {
+			more, err := section(db, q.name, q.query, rewrite, yield)
+			if err != nil {
 				yield("error\t" + q.name + ": " + err.Error())
 				return
+			}
+			if !more {
+				return // the consumer stopped: run no further query
 			}
 		}
 	}
 }
 
-func section(db *sql.DB, name, query string, rewrite func(string) string, yield func(string) bool) error {
+// section yields one section's records; more is false once yield asked
+// to stop.
+func section(db *sql.DB, name, query string, rewrite func(string) string, yield func(string) bool) (more bool, err error) {
 	rows, err := db.Query(query)
 	if err != nil {
-		return err
+		return false, err
 	}
 	defer rows.Close()
 	cols, err := rows.Columns()
 	if err != nil {
-		return err
+		return false, err
 	}
 	vals := make([]sql.NullString, len(cols))
 	ptrs := make([]any, len(cols))
@@ -82,7 +91,7 @@ func section(db *sql.DB, name, query string, rewrite func(string) string, yield 
 	var b strings.Builder
 	for rows.Next() {
 		if err := rows.Scan(ptrs...); err != nil {
-			return err
+			return false, err
 		}
 		b.Reset()
 		b.WriteString(name)
@@ -103,10 +112,10 @@ func section(db *sql.DB, name, query string, rewrite func(string) string, yield 
 			line = rewrite(line)
 		}
 		if !yield(line) {
-			return nil
+			return false, nil
 		}
 	}
-	return rows.Err()
+	return true, rows.Err()
 }
 
 // dumpText is the whole dump as text, one record per line.
@@ -161,6 +170,8 @@ func TestCompareDumpsReportsFirstDifferences(t *testing.T) {
 		{"equal", []string{"x", "y"}, []string{"x", "y"}, 0},
 		{"changed record", []string{"x", "y"}, []string{"x", "z"}, 1},
 		{"missing tail", []string{"x", "y"}, []string{"x"}, 1},
+		{"longer second dump", []string{"x"}, []string{"x", "y", "z"}, 2},
+		{"capped at max, then stopped", []string{"a", "b", "c", "d", "e", "f", "g"}, []string{"1", "2", "3", "4", "5", "6", "7"}, 6},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -168,5 +179,20 @@ func TestCompareDumpsReportsFirstDifferences(t *testing.T) {
 				t.Errorf("got %d differences %v, want %d", len(d), d, tt.diffs)
 			}
 		})
+	}
+}
+
+func TestDumpStopsQueryingWhenTheConsumerStops(t *testing.T) {
+	root := writeTree(t)
+	out := filepath.Join(t.TempDir(), fts.DBName)
+	if _, err := Build(root, Options{Output: out}); err != nil {
+		t.Fatal(err)
+	}
+	produced := 0
+	for range dump(out, func(s string) string { produced++; return s }) {
+		break
+	}
+	if produced != 1 {
+		t.Errorf("%d records produced after the consumer stopped at the first, want 1", produced)
 	}
 }

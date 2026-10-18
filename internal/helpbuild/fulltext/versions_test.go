@@ -69,8 +69,9 @@ func TestBuildMatchesPythonOnRegisteredVersions(t *testing.T) {
 	}
 }
 
-// keepCopies moves both databases to <keep>/<version>/{python,go}.sqlite
-// for a later behavioural check (FULLTEXT_KEEP_DIR).
+// keepCopies copies both databases to <keep>/<version>/{python,go}.sqlite
+// for a later behavioural check (FULLTEXT_KEEP_DIR); a copy, not a rename,
+// because the keep directory may be on another file system than TMPDIR.
 func keepCopies(t *testing.T, keep, vid, py, goDB string) {
 	t.Helper()
 	dst := filepath.Join(keep, vid)
@@ -78,7 +79,11 @@ func keepCopies(t *testing.T, keep, vid, py, goDB string) {
 		t.Fatal(err)
 	}
 	for src, name := range map[string]string{py: "python.sqlite", goDB: "go.sqlite"} {
-		if err := os.Rename(src, filepath.Join(dst, name)); err != nil {
+		data, err := os.ReadFile(src)
+		if err == nil {
+			err = os.WriteFile(filepath.Join(dst, name), data, 0o644)
+		}
+		if err != nil {
 			t.Fatal(err)
 		}
 	}
