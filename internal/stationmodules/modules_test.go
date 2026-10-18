@@ -69,7 +69,10 @@ func TestFixCopiesTheStagedJar(t *testing.T) {
 	t.Chdir(tmp)
 	code, out, errText := run("check", "kit.xml", "--install", "install-copy", "--fix")
 	want, _ := strconv.Atoi(strings.TrimSpace(readFile(t, filepath.Join(td, "copy", "exit"))))
-	if code != want || out != readFile(t, filepath.Join(td, "copy", "stdout")) || errText != readFile(t, filepath.Join(td, "copy", "stderr")) {
+	// The staged path is os.path.join output (native separator); the recording is Linux's.
+	wantOut := strings.ReplaceAll(readFile(t, filepath.Join(td, "copy", "stdout")),
+		"install-copy/sw/4.14.0.162/kitPid-rt.jar", filepath.Join("install-copy", "sw", "4.14.0.162", "kitPid-rt.jar"))
+	if code != want || out != wantOut || errText != readFile(t, filepath.Join(td, "copy", "stderr")) {
 		t.Fatalf("exit %d\n%s%s", code, out, errText)
 	}
 	dst := filepath.Join(tmp, "install-copy", "modules", "kitPid-rt.jar")

@@ -1,1 +1,1 @@
-{"args": ["check", "station.xml", "--install", "install", "--json"], "cwd_fixture": "fixtures"}
+{"args": ["check", "station.xml", "--install", "install", "--json"], "cwd_fixture": "fixtures", "requires": {"goos": ["linux"]}}
