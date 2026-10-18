@@ -51,3 +51,47 @@ func TestExamFailPaths(t *testing.T) {
 		}
 	}
 }
+
+// CRA2.11 reads the Review2 fallbacks (nested fallback.value): equal values FAIL, and a point whose
+// fallback is not stored counts with the default 0.0; a point outside Review2 is not read.
+func TestReviewDistinctFallback(t *testing.T) {
+	bogText := func(a, b string) string {
+		fb := func(v string) string {
+			if v == "" {
+				return ""
+			}
+			return `<p n="fallback" t="b:StatusNumeric"><p n="value" v="` + v + `"/></p>`
+		}
+		return `<?xml version="1.0" encoding="UTF-8"?>
+<bajaObjectGraph version="4.0">
+<p h="1" m="b=baja" t="b:Station">
+ <p n="Review2" h="2" t="b:Folder">
+  <p n="NumericWritable" h="3" m="c=control" t="c:NumericWritable">` + fb(a) + `</p>
+  <p n="NumericWritable1" h="4" t="c:NumericWritable">` + fb(b) + `</p>
+ </p>
+ <p n="Other" h="5" t="c:NumericWritable"><p n="fallback" t="b:StatusNumeric"><p n="value" v="9.0"/></p></p>
+</p>
+</bajaObjectGraph>
+`
+	}
+	ck := specRow("CRA2.11")
+	cases := []struct{ a, b, verdict, evidence string }{
+		{"54.0", "33.0", Pass, "2 distinct fallback.value over 2 components: 33.0, 54.0"},
+		{"5.0", "5.0", Fail, "1 distinct fallback.value over 2 components, want at least 2: 5.0"},
+		{"", "0.0", Fail, "1 distinct fallback.value over 2 components, want at least 2: 0.0"},
+		{"", "7.0", Pass, "2 distinct fallback.value over 2 components: 0.0, 7.0"},
+	}
+	for _, c := range cases {
+		dir := t.TempDir()
+		if err := os.WriteFile(filepath.Join(dir, "config.bog"), []byte(bogText(c.a, c.b)), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		st, err := Open(dir, "", NeedsNested([]*Check{ck}))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if r := st.Run(ck); r.Verdict != c.verdict || !strings.HasPrefix(r.Evidence, c.evidence) {
+			t.Errorf("fallbacks %q, %q: %s %q, want %s %q", c.a, c.b, r.Verdict, r.Evidence, c.verdict, c.evidence)
+		}
+	}
+}

@@ -247,13 +247,14 @@ signed).
 | CRA1.8-CRA1.10 | two ComponentWithId, distinct ids, in the folder `Review` |
 | CRA2.1-CRA2.5 | `control-rt` dependency, `BPointSummaryService.class`, palette entry, signed, built |
 | CRA2.6-CRA2.10 | NumericWritables in `Review2`, one PointSummaryService under Services, `summaryFile = file:^Review.txt`, `shared/Review.txt` with `name: value {status} @ priority` lines |
+| CRA2.11 | the `Review2` NumericWritables hold at least two distinct values (RA2.V11): the nested `fallback.value` (the value the set action writes; default 0.0), read with nested values |
 
 What no row observes is an `Unobserved` note: flags, the confirmation dialog and other UI steps,
-superclasses, and that the `Review2` points hold different values: the bog reader drops a
-writable's `fallback` (`internal/bog/parse.go`), so the values cannot be read.
+superclasses, and that `Review.txt` lists every NumericWritable of the station (CRA2.10 counts two
+lines or more), so the range item RA2.V10–V15 stays PARTIAL.
 
-The live review station (2026-10-17, with the 4.15.6.20 install): 20 checked, 18 PASS, 2 FAIL,
-both real: CRA1.2 (the jar's description is `Cristian Angeles Niagara Reviw Assignments`) and
+The live review station (2026-10-17, with the 4.15.6.20 install): 21 checked, 19 PASS (CRA2.11: four
+distinct fallbacks, 111.0, 221.0, 33.0, 54.0), 2 FAIL, both real: CRA1.2 (the jar's description is `Cristian Angeles Niagara Reviw Assignments`) and
 CRA1.10 (the components sit in `Config/Cristian_Angeles_Review`, not in `Config/Review`).
 
 ### Exam checks (EXAM)

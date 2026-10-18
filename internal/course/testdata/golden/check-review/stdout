@@ -19,4 +19,5 @@ CRA2.7   RA2  PASS     one PointSummaryService, under Services [RA2.V12 RA2.R2] 
 CRA2.8   RA2  PASS     summaryFile = file:^Review.txt [RA2.V13 RA2.R3]                      Services/PointSummaryService.summaryFile = file:^Review.txt (stored)
 CRA2.9   RA2  PASS     Review.txt in the station's Files space [RA2.V15 X6]                 found 1 shared/Review.txt: Review.txt
 CRA2.10  RA2  PASS     Review.txt lines: name: value {status} @ priority [RA2.R5b RA2.V15]  shared/Review.txt: 2 lines match
-checked 20: PASS 19, FAIL 1, SKIP 0; station ReviewStation (9 components, 0 links), install install
+CRA2.11  RA2  PASS     distinct fallback values in Config/Review2 [RA2.V11]                 2 distinct fallback.value over 2 components: 33.0, 54.0
+checked 21: PASS 20, FAIL 1, SKIP 0; station ReviewStation (9 components, 0 links), install install

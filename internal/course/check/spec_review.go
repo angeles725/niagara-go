@@ -11,7 +11,8 @@ package check
 // Defaults: BComponentWithId id "" and BPointSummaryService summaryFile BOrd.DEFAULT ("null")
 // (sources/n4-dev-course/solutions/review/ and review-assignments.md §1.3, §2.3); BNumericWritable
 // fallback 0.0 (organized/control/control-rt/decompiled/javax/baja/control/BNumericWritable.java:78),
-// a value the bog reader does not keep (internal/bog/parse.go: a fallback property is skipped).
+// read as the nested slot fallback.value (bog.Options{NestedSlots: true}): the value the set action
+// writes.
 
 const (
 	reviewRT        = "Cristian_Angeles_Review-rt"
@@ -21,9 +22,9 @@ const (
 
 	// The UI steps of RA1.V9–V14 no bog or jar holds.
 	ra1UISteps = "the Wire Sheet Id column, the regenerateId confirmation dialog and the read-only Property Sheet (UI steps)"
-	// What no check of RA2.V10–V15 reads: the bog reader keeps no fallback value of a writable
-	// (internal/bog drops it), so "several NumericWritables with different values" is not observed.
-	ra2Values = "that the Review2 NumericWritables hold different values (the bog reader keeps no fallback value)"
+	// What no check of RA2.V10–V15 reads: that the summary lists every point (CRA2.10 counts lines,
+	// it does not compare them with the station's NumericWritables).
+	ra2Listing = "that Review.txt lists every NumericWritable of the station (CRA2.10 wants two lines or more)"
 	// What a jar entry does not say about the written listing (X1).
 	writtenListing = "the written listing of review-assignments.md (the jar holds the participant's built code, not the listing)"
 )
@@ -74,21 +75,27 @@ var reviewSpec = []Check{
 		Desc: "Cristian_Angeles_Review-rt is signed", Jar: reviewRT},
 	{ID: "CRA2.5", Lab: "RA2", Keys: []string{"RA2.R9"}, Kind: kindJar, Desc: "Cristian_Angeles_Review-rt jar built", Jar: reviewRT},
 	{ID: "CRA2.6", Lab: "RA2", Keys: []string{"RA2.V10"},
-		Unobserved: map[string]string{"RA2.V10": ra2Values}, Kind: kindType, Desc: "NumericWritables in Config/Review2",
+		Unobserved: map[string]string{"RA2.V10": ra2Listing}, Kind: kindType, Desc: "NumericWritables in Config/Review2",
 		Type: numericWritable, Under: "Review2", Op: opMin, N: 2},
 	{ID: "CRA2.7", Lab: "RA2", Keys: []string{"RA2.V12", "RA2.R2"},
-		Unobserved: map[string]string{"RA2.R2": "that the class extends BAbstractService", "RA2.V12": ra2Values}, Kind: kindType,
+		Unobserved: map[string]string{"RA2.R2": "that the class extends BAbstractService", "RA2.V12": ra2Listing}, Kind: kindType,
 		Desc: "one PointSummaryService, under Services", Type: pointSummary, Within: services, Op: opEq, N: 1},
 	{ID: "CRA2.8", Lab: "RA2", Keys: []string{"RA2.V13", "RA2.R3"},
 		Unobserved: map[string]string{"RA2.R3": "that summaryFile is a frozen BOrd property with default BOrd.DEFAULT",
-			"RA2.V13": ra2Values}, Kind: kindSlot,
+			"RA2.V13": ra2Listing}, Kind: kindSlot,
 		Desc: "summaryFile = file:^Review.txt", Type: pointSummary, Slot: "summaryFile", Want: "file:^Review.txt", Default: "null"},
 	{ID: "CRA2.9", Lab: "RA2", Keys: []string{"RA2.V15", "X6"},
-		Unobserved: map[string]string{"RA2.V15": ra2Values}, Kind: kindFiles, Desc: "Review.txt in the station's Files space",
+		Unobserved: map[string]string{"RA2.V15": ra2Listing}, Kind: kindFiles, Desc: "Review.txt in the station's Files space",
 		Glob: reviewTxt, Op: opEq, N: 1},
 	{ID: "CRA2.10", Lab: "RA2", Keys: []string{"RA2.R5b", "RA2.V15"},
 		Unobserved: map[string]string{"RA2.R5b": "that every NumericWritable of the station is listed (the check wants two lines or more)",
-			"RA2.V15": ra2Values + "; that every NumericWritable of the station is listed (the check wants two lines or more)"}, Kind: kindFileText,
+			"RA2.V15": ra2Listing}, Kind: kindFileText,
 		Desc: "Review.txt lines: name: value {status} @ priority", Glob: reviewTxt,
 		Match: `^\S+: -?[0-9][0-9.,]* \{[^}]*\} @ \S+$`, Op: opMin, N: 2},
+	// RA2.V11 "add several NumericWritables to Review2 and set them to different values": the set
+	// action writes the fallback, kept below the composite slot (fallback.value, default 0.0).
+	{ID: "CRA2.11", Lab: "RA2", Keys: []string{"RA2.V11"},
+		Unobserved: map[string]string{"RA2.V11": ra2Listing}, Kind: kindSlot,
+		Desc: "distinct fallback values in Config/Review2", Type: numericWritable, Under: "Review2",
+		Slot: "fallback.value", Default: "0.0", Distinct: true, Op: opMin, N: 2},
 }
