@@ -117,6 +117,20 @@ func TestTrendUnsupportedValue(t *testing.T) {
 	}
 }
 
+// A record without a trend body (nil Trend) cannot be read as a number: SKIP, and the evidence
+// reports the missing value as <nil>, never a panic or a 0.
+func TestTrendNilRecord(t *testing.T) {
+	h := &hdbread.History{RecordType: "history:NumericTrendRecord", Records: []hdbread.Record{
+		{Timestamp: "2026-10-15T18:42:32.959Z", Trend: &hdbread.TrendRecord{Value: 1.5}},
+		{Timestamp: "2026-10-15T18:42:33.959Z"},
+	}}
+	ck := &Check{Kind: kindTrend, Op: opMin, N: 1}
+	verdict, ev := checkTrend(ck, &HistMatch{}, []string{"T.hdb"}, []*hdbread.History{h})
+	if want := "T.hdb: unsupported trend value <nil> at 2026-10-15T18:42:33.959Z"; verdict != Skip || ev != want {
+		t.Errorf("got %s %q, want SKIP %q", verdict, ev, want)
+	}
+}
+
 // Audit records are counted over every matching file; the evidence names the file count.
 func TestHistoryAuditSeveralFiles(t *testing.T) {
 	rec := []auditRec{{"Invoked", "/Lab1/FirstComponent", "execute", "", ""}}
