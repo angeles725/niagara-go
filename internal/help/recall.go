@@ -14,6 +14,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/angeles725/niagara-go/internal/bajadocxml"
 	"github.com/angeles725/niagara-go/internal/help/scope"
 	"github.com/angeles725/niagara-go/internal/index"
 	"github.com/angeles725/niagara-go/internal/pycompat"
@@ -152,13 +153,13 @@ func (e *Env) checkAll(samples bool) ([]recallRow, float64, error) {
 	pairSet := map[implPair]bool{}
 	var pairs []implPair
 	for _, c := range truth.xml {
-		if c.kind != "class" && c.kind != "enum" {
+		if c.Kind != "class" && c.Kind != "enum" {
 			continue
 		}
-		for _, iface := range c.implements {
+		for _, iface := range c.Implements {
 			simple := strings.ReplaceAll(strings.SplitN(iface, "<", 2)[0], "$", ".")
 			simple = simple[strings.LastIndex(simple, ".")+1:]
-			if p := (implPair{simple, c.name, c.pkg}); !pairSet[p] {
+			if p := (implPair{simple, c.Name, c.Pkg}); !pairSet[p] {
 				pairSet[p] = true
 				pairs = append(pairs, p)
 			}
@@ -192,11 +193,11 @@ func (e *Env) checkAll(samples bool) ([]recallRow, float64, error) {
 	var extOrder []classKey
 	extends := map[classKey]string{}
 	for _, c := range truth.xml {
-		k := classKey{c.pkg, c.name}
+		k := classKey{c.Pkg, c.Name}
 		if _, ok := extends[k]; !ok {
 			extOrder = append(extOrder, k)
 		}
-		extends[k] = c.extends
+		extends[k] = c.Extends
 	}
 	simpleExt := map[string]string{}
 	for _, k := range extOrder {
@@ -204,9 +205,9 @@ func (e *Env) checkAll(samples bool) ([]recallRow, float64, error) {
 			simpleExt[k.name] = extends[k]
 		}
 	}
-	isEnum := func(c bajadocClass) bool {
+	isEnum := func(c bajadocxml.Class) bool {
 		seen := map[string]bool{}
-		for cur := c.extends; cur != "" && !seen[cur]; {
+		for cur := c.Extends; cur != "" && !seen[cur]; {
 			seen[cur] = true
 			s := strings.SplitN(cur, "<", 2)[0]
 			s = s[strings.LastIndex(s, ".")+1:]
@@ -220,7 +221,7 @@ func (e *Env) checkAll(samples bool) ([]recallRow, float64, error) {
 	enumSet := map[classKey]bool{}
 	var enums []classKey
 	for _, c := range truth.xml {
-		if k := (classKey{c.pkg, c.name}); !enumSet[k] && isEnum(c) {
+		if k := (classKey{c.Pkg, c.Name}); !enumSet[k] && isEnum(c) {
 			enumSet[k] = true
 			enums = append(enums, k)
 		}
@@ -232,9 +233,9 @@ func (e *Env) checkAll(samples bool) ([]recallRow, float64, error) {
 	modSet := map[string]bool{}
 	var modules []string
 	for _, c := range truth.xml {
-		if c.module != "" && !modSet[c.module] {
-			modSet[c.module] = true
-			modules = append(modules, c.module)
+		if c.Module != "" && !modSet[c.Module] {
+			modSet[c.Module] = true
+			modules = append(modules, c.Module)
 		}
 	}
 	sortStable(modules, func(a, b string) bool { return a < b })
@@ -244,7 +245,7 @@ func (e *Env) checkAll(samples bool) ([]recallRow, float64, error) {
 	jdkSet := map[classKey]bool{}
 	var jdkKeys []classKey
 	for _, c := range truth.jdk {
-		if k := (classKey{c.pkg, c.name}); !jdkSet[k] {
+		if k := (classKey{c.Pkg, c.Name}); !jdkSet[k] {
 			jdkSet[k] = true
 			jdkKeys = append(jdkKeys, k)
 		}

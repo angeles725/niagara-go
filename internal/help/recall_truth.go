@@ -12,6 +12,8 @@ import (
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/angeles725/niagara-go/internal/bajadocxml"
 )
 
 // classKey is a (package, simple name) pair; keys sort like Python tuples.
@@ -39,16 +41,16 @@ func lessMemberKey(a, b memberKey) bool {
 
 // recallTruth is the ground_truth dict.
 type recallTruth struct {
-	xmlFiles  []string        // every .bajadoc under devguide/, guides/, jdk/ (sorted)
-	xmlFailed map[string]bool // the ones that stayed unparseable
-	classes   []classKey      // sorted
-	xml       []bajadocClass  // the Niagara .bajadoc classes, in walk order
-	methods   []memberKey     // sorted
-	slots     []memberKey     // sorted
-	java      []string        // sorted
-	guides    []string        // walk order
-	devguide  []string        // walk order
-	jdk       []bajadocClass
+	xmlFiles  []string           // every .bajadoc under devguide/, guides/, jdk/ (sorted)
+	xmlFailed map[string]bool    // the ones that stayed unparseable
+	classes   []classKey         // sorted
+	xml       []bajadocxml.Class // the Niagara .bajadoc classes, in walk order
+	methods   []memberKey        // sorted
+	slots     []memberKey        // sorted
+	java      []string           // sorted
+	guides    []string           // walk order
+	devguide  []string           // walk order
+	jdk       []bajadocxml.Class
 	seconds   float64
 }
 
@@ -202,7 +204,7 @@ func groundTruth(baseDir string) recallTruth {
 	}
 	seen := map[classKey]bool{}
 	for _, c := range t.xml {
-		if k := (classKey{c.pkg, c.name}); !seen[k] {
+		if k := (classKey{c.Pkg, c.Name}); !seen[k] {
 			seen[k] = true
 			t.classes = append(t.classes, k)
 		}
@@ -216,9 +218,9 @@ func groundTruth(baseDir string) recallTruth {
 	sort.Slice(t.classes, func(i, j int) bool { return lessClassKey(t.classes[i], t.classes[j]) })
 	methods, slots := map[memberKey]bool{}, map[memberKey]bool{}
 	for _, c := range t.xml {
-		for _, m := range c.members {
-			k := memberKey{c.pkg, c.name, m.name}
-			switch m.kind {
+		for _, m := range c.Members {
+			k := memberKey{c.Pkg, c.Name, m.Name}
+			switch m.Kind {
 			case "method":
 				methods[k] = true
 			case "property", "action", "topic":
@@ -296,18 +298,18 @@ func walkSorted(root string, fn func(path, name string)) {
 // iterBajadocClasses is iter_classes: every class of the .bajadoc files
 // under root (module-index.bajadoc excluded), each with its file. failed
 // receives every file that could not be parsed.
-func iterBajadocClasses(root string, failed func(path string)) []bajadocClass {
-	var out []bajadocClass
+func iterBajadocClasses(root string, failed func(path string)) []bajadocxml.Class {
+	var out []bajadocxml.Class
 	walkSorted(root, func(path, name string) {
 		if !strings.HasSuffix(name, ".bajadoc") || name == "module-index.bajadoc" {
 			return
 		}
-		classes, ok := parseBajadocFile(path)
+		classes, ok := bajadocxml.ParseFile(path)
 		if !ok && failed != nil {
 			failed(path)
 		}
 		for _, c := range classes {
-			c.file = path
+			c.File = path
 			out = append(out, c)
 		}
 	})

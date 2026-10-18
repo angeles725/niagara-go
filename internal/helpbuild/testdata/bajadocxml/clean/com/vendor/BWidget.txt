@@ -1,0 +1,3 @@
+CLASS: BWidget
+PACKAGE: com.vendor
+EXTENDS: javax.baja.demo.BDemo<javax.baja.sys.BValue>

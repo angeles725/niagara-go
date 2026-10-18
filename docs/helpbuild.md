@@ -20,7 +20,7 @@ document disagree, the code wins and this document is corrected.
 | **S5** (done) | `html_text` (html.parser with `convert_charrefs`) + guides/devguide parsers | `html_text.py`, `guides_parser.py`, `guide_toc.py`, `devguide_parser.py` | ~2,100 with tests |
 | **S6** (done) | `guides-index.json` + `devguide-toc.json` | `build_guides_index.py`, `build_devguide_toc.py` | ~930 with tests |
 | **S7a** (done) | bajadoc text of the javadoc HTML pages (`bajadoc-clean/`) | `bajadoc_parser.py` (+ `bajadoc_xml.format_output`, `write_clean_class`, `doc_types.clean_class_name`) | ~1,000 with tests |
-| S7b | bajadoc text from `.bajadoc` XML for the classes without an HTML page | `bajadoc_xml_parser.py`, `bajadoc_xml.py` (rest) | ~500 |
+| **S7b** (done) | bajadoc text from `.bajadoc` XML for the classes without an HTML page; the XML reader moved to the shared leaf `internal/bajadocxml` | `bajadoc_xml_parser.py`, `bajadoc_xml.py` (rest) | ~900 with tests |
 | S8 | class / inheritance / method indexes | `build_class_index.py`, `inheritance_builder.py`, `method_indexer.py` | ~550 |
 | S9 | source / slots / xref / call indexes | `source_indexer.py`, `slots_indexer.py`, `xref_builder.py`, `build_call_index.py` | ~800 |
 | S10 | orchestration (`extract`, `versions add`, `rebuild-all`, `freshness`) | `extract_version.py`, `version_setup.py`, `version_report.py`, `maintenance.py` | ~750 |
@@ -406,7 +406,7 @@ parity test over all 2,231 names of `html.entities.html5`). The attribute rule
 | File | Ports | Notes |
 |---|---|---|
 | `bajadoc.go` | `parse_bajadoc_html` and its `extract_*` / `parse_*_summary` helpers, `strip_tags`, `normalize_ws` | the regexes are Python's, run by `internal/pyre` on code points (Unicode `\s` `\S` `\w` `\b`, lazy quantifiers, backtracking); `_find_summary_section` searches the end markers from 10 code points past the marker; `strip_tags` is `pyhtml.Feed` (one `feed()`, never `close()`) |
-| `bajadocrun.go` | `bajadoc_parser.main`, `bajadoc_xml.format_output`, `bajadoc_xml.write_clean_class`, `doc_types.clean_class_name` | the walk skips the index pages and the files of a folder whose path holds `/class-use/` (so `class-use/` itself is read, its pages skipped as no class); pages are read with `errors="replace"` and universal newlines; `bajadoc-clean/` is written in place with atomic writes (it also holds what S7b writes), a page left under its escaped name (`Cursor&lt;E&gt;.txt`) is removed |
+| `bajadocrun.go` | `bajadoc_parser.main`, `bajadoc_xml.write_clean_class`, `doc_types.clean_class_name` (`format_output` is `bajadocxml.FormatCleanInfo`, see S7b) | the walk skips the index pages and the files of a folder whose path holds `/class-use/` (so `class-use/` itself is read, its pages skipped as no class); pages are read with `errors="replace"` and universal newlines; `bajadoc-clean/` is written in place with atomic writes (it also holds what S7b writes), a page left under its escaped name (`Cursor&lt;E&gt;.txt`) is removed |
 
 API for S10 (`maintenance.BUILDERS` runs `bajadoc_parser.py <data root>`):
 
@@ -444,26 +444,74 @@ Measured 2026-10-17 (whole trees identical, Python 3.15 vs Go, wall time of one 
 - **Page names that are not UTF-8** (Python's surrogateescape, sorted as decoded names) are
   not modelled; parity runs on Linux with UTF-8 names.
 
+## S7b files
+
+The `.bajadoc` reader is `internal/bajadocxml` (owner Integrante3): a leaf package (standard
+library and `internal/pycompat` only, never `internal/help` or `internal/helpbuild`) that nh's
+`class --jdk` and `selftest --recall` read the model from and S7b renders pages with. It
+moved there unchanged from `internal/help/bajadocxml.go`; its `doc.go` holds the contract.
+
+| File | Ports | Notes |
+|---|---|---|
+| `internal/bajadocxml/bajadocxml.go` | `bajadoc_xml.render_type`, `parse_class`, `_sanitize`, `parse_file` (`ParseFile`; `Parse` on bytes already read), `_simple`, `to_clean_info`, `format_output` | `encoding/xml` builds an ElementTree-like tree (an element's text is the character data before its first child; comments and processing instructions dropped); a document that does not parse is parsed again with the character references XML forbids replaced by `?`; `CleanInfo.Subclasses` is the caller's to fill, `FormatCleanInfo` prints `SUBCLASSES:` when it is not empty |
+| `bajadocxmlrun.go` | `bajadoc_xml_parser.build`, `main`, `has_html_page`, `bajadoc_xml.iter_classes` | walks `devguide/` then `guides/` (os.walk order, links to folders not entered, links to files read), skips `module-index.bajadoc`, a class already seen (the first walked wins) and a class whose `bajadoc/<package path>/<Name>.html` is a file; `SUBCLASSES` lists the classes whose simplified `extends` is the class name, so a `com.vendor.BBase` superclass (kept qualified by `_simple`) or a parameterized one never matches; every page is written after the whole walk with S7a's `writeCleanClass` |
+
+API for S10 (`maintenance.BUILDERS` runs `bajadoc_xml_parser.py <data root>` after
+`bajadoc_parser.py`):
+
+```go
+res, err := helpbuild.ParseBajadocXML(root)
+// print res.Log (one line); err != nil is a Python traceback (exit 1): a .bajadoc file
+// that cannot be read (ET.parse raises the OSError, nothing is written) or a failed write.
+```
+
+S7b parity (`testdata/parity/bajadocdriver.py`, mode `xmlrun`):
+
+| Test | Compares |
+|---|---|
+| `TestParseBajadocXMLFixture` | no Python needed: `ParseBajadocXML` on `testdata/bajadocxml/root/` against the golden `testdata/bajadocxml/clean/` and `stdout.txt` (Python's output, regenerated with the driver's `xmlrun` mode) |
+| `TestParityBajadocXMLSynthetic` | stdout lines, exit status and both whole trees: the fixture (a class with every member kind, varargs, parameterized, wildcard and type-variable types, markup, a comment and CDATA in a description, two `@since` tags, two `<implements>` elements of which only the first is read; an enum, an annotation type, an interface, a generic name, no package; a class with a javadoc page; a class in both trees and in two devguide modules; an index file; an empty and an unclosed file; a forbidden character reference; CRLF; files that are not `.bajadoc`), then a page under its escaped name, S7a's page of the class with a javadoc page, links to a file and to a folder, a second run, a dangling link and an unreadable file (both raise), and a root without `devguide/` or `guides/`; it also fails when the golden files are no longer Python's output |
+| `TestParityBajadocXMLReal` | the build's order on a real version (`bajadoc/`, `devguide/`, `guides/` linked into a temporary data root): S7a (`run`) then S7b (`xmlrun`) on each side, the lines of both steps and the whole `bajadoc-clean/` tree; 4.3.58.18 and 4.14.0.162 with `HELPBUILD_PARITY_REAL=1`, 4.15.6.20 with `HELPBUILD_PARITY_415=1`, or the `HELPBUILD_PARITY_BAJADOCXML` list; logs the run times of each step |
+
+Measured 2026-10-17 (S7a then S7b; whole `bajadoc-clean/` trees identical, Python 3.15 vs
+Go, wall time of one run of each step):
+
+| Version | S7a pages | S7b classes | Files (bytes) | S7a Python / Go | S7b Python / Go |
+|---|---|---|---|---|---|
+| 4.3.58.18 (XML only: S7a prints its ERROR line, exit 1, on both sides) | — | 5,104 | 5,104 (3,417,247) | 0.0 / 0.0 s | 2.1 / 1.6 s |
+| 4.14.0.162 (data root `.`) | 2,761 | 3,551 | 6,310 (5,629,497) | 2.5 / 3.3 s | 4.5 / 3.0 s |
+| 4.15.6.20 | 2,839 | 2,840 | 5,679 (4,623,322) | 3.7 / 2.7 s | 2.1 / 1.8 s |
+| 4.13.2.18 (`HELPBUILD_PARITY_BAJADOCXML`) | 2,714 | 2,796 | 5,510 (4,355,293) | 7.7 / 4.4 s | 2.5 / 1.7 s |
+
+### S7b intended differences
+
+- **A class name that would put its page outside `bajadoc-clean/`**: `ErrUnsafeClassName`,
+  as in S7a.
+- **Encodings other than UTF-8** (an `encoding="ISO-8859-1"` declaration): expat decodes
+  them, `encoding/xml` has no charset reader here, so such a file counts as unparseable. Every
+  `.bajadoc` of the four registered versions declares UTF-8.
+
 ## Real-data parity
 
 Every test that reads a real install or the real corpus runs only on request, `-short`
 or not; without its variable it skips and the message names the variable. A switch
 (`REAL`, `FULL`, `415`) counts only when set to `1`: any other value fails the test,
 naming the variable and the accepted value. A selection that leaves nothing to compare
-(no version for `TestParityGuidesReal` or `TestParityBajadocReal`, a `HELPBUILD_PARITY_JARS` naming no jar, a
+(no version for `TestParityGuidesReal`, `TestParityBajadocReal` or `TestParityBajadocXMLReal`, a `HELPBUILD_PARITY_JARS` naming no jar, a
 `HELPBUILD_PARITY_PDF_DOCS` without a PDF, a `HELPBUILD_PARITY_COURSE` without files)
 fails too, and an explicit jar list or course never skips as "not mounted". The synthetic,
 cache, glob, toc and fuzz parity tests (5,000 snippets) stay on in `go test`.
 
 | Variable | Turns on |
 |---|---|
-| `HELPBUILD_PARITY_REAL=1` | the umbrella: `TestParityRealJars` (five 4.3 jars + 4.15 `ffmpeg-wb.jar`), `TestParityExtractReal` (the 4.3 subset), `TestParityPDFReal` (five 4.3 manuals), `TestParityCourseReal`, `TestParityGuidesReal` (4.3.58.18), `TestParityBajadocReal` (4.14.0.162) |
+| `HELPBUILD_PARITY_REAL=1` | the umbrella: `TestParityRealJars` (five 4.3 jars + 4.15 `ffmpeg-wb.jar`), `TestParityExtractReal` (the 4.3 subset), `TestParityPDFReal` (five 4.3 manuals), `TestParityCourseReal`, `TestParityGuidesReal` (4.3.58.18), `TestParityBajadocReal` (4.14.0.162), `TestParityBajadocXMLReal` (4.3.58.18 and 4.14.0.162) |
 | `HELPBUILD_PARITY_JARS=a.jar:b.jar` | `TestParityRealJars` on that list instead |
 | `HELPBUILD_PARITY_FULL=1` | `TestParityHelpJarsFullInstall` (all 578 module jars of 4.3) |
 | `HELPBUILD_PARITY_PDF_DOCS=<dir>` | `TestParityPDFReal` over a whole docs folder (the 66-PDF run) |
 | `HELPBUILD_PARITY_COURSE=<dir>` | `TestParityCourseReal` on that course tree |
-| `HELPBUILD_PARITY_415=1` | `TestParityGuidesReal` and `TestParityBajadocReal` on 4.15.6.20 too |
+| `HELPBUILD_PARITY_415=1` | `TestParityGuidesReal`, `TestParityBajadocReal` and `TestParityBajadocXMLReal` on 4.15.6.20 too |
 | `HELPBUILD_PARITY_BAJADOC=a:b` | `TestParityBajadocReal` on that list of version ids instead (for example `4.13.2.18`) |
+| `HELPBUILD_PARITY_BAJADOCXML=a:b` | `TestParityBajadocXMLReal` on that list of version ids instead |
 
 `make parity` sets `REAL`, `FULL` and `415` and runs every `Parity` test of the package.
 Timings on the development laptop: `go test ./internal/helpbuild/` about 20 s without the

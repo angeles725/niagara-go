@@ -151,7 +151,15 @@ func TestParityBajadocSynthetic(t *testing.T) {
 // 4.14.0.162 with HELPBUILD_PARITY_REAL=1 and 4.15.6.20 with
 // HELPBUILD_PARITY_415=1; none is an error, never an empty pass.
 func bajadocVersions() ([]string, error) {
-	if env := os.Getenv("HELPBUILD_PARITY_BAJADOC"); env != "" {
+	return versionList("HELPBUILD_PARITY_BAJADOC",
+		[][2]string{{realParityVar, "4.14.0.162"}, {"HELPBUILD_PARITY_415", "4.15.6.20"}})
+}
+
+// versionList is the version ids named by listVar (a path-list, empty
+// entries dropped) when it is set, else those of defaults ({switch, id})
+// whose switch is on; none is an error, never an empty pass.
+func versionList(listVar string, defaults [][2]string) ([]string, error) {
+	if env := os.Getenv(listVar); env != "" {
 		var vids []string
 		for _, v := range filepath.SplitList(env) {
 			if v != "" {
@@ -159,12 +167,12 @@ func bajadocVersions() ([]string, error) {
 			}
 		}
 		if len(vids) == 0 {
-			return nil, fmt.Errorf("HELPBUILD_PARITY_BAJADOC=%q names no version: nothing to compare", env)
+			return nil, fmt.Errorf("%s=%q names no version: nothing to compare", listVar, env)
 		}
 		return vids, nil
 	}
 	var vids []string
-	for _, c := range [][2]string{{realParityVar, "4.14.0.162"}, {"HELPBUILD_PARITY_415", "4.15.6.20"}} {
+	for _, c := range defaults {
 		on, err := parityVar(c[0])
 		if err != nil {
 			return nil, err
@@ -174,15 +182,14 @@ func bajadocVersions() ([]string, error) {
 		}
 	}
 	if len(vids) == 0 {
-		return nil, errors.New("no version to compare: set " + realParityVar + "=1 (4.14.0.162), HELPBUILD_PARITY_415=1 (4.15.6.20) or HELPBUILD_PARITY_BAJADOC")
+		return nil, errors.New("no version to compare: set " + realParityVar + "=1, HELPBUILD_PARITY_415=1 or " + listVar)
 	}
 	return vids, nil
 }
 
-// realBajadocBase makes a temporary data root whose bajadoc/ links to the
-// registered data root of vid (only read; bajadoc-clean/ is written in the
-// temporary root).
-func realBajadocBase(t *testing.T, vid string) string {
+// registeredDataRoot is the data root of vid in the niagara-help version
+// registry.
+func registeredDataRoot(t *testing.T, vid string) string {
 	t.Helper()
 	tools := niagaraHelpTools()
 	if tools == "" {
@@ -205,7 +212,15 @@ func realBajadocBase(t *testing.T, vid string) string {
 	if !ok || entry.DataRoot == "" {
 		t.Fatalf("version %s has no data_root in the registry", vid)
 	}
-	src := filepath.Join(help, filepath.FromSlash(entry.DataRoot), "bajadoc")
+	return filepath.Join(help, filepath.FromSlash(entry.DataRoot))
+}
+
+// realBajadocBase makes a temporary data root whose bajadoc/ links to the
+// registered data root of vid (only read; bajadoc-clean/ is written in the
+// temporary root).
+func realBajadocBase(t *testing.T, vid string) string {
+	t.Helper()
+	src := filepath.Join(registeredDataRoot(t, vid), "bajadoc")
 	if !isDir(filepath.Join(src, "javax", "baja")) {
 		missingReference(t, fmt.Sprintf("version %s has no bajadoc/javax/baja (%s)", vid, src))
 	}

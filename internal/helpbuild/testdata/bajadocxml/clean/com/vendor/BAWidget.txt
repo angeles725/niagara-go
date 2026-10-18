@@ -1,0 +1,3 @@
+CLASS: BAWidget
+PACKAGE: com.vendor
+EXTENDS: BDemo

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bajadoc version="2.0" createdBy="niagara-baja-doclet-1.0.9">
+<class module="demo" runtimeProfile="rt" qualifiedName="javax.baja.demo.BDemo" name="BDemo" packageName="javax.baja.demo" public="true" abstract="true">
+<description>
+BDemo is the &lt;code&gt;demo&lt;/code&gt; base class&#xa; of the fixture.<!-- a comment is dropped --> It carries a description long enough to wrap at seventy-eight code points: café, naïve, Ünicode and <![CDATA[<b>bold</b> CDATA]]> words.
+<see ref="javax.baja.sys.BObject"/> text after a child is not the element text.
+</description>
+<tag name="@author">Someone</tag>
+<tag name="@since">Niagara &lt;b&gt;4.0&lt;/b&gt;</tag>
+<tag name="@since">Niagara 4.1</tag>
+<extends>
+<type class="javax.baja.sys.BComponent"/>
+</extends>
+<implements>
+<type class="javax.baja.sys.BIService"/>
+<parameterizedType class="java.lang.Comparable"><args><type class="javax.baja.demo.BDemo"/></args></parameterizedType>
+</implements>
+<implements>
+<type class="javax.baja.sys.BINotRead"/>
+</implements>
+<!-- javax.baja.demo.BDemo() -->
+<constructor name="BDemo" public="true">
+<description>Public no arg constructor.</description>
+</constructor>
+<constructor name="BDemo" protected="true">
+<parameter name="parent"><type class="com.tridium.sys.BParent"/></parameter>
+<parameter name="slots" isVarargs="true"><type class="javax.baja.sys.Slot" dimension="1"/></parameter>
+</constructor>
+<method name="zeta" public="true" static="true" abstract="true">
+<parameter name="names" isVarargs="true"><type class="java.lang.String" dimension="1"/></parameter>
+<return><parameterizedType class="java.util.List"><args><wildcardType><bounds><type class="javax.baja.sys.BObject"/></bounds></wildcardType><typeVariable name="T"/></args></parameterizedType></return>
+</method>
+<method name="getType" public="true">
+<annotation><type class="java.lang.Override"/></annotation>
+<description/>
+<return><type class="javax.baja.sys.Type"/></return>
+</method>
+<method name="alpha" public="true" final="true">
+<return><type class="int" dimension="2"/></return>
+</method>
+<method name="alpha" public="true">
+<parameter name="x"><type class="java.util.Map"/></parameter>
+<return><typeVariable class="javax.baja.sys.BValue" name="V"/></return>
+</method>
+<method name="wild" public="true"><return><wildcardType/></return></method>
+<field name="status" public="true" static="true" final="true"><type class="javax.baja.sys.Property"/></field>
+<field name="count" public="true"><type class="int"/></field>
+<field name="Abc" public="true"><type class="com.tridium.demo.BThing" dimension="1"/></field>
+<property name="enabled" flags=""><type class="boolean"/></property>
+<action name="execute"><return><type class="void"/></return></action>
+<topic name="changed"><eventType><type class="javax.baja.sys.BValue"/></eventType></topic>
+</class>
+</bajadoc>

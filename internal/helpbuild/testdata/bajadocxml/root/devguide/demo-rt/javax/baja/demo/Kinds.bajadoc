@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bajadoc version="2.0">
+<class qualifiedName="javax.baja.demo.BMode" name="BMode" packageName="javax.baja.demo" category="enum" public="true" final="true">
+<description>An enum.</description>
+<extends><type class="javax.baja.sys.BFrozenEnum"/></extends>
+<field name="ON" public="true" static="true" final="true"><type class="javax.baja.demo.BMode"/></field>
+<field name="OFF" public="true" static="true" final="true"><type class="javax.baja.demo.BMode"/></field>
+</class>
+<class qualifiedName="javax.baja.demo.Marker" name="Marker" packageName="javax.baja.demo" annotation="true">
+<method name="value" public="true" abstract="true"><return><type class="java.lang.String"/></return></method>
+</class>
+<class qualifiedName="javax.baja.demo.BIDemo" name="BIDemo" packageName="javax.baja.demo" interface="true" abstract="true">
+<description>An interface.</description>
+</class>
+<class name="NoQualifiedName" packageName="javax.baja.demo"/>
+<class qualifiedName="javax.baja.demo.BHasHtml" name="BHasHtml" packageName="javax.baja.demo">
+<description>Its javadoc page wins.</description>
+</class>
+<class qualifiedName="javax.baja.demo.Box" name="Box&lt;T&gt;" packageName="javax.baja.demo">
+<extends><type class="java.lang.Object"/></extends>
+</class>
+<class qualifiedName="BTop" name="BTop">
+<description>No package.</description>
+<extends><type class="javax.baja.demo.BDemo"/></extends>
+</class>
+</bajadoc>

@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/angeles725/niagara-go/internal/bajadocxml"
 	"github.com/angeles725/niagara-go/internal/index"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyhtml"
@@ -194,10 +195,10 @@ func (e *Env) Class(p ClassParams) error {
 // class of that name or cannot be parsed).
 func (e *Env) printJDKMembers(h classEntry) {
 	rel, _ := strings.CutPrefix(h.Path, "../")
-	classes, _ := parseBajadocFile(pycompat.PosixJoin(e.BaseDir, rel))
+	classes, _ := bajadocxml.ParseFile(pycompat.PosixJoin(e.BaseDir, rel))
 	for _, c := range classes {
-		if c.name == h.Name {
-			fmt.Fprintf(e.Out, "\n%s\n", formatCleanInfo(toCleanInfo(c)))
+		if c.Name == h.Name {
+			fmt.Fprintf(e.Out, "\n%s\n", bajadocxml.FormatCleanInfo(bajadocxml.ToCleanInfo(c)))
 			return
 		}
 	}
