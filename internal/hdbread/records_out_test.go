@@ -48,3 +48,52 @@ func TestPrintVarRecordsReportsWriteErrors(t *testing.T) {
 		})
 	}
 }
+
+// maskRecord in a login-family record treats every field but the operation (and a '/' slot-path
+// target) as the user's identity; an operation that is not an AuditEvent constant is free text.
+func TestMaskRecordAudit(t *testing.T) {
+	const v, u = valueMasked, userMasked
+	for _, tc := range []struct {
+		name     string
+		in, want AuditRecord
+	}{
+		{"login fields are the user",
+			AuditRecord{"Login", "alice-pc", "slot", "old", "new", "alice"},
+			AuditRecord{"Login", u, u, u, u, u}},
+		{"login failure, slot-path target",
+			AuditRecord{"Login Failure", "/Services/UserService", "", "", "bob", "bob"},
+			AuditRecord{"Login Failure", v, "", "", u, u}},
+		{"logout (timeout), empty fields stay empty",
+			AuditRecord{"Logout (Timeout)", "", "", "", "", "carol"},
+			AuditRecord{"Logout (Timeout)", "", "", "", "", u}},
+		{"unknown operation is masked as free text",
+			AuditRecord{"Logged In As dave", "dave-pc", "slot", "old", "new", "dave"},
+			AuditRecord{v, v, v, v, v, u}},
+		{"known non-login operation",
+			AuditRecord{"Changed", "/Lab1/Folder", "out", "1", "2", "erin"},
+			AuditRecord{"Changed", v, v, v, v, u}},
+		{"empty operation is not a constant",
+			AuditRecord{"", "", "", "", "", ""},
+			AuditRecord{v, "", "", "", "", ""}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			in := tc.in
+			got := maskRecord(Record{Audit: &in})
+			if *got.Audit != tc.want {
+				t.Errorf("masked = %+v\nwant     %+v", *got.Audit, tc.want)
+			}
+			if in != tc.in {
+				t.Errorf("maskRecord changed its input: %+v", in)
+			}
+		})
+	}
+}
+
+func TestMaskRecordLog(t *testing.T) {
+	in := LogRecord{LogName: "sys", Severity: 1000, Level: "SEVERE", Message: "user alice", Exception: ""}
+	got := maskRecord(Record{Log: &in}).Log
+	want := LogRecord{LogName: valueMasked, Severity: 1000, Level: "SEVERE", Message: valueMasked}
+	if *got != want || in.Message != "user alice" {
+		t.Errorf("masked = %+v (input %+v)", *got, in)
+	}
+}
