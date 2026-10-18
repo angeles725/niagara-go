@@ -1,0 +1,1 @@
+{"args": ["--check"], "env": {"COLUMNS": "80"}, "cwd_fixture": "corpus"}
