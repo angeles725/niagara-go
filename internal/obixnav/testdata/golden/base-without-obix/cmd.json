@@ -1,7 +1,7 @@
 {
  "args": [
   "--base",
-  "http://127.0.0.1:47913/xobi",
+  "http://127.0.0.1:39213/xobi",
   "--pass-file",
   "inputs/pass.txt",
   "cond"

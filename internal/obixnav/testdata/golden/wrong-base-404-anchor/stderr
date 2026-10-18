@@ -1,1 +1,1 @@
-obix-nav: map failed against http://127.0.0.1:47913/wrong/obix: 404 on http://127.0.0.1:47913/wrong/obix/config/Programacion/ itself: wrong --base or the station has no such tree
+obix-nav: map failed against http://127.0.0.1:39213/wrong/obix: 404 on http://127.0.0.1:39213/wrong/obix/config/Programacion/ itself: wrong --base or the station has no such tree
