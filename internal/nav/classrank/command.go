@@ -3,7 +3,6 @@ package classrank
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/index"
@@ -16,14 +15,6 @@ const (
 	xrefIndex  = "xref-index.json"
 	progressMB = 20 // indexes this large print a progress line (indexes.py)
 )
-
-func absIndex(env *registry.Env, name string) string {
-	p := core.IndexPath(env.BaseDir, name)
-	if a, err := filepath.Abs(p); err == nil {
-		return a
-	}
-	return p
-}
 
 // progressStart is _progress_start: the progress line of a large index.
 func progressStart(env *registry.Env, path, name string) bool {
@@ -58,8 +49,8 @@ func warnStale(env *registry.Env, meta *index.Object, path string) {
 
 // xrefAbsent is _note_absent: true, after the NOTE indexes.load prints, when
 // the optional xref index does not exist.
-func xrefAbsent(env *registry.Env) bool {
-	if st, err := os.Stat(absIndex(env, xrefIndex)); err == nil && st.Mode().IsRegular() {
+func xrefAbsent(env *registry.Env, src Source) bool {
+	if isFile(src.XrefIndex) {
 		return false
 	}
 	env.Load(xrefIndex, core.LoadOpts{Optional: true})
@@ -75,38 +66,28 @@ func load(env *registry.Env, path, name, what string) *index.Object {
 
 // readInputs is class_rank_cache.read_inputs: (classes, imported_by, meta) of
 // the class and xref indexes, or ok=false after an exit-2 error.
-func readInputs(env *registry.Env) (classes, importedBy, meta *index.Object, ok bool) {
-	path := absIndex(env, classIndex)
+func readInputs(env *registry.Env, src Source) (classes, importedBy, meta *index.Object, ok bool) {
+	path := src.ClassIndex
 	data := load(env, path, classIndex, "class index")
 	if data == nil {
 		return nil, nil, nil, false
 	}
-	if v, _ := data.Get("classes"); v != nil {
-		classes, _ = v.(*index.Object)
-	}
-	if classes == nil {
+	if classes, meta, ok = classTables(data); !ok {
 		env.Error(fmt.Sprintf("class index has no 'classes' table: %s", path), "Run: ./reindex.sh")
 		return nil, nil, nil, false
 	}
-	if v, _ := data.Get("_meta"); truthy(v) {
-		meta, _ = v.(*index.Object)
-	}
 	warnStale(env, meta, path)
-	if xrefAbsent(env) {
+	if xrefAbsent(env, src) {
 		return classes, nil, meta, true
 	}
-	xrefPath := absIndex(env, xrefIndex)
-	xref := load(env, xrefPath, xrefIndex, "xref index")
+	xref := load(env, src.XrefIndex, xrefIndex, "xref index")
 	if xref == nil {
 		return nil, nil, nil, false
 	}
-	v, present := xref.Get("class_imported_by")
-	if present && v != nil {
-		if importedBy, ok = v.(*index.Object); !ok {
-			env.Error(fmt.Sprintf("xref index has no 'class_imported_by' table: %s", xrefPath),
-				"Run: ./reindex.sh")
-			return nil, nil, nil, false
-		}
+	if importedBy, ok = importedByTable(xref); !ok {
+		env.Error(fmt.Sprintf("xref index has no 'class_imported_by' table: %s", src.XrefIndex),
+			"Run: ./reindex.sh")
+		return nil, nil, nil, false
 	}
 	return classes, importedBy, meta, true
 }
@@ -127,13 +108,13 @@ func Cmd(env *registry.Env, question string, limit int) {
 	if r == nil {
 		return
 	}
-	results := r.rankAll(question)
-	terms := strings.Join(r.terms.queryTerms(question), ", ")
+	results := r.Rank(question)
+	terms := strings.Join(r.QueryTerms(question), ", ")
 	if len(results) == 0 {
 		if terms == "" {
 			terms = "none"
 		}
-		env.Miss(fmt.Sprintf("question '%s' (terms: %s)", question, terms), r.scope(),
+		env.Miss(fmt.Sprintf("question '%s' (terms: %s)", question, terms), r.Scope(),
 			"grep '<regex>' for literal text, or search '*Name*' for class names")
 		return
 	}
@@ -145,8 +126,7 @@ func Cmd(env *registry.Env, question string, limit int) {
 		"columns: rank, score, class, module, path")
 	fmt.Fprintln(w)
 	for k, x := range results[:min(limit, len(results))] {
-		fmt.Fprintf(w, "%d\t%s\t%s\t%s\t%s\n", k+1, core.Fixed(x.score, 3), x.name, r.module(x.doc),
-			r.st.Paths[x.doc])
+		fmt.Fprintln(w, FormatRow(k+1, x))
 	}
 	if len(results) > limit {
 		fmt.Fprintln(w)

@@ -1,7 +1,6 @@
 package domain
 
 import (
-	"fmt"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -199,9 +198,10 @@ func deviceTypeAt(text string, p int) (string, int, bool) {
 	return text[j:k], k + len(".TYPE"), true
 }
 
-// networkRows is driver_networks: every driver network and the scope, or
-// ok=false (after an exit-2 error, or silently when an index is empty).
-func networkRows(env *registry.Env) (rows []*row, scope string, ok bool) {
+// networkRows loads the indexes, the corpus root and the license features
+// Drivers reads, then returns its rows and scope, or ok=false (after an
+// exit-2 error, or silently when an index is empty).
+func networkRows(env *registry.Env) (rows []*DriverRow, scope string, ok bool) {
 	ci := env.Load("class-index.json", core.LoadOpts{})
 	var inh, inv *index.Object
 	if ci != nil && ci.Len() > 0 {
@@ -221,63 +221,25 @@ func networkRows(env *registry.Env) (rows []*row, scope string, ok bool) {
 	if report == nil {
 		return nil, "", false
 	}
-	features := map[string][]string{}
-	for _, c := range report.Calls {
-		if c.Feature != nil && *c.Feature != "" {
-			vendor := "?"
-			if c.Vendor != nil && *c.Vendor != "" {
-				vendor = *c.Vendor
-			}
-			features[c.Module] = append(features[c.Module], vendor+":"+*c.Feature)
-		}
-	}
-	classes := ci.Object("classes")
-	if classes == nil {
-		classes = index.NewObject()
-	}
-	cx := newCorpus(classes, inh)
-	docs := newDocIndex(inv.Object("modules"))
-	subs := append([]string(nil), cx.subs...)
-	sort.Strings(subs)
-	modules := map[string]bool{}
-	for _, sub := range subs {
-		if !strings.HasSuffix(sub, "-rt") {
-			continue
-		}
-		items := append([]item(nil), cx.bySub[sub]...)
-		sort.SliceStable(items, func(a, b int) bool { return items[a].name < items[b].name })
-		for _, it := range items {
-			if contains(cx.chain(it.e), "BDeviceNetwork") {
-				rows = append(rows, anatomy(cx, it, organized, features, docs))
-				modules[sub] = true
-			}
-		}
-	}
-	entries := 0
-	for _, v := range classes.Values() {
-		l, _ := v.([]any)
-		entries += len(l)
-	}
-	scope = fmt.Sprintf("%s driver networks (BDeviceNetwork subclasses) in %s rt submodules of %s "+
-		"class entries, %s", core.Commas(int64(len(rows))), core.Commas(int64(len(modules))),
-		core.Commas(int64(entries)), core.Built(ci.Object("_meta")))
+	rows, scope = Drivers(DriverInputs{ClassIndex: ci, Inheritance: inh, Inventory: inv,
+		Organized: organized, Features: FeaturesByModule(report.Calls)})
 	return rows, scope, true
 }
 
-func anatomy(cx *corpus, it item, organized string, features map[string][]string, docs *docIndex) *row {
+func anatomy(cx *corpus, it item, organized string, features map[string][]string, docs *docIndex) *DriverRow {
 	sub, dir := it.module(), familyDir(it.path())
 	fam := cx.byFamily[dir]
 	declared := sortedSet(deviceTypes(organized, it.path()))
-	r := &row{network: it.name, module: sub, pkg: core.Str(it.e, "package"), path: it.path(),
-		abstract: contains(core.Strs(it.e, "modifiers"), "abstract"), extends: simple(extendsOf(it.e)),
-		family: family(append([]string{it.name}, cx.chain(it.e)...))}
-	r.devices, r.devicesFrom = cx.inherited(it.e, "BDevice")
-	r.devicesVia = "subclasses"
+	r := &DriverRow{Network: it.name, Module: sub, Package: core.Str(it.e, "package"), Path: it.path(),
+		Abstract: contains(core.Strs(it.e, "modifiers"), "abstract"), Extends: simple(extendsOf(it.e)),
+		Family: family(append([]string{it.name}, cx.chain(it.e)...))}
+	r.Devices, r.DevicesFrom = cx.inherited(it.e, "BDevice")
+	r.DevicesVia = "subclasses"
 	if len(declared) > 0 {
-		r.devices, r.devicesFrom, r.devicesVia = declared, sub, "getDeviceType()"
+		r.Devices, r.DevicesFrom, r.DevicesVia = declared, sub, "getDeviceType()"
 	}
-	r.pdx, r.pdxFrom = cx.inherited(it.e, "BPointDeviceExt")
-	r.proxy, r.proxyFrom = cx.inherited(it.e, "BProxyExt")
+	r.PointDeviceExts, r.PointDeviceExtsFrom = cx.inherited(it.e, "BPointDeviceExt")
+	r.ProxyExts, r.ProxyExtsFrom = cx.inherited(it.e, "BProxyExt")
 	var managers []string
 	for _, f := range fam {
 		ch := cx.chain(f.e)
@@ -290,14 +252,14 @@ func anatomy(cx *corpus, it item, organized string, features map[string][]string
 			managers = append(managers, f.name)
 		}
 	}
-	r.managers = sortedSet(managers)
-	r.jobs = []string{}
+	r.Managers = sortedSet(managers)
+	r.DiscoveryJobs = []string{}
 	for _, n := range cx.subclasses(fam, "BJob") {
 		if strings.Contains(n, "Discover") || strings.Contains(n, "Learn") {
-			r.jobs = append(r.jobs, n)
+			r.DiscoveryJobs = append(r.DiscoveryJobs, n)
 		}
 	}
-	r.license = sortedSet(features[sub])
+	r.License = sortedSet(features[sub])
 	r.doc = docs.target(organized, dir, sub)
 	return r
 }

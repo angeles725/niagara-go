@@ -65,19 +65,15 @@ func statOf(path string) fileStat {
 	return fileStat{true, st.Size(), st.ModTime().UnixNano()}
 }
 
-func keyOf(env *registry.Env) cacheKey {
+func keyOf(src Source) cacheKey {
 	return cacheKey{Format: cacheFormat, K1: 1.5, B: 0.3, Title: titleWeight, Prio: priorWeight,
-		Class: statOf(absIndex(env, classIndex)), Xref: statOf(absIndex(env, xrefIndex))}
-}
-
-func cachePath(env *registry.Env) string {
-	return filepath.Join(core.IndexPath(env.BaseDir, cacheDir), cacheName)
+		Class: statOf(src.ClassIndex), Xref: statOf(src.XrefIndex)}
 }
 
 // readCache is class_rank_cache.read plus ClassRanker.from_state: the ranker
-// stored under key, else nil.
-func readCache(env *registry.Env, key cacheKey) *Ranker {
-	data, err := os.ReadFile(cachePath(env))
+// stored at path under key, else nil.
+func readCache(path string, key cacheKey) *Ranker {
+	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil
 	}
@@ -99,9 +95,9 @@ func readCache(env *registry.Env, key cacheKey) *Ranker {
 	return r
 }
 
-// writeCache is class_rank_cache.write; false, leaving nothing behind, when
-// the cache cannot be written.
-func writeCache(env *registry.Env, key cacheKey, st state, meta *index.Object) bool {
+// writeCache is class_rank_cache.write to path; false, leaving nothing
+// behind, when the cache cannot be written.
+func writeCache(path string, key cacheKey, st state, meta *index.Object) bool {
 	cf := cacheFile{Key: key, State: st}
 	if meta != nil {
 		cf.Meta = []byte(core.Dumps(meta, -1))
@@ -110,7 +106,6 @@ func writeCache(env *registry.Env, key cacheKey, st state, meta *index.Object) b
 	if gob.NewEncoder(&buf).Encode(&cf) != nil {
 		return false
 	}
-	path := cachePath(env)
 	if os.MkdirAll(filepath.Dir(path), 0o700) != nil {
 		return false
 	}
@@ -135,38 +130,31 @@ func writeCache(env *registry.Env, key cacheKey, st state, meta *index.Object) b
 // announce is class_rank_cache.announce: on a cache hit, the stderr a build
 // prints (progress line, staleness warnings, the absent-xref NOTE or the xref
 // progress line).
-func announce(env *registry.Env, meta *index.Object) {
-	path := absIndex(env, classIndex)
-	progressEnd(env, progressStart(env, path, classIndex), true)
-	warnStale(env, meta, path)
-	if !xrefAbsent(env) {
-		progressEnd(env, progressStart(env, absIndex(env, xrefIndex), xrefIndex), true)
+func announce(env *registry.Env, src Source, meta *index.Object) {
+	progressEnd(env, progressStart(env, src.ClassIndex, classIndex), true)
+	warnStale(env, meta, src.ClassIndex)
+	if !xrefAbsent(env, src) {
+		progressEnd(env, progressStart(env, src.XrefIndex, xrefIndex), true)
 	}
 }
 
 // Load is load_ranker: the Ranker of the base directory's indexes, or nil
 // after an exit-2 error: the cached one, else a full build (which then
-// refreshes the cache unless an index changed while it was read).
+// refreshes the cache unless an index changed while it was read). It is Open
+// plus the runtime's stderr (progress, staleness, NOTE) and error reporting.
 func Load(env *registry.Env) *Ranker {
-	key := keyOf(env)
+	src := SourceOf(env.BaseDir)
+	key := keyOf(src)
 	cached := key.Class.Size >= cacheMinBytes
 	if cached {
-		if r := readCache(env, key); r != nil {
-			announce(env, r.meta)
+		if r := readCache(src.Cache, key); r != nil {
+			announce(env, src, r.meta)
 			return r
 		}
 	}
-	classes, importedBy, meta, ok := readInputs(env)
+	classes, importedBy, meta, ok := readInputs(env, src)
 	if !ok {
 		return nil
 	}
-	st := build(classes, importedBy)
-	r, err := newRanker(st, meta)
-	if err != nil { // a freshly built state is always well formed
-		panic(err)
-	}
-	if cached && key == keyOf(env) {
-		writeCache(env, key, st, meta)
-	}
-	return r
+	return fromTables(src, key, cached, classes, importedBy, meta)
 }
