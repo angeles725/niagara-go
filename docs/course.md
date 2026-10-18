@@ -322,7 +322,8 @@ The rows `CEXAM.<n>` (`internal/course/check/spec_exam.go`) read the exam statio
 
 The live exam station (2026-10-17, with the 4.15.6.20 install): 19 checked, 19 PASS.
 
-The live TrainingStation (2026-10-17, with the 4.15.6.20 install): 75 checked, 74 PASS, 1 FAIL.
+The live TrainingStation (2026-10-17, with the 4.15.6.20 install and source tree): 83 checked, 82
+PASS, 1 FAIL (75, 74 and 1 before the history and source-text rows: all eight new rows PASS).
 C3.4 fails because the station really differs: its Lab2 folder has Point1..Point4 linked to
 Add.in1..in4 and no `Output` point, so Lab 3 step 11 (`LI:576`, Add.Out -> Output.In10) was
 not done.
@@ -338,11 +339,14 @@ rules, output and exit of `verify-predictions` below; the summary starts with th
 of `course check`), so `course verify --status written` with the three station variables set
 decides the lab, review and exam items in one run. An unknown group is exit 1 with the group list.
 
-The live stations and the real answer key (2026-10-17, with the 4.15.6.20 install):
-`verify --status written` decides 258 items: 55 CONFIRMED, 8 PARTIAL, 3 CONTRADICTED (L3.7: C3.4,
+The live stations and the real answer key (2026-10-17, with the 4.15.6.20 install and source tree):
+`verify --status written` decides 259 items: 58 CONFIRMED, 8 PARTIAL, 3 CONTRADICTED (L3.7: C3.4,
 the missing Add.out -> Output link; RA1.M3: the description typo; RA1.V9–V14: no folder
-`Review`), 192 UNDECIDED (no check covers them); 72 checks run on the TrainingStation and the
-review station (no written item links an exam check: the exam items are verified).
+`Review`), 190 UNDECIDED (no check covers them); 78 checks run on the TrainingStation and the
+review station (no written item links an exam check: the exam items are verified). L10.18 (the
+NumericWritable chart has data) and L10.21 (ten histories named after their points) became
+CONFIRMED from the history files (C10.12, C10.13); L10.24 counts as written since labs.md recorded it
+from the CSV with a marker that is not the verified one.
 
 `course verify-predictions` is `course verify --status predicted` over every group: the same
 stdout, stderr and exit (`TestVerifyPredictionsIsVerifyStatusPredicted`).
@@ -398,9 +402,12 @@ CONTRADICTED, or no item carries the status in the selected groups (the honest z
 station is read); 2 the answer keys or the station cannot be read, a bad `--date`, or every linked
 check was skipped (nothing could be checked, as in `course check`).
 
-The live TrainingStation and the real answer key (2026-10-17, with the 4.15.6.20 install):
-40 predicted, 1 CONFIRMED (L10.24), 9 PARTIAL (L1.14, L1.25, L4.15, L7.18, L10.19, L10.22, L11.7,
-L11.26, L11.32), 0 CONTRADICTED, 30 UNDECIDED (no check covers them); 18 checks run.
+The live TrainingStation and the real answer key (2026-10-17, with the 4.15.6.20 install and source
+tree): 39 predicted, 0 CONFIRMED, 10 PARTIAL (L1.14, L1.25, L4.8, L4.15, L7.18, L10.19, L10.22,
+L11.7, L11.26, L11.32), 0 CONTRADICTED, 29 UNDECIDED (no check covers them); 22 checks run. L4.8
+moved from UNDECIDED to PARTIAL (C4.8, the audited set); L7.18, L10.19 and L10.22 stay PARTIAL with
+more evidence (C7.6-C7.8 from the 4.15 source, C10.11-C10.12 from the histories, C10.14 from the
+lexicon). L10.24, CONFIRMED before, is no longer predicted in labs.md.
 
 Audit of the links to predicted items (2026-10-17): C3.5 (Add.out stored) no longer links L3.9
 (`Output = Point1 + Point2 + Point3`): it says nothing of the Output point, which the live
