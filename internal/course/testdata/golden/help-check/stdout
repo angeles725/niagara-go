@@ -8,5 +8,5 @@ options:
                   $COURSE_CERT_STATION for EXAM
   --install DIR   Niagara install whose modules/ holds the built jars (default:
                   $COURSE_NIAGARA_INSTALL; jar checks SKIP without either)
-  --lab N         only this lab (1-11, B; RA1, RA2 run only when named); repeatable
+  --lab N         only this lab (1-11, B; RA1, RA2, EXAM run only when named); repeatable
   --json          machine JSON output

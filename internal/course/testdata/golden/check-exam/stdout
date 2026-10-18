@@ -1,0 +1,212 @@
+[
+  {
+    "id": "CEXAM.1",
+    "lab": "EXAM",
+    "keys": [
+      "P1"
+    ],
+    "kind": "type",
+    "description": "a Limiter in Config/Test",
+    "verdict": "PASS",
+    "evidence": "found 1 in Test: Test/Limiter"
+  },
+  {
+    "id": "CEXAM.2",
+    "lab": "EXAM",
+    "keys": [
+      "P1"
+    ],
+    "kind": "slot",
+    "description": "Limiter min = 25",
+    "verdict": "PASS",
+    "evidence": "Test/Limiter.min = 25.0 (stored)"
+  },
+  {
+    "id": "CEXAM.3",
+    "lab": "EXAM",
+    "keys": [
+      "P1"
+    ],
+    "kind": "slot",
+    "description": "Limiter max = 75",
+    "verdict": "PASS",
+    "evidence": "Test/Limiter.max = 75.0 (stored)"
+  },
+  {
+    "id": "CEXAM.4",
+    "lab": "EXAM",
+    "keys": [
+      "P1"
+    ],
+    "kind": "link",
+    "description": "Ramp.out -> Limiter.in",
+    "verdict": "PASS",
+    "evidence": "found 1: Test/Ramp.out -> Test/Limiter.in"
+  },
+  {
+    "id": "CEXAM.5",
+    "lab": "EXAM",
+    "keys": [
+      "P1"
+    ],
+    "kind": "slot",
+    "description": "Limiter computed out (out stored)",
+    "verdict": "PASS",
+    "evidence": "Test/Limiter.out = 75.0 (stored)"
+  },
+  {
+    "id": "CEXAM.6",
+    "lab": "EXAM",
+    "keys": [
+      "P1",
+      "P2"
+    ],
+    "kind": "jar-signed",
+    "description": "Cristian_Angeles_Cert-rt is signed",
+    "verdict": "PASS",
+    "evidence": "modules/Cristian_Angeles_Cert-rt.jar: META-INF/CODESIGN.SF, META-INF/CODESIGN.RSA"
+  },
+  {
+    "id": "CEXAM.7",
+    "lab": "EXAM",
+    "keys": [
+      "P1"
+    ],
+    "kind": "jar-entry",
+    "description": "BLimiter.class built",
+    "verdict": "PASS",
+    "evidence": "modules/Cristian_Angeles_Cert-rt.jar: 1 entry matches **/BLimiter.class"
+  },
+  {
+    "id": "CEXAM.8",
+    "lab": "EXAM",
+    "keys": [
+      "P2"
+    ],
+    "kind": "type",
+    "description": "one HistoryExportService, under Services",
+    "verdict": "PASS",
+    "evidence": "found 1 under baja:ServiceContainer: Services/HistoryExportService"
+  },
+  {
+    "id": "CEXAM.9",
+    "lab": "EXAM",
+    "keys": [
+      "P2"
+    ],
+    "kind": "slot",
+    "description": "historyId = /<station>/AuditHistory",
+    "verdict": "PASS",
+    "evidence": "Services/HistoryExportService.historyId = /Cristian_Angeles_Cert/AuditHistory (stored)"
+  },
+  {
+    "id": "CEXAM.10",
+    "lab": "EXAM",
+    "keys": [
+      "P2"
+    ],
+    "kind": "files",
+    "description": "history.csv in the station's Files space",
+    "verdict": "PASS",
+    "evidence": "found 1 shared/history.csv: history.csv"
+  },
+  {
+    "id": "CEXAM.11",
+    "lab": "EXAM",
+    "keys": [
+      "P2"
+    ],
+    "kind": "file-text",
+    "description": "history.csv header Timestamp,Operation,Target,SlotName",
+    "verdict": "PASS",
+    "evidence": "shared/history.csv:1 = Timestamp,Operation,Target,SlotName"
+  },
+  {
+    "id": "CEXAM.12",
+    "lab": "EXAM",
+    "keys": [
+      "P2"
+    ],
+    "kind": "file-text",
+    "description": "history.csv rows: timestamp, operation, target, slot",
+    "verdict": "PASS",
+    "evidence": "shared/history.csv: 2 lines match"
+  },
+  {
+    "id": "CEXAM.13",
+    "lab": "EXAM",
+    "keys": [
+      "P2"
+    ],
+    "kind": "jar-entry",
+    "description": "BHistoryExportService.class built",
+    "verdict": "PASS",
+    "evidence": "modules/Cristian_Angeles_Cert-rt.jar: 1 entry matches **/BHistoryExportService.class"
+  },
+  {
+    "id": "CEXAM.14",
+    "lab": "EXAM",
+    "keys": [
+      "P3"
+    ],
+    "kind": "type",
+    "description": "a WebsiteDriverDevice under Drivers",
+    "verdict": "PASS",
+    "evidence": "found 1 under driver:DriverContainer: Drivers/WebsiteDriverNetwork/WebsiteDriverDevice"
+  },
+  {
+    "id": "CEXAM.15",
+    "lab": "EXAM",
+    "keys": [
+      "P3"
+    ],
+    "kind": "slot",
+    "description": "device website set",
+    "verdict": "PASS",
+    "evidence": "Drivers/WebsiteDriverNetwork/WebsiteDriverDevice.website = www.google.com (stored)"
+  },
+  {
+    "id": "CEXAM.16",
+    "lab": "EXAM",
+    "keys": [
+      "P3"
+    ],
+    "kind": "slot",
+    "description": "device pinged ok (health.lastOkTime stored)",
+    "verdict": "PASS",
+    "evidence": "Drivers/WebsiteDriverNetwork/WebsiteDriverDevice.health.lastOkTime = 2026-10-16T13:24:00.000-06:00 (stored)"
+  },
+  {
+    "id": "CEXAM.17",
+    "lab": "EXAM",
+    "keys": [
+      "P3"
+    ],
+    "kind": "jar-signed",
+    "description": "websiteDriver-rt is signed",
+    "verdict": "PASS",
+    "evidence": "modules/websiteDriver-rt.jar: META-INF/CODESIGN.SF, META-INF/CODESIGN.RSA"
+  },
+  {
+    "id": "CEXAM.18",
+    "lab": "EXAM",
+    "keys": [
+      "P3"
+    ],
+    "kind": "jar-entry",
+    "description": "network, device and folder classes built",
+    "verdict": "PASS",
+    "evidence": "modules/websiteDriver-rt.jar: 3 entries match **/websiteDriver/BWebsiteDriver*.class"
+  },
+  {
+    "id": "CEXAM.19",
+    "lab": "EXAM",
+    "keys": [
+      "P3"
+    ],
+    "kind": "jar-text",
+    "description": "websiteDriver requests NETWORK_COMMUNICATION",
+    "verdict": "PASS",
+    "evidence": "modules/websiteDriver-rt.jar!META-INF/module.xml has <name>NETWORK_COMMUNICATION</name>"
+  }
+]

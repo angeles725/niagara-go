@@ -20,9 +20,9 @@ const (
 	csvGlob         = "shared/{station}_NumericWritable*.csv" // the Lab 10 export (LI:1976-1977)
 )
 
-// Spec is every check: the labs, then the review assignments. A run without --lab selects only
+// Spec is every check: the labs, the review assignments, the exam. A run without --lab selects only
 // the labs (Select), whose station is the TrainingStation.
-var Spec = slices.Concat(labSpec, reviewSpec)
+var Spec = slices.Concat(labSpec, reviewSpec, examSpec)
 
 var labSpec = []Check{
 	// Lab 1. BFirstComponent.java:15-20 timeExecuted, default BAbsTime.DEFAULT (not stored);

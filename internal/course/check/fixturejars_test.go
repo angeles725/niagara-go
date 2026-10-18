@@ -53,6 +53,22 @@ var fixtureJars = map[string]map[string]string{
 		"com/review/Cristian_Angeles_Review/BComponentWithId.class":     "stand-in class\n",
 		"com/review/Cristian_Angeles_Review/BPointSummaryService.class": "stand-in class\n",
 	},
+	"Cristian_Angeles_Cert-rt": {
+		"META-INF/CODESIGN.SF":                                           "Signature-Version: 1.0\n",
+		"META-INF/CODESIGN.RSA":                                          "stand-in signature block\n",
+		"META-INF/module.xml":                                            `<module name="Cristian_Angeles_Cert-rt" vendor="certExam"><dependency name="history-rt"/></module>` + "\n",
+		"com/certexam/Cristian_Angeles_Cert/BLimiter.class":              "stand-in class\n",
+		"com/certexam/Cristian_Angeles_Cert/BHistoryExportService.class": "stand-in class\n",
+	},
+	"websiteDriver-rt": {
+		"META-INF/CODESIGN.SF":  "Signature-Version: 1.0\n",
+		"META-INF/CODESIGN.RSA": "stand-in signature block\n",
+		"META-INF/module.xml":   "<module><permissions><name>NETWORK_COMMUNICATION</name></permissions></module>\n",
+		"com/certExam/websiteDriver/BWebsiteDriverDevice.class":             "stand-in class\n",
+		"com/certExam/websiteDriver/BWebsiteDriverDeviceFolder.class":       "stand-in class\n",
+		"com/certExam/websiteDriver/BWebsiteDriverNetwork.class":            "stand-in class\n",
+		"com/certExam/websiteDriver/comm/BWebsiteDriverTcpCommConfig.class": "stand-in class\n",
+	},
 	"trafficLightServer-rt": {
 		"META-INF/CODESIGN.SF":  "Signature-Version: 1.0\n",
 		"META-INF/CODESIGN.EC":  "stand-in signature block\n",

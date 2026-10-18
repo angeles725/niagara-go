@@ -157,9 +157,9 @@ per check. It reads the station and the jars only; it needs no niagara-research 
   the bog file itself (its directory is the station directory). Every selected check runs on it.
 - `--install`: a Niagara install; the jar checks read `<install>/modules/<part>.jar`. Without it
   (and without `COURSE_NIAGARA_INSTALL`) every jar check is SKIP.
-- `--lab`: repeatable; `3`, `03`, `L3`, `B`, `LB`, `RA1`, `RA2` (any case). A lab without checks (8)
-  is exit 1. Without `--lab` only the labs run (1-11, B: the TrainingStation); `RA1` and `RA2`
-  run only when named, on their own station.
+- `--lab`: repeatable; `3`, `03`, `L3`, `B`, `LB`, `RA1`, `RA2`, `EXAM` (any case). A lab without
+  checks (8) is exit 1. Without `--lab` only the labs run (1-11, B: the TrainingStation); `RA1`,
+  `RA2` and `EXAM` run only when named, on their own station.
 
 Defaults (explicit flags win; a blank variable counts as unset):
 
@@ -244,6 +244,20 @@ writable's `fallback` (`internal/bog/parse.go`), so the values cannot be read.
 The live review station (2026-10-17, with the 4.15.6.20 install): 20 checked, 18 PASS, 2 FAIL,
 both real: CRA1.2 (the jar's description is `Cristian Angeles Niagara Reviw Assignments`) and
 CRA1.10 (the components sit in `Config/Cristian_Angeles_Review`, not in `Config/Review`).
+
+### Exam checks (EXAM)
+
+The rows `CEXAM.<n>` (`internal/course/check/spec_exam.go`) read the exam station
+(`COURSE_CERT_STATION`, `Cristian_Angeles_Cert`) and the jars `Cristian_Angeles_Cert-rt` and
+`websiteDriver-rt`; keys are P1-P3.
+
+| Problem | Rows |
+|---|---|
+| P1 Limiter | a `Limiter` in `Test`, `min = 25.0`, `max = 75.0`, the link `Ramp.out -> Limiter.in`, `out` stored, the jar signed, `BLimiter.class` |
+| P2 HistoryExportService | one under Services, `historyId = /Cristian_Angeles_Cert/AuditHistory`, `shared/history.csv` with the header `Timestamp,Operation,Target,SlotName` and audit rows, `BHistoryExportService.class` |
+| P3 websiteDriver | a `WebsiteDriverDevice` under Drivers with `website` stored and `health.lastOkTime` stored (nested), the jar signed, the network, device and folder classes, `NETWORK_COMMUNICATION` |
+
+The live exam station (2026-10-17, with the 4.15.6.20 install): 19 checked, 19 PASS.
 
 The live TrainingStation (2026-10-17, with the 4.15.6.20 install): 75 checked, 74 PASS, 1 FAIL.
 C3.4 fails because the station really differs: its Lab2 folder has Point1..Point4 linked to
@@ -335,7 +349,9 @@ not observed.
   (`COURSE_TRAINING_STATION`, `COURSE_REVIEW_STATION`, `COURSE_CERT_STATION`, and the jars of
   `COURSE_NIAGARA_INSTALL`) and pins the known station differences; a role whose variable is unset
   skips, visibly. The synthetic `stations/review` mirrors the live review station (components in
-  `Cristian_Angeles_Review`, so CRA1.10 FAILs); the `check-review` golden runs it. `TestCheckNestedNeedsNestedLoad`: a dotted check on a bog read without
+  `Cristian_Angeles_Review`, so CRA1.10 FAILs); the `check-review` golden runs it. `stations/cert`
+  is a passing exam station (`check-exam`); `check-mixed-roles` reads three stations in one run and
+  `check-missing-role` is the usage error of a role without a station. `TestCheckNestedNeedsNestedLoad`: a dotted check on a bog read without
   nested values is SKIP.
 - `check/verify_test.go` and the `verify-*` goldens: the verdict rules (`TestDecidePrediction`) and
   the command over `testdata/predict-root/` (a synthetic answer key whose predicted IDs are
