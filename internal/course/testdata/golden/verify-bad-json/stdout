@@ -1,0 +1,141 @@
+[
+  {
+    "id": "L1.4",
+    "verdict": "UNDECIDED",
+    "reason": "no check covers it",
+    "checks": [],
+    "file": "docs/n4-dev-course-solutions/labs.md",
+    "line": 10,
+    "suggestion": null
+  },
+  {
+    "id": "L1.14",
+    "verdict": "UNDECIDED",
+    "reason": "C1.6 SKIP: no --install DIR: modules/training-rt.jar not checked",
+    "checks": [
+      {
+        "id": "C1.6",
+        "verdict": "SKIP",
+        "evidence": "no --install DIR: modules/training-rt.jar not checked"
+      }
+    ],
+    "file": "docs/n4-dev-course-solutions/labs.md",
+    "line": 11,
+    "suggestion": null
+  },
+  {
+    "id": "L1.25",
+    "verdict": "CONTRADICTED",
+    "reason": "C1.2 FAIL: no training:FirstComponent component (searched 235 components)",
+    "checks": [
+      {
+        "id": "C1.2",
+        "verdict": "FAIL",
+        "evidence": "no training:FirstComponent component (searched 235 components)"
+      }
+    ],
+    "file": "docs/n4-dev-course-solutions/labs.md",
+    "line": 12,
+    "suggestion": null
+  },
+  {
+    "id": "L3.9",
+    "verdict": "CONFIRMED",
+    "reason": "C3.5 PASS: Lab2/Add.out = 6.0 (stored)",
+    "checks": [
+      {
+        "id": "C3.5",
+        "verdict": "PASS",
+        "evidence": "Lab2/Add.out = 6.0 (stored)"
+      }
+    ],
+    "file": "docs/n4-dev-course-solutions/labs.md",
+    "line": 18,
+    "suggestion": "L3.9: *(verified live 2026-10-17)* evidence: C3.5 Lab2/Add.out = 6.0 (stored)"
+  },
+  {
+    "id": "L4.15",
+    "verdict": "CONFIRMED",
+    "reason": "C4.6 PASS: Lab4/My Tstat.action = reverse (stored)",
+    "checks": [
+      {
+        "id": "C4.6",
+        "verdict": "PASS",
+        "evidence": "Lab4/My Tstat.action = reverse (stored)"
+      }
+    ],
+    "file": "docs/n4-dev-course-solutions/labs.md",
+    "line": 25,
+    "suggestion": "L4.15: *(verified live 2026-10-17)* evidence: C4.6 Lab4/My Tstat.action = reverse (stored)"
+  },
+  {
+    "id": "L11.7",
+    "verdict": "CONFIRMED",
+    "reason": "C11.1 PASS: found 1: Drivers/TrafficLightServerNetwork; C11.15 PASS: Drivers/TrafficLightServerNetwork/tcpConfig.address.ipAddress = 127.0.0.1 (stored); C11.16 PASS: Drivers/TrafficLightServerNetwork/tcpConfig.address.port = 23 (stored); C11.17 PASS: Drivers/TrafficLightServerNetwork/tcpConfig.serverEnabled = true (stored)",
+    "checks": [
+      {
+        "id": "C11.1",
+        "verdict": "PASS",
+        "evidence": "found 1: Drivers/TrafficLightServerNetwork"
+      },
+      {
+        "id": "C11.15",
+        "verdict": "PASS",
+        "evidence": "Drivers/TrafficLightServerNetwork/tcpConfig.address.ipAddress = 127.0.0.1 (stored)"
+      },
+      {
+        "id": "C11.16",
+        "verdict": "PASS",
+        "evidence": "Drivers/TrafficLightServerNetwork/tcpConfig.address.port = 23 (stored)"
+      },
+      {
+        "id": "C11.17",
+        "verdict": "PASS",
+        "evidence": "Drivers/TrafficLightServerNetwork/tcpConfig.serverEnabled = true (stored)"
+      }
+    ],
+    "file": "docs/n4-dev-course-solutions/labs.md",
+    "line": 37,
+    "suggestion": "L11.7: *(verified live 2026-10-17)* evidence: C11.1 found 1: Drivers/TrafficLightServerNetwork; C11.15 Drivers/TrafficLightServerNetwork/tcpConfig.address.ipAddress = 127.0.0.1 (stored); C11.16 Drivers/TrafficLightServerNetwork/tcpConfig.address.port = 23 (stored); C11.17 Drivers/TrafficLightServerNetwork/tcpConfig.serverEnabled = true (stored)"
+  },
+  {
+    "id": "L11.26",
+    "verdict": "CONTRADICTED",
+    "reason": "C11.11 FAIL: 0 of 1 pass, want it stored: Drivers/TrafficLightDriverNetwork.health.lastOkTime = \"\" (default); C11.12 FAIL: 0 of 1 pass, want false: Drivers/TrafficLightDriverNetwork.health.down = true (stored)",
+    "checks": [
+      {
+        "id": "C11.11",
+        "verdict": "FAIL",
+        "evidence": "0 of 1 pass, want it stored: Drivers/TrafficLightDriverNetwork.health.lastOkTime = \"\" (default)"
+      },
+      {
+        "id": "C11.12",
+        "verdict": "FAIL",
+        "evidence": "0 of 1 pass, want false: Drivers/TrafficLightDriverNetwork.health.down = true (stored)"
+      }
+    ],
+    "file": "docs/n4-dev-course-solutions/labs.md",
+    "line": 39,
+    "suggestion": null
+  },
+  {
+    "id": "L11.32",
+    "verdict": "CONFIRMED",
+    "reason": "C11.13 PASS: 3 of 3: Drivers/TrafficLightDriverNetwork/Intersection A.health.lastOkTime = 2026-10-16T15:13:00.000-06:00 (stored); C11.14 PASS: 3 of 3: Drivers/TrafficLightDriverNetwork/Intersection A.health.down = false (default)",
+    "checks": [
+      {
+        "id": "C11.13",
+        "verdict": "PASS",
+        "evidence": "3 of 3: Drivers/TrafficLightDriverNetwork/Intersection A.health.lastOkTime = 2026-10-16T15:13:00.000-06:00 (stored)"
+      },
+      {
+        "id": "C11.14",
+        "verdict": "PASS",
+        "evidence": "3 of 3: Drivers/TrafficLightDriverNetwork/Intersection A.health.down = false (default)"
+      }
+    ],
+    "file": "docs/n4-dev-course-solutions/labs.md",
+    "line": 40,
+    "suggestion": "L11.32: *(verified live 2026-10-17)* evidence: C11.13 3 of 3: Drivers/TrafficLightDriverNetwork/Intersection A.health.lastOkTime = 2026-10-16T15:13:00.000-06:00 (stored); C11.14 3 of 3: Drivers/TrafficLightDriverNetwork/Intersection A.health.down = false (default)"
+  }
+]

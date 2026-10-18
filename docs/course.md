@@ -1,7 +1,8 @@
 # course: the N4 developer-course answer keys
 
 `course` looks up the written answers of the N4 Developer Certification course by item ID,
-counts them by verification status, and checks a station against the labs (`course check`).
+counts them by verification status, checks a station against the labs (`course check`), and
+decides the predicted answers from that station (`course verify-predictions`).
 It reads three Markdown files of a niagara-research checkout and one or two course text
 files. It is new (no Python original), so its golden cases run over the synthetic tree
 `internal/course/testdata/root/`.
@@ -196,6 +197,44 @@ C3.4 fails because the station really differs: its Lab2 folder has Point1..Point
 Add.in1..in4 and no `Output` point, so Lab 3 step 11 (`LI:576`, Add.Out -> Output.In10) was
 not done.
 
+## course verify-predictions
+
+`course verify-predictions --station <dir|config.bog> [--install DIR] [--date YYYY-MM-DD] [--json]`
+reads the answer keys (it needs the root, like `show`) and the station, and decides every item
+still marked `*(predicted)*` from the checks whose `Keys` name it (`c.lookup`, so a key also
+finds a range item). Only those linked checks run; the bog is read with nested values only when
+one of them has a dotted slot.
+
+| Verdict | When | Printed |
+|---|---|---|
+| `CONFIRMED` | at least one linked check, and every one PASS | each check's ID, verdict and evidence |
+| `CONTRADICTED` | at least one linked check FAIL | the FAIL checks and their evidence |
+| `UNDECIDED` | no linked check (`no check covers it`), or a SKIP and no FAIL | the reason: the SKIP checks |
+
+The table `ID  VERDICT  EVIDENCE` lists the predicted items in answer-key order, then, when any
+item is CONFIRMED, one ready-to-apply line per such item:
+
+    L10.23: *(verified live 2026-10-17)* evidence: C10.6 found 10 shared/...
+
+`course` never edits the Markdown: a human or an agent applies the line. A check proves what
+the station and the jars store, not a console line, a job log or a Px view, so a CONFIRMED item
+whose prediction is also an observation (L1.25 `Hello, World!`, L10.22 the job log) is confirmed
+only in its stored part: read the item before applying. `--date` is the date written in the
+lines (default: today, local time); a value that is not `YYYY-MM-DD` is exit 2.
+
+Summary: `predicted N: CONFIRMED c, CONTRADICTED x, UNDECIDED u; K checks run; station ...`.
+With `--json`, stdout is a list of `{id, verdict, reason, checks: [{id, verdict, evidence}],
+file, line, suggestion}` (`suggestion` is null unless CONFIRMED) and the summary goes to stderr.
+
+Exit: 0 no item CONTRADICTED (UNDECIDED items are counted, never confirmed); 1 at least one
+CONTRADICTED; 2 the answer keys or the station cannot be read, a bad `--date`, or every linked
+check was skipped (nothing could be checked, as in `course check`).
+
+The live TrainingStation and the real answer key (2026-10-17, with the 4.15.6.20 install):
+40 predicted, 10 CONFIRMED (L1.14, L1.25, L3.9, L4.15, L7.18, L10.19, L10.22, L11.7, L11.26,
+L11.32), 0 CONTRADICTED, 30 UNDECIDED (no check covers them: console, log and UI observations);
+17 checks run.
+
 ## Tests
 
 - `internal/course/testdata/golden/`: hand-written expectations over the fixture roots
@@ -213,7 +252,16 @@ not done.
   when a jar drifts). The zipped form of a bog is covered by `TestCheckZippedBog`.
   `TestCheckTrainingStation` runs the spec against `COURSE_TRAINING_STATION` (and the jars of
   `COURSE_NIAGARA_INSTALL`) and pins the known station differences; it skips, visibly,
-  without the variable. `TestCheckKeysReal` resolves every linked key in the real labs.md.
+  without the variable. `TestCheckNestedNeedsNestedLoad`: a dotted check on a bog read without
+  nested values is SKIP.
+- `verify_test.go` and the `verify-*` goldens: the verdict rules (`TestDecidePrediction`) and
+  the command over `testdata/predict-root/` (a synthetic answer key whose predicted IDs are
+  linked keys: one unlinked, one linked only to a jar check) with the `good` station (every
+  linked check PASS), the `bad` one (L1.25 and L11.26 CONTRADICTED), no `--install`, the `root`
+  fixture (its one linked check is a jar check: exit 2), a bad `--date` and a broken bog.
+  `TestVerifyPredictionsTrainingStation` (with `COURSE_TRAINING_STATION` and
+  `NIAGARA_RESEARCH_DIR`) pins only that no predicted item is CONTRADICTED and at least one is
+  CONFIRMED on the live station. `TestCheckKeysReal` resolves every linked key in the real labs.md.
 - `oracle_test.go`: the recall oracle (plain regexes over the raw files, its own range
   expansion) must equal the parsed ID set on the fixture, and on the real checkout when
   `NIAGARA_RESEARCH_DIR` is set, where the counts per group and per status are pinned.

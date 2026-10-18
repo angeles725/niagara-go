@@ -1,0 +1,1 @@
+{"args": ["--root", "predict-root", "verify-predictions", "--station", "stations/good", "--date", "2026-10-17"]}
