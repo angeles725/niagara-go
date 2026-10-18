@@ -486,7 +486,13 @@ not observed.
   and some are PARTIAL on the live station. `TestCheckKeysReal` resolves every linked key in the real labs.md.
 - `testdata/go/golden/` (D46, `TestGoldenGo` via `golden.RunGo`, regenerated with `GOLDEN_UPDATE=1`
   and reviewed in the diff): `verify-predictions-no-station` (the missing `--station` before a bad
-  root and a bad `--date`) and `verify-status-none` (the honest zero, exit 1).
+  root and a bad `--date`), `verify-status-none` (the honest zero, exit 1), `verify-env-role-only`
+  (only `COURSE_TRAINING_STATION` set passes the early gate: the output of `verify-good`),
+  `verify-env-blank-and-role` (a blank training variable and a set review one pass the early gate,
+  then the labs' role is the usage error naming `COURSE_TRAINING_STATION`), `verify-env-blank-only`
+  (a blank variable alone is the plain usage error, before a bad root and `--date`) and
+  `verify-predictions-none` (no `--lab`: the honest zero over every group of the synthetic
+  `testdata/nopredict-root/`, whose answer key carries no predicted item).
 - `key/oracle_test.go`: the recall oracle (plain regexes over the raw files, its own range
   expansion) must equal the parsed ID set on the fixture, and on the real checkout when
   `NIAGARA_RESEARCH_DIR` is set, where the counts per group and per status are pinned; they are

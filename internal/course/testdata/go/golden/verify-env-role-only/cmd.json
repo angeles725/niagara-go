@@ -1,0 +1,1 @@
+{"args": ["--root", "predict-root", "verify", "--status", "predicted", "--date", "2026-10-17"], "env": {"COURSE_TRAINING_STATION": "stations/good", "COURSE_NIAGARA_INSTALL": "install"}, "cwd_fixture": ".."}
