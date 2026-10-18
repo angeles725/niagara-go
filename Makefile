@@ -12,7 +12,7 @@ COVERPROFILE ?= $(BIN)/cover.out
 TOOLBIN := $(abspath $(BIN))/tools
 export CGO_ENABLED=0
 
-.PHONY: all build cross test test-short vet fmt-check check lint deadcode cover ci wintest parity hooks clean
+.PHONY: all build cross test vet fmt-check check lint deadcode cover ci wintest parity hooks clean
 
 all: check build
 
@@ -25,9 +25,6 @@ cross:
 
 test:
 	$(GO) test ./...
-
-test-short:
-	$(GO) test -short ./...
 
 vet:
 	$(GO) vet ./...
