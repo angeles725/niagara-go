@@ -116,7 +116,7 @@ func TestBuildKeepsBigFlagValues(t *testing.T) {
 		t.Fatal(err)
 	}
 	out, _, code := run("build", dir)
-	if code != 0 || !strings.Contains(out, `"flags": 590295810358705651696,`) || !strings.Contains(out, `"flagLetters": "andcoxfApRmLN1",`) {
+	if code != 0 || !strings.Contains(out, `"flags": 590295810358705651696,`) || !strings.Contains(out, `"flagLetters": "andcoxfApRmNL1234",`) {
 		t.Errorf("code %d\n%s", code, out)
 	}
 }

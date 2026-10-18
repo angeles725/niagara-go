@@ -25,7 +25,7 @@ import (
 type Decl struct {
 	Name        string
 	Flags       *big.Int // Python int: no bound; nil (a zero Decl) means 0, read it with FlagValue
-	FlagLetters string   // the letters of the known flag bits, in bit order
+	FlagLetters string   // the letters of the known flag bits, in Flags.encodeToString order
 	Args        []string // every call argument, cleaned
 	Default     string   // the default value expression ("" when the call has none)
 	Facets      string   // the facets expression ("null" when absent)

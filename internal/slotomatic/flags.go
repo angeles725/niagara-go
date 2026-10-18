@@ -14,8 +14,10 @@ type Flag struct {
 	Letter string
 }
 
-// Flags is javax.baja.sys.Flags (docSource baja/javax/baja/sys/Flags.java:179-198, B1169/B1174),
-// in bit order.
+// Flags is javax.baja.sys.Flags (docSource baja/javax/baja/sys/Flags.java:179-198, B1169/B1174)
+// in the order of its FLAGS array (vineflower Flags.java:30-52), which Flags.encodeToString walks:
+// nonCritical (N) comes before linkTarget (L), and userDefined1-4 close the list. The Python
+// n4-type-catalog used bit order and stopped at userDefined1 (intended difference, D34).
 var Flags = []Flag{
 	{"READONLY", 0x00000001, "r"},
 	{"TRANSIENT", 0x00000002, "t"},
@@ -32,9 +34,12 @@ var Flags = []Flag{
 	{"COMPOSITE", 0x00001000, "p"},
 	{"REMOVE_ON_CLONE", 0x00002000, "R"},
 	{"METADATA", 0x00004000, "m"},
-	{"LINK_TARGET", 0x00008000, "L"},
 	{"NON_CRITICAL", 0x00010000, "N"},
+	{"LINK_TARGET", 0x00008000, "L"},
 	{"USER_DEFINED_1", 0x10000000, "1"},
+	{"USER_DEFINED_2", 0x20000000, "2"},
+	{"USER_DEFINED_3", 0x40000000, "3"},
+	{"USER_DEFINED_4", 0x80000000, "4"},
 }
 
 var (
