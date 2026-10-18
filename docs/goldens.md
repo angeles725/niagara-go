@@ -79,16 +79,40 @@ A Python golden has no update mode: it is Python's output, so the Go side never 
 next to them, run against the Python tool, for example:
 
 ```sh
-NIAGARA_RESEARCH=~/niagara-research python3 -I internal/typecatalog/testdata/freeze_golden.py
+python3 -I internal/typecatalog/testdata/freeze_golden.py
 python3 -I internal/nav/testdata/gen_golden.py
-NIAGARA_RESEARCH=~/niagara-research python3 -I internal/bognav/testdata/convert_golden.py
+python3 -I internal/bognav/testdata/convert_golden.py
 ```
 
-The generator's docstring states its inputs. Since the entry scripts exec the Go ports (D35),
-a converter that re-runs Python exports the frozen tools from niagara-research at the parent of
-the switch commit (`git archive`), checks each run against the frozen JSON in text mode and
-writes the exact bytes (`internal/{corpusnav,checkcoverage,modulefind,gencatalog}/testdata/
-convert_golden.py`). A case that needs state git cannot hold (an empty root, a mode-000 file, a
+The generator's docstring states its inputs. Phase 5 deleted the Python from the live
+checkouts, so a generator reads it from a worktree of the source repo's `pre-go-retire` tag
+(D47), named by one variable per repo:
+
+| Variable | Repo | Pinned revision |
+|---|---|---|
+| `NIAGARA_RESEARCH_PY_REF` | niagara-research | `c846ce1e5` |
+| `MODULE_NAVIGATOR_PY_REF` | module-navigator | `f897268` |
+| `NIAGARA_HELP_PY_REF` | niagara-help | `8410d7451` |
+
+Each defaults to `$HOME/niagara-research-worktrees/pre-go-retire-<repo>`; create it once with
+
+```sh
+git -C ~/niagara-research worktree add --detach ~/niagara-research-worktrees/pre-go-retire-niagara-research pre-go-retire
+```
+
+(the same with `-C <module-navigator or niagara-help checkout>` for the other two). Every
+generator carries the same `py_ref` snippet: it refuses a worktree whose HEAD is not the pinned
+revision or that has local changes. Rerunning a generator from the tag must leave `git status`
+clean; that is the proof its fixtures are still the Python's output.
+
+At the tag the switched entry scripts exec the Go ports (D35), so running `tools/<x>.py` would
+record Go checking itself. The capture scripts that run a CLI (`internal/{bogcycles,bognav,
+bogwrite,stationmodules,typecatalog}/testdata`) run it through `FROZEN`: the switch block is cut
+out, which gives back the exact source of the parent of the switch commit, and the code runs as
+`__main__` under the tool's own path and line numbers. The older converters export the frozen
+tools from niagara-research at that parent commit (`git archive`), check each run against the
+frozen JSON in text mode and write the exact bytes (`internal/{corpusnav,checkcoverage,
+modulefind,gencatalog}/testdata/convert_golden.py`). A case that needs state git cannot hold (an empty root, a mode-000 file, a
 CATALOG.md state) lives in its own `testdata/<set>/golden/` and a package test stages it in a
 temporary directory before calling `golden.Run` on it. When a generator owns the cases it also writes
 their `intended.json` (see `INTENDED` in `internal/nav/testdata/gen_golden.py`), so a re-run
@@ -127,10 +151,13 @@ whose output the new behaviour changes keeps its Python bytes and declares the G
 
 ## Search quality: `make parity`
 
-`make parity` runs `TestSearchQuality` (internal/searchdoor): the gate of niagara-research
-`tools/searchdoor/golden.py` in process on the real corpus (`NIAGARA_RESEARCH`, default
-`~/niagara-research`): hit@1/hit@5 per source over `testdata/quality/golden-queries.jsonl` (99
-questions, docs pinned to 4.14.0.162) and the warm p50/p95 latency. Each `qualitySets` range has
+`make parity` runs `TestSearchQuality` (internal/searchdoor/quality_test.go), the search quality
+gate. It runs the search in process on the real corpus (`NIAGARA_RESEARCH`, default
+`~/niagara-research`) and measures hit@1/hit@5 per source over
+`testdata/quality/golden-queries.jsonl` (99 questions, docs pinned to 4.14.0.162) and the warm
+p50/p95 latency. The review that set each question's expected locations, with one evidence line
+per added or removed location, is `testdata/quality/golden-queries-review.md`, kept next to the
+fixture. Each `qualitySets` range has
 its own floor (q01-q81 the S3.1 baseline, q82-q99 the D41 course rows), so new rows cannot hide a
 regression of the earlier ones. A hit count below a floor fails; a higher one is logged so the
 floor can be raised. Without
