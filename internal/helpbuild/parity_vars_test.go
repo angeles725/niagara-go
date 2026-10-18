@@ -3,6 +3,8 @@ package helpbuild
 import (
 	"fmt"
 	"os"
+	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -202,5 +204,34 @@ func TestParityPythonMinor(t *testing.T) {
 		if err := checkPythonMinor(c.version); (err == nil) != c.ok {
 			t.Errorf("%q: %v", c.version, err)
 		}
+	}
+}
+
+// A python3 that is not CPython 3.15 is a missing reference: a plain run
+// skips once the version was read (the tools check passed), as it does
+// without python3 or a checkout.
+func TestParityWrongPythonSkips(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("the fake python3 is a shell script")
+	}
+	for _, v := range parityVars {
+		t.Setenv(v, "")
+	}
+	help := t.TempDir()
+	writeFile(t, filepath.Join(help, "tools", "niagara_help_lib", "jar_listing.py"), nil)
+	t.Setenv("NIAGARA_HELP_DIR", help)
+	bin := t.TempDir()
+	python := filepath.Join(bin, "python3")
+	if err := os.WriteFile(python, []byte("#!/bin/sh\necho 3.14.9\n"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("PATH", bin)
+	var skipped bool
+	t.Run("driver", func(t *testing.T) {
+		defer func() { skipped = t.Skipped() }()
+		driver(t)
+	})
+	if v, ok := pythonVersions.Load(python); !skipped || !ok || v != "3.14.9" {
+		t.Errorf("CPython 3.14.9 in a plain run: skipped %v, version read %v %v; want a skip after reading 3.14.9", skipped, v, ok)
 	}
 }

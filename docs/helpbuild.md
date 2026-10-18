@@ -105,8 +105,9 @@ that set any `HELPBUILD_PARITY_*` variable (`make parity` sets three) fails inst
 skipping when `python3`, the checkout, its tools or a real version's `versions/` tree are
 missing, the message naming the variable. The interpreter must be CPython 3.15.x
 (`html.parser` and the other stdlib behaviour the drivers compare change between minor
-releases): another version fails every parity test, and `-v` logs the version used
-(`parity driver python: CPython 3.15.0 (...)`). After Phase 5 retires the Python tools from
+releases): another version is a missing reference like the rest (skipped visibly in a
+plain run, every parity test failing when a `HELPBUILD_PARITY_*` variable is set), and `-v`
+logs the version used (`parity driver python: CPython 3.15.0 (...)`). After Phase 5 retires the Python tools from
 niagara-research, the reference lives in a `pre-go-retire` worktree of niagara-research:
 point `NIAGARA_HELP_DIR` at its `niagara-help` folder (for example
 `NIAGARA_HELP_DIR=~/niagara-research-worktrees/pre-go-retire/niagara-help make parity`). The drift

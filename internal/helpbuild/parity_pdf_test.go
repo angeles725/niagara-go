@@ -334,17 +334,55 @@ func TestParityPDFReal(t *testing.T) {
 	logTreeSize(t, goRoot)
 }
 
-// countFiles is the number of regular files under root whose base name
-// keep accepts (0 when root is missing or not a folder).
+// countFiles is the number of files os.walk(root) yields whose base name
+// keep accepts, as find_pdfs and course._files count them: a symlinked root
+// is followed, a symlink to a file (or a dangling one) is a file, a
+// symlinked folder is listed but not entered (0 when root is missing or not
+// a folder).
 func countFiles(root string, keep func(name string) bool) int {
 	n := 0
-	_ = filepath.Walk(root, func(_ string, info os.FileInfo, err error) error {
-		if err == nil && info.Mode().IsRegular() && keep(info.Name()) {
-			n++
+	pyWalk(root, func(_ string, dirs, files []string) []string {
+		for _, f := range files {
+			if keep(f) {
+				n++
+			}
 		}
-		return nil
+		return dirs
 	})
 	return n
+}
+
+// countFiles follows os.walk: through a symlinked root, counting symlinked
+// files, not entering symlinked folders.
+func TestCountFilesLikeOSWalk(t *testing.T) {
+	dir := t.TempDir()
+	real := filepath.Join(dir, "real")
+	for _, rel := range []string{"a.pdf", "b.PDF", "c.txt", "sub/d.pdf", "outside/e.pdf"} {
+		writeFile(t, filepath.Join(real, filepath.FromSlash(rel)), nil)
+	}
+	for link, target := range map[string]string{
+		"real/linked.pdf": "a.pdf", "real/dangling.pdf": "missing.pdf", "real/linkdir": "outside", "root": "real",
+	} {
+		if err := os.Symlink(target, filepath.Join(dir, filepath.FromSlash(link))); err != nil {
+			t.Skipf("no symlinks here: %v", err)
+		}
+	}
+	pdf := func(name string) bool { return strings.EqualFold(filepath.Ext(name), ".pdf") }
+	for _, c := range []struct {
+		root string
+		keep func(string) bool
+		want int
+	}{
+		{filepath.Join(dir, "root"), pdf, 6}, // a b linked dangling sub/d outside/e; linkdir not entered
+		{filepath.Join(dir, "root"), func(string) bool { return true }, 7},
+		{filepath.Join(dir, "root", "linkdir"), pdf, 1},
+		{filepath.Join(dir, "root", "a.pdf"), pdf, 0},
+		{filepath.Join(dir, "missing"), pdf, 0},
+	} {
+		if got := countFiles(c.root, c.keep); got != c.want {
+			t.Errorf("countFiles(%s) = %d, want %d", c.root, got, c.want)
+		}
+	}
 }
 
 // logTreeSize logs the number of files and bytes under root.

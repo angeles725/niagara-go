@@ -1,6 +1,7 @@
 package helpbuild
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -25,70 +26,89 @@ func fuzzSeeds(f *testing.F) {
 	f.Add("\xff<p \xfe=\x80>a</p\xc3>")
 }
 
-// withinDeadline runs fn and fails t when it does not return in time; a
-// panic in fn surfaces in t as usual.
-func withinDeadline(t *testing.T, page string, fn func()) {
+// withinDeadline runs fn and fails t when it does not return in time. fn
+// reports through its return value, never through t: a run past the
+// deadline keeps going after t has failed (and its test may have ended),
+// so only the goroutine that owns t calls it. A panic in fn fails t too.
+func withinDeadline(t *testing.T, page string, fn func() []string) {
 	t.Helper()
-	done := make(chan any, 1)
+	type result struct {
+		panicked any
+		problems []string
+	}
+	done := make(chan result, 1) // buffered: a late send never blocks
 	go func() {
-		defer func() { done <- recover() }()
-		fn()
+		var r result
+		defer func() {
+			r.panicked = recover()
+			done <- r
+		}()
+		r.problems = fn()
 	}()
 	select {
-	case p := <-done:
-		if p != nil {
-			t.Fatalf("panic on %q: %v", page, p)
+	case r := <-done:
+		if r.panicked != nil {
+			t.Fatalf("panic on %q: %v", page, r.panicked)
+		}
+		for _, p := range r.problems {
+			t.Error(p)
 		}
 	case <-time.After(fuzzDeadline):
 		t.Fatalf("no result within %v on a %d-byte page %.200q", fuzzDeadline, len(page), page)
 	}
 }
 
-// utf8Checker fails on any callback argument that is not valid UTF-8.
+// utf8Checker collects every callback argument that is not valid UTF-8.
 type utf8Checker struct {
-	t    *testing.T
-	page string
+	page     string
+	problems []string
 }
 
-func (c utf8Checker) check(what, s string) {
+func (c *utf8Checker) check(what, s string) {
 	if !utf8.ValidString(s) {
-		c.t.Errorf("%s %q of %q is not valid UTF-8", what, s, c.page)
+		c.problems = append(c.problems, fmt.Sprintf("%s %q of %q is not valid UTF-8", what, s, c.page))
 	}
 }
 
-func (c utf8Checker) attrs(attrs []htmlAttr) {
+func (c *utf8Checker) attrs(attrs []htmlAttr) {
 	for _, a := range attrs {
 		c.check("attribute name", a.Name)
 		c.check("attribute value", a.Value)
 	}
 }
 
-func (c utf8Checker) startTag(tag string, attrs []htmlAttr) { c.check("tag", tag); c.attrs(attrs) }
-func (c utf8Checker) startEndTag(tag string, attrs []htmlAttr) {
+func (c *utf8Checker) startTag(tag string, attrs []htmlAttr) { c.check("tag", tag); c.attrs(attrs) }
+func (c *utf8Checker) startEndTag(tag string, attrs []htmlAttr) {
 	c.check("tag", tag)
 	c.attrs(attrs)
 }
-func (c utf8Checker) endTag(tag string) { c.check("end tag", tag) }
-func (c utf8Checker) data(text string)  { c.check("data", text) }
+func (c *utf8Checker) endTag(tag string) { c.check("end tag", tag) }
+func (c *utf8Checker) data(text string)  { c.check("data", text) }
 
 func FuzzParseHTML(f *testing.F) {
 	fuzzSeeds(f)
 	f.Fuzz(func(t *testing.T, raw string) {
-		withinDeadline(t, raw, func() { parseHTML(raw, &eventRecorder{}) })
+		withinDeadline(t, raw, func() []string { parseHTML(raw, &eventRecorder{}); return nil })
 		page := strings.ToValidUTF8(raw, "�")
-		withinDeadline(t, page, func() { parseHTML(page, utf8Checker{t, page}) })
+		withinDeadline(t, page, func() []string {
+			c := &utf8Checker{page: page}
+			parseHTML(page, c)
+			return c.problems
+		})
 	})
 }
 
 func FuzzHTMLToText(f *testing.F) {
 	fuzzSeeds(f)
 	f.Fuzz(func(t *testing.T, raw string) {
-		withinDeadline(t, raw, func() { HTMLToText(raw) })
+		withinDeadline(t, raw, func() []string { HTMLToText(raw); return nil })
 		page := strings.ToValidUTF8(raw, "�")
-		var title, text string
-		withinDeadline(t, page, func() { title, text = HTMLToText(page) })
-		if !utf8.ValidString(title) || !utf8.ValidString(text) {
-			t.Errorf("convert(%q) = %q, %q: not valid UTF-8", page, title, text)
-		}
+		withinDeadline(t, page, func() []string {
+			title, text := HTMLToText(page)
+			if !utf8.ValidString(title) || !utf8.ValidString(text) {
+				return []string{fmt.Sprintf("convert(%q) = %q, %q: not valid UTF-8", page, title, text)}
+			}
+			return nil
+		})
 	})
 }
