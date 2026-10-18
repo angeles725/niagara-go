@@ -24,7 +24,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 def py_ref(repo, env, rev):  # D47: a clean worktree of <repo> tag pre-go-retire (docs/goldens.md)
     root = os.environ.get(env) or os.path.expanduser("~/niagara-research-worktrees/pre-go-retire-" + repo)
     git = lambda *a: subprocess.run(["git", "-C", root, *a], capture_output=True, text=True).stdout.strip()  # noqa: E731
-    if git("rev-parse", "HEAD") != rev or git("status", "--porcelain", "--untracked-files=no"):
+    if git("rev-parse", "HEAD") != rev or git("status", "--porcelain"):
         sys.exit(f"{env}={root}: not a clean worktree of {repo} tag pre-go-retire ({rev[:9]}); see docs/goldens.md")
     return root
 

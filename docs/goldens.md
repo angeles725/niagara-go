@@ -102,7 +102,7 @@ git -C ~/niagara-research worktree add --detach ~/niagara-research-worktrees/pre
 
 (the same with `-C <module-navigator or niagara-help checkout>` for the other two). Every
 generator carries the same `py_ref` snippet: it refuses a worktree whose HEAD is not the pinned
-revision or that has local changes. Rerunning a generator from the tag must leave `git status`
+revision or that has local changes or untracked files (ignored files such as `__pycache__` pass). Rerunning a generator from the tag must leave `git status`
 clean; that is the proof its fixtures are still the Python's output.
 
 At the tag the switched entry scripts exec the Go ports (D35), so running `tools/<x>.py` would
