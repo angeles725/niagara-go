@@ -26,10 +26,11 @@ var updateS9 = flag.Bool("update-s9", false, "rewrite testdata/s9/golden/ from t
 var s9Builders = map[string]func(string) (*IndexResult, error){
 	"source": BuildSourceIndex,
 	"slots":  BuildSlotsIndex,
+	"xref":   BuildXrefIndex,
 }
 
 // s9Modes are the S9 driver modes, in the order rebuild-all runs them.
-var s9Modes = []string{"source", "slots"}
+var s9Modes = []string{"source", "slots", "xref"}
 
 // s9Indexes are the files each mode writes.
 var s9Indexes = map[string]string{"source": "source-index.json", "slots": "slots-index.json", "xref": "xref-index.json"}
@@ -124,18 +125,28 @@ func TestParityS9Synthetic(t *testing.T) {
 		indexBoth(t, "corners", mode, pyBase, goBase)
 	}
 	for _, c := range []struct {
-		what string
-		keep []string
+		what  string
+		keep  []string
+		files map[string]string
 	}{
-		{"empty root", nil},
-		{"only devguide-rc", []string{"devguide-rc"}},
-		{"source without devguide-rc", []string{"source", "devguide", "guides"}},
+		{"empty root", nil, nil},
+		{"only devguide-rc", []string{"devguide-rc"}, nil},
+		{"source without devguide-rc", []string{"source", "devguide", "guides"}, nil},
+		{"import ending with a dot", nil, map[string]string{ // xref raises IndexError
+			"source/m-rt/a/A.java": "package a;\nimport b.C;\npublic class A {}\n",
+			"source/m-rt/b/B.java": "package b;\nimport c.;\npublic class B {}\n",
+			"source/m-rt/c/C.java": "package c;\nimport a.A;\npublic class C {}\n",
+		}},
+		{"source is a file", nil, map[string]string{"source": "", "devguide-rc/R.java": "class R {}\n"}},
 	} {
 		pyB, goB := filepath.Join(t.TempDir(), "py"), filepath.Join(t.TempDir(), "go")
 		for _, b := range []string{pyB, goB} {
 			writeFile(t, filepath.Join(b, "readme.txt"), nil)
 			for _, d := range c.keep {
 				copyTree(t, filepath.Join("testdata", "s9", "root", d), filepath.Join(b, d))
+			}
+			for rel, data := range c.files {
+				writeFile(t, filepath.Join(b, filepath.FromSlash(rel)), []byte(data))
 			}
 		}
 		for _, mode := range s9Modes {
@@ -298,4 +309,13 @@ func TestSlotsCollisionKey(t *testing.T) {
 	if key := x.collisionKey("BZ", "", ""); key != "BZ ()" {
 		t.Errorf("no qualifier: %q", key)
 	}
+}
+
+// TestBuildXrefIndexFixture: the Go xref index of the fixture against the
+// golden file (static, wildcard and self imports, imports of corpus types
+// that are not B*/Niagara*, a class declared under another name than its
+// file, a nested type, a default package that a same-name file with a
+// package overrides, devguide-rc/).
+func TestBuildXrefIndexFixture(t *testing.T) {
+	checkS9Golden(t, "xref")
 }
