@@ -7,7 +7,6 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/index"
 	"github.com/angeles725/niagara-go/internal/nav/core"
-	"github.com/angeles725/niagara-go/internal/nav/lib/license"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
@@ -148,8 +147,8 @@ func family(chain []string) string {
 // deviceTypes is _DEVICE_TYPE.findall on the network's source:
 // \bgetDeviceType\s*\(\s*\)\s*\{\s*return\s+([\w$]+)\.TYPE\b.
 func deviceTypes(organized, path string) []string {
-	text, ok := license.ReadText(filepath.Join(organized, path))
-	if !ok {
+	text, err := pycompat.ReadTextReplace(filepath.Join(organized, path))
+	if err != nil {
 		return nil
 	}
 	var out []string

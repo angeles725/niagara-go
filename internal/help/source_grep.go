@@ -7,7 +7,6 @@ package help
 
 import (
 	"fmt"
-	"os"
 	"sort"
 	"strings"
 
@@ -31,18 +30,11 @@ func compileRegex(pattern string) (*pyre.Regexp, error) {
 // each line keeps its "\n" (the last one has none when the file does not end
 // with a newline).
 func sourceLinesKeepEnds(file string) ([]string, error) {
-	data, err := os.ReadFile(file)
+	text, err := pycompat.ReadTextReplace(file)
 	if err != nil {
 		return nil, err
 	}
-	text := pycompat.DecodeReplace(data)
-	text = strings.ReplaceAll(text, "\r\n", "\n")
-	text = strings.ReplaceAll(text, "\r", "\n")
-	lines := strings.SplitAfter(text, "\n")
-	if lines[len(lines)-1] == "" {
-		lines = lines[:len(lines)-1]
-	}
-	return lines, nil
+	return pycompat.Lines(text), nil
 }
 
 // grepSource is the --grep branch of cmd_source: every line of the class's

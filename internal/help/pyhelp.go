@@ -15,6 +15,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/angeles725/niagara-go/internal/index"
+	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
@@ -152,8 +153,7 @@ func readText(path string) (text string, ok bool, err error) {
 	if err != nil {
 		return "", false, err
 	}
-	s := strings.ReplaceAll(string(data), "\r\n", "\n")
-	return strings.ReplaceAll(s, "\r", "\n"), true, nil
+	return pycompat.UniversalNewlines(string(data)), true, nil
 }
 
 // pyHead is items[:n] with Python's slice bounds: a negative n counts from

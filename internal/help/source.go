@@ -6,7 +6,6 @@ package help
 
 import (
 	"fmt"
-	"os"
 	"path"
 	"sort"
 	"strings"
@@ -54,13 +53,10 @@ func pyNormpath(p string) string {
 // encoding="utf-8", errors="replace")` iterates it: invalid UTF-8 replaced,
 // universal newlines, one entry per line without its "\n".
 func sourceLines(file string) ([]string, error) {
-	data, err := os.ReadFile(file)
+	text, err := pycompat.ReadTextReplace(file)
 	if err != nil {
 		return nil, err
 	}
-	text := pycompat.DecodeReplace(data)
-	text = strings.ReplaceAll(text, "\r\n", "\n")
-	text = strings.ReplaceAll(text, "\r", "\n")
 	if text == "" {
 		return nil, nil
 	}
