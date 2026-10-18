@@ -62,7 +62,14 @@ func TestGoldenSynthetic(t *testing.T) {
 	if _, err := BuildClassIndex(base, organized); err != nil {
 		t.Fatal(err)
 	}
-	for _, index := range []string{InventoryFile, ClassIndexFile} {
+	indexes := []string{InventoryFile, ClassIndexFile}
+	for _, b := range laterBuilders {
+		if err := b.build(base, organized); err != nil {
+			t.Fatal(err)
+		}
+		indexes = append(indexes, b.index)
+	}
+	for _, index := range indexes {
 		t.Run(index, func(t *testing.T) {
 			want, err := os.ReadFile(goldenPath(index))
 			if err != nil {

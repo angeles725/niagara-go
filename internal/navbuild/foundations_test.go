@@ -115,7 +115,7 @@ func TestBuildInventoryWritesIntoBaseDir(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(inv.Submodules) != 6 || len(inv.NoRecon) != 4 || len(inv.UnreadableRecon) != 2 ||
+	if len(inv.Submodules) != 8 || len(inv.NoRecon) != 6 || len(inv.UnreadableRecon) != 2 ||
 		!reflect.DeepEqual(inv.Skipped, []string{"alpha/docs"}) {
 		t.Errorf("submodules %d, no recon %v, unreadable %v, skipped %v",
 			len(inv.Submodules), inv.NoRecon, inv.UnreadableRecon, inv.Skipped)

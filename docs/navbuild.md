@@ -14,8 +14,8 @@ document disagree, the code wins and this document is corrected.
 | Slice | Scope | Python source |
 |---|---|---|
 | B1 | foundations (JSON layouts, `_meta`, atomic write, normalisation, parity driver) + module inventory | `build_module_inventory.py`, `module_nav_lib/build.py` |
-| **B2** | `declaration_header` / `strip_comments` + class index | `build_class_index.py`, `module_nav_lib/java_text.py` |
-| B3 | inheritance + xref | `build_inheritance.py`, `build_xref.py` |
+| B2 | `declaration_header` / `strip_comments` + class index | `build_class_index.py`, `module_nav_lib/java_text.py` |
+| **B3** | inheritance + xref | `build_inheritance.py`, `build_xref.py` |
 | B4-B7 | token (SQLite), method, field, callgraph | `build_token_index.py`, ... |
 | B8 | `mnav reindex` orchestration | `reindex.sh` |
 
@@ -68,6 +68,16 @@ type at another indent (`\tclass Tabbed` after `class NB`); `implements A extend
 re-matching the cut line, which skips the same text inside an annotation argument).
 Export requests to the owners: `core.MatchDecl`'s end offset (Integrante2) and the
 `nav/license` `commentSpans` twin (one shared Java-text helper).
+
+## Inheritance
+
+`readClassIndex` reads `<base>/indexes/class-index.json` with Python `json.load` semantics
+(`index.LoadPython`) and flattens `classes` in dict order; a missing index is an error
+naming `./reindex.sh` like `build.read_json`, and a member of an unexpected JSON type is
+an error (Python would die or key a dict by it). `ComputeInheritance` is
+`build_inheritance`: the top-level entries (falsy `outer_class`), children and
+implementors deduplicated in first-seen order and then sorted, the first `extends` of a
+name wins for the chains, a cycle stops a chain and counts once per walk.
 
 ## Gates
 

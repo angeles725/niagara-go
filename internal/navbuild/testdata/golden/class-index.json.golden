@@ -2,12 +2,12 @@
   "_meta": {
     "description": "Class index for Niagara N4 decompiled modules",
     "source": "<SOURCE>",
-    "files_processed": 23,
-    "modules": 5,
-    "top_classes": 35,
+    "files_processed": 31,
+    "modules": 7,
+    "top_classes": 45,
     "inner_classes": 7,
-    "total_entries": 42,
-    "unique_names": 40,
+    "total_entries": 52,
+    "unique_names": 49,
     "interfaces": 2,
     "enums": 0,
     "annotation_types": 1,
@@ -15,7 +15,7 @@
     "zkm_source": "module-inventory.json",
     "zkm_modules": 2,
     "abstract": 1,
-    "unique_packages": 10,
+    "unique_packages": 12,
     "build_time_sec": 0,
     "timestamp": "<TIMESTAMP>"
   },
@@ -266,6 +266,23 @@
         "lines": 3,
         "path": "beta/beta-ux/vineflower/com/niagara/foo/Generic.java",
         "zkm": true,
+        "inner_classes": [],
+        "outer_class": null
+      },
+      {
+        "package": "com.tridium.epswb",
+        "module": "epsilon-wb",
+        "kind": "class",
+        "extends": "Cycle1",
+        "implements": [
+          "Runnable"
+        ],
+        "modifiers": [
+          "public"
+        ],
+        "lines": 3,
+        "path": "epsilon/epsilon-wb/vineflower/com/tridium/epswb/Generic.java",
+        "zkm": false,
         "inner_classes": [],
         "outer_class": null
       }
@@ -752,6 +769,160 @@
         "modifiers": [],
         "lines": 2,
         "path": "delta/alpha-wb/vineflower/q/Q.java",
+        "zkm": false,
+        "inner_classes": [],
+        "outer_class": null
+      }
+    ],
+    "Cycle1": [
+      {
+        "package": "com.tridium.eps",
+        "module": "epsilon-rt",
+        "kind": "class",
+        "extends": "Cycle2",
+        "implements": [],
+        "modifiers": [
+          "public"
+        ],
+        "lines": 3,
+        "path": "epsilon/epsilon-rt/vineflower/com/tridium/eps/Cycle1.java",
+        "zkm": false,
+        "inner_classes": [],
+        "outer_class": null
+      }
+    ],
+    "Cycle2": [
+      {
+        "package": "com.tridium.eps",
+        "module": "epsilon-rt",
+        "kind": "class",
+        "extends": "Cycle1",
+        "implements": [],
+        "modifiers": [
+          "public"
+        ],
+        "lines": 3,
+        "path": "epsilon/epsilon-rt/vineflower/com/tridium/eps/Cycle2.java",
+        "zkm": false,
+        "inner_classes": [],
+        "outer_class": null
+      }
+    ],
+    "Deep3": [
+      {
+        "package": "com.tridium.eps",
+        "module": "epsilon-rt",
+        "kind": "class",
+        "extends": "Deep2",
+        "implements": [],
+        "modifiers": [
+          "public"
+        ],
+        "lines": 4,
+        "path": "epsilon/epsilon-rt/vineflower/com/tridium/eps/Deep3.java",
+        "zkm": false,
+        "inner_classes": [],
+        "outer_class": null
+      }
+    ],
+    "Deep2": [
+      {
+        "package": "com.tridium.eps",
+        "module": "epsilon-rt",
+        "kind": "class",
+        "extends": "Deep1",
+        "implements": [],
+        "modifiers": [],
+        "lines": 4,
+        "path": "epsilon/epsilon-rt/vineflower/com/tridium/eps/Deep3.java",
+        "zkm": false,
+        "inner_classes": [],
+        "outer_class": null
+      }
+    ],
+    "Deep1": [
+      {
+        "package": "com.tridium.eps",
+        "module": "epsilon-rt",
+        "kind": "class",
+        "extends": "java.lang.Object",
+        "implements": [],
+        "modifiers": [],
+        "lines": 4,
+        "path": "epsilon/epsilon-rt/vineflower/com/tridium/eps/Deep3.java",
+        "zkm": false,
+        "inner_classes": [],
+        "outer_class": null
+      }
+    ],
+    "Edge": [
+      {
+        "package": "com.tridium.eps",
+        "module": "epsilon-rt",
+        "kind": "class",
+        "extends": null,
+        "implements": [],
+        "modifiers": [
+          "public"
+        ],
+        "lines": 201,
+        "path": "epsilon/epsilon-rt/vineflower/com/tridium/eps/Edge.java",
+        "zkm": false,
+        "inner_classes": [],
+        "outer_class": null
+      }
+    ],
+    "Importer": [
+      {
+        "package": "com.tridium.eps",
+        "module": "epsilon-rt",
+        "kind": "class",
+        "extends": "Cycle1",
+        "implements": [
+          "Runnable"
+        ],
+        "modifiers": [
+          "public"
+        ],
+        "lines": 27,
+        "path": "epsilon/epsilon-rt/vineflower/com/tridium/eps/Importer.java",
+        "zkm": false,
+        "inner_classes": [],
+        "outer_class": null
+      }
+    ],
+    "Long": [
+      {
+        "package": "com.tridium.eps",
+        "module": "epsilon-rt",
+        "kind": "class",
+        "extends": "Generic",
+        "implements": [
+          "Runnable",
+          "Cloneable"
+        ],
+        "modifiers": [
+          "public"
+        ],
+        "lines": 202,
+        "path": "epsilon/epsilon-rt/vineflower/com/tridium/eps/Long.java",
+        "zkm": false,
+        "inner_classes": [],
+        "outer_class": null
+      }
+    ],
+    "Self": [
+      {
+        "package": "com.tridium.eps",
+        "module": "epsilon-rt",
+        "kind": "class",
+        "extends": "Self",
+        "implements": [],
+        "modifiers": [
+          "public"
+        ],
+        "lines": 2,
+        "path": "epsilon/epsilon-rt/vineflower/com/tridium/eps/Self.java",
         "zkm": false,
         "inner_classes": [],
         "outer_class": null

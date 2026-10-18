@@ -2,7 +2,7 @@
   "_meta": {
     "description": "Module inventory for Niagara N4 decompiled modules",
     "source": "<SOURCE>",
-    "total_submodules": 6,
+    "total_submodules": 8,
     "build_time_sec": 0,
     "timestamp": "<TIMESTAMP>"
   },
@@ -92,6 +92,40 @@
       "recon": false,
       "packages": [
         "single"
+      ],
+      "third_party": []
+    },
+    "epsilon-rt": {
+      "module": "epsilon",
+      "type": "rt",
+      "jar": "epsilon-rt.jar",
+      "class_count": 0,
+      "java_files": 7,
+      "zkm": false,
+      "bytecode": 0,
+      "has_vineflower": true,
+      "has_cfr": false,
+      "has_code": true,
+      "recon": false,
+      "packages": [
+        "com.tridium"
+      ],
+      "third_party": []
+    },
+    "epsilon-wb": {
+      "module": "epsilon",
+      "type": "wb",
+      "jar": "epsilon-wb.jar",
+      "class_count": 0,
+      "java_files": 1,
+      "zkm": false,
+      "bytecode": 0,
+      "has_vineflower": true,
+      "has_cfr": false,
+      "has_code": true,
+      "recon": false,
+      "packages": [
+        "com.tridium"
       ],
       "third_party": []
     },
