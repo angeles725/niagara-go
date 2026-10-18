@@ -78,23 +78,43 @@ func mustMarshal(v any) []byte {
 // naming signer by issuer and serial number, and (when token is not nil) the timestamp token as an
 // unsigned attribute.
 func fixtureSignedData(certs []*x509.Certificate, signer *x509.Certificate, token []byte) []byte {
+	var unsigned []byte
+	if token != nil {
+		attr := tlv(classUniversal, tagSequence, true, mustMarshal(oidTimeStampToken), tlv(classUniversal, tagSet, true, token))
+		unsigned = tlv(classContext, 1, true, attr)
+	}
+	return fixtureSignedDataSI(certs, fixtureSignerInfo(fixtureSid(signer), unsigned))
+}
+
+// fixtureSid is an issuerAndSerialNumber signer identifier.
+func fixtureSid(c *x509.Certificate) []byte {
+	return tlv(classUniversal, tagSequence, true, c.RawIssuer, mustMarshal(c.SerialNumber))
+}
+
+// fixtureSignerInfo is a SignerInfo with the identifier, a stand-in signature and the unsigned
+// attributes element (nil: none).
+func fixtureSignerInfo(sid, unsigned []byte) []byte {
+	alg := mustMarshal(pkix.AlgorithmIdentifier{Algorithm: oidSHA256})
+	si := [][]byte{mustMarshal(1), sid, alg, alg, tlv(classUniversal, tagOctetString, false, []byte("fixture: not a signature"))}
+	if unsigned != nil {
+		si = append(si, unsigned)
+	}
+	return tlv(classUniversal, tagSequence, true, si...)
+}
+
+// fixtureSignedDataSI is a ContentInfo holding a SignedData with the certificates and one SignerInfo.
+func fixtureSignedDataSI(certs []*x509.Certificate, si []byte) []byte {
 	alg := mustMarshal(pkix.AlgorithmIdentifier{Algorithm: oidSHA256})
 	var raw [][]byte
 	for _, c := range certs {
 		raw = append(raw, c.Raw)
-	}
-	sid := tlv(classUniversal, tagSequence, true, signer.RawIssuer, mustMarshal(signer.SerialNumber))
-	si := [][]byte{mustMarshal(1), sid, alg, alg, tlv(classUniversal, tagOctetString, false, []byte("fixture: not a signature"))}
-	if token != nil {
-		attr := tlv(classUniversal, tagSequence, true, mustMarshal(oidTimeStampToken), tlv(classUniversal, tagSet, true, token))
-		si = append(si, tlv(classContext, 1, true, attr))
 	}
 	sd := tlv(classUniversal, tagSequence, true,
 		mustMarshal(1),
 		tlv(classUniversal, tagSet, true, alg),
 		tlv(classUniversal, tagSequence, true, mustMarshal(oidData)),
 		tlv(classContext, 0, true, raw...),
-		tlv(classUniversal, tagSet, true, tlv(classUniversal, tagSequence, true, si...)))
+		tlv(classUniversal, tagSet, true, si))
 	return tlv(classUniversal, tagSequence, true, mustMarshal(oidSignedData), tlv(classContext, 0, true, sd))
 }
 

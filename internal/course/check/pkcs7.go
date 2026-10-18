@@ -37,6 +37,8 @@ type signedData struct {
 	certs     []*x509.Certificate
 	signer    *x509.Certificate // the certificate the first SignerInfo names
 	timestamp *signedData       // the timestamp token's SignedData; nil when the signer has none
+	// timestampErr is why the unsigned attributes or the token could not be read (timestamp nil).
+	timestampErr error
 }
 
 // elements splits the contents of a constructed element into its DER elements.
@@ -297,34 +299,45 @@ func (sd *signedData) readSigner(si asn1.RawValue, depth int) error {
 		}
 		return nil // no unsigned attributes: no timestamp
 	}
-	attrs, err := elements(last.Bytes)
+	// The unsigned attributes hold only the timestamp: whatever is wrong with them costs the
+	// timestamp fact (timestampErr), never the signer the block was read for.
+	sd.timestamp, sd.timestampErr = readTimestamp(last.Bytes, depth)
+	return nil
+}
+
+// readTimestamp reads the timestamp token among the unsigned attributes: nil, nil when there is
+// none.
+func readTimestamp(unsigned []byte, depth int) (*signedData, error) {
+	attrs, err := elements(unsigned)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	for _, a := range attrs {
 		parts, err := elements(a.Bytes)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		var oid asn1.ObjectIdentifier
 		if len(parts) != 2 || !is(parts[1], classUniversal, tagSet, true) {
-			return errors.New("an unsigned attribute is not a type and a SET of values")
+			return nil, errors.New("an unsigned attribute is not a type and a SET of values")
 		}
 		if _, err := asn1.Unmarshal(parts[0].FullBytes, &oid); err != nil || !oid.Equal(oidTimeStampToken) {
 			continue
 		}
 		if depth > 0 {
-			return errors.New("a timestamp token inside a timestamp token")
+			return nil, errors.New("a timestamp token inside a timestamp token")
 		}
 		vals, err := elements(parts[1].Bytes)
 		if err != nil || len(vals) != 1 {
-			return errors.New("the timestamp token attribute does not hold one token")
+			return nil, errors.New("the timestamp token attribute does not hold one token")
 		}
-		if sd.timestamp, err = parseContentInfo(vals[0].FullBytes, depth+1); err != nil {
-			return fmt.Errorf("timestamp token: %v", err)
+		ts, err := parseContentInfo(vals[0].FullBytes, depth+1)
+		if err != nil {
+			return nil, fmt.Errorf("timestamp token: %v", err)
 		}
+		return ts, nil
 	}
-	return nil
+	return nil, nil
 }
 
 // chainOf is the signer's certificate path inside the block: each next certificate is the

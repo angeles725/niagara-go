@@ -113,6 +113,9 @@ func (s *Station) checkJarCert(ck *Check) (string, string) {
 		}
 		return Pass, ev
 	case certTimestamp:
+		if sd.timestampErr != nil {
+			return Skip, fmt.Sprintf("cannot read the timestamp token of %s: %v", block, sd.timestampErr)
+		}
 		if sd.timestamp == nil {
 			return Fail, block + ": " + signer + " has no timestamp token"
 		}

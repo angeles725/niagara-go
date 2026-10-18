@@ -3,6 +3,7 @@ package check
 import (
 	"bytes"
 	"crypto/x509"
+	"encoding/asn1"
 	"os"
 	"path/filepath"
 	"strings"
@@ -86,12 +87,16 @@ func TestParseSignedDataMalformed(t *testing.T) {
 		"trailing":      append(append([]byte{}, fixtureBlock...), 0),
 		"other content": tlv(classUniversal, tagSequence, true, mustMarshal(oidData), tlv(classContext, 0, true, mustMarshal(1))),
 		"signer absent": noSigner,
-		"token not SD":  fixtureSignedData([]*x509.Certificate{fixtureSigner.cert}, fixtureSigner.cert, mustMarshal(1)),
 	}
 	for name, der := range cases {
 		if sd, err := parseSignedData(der); err == nil {
 			t.Errorf("%s: no error (%+v)", name, sd)
 		}
+	}
+	// A token that is not a SignedData is the timestamp's error, not the block's.
+	sd, err := parseSignedData(fixtureSignedData([]*x509.Certificate{fixtureSigner.cert}, fixtureSigner.cert, mustMarshal(1)))
+	if err != nil || sd.timestamp != nil || sd.timestampErr == nil {
+		t.Errorf("token not SD: %v %+v", err, sd)
 	}
 }
 
@@ -175,5 +180,75 @@ func TestJarCertKind(t *testing.T) {
 	st.install = ""
 	if r := st.Run(&Check{Kind: kindJarCert, Jar: "good", Fact: certChain, Op: opEq, N: 2}); r.Verdict != Skip {
 		t.Errorf("no install: %s %q", r.Verdict, r.Evidence)
+	}
+}
+
+// allIndefinite re-encodes every constructed element of a DER element (one-byte tags) with an
+// indefinite length, down to the certificates: BER at every level, which berToDER must undo.
+func allIndefinite(der []byte) []byte {
+	var rv asn1.RawValue
+	if _, err := asn1.Unmarshal(der, &rv); err != nil || !rv.IsCompound {
+		return der
+	}
+	els, err := elements(rv.Bytes)
+	if err != nil {
+		panic(err)
+	}
+	b := []byte{rv.FullBytes[0], 0x80}
+	for _, e := range els {
+		b = append(b, allIndefinite(e.FullBytes)...)
+	}
+	return append(b, 0, 0)
+}
+
+// fixtureBlockSKI names the signer (the root) by subject key identifier instead of issuer and serial.
+func fixtureBlockSKI() []byte {
+	c := fixtureRoot.cert
+	sid := tlv(classContext, 0, false, c.SubjectKeyId)
+	return fixtureSignedDataSI([]*x509.Certificate{c}, fixtureSignerInfo(sid, nil))
+}
+
+// An unreadable timestamp token or unsigned attribute costs only the timestamp fact: the signer,
+// its issuer, chain, PEM and same facts still read.
+func TestTimestampIsolated(t *testing.T) {
+	noCerts := fixtureSignedData(nil, fixtureTSA.cert, nil) // a token whose SignedData holds no certificate
+	block := fixtureSignedData([]*x509.Certificate{fixtureSigner.cert, fixtureRoot.cert}, fixtureSigner.cert, noCerts)
+	sd, err := parseSignedData(block)
+	if err != nil {
+		t.Fatalf("a bad token fails the whole block: %v", err)
+	}
+	if !bytes.Equal(sd.signer.Raw, fixtureSigner.cert.Raw) || sd.timestamp != nil || sd.timestampErr == nil {
+		t.Fatalf("signer %v, timestamp %v, err %v", sd.signer.Subject, sd.timestamp, sd.timestampErr)
+	}
+	install := writeInstall(t, map[string][]byte{"bad-token": block, "good": fixtureBlock, "ski": fixtureBlockSKI(),
+		"nested": allIndefinite(fixtureBlock)})
+	st, err := Open(writeStation(t), install, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer st.Close()
+	for _, c := range []struct {
+		ck       Check
+		verdict  string
+		evidence string
+	}{
+		{Check{Jar: "bad-token", Fact: certSubject, Match: `^CN=\(CodeSigning\),`}, Pass, "modules/bad-token.jar!META-INF/CODESIGN.RSA: signer CN=(CodeSigning)"},
+		{Check{Jar: "bad-token", Fact: certChain, Op: opEq, N: 2}, Pass, "modules/bad-token.jar!META-INF/CODESIGN.RSA: 2 of 2"},
+		{Check{Jar: "bad-token", Fact: certSame, CertOf: "good"}, Pass, "modules/bad-token.jar!META-INF/CODESIGN.RSA: signer CN=(CodeSigning)"},
+		{Check{Jar: "bad-token", Fact: certTimestamp, Match: `O=DigiCert`}, Skip, "cannot read the timestamp token of modules/bad-token.jar!META-INF/CODESIGN.RSA: "},
+		{Check{Jar: "ski", Fact: certSubject, Match: `^CN=Tridium University Root`}, Pass, "modules/ski.jar!META-INF/CODESIGN.RSA: signer CN=Tridium University Root"},
+		{Check{Jar: "nested", Fact: certTimestamp, Match: `O=DigiCert`}, Pass, "modules/nested.jar!META-INF/CODESIGN.RSA: timestamped by CN=Fixture Timestamp Responder"},
+		{Check{Jar: "nested", Fact: certSame, CertOf: "good"}, Pass, "modules/nested.jar!"},
+	} {
+		c.ck.Kind = kindJarCert
+		if r := st.Run(&c.ck); r.Verdict != c.verdict || !strings.HasPrefix(r.Evidence, c.evidence) {
+			t.Errorf("%s %s:\n got %s %q\nwant %s %q", c.ck.Jar, c.ck.Fact, r.Verdict, r.Evidence, c.verdict, c.evidence)
+		}
+	}
+	// A malformed unsigned attribute (not a type and a SET) is the timestamp's error too.
+	attr := tlv(classUniversal, tagSequence, true, mustMarshal(oidTimeStampToken))
+	si := fixtureSignerInfo(fixtureSid(fixtureSigner.cert), tlv(classContext, 1, true, attr))
+	if sd, err := parseSignedData(fixtureSignedDataSI([]*x509.Certificate{fixtureSigner.cert}, si)); err != nil || sd.timestampErr == nil {
+		t.Errorf("malformed attribute: %v, %+v", err, sd)
 	}
 }

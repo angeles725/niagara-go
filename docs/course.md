@@ -274,7 +274,10 @@ ContentInfo, SignedData and certificate set with indefinite lengths; a primitive
 every DER certificate, are copied as they are). It keeps the certificates, the certificate the first
 SignerInfo names (issuer and serial number, or subject key identifier) and the timestamp token's
 SignedData; it verifies only the certificate chain (`CheckSignatureFrom`), never the jar signature.
-A malformed block is an error, never a panic (`FuzzParseSignedData`). The rows (2026-10-18):
+A malformed block is an error, never a panic (`FuzzParseSignedData`). The unsigned attributes hold
+only the timestamp: an attribute or a token that cannot be read costs the `timestamp` fact alone
+(SKIP `cannot read the timestamp token of ...`), never the signer, issuer, chain, `same` or `pem`
+facts. The rows (2026-10-18):
 
 | Row | Item | Reads (`training-rt`, live) |
 |---|---|---|
@@ -728,7 +731,10 @@ FAILs, no CONTRADICTED prediction, the item and status counts), not this table.
   the signer, the timestamp token, the chain (a same-named root that did not sign is not the issuer),
   a BER copy (`TestBERToDER`, and the fixture `training-rt` block is BER, as the live one), malformed
   blocks (not DER, truncated, trailing data, another content type, the signer's certificate absent, a
-  token that is not a SignedData: errors), and every fact PASS and FAIL over an install built in the
+  token that is not a SignedData: the timestamp's error only), `TestTimestampIsolated` (a token
+  with no certificate and a malformed unsigned attribute leave the other facts reading; a signer
+  named by subject key identifier; a block with indefinite lengths at every level), and every fact
+  PASS and FAIL over an install built in the
   test (a self-signed jar, an unsigned one, a block that is not DER: SKIP). `FuzzParseSignedData`
   (`go test -run '^$' -fuzz=FuzzParseSignedData -fuzztime=30s -fuzzminimizetime=2s
   ./internal/course/check/`; without the last flag the display stalls while a new input is minimised).
