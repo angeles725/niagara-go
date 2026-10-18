@@ -27,7 +27,7 @@ const (
 // Check is one row of the spec.
 type Check struct {
 	ID   string
-	Lab  string   // "1".."11", "B" (Bonus lab)
+	Lab  string   // "1".."11", "B" (Bonus lab), "RA1", "RA2" (review assignments), "EXAM"
 	Keys []string // answer-key items the check confirms
 	// Unobserved maps a key to what of that item's answer the check does not observe (a console
 	// line, a log, a view, a runtime status): when every passing check of a predicted item has a

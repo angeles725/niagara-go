@@ -155,6 +155,3 @@ func Verify(c *key.Corpus, ss *Stations, keep func(*key.Item) bool) []Prediction
 	}
 	return preds
 }
-
-// Predicted selects the items still marked *(predicted)*.
-func Predicted(it *key.Item) bool { return it.HasStatus("predicted") }

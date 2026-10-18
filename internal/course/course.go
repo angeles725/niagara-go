@@ -108,7 +108,7 @@ func buildParser() (*argparse.Parser, map[string]*argparse.Parser) {
 	ck.Add(labsrcArg, "--labsrc")
 	ck.Add(argparse.Arg{Action: argparse.Append, Metavar: "N", Help: "only this lab (1-11, B; RA1, RA2, EXAM run only when named); repeatable"}, "--lab")
 	ck.Add(jsonHelp, "--json")
-	vp := add("verify-predictions", "run the checks linked to every *(predicted)* item: CONFIRMED, CONTRADICTED or UNDECIDED")
+	vp := add("verify-predictions", "run the checks linked to every *(predicted)* item: CONFIRMED, PARTIAL, CONTRADICTED or UNDECIDED")
 	vp.Add(stationArg, "--station")
 	vp.Add(installArg, "--install")
 	vp.Add(sourceArg, "--source")

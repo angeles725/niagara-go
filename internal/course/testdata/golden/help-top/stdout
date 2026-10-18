@@ -42,8 +42,8 @@ positional arguments:
     text                print the course text lines an item (or a lab) points at
     check               check what each lab leaves in a station (and the built jars):
                         PASS/FAIL/SKIP per check
-    verify-predictions  run the checks linked to every *(predicted)* item: CONFIRMED, CONTRADICTED
-                        or UNDECIDED
+    verify-predictions  run the checks linked to every *(predicted)* item: CONFIRMED, PARTIAL,
+                        CONTRADICTED or UNDECIDED
     find                items whose step or answer matches a regexp: group, ID, status and the
                         first matching line
     verify              decide every item of a status from its linked checks: CONFIRMED, PARTIAL,

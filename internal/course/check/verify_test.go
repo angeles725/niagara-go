@@ -9,6 +9,10 @@ import (
 	"github.com/angeles725/niagara-go/internal/course/key"
 )
 
+// Predicted selects the items still marked *(predicted)* (the tests' keep; the commands build
+// theirs from --status with HasStatus).
+func Predicted(it *key.Item) bool { return it.HasStatus("predicted") }
+
 // verifyOn decides the predicted items of c with every check run on one station.
 func verifyOn(t *testing.T, c *key.Corpus, path, install string) []Prediction {
 	t.Helper()
