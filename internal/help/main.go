@@ -15,6 +15,7 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/argparse"
 	"github.com/angeles725/niagara-go/internal/cli"
+	"github.com/angeles725/niagara-go/internal/help/scope"
 	"github.com/angeles725/niagara-go/internal/index"
 )
 
@@ -42,7 +43,7 @@ func Main(args []string, s cli.Stdio) int {
 	}
 	requested, argv, err := popVersionArg(args)
 	if err != nil {
-		fmt.Fprintf(s.Out, "ERROR: %v\n", err)
+		fmt.Fprintln(s.Out, scope.ErrorLine(err))
 		return cli.ExitCannotSearch
 	}
 	if len(argv) > 0 && retired[argv[0]] {
@@ -132,16 +133,13 @@ func popVersionArg(argv []string) (value string, rest []string, err error) {
 // resolveVersion maps the requested version to its data root (app.py
 // resolve_base_dir). On failure it prints the error and returns the exit code.
 func (e *Env) resolveVersion(requested string) (int, bool) {
-	id, root, err := index.Resolve(e.RepoRoot, requested, os.Getenv)
+	id, root, err := scope.Resolve(e.RepoRoot, requested, os.Getenv)
 	if err != nil {
 		// An unknown version is exit 2 in Python; a malformed registry is a
 		// traceback there and the same ERROR line here (intended difference).
-		fmt.Fprintf(e.Out, "ERROR: %v\n", err)
-		return cli.ExitCannotSearch, false
-	}
-	if id != "" && !index.IsExtracted(root) {
-		fmt.Fprintf(e.Out, "ERROR: Niagara version %s is registered but not extracted at %s.\n", id, root)
-		fmt.Fprintf(e.Out, "Run: python3 tools/extract_version.py %s\n", id)
+		for _, l := range scope.VersionLines(err) {
+			fmt.Fprintln(e.Out, l)
+		}
 		return cli.ExitCannotSearch, false
 	}
 	e.VersionID, e.BaseDir = id, root
@@ -166,7 +164,7 @@ func (e *Env) run(c *command, ns *argparse.Namespace) int {
 		fmt.Fprintln(e.Err, np.Error())
 		return cli.ExitCannotSearch
 	case err != nil:
-		fmt.Fprintf(e.Err, "ERROR: %v\n", err)
+		fmt.Fprintln(e.Err, scope.ErrorLine(err))
 		return cli.ExitCannotSearch
 	case e.misses > 0:
 		return cli.ExitNoMatch

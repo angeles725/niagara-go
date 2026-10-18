@@ -14,6 +14,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/angeles725/niagara-go/internal/help/scope"
 	"github.com/angeles725/niagara-go/internal/index"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 )
@@ -384,7 +385,7 @@ func (e *Env) Recall(samples bool) error {
 	if err != nil {
 		return err
 	}
-	vid := identify(e.BaseDir)
+	vid := scope.Identify(e.BaseDir)
 	if vid == "" {
 		vid = e.BaseDir
 	}
