@@ -1,1 +1,3 @@
 # <repo-relative path> <max lines>. Entries may only be lowered or removed.
+# Frozen D39(d) reference generator: runs Python module_nav.py and moves to the pre-go-retire tag.
+internal/nav/testdata/gen_golden.py 907

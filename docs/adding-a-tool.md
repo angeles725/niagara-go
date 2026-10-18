@@ -56,10 +56,13 @@ Details: [goldens.md](goldens.md).
 
 ## 4. Size gate
 
-`internal/sizegate` fails `go test` when a `.go` file outside `testdata/` exceeds 500 lines
-(D4). `internal/sizegate/allowlist.txt` lists the exceptions as `<path> <max-lines>`; entries
-may only be lowered or removed, and the test fails on an entry that is too high or matches no
-file. Split the file instead of adding an entry.
+`internal/sizegate` fails `go test` when a `.go` file outside `testdata/`, or a `.py` file
+anywhere (the generator and parity scripts under `testdata/` included), exceeds 500 lines
+(D4). `internal/sizegate/allowlist.txt` lists the exceptions as `<path> <max-lines>`, each
+after a `#` line with its reason; entries may only be lowered or removed, and the test fails
+on an entry that is too high or matches no file. Split the file instead of adding an entry;
+the only accepted new entry is a frozen reference generator that D39(d) moves to the
+`pre-go-retire` tag (today `internal/nav/testdata/gen_golden.py`).
 
 ## 5. Checks
 
