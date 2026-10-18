@@ -6,6 +6,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -86,6 +87,26 @@ func lockAge(t *testing.T, lock string) time.Duration {
 	return time.Since(st.ModTime())
 }
 
+// TestHeartbeatTicksDefault: the default heartbeatTicks (a time.Ticker)
+// delivers a tick and, once stopped, delivers no more. Only the absence of
+// a tick after stop is asserted over a short window, so a loaded machine
+// can at worst miss a broken stop, never fail a working one.
+func TestHeartbeatTicksDefault(t *testing.T) {
+	ticks, stop := heartbeatTicks(time.Millisecond)
+	select {
+	case <-ticks:
+	case <-time.After(10 * time.Second):
+		stop()
+		t.Fatal("the default ticker delivered no tick in 10s")
+	}
+	stop()
+	select {
+	case <-ticks:
+		t.Fatal("the default ticker ticked after stop")
+	case <-time.After(20 * time.Millisecond):
+	}
+}
+
 // TestWithBuildLockHeartbeatKeepsALongHolder: a holder whose lock has aged
 // past lockStale (simulated by backdating its mtime) is kept fresh by one
 // heartbeat tick, so a waiter does not take it over and gets the lock only
@@ -94,10 +115,20 @@ func TestWithBuildLockHeartbeatKeepsALongHolder(t *testing.T) {
 	lockTiming(t, time.Millisecond, time.Minute, time.Hour)
 	ticks := manualTicks(t)
 	root, lock := lockRoot(t)
-	started, proceed := make(chan struct{}), make(chan struct{})
+	started, proceed, holderExited := make(chan struct{}), make(chan struct{}), make(chan struct{})
+	var closeOnce sync.Once
+	closeProceed := func() { closeOnce.Do(func() { close(proceed) }) }
+	// An early failure must not leak the holder, its heartbeat or the lock:
+	// the cleanup lets fn return and waits for WithBuildLock to release,
+	// before the timing, ticker and temp dir cleanups registered above run.
+	t.Cleanup(func() {
+		closeProceed()
+		<-holderExited
+	})
 	var holderDone atomic.Bool
 	errc := make(chan error, 1)
 	go func() {
+		defer close(holderExited)
 		errc <- WithBuildLock(root, func() error {
 			close(started)
 			<-proceed
@@ -127,7 +158,7 @@ func TestWithBuildLockHeartbeatKeepsALongHolder(t *testing.T) {
 		t.Fatal("the waiter took over the lock while its holder was still running")
 	case <-time.After(50 * time.Millisecond):
 	}
-	close(proceed)
+	closeProceed()
 	mine := <-got
 	if mine == nil || !holderDone.Load() {
 		t.Errorf("waiter got %q, holder done %v", mine, holderDone.Load())
