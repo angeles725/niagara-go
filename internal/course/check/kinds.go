@@ -79,6 +79,9 @@ type Check struct {
 	Line  int    // file-text: the 1-based line that must match (a BOM and CR line ends dropped); 0 = count lines
 	Match string // file-text: a Go regexp; {station} = the station name, quoted (station root); source-text: a Go regexp over the whole file; jar-cert: a Go regexp over a DN
 	Whole bool   // file-text: Match runs over the whole text (lines joined with "\n"), its matches counted against N
+	// Names (file-text with Whole): the first match's group 1 is a comma-separated NAME=value list
+	// (a DN); its names, sorted and space-joined, must equal Names: each once, none other.
+	Names string
 
 	Hist *HistMatch // audit, log: the record fields to match; trend: the value range
 }

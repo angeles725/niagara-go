@@ -62,3 +62,50 @@ func TestListingKind(t *testing.T) {
 		t.Errorf("no name group: %s %q", r.Verdict, r.Evidence)
 	}
 }
+
+// twoPoints is a station whose two NumericWritables share the short name Point, in two folders.
+const twoPoints = `<?xml version="1.0" encoding="UTF-8"?>
+<bajaObjectGraph version="4.0">
+<p h="1" m="b=baja" t="b:Station">
+ <p n="stationName" v="Two"/>
+ <p n="A" h="2" t="b:Folder"><p n="Point" h="3" m="c=control" t="c:NumericWritable"/></p>
+ <p n="B" h="4" t="b:Folder"><p n="Point" h="5" t="c:NumericWritable"/></p>
+</p>
+</bajaObjectGraph>
+`
+
+// A short name two components share cannot say which one a line lists: SKIP naming both paths,
+// never PASS (one line would cover both) nor FAIL (one would look missing).
+func TestListingAmbiguous(t *testing.T) {
+	dir := writeStation(t)
+	if err := os.WriteFile(filepath.Join(dir, "config.bog"), []byte(twoPoints), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	for name, text := range map[string]string{"Review.txt": "Point: 0,00 {ok} @ def\n", "Other.txt": "x\n"} {
+		if err := os.WriteFile(filepath.Join(dir, "shared", name), []byte(text), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	st, err := Open(dir, "", true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ck := Check{Kind: kindListing, Glob: "shared/Review.txt", Type: numericWritable, Match: `^(?P<name>\S+):`}
+	if r := st.Run(&ck); r.Verdict != Skip || r.Evidence != "ambiguous: A/Point, B/Point share the name Point" {
+		t.Errorf("same-named points: %s %q", r.Verdict, r.Evidence)
+	}
+	ck.Under = "A" // one folder: no ambiguity
+	if r := st.Run(&ck); r.Verdict != Pass {
+		t.Errorf("one folder: %s %q", r.Verdict, r.Evidence)
+	}
+	many := ck
+	many.Glob = "shared/*.txt"
+	if r := st.Run(&many); r.Verdict != Fail || r.Evidence != "found 2 files shared/*.txt, want one" {
+		t.Errorf("two files: %s %q", r.Verdict, r.Evidence)
+	}
+	defer func(n int) { maxFileText = n }(maxFileText)
+	maxFileText = 4
+	if r := st.Run(&ck); r.Verdict != Skip || !strings.HasPrefix(r.Evidence, "cannot read shared/Review.txt: larger than 4 bytes") {
+		t.Errorf("unreadable file: %s %q", r.Verdict, r.Evidence)
+	}
+}

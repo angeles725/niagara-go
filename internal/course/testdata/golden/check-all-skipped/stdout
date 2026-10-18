@@ -5,7 +5,7 @@ C5.3   5    SKIP     signed with the CodeSigning alias [L5.13 L5.14]            
 C5.4   5    SKIP     system.properties: moduleVerificationMode=high [L5.2]                             no --install DIR: defaults/system.properties not checked
 C5.5   5    SKIP     system.properties sets moduleVerificationMode once [L5.2]                         no --install DIR: defaults/system.properties not checked
 C5.6   5    SKIP     ../certificates: the keystore and its profile [L5.8 L5.9]                         no --labsrc DIR: ../certificates/{code_signing.jceks,code_signing.xml} not checked
-C5.7   5    SKIP     dname: five attributes among C, ST, L, O, CN (no OU) [L5.10]                      no --labsrc DIR: ../certificates/code_signing.xml not checked
+C5.7   5    SKIP     dname: C, ST, L, O and CN once each (no OU) [L5.10]                               no --labsrc DIR: ../certificates/code_signing.xml not checked
 C5.8   5    SKIP     dname: CN=${alias} [L5.10]                                                        no --labsrc DIR: ../certificates/code_signing.xml not checked
 C5.9   5    SKIP     standardtsa = http://timestamp.digicert.com [L5.11]                               no --labsrc DIR: ../certificates/code_signing.xml not checked
 C5.10  5    SKIP     profileType RestrictedSigningProfile [L5.11]                                      no --labsrc DIR: ../certificates/code_signing.xml not checked

@@ -91,12 +91,14 @@ func (s *Station) rootFiles(ck *Check) (pattern string, files []string, skip str
 	if skip != "" {
 		return ck.Glob, nil, skip
 	}
-	pattern = ck.Glob
-	if ck.Root == rootStation {
-		pattern = strings.ReplaceAll(pattern, "{station}", globEscape(s.Name))
-	}
+	// The row's own {a,b} groups are expanded first and {station} replaced after, so a station
+	// name holding braces, commas or glob characters matches only itself.
+	const mark = "\x00station\x00"
+	raw := strings.ReplaceAll(ck.Glob, "{station}", mark)
+	pattern = strings.ReplaceAll(raw, mark, s.Name)
 	seen := map[string]bool{}
-	for _, alt := range expandBraces(pattern) {
+	for _, alt := range expandBraces(raw) {
+		alt = strings.ReplaceAll(alt, mark, globEscape(s.Name))
 		wantDir := strings.HasSuffix(alt, "/")
 		matches, err := filepath.Glob(filepath.Join(globEscape(dir), filepath.FromSlash(strings.TrimSuffix(alt, "/"))))
 		if err != nil {
@@ -134,4 +136,37 @@ func (s *Station) rootPath(ck *Check, rel string) string {
 // NeedsSolutions reports whether a check reads the corpus solutions, so a summary names it.
 func NeedsSolutions(checks []*Check) bool {
 	return slices.ContainsFunc(checks, func(ck *Check) bool { return ck.Root == rootSolutions })
+}
+
+// validate reports a row whose fields contradict each other: a Root on a kind that does not read
+// it, Whole with Line, {station} outside the station root. Run makes such a row SKIP.
+func (ck *Check) validate() error {
+	switch ck.Root {
+	case rootStation, rootInstall, rootLabsrc, rootSolutions:
+	default:
+		return fmt.Errorf("unknown Root %s", ck.Root)
+	}
+	ok := ck.Root == rootStation
+	switch ck.Kind {
+	case kindFiles, kindFileText:
+		ok = true
+	case kindAnnotation:
+		ok = ok || ck.Root == rootLabsrc || ck.Root == rootSolutions
+	case kindJarCert:
+		ok = ok || ck.Fact == certPEM
+	}
+	if !ok {
+		return fmt.Errorf("Root %s on kind %s", ck.Root, ck.Kind)
+	}
+	if ck.Whole && ck.Line > 0 {
+		return fmt.Errorf("Whole and Line together")
+	}
+	if ck.Names != "" && (ck.Kind != kindFileText || !ck.Whole) {
+		return fmt.Errorf("Names without a Whole file-text row")
+	}
+	if ck.Root != rootStation && (ck.Kind == kindFiles || ck.Kind == kindFileText) &&
+		(strings.Contains(ck.Glob, "{station}") || strings.Contains(ck.Match, "{station}")) {
+		return fmt.Errorf("{station} outside the station root")
+	}
+	return nil
 }

@@ -173,14 +173,26 @@ func slotText(sl niagaraannot.Slot) string {
 	return "topic " + sl.Name + "(" + sl.Type + ")"
 }
 
-// superclass reads the extends clause of the class declaration that starts on the type's line: the
-// type name and its type arguments as written, without spaces.
+// superclass reads the extends clause of the class declaration: the source from the type's line,
+// without comments and string literals, from "class <Name>" to the body's brace (so a brace or an
+// "extends" inside an annotation, a comment or a string is not read); the type name and its type
+// arguments as written, without spaces.
 func superclass(ty *niagaraannot.Type, text string) (string, error) {
 	lines := strings.Split(text, "\n")
 	if ty.Line < 1 || ty.Line > len(lines) {
 		return "", fmt.Errorf("no class declaration at line %d", ty.Line)
 	}
-	decl := strings.Join(lines[ty.Line-1:], "\n")
+	decl := javaNoise.ReplaceAllStringFunc(strings.Join(lines[ty.Line-1:], "\n"), func(m string) string {
+		if strings.HasPrefix(m, `"`) || strings.HasPrefix(m, "'") {
+			return `""`
+		}
+		return " "
+	})
+	at := regexp.MustCompile(`\b(?:class|interface)\s+` + regexp.QuoteMeta(ty.Name) + `\b`).FindStringIndex(decl)
+	if at == nil {
+		return "", fmt.Errorf("no class declaration for %s", ty.Name)
+	}
+	decl = decl[at[1]:]
 	if i := strings.IndexByte(decl, '{'); i >= 0 {
 		decl = decl[:i]
 	}
@@ -190,5 +202,8 @@ func superclass(ty *niagaraannot.Type, text string) (string, error) {
 	}
 	return strings.Join(strings.Fields(m[1]), ""), nil
 }
+
+// javaNoise matches what superclass blanks: block and line comments, string and char literals.
+var javaNoise = regexp.MustCompile(`(?s)/\*.*?\*/|//[^\n]*|"(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*'`)
 
 var extendsRe = regexp.MustCompile(`\bextends\s+([A-Za-z_][\w.]*(?:\s*<[^{]*?>)?)(?:\s+implements\b|\s*$)`)

@@ -69,3 +69,15 @@ func TestExtendsAndDefaults(t *testing.T) {
 		}
 	}
 }
+
+// The extends fact ignores braces and words inside annotations, comments and strings.
+func TestExtendsIgnoresBraces(t *testing.T) {
+	dir := t.TempDir()
+	writeLabFile(t, dir, "B.java", "@NiagaraType\n@NiagaraProperty(name = \"a\", type = \"String\", defaultValue = \"{ extends X }\")\n"+
+		"@Facets({ \"x\" }) public class BB /* { extends BWrong } */ // {\n  extends BRight {\n}\n")
+	st := &Station{solutions: dir}
+	ck := Check{Kind: kindAnnotation, Root: rootSolutions, Glob: "B.java", Fact: factExtends, Want: "BRight"}
+	if r := st.Run(&ck); r.Verdict != Pass {
+		t.Errorf("%s %q", r.Verdict, r.Evidence)
+	}
+}

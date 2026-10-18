@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"regexp"
+	"sort"
 	"strings"
 )
 
@@ -58,7 +59,17 @@ func (s *Station) fileText(ck *Check, re *regexp.Regexp, rel string) (bool, stri
 			at := found[0][0]
 			ev += fmt.Sprintf(" (first at line %d: %s)", strings.Count(text[:at], "\n")+1, excerpt(text[at:found[0][1]]))
 		}
-		return countOK(ck.Op, len(found), ck.N), ev, nil
+		ok := countOK(ck.Op, len(found), ck.N)
+		if ck.Names != "" && len(found) > 0 {
+			sub := re.FindStringSubmatch(text[found[0][0]:found[0][1]])
+			if len(sub) < 2 {
+				return false, ev + ": no group 1", nil
+			}
+			if got := attrNames(sub[1]); got != ck.Names {
+				return false, ev + ": attributes " + got + ", want " + ck.Names, nil
+			}
+		}
+		return ok, ev, nil
 	}
 	if ck.Line > 0 {
 		if ck.Line > len(lines) {
@@ -137,4 +148,15 @@ func (s *Station) checkFileText(ck *Check) (string, string) {
 		target = fmt.Sprintf("%s %s =~ %s", want(ck.Op, ck.N), noun, ck.Match)
 	}
 	return Fail, fmt.Sprintf("%d of %d files pass, want %s: %s", pass, len(files), target, bad)
+}
+
+// attrNames is the sorted, space-joined names of a comma-separated NAME=value list.
+func attrNames(list string) string {
+	var names []string
+	for _, a := range strings.Split(list, ",") {
+		name, _, _ := strings.Cut(a, "=")
+		names = append(names, strings.TrimSpace(name))
+	}
+	sort.Strings(names)
+	return strings.Join(names, " ")
 }

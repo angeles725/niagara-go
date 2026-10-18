@@ -168,6 +168,10 @@ func pathList(cs []*bog.Comp) string {
 // Run runs one check on the station.
 func (s *Station) Run(ck *Check) Result {
 	r := Result{Check: ck}
+	if err := ck.validate(); err != nil {
+		r.Verdict, r.Evidence = Skip, "bad row: "+err.Error()
+		return r
+	}
 	switch ck.Kind {
 	case kindType:
 		r.Verdict, r.Evidence = s.checkType(ck)

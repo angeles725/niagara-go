@@ -17,7 +17,8 @@ import (
 // set, Match also has (?P<value>...) and (?P<priority>...) groups: every line must be at priority
 // Want and its value must equal the component's effective Slot (read as for slot, Default when not
 // stored), numbers compared as numbers (a decimal comma is a point). The file is compared with the
-// bog as both were last saved.
+// bog as both were last saved. Two selected components with the same short name make the check
+// SKIP (ambiguous), since a line names a component by its short name only.
 
 func (s *Station) checkListing(ck *Check) (string, string) {
 	if ck.dotted() && !s.nested {
@@ -43,8 +44,19 @@ func (s *Station) checkListing(ck *Check) (string, string) {
 		return Skip, fmt.Sprintf("cannot read %s: %v", files[0], err)
 	}
 	cs, _, where := s.selected(ck)
+	// The file names components by their short name: two selected components sharing one cannot be
+	// told apart, so the check cannot decide (never a PASS one line would earn for both).
 	byName := map[string]*bog.Comp{}
 	for _, c := range cs {
+		if prev := byName[c.Name]; prev != nil {
+			var paths []string
+			for _, o := range cs {
+				if o.Name == c.Name {
+					paths = append(paths, o.Path)
+				}
+			}
+			return Skip, fmt.Sprintf("ambiguous: %s share the name %s", strings.Join(paths, ", "), c.Name)
+		}
 		byName[c.Name] = c
 	}
 	listed := map[string]bool{}
