@@ -6,8 +6,11 @@ import (
 	"os/exec"
 	"path/filepath"
 	"reflect"
+	"runtime"
 	"strings"
 	"testing"
+
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // Unit tests of pyfs.go and registry.go: the Python semantics the S3/S4
@@ -18,6 +21,18 @@ func writeTree(t *testing.T, root string, files map[string]string) {
 	t.Helper()
 	for rel, text := range files {
 		writeFile(t, filepath.Join(root, filepath.FromSlash(rel)), []byte(text))
+	}
+}
+
+// symlinkOrSkip makes newname a symlink to oldname; on Windows without the
+// symlink privilege the test is skipped.
+func symlinkOrSkip(t *testing.T, oldname, newname string) {
+	t.Helper()
+	if err := os.Symlink(oldname, newname); err != nil {
+		if runtime.GOOS == "windows" {
+			t.Skipf("no symlink privilege: %v", err)
+		}
+		t.Fatal(err)
 	}
 }
 
@@ -84,6 +99,43 @@ func TestPyCopyfile(t *testing.T) {
 	}
 	if err := pyCopyfile(fifo, dst); err == nil || err.Error() != "`"+fifo+"` is a named pipe" {
 		t.Errorf("pyCopyfile(fifo) = %v", err)
+	}
+}
+
+// shutil.copyfile raises SameFileError before opening dst when both names
+// are one file (the same name, a symlink either way, a hard link), so the
+// file is never truncated; a directory source fails with
+// IsADirectoryError before dst is opened, so dst keeps its content.
+func TestPyCopyfileRefusesSameFileAndDirectory(t *testing.T) {
+	dir := t.TempDir()
+	a := filepath.Join(dir, "a")
+	writeFile(t, a, []byte("data"))
+	link, hard := filepath.Join(dir, "link"), filepath.Join(dir, "hard")
+	symlinkOrSkip(t, a, link)
+	if err := os.Link(a, hard); err != nil {
+		t.Fatal(err)
+	}
+	for _, p := range [][2]string{{a, a}, {a, link}, {link, a}, {hard, a}} {
+		err := pyCopyfile(p[0], p[1])
+		want := pycompat.FSRepr(p[0]) + " and " + pycompat.FSRepr(p[1]) + " are the same file"
+		if err == nil || pycompat.OSErrorText(err) != want {
+			t.Errorf("pyCopyfile(%s, %s) = %v, want %q", p[0], p[1], err, want)
+		}
+		if got := string(readBytes(t, a)); got != "data" {
+			t.Fatalf("pyCopyfile(%s, %s) left %q", p[0], p[1], got)
+		}
+	}
+	src, dst := filepath.Join(dir, "d"), filepath.Join(dir, "dst")
+	if err := os.Mkdir(src, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	writeFile(t, dst, []byte("keep"))
+	err := pyCopyfile(src, dst)
+	if want := "[Errno 21] Is a directory: " + pycompat.FSRepr(src); err == nil || pycompat.OSErrorText(err) != want {
+		t.Errorf("pyCopyfile(dir, dst) = %v, want %q", err, want)
+	}
+	if got := string(readBytes(t, dst)); got != "keep" {
+		t.Errorf("pyCopyfile(dir, dst) truncated dst to %q", got)
 	}
 }
 

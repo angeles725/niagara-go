@@ -61,7 +61,16 @@ func removeFile(path string) error {
 // pyCopyfile is shutil.copyfile(src, dst): the content only, following
 // symlinks, dst created or truncated with the default mode (0666 less the
 // umask). The error names the file that failed, as Python's OSError does.
+// Before dst is opened (and truncated) it refuses, like Python, two names
+// of one file (SameFileError, os.path.samefile: links followed), a named
+// pipe (SpecialFileError) and a directory source (IsADirectoryError, which
+// Python's open(src, 'rb') raises).
 func pyCopyfile(src, dst string) error {
+	if s, err := os.Stat(src); err == nil {
+		if d, err := os.Stat(dst); err == nil && os.SameFile(s, d) {
+			return &sameFileError{src, dst}
+		}
+	}
 	for _, fn := range []string{src, dst} {
 		if st, err := os.Stat(fn); err == nil && st.Mode()&fs.ModeNamedPipe != 0 {
 			return &specialFileError{fn} // never opened: a FIFO would block
@@ -72,6 +81,9 @@ func pyCopyfile(src, dst string) error {
 		return err
 	}
 	defer in.Close()
+	if st, err := in.Stat(); err == nil && st.IsDir() {
+		return &fs.PathError{Op: "open", Path: src, Err: syscall.EISDIR}
+	}
 	out, err := os.OpenFile(dst, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o666)
 	if err != nil {
 		return err
@@ -81,6 +93,14 @@ func pyCopyfile(src, dst string) error {
 		return err
 	}
 	return out.Close()
+}
+
+// sameFileError is shutil.SameFileError, an OSError: str() quotes both
+// names with repr.
+type sameFileError struct{ src, dst string }
+
+func (e *sameFileError) Error() string {
+	return pycompat.FSRepr(e.src) + " and " + pycompat.FSRepr(e.dst) + " are the same file"
 }
 
 // specialFileError is shutil.SpecialFileError, an OSError.
