@@ -9,6 +9,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/angeles725/niagara-go/internal/pyref"
 )
 
 func goldenPath(index string) string {
@@ -95,7 +97,8 @@ func TestGoldenSynthetic(t *testing.T) {
 // TestRecallOnGoBuiltIndex is the B2 gate: the recall oracle (`selftest
 // --recall`: every declaration in organized/ found by `class`, with its
 // supertypes) passes on a Go-built full-corpus class index. The Go mnav has no
-// selftest yet, so the Python oracle reads the Go index through --base-dir.
+// selftest yet, so the Python oracle, the pre-go-retire module_nav.py run with
+// MODULE_NAV_PYTHON=1 (pythonNav, D47), reads the Go index through --base-dir.
 // Only with NAVBUILD_PARITY_FULL=1.
 func TestRecallOnGoBuiltIndex(t *testing.T) {
 	organized := fullCorpus(t)
@@ -109,7 +112,7 @@ func TestRecallOnGoBuiltIndex(t *testing.T) {
 	}
 	cmd := exec.Command(python, "-E", "-B", filepath.Join(nav, "tools", "module_nav.py"),
 		"--base-dir", base, "selftest", "--recall")
-	cmd.Env = append(os.Environ(), "NAV_CORPUS_BASE="+organized)
+	cmd.Env = append(append(os.Environ(), pyref.Env("module-navigator")...), "NAV_CORPUS_BASE="+organized)
 	out, err := cmd.CombinedOutput()
 	t.Logf("%s", out)
 	if err != nil || !strings.HasPrefix(string(out), "recall 100.00% ") {

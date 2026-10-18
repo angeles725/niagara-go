@@ -240,9 +240,12 @@ copies (`reindex_test.go`), never a real `indexes/`.
 `parity_test.go` runs the real Python builder (`python3 -E -B tools/<builder> --base-dir
 <temp>`, `NAV_CORPUS_BASE=<corpus>`; `-E` leaves the hash seed random) and the Go builder
 into another temp base over the same corpus, then byte-diffs both indexes after
-`NormalizeVolatile`. It needs a module-navigator checkout whose builders take
-`--base-dir` (branch `fix/deterministic-xref-base-dir`): `$NAVBUILD_PY_NAV`, else
-`$NIAGARA_RESEARCH/module-navigator`; it skips visibly otherwise.
+`NormalizeVolatile`. The builders are the frozen module-navigator Python, its
+`pre-go-retire` worktree (`internal/pyref`, D47: `$MODULE_NAVIGATOR_PY_REF`, see
+docs/goldens.md); `$NAVBUILD_PY_NAV` overrides it with any checkout whose builders take
+`--base-dir`, unchecked against the tag. A missing reference or python3 skips visibly, or
+fails under `PYREF_REQUIRED=1` (`make parity`); off Linux the tests skip. The corpora stay
+live data (`$NIAGARA_RESEARCH/organized`).
 
 | Corpus | When |
 |---|---|

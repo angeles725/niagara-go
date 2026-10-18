@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/angeles725/niagara-go/internal/help/fts"
+	"github.com/angeles725/niagara-go/internal/pyref"
 )
 
 var update = flag.Bool("update", false, "regenerate testdata/synthetic.dump with the Python builder")
@@ -86,39 +87,35 @@ func lines(s string) func(func(string) bool) {
 	}
 }
 
-// pythonBuild runs fulltext_index.build(root, path=out, quiet=True) from the
-// niagara-help checkout ($NIAGARA_HELP_DIR, else
-// $NIAGARA_RESEARCH/niagara-help); it never writes into that checkout.
+// pythonTools is python3 and the tools/ of the frozen niagara-help Python
+// (internal/pyref, D47: the pre-go-retire worktree, $NIAGARA_HELP_PY_REF); it
+// skips when either is missing, or off Linux, and fails under PYREF_REQUIRED=1
+// (`make parity`). The data a build reads is never taken from there.
+func pythonTools(t *testing.T) (python, tools string) {
+	t.Helper()
+	python = pyref.Python(t)
+	tools = filepath.Join(pyref.Dir(t, "niagara-help"), "tools")
+	if _, err := os.Stat(filepath.Join(tools, "niagara_help_lib", "fulltext_index.py")); err != nil {
+		t.Fatalf("the niagara-help reference has no fulltext_index.py: %v", err)
+	}
+	return python, tools
+}
+
+// pythonBuild runs the reference's fulltext_index.build(root, path=out,
+// quiet=True) (pythonTools); it never writes into root's checkout.
 func pythonBuild(t *testing.T, root, out string) error {
 	t.Helper()
-	python, err := exec.LookPath("python3")
-	if err != nil {
-		t.Skip("python3 not on PATH")
-	}
-	tools := filepath.Join(niagaraHelpDir(), "tools")
-	if _, err := os.Stat(filepath.Join(tools, "niagara_help_lib", "fulltext_index.py")); err != nil {
-		t.Skipf("niagara-help tools not available: %v", err)
-	}
+	python, tools := pythonTools(t)
 	cmd := exec.Command(python, "-I", "-B", "-c",
 		"import sys; sys.path.insert(0, sys.argv[1]); "+
 			"from niagara_help_lib import fulltext_index as f; "+
 			"f.build(sys.argv[2], path=sys.argv[3], quiet=True)",
 		tools, root, out)
+	cmd.Env = append(os.Environ(), pyref.Env("niagara-help")...)
 	if b, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("python build %s: %v\n%s", root, err, b)
 	}
 	return nil
-}
-
-func niagaraHelpDir() string {
-	if d := os.Getenv("NIAGARA_HELP_DIR"); d != "" {
-		return d
-	}
-	root := os.Getenv("NIAGARA_RESEARCH")
-	if root == "" {
-		root = "/home/cristian/niagara-research"
-	}
-	return filepath.Join(root, "niagara-help")
 }
 
 func TestBuildIsTheSameForAnyWorkerCount(t *testing.T) {

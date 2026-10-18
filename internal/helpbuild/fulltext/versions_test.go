@@ -13,9 +13,10 @@ import (
 )
 
 // TestBuildMatchesPythonOnRegisteredVersions builds every registered version
-// of the niagara-help checkout at $NIAGARA_HELP_DIR twice, with the Python
-// builder and with Build, into temp files (the checkout's own indexes are
-// never written) and requires equal canonical dumps. It is slow (minutes per
+// of the niagara-help checkout at $NIAGARA_HELP_DIR (the live data: registry,
+// versions/) twice, with the frozen Python builder (pythonTools: the
+// pre-go-retire worktree, D47) and with Build, into temp files (the checkout's
+// own indexes are never written) and requires equal canonical dumps. It is slow (minutes per
 // version): run it with -parallel 2 on a busy host. Both build times are
 // logged.
 func TestBuildMatchesPythonOnRegisteredVersions(t *testing.T) {
@@ -26,6 +27,7 @@ func TestBuildMatchesPythonOnRegisteredVersions(t *testing.T) {
 	if testing.Short() {
 		t.Skip("real-version parity is slow")
 	}
+	pythonTools(t) // a missing reference stops the test before any build
 	reg, err := index.LoadRegistry(repo)
 	if err != nil || reg == nil {
 		t.Fatalf("no registry under %s: %v", repo, err)
