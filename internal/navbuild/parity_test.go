@@ -7,6 +7,8 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -61,12 +63,13 @@ func pythonNav(t *testing.T) (python, nav string) {
 	return python, nav
 }
 
-// runPython runs tools/<script> --base-dir base over organized and returns its
-// wall time. -E drops PYTHONHASHSEED, so set order is not pinned either.
-func runPython(t *testing.T, script, base, organized string) time.Duration {
+// runPython runs tools/<script> --base-dir base [args] over organized, logs
+// its wall time and peak RSS and returns the wall time. -E drops
+// PYTHONHASHSEED, so set order is not pinned either.
+func runPython(t *testing.T, script, base, organized string, args ...string) time.Duration {
 	t.Helper()
 	python, nav := pythonNav(t)
-	cmd := exec.Command(python, "-E", "-B", script, "--base-dir", base)
+	cmd := measured(python, append([]string{"-E", "-B", script, "--base-dir", base}, args...)...)
 	cmd.Dir = filepath.Join(nav, "tools")
 	cmd.Env = append(os.Environ(), "NAV_CORPUS_BASE="+organized)
 	t0 := time.Now()
@@ -74,7 +77,34 @@ func runPython(t *testing.T, script, base, organized string) time.Duration {
 	if err != nil {
 		t.Fatalf("%s: %v\n%s", script, err, out)
 	}
-	return time.Since(t0)
+	d := time.Since(t0)
+	t.Logf("python %s: %v, peak RSS %s", script, d.Round(time.Millisecond), peakRSS(out))
+	return d
+}
+
+// gnuTime is GNU time, which reports a child's peak RSS: the rusage of a
+// child of this (large) test process would report this process's peak
+// instead, since Linux keeps the high-water mark across exec.
+const gnuTime = "/usr/bin/time"
+
+// measured is exec.Command(name, args...), run under GNU time when it exists.
+func measured(name string, args ...string) *exec.Cmd {
+	if isFile(gnuTime) {
+		return exec.Command(gnuTime, append([]string{"-f", "NAVBUILD_PEAK_RSS_KB=%M", name}, args...)...)
+	}
+	return exec.Command(name, args...)
+}
+
+var peakRSSLine = regexp.MustCompile(`NAVBUILD_PEAK_RSS_KB=([0-9]+)`)
+
+// peakRSS is the peak RSS GNU time reported in out.
+func peakRSS(out []byte) string {
+	m := peakRSSLine.FindSubmatch(out)
+	if m == nil {
+		return "n/a"
+	}
+	kb, _ := strconv.Atoi(string(m[1]))
+	return fmt.Sprintf("%d MiB", kb/1024)
 }
 
 // newBase is an empty module-navigator base dir (with indexes/, as the
@@ -92,6 +122,10 @@ func newBase(t *testing.T) string {
 // showing the first differing line.
 func sameIndex(t *testing.T, name, pyBase, goBase string) {
 	t.Helper()
+	if name == TokenFile {
+		sameTokenDB(t, IndexPath(pyBase, name), IndexPath(goBase, name))
+		return
+	}
 	py, err := os.ReadFile(IndexPath(pyBase, name))
 	if err != nil {
 		t.Fatal(err)

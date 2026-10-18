@@ -71,6 +71,12 @@ func TestGoldenSynthetic(t *testing.T) {
 	}
 	for _, index := range indexes {
 		t.Run(index, func(t *testing.T) {
+			if index == TokenFile {
+				if n, diff := diffSeqs(goldenLines(t, goldenPath(index)), tokenDump(IndexPath(base, index))); diff != "" {
+					t.Errorf("%s differs from its golden at record %d: %s", index, n, diff)
+				}
+				return
+			}
 			want, err := os.ReadFile(goldenPath(index))
 			if err != nil {
 				t.Fatal(err)
