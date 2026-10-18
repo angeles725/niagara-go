@@ -40,8 +40,10 @@ func TestDefaultPathsHonourEachVariable(t *testing.T) {
 	t.Setenv("NSEARCH_MODULE_NAV", "x/nav.py")
 	t.Setenv("NSEARCH_COURSE_ROOT", "")
 	t.Setenv("NSEARCH_COURSE_KEYS", "")
-	want := Paths{Blocks: "/r/tools/corpus-nav.py", Docs: "/r/niagara-help/tools/niagara_help.py",
-		Code: "x/nav.py", Course: "/r/sources/n4-dev-course", Keys: "/r"}
+	// Python joins REPO / "tools" / ... with pathlib: native separators (\r\tools\corpus-nav.py on Windows).
+	want := Paths{Blocks: filepath.Join("/r", "tools", "corpus-nav.py"),
+		Docs: filepath.Join("/r", "niagara-help", "tools", "niagara_help.py"),
+		Code: "x/nav.py", Course: filepath.Join("/r", "sources", "n4-dev-course"), Keys: "/r"}
 	if got := defaultPaths(); got != want {
 		t.Errorf("defaultPaths() = %+v, want %+v", got, want)
 	}
