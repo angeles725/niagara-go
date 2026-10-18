@@ -6,10 +6,12 @@ C1.4    1    PASS     training-wb jar built [L1.15]                             
 C1.5    1    PASS     BFirstComponent.class in training-rt [L1.16]                                   modules/training-rt.jar: 1 entry matches com/tridiumuniversity/training/BFirstComponent.class
 C1.6    1    PASS     module.xml registers FirstComponent [L1.14]                                    modules/training-rt.jar!META-INF/module.xml has name="FirstComponent"
 C1.7    1    PASS     palette lists FirstComponent [L1.11 L1.18]                                     modules/training-rt.jar!module.palette has n="FirstComponent"
+C1.8    1    SKIP     BFirstComponent declares timeExecuted and execute [L1.9 L1.12]                 no --labsrc DIR: training/training-rt/src/com/tridiumuniversity/training/BFirstComponent.java not checked
 C2.1    2    PASS     an Add in the station [L2.8]                                                   found 1: Lab2/Add
 C2.2    2    PASS     BAdd.class in training-rt [L2.1 L2.7]                                          modules/training-rt.jar: 1 entry matches com/tridiumuniversity/training/kitControl/BAdd.class
 C2.3    2    PASS     palette has the kitControl folder with Add [L2.6]                              modules/training-rt.jar!module.palette has n="kitControl", n="Add"
 C2.4    2    PASS     module.xml registers Add [L2.1]                                                modules/training-rt.jar!META-INF/module.xml has name="Add"
+C2.5    2    SKIP     BAdd flags: out rs, in1/in2 s, in3/in4 none [L2.2 L2.11]                       no --labsrc DIR: training/training-rt/src/com/tridiumuniversity/training/kitControl/BAdd.java not checked
 C3.1    3    PASS     NumericWritable.out -> Add.in1 [L3.5]                                          found 1: Lab2/Point1.out -> Lab2/Add.in1
 C3.2    3    PASS     NumericWritable.out -> Add.in2 [L3.5]                                          found 1: Lab2/Point2.out -> Lab2/Add.in2
 C3.3    3    PASS     NumericWritable.out -> Add.in3 (link dialog) [L3.6]                            found 1: Lab2/Point3.out -> Lab2/Add.in3
@@ -23,6 +25,8 @@ C4.5    4    FAIL     training Tstat diff = 2 [L4.13]                           
 C4.6    4    PASS     training Tstat action = reverse [L4.15]                                        Lab4/My Tstat.action = reverse (stored)
 C4.7    4    PASS     Reference Tstat nullOnInControl = false [L4.7]                                 Lab4/Reference Tstat.nullOnInControl = false (stored)
 C4.8    4    FAIL     SpaceTemp Out text has the unit (audit) [L4.8]                                 history/station/seg7/AuditHistory.hdb: 0 of 4 audit records match, want at least 1 (operation =~ ^Invoked$, target =~ /SpaceTemp$, slotName =~ ^set$, oldValue =~ \(Out = -?[0-9.,]+ °[CF] )
+C4.9    4    SKIP     BLoopAction enum: DIRECT 0, REVERSE 1, default direct [L4.1 L4.2]              no --labsrc DIR: training/training-rt/src/com/tridiumuniversity/training/kitControl/BLoopAction.java not checked
+C4.10   4    SKIP     BTstat flags: out rs, cv/sp/diff/action none [L4.3]                            no --labsrc DIR: training/training-rt/src/com/tridiumuniversity/training/kitControl/BTstat.java not checked
 C5.1    5    PASS     training-rt is signed [L5.21 L5.24]                                            modules/training-rt.jar: META-INF/CODESIGN.SF, META-INF/CODESIGN.RSA
 C5.2    5    PASS     training-wb is signed [L5.24]                                                  modules/training-wb.jar: META-INF/CODESIGN.SF, META-INF/CODESIGN.RSA
 C5.3    5    PASS     signed with the CodeSigning alias [L5.13 L5.14]                                modules/training-rt.jar: 1 entry matches META-INF/CODESIGN.SF
@@ -32,6 +36,8 @@ C6.3    6    PASS     training-rt depends on net-rt [L6.9]                      
 C6.4    6    PASS     NETWORK_COMMUNICATION requested [L6.21]                                        modules/training-rt.jar!META-INF/module.xml has <name>NETWORK_COMMUNICATION</name>
 C6.5    6    PASS     REFLECTION requested [L6.31]                                                   modules/training-rt.jar!META-INF/module.xml has <name>REFLECTION</name>
 C6.6    6    PASS     jackson-databind in the uberjar [L6.28]                                        modules/training-rt.jar: 1 entry matches META-INF/maven/com.fasterxml.jackson.core/jackson-databind/pom.properties
+C6.7    6    SKIP     BWorkOrderSubmissionState enum: IDLE 0, SUBMITTING 1, default idle [L6.2]      no --labsrc DIR: training/training-rt/src/com/tridiumuniversity/training/workOrder/BWorkOrderSubmissionState.java not checked
+C6.8    6    SKIP     submit takes a BWorkOrder with a default [L6.29 L6.32]                         no --labsrc DIR: training/training-rt/src/com/tridiumuniversity/training/workOrder/BWorkOrderService.java not checked
 C7.1    7    PASS     training-rtTest jar built [L7.7 L7.8]                                          modules/training-rtTest.jar (2 entries)
 C7.2    7    PASS     BWorkOrderServiceTest.class in training-rtTest [L7.1 L7.2]                     modules/training-rtTest.jar: 1 entry matches test/com/tridiumuniversity/training/workOrder/BWorkOrderServiceTest.class
 C7.3    7    PASS     Mockito in the test uberjar [L7.3]                                             modules/training-rtTest.jar: 1 entry matches org/mockito/**
@@ -82,4 +88,5 @@ CB.1    B    PASS     devices added by discovery (distinct intersection ids) [LB
 CB.2    B    PASS     device discovery leaf in trafficLightDriver-rt [LB.16]                         modules/trafficLightDriver-rt.jar: 1 entry matches com/tridiumuniversity/trafficLightDriver/learn/BTrafficLightDriverDeviceDiscoveryLeaf.class
 CB.3    B    PASS     point discovery leaf in trafficLightDriver-rt [LB.19]                          modules/trafficLightDriver-rt.jar: 1 entry matches com/tridiumuniversity/trafficLightDriver/point/BTrafficLightDriverPointDiscoveryLeaf.class
 CB.4    B    PASS     point manager in trafficLightDriver-wb [LB.8]                                  modules/trafficLightDriver-wb.jar: 1 entry matches **/BTrafficLightDriverPointManager*.class
-checked 83: PASS 63, FAIL 17, SKIP 3; station BadStation (236 components, 15 links), install install, source (none: source checks skipped)
+CB.5    B    SKIP     intersectionId has the facet SfUtil.incl(SfUtil.MGR_EDIT) [LB.1 LB.3]          no --labsrc DIR: trafficLightDriver/trafficLightDriver-rt/src/com/tridiumuniversity/trafficLightDriver/BTrafficLightDriverDevice.java not checked
+checked 90: PASS 63, FAIL 17, SKIP 10; station BadStation (236 components, 15 links), install install, source (none: source checks skipped), labsrc (none: annotation checks skipped)

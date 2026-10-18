@@ -1,1 +1,1 @@
-{"args": ["check", "--station", "stations/good", "--install", "install", "--source", "source"]}
+{"args": ["check", "--station", "stations/good", "--install", "install", "--source", "source", "--labsrc", "labsrc"]}

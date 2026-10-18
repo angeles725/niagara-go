@@ -53,7 +53,7 @@ func TestCheckZippedBog(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	plain, zipped := runAll(t, goodStation, fixtureInstall, fixtureSource, RoleTraining), runAll(t, dir, fixtureInstall, fixtureSource, RoleTraining)
+	plain, zipped := runAll(t, goodStation, fixtureInstall, fixtureSource, fixtureLabsrc, RoleTraining), runAll(t, dir, fixtureInstall, fixtureSource, fixtureLabsrc, RoleTraining)
 	if len(plain) == 0 || len(plain) != len(zipped) {
 		t.Fatalf("plain station gave %d results, zipped %d", len(plain), len(zipped))
 	}

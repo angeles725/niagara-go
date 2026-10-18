@@ -45,9 +45,10 @@ type Stations struct {
 }
 
 // OpenStations opens the station of every role the checks need; path maps a role to its station
-// directory or bog; install and source are the Niagara install and source tree ("" = none). The
-// error is the bog reader's message of the first station that cannot be read.
-func OpenStations(checks []*Check, path func(role string) string, install, source string) (*Stations, error) {
+// directory or bog; install, source and labsrc are the Niagara install, the Niagara source tree
+// and the lab module sources ("" = none). The error is the bog reader's message of the first station
+// that cannot be read.
+func OpenStations(checks []*Check, path func(role string) string, install, source, labsrc string) (*Stations, error) {
 	perPath := map[string][]*Check{}
 	var paths []string
 	rolePath := map[string]string{}
@@ -71,7 +72,7 @@ func OpenStations(checks []*Check, path func(role string) string, install, sourc
 			ss.Close()
 			return nil, err
 		}
-		st.source = source
+		st.source, st.labsrc = source, labsrc
 		byPath[p] = st
 		ss.list = append(ss.list, st)
 	}

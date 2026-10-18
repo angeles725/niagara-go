@@ -24,7 +24,7 @@ func TestRoles(t *testing.T) {
 // Two roles on one path read the station once; a role's station is the one of its path.
 func TestOpenStationsSharesAPath(t *testing.T) {
 	checks := []*Check{&Spec[0], {ID: "CRA1.x", Lab: "RA1", Kind: kindType, Type: "training:FirstComponent", Op: opMin, N: 1}}
-	ss, err := OpenStations(checks, func(string) string { return goodStation }, "", "")
+	ss, err := OpenStations(checks, func(string) string { return goodStation }, "", "", "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -33,7 +33,7 @@ func TestOpenStationsSharesAPath(t *testing.T) {
 		t.Errorf("stations %d, scope %q", len(ss.list), ss.Scope())
 	}
 	paths := map[string]string{RoleTraining: goodStation, RoleReview: "../testdata/stations/bad"}
-	ss2, err := OpenStations(checks, func(r string) string { return paths[r] }, "", "")
+	ss2, err := OpenStations(checks, func(r string) string { return paths[r] }, "", "", "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -45,7 +45,7 @@ func TestOpenStationsSharesAPath(t *testing.T) {
 	if want := "station GoodStation (237 components, 16 links), station BadStation (236 components, 15 links)"; ss2.Scope() != want {
 		t.Errorf("two-station scope %q, want %q", ss2.Scope(), want)
 	}
-	if _, err := OpenStations(checks, func(r string) string { return paths[r] + "x" }, "", ""); err == nil {
+	if _, err := OpenStations(checks, func(r string) string { return paths[r] + "x" }, "", "", ""); err == nil {
 		t.Error("an unreadable station: no error")
 	}
 }

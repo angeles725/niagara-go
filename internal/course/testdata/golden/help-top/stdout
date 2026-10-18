@@ -21,7 +21,9 @@ cannot be read, or every linked check was skipped.
 stations: --station, else $COURSE_TRAINING_STATION (labs),
 $COURSE_REVIEW_STATION (RA1, RA2), $COURSE_CERT_STATION (EXAM);
 --install, else $COURSE_NIAGARA_INSTALL; --source, else
-$COURSE_NIAGARA_SOURCE (the 4.15 source tree the source-text checks read).
+$COURSE_NIAGARA_SOURCE (the 4.15 source tree the source-text checks read);
+--labsrc, else $COURSE_LAB_SOURCES (the lab module sources the annotation
+checks read).
 
 examples:
   course show L1.9 RA1.R6 P2

@@ -15,6 +15,7 @@ const (
 	kindLog        = "log"         // log records of the Glob history files matching Hist, counted against N
 	kindTrend      = "trend"       // every Glob trend history: N records (Distinct: N values), values in Hist's range
 	kindSourceText = "source-text" // the matches of Match in the source-tree file Glob counted against N
+	kindAnnotation = "annotation"  // the Fact the annotations of the lab-source file Glob declare equals Want
 )
 
 // Count operators.
@@ -41,8 +42,9 @@ type Check struct {
 	Op     string // type, link, files, jar-entry, slot with Distinct, file-text without Line, audit, log, trend, source-text: opMin or opEq
 	N      int
 
-	Slot     string   // slot: the slot; link: the target slot
-	Want     string   // slot: the expected effective value
+	Slot     string   // slot: the slot; link: the target slot; annotation: the one slot the Fact covers ("" = every slot)
+	Want     string   // slot: the expected effective value; annotation: the expected Fact
+	Fact     string   // annotation: what the annotations declare (flags, enum, slots, facets: see annotation.go)
 	Default  string   // slot: the type's default, the value of a slot the bog does not store
 	Set      bool     // slot: the slot must be stored (differ from its default) instead of Want
 	Distinct bool     // slot: N distinct effective values across the components instead of Want; trend: N distinct values per file
@@ -51,7 +53,7 @@ type Check struct {
 	From     string // link: source type "module:Type"
 	FromSlot string // link: source slot
 
-	Glob     string   // files, file-text, audit, log, trend: path under the station dir ({station} = station name); jar-*: entry; source-text: path under the source tree
+	Glob     string   // files, file-text, audit, log, trend: path under the station dir ({station} = station name); jar-*: entry; source-text: path under the source tree; annotation: path under the lab module sources
 	Jar      string   // jar-*: module part name, e.g. training-rt
 	Contains []string // jar-text
 

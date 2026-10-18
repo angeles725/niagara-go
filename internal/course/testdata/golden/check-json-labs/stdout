@@ -88,6 +88,29 @@
     "evidence": "history/station/seg7/AuditHistory.hdb: 1 of 12 audit records match; first 2026-10-15T18:42:34.959Z Invoked /Lab4/SpaceTemp.set = 22,0 °C"
   },
   {
+    "id": "C4.9",
+    "lab": "4",
+    "keys": [
+      "L4.1",
+      "L4.2"
+    ],
+    "kind": "annotation",
+    "description": "BLoopAction enum: DIRECT 0, REVERSE 1, default direct",
+    "verdict": "SKIP",
+    "evidence": "no --labsrc DIR: training/training-rt/src/com/tridiumuniversity/training/kitControl/BLoopAction.java not checked"
+  },
+  {
+    "id": "C4.10",
+    "lab": "4",
+    "keys": [
+      "L4.3"
+    ],
+    "kind": "annotation",
+    "description": "BTstat flags: out rs, cv/sp/diff/action none",
+    "verdict": "SKIP",
+    "evidence": "no --labsrc DIR: training/training-rt/src/com/tridiumuniversity/training/kitControl/BTstat.java not checked"
+  },
+  {
     "id": "CB.1",
     "lab": "B",
     "keys": [
@@ -130,5 +153,17 @@
     "description": "point manager in trafficLightDriver-wb",
     "verdict": "PASS",
     "evidence": "modules/trafficLightDriver-wb.jar: 1 entry matches **/BTrafficLightDriverPointManager*.class"
+  },
+  {
+    "id": "CB.5",
+    "lab": "B",
+    "keys": [
+      "LB.1",
+      "LB.3"
+    ],
+    "kind": "annotation",
+    "description": "intersectionId has the facet SfUtil.incl(SfUtil.MGR_EDIT)",
+    "verdict": "SKIP",
+    "evidence": "no --labsrc DIR: trafficLightDriver/trafficLightDriver-rt/src/com/tridiumuniversity/trafficLightDriver/BTrafficLightDriverDevice.java not checked"
   }
 ]

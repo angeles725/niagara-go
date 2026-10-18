@@ -1,3 +1,3 @@
-usage: course check [-h] [--root DIR] [--station PATH] [--install DIR] [--source DIR] [--lab N]
-                    [--json]
+usage: course check [-h] [--root DIR] [--station PATH] [--install DIR] [--source DIR]
+                    [--labsrc DIR] [--lab N] [--json]
 course check: error: the following arguments are required: --station (lab 4 needs --station or COURSE_TRAINING_STATION)
