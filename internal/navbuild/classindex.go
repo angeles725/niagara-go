@@ -59,11 +59,13 @@ type declaration struct {
 }
 
 // parseJavaFile is parse_java_file: the declarations, line count and package
-// of one source (none of them for an unreadable file).
-func parseJavaFile(path string) ([]declaration, int, string) {
+// of one source (none of them for an unreadable file). The error is a
+// declaration line whose match end declEnd cannot recover, which would be a
+// bug in declEnd: the build stops instead of writing a wrong header.
+func parseJavaFile(path string) ([]declaration, int, string, error) {
 	text, err := pycompat.ReadTextReplace(path)
 	if err != nil {
-		return nil, 0, ""
+		return nil, 0, "", nil
 	}
 	lines := pycompat.Lines(text)
 	pkg := ""
@@ -98,7 +100,7 @@ func parseJavaFile(path string) ([]declaration, int, string) {
 		}
 		end := declEnd(line, d)
 		if end < 0 {
-			panic(fmt.Sprintf("navbuild: no match end for a declaration of %s:%d", path, i+1))
+			return nil, 0, "", fmt.Errorf("%s:%d: no match end for the declaration of %s", path, i+1, d.Name)
 		}
 		ext, impl := parseExtendsImplements(declarationHeader(lines, i, end))
 		decls = append(decls, declaration{
@@ -110,17 +112,17 @@ func parseJavaFile(path string) ([]declaration, int, string) {
 			implements: impl,
 		})
 	}
-	return decls, len(lines), pkg
+	return decls, len(lines), pkg, nil
 }
 
 // fileEntries is process_file: (class name, entry) pairs of one source. Every
 // indent-0 declaration is a top-level type; the declarations after it, up to
 // the next top-level one, are its inner types (the first declaration opens a
 // group when none is at indent 0).
-func fileEntries(f core.JavaFile, zkm bool) (names []string, entries []*ClassEntry, noDecl bool) {
-	decls, lineCount, pkg := parseJavaFile(f.Path)
-	if len(decls) == 0 {
-		return nil, nil, true
+func fileEntries(f core.JavaFile, zkm bool) (names []string, entries []*ClassEntry, noDecl bool, err error) {
+	decls, lineCount, pkg, err := parseJavaFile(f.Path)
+	if err != nil || len(decls) == 0 {
+		return nil, nil, true, err
 	}
 	type group struct {
 		outer declaration
@@ -151,18 +153,20 @@ func fileEntries(f core.JavaFile, zkm bool) (names []string, entries []*ClassEnt
 			entries = append(entries, entry(d, 0, []string{}, g.outer.name))
 		}
 	}
-	return names, entries, false
+	return names, entries, false, nil
 }
 
 // ScanClasses is build_class_index(organized, zkm_modules): every vineflower
-// .java file in corpus order, parsed by a few workers.
-func ScanClasses(organized string, zkmModules map[string]bool) *ClassIndex {
+// .java file in corpus order, parsed by a few workers. It fails only on a
+// parseJavaFile error (the first in corpus order).
+func ScanClasses(organized string, zkmModules map[string]bool) (*ClassIndex, error) {
 	t0 := time.Now()
 	files := core.IterJava(organized)
 	type result struct {
 		names   []string
 		entries []*ClassEntry
 		noDecl  bool
+		err     error
 	}
 	results := make([]result, len(files))
 	var wg sync.WaitGroup
@@ -173,7 +177,7 @@ func ScanClasses(organized string, zkmModules map[string]bool) *ClassIndex {
 			defer wg.Done()
 			for i := range next {
 				r := &results[i]
-				r.names, r.entries, r.noDecl = fileEntries(files[i], zkmModules[files[i].Sub])
+				r.names, r.entries, r.noDecl, r.err = fileEntries(files[i], zkmModules[files[i].Sub])
 			}
 		}()
 	}
@@ -187,6 +191,9 @@ func ScanClasses(organized string, zkmModules map[string]bool) *ClassIndex {
 	st := &ci.Stats
 	packages, modules := map[string]bool{}, map[string]bool{}
 	for i, r := range results {
+		if r.err != nil {
+			return nil, r.err
+		}
 		st.FilesProcessed++
 		modules[files[i].Sub] = true
 		if r.noDecl {
@@ -227,7 +234,7 @@ func ScanClasses(organized string, zkmModules map[string]bool) *ClassIndex {
 	}
 	st.Packages, st.Mods = len(packages), len(modules)
 	ci.Elapsed = time.Since(t0)
-	return ci
+	return ci, nil
 }
 
 // LoadZKMModules is load_zkm_modules(base_dir): the submodules flagged ZKM in
@@ -346,7 +353,10 @@ func BuildClassIndex(baseDir, organized string) (*ClassIndex, error) {
 	if err != nil {
 		return nil, err
 	}
-	ci := ScanClasses(organized, zkm)
+	ci, err := ScanClasses(organized, zkm)
+	if err != nil {
+		return nil, err
+	}
 	ci.ZKMSourceFound, ci.ZKMModules = found, len(zkm)
 	ci.Elapsed = time.Since(t0)
 	if err := writeIndex(baseDir, ClassIndexFile, ci.Document(organized, now())); err != nil {
