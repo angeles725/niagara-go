@@ -61,6 +61,33 @@ func needRealParity(t *testing.T, finer ...string) {
 	}
 }
 
+// parityVars are every HELPBUILD_PARITY_* variable, switches first.
+var parityVars = []string{realParityVar, "HELPBUILD_PARITY_FULL", "HELPBUILD_PARITY_415",
+	"HELPBUILD_PARITY_JARS", "HELPBUILD_PARITY_PDF_DOCS", "HELPBUILD_PARITY_COURSE"}
+
+// parityRequested names the first HELPBUILD_PARITY_* variable set (as
+// "NAME=value"), "" when none is: the run asked for parity, so a missing
+// Python reference is a failure, not a skip.
+func parityRequested() string {
+	for _, v := range parityVars {
+		if val := os.Getenv(v); val != "" {
+			return v + "=" + val
+		}
+	}
+	return ""
+}
+
+// missingReference skips t with msg in a plain run and fails it when the
+// run requested parity (make parity).
+func missingReference(t *testing.T, msg string) {
+	t.Helper()
+	if req := parityRequested(); req != "" {
+		t.Fatalf("%s\n%s is set, so the Python reference is required: python3 (CPython 3.15) on PATH and a niagara-help "+
+			"checkout; after Phase 5 it lives in a pre-go-retire worktree of niagara-research, point NIAGARA_HELP_DIR at its niagara-help", msg, req)
+	}
+	t.Skip(msg)
+}
+
 // guidesRealVersions are the versions TestParityGuidesReal builds:
 // 4.3.58.18 with HELPBUILD_PARITY_REAL=1, 4.15.6.20 with
 // HELPBUILD_PARITY_415=1; none is an error, never an empty pass.
@@ -143,5 +170,21 @@ func TestRealJarsList(t *testing.T) {
 	t.Setenv("HELPBUILD_PARITY_JARS", sep+sep)
 	if _, _, err := realJars(); err == nil || !strings.Contains(err.Error(), "HELPBUILD_PARITY_JARS") {
 		t.Errorf("empty list: %v", err)
+	}
+}
+
+// A run that set any HELPBUILD_PARITY_* variable requires the Python
+// reference; a plain run does not.
+func TestParityRequested(t *testing.T) {
+	for _, v := range parityVars {
+		t.Setenv(v, "")
+	}
+	if got := parityRequested(); got != "" {
+		t.Errorf("no variable set: %q", got)
+	}
+	t.Setenv("HELPBUILD_PARITY_COURSE", "/c")
+	t.Setenv("HELPBUILD_PARITY_FULL", "1")
+	if got := parityRequested(); got != "HELPBUILD_PARITY_FULL=1" {
+		t.Errorf("FULL and COURSE set: %q", got)
 	}
 }

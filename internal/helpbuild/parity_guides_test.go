@@ -2,6 +2,7 @@ package helpbuild
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -297,15 +298,15 @@ func realBase(t *testing.T, vid string) string {
 	t.Helper()
 	tools := niagaraHelpTools()
 	if tools == "" {
-		t.Skip("no niagara-help checkout")
+		missingReference(t, "no niagara-help checkout")
 	}
 	src := filepath.Join(filepath.Dir(tools), "versions")
 	reg, err := os.ReadFile(filepath.Join(src, "registry.json"))
 	if err != nil {
-		t.Skipf("no registry: %v", err)
+		missingReference(t, fmt.Sprintf("no registry: %v", err))
 	}
 	if _, err := os.Stat(filepath.Join(src, vid, "guides")); err != nil {
-		t.Skipf("version %s not extracted: %v", vid, err)
+		missingReference(t, fmt.Sprintf("version %s not extracted: %v", vid, err))
 	}
 	repo := t.TempDir()
 	base := filepath.Join(repo, "versions", vid)

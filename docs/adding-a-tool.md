@@ -123,5 +123,9 @@ trees, the real PDFs and the developer course. These tests read gigabytes, so `g
 `HELPBUILD_PARITY_415=1`) and runs the package's `Parity` tests, synthetic ones included;
 it takes several minutes (see [helpbuild.md](helpbuild.md#real-data-parity) for the list
 and the timing). Run it before handing any builder PR for review, and after changing a
-helper the builders share. A test whose data is missing skips visibly; it never passes
-without comparing.
+helper the builders share. A real install that is not mounted skips visibly; it never
+passes without comparing. The Python reference is not optional under `make parity`: a
+missing `python3` or niagara-help checkout fails every parity test with a message, where
+plain `go test` skips naming the variable. After Phase 5 the Python reference lives in a
+`pre-go-retire` worktree of niagara-research; point `NIAGARA_HELP_DIR` at its
+`niagara-help` folder before running `make parity`.
