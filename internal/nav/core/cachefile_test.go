@@ -15,7 +15,7 @@ type gobRecord struct {
 }
 
 // TestWriteGob: the file holds the gob of the value (pointer or not), in a
-// directory created on demand, with mode 0600, and no temporary is left.
+// directory created on demand (mode 0700), with mode 0600, and no temporary is left.
 func TestWriteGob(t *testing.T) {
 	dir := filepath.Join(t.TempDir(), ".mnav-cache")
 	path := filepath.Join(dir, "x.gob")
@@ -35,6 +35,9 @@ func TestWriteGob(t *testing.T) {
 	if runtime.GOOS != "windows" {
 		if st, err := os.Stat(path); err != nil || st.Mode().Perm() != 0o600 {
 			t.Errorf("mode %v, %v; want 0600", st.Mode().Perm(), err)
+		}
+		if st, err := os.Stat(dir); err != nil || st.Mode().Perm() != 0o700 {
+			t.Errorf("directory mode %v, %v; want 0700", st.Mode().Perm(), err)
 		}
 	}
 	assertOnly(t, dir, "x.gob")
