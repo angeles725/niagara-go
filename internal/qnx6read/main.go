@@ -8,14 +8,14 @@ import (
 	"github.com/angeles725/niagara-go/internal/cli"
 )
 
-// doc is the Python module docstring, the --help description (RawDescriptionHelpFormatter).
+// doc is the --help description (RawDescriptionHelpFormatter), from the Python docstring.
 const doc = "qnx6read: minimal read-only QNX6 (Power-Safe) reader for the JACE-8000 SD image (B674).\n" +
 	"\n" +
 	"Lists the directory tree of one partition of a raw disk image, or extracts one file. READ-ONLY.\n" +
 	"\n" +
 	"Usage:\n" +
-	"  qnx6read.py [--image disk.img] [P2|P3]                  list the tree (default P2)\n" +
-	"  qnx6read.py [--image disk.img] P2 extract <src> <dst>  copy one file out of the image\n" +
+	"  qnx6read [--image disk.img] [P2|P3]                  list the tree (default P2)\n" +
+	"  qnx6read [--image disk.img] P2 extract <src> <dst>  copy one file out of the image\n" +
 	"The image comes from --image, else from the QNX6_IMG environment variable: a regular file or a block\n" +
 	"device (`--image /dev/sdb` reads the card directly); a character device (a BSD raw disk /dev/rdiskN)\n" +
 	"only with --char-device, so a terminal or /dev/null is never read as a disk.\n" +
@@ -25,7 +25,7 @@ const doc = "qnx6read: minimal read-only QNX6 (Power-Safe) reader for the JACE-8
 
 // Main is the qnx6read command line (Python argparse parity). --image defaults to $QNX6_IMG.
 func Main(args []string, s cli.Stdio) int {
-	p := argparse.New(argparse.Config{Prog: "qnx6read.py", Description: doc,
+	p := argparse.New(argparse.Config{Prog: "qnx6read", Description: doc,
 		Formatter: argparse.RawDescriptionHelpFormatter})
 	p.Add(argparse.Arg{Default: os.Getenv("QNX6_IMG"), Help: "raw disk image (default: $QNX6_IMG)"}, "--image")
 	parts := make([]string, 0, len(Partitions))

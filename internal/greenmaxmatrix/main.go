@@ -18,8 +18,8 @@ import (
 	"github.com/angeles725/niagara-go/internal/pycsv"
 )
 
-// prog is the Python program name, kept for byte-identical usage and error lines.
-const prog = "greenmax-matrix.py"
+// prog is the installed command name used in usage and error lines (I4-2).
+const prog = "greenmax-matrix"
 
 func newParser() *argparse.Parser {
 	p := argparse.New(argparse.Config{Prog: prog, Description: "Build the GreenMAX lighting points matrix."})
@@ -74,7 +74,7 @@ func run(supPath, jacePath, pxDir, out string, s cli.Stdio) int {
 	if len(sup) == 0 && len(supPanels(jaceBog)) > 0 || len(jac) == 0 && len(jacePanels(supBog)) > 0 {
 		fmt.Fprintf(s.Err, "greenmax-matrix: the two bogs look swapped: the GM<n>ilum NiagaraPointFolders "+
 			"(supervisor role) are in %s and/or the GM<n>ilum BacnetDevices (JACE role) "+
-			"are in %s; usage: greenmax-matrix.py <supervisor.bog> <jace.bog> <px_dir>\n", jacePath, supPath)
+			"are in %s; usage: greenmax-matrix <supervisor.bog> <jace.bog> <px_dir>\n", jacePath, supPath)
 		return 2
 	}
 	px, err := parsePx(pxDir)

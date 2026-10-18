@@ -1,0 +1,4 @@
+{
+ "reason": "I4-2 (D34): the Python script is retired; help, usage and error lines name the installed Go command obix-nav instead of obix-nav.py",
+ "stderr": "usage: obix-nav [-h] [--base BASE] [--pass-file PASS_FILE] {map,cond,wiring,config,read,dump} ...\nobix-nav: error: argument cmd: invalid choice: 'audit' (choose from 'map', 'cond', 'wiring', 'config', 'read', 'dump')\n"
+}

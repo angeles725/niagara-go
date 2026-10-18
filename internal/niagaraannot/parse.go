@@ -3,7 +3,6 @@ package niagaraannot
 import (
 	"fmt"
 	"math"
-	"os"
 	"strings"
 )
 
@@ -85,15 +84,6 @@ func (t *Type) Slot(name string) *Slot {
 		}
 	}
 	return nil
-}
-
-// ParseFile reads and parses one Java source file.
-func ParseFile(path string) (*Type, error) {
-	b, err := os.ReadFile(path)
-	if err != nil {
-		return nil, err
-	}
-	return Parse(string(b))
 }
 
 // Parse reads the annotations of the top-level type declared in src.

@@ -1,0 +1,4 @@
+{
+ "reason": "I4-2 (D34): the Python script is retired; help, usage and error lines name the installed Go command obix-nav instead of obix-nav.py",
+ "stderr": "usage: obix-nav read [-h] ord\nobix-nav read: error: the following arguments are required: ord\n"
+}

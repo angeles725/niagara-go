@@ -1,0 +1,4 @@
+{
+ "reason": "I4-2 (D34): the Python script is retired; help, usage and error lines name the installed Go command licensador instead of licensador.py",
+ "stderr": "usage: licensador genkeys [-h] --out-dir OUT_DIR [--bits BITS]\nlicensador genkeys: error: argument --bits: invalid int value: 'many'\n"
+}

@@ -1,0 +1,4 @@
+{
+ "reason": "I4-2 (D34): the Python script is retired; help, usage and error lines name the installed Go command niagara-security-audit instead of niagara-security-audit.py",
+ "stderr": "niagara-security-audit: keytool: [Errno 2] No such file or directory: 'keytool'\n"
+}

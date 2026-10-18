@@ -1,0 +1,4 @@
+{
+ "reason": "I4-2 (D34): the Python script is retired; help, usage and error lines name the installed Go command hdbread instead of hdbread.py (and python3 hdbread.py)",
+ "stderr": "usage: hdbread [-h] [--schema] [--ops] [--strings] [--mask] [--records] [--json] hdb\nhdbread: error: the following arguments are required: hdb\n"
+}

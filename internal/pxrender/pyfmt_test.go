@@ -6,6 +6,8 @@ import (
 	"testing"
 
 	"github.com/angeles725/niagara-go/internal/pycompat"
+	"github.com/angeles725/niagara-go/internal/pyhtml"
+	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
 // parseFloat and splitextRoot adapt the pycompat calls render.go makes to one comparable value.
@@ -61,8 +63,8 @@ func TestPyUnescape(t *testing.T) {
 		"&foo-bar;": "&foo-bar;", "a & b": "a & b", "&#169": "©", "&NotNestedGreaterGreater;": "⪢̸",
 		"&lt": "<", "&acE;": "∾̳"}
 	for in, want := range cases {
-		if got := pycompat.HTMLUnescape(in); got != want {
-			t.Errorf("pycompat.HTMLUnescape(%q) = %q, want %q", in, got, want)
+		if got := pyhtml.Unescape(in); got != want {
+			t.Errorf("pyhtml.Unescape(%q) = %q, want %q", in, got, want)
 		}
 	}
 	if got := pycompat.HTMLEscape(`<a href="x">it's & co</a>`); got != "&lt;a href=&quot;x&quot;&gt;it&#x27;s &amp; co&lt;/a&gt;" {
@@ -116,7 +118,7 @@ func TestRelayNumAndFont(t *testing.T) {
 	if w != "bold" || s != "26" || f != "Arial" {
 		t.Errorf("parseFont = %s %s %s", w, s, f)
 	}
-	if out := strings.Join(pycompat.Fields("a\x1cb"), "|"); out != "a|b" {
+	if out := strings.Join(textfold.Fields("a\x1cb"), "|"); out != "a|b" {
 		t.Errorf("pySplit = %q", out)
 	}
 }

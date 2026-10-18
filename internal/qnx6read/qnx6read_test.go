@@ -14,8 +14,8 @@ import (
 	"github.com/angeles725/niagara-go/internal/golden"
 )
 
-// The image checks are argparse errors in Python ("qnx6read.py: error: <message>"); the message
-// part is ours to match before internal/argparse lands.
+// The image checks are argparse errors ("qnx6read: error: <message>"; Python printed qnx6read.py,
+// the port names the installed command, I4-2); the message part is ours to match.
 func TestValidateImageMatchesGoldenUsageMessages(t *testing.T) {
 	cases := map[string]string{"usage-no-image": "", "usage-missing-image": "images/missing.img",
 		"usage-directory-image": "images", "usage-char-device": "/dev/null"}
@@ -37,7 +37,7 @@ func TestValidateImageMatchesGoldenUsageMessages(t *testing.T) {
 			}
 		}
 		msg := ValidateImage(image, false)
-		if want := "qnx6read.py: error: " + msg + "\n"; msg == "" || !bytes.HasSuffix(stderr[name], []byte(want)) {
+		if want := "qnx6read: error: " + msg + "\n"; msg == "" || !bytes.HasSuffix(stderr[name], []byte(want)) {
 			t.Errorf("%s: ValidateImage = %q; golden stderr %q", name, msg, stderr[name])
 		}
 	}

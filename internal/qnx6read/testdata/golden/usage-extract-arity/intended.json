@@ -1,0 +1,4 @@
+{
+ "reason": "I4-2 (D34): the Python script is retired; help, usage and error lines name the installed Go command qnx6read instead of qnx6read.py",
+ "stderr": "usage: qnx6read [-h] [--image IMAGE] [--char-device] [{P2,P3}] [extract SRC DST ...]\nqnx6read: error: expected: extract <src> <dst>\n"
+}

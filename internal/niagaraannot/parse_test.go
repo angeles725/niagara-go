@@ -1,6 +1,7 @@
 package niagaraannot
 
 import (
+	"os"
 	"reflect"
 	"strings"
 	"testing"
@@ -8,7 +9,11 @@ import (
 
 func parseFixture(t *testing.T, name string) *Type {
 	t.Helper()
-	ty, err := ParseFile("testdata/" + name)
+	b, err := os.ReadFile("testdata/" + name)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ty, err := Parse(string(b))
 	if err != nil {
 		t.Fatalf("%s: %v", name, err)
 	}

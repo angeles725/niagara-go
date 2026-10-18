@@ -13,10 +13,11 @@ import (
 	"github.com/angeles725/niagara-go/internal/argparse"
 	"github.com/angeles725/niagara-go/internal/cli"
 	"github.com/angeles725/niagara-go/internal/pycompat"
+	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
-// prog is the Python program name, kept for byte-identical usage and error lines.
-const prog = "greenmax-tablero-gen.py"
+// prog is the installed command name used in usage and error lines (I4-2).
+const prog = "greenmax-tablero-gen"
 
 func newParser() *argparse.Parser {
 	p := argparse.New(argparse.Config{Prog: prog, Description: "Generate a redesigned GreenMAX tablero Px."})
@@ -66,7 +67,7 @@ func run(src, gm, out, tab string, legend, toStdout bool, s cli.Stdio) int {
 	doc := fmt.Sprintf("# %s — Tablero (`%s`) con selector de nombre\n\n"+
 		"> %d circuitos. Original de %s: HOA+popups quitados, pills+LEDs conservados, "+
 		"%d selectores NameMux/SelR (ords absolutos Iluminacion/%s/)%s.\n\n```xml\n", gm, tab, n, gm, n, gm, legendNote) +
-		strings.TrimRightFunc(px, pycompat.IsSpace) + "\n```\n"
+		strings.TrimRightFunc(px, textfold.IsSpace) + "\n```\n"
 	if toStdout || out == "" {
 		fmt.Fprint(s.Out, doc)
 	} else {

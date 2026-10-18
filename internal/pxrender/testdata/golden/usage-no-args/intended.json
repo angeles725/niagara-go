@@ -1,0 +1,4 @@
+{
+ "reason": "I4-2 (D34): the Python script is retired; help, usage and error lines name the installed Go command px-render instead of px-render.py",
+ "stderr": "usage: px-render [-h] [--shared SHARED] [--organized ORGANIZED] [--out OUT] [--on-ratio ON_RATIO]\n                 [--seed SEED] [--title TITLE] [--subtitle SUBTITLE]\n                 px\npx-render: error: the following arguments are required: px\n"
+}

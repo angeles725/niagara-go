@@ -25,7 +25,7 @@ func Main(args []string, s cli.Stdio) int {
 // parse reads the command line into Options; done is true (with the exit code) after --help or a
 // usage error.
 func parse(args []string, s cli.Stdio) (o Options, code int, done bool) {
-	p := argparse.New(argparse.Config{Prog: "obix-nav.py"})
+	p := argparse.New(argparse.Config{Prog: "obix-nav"})
 	p.Add(argparse.Arg{Default: DefaultBase}, "--base")
 	p.Add(argparse.Arg{Default: DefaultPassFile}, "--pass-file")
 	sub := p.AddSubparsers(argparse.SubparsersConfig{Dest: "cmd", Required: true})

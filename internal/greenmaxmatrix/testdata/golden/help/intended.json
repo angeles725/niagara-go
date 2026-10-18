@@ -1,0 +1,4 @@
+{
+ "reason": "I4-2 (D34): the Python script is retired; help, usage and error lines name the installed Go command greenmax-matrix instead of greenmax-matrix.py",
+ "stdout": "usage: greenmax-matrix [-h] [-o OUT] supervisor jace px_dir\n\nBuild the GreenMAX lighting points matrix.\n\npositional arguments:\n  supervisor\n  jace\n  px_dir\n\noptions:\n  -h, --help     show this help message and exit\n  -o, --out OUT\n"
+}

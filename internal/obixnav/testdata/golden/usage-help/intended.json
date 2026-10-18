@@ -1,0 +1,4 @@
+{
+ "reason": "I4-2 (D34): the Python script is retired; help, usage and error lines name the installed Go command obix-nav instead of obix-nav.py",
+ "stdout": "usage: obix-nav [-h] [--base BASE] [--pass-file PASS_FILE] {map,cond,wiring,config,read,dump} ...\n\npositional arguments:\n  {map,cond,wiring,config,read,dump}\n\noptions:\n  -h, --help            show this help message and exit\n  --base BASE\n  --pass-file PASS_FILE\n"
+}

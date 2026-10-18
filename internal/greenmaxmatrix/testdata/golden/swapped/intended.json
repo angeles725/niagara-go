@@ -1,0 +1,4 @@
+{
+ "reason": "I4-2 (D34): the Python script is retired; help, usage and error lines name the installed Go command greenmax-matrix instead of greenmax-matrix.py",
+ "stderr": "greenmax-matrix: the two bogs look swapped: the GM<n>ilum NiagaraPointFolders (supervisor role) are in inputs/sup.bog and/or the GM<n>ilum BacnetDevices (JACE role) are in inputs/jace.bog; usage: greenmax-matrix <supervisor.bog> <jace.bog> <px_dir>\n"
+}

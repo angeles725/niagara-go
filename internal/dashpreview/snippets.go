@@ -1,4 +1,5 @@
-// Code generated from tools/dashboard-preview.py and Python 3.15 http.server; DO NOT EDIT.
+// The snippets below were frozen from tools/dashboard-preview.py and the Python 3.15 http.server
+// at niagara-research tag pre-go-retire; no generator exists, so they are edited by hand.
 
 package dashpreview
 

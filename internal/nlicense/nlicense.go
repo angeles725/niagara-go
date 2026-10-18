@@ -21,6 +21,7 @@ import (
 	"github.com/angeles725/niagara-go/internal/cli"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyjson"
+	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
 // exitError is a Python SystemExit: message to stderr, then the code.
@@ -99,7 +100,7 @@ func loadCertPublicKey(path string) (any, error) {
 	if pk == nil || elemText(pk) == nil || *elemText(pk) == "" {
 		return nil, sysExit("ERROR: no <publicKey> in certificate")
 	}
-	der, err := b64decode(strings.Join(pycompat.Fields(*elemText(pk)), ""))
+	der, err := b64decode(strings.Join(textfold.Fields(*elemText(pk)), ""))
 	if err != nil {
 		return nil, err
 	}
@@ -123,7 +124,7 @@ func cmdVerify(licensePath, certPath string, s cli.Stdio) (int, error) {
 	if sigEl == nil || elemText(sigEl) == nil || *elemText(sigEl) == "" {
 		return 0, sysExit("ERROR: no <signature> element")
 	}
-	sig, err := b64decode(strings.Join(pycompat.Fields(*elemText(sigEl)), ""))
+	sig, err := b64decode(strings.Join(textfold.Fields(*elemText(sigEl)), ""))
 	if err != nil {
 		return 0, err
 	}

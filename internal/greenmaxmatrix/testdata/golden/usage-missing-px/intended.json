@@ -1,0 +1,4 @@
+{
+ "reason": "I4-2 (D34): the Python script is retired; help, usage and error lines name the installed Go command greenmax-matrix instead of greenmax-matrix.py",
+ "stderr": "usage: greenmax-matrix [-h] [-o OUT] supervisor jace px_dir\ngreenmax-matrix: error: the following arguments are required: px_dir\n"
+}

@@ -5,8 +5,8 @@ import (
 	"github.com/angeles725/niagara-go/internal/cli"
 )
 
-// doc is the Python module docstring, the --help description (RawDescriptionHelpFormatter).
-const doc = "hdbread.py — read-only reader for Niagara N4 .hdb history files.\n" +
+// doc is the --help description (RawDescriptionHelpFormatter), from the Python docstring.
+const doc = "hdbread — read-only reader for Niagara N4 .hdb history files.\n" +
 	"\n" +
 	"On-disk format, derived from the history-rt code (organized/history/history-rt/vineflower, N4; file:line):\n" +
 	"  [0:4]   magic 0xA106F11E (-1593380578)          com/tridium/history/file/BFileHistoryTable.java:63,821\n" +
@@ -44,8 +44,8 @@ const doc = "hdbread.py — read-only reader for Niagara N4 .hdb history files.\
 	"and long values before printing; cite structure/counts, not specific secret values.\n" +
 	"\n" +
 	"Usage:\n" +
-	"  python3 hdbread.py <file.hdb> [--schema] [--ops] [--strings] [--mask]\n" +
-	"  python3 hdbread.py <file.hdb> --records [--json]   trend records as CSV (or JSON) on stdout,\n" +
+	"  hdbread <file.hdb> [--schema] [--ops] [--strings] [--mask]\n" +
+	"  hdbread <file.hdb> --records [--json]   trend records as CSV (or JSON) on stdout,\n" +
 	"        timestamp (UTC ISO 8601), millis, status, trendFlags, value; summary on stderr\n" +
 	"  hdbread <file.hdb> --records [--json] [--mask]   LogRecord/AuditRecord histories: timestamp, millis,\n" +
 	"        then the schema fields (a log record adds the severity's level name); --mask prints\n" +
@@ -55,7 +55,7 @@ const doc = "hdbread.py — read-only reader for Niagara N4 .hdb history files.\
 	""
 
 func newParser() *argparse.Parser {
-	p := argparse.New(argparse.Config{Prog: "hdbread.py", Description: doc,
+	p := argparse.New(argparse.Config{Prog: "hdbread", Description: doc,
 		Formatter: argparse.RawDescriptionHelpFormatter})
 	p.Add(argparse.Arg{Help: "a Niagara .hdb history file"}, "hdb")
 	flag := func(name, help string) { p.Add(argparse.Arg{Action: argparse.StoreTrue, Help: help}, name) }
