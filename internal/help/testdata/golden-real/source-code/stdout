@@ -1,0 +1,1766 @@
+SOURCE: BAlarmService
+MODULE: alarm-rt
+PACKAGE: javax.baja.alarm
+LINES: 1760
+PATH: source/alarm-rt/javax/baja/alarm/BAlarmService.java
+
+   1 | /*
+   2 |  * Copyright 2000-2001 Tridium, Inc. All Rights Reserved.
+   3 |  */
+   4 | package javax.baja.alarm;
+   5 | 
+   6 | import java.io.IOException;
+   7 | import java.util.HashMap;
+   8 | import java.util.Map;
+   9 | import java.util.Optional;
+  10 | import java.util.logging.Level;
+  11 | import java.util.logging.Logger;
+  12 | 
+  13 | import javax.baja.agent.AgentList;
+  14 | import javax.baja.collection.BITable;
+  15 | import javax.baja.control.trigger.BIntervalTriggerMode;
+  16 | import javax.baja.control.trigger.BTimeTrigger;
+  17 | import javax.baja.dataRecovery.BIDataRecoveryService;
+  18 | import javax.baja.dataRecovery.BIDataRecoverySourceService;
+  19 | import javax.baja.license.Feature;
+  20 | import javax.baja.naming.BLocalHost;
+  21 | import javax.baja.naming.BOrd;
+  22 | import javax.baja.naming.BOrdList;
+  23 | import javax.baja.naming.SlotPath;
+  24 | import javax.baja.naming.UnresolvedException;
+  25 | import javax.baja.nre.annotations.NiagaraAction;
+  26 | import javax.baja.nre.annotations.NiagaraProperty;
+  27 | import javax.baja.nre.annotations.NiagaraTopic;
+  28 | import javax.baja.nre.annotations.NiagaraType;
+  29 | import javax.baja.nre.util.Array;
+  30 | import javax.baja.rpc.NiagaraRpc;
+  31 | import javax.baja.rpc.Transport;
+  32 | import javax.baja.rpc.TransportType;
+  33 | import javax.baja.security.AuditEvent;
+  34 | import javax.baja.security.Auditor;
+  35 | import javax.baja.space.BComponentSpace;
+  36 | import javax.baja.spy.SpyWriter;
+  37 | import javax.baja.sys.Action;
+  38 | import javax.baja.sys.BAbsTime;
+  39 | import javax.baja.sys.BAbstractService;
+  40 | import javax.baja.sys.BComponent;
+  41 | import javax.baja.sys.BFacets;
+  42 | import javax.baja.sys.BIcon;
+  43 | import javax.baja.sys.BLink;
+  44 | import javax.baja.sys.BObject;
+  45 | import javax.baja.sys.BRelTime;
+  46 | import javax.baja.sys.BString;
+  47 | import javax.baja.sys.BValue;
+  48 | import javax.baja.sys.BVector;
+  49 | import javax.baja.sys.BajaRuntimeException;
+  50 | import javax.baja.sys.Context;
+  51 | import javax.baja.sys.Cursor;
+  52 | import javax.baja.sys.Flags;
+  53 | import javax.baja.sys.IllegalNameException;
+  54 | import javax.baja.sys.LocalizableRuntimeException;
+  55 | import javax.baja.sys.NotRunningException;
+  56 | import javax.baja.sys.Property;
+  57 | import javax.baja.sys.Sys;
+  58 | import javax.baja.sys.Topic;
+  59 | import javax.baja.sys.Type;
+  60 | import javax.baja.user.BUser;
+  61 | import javax.baja.util.BIRestrictedComponent;
+  62 | import javax.baja.util.BUuid;
+  63 | import javax.baja.util.CoalesceQueue;
+  64 | import javax.baja.util.IFuture;
+  65 | import javax.baja.util.Invocation;
+  66 | import javax.baja.util.Queue;
+  67 | import javax.baja.util.Version;
+  68 | import javax.baja.util.Worker;
+  69 | 
+  70 | import com.tridium.alarm.BAlarmExtStatusJob;
+  71 | import com.tridium.alarm.BIUpdatableAlarmSource;
+  72 | import com.tridium.alarm.db.file.BFileAlarmDatabase;
+  73 | import com.tridium.alarm.db.file.BFileAlarmDbConfig;
+  74 | import com.tridium.alarm.fox.BAlarmDbChannel;
+  75 | import com.tridium.fox.sys.BFoxChannelRegistry;
+  76 | import com.tridium.fox.sys.BFoxSession;
+  77 | import com.tridium.fox.util.FoxRpcUtil;
+  78 | import com.tridium.platform.BPlatformService;
+  79 | import com.tridium.platform.BPlatformServiceContainer;
+  80 | import com.tridium.platform.alarm.BIAlarmablePlatformService;
+  81 | import com.tridium.platform.alarm.BPlatformServiceAlarmRecord;
+  82 | import com.tridium.platform.alarm.BPlatformServiceSourceState;
+  83 | import com.tridium.platform.alarm.PlatformServiceAlarmListener;
+  84 | import com.tridium.sys.license.LicenseUtil;
+  85 | import com.tridium.sys.schema.Fw;
+  86 | import com.tridium.sys.station.Station;
+  87 | import com.tridium.util.PxUtil;
+  88 | 
+  89 | /**
+  90 |  * The BAlarmService uses BAlarmClasses to route all alarm
+  91 |  * messages between AlarmSources and BAlarmRecipients.
+  92 |  * <p>
+  93 |  * Each station contains a single BAlarmService.
+  94 |  *
+  95 |  * @author Dan Giorgis on 19 Feb 01
+  96 |  * @since Baja 1.0
+  97 |  */
+  98 | @NiagaraType
+  99 | /*
+ 100 |  Alarm Database Configuration.
+ 101 |  */
+ 102 | @NiagaraProperty(
+ 103 |   name = "alarmDbConfig",
+ 104 |   type = "BAlarmDbConfig",
+ 105 |   defaultValue = "new BFileAlarmDbConfig()"
+ 106 | )
+ 107 | /*
+ 108 |  The default alarm class.
+ 109 |  */
+ 110 | @NiagaraProperty(
+ 111 |   name = "defaultAlarmClass",
+ 112 |   type = "BAlarmClass",
+ 113 |   defaultValue = "new BAlarmClass()"
+ 114 | )
+ 115 | /*
+ 116 |  List of generic instructions that are available to all alarm exts.
+ 117 |  */
+ 118 | @NiagaraProperty(
+ 119 |   name = "masterAlarmInstructions",
+ 120 |   type = "BAlarmInstructions",
+ 121 |   defaultValue = "BAlarmInstructions.make(\"\")"
+ 122 | )
+ 123 | /*
+ 124 |  The frequency that alarms should be escalated
+ 125 |  */
+ 126 | @NiagaraProperty(
+ 127 |   name = "escalationTimeTrigger",
+ 128 |   type = "BTimeTrigger",
+ 129 |   defaultValue = "new BTimeTrigger(BIntervalTriggerMode.make(BRelTime.makeMinutes(1)))",
+ 130 |   flags = Flags.HIDDEN
+ 131 | )
+ 132 | /*
+ 133 |  Determines whether to coalesce alarms or not.
+ 134 |  */
+ 135 | @NiagaraProperty(
+ 136 |   name = "coalesceAlarms",
+ 137 |   type = "boolean",
+ 138 |   defaultValue = "true"
+ 139 | )
+ 140 | /*
+ 141 |  Route an alarm record to recipients.
+ 142 |  */
+ 143 | @NiagaraAction(
+ 144 |   name = "routeAlarm",
+ 145 |   parameterType = "BAlarmRecord",
+ 146 |   defaultValue = "new BAlarmRecord()",
+ 147 |   flags = Flags.HIDDEN
+ 148 | )
+ 149 | /*
+ 150 |  Route an ack Request to it's source.
+ 151 |  */
+ 152 | @NiagaraAction(
+ 153 |   name = "ackAlarm",
+ 154 |   parameterType = "BAlarmRecord",
+ 155 |   defaultValue = "new BAlarmRecord()",
+ 156 |   flags = Flags.HIDDEN
+ 157 | )
+ 158 | /*
+ 159 |  Set into service all of the extensions referenced in the specified list of ords.
+ 160 |  */
+ 161 | @NiagaraAction(
+ 162 |   name = "enableToOffnormal",
+ 163 |   parameterType = "BVector",
+ 164 |   defaultValue = "new BVector()",
+ 165 |   returnType = "BOrd",
+ 166 |   flags = Flags.HIDDEN
+ 167 | )
+ 168 | /*
+ 169 |  Set disabled all of the extensions referenced in the specified list of ords.
+ 170 |  */
+ 171 | @NiagaraAction(
+ 172 |   name = "disableToOffnormal",
+ 173 |   parameterType = "BVector",
+ 174 |   defaultValue = "new BVector()",
+ 175 |   returnType = "BOrd",
+ 176 |   flags = Flags.HIDDEN
+ 177 | )
+ 178 | /*
+ 179 |  Set into service all of the extensions referenced in the specified list of ords.
+ 180 |  */
+ 181 | @NiagaraAction(
+ 182 |   name = "enableToFault",
+ 183 |   parameterType = "BVector",
+ 184 |   defaultValue = "new BVector()",
+ 185 |   returnType = "BOrd",
+ 186 |   flags = Flags.HIDDEN
+ 187 | )
+ 188 | /*
+ 189 |  Set disabled all of the extensions referenced in the specified list of ords.
+ 190 |  */
+ 191 | @NiagaraAction(
+ 192 |   name = "disableToFault",
+ 193 |   parameterType = "BVector",
+ 194 |   defaultValue = "new BVector()",
+ 195 |   returnType = "BOrd",
+ 196 |   flags = Flags.HIDDEN
+ 197 | )
+ 198 | /*
+ 199 |  Creates an audit record in the AuditHistory Database if available.
+ 200 |  Flagged as no audit since this method create an audit record.
+ 201 |  */
+ 202 | @NiagaraAction(
+ 203 |   name = "auditForceClear",
+ 204 |   parameterType = "BAlarmRecord",
+ 205 |   defaultValue = "new BAlarmRecord()",
+ 206 |   flags = Flags.HIDDEN | Flags.NO_AUDIT
+ 207 | )
+ 208 | /*
+ 209 |  Creates an audit record in the AuditHistory Database if available.
+ 210 |  Flagged as no audit since this method create an audit record.
+ 211 |  */
+ 212 | @NiagaraAction(
+ 213 |   name = "escalateAlarms",
+ 214 |   flags = Flags.HIDDEN | Flags.NO_AUDIT | Flags.ASYNC
+ 215 | )
+ 216 | /*
+ 217 |  Fired whenever an alarm is received (eg. when the alarm is routed to an alarm class).
+ 218 |  */
+ 219 | @NiagaraTopic(
+ 220 |   name = "alarm",
+ 221 |   eventType = "BAlarmRecord",
+ 222 |   flags = Flags.SUMMARY
+ 223 | )
+ 224 | public class BAlarmService
+ 225 |   extends BAbstractService
+ 226 |   implements BIAlarmClassFolder, BIDataRecoverySourceService, BIRestrictedComponent
+ 227 | {
+ 228 | //region /*+ ------------ BEGIN BAJA AUTO GENERATED CODE ------------ +*/
+ 229 | //@formatter:off
+ 230 | /*@ $javax.baja.alarm.BAlarmService(1717681336)1.0$ @*/
+ 231 | /* Generated Thu Jun 02 14:30:00 EDT 2022 by Slot-o-Matic (c) Tridium, Inc. 2012-2022 */
+ 232 | 
+ 233 |   //region Property "alarmDbConfig"
+ 234 | 
+ 235 |   /**
+ 236 |    * Slot for the {@code alarmDbConfig} property.
+ 237 |    * Alarm Database Configuration.
+ 238 |    * @see #getAlarmDbConfig
+ 239 |    * @see #setAlarmDbConfig
+ 240 |    */
+ 241 |   public static final Property alarmDbConfig = newProperty(0, new BFileAlarmDbConfig(), null);
+ 242 | 
+ 243 |   /**
+ 244 |    * Get the {@code alarmDbConfig} property.
+ 245 |    * Alarm Database Configuration.
+ 246 |    * @see #alarmDbConfig
+ 247 |    */
+ 248 |   public BAlarmDbConfig getAlarmDbConfig() { return (BAlarmDbConfig)get(alarmDbConfig); }
+ 249 | 
+ 250 |   /**
+ 251 |    * Set the {@code alarmDbConfig} property.
+ 252 |    * Alarm Database Configuration.
+ 253 |    * @see #alarmDbConfig
+ 254 |    */
+ 255 |   public void setAlarmDbConfig(BAlarmDbConfig v) { set(alarmDbConfig, v, null); }
+ 256 | 
+ 257 |   //endregion Property "alarmDbConfig"
+ 258 | 
+ 259 |   //region Property "defaultAlarmClass"
+ 260 | 
+ 261 |   /**
+ 262 |    * Slot for the {@code defaultAlarmClass} property.
+ 263 |    * The default alarm class.
+ 264 |    * @see #getDefaultAlarmClass
+ 265 |    * @see #setDefaultAlarmClass
+ 266 |    */
+ 267 |   public static final Property defaultAlarmClass = newProperty(0, new BAlarmClass(), null);
+ 268 | 
+ 269 |   /**
+ 270 |    * Get the {@code defaultAlarmClass} property.
+ 271 |    * The default alarm class.
+ 272 |    * @see #defaultAlarmClass
+ 273 |    */
+ 274 |   public BAlarmClass getDefaultAlarmClass() { return (BAlarmClass)get(defaultAlarmClass); }
+ 275 | 
+ 276 |   /**
+ 277 |    * Set the {@code defaultAlarmClass} property.
+ 278 |    * The default alarm class.
+ 279 |    * @see #defaultAlarmClass
+ 280 |    */
+ 281 |   public void setDefaultAlarmClass(BAlarmClass v) { set(defaultAlarmClass, v, null); }
+ 282 | 
+ 283 |   //endregion Property "defaultAlarmClass"
+ 284 | 
+ 285 |   //region Property "masterAlarmInstructions"
+ 286 | 
+ 287 |   /**
+ 288 |    * Slot for the {@code masterAlarmInstructions} property.
+ 289 |    * List of generic instructions that are available to all alarm exts.
+ 290 |    * @see #getMasterAlarmInstructions
+ 291 |    * @see #setMasterAlarmInstructions
+ 292 |    */
+ 293 |   public static final Property masterAlarmInstructions = newProperty(0, BAlarmInstructions.make(""), null);
+ 294 | 
+ 295 |   /**
+ 296 |    * Get the {@code masterAlarmInstructions} property.
+ 297 |    * List of generic instructions that are available to all alarm exts.
+ 298 |    * @see #masterAlarmInstructions
+ 299 |    */
+ 300 |   public BAlarmInstructions getMasterAlarmInstructions() { return (BAlarmInstructions)get(masterAlarmInstructions); }
+ 301 | 
+ 302 |   /**
+ 303 |    * Set the {@code masterAlarmInstructions} property.
+ 304 |    * List of generic instructions that are available to all alarm exts.
+ 305 |    * @see #masterAlarmInstructions
+ 306 |    */
+ 307 |   public void setMasterAlarmInstructions(BAlarmInstructions v) { set(masterAlarmInstructions, v, null); }
+ 308 | 
+ 309 |   //endregion Property "masterAlarmInstructions"
+ 310 | 
+ 311 |   //region Property "escalationTimeTrigger"
+ 312 | 
+ 313 |   /**
+ 314 |    * Slot for the {@code escalationTimeTrigger} property.
+ 315 |    * The frequency that alarms should be escalated
+ 316 |    * @see #getEscalationTimeTrigger
+ 317 |    * @see #setEscalationTimeTrigger
+ 318 |    */
+ 319 |   public static final Property escalationTimeTrigger = newProperty(Flags.HIDDEN, new BTimeTrigger(BIntervalTriggerMode.make(BRelTime.makeMinutes(1))), null);
+ 320 | 
+ 321 |   /**
+ 322 |    * Get the {@code escalationTimeTrigger} property.
+ 323 |    * The frequency that alarms should be escalated
+ 324 |    * @see #escalationTimeTrigger
+ 325 |    */
+ 326 |   public BTimeTrigger getEscalationTimeTrigger() { return (BTimeTrigger)get(escalationTimeTrigger); }
+ 327 | 
+ 328 |   /**
+ 329 |    * Set the {@code escalationTimeTrigger} property.
+ 330 |    * The frequency that alarms should be escalated
+ 331 |    * @see #escalationTimeTrigger
+ 332 |    */
+ 333 |   public void setEscalationTimeTrigger(BTimeTrigger v) { set(escalationTimeTrigger, v, null); }
+ 334 | 
+ 335 |   //endregion Property "escalationTimeTrigger"
+ 336 | 
+ 337 |   //region Property "coalesceAlarms"
+ 338 | 
+ 339 |   /**
+ 340 |    * Slot for the {@code coalesceAlarms} property.
+ 341 |    * Determines whether to coalesce alarms or not.
+ 342 |    * @see #getCoalesceAlarms
+ 343 |    * @see #setCoalesceAlarms
+ 344 |    */
+ 345 |   public static final Property coalesceAlarms = newProperty(0, true, null);
+ 346 | 
+ 347 |   /**
+ 348 |    * Get the {@code coalesceAlarms} property.
+ 349 |    * Determines whether to coalesce alarms or not.
+ 350 |    * @see #coalesceAlarms
+ 351 |    */
+ 352 |   public boolean getCoalesceAlarms() { return getBoolean(coalesceAlarms); }
+ 353 | 
+ 354 |   /**
+ 355 |    * Set the {@code coalesceAlarms} property.
+ 356 |    * Determines whether to coalesce alarms or not.
+ 357 |    * @see #coalesceAlarms
+ 358 |    */
+ 359 |   public void setCoalesceAlarms(boolean v) { setBoolean(coalesceAlarms, v, null); }
+ 360 | 
+ 361 |   //endregion Property "coalesceAlarms"
+ 362 | 
+ 363 |   //region Action "routeAlarm"
+ 364 | 
+ 365 |   /**
+ 366 |    * Slot for the {@code routeAlarm} action.
+ 367 |    * Route an alarm record to recipients.
+ 368 |    * @see #routeAlarm(BAlarmRecord parameter)
+ 369 |    */
+ 370 |   public static final Action routeAlarm = newAction(Flags.HIDDEN, new BAlarmRecord(), null);
+ 371 | 
+ 372 |   /**
+ 373 |    * Invoke the {@code routeAlarm} action.
+ 374 |    * Route an alarm record to recipients.
+ 375 |    * @see #routeAlarm
+ 376 |    */
+ 377 |   public void routeAlarm(BAlarmRecord parameter) { invoke(routeAlarm, parameter, null); }
+ 378 | 
+ 379 |   //endregion Action "routeAlarm"
+ 380 | 
+ 381 |   //region Action "ackAlarm"
+ 382 | 
+ 383 |   /**
+ 384 |    * Slot for the {@code ackAlarm} action.
+ 385 |    * Route an ack Request to it's source.
+ 386 |    * @see #ackAlarm(BAlarmRecord parameter)
+ 387 |    */
+ 388 |   public static final Action ackAlarm = newAction(Flags.HIDDEN, new BAlarmRecord(), null);
+ 389 | 
+ 390 |   /**
+ 391 |    * Invoke the {@code ackAlarm} action.
+ 392 |    * Route an ack Request to it's source.
+ 393 |    * @see #ackAlarm
+ 394 |    */
+ 395 |   public void ackAlarm(BAlarmRecord parameter) { invoke(ackAlarm, parameter, null); }
+ 396 | 
+ 397 |   //endregion Action "ackAlarm"
+ 398 | 
+ 399 |   //region Action "enableToOffnormal"
+ 400 | 
+ 401 |   /**
+ 402 |    * Slot for the {@code enableToOffnormal} action.
+ 403 |    * Set into service all of the extensions referenced in the specified list of ords.
+ 404 |    * @see #enableToOffnormal(BVector parameter)
+ 405 |    */
+ 406 |   public static final Action enableToOffnormal = newAction(Flags.HIDDEN, new BVector(), null);
+ 407 | 
+ 408 |   /**
+ 409 |    * Invoke the {@code enableToOffnormal} action.
+ 410 |    * Set into service all of the extensions referenced in the specified list of ords.
+ 411 |    * @see #enableToOffnormal
+ 412 |    */
+ 413 |   public BOrd enableToOffnormal(BVector parameter) { return (BOrd)invoke(enableToOffnormal, parameter, null); }
+ 414 | 
+ 415 |   //endregion Action "enableToOffnormal"
+ 416 | 
+ 417 |   //region Action "disableToOffnormal"
+ 418 | 
+ 419 |   /**
+ 420 |    * Slot for the {@code disableToOffnormal} action.
+ 421 |    * Set disabled all of the extensions referenced in the specified list of ords.
+ 422 |    * @see #disableToOffnormal(BVector parameter)
+ 423 |    */
+ 424 |   public static final Action disableToOffnormal = newAction(Flags.HIDDEN, new BVector(), null);
+ 425 | 
+ 426 |   /**
+ 427 |    * Invoke the {@code disableToOffnormal} action.
+ 428 |    * Set disabled all of the extensions referenced in the specified list of ords.
+ 429 |    * @see #disableToOffnormal
+ 430 |    */
+ 431 |   public BOrd disableToOffnormal(BVector parameter) { return (BOrd)invoke(disableToOffnormal, parameter, null); }
+ 432 | 
+ 433 |   //endregion Action "disableToOffnormal"
+ 434 | 
+ 435 |   //region Action "enableToFault"
+ 436 | 
+ 437 |   /**
+ 438 |    * Slot for the {@code enableToFault} action.
+ 439 |    * Set into service all of the extensions referenced in the specified list of ords.
+ 440 |    * @see #enableToFault(BVector parameter)
+ 441 |    */
+ 442 |   public static final Action enableToFault = newAction(Flags.HIDDEN, new BVector(), null);
+ 443 | 
+ 444 |   /**
+ 445 |    * Invoke the {@code enableToFault} action.
+ 446 |    * Set into service all of the extensions referenced in the specified list of ords.
+ 447 |    * @see #enableToFault
+ 448 |    */
+ 449 |   public BOrd enableToFault(BVector parameter) { return (BOrd)invoke(enableToFault, parameter, null); }
+ 450 | 
+ 451 |   //endregion Action "enableToFault"
+ 452 | 
+ 453 |   //region Action "disableToFault"
+ 454 | 
+ 455 |   /**
+ 456 |    * Slot for the {@code disableToFault} action.
+ 457 |    * Set disabled all of the extensions referenced in the specified list of ords.
+ 458 |    * @see #disableToFault(BVector parameter)
+ 459 |    */
+ 460 |   public static final Action disableToFault = newAction(Flags.HIDDEN, new BVector(), null);
+ 461 | 
+ 462 |   /**
+ 463 |    * Invoke the {@code disableToFault} action.
+ 464 |    * Set disabled all of the extensions referenced in the specified list of ords.
+ 465 |    * @see #disableToFault
+ 466 |    */
+ 467 |   public BOrd disableToFault(BVector parameter) { return (BOrd)invoke(disableToFault, parameter, null); }
+ 468 | 
+ 469 |   //endregion Action "disableToFault"
+ 470 | 
+ 471 |   //region Action "auditForceClear"
+ 472 | 
+ 473 |   /**
+ 474 |    * Slot for the {@code auditForceClear} action.
+ 475 |    * Creates an audit record in the AuditHistory Database if available.
+ 476 |    * Flagged as no audit since this method create an audit record.
+ 477 |    * @see #auditForceClear(BAlarmRecord parameter)
+ 478 |    */
+ 479 |   public static final Action auditForceClear = newAction(Flags.HIDDEN | Flags.NO_AUDIT, new BAlarmRecord(), null);
+ 480 | 
+ 481 |   /**
+ 482 |    * Invoke the {@code auditForceClear} action.
+ 483 |    * Creates an audit record in the AuditHistory Database if available.
+ 484 |    * Flagged as no audit since this method create an audit record.
+ 485 |    * @see #auditForceClear
+ 486 |    */
+ 487 |   public void auditForceClear(BAlarmRecord parameter) { invoke(auditForceClear, parameter, null); }
+ 488 | 
+ 489 |   //endregion Action "auditForceClear"
+ 490 | 
+ 491 |   //region Action "escalateAlarms"
+ 492 | 
+ 493 |   /**
+ 494 |    * Slot for the {@code escalateAlarms} action.
+ 495 |    * Creates an audit record in the AuditHistory Database if available.
+ 496 |    * Flagged as no audit since this method create an audit record.
+ 497 |    * @see #escalateAlarms()
+ 498 |    */
+ 499 |   public static final Action escalateAlarms = newAction(Flags.HIDDEN | Flags.NO_AUDIT | Flags.ASYNC, null);
+ 500 | 
+ 501 |   /**
+ 502 |    * Invoke the {@code escalateAlarms} action.
+ 503 |    * Creates an audit record in the AuditHistory Database if available.
+ 504 |    * Flagged as no audit since this method create an audit record.
+ 505 |    * @see #escalateAlarms
+ 506 |    */
+ 507 |   public void escalateAlarms() { invoke(escalateAlarms, null, null); }
+ 508 | 
+ 509 |   //endregion Action "escalateAlarms"
+ 510 | 
+ 511 |   //region Topic "alarm"
+ 512 | 
+ 513 |   /**
+ 514 |    * Slot for the {@code alarm} topic.
+ 515 |    * Fired whenever an alarm is received (eg. when the alarm is routed to an alarm class).
+ 516 |    * @see #fireAlarm
+ 517 |    */
+ 518 |   public static final Topic alarm = newTopic(Flags.SUMMARY, null);
+ 519 | 
+ 520 |   /**
+ 521 |    * Fire an event for the {@code alarm} topic.
+ 522 |    * Fired whenever an alarm is received (eg. when the alarm is routed to an alarm class).
+ 523 |    * @see #alarm
+ 524 |    */
+ 525 |   public void fireAlarm(BAlarmRecord event) { fire(alarm, event, null); }
+ 526 | 
+ 527 |   //endregion Topic "alarm"
+ 528 | 
+ 529 |   //region Type
+ 530 | 
+ 531 |   @Override
+ 532 |   public Type getType() { return TYPE; }
+ 533 |   public static final Type TYPE = Sys.loadType(BAlarmService.class);
+ 534 | 
+ 535 |   //endregion Type
+ 536 | 
+ 537 | //@formatter:on
+ 538 | //endregion /*+ ------------ END BAJA AUTO GENERATED CODE -------------- +*/
+ 539 | 
+ 540 | ////////////////////////////////////////////////////////////////
+ 541 | // Methods
+ 542 | ////////////////////////////////////////////////////////////////
+ 543 | 
+ 544 |   /**
+ 545 |    * Register this component under "alarm:AlarmService".
+ 546 |    */
+ 547 |   @Override
+ 548 |   public Type[] getServiceTypes()
+ 549 |   {
+ 550 |     return serviceTypes;
+ 551 |   }
+ 552 |   private static final Type[] serviceTypes = { TYPE };
+ 553 | 
+ 554 |   /**
+ 555 |    * Service start.
+ 556 |    */
+ 557 |   @Override
+ 558 |   public void serviceStarted()
+ 559 |   {
+ 560 |     if(isOperational())
+ 561 |     {
+ 562 |       //loop through all platform services
+ 563 |       // check to see if platform service implements BIAlarmable
+ 564 |       // if it does, addAlarmListener(platformsvc)
+ 565 |       try
+ 566 |       {
+ 567 |         BPlatformServiceContainer container = (BPlatformServiceContainer)Sys.getService(BPlatformServiceContainer.TYPE);
+ 568 |         BPlatformService[] platSvcs = container.getChildren(BPlatformService.class);
+ 569 | 
+ 570 |         for (BPlatformService platSvc : platSvcs)
+ 571 |         {
+ 572 |           if (platSvc instanceof BIAlarmablePlatformService)
+ 573 |           {
+ 574 |             ((BIAlarmablePlatformService)platSvc).addPlatformServiceAlarmListener(listener);
+ 575 |           }
+ 576 |         }
+ 577 |       }
+ 578 |       catch (Exception e)
+ 579 |       {
+ 580 |         logger.severe("Cannot setup alarming for platform service\n  " + e);
+ 581 |       }
+ 582 | 
+ 583 |       if (alarmWorker == null)
+ 584 |       {
+ 585 |         alarmWorker = new Worker(alarmQueue);
+ 586 |       }
+ 587 |       alarmWorker.start("Alarm:ServiceWorker");
+ 588 | 
+ 589 |       // create and open the alarm database
+ 590 |       initAlarmDb();
+ 591 | 
+ 592 |       // create the alarmdb channel
+ 593 |       BFoxChannelRegistry registry = BFoxChannelRegistry.getPrototype();
+ 594 |       if(registry.get("alarmdb") == null)
+ 595 |       {
+ 596 |         registry.add("alarmdb", new BAlarmDbChannel());
+ 597 |       }
+ 598 | 
+ 599 |       // add myself to receive station.save callbacks
+ 600 |       Station.addSaveListener(saveListener);
+ 601 | 
+ 602 |       try
+ 603 |       {
+ 604 |         BLocalHost.INSTANCE.addNavChild(getAlarmDb());
+ 605 | 
+ 606 |       }
+ 607 |       catch (IllegalArgumentException iae)
+ 608 |       {
+ 609 |         //Already added the alarm db
+ 610 |       }
+ 611 |     }
+ 612 | 
+ 613 |     //TODO if already at steady state, then call atSteadyState() to start esc
+ 614 |     // timer
+ 615 |   }
+ 616 | 
+ 617 |   @Override
+ 618 |   public void atSteadyState()
+ 619 |   {
+ 620 |   }
+ 621 | 
+ 622 |   /**
+ 623 |    * Service stop.
+ 624 |    */
+ 625 |   @Override
+ 626 |   public void serviceStopped()
+ 627 |   {
+ 628 |     Station.removeSaveListener(saveListener);
+ 629 | 
+ 630 |     if(alarmWorker != null)
+ 631 |     {
+ 632 |       alarmWorker.stop();
+ 633 |     }
+ 634 | 
+ 635 |     BFoxChannelRegistry registry = BFoxChannelRegistry.getPrototype();
+ 636 |     if (registry.get("alarmdb") != null)
+ 637 |     {
+ 638 |       registry.remove("alarmdb");
+ 639 |     }
+ 640 | 
+ 641 |     if(alarmDb != null)
+ 642 |     {
+ 643 |       try
+ 644 |       {
+ 645 |         alarmDb.flush();
+ 646 |       }
+ 647 |       catch (IOException e)
+ 648 |       {
+ 649 |         String msg = "Alarm database save failed";
+ 650 |         if (logger.isLoggable(Level.FINE))
+ 651 |         {
+ 652 |           logger.log(Level.SEVERE, msg, e);
+ 653 |         }
+ 654 |         else
+ 655 |         {
+ 656 |           logger.severe(msg);
+ 657 |         }
+ 658 |       }
+ 659 |       finally
+ 660 |       {
+ 661 |         alarmDb.close();
+ 662 |         alarmDb = null;
+ 663 |       }
+ 664 |     }
+ 665 | 
+ 666 |     //removeListeners
+ 667 |     BPlatformServiceContainer container = (BPlatformServiceContainer)Sys.getService(BPlatformServiceContainer.TYPE);
+ 668 |     BPlatformService[] platSvcs = container.getChildren(BPlatformService.class);
+ 669 | 
+ 670 |     for (BPlatformService platSvc : platSvcs)
+ 671 |     {
+ 672 |       if (platSvc instanceof BIAlarmablePlatformService)
+ 673 |       {
+ 674 |         ((BIAlarmablePlatformService)platSvc).removePlatformServiceAlarmListener(listener);
+ 675 |       }
+ 676 |     }
+ 677 |   }
+ 678 | 
+ 679 |   @Override
+ 680 |   public Feature getLicenseFeature()
+ 681 |   {
+ 682 |     Feature feature = Sys.getLicenseManager().getFeature(LicenseUtil.TRIDIUM_VENDOR, "alarm");
+ 683 |     String alarmType = feature.get("type", "");
+ 684 |     if (alarmType.isEmpty())
+ 685 |     {
+ 686 |       configFatal("Unlicensed for all alarm types. Alarms are disabled.");
+ 687 |     }
+ 688 |     return feature;
+ 689 |   }
+ 690 | 
+ 691 |   @Override
+ 692 |   protected final void enabled()
+ 693 |   {
+ 694 |     serviceStarted();
+ 695 |     getArchiveAlarmProvider().ifPresent(BArchiveAlarmProvider::initAlarmArchive);
+ 696 |   }
+ 697 | 
+ 698 |   @Override
+ 699 |   protected final void disabled()
+ 700 |   {
+ 701 |     serviceStopped();
+ 702 |     getArchiveAlarmProvider().ifPresent(BArchiveAlarmProvider::closeAlarmArchive);
+ 703 |   }
+ 704 | 
+ 705 |   /**
+ 706 |    * Get the AlarmService or throw ServiceNotFoundException.
+ 707 |    * @since Niagara 4.11
+ 708 |    */
+ 709 |   public static BAlarmService getService()
+ 710 |   {
+ 711 |     return (BAlarmService) Sys.getService(TYPE);
+ 712 |   }
+ 713 | 
+ 714 | ////////////////////////////////////////////////////////////////
+ 715 | // Data Recovery
+ 716 | ////////////////////////////////////////////////////////////////
+ 717 | 
+ 718 |   @Override
+ 719 |   public void initDataRecoverySource(BIDataRecoveryService service)
+ 720 |   {
+ 721 |     if(alarmWorker==null)
+ 722 |     {
+ 723 |       alarmWorker = new Worker(alarmQueue);
+ 724 |       alarmWorker.start("Alarm:ServiceWorker");
+ 725 |     }
+ 726 | 
+ 727 |     // create and open the alarm database
+ 728 |     initAlarmDb();
+ 729 |   }
+ 730 | 
+ 731 | ////////////////////////////////////////////////////////////////
+ 732 | // AlarmDatabase
+ 733 | ////////////////////////////////////////////////////////////////
+ 734 | 
+ 735 |   /**
+ 736 |    * Initialize the alarm database.
+ 737 |    */
+ 738 |   private void initAlarmDb()
+ 739 |   {
+ 740 |     if (!isOperational())
+ 741 |     {
+ 742 |       throw new NotRunningException("The AlarmService is not operational");
+ 743 |     }
+ 744 | 
+ 745 |     if (alarmDb == null)
+ 746 |     {
+ 747 |       alarmDb = createAlarmDb();
+ 748 | 
+ 749 |       try
+ 750 |       {
+ 751 |         alarmDb.open();
+ 752 |       }
+ 753 |       catch (Exception e)
+ 754 |       {
+ 755 |         logger.log(Level.SEVERE, "Cannot open alarm database.", e);
+ 756 |       }
+ 757 |     }
+ 758 | 
+ 759 |   }
+ 760 | 
+ 761 |   /**
+ 762 |    * Get the alarm database.
+ 763 |    */
+ 764 |   public final BAlarmDatabase getAlarmDb()
+ 765 |     throws AlarmException
+ 766 |   {
+ 767 |     if (alarmDb == null)
+ 768 |     {
+ 769 |       throw new AlarmException("Alarm database is not open.");
+ 770 |     }
+ 771 |     return alarmDb;
+ 772 |   }
+ 773 | 
+ 774 |   /**
+ 775 |    * Get the Archive Alarm Provider configured on the Alarm Service,
+ 776 |    * if any and is operational
+ 777 |    * @return the instance of the archive alarm provider
+ 778 |    * @since Niagara 4.11
+ 779 |    */
+ 780 |   private Optional<BArchiveAlarmProvider> getArchiveAlarmProvider()
+ 781 |   {
+ 782 |     BArchiveAlarmProvider[] archiveProviders = getChildren(BArchiveAlarmProvider.class);
+ 783 |     if (archiveProviders.length > 0 && archiveProviders[0].isOperational())
+ 784 |     {
+ 785 |       return Optional.of(archiveProviders[0]);
+ 786 |     }
+ 787 |     return Optional.empty();
+ 788 |   }
+ 789 | 
+ 790 |   /**
+ 791 |    * Get the AlarmArchive present on the AlarmArchiveProvider, if present.
+ 792 |    * @return The AlarmArchive instance present on the alarm archive provider.
+ 793 |    * @since Niagara 4.11
+ 794 |    */
+ 795 |   public final Optional<BAlarmArchive> getAlarmArchive()
+ 796 |   {
+ 797 |     Optional<BArchiveAlarmProvider> provider = getArchiveAlarmProvider();
+ 798 |     if (provider.isPresent())
+ 799 |     {
+ 800 |       return Optional.of(provider.get().getAlarmArchive());
+ 801 |     }
+ 802 |     return Optional.empty();
+ 803 |   }
+ 804 | 
+ 805 |   protected BAlarmDatabase createAlarmDb()
+ 806 |   {
+ 807 |     return new BFileAlarmDatabase();
+ 808 |   }
+ 809 | 
+ 810 |   /**
+ 811 |    * Notify the AlarmService that the AlarmDbConfig has changed.
+ 812 |    * @since Niagara 4.0
+ 813 |    */
+ 814 |   protected void alarmDbConfigChanged(Property p)
+ 815 |     throws AlarmException
+ 816 |   {
+ 817 |     getAlarmDb().updateConfig(getAlarmDbConfig(), p);
+ 818 |   }
+ 819 | 
+ 820 | ////////////////////////////////////////////////////////////////
+ 821 | // Actions
+ 822 | ////////////////////////////////////////////////////////////////
+ 823 | 
+ 824 |   @Override
+ 825 |   public IFuture post(Action action, BValue argument, Context cx)
+ 826 |   {
+ 827 |     if (action.equals(escalateAlarms))
+ 828 |     {
+ 829 |       alarmQueue.enqueue(new Invocation(this, action, null, cx));
+ 830 |       return null;
+ 831 |     }
+ 832 |     else
+ 833 |     {
+ 834 |       return super.post(action, argument, cx);
+ 835 |     }
+ 836 |   }
+ 837 | 
+ 838 |   public void doEscalateAlarms()
+ 839 |   {
+ 840 |     if (!isRunning() || !isOperational())
+ 841 |     {
+ 842 |       return;
+ 843 |     }
+ 844 | 
+ 845 |     try
+ 846 |     {
+ 847 |       // Build a query to get all open alarms for classes that are using escalation
+ 848 |       StringBuilder bql = new StringBuilder("alarm:|bql:select from openAlarms ");
+ 849 | 
+ 850 |       int classCount = 0;
+ 851 |       boolean escalationInUse = false;
+ 852 |       for (BAlarmClass alarmClass : getAlarmClasses())
+ 853 |       {
+ 854 |         if (alarmClass.getEscalationLevel1Enabled() ||
+ 855 |           alarmClass.getEscalationLevel2Enabled() ||
+ 856 |           alarmClass.getEscalationLevel3Enabled())
+ 857 |         {
+ 858 |           escalationInUse = true;
+ 859 | 
+ 860 |           if (classCount != 0)
+ 861 |           {
+ 862 |             bql.append("or ");
+ 863 |           }
+ 864 |           else
+ 865 |           {
+ 866 |             bql.append("where (");
+ 867 |           }
+ 868 |           ++classCount;
+ 869 | 
+ 870 |           bql.append("alarmClass='");
+ 871 |           bql.append(SlotPath.escape(alarmClass.getName()));
+ 872 |           bql.append("' ");
+ 873 |         }
+ 874 |       }
+ 875 | 
+ 876 |       if (classCount > 0)
+ 877 |       {
+ 878 |         bql.append(')');
+ 879 |       }
+ 880 | 
+ 881 |       // If no classes are using escalation, then we don't need to
+ 882 |       // continue
+ 883 |       if (!escalationInUse)
+ 884 |       {
+ 885 |         return;
+ 886 |       }
+ 887 | 
+ 888 |       // Execute the query
+ 889 |       @SuppressWarnings("unchecked") BITable<BAlarmRecord> table = (BITable<BAlarmRecord>) BOrd.make(bql.toString()).get(this);
+ 890 |       // Storage for alarms needing to be updated
+ 891 |       Map<BUuid, BAlarmRecord> updates = new HashMap<>();
+ 892 |       try (Cursor<BAlarmRecord> cur = table.cursor())
+ 893 |       {
+ 894 |         while (cur.next())
+ 895 |         {
+ 896 |           BAlarmRecord record = cur.get();
+ 897 |           if (record.getAckState() == BAckState.unacked)
+ 898 |           {
+ 899 |             BAlarmClass alarmClass = lookupAlarmClass(record.getAlarmClass());
+ 900 | 
+ 901 |             BObject escalatedValue = record.getAlarmData().get(BAlarmClass.ESCALATED);
+ 902 |             if (alarmClass.getEscalationLevel1Enabled() && escalatedValue.equals(BString.DEFAULT))
+ 903 |             {
+ 904 |               // if it's never been escalated, we can check level 1
+ 905 |               if (record.getTimestamp().add(alarmClass.getEscalationLevel1Delay()).isBefore(BAbsTime.now()))
+ 906 |               {
+ 907 |                 record.addAlarmFacet(BAlarmClass.ESCALATED, BString.make(BAlarmClass.LEVEL_1));
+ 908 |                 updates.put(record.getUuid(), (BAlarmRecord)record.newCopy());
+ 909 |                 if (logger.isLoggable(Level.FINE))
+ 910 |                 {
+ 911 |                   logger.fine("Escalating " + record.getUuid() + " to level 1");
+ 912 |                 }
+ 913 |               }
+ 914 |             }
+ 915 |             else if (alarmClass.getEscalationLevel2Enabled() &&
+ 916 |               (escalatedValue.equals(LEVEL_1_STRING) || escalatedValue.equals(BString.DEFAULT)))
+ 917 |             {
+ 918 |               // if it's at level 1 (or 0), we can check level 2
+ 919 |               if (record.getTimestamp().add(alarmClass.getEscalationLevel2Delay()).isBefore(BAbsTime.now()))
+ 920 |               {
+ 921 |                 // escalate the alarm
+ 922 |                 record.addAlarmFacet(BAlarmClass.ESCALATED, BString.make(BAlarmClass.LEVEL_2));
+ 923 |                 updates.put(record.getUuid(), (BAlarmRecord)record.newCopy());
+ 924 |                 if (logger.isLoggable(Level.FINE))
+ 925 |                 {
+ 926 |                   logger.fine("Escalating " + record.getUuid() + " to level 2");
+ 927 |                 }
+ 928 |               }
+ 929 |             }
+ 930 |             else if (alarmClass.getEscalationLevel3Enabled() &&
+ 931 |               (escalatedValue.equals(LEVEL_2_STRING) || escalatedValue.equals(LEVEL_1_STRING) || escalatedValue.equals(BString.DEFAULT)))
+ 932 |             {
+ 933 |               // if it's at level 2 (or 1 or 0), we can check level 3
+ 934 |               if (record.getTimestamp().add(alarmClass.getEscalationLevel3Delay()).isBefore(BAbsTime.now()))
+ 935 |               {
+ 936 |                 // escalate the alarm
+ 937 |                 record.addAlarmFacet(BAlarmClass.ESCALATED, BString.make(BAlarmClass.LEVEL_3));
+ 938 |                 updates.put(record.getUuid(), (BAlarmRecord)record.newCopy());
+ 939 |                 if (logger.isLoggable(Level.FINE))
+ 940 |                 {
+ 941 |                   logger.fine("Escalating " + record.getUuid() + " to level 3");
+ 942 |                 }
+ 943 |               }
+ 944 |             }
+ 945 |           }
+ 946 |         }
+ 947 |       }
+ 948 | 
+ 949 |       try (AlarmDbConnection connection = getAlarmDb().getDbConnection(null))
+ 950 |       {
+ 951 |         for (BAlarmRecord record : updates.values())
+ 952 |         {
+ 953 |           connection.update(record);
+ 954 | 
+ 955 |           BAlarmClass alarmClass = lookupAlarmClass(record.getAlarmClass());
+ 956 | 
+ 957 |           BObject escalatedValue = record.getAlarmData().get(BAlarmClass.ESCALATED);
+ 958 |           if (escalatedValue.equals(LEVEL_1_STRING))
+ 959 |           {
+ 960 |             alarmClass.fireAlarm(record);
+ 961 |             alarmClass.fireEscalatedAlarm1(record);
+ 962 |           }
+ 963 |           else if (escalatedValue.equals(LEVEL_2_STRING))
+ 964 |           {
+ 965 |             alarmClass.fireAlarm(record);
+ 966 |             alarmClass.fireEscalatedAlarm1(record);
+ 967 |             alarmClass.fireEscalatedAlarm2(record);
+ 968 |           }
+ 969 |           else if (escalatedValue.equals(LEVEL_3_STRING))
+ 970 |           {
+ 971 |             alarmClass.fireAlarm(record);
+ 972 |             alarmClass.fireEscalatedAlarm1(record);
+ 973 |             alarmClass.fireEscalatedAlarm2(record);
+ 974 |             alarmClass.fireEscalatedAlarm3(record);
+ 975 |           }
+ 976 |         }
+ 977 |       }
+ 978 |     }
+ 979 |     catch(Exception e)
+ 980 |     {
+ 981 |       logThrowable("Exception while checking for alarms to escalate", e);
+ 982 |     }
+ 983 |   }
+ 984 | 
+ 985 |   /**
+ 986 |    * If an ack is required, route the alarm to the source.
+ 987 |    * Otherwise, set it to be acked and route it back to the recipients.
+ 988 |    */
+ 989 |   public void doAckAlarm(BAlarmRecord alarm)
+ 990 |     throws Exception
+ 991 |   {
+ 992 |     BObject source = null;
+ 993 |     try
+ 994 |     {
+ 995 |       // Resolve the source of the alarm so we can check the source's type.
+ 996 |       source = resolveAlarmSource(alarm);
+ 997 |     }
+ 998 |     catch (UnresolvedException e)
+ 999 |     {
+1000 |       //ignore this Exception since doRouteToSource will handle it
+1001 |     }
+1002 | 
+1003 |     if (source instanceof BIRemoteAlarmSource)
+1004 |     {
+1005 |       //Issue 13921
+1006 |       doRouteToSource(alarm, source);
+1007 |     }
+1008 |     else
+1009 |     {
+1010 |       if (alarm.getAckRequired())
+1011 |       {
+1012 |         doRouteToSource(alarm, source);
+1013 |       }
+1014 |       else
+1015 |       {
+1016 |         alarm.setAckState(BAckState.acked);
+1017 |         doRouteToRecipient(alarm);
+1018 |       }
+1019 |     }
+1020 |   }
+1021 | 
+1022 |   /**
+1023 |    * Route an alarm record to Recipients.
+1024 |    *
+1025 |    * @param alarm The alarm to route.
+1026 |    */
+1027 |   public void doRouteAlarm(BAlarmRecord alarm)
+1028 |     throws Exception
+1029 |   {
+1030 |     if(!isRunning() || !isOperational())
+1031 |     {
+1032 |       return;
+1033 |     }
+1034 | 
+1035 |     if (logger.isLoggable(Level.FINE))
+1036 |     {
+1037 |       logger.fine("BAlarmService.doRouteAlarm: " + alarm.getSourceState() + ' ' + alarm.getAckState() + ' ' + alarm.getTimestamp() + ' ' + alarm.getAlarmClass());
+1038 |     }
+1039 | 
+1040 |     doRouteToRecipient(alarm);
+1041 |   }
+1042 | 
+1043 |   /**
+1044 |    * Route an alarm record to the required recipient.
+1045 |    *
+1046 |    * @param alarm The alarm to route.
+1047 |    */
+1048 |   public void doRouteToRecipient(BAlarmRecord alarm)
+1049 |   {
+1050 |     // Get the alarm class from the alarm record.
+1051 |     BAlarmClass ac = lookupAlarmClass(alarm.getAlarmClass());
+1052 | 
+1053 |     // Route the record to that alarm class.
+1054 |     ac.routeAlarm(alarm);
+1055 | 
+1056 |     fireAlarm(alarm);
+1057 |   }
+1058 | 
+1059 |   public void doRouteToSource(BAlarmRecord alarm)
+1060 |     throws Exception
+1061 |   {
+1062 |     BObject source = null;
+1063 |     try
+1064 |     {
+1065 |       // Resolve the source of the alarm so we can check the source's type.
+1066 |       source = resolveAlarmSource(alarm);
+1067 |     }
+1068 |     catch (UnresolvedException e)
+1069 |     {
+1070 |       //ignore this Exception since doRouteToSource will handle it
+1071 |     }
+1072 |     doRouteToSource(alarm, source);
+1073 |   }
+1074 |   /**
+1075 |    * Route an alarm record to the source of the alarm.
+1076 |    *
+1077 |    * @param alarm The alarm to route.
+1078 |    */
+1079 |   public void doRouteToSource(BAlarmRecord alarm, BObject source)
+1080 |     throws Exception
+1081 |   {
+1082 |     // is this an alarm ack?
+1083 |     boolean isAck = alarm.getAckState() == BAckState.ackPending ||
+1084 |       (alarm.getAckState() == BAckState.acked && alarm.getAckRequired());
+1085 | 
+1086 |     if (source == null)
+1087 |     {
+1088 |       logger.severe("BAlarmService.doRouteToSource cannot resolve alarm source " + alarm.getSource());
+1089 | 
+1090 |       if (isAck)
+1091 |       {
+1092 |         alarm.setAckState(BAckState.acked);
+1093 |         alarm.setAckTime(BAbsTime.now());
+1094 |         alarm.setAckRequired(false);
+1095 |         alarm.addAlarmFacet("autoAcked", BString.make("Cannot resolve: " + alarm.getSource()));
+1096 |         doRouteToRecipient(alarm);
+1097 |       }
+1098 | 
+1099 |       return;
+1100 |     }
+1101 | 
+1102 |     // If it's an ack request, have the source ack the alarm.
+1103 |     if (logger.isLoggable(Level.FINE))
+1104 |     {
+1105 |       logger.fine("BAlarmService.doRouteToSource: " + source);
+1106 |     }
+1107 | 
+1108 |     if (source instanceof BIAlarmSource)
+1109 |     {
+1110 |       try
+1111 |       {
+1112 |         if (isAck)
+1113 |         {
+1114 |           ((BIAlarmSource) source).ackAlarm(alarm);
+1115 |         }
+1116 |         else if (source instanceof BIUpdatableAlarmSource)
+1117 |         {
+1118 |           BIUpdatableAlarmSource ext = (BIUpdatableAlarmSource)source;
+1119 |           ext.updateAlarm(alarm);
+1120 |         }
+1121 |       }
+1122 |       catch(Exception e)
+1123 |       {
+1124 |         if (e instanceof BajaRuntimeException)
+1125 |         {
+1126 |           throw (Exception)e.getCause();
+1127 |         }
+1128 |         else
+1129 |         {
+1130 |           throw e;
+1131 |         }
+1132 |       }
+1133 |     }
+1134 |     else if (isAck && source instanceof BIAlarmablePlatformService)
+1135 |     {
+1136 |       //  Translate BAlarmTransition to BPlatformServiceAlarmState
+1137 |       BPlatformServiceSourceState transState;
+1138 |       BSourceState state = alarm.getAlarmTransition();
+1139 |       if (state == BSourceState.offnormal)
+1140 |       {
+1141 |         transState = BPlatformServiceSourceState.offnormal;
+1142 |       }
+1143 |       else if (state == BSourceState.fault)
+1144 |       {
+1145 |         transState = BPlatformServiceSourceState.fault;
+1146 |       }
+1147 |       else if (state == BSourceState.alert)
+1148 |       {
+1149 |         transState = BPlatformServiceSourceState.alert;
+1150 |       }
+1151 |       else
+1152 |       {
+1153 |         throw new IllegalStateException();
+1154 |       }
+1155 | 
+1156 |       BOrdList stackedSource = alarm.getSource();
+1157 |       BOrd localSource = stackedSource.get(stackedSource.size()-1);
+1158 | 
+1159 |       BPlatformServiceAlarmRecord record = new BPlatformServiceAlarmRecord(localSource,
+1160 |         alarm.getAlarmClass(),
+1161 |         transState,
+1162 |         alarm.getAlarmData());
+1163 |       record.setTimestamp(alarm.getTimestamp());
+1164 | 
+1165 |       ((BIAlarmablePlatformService) source).ackAlarm(record);
+1166 | 
+1167 |       alarm.setAckState(BAckState.acked);
+1168 |       alarm.setAckTime(BAbsTime.now());
+1169 |       alarm.setAckRequired(false);
+1170 |       alarm.setAlarmClass(record.getAlarmClass());
+1171 | 
+1172 |       doRouteToRecipient(alarm);
+1173 |     }
+1174 |   }
+1175 | 
+1176 |   /**
+1177 |    * Enable the specified history extensions.
+1178 |    */
+1179 |   public BOrd doEnableToOffnormal(BVector extOrds, Context cx)
+1180 |   {
+1181 |     return new BAlarmExtStatusJob(this, extOrds, BAlarmTransitionBits.toOffnormal, true).submit(cx);
+1182 |   }
+1183 | 
+1184 |   /**
+1185 |    * Disable the specified history extensions.
+1186 |    */
+1187 |   public BOrd doDisableToOffnormal(BVector extOrds, Context cx)
+1188 |   {
+1189 |     return new BAlarmExtStatusJob(this, extOrds, BAlarmTransitionBits.toOffnormal, false).submit(cx);
+1190 |   }
+1191 | 
+1192 |   /**
+1193 |    * Enable the specified history extensions.
+1194 |    */
+1195 |   public BOrd doEnableToFault(BVector extOrds, Context cx)
+1196 |   {
+1197 |     return new BAlarmExtStatusJob(this, extOrds, BAlarmTransitionBits.toFault, true).submit(cx);
+1198 |   }
+1199 | 
+1200 |   /**
+1201 |    * Disable the specified history extensions.
+1202 |    */
+1203 |   public BOrd doDisableToFault(BVector extOrds, Context cx)
+1204 |   {
+1205 |     return new BAlarmExtStatusJob(this, extOrds, BAlarmTransitionBits.toFault, false).submit(cx);
+1206 |   }
+1207 | 
+1208 |   public void doAuditForceClear(BAlarmRecord rec, Context cx)
+1209 |   {
+1210 |     Auditor auditor = Sys.getAuditor();
+1211 |     if (auditor != null)
+1212 |     {
+1213 |       BUser user = cx.getUser();
+1214 |       String username = "";
+1215 |       if (user != null)
+1216 |       {
+1217 |         username = user.getUsername();
+1218 |       }
+1219 | 
+1220 |       user.getUsername();
+1221 |       auditor.audit(new AuditEvent("Force Clear Alarm",
+1222 |                                    rec.getSource().toString(),
+1223 |                                    rec.getUuid().toString(),
+1224 |                                    "",
+1225 |                                    "",
+1226 |                                    username));
+1227 |     }
+1228 |   }
+1229 | 
+1230 | ////////////////////////////////////////////////////////////////
+1231 | // AlarmClass management
+1232 | ////////////////////////////////////////////////////////////////
+1233 | 
+1234 |   /**
+1235 |    * Return an array of all alarm classes in the AlarmService and all AlarmClassFolders
+1236 |    */
+1237 |   public BAlarmClass[] getAlarmClasses()
+1238 |   {
+1239 |     return loadFromFolder(this);
+1240 |   }
+1241 | 
+1242 |   private static BAlarmClass[] loadFromFolder(BComponent folder)
+1243 |   {
+1244 |     Array<BAlarmClass> alarmClasses = new Array<>(BAlarmClass.class);
+1245 |     folder.lease();
+1246 |     BAlarmClass[] direct = folder.getChildren(BAlarmClass.class);
+1247 |     for (BAlarmClass aDirect : direct)
+1248 |     {
+1249 |       alarmClasses.add(aDirect);
+1250 |     }
+1251 |     BAlarmClassFolder[] folders = folder.getChildren(BAlarmClassFolder.class);
+1252 |     for (BAlarmClassFolder aFolder : folders)
+1253 |     {
+1254 |       loadFromFolder(aFolder);
+1255 |       BAlarmClass[] indirect = loadFromFolder(aFolder);
+1256 |       for (BAlarmClass anIndirect : indirect)
+1257 |       {
+1258 |         alarmClasses.add(anIndirect);
+1259 |       }
+1260 |     }
+1261 |     return alarmClasses.trim();
+1262 |   }
+1263 | 
+1264 |   /**
+1265 |    * Resolve an alarm class name to an alarm class.
+1266 |    *
+1267 |    * @param alarmClassName The path to the alarm class.
+1268 |    * @return Returns BAlarmService.defaultAlarmClass if no alarm class with the specified name can be found.
+1269 |    */
+1270 |   public BAlarmClass lookupAlarmClass(String alarmClassName)
+1271 |   {
+1272 |     BAlarmClass ac = lookupAlarmClass(this, alarmClassName);
+1273 |     if (ac == null)
+1274 |     {
+1275 |       ac = getDefaultAlarmClass();
+1276 |       if (logger.isLoggable(Level.FINE))
+1277 |       {
+1278 |         logger.fine("BAlarmService.lookupAlarmClass can't find alarm class <" +
+1279 |                     alarmClassName + "> using default <" + ac.getName() + '>');
+1280 |       }
+1281 | 
+1282 |     }
+1283 |     else
+1284 |     {
+1285 |       if (logger.isLoggable(Level.FINE))
+1286 |       {
+1287 |         logger.fine("BAlarmService.lookupAlarmClass: will route alarm with " + ac);
+1288 |       }
+1289 |     }
+1290 |     return ac;
+1291 |   }
+1292 | 
+1293 |   protected BAlarmClass lookupAlarmClass(BComponent folder, String alarmClassName)
+1294 |   {
+1295 |     folder.lease();
+1296 |     Property acp = folder.getProperty(alarmClassName);
+1297 |     if (acp == null || !folder.get(acp).getType().is(BAlarmClass.TYPE))
+1298 |     {
+1299 |       //check all the AlarmClassFolders
+1300 |       BAlarmClassFolder[] folders = folder.getChildren(BAlarmClassFolder.class);
+1301 |       for (BAlarmClassFolder alarmClassFolder : folders)
+1302 |       {
+1303 |         BAlarmClass temp = lookupAlarmClass(alarmClassFolder, alarmClassName);
+1304 |         if (temp != null)
+1305 |         {
+1306 |           return temp;
+1307 |         }
+1308 |       }
+1309 |     }
+1310 |     else
+1311 |     {
+1312 |       return (BAlarmClass)folder.get(acp);
+1313 |     }
+1314 |     return null;
+1315 |   }
+1316 | 
+1317 |   /**
+1318 |    * Utility method for finding display names of alarm classes.
+1319 |    * If invoked on the client side and the server is running alarm-3.7.35 or greater, will make an RPC call.
+1320 |    *
+1321 |    * @since Niagara 3.7
+1322 |    * @param alarmClass BAlarmClass name
+1323 |    * @param cx the context
+1324 |    * @return Returns getDisplayName(cx) of BAlarmClass with name alarmClass of BAlarmService.getDefaultAlarmClass().getDisplayName(c) if alarmClass does not exist or remote station does not support RPC call.
+1325 |    */
+1326 |   @NiagaraRpc(permissions = "unrestricted", transports = @Transport(type = TransportType.fox))
+1327 |   public BString getAlarmClassDisplayName(Object alarmClass, Context cx)
+1328 |   {
+1329 |     BComponentSpace space = getComponentSpace();
+1330 |     if (space != null && space.isProxyComponentSpace())
+1331 |     {
+1332 |       if (remoteVersionGtOrEq("3.7.35"))
+1333 |       {
+1334 |         try
+1335 |         {
+1336 |           return FoxRpcUtil.<BString>doRpc(this, "getAlarmClassDisplayName", BString.make(alarmClass.toString())).get();
+1337 |         }
+1338 |         catch(Exception ignore) {}
+1339 |       }
+1340 |       return BString.make(alarmClass.toString());
+1341 |     }
+1342 |     else
+1343 |     {
+1344 |       String displayName = alarmClassDisplayNames.get(alarmClass.toString());
+1345 |       if (displayName == null)
+1346 |       {
+1347 |         displayName = lookupAlarmClass(alarmClass.toString()).getDisplayName(cx);
+1348 |         alarmClassDisplayNames.put(alarmClass, displayName);
+1349 |       }
+1350 |       return BString.make(displayName);
+1351 |     }
+1352 |   }
+1353 |   HashMap<Object, String> alarmClassDisplayNames = new HashMap<>();
+1354 |   private Version remoteVersion = null;
+1355 | 
+1356 | 
+1357 |   /**
+1358 |    * Utility method for retrieving a name/displayName map with an entry for each BAlarmClass in BAlarmService, and
+1359 |    * recursively in its BAlarmFolder(s). If invoked on the client side and the server is running alarm-4.9.0 or
+1360 |    * greater, will make an RPC call.
+1361 |    *
+1362 |    * @since Niagara 4.9
+1363 |    * @param cx the context
+1364 |    * @return Returns {@code Map<alarmClass.getName(), alarmClass.getDisplayName(cx)>} for each BAlarmClass found in the
+1365 |    * BAlarmService. If the remote station does not support RPC call an empty map is returned.
+1366 |    */
+1367 |   @NiagaraRpc(permissions = "unrestricted", transports = @Transport(type = TransportType.fox))
+1368 |   public Map<String, String> getAlarmClassDisplayNameMap(Context cx)
+1369 |   {
+1370 |     Map<String, String> alarmClassDisplayNameMap = new HashMap<String, String>();
+1371 | 
+1372 |     BComponentSpace space = getComponentSpace();
+1373 |     if (space != null && space.isProxyComponentSpace())
+1374 |     {
+1375 |       if (remoteVersionGtOrEq("4.9.0"))
+1376 |       {
+1377 |         try
+1378 |         {
+1379 |           alarmClassDisplayNameMap = FoxRpcUtil.<Map<String, String>>doRpc(this, "getAlarmClassDisplayNameMap").get();
+1380 |         }
+1381 |         catch(Exception ignore) {}
+1382 |       }
+1383 |     }
+1384 |     else
+1385 |     {
+1386 |       addAlarmClassesToDisplayNameMap(alarmClassDisplayNameMap, this, cx);
+1387 |     }
+1388 | 
+1389 |     return alarmClassDisplayNameMap;
+1390 |   }
+1391 | 
+1392 |   /**
+1393 |    * Resolve source object for silence / ack requests
+1394 |    */
+1395 |   private BObject resolveAlarmSource(BAlarmRecord req)
+1396 |     throws Exception
+1397 |   {
+1398 |     BObject source = null;
+1399 | 
+1400 |     BOrdList stackedSource = req.getSource();
+1401 |     BOrd localSource = stackedSource.get(stackedSource.size()-1);
+1402 | 
+1403 |     if (logger.isLoggable(Level.FINE))
+1404 |     {
+1405 |       logger.fine("BAlarmService::resolveAlarmSource = " + localSource);
+1406 |     }
+1407 |     source = localSource.get(this);
+1408 | 
+1409 |     if (logger.isLoggable(Level.FINE))
+1410 |     {
+1411 |       logger.fine("  BAlarmService::resolveAlarmSource resolved = " + source);
+1412 |     }
+1413 |     return source;
+1414 |   }
+1415 | 
+1416 |   /**
+1417 |    * Recursively search for BAlarmClass(es) in a folder and add <name, displayName> to to a map.
+1418 |    *
+1419 |    * @since Niagara 4.9
+1420 |    * @param map the Map<String, String> to be populated.
+1421 |    * @param folder the folder to search.
+1422 |    * @param cx the context
+1423 |    */
+1424 |   private void addAlarmClassesToDisplayNameMap(Map<String, String> map, BComponent folder, Context cx)
+1425 |   {
+1426 |     BAlarmClass[] alarmClasses = folder.getChildren(BAlarmClass.class);
+1427 |     for (BAlarmClass alarmClass : alarmClasses)
+1428 |     {
+1429 |       if (cx != null && cx.getUser() != null && cx.getUser().getPermissionsFor(alarmClass).hasOperatorRead())
+1430 |       {
+1431 |         map.put(alarmClass.getName(), alarmClass.getDisplayName(cx));
+1432 |       }
+1433 |     }
+1434 | 
+1435 |     BAlarmClassFolder[] alarmClassFolders = folder.getChildren(BAlarmClassFolder.class);
+1436 |     for (BAlarmClassFolder alarmClassFolder : alarmClassFolders)
+1437 |     {
+1438 |       addAlarmClassesToDisplayNameMap(map, alarmClassFolder, cx);
+1439 |     }
+1440 |   }
+1441 | 
+1442 |   /**
+1443 |    * Utility method to compare the remote version of the alarm module to the version string passed in as a parameter.
+1444 |    *
+1445 |    * @since Niagara 4.9
+1446 |    * @param versionString the version string to compare against the remote version of the alarm module.
+1447 |    * @return Returns boolean: true if the remote version of the alarm module is greater than or equal to the
+1448 |    * versionString parameter passed in as a parameter, otherwise false.
+1449 |    */
+1450 |   private boolean remoteVersionGtOrEq(String versionString)
+1451 |   {
+1452 |     boolean result = false;
+1453 | 
+1454 |     if (remoteVersion == null)
+1455 |     {
+1456 |       try
+1457 |       {
+1458 |         remoteVersion  = (Version)((BFoxSession)getSession()).fw(Fw.GET_REMOTE_VERSION, "alarm", null, null, null);
+1459 |       }
+1460 |       catch(Exception ignore) {}
+1461 |     }
+1462 |     if (remoteVersion != null && !remoteVersion.isNull())
+1463 |     {
+1464 |       result = remoteVersion.compareTo(new Version(versionString)) >= 0;
+1465 |     }
+1466 | 
+1467 |     return result;
+1468 |   }
+1469 | 
+1470 | ////////////////////////////////////////////////////////////////
+1471 | // Component callbacks
+1472 | ////////////////////////////////////////////////////////////////
+1473 | 
+1474 |   /**
+1475 |    * Disallow duplicate alarm classes
+1476 |    */
+1477 |   @Override
+1478 |   public void checkAdd(String newName, BValue value, int flags, BFacets facets,
+1479 |       Context context)
+1480 |   {
+1481 |     if(isRunning() && isOperational() && value.getType().is(BAlarmClass.TYPE))
+1482 |     {
+1483 |       BAlarmClass existingClass = lookupAlarmClass(newName);
+1484 |       if(newName.equals("defaultAlarmClass") || !existingClass.getName().equals("defaultAlarmClass"))
+1485 |       {
+1486 |         throw new LocalizableRuntimeException("alarm","DuplicateAlarmClass",new String[] {newName});
+1487 |       }
+1488 |     }
+1489 |     super.checkAdd(newName, value, flags, facets, context);
+1490 |   }
+1491 | 
+1492 |   /**
+1493 |    * Disallow duplicate alarm classes
+1494 |    */
+1495 |   @Override
+1496 |   public void checkRename(Property property, String newName, Context context)
+1497 |   {
+1498 |     if(property.getType().is(BAlarmClass.TYPE))
+1499 |     {
+1500 |       BAlarmClass existingClass = lookupAlarmClass(newName);
+1501 |       if(newName.equals("defaultAlarmClass") || !existingClass.getName().equals("defaultAlarmClass"))
+1502 |       {
+1503 |         throw new IllegalNameException("alarm","DuplicateAlarmClass",new String[] {newName});
+1504 |       }
+1505 |       alarmClassDisplayNames.clear();
+1506 |     }
+1507 |     super.checkRename(property, newName, context);
+1508 |   }
+1509 | 
+1510 |   @Override
+1511 |   public void changed(Property prop, Context cx)
+1512 |   {
+1513 |     if (prop.getName().equals("displayNames"))
+1514 |     {
+1515 |       alarmClassDisplayNames.clear();
+1516 |     }
+1517 |   }
+1518 | 
+1519 |   @Override
+1520 |   public void added(Property prop, Context cx)
+1521 |   {
+1522 |     if (prop.getName().equals("displayNames"))
+1523 |     {
+1524 |       alarmClassDisplayNames.clear();
+1525 |     }
+1526 |   }
+1527 | 
+1528 |   @Override
+1529 |   public void removed(Property prop, BValue oldValue, Context cx)
+1530 |   {
+1531 |     if (prop.getName().equals("displayNames"))
+1532 |     {
+1533 |       alarmClassDisplayNames.clear();
+1534 |     }
+1535 |   }
+1536 | 
+1537 | ////////////////////////////////////////////////////////////////
+1538 | // BIRestrictedComponent
+1539 | ////////////////////////////////////////////////////////////////
+1540 | 
+1541 |   /**
+1542 |    * Only allowed to live under the station's BServiceContainer and
+1543 |    * no duplicates of the exact same type.
+1544 |    */
+1545 |   @Override
+1546 |   public final void checkParentForRestrictedComponent(BComponent parent, Context cx)
+1547 |   {
+1548 |     BIRestrictedComponent.checkParentIsServiceContainer(parent, this);
+1549 |     BIRestrictedComponent.checkForDuplicates(parent, this, /*allowNonExactTypes*/true);
+1550 |   }
+1551 | 
+1552 | ////////////////////////////////////////////////////////////////
+1553 | //  Presentation
+1554 | ////////////////////////////////////////////////////////////////
+1555 | 
+1556 |   @Override
+1557 |   public AgentList getAgents(Context cx)
+1558 |   {
+1559 |     AgentList list = super.getAgents(cx);
+1560 |     list.toTop("wiresheet:WebWiresheet");
+1561 |     list.toTop("wiresheet:WireSheet");
+1562 |     return PxUtil.movePxViewsToTop(BAlarmDatabase.filterAgents(list));
+1563 |   }
+1564 | 
+1565 |   /**
+1566 |    * Get the icon.
+1567 |    */
+1568 |   @Override
+1569 |   public BIcon getIcon() { return icon; }
+1570 |   private static final BIcon icon = BIcon.std("navOnly/alarmService.png");
+1571 | 
+1572 | ////////////////////////////////////////////////////////////////
+1573 | // Framework
+1574 | ////////////////////////////////////////////////////////////////
+1575 | 
+1576 |   @Override
+1577 |   public final Object fw(int x, Object a, Object b, Object c, Object d)
+1578 |   {
+1579 |     switch(x)
+1580 |     {
+1581 |       case Fw.STARTED:
+1582 |         add(null,
+1583 |             new BLink(getEscalationTimeTrigger().getOrdInSession(),"fireTrigger","escalateAlarms",true),
+1584 |             Flags.HIDDEN | Flags.TRANSIENT);
+1585 |         break;
+1586 |       case Fw.GET_ALARM_QUEUE:
+1587 |         return alarmQueue;
+1588 |     }
+1589 |     return super.fw(x, a, b, c, d);
+1590 |   }
+1591 | 
+1592 | ////////////////////////////////////////////////////////////////
+1593 | // PlatformServiceListener
+1594 | ////////////////////////////////////////////////////////////////
+1595 | 
+1596 |   class PlatformServiceListener
+1597 |     implements PlatformServiceAlarmListener
+1598 |   {
+1599 |     @Override
+1600 |     public void platformServiceAlarm(BPlatformServiceAlarmRecord platformServiceAlarm)
+1601 |     {
+1602 |       if (!isRunning())
+1603 |       {
+1604 |         throw new NotRunningException("Alarm Service is not running, unable to process platform alarm record");
+1605 |       }
+1606 | 
+1607 |       //  Translate platform service alarm transition to BAlarmTransition
+1608 |       BPlatformServiceSourceState pt = platformServiceAlarm.getSourceState();
+1609 |       BSourceState sourceState;
+1610 | 
+1611 |       if (pt == BPlatformServiceSourceState.normal)
+1612 |       {
+1613 |         platformServiceToNormal(platformServiceAlarm);
+1614 |         return;
+1615 |       }
+1616 | 
+1617 |       if (pt == BPlatformServiceSourceState.offnormal)
+1618 |       {
+1619 |         sourceState = BSourceState.offnormal;
+1620 |       }
+1621 |       else if (pt == BPlatformServiceSourceState.fault)
+1622 |       {
+1623 |         sourceState = BSourceState.fault;
+1624 |       }
+1625 |       else if (pt == BPlatformServiceSourceState.alert)
+1626 |       {
+1627 |         sourceState = BSourceState.alert;
+1628 |       }
+1629 |       else
+1630 |       {
+1631 |         throw new IllegalStateException();
+1632 |       }
+1633 | 
+1634 |       BAlarmRecord alarm = null;
+1635 |       try (AlarmDbConnection conn = getAlarmDb().getDbConnection(null))
+1636 |       {
+1637 |         alarm = conn.getRecord(platformServiceAlarm.getUuid());
+1638 |       }
+1639 |       catch (Exception e) { }
+1640 |       if (alarm == null)
+1641 |       {
+1642 |         //  Create alarm record
+1643 |         alarm = new BAlarmRecord(platformServiceAlarm.getSource(),
+1644 |                                  platformServiceAlarm.getAlarmClass(),
+1645 |                                  platformServiceAlarm.getAlarmData(),
+1646 |                                  BUuid.DEFAULT);
+1647 |         alarm.setUuid(platformServiceAlarm.getUuid());
+1648 |         alarm.setTimestamp(platformServiceAlarm.getTimestamp());
+1649 |       }
+1650 | 
+1651 |       alarm.setSourceState(sourceState);
+1652 |       alarm.setAlarmTransition(sourceState);
+1653 |       //ackState is set in doAckAlarm
+1654 | 
+1655 |       routeAlarm(alarm);
+1656 |     }
+1657 | 
+1658 |     public void platformServiceToNormal(BPlatformServiceAlarmRecord platformServiceAlarm)
+1659 |     {
+1660 |       if (!isRunning())
+1661 |       {
+1662 |         throw new NotRunningException("Alarm Service is not running, unable to process platform toNormal record");
+1663 |       }
+1664 | 
+1665 |       try (AlarmDbConnection conn = getAlarmDb().getDbConnection(null);
+1666 |            Cursor<BAlarmRecord> cur = conn.getAlarmsForSource(BOrdList.make(platformServiceAlarm.getSource())))
+1667 |       {
+1668 |         while (cur.next())
+1669 |         {
+1670 |           BAlarmRecord alarm = cur.get();
+1671 |           if (!alarm.isNormal())
+1672 |           {
+1673 |             // Make the record normal and route it to recipients
+1674 |             alarm.setAlarmClass(platformServiceAlarm.getAlarmClass());
+1675 |             alarm.setAlarmData(BFacets.make(alarm.getAlarmData(), platformServiceAlarm.getAlarmData()));
+1676 |             alarm.setNormalTime(platformServiceAlarm.getTimestamp());
+1677 |             alarm.setSourceState(BSourceState.normal);
+1678 |             routeAlarm((BAlarmRecord) alarm.newCopy());
+1679 |           }
+1680 |         }
+1681 |       }
+1682 |       catch(Exception e) { logger.log(Level.SEVERE, "Unable to generate toNormal PlatformServiceAlarm for: " + platformServiceAlarm.getSource(), e); }
+1683 |     }
+1684 |   }
+1685 | 
+1686 | ////////////////////////////////////////////////////////////////
+1687 | // Spy
+1688 | ////////////////////////////////////////////////////////////////
+1689 | 
+1690 |   /**
+1691 |    * Include worker's spy in diagnostics.
+1692 |    */
+1693 |   @Override
+1694 |   public void spy(SpyWriter out)
+1695 |     throws Exception
+1696 |   {
+1697 |     super.spy(out);
+1698 |     out.startProps();
+1699 |     out.trTitle("BAlarmService", 2);
+1700 |     out.prop("workInAlarmQueue", String.valueOf(alarmQueue != null ? alarmQueue.size() : 0));
+1701 |     out.endProps();
+1702 |     if (alarmWorker != null)
+1703 |     {
+1704 |       alarmWorker.spy(out);
+1705 |     }
+1706 |   }
+1707 | 
+1708 | ////////////////////////////////////////////////////////////////
+1709 | //  Utilities
+1710 | ////////////////////////////////////////////////////////////////
+1711 | 
+1712 |   private static void logThrowable(String message, Throwable thrown)
+1713 |   {
+1714 |     if (logger.isLoggable(Level.FINE))
+1715 |     {
+1716 |       logger.log(Level.FINE, message, thrown);
+1717 |     }
+1718 |     else
+1719 |     {
+1720 |       logger.warning(message);
+1721 |     }
+1722 |   }
+1723 | 
+1724 | ////////////////////////////////////////////////////////////////
+1725 | //  Attributes
+1726 | ////////////////////////////////////////////////////////////////
+1727 | 
+1728 |   public static final Logger logger = Logger.getLogger("alarm");
+1729 | 
+1730 |   private static final BString LEVEL_1_STRING = BString.make(BAlarmClass.LEVEL_1);
+1731 |   private static final BString LEVEL_2_STRING = BString.make(BAlarmClass.LEVEL_2);
+1732 |   private static final BString LEVEL_3_STRING = BString.make(BAlarmClass.LEVEL_3);
+1733 | 
+1734 |   private final PlatformServiceListener listener = new PlatformServiceListener();
+1735 |   private BAlarmDatabase alarmDb;
+1736 |   private final Queue alarmQueue = new CoalesceQueue();
+1737 |   private Worker alarmWorker;
+1738 | 
+1739 |   private final Station.SaveListener saveListener = new Station.SaveListener()
+1740 |   {
+1741 |     @Override
+1742 |     public void stationSave()
+1743 |     {
+1744 |       try
+1745 |       {
+1746 |         getAlarmDb().save();
+1747 |       }
+1748 |       catch(Exception e)
+1749 |       {
+1750 |         BAlarmDatabase.log.log(Level.SEVERE, "Alarm database save failed.", e);
+1751 |       }
+1752 |     }
+1753 |     @Override
+1754 |     public void stationSaveOk() {}
+1755 |     @Override
+1756 |     public void stationSaveFail(String cause) {}
+1757 |     @Override
+1758 |     public String toString() { return "AlarmService " + getNavOrd(); }
+1759 |   };
+1760 | }
