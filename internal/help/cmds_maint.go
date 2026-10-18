@@ -105,7 +105,11 @@ func (e *Env) Coverage(p CoverageParams) error {
 // fulltextDocs is the helpbuild.FulltextDocs of the gates: the documents of
 // the up-to-date full-text index of root. A missing or stale index is built
 // first by nh's search opener (open_index's notice on stderr, the build
-// lock next to the database), then the fresh database is read.
+// lock next to the database), then the fresh database is read. The handle
+// is closed, releasing the lock, before the docs are read: safe because every
+// full-text build writes a temp file and renames it into place
+// (helpbuild/fulltext build.go), so a reader never sees a half-written index.
+// Shared by coverage --sweep and versions add.
 func (e *Env) fulltextDocs(root string) (map[string]bool, error) {
 	x, err := scope.OpenFulltext(e.Err)(root, e.VersionID)
 	if err != nil {
