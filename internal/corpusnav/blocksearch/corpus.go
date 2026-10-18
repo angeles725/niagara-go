@@ -1,5 +1,5 @@
 // Package blocksearch is corpus-nav's find as a library (decision D29): the
-// search scopes of the niagara-research corpus, the BM25 ranking with its gob
+// search scopes of the niagara-research corpus, the BM25 ranking with its file
 // cache, and the exact text corpus-nav find prints (result headers, hit lines,
 // the honest miss line). It never prints: corpus-nav's Main and the nsearch
 // front door both render the same Result.

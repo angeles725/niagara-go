@@ -2,12 +2,10 @@ package blocksearch
 
 import (
 	"crypto/sha256"
-	"encoding/gob"
 	"encoding/hex"
 	"errors"
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/bm25"
@@ -16,14 +14,16 @@ import (
 )
 
 // corpusnav/findindex.py: BM25 (textsearch, title counted 8x) over a search scope, in
-// memory or from a cache file. The cache is a gob file, find-<scope>.gob: a private
-// gob cache avoids a SQLite dependency for a small index (the Python tool keeps
-// find-<scope>.sqlite; the two never read each other's file). It holds the
-// document table and the (doc, tf) postings of every term; it is trusted only when its
-// fingerprint (schema, this executable, the stat of CATALOG.md and of every searched
-// file) matches, else the query is ranked in memory and the cache rebuilt atomically.
+// memory or from a cache file, find-<scope>.gob: a private cache avoids a SQLite dependency
+// for a small index (the Python tool keeps find-<scope>.sqlite; the two never read each
+// other's file). The name is historical: since schema go-2 the file is the sectioned binary
+// layout of cachefile.go, not a gob, and an older gob reads as corrupt and is rebuilt. It
+// holds the document table and the (doc, tf) postings of every term; it is trusted only
+// when its fingerprint (schema, this executable, the stat of CATALOG.md and of every
+// searched file) matches, else the query is ranked in memory and the cache rebuilt
+// atomically.
 
-const indexSchema = "go-1"
+const indexSchema = "go-2"
 
 // Doc is one searchable file. text is loaded on demand for a cached document.
 type Doc struct {
@@ -42,15 +42,6 @@ func (d *Doc) Text() (string, bool) {
 		}
 	}
 	return d.text, true
-}
-
-// stored is the cache file content (exported fields for gob).
-type stored struct {
-	Schema, Fingerprint string
-	NDocs, TotalLen     int
-	Unreadable          []string
-	Docs                []Doc
-	Terms               map[string][]int32 // term -> doc, tf, doc, tf, ...
 }
 
 // MemIndex is findindex.SearchIndex: every readable target of a scope, tokenized.
@@ -160,27 +151,22 @@ func (ix *MemIndex) Rank(query string, requireAll bool, factors []bm25.Factor) [
 	return rankStats(ix.docs, post, df, total, q, requireAll, factors)
 }
 
-func (s *stored) rank(query string, requireAll bool, factors []bm25.Factor) ([]Scored, error) {
+func (f *cacheFile) rank(query string, requireAll bool, factors []bm25.Factor) ([]Scored, error) {
 	q := queryTerms(query, factors)
 	df, post := map[string]int{}, map[string]map[int]int{}
 	for _, t := range q {
-		pairs, ok := s.Terms[t]
-		if !ok {
+		if _, seen := post[t]; seen {
 			continue
 		}
-		if len(pairs)%2 != 0 {
-			return nil, fmt.Errorf("postings of %q: odd length", t)
+		p, err := f.postings(t)
+		if err != nil {
+			return nil, err
 		}
-		post[t] = map[int]int{}
-		for i := 0; i < len(pairs); i += 2 {
-			if int(pairs[i]) < 0 || int(pairs[i]) >= len(s.Docs) {
-				return nil, errors.New("postings point outside the document table")
-			}
-			post[t][int(pairs[i])] = int(pairs[i+1])
+		if p != nil {
+			post[t], df[t] = p, len(p)
 		}
-		df[t] = len(pairs) / 2
 	}
-	return rankStats(s.Docs, post, df, s.TotalLen, q, requireAll, factors), nil
+	return rankStats(f.docs, post, df, f.totalLen, q, requireAll, factors), nil
 }
 
 // Ranking is findindex.ranked's answer.
@@ -230,59 +216,22 @@ func (c *Corpus) Ranked(scope, query string, requireAll bool, factors []bm25.Fac
 	path := c.IndexPath(scope)
 	fp := c.fingerprint(targets) // stat BEFORE reading: a file changed meanwhile leaves the cache stale
 	state := "missing"
-	if f, err := os.Open(path); err == nil {
-		var s stored
-		derr := gob.NewDecoder(f).Decode(&s)
-		f.Close()
-		state = "corrupt"
-		if derr == nil && len(s.Docs) == s.NDocs {
-			state = "stale"
-			if s.Schema == indexSchema && s.Fingerprint == fp {
-				if res, err := s.rank(query, requireAll, factors); err == nil {
-					return Ranking{Results: res, NFiles: len(targets), Unreadable: s.Unreadable}
-				}
-				state = "corrupt"
+	if f, err := readCacheFile(path); err == nil {
+		state = "stale"
+		if f.schema == indexSchema && f.fingerprint == fp {
+			if res, err := f.rank(query, requireAll, factors); err == nil {
+				return Ranking{Results: res, NFiles: len(targets), Unreadable: f.unreadable}
 			}
+			state = "corrupt"
 		}
+	} else if errors.Is(err, errCorrupt) {
+		state = "corrupt"
 	}
 	mem := c.NewMemIndex(targets)
 	outcome := "index rebuilt"
-	if err := writeIndex(mem, fp, path); err != nil {
+	if err := writeCacheFile(mem, fp, path); err != nil {
 		outcome = "index not rebuilt: " + strings.SplitN(err.Error(), "\n", 2)[0]
 	}
 	note := fmt.Sprintf("corpus-nav: find index %s (%s); ranked in memory, %s\n", state, path, outcome)
 	return Ranking{mem.Rank(query, requireAll, factors), len(targets), mem.unreadable, state, note}
-}
-
-// writeIndex writes the cache atomically: a temp file in the same directory, then rename.
-func writeIndex(mem *MemIndex, fp, path string) error {
-	if err := os.MkdirAll(filepath.Dir(path), 0o777); err != nil {
-		return err
-	}
-	tmp, err := os.CreateTemp(filepath.Dir(path), filepath.Base(path)+".*.tmp")
-	if err != nil {
-		return err
-	}
-	s := stored{Schema: indexSchema, Fingerprint: fp, NDocs: len(mem.docs), Unreadable: mem.unreadable,
-		Docs: mem.docs, Terms: map[string][]int32{}}
-	for i, tf := range mem.tfs {
-		s.TotalLen += mem.docs[i].Length
-		for t, n := range tf {
-			s.Terms[t] = append(s.Terms[t], int32(i), int32(n))
-		}
-	}
-	if s.Unreadable == nil {
-		s.Unreadable = []string{}
-	}
-	err = gob.NewEncoder(tmp).Encode(&s)
-	if cerr := tmp.Close(); err == nil {
-		err = cerr
-	}
-	if err == nil {
-		err = os.Rename(tmp.Name(), path)
-	}
-	if err != nil {
-		os.Remove(tmp.Name())
-	}
-	return err
 }
