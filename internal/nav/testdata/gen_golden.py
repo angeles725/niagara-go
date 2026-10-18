@@ -32,6 +32,7 @@ SRC_BASE = "fixture/search"
 LIC = {"NAV_CORPUS_BASE": "fixture/lic-organized"}
 LIC_BASE = "fixture/lic"
 CG_BASE = "fixture/cg"
+STATS_BASE = "fixture/stats/base"
 
 CLASS_NAMES = ["BAlarmService", "BAlarmClass", "BAlarmRecord", "AlarmDbConnection", "BAckState",
                "AlarmSupport", "BAlarmArchive", "BAlarmablePointMarkerTag", "BAlarm", "Entry",
@@ -208,6 +209,8 @@ CASES = [
     ("callees-class-n", ["callees", "BCaller", "-n", "1"], NO_CORPUS, CG_BASE),
     ("callees-class-miss", ["callees", "caller"], NO_CORPUS, CG_BASE),
     ("callees-empty-method", ["callees", "BCaller", ""], NO_CORPUS, CG_BASE),
+    ("stats", ["stats"], NO_CORPUS, STATS_BASE),
+    ("stats-sparse", ["stats"], NO_CORPUS, "fixture/stats-sparse/base"),
 ]
 
 
@@ -611,6 +614,76 @@ def build_cg():
         json.dump({"_meta": {"timestamp": "2026-04-05T06:07:08"}, "classes": classes}, f)
 
 
+# stats: every index with a _meta block (floats, a non-ASCII name, a meta
+# value Python formats with grouping), a field index with NaN (decoded whole,
+# not from its prefix), an exceptions index with two _meta keys (the last
+# wins), a token index and a string index that is not SQLite, a file that is
+# not an index, and a niagara-help sibling; stats-sparse has only a module
+# inventory with a null type, a broken class index and no help sibling.
+STATS_METAS = {
+    "swing-index.json": {"classes_with_ui": 3, "total_dialogs": 1, "total_dimensions": 1234,
+                         "total_colors": 0, "total_fonts": 5, "total_icons": 6},
+    "inheritance.json": {"unique_parents": 10, "unique_interfaces_implemented": 4, "classes_with_chains": 9,
+                         "max_chain_depth": 7, "avg_chain_depth": 2.25, "with_extends": 8, "with_implements": 3},
+    "xref-index.json": {"classes_with_imports": 1500, "classes_imported_by_others": 2, "total_import_statements": 3,
+                        "resolved_imports": 4, "wildcard_imports": 5, "modules_with_deps": 6,
+                        "modules_depended_on": 7, "total_class_import_edges": 8, "total_module_dep_edges": 9},
+    "method-index.json": {"total_method_definitions": 1234567, "unique_method_names": 2, "total_constructors": 3,
+                          "classes_with_methods": 4, "avg_methods_per_class": 12.35, "max_methods_per_class": 99,
+                          "max_methods_class": "BÉtat"},
+    "annotations-index.json": {"total_niagara_types": 1, "with_properties": 2},
+    "callgraph-index.json": {"total_caller_methods": 11, "total_unique_callees": 12, "total_edges": 13,
+                             "avg_callees_per_caller": 0.05},
+}
+
+
+def build_stats():
+    fx = os.path.join(HERE, "fixture")
+    for name in ("stats", "stats-sparse"):
+        shutil.rmtree(os.path.join(fx, name), ignore_errors=True)
+    idx = os.path.join(fx, "stats", "base", "indexes")
+    os.makedirs(idx)
+    with open(os.path.join(idx, "notes.txt"), "w", encoding="utf-8") as f:
+        f.write("not an index\n")
+    for name, meta in STATS_METAS.items():
+        with open(os.path.join(idx, name), "w", encoding="utf-8") as f:
+            json.dump({"_meta": meta, "data": {"x": [1, 2]}}, f)
+    with open(os.path.join(idx, "field-index.json"), "w", encoding="utf-8") as f:
+        f.write('{"_meta": {"total_field_definitions": 5, "avg_fields_per_class": NaN, '
+                '"max_fields_class": "BMax"}, "fields": {}}')
+    with open(os.path.join(idx, "exceptions-index.json"), "w", encoding="utf-8") as f:
+        f.write('{"_meta": {"total_catch_blocks": 1}, "x": 1, "_meta": {"total_catch_blocks": 2}}')
+    with open(os.path.join(idx, "class-index.json"), "w", encoding="utf-8") as f:
+        json.dump({"_meta": {"top_level_classes": 3, "inner_classes": 0, "interfaces": 1, "unique_packages": 2},
+                   "classes": {"A": [{}, {}], "B": [{}]}}, f)
+    inv = {"a-rt": {"module": "a", "type": "rt", "has_code": True, "java_files": 1200, "class_count": 1300,
+                    "zkm": False},
+           "a-wb": {"module": "a", "type": "wb", "has_code": False, "java_files": 0, "class_count": 0, "zkm": True},
+           "b": {"module": "b", "type": "", "has_code": True, "java_files": 3, "class_count": 4, "zkm": False}}
+    with open(os.path.join(idx, "module-inventory.json"), "w", encoding="utf-8") as f:
+        json.dump({"_meta": {}, "modules": inv}, f)
+    conn = sqlite3.connect(os.path.join(idx, "token-index.db"))
+    conn.executescript("CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT NOT NULL); INSERT INTO meta VALUES "
+                       "('total_postings', '15528521'), ('unique_tokens', '7'), ('files_with_tokens', '8'), "
+                       "('total_lines', '9');")
+    conn.close()
+    with open(os.path.join(idx, "string-index.db"), "wb") as f:
+        f.write(b"not a database\n")
+    help_idx = os.path.join(fx, "stats", "niagara-help", "indexes")
+    os.makedirs(help_idx)
+    for name, data in (("class-index.json", {"A": 1, "B": 2}), ("source-index.json", ["x"]),
+                       ("slots-index.json", {}), ("other.json", {})):
+        with open(os.path.join(help_idx, name), "w", encoding="utf-8") as f:
+            json.dump(data, f)
+    sparse = os.path.join(fx, "stats-sparse", "base", "indexes")
+    os.makedirs(sparse)
+    with open(os.path.join(sparse, "module-inventory.json"), "w", encoding="utf-8") as f:
+        json.dump({"_meta": {}, "modules": {"z": {"module": "z", "type": None, "has_code": False,
+                                                  "java_files": 0, "class_count": 0, "zkm": False}}}, f)
+    with open(os.path.join(sparse, "class-index.json"), "w", encoding="utf-8") as f:
+        f.write('{"_meta": {"top_level_classes": 1}, "classes": ')
+
+
 def build_fixture():
     fx = os.path.join(HERE, "fixture")
     shutil.rmtree(fx, ignore_errors=True)
@@ -668,7 +741,8 @@ def capture(cid, args, env, base=BASE):
 
 def main():
     """--fixture rebuilds every fixture; --search only the grep/source/token one,
-    --lic only the license/resources one, --cg only the call graph one.
+    --lic only the license/resources one, --cg only the call graph one, --stats
+    only the stats ones.
     --only a,b captures just those case ids (without the nav- prefix)."""
     if "--fixture" in sys.argv:
         build_fixture()
@@ -679,6 +753,8 @@ def main():
         build_lic()
     if "--fixture" in sys.argv or "--cg" in sys.argv:
         build_cg()
+    if "--fixture" in sys.argv or "--stats" in sys.argv:
+        build_stats()
     only = set(sys.argv[sys.argv.index("--only") + 1].split(",")) if "--only" in sys.argv else None
     fresh_class_index()
     for cid, args, env, *base in CASES:

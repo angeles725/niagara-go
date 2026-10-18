@@ -54,3 +54,11 @@ func TestSummarizeCounts(t *testing.T) {
 		t.Errorf("summary = %+v", s)
 	}
 }
+
+func TestPosixDirname(t *testing.T) {
+	for in, want := range map[string]string{"a/b": "a", "a/b/": "a/b", "base": "", "/x": "/", "//x": "//", "/a//b": "/a"} {
+		if got := posixDirname(in); got != want {
+			t.Errorf("posixDirname(%q) = %q, want %q", in, got, want)
+		}
+	}
+}

@@ -140,3 +140,15 @@ func truthy(v any) bool {
 	f, _ := index.Float(v)
 	return f != 0
 }
+
+// directReader reads every summary from its file.
+type directReader struct{}
+
+func (directReader) summary(path string, full bool) summary {
+	if st, err := os.Stat(path); err != nil || !st.Mode().IsRegular() {
+		return summary{}
+	}
+	return summarize(path, full)
+}
+
+func (directReader) save() {}

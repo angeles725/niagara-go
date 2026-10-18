@@ -14,7 +14,7 @@ func init() {
 		{Name: "inventory", Help: "Summary of all indexed modules", Run: runInventory},
 		{Name: "module", Help: "Detailed info for a specific submodule", Args: argsModule, Run: runModule},
 		{Name: "modules", Help: "List modules with filters", Args: argsModules, Run: runModules},
-		{Name: "stats", Help: "Corpus summary (modules, classes, indexes)", Args: argsStats},
+		{Name: "stats", Help: "Corpus summary (modules, classes, indexes)", Args: argsStats, Run: runStats},
 	})
 }
 
