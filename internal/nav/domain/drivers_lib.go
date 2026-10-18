@@ -7,7 +7,7 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/index"
 	"github.com/angeles725/niagara-go/internal/nav/core"
-	"github.com/angeles725/niagara-go/internal/nav/license"
+	"github.com/angeles725/niagara-go/internal/nav/lib/license"
 )
 
 // The library half of `drivers` (decision D29): Drivers takes the decoded

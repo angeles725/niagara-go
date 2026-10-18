@@ -1,7 +1,7 @@
 """Regenerate scan.json: license_features._scan_file calls and getLicenseManager()
 sites on sample sources.
 
-    python3 -I internal/nav/license/testdata/gen_scan.py [<module-navigator>/tools]
+    python3 -I internal/nav/lib/license/testdata/gen_scan.py [<module-navigator>/tools]
 
 Every file is written under a temporary root and read back through
 _Resolver._text (UTF-8 with replacement, universal newlines); the files table

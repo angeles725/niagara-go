@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"github.com/angeles725/niagara-go/internal/argparse"
-	"github.com/angeles725/niagara-go/internal/nav/codesearch"
 	"github.com/angeles725/niagara-go/internal/nav/core"
+	"github.com/angeles725/niagara-go/internal/nav/lib/codesearch"
 	"github.com/angeles725/niagara-go/internal/nav/registry"
 	"github.com/angeles725/niagara-go/internal/pyre"
 )

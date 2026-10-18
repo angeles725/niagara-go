@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/angeles725/niagara-go/internal/index"
-	"github.com/angeles725/niagara-go/internal/nav/license"
+	"github.com/angeles725/niagara-go/internal/nav/lib/license"
 )
 
 // fixtureDrivers runs Drivers on the drivers golden fixture without the nav

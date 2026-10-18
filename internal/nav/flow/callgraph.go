@@ -6,8 +6,8 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/argparse"
 	"github.com/angeles725/niagara-go/internal/index"
-	"github.com/angeles725/niagara-go/internal/nav/callgraph"
 	"github.com/angeles725/niagara-go/internal/nav/core"
+	"github.com/angeles725/niagara-go/internal/nav/lib/callgraph"
 	"github.com/angeles725/niagara-go/internal/nav/registry"
 )
 
