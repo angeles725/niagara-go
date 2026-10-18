@@ -22,7 +22,7 @@ document disagree, the code wins and this document is corrected.
 | **S7a** (done) | bajadoc text of the javadoc HTML pages (`bajadoc-clean/`) | `bajadoc_parser.py` (+ `bajadoc_xml.format_output`, `write_clean_class`, `doc_types.clean_class_name`) | ~1,000 with tests |
 | **S7b** (done) | bajadoc text from `.bajadoc` XML for the classes without an HTML page; the XML reader moved to the shared leaf `internal/bajadocxml` | `bajadoc_xml_parser.py`, `bajadoc_xml.py` (rest) | ~900 with tests |
 | **S8** (done) | class / inheritance / method indexes | `build_class_index.py`, `inheritance_builder.py`, `method_indexer.py` (+ the class attributes of `bajadoc_xml.parse_file`) | ~1,900 with tests |
-| S9 | source / slots / xref / call indexes | `source_indexer.py`, `slots_indexer.py`, `xref_builder.py`, `build_call_index.py` | ~800 |
+| **S9** (done) | source / slots / xref indexes; `call-index.json` is retired (decision I3-5), not ported | `source_indexer.py`, `slots_indexer.py`, `xref_builder.py` | ~2,000 with tests |
 | S10 | orchestration (`extract`, `versions add`, `rebuild-all`, `freshness`) | `extract_version.py`, `version_setup.py`, `version_report.py`, `maintenance.py` | ~750 |
 | (S11) | whole-install sweep gate, if it moves to Go | `install_sweep.py` | — |
 
@@ -560,28 +560,83 @@ path in `pyjson.EncodeString` is the place to win it back.
   `bajadocxml` (see the S7b intended differences): such a file is a parse failure. Every
   one of the 27,804 `.bajadoc` declarations in the corpus is UTF-8.
 
+## S9 files
+
+| File | Ports | Notes |
+|---|---|---|
+| `javasrc.go` | `source_indexer.java_package`, `java_declaration`, `iter_java_roots`, `RC_DIR` | `_PACKAGE` and `_DECLARATION` run through `internal/pyre` (Unicode `\s` `\w`, the lookahead and its backtracking); `.java` files are read with `errors="replace"` (`pycompat.DecodeReplace`) and universal newlines; a root without `source/` gets the warning line on stderr (`IndexResult.Stderr`) |
+| `pyfs.go` | `os.walk` | `pyWalkDirOrder` lists each folder in the file system's order (`os.scandir`), for the scripts that do not sort what `os.walk` yields |
+| `sourceindex.go` | `source_indexer.index_source` | folders sorted, files in directory order (the script sorts only `dirs`): that order fixes the key order and which same-name file gets the plain key; a later same-name file is `Name (module)`, overwriting an earlier one of that key in place; the package is matched on the raw line (an indented `package` does not count); `path` is `os.path.relpath` from `source/` with `\` turned into `/` |
+| `slotsparse.go` | `slots_indexer.annotation_bodies`, `_skip_literal_or_comment`, `_scan`, `_strip_comments`, `_split_top_level`, `_parse_annotation_body` | code points, with Python's slice clamping (an unclosed literal or group runs past the end; a closer that does not match ends the group one code point early, as `content[start:end - 1]` does); `@Name\s*\(` matches anywhere, comments included, as in Python |
+| `slotsindex.go` | `slots_indexer.parse_annotations`, `collision_key`, `build_slots_index`, `merge_bajadoc_slots`, `_xml_slot` | the module folders sorted, everything under them in directory order (the script sorts nothing there); the class line search uses `str.splitlines` boundaries and stripped lines (an indented `package` counts here); a source class without a package has no `package` key and never matches a `.bajadoc` class (Python's `None` against `""`); the `.bajadoc` classes come from S8's `bajadocWalk` and `parseBajadocFiles` (devguide/ then guides/), the types from `bajadocxml.Simple` |
+| `xrefindex.go` | `xref_builder.extract_imports`, `build_xref` | sorted walk; every file read before the imports are filtered, so the graph does not depend on the walk order; the package is the last `package` line before the declaration (`None` when it does not match); `str.isupper()` of the first code point is `pycompat.IsUpper` |
+
+API for S10 (`maintenance.BUILDERS` runs the three scripts with the data root as argument):
+
+```go
+res, err := helpbuild.BuildSourceIndex(root) // indexes/source-index.json
+res, err := helpbuild.BuildSlotsIndex(root)  // indexes/slots-index.json; err without source/
+res, err := helpbuild.BuildXrefIndex(root)   // indexes/xref-index.json
+// print res.Log on stdout and res.Stderr on stderr line by line, exit res.Status (always 0);
+// err != nil is a Python traceback (exit 1), res.Log holds what was printed before it.
+```
+
+The three files are `json.dumps(indent=2, ensure_ascii=False)` in insertion order
+(`DumpIndent2Unicode`); xref's keys are sorted by construction.
+
+S9 parity (`testdata/s9/indexdriver.py`, modes `source`, `slots`, `xref`; the driver
+prints stdout lines, then stderr lines as `["err", line]`, and each builder's own run
+time):
+
+| Test | Compares |
+|---|---|
+| `TestBuildSourceIndexFixture`, `TestBuildSlotsIndexFixture`, `TestBuildXrefIndexFixture` | no Python needed: each Go builder on `testdata/s9/root/` against `testdata/s9/golden/` (lines exactly; the index with its top-level keys sorted, since source and slots follow the directory order of the file system the golden file was written on); `go test -run TestParityS9Synthetic -args -update-s9` rewrites them |
+| `TestParityS9Synthetic` | lines, exit status and both whole trees after each builder on the fixture (multi-line annotations, nested parentheses, literals holding commas, quotes and `=`, comments in and around annotations, unnamed, empty and repeated keys, a closer that does not match, an annotation inside a comment, a package split over two lines, an indented package, a default package, `X.java.java`, non-ASCII names, static, wildcard and self imports, `.bajadoc` slots with and without a source entry, module or package, an index file and a broken file); then the corners written at test time (one class name in three folders of one module and five identical copies with the `#n` warning, both order-dependent; CRLF, a lone CR, a form feed, U+2028, bytes that are not UTF-8, a literal left open by a final backslash, a `\` in a file name, a linked module, a linked folder inside a module, linked and dangling `.java` files); then roots without `source/`, without `devguide-rc/`, a `source` that is a file, and an import ending with `.` (xref raises); it also fails when the golden files are no longer Python's output |
+| `TestParityS9Unreadable` | lines and index with an unreadable `.java` (source and slots skip it, xref names it after its file) and an unreadable `.bajadoc` (slots raises) |
+| `TestParityS9Real` | the three builders on a real version's `source/`, `devguide-rc/`, `devguide/` and `guides/` (linked into a temporary data root), on the versions of `TestParityS8Real` (`HELPBUILD_PARITY_INDEXES`, or the `REAL` and `415` switches); logs sizes and both run times |
+
+Measured 2026-10-18 (every file byte-identical, builder time only, CPython 3.15 vs Go, a
+shared machine):
+
+| Version | `source-index.json` | `slots-index.json` | `xref-index.json` | source: Python / Go | slots | xref |
+|---|---|---|---|---|---|---|
+| 4.14.0.162 | 465,484 | 1,465,953 | 1,199,822 | 0.34 / 0.16 s | 3.7 / 1.4 s | 0.23 / 0.26 s |
+| 4.15.6.20 | 479,473 | 1,396,710 | 1,268,867 | 0.20 / 0.11 s | 2.0 / 0.96 s | 0.19 / 0.24 s |
+| 4.3.58.18 | 470,439 | 1,005,772 | 935,445 | 0.16 / 0.12 s | 2.5 / 1.2 s | 0.16 / 0.21 s |
+| 4.13.2.18 | 459,842 | 1,305,528 | 1,148,605 | 0.22 / 0.10 s | 2.9 / 2.5 s | 0.54 / 1.4 s |
+
+The slots time is mostly the `.bajadoc` XML of `devguide/` and `guides/`; xref's is the
+`_DECLARATION` regex (`internal/pyre`) run on every line before a file's type declaration.
+
+### S9 intended differences
+
+- **File names that are not UTF-8** (Python's surrogateescape, sorted as decoded names)
+  are not modelled, as in S7a; parity runs on Linux with UTF-8 names.
+- **The `.bajadoc` files are parsed concurrently** (as in S8): after an unreadable file
+  Python stops, Go has also read the files after it; nothing printed or written changes.
+
 ## Real-data parity
 
 Every test that reads a real install or the real corpus runs only on request, `-short`
 or not; without its variable it skips and the message names the variable. A switch
 (`REAL`, `FULL`, `415`) counts only when set to `1`: any other value fails the test,
 naming the variable and the accepted value. A selection that leaves nothing to compare
-(no version for `TestParityGuidesReal`, `TestParityBajadocReal`, `TestParityBajadocXMLReal` or `TestParityS8Real`, a `HELPBUILD_PARITY_JARS` naming no jar, a
+(no version for `TestParityGuidesReal`, `TestParityBajadocReal`, `TestParityBajadocXMLReal`, `TestParityS8Real` or `TestParityS9Real`, a `HELPBUILD_PARITY_JARS` naming no jar, a
 `HELPBUILD_PARITY_PDF_DOCS` without a PDF, a `HELPBUILD_PARITY_COURSE` without files)
 fails too, and an explicit jar list or course never skips as "not mounted". The synthetic,
 cache, glob, toc and fuzz parity tests (5,000 snippets) stay on in `go test`.
 
 | Variable | Turns on |
 |---|---|
-| `HELPBUILD_PARITY_REAL=1` | the umbrella: `TestParityRealJars` (five 4.3 jars + 4.15 `ffmpeg-wb.jar`), `TestParityExtractReal` (the 4.3 subset), `TestParityPDFReal` (five 4.3 manuals), `TestParityCourseReal`, `TestParityGuidesReal` (4.3.58.18), `TestParityBajadocReal` (4.14.0.162), `TestParityBajadocXMLReal` (4.3.58.18 and 4.14.0.162), `TestParityS8Real` (4.14.0.162) |
+| `HELPBUILD_PARITY_REAL=1` | the umbrella: `TestParityRealJars` (five 4.3 jars + 4.15 `ffmpeg-wb.jar`), `TestParityExtractReal` (the 4.3 subset), `TestParityPDFReal` (five 4.3 manuals), `TestParityCourseReal`, `TestParityGuidesReal` (4.3.58.18), `TestParityBajadocReal` (4.14.0.162), `TestParityBajadocXMLReal` (4.3.58.18 and 4.14.0.162), `TestParityS8Real` and `TestParityS9Real` (4.14.0.162) |
 | `HELPBUILD_PARITY_JARS=a.jar:b.jar` | `TestParityRealJars` on that list instead |
 | `HELPBUILD_PARITY_FULL=1` | `TestParityHelpJarsFullInstall` (all 578 module jars of 4.3) |
 | `HELPBUILD_PARITY_PDF_DOCS=<dir>` | `TestParityPDFReal` over a whole docs folder (the 66-PDF run) |
 | `HELPBUILD_PARITY_COURSE=<dir>` | `TestParityCourseReal` on that course tree |
-| `HELPBUILD_PARITY_415=1` | `TestParityGuidesReal`, `TestParityBajadocReal`, `TestParityBajadocXMLReal` and `TestParityS8Real` on 4.15.6.20 too |
+| `HELPBUILD_PARITY_415=1` | `TestParityGuidesReal`, `TestParityBajadocReal`, `TestParityBajadocXMLReal`, `TestParityS8Real` and `TestParityS9Real` on 4.15.6.20 too |
 | `HELPBUILD_PARITY_BAJADOC=a:b` | `TestParityBajadocReal` on that list of version ids instead (for example `4.13.2.18`) |
 | `HELPBUILD_PARITY_BAJADOCXML=a:b` | `TestParityBajadocXMLReal` on that list of version ids instead |
-| `HELPBUILD_PARITY_INDEXES=a:b` | `TestParityS8Real` on that list of version ids instead |
+| `HELPBUILD_PARITY_INDEXES=a:b` | `TestParityS8Real` and `TestParityS9Real` on that list of version ids instead |
 
 `make parity` sets `REAL`, `FULL`, `415` and `INDEXES=4.14.0.162:4.15.6.20:4.3.58.18` and runs every `Parity` test of the package.
 Timings on the development laptop: `go test ./internal/helpbuild/` about 20 s without the

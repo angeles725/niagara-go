@@ -104,7 +104,8 @@ clean:
 
 # Real-corpus parity (Python vs Go on the installs under /mnt/c and the niagara-help
 # versions/ trees): off in `test` and `ci`; `make parity` runs it first, then the search gate.
-# The S8 indexes (class, inheritance, method) are compared on three versions (about 30 s).
+# The S8 and S9 indexes (class, inheritance, method; source, slots, xref) are compared on
+# three versions (about 50 s).
 # A green run prints the result lines (subtests included) and the skips; a failing run
 # prints the whole -v output but the === progress lines, so every failure message and
 # diff is kept. The exit status is go test's.
