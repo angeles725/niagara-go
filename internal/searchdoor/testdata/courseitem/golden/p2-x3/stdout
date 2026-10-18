@@ -1,0 +1,76 @@
+
+Query: 'exam P2 and X3 history'   mode=backend default   docs=niagara-help default
+
+========================================================================
+COURSE ITEM · answer key   (course show P2 X3)
+========================================================================
+   1. P2 (exam problem)
+      section:  2. Problem 2 — BHistoryExportService
+      step:     Problem 2 — BHistoryExportService
+      text:     (none)
+      status:   verified
+      source:   docs/n4-dev-course-solutions/certification-exam.md:5
+      answer:
+        **Requirement.** Export a history to a CSV file.
+
+        **Verified.** `history.csv` appeared in the station's Files space.
+   2. X3 (check)
+      section:  3. Needs a run (requires execution)
+      step:     Copy/paste gives the copy a new UUID
+      text:     (none)
+      status:   unverified
+      source:   docs/n4-dev-course-solutions/review-assignments.md:23
+      answer:
+        Cheapest check: RA1 V12 in a dev station
+
+========================================================================
+SOURCE 1 · OUR BLOCKS   (corpus-nav find)
+========================================================================
+   1. B101 · Block 101 — exam research (default mode, --limit 2000)
+        12: > a line about exam in block 101
+   2. B102 · Block 102 — p2 research (default mode, --limit 2000)
+        13: > a line about p2 in block 102
+   3. B103 · Block 103 — and research (default mode, --limit 2000)
+        14: > a line about and in block 103
+   4. B104 · Block 104 — x3 research (default mode, --limit 2000)
+        15: > a line about x3 in block 104
+
+========================================================================
+SOURCE 2 · OFFICIAL DOCS   (niagara_help find)
+========================================================================
+  8 files matching 'exam P2 and X3 history' (docs default, default mode):
+  by source: guides-clean 3, devguide-clean 2
+   1. guides-clean/Exam/page1.html  [guides-clean] Exam guide, page 1
+        L10: how the exam setting works
+   2. guides-clean/P2/page2.html  [guides-clean] P2 guide, page 2
+        L11: how the p2 setting works
+   3. guides-clean/And/page3.html  [guides-clean] And guide, page 3
+        L12: how the and setting works
+   4. guides-clean/X3/page4.html  [guides-clean] X3 guide, page 4
+        L13: how the x3 setting works
+   5. History guide, page 5  [guides-clean] History guide, page 5
+        L14: how the history setting works
+
+========================================================================
+SOURCE 3 · CODE   (module_nav rank)
+========================================================================
+  Rank 'exam P2 and X3 history': 10 matching classes (terms: exam, p2, and, x3, history)
+   1. BExamService  [demo-rt]  score 9.250
+        com/demo/BExamService.java
+   2. BExamExt  [demo-rt]  score 9.000
+        com/demo/BExamExt.java
+   3. BP2Service  [demo-rt]  score 8.750
+        com/demo/BP2Service.java
+   4. BP2Ext  [demo-rt]  score 8.500
+        com/demo/BP2Ext.java
+   5. BAndService  [demo-rt]  score 8.250
+        com/demo/BAndService.java
+  ... 5 more ranked (raise --limit)
+  -- course code   (BM25 over course/{course,solutions,niagara-4.15.6.20/dev}/**/*.java) --
+    searched 4 .java files of the N4 developer course (course 2, verified solution 1, dev kit example 1)
+     1. BHistoryExportService  [course]  score 2.651
+          course/slides/BHistoryExportService.java
+     2. BRoomPanel  [verified solution]  score 2.017
+          solutions/exam/BRoomPanel.java
+
+Summary: course 2 listed · blocks 4 ranked · docs 5 ranked · code 10 ranked + course code 2 ranked

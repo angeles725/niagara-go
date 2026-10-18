@@ -6,7 +6,8 @@ import (
 )
 
 // pathEnv names the variable that re-points each source (the Python seam).
-var pathEnv = [4]string{"NSEARCH_CORPUS_NAV", "NSEARCH_NIAGARA_HELP", "NSEARCH_MODULE_NAV", "NSEARCH_COURSE_ROOT"}
+var pathEnv = [5]string{"NSEARCH_CORPUS_NAV", "NSEARCH_NIAGARA_HELP", "NSEARCH_MODULE_NAV", "NSEARCH_COURSE_ROOT",
+	"NSEARCH_COURSE_KEYS"}
 
 // marker identifies a niagara-research checkout.
 var marker = filepath.Join("tools", "corpus-nav.py")
@@ -58,7 +59,7 @@ func root() string {
 // NSEARCH_* variable when that is set and not empty. The checkout is only
 // located when a path still needs it.
 func defaultPaths() Paths {
-	vals := [4]string{}
+	vals := [len(pathEnv)]string{}
 	need := false
 	for i, name := range pathEnv {
 		vals[i] = os.Getenv(name)
@@ -66,15 +67,15 @@ func defaultPaths() Paths {
 	}
 	if need {
 		r := root()
-		defaults := [4]string{filepath.Join(r, "tools", "corpus-nav.py"),
+		defaults := [len(pathEnv)]string{filepath.Join(r, "tools", "corpus-nav.py"),
 			filepath.Join(r, "niagara-help", "tools", "niagara_help.py"),
 			filepath.Join(r, "module-navigator", "tools", "module_nav.py"),
-			filepath.Join(r, "sources", "n4-dev-course")}
+			filepath.Join(r, "sources", "n4-dev-course"), r}
 		for i := range vals {
 			if vals[i] == "" {
 				vals[i] = defaults[i]
 			}
 		}
 	}
-	return Paths{Blocks: vals[0], Docs: vals[1], Code: vals[2], Course: vals[3]}
+	return Paths{Blocks: vals[0], Docs: vals[1], Code: vals[2], Course: vals[3], Keys: vals[4]}
 }

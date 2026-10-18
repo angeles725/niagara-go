@@ -124,9 +124,11 @@ whose output the new behaviour changes keeps its Python bytes and declares the G
 
 `make parity` runs `TestSearchQuality` (internal/searchdoor): the gate of niagara-research
 `tools/searchdoor/golden.py` in process on the real corpus (`NIAGARA_RESEARCH`, default
-`~/niagara-research`): hit@1/hit@5 per source over `testdata/quality/golden-queries.jsonl` (81
-questions, docs pinned to 4.14.0.162) and the warm p50/p95 latency. A hit count below
-`qualityFloor` fails; a higher one is logged so the floor can be raised. Without
+`~/niagara-research`): hit@1/hit@5 per source over `testdata/quality/golden-queries.jsonl` (99
+questions, docs pinned to 4.14.0.162) and the warm p50/p95 latency. Each `qualitySets` range has
+its own floor (q01-q81 the S3.1 baseline, q82-q99 the D41 course rows), so new rows cannot hide a
+regression of the earlier ones. A hit count below a floor fails; a higher one is logged so the
+floor can be raised. Without
 `NSEARCH_QUALITY_ROOT` the test skips. `TestQualityFixtureMatchesResearch` fails when the copied
 question set drifts from the niagara-research one (skipped when that file is absent).
 

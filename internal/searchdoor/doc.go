@@ -11,6 +11,11 @@
 //	                              implementors, drivers) and the course-code
 //	                              sub-scope (in-process BM25 over sources/n4-dev-course)
 //
+// A query that names a course answer-key item (L10.23, LB.7, RA1.V12, D1.8, T1.1,
+// X3, P2: courseitem.go) is led by that item, as `course show <ID>` prints it
+// (parsed by course/key, decision D41), before the three sources; a token that
+// names no item is ordinary query text.
+//
 // `license <module|feature>` joins the licensing evidence of the three sources.
 // Exit: 0 a source returned rows, 1 every source searched and none matched,
 // 2 a source was unavailable and none returned rows, 3 usage.
@@ -43,9 +48,11 @@
 //	docs    $NSEARCH_NIAGARA_HELP  else <root>/niagara-help/tools/niagara_help.py
 //	code    $NSEARCH_MODULE_NAV    else <root>/module-navigator/tools/module_nav.py
 //	course  $NSEARCH_COURSE_ROOT   else <root>/sources/n4-dev-course
+//	keys    $NSEARCH_COURSE_KEYS   else <root> (holds docs/n4-dev-course-solutions)
 //
-// The four NSEARCH_* path variables are the same seam the Python front door
-// reads (searchdoor/backend.py); an empty value keeps the default. The hermetic
+// The first four NSEARCH_* path variables are the same seam the Python front door
+// reads (searchdoor/backend.py); NSEARCH_COURSE_KEYS is Go only. An empty value
+// keeps the default. The hermetic
 // goldens under testdata/ point them at fake backend scripts, which the tests
 // answer with their Go port (scriptFakes).
 //
@@ -61,5 +68,6 @@
 // work (a fulltext rebuild included, which is atomic) is not interrupted: it ends
 // with the process; a query that starts with "-" is searched as text (the Python
 // backends' argparse read it as an option and exited 2); a call the door never
-// makes is typed UNAVAILABLE "no in-process answer".
+// makes is typed UNAVAILABLE "no in-process answer"; the course item lead (D41) is
+// Go only, so a query naming an item ID prints one more section and Summary entry.
 package searchdoor

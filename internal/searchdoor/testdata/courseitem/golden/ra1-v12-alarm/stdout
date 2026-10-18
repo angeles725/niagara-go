@@ -1,0 +1,68 @@
+
+Query: 'what does RA1.V12 say about alarm'   mode=backend default   docs=niagara-help default
+
+========================================================================
+COURSE ITEM · answer key   (course show RA1.V12)
+========================================================================
+   1. RA1.V9–V14 (requirement)
+      section:  1. Review Assignment 1 — BComponentWithId / 1.1 Requirements (from `sources/n4-dev-course/text/Review Assignment 1.txt`)
+      covers:   RA1.V9, RA1.V10, RA1.V11, RA1.V12, RA1.V13, RA1.V14
+      step:     Station steps: copy/paste gives a new Id
+      text:     sources/n4-dev-course/text/Review Assignment 1.txt:8-9
+      status:   written
+      source:   docs/n4-dev-course-solutions/review-assignments.md:10
+      answer:
+        Satisfied by: station steps
+        Verified by: §3
+
+========================================================================
+SOURCE 1 · OUR BLOCKS   (corpus-nav find)
+========================================================================
+   1. B101 · Block 101 — what research (default mode, --limit 2000)
+        12: > a line about what in block 101
+   2. B102 · Block 102 — does research (default mode, --limit 2000)
+        13: > a line about does in block 102
+   3. B103 · Block 103 — ra1.v12 research (default mode, --limit 2000)
+        14: > a line about ra1.v12 in block 103
+   4. B104 · Block 104 — say research (default mode, --limit 2000)
+        15: > a line about say in block 104
+
+========================================================================
+SOURCE 2 · OFFICIAL DOCS   (niagara_help find)
+========================================================================
+  9 files matching 'what does RA1.V12 say about alarm' (docs default, default mode):
+  by source: guides-clean 3, devguide-clean 2
+   1. guides-clean/What/page1.html  [guides-clean] What guide, page 1
+        L10: how the what setting works
+   2. guides-clean/Does/page2.html  [guides-clean] Does guide, page 2
+        L11: how the does setting works
+   3. guides-clean/Ra1.V12/page3.html  [guides-clean] Ra1.V12 guide, page 3
+        L12: how the ra1.v12 setting works
+   4. guides-clean/Say/page4.html  [guides-clean] Say guide, page 4
+        L13: how the say setting works
+   5. About guide, page 5  [guides-clean] About guide, page 5
+        L14: how the about setting works
+
+========================================================================
+SOURCE 3 · CODE   (module_nav rank)
+========================================================================
+  Rank 'what does RA1.V12 say about alarm': 12 matching classes (terms: what, does, ra1.v12, say, about, alarm)
+   1. BWhatService  [demo-rt]  score 9.250
+        com/demo/BWhatService.java
+   2. BWhatExt  [demo-rt]  score 9.000
+        com/demo/BWhatExt.java
+   3. BDoesService  [demo-rt]  score 8.750
+        com/demo/BDoesService.java
+   4. BDoesExt  [demo-rt]  score 8.500
+        com/demo/BDoesExt.java
+   5. BRa1V12Service  [demo-rt]  score 8.250
+        com/demo/BRa1V12Service.java
+  ... 7 more ranked (raise --limit)
+  -- course code   (BM25 over course/{course,solutions,niagara-4.15.6.20/dev}/**/*.java) --
+    searched 4 .java files of the N4 developer course (course 2, verified solution 1, dev kit example 1)
+     1. BAlarmCounter  [course]  score 1.497
+          course/lab3/BAlarmCounter.java
+     2. BRoomPanel  [verified solution]  score 0.700
+          solutions/exam/BRoomPanel.java
+
+Summary: course 1 listed · blocks 4 ranked · docs 5 ranked · code 12 ranked + course code 2 ranked

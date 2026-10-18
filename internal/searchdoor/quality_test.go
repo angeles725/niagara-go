@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"slices"
 	"sort"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -33,9 +34,36 @@ const (
 	hitDepth          = 5            // a ranked list hits within its first five rows
 )
 
-// qualityFloor is the baseline per source: hit@1, hit@5 and the questions that expect the
-// source. A run below either hit count fails, a run above it is reported so the floor can be raised.
-var qualityFloor = map[string][3]int{"blocks": {62, 77, 81}, "docs": {36, 62, 67}, "code": {30, 53, 62}}
+// qualitySet is a range of fixture rows (qNN, inclusive) with its own floor per source:
+// hit@1, hit@5 and the questions that expect the source. A run below either hit count fails,
+// a run above it is reported so the floor can be raised. Each set keeps the floor it was
+// measured with, so rows added later cannot hide a regression of the earlier ones.
+type qualitySet struct {
+	name     string
+	from, to int
+	floor    map[string][3]int
+}
+
+var qualitySets = []qualitySet{
+	{"q01-q81", 1, 81, map[string][3]int{"blocks": {62, 77, 81}, "docs": {36, 62, 67}, "code": {30, 53, 62}}},
+	// D41: course questions from the labs.md *Why ...?* items (niagara-research
+	// tools/tests/fixtures/golden-queries-review.md, "D41 course rows")
+	{"q82-q99 course", 82, 99, map[string][3]int{"blocks": {10, 15, 18}, "docs": {0, 1, 2}, "code": {10, 13, 16}}},
+}
+
+// setOf is the index of the quality set holding row id (qNN), or -1.
+func setOf(id string) int {
+	n, err := strconv.Atoi(strings.TrimPrefix(id, "q"))
+	if err != nil {
+		return -1
+	}
+	for i, s := range qualitySets {
+		if s.from <= n && n <= s.to {
+			return i
+		}
+	}
+	return -1
+}
 
 // qualitySources are golden.py SOURCES: the outcome key and the fixture's expectation key.
 var qualitySources = [][2]string{{"blocks", "blocks"}, {"docs", "doc"}, {"code", "code"}}
@@ -144,6 +172,9 @@ func TestSearchQuality(t *testing.T) {
 	if root == "" {
 		t.Skip("set " + QualityRootEnv + " to a niagara-research checkout (make parity)")
 	}
+	if testing.Short() {
+		t.Skip("the real-corpus search gate is not a short test (make parity)")
+	}
 	t.Setenv("NSEARCH_ROOT", root)
 	rows := loadQualityRows(t)
 	paths := defaultPaths()
@@ -161,11 +192,19 @@ func TestSearchQuality(t *testing.T) {
 	type tally struct{ h1, h5, n int }
 	hits := map[string]*tally{}
 	byLang := map[string]map[string]*tally{}
+	bySet := make([]map[string]*tally, len(qualitySets))
+	for i := range bySet {
+		bySet[i] = map[string]*tally{}
+	}
 	misses := map[string][]string{}
 	unavail := map[string]int{}
 	answered := 0
 	var times []time.Duration
 	for _, row := range rows {
+		set := setOf(row.ID)
+		if set < 0 {
+			t.Fatalf("%s: the row is in no quality set", row.ID)
+		}
 		t0 := time.Now()
 		outcomes := search(row.Question)
 		times = append(times, time.Since(t0))
@@ -187,7 +226,7 @@ func TestSearchQuality(t *testing.T) {
 			if byLang[row.Lang] == nil {
 				byLang[row.Lang] = map[string]*tally{}
 			}
-			for _, m := range []map[string]*tally{hits, byLang[row.Lang]} {
+			for _, m := range []map[string]*tally{hits, byLang[row.Lang], bySet[set]} {
 				if m[source] == nil {
 					m[source] = &tally{}
 				}
@@ -240,22 +279,37 @@ func TestSearchQuality(t *testing.T) {
 	t.Logf("warm latency per query: p50 %.2f s, p95 %.2f s, max %.2f s over %d questions",
 		percentile(times, .5).Seconds(), percentile(times, .95).Seconds(), slices.Max(times).Seconds(), len(rows))
 
-	for _, src := range qualitySources {
-		source := src[0]
-		h, floor := hits[source], qualityFloor[source]
-		if h.n != floor[2] {
-			t.Errorf("%s: %d questions expect it, the floor was set on %d (fixture changed?)", source, h.n, floor[2])
-			continue
+	for i, set := range qualitySets {
+		var parts []string
+		for _, src := range qualitySources {
+			if v := bySet[i][src[0]]; v != nil {
+				parts = append(parts, fmt.Sprintf("%s %d/%d/%d", src[0], v.h1, v.h5, v.n))
+			}
 		}
-		for _, m := range []struct {
-			name      string
-			got, want int
-		}{{"hit@1", h.h1, floor[0]}, {"hit@5", h.h5, floor[1]}} {
-			switch {
-			case m.got < m.want:
-				t.Errorf("%s: %s %d/%d regressed below the floor %d/%d", source, m.name, m.got, h.n, m.want, h.n)
-			case m.got > m.want:
-				t.Logf("%s: %s %d/%d improved on the floor %d/%d; raise qualityFloor", source, m.name, m.got, h.n, m.want, h.n)
+		t.Logf("  set %s: %s   (hit@1/hit@5/questions)", set.name, strings.Join(parts, " · "))
+	}
+
+	for i, set := range qualitySets {
+		for _, src := range qualitySources {
+			source := src[0]
+			h, floor := bySet[i][source], set.floor[source]
+			if h == nil {
+				h = &tally{}
+			}
+			if h.n != floor[2] {
+				t.Errorf("%s %s: %d questions expect it, the floor was set on %d (fixture changed?)", set.name, source, h.n, floor[2])
+				continue
+			}
+			for _, m := range []struct {
+				name      string
+				got, want int
+			}{{"hit@1", h.h1, floor[0]}, {"hit@5", h.h5, floor[1]}} {
+				switch {
+				case m.got < m.want:
+					t.Errorf("%s %s: %s %d/%d regressed below the floor %d/%d", set.name, source, m.name, m.got, h.n, m.want, h.n)
+				case m.got > m.want:
+					t.Logf("%s %s: %s %d/%d improved on the floor %d/%d; raise qualitySets", set.name, source, m.name, m.got, h.n, m.want, h.n)
+				}
 			}
 		}
 	}
