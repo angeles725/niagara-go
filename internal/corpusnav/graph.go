@@ -3,6 +3,7 @@ package corpusnav
 import (
 	"sort"
 	"strings"
+	"sync"
 
 	"github.com/angeles725/niagara-go/internal/blockfiles"
 	"github.com/angeles725/niagara-go/internal/pycompat"
@@ -12,7 +13,9 @@ import (
 // corpusnav/graph.py: the one block-reference extractor and the citation graph.
 
 // refRe is _REF_RE: [Block N] / [Bloque N] / [Bloque #N], [BN] / [BN §x], bloqueN.
-var refRe = pyre.MustCompile(`
+// The patterns of this package compile on first use: at package init they cost every
+// corpus-nav run (find included) ~15 ms.
+var refRe = lazyRe(`
     [\[Bb]
     (?:
         (?<=\[) [Bb][Ll][Oo](?:[Cc][Kk]|[Qq][Uu][Ee])\s+\#?(\d+)\]   # [Block 18] / [Bloque 75] / [Bloque #12]
@@ -23,9 +26,14 @@ var refRe = pyre.MustCompile(`
 
 var (
 	// bareRefRe is _BARE_REF_RE (--bare), codeRe is _CODE_RE (code spans and fences).
-	bareRefRe = pyre.MustCompile(`(?<![\w/.\[-])B(\d{1,4})(?![\w-])`, 0)
-	codeRe    = pyre.MustCompile("```.*?```|`[^`\\n]*`", pyre.DOTALL)
+	bareRefRe = lazyRe(`(?<![\w/.\[-])B(\d{1,4})(?![\w-])`, 0)
+	codeRe    = lazyRe("```.*?```|`[^`\\n]*`", pyre.DOTALL)
 )
+
+// lazyRe is pyre.MustCompile deferred to the first call.
+func lazyRe(pattern string, flags pyre.Flags) func() *pyre.Regexp {
+	return sync.OnceValue(func() *pyre.Regexp { return pyre.MustCompile(pattern, flags) })
+}
 
 // parseLabel is graph.parse_label: "B720", "720", "b0720", "TI" -> a label.
 func parseLabel(raw string) string {
@@ -53,7 +61,7 @@ func resolveLabel(label string, labels map[string]bool) string {
 // refsInText is graph.refs_in_text: every block number cited (bare B<N> too with bare).
 func refsInText(text string, bare bool) map[string]bool {
 	nums := map[string]bool{}
-	for _, m := range refRe.FindIter([]rune(text)) {
+	for _, m := range refRe().FindIter([]rune(text)) {
 		for g := 1; g <= 3; g++ {
 			if s := m.Group(g); s != "" {
 				nums[blockfiles.PyInt(s)] = true
@@ -61,7 +69,7 @@ func refsInText(text string, bare bool) map[string]bool {
 		}
 	}
 	if bare {
-		for _, n := range bareRefRe.FindAll(subSpans(text, codeRe, " ")) {
+		for _, n := range bareRefRe().FindAll(subSpans(text, codeRe(), " ")) {
 			nums[blockfiles.PyInt(n)] = true
 		}
 	}
@@ -246,7 +254,7 @@ func lintRefs(files []blockFile) (found []lintFinding, unreadable []string) {
 		}
 		rs := []rune(text)
 		line, pos := 1, 0
-		for _, m := range refRe.FindIter(rs) {
+		for _, m := range refRe().FindIter(rs) {
 			form := classifyRef(m, rs)
 			if form == "" {
 				continue

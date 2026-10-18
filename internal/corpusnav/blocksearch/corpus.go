@@ -12,7 +12,6 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/blockfiles"
 	"github.com/angeles725/niagara-go/internal/pycompat"
-	"github.com/angeles725/niagara-go/internal/pyre"
 	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
@@ -81,7 +80,49 @@ func DirFiles(dir string) []string {
 	return out
 }
 
-var catalogRowRe = pyre.MustCompile(`^\|\s*([^|]+?)\s*\|\s*\[[^\]]+\]\([^)]+\)\s*\|\s*(.*?)\s*\|\s*$`, 0)
+// catalogRow is corpus._CATALOG_ROW_RE.match on one line, stripped groups:
+//
+//	^\|\s*([^|]+?)\s*\|\s*\[[^\]]+\]\([^)]+\)\s*\|\s*(.*?)\s*\|\s*$
+//
+// written out by hand because every position in it is forced: the label cell ends at the
+// first '|' after the leading one, [^\]]+ and [^)]+ end at the first ']' and ')', and the
+// title runs to the last '|', which only whitespace may follow (lines carry no line break,
+// so '.' matches every character). Both backtracking pyre and Go's RE2 spent 25-90 ms on
+// the ~1,400 CATALOG rows of every find; TestCatalogRowMatchesRegex holds it to the regex.
+func catalogRow(line string) (label, title string, ok bool) {
+	rest, found := strings.CutPrefix(line, "|")
+	if !found {
+		return "", "", false
+	}
+	cell, rest, found := strings.Cut(rest, "|")
+	if !found || cell == "" { // ([^|]+?) needs one character
+		return "", "", false
+	}
+	// \s*\[[^\]]+\]\([^)]+\)\s*\|
+	rest = strings.TrimLeftFunc(rest, pycompat.IsSpace)
+	if rest, found = strings.CutPrefix(rest, "["); !found {
+		return "", "", false
+	}
+	i := strings.IndexByte(rest, ']')
+	if i < 1 {
+		return "", "", false
+	}
+	if rest, found = strings.CutPrefix(rest[i+1:], "("); !found {
+		return "", "", false
+	}
+	if i = strings.IndexByte(rest, ')'); i < 1 {
+		return "", "", false
+	}
+	rest = strings.TrimLeftFunc(rest[i+1:], pycompat.IsSpace)
+	if rest, found = strings.CutPrefix(rest, "|"); !found {
+		return "", "", false
+	}
+	// \s*(.*?)\s*\|\s*$
+	if title, found = strings.CutSuffix(strings.TrimRightFunc(rest, pycompat.IsSpace), "|"); !found {
+		return "", "", false
+	}
+	return pycompat.Strip(cell), pycompat.Strip(title), true
+}
 
 // LoadCatalog is corpus.load_catalog: CATALOG.md rows as {label: title}.
 func (c *Corpus) LoadCatalog() map[string]string {
@@ -91,11 +132,10 @@ func (c *Corpus) LoadCatalog() map[string]string {
 		return titles
 	}
 	for _, line := range pycompat.SplitLines(text, false) {
-		m := catalogRowRe.Search(line)
-		if m == nil {
+		label, title, ok := catalogRow(line)
+		if !ok {
 			continue
 		}
-		label, title := pycompat.Strip(m.Group(1)), pycompat.Strip(m.Group(2))
 		if label == "Bloque" || label == "--------" || strings.Trim(label, "-") == "" {
 			continue
 		}
