@@ -4,9 +4,11 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
+	"github.com/angeles725/niagara-go/internal/help/fts"
 	"github.com/angeles725/niagara-go/internal/help/fts/ftsfixture"
 )
 
@@ -51,35 +53,134 @@ func TestFulltextCommandsMatchPython(t *testing.T) {
 	}
 }
 
-// TestFulltextWithoutIndexCannotSearch: with no up-to-date fulltext.sqlite
-// the search commands exit 2 naming the Python rebuild command (intended
-// difference: Python builds the index), while a query without words and
-// pdf --no-fulltext never need the index.
-func TestFulltextWithoutIndexCannotSearch(t *testing.T) {
+// rebuildCase is one case of testdata/fulltext-rebuild/cases.json (written
+// by testdata/rebuild_gen.py) or of its intended.json, what nh prints where
+// it differs from Python on purpose.
+type rebuildCase struct {
+	Name   string   `json:"name"`
+	Args   []string `json:"args"`
+	Setup  string   `json:"setup"`
+	Exit   int      `json:"exit"`
+	Stdout *string  `json:"stdout"` // intended.json only; else <case>.txt
+	Stderr string   `json:"stderr"`
+	Built  string   `json:"built"`
+	Reason string   `json:"reason"`
+}
+
+// TestFulltextRebuildMatchesPython: with a missing or stale full-text index
+// the search commands build it in process, print Python's lines on stderr
+// and answer (decision D38); a read-only indexes/ builds it in the cache
+// directory. Each case runs on a fresh fixture copy prepared like
+// rebuild_gen.py did; intended.json replaces the cases nh answers otherwise.
+func TestFulltextRebuildMatchesPython(t *testing.T) {
+	var cases, intended []rebuildCase
+	for path, into := range map[string]*[]rebuildCase{
+		"testdata/fulltext-rebuild/cases.json": &cases, "testdata/fulltext-rebuild/intended.json": &intended} {
+		raw, err := os.ReadFile(path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := json.Unmarshal(raw, into); err != nil {
+			t.Fatal(err)
+		}
+	}
+	override := map[string]rebuildCase{}
+	for _, c := range intended {
+		if c.Reason == "" || c.Stdout == nil {
+			t.Fatalf("intended case %s needs a reason and a stdout", c.Name)
+		}
+		override[c.Name] = c
+	}
 	testdata, err := filepath.Abs("testdata")
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Setenv("XDG_CACHE_HOME", t.TempDir())
-	checkout := ftsfixture.Checkout(t, testdata, true)
-	want := "ERROR: full-text index indexes/fulltext.sqlite under " + checkout + " is missing; this port " +
-		"reads it but never builds it, rebuild it with: python3 tools/niagara_help.py " +
-		"--niagara-version 1.0 find index\n"
-	for _, args := range [][]string{
-		{"find", "alarm"}, {"guide-search", "alarm"}, {"devguide-search", "servlet"}, {"pdf", "modbus"},
-	} {
-		out, errs, code := run(t, checkout, append([]string{"--niagara-version", "1.0"}, args...)...)
-		if code != 2 || out != "" || errs != want {
-			t.Errorf("%v: exit %d stdout %q stderr %q", args, code, out, errs)
+	for _, py := range cases {
+		t.Run(py.Name, func(t *testing.T) {
+			c, isIntended := override[py.Name]
+			if !isIntended {
+				c = py
+				want, err := os.ReadFile(filepath.Join(testdata, "fulltext-rebuild", c.Name+".txt"))
+				if err != nil {
+					t.Fatal(err)
+				}
+				s := string(want)
+				c.Stdout = &s
+			}
+			if strings.HasPrefix(c.Setup, "ro-") && (runtime.GOOS == "windows" || os.Geteuid() == 0) {
+				t.Skip("read-only directories need a non-root POSIX user")
+			}
+			checkout := ftsfixture.Checkout(t, testdata, true)
+			base := filepath.Join(checkout, ftsfixture.Versions[c.Args[1]])
+			if base == filepath.Join(checkout, ".") {
+				base = checkout
+			}
+			cache := filepath.Join(filepath.Dir(checkout), "cache")
+			t.Setenv("XDG_CACHE_HOME", cache)
+			for _, d := range rebuildSetup(t, testdata, checkout, base, cache, c.Setup) {
+				defer os.Chmod(d, 0o755)
+			}
+			out, errs, code := run(t, checkout, c.Args...)
+			cacheDB := fts.CachePath(base)
+			norm := strings.NewReplacer("<CACHEDB>", cacheDB, "<CACHEDIR>", filepath.Dir(cacheDB),
+				"<CACHE>", cache, ftsfixture.Root, checkout)
+			if wantErr := norm.Replace(c.Stderr); code != c.Exit || errs != wantErr {
+				t.Errorf("exit %d (want %d) stderr:\n%s\nwant:\n%s", code, c.Exit, errs, wantErr)
+			}
+			if wantOut := norm.Replace(*c.Stdout); out != wantOut {
+				t.Errorf("stdout:\n%s\nwant:\n%s", out, wantOut)
+			}
+			if got := builtAt(base); got != c.Built {
+				t.Errorf("up-to-date index in %q, want %q", got, c.Built)
+			}
+		})
+	}
+}
+
+// rebuildSetup prepares a fixture copy without indexes as rebuild_gen.py
+// does for setup, returning the directories it made read-only.
+func rebuildSetup(t *testing.T, testdata, checkout, base, cache, setup string) []string {
+	t.Helper()
+	var locked []string
+	switch setup {
+	case "missing":
+	case "stale":
+		vid := "1.0"
+		if base != checkout {
+			vid = "2.0"
+		}
+		db := fts.DBPath(base)
+		ftsfixture.Install(t, filepath.Join(testdata, "fulltext-db", vid+".sqlite"), db, checkout)
+		ftsfixture.SetFingerprint(t, db, "stale", "", "")
+	case "ro-everywhere":
+		if err := os.MkdirAll(cache, 0o755); err != nil {
+			t.Fatal(err)
+		}
+		locked = append(locked, cache)
+		fallthrough
+	case "ro-indexes":
+		locked = append(locked, filepath.Join(base, "indexes"))
+	default:
+		t.Fatalf("unknown setup %q", setup)
+	}
+	for _, d := range locked {
+		if err := os.Chmod(d, 0o500); err != nil {
+			t.Fatal(err)
 		}
 	}
-	if _, errs, code := run(t, checkout, "--niagara-version", "1.0", "find", "!!!"); code != 2 ||
-		errs != "ERROR: query '!!!' has no searchable word\n" {
-		t.Errorf("no-word query: exit %d stderr %q", code, errs)
-	}
-	if out, _, code := run(t, checkout, "--niagara-version", "1.0", "pdf", "modbus", "--no-fulltext"); code != 0 ||
-		!strings.HasPrefix(out, "2 PDF manuals matching 'modbus':") {
-		t.Errorf("--no-fulltext: exit %d stdout %q", code, out)
+	return locked
+}
+
+// builtAt is where an up-to-date index of base exists: "indexes", "cache"
+// or "none" (rebuild_gen.py where).
+func builtAt(base string) string {
+	switch path, _ := fts.FreshPath(base, fts.Fingerprint(fts.SourceDirs(base))); path {
+	case "":
+		return "none"
+	case fts.DBPath(base):
+		return "indexes"
+	default:
+		return "cache"
 	}
 }
 

@@ -1,8 +1,9 @@
 package help
 
 // The ranked full-text commands (find_search.py, guide_search.py
-// guide-search / devguide-search): fts ranks, these print. The index is the
-// Python-built fulltext.sqlite, read only (fts.Open).
+// guide-search / devguide-search): fts ranks, these print. The index is
+// fulltext.sqlite, rebuilt first when it is missing or stale like Python's
+// open_index (scope.OpenFulltext, decision D38).
 
 import (
 	"fmt"
@@ -11,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/help/fts"
+	"github.com/angeles725/niagara-go/internal/help/scope"
 )
 
 // FulltextParams are the arguments of find, guide-search and devguide-search.
@@ -27,9 +29,10 @@ func (p FulltextParams) mode() string {
 	return "and"
 }
 
-// search runs fts.Search on the selected data root.
+// search runs fts.Search on the selected data root, rebuilding a missing or
+// stale index first (scope.OpenFulltext).
 func (e *Env) search(query string, srcs []string, mode string) (*fts.Result, error) {
-	return fts.Search(e.BaseDir, e.VersionID, query, srcs, mode)
+	return fts.SearchUsing(scope.OpenFulltext(e.Err), e.BaseDir, e.VersionID, query, srcs, mode)
 }
 
 // ftHead is Python's items[:n] for a slice length: a negative n counts from

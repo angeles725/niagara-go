@@ -8,7 +8,9 @@
 //   - Resolve and VersionLines are the version selection (app.py
 //     resolve_base_dir) and its failure text on stdout. nh exits 2 after it.
 //   - ErrorLine is the stderr line of a lookup that cannot search, such as a
-//     missing or stale full-text index (*fts.StaleIndexError). nh exits 2.
+//     full-text index that cannot be built (*UnwritableIndexError). nh exits 2.
+//   - EnsureFulltext and OpenFulltext rebuild a missing or stale full-text
+//     index before a search, printing Python's lines (fulltext.go, D38).
 package scope
 
 import (

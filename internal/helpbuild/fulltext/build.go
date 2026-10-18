@@ -66,7 +66,7 @@ func Build(versionRoot string, opts Options) (*Result, error) {
 	fingerprint := fts.Fingerprint(dirs)
 	final := opts.Output
 	if final == "" {
-		final = pyJoin(versionRoot, "indexes", fts.DBName)
+		final = DefaultOutput(versionRoot)
 	}
 	if err := os.MkdirAll(filepath.Dir(final), 0o777); err != nil {
 		return nil, err
@@ -94,6 +94,11 @@ func Build(versionRoot string, opts Options) (*Result, error) {
 	res.Log = []string{fmt.Sprintf("full-text index: %s documents -> %s", n, final)}
 	return res, nil
 }
+
+// DefaultOutput is fulltext_index.db_path(versionRoot) as Python spells it,
+// os.path.join(versionRoot, "indexes", "fulltext.sqlite"), the path Build
+// writes and names in its log line when Options.Output is "".
+func DefaultOutput(versionRoot string) string { return pyJoin(versionRoot, "indexes", fts.DBName) }
 
 // pyJoin is os.path.join for the default path, unnormalised like Python's
 // (the log line shows it as Python would).

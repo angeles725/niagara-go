@@ -9,8 +9,8 @@ trailing whitespace), guide and devguide pages, a stamped manifest and a fake in
 jars. For each case the script copies s5/ to a fresh temporary folder (method makes Python build
 a full-text index there), runs tools/niagara_help.py on each case with that copy as the working directory and
 writes s5-cli/<case>.txt (stdout, <ROOT> for the checkout) and s5-cli/cases.json (arguments,
-exit status, stderr; null stderr where Python reports building its full-text index, which the
-Go port never builds).
+exit status, stderr, which for method includes Python building the full-text index; Go builds
+it the same way, decision D38).
 """
 import json
 import os
@@ -95,8 +95,7 @@ def main():
             with open(os.path.join(out, name + ".txt"), "w", encoding="utf-8") as f:
                 f.write(p.stdout.replace(checkout, ROOT))
             stderr = p.stderr.replace(checkout, ROOT)
-            cases.append({"name": name, "args": argv, "exit": p.returncode,
-                          "stderr": None if "full-text" in stderr else stderr})
+            cases.append({"name": name, "args": argv, "exit": p.returncode, "stderr": stderr})
     with open(os.path.join(out, "cases.json"), "w", encoding="utf-8") as f:
         f.write("[\n" + ",\n".join(json.dumps(c) for c in cases) + "\n]\n")
 

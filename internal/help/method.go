@@ -11,6 +11,7 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/fnmatch"
 	"github.com/angeles725/niagara-go/internal/help/fts"
+	"github.com/angeles725/niagara-go/internal/help/scope"
 	"github.com/angeles725/niagara-go/internal/index"
 )
 
@@ -90,8 +91,9 @@ func sectionOrder(s string) int {
 }
 
 // docFrequency is fulltext.doc_frequency: for each word the number of
-// indexed documents containing it as a whole word. Without a current
-// full-text index every count is 0 and a note goes to stderr.
+// indexed documents containing it as a whole word. A missing or stale
+// full-text index is rebuilt first; when none can be built every count is 0
+// and a note goes to stderr.
 func (e *Env) docFrequency(words []string) map[string]int {
 	if len(words) == 0 {
 		return map[string]int{}
@@ -121,7 +123,7 @@ func (e *Env) docFrequency(words []string) map[string]int {
 }
 
 func (e *Env) docCounts(terms []string) (map[string]int, error) {
-	x, err := fts.Open(e.BaseDir, e.VersionID)
+	x, err := scope.OpenFulltext(e.Err)(e.BaseDir, e.VersionID)
 	if err != nil {
 		return nil, err
 	}
