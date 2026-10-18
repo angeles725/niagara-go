@@ -25,16 +25,35 @@ type Runtime struct {
 	Out     io.Writer // stdout
 	Err     io.Writer // stderr
 
+	navDir string // the pinned checkout (NewAt); "" looks it up (FindNavDir)
 	status int
 	json   map[string]*index.Object
 	db     map[string]*sql.DB
 	noted  map[string]bool // optional indexes already reported absent
 }
 
-// New returns the runtime of a command run against baseDir.
-func New(baseDir string, out, errw io.Writer) *Runtime {
-	return &Runtime{BaseDir: baseDir, Out: out, Err: errw,
+// New returns the runtime of a command run against baseDir; its corpus is
+// next to the checkout FindNavDir locates.
+func New(baseDir string, out, errw io.Writer) *Runtime { return NewAt("", baseDir, out, errw) }
+
+// NewAt is New pinned to the checkout navDir (made absolute): its corpus is
+// OrganizedDirAt(navDir), never looked up from the environment's checkout
+// variables, working directory or executable. "" is New.
+func NewAt(navDir, baseDir string, out, errw io.Writer) *Runtime {
+	if navDir != "" {
+		navDir = absPath(navDir)
+	}
+	return &Runtime{BaseDir: baseDir, Out: out, Err: errw, navDir: navDir,
 		json: map[string]*index.Object{}, db: map[string]*sql.DB{}, noted: map[string]bool{}}
+}
+
+// OrganizedDir is the package-level OrganizedDir for this runtime: that of
+// the pinned checkout (OrganizedDirAt), else of the one FindNavDir locates.
+func (r *Runtime) OrganizedDir() string {
+	if r.navDir == "" {
+		return OrganizedDir()
+	}
+	return OrganizedDirAt(r.navDir)
 }
 
 func (r *Runtime) raise(code int) { r.status = max(r.status, code) }

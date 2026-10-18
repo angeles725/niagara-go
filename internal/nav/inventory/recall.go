@@ -120,8 +120,9 @@ func sortedDir(dir string) []string {
 
 // classRecall is class_recall; the error text is what cmd_selftest prints
 // after "recall oracle could not run: ".
-func classRecall(baseDir string, sampleN int) (*recallReport, error) {
-	organized, tried := core.ResolveOrganized()
+func classRecall(env *registry.Env, sampleN int) (*recallReport, error) {
+	baseDir := env.BaseDir
+	organized, tried := env.ResolveOrganized()
 	if organized == "" {
 		return nil, errors.New("corpus not found: " + tried)
 	}
@@ -207,7 +208,7 @@ func runSelftest(env *registry.Env, ns *argparse.Namespace) int {
 		return core.StatusError
 	}
 	sampleN, sampled := ns.Get("sample").(int)
-	r, err := classRecall(env.BaseDir, sampleN)
+	r, err := classRecall(env, sampleN)
 	if err != nil {
 		fmt.Fprintf(w, "ERROR: recall oracle could not run: %v\n", err)
 		return core.StatusError

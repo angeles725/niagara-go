@@ -21,7 +21,7 @@ import (
 // report is license_report with its outcomes reported: nil after an exit-2
 // error; a partial read warns on stderr.
 func report(env *registry.Env) *license.Report {
-	rep, f := license.Scan(env.BaseDir)
+	rep, f := license.Scan(env.BaseDir, env.OrganizedDir())
 	if f != nil {
 		env.Error(f.Message, f.Hint)
 		return nil

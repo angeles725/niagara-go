@@ -83,7 +83,7 @@ func (r *Runtime) Load(name string, opts LoadOpts) *index.Object {
 		return nil
 	}
 	if name == "class-index.json" {
-		for _, w := range Staleness(data.Object("_meta"), key) {
+		for _, w := range r.Staleness(data.Object("_meta"), key) {
 			fmt.Fprintf(r.Err, "WARNING: %s\n", w)
 		}
 	}

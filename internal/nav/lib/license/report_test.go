@@ -45,8 +45,7 @@ func tokenBase(t *testing.T, files map[string]string) (base, corpus string) {
 // stderr text and the exit status.
 func scan(t *testing.T, base, corpus string) (*Report, string, int) {
 	t.Helper()
-	t.Setenv("NAV_CORPUS_BASE", corpus)
-	rep, f := Scan(base)
+	rep, f := Scan(base, corpus)
 	switch {
 	case f != nil:
 		stderr := "ERROR: " + f.Message + "\n"

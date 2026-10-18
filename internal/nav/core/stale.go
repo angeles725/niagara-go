@@ -91,7 +91,17 @@ func changedDirs(organized string, built float64) []string {
 // describes the corpus (built from another corpus path, or older than a
 // module, submodule or vineflower/ directory), ending with the rebuild advice.
 func Staleness(meta *index.Object, indexPath string) []string {
-	organized := OrganizedDir()
+	return StalenessAt(OrganizedDir(), meta, indexPath)
+}
+
+// Staleness is the package-level Staleness against the runtime's corpus
+// (OrganizedDir).
+func (r *Runtime) Staleness(meta *index.Object, indexPath string) []string {
+	return StalenessAt(r.OrganizedDir(), meta, indexPath)
+}
+
+// StalenessAt is Staleness against the corpus location organized.
+func StalenessAt(organized string, meta *index.Object, indexPath string) []string {
 	var warnings []string
 	if source := metaSource(meta); source != "" && realpath(source) != realpath(organized) {
 		warnings = append(warnings, fmt.Sprintf("index %s was built from %s but the corpus is %s",

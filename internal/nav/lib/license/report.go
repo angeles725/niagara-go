@@ -42,12 +42,12 @@ func unreadableIndex(err error) *Failure {
 }
 
 // Scan is license_report over baseDir/indexes/token-index.db and the
-// organized/ corpus (NAV_CORPUS_BASE or the default location): the report,
+// organized/ corpus at organized (core.OrganizedDir or OrganizedDirAt): the report,
 // or the Failure that stopped it (missing token index or corpus, a database
 // error, or no candidate file readable). When only some candidate files
 // cannot be read the report carries Warning. It is ScanIndex with the paths
 // module-nav uses.
-func Scan(baseDir string) (*Report, *Failure) {
+func Scan(baseDir, organized string) (*Report, *Failure) {
 	dbPath := filepath.Join(baseDir, "indexes", "token-index.db")
 	if st, err := os.Stat(dbPath); err != nil || !st.Mode().IsRegular() {
 		return nil, &Failure{fmt.Sprintf("token index not found: %s", dbPath), "Run: ./reindex.sh"}
@@ -61,7 +61,7 @@ func Scan(baseDir string) (*Report, *Failure) {
 	if err != nil {
 		return nil, unreadableIndex(err)
 	}
-	root, message, hint := core.FindSourceRoot(meta)
+	root, message, hint := core.FindSourceRootAt(organized, meta)
 	if root == "" {
 		return nil, &Failure{message, hint}
 	}

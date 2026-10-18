@@ -16,9 +16,15 @@ import (
 
 // ResolveOrganized returns the corpus root when it exists, else "" and the
 // path tried.
-func ResolveOrganized() (path, tried string) {
-	p := OrganizedDir()
-	if st, err := os.Stat(p); err == nil && st.IsDir() {
+func ResolveOrganized() (path, tried string) { return resolveDir(OrganizedDir()) }
+
+// ResolveOrganized is the package-level ResolveOrganized for the runtime's
+// checkout (OrganizedDir).
+func (r *Runtime) ResolveOrganized() (path, tried string) { return resolveDir(r.OrganizedDir()) }
+
+// resolveDir is (p, "") when p is a directory, else ("", p).
+func resolveDir(p string) (path, tried string) {
+	if isDir(p) {
 		return p, ""
 	}
 	return "", p
@@ -28,7 +34,7 @@ func ResolveOrganized() (path, tried string) {
 // root, or "" after an exit-2 error. meta is the _meta block of the index in
 // use: when it was built from another corpus that still exists, the hint names it.
 func (r *Runtime) SourceRoot(meta *index.Object) string {
-	path, message, hint := FindSourceRoot(meta)
+	path, message, hint := FindSourceRootAt(r.OrganizedDir(), meta)
 	if path == "" {
 		r.Error(message, hint)
 	}
@@ -38,7 +44,13 @@ func (r *Runtime) SourceRoot(meta *index.Object) string {
 // FindSourceRoot is SourceRoot without a runtime: the corpus root, or "" with
 // the error message and hint to report.
 func FindSourceRoot(meta *index.Object) (path, message, hint string) {
-	path, tried := ResolveOrganized()
+	return FindSourceRootAt(OrganizedDir(), meta)
+}
+
+// FindSourceRootAt is FindSourceRoot with the corpus location given
+// (organized, which may not exist) instead of looked up.
+func FindSourceRootAt(organized string, meta *index.Object) (path, message, hint string) {
+	path, tried := resolveDir(organized)
 	if path != "" {
 		return path, "", ""
 	}

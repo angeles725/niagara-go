@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/angeles725/niagara-go/internal/argparse"
-	"github.com/angeles725/niagara-go/internal/nav/core"
 	"github.com/angeles725/niagara-go/internal/nav/lib/codesearch"
 	"github.com/angeles725/niagara-go/internal/nav/registry"
 	"github.com/angeles725/niagara-go/internal/pyre"
@@ -19,7 +18,7 @@ func runGrep(env *registry.Env, ns *argparse.Namespace) int {
 		env.Error(fmt.Sprintf("invalid regex '%s': %v", pattern, err), "")
 		return env.ExitCode()
 	}
-	organized, tried := core.ResolveOrganized()
+	organized, tried := env.ResolveOrganized()
 	if organized == "" {
 		env.Error("corpus not found: "+tried, "Set NAV_CORPUS_BASE to the organized/ directory.")
 		return env.ExitCode()

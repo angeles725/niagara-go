@@ -38,7 +38,7 @@ func networkRows(env *registry.Env) (rows []*drivers.DriverRow, scope string, ok
 	if organized == "" {
 		return nil, "", false
 	}
-	report, failure := license.Scan(env.BaseDir)
+	report, failure := license.Scan(env.BaseDir, env.OrganizedDir())
 	if failure != nil {
 		env.Error(failure.Message, failure.Hint)
 		return nil, "", false
