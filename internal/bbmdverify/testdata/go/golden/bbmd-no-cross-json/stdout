@@ -1,0 +1,54 @@
+{
+  "device_ip": "127.0.0.4",
+  "device_subnet": "127.0.0.4/32",
+  "local_ip": "127.0.0.1",
+  "local_on_device_subnet": false,
+  "port": 47931,
+  "tests": {
+    "unicast_device": {
+      "reachable": false,
+      "instance": null
+    },
+    "broadcast": {
+      "responders": {
+        "127.0.0.2": [
+          1234
+        ]
+      },
+      "crossed_from_device_subnet": {},
+      "same_as_local": {
+        "127.0.0.2": [
+          1234
+        ]
+      }
+    },
+    "bbmd_probe": {
+      "127.0.0.2": {
+        "is_bbmd": true,
+        "bdt": [
+          [
+            "127.0.0.2:0xBAC0",
+            "255.255.255.255"
+          ],
+          [
+            "10.1.0.1:0xBAC0",
+            "255.255.255.0"
+          ]
+        ],
+        "fdt": [
+          [
+            "10.9.9.9:0xBAC0",
+            60,
+            45
+          ]
+        ]
+      },
+      "127.0.0.4": {
+        "is_bbmd": false,
+        "bdt": null,
+        "fdt": null
+      }
+    }
+  },
+  "verdict": "REBIND NOT CONFIRMED \u2014 a BBMD answered Read-BDT, but no I-Am came back from the device subnet (directly or forwarded), so the broadcast Who-Is was not seen to reach it. Check that the BBMD's BDT lists the device subnet's BBMD, then re-run."
+}
