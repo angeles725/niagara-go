@@ -11,8 +11,8 @@ import (
 )
 
 // In-process backends (decisions D29, D30): the blocks source (corpus-nav find),
-// the docs source (niagara_help find) and the code source's token and grep calls
-// are answered by the libraries the Go ports share, producing the exact text the
+// the docs source (niagara_help find) and the code source's token, grep and rank
+// calls are answered by the libraries the Go ports share, producing the exact text the
 // backend CLI prints, so parse.go and the goldens see the same rows without a
 // process start. Every case the library cannot answer exactly (no data, a stale
 // full-text index (D21), a miss whose text belongs to a printing package, an
@@ -27,11 +27,19 @@ const ExecEnv = "NSEARCH_EXEC"
 const blocksCacheTag = ".nsearch"
 
 // inprocBackend answers the calls it knows in process and hands the rest to exec.
+// paths are the backend scripts it answers for (bindPaths); pick chooses the
+// in-process answer of a call (route; tests replace it).
 type inprocBackend struct {
 	exec  Backend
 	paths Paths
 	clock func() time.Time
+	pick  func(Paths, []string) func([]string) answer
 }
+
+// pathBinder is a Backend that must know the backend scripts of the question.
+type pathBinder interface{ bindPaths(Paths) }
+
+func (b *inprocBackend) bindPaths(p Paths) { b.paths = p }
 
 // answer is one in-process run: what the backend would have printed, or ok
 // false when only exec can answer exactly.
@@ -41,19 +49,27 @@ type answer struct {
 	ok             bool
 }
 
+// Run answers argv in process when it can, else through exec. A call that falls
+// back after trying in process gives exec only the budget it has left, so one
+// call never spends more than timeout seconds.
 func (b *inprocBackend) Run(argv []string, timeout float64) Raw {
-	run := route(b.paths, argv)
+	pick := b.pick
+	if pick == nil {
+		pick = route
+	}
+	run := pick(b.paths, argv)
 	if run == nil || !isFile(argv[0]) { // a missing script is exec's "tool not found"
 		return b.exec.Run(argv, timeout)
 	}
 	t0 := b.clock()
 	a, done := bounded(func() answer { return run(argv) }, timeout)
+	left := timeout - b.clock().Sub(t0).Seconds()
 	switch {
-	case !done:
+	case !done || (!a.ok && left <= 0):
 		return Raw{State: Unavailable, Reason: "unavailable: timed out after " + formatG3(timeout) + "s",
 			MS: int(timeout * 1000)}
 	case !a.ok:
-		return b.exec.Run(argv, timeout)
+		return b.exec.Run(argv, left)
 	}
 	return Classify(a.rc, a.stdout, a.stderr, int(b.clock().Sub(t0)/time.Millisecond))
 }
@@ -70,6 +86,8 @@ func route(p Paths, argv []string) func([]string) answer {
 		return codeToken
 	case argv[0] == p.Code && argv[1] == "grep":
 		return codeGrep
+	case argv[0] == p.Code && argv[1] == "rank":
+		return codeRank
 	}
 	return nil
 }

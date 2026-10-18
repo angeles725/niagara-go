@@ -279,3 +279,76 @@ func TestBoundedPanicPastTimeoutIsDropped(t *testing.T) {
 	<-panicking
 	time.Sleep(50 * time.Millisecond) // an unrecovered panic would end the test binary here
 }
+
+func TestCodeRankMatchesModuleNav(t *testing.T) {
+	t.Setenv("NAV_CORPUS_BASE", filepath.Join(t.TempDir(), "no-corpus"))
+	scripts := map[string]string{}
+	for _, fixture := range []string{"nav", "rank-skips"} {
+		base := filepath.Join(t.TempDir(), "module-navigator")
+		if err := os.CopyFS(filepath.Join(base, "indexes"),
+			os.DirFS(filepath.Join("..", "nav", "testdata", "fixture", fixture, "indexes"))); err != nil {
+			t.Fatal(err)
+		}
+		scripts[fixture] = stubScript(t, filepath.Join(base, "tools", "module_nav.py"))
+	}
+	for golden, c := range map[string]struct{ fixture, n, question string }{
+		"nav-rank":          {"nav", "3", "como funciona el ack de alarmas"},
+		"nav-rank-exact":    {"nav", "4", "que es un AlarmService y un BAckState"},
+		"nav-rank-accents":  {"nav", "2", "configuración de la consola"},
+		"nav-rank-all":      {"nav", "20", "alarm"},
+		"nav-rank-miss":     {"nav", "20", "zzzqqq xxyyzz"},
+		"nav-rank-no-terms": {"nav", "20", "the a of"},
+		"nav-rank-skips":    {"rank-skips", "20", "alarm service"},
+	} {
+		t.Run(golden, func(t *testing.T) {
+			checkAnswer(t, codeRank([]string{scripts[c.fixture], "rank", "-n", c.n, "--", c.question}),
+				readOracle(t, filepath.Join("..", "nav", "testdata", "golden", golden)))
+		})
+	}
+	if codeRank([]string{scripts["nav"], "rank", "alarm"}).ok {
+		t.Error("a rank line nsearch never sends: answered in process, want exec")
+	}
+	if err := os.Remove(filepath.Join(filepath.Dir(filepath.Dir(scripts["nav"])), "indexes", "xref-index.json")); err != nil {
+		t.Fatal(err)
+	}
+	if codeRank([]string{scripts["nav"], "rank", "-n", "20", "--", "alarm"}).ok {
+		t.Error("absent xref index (module_nav prints a NOTE): answered in process, want exec")
+	}
+}
+
+// budgetBackend is the exec stand-in that records the timeout it was given.
+type budgetBackend struct{ timeouts []float64 }
+
+func (b *budgetBackend) Run(_ []string, timeout float64) Raw {
+	b.timeouts = append(b.timeouts, timeout)
+	return Raw{State: Empty, Out: "(no matches; exec)", RC: 1, HasRC: true}
+}
+
+// TestInprocBudget: a call past its timeout is typed timed out like a killed
+// process, and a fallback to exec only gets the budget that is left.
+func TestInprocBudget(t *testing.T) {
+	script := stubScript(t, filepath.Join(t.TempDir(), "tools", "module_nav.py"))
+	now := time.Unix(0, 0)
+	release := make(chan struct{})
+	defer close(release)
+	slow := func(Paths, []string) func([]string) answer {
+		return func([]string) answer { <-release; return exact(0, "late", "") }
+	}
+	exec := &budgetBackend{}
+	b := &inprocBackend{exec: exec, clock: func() time.Time { return now }, pick: slow}
+	raw := b.Run([]string{script, "token", "BAlarm", "-n", "5"}, 0.01)
+	if raw.State != Unavailable || raw.Reason != "unavailable: timed out after 0.01s" || raw.MS != 10 {
+		t.Errorf("timed out: %+v", raw)
+	}
+	b.pick = func(Paths, []string) func([]string) answer {
+		return func([]string) answer { now = now.Add(3 * time.Second); return viaExec }
+	}
+	if raw := b.Run([]string{script, "token", "BAlarm", "-n", "5"}, 10); raw.State != Empty ||
+		len(exec.timeouts) != 1 || exec.timeouts[0] != 7 {
+		t.Errorf("fallback: %+v, exec timeouts %v (want [7])", raw, exec.timeouts)
+	}
+	if raw := b.Run([]string{script, "token", "BAlarm", "-n", "5"}, 2); raw.State != Unavailable ||
+		len(exec.timeouts) != 1 {
+		t.Errorf("fallback with no budget left: %+v, exec timeouts %v", raw, exec.timeouts)
+	}
+}

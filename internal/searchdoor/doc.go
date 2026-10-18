@@ -20,13 +20,16 @@
 // default inprocBackend answers in process, through the libraries the Go ports
 // share (decision D29), the calls it can reproduce byte for byte: blocks
 // (corpusnav/blocksearch), docs (help/fts) and the code source's token and grep
-// (nav/codesearch); it renders the exact text the backend CLI prints, so the
-// parsers see the same rows. Everything else runs through exec: rank and the
-// structure, modules and license calls (no library yet), and any call whose
+// (nav/codesearch) and rank (nav/classrank); it renders the exact text the
+// backend CLI prints, so the parsers see the same rows. Everything else runs
+// through exec: the structure, modules and license calls, and any call whose
 // data is absent, whose full-text index is missing or stale (D21) or whose
-// niagara_help miss block belongs to a printing package. NSEARCH_EXEC=1 forces
-// exec for every call; it is the parity oracle. The in-process blocks source
-// keeps its own find cache, find-<scope>.nsearch.gob, beside corpus-nav's.
+// niagara_help miss block belongs to a printing package (or whose rank xref
+// index is absent); a call that falls back after trying in process gives exec
+// only the budget it has left. NSEARCH_EXEC=1 forces exec for every call; it is
+// the parity oracle. The in-process blocks source keeps its own find cache,
+// find-<scope>.nsearch.gob, beside corpus-nav's; rank shares module_nav's Go
+// cache (indexes/.mnav-cache/class-rank.gob).
 //
 // Locating the backends (decision D24 style; a binary has no source path):
 //
