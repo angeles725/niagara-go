@@ -1,6 +1,7 @@
 package golden
 
 import (
+	"bytes"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -26,8 +27,8 @@ func Updating() bool { return os.Getenv(UpdateEnv) != "" }
 
 // RunGo checks the Go-only cases under testdata/go/golden against m, as Run does. With UpdateEnv
 // set it first rewrites each case's stdout, stderr and exit from m in process (a new case needs
-// only its cmd.json; an empty stderr removes the file), then checks them; the rewrite is reviewed
-// in the diff before it is committed. GOLDEN_BIN affects only that check.
+// only its cmd.json; an empty stderr removes the file), then checks them; each rewritten file is
+// logged, and the rewrite is reviewed in the diff before it is committed. GOLDEN_BIN affects only that check.
 func RunGo(t *testing.T, m cli.Main) {
 	t.Helper()
 	runGo(t, GoTestdata, m)
@@ -36,6 +37,7 @@ func RunGo(t *testing.T, m cli.Main) {
 func runGo(t *testing.T, testdata string, m cli.Main) {
 	t.Helper()
 	if Updating() {
+		t.Logf("golden: %s set, Go-only cases under %s regenerated", UpdateEnv, testdata)
 		update(t, testdata, m)
 	}
 	Run(t, testdata, m)
@@ -73,19 +75,51 @@ func update(t *testing.T, testdata string, m cli.Main) {
 	})
 }
 
+// writeOutputs rewrites a case's expectations and logs each file whose bytes changed, so a
+// GOLDEN_UPDATE left exported shows in `go test -v`.
 func writeOutputs(t *testing.T, dir string, r result) {
 	t.Helper()
-	if len(r.stderr) == 0 { // a missing stderr is an empty expectation
-		if err := os.Remove(filepath.Join(dir, "stderr")); err != nil && !os.IsNotExist(err) {
-			t.Fatal(err)
+	rewritten, err := rewriteOutputs(dir, r)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, path := range rewritten {
+		t.Logf("golden: rewrote %s", path)
+	}
+}
+
+// rewriteOutputs writes stdout, stderr and exit of r under dir and returns the paths whose
+// content changed (a created, modified or removed file).
+func rewriteOutputs(dir string, r result) ([]string, error) {
+	var changed []string
+	put := func(name string, body []byte) error {
+		path := filepath.Join(dir, name)
+		old, err := os.ReadFile(path)
+		if err == nil && bytes.Equal(old, body) {
+			return nil
 		}
-	} else if err := os.WriteFile(filepath.Join(dir, "stderr"), r.stderr, 0o644); err != nil {
-		t.Fatal(err)
+		if err != nil && !os.IsNotExist(err) {
+			return err
+		}
+		changed = append(changed, path)
+		return os.WriteFile(path, body, 0o644)
 	}
-	if err := os.WriteFile(filepath.Join(dir, "stdout"), r.stdout, 0o644); err != nil {
-		t.Fatal(err)
+	if len(r.stderr) == 0 { // a missing stderr is an empty expectation
+		path := filepath.Join(dir, "stderr")
+		switch err := os.Remove(path); {
+		case err == nil:
+			changed = append(changed, path)
+		case !os.IsNotExist(err):
+			return nil, err
+		}
+	} else if err := put("stderr", r.stderr); err != nil {
+		return nil, err
 	}
-	if err := os.WriteFile(filepath.Join(dir, "exit"), []byte(strconv.Itoa(r.exit)+"\n"), 0o644); err != nil {
-		t.Fatal(err)
+	if err := put("stdout", r.stdout); err != nil {
+		return nil, err
 	}
+	if err := put("exit", []byte(strconv.Itoa(r.exit)+"\n")); err != nil {
+		return nil, err
+	}
+	return changed, nil
 }

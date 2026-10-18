@@ -112,7 +112,9 @@ go test ./internal/hdbread -run 'TestGoInputs|TestGoldenGo'
 With `GOLDEN_UPDATE` set (any non-empty value), `golden.RunGo` first runs each case in process,
 each in its own subtest so its working directory and env are restored, and rewrites its
 `stdout`, `stderr` and `exit` (a new case needs only its `cmd.json`; an empty stderr removes the
-file); then it checks the cases as usual. The package's input helper rewrites
+file); then it checks the cases as usual. Update mode logs one line saying it is on and one
+`golden: rewrote <path>` per file whose bytes changed (`go test -v` shows them), so a
+`GOLDEN_UPDATE` left exported is visible; review that diff before committing. The package's input helper rewrites
 `testdata/go/inputs/` under the same variable (`golden.Updating()`, hdbread `TestGoInputs`).
 Nothing outside `testdata/go/` is written: `golden.Run` never rewrites a Python case. A Python case
 whose output the new behaviour changes keeps its Python bytes and declares the Go output in

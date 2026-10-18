@@ -3,6 +3,7 @@ package golden
 import (
 	"os"
 	"path/filepath"
+	"slices"
 	"strconv"
 	"testing"
 
@@ -66,5 +67,27 @@ func TestUpdatingFollowsTheVariable(t *testing.T) {
 	t.Setenv(UpdateEnv, "1")
 	if !Updating() {
 		t.Fatal("not Updating with GOLDEN_UPDATE=1")
+	}
+}
+
+func TestRewriteOutputsReportsChangedFiles(t *testing.T) {
+	dir := t.TempDir()
+	write(t, filepath.Join(dir, "stdout"), "same\n")
+	write(t, filepath.Join(dir, "stderr"), "old\n")
+	write(t, filepath.Join(dir, "exit"), "0\n")
+
+	got, err := rewriteOutputs(dir, result{stdout: []byte("same\n"), stderr: []byte("new\n"), exit: 0})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want := []string{filepath.Join(dir, "stderr")}; !slices.Equal(got, want) {
+		t.Errorf("changed = %v, want %v", got, want)
+	}
+	got, err = rewriteOutputs(dir, result{stdout: []byte("same\n"), exit: 0}) // empty stderr removes it
+	if err != nil || !slices.Equal(got, []string{filepath.Join(dir, "stderr")}) {
+		t.Errorf("removal: changed = %v (%v)", got, err)
+	}
+	if got, err = rewriteOutputs(dir, result{stdout: []byte("same\n")}); err != nil || len(got) != 0 {
+		t.Errorf("unchanged rewrite reported %v (%v)", got, err)
 	}
 }
