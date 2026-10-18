@@ -8,6 +8,7 @@ import (
 	"github.com/angeles725/niagara-go/internal/argparse"
 	"github.com/angeles725/niagara-go/internal/index"
 	"github.com/angeles725/niagara-go/internal/nav/core"
+	"github.com/angeles725/niagara-go/internal/nav/lib/modlist"
 	"github.com/angeles725/niagara-go/internal/nav/registry"
 )
 
@@ -15,14 +16,6 @@ import (
 
 func loadInventory(env *registry.Env) *index.Object {
 	return env.Load("module-inventory.json", core.LoadOpts{})
-}
-
-// typeOrStandalone is `v["type"] if v["type"] else "standalone"`.
-func typeOrStandalone(v *index.Object) string {
-	if core.Truthy(v, "type") {
-		return core.Str(v, "type")
-	}
-	return "standalone"
 }
 
 // javaLabel is the "Java N" label of a bytecode version (45 = Java 1).
@@ -65,7 +58,7 @@ func runInventory(env *registry.Env, _ *argparse.Namespace) int {
 		if core.Truthy(v, "has_vineflower") {
 			withVF++
 		}
-		types[typeOrStandalone(v)]++
+		types[modlist.TypeOrStandalone(v)]++
 		if bc := core.Int(v, "bytecode"); bc > 0 {
 			bytecodes[bc]++
 		}
@@ -143,17 +136,17 @@ func runModules(env *registry.Env, ns *argparse.Namespace) int {
 	}
 	w := env.Out
 	bytecode, byBytecode := ns.Get("bytecode").(int)
-	f := ModuleFilter{Type: ns.String("mod_type"), ZKM: ns.Bool("zkm"), NoCode: ns.Bool("no_code"),
+	f := modlist.ModuleFilter{Type: ns.String("mod_type"), ZKM: ns.Bool("zkm"), NoCode: ns.Bool("no_code"),
 		HasCode: ns.Bool("has_code"), ByBytecode: byBytecode, Bytecode: bytecode, Top: ns.Int("top")}
-	results := Modules(data, f)
+	results := modlist.Modules(data, f)
 	fmt.Fprintln(w)
 	fmt.Fprintf(w, "  Modules%s: %d results\n", f.Label(), len(results))
-	for _, line := range ModuleTableHeader() {
+	for _, line := range modlist.ModuleTableHeader() {
 		fmt.Fprintln(w, line)
 	}
 	var java, classes int64
 	for _, r := range results {
-		fmt.Fprintln(w, FormatModuleRow(r))
+		fmt.Fprintln(w, modlist.FormatModuleRow(r))
 		java += r.JavaFiles
 		classes += r.ClassCount
 	}
@@ -161,19 +154,4 @@ func runModules(env *registry.Env, ns *argparse.Namespace) int {
 	fmt.Fprintf(w, "  Total: %d modules, %s java files, %s classes\n", len(results), core.Commas(java), core.Commas(classes))
 	fmt.Fprintln(w)
 	return env.ExitCode()
-}
-
-func yesBlank(b bool) string {
-	if b {
-		return "YES"
-	}
-	return ""
-}
-
-// pySliceEnd is the end index of Python's seq[:n] on a sequence of length l.
-func pySliceEnd(n, l int) int {
-	if n < 0 {
-		return max(0, l+n)
-	}
-	return min(n, l)
 }

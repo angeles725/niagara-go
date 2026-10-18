@@ -1,7 +1,6 @@
-package domain
+package drivers
 
 import (
-	"fmt"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -9,7 +8,6 @@ import (
 	"github.com/angeles725/niagara-go/internal/index"
 	"github.com/angeles725/niagara-go/internal/nav/core"
 	"github.com/angeles725/niagara-go/internal/nav/lib/license"
-	"github.com/angeles725/niagara-go/internal/nav/registry"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
@@ -197,38 +195,6 @@ func deviceTypeAt(text string, p int) (string, int, bool) {
 		return "", 0, false
 	}
 	return text[j:k], k + len(".TYPE"), true
-}
-
-// networkRows loads the indexes, the corpus root and the license features
-// Drivers reads, then returns its rows and scope, or ok=false (after an
-// exit-2 error, or silently when an index is empty).
-func networkRows(env *registry.Env) (rows []*DriverRow, scope string, ok bool) {
-	ci := env.Load("class-index.json", core.LoadOpts{})
-	var inh, inv *index.Object
-	if ci != nil && ci.Len() > 0 {
-		inh = env.Load("inheritance.json", core.LoadOpts{})
-	}
-	if inh != nil && inh.Len() > 0 {
-		inv = env.Load("module-inventory.json", core.LoadOpts{})
-	}
-	if inv == nil || inv.Len() == 0 {
-		return nil, "", false
-	}
-	organized := env.SourceRoot(ci.Object("_meta"))
-	if organized == "" {
-		return nil, "", false
-	}
-	report, failure := license.Scan(env.BaseDir)
-	if failure != nil {
-		env.Error(failure.Message, failure.Hint)
-		return nil, "", false
-	}
-	if report.Warning != "" {
-		fmt.Fprintf(env.Err, "WARNING: %s\n", report.Warning)
-	}
-	rows, scope = Drivers(DriverInputs{ClassIndex: ci, Inheritance: inh, Inventory: inv,
-		Organized: organized, Features: FeaturesByModule(report.Calls)})
-	return rows, scope, true
 }
 
 func anatomy(cx *corpus, it item, organized string, features map[string][]string, docs *docIndex) *DriverRow {

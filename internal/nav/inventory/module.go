@@ -10,6 +10,7 @@ import (
 	"github.com/angeles725/niagara-go/internal/argparse"
 	"github.com/angeles725/niagara-go/internal/index"
 	"github.com/angeles725/niagara-go/internal/nav/core"
+	"github.com/angeles725/niagara-go/internal/nav/lib/modlist"
 	"github.com/angeles725/niagara-go/internal/nav/registry"
 	"github.com/angeles725/niagara-go/internal/textfold"
 )
@@ -83,7 +84,7 @@ func printModuleDetail(w io.Writer, name string, v *index.Object) {
 	fmt.Fprintln(w)
 	fmt.Fprintf(w, "  Module:      %s\n", name)
 	fmt.Fprintf(w, "  Parent:      %s\n", core.Str(v, "module"))
-	fmt.Fprintf(w, "  Type:        %s\n", typeOrStandalone(v))
+	fmt.Fprintf(w, "  Type:        %s\n", modlist.TypeOrStandalone(v))
 	fmt.Fprintf(w, "  JAR:         %s\n", core.Str(v, "jar"))
 	fmt.Fprintf(w, "  Has code:    %s\n", yesNo(core.Truthy(v, "has_code")))
 	fmt.Fprintf(w, "  Class count: %s\n", core.Commas(core.Int(v, "class_count")))

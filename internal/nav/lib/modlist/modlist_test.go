@@ -1,4 +1,4 @@
-package inventory
+package modlist
 
 import (
 	"os"
@@ -14,7 +14,7 @@ import (
 // the nav runtime and compares the results line, header and rows with the
 // `modules` goldens (filters, --top and a "-" type and "v?" bytecode).
 func TestModulesMatchesGolden(t *testing.T) {
-	v, err := index.LoadPython(filepath.Join("..", "testdata", "fixture", "nav", "indexes", "module-inventory.json"))
+	v, err := index.LoadPython(filepath.Join("..", "..", "testdata", "fixture", "nav", "indexes", "module-inventory.json"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -28,7 +28,7 @@ func TestModulesMatchesGolden(t *testing.T) {
 		{"nav-modules-bytecode", ModuleFilter{HasCode: true, ByBytecode: true, Bytecode: 52}},
 	} {
 		t.Run(tc.golden, func(t *testing.T) {
-			b, err := os.ReadFile(filepath.Join("..", "testdata", "golden", tc.golden, "stdout"))
+			b, err := os.ReadFile(filepath.Join("..", "..", "testdata", "golden", tc.golden, "stdout"))
 			if err != nil {
 				t.Fatal(err)
 			}

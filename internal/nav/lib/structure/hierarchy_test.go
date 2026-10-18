@@ -14,7 +14,7 @@ import (
 func navIndexes(t *testing.T) (inh, classes *index.Object) {
 	t.Helper()
 	load := func(name string) *index.Object {
-		v, err := index.LoadPython(filepath.Join("..", "testdata", "fixture", "nav", "indexes", name))
+		v, err := index.LoadPython(filepath.Join("..", "..", "testdata", "fixture", "nav", "indexes", name))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -26,7 +26,7 @@ func navIndexes(t *testing.T) (inh, classes *index.Object) {
 // golden is the stdout lines of a module-nav golden case.
 func golden(t *testing.T, name string) []string {
 	t.Helper()
-	b, err := os.ReadFile(filepath.Join("..", "testdata", "golden", name, "stdout"))
+	b, err := os.ReadFile(filepath.Join("..", "..", "testdata", "golden", name, "stdout"))
 	if err != nil {
 		t.Fatal(err)
 	}

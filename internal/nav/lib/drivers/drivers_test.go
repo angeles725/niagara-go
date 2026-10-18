@@ -1,4 +1,4 @@
-package domain
+package drivers
 
 import (
 	"os"
@@ -16,7 +16,7 @@ import (
 func fixtureDrivers(t *testing.T) ([]*DriverRow, string) {
 	t.Helper()
 	load := func(name string) *index.Object {
-		v, err := index.LoadPython(filepath.Join("..", "testdata", "fixture", "drivers", "indexes", name))
+		v, err := index.LoadPython(filepath.Join("..", "..", "testdata", "fixture", "drivers", "indexes", name))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -31,12 +31,12 @@ func fixtureDrivers(t *testing.T) ([]*DriverRow, string) {
 	})
 	return Drivers(DriverInputs{ClassIndex: load("class-index.json"), Inheritance: load("inheritance.json"),
 		Inventory: load("module-inventory.json"), Features: features,
-		Organized: filepath.Join("..", "testdata", "fixture", "drivers-organized")})
+		Organized: filepath.Join("..", "..", "testdata", "fixture", "drivers-organized")})
 }
 
 func goldenStdout(t *testing.T, name string) string {
 	t.Helper()
-	b, err := os.ReadFile(filepath.Join("..", "testdata", "golden", name, "stdout"))
+	b, err := os.ReadFile(filepath.Join("..", "..", "testdata", "golden", name, "stdout"))
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -1,4 +1,4 @@
-package inventory
+package modlist
 
 import (
 	"fmt"
@@ -14,7 +14,7 @@ import (
 // module-inventory.json, prints nothing and returns typed rows;
 // ModuleTableHeader and FormatModuleRow yield the exact lines the command
 // prints, so the command and nsearch show the same text. Loading the index
-// and its stderr belong to the command (modules.go).
+// and its stderr belong to the command (internal/nav/inventory).
 
 // ModuleFilter is the filters of `modules`; the zero value keeps every
 // submodule, sorted by name.
@@ -77,7 +77,7 @@ func Modules(inventory *index.Object, f ModuleFilter) []ModuleRow {
 			continue
 		}
 		switch {
-		case f.Type != "" && typeOrStandalone(v) != f.Type,
+		case f.Type != "" && TypeOrStandalone(v) != f.Type,
 			f.ZKM && !core.Truthy(v, "zkm"),
 			f.NoCode && core.Truthy(v, "has_code"),
 			f.HasCode && !core.Truthy(v, "has_code"):
@@ -130,4 +130,27 @@ func FormatModuleRow(r ModuleRow) string {
 	return fmt.Sprintf("  %s %s  %s  %s  %s  v%s", core.LJust(r.Name, 40), core.RJust(typ, 4),
 		core.RJust(core.Commas(r.JavaFiles), 6), core.RJust(core.Commas(r.ClassCount), 6),
 		core.RJust(yesBlank(r.ZKM), 3), bc)
+}
+
+// TypeOrStandalone is `v["type"] if v["type"] else "standalone"`.
+func TypeOrStandalone(v *index.Object) string {
+	if core.Truthy(v, "type") {
+		return core.Str(v, "type")
+	}
+	return "standalone"
+}
+
+func yesBlank(b bool) string {
+	if b {
+		return "YES"
+	}
+	return ""
+}
+
+// pySliceEnd is the end index of Python's seq[:n] on a sequence of length l.
+func pySliceEnd(n, l int) int {
+	if n < 0 {
+		return max(0, l+n)
+	}
+	return min(n, l)
 }
