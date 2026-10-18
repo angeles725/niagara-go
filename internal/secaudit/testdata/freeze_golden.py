@@ -12,7 +12,9 @@ checkout gives the same bytes. No case runs a real keytool: the homes with a tru
 PATH=/nonexistent. The unreadable-dir suite (POSIX only) runs in a temp copy of
 testdata/unreadable-dir holding the mode-000 directory TestGoldenUnreadableDir creates
 (inputs/logs-locked/locked with an IOC in station.log); its outputs are written back to the
-checked-in suite, which is never chmod'ed.
+checked-in suite, which is never chmod'ed. The dangling-links suite (POSIX only) likewise runs
+in a temp copy of testdata/dangling-links holding the two symlinks to a missing gone.log that
+TestGoldenDanglingLinks creates (inputs/logs-dangling/nre.log, inputs/logs-partial/station.log).
 """
 import json
 import os
@@ -64,6 +66,19 @@ def freeze_unreadable_dir(tool):
             os.chmod(locked, 0o755)
 
 
+def freeze_dangling_links(tool):
+    """The dangling-links suite, run in a temp copy holding the links (as TestGoldenDanglingLinks
+    builds them)."""
+    with tempfile.TemporaryDirectory() as tmp:
+        suite = os.path.join(tmp, "suite")
+        shutil.copytree(os.path.join(HERE, "dangling-links"), suite)
+        for link in ("logs-dangling/nre.log", "logs-partial/station.log"):
+            path = os.path.join(suite, "inputs", link)
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            os.symlink("gone.log", path)
+        freeze(tool, os.path.join(HERE, "dangling-links", "golden"), suite)
+
+
 def main():
     research = os.environ.get("NIAGARA_RESEARCH")
     if not research:
@@ -72,6 +87,7 @@ def main():
     freeze(tool, os.path.join(HERE, "golden"), HERE)
     if os.name == "posix":
         freeze_unreadable_dir(tool)
+        freeze_dangling_links(tool)
 
 
 if __name__ == "__main__":
