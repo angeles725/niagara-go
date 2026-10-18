@@ -16,8 +16,8 @@ document disagree, the code wins and this document is corrected.
 | B1 | foundations (JSON layouts, `_meta`, atomic write, normalisation, parity driver) + module inventory | `build_module_inventory.py`, `module_nav_lib/build.py` |
 | B2 | `declaration_header` / `strip_comments` + class index | `build_class_index.py`, `module_nav_lib/java_text.py` |
 | B3 | inheritance + xref | `build_inheritance.py`, `build_xref.py` |
-| **B4** | token index (SQLite) | `build_token_index.py` |
-| B5 | Java member scanner + method index | `build_method_index.py` |
+| B4 | token index (SQLite) | `build_token_index.py` |
+| **B5** | Java member scanner + method index | `build_method_index.py` |
 | ~~B6~~ | field index: dropped, no kept reader (D32) | `build_field_index.py` |
 | B7 | call graph | `build_callgraph_index.py` |
 | B8 | `mnav reindex` orchestration | `reindex.sh` |
@@ -130,6 +130,28 @@ streams record by record without holding either.
 
 Intended difference: a scanned file whose entry has `"module": null` is an error naming it
 where Python dies with `IntegrityError` (`files.module` is `NOT NULL`).
+
+## Java member scanner
+
+`javamembers.go` ports the line scanner of `build_method_index.py` that the method index
+and the call graph share: `countBraces` (`{`/`}` outside `"..."`/`'...'` literals and
+before `//`), `dropBlockComments`, `splitParams`, `extractParamType`, `tryParseMethod` and
+`parseMethods` (`parse_methods_from_content`). It walks `content.split("\n")` with a class
+stack of `(name, body depth)` frames: closing braces are counted on the whole line before
+the frame check, a declaration line pushes `core.TypeDeclName` unless it starts with `//`
+or an annotation, and a method is tried on a line that starts with a space or tab, does
+not start with `//` or `@`, and holds a `(`. Python's quirks are kept because they are
+what the indexes hold: a one-line `{ ... }` body at class depth pops the class (later
+members fall back to the file's class); the continuation lines of a multi-line parameter
+list are skipped, braces included; a line starting with `@` (an `@interface` member, an
+annotated method on one line) is never a method; a declaration without return type and
+modifiers that is not a constructor is an enum constant and skipped, its continuation
+lines scanned again. `\w`, `isalnum`, `isalpha`, `strip` and `split` are Python's
+Unicode ones (`pycompat`).
+
+Intended difference: `extract_param_type` raises `IndexError` on an annotation with
+arguments and nothing after it (`@A(x y)`); here the type is empty and dropped like any
+empty type.
 
 ## Gates
 
