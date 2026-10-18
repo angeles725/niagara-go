@@ -10,6 +10,6 @@
 // Source of truth: module-navigator tools/ (Python 3.15). Where the Python
 // code and this package disagree, the code wins. Each index is written with
 // the same bytes as Python except the volatile _meta members (timestamp,
-// build_time_sec and the absolute source path; see NormalizeVolatile), which
+// build_time_sec and the absolute source path; see NormalizeVolatile in the package tests), which
 // the parity tests normalise before a byte diff. See docs/navbuild.md.
 package navbuild
