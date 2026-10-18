@@ -114,13 +114,3 @@ func pyHead[T any](items []T, n int) []T {
 	}
 	return items[:max(0, min(n, len(items)))]
 }
-
-// pyInt is a decoded JSON integer as a Go int (0 for anything else).
-func pyInt(v any) int {
-	if n, ok := v.(json.Number); ok {
-		if i, err := n.Int64(); err == nil {
-			return int(i)
-		}
-	}
-	return 0
-}

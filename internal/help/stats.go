@@ -88,7 +88,10 @@ func (e *Env) Stats(asJSON bool) error {
 	props, actions, topics := sum("slots-index", listOf("properties")), sum("slots-index", listOf("actions")), sum("slots-index", listOf("topics"))
 	methods := sum("method-index", func(o *index.Object, k string) int { v, _ := o.Get(k); return pyLen(v) })
 	edges := sum("xref-index", listOf("uses"))
-	lines := sum("source-index", func(o *index.Object, k string) int { return pyInt(get(o.Object(k), "lines", nil)) })
+	lines := sum("source-index", func(o *index.Object, k string) int {
+		n, _ := index.Int(get(o.Object(k), "lines", nil))
+		return int(n)
+	})
 	dgItems := 0
 	for _, s := range objList(idx["devguide-toc"], "sections") {
 		dgItems += listLen(s, "items")
