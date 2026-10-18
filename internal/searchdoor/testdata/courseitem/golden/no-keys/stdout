@@ -4,7 +4,7 @@ Query: 'L10.23 alarm'   mode=backend default   docs=niagara-help default
 ========================================================================
 COURSE ITEM · answer key   (course show L10.23)
 ========================================================================
-  [!] unavailable: --root empty-course has no docs/n4-dev-course-solutions/labs.md   (unavailable: not a zero)
+  [!] unavailable: empty-course has no docs/n4-dev-course-solutions/labs.md (set NSEARCH_COURSE_KEYS)   (unavailable: not a zero)
 
 ========================================================================
 SOURCE 1 · OUR BLOCKS   (corpus-nav find)

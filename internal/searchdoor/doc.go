@@ -13,7 +13,7 @@
 //
 // A query that names a course answer-key item (L10.23, LB.7, RA1.V12, D1.8, T1.1,
 // X3, P2: courseitem.go) is led by that item, as `course show <ID>` prints it
-// (course.Main in process, decision D41), before the three sources; a token that
+// (parsed by course/key, decision D41), before the three sources; a token that
 // names no item is ordinary query text.
 //
 // `license <module|feature>` joins the licensing evidence of the three sources.

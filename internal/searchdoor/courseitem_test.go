@@ -1,10 +1,16 @@
 package searchdoor
 
 import (
+	"bytes"
+	"os"
+	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
 
+	"github.com/angeles725/niagara-go/internal/cli"
+	"github.com/angeles725/niagara-go/internal/course"
+	"github.com/angeles725/niagara-go/internal/course/key"
 	"github.com/angeles725/niagara-go/internal/golden"
 )
 
@@ -112,7 +118,41 @@ func TestNoItemNoRoute(t *testing.T) {
 func TestMissingAnswerKeyIsUnavailable(t *testing.T) {
 	out := searchKeys(t, "L10.23", "testdata/no-such-checkout")
 	if len(out) != 4 || out[0].State != Unavailable ||
-		!strings.Contains(out[0].Reason, "has no docs/n4-dev-course-solutions/labs.md") {
+		out[0].Reason != "unavailable: testdata/no-such-checkout has no docs/n4-dev-course-solutions/labs.md (set NSEARCH_COURSE_KEYS)" {
 		t.Fatalf("first outcome %+v", out[0])
+	}
+}
+
+// showLines must print every item byte for byte as `course show` does: the hermetic key
+// always, the real answer keys of the niagara-research checkout when one is found.
+func TestShowLinesMatchCourseShow(t *testing.T) {
+	roots := []string{courseKeys}
+	if !testing.Short() {
+		real := os.Getenv(QualityRootEnv)
+		if real == "" {
+			if home, err := os.UserHomeDir(); err == nil {
+				real = filepath.Join(home, "niagara-research")
+			}
+		}
+		if key.HasMarker(real) {
+			roots = append(roots, real)
+		}
+	}
+	for _, root := range roots {
+		c, problems := key.Load(root)
+		if c == nil {
+			t.Fatalf("%s: %v", root, problems)
+		}
+		for _, it := range c.Items {
+			var out, errb bytes.Buffer
+			if rc := course.Main([]string{"--root", root, "show", it.ID}, cli.Stdio{In: strings.NewReader(""), Out: &out, Err: &errb}); rc != 0 {
+				t.Fatalf("%s: course show %s exited %d: %s", root, it.ID, rc, errb.String())
+			}
+			want := strings.TrimRight(out.String(), "\n")
+			if got := strings.Join(showLines(it), "\n"); got != want {
+				t.Errorf("%s %s:\n got %q\nwant %q", root, it.ID, got, want)
+			}
+		}
+		t.Logf("%s: %d items match course show", root, len(c.Items))
 	}
 }
