@@ -1,0 +1,3 @@
+usage: course progress [-h] [--root DIR] [--lab GROUP] [--station PATH] [--install DIR]
+                       [--source DIR] [--labsrc DIR] [--date YYYY-MM-DD] [--json]
+course progress: error: the following arguments are required: --station

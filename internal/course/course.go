@@ -29,7 +29,7 @@ exit: 0 found; 1 searched, no match (show: any unknown ID, even when the
 others were printed; find: no item matches); 2 cannot search (no root, a missing or ambiguous answer
 key, a missing text file). check: 0 no FAIL (SKIPs are counted, never passed);
 1 at least one FAIL; 2 the station cannot be read, or every check was skipped.
-verify, verify-predictions (= verify --status predicted): 0 no item
+verify, verify-predictions (= verify --status predicted), progress: 0 no item
 contradicted; 1 at least one CONTRADICTED; 2 cannot search, the station
 cannot be read, or every linked check was skipped.
 
@@ -48,6 +48,7 @@ examples:
     --install /opt/Niagara/Niagara-4.15.6.20 --lab 4 --lab 10
   course verify-predictions --station ~/Niagara4.15/tridium/stations/TrainingStation
   course verify --status written --lab RA1
+  course progress --lab 3
   course find -i 'history:'`
 
 // rootParent holds --root: None on the main parser, SUPPRESS on the subcommands, so the
@@ -127,6 +128,14 @@ func buildParser() (*argparse.Parser, map[string]*argparse.Parser) {
 	vf.Add(labsrcArg, "--labsrc")
 	vf.Add(argparse.Arg{Metavar: "YYYY-MM-DD", Help: "date written in the suggested *(verified live|offline ...)* lines (default: today)"}, "--date")
 	vf.Add(jsonHelp, "--json")
+	pg := add("progress", "where you are: verify's verdicts per group over every item, then the steps to redo and the markers to add")
+	pg.Add(argparse.Arg{Metavar: "GROUP", Help: "one group: a lab number (3 or L3), B, A, RA1, RA2, RAX, RA (all three), EXAM"}, "--lab")
+	pg.Add(stationArg, "--station")
+	pg.Add(installArg, "--install")
+	pg.Add(sourceArg, "--source")
+	pg.Add(labsrcArg, "--labsrc")
+	pg.Add(argparse.Arg{Metavar: "YYYY-MM-DD", Help: "date written in the suggested *(verified live|offline ...)* lines (default: today)"}, "--date")
+	pg.Add(jsonHelp, "--json")
 	return p, subs
 }
 
@@ -146,7 +155,7 @@ func Main(args []string, s cli.Stdio) int {
 	if cmd == "check" { // reads a station, not the answer keys
 		return cmdCheck(s, o, ns.Strings("lab"), ns.Bool("json"))
 	}
-	if (cmd == "verify" || cmd == "verify-predictions") && !o.anyStation() {
+	if (cmd == "verify" || cmd == "verify-predictions" || cmd == "progress") && !o.anyStation() {
 		return o.missingStation("", nil) // before the root and --date errors
 	}
 	root, err := findRoot(ns.String("root"), ns.Get("root") != nil)
@@ -168,13 +177,16 @@ func Main(args []string, s cli.Stdio) int {
 		return cmdVerify(c, s, o, "predicted", nil, ns.String("date"), ns.Bool("json"))
 	case "find":
 		return cmdFind(c, s, ns.String("query"), ns.Bool("ignore_case"))
-	case "verify":
+	case "verify", "progress":
 		var groups []string
 		if ns.Get("lab") != nil {
 			if groups = c.GroupKeys(ns.String("lab")); len(groups) == 0 {
 				fmt.Fprintf(s.Err, "course: no group %s (groups: %s)\n", ns.String("lab"), c.GroupList())
 				return cli.ExitNoMatch
 			}
+		}
+		if cmd == "progress" {
+			return cmdProgress(c, s, o, groups, ns.String("date"), ns.Bool("json"))
 		}
 		return cmdVerify(c, s, o, ns.String("status"), groups, ns.String("date"), ns.Bool("json"))
 	case "status":

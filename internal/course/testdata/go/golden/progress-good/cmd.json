@@ -1,0 +1,1 @@
+{"args": ["--root", "predict-root", "progress", "--station", "stations/good", "--install", "install", "--date", "2026-10-18"], "cwd_fixture": ".."}
