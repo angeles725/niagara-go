@@ -172,36 +172,40 @@ func TestVerifyPredictionsTrainingStation(t *testing.T) {
 }
 
 // A check SKIPped only because its optional tree (--install, --source, --labsrc, --solutions) was
-// not given does not lower what the other checks decide; any other SKIP still does.
+// not given does not lower what the other checks decide, but caps it at PARTIAL: an item is never
+// CONFIRMED on fewer checks than link it. Any other SKIP still leaves the item UNDECIDED.
 func TestDecideAbsentTree(t *testing.T) {
-	r := func(id, kind, verdict, ev string, absent bool, notes ...string) LinkedResult {
+	r := func(id, kind, verdict, ev, absent string, notes ...string) LinkedResult {
 		return LinkedResult{Result: Result{Check: &Check{ID: id, Kind: kind}, Verdict: verdict, Evidence: ev, Absent: absent}, Notes: notes}
 	}
-	pass := r("C1.1", kindType, Pass, "found 1", false)
-	part := r("C1.5", kindSlot, Pass, "y stored", false, "the console line")
-	absent := r("C1.12", kindFileText, Skip, "no --labsrc DIR: x not checked", true)
-	unreadable := r("C1.9", kindFiles, Skip, "cannot read /x: not a directory", false)
-	fail := r("C1.3", kindLink, Fail, "found 0, want at least 1", false)
+	pass := r("C1.1", kindType, Pass, "found 1", "")
+	part := r("C1.5", kindSlot, Pass, "y stored", "", "the console line")
+	absent := r("C1.12", kindFileText, Skip, "no --labsrc DIR: x not checked", "--labsrc")
+	absent2 := r("C5.6", kindFiles, Skip, "no --labsrc DIR: y not checked", "--labsrc")
+	noJar := r("C1.3", kindJar, Skip, "no --install DIR: modules/training-rt.jar not checked", "--install")
+	unreadable := r("C1.9", kindFiles, Skip, "cannot read /x: not a directory", "")
+	fail := r("C1.3", kindLink, Fail, "found 0, want at least 1", "")
 	for _, c := range []struct {
 		results         []LinkedResult
 		verdict, reason string
 	}{
-		{[]LinkedResult{pass, absent}, Confirmed, "C1.1 PASS: found 1; not run: C1.12 SKIP: no --labsrc DIR: x not checked"},
-		{[]LinkedResult{part, absent}, Partial, "C1.5 PASS: y stored; not observed: the console line; not run: C1.12 SKIP: no --labsrc DIR: x not checked"},
+		{[]LinkedResult{pass, absent}, Partial, "C1.1 PASS: found 1; not run: C1.12 (--labsrc not given)"},
+		// A passing station check and a jar check the run could not read: PARTIAL, not CONFIRMED live.
+		{[]LinkedResult{pass, noJar}, Partial, "C1.1 PASS: found 1; not run: C1.3 (--install not given)"},
+		{[]LinkedResult{pass, absent, absent2, noJar}, Partial, "C1.1 PASS: found 1; not run: C1.12, C5.6 (--labsrc not given); C1.3 (--install not given)"},
+		{[]LinkedResult{part, absent}, Partial, "C1.5 PASS: y stored; not observed: the console line; not run: C1.12 (--labsrc not given)"},
 		{[]LinkedResult{absent}, Undecided, "C1.12 SKIP: no --labsrc DIR: x not checked"},
 		{[]LinkedResult{pass, unreadable}, Undecided, "C1.9 SKIP: cannot read /x: not a directory"},
 		{[]LinkedResult{absent, fail}, Contradicted, "C1.3 FAIL: found 0, want at least 1"},
+		{[]LinkedResult{pass, absent, unreadable}, Undecided, "C1.9 SKIP: cannot read /x: not a directory"},
 	} {
 		if v, why := Decide(c.results); v != c.verdict || why != c.reason {
 			t.Errorf("Decide = %s %q, want %s %q", v, why, c.verdict, c.reason)
 		}
 	}
-	// The marker's evidence is that of the checks that ran.
-	if e := Evidence([]LinkedResult{pass, absent}); e != key.EvidenceLive {
+	// The evidence of a marker (for an item every check of which ran) is unchanged.
+	if e := Evidence([]LinkedResult{pass}); e != key.EvidenceLive {
 		t.Errorf("evidence %s, want live", e)
-	}
-	if s := Suggestion("L1.1", "2026-10-18", []LinkedResult{pass, absent}); s != "L1.1: *(verified live 2026-10-18)* evidence: C1.1 found 1" {
-		t.Errorf("suggestion %q", s)
 	}
 }
 
@@ -213,21 +217,21 @@ func TestRunMarksAbsent(t *testing.T) {
 	}
 	for _, c := range []struct {
 		ck     Check
-		absent bool
+		absent string
 	}{
-		{Check{Kind: kindJar, Jar: "x"}, true},
-		{Check{Kind: kindSourceText, Glob: "a", Match: ".", Op: opMin, N: 1}, true},
-		{Check{Kind: kindAnnotation, Glob: "A.java", Fact: factSlots, Want: "x"}, true},
-		{Check{Kind: kindAnnotation, Root: rootSolutions, Glob: "A.java", Fact: factSlots, Want: "x"}, true},
-		{Check{Kind: kindFiles, Root: rootLabsrc, Glob: "a", Op: opMin, N: 1}, true},
-		{Check{Kind: kindFileText, Glob: "shared/a", Line: 1, Match: "("}, false}, // a bad pattern
+		{Check{Kind: kindJar, Jar: "x"}, "--install"},
+		{Check{Kind: kindSourceText, Glob: "a", Match: ".", Op: opMin, N: 1}, "--source"},
+		{Check{Kind: kindAnnotation, Glob: "A.java", Fact: factSlots, Want: "x"}, "--labsrc"},
+		{Check{Kind: kindAnnotation, Root: rootSolutions, Glob: "A.java", Fact: factSlots, Want: "x"}, "--solutions"},
+		{Check{Kind: kindFiles, Root: rootLabsrc, Glob: "a", Op: opMin, N: 1}, "--labsrc"},
+		{Check{Kind: kindFileText, Glob: "shared/a", Line: 1, Match: "("}, ""}, // a bad pattern
 	} {
 		if r := st.Run(&c.ck); r.Verdict != Skip || r.Absent != c.absent {
-			t.Errorf("%s %s: %s %q absent %v, want SKIP absent %v", c.ck.Kind, c.ck.Root, r.Verdict, r.Evidence, r.Absent, c.absent)
+			t.Errorf("%s %s: %s %q absent %q, want SKIP absent %q", c.ck.Kind, c.ck.Root, r.Verdict, r.Evidence, r.Absent, c.absent)
 		}
 	}
 	st.labsrc = filepath.Join(t.TempDir(), "nosuch") // given but unreadable: not absent
-	if r := st.Run(&Check{Kind: kindFiles, Root: rootLabsrc, Glob: "a", Op: opMin, N: 1}); r.Verdict != Skip || r.Absent {
-		t.Errorf("unreadable tree: %s %q absent %v", r.Verdict, r.Evidence, r.Absent)
+	if r := st.Run(&Check{Kind: kindFiles, Root: rootLabsrc, Glob: "a", Op: opMin, N: 1}); r.Verdict != Skip || r.Absent != "" {
+		t.Errorf("unreadable tree: %s %q absent %q", r.Verdict, r.Evidence, r.Absent)
 	}
 }

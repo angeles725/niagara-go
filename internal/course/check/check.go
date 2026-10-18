@@ -25,10 +25,11 @@ type Result struct {
 	*Check
 	Verdict  string
 	Evidence string
-	// Absent: the check is SKIP because a tree it reads (--install, --source, --labsrc,
-	// --solutions) was not given, not because one was unreadable; verify does not let such a check
-	// lower what the others decide (Decide).
-	Absent bool
+	// Absent names the flag of a tree the check reads (--install, --source, --labsrc,
+	// --solutions) when it is SKIP because that tree was not given, not because one was unreadable;
+	// "" otherwise. verify does not let such a check lower what the others decide, but caps the
+	// item at PARTIAL (Decide).
+	Absent string
 }
 
 // Station is the input of a check run: the parsed bog, its directory and the optional install.
@@ -200,33 +201,38 @@ func (s *Station) Run(ck *Check) Result {
 	default:
 		r.Verdict, r.Evidence = s.checkJar(ck)
 	}
-	r.Absent = r.Verdict == Skip && s.treeNotGiven(ck)
+	if r.Verdict == Skip {
+		r.Absent = s.treeNotGiven(ck)
+	}
 	return r
 }
 
-// treeNotGiven reports whether a tree the check reads was not given to the run: the install for
-// the jar kinds, the source tree for source-text, the root of an annotation, files, file-text or
-// jar-cert pem row.
-func (s *Station) treeNotGiven(ck *Check) bool {
+// treeNotGiven is the flag of a tree the check reads that was not given to the run ("" when every
+// one was): the install for the jar kinds, the source tree for source-text, the root of an
+// annotation, files, file-text or jar-cert pem row.
+func (s *Station) treeNotGiven(ck *Check) string {
 	if strings.HasPrefix(ck.Kind, "jar") && s.install == "" {
-		return true
+		return "--install"
 	}
 	if ck.Kind == kindSourceText {
-		return s.source == ""
+		if s.source == "" {
+			return "--source"
+		}
+		return ""
 	}
 	root := ck.Root
 	if ck.Kind == kindAnnotation && root == rootStation {
 		root = rootLabsrc
 	}
-	switch root {
-	case rootInstall:
-		return s.install == ""
-	case rootLabsrc:
-		return s.labsrc == ""
-	case rootSolutions:
-		return s.solutions == ""
+	switch {
+	case root == rootInstall && s.install == "":
+		return "--install"
+	case root == rootLabsrc && s.labsrc == "":
+		return "--labsrc"
+	case root == rootSolutions && s.solutions == "":
+		return "--solutions"
 	}
-	return false
+	return ""
 }
 
 func verdict(ok bool) string {

@@ -492,11 +492,14 @@ one of them has a dotted slot.
 | `UNDECIDED` | no linked check (`no check covers it`), or a SKIP and no FAIL | the reason: the SKIP checks |
 
 A linked check that is SKIP only because a tree it reads was not given (`--install`, `--source`,
-`--labsrc`, `--solutions`: `Result.Absent`) does not lower what the other checks decide: the item
-gets the verdict of the checks that ran, and the reason ends with `not run: <the SKIP checks>`
-(L1.14 without `--labsrc` stays PARTIAL from C1.6; with it, C1.12 makes it CONFIRMED). The marker's
-evidence is that of the checks that ran. A tree that was given but cannot be read, and every other
-SKIP, still leaves the item UNDECIDED; an item none of whose checks ran is UNDECIDED.
+`--labsrc`, `--solutions`: `Result.Absent`, the flag) does not lower what the other checks decide,
+and never lets the item reach CONFIRMED either (never claim more than was checked): the item gets
+the verdict of the checks that ran, capped at PARTIAL, and the reason ends with `not run: C1.12, C5.6
+(--labsrc not given); C1.3 (--install not given)`. Such an item gets no marker line (`verify`) and no
+`mark` (`progress`). So L1.14 is PARTIAL without `--labsrc` and CONFIRMED with it, RA1.R1 likewise
+with `--solutions`, and an item with a passing station check and a jar check is PARTIAL without
+`--install`. CONTRADICTED (a FAIL among the checks that ran) and UNDECIDED (any other SKIP: a tree
+given but unreadable, a bad pattern; or no check that ran) are unchanged.
 
 A check proves what the station and the jars store, never a console line, a job log, a Px view
 or a runtime status. So a spec row may carry `Unobserved`, a map from a key to what of that
@@ -805,8 +808,9 @@ FAILs, no CONTRADICTED prediction, the item and status counts), not this table.
   (a blank variable alone is the plain usage error, before a bad root and `--date`) and
   `verify-predictions-none` (no `--lab`: the honest zero over every group of the synthetic
   `testdata/nopredict-root/`, whose answer key carries no predicted item).
-- `check/verify_test.go` `TestDecideAbsentTree` (an absent tree beside a PASS: CONFIRMED or PARTIAL
-  with `not run`; alone: UNDECIDED; an unreadable tree or a FAIL still decides) and
+- `check/verify_test.go` `TestDecideAbsentTree` (an absent tree beside a PASS, a passing station
+  check beside an unrun jar check: PARTIAL with `not run`, grouped by tree; alone: UNDECIDED; an
+  unreadable tree or a FAIL still decides) and
   `TestRunMarksAbsent` (which SKIPs are absent). The goldens pin both sides: `verify-good` (no
   `--labsrc`: L1.14 PARTIAL) and the Go-only `verify-good-labsrc` (L1.14 CONFIRMED), `progress-lab`
   (no `--solutions`: RA1.R1 PARTIAL) and `progress-lab-solutions` (RA1.R1 CONFIRMED).

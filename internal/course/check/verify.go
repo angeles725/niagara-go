@@ -78,7 +78,8 @@ func joinResults(results []LinkedResult, verdict string) string {
 }
 
 // Decide turns the results of an item's checks into its verdict and reason. A check SKIPped only
-// because a tree it reads was not given does not count (ran); the reason names it as not run.
+// because a tree it reads was not given does not count (ran): the others decide, capped at
+// PARTIAL, and the reason names it as not run.
 func Decide(all []LinkedResult) (string, string) {
 	if len(all) == 0 {
 		return Undecided, "no check covers it"
@@ -87,10 +88,7 @@ func Decide(all []LinkedResult) (string, string) {
 	if len(results) == 0 {
 		return Undecided, joinResults(absent, Skip) // nothing ran: every tree it needs is missing
 	}
-	notRun := ""
-	if len(absent) > 0 {
-		notRun = "; not run: " + joinResults(absent, "")
-	}
+	notRun := notRunReason(absent)
 	fail, skip := false, false
 	for _, r := range results {
 		fail = fail || r.Verdict == Fail
@@ -105,7 +103,12 @@ func Decide(all []LinkedResult) (string, string) {
 	var notes []string
 	for _, r := range results {
 		if len(r.Notes) == 0 {
-			return Confirmed, joinResults(results, "") + notRun // this check observes the whole answer
+			if notRun != "" {
+				// The checks that ran confirm it, but not every linked check ran: never claim more
+				// than was checked (no marker line).
+				return Partial, joinResults(results, "") + notRun
+			}
+			return Confirmed, joinResults(results, "") // this check observes the whole answer
 		}
 		for _, n := range r.Notes {
 			if !slices.Contains(notes, n) {
@@ -116,12 +119,33 @@ func Decide(all []LinkedResult) (string, string) {
 	return Partial, joinResults(results, "") + "; not observed: " + strings.Join(notes, "; ") + notRun
 }
 
+// notRunReason is "; not run: C1.12, C5.6 (--labsrc not given); C1.3 (--install not given)", the
+// absent checks grouped by the tree not given, in first-seen order; "" when none.
+func notRunReason(absent []LinkedResult) string {
+	if len(absent) == 0 {
+		return ""
+	}
+	var trees []string
+	ids := map[string][]string{}
+	for _, r := range absent {
+		if _, ok := ids[r.Absent]; !ok {
+			trees = append(trees, r.Absent)
+		}
+		ids[r.Absent] = append(ids[r.Absent], r.ID)
+	}
+	parts := make([]string, len(trees))
+	for i, tr := range trees {
+		parts[i] = strings.Join(ids[tr], ", ") + " (" + tr + " not given)"
+	}
+	return "; not run: " + strings.Join(parts, "; ")
+}
+
 // ran splits an item's results into the checks that ran and those SKIPped only because a tree
-// they read was not given (Result.Absent). The latter never lower what the others decide: an
-// optional tree left out leaves the verdict the station and the given trees reach.
+// they read was not given (Result.Absent). The latter never lower what the others decide, but an
+// item one of them links is at most PARTIAL (Decide).
 func ran(results []LinkedResult) (run, absent []LinkedResult) {
 	for _, r := range results {
-		if r.Absent {
+		if r.Absent != "" {
 			absent = append(absent, r)
 		} else {
 			run = append(run, r)
