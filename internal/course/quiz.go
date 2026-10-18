@@ -160,11 +160,9 @@ func cmdQuiz(c *key.Corpus, s cli.Stdio, root string, o quizOpts) int {
 			}
 			texts[f] = lines
 		}
-		for _, r := range q.it.Ranges { // as course text: a range the file does not hold is exit 2
-			if lines := texts[q.it.TextFile]; r.A < 1 || r.B < r.A || r.B > len(lines) {
-				fmt.Fprintf(s.Err, "course: %s: range %s is outside %s (%s)\n", q.it.ID, r, q.it.TextFile, key.Plural(len(lines), "line"))
-				return cli.ExitCannotSearch
-			}
+		if msg := rangeOutside(q.it, texts[q.it.TextFile]); msg != "" {
+			fmt.Fprintf(s.Err, "course: %s\n", msg)
+			return cli.ExitCannotSearch
 		}
 	}
 	fmt.Fprintf(s.Out, "quiz: %d of %s (%s; %s), seed %d\n", len(drawn), key.Plural(len(pool), "question"),
@@ -184,6 +182,21 @@ func cmdQuiz(c *key.Corpus, s cli.Stdio, root string, o quizOpts) int {
 		printIndented(s.Out, q.answer)
 	}
 	return cli.ExitFound
+}
+
+// rangeOutside is course text's refusal for the first range of it that its
+// text file (lines) does not hold, "" when every range fits. An item with no
+// text file has no context to print, so its ranges are not checked.
+func rangeOutside(it *key.Item, lines []string) string {
+	if it.TextFile == "" {
+		return ""
+	}
+	for _, r := range it.Ranges {
+		if r.A < 1 || r.B < r.A || r.B > len(lines) {
+			return fmt.Sprintf("%s: range %s is outside %s (%s)", it.ID, r, it.TextFile, key.Plural(len(lines), "line"))
+		}
+	}
+	return ""
 }
 
 func printIndented(w io.Writer, text string) {

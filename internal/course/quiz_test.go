@@ -146,3 +146,25 @@ func TestQuizReplayQuotesLab(t *testing.T) {
 		}
 	}
 }
+
+// An item with ranges but no text file has no context to print: quiz does
+// not refuse it (it did before the range check, review-6710683f89426a1f).
+func TestRangeOutside(t *testing.T) {
+	lines := []string{"1", "2", "3"}
+	for _, c := range []struct {
+		name string
+		it   key.Item
+		want string
+	}{
+		{"no text file", key.Item{ID: "L1.1", Ranges: []key.Range{{A: 8, B: 9}}}, ""},
+		{"fits", key.Item{ID: "L1.2", TextFile: "t.txt", Ranges: []key.Range{{A: 1, B: 3}}}, ""},
+		{"past the end", key.Item{ID: "L1.3", TextFile: "t.txt", Ranges: []key.Range{{A: 2, B: 4}}},
+			"L1.3: range 2-4 is outside t.txt (3 lines)"},
+		{"reversed", key.Item{ID: "L1.4", TextFile: "t.txt", Ranges: []key.Range{{A: 3, B: 2}}},
+			"L1.4: range 3-2 is outside t.txt (3 lines)"},
+	} {
+		if got := rangeOutside(&c.it, lines); got != c.want {
+			t.Errorf("%s: %q, want %q", c.name, got, c.want)
+		}
+	}
+}
