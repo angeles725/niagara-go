@@ -1,0 +1,38 @@
+'ackAlarm' found in 18 classes:
+
+  [methods] javax.baja.alarm.BAlarmRecord
+    void ackAlarm()
+  [methods] javax.baja.alarm.BAlarmRecord
+    void ackAlarm(java.lang.String user)
+  [methods] javax.baja.alarm.ext.BAlarmSourceExt
+    BBoolean ackAlarm(BAlarmRecord parameter)
+  [methods] javax.baja.alarm.BIAlarmSource
+    BBoolean ackAlarm(BAlarmRecord ackRequest)
+  [methods] javax.baja.alarm.BAlarmService
+    void ackAlarm(BAlarmRecord parameter)
+  [methods] javax.baja.alarm.AlarmSupport
+    boolean ackAlarm(BAlarmRecord alarm)
+  [methods] javax.baja.alarm.BArchiveAlarmProvider
+    BBoolean ackAlarm(BAlarmRecord parameter)
+  [methods] javax.baja.driver.alarm.BAlarmDeviceExt
+    BBoolean ackAlarm(BAlarmRecord parameter)
+  [methods] javax.baja.obix.driver.alarm.BObixAlarmImport
+    BBoolean ackAlarm(BAlarmRecord parameter)
+  [methods] javax.baja.bacnet.export.BReliabilityAlarmSourceExt
+    BBoolean ackAlarm(BAlarmRecord parameter)
+  [methods] javax.baja.driver.BDevice
+    BBoolean ackAlarm(BAlarmRecord parameter)
+  [methods] javax.baja.driver.BDeviceNetwork
+    BBoolean ackAlarm(BAlarmRecord parameter)
+  [methods] javax.baja.bacnet.point.BBacnetProxyExt
+    BBoolean ackAlarm(BAlarmRecord parameter)
+  [methods] javax.baja.batchJob.BBatchJobService
+    BBoolean ackAlarm(BAlarmRecord parameter)
+  [methods] javax.baja.driver.ping.BIPingable
+    BBoolean ackAlarm(BAlarmRecord ackRequest)
+  [methods] javax.baja.weather.advisory.BAdvisoryContainer
+    BBoolean ackAlarm(BAlarmRecord alarmRecord)
+  [methods] javax.baja.obix.driver.point.BObixProxyExt
+    BBoolean ackAlarm(BAlarmRecord parameter)
+  [methods] com.tridiumx.jsonToolkit.outbound.schema.support.BSMAExpirationMonitor
+    BBoolean ackAlarm(BAlarmRecord parameter)

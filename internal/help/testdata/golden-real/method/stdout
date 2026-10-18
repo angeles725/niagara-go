@@ -1,0 +1,16 @@
+'doGet' found in 7 classes:
+
+  [methods] javax.baja.hx.BHxView
+    void doGet(WebOp c)
+  [methods] javax.baja.web.BWebServlet
+    void doGet(WebOp c)
+  [methods] javax.baja.web.BServletView
+    void doGet(WebOp c)
+  [methods] javax.baja.velocity.BVelocityView
+    void doGet(WebOp op)
+  [methods] javax.baja.collection.AbstractCursor&lt;E&gt;
+    protected abstract E doGet()
+  [methods] javax.baja.history.HistoryCursor
+    protected BHistoryRecord doGet()
+  [methods] javax.baja.collection.AbstractTableCursor
+    protected T doGet()
