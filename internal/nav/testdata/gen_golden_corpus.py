@@ -162,6 +162,10 @@ def src_entry(sub, pkg, name, lines, kind="class", outer=None, path=None):
             "path": path or "{}/{}/vineflower/{}/{}.java".format(module, sub, pkg.replace(".", "/"), name)}
 
 
+# search-organized/.gitattributes keeps git from normalizing the corpus bytes.
+SEARCH_GITATTRIBUTES = "# Byte-exact fixtures: CRLF, a lone CR and invalid UTF-8 are part of the cases.\n* -text\n"
+
+
 def build_search():
     import re
     fx = os.path.join(HERE, "fixture")
@@ -170,6 +174,9 @@ def build_search():
     for d in (os.path.join(fx, "search"), org):
         shutil.rmtree(d, ignore_errors=True)
     os.makedirs(idx)
+    os.makedirs(org)
+    with open(os.path.join(org, ".gitattributes"), "w", encoding="utf-8") as f:
+        f.write(SEARCH_GITATTRIBUTES)
     for rel, data in SRC_FILES.items():
         os.makedirs(os.path.dirname(os.path.join(org, rel)), exist_ok=True)
         with open(os.path.join(org, rel), "wb") as f:

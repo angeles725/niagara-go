@@ -62,7 +62,8 @@ anywhere (the generator and parity scripts under `testdata/` included), exceeds 
 after a `#` line with its reason; entries may only be lowered or removed, and the test fails
 on an entry that is too high or matches no file. Split the file instead of adding an entry;
 the only accepted new entry is a frozen reference generator that D39(d) moves to the
-`pre-go-retire` tag (today `internal/nav/testdata/gen_golden.py`).
+`pre-go-retire` tag. The list is empty today: its last entry,
+`internal/nav/testdata/gen_golden.py`, was split under the limit.
 
 ## 5. Checks
 

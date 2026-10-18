@@ -103,7 +103,10 @@ git -C ~/niagara-research worktree add --detach ~/niagara-research-worktrees/pre
 (the same with `-C <module-navigator or niagara-help checkout>` for the other two). Every
 generator carries the same `py_ref` snippet: it refuses a worktree whose HEAD is not the pinned
 revision or that has local changes or untracked files (also in `internal/secaudit/testdata/freeze_golden.py`) (ignored files such as `__pycache__` pass). Rerunning a generator from the tag must leave `git status`
-clean; that is the proof its fixtures are still the Python's output.
+clean; that is the proof its fixtures are still the Python's output. A generator therefore
+reads no live data that changes: a fixture once cut from live indexes is committed and stays
+frozen input (`internal/nav/testdata/fixture/nav/`, whose `_meta` timestamps the goldens
+print), and only synthetic fixtures are rebuilt.
 
 A tag script that carries an escape runs with it: `MODULE_NAV_PYTHON=1` (module_nav.py is still
 full Python at the tag) or `NIAGARA_HELP_PYTHON=1` (niagara_help.py is a shim there), set in

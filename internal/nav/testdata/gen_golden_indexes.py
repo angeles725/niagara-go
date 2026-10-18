@@ -1,5 +1,10 @@
-"""Index fixtures of gen_golden.py: nav (cut from the live module-navigator indexes), rank-skips,
-cg, stats, pla and recall."""
+"""Index fixtures of gen_golden.py: rank-skips, the synthetic organized/ module.xml, cg, stats,
+pla and recall.
+
+fixture/nav/ (class-index, module-inventory, xref-index and inheritance.json) is frozen,
+committed input: it was cut once from the live module-navigator indexes (14 alarm-related
+classes, 13 modules) and is never rebuilt, so a --fixture run does not depend on the live
+indexes and leaves its bytes, and the goldens that print its _meta, unchanged."""
 
 import json
 import os
@@ -7,13 +12,6 @@ import shutil
 import sqlite3
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-NAV = os.path.expanduser("~/niagara-research/module-navigator")  # the live data (indexes/); the code is PYREF's
-
-CLASS_NAMES = ["BAlarmService", "BAlarmClass", "BAlarmRecord", "AlarmDbConnection", "BAckState",
-               "AlarmSupport", "BAlarmArchive", "BAlarmablePointMarkerTag", "BAlarm", "Entry",
-               "BAlarmConsole", "BComponent", "BAlarmSourceInfo", "BAlarmAcknowledger"]
-MODULES = ["alarm-rt", "alarm-ux", "alarm-wb", "alarm-se", "alarmOrion-rt", "apachePoi-rt",
-           "docSource-doc", "baja", "backup-rt", "opcUaCore-rt", "obix-se", "niagaraTest-se", "lonNico-rt"]
 
 MODULE_XML = """<?xml version="1.0" encoding="UTF-8"?>
 <module name="alarm-rt" vendor="Tridium" preferredSymbol="alarm" moduleName="alarm">
@@ -51,44 +49,6 @@ SKIPS_INDEX = {
         "BServiceAlarm": [{"module": "b-rt", "package": "b.alarm"}, {"module": "a-rt", "package": "b.alarm"}],
     },
 }
-
-
-def cut_xref(names):
-    """class_imported_by of `names` from the real xref index, each list cut to
-    25 importers plus one repeat (class_rank counts distinct importers)."""
-    with open(os.path.join(NAV, "indexes", "xref-index.json"), encoding="utf-8") as f:
-        xref = json.load(f)
-    out = {}
-    for n in names:
-        importers = xref["class_imported_by"].get(n)
-        if importers:
-            out[n] = importers[:25] + importers[:1]
-    return {"_meta": {"timestamp": xref["_meta"]["timestamp"]}, "class_imported_by": out}
-
-
-def cut_inheritance(names):
-    """inheritance.json restricted to `names` plus the descendants of
-    BAlarmRecipient and the chains of `names`: children and implementors
-    lists keep only kept classes (a small tree with real shapes)."""
-    with open(os.path.join(NAV, "indexes", "inheritance.json"), encoding="utf-8") as f:
-        inh = json.load(f)
-    p2c, c2c, i2i = inh["parent_to_children"], inh["class_to_chain"], inh["interface_to_implementors"]
-    keep, todo = set(names), ["BAlarmRecipient"]
-    while todo:
-        n = todo.pop()
-        if n not in keep or n == "BAlarmRecipient":
-            keep.add(n)
-            todo += [c for c in p2c.get(n, []) if c not in keep]
-    for n in list(keep):
-        keep.update(c2c.get(n, []))
-    cut = lambda d: {k: [x for x in v if x in keep] for k, v in d.items()
-                     if k in keep and any(x in keep for x in v)}
-    i2i_keep = {k: v for k, v in cut(i2i).items() if k in ("BIAlarmSource", "BIService", "BIAlarmClassFolder")}
-    for k in ("BIAlarmSource", "BIService", "BIAlarmClassFolder"):
-        i2i_keep.setdefault(k, [x for x in i2i.get(k, []) if x in keep] or i2i.get(k, [])[:12])
-    return {"_meta": {"timestamp": inh["_meta"]["timestamp"]}, "parent_to_children": cut(p2c),
-            "interface_to_implementors": i2i_keep,
-            "class_to_chain": {k: v for k, v in c2c.items() if k in keep}}
 
 
 # callers and callees: a small call graph with a qualified callee filed under
@@ -303,26 +263,12 @@ def build_recall():
         f.write('{"_meta": {}, "classes": ')
 
 
-def build_fixture():
+def build_nav_synthetic():
+    """The synthetic parts next to the frozen fixture/nav/: rank-skips/ and the
+    organized/ module.xml."""
     fx = os.path.join(HERE, "fixture")
-    shutil.rmtree(fx, ignore_errors=True)
-    idx = os.path.join(fx, "nav", "indexes")
-    os.makedirs(idx)
-    with open(os.path.join(NAV, "indexes", "class-index.json"), encoding="utf-8") as f:
-        ci = json.load(f)
-    meta = {k: ci["_meta"][k] for k in ("description", "modules", "timestamp")}
-    classes = {n: ci["classes"][n] for n in CLASS_NAMES}
-    with open(os.path.join(idx, "class-index.json"), "w", encoding="utf-8") as f:
-        json.dump({"_meta": meta, "classes": classes}, f)
-    with open(os.path.join(NAV, "indexes", "module-inventory.json"), encoding="utf-8") as f:
-        inv = json.load(f)
-    mods = {n: inv["modules"][n] for n in MODULES}
-    with open(os.path.join(idx, "module-inventory.json"), "w", encoding="utf-8") as f:
-        json.dump({"_meta": inv["_meta"], "modules": mods}, f)
-    with open(os.path.join(idx, "xref-index.json"), "w", encoding="utf-8") as f:
-        json.dump(cut_xref(CLASS_NAMES), f)
-    with open(os.path.join(idx, "inheritance.json"), "w", encoding="utf-8") as f:
-        json.dump(cut_inheritance(CLASS_NAMES), f)
+    for name in ("rank-skips", "organized"):
+        shutil.rmtree(os.path.join(fx, name), ignore_errors=True)
     skips = os.path.join(fx, "rank-skips", "indexes")
     os.makedirs(skips)
     with open(os.path.join(skips, "class-index.json"), "w", encoding="utf-8") as f:

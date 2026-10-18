@@ -2,8 +2,9 @@
 
     python3 -I internal/nav/testdata/gen_golden.py [--fixture | --search]
 
---fixture first rebuilds fixture/ (a small class index and module inventory cut from the real
-module-navigator indexes, plus a synthetic module.xml), and --search rebuilds only the synthetic
+--fixture first rebuilds every synthetic fixture under fixture/ (fixture/nav/, a small class
+index, module inventory, xref and inheritance index cut once from the real module-navigator
+indexes, is frozen committed input and never rebuilt), and --search rebuilds only the synthetic
 grep/source/token corpus; then every case is run from this directory through the frozen
 module_nav.py of the pre-go-retire worktree (PYREF; MODULE_NAV_PYTHON=1, COLUMNS=100, NO_COLOR=1)
 and written to golden/<case>/: nav-<case> runs on the fixture, and the parser-only PARSE_CASES.
@@ -22,12 +23,13 @@ import subprocess
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+NAV = os.path.expanduser("~/niagara-research/module-navigator")  # where the cases were frozen (unpin)
 sys.path.insert(0, HERE)  # python3 -I leaves the script directory off sys.path
 sys.dont_write_bytecode = True  # no __pycache__ next to the generator
 
 from gen_golden_cases import BASE, CASES, INTENDED, PARSE_CASES  # noqa: E402
 from gen_golden_corpus import build_drivers, build_lic, build_search, fresh_class_index  # noqa: E402
-from gen_golden_indexes import NAV, build_cg, build_fixture, build_pla, build_recall, build_stats  # noqa: E402
+from gen_golden_indexes import build_cg, build_nav_synthetic, build_pla, build_recall, build_stats  # noqa: E402
 
 
 def py_ref(repo, env, rev):  # D47: a clean worktree of <repo> tag pre-go-retire (docs/goldens.md)
@@ -102,13 +104,13 @@ def capture(cid, args, env, base=BASE):
 
 
 def main():
-    """--fixture rebuilds every fixture; --search only the grep/source/token one,
+    """--fixture rebuilds every synthetic fixture; --search only the grep/source/token one,
     --lic only the license/resources one, --cg only the call graph one, --stats
     only the stats ones, --pla only the palette-lexicon-agents one, --recall
     only the selftest one.
     --only a,b captures just those case ids (without the nav- prefix)."""
     if "--fixture" in sys.argv:
-        build_fixture()
+        build_nav_synthetic()
         build_drivers()
     if "--fixture" in sys.argv or "--search" in sys.argv:
         build_search()
