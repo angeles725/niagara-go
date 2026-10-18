@@ -30,7 +30,7 @@ func TestCacheHitPrintsWhatABuildPrints(t *testing.T) {
 	for _, withXref := range []bool{true, false} {
 		base := cachedBase(t, withXref)
 		out1, err1, code1 := run(t, base, "alarm service", 2)
-		st, err := os.Stat(cachePath(envFor(base)))
+		st, err := os.Stat(SourceOf(base).Cache)
 		if err != nil {
 			t.Fatalf("xref=%v: no cache written: %v", withXref, err)
 		}
@@ -58,7 +58,7 @@ func TestCacheHitPrintsWhatABuildPrints(t *testing.T) {
 func TestCacheRebuildsWhenStaleOrCorrupt(t *testing.T) {
 	base := cachedBase(t, true)
 	want, _, _ := run(t, base, "alarm", 20)
-	path := cachePath(envFor(base))
+	path := SourceOf(base).Cache
 	if err := os.WriteFile(path, []byte("garbage"), 0o600); err != nil {
 		t.Fatal(err)
 	}
