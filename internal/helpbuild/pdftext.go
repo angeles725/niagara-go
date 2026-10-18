@@ -127,7 +127,7 @@ func FindPDFs(docsDir string) []string {
 	pyWalk(docsDir, func(dir string, dirs, files []string) []string {
 		for _, f := range files {
 			if hasSuffixFold(f, ".pdf") {
-				out = append(out, pyJoin(dir, f))
+				out = append(out, pycompat.Join(dir, f))
 			}
 		}
 		return dirs

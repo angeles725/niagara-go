@@ -60,7 +60,7 @@ func dgEntry(file, title, desc string) pyjson.Value {
 
 // DevguideTOC is build_devguide_toc.build(baseDir): {"sections": [...]}.
 func DevguideTOC(baseDir string) (pyjson.Value, error) {
-	raw, err := readPage(pyJoin(baseDir, "devguide", "index.html"))
+	raw, err := readPage(pycompat.Join(baseDir, "devguide", "index.html"))
 	if err != nil {
 		return pyjson.Value{}, err
 	}
@@ -114,7 +114,7 @@ func BuildDevguideTOC(baseDir string) (*TextResult, error) {
 	if err != nil {
 		return nil, err
 	}
-	out := pyJoin(baseDir, "indexes", "devguide-toc.json")
+	out := pycompat.Join(baseDir, "indexes", "devguide-toc.json")
 	if err := os.MkdirAll(filepath.Dir(out), 0o777); err != nil {
 		return nil, err
 	}

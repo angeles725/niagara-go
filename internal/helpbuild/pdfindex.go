@@ -113,7 +113,7 @@ func docsDirOf(base, docs string) (string, error) {
 	if err != nil || install == "" {
 		return "", err
 	}
-	return pyJoin(install, "docs"), nil
+	return pycompat.Join(install, "docs"), nil
 }
 
 // loadPDFIndex reads the previous pdf-index.json: the dict, or why it

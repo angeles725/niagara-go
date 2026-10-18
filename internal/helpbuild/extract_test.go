@@ -7,6 +7,8 @@ import (
 	"runtime"
 	"strings"
 	"testing"
+
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // test_extraction.TestExtractAndFidelity.setUp.
@@ -151,7 +153,7 @@ func TestOutPathRefusesUnsafeEntries(t *testing.T) {
 	}
 	// Names that only look odd stay under the root.
 	for _, rel := range []string{"a/b.txt", "a/..b", "a/b..", "a/.../x", "a/C:x", "a/b:c"} {
-		if out, err := outPath(root, rel); err != nil || out != pyJoin(root, rel) {
+		if out, err := outPath(root, rel); err != nil || out != pycompat.Join(root, rel) {
 			t.Errorf("%q: %q %v", rel, out, err)
 		}
 	}

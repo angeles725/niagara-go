@@ -9,6 +9,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // Extraction, fill-missing and the sha256 fidelity check of an install's
@@ -123,7 +125,7 @@ func outPath(root, rel string) (string, error) {
 			return "", unsafe
 		}
 	}
-	out := pyJoin(root, rel)
+	out := pycompat.Join(root, rel)
 	if r, err := filepath.Rel(filepath.Clean(root), filepath.Clean(out)); err != nil ||
 		r == ".." || strings.HasPrefix(r, ".."+string(filepath.Separator)) {
 		return "", unsafe
@@ -252,7 +254,7 @@ func FidelityJar(jarPath, root string, rep *FidelityReport) error {
 	skip := func(c Collision) { rep.Collisions = append(rep.Collisions, c) }
 	return m.each(skip, func(x *zipInfo, rel string) error {
 		rep.Checked++
-		path := pyJoin(root, rel)
+		path := pycompat.Join(root, rel)
 		if !isRegular(path) {
 			rep.Missing = append(rep.Missing, rel)
 			return nil

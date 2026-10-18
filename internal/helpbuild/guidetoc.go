@@ -38,7 +38,7 @@ func FindToc(folder string) string {
 		return ""
 	}
 	for _, name := range names {
-		if p := pyJoin(folder, name); pycompat.Lower(name) == "toc.xml" && isRegular(p) {
+		if p := pycompat.Join(folder, name); pycompat.Lower(name) == "toc.xml" && isRegular(p) {
 			return p
 		}
 	}

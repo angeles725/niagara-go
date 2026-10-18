@@ -55,7 +55,7 @@ func bajadocPages(dir string) []string {
 			if strings.Contains(root, sep+"class-use"+sep) || strings.Contains(root, "/class-use/") {
 				continue
 			}
-			files = append(files, pyJoin(root, f))
+			files = append(files, pycompat.Join(root, f))
 		}
 		return dirs
 	})
@@ -71,8 +71,8 @@ func bajadocPages(dir string) []string {
 // 1), with the lines printed before it in the result.
 func ParseBajadoc(baseDir string) (*BajadocResult, error) {
 	res := &BajadocResult{}
-	bajadocDir := pyJoin(baseDir, "bajadoc", "javax", "baja")
-	outputDir := pyJoin(baseDir, "bajadoc-clean")
+	bajadocDir := pycompat.Join(baseDir, "bajadoc", "javax", "baja")
+	outputDir := pycompat.Join(baseDir, "bajadoc-clean")
 	if !isDir(bajadocDir) {
 		res.out("ERROR: bajadoc directory not found: %s", bajadocDir)
 		res.Status = 1
@@ -120,9 +120,9 @@ func cleanClassName(name string) string {
 // <package path>/<clean name>.txt and a page left under the escaped name
 // ("Cursor&lt;E&gt;.txt") is removed.
 func writeCleanClass(outDir, pkg, className, text string) error {
-	pkgDir := pyJoin(outDir, strings.ReplaceAll(pkg, ".", string(filepath.Separator)))
-	path := pyJoin(pkgDir, cleanClassName(className)+".txt")
-	legacy := pyJoin(pkgDir, className+".txt")
+	pkgDir := pycompat.Join(outDir, strings.ReplaceAll(pkg, ".", string(filepath.Separator)))
+	path := pycompat.Join(pkgDir, cleanClassName(className)+".txt")
+	legacy := pycompat.Join(pkgDir, className+".txt")
 	for _, p := range []string{path, legacy} {
 		if rel, err := filepath.Rel(filepath.Clean(outDir), filepath.Clean(p)); err != nil ||
 			rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) || filepath.IsAbs(rel) {

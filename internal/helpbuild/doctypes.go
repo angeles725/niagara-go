@@ -93,16 +93,16 @@ func CleanTextName(rel, srcDir string) string {
 }
 
 // hasHTMLSibling: srcDir holds <stem>.html in any letter case. The join and
-// split are posixpath's on POSIX (no normalisation), filepath's on Windows.
+// split are the host's os.path (no normalisation): the split cuts after the
+// last separator ("/", or either one on Windows) and never inside the drive.
 func hasHTMLSibling(srcDir, stem string) bool {
-	var folder, base string
+	p := pycompat.Join(srcDir, stem)
+	seps := "/"
 	if runtime.GOOS == "windows" {
-		folder, base = filepath.Split(filepath.Join(srcDir, stem))
-	} else {
-		p := pycompat.PosixJoin(srcDir, stem)
-		i := strings.LastIndex(p, "/") + 1
-		folder, base = p[:i], p[i:]
+		seps = `\/`
 	}
+	i := max(strings.LastIndexAny(p, seps)+1, len(filepath.VolumeName(p)))
+	folder, base := p[:i], p[i:]
 	if folder == "" {
 		return false // os.listdir("") raises FileNotFoundError
 	}

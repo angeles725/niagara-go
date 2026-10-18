@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 )
 
@@ -119,7 +120,7 @@ func writeManifest(res *SetupResult, repo, vid, label, dataRoot string, now func
 	if now == nil {
 		now = time.Now
 	}
-	path := pyJoin(repo, "versions", vid+".manifest.json")
+	path := pycompat.Join(repo, "versions", vid+".manifest.json")
 	v := manifestValue(vid, label, res.Install, dataRoot, now(), res.Fidelity, rows)
 	if err := WriteJSON(path, v, DumpManifest); err != nil {
 		return err
