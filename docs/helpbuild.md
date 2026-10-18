@@ -24,6 +24,7 @@ document disagree, the code wins and this document is corrected.
 | **S8** (done) | class / inheritance / method indexes | `build_class_index.py`, `inheritance_builder.py`, `method_indexer.py` (+ the class attributes of `bajadoc_xml.parse_file`) | ~1,900 with tests |
 | **S9** (done) | source / slots / xref indexes; `call-index.json` is retired (decision I3-5), not ported | `source_indexer.py`, `slots_indexer.py`, `xref_builder.py` | ~2,000 with tests |
 | S10 | orchestration (`extract`, `versions add`, `rebuild-all`, `freshness`) | `extract_version.py`, `version_setup.py`, `version_report.py`, `maintenance.py` | ~750 |
+| **S10b-1** (done) | the coverage reports: `coverage`, `coverage <module>`, `coverage --doc-jars` (library + printers; the nh wiring is a later slice) | `coverage_report.py`, `doc_coverage.py` (+ `doc_types.classify`, `classify_unmapped`, `content_type`, `example_skip_reason`) | ~1,300 + tests |
 | (S11) | whole-install sweep gate, if it moves to Go | `install_sweep.py` | — |
 
 `fulltext.sqlite` is outside this plan (owned by the full-text port).
@@ -102,7 +103,7 @@ holds the data file (the variable the glossary and version drift tests read); el
 first one met walking up from the test directory as `<dir>/niagara-help` or
 `<dir>/niagara-research/niagara-help` (a worktree under `~/niagara-go-worktrees` finds
 `~/niagara-research/niagara-help`) — and skips visibly only when there is none. A run
-that set any `HELPBUILD_PARITY_*` variable (`make parity` sets four) fails instead of
+that set any `HELPBUILD_PARITY_*` variable (`make parity` sets five) fails instead of
 skipping when `python3`, the checkout, its tools or a real version's `versions/` tree are
 missing, the message naming the variable. The interpreter must be CPython 3.15.x
 (`html.parser` and the other stdlib behaviour the drivers compare change between minor
@@ -622,33 +623,110 @@ The slots time is mostly the `.bajadoc` XML of `devguide/` and `guides/`; xref's
 - **The `.bajadoc` files are parsed concurrently** (as in S8): after an unreadable file
   Python stops, Go has also read the files after it; nothing printed or written changes.
 
+## S10b-1 files: the coverage reports
+
+| File | Ports | Notes |
+|---|---|---|
+| `coveragereport.go` | `coverage_report.guide_coverage`, `cmd_guide_coverage`, `cmd_coverage` (entry), `index_cache.load_index` for the four report indexes, `module_export.module_classes` | `MissingIndexError` has Python's message; the four indexes (class, source, method, slots) are loaded before anything prints, in Python's order |
+| `coveragereportmodule.go` | the module and overview halves of `cmd_coverage` | `Total methods` counts each method-index entry once against the module's class set (Python's per-class loop over distinct keys gives the same number) |
+| `doccoverageclassify.go` | `doc_types.classify`, `classify_unmapped`, `content_type`, `example_skip_reason`, `REASONS`, `_GUIDE_JUNK` | extensions lower-cased with Python's full Unicode `lower()` (`pycompat.Lower`) |
+| `doccoverage.go` | `doc_coverage.Indexed` | lazy views, each index loaded on first use (so an index error surfaces at the same entry); `FulltextDocsAt` is `FtsIndex.docs()` of one database |
+| `doccoveragereport.go` | `_entries`, `_verdict`, `scan`, `cmd_doc_jar_coverage`, `_print_report` | the table is `format()` through `pycompat.Format` (`{:34s}`, `{:>7,}`: code-point widths, comma groups); the listing cache is saved before the scan, as Python does |
+
+API for the nh wiring (`cli/cmd_export.py` `coverage`):
+
+```go
+// coverage [module]: print to stdout; exit 1 when res.GuideGaps > 0 (overview only).
+res, err := helpbuild.Coverage(os.Stdout, baseDir, module) // module "" = overview
+// res.Miss: the module matched no class, nothing printed: print
+// scope.report_miss(baseDir, "coverage", module, "modules") (internal/help/scope).
+// err: *helpbuild.MissingIndexError -> the CLI's "Cannot search:" exit 2
+// (internal/help's MissingIndexError has the same text); anything else is a traceback.
+
+// coverage --doc-jars: status 0 PASS, 1 FAIL, 2 install not available.
+status, err := helpbuild.DocJarCoverage(os.Stdout, repoRoot, baseDir, versionID, docs)
+// docs is a helpbuild.FulltextDocs: open_index(root).docs() -- the up-to-date
+// fulltext.sqlite (rebuilt first when stale, as scope.OpenFulltext does) read
+// with helpbuild.FulltextDocsAt(path). It is only called when an example entry
+// (devguide-examples/) is checked; nil then is an error, never a silent gap.
+
+// coverage --sweep --doc-jars: DocJarCoverage, a blank line, exit 2 when it
+// returned 2, else max(status, sweep) (install_sweep, ported separately).
+```
+
+`PrintGuideCoverage(w, baseDir)` is `cmd_guide_coverage` alone (`GuideCoverage` its rows);
+`ScanDocJars(install, root, jars, docs)` is `scan` (rows, reasons in first-met order, gaps).
+
+S10b-1 parity (`testdata/cov/covdriver.py`, modes `docjars`, `coverage`, `guides`; each
+prints `["out", <stdout>]` then `["status", <return value>]`, `["missing", str(e)]` for
+`MissingIndexError` or `["raise"]`; `scope.report_miss` is replaced by a `["miss", ...]`
+line, the scope block being `internal/help`'s). The Python side is the pre-go-retire
+reference (`internal/pyref`: `pyref.Dir(t, "niagara-help")`, `pyref.Python`) run by a
+CPython 3.15 python3:
+
+| Test | Compares |
+|---|---|
+| `TestClassify`, `TestPyNormpath`, `TestModuleClasses`, `TestScanDocJarsNeedsFulltextForExamples` | no Python: one row per classification branch, `posixpath.normpath`, the module match, the full-text reader requirement |
+| `TestCoverageReportGolden`, `TestDocJarCoverageGolden` | no Python: the Go reports of the synthetic fixtures against `testdata/cov/golden/*.jsonl` (Python's output; `go test -run 'TestParity.*Golden' -args -update-cov` rewrites them) |
+| `TestParityCoverageReportGolden`, `TestParityDocJarCoverageGolden` | the golden files are still Python's output |
+| `TestParityDocJarCoverage` | the gate on the synthetic install (11 jars: every index kind indexed, not indexed and not extracted, every exclusion reason, unmapped and unknown entries, duplicates, an unreadable jar, a module help jar, a jar name cut at 34 code points around non-ASCII letters, a content type cut at 20) by version id and identified from the data root, an unregistered version, no `install_dir`, no registry, more than 25 gaps, a PASS, a FAIL from a guide folder alone, no indexes, a malformed index; the listing cache each side saves is byte-identical |
+| `TestParityCoverageReport` | the overview (ties on the percentage, a class without module, non-ASCII modules, `str.replace` of every `.txt`), module reports (`alarm-rt`, `ALARM`, `alarm-ux`, `zeta-rt`, `école`, `rt`), a miss, the guide coverage alone, an empty source index, each missing index |
+| `TestParityCoverageReal` | `coverage`, `coverage alarm-rt`, the guide coverage and `coverage --doc-jars` on the real data roots and installs (4.14.0.162 with `HELPBUILD_PARITY_REAL=1`, 4.15.6.20 with `HELPBUILD_PARITY_415=1`, or the `HELPBUILD_PARITY_COVERAGE` list); each side saves its listing cache in a temporary repository holding a copy of the registry, and the full-text index must already be up to date (the test never writes the corpus); on 4.14.0.162 the SHA-256 and exit status of the three Go reports also equal the `coverage`, `coverage-module` and `coverage-doc-jars` cases of the reference's `tests/golden/cli.json` |
+
+Measured 2026-10-18 (byte-identical; wall time, Python's driver start-up included):
+
+| Version | `coverage` | `coverage alarm-rt` | `--doc-jars` (report bytes) | `--doc-jars` Python / Go |
+|---|---|---|---|---|
+| 4.14.0.162 | 0.49 / 0.17 s | 1.11 / 0.20 s | 97,462 | 20 to 26 s / 15 to 26 s |
+| 4.15.6.20 | 0.59 / 0.25 s | 1.24 / 0.15 s | 65,314 | 32 to 127 s / 15 to 18 s |
+
+The `--doc-jars` times are two runs each: both sides read every jar's central directory
+over /mnt/c, so the page cache (cold or warm) decides most of them.
+
+### S10b-1 intended differences
+
+- **An index of an unexpected shape** (a list where a dict is expected, a record without
+  its `path` or `package`, a non-string module) is an `*IndexShapeError` before the report
+  prints; Python raises `AttributeError`/`TypeError`/`KeyError`, in the overview after the
+  guide coverage and its header are printed. A non-string `package` prints Python's
+  `str()` of it.
+- **A jar whose central directory has an invalid UTF-8 name under the UTF-8 flag**:
+  `_entries` catches only `BadZipFile`/`OSError`, so Python stops with a
+  `UnicodeDecodeError` traceback; Go counts the jar unreadable (one gap row), as
+  `read_listing` does.
+- **A registry of an unexpected shape** (`versions` missing or not an object, an entry or
+  `install_dir` of another type) is an error, where Python raises or, for a non-string
+  `install_dir`, calls `os.path.isdir` on it.
+
 ## Real-data parity
 
 Every test that reads a real install or the real corpus runs only on request, `-short`
 or not; without its variable it skips and the message names the variable. A switch
 (`REAL`, `FULL`, `415`) counts only when set to `1`: any other value fails the test,
 naming the variable and the accepted value. A selection that leaves nothing to compare
-(no version for `TestParityGuidesReal`, `TestParityBajadocReal`, `TestParityBajadocXMLReal`, `TestParityS8Real` or `TestParityS9Real`, a `HELPBUILD_PARITY_JARS` naming no jar, a
+(no version for `TestParityGuidesReal`, `TestParityBajadocReal`, `TestParityBajadocXMLReal`, `TestParityS8Real`, `TestParityS9Real` or `TestParityCoverageReal`, a `HELPBUILD_PARITY_JARS` naming no jar, a
 `HELPBUILD_PARITY_PDF_DOCS` without a PDF, a `HELPBUILD_PARITY_COURSE` without files)
 fails too, and an explicit jar list or course never skips as "not mounted". The synthetic,
 cache, glob, toc and fuzz parity tests (5,000 snippets) stay on in `go test`.
 
 | Variable | Turns on |
 |---|---|
-| `HELPBUILD_PARITY_REAL=1` | the umbrella: `TestParityRealJars` (five 4.3 jars + 4.15 `ffmpeg-wb.jar`), `TestParityExtractReal` (the 4.3 subset), `TestParityPDFReal` (five 4.3 manuals), `TestParityCourseReal`, `TestParityGuidesReal` (4.3.58.18), `TestParityBajadocReal` (4.14.0.162), `TestParityBajadocXMLReal` (4.3.58.18 and 4.14.0.162), `TestParityS8Real` and `TestParityS9Real` (4.14.0.162) |
+| `HELPBUILD_PARITY_REAL=1` | the umbrella: `TestParityRealJars` (five 4.3 jars + 4.15 `ffmpeg-wb.jar`), `TestParityExtractReal` (the 4.3 subset), `TestParityPDFReal` (five 4.3 manuals), `TestParityCourseReal`, `TestParityGuidesReal` (4.3.58.18), `TestParityBajadocReal` (4.14.0.162), `TestParityBajadocXMLReal` (4.3.58.18 and 4.14.0.162), `TestParityS8Real` and `TestParityS9Real` (4.14.0.162), `TestParityCoverageReal` (4.14.0.162) |
 | `HELPBUILD_PARITY_JARS=a.jar:b.jar` | `TestParityRealJars` on that list instead |
 | `HELPBUILD_PARITY_FULL=1` | `TestParityHelpJarsFullInstall` (all 578 module jars of 4.3) |
 | `HELPBUILD_PARITY_PDF_DOCS=<dir>` | `TestParityPDFReal` over a whole docs folder (the 66-PDF run) |
 | `HELPBUILD_PARITY_COURSE=<dir>` | `TestParityCourseReal` on that course tree |
-| `HELPBUILD_PARITY_415=1` | `TestParityGuidesReal`, `TestParityBajadocReal`, `TestParityBajadocXMLReal`, `TestParityS8Real` and `TestParityS9Real` on 4.15.6.20 too |
+| `HELPBUILD_PARITY_415=1` | `TestParityGuidesReal`, `TestParityBajadocReal`, `TestParityBajadocXMLReal`, `TestParityS8Real`, `TestParityS9Real` and `TestParityCoverageReal` on 4.15.6.20 too |
 | `HELPBUILD_PARITY_BAJADOC=a:b` | `TestParityBajadocReal` on that list of version ids instead (for example `4.13.2.18`) |
 | `HELPBUILD_PARITY_BAJADOCXML=a:b` | `TestParityBajadocXMLReal` on that list of version ids instead |
 | `HELPBUILD_PARITY_INDEXES=a:b` | `TestParityS8Real` and `TestParityS9Real` on that list of version ids instead |
+| `HELPBUILD_PARITY_COVERAGE=a:b` | `TestParityCoverageReal` on that list of version ids instead; an install that is not mounted then fails instead of skipping `--doc-jars` |
 
-`make parity` sets `REAL`, `FULL`, `415` and `INDEXES=4.14.0.162:4.15.6.20:4.3.58.18` and runs every `Parity` test of the package.
+`make parity` sets `REAL`, `FULL`, `415`, `INDEXES=4.14.0.162:4.15.6.20:4.3.58.18` and `COVERAGE=4.14.0.162:4.15.6.20` and runs every `Parity` test of the package.
 Timings on the development laptop: `go test ./internal/helpbuild/` about 20 s without the
-variables (about 170 s when the real tests ran by default); `HELPBUILD_PARITY_REAL=1 go test ./internal/helpbuild/` about 60 s; `make parity`
-4.5 to 6 min (the full-install sweep 80 s or more over /mnt/c, 4.3 + 4.15 guides about 135 s).
+variables (about 170 s when the real tests ran by default); `HELPBUILD_PARITY_REAL=1 go test ./internal/helpbuild/` about 2.5 min (the 4.14 coverage reports
+about 80 s of it); `make parity` 8 to 10 min (the full-install sweep 80 s or more over /mnt/c,
+4.3 + 4.15 guides about 135 s, the coverage reports of 4.14 and 4.15 2 to 4 min).
 
 ## Dead code not ported
 
