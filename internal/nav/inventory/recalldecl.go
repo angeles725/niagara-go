@@ -5,18 +5,13 @@ import (
 	"strings"
 	"unicode/utf8"
 
+	"github.com/angeles725/niagara-go/internal/nav/lib/javatext"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // The declaration scan of the recall oracle (recall.py _TOP_LEVEL_DECL,
-// _declarations, _header_keywords and java_text.declaration_header).
-
-// recallModifiers and recallKinds are the alternatives of _TOP_LEVEL_DECL.
-var (
-	recallModifiers = []string{"public", "protected", "private", "static", "abstract", "final", "strictfp",
-		"sealed", "non-sealed"}
-	recallKinds = []string{"class", "interface", "@interface", "enum", "record"}
-)
+// _declarations and _header_keywords; java_text.declaration_header is
+// javatext.DeclarationHeader).
 
 // topLevelDecl is _TOP_LEVEL_DECL.match(line):
 //
@@ -103,7 +98,7 @@ func recallAnnotation(s string, i int) (int, bool) {
 
 // recallModifier is (?:MODIFIER)\s+ at i, the alternatives in order.
 func recallModifier(s string, i int) (int, bool) {
-	for _, m := range recallModifiers {
+	for _, m := range javatext.Modifiers {
 		if strings.HasPrefix(s[i:], m) {
 			if end, ok := spaces(s, i+len(m)); ok {
 				return end, true
@@ -115,7 +110,7 @@ func recallModifier(s string, i int) (int, bool) {
 
 // recallKindName is (?:KIND)\s+([A-Za-z_$][\w$]*) at i.
 func recallKindName(s string, i int) (string, int, bool) {
-	for _, k := range recallKinds {
+	for _, k := range javatext.Kinds {
 		if !strings.HasPrefix(s[i:], k) {
 			continue
 		}
@@ -159,30 +154,11 @@ func declarations(path string) ([]string, [][]string, error) {
 	return names, keywords, nil
 }
 
-// maxHeaderLines is java_text.MAX_HEADER_LINES.
-const maxHeaderLines = 40
-
 // headerKeywords is _header_keywords: the sorted {extends, implements} named
 // in the declaration header (java_text.declaration_header), type arguments
 // dropped.
 func headerKeywords(lines []string, index, start int) []string {
-	raw := lines[index][start:]
-	end := min(len(lines), index+maxHeaderLines)
-	j := index + 1
-	var text string
-	for {
-		text = stripComments(raw)
-		if b := strings.IndexByte(text, '{'); b >= 0 {
-			text = text[:b]
-			break
-		}
-		if j >= end {
-			break
-		}
-		raw += "\n" + lines[j]
-		j++
-	}
-	text = strings.Join(pycompat.Fields(text), " ")
+	text := javatext.DeclarationHeader(lines, index, start)
 	depth := 0
 	var outside strings.Builder
 	for _, c := range text {
@@ -207,7 +183,7 @@ func headerKeywords(lines []string, index, start int) []string {
 				break
 			}
 			p := i + k
-			if !wordAt(o, p-1, true) && !wordAt(o, p+len(kw), false) {
+			if !javatext.WordBefore(o, p) && !javatext.WordAt(o, p+len(kw)) {
 				out = append(out, kw)
 				break
 			}
@@ -215,59 +191,4 @@ func headerKeywords(lines []string, index, start int) []string {
 		}
 	}
 	return out
-}
-
-// wordAt tells whether the rune ending (before) or starting (!before) at
-// byte i of s is a word character.
-func wordAt(s string, i int, before bool) bool {
-	if before {
-		if i < 0 {
-			return false
-		}
-		r, _ := utf8.DecodeLastRuneInString(s[:i+1])
-		return pycompat.IsWordRune(r)
-	}
-	if i >= len(s) {
-		return false
-	}
-	r, _ := utf8.DecodeRuneInString(s[i:])
-	return pycompat.IsWordRune(r)
-}
-
-// stripComments is java_text.strip_comments: every comment replaced by one
-// space, string and char literals (which end at a newline) skipped.
-func stripComments(text string) string {
-	var b strings.Builder
-	last, n := 0, len(text)
-	for i := 0; i < n; {
-		c := text[i]
-		switch {
-		case c == '"' || c == '\'':
-			j := i + 1
-			for j < n && text[j] != c && text[j] != '\n' {
-				if text[j] == '\\' {
-					j += 2
-				} else {
-					j++
-				}
-			}
-			i = j + 1
-		case strings.HasPrefix(text[i:], "//"), strings.HasPrefix(text[i:], "/*"):
-			j := n
-			if c2 := text[i+1]; c2 == '/' {
-				if k := strings.IndexByte(text[i:], '\n'); k >= 0 {
-					j = i + k
-				}
-			} else if k := strings.Index(text[i+2:], "*/"); k >= 0 {
-				j = i + 2 + k + 2
-			}
-			b.WriteString(text[last:i])
-			b.WriteByte(' ')
-			last, i = j, j
-		default:
-			i++
-		}
-	}
-	b.WriteString(text[min(last, n):])
-	return b.String()
 }

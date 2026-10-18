@@ -4,6 +4,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
+	"github.com/angeles725/niagara-go/internal/nav/lib/javatext"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
@@ -20,11 +21,6 @@ type Decl struct {
 	Name      string
 	End       int // m.end() as a byte offset: just after Name, where the header continues
 }
-
-var declModifiers = []string{"public", "protected", "private", "static", "abstract", "final",
-	"strictfp", "sealed", "non-sealed"}
-
-var declKinds = []string{"class", "interface", "@interface", "enum", "record"}
 
 func runeAt(s string, i int) rune {
 	if i >= len(s) {
@@ -76,7 +72,7 @@ func MatchDecl(line string) (Decl, bool) {
 		i = j
 	}
 	d.Modifiers = line[start:i]
-	for _, k := range declKinds {
+	for _, k := range javatext.Kinds {
 		if !strings.HasPrefix(line[i:], k) || (k == "record" && !recordHeader(line, i+len(k))) {
 			continue
 		}
@@ -121,7 +117,7 @@ func annotation(s string, i int) (int, bool) {
 
 // modifier matches one (?:public|...|non-sealed)\s+ at i.
 func modifier(s string, i int) (int, bool) {
-	for _, m := range declModifiers {
+	for _, m := range javatext.Modifiers {
 		if strings.HasPrefix(s[i:], m) {
 			if e := span(s, i+len(m), pycompat.IsSpace); e > i+len(m) {
 				return e, true

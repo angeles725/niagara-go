@@ -7,6 +7,7 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/index"
 	"github.com/angeles725/niagara-go/internal/nav/core"
+	"github.com/angeles725/niagara-go/internal/nav/lib/javatext"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
@@ -167,30 +168,30 @@ func deviceTypes(organized, path string) []string {
 }
 
 func deviceTypeAt(text string, p int) (string, int, bool) {
-	if wordBefore(text, p) {
+	if javatext.WordBefore(text, p) {
 		return "", 0, false
 	}
 	i := p + len("getDeviceType")
 	for _, tok := range []string{"(", ")", "{", "return"} {
-		i = skipSpace(text, i)
+		i = javatext.SkipSpace(text, i)
 		if !strings.HasPrefix(text[i:], tok) {
 			return "", 0, false
 		}
 		i += len(tok)
 	}
-	j := skipSpace(text, i)
+	j := javatext.SkipSpace(text, i)
 	if j == i {
 		return "", 0, false
 	}
 	k := j
 	for k < len(text) {
-		r, n := runeAt(text, k)
+		r, n := javatext.RuneAt(text, k)
 		if r != '$' && !pycompat.IsWordRune(r) {
 			break
 		}
 		k += n
 	}
-	if k == j || !strings.HasPrefix(text[k:], ".TYPE") || wordAt(text, k+len(".TYPE")) {
+	if k == j || !strings.HasPrefix(text[k:], ".TYPE") || javatext.WordAt(text, k+len(".TYPE")) {
 		return "", 0, false
 	}
 	return text[j:k], k + len(".TYPE"), true

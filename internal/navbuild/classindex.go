@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/angeles725/niagara-go/internal/nav/core"
+	"github.com/angeles725/niagara-go/internal/nav/lib/javatext"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 )
@@ -98,7 +99,7 @@ func parseJavaFile(path string) ([]declaration, int, string, error) {
 		if !ok {
 			continue
 		}
-		ext, impl := parseExtendsImplements(declarationHeader(lines, i, d.End))
+		ext, impl := parseExtendsImplements(javatext.DeclarationHeader(lines, i, d.End))
 		decls = append(decls, declaration{
 			topLevel:   d.Indent == "",
 			modifiers:  pycompat.Fields(d.Modifiers),

@@ -5,6 +5,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
+	"github.com/angeles725/niagara-go/internal/nav/lib/javatext"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/textfold"
 )
@@ -41,8 +42,8 @@ func nextCall(text string, i int) (start int, method string, paren int, ok bool)
 		if best < 0 {
 			return 0, "", 0, false
 		}
-		if !wordBefore(text, best) {
-			if p := skipSpace(text, best+len(form)); p < len(text) && text[p] == '(' {
+		if !javatext.WordBefore(text, best) {
+			if p := javatext.SkipSpace(text, best+len(form)); p < len(text) && text[p] == '(' {
 				return best, form, p, true
 			}
 		}
@@ -137,9 +138,9 @@ func isLicenseCall(method, recv, text, rel string) bool {
 func typedManagerVar(text, v string) bool {
 	found := false
 	occurrences(text, "LicenseManager", func(q int) bool {
-		i := skipSpace(text, q+len("LicenseManager"))
+		i := javatext.SkipSpace(text, q+len("LicenseManager"))
 		if i < len(text) && text[i] == ')' {
-			i = skipSpace(text, i+1)
+			i = javatext.SkipSpace(text, i+1)
 		}
 		if e := lit(text, i, v); e >= 0 && boundary(text, e) {
 			found = true
@@ -156,7 +157,7 @@ func assignedManagerVar(text, v string) bool {
 		if !boundary(text, p) {
 			return false
 		}
-		eq := skipSpace(text, p+len(v))
+		eq := javatext.SkipSpace(text, p+len(v))
 		if eq >= len(text) || text[eq] != '=' {
 			return false
 		}
@@ -166,7 +167,7 @@ func assignedManagerVar(text, v string) bool {
 		}
 		region := text[:end]
 		occurrences(region[eq+1:], "getLicenseManager", func(k int) bool {
-			i := skipSpace(region, eq+1+k+len("getLicenseManager"))
+			i := javatext.SkipSpace(region, eq+1+k+len("getLicenseManager"))
 			found = i < len(region) && region[i] == '('
 			return found
 		})
@@ -178,7 +179,7 @@ func assignedManagerVar(text, v string) bool {
 // scanFile is _scan_file: the licensing calls of one source file and the
 // classification of its getLicenseManager() sites.
 func scanFile(text, rel, module, cls string, res *resolver) ([]Call, []Site) {
-	comments := CommentSpans(text)
+	comments := javatext.CommentSpans(text)
 	var calls []Call
 	for i := 0; ; {
 		start, method, paren, ok := nextCall(text, i)

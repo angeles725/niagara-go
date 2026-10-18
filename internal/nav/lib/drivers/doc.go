@@ -27,39 +27,6 @@ func contains(xs []string, x string) bool {
 	return false
 }
 
-func runeAt(s string, i int) (rune, int) {
-	if i < 0 || i >= len(s) {
-		return utf8.RuneError, 0
-	}
-	return utf8.DecodeRuneInString(s[i:])
-}
-
-// wordAt / wordBefore: re's \w at / before byte i (false outside the text).
-func wordAt(s string, i int) bool {
-	r, n := runeAt(s, i)
-	return n > 0 && pycompat.IsWordRune(r)
-}
-
-func wordBefore(s string, i int) bool {
-	if i <= 0 {
-		return false
-	}
-	r, _ := utf8.DecodeLastRuneInString(s[:i])
-	return pycompat.IsWordRune(r)
-}
-
-// skipSpace is re's \s* from byte i.
-func skipSpace(s string, i int) int {
-	for i < len(s) {
-		r, n := utf8.DecodeRuneInString(s[i:])
-		if !pycompat.IsSpace(r) {
-			break
-		}
-		i += n
-	}
-	return i
-}
-
 // docIndex holds _doc_modules ({lower-case core: doc submodule}, in inventory
 // order) and _doc_submodules ({doc module name: its submodule}).
 type docIndex struct {

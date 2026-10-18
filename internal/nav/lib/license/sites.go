@@ -6,6 +6,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
+	"github.com/angeles725/niagara-go/internal/nav/lib/javatext"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
@@ -19,9 +20,9 @@ type Site struct {
 }
 
 // classifySites is the getLicenseManager() half of _scan_file.
-func classifySites(text, rel, module, cls string, comments []Span, calls []Call) []Site {
+func classifySites(text, rel, module, cls string, comments []javatext.Span, calls []Call) []Site {
 	var sites []Site
-	var blocks []Span
+	var blocks []javatext.Span
 	blocksDone := false
 	for i := 0; ; {
 		start, end, ok := nextManager(text, i)
@@ -105,14 +106,14 @@ func nextManager(text string, i int) (start, end int, ok bool) {
 		}
 		start = i + k
 		i = start + 1
-		if wordBefore(text, start) {
+		if javatext.WordBefore(text, start) {
 			continue
 		}
-		p := skipSpace(text, start+len(word))
+		p := javatext.SkipSpace(text, start+len(word))
 		if p >= len(text) || text[p] != '(' {
 			continue
 		}
-		if p = skipSpace(text, p+1); p < len(text) && text[p] == ')' {
+		if p = javatext.SkipSpace(text, p+1); p < len(text) && text[p] == ')' {
 			return start, p + 1, true
 		}
 	}
@@ -135,20 +136,20 @@ func statementStart(text string, pos int) int {
 
 // onlyDot is re.match(r'\s*\.\s*$', s).
 func onlyDot(s string) bool {
-	i := skipSpace(s, 0)
-	return i < len(s) && s[i] == '.' && skipSpace(s, i+1) == len(s)
+	i := javatext.SkipSpace(s, 0)
+	return i < len(s) && s[i] == '.' && javatext.SkipSpace(s, i+1) == len(s)
 }
 
 // featuresCall is re.match(r'\s*\.\s*getFeatures\s*\(', after).
 func featuresCall(after string) bool {
-	i := skipSpace(after, 0)
+	i := javatext.SkipSpace(after, 0)
 	if i >= len(after) || after[i] != '.' {
 		return false
 	}
-	if i = lit(after, skipSpace(after, i+1), "getFeatures"); i < 0 {
+	if i = lit(after, javatext.SkipSpace(after, i+1), "getFeatures"); i < 0 {
 		return false
 	}
-	i = skipSpace(after, i)
+	i = javatext.SkipSpace(after, i)
 	return i < len(after) && after[i] == '('
 }
 
@@ -164,14 +165,14 @@ func instanceofCheck(after, stmt string) bool {
 		return true
 	}
 	t := strings.TrimRightFunc(stmt, pycompat.IsSpace)
-	return strings.HasSuffix(t, "instanceof") && !wordBefore(t, len(t)-len("instanceof"))
+	return strings.HasSuffix(t, "instanceof") && !javatext.WordBefore(t, len(t)-len("instanceof"))
 }
 
 // hasWord is re.search(r'\b' + word + r'\b', s) for a word of word characters.
 func hasWord(s, word string) bool {
 	found := false
 	occurrences(s, word, func(i int) bool {
-		found = !wordBefore(s, i) && !wordAt(s, i+len(word))
+		found = !javatext.WordBefore(s, i) && !javatext.WordAt(s, i+len(word))
 		return found
 	})
 	return found
@@ -186,23 +187,23 @@ func assignedVar(stmt string) (string, bool) {
 	if e < 0 {
 		return "", false
 	}
-	j := skipSpace(stmt, e+1)
+	j := javatext.SkipSpace(stmt, e+1)
 	if j < len(stmt) && stmt[j] == '(' {
 		k := skipRun(stmt, j+1, castChar)
 		if k == j+1 || k >= len(stmt) || stmt[k] != ')' {
 			return "", false
 		}
-		j = skipSpace(stmt, k+1)
+		j = javatext.SkipSpace(stmt, k+1)
 	}
 	if j < len(stmt) {
 		k := skipRun(stmt, j, isIdent)
 		if k == j {
 			return "", false
 		}
-		if k = skipSpace(stmt, k); k >= len(stmt) || stmt[k] != '.' {
+		if k = javatext.SkipSpace(stmt, k); k >= len(stmt) || stmt[k] != '.' {
 			return "", false
 		}
-		if j = skipSpace(stmt, k+1); j != len(stmt) {
+		if j = javatext.SkipSpace(stmt, k+1); j != len(stmt) {
 			return "", false
 		}
 	}
@@ -241,8 +242,8 @@ func collapseSpace(s string) string {
 
 // braceBlocks is java_text.brace_blocks: every {...} block outside comments
 // and string or char literals, an unclosed one ending at the end of the text.
-func braceBlocks(text string, comments []Span) []Span {
-	var blocks []Span
+func braceBlocks(text string, comments []javatext.Span) []javatext.Span {
+	var blocks []javatext.Span
 	var stack []int
 	n, k := len(text), 0
 	for i := 0; i < n; {
@@ -269,27 +270,27 @@ func braceBlocks(text string, comments []Span) []Span {
 		case c == '{':
 			stack = append(stack, i)
 		case c == '}' && len(stack) > 0:
-			blocks = append(blocks, Span{stack[len(stack)-1], i})
+			blocks = append(blocks, javatext.Span{Start: stack[len(stack)-1], End: i})
 			stack = stack[:len(stack)-1]
 		}
 		i++
 	}
 	for _, o := range stack {
-		blocks = append(blocks, Span{o, n})
+		blocks = append(blocks, javatext.Span{Start: o, End: n})
 	}
 	return blocks
 }
 
 // enclosing is java_text.enclosing: the blocks containing pos (open < pos <=
 // close), innermost first.
-func enclosing(blocks []Span, pos int) []Span {
-	var out []Span
+func enclosing(blocks []javatext.Span, pos int) []javatext.Span {
+	var out []javatext.Span
 	for _, b := range blocks {
 		if b.Start < pos && pos <= b.End {
 			out = append(out, b)
 		}
 	}
-	slices.SortFunc(out, func(a, b Span) int {
+	slices.SortFunc(out, func(a, b javatext.Span) int {
 		if a.Start != b.Start {
 			return b.Start - a.Start
 		}
@@ -325,10 +326,10 @@ func anonymousClassHead(head string) bool {
 	closing, semi := len(t)-1, strings.LastIndexByte(t, ';')
 	found := false
 	occurrences(head, "new", func(k int) bool {
-		if wordBefore(head, k) {
+		if javatext.WordBefore(head, k) {
 			return false
 		}
-		j := skipSpace(head, k+3)
+		j := javatext.SkipSpace(head, k+3)
 		if j == k+3 {
 			return false
 		}
@@ -336,7 +337,7 @@ func anonymousClassHead(head string) bool {
 		if e == j {
 			return false
 		}
-		p := skipSpace(head, e)
+		p := javatext.SkipSpace(head, e)
 		found = p < closing && head[p] == '(' && p > semi
 		return found
 	})
@@ -347,16 +348,16 @@ func anonymousClassHead(head string) bool {
 // name assigned at pos by the statement stmt is the same variable: a local
 // from the assignment to the end of its declaring block, a field its whole
 // class body.
-func variableScope(text string, blocks []Span, name string, pos int, stmt string) (int, int) {
+func variableScope(text string, blocks []javatext.Span, name string, pos int, stmt string) (int, int) {
 	thisField := thisFieldAssign(stmt, name)
 	encl := enclosing(blocks, pos)
-	var declaring []Span
+	var declaring []javatext.Span
 	if declaredFinally(stmt, name) || thisField {
 		declaring = encl[:min(1, len(encl))]
 	} else {
 		for _, b := range encl {
 			if isTypeBody(text, b.Start) || declares(header(text, b.Start)+text[b.Start:pos], name) >= 0 {
-				declaring = []Span{b}
+				declaring = []javatext.Span{b}
 				break
 			}
 		}
@@ -409,7 +410,7 @@ func declaresFrom(s, name string, ok func(t int) bool) int {
 		if r, _ := utf8.DecodeLastRuneInString(s[:ws]); !isIdent(r) && r != '>' && r != ']' {
 			return false
 		}
-		t := skipSpace(s, k+len(name))
+		t := javatext.SkipSpace(s, k+len(name))
 		if t >= len(s) || !strings.ContainsRune(";=,)", rune(s[t])) || !ok(t) {
 			return false
 		}
@@ -423,17 +424,17 @@ func declaresFrom(s, name string, ok func(t int) bool) int {
 func thisFieldAssign(stmt, name string) bool {
 	found := false
 	occurrences(stmt, "this", func(k int) bool {
-		if wordBefore(stmt, k) {
+		if javatext.WordBefore(stmt, k) {
 			return false
 		}
-		i := skipSpace(stmt, k+4)
+		i := javatext.SkipSpace(stmt, k+4)
 		if i >= len(stmt) || stmt[i] != '.' {
 			return false
 		}
-		if i = lit(stmt, skipSpace(stmt, i+1), name); i < 0 {
+		if i = lit(stmt, javatext.SkipSpace(stmt, i+1), name); i < 0 {
 			return false
 		}
-		i = skipSpace(stmt, i)
+		i = javatext.SkipSpace(stmt, i)
 		found = i < len(stmt) && stmt[i] == '=' && !strings.Contains(stmt[i+1:], "=")
 		return found
 	})

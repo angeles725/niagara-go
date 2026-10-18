@@ -2,44 +2,10 @@ package navbuild
 
 import (
 	"reflect"
-	"strings"
 	"testing"
 
 	"github.com/angeles725/niagara-go/internal/nav/core"
 )
-
-func TestDeclarationHeader(t *testing.T) {
-	lines := []string{
-		"public class A<T> // trailing { brace in a comment\n",
-		"   extends B /* { */ implements\n",
-		"   C, D {\n",
-	}
-	if got, want := declarationHeader(lines, 0, len("public class A")), "<T> extends B implements C, D"; got != want {
-		t.Errorf("got %q, want %q", got, want)
-	}
-	// Without a brace the header stops after maxHeaderLines lines.
-	var long []string
-	for i := 0; i < 50; i++ {
-		long = append(long, "x\n")
-	}
-	if got := strings.Fields(declarationHeader(long, 0, 0)); len(got) != maxHeaderLines {
-		t.Errorf("unterminated header joined %d lines, want %d", len(got), maxHeaderLines)
-	}
-}
-
-func TestStripComments(t *testing.T) {
-	for in, want := range map[string]string{
-		`a /* x */ b // y`:            `a   b  `,
-		`s = "// not" + '/' // c`:     `s = "// not" + '/'  `,
-		"open /* never closed":        "open  ",
-		`esc = "a\"//b" // c`:         `esc = "a\"//b"  `,
-		"str ends at newline \"\n//c": "str ends at newline \"\n ",
-	} {
-		if got := stripComments(in); got != want {
-			t.Errorf("stripComments(%q) = %q, want %q", in, got, want)
-		}
-	}
-}
 
 func TestParseExtendsImplements(t *testing.T) {
 	for _, tc := range []struct {

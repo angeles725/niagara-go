@@ -13,7 +13,7 @@
 // The packages under internal/nav split into two kinds, by path:
 //
 //   - Library packages live under internal/nav/lib (classrank, callgraph,
-//     codesearch, drivers, license, modlist, structure). Other tools (nsearch
+//     codesearch, drivers, javatext, license, modlist, structure). Other tools (nsearch
 //     in internal/searchdoor, the builders in internal/navbuild) import them.
 //     A library package never imports internal/nav/registry, this package or
 //     any command package: from internal/nav it imports only core and other
@@ -26,6 +26,8 @@
 //     structure) register their commands from init through registry; rankcmd
 //     and cliargs are command helpers; core is the runtime and shared helpers
 //     (the only command-side package a library may import, for its helpers).
+//     core itself imports only the javatext library, a leaf that imports
+//     nothing from internal/nav.
 //
 // TestLibrariesAreImportClean enforces the library rule.
 package nav

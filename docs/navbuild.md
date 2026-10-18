@@ -55,9 +55,9 @@ here; Python dies with `AttributeError`.
 read with `errors="replace"` and universal newlines and split as `readlines()`
 (`pycompat.Lines`: `\f`, `\v`, U+2028 are not line breaks), the package from the first 30
 stripped lines, block/line comment skipping by line prefix, `core.MatchDecl` per line, and
-`declarationHeader` (`java_text.declaration_header`: up to 40 lines to the first brace
-outside comments, `commentSpans`/`stripComments` ported byte-wise, whitespace collapsed
-with Python's `str.split()`). Files are parsed by four workers and merged in corpus order.
+`javatext.DeclarationHeader` (`java_text.declaration_header`: up to 40 lines to the first
+brace outside comments, `CommentSpans`/`StripComments` ported byte-wise, whitespace
+collapsed with Python's `str.split()`). Files are parsed by four workers and merged in corpus order.
 `LoadZKMModules` reads `<base>/indexes/module-inventory.json` like `load_zkm_modules`
 (absent = all flags false and `zkm_source: null`).
 
@@ -68,8 +68,9 @@ type at another indent (`\tclass Tabbed` after `class NB`); `implements A extend
 `null`; a header without a brace in 40 lines keeps every `implements` word.
 
 `declaration_header` starts at the end of the declaration match: `core.MatchDecl` returns it
-as `Decl.End`, and comment stripping uses the shared `license.CommentSpans` (the
-`internal/nav/lib/license` Java-text helper), so navbuild keeps no copy of either.
+as `Decl.End`, and the header itself is the shared `internal/nav/lib/javatext` leaf (the
+one Go port of the `java_text.py` helpers that the class index, the recall oracle and the
+license scan all use), so navbuild keeps no copy of either.
 
 ## Inheritance
 
