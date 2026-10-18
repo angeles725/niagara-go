@@ -3,9 +3,10 @@ package navbuild
 import (
 	"errors"
 	"fmt"
+	"maps"
 	"os"
 	"path/filepath"
-	"sort"
+	"slices"
 	"strings"
 	"time"
 
@@ -165,7 +166,7 @@ func scanPackages(vineflower string) (count int, packages, thirdParty []string) 
 		}
 	}
 	walk(vineflower, "")
-	return count, sortedKeys(pkgs), sortedKeys(third)
+	return count, slices.Sorted(maps.Keys(pkgs)), slices.Sorted(maps.Keys(third))
 }
 
 // listDir splits dir's entries as os.walk does: directories (or links to
@@ -198,15 +199,6 @@ func hasAnyPrefix(s string, prefixes []string) bool {
 		}
 	}
 	return false
-}
-
-func sortedKeys(m map[string]bool) []string {
-	out := make([]string, 0, len(m))
-	for k := range m {
-		out = append(out, k)
-	}
-	sort.Strings(out)
-	return out
 }
 
 // Document is the module-inventory.json text for this inventory: _meta

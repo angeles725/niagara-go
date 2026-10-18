@@ -40,11 +40,6 @@ func (x *partIndex) each(fn func(*part)) {
 	}
 }
 
-func isDir(p string) bool {
-	st, err := os.Stat(p)
-	return err == nil && st.IsDir()
-}
-
 // readZipMember is _read_zip_member: the member's bytes, or false for any read failure.
 // Python returns None only for a missing member, a bad ZIP or an OSError and crashes on a
 // corrupt deflate stream or an encrypted member; here every failure is None.
@@ -106,7 +101,7 @@ func parseModuleXML(raw []byte) *part {
 // is no modules/ directory.
 func indexInstall(root string) (*partIndex, string, bool) {
 	dir := pycompat.Join(root, "modules")
-	if !isDir(dir) {
+	if !pycompat.IsDir(dir) {
 		return nil, dir, false
 	}
 	x := &partIndex{byName: map[string]*part{}}
@@ -134,7 +129,7 @@ func indexInstall(root string) (*partIndex, string, bool) {
 func indexSw(root string) map[string][]string {
 	staged := map[string][]string{}
 	sw := pycompat.Join(root, "sw")
-	if !isDir(sw) {
+	if !pycompat.IsDir(sw) {
 		return staged
 	}
 	var walk func(string)
@@ -146,7 +141,7 @@ func indexSw(root string) map[string][]string {
 		var dirs []string
 		for _, e := range entries {
 			p := pycompat.Join(dir, e.Name())
-			if isDir(p) {
+			if pycompat.IsDir(p) {
 				dirs = append(dirs, p)
 			} else if strings.HasSuffix(e.Name(), ".jar") {
 				n := strings.TrimSuffix(e.Name(), ".jar")

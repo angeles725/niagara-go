@@ -55,7 +55,7 @@ func cmdTree(e *env) (int, int) {
 		e.println("(no components", of, " -- ", e.scope, ")")
 	}
 	for _, r := range rows {
-		e.println("h:", ljust(r.s("handle"), 8), " ", strings.Repeat("  ", r.get("depth").(int)), r.s("name"), "  <", r.s("type"), ">")
+		e.println("h:", pycompat.LJust(r.s("handle"), 8, ' '), " ", strings.Repeat("  ", r.get("depth").(int)), r.s("name"), "  <", r.s("type"), ">")
 	}
 	return 0, -1
 }
@@ -286,7 +286,7 @@ func cmdFind(e *env) (int, int) {
 		}
 	}
 	return e.render(rows, func(r row) string {
-		return "h:" + ljust(r.s("handle"), 8) + " " + r.s("path") + "  <" + r.s("type") + ">  [" + r.s("kind") + "]"
+		return "h:" + pycompat.LJust(r.s("handle"), 8, ' ') + " " + r.s("path") + "  <" + r.s("type") + ">  [" + r.s("kind") + "]"
 	}, "(no components or slots of type "+want+")", []string{"handle", "path", "type", "kind"}), -1
 }
 
@@ -348,7 +348,7 @@ func cmdTypes(e *env) (int, int) {
 		rows = kept
 	}
 	e.render(rows, func(r row) string {
-		return rjust(r.s("count"), 8) + "  " + ljust(r.s("type"), 34) + " [" + r.s("kind") + "]"
+		return pycompat.RJust(r.s("count"), 8, ' ') + "  " + pycompat.LJust(r.s("type"), 34, ' ') + " [" + r.s("kind") + "]"
 	}, "(no components)", []string{"count", "type", "kind"})
 	return 0, -1
 }
@@ -371,7 +371,7 @@ func cmdGrep(e *env) (int, int) {
 		}
 	}
 	return e.render(rows, func(r row) string {
-		return ljust(r.s("kind"), 5) + " h:" + ljust(r.s("handle"), 8) + " " + r.s("path") + "  <" + r.s("type") + ">"
+		return pycompat.LJust(r.s("kind"), 5, ' ') + " h:" + pycompat.LJust(r.s("handle"), 8, ' ') + " " + r.s("path") + "  <" + r.s("type") + ">"
 	}, "(no matches)", nil), -1
 }
 

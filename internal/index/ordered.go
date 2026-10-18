@@ -98,8 +98,8 @@ func Decode(data []byte) (any, error) {
 	return p.document()
 }
 
-// LoadOrdered reads and decodes the JSON file at path.
-func LoadOrdered(path string) (any, error) {
+// loadOrdered reads and decodes the JSON file at path.
+func loadOrdered(path string) (any, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
@@ -113,7 +113,7 @@ func LoadOrdered(path string) (any, error) {
 
 // LoadObject reads a JSON file whose top-level value must be an object.
 func LoadObject(path string) (*Object, error) {
-	v, err := LoadOrdered(path)
+	v, err := loadOrdered(path)
 	if err != nil {
 		return nil, err
 	}

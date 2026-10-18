@@ -12,6 +12,8 @@ package stationmodules
 import (
 	"fmt"
 	"io"
+	"maps"
+	"slices"
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/argparse"
@@ -85,13 +87,13 @@ func Main(args []string, s cli.Stdio) int {
 
 func autodetect(explicit string) (string, error) {
 	if explicit != "" {
-		if !isDir(explicit) {
+		if !pycompat.IsDir(explicit) {
 			return "", fail(1, "error: install root not found: %s", pycompat.StrRepr(explicit))
 		}
 		return explicit, nil
 	}
 	for _, c := range installCandidates {
-		if isDir(pycompat.Join(c, "modules")) {
+		if pycompat.IsDir(pycompat.Join(c, "modules")) {
 			return c, nil
 		}
 	}
@@ -151,14 +153,14 @@ func check(o options, w io.Writer) (int, error) {
 	var rows []moduleRow
 	seed := map[string]bool{}
 	var seedOrder []string
-	for _, module := range sortedKeys(setOfKeys(refs)) {
+	for _, module := range slices.Sorted(maps.Keys(setOfKeys(refs))) {
 		installed := map[string]bool{}
 		in.parts.each(func(p *part) {
 			if p.module == module {
 				installed[p.name] = true
 			}
 		})
-		ts := sortedKeys(refs[module])
+		ts := slices.Sorted(maps.Keys(refs[module]))
 		for _, tn := range ts {
 			if prov := typeProvider(in.parts, module, tn); prov != "" {
 				if !seed[prov] {
@@ -172,11 +174,11 @@ func check(o options, w io.Writer) (int, error) {
 		if len(installed) == 0 && len(ts) == 0 {
 			missing.setDefault(module+"-rt", fmt.Sprintf("module %s referenced, no part installed", module))
 		}
-		rows = append(rows, moduleRow{module, sortedKeys(installed), ts})
+		rows = append(rows, moduleRow{module, slices.Sorted(maps.Keys(installed)), ts})
 	}
 	// Python iterates a set here; with more than one new name its order follows the string
 	// hash. Sorted is the deterministic choice.
-	for _, dm := range sortedKeys(resolveDeps(in.parts, seedOrder)) {
+	for _, dm := range slices.Sorted(maps.Keys(resolveDeps(in.parts, seedOrder))) {
 		missing.setDefault(dm, "dependency of an installed part the station uses")
 	}
 	fixes, err := planFixes(missing, in, o.fix)
@@ -187,8 +189,8 @@ func check(o options, w io.Writer) (int, error) {
 		mods := pyjson.NewObject()
 		for _, r := range rows {
 			m := pyjson.NewObject()
-			m.Set("installed", strList(r.installed))
-			m.Set("types", strList(r.refs))
+			m.Set("installed", pyjson.StringList(r.installed))
+			m.Set("types", pyjson.StringList(r.refs))
 			mods.Set(r.module, m)
 		}
 		out := pyjson.NewObject()
@@ -197,7 +199,7 @@ func check(o options, w io.Writer) (int, error) {
 		out.Set("modules", mods)
 		out.Set("missing", missing.json())
 		out.Set("fixes", fixes.json())
-		fmt.Fprintln(w, pyjson.Dumps(out, indent2))
+		fmt.Fprintln(w, pyjson.Dumps(out, pyjson.Indent2))
 	} else {
 		fmt.Fprintf(w, "install : %s\nstation : %s\nmodules referenced: %d\n", in.root, o.target, len(rows))
 		for _, r := range rows {
@@ -207,7 +209,7 @@ func check(o options, w io.Writer) (int, error) {
 				for _, p := range r.installed {
 					profiles[in.parts.byName[p].profile] = true
 				}
-				tag = strings.Join(sortedKeys(profiles), ",")
+				tag = strings.Join(slices.Sorted(maps.Keys(profiles)), ",")
 			}
 			tsug := ""
 			if len(r.refs) > 0 {
@@ -287,7 +289,7 @@ func doctor(o options, w io.Writer) (int, error) {
 		out.Set("installed_parts", pyjson.IntValue(int64(len(in.parts.order))))
 		out.Set("missing", missing.json())
 		out.Set("fixes", fixes.json())
-		fmt.Fprintln(w, pyjson.Dumps(out, indent2))
+		fmt.Fprintln(w, pyjson.Dumps(out, pyjson.Indent2))
 	} else {
 		fmt.Fprintf(w, "install : %s\ninstalled module-parts: %d\n", in.root, len(in.parts.order))
 		printMissing(w, missing, fixes)
@@ -308,15 +310,4 @@ func (m *missingSet) json() pyjson.Value {
 		out.Set(p, pyjson.String(m.reason[p]))
 	}
 	return out
-}
-
-// indent2 is json.dumps(obj, indent=2).
-var indent2 = pyjson.DumpOpts{EnsureASCII: true, Indent: 2, ItemSep: ",", KeySep: ": "}
-
-func strList(ss []string) pyjson.Value {
-	a := pyjson.Value{Kind: pyjson.Array, A: []pyjson.Value{}}
-	for _, s := range ss {
-		a.A = append(a.A, pyjson.String(s))
-	}
-	return a
 }

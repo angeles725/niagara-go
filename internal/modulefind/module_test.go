@@ -1,8 +1,10 @@
 package modulefind
 
 import (
+	"maps"
 	"reflect"
 	"runtime"
+	"slices"
 	"strings"
 	"testing"
 )
@@ -41,7 +43,7 @@ func TestModuleScan(t *testing.T) {
 	if got := len(m.ords); got != 5 || m.ords[0] != [2]string{"BColdRoom", "station:|slot:/Drivers"} {
 		t.Errorf("ords = %q", m.ords)
 	}
-	if got := sortedSet(m.writers["mode"]); !reflect.DeepEqual(got, []string{`BColdRoom: .set("mode", ...)`, "Helper: setMode(...)"}) {
+	if got := slices.Sorted(maps.Keys(m.writers["mode"])); !reflect.DeepEqual(got, []string{`BColdRoom: .set("mode", ...)`, "Helper: setMode(...)"}) {
 		t.Errorf("writers[mode] = %q", got)
 	}
 	if !m.dynWriters["BDashServlet"]["BDashServlet: comp.set(prop, ...)  [slot resolved at runtime]"] {

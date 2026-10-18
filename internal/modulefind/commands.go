@@ -2,7 +2,9 @@ package modulefind
 
 import (
 	"fmt"
+	"maps"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/honest"
@@ -100,14 +102,14 @@ func cmdActions(m *module, o *opts, name *pyre.Regexp) int {
 }
 
 func cmdWriters(m *module, o *opts, slot string) {
-	w := sortedSet(m.writers[slot])
+	w := slices.Sorted(maps.Keys(m.writers[slot]))
 	all := map[string]bool{}
 	for _, s := range m.dynWriters {
 		for x := range s {
 			all[x] = true
 		}
 	}
-	dyn := sortedSet(all)
+	dyn := slices.Sorted(maps.Keys(all))
 	if o.json {
 		fmt.Fprintln(o.out, jsonDumps(row{{"slot", slot}, {"writers", w}, {"dynamic", dyn}}))
 		return
@@ -203,7 +205,7 @@ func cmdGrep(m *module, o *opts, rx *pyre.Regexp, source bool) int {
 	for _, cls := range m.extends.keys {
 		classes[cls], classes[m.extends.m[cls]] = true, true
 	}
-	for _, cls := range sortedSet(classes) { // sorted: set order is hash-seed dependent
+	for _, cls := range slices.Sorted(maps.Keys(classes)) { // sorted: set order is hash-seed dependent
 		if rx.MatchString(cls) {
 			rows = append(rows, row{{"kind", "class"}, {"class", cls}, {"name", m.extends.m[cls]}})
 		}

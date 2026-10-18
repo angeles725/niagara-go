@@ -36,7 +36,7 @@ func cmdWritable(e *env) (int, int) {
 		}
 	}
 	return e.render(rows, func(r row) string {
-		line := ljust(r.s("class"), 8) + " " + r.s("path") + "." + r.s("slot")
+		line := pycompat.LJust(r.s("class"), 8, ' ') + " " + r.s("path") + "." + r.s("slot")
 		if v := r.get("value").(*string); v != nil {
 			line += "=" + *v
 		}
@@ -147,7 +147,7 @@ func cmdRelays(e *env) (int, int) {
 		}
 	}
 	e.render(rows, func(r row) string {
-		return ljust(r.s("fallback"), 3) + " fb  " + r.s("target") + "  <" + r.s("type") + ">  <- " + r.s("source") +
+		return pycompat.LJust(r.s("fallback"), 3, ' ') + " fb  " + r.s("target") + "  <" + r.s("type") + ">  <- " + r.s("source") +
 			"  writeOnUp=" + r.s("writeOnUp")
 	}, "(no own-module relays)", nil)
 	if e.isText() {
@@ -210,7 +210,7 @@ func cmdHoa(e *env) (int, int) {
 		return rows[i].s("slot") < rows[j].s("slot")
 	})
 	e.render(rows, func(r row) string {
-		return ljust(r.s("state"), 8) + " " + r.s("slot") + " = " + r.s("value")
+		return pycompat.LJust(r.s("state"), 8, ' ') + " " + r.s("slot") + " = " + r.s("value")
 	}, "(no HOA/mode slots)", nil)
 	if e.isText() {
 		e.println(fmt.Sprintf("# %d HOA/mode slots; %d AUTO/null; %d persisted config-mode; "+
@@ -264,7 +264,7 @@ func cmdTiles(e *env) (int, int) {
 		return rows[i].s("tile") < rows[j].s("tile")
 	})
 	e.render(rows, func(r row) string {
-		return ljust(r.s("crossed"), 7) + " " + r.s("room") + "." + r.s("tile") + "  <- " + r.s("unit")
+		return pycompat.LJust(r.s("crossed"), 7, ' ') + " " + r.s("room") + "." + r.s("tile") + "  <- " + r.s("unit")
 	}, "(no RoomPanel tiles)", nil)
 	if e.isText() {
 		crossed := 0

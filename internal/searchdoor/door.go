@@ -2,6 +2,7 @@ package searchdoor
 
 import (
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -237,7 +238,7 @@ func (d *door) rankedCode(path, query string, deadline float64, timeout int, tit
 	}
 	var exact, mention []Item
 	for _, it := range found {
-		if contains(idents, it.Key) {
+		if slices.Contains(idents, it.Key) {
 			exact = append(exact, it)
 		} else {
 			mention = append(mention, it)

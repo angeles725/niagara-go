@@ -3,6 +3,8 @@ package stationmodules
 import (
 	"fmt"
 	"io"
+	"maps"
+	"slices"
 
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyjson"
@@ -29,7 +31,7 @@ func planFixes(missing *missingSet, in *install, doFix bool) (*fixPlan, error) {
 		}
 	})
 	plan := &fixPlan{byPart: map[string]*fix{}}
-	for _, name := range sortedKeys(setOfKeys(missing.reason)) {
+	for _, name := range slices.Sorted(maps.Keys(setOfKeys(missing.reason))) {
 		f := &fix{reason: missing.reason[name]}
 		if cands := in.staged[name]; len(cands) > 0 {
 			src, srcVer := locateFix(cands, ver, jarVersion)
@@ -91,7 +93,7 @@ func printMissing(w io.Writer, missing *missingSet, fixes *fixPlan) {
 		return
 	}
 	fmt.Fprintf(w, "\nMISSING module-parts: %d\n", len(missing.order))
-	for _, name := range sortedKeys(setOfKeys(missing.reason)) {
+	for _, name := range slices.Sorted(maps.Keys(setOfKeys(missing.reason))) {
 		f := fixes.byPart[name]
 		fmt.Fprintf(w, "  ✗ %s  (%s)\n", name, f.reason)
 		if f.hasStaged {

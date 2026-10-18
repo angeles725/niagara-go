@@ -49,12 +49,12 @@ type Options struct {
 // smaller graph rather than an error. srcPath is only recorded. Text that is not valid UTF-8 is
 // first decoded as ReadText does.
 func Parse(srcPath, text string) *Bog {
-	return ParseOptions(srcPath, text, Options{})
+	return parseOptions(srcPath, text, Options{})
 }
 
-// ParseOptions is Parse with the opt-in additions of opts; every part of the graph Parse builds
+// parseOptions is Parse with the opt-in additions of opts; every part of the graph Parse builds
 // stays the same.
-func ParseOptions(srcPath, text string, opts Options) *Bog {
+func parseOptions(srcPath, text string, opts Options) *Bog {
 	if !utf8.ValidString(text) {
 		text = pycompat.DecodeReplace([]byte(text))
 	}

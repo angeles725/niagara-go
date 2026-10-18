@@ -1,6 +1,10 @@
 package bm25
 
-import "github.com/angeles725/niagara-go/internal/textfold"
+import (
+	"slices"
+
+	"github.com/angeles725/niagara-go/internal/textfold"
+)
 
 // Doc is one document of an Index: its key, title and body.
 type Doc[K any] struct {
@@ -61,7 +65,7 @@ func NewIndex[K any](docs []Doc[K], p Params, titleWeight int) *Index[K] {
 func (ix *Index[K]) Rank(query string, requireAll bool, factors []Factor) []Hit[K] {
 	q := textfold.QueryTerms(query)
 	for _, f := range factors {
-		if !contains(q, f.Term) {
+		if !slices.Contains(q, f.Term) {
 			q = append(q, f.Term)
 		}
 	}
@@ -85,13 +89,4 @@ func (ix *Index[K]) Rank(query string, requireAll bool, factors []Factor) []Hit[
 		out[i] = Hit[K]{r.Score, ix.keys[r.Doc]}
 	}
 	return out
-}
-
-func contains(xs []string, x string) bool {
-	for _, y := range xs {
-		if y == x {
-			return true
-		}
-	}
-	return false
 }

@@ -55,8 +55,6 @@ func TestFindWalksUpFromEachStartInOrder(t *testing.T) {
 	}{
 		{"cwd first", []Start{FromCwd, FromExecutable}, a},
 		{"executable first", []Start{FromExecutable, FromCwd}, b},
-		{"explicit path", []Start{FromPath(filepath.Join(b, "bin")), FromCwd}, b},
-		{"empty explicit path is skipped", []Start{FromPath(""), FromCwd}, a},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -179,13 +177,13 @@ func TestWalkUp(t *testing.T) {
 	t.Parallel()
 	a := checkout(t, filepath.Join("sub", "MARK"))
 	deep := filepath.Join(a, "bin", "deep")
-	if got, ok := WalkUp(deep, HasFile(filepath.Join("sub", "MARK"))); !ok || got != a {
-		t.Errorf("WalkUp = %q %v, want %q true", got, ok, a)
+	if got, ok := walkUp(deep, HasFile(filepath.Join("sub", "MARK"))); !ok || got != a {
+		t.Errorf("walkUp = %q %v, want %q true", got, ok, a)
 	}
-	if got, ok := WalkUp(deep+string(filepath.Separator)+"..", HasDir("deep")); !ok || got != filepath.Join(a, "bin") {
+	if got, ok := walkUp(deep+string(filepath.Separator)+"..", HasDir("deep")); !ok || got != filepath.Join(a, "bin") {
 		t.Errorf("WalkUp of an unclean path = %q %v, want %q true", got, ok, filepath.Join(a, "bin"))
 	}
-	if got, ok := WalkUp(deep, HasFile("no-such-marker")); ok || got != "" {
+	if got, ok := walkUp(deep, HasFile("no-such-marker")); ok || got != "" {
 		t.Errorf("WalkUp to the root = %q %v, want \"\" false", got, ok)
 	}
 }

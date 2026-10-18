@@ -5,7 +5,6 @@ import (
 	"io"
 	"strconv"
 	"strings"
-	"unicode/utf8"
 
 	"github.com/angeles725/niagara-go/internal/argparse"
 	"github.com/angeles725/niagara-go/internal/bog"
@@ -161,21 +160,6 @@ func pyStr(v any) string {
 		return strconv.Itoa(x)
 	}
 	return fmt.Sprint(v)
-}
-
-// ljust and rjust pad to n code points, like format specs ":<n" / ":n" on str and int.
-func ljust(s string, n int) string {
-	if k := utf8.RuneCountInString(s); k < n {
-		return s + strings.Repeat(" ", n-k)
-	}
-	return s
-}
-
-func rjust(s string, n int) string {
-	if k := utf8.RuneCountInString(s); k < n {
-		return strings.Repeat(" ", n-k) + s
-	}
-	return s
 }
 
 // head is s[:n] in code points.

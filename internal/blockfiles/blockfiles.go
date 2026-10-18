@@ -67,8 +67,8 @@ func MainLabel(name string) string {
 // IsMainLabel is is_main_label: a number, "1-3" or "TI".
 func IsMainLabel(label string) bool { return IsDigit(label) || label == "1-3" || label == "TI" }
 
-// IsSnapshot reports a dated niagara-mental-model.<YYYY-MM-DD>.md snapshot.
-func IsSnapshot(name string) bool { return snapshotRe.MatchString(name) }
+// isSnapshot reports a dated niagara-mental-model.<YYYY-MM-DD>.md snapshot.
+func isSnapshot(name string) bool { return snapshotRe.MatchString(name) }
 
 // PyInt is str(int(digits)) for the Unicode decimal digits re's \d matched ("0" if none parse).
 func PyInt(digits string) string {
@@ -124,13 +124,13 @@ func (k key) less(o key) bool {
 	return k.num < o.num
 }
 
-// Less orders labels by label_sort_key: consolidated first, numbers by value, TI after
+// less orders labels by label_sort_key: consolidated first, numbers by value, TI after
 // them, sub-corpus labels last.
-func Less(a, b string) bool { return sortKey(a).less(sortKey(b)) }
+func less(a, b string) bool { return sortKey(a).less(sortKey(b)) }
 
 // SortLabels sorts labels in place, stably, by label_sort_key.
 func SortLabels(labels []string) {
-	sort.SliceStable(labels, func(i, j int) bool { return Less(labels[i], labels[j]) })
+	sort.SliceStable(labels, func(i, j int) bool { return less(labels[i], labels[j]) })
 }
 
 func sortBlocks(bs []Block, tie func(a, b Block) bool) {
@@ -182,7 +182,7 @@ func MainBlocks(root string) []Block {
 // subLabel is _sub_label: (corpus, label) of a sub-corpus block, ok false otherwise.
 func subLabel(root, path string) (corpus, label string, ok bool) {
 	name := filepath.Base(path)
-	if MainLabel(name) != "" || IsSnapshot(name) {
+	if MainLabel(name) != "" || isSnapshot(name) {
 		return "", "", false // main-corpus names count only at the root (elsewhere they are copies)
 	}
 	for _, re := range []*pyre.Regexp{subBlockRe, subBloque} {

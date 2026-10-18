@@ -10,13 +10,11 @@ type startKind int
 const (
 	cwdStart startKind = iota + 1
 	executableStart
-	pathStart
 )
 
 // Start is one place Find searches from.
 type Start struct {
 	kind startKind
-	path string
 }
 
 var (
@@ -25,9 +23,6 @@ var (
 	// FromExecutable starts at the executable's directory, symlinks resolved.
 	FromExecutable = Start{kind: executableStart}
 )
-
-// FromPath starts at dir; an empty dir is skipped.
-func FromPath(dir string) Start { return Start{kind: pathStart, path: dir} }
 
 // Options say where a checkout may be and how to recognise it (see the package doc).
 type Options struct {
@@ -57,7 +52,7 @@ func Find(o Options) (string, bool) {
 		if !ok {
 			continue
 		}
-		if found, ok := WalkUp(dir, o.Marker); ok {
+		if found, ok := walkUp(dir, o.Marker); ok {
 			return found, true
 		}
 	}
@@ -87,8 +82,6 @@ func (o Options) startDir(s Start) (string, bool) {
 			exe = real
 		}
 		return filepath.Dir(exe), true
-	case pathStart:
-		return s.path, s.path != ""
 	}
 	return "", false
 }
@@ -104,9 +97,9 @@ func FirstEnv(getenv func(string) string, names ...string) (name, value string) 
 	return "", ""
 }
 
-// WalkUp returns the first of dir (made absolute) and its parents that marker
+// walkUp returns the first of dir (made absolute) and its parents that marker
 // accepts, or ("", false) at the file-system root.
-func WalkUp(dir string, marker func(string) bool) (string, bool) {
+func walkUp(dir string, marker func(string) bool) (string, bool) {
 	dir, err := filepath.Abs(dir)
 	if err != nil {
 		return "", false

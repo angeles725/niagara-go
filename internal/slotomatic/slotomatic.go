@@ -123,7 +123,7 @@ func ParseSource(text string) Type {
 		if !ok {
 			continue
 		}
-		args := SplitArgs(inner)
+		args := splitArgs(inner)
 		if len(args) == 0 {
 			continue
 		}
@@ -280,9 +280,9 @@ func callArgs(expr string, start int) (string, bool) {
 	return "", false
 }
 
-// SplitArgs is _split_args: s split at the top-level commas (parens, brackets, braces and
+// splitArgs is _split_args: s split at the top-level commas (parens, brackets, braces and
 // string literals respected), each part stripped; "" gives no parts.
-func SplitArgs(s string) []string {
+func splitArgs(s string) []string {
 	var args []string
 	depth, cur := 0, 0
 	var inStr byte

@@ -13,9 +13,9 @@ const ToolsVersion = "3.0.0"
 // binary is used (vcs.revision cut to 9 characters, "-dirty" when modified).
 var gitDescribe string
 
-// Describe is the git description of the build, or "" when unknown (a build
+// describe is the git description of the build, or "" when unknown (a build
 // outside a git checkout, or go test).
-func Describe() string {
+func describe() string {
 	if gitDescribe != "" {
 		return gitDescribe
 	}
@@ -49,7 +49,7 @@ func describeVCS(rev, modified string) string {
 }
 
 // Line is version.version_line: "bog-nav 3.0.0 (git d62aeb56a-dirty)".
-func Line(tool string) string { return lineWith(tool, Describe()) }
+func Line(tool string) string { return lineWith(tool, describe()) }
 
 func lineWith(tool, describe string) string {
 	if describe == "" {

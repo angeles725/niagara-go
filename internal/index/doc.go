@@ -2,7 +2,7 @@
 // versions/registry.json (which Niagara versions are extracted and where) and
 // the JSON indexes under <data root>/indexes/.
 //
-// Every JSON document is decoded in order (Decode, LoadOrdered): objects keep
+// Every JSON document is decoded in order (Decode, loadOrdered): objects keep
 // the key insertion order of Python's dict, because the Python tools iterate
 // their indexes in that order and stable sorts over it decide the output.
 // A Go map is never iterated to produce output.
