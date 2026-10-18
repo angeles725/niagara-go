@@ -1,0 +1,2 @@
+recall 100.00% (40/40 declarations in 40 files, sampled; 0 excluded; index 67,720 entries built <DATE>)
+supertypes 34/34 declarations whose header names extends/implements have them in the index

@@ -1,0 +1,101 @@
+CLASS: BAlarmService
+PACKAGE: javax.baja.alarm
+TYPE: class
+MODULE: alarm-rt
+HTML: bajadoc/javax/baja/alarm/BAlarmService.html
+
+CLASS: BAlarmService
+PACKAGE: javax.baja.alarm
+SINCE: Baja 1.0
+EXTENDS: BAbstractService
+IMPLEMENTS: BIAlarmClassFolder, BIDataRecoverySourceService, BIRestrictedComponent
+SUBCLASSES: BOrionAlarmService
+
+DESCRIPTION:
+The BAlarmService uses BAlarmClasses to route all alarm messages between
+AlarmSources and BAlarmRecipients. Each station contains a single
+BAlarmService.
+
+FIELDS:
+  static Action ackAlarm - Slot for the ackAlarm action.
+  static Topic alarm - Slot for the alarm topic.
+  static Property alarmDbConfig - Slot for the alarmDbConfig property.
+  static Action auditForceClear - Slot for the auditForceClear action.
+  static Property coalesceAlarms - Slot for the coalesceAlarms property.
+  static Property defaultAlarmClass - Slot for the defaultAlarmClass property.
+  static Action disableToFault - Slot for the disableToFault action.
+  static Action disableToOffnormal - Slot for the disableToOffnormal action.
+  static Action enableToFault - Slot for the enableToFault action.
+  static Action enableToOffnormal - Slot for the enableToOffnormal action.
+  static Action escalateAlarms - Slot for the escalateAlarms action.
+  static Property escalationTimeTrigger - Slot for the escalationTimeTrigger property.
+  static java.util.logging.Logger logger
+  static Property masterAlarmInstructions - Slot for the masterAlarmInstructions property.
+  static Action routeAlarm - Slot for the routeAlarm action.
+  static Type TYPE
+
+CONSTRUCTORS:
+  BAlarmService()
+
+METHODS:
+  void ackAlarm(BAlarmRecord parameter)
+  void added(Property prop, Context cx)
+  protected void alarmDbConfigChanged(Property p)
+  void atSteadyState()
+  void auditForceClear(BAlarmRecord parameter)
+  void changed(Property prop, Context cx)
+  void checkAdd(java.lang.String newName, BValue value, int flags, BFacets facets, Context context)
+  void checkParentForRestrictedComponent(BComponent parent, Context cx)
+  void checkRename(Property property, java.lang.String newName, Context context)
+  protected BAlarmDatabase createAlarmDb()
+  protected void disabled()
+  BOrd disableToFault(BVector parameter)
+  BOrd disableToOffnormal(BVector parameter)
+  void doAckAlarm(BAlarmRecord alarm)
+  void doAuditForceClear(BAlarmRecord rec, Context cx)
+  BOrd doDisableToFault(BVector extOrds, Context cx)
+  BOrd doDisableToOffnormal(BVector extOrds, Context cx)
+  BOrd doEnableToFault(BVector extOrds, Context cx)
+  BOrd doEnableToOffnormal(BVector extOrds, Context cx)
+  void doEscalateAlarms()
+  void doRouteAlarm(BAlarmRecord alarm)
+  void doRouteToRecipient(BAlarmRecord alarm)
+  void doRouteToSource(BAlarmRecord alarm)
+  void doRouteToSource(BAlarmRecord alarm, BObject source)
+  protected void enabled()
+  BOrd enableToFault(BVector parameter)
+  BOrd enableToOffnormal(BVector parameter)
+  void escalateAlarms()
+  void fireAlarm(BAlarmRecord event)
+  java.lang.Object fw(int x, java.lang.Object a, java.lang.Object b, java.lang.Object c, java.lang.Object d)
+  AgentList getAgents(Context cx)
+  java.util.Optional<BAlarmArchive> getAlarmArchive()
+  BString getAlarmClassDisplayName(java.lang.Object alarmClass, Context cx)
+  java.util.Map<java.lang.String,java.lang.String> getAlarmClassDisplayNameMap(Context cx)
+  BAlarmClass[] getAlarmClasses()
+  BAlarmDatabase getAlarmDb()
+  BAlarmDbConfig getAlarmDbConfig()
+  boolean getCoalesceAlarms()
+  BAlarmClass getDefaultAlarmClass()
+  BTimeTrigger getEscalationTimeTrigger()
+  BIcon getIcon()
+  Feature getLicenseFeature()
+  BAlarmInstructions getMasterAlarmInstructions()
+  static BAlarmService getService()
+  Type[] getServiceTypes()
+  Type getType()
+  void initDataRecoverySource(BIDataRecoveryService service)
+  protected BAlarmClass lookupAlarmClass(BComponent folder, java.lang.String alarmClassName)
+  BAlarmClass lookupAlarmClass(java.lang.String alarmClassName)
+  IFuture post(Action action, BValue argument, Context cx)
+  void removed(Property prop, BValue oldValue, Context cx)
+  void routeAlarm(BAlarmRecord parameter)
+  void serviceStarted()
+  void serviceStopped()
+  void setAlarmDbConfig(BAlarmDbConfig v)
+  void setCoalesceAlarms(boolean v)
+  void setDefaultAlarmClass(BAlarmClass v)
+  void setEscalationTimeTrigger(BTimeTrigger v)
+  void setMasterAlarmInstructions(BAlarmInstructions v)
+  void spy(SpyWriter out)
+

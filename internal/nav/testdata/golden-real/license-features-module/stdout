@@ -1,0 +1,7 @@
+
+  MODULE bacnet-rt requires features: bacnet, bacnetSc, mstp
+
+    mstp                   bacnet/bacnet-rt/vineflower/com/tridium/bacnet/stack/link/mstp/BBacnetMstpLinkLayer.java:207  getFeature(tridium, mstp)
+    bacnetSc               bacnet/bacnet-rt/vineflower/com/tridium/bacnet/stack/link/sc/BAbstractConnectionManager.java:332  getFeature(tridium, bacnetSc)
+    bacnet                 bacnet/bacnet-rt/vineflower/javax/baja/bacnet/BBacnetNetwork.java:340  getFeature(tridium, bacnet)
+

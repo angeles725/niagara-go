@@ -96,3 +96,52 @@ questions, docs pinned to 4.14.0.162) and the warm p50/p95 latency. A hit count 
 `qualityFloor` fails; a higher one is logged so the floor can be raised. Without
 `NSEARCH_QUALITY_ROOT` the test skips. `TestQualityFixtureMatchesResearch` fails when the copied
 question set drifts from the niagara-research one (skipped when that file is absent).
+
+## Real-corpus goldens: mnav and nh keep sets
+
+`internal/nav/testdata/golden-real/` and `internal/help/testdata/golden-real/` hold the
+keep-set cases (decision D32) of the two hashed Python golden suites, module-navigator and
+niagara-help `tests/golden_cli.py`, as real bytes: 66 mnav cases (44 command cases, 21
+`help-<command>`, `help`) and 61 nh cases (42 command cases, 17 `<command>--help`, `help`,
+`no-command`). Retired-command ids are dropped. `help` (and nh `no-command`) keep Python's
+output and declare the Go one in `intended.json` (reason D32: only kept commands are listed).
+
+The case layout is the one above, but the stored bytes are the harness's normalized output,
+whose SHA-256 is the `cli.json` hash: mnav replaces the scratch base, run directory, `organized/`
+corpus and checkout paths with `<BASE>`, `<RUN>`, `<CORPUS>`, `<NAV>`, elapsed times, dates
+and index sizes with `<T>`, `<DATE>`, `(<MB>)`, and drops corpus staleness warnings; nh
+replaces the scratch directory and checkout with `<TMP>` and `<REPO>` and elapsed times with
+`<T>`. `{tmp}` in `args` is the mnav `--base-dir` scratch directory, or the nh scratch
+directory. `TestGoldenReal` in each package runs the cases the way the harness does (same cwd,
+`COLUMNS=100`; for mnav a fresh `--base-dir` linking `indexes/`) and normalizes the Go output
+with the same rules (`internal/pyre`, so Python's regex classes) before comparing. `GOLDEN_BIN`
+runs a binary instead of `Main`.
+
+The tests need the real checkouts and are skipped (with the reason) when the variable is unset,
+so `make ci` skips them; set, a missing checkout or corpus fails:
+
+```sh
+MODULE_NAVIGATOR_DIR=~/niagara-research/module-navigator go test ./internal/nav -run TestGoldenReal
+NIAGARA_HELP_DIR=~/niagara-research/niagara-help go test ./internal/help -run TestGoldenReal
+```
+
+mnav also needs the `organized/` corpus (`$NAV_CORPUS_BASE`, else next to the checkout) and
+uses `niagara-help/` next to the checkout when it exists. nh must be the main checkout
+(untracked files there change several counts, see the harness docstring).
+
+To re-capture (after a reindex re-captured `cli.json`), run the generator next to the cases. It
+runs each kept case through the harness's own `run_case`/`run_isolated`, with
+`NIAGARA_HELP_PYTHON=1` so `tools/niagara_help.py` runs Python and never its Go shim, refuses
+to write anything when a hash differs from `cli.json`, and takes the Go binary for the
+`intended.json` output:
+
+```sh
+make build
+python3 -I internal/nav/testdata/golden-real/capture.py bin/mnav
+python3 -I internal/help/testdata/golden-real/capture.py bin/nh
+```
+
+These cases replace both Python harnesses for the kept commands: once Phase 5 removes the
+frozen Python tools, module-navigator and niagara-help `tests/golden_cli.py` (and their
+`tests/golden/cli.json`) can be deleted (D39 (b)); the generators then run only from a
+`pre-go-retire` worktree.

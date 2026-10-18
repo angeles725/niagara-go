@@ -1,0 +1,14 @@
+usage: module-nav drivers [-h] [--json] [module]
+
+One row per driver network (a BDeviceNetwork subclass in an -rt module): family, device, license
+feature, doc module. With a module: the full anatomy of its networks (devices, point-device-ext,
+proxy-ext, managers, discovery jobs, license features, doc module).
+
+positional arguments:
+  module      Submodule (modbusTcp-rt) or module directory (modbusTcp)
+
+options:
+  -h, --help  show this help message and exit
+  --json      JSON output
+
+examples: drivers | drivers modbusTcp-rt | drivers niagaraDriver --json

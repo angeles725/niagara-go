@@ -1,0 +1,177 @@
+{
+  "corpus": {
+    "submodules": 956,
+    "unique_modules": 685,
+    "with_code": 566,
+    "without_code": 390,
+    "java_files": 53485,
+    "class_files": 68116,
+    "zkm_obfuscated": 81,
+    "types": {
+      "rt": 516,
+      "wb": 204,
+      "ux": 106,
+      "standalone": 22,
+      "se": 5,
+      "doc": 103
+    }
+  },
+  "class_index": {
+    "total_entries": 67720,
+    "unique_names": 49155,
+    "top_level": 0,
+    "inner_classes": 14394,
+    "interfaces": 6906,
+    "enums": 647,
+    "abstract_classes": 0,
+    "packages": 4442
+  },
+  "swing_index": {
+    "classes_with_ui": 812,
+    "dialogs": 188,
+    "dimensions": 138,
+    "colors": 192,
+    "fonts": 5,
+    "icons": 1511
+  },
+  "inheritance_index": {
+    "unique_parents": 6717,
+    "unique_interfaces": 5520,
+    "classes_with_chains": 30069,
+    "max_chain_depth": 22,
+    "avg_chain_depth": 3.8,
+    "with_extends": 36714,
+    "with_implements": 14217
+  },
+  "xref_index": {
+    "classes_with_imports": 35870,
+    "classes_imported_by_others": 24210,
+    "total_import_statements": 517145,
+    "resolved_imports": 399591,
+    "wildcard_imports": 1731,
+    "modules_with_deps": 562,
+    "modules_depended_on": 339,
+    "total_class_import_edges": 434731,
+    "total_module_dep_edges": 16653
+  },
+  "method_index": {
+    "total_definitions": 726965,
+    "unique_names": 168678,
+    "constructors": 61785,
+    "classes_with_methods": 47503,
+    "avg_methods_per_class": 10.9,
+    "max_methods_per_class": 4299,
+    "max_methods_class": "f"
+  },
+  "annotations_index": {
+    "niagara_types": 11051,
+    "with_properties": 4453,
+    "with_actions": 1538,
+    "with_topics": 173,
+    "total_properties": 20170,
+    "total_actions": 3247,
+    "total_topics": 193,
+    "unique_property_types": 1694,
+    "unique_action_names": 1632
+  },
+  "callgraph_index": {
+    "caller_methods": 293273,
+    "unique_callees": 227956,
+    "total_edges": 686390,
+    "avg_callees_per_caller": 2.3
+  },
+  "field_index": {
+    "total_definitions": 309416,
+    "unique_names": 140435,
+    "static_fields": 156811,
+    "final_fields": 173853,
+    "constants": 147203,
+    "with_init": 230675,
+    "classes_with_fields": 35043,
+    "avg_fields_per_class": 8.0,
+    "max_fields_per_class": 4087,
+    "max_fields_class": "UaObjectIds"
+  },
+  "exceptions_index": {
+    "throws_declarations": 76765,
+    "catch_blocks": 45014,
+    "unique_thrown_types": 596,
+    "unique_caught_types": 644,
+    "classes_with_throws": 16757,
+    "classes_with_catches": 11852
+  },
+  "token_index": {
+    "total_postings": 15528521,
+    "unique_tokens": 563131,
+    "files_with_tokens": 53324,
+    "total_lines": 8410016
+  },
+  "string_index": {
+    "total_strings": 652399,
+    "unique_strings": 202515,
+    "files_with_strings": 35032
+  },
+  "indexes": [
+    {
+      "name": "annotations-index.json",
+      "size_bytes": 3465429,
+      "size_mb": 3.3
+    },
+    {
+      "name": "callgraph-index.json",
+      "size_bytes": 31017702,
+      "size_mb": 29.6
+    },
+    {
+      "name": "class-index.json",
+      "size_bytes": 34144665,
+      "size_mb": 32.6
+    },
+    {
+      "name": "exceptions-index.json",
+      "size_bytes": 18475111,
+      "size_mb": 17.6
+    },
+    {
+      "name": "field-index.json",
+      "size_bytes": 53348162,
+      "size_mb": 50.9
+    },
+    {
+      "name": "inheritance.json",
+      "size_bytes": 3740771,
+      "size_mb": 3.6
+    },
+    {
+      "name": "method-index.json",
+      "size_bytes": 149377526,
+      "size_mb": 142.5
+    },
+    {
+      "name": "module-inventory.json",
+      "size_bytes": 365375,
+      "size_mb": 0.3
+    },
+    {
+      "name": "swing-index.json",
+      "size_bytes": 427459,
+      "size_mb": 0.4
+    },
+    {
+      "name": "xref-index.json",
+      "size_bytes": 19290739,
+      "size_mb": 18.4
+    },
+    {
+      "name": "token-index.db",
+      "size_bytes": 1006706688,
+      "size_mb": 960.1
+    },
+    {
+      "name": "string-index.db",
+      "size_bytes": 57745408,
+      "size_mb": 55.1
+    }
+  ],
+  "total_index_size_mb": 1314.3
+}

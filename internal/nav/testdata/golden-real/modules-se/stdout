@@ -1,0 +1,12 @@
+
+  Modules (type=se): 5 results
+  NAME                                     TYPE    JAVA   CLASS  ZKM   BC
+  ----------------------------------------------------------------------
+  alarm-se                                   se       4       6       v52
+  niagaraTest-se                             se       0       0       v?
+  obix-se                                    se      37     101       v52
+  orientSystemDb-se                          se       7      16  YES  v52
+  test-se                                    se       0       0       v?
+
+  Total: 5 modules, 48 java files, 123 classes
+

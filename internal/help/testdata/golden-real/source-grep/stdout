@@ -1,0 +1,45 @@
+58 matches for 'getSession\(\)' in 30 classes:
+
+  BAbstractFile (baja, javax.baja.file):
+    L558: out.prop("session",        getSession());
+
+  BAlarmArchive (alarm-rt, javax.baja.alarm):
+    L83: public BISession getSession()
+    L87: if (p instanceof BSpace) return ((BSpace)p).getSession();
+
+  BAlarmService (alarm-rt, javax.baja.alarm):
+    L1458: remoteVersion  = (Version)((BFoxSession)getSession()).fw(Fw.GET_REMOTE_VERSION, "alarm", null, null, null);
+
+  BBogSpace (file-rt, com.tridium.file.types.bog):
+    L259: public BISession getSession()
+    L265: return bogFile.getSession();
+
+  BCertificateAliasFE (workbench-wb, com.tridium.workbench.fieldeditors):
+    L163: BFoxSession session = (BFoxSession)service.getSession();
+
+  BComplex (baja, javax.baja.sys):
+    L1171: out.prop("session",        c.getSession());
+
+  BComponent (baja, javax.baja.sys):
+    L124: BISession session = getSession();
+
+  BDefaultClientEnvironment (web-rt, javax.baja.web):
+    L101: WebSessionUtil.getSession(op.getRequest().getSession()).setAttribute("hxProfileConfig", config);
+
+  BFormat (baja, javax.baja.util):
+    L998: Context sessionCx = comp.getSession().getSessionContext();
+
+  BHierarchyScheme (hierarchy-rt, javax.baja.hierarchy):
+    L112: BHierarchyService.log.fine(() -> "resolve: base=" + base + " query=" + query + " space=" + space.getSession().getNavOrd());
+
+  BHxProfile (hx-wb, javax.baja.hx):
+    L806: op.getRequest().getSession().setAttribute("hx.error", error);
+    L807: op.getRequest().getSession().setAttribute("hx.error.name", err.getClass().getName().substring(err.getClass().getName().lastInde...
+    L808: op.getRequest().getSession().setAttribute("hx.error.details", details);
+    L816: op.getRequest().getSession().removeAttribute("hx.error");
+    L817: op.getRequest().getSession().removeAttribute("hx.error.name");
+    L818: op.getRequest().getSession().removeAttribute("hx.error.details");
+    L828: String error = (String) op.getRequest().getSession().getAttribute("hx.error");
+    L829: String details = (String) op.getRequest().getSession().getAttribute("hx.error.details");
+
+  ... and 38 more matches

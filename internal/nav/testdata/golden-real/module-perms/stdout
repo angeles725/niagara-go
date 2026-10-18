@@ -1,0 +1,40 @@
+
+  Module:      alarm-rt
+  module.xml:  <CORPUS>/alarm/alarm-rt/extracted/META-INF/module.xml
+
+  DECLARED PERMISSIONS
+    type=workbench  (8 entries)
+      java.lang.RuntimePermission                   loadLibrary.alarmDialog   
+      java.lang.RuntimePermission                   loadLibrary.trayIcon      
+      java.lang.RuntimePermission                   getenv.*                  
+      java.lang.RuntimePermission                   exitVM.*                  
+      java.lang.RuntimePermission                   accessClassInPackage.sun. 
+      com.tridium.nre.security.NiagaraSocketPermiss *:1-100000                connect,resolve
+      java.awt.AWTPermission                        accessClipboard           
+      java.awt.AWTPermission                        showWindowWithoutWarningB 
+    type=station  (18 entries)
+      java.io.FilePermission                        ${protected.station.home} read
+      java.io.FilePermission                        ${protected.station.home} read, write, delete
+      java.io.FilePermission                        ${protected.station.home} read, write, delete
+      java.io.FilePermission                        ${niagara.alternative.dat read
+      java.io.FilePermission                        ${niagara.alternative.dat read, write, delete
+      java.io.FilePermission                        ${niagara.alternative.dat read, write, delete
+      java.io.FilePermission                        ${niagara.alternative.arc read
+      java.io.FilePermission                        ${niagara.alternative.arc read, write, delete
+      java.io.FilePermission                        ${niagara.alternative.arc read, write, delete
+      java.io.FilePermission                        ${niagara.alternative.arc read, write, delete
+      java.io.FilePermission                        ${niagara.alternative.arc read, write, delete
+      java.io.FilePermission                        ${niagara.user.home}${/}l read,write
+      java.io.FilePermission                        ${niagara.user.home}${/}l read,write
+      com.tridium.nre.security.NiagaraSocketPermiss *:1-100000                accept,connect,listen,resolve
+      java.lang.RuntimePermission                   setIO                     
+      java.lang.RuntimePermission                   modifyThread              
+      java.lang.RuntimePermission                   modifyThreadGroup         
+      java.lang.RuntimePermission                   shutdownHooks             
+    type=all  (3 entries)
+      java.util.PropertyPermission                  *                         read
+      java.util.logging.LoggingPermission           control                   
+      com.tridium.nre.security.NiagaraBasicPermissi GET_MANAGER               
+
+  Total java-permission entries: 29
+

@@ -1,0 +1,107 @@
+{
+  "class": "BAlarmClass",
+  "package": "javax.baja.alarm",
+  "module": "alarm-rt",
+  "properties": [
+    {
+      "name": "ackRequired",
+      "type": "BAlarmTransitionBits",
+      "defaultValue": "BAlarmTransitionBits.make(BAlarmTransitionBits.TO_OFFNORMAL | BAlarmTransitionBits.TO_FAULT | BAlarmTransitionBits.TO_NORMAL)"
+    },
+    {
+      "name": "priority",
+      "type": "BAlarmPriorities",
+      "defaultValue": "BAlarmPriorities.DEFAULT"
+    },
+    {
+      "name": "totalAlarmCount",
+      "type": "int",
+      "defaultValue": "0",
+      "flags": "Flags.READONLY | Flags.DEFAULT_ON_CLONE | Flags.TRANSIENT"
+    },
+    {
+      "name": "openAlarmCount",
+      "type": "int",
+      "defaultValue": "0",
+      "flags": "Flags.READONLY | Flags.DEFAULT_ON_CLONE | Flags.TRANSIENT"
+    },
+    {
+      "name": "inAlarmCount",
+      "type": "int",
+      "defaultValue": "0",
+      "flags": "Flags.READONLY | Flags.DEFAULT_ON_CLONE | Flags.TRANSIENT"
+    },
+    {
+      "name": "unackedAlarmCount",
+      "type": "int",
+      "defaultValue": "0",
+      "flags": "Flags.READONLY | Flags.DEFAULT_ON_CLONE | Flags.TRANSIENT"
+    },
+    {
+      "name": "timeOfLastAlarm",
+      "type": "BAbsTime",
+      "defaultValue": "BAbsTime.DEFAULT",
+      "flags": "Flags.READONLY | Flags.DEFAULT_ON_CLONE"
+    },
+    {
+      "name": "escalationLevel1Enabled",
+      "type": "boolean",
+      "defaultValue": "false"
+    },
+    {
+      "name": "escalationLevel1Delay",
+      "type": "BRelTime",
+      "defaultValue": "BRelTime.make(5*60*1000)",
+      "facets": "@Facet(\"BFacets.make(BFacets.SHOW_SECONDS, BBoolean.FALSE, BFacets.MIN, BRelTime.make(60*1000))\")"
+    },
+    {
+      "name": "escalationLevel2Enabled",
+      "type": "boolean",
+      "defaultValue": "false"
+    },
+    {
+      "name": "escalationLevel2Delay",
+      "type": "BRelTime",
+      "defaultValue": "BRelTime.make(15*60*1000)",
+      "facets": "@Facet(\"BFacets.make(BFacets.SHOW_SECONDS, BBoolean.FALSE, BFacets.MIN, BRelTime.make(2*60*1000))\")"
+    },
+    {
+      "name": "escalationLevel3Enabled",
+      "type": "boolean",
+      "defaultValue": "false"
+    },
+    {
+      "name": "escalationLevel3Delay",
+      "type": "BRelTime",
+      "defaultValue": "BRelTime.make(30*60*1000)",
+      "facets": "@Facet(\"BFacets.make(BFacets.SHOW_SECONDS, BBoolean.FALSE, BFacets.MIN, BRelTime.make(3*60*1000))\")"
+    }
+  ],
+  "actions": [
+    {
+      "name": "routeAlarm",
+      "parameterType": "BAlarmRecord",
+      "defaultValue": "new BAlarmRecord()",
+      "flags": "Flags.HIDDEN | Flags.ASYNC"
+    }
+  ],
+  "topics": [
+    {
+      "name": "alarm",
+      "eventType": "BAlarmRecord",
+      "flags": "Flags.SUMMARY"
+    },
+    {
+      "name": "escalatedAlarm1",
+      "eventType": "BAlarmRecord"
+    },
+    {
+      "name": "escalatedAlarm2",
+      "eventType": "BAlarmRecord"
+    },
+    {
+      "name": "escalatedAlarm3",
+      "eventType": "BAlarmRecord"
+    }
+  ]
+}

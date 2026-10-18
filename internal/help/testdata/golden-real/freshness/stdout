@@ -1,0 +1,11 @@
+Niagara version: 4.14.0.162  (<REPO>)
+CORPUS FRESHNESS
+============================================================
+  OK             bajadoc      now: 3,594 files, 138,172,923 bytes
+  OK             source       now: 2,610 files, 28,581,984 bytes
+  OK             guides       now: 19,673 files, 471,896,565 bytes
+  OK             devguide     now: 7,328 files, 97,186,713 bytes
+  OK             docs         now: (absent)
+
+Baseline stamped: 2026-10-17T06:38:46.543346+00:00
+RESULT: FRESH — corpus matches the recorded baseline.

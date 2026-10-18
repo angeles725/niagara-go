@@ -1,0 +1,10 @@
+usage: module-nav source [-h] [--code] [--grep SRC_GREP] [--batch SRC_BATCH] [name]
+
+positional arguments:
+  name               Class name (e.g. BLinkPad). Omit when using --batch.
+
+options:
+  -h, --help         show this help message and exit
+  --code             Show full source code with line numbers
+  --grep SRC_GREP    Search regex within the class source
+  --batch SRC_BATCH  CSV of class names to read in sequence (e.g. BLinkPad,BAlarmService)

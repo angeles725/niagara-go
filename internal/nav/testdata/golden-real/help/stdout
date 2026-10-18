@@ -1,0 +1,170 @@
+usage: module-nav [-h] [--base-dir DIR] <command> [<args>]
+
+Module Navigator - CLI for Niagara N4 decompiled modules
+
+options:
+  -h, --help            show this help message and exit
+  --base-dir, -d BASE_DIR
+                        Base directory (auto-detected if omitted)
+
+commands (module-nav <command> --help for its options):
+
+  Inventory and self-checks:
+    selftest                Self-checks; --recall verifies `class` finds every declaration in organized/
+    inventory               Summary of all indexed modules
+    module                  Detailed info for a specific submodule
+    modules                 List modules with filters
+    stats                   Corpus summary (modules, classes, indexes)
+
+  Find classes and concepts:
+    class                   Look up a class by exact name
+    search                  Search classes by glob pattern
+    package                 List classes in a package
+    profile                 Combined class + source + UI view
+    full-profile            Combined view from BOTH navigators
+    cross-ref               Docs + implementation + who uses it
+    find                    Fuzzy search in class names (camelCase-aware); see also: rank
+    ask                     Same as `rank` (ranked classes for a question); see also: grep
+    explain                 Cross-reference a concept across devguide/guides/bajadoc + code; see also: rank, grep
+    unified                 Search Help + Module + BOG simultaneously; see also: rank, grep
+    compare                 Docs vs implementation vs station usage
+
+  Source text, strings and resources:
+    grep                    Regex search across all decompiled sources
+    rank                    Classes most relevant to a free-text question (EN/ES), best first
+    source                  Show info or source code for a class
+    snippet                 Extract a specific method's source code
+    imports                 Raw import statements from the .java header (includes externals)
+    strings                 Search string literals across source; see also: grep
+    resources               List non-Java resources in module JAR
+    token                   Exact token search (instant via SQLite index)
+    resources-usage         How resources of a module are used
+    string-search           Regex search in indexed string literals (instant via SQLite); see also: grep
+    string-constants        All string literals in a class (categorized)
+
+  Types: hierarchy, members, imports:
+    hierarchy               Show subclass tree or inheritance chain
+    implementors            Show classes implementing an interface
+    xref                    Show cross-references (imports/importers) for a class
+    deps                    Show module-level dependencies
+    method                  Show classes that define a given method
+    methods                 List all methods of a class
+    slots                   Show Niagara slots (properties, actions, topics)
+    annotations             List classes with a specific Niagara annotation
+    deps-graph              Module dependency graph
+    trace-type              Map Niagara type to Java class
+    version-diff            Compare with another class-index.json
+    fields                  List all fields of a class
+    field                   Show classes that define a given field
+
+  Call and data flow:
+    callers                 Who calls this method (or, without one, every method of the class)
+    callees                 What methods this class/method calls
+    call-chain              Transitive call chain (tree)
+    hotspots                Most-called methods (hub analysis)
+    type-consumers          Methods that receive this type as parameter
+    type-producers          Methods that return this type
+    type-flow               Producer -> consumer chain for a type
+    module-calls            Methods of target module called from source module
+    module-api-usage        Top external methods used by a module
+    coupling                Coupling metrics between two modules
+    impact                  Transitive impact analysis for a class or method
+    virtual-callers         Aggregate callers via virtual dispatch (inheritance chain)
+    full-stack-trace        Call chain with semantic annotations (input, BQL, data-source, serialize, output)
+
+  UI and Swing:
+    ui                      UI/Swing pattern search (dialogs, sizes, colors, fonts)
+
+  Patching:
+    patch-target            Find patchable classes by natural language query
+    patch-plan              Generate a complete patch plan for a class
+    extract                 Extract class to working directory for editing
+    export                  Export class report or module diagram
+
+  Code quality:
+    orphans                 Find classes never imported (dead code)
+    api-surface             Public API surface of a module
+    security-audit          Scan for insecure patterns
+    deprecated              List @Deprecated classes and methods
+    deprecated-users        Who uses a deprecated class or method
+    deprecated-risk         Deprecated usage risk summary
+    similar                 Find classes with similar structure
+    clones                  Top duplicate class pairs
+    config-usage            Classes that read configuration
+    config-keys             Top config keys referenced in code
+    serial                  Serialization info for a class
+    serial-audit            Audit Serializable classes: missing UIDs, risks
+    serial-conflicts        Classes with same serialVersionUID (collision)
+    thread-safety           Thread safety analysis for a class
+    thread-scan             Module-wide thread safety summary
+    lifecycle               Lifecycle methods implemented by a class
+    lifecycle-scan          Classes with lifecycle overrides
+
+  Architecture and dependencies:
+    patterns                Detect architectural patterns in a module
+    pattern                 List all classes matching a pattern category
+    throws                  Methods with throws declarations in a class
+    catches                 Classes that catch this exception type
+    cycles                  Cyclic module dependencies (DFS/Tarjan)
+    god-classes             Classes with excessive methods/fields/deps
+    layer-check             Layer violations: RT must not import WB/UX
+    complexity              Complexity metrics for a class
+    complexity-scan         Ranking of most complex classes
+    metrics                 Module-level complexity summary
+
+  Niagara domain: drivers, servlets, ORDs, topics, BQL, alarms, BOG:
+    drivers                 Driver networks and their anatomy (device, extensions, managers, license)
+    bog-trace               Trace BOG component to Java class with profile
+    bog-classes             List unique Niagara types in BOG + Java resolution
+    bog-coverage            Code-base vs BOG coverage analysis
+    servlets                List all web servlets with their routes and HTTP handlers
+    routes                  Map HTTP verbs to servlet classes and handler methods
+    servlet                 Detailed info for a specific servlet class
+    ords                    List all ORDs (Object Resolution Descriptors) grouped by scheme
+    ord-usage               Classes that use a specific ORD scheme
+    ord-flow                ORDs created/resolved by a specific class
+    topics                  List all @NiagaraTopic declarations with publishers/subscribers
+    subscribers             Who subscribes to or fires a specific topic or class
+    pub-sub                 Publish->subscribe graph for a module
+    bql                     List BQL/SQL queries found in the corpus
+    bql-tables              Tables/sources most queried by BQL and SQL
+    bql-class               BQL/SQL queries used by a specific class
+    alarm-flow              Classes in the alarm chain by role
+    alarm-types             Alarm types defined in the corpus
+    alarm-trace             Role of a class in the alarm flow
+
+  Security, licensing and permissions:
+    license-feature         Call sites that check or read a licensed feature (checkFeature/getFeature)
+    license-features        Licensed feature names with counts; --module: features a module requires
+    permissions             List classes with permission checks and auth methods
+    license-inspect         Parse installed .license files and aggregate features
+    policy-inspect          Parse bin/policy/{signing.properties,java.policy,java.security}
+    trust-anchor-check      Verify a JAR's signer cert against the trust anchor
+    bypass-status           Report skipModuleValidation & security-manager-disable bypass state
+    permission-report       Aggregate declared java-permissions into the 19 devguide groups
+    feasibility-check       Simulate whether a module+cert would deploy against the trust anchor
+    permission-flow         Permission verification chain for a class
+    credentials             Detect credential handling (password, token, secret)
+
+  Module audits:
+    integration-contract    Extract integration contract from real corpus usages
+    example-mine            Mine real usage examples (full method bodies) of a class
+    feature-brief           One-command research brief for a Niagara feature domain
+    slot-validate           Pre-flight validation for @NiagaraProperty slots
+    slot-collision          Detect slot name collisions across modules
+    ord-validate            Validate ORDs referencing non-existent station tree paths
+    resolve-audit           Audit .resolve() calls for null-safety
+    driver-cleanup-audit    Audit driver doStop() cleanup
+    resource-leak           Audit resource acquisitions for missing close()
+    service-order           Analyze service startup order issues
+    dependency-audit        Audit third-party and external dependencies
+    module-health           Overall module health scorecard (A/B/C/D/F)
+    palette-lexicon-agents  Palette entries, lexicon keys (+ dup-key report), and agent registrations for a module
+
+  Session: bookmarks, history, REPL:
+    repl                    Interactive REPL with all commands
+    bookmark                Save a class bookmark with optional note
+    bookmarks               List all bookmarks
+    unbookmark              Remove a bookmark
+    history                 Show command history
+    session                 Session save/load/export management

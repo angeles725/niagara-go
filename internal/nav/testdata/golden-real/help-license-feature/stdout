@@ -1,0 +1,10 @@
+usage: module-nav license-feature [-h] [-n N] [--module LF_MODULE] name
+
+positional arguments:
+  name                  Feature name (e.g. historyImport)
+
+options:
+  -h, --help            show this help message and exit
+  -n N                  Max results to show (default 100)
+  --module, -m LF_MODULE
+                        Only call sites in this submodule or module (e.g. bacnet-rt, bacnet)

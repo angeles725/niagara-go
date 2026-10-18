@@ -1,0 +1,5 @@
+usage: niagara_help freshness [-h] [--all]
+
+options:
+  -h, --help  show this help message and exit
+  --all       One line per registered Niagara version (index + install drift)

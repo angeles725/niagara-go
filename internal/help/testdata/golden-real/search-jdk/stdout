@@ -1,0 +1,10 @@
+8 classes matching 'Hash*':
+
+  HashAttributeSet (class) - javax.print.attribute
+  HashDocAttributeSet (class) - javax.print.attribute
+  HashMap (class) - java.util
+  HashPrintJobAttributeSet (class) - javax.print.attribute
+  HashPrintRequestAttributeSet (class) - javax.print.attribute
+  HashPrintServiceAttributeSet (class) - javax.print.attribute
+  HashSet (class) - java.util
+  Hashtable (class) - java.util

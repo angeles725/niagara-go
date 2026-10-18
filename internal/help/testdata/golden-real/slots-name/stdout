@@ -1,0 +1,78 @@
+48 slots matching 'faultCause':
+
+  [propertie] BAbstractCategory.faultCause: String
+    flags: Flags.READONLY | Flags.TRANSIENT
+  [propertie] BAbstractDescriptor.faultCause: String
+    flags: Flags.READONLY | Flags.TRANSIENT
+  [propertie] BAbstractExprComponent.faultCause: java.lang.String
+  [propertie] BAbstractService.faultCause: String
+    flags: Flags.READONLY | Flags.TRANSIENT
+  [propertie] BApp.faultCause: String
+    flags: Flags.READONLY | Flags.TRANSIENT
+  [propertie] BArchiveAlarmProvider.faultCause: String
+    flags: Flags.READONLY | Flags.TRANSIENT
+  [propertie] BArchiveHistoryProvider.faultCause: String
+    default: BString.DEFAULT
+    flags: Flags.DEFAULT_ON_CLONE | Flags.READONLY | Flags.TRANSIENT
+  [propertie] BBacnetCalendarDescriptor.faultCause: String
+    flags: Flags.READONLY | Flags.TRANSIENT
+  [propertie] BBacnetEventSource.faultCause: String
+    flags: Flags.READONLY | Flags.TRANSIENT
+  [propertie] BBacnetExportFolder.faultCause: java.lang.String
+  [propertie] BBacnetFileDescriptor.faultCause: String
+    flags: Flags.READONLY | Flags.TRANSIENT
+  [propertie] BBacnetNotificationClassDescriptor.faultCause: String
+    flags: Flags.READONLY | Flags.TRANSIENT
+  [propertie] BBacnetObject.faultCause: String
+    flags: Flags.TRANSIENT | Flags.READONLY
+  [propertie] BBacnetPollOrder.faultCause: java.lang.String
+  [propertie] BBacnetScheduleDescriptor.faultCause: String
+    flags: Flags.READONLY | Flags.TRANSIENT
+  [propertie] BBacnetUnsignedPropertyExt.faultCause: java.lang.String
+  [propertie] BBaseQuery.faultCause: java.lang.String
+  [propertie] BClientEnvironment.faultCause: String
+    flags: Flags.TRANSIENT | Flags.READONLY
+  [propertie] BCode.faultCause: java.lang.String
+  [propertie] BCommConfig.faultCause: String
+    flags: Flags.TRANSIENT | Flags.READONLY | Flags.DEFAULT_ON_CLONE
+  [propertie] BCompositeSchedule.faultCause: String
+    flags: Flags.TRANSIENT | Flags.READONLY | Flags.DEFAULT_ON_CLONE
+  [propertie] BConsoleRecipient.faultCause: java.lang.String
+  [propertie] BDdfUdpMulticastHelper.faultCause: BFormat
+  [propertie] BDevice.faultCause: String
+    flags: Flags.TRANSIENT | Flags.READONLY | Flags.DEFAULT_ON_CLONE
+  [propertie] BDeviceNetwork.faultCause: String
+    flags: Flags.TRANSIENT | Flags.READONLY | Flags.DEFAULT_ON_CLONE
+  [propertie] BFlexSendMessage.faultCause: String
+    flags: Flags.TRANSIENT | Flags.READONLY
+  [propertie] BGraphNode.faultCause: java.lang.String
+  [propertie] BHierarchy.faultCause: String
+    flags: Flags.TRANSIENT | Flags.READONLY | Flags.DEFAULT_ON_CLONE
+  [propertie] BHistoryExt.faultCause: String
+    flags: Flags.READONLY | Flags.TRANSIENT
+  [propertie] BJsonSchema.faultCause: java.lang.String
+  [propertie] BLinearCalibrationExt.faultCause: String
+    flags: Flags.READONLY | Flags.TRANSIENT
+  [propertie] BLinearCalibrationExt (ndio-rt).faultCause: java.lang.String
+  [propertie] BLocalBacnetDevice.faultCause: String
+    flags: Flags.READONLY | Flags.TRANSIENT
+  [propertie] BLonObject.faultCause: String
+    flags: Flags.TRANSIENT | Flags.READONLY | Flags.DEFAULT_ON_CLONE
+  [propertie] BLonRouter.faultCause: java.lang.String
+  [propertie] BModbusClientExceptionStatus.faultCause: java.lang.String
+  [propertie] BNetworkPort.faultCause: java.lang.String
+  [propertie] BNiagaraSysDefDeviceExt.faultCause: java.lang.String
+  [propertie] BNiagaraUserDeviceExt.faultCause: java.lang.String
+  [propertie] BObixAlarmImport.faultCause: java.lang.String
+  [propertie] BOrionAlarmService.faultCause: String
+    flags: Flags.READONLY | Flags.TRANSIENT
+  [propertie] BProxyExt.faultCause: String
+    flags: Flags.READONLY | Flags.TRANSIENT
+  [propertie] BPseudoNvContainer.faultCause: java.lang.String
+  [propertie] BRdbmsPointQuery.faultCause: String
+    flags: Flags.READONLY | Flags.TRANSIENT
+  [propertie] BRetrieveActionParam.faultCause: BFormat
+  [propertie] BSnmpExportObject.faultCause: java.lang.String
+  [propertie] BSysDefProvider.faultCause: java.lang.String
+  [propertie] BTagDictionary.faultCause: String
+    flags: Flags.READONLY | Flags.TRANSIENT | Flags.DEFAULT_ON_CLONE

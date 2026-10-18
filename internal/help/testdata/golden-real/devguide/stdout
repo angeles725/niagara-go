@@ -1,0 +1,42 @@
+16 devguide entries matching 'component model':
+
+  [Framework] Component Model
+    An introduction to the Niagara component model
+    file: devguide/componentModel.html
+
+  [Framework] Remote Programming
+    Describes how the component model is programmed across the network
+    file: devguide/remoteProgramming.html
+
+  [Framework] Entity Model
+    An introduction to the Niagara entity model
+    file: devguide/entityModel.html
+
+  [Framework] Virtual Components
+    An overview of using transient, on-demand (virtual) components
+    file: devguide/virtualComponents.html
+
+  [Web Server] Web Servlet Components
+    create a component that's also a Servlet
+    file: devguide/servlets/webServlets.html
+
+  [Series Transforms] Creating a Graph Component
+    Creating new graph components for inclusion in the transform graph
+    file: devguide/seriesTransforms/graphComponents.html
+
+  [Framework] Object Model
+    An introduction to the Niagara type system
+    file: devguide/objectModel.html
+
+  [Framework] Building Complexes
+    Details for building complex struct and component Types
+    file: devguide/buildingComplexes.html
+
+  [Framework] Files
+    Discusses how files are mapped into the Niagara object model
+    file: devguide/files.html
+
+  [Framework] XML
+    An overview of Niagara XML document model and parser APIs
+    file: devguide/xml.html
+

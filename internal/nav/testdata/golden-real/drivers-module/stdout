@@ -1,0 +1,26 @@
+
+  DRIVER BModbusTcpGateway  (modbusTcp-rt, com.tridium.modbusTcp)
+  ======================================================================
+  family             BasicDriver (extends BModbusTcpNetwork)
+  devices            BModbusTcpGatewayDevice  [from getDeviceType()]
+  point-device-ext   BModbusClientPointDeviceExt, BModbusServerPointDeviceExt  [from modbusCore-rt]
+  proxy-ext          BModbusClientBooleanProxyExt, BModbusClientEnumBitsProxyExt, BModbusClientNumericBitsProxyExt, BModbusClientNumericProxyExt, BModbusClientProxyExt, BModbusClientRegisterBitProxyExt, BModbusClientStringProxyExt, BModbusProxyExt, BModbusServerBooleanProxyExt, BModbusServerNumericProxyExt, BModbusServerProxyExt, BModbusServerRegisterBitProxyExt  [from modbusCore-rt]
+  managers           BModbusTcpDeviceManager, BModbusTcpDeviceUxManager, BModbusTcpGatewayDeviceManager, BModbusTcpGatewayDeviceUxManager
+  discovery jobs     -
+  license            tridium:modbusTcp
+  doc module         docModbus-doc  [help.guide.base=module://docModbus/doc]
+  source             modbusTcp/modbusTcp-rt/vineflower/com/tridium/modbusTcp/BModbusTcpGateway.java
+
+
+  DRIVER BModbusTcpNetwork  (modbusTcp-rt, com.tridium.modbusTcp)
+  ======================================================================
+  family             BasicDriver (extends BModbusClientNetwork)
+  devices            BModbusTcpDevice  [from getDeviceType()]
+  point-device-ext   BModbusClientPointDeviceExt, BModbusServerPointDeviceExt  [from modbusCore-rt]
+  proxy-ext          BModbusClientBooleanProxyExt, BModbusClientEnumBitsProxyExt, BModbusClientNumericBitsProxyExt, BModbusClientNumericProxyExt, BModbusClientProxyExt, BModbusClientRegisterBitProxyExt, BModbusClientStringProxyExt, BModbusProxyExt, BModbusServerBooleanProxyExt, BModbusServerNumericProxyExt, BModbusServerProxyExt, BModbusServerRegisterBitProxyExt  [from modbusCore-rt]
+  managers           BModbusTcpDeviceManager, BModbusTcpDeviceUxManager, BModbusTcpGatewayDeviceManager, BModbusTcpGatewayDeviceUxManager
+  discovery jobs     -
+  license            tridium:modbusTcp
+  doc module         docModbus-doc  [help.guide.base=module://docModbus/doc]
+  source             modbusTcp/modbusTcp-rt/vineflower/com/tridium/modbusTcp/BModbusTcpNetwork.java
+

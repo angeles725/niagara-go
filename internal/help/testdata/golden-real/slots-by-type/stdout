@@ -1,0 +1,157 @@
+464 slots of type 'BStatusNumeric' across 155 classes:
+
+  BAbsolute (cl.hvac) — absValueOut, absValueIn
+  BAddition (cl.hvac) — sumOut, sumValueAIn, sumValueBIn
+  BAdh2 (cl.hvac) — adh2SlopeOut, adh2SetpointIn, adh2RoomTempIn, adh2OutsideAirTempIn, adh2SupplyWaterTempIn
+  BAnyChangeFlipFlop (cl.hvac) — acffLastValueOut, acffValueIn, acffHystIn
+  BArcCosinus (cl.hvac) — acosOut, acosIn
+  BArcSinus (cl.hvac) — asinOut, asinIn
+  BArcTangens (cl.hvac) — atanOut, atanIn
+  BAverage (cl.hvac) — avrOut, avrValueAIn, avrValueBIn, avrValueCIn, avrValueDIn
+  BBacnetClientCov (javax.baja.bacnet.datatypes) — increment
+  BBinaryMath (com.tridium.kitControl.math) — inA, inB
+  BBitAnd (cl.hvac) — bitAndOut, bitAndValueAIn, bitAndValueBIn
+  BBitNot (cl.hvac) — bitNotOut, bitNotIn
+  BBitOr (cl.hvac) — bitOrOut, bitOrValueAIn, bitOrValueBIn
+  BBitSet (cl.hvac) — bitSetOut, bitSetInBits, bitSetInBitIndex
+  BBitSum (cl.hvac) — bitSumOut, bitSumIn
+  BBitTest (cl.hvac) — bitTestInBits, bitTestInBitIndex
+  BBitXOr (cl.hvac) — bitXOrOut, bitXOrValueAIn, bitXOrValueBIn
+  BCasPlus (cl.hvac) — casOut, casX1In, casX2In, casWIn
+  BCeil (cl.hvac) — ceilOut, ceilIn
+  BCompare1 (cl.hvac) — cmp1ValueAIn, cmp1ValueBIn
+  BCompare2 (cl.hvac) — cmp2ValueAIn, cmp2ValueBIn
+  BComparison (com.tridium.kitControl.logic) — inA, inB
+  BCosinus (cl.hvac) — cosOut, cosIn
+  BCounter (com.tridium.kitControl.util) — out, presetValue
+  BCounter (clHVAC-rt) (cl.hvac) — countOut
+  BCurrentConditions (javax.baja.weather) — temp, humidity, windSpeed, windGust, windChill, pressure, dewPoint, heatIndex, visibility, ozone, particulateMatter
+  BDecaInputNumeric (com.tridium.kitControl.util) — min, max, avg, inA, inB, inC, inD, inE, inF, inG, inH, inI, inJ
+  BDecimalPlaces (cl.hvac) — dpOut, dpIn
+  BDegreeDays (com.tridium.kitControl.energy) — tempIn, minTemp, maxTemp, meanTemp, clgDegDays, clgDegDaysTotal, htgDegDays, htgDegDaysTotal
+  BDewpoint (cl.hvac) — dewpOut, dewpAbsHumidityIn, dewpAirPressureIn
+  BDifferential (cl.hvac) — diffOut, diffXIn
+  BDigitalInputDemux (com.tridium.kitControl.util) — in
+  BDiscreteTotalizerExt (javax.baja.control.ext) — elapsedActiveTimeNumeric
+  BDivide (cl.hvac) — divOut, divValueAIn, divValueBIn
+  BDoubleToStatusNumeric (com.tridium.kitControl.conversion) — out
+  BDutyCycle (cl.hvac) — dutyCycleTempZoneHighIn, dutyCycleTempZoneLowIn, dutyCycleFanStatusIn, dutyCycleSetpointIn
+  BEconomy (cl.hvac) — ecoOut, ecoTemperatureIn, ecoHumidityIn, ecoOutdoorEnthalpyIn, ecoReturnEnthalpyIn
+  BElectricalDemandLimit (com.tridium.kitControl.energy) — powerInput, shedOut
+  BEnthalpy (cl.hvac) — enthalpyOut, enthalpyAbsHumidityOut, enthalpyOutAirTempIn, enthalpyRelHumidityIn, enthalpyAirPressureIn
+  BEoh (cl.hvac) — eohSupplyWaterTempOut, eohOperatingModeOut, eohRoomControlModeOut, eohRoomTempSetpointIn, eohRoomTempIn, eohSetpointOverrideIn, eohOutsideAirTempIn, eohEnableOptimizationIn, eohControlPointAdjustIn
+  BEoh2 (cl.hvac) — eoh2SupplyWaterSetPointOut, eoh2OperationModeOut, eoh2RoomTemperatureSetpointIn, eoh2RoomTemperatureIn, eoh2OutdoorTemperatureIn
+  BEov (cl.hvac) — eovSetpointIn, eovRoomTempIn, eovOatIn
+  BEqual (cl.hvac) — equalValueIn, equalCompareAIn, equalCompareBIn
+  BExponential (cl.hvac) — expOut, expIn
+  BFactorial (cl.hvac) — factorialOut, factorialIn
+  BFloatToStatusNumeric (com.tridium.kitControl.conversion) — out
+  BFloatingLimitAlgorithm (javax.baja.alarm.ext.offnormal) — setpoint
+  BFloor (cl.hvac) — floorOut, floorIn
+  BForecast (javax.baja.weather) — high, low, precipChance, ozone, particulateMatter, humidity, windSpeed
+  BHcWithAdaption (cl.hvac) — hcaOut, hcaSetpointIn, hcaRoomTempIn, hcaOutsideAirTempIn, hcaSupplyWaterTempIn
+  BHeatingCurve (cl.hvac) — heatingCurveOut, heatingCurveRoomSetPointIn, heatingCurveOutdoorTemperatureIn
+  BHysteresis (cl.hvac) — hysValueIn, hysTriggerIn
+  BIdt (cl.hvac) — idtValueOut, idtValueIn
+  BInformation (cl.hvac) — out
+  BInputSwitch (cl.hvac) — imuxOut, imuxSwitch, imuxValueAIn, imuxValueBIn
+  BIntToStatusNumeric (com.tridium.kitControl.conversion) — out
+  BIntegral (cl.hvac) — intOut, intXIn
+  BKnx3ByteDemux (com.tridium.eibnetIp.point) — inNumeric, byte0, byte1, byte2
+  BKnxBoilerModeDemux (com.tridium.eibnetIp.point) — inNumeric, mode
+  BKnxStatusWithModeDemux (com.tridium.eibnetIp.point) — inNumeric, mode
+  BLastValue (cl.hvac) — lvOut, lvIn
+  BLastValue2 (cl.hvac) — lvOutCurrent, lvOutLast, lvIn
+  BLimit (cl.hvac) — limitOut, limitIn
+  BLinear (cl.hvac) — linOut, linValueAIn, linFactorA, linValueBIn, linFactorB, linValueCIn, linFactorC
+  BLinearConverter (cl.hvac) — linConvOut, linConvValueIn, linConvValueMaxIn, linConvValueMinIn, linConvResultMaxIn, linConvResultMinIn
+  BLn (cl.hvac) — lnOut, lnIn
+  BLonFloatProxyExt (javax.baja.lonworks.proxy) — readValue, writeValue
+  BLongToStatusNumeric (com.tridium.kitControl.conversion) — out
+  BLoopPoint (com.tridium.kitControl) — controlledVariable, setpoint
+  BMat (cl.hvac) — matOut
+  BMaximum (cl.hvac) — maxOut, maxValueAIn, maxValueBIn
+  BMerge (cl.hvac) — mergeOut
+  BMinMaxAvg (com.tridium.kitControl.util) — min, max, avg
+  BMinimum (cl.hvac) — minOut, minValueAIn, minValueBIn
+  BModbusClientExceptionStatus (com.tridium.modbusCore.client.datatypes) — out
+  BModulo (cl.hvac) — modOut, modValueAIn, modValueBIn
+  BMultiply (cl.hvac) — mulOut, mulValueAIn, mulValueBIn
+  BNOfM (cl.hvac) — nofmNoOfOn, nofmNoOfOff, nofmValueAIn, nofmValueBIn
+  BNegate (cl.hvac) — negOut, negIn
+  BNextSchedule (cl.hvac) — nxsNextValueOut, nxsTimeUntilChangeOut, nxsScheduleIn
+  BNightPurge (com.tridium.kitControl.energy) — outsideTemp, outsideHumidity, insideTemp, insideHumidity, lowTemperatureLimit, nightSetpoint, outsideEnthalpy, insideEnthalpy
+  BNightPurge (clHVAC-rt) (cl.hvac) — nipuConditionOut, nipuRoomTempIn, nipuOutsideAirTempIn, nipuRoomSpShiftIn, nipuRoomSetpointIn
+  BNumericConst (com.tridium.kitControl.constants) — out
+  BNumericDelay (com.tridium.kitControl.timer) — in, out
+  BNumericLatch (com.tridium.kitControl.util) — out, in
+  BNumericMask (com.tridium.kitControl.util) — out, in, mask
+  BNumericPoint (javax.baja.control) — out
+  BNumericSchedule (javax.baja.schedule) — out, in, nextValue
+  BNumericScheduleSelector (javax.baja.schedule) — in, out, nextValue
+  BNumericSelect (com.tridium.kitControl.util) — out, inA, inB, inC, inD, inE, inF, inG, inH, inI, inJ
+  BNumericSwitch (com.tridium.kitControl.util) — inTrue, inFalse
+  BNumericToBitsDemux (com.tridium.kitControl.util) — inNumeric, byte0, byte1, byte2, byte3
+  BNumericTotalizerExt (javax.baja.control.ext) — total
+  BNumericUnitConverter (com.tridium.kitControl.conversion) — in, out
+  BNumericWritable (javax.baja.control) — in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11, in12, in13, in14, in15, in16, fallback
+  BOptimizedStartStop (com.tridium.kitControl.energy) — outsideTemp, spaceTemp, outsideTempAtBeginning, spaceTempAtBeginning
+  BOutputSwitch (cl.hvac) — omuxValueAOut, omuxValueBOut, omuxSwitchIn, omuxValueIn
+  BOutsideAirOptimization (com.tridium.kitControl.energy) — outsideTemp, outsideHumidity, insideTemp, insideHumidity, lowTemperatureLimit, outsideEnthalpy, insideEnthalpy
+  BParity (cl.hvac) — parityValueAIn, parityValueBIn
+  BPid (cl.hvac) — pidOut, pidXIn, pidWIn
+  BPidPlus (cl.hvac) — pidOut, pidXIn, pidWIn
+  BPolynomial (cl.hvac) — polOut, polIn, polFactorAIn, polFactorBIn
+  BPower (cl.hvac) — powOut, powXIn, powYIn
+  BPsychrometric (com.tridium.kitControl.energy) — inTemp, inHumidity, outDewPoint, outEnthalpy, outSatPress, outVaporPress, outWetBulbTemp
+  BQuadMath (com.tridium.kitControl.math) — inA, inB, inC, inD
+  BRaiseLower (com.tridium.kitControl.hvac) — out, in, lastValidIn
+  BRamp (clHVAC-rt) (cl.hvac) — rampOut, rampIn
+  BRandom (clHVAC-rt) (cl.hvac) — randomOut, randomLowerLimit, randomUpperlimit
+  BRdGlobalRegister (cl.hvac) — rgrOutput, rgrInputRegister, rgrInputResetValue
+  BReadPriority (cl.hvac) — rdprioPriorityOut, rdprioValueIn
+  BReadTimer (cl.hvac) — ticksOut, timerOut, timerIn
+  BReset (com.tridium.kitControl.util) — inA, inputLowLimit, inputHighLimit, outputLowLimit, outputHighLimit
+  BResetTimer (cl.hvac) — timerOut
+  BRound (cl.hvac) — roundOut, roundIn
+  BSMAExpirationMonitor (com.tridiumx.jsonToolkit.outbound.schema.support) — remaining
+  BScheduledCopy (cl.hvac) — scOut, scIn
+  BSequence (com.tridium.kitControl.hvac) — in
+  BSequence (clHVAC-rt) (cl.hvac) — seqAOut, seqBOut, seqCOut, seqIn
+  BSetOutput (cl.hvac) — setValueAIn, setValueBIn
+  BSetpointLoadShed (com.tridium.kitControl.energy) — setpointIn, htgOffset, clgOffset, setpointOut
+  BSetpointOffset (com.tridium.kitControl.energy) — setpointIn, htgOffset, clgOffset, shedLevel, setpointOut
+  BShedControl (com.tridium.kitControl.energy) — primaryShedLevel, secondaryShedLevel
+  BSinus (cl.hvac) — sinOut, sinIn
+  BSlidingWindowDemandCalc (com.tridium.kitControl.energy) — currentPulseCount, demand5, demand15, demand30, kwh, kwhHourly, kwhLastHour, kwhDaily, kwhLastDay
+  BSplit (cl.hvac) — splitValueIn
+  BSquare (cl.hvac) — sqrOut, sqrIn
+  BSquareRoot (cl.hvac) — sqrtOut, sqrtIn
+  BStatusDemux (com.tridium.kitControl.util) — inNumeric
+  BStatusEnumToStatusNumeric (com.tridium.kitControl.conversion) — out
+  BStatusNumericToDouble (com.tridium.kitControl.conversion) — in
+  BStatusNumericToFloat (com.tridium.kitControl.conversion) — in
+  BStatusNumericToInt (com.tridium.kitControl.conversion) — in
+  BStatusNumericToStatusEnum (com.tridium.kitControl.conversion) — in
+  BStatusNumericToStatusString (com.tridium.kitControl.conversion) — in
+  BStatusStringToStatusNumeric (com.tridium.kitControl.conversion) — out
+  BStressTest (cl.hvac) — totalRun
+  BStringLen (com.tridium.kitControl.util) — out
+  BSubtract (cl.hvac) — subOut, subValueAIn, subValueBIn
+  BSwitchingLogic (cl.hvac) — swlOut, swlInFalse, swlInTrue
+  BSwitchingLogicRowNumeric (cl.hvac.bajabase) — value, comparison, hysteresis
+  BSystemData (cl.hvac) — systemDataOut
+  BTangens (cl.hvac) — tanOut, tanIn
+  BTimeCounter (cl.hvac) — tcHoursOut, tcMinutesOut
+  BTimeDifference (com.tridium.kitControl.timer) — out
+  BTimer (cl.hvac) — timerOut
+  BTruncate (cl.hvac) — truncOut, truncIn
+  BTstat (com.tridium.kitControl.hvac) — cv, sp, diff
+  BTuncos (cl.hvac) — tuncosOut, tuncosSetpt
+  BUnaryMath (com.tridium.kitControl.math) — inA
+  BValueRamp (cl.hvac) — vrampOut, vrampValueIn
+  BWindow (clHVAC-rt) (cl.hvac) — winValueIn, winMaxIn, winMinIn
+  BWrGlobalRegister (cl.hvac) — wgrInputValue, wgrInputRegister, wgrInputMode
+  BWritePriority (cl.hvac) — wrprioTargetIn, wrprioValueIn, wrprioPriorityIn
+  BXRootY (cl.hvac) — xrootyOut, xrootyValueXIn, xrootyValueYIn
+  BZeroEnergyBand (cl.hvac) — zebSpHtgOut, zebSpClgOut, zebSpMixOut, zebTempZoneHiIn, zebTempZoneLoIn, zebTempZoneAvrIn, zebMoistureIn, zebSetpointIn

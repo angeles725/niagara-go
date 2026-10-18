@@ -1,0 +1,11 @@
+  0 matches for callers of 'BAlarmService.ackAlarm' in 686,390 call edges from 293,273 caller methods (static, this/super, new and Class.method calls; calls on instance variables are not resolved), index built <DATE>.
+  Try: grep '\.ackAlarm\('
+
+  Other classes with callers for 'ackAlarm':
+    Alarms.ackAlarm (2 callers)
+    BAlarmRecord.ackAlarm (1 callers)
+    BCloudAlarmAcknowledger.ackAlarm (1 callers)
+    BEmailAlarmAcknowledger.ackAlarm (1 callers)
+    BHxAlarmConsole.ackAlarm (2 callers)
+    BSmsAlarmAcknowledger.ackAlarm (1 callers)
+

@@ -1,0 +1,12 @@
+usage: module-nav grep [-h] [-n N] [--module GREP_MODULE] [--type GREP_TYPE] pattern
+
+positional arguments:
+  pattern               Regex pattern (e.g. 'setPreferredSize')
+
+options:
+  -h, --help            show this help message and exit
+  -n N                  Max results to show (default 30)
+  --module, -m GREP_MODULE
+                        Filter to a specific module (e.g. workbench-wb)
+  --type, -t GREP_TYPE  Filter by submodule type: rt, wb, ux, doc, se, standalone
+                        (<module>/<module>) or other (unknown suffix)

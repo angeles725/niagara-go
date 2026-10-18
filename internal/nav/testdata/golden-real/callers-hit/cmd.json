@@ -1,0 +1,1 @@
+{"args": ["--base-dir", "{tmp}", "callers", "BAlarmRecord", "ackAlarm", "-n", "10"]}

@@ -1,0 +1,9 @@
+usage: module-nav resources [-h] [--type RES_TYPE] [-n N] name
+
+positional arguments:
+  name             Module name (e.g. workbench-wb)
+
+options:
+  -h, --help       show this help message and exit
+  --type RES_TYPE  Filter by file extension (e.g. xml, properties)
+  -n N             Max results (default 100)

@@ -1,0 +1,15 @@
+26 guides files matching 'bbmd wiretap' (any term, ranked by how many terms match):
+
+  [EngNotes] Setting up a wiretap
+    L7: Wiretaps evaluate (sniff) messages after they have been processed by a network port. You add wiretaps as children of the NetworkPorts container in the same way ...
+    path: guides-clean/EngNotes/BACnetSettingUpAWiretap.txt
+
+  [EngNotes] Processing a forwarded wiretap
+    L7: The ForwardingWiretap component sends each captured message to a specified IP address. The intent is to provide a way to forward MS/TP packets from a controller...
+    path: guides-clean/EngNotes/BACnetProcessingAForwardedWiretap.txt
+
+  [EngNotes] ForwardingWiretap
+    L9: Figure 87. ForwardingWiretap properties
+    path: guides-clean/EngNotes/bacnetUtil-ForwardingWiretap.txt
+
+  ... and 23 more files

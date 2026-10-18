@@ -1,0 +1,8 @@
+usage: module-nav palette-lexicon-agents [-h] [--json] module
+
+positional arguments:
+  module      Module name in organized/ (e.g. alarm)
+
+options:
+  -h, --help  show this help message and exit
+  --json      Structured JSON output

@@ -1,0 +1,16 @@
+
+  UNRESOLVED licensing calls: 26
+    baja/baja/vineflower/com/tridium/sys/station/Station.java:216  checkFeature("tridium", getStationLicenseFeature(NreLib.getHostId()))
+    clCBus/clCBus-ux/vineflower/com/honeywell/cbus/ux/BClTimeProgramView.java:50  checkFeature(z[2], z[3])
+    clCBus/clCBus-ux/vineflower/com/honeywell/cbus/ux/BClTimeProgramView.java:52  checkFeature(z[1], z[4])
+    cloudLink/cloudLink-rt/vineflower/com/tridium/cloudLink/channel/BBackupChannel.java:79  getFeature(vendorName, featureName)
+    cloudLink/cloudLink-rt/vineflower/com/tridium/cloudLink/transport/BNiagaraRemoteTransport.java:175  getFeature(vendorName, featureName)
+
+  getLicenseManager() sites without a feature: 65 of 384
+    baja/baja/vineflower/com/tridium/sys/Nre.java:1356  declaration of getLicenseManager()
+    baja/baja/vineflower/com/tridium/sys/license/subscription/SubscriptionLicenseManager.java:491  assigned to 'licenseManager', never used for a feature call
+    baja/baja/vineflower/com/tridium/sys/metrics/Metrics.java:299  getFeatures(): every licensed feature, none named
+    baja/baja/vineflower/com/tridium/sys/module/NModule.java:129  other use: getLicenseManager())).checkModuleReleaseDate(this); }
+    baja/baja/vineflower/com/tridium/sys/station/Station.java:216  feature argument not resolvable: getStationLicenseFeature(NreLib.getHostId())
+    ... limit reached (5) — use -n to increase
+

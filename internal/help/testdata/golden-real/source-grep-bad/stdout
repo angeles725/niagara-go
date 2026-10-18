@@ -1,0 +1,5 @@
+SOURCE: BComponent
+MODULE: baja
+PACKAGE: javax.baja.sys
+LINES: 2388
+PATH: source/baja/javax/baja/sys/BComponent.java

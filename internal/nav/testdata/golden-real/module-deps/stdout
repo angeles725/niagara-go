@@ -1,0 +1,18 @@
+
+  Module:      alarm-rt
+  module.xml:  <CORPUS>/alarm/alarm-rt/extracted/META-INF/module.xml
+
+  DEPENDENCIES (10)
+  NAME                           VENDOR       VERSION
+  ----------------------------------------------------------------
+  baja                           Tridium      4.14.0
+  bql-rt                         Tridium      4.14.0
+  control-rt                     Tridium      4.14.0
+  entityIo-rt                    Tridium      4.14.0
+  file-rt                        Tridium      4.14.0
+  fox-rt                         Tridium      4.14.0
+  net-rt                         Tridium      4.14.0
+  platform-rt                    Tridium      4.14.0
+  query-rt                       Tridium      4.14.0
+  web-rt                         Tridium      4.14.0
+

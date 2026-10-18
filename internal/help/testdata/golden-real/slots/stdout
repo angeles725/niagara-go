@@ -1,0 +1,28 @@
+SLOTS: BAlarmClass (javax.baja.alarm, alarm-rt)
+
+PROPERTIES (13):
+
+  ackRequired: BAlarmTransitionBits = BAlarmTransitionBits.make(BAlarmTransitionBits.TO_OFFNORM...
+  priority: BAlarmPriorities = BAlarmPriorities.DEFAULT
+  totalAlarmCount: int = 0 [Flags.READONLY | Flags.DEFAULT_ON_CLONE | Flags.TRANSIENT]
+  openAlarmCount: int = 0 [Flags.READONLY | Flags.DEFAULT_ON_CLONE | Flags.TRANSIENT]
+  inAlarmCount: int = 0 [Flags.READONLY | Flags.DEFAULT_ON_CLONE | Flags.TRANSIENT]
+  unackedAlarmCount: int = 0 [Flags.READONLY | Flags.DEFAULT_ON_CLONE | Flags.TRANSIENT]
+  timeOfLastAlarm: BAbsTime = BAbsTime.DEFAULT [Flags.READONLY | Flags.DEFAULT_ON_CLONE]
+  escalationLevel1Enabled: boolean = false
+  escalationLevel1Delay: BRelTime = BRelTime.make(5*60*1000)
+  escalationLevel2Enabled: boolean = false
+  escalationLevel2Delay: BRelTime = BRelTime.make(15*60*1000)
+  escalationLevel3Enabled: boolean = false
+  escalationLevel3Delay: BRelTime = BRelTime.make(30*60*1000)
+
+ACTIONS (1):
+
+  routeAlarm (BAlarmRecord)
+
+TOPICS (4):
+
+  alarm -> BAlarmRecord
+  escalatedAlarm1 -> BAlarmRecord
+  escalatedAlarm2 -> BAlarmRecord
+  escalatedAlarm3 -> BAlarmRecord

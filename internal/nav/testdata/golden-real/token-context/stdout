@@ -1,0 +1,17 @@
+
+  TOKEN: 'ackAlarm' (379 occurrences in 110 classes, 47 modules)
+
+  --- BAaPhpNativeEventsProcessor (aaphp-rt) ---
+         26: @NiagaraAction(
+   >>    27:    name = "ackAlarm",
+         28:    parameterType = "BAlarmRecord",
+
+         33: public class BAaPhpNativeEventsProcessor extends BAlarmSourceInfo implements BIAlarmSource {
+   >>    34:    public static final Action ackAlarm = newAction(5, new BAlarmRecord(), null);
+         35:    public static final Type TYPE = Sys.loadType(BAaPhpNativeEventsProcessor.class);
+
+         40: 
+   >>    41:    public BBoolean ackAlarm(BAlarmRecord parameter) {
+         42:       return (BBoolean)this.invoke(ackAlarm, parameter, null);
+  ... and 376 more (use -n 379 to see all)
+
