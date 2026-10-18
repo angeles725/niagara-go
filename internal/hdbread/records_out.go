@@ -71,19 +71,25 @@ func recordFields(r Record) []string {
 	return r.Audit.fields()
 }
 
-func printVarCSV(w io.Writer, h *History) {
+// printVarCSV prints the CSV header and one row per record; it stops at the first failed write.
+func printVarCSV(w io.Writer, h *History) error {
 	cols := auditColumns
 	if h.RecordType == "history:LogRecord" {
 		cols = logColumns
 	}
-	fmt.Fprintln(w, "timestamp,millis,"+strings.Join(cols, ","))
+	if _, err := fmt.Fprintln(w, "timestamp,millis,"+strings.Join(cols, ",")); err != nil {
+		return err
+	}
 	for _, r := range h.Records {
 		fields := append([]string{r.Timestamp, strconv.FormatInt(r.Millis, 10)}, recordFields(r)...)
 		for i := range fields {
 			fields[i] = csvField(fields[i])
 		}
-		fmt.Fprintln(w, strings.Join(fields, ","))
+		if _, err := fmt.Fprintln(w, strings.Join(fields, ",")); err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
 // jsonRecord fixes the JSON key order: timestamp, millis, then the record's own fields (their
@@ -138,8 +144,8 @@ func printVarRecords(o Options, h *History, s cli.Stdio) int {
 		if err := printVarJSON(s.Out, h); err != nil {
 			return honest.Fail(s.Err, "hdbread", "--records --json: "+err.Error(), cli.ExitNoMatch)
 		}
-	} else {
-		printVarCSV(s.Out, h)
+	} else if err := printVarCSV(s.Out, h); err != nil {
+		return honest.Fail(s.Err, "hdbread", "--records: "+err.Error(), cli.ExitNoMatch)
 	}
 	fmt.Fprintf(s.Err, "# %s\n# %s\n", o.Path, varSummary(h))
 	if len(h.Records) == 0 {
