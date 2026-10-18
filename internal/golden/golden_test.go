@@ -239,6 +239,8 @@ func TestRequiresGOOSIsValidatedOnLoad(t *testing.T) {
 			switch {
 			case tt.wantErr == "" && err != nil:
 				t.Fatalf("Load: %v", err)
+			case tt.wantErr == "" && len(cases) != 1:
+				t.Fatalf("Load returned %d cases, want 1", len(cases))
 			case tt.wantErr == "" && !slices.Equal(cases[0].Requires.GOOS, []string{"linux", "windows"}):
 				t.Fatalf("goos = %v", cases[0].Requires.GOOS)
 			case tt.wantErr != "" && (err == nil || !strings.Contains(err.Error(), tt.wantErr)):
