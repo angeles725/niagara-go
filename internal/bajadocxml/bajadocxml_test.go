@@ -140,3 +140,75 @@ func TestFormatCleanInfo(t *testing.T) {
 		})
 	}
 }
+
+// ET.fromstring decodes the encodings expat knows (UTF-8, ISO-8859-1,
+// US-ASCII, names case-insensitive); a byte above 0x7F in a US-ASCII
+// document is not well-formed. Python's codecs also decode other
+// single-byte names such as "latin1"; here they stay unparseable (see
+// docs/helpbuild.md). The expected results are CPython 3.15's.
+func TestParseEncodings(t *testing.T) {
+	doc := func(enc, name string) []byte {
+		return []byte(`<?xml version="1.0" encoding="` + enc + `"?><bajadoc><class qualifiedName="a.X" name="` +
+			name + `" packageName="a" module="m"/></bajadoc>`)
+	}
+	for _, c := range []struct {
+		enc, name, want string
+		ok              bool
+	}{
+		{"ISO-8859-1", "BCaf\xe9", "BCafé", true},
+		{"iso-8859-1", "B\xff", "Bÿ", true},
+		{"us-ascii", "BCafe", "BCafe", true},
+		{"US-ASCII", "BCaf\xe9", "", false},
+		{"UTF-8", "BCafé", "BCafé", true},
+		{"latin1", "BCaf\xe9", "", false},
+	} {
+		classes, ok := Parse(doc(c.enc, c.name))
+		got := ""
+		if len(classes) == 1 {
+			got = classes[0].Name
+		}
+		if ok != c.ok || got != c.want {
+			t.Errorf("%s %q: %q, %v; want %q, %v", c.enc, c.name, got, ok, c.want, c.ok)
+		}
+	}
+}
+
+// _sanitize keeps references to XML characters and replaces the others
+// (NUL, other C0 controls, surrogates, U+FFFE/U+FFFF, beyond U+10FFFF,
+// values beyond any integer type) with "?"; only a lowercase x starts a
+// hexadecimal reference, as in the bytes pattern.
+func TestSanitizeXML(t *testing.T) {
+	for _, c := range []struct{ in, want string }{
+		{"&#x0;&#0;&#x9;&#10;&#13;&#x1F;", "??&#x9;&#10;&#13;?"},
+		{"&#x41;&#00000065;&#x0000041;", "&#x41;&#00000065;&#x0000041;"},
+		{"&#xD800;&#xDFFF;&#xD7FF;&#xE000;", "??&#xD7FF;&#xE000;"},
+		{"&#xFFFE;&#xFFFF;&#xFFFD;&#x10000;&#x10FFFF;&#x110000;", "??&#xFFFD;&#x10000;&#x10FFFF;?"},
+		{"&#99999999999999999999;&#xFFFFFFFFFFFFFFFFFF;", "??"},
+		{"&#X0;&#x;&#;&amp;&#x0", "&#X0;&#x;&#;&amp;&#x0"},
+	} {
+		if got := string(sanitizeXML([]byte(c.in))); got != c.want {
+			t.Errorf("%q: %q, want %q", c.in, got, c.want)
+		}
+	}
+}
+
+// parse_class's module ("<module>-<runtimeProfile>" when the profile is not
+// empty) and _kind (enum, then annotation, then interface; only "true").
+func TestClassModuleAndKind(t *testing.T) {
+	for _, c := range []struct{ attrs, module, kind string }{
+		{``, "", "class"},
+		{`module="m" runtimeProfile="ux"`, "m-ux", "class"},
+		{`module="m" runtimeProfile=""`, "m", "class"},
+		{`runtimeProfile="rt"`, "-rt", "class"},
+		{`interface="true" annotation="true" enum="true"`, "", "enum"},
+		{`interface="true" category="annotation"`, "", "annotation_type"},
+		{`interface="true" category="enum"`, "", "enum"},
+		{`interface="TRUE"`, "", "class"},
+		{`interface="true"`, "", "interface"},
+	} {
+		classes, ok := Parse([]byte(`<bajadoc><class qualifiedName="a.X" ` + c.attrs + `/></bajadoc>`))
+		if !ok || len(classes) != 1 || classes[0].Module != c.module || classes[0].Kind != c.kind {
+			t.Errorf("%s: %+v %v; want module %q, kind %q", c.attrs, classes, ok, c.module, c.kind)
+		}
+	}
+}

@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bajadoc>
+  <class qualifiedName="javax.baja.util.Cursor" name="Cursor" packageName="javax.baja.util" module="baja" interface="true"></class>
+</bajadoc>

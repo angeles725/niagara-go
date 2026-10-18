@@ -7,7 +7,13 @@
 // entry reading like ZipFile.open (zipread.go), the jar-entry mapping
 // (docjars.go), extract / fill-missing / fidelity (extract.go) and the raw
 // steps of version_setup.extract_and_index with the version manifest
-// (versionsetup.go, manifest.go).
+// (versionsetup.go, manifest.go). Then the builders: PDF text and the
+// developer course (S3, S4: pdftext.go, pdfindex.go, course.go), the
+// guides/devguide text and their indexes (S5, S6: htmltext.go,
+// guidesparser.go, guidesindex.go, devguidetoc.go), bajadoc-clean/ from the
+// javadoc pages and the .bajadoc XML (S7a, S7b: bajadocrun.go,
+// bajadocxmlrun.go, with internal/bajadocxml) and the class, inheritance
+// and method indexes (S8: classindex.go, inheritance.go, methodindex.go).
 //
 // It is a non-printing library: every function returns typed values or
 // errors and writes nothing to stdout or stderr. Behaviour matches the

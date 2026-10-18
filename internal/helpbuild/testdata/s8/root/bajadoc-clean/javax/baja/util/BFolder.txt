@@ -1,0 +1,6 @@
+CLASS: BFolder
+PACKAGE: javax.baja.util
+EXTENDS: BComponent
+
+CONSTRUCTORS:
+  BFolder()

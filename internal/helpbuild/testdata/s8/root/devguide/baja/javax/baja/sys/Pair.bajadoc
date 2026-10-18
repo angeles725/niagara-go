@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bajadoc>
+  <class qualifiedName="javax.baja.sys.BPairA" name="BPairA" packageName="javax.baja.sys" module="baja" category="enum"></class>
+  <class qualifiedName="" name="BNoQualified" packageName="javax.baja.sys"></class>
+  <other><class qualifiedName="x.Nested" name="Nested" packageName="x"/></other>
+  <class qualifiedName="javax.baja.sys.Ann" name="Ann" packageName="javax.baja.sys" annotation="true"></class>
+  <class qualifiedName="javax.baja.sys.Cat" name="Cat" packageName="javax.baja.sys" category="annotation" interface="true"></class>
+  <class qualifiedName="javax.baja.sys.En" name="En" packageName="javax.baja.sys" enum="true" interface="true"></class>
+</bajadoc>

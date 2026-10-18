@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bajadoc>
+  <class qualifiedName="javax.baja.sys.BComponent" name="BComponent" packageName="javax.baja.sys" module="baja" runtimeProfile="rt"><extends><type class="javax.baja.sys.BComplex"/></extends></class>
+</bajadoc>

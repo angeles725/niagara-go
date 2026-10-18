@@ -1,0 +1,3 @@
+CLASS: Twice
+PACKAGE: com.twice
+EXTENDS: First

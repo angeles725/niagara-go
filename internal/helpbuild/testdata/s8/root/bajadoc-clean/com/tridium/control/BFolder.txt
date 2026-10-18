@@ -1,0 +1,6 @@
+CLASS: BFolder
+PACKAGE: com.tridium.control
+EXTENDS: BComponent
+
+METHODS:
+  void added(Property p)

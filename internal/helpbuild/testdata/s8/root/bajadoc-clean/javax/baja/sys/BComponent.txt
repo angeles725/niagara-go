@@ -1,0 +1,35 @@
+CLASS: BComponent
+PACKAGE: javax.baja.sys
+SINCE: Baja 1.0
+EXTENDS: BComplex
+IMPLEMENTS: BISpaceNode,  BIProtected , ,BIEntity
+SUBCLASSES: BAbstractService, BFolder, BIQuirk
+
+DESCRIPTION:
+BComponent is the base.
+  indented description line(x)
+
+FIELDS:
+  static Type TYPE
+  static final Property servletName - the name - really
+  　
+  int wide
+
+CONSTRUCTORS:
+  BComponent()
+  BComponent (int x)
+  new BComponent()
+
+METHODS:
+  Property add(java.lang.String name, BValue value)
+  void added(Property p)
+  static <T extends BObject> T  make (Class<T> c)
+  java.util.List<java.lang.String> names()
+  void noParen
+  (weird)
+  void ünïcode_näme(int x)
+  void sp ace (int x)
+  int x.y(int z)
+  void a(b(c)
+NOT INDENTED
+  void afterSection()
