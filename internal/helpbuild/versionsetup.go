@@ -17,10 +17,10 @@ import (
 // sha256 fidelity check and (4) the tracked manifest
 // versions/<id>.manifest.json. Step (2), rebuild-all, is the Rebuild hook
 // (RebuildToLog runs RebuildAll with its stdout in build.log); the CLI
-// wiring of extract_version.py (--force, --verify-only, --fill-missing) is
-// S10. Like
-// the rest of the package nothing is printed: the lines Python passes to
-// out() are returned in SetupResult.Log, in order.
+// of extract_version.py (--force, --verify-only, --fill-missing,
+// --no-index) is nh `versions extract`. Like the rest of the package
+// nothing is printed: the lines Python passes to out() are returned in
+// SetupResult.Log, in order.
 
 // RawDirs are the data-root folders extraction writes; DerivedDirs the
 // ones the builders write. A re-extraction (Force) removes both.
