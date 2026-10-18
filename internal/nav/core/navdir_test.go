@@ -77,6 +77,7 @@ func TestLocateNavDirOverride(t *testing.T) {
 		{"unset: the search", "", "", nav, ""},
 		{"MODULE_NAVIGATOR_DIR set and valid", other, "", other, ""},
 		{"NAV_DIR alias set and valid", "", other, other, ""},
+		{"a relative value is made absolute", "..", "", nav, ""},
 		{"MODULE_NAVIGATOR_DIR wins over NAV_DIR", other, filepath.Join(other, "missing"), other, ""},
 		{"set to a missing directory", filepath.Join(other, "missing"), "", "", "MODULE_NAVIGATOR_DIR"},
 		{"set to a directory without indexes/", t.TempDir(), "", "", "MODULE_NAVIGATOR_DIR"},

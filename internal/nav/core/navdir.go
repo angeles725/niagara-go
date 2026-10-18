@@ -19,7 +19,7 @@ var Executable = os.Executable
 var NavDirVars = []string{"MODULE_NAVIGATOR_DIR", "NAV_DIR"}
 
 // LocateNavDir returns the module-navigator checkout: the directory the first
-// set NavDirVars variable names, which must hold indexes/ (else an error
+// set NavDirVars variable names (made absolute), which must hold indexes/ (else an error
 // naming the variable, "VAR=value: ...", and "" - never a fallback to the
 // search); with none set, the search of FindNavDir.
 func LocateNavDir() (string, error) {
@@ -31,7 +31,7 @@ func LocateNavDir() (string, error) {
 		if st, err := os.Stat(filepath.Join(v, "indexes")); err != nil || !st.IsDir() {
 			return "", fmt.Errorf("%s=%s: not a module-navigator checkout (no indexes/ directory)", name, v)
 		}
-		return v, nil
+		return absPath(v), nil
 	}
 	return searchNavDir(), nil
 }

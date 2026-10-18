@@ -182,6 +182,27 @@ func TestReindexSetupErrors(t *testing.T) {
 	}
 }
 
+// TestReindexNavigatorDir: without --base-dir, MODULE_NAVIGATOR_DIR names the
+// checkout; naming none is one stderr line naming it and exit 2, never the
+// search.
+func TestReindexNavigatorDir(t *testing.T) {
+	nav, _ := fixture(t)
+	t.Setenv("NAV_CORPUS_BASE", "")
+	t.Setenv("NAV_DIR", "")
+	t.Setenv("MODULE_NAVIGATOR_DIR", nav)
+	if code, out, errs := reindex(t); code != cli.ExitNoMatch ||
+		!strings.Contains(out, "Corpus dir not found: '"+filepath.Join(filepath.Dir(nav), "organized")+"'") {
+		t.Errorf("valid variable: exit %d, output %s%s", code, out, errs)
+	}
+	bad := filepath.Join(nav, "missing")
+	t.Setenv("MODULE_NAVIGATOR_DIR", bad)
+	code, out, errs := reindex(t)
+	want := "mnav reindex: MODULE_NAVIGATOR_DIR=" + bad + ": not a module-navigator checkout (no indexes/ directory)\n"
+	if code != cli.ExitCannotSearch || errs != want || out != "" {
+		t.Errorf("bad variable: exit %d, stderr %q, stdout %q; want exit 2 and %q", code, errs, out, want)
+	}
+}
+
 // failing replaces the build of the builder writing index for one test: it
 // writes junk over the index, then fails, so only a rollback restores it.
 func failing(t *testing.T, index string) {
