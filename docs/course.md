@@ -1,7 +1,8 @@
 # course: the N4 developer-course answer keys
 
 `course` looks up the written answers of the N4 Developer Certification course by item ID,
-counts them by verification status, and checks a station against the labs (`course check`).
+counts them by verification status, checks a station against the labs (`course check`), and
+decides the predicted answers from that station (`course verify-predictions`).
 It reads three Markdown files of a niagara-research checkout and one or two course text
 files. It is new (no Python original), so its golden cases run over the synthetic tree
 `internal/course/testdata/root/`.
@@ -158,7 +159,7 @@ own prefixes (`t:`, `tld:`) are resolved through its `m=` declarations.
 | Kind | Checks | PASS when |
 |---|---|---|
 | `type` | components of a type, optionally under an ancestor type (`Within`) | the count is at least / exactly N |
-| `slot` | a slot on every component of a type; its effective value is the stored value (a composite's nested `value`), else the type default | every value equals `Want`; or (`Set`) every slot is stored; or (`Distinct`) the distinct values reach N |
+| `slot` | a slot on every component of a type; its effective value is the stored value (a composite's nested `value`), else the type default. A dotted slot (`address.port`, `health.lastOkTime`) is a value below a composite slot of the component | every value equals `Want`, and every `Stored` slot is stored (`health.down = false` is also the default of a device never pinged, so C11.12 and C11.14 need `health.lastOkTime` stored); or (`Set`) every slot is stored; or (`Distinct`) the distinct values reach N |
 | `link` | links `From.FromSlot -> Type.Slot`, source by handle or `slot:` ord | the count is at least / exactly N |
 | `files` | files matching a glob under the station dir, `{station}` = the `stationName` slot | the count is at least / exactly N |
 | `jar` | `modules/<part>.jar` | it exists |
@@ -166,9 +167,18 @@ own prefixes (`t:`, `tld:`) are resolved through its `m=` declarations.
 | `jar-text` | the first entry matching a glob | it holds every listed string |
 | `jar-signed` | `META-INF/*.SF` and `META-INF/*.RSA`, `.DSA` or `.EC` | both exist |
 
+Nested slots: the bog reader keeps only a composite slot's direct `value` and `status`, so a
+dotted slot is read from `Comp.Nested`, which `bog.LoadOptions` fills only with
+`bog.Options{NestedSlots: true}`. `course check` turns the option on only when a selected check
+has a dotted slot (`--lab 4` reads the bog as before); a dotted check run on a bog read without
+it is SKIP, never PASS on the type default. The path is from the component that owns the
+composite slot: the Tcp Config of a driver network is its own component (`tcpConfig`, with a
+handle), so its port is `address.port` on `trafficLightDriver:TrafficLightDriverTcpCommConfig`.
+
 Checks per lab: 1: 7, 2: 4, 3: 5, 4: 7, 5: 3 (jars only: the station holds nothing of code
-signing), 6: 6, 7: 5, 9: 7, 10: 7, 11: 8, B: 4. Lab 8 (ORDs) writes no code and changes
-nothing, so it has none.
+signing), 6: 6, 7: 5, 9: 7, 10: 7, 11: 17 (9 of them nested: driver and server Tcp Config, the
+ping health of the network and of every driver device), B: 4. Lab 8 (ORDs) writes no code and
+changes nothing, so it has none.
 
 Verdicts: PASS; FAIL with what was found instead (`found 9 ..., want exactly 10`,
 `0 of 1 pass, want 2.0: Lab4/My Tstat.diff = 0.0 (default)`); SKIP when the check could not run
@@ -182,10 +192,61 @@ the summary goes to stderr.
 Exit: 0 no FAIL (the SKIPs are in the summary); 1 at least one FAIL; 2 the station cannot be
 read (no such file, not a BOG document) or every selected check was skipped.
 
-The live TrainingStation (2026-10-17, with the 4.15.6.20 install): 63 checked, 62 PASS, 1 FAIL.
+The live TrainingStation (2026-10-17, with the 4.15.6.20 install): 72 checked, 71 PASS, 1 FAIL.
 C3.4 fails because the station really differs: its Lab2 folder has Point1..Point4 linked to
 Add.in1..in4 and no `Output` point, so Lab 3 step 11 (`LI:576`, Add.Out -> Output.In10) was
 not done.
+
+## course verify-predictions
+
+`course verify-predictions --station <dir|config.bog> [--install DIR] [--date YYYY-MM-DD] [--json]`
+reads the answer keys (it needs the root, like `show`) and the station, and decides every item
+still marked `*(predicted)*` from the checks whose `Keys` resolve to it (`Corpus.lookup`: the ID,
+a range ID or a covered ID, so key `L4.15` reaches the range item `L4.15–L4.16`). A check is
+linked once per item however many of its keys reach it, and its `Unobserved` note is read under
+the key that matched, not the item's ID (`itemLinks`, which `TestCheckKeysReal` uses too). Only those linked checks run; the bog is read with nested values only when
+one of them has a dotted slot.
+
+| Verdict | When | Printed |
+|---|---|---|
+| `CONFIRMED` | every linked check PASS, and at least one observes the whole answer (no `Unobserved` note for the item) | each check's ID, verdict and evidence |
+| `PARTIAL` | every linked check PASS, but each observes only the stored part | the evidence, then `not observed: ...` (the notes) |
+| `CONTRADICTED` | at least one linked check FAIL | the FAIL checks and their evidence |
+| `UNDECIDED` | no linked check (`no check covers it`), or a SKIP and no FAIL | the reason: the SKIP checks |
+
+A check proves what the station and the jars store, never a console line, a job log, a Px view
+or a runtime status. So a spec row may carry `Unobserved`, a map from a key to what of that
+item's answer the check does not observe (C1.2 -> L1.25: `the Hello, World! line in the station
+console`). `TestCheckKeysReal` fails on a link to an item the real key marks predicted that has
+no note, unless the link is audited into `fullyObserved` (empty on 2026-10-17: every predicted
+item a check links also predicts something no bog or jar holds).
+
+The table `ID  VERDICT  EVIDENCE` lists the predicted items in answer-key order, then, when any
+item is CONFIRMED, one ready-to-apply line per CONFIRMED item (never for PARTIAL):
+
+    L4.13: *(verified live 2026-10-17)* evidence: C4.5 Lab4/My Tstat.diff = 2.0 (stored)
+
+`course` never edits the Markdown: a human or an agent applies the line. `--date` is the date
+written in the lines (default: today, local time; the clock is injectable for tests); a value that is not `YYYY-MM-DD` is exit 2.
+
+Summary: `predicted N: CONFIRMED c, PARTIAL p, CONTRADICTED x, UNDECIDED u; K checks run; station ...`.
+With `--json`, stdout is a list of `{id, verdict, reason, checks: [{id, verdict, evidence}],
+file, line, suggestion}` (`suggestion` is null unless CONFIRMED) and the summary goes to stderr.
+
+Exit: 0 no item CONTRADICTED (PARTIAL and UNDECIDED items are counted, never confirmed); 1 at least one
+CONTRADICTED; 2 the answer keys or the station cannot be read, a bad `--date`, or every linked
+check was skipped (nothing could be checked, as in `course check`).
+
+The live TrainingStation and the real answer key (2026-10-17, with the 4.15.6.20 install):
+40 predicted, 0 CONFIRMED, 9 PARTIAL (L1.14, L1.25, L4.15, L7.18, L10.19, L10.22, L11.7,
+L11.26, L11.32), 0 CONTRADICTED, 31 UNDECIDED (no check covers them); 15 checks run.
+
+Audit of the links to predicted items (2026-10-17): C3.5 (Add.out stored) no longer links L3.9
+(`Output = Point1 + Point2 + Point3`): it says nothing of the Output point, which the live
+station does not have (C3.4). C10.2 wants one Ramp, not ten, and links only L10.16: the lab
+copies the point alone with "Keep all links" (`LI:1934-1936`), so one Ramp feeds all ten
+points; the live station has one Ramp per point, which the PARTIAL note of L10.19 records as
+not observed.
 
 ## Tests
 
@@ -197,13 +258,28 @@ not done.
   above the real checkout can leak in.
 - `check_test.go` and the `check-*` goldens: synthetic stations under
   `internal/course/testdata/stations/` (`good`: every check PASS; `bad`: no FirstComponent,
-  default Tstat diff, no Add.out -> Output link, nine CSV files; `broken`: not a bog) and a
-  synthetic install under `testdata/install/`, whose jars are generated from the table in
+  default Tstat diff, no Add.out -> Output link, nine CSV files, a driver Tcp Config on the
+  default port, a network whose ping failed (`health.down` true, no `lastOkTime`) and a driver
+  device never pinged (no `health`); `broken`:
+  not a bog) and a synthetic install under `testdata/install/`, whose jars are generated from the table in
   `fixturejars_test.go` (`COURSE_UPDATE_FIXTURES=1 go test -run TestFixtureJars`; the test fails
   when a jar drifts). The zipped form of a bog is covered by `TestCheckZippedBog`.
   `TestCheckTrainingStation` runs the spec against `COURSE_TRAINING_STATION` (and the jars of
   `COURSE_NIAGARA_INSTALL`) and pins the known station differences; it skips, visibly,
-  without the variable. `TestCheckKeysReal` resolves every linked key in the real labs.md.
+  without the variable. `TestCheckNestedNeedsNestedLoad`: a dotted check on a bog read without
+  nested values is SKIP.
+- `verify_test.go` and the `verify-*` goldens: the verdict rules (`TestDecidePrediction`) and
+  the command over `testdata/predict-root/` (a synthetic answer key whose predicted IDs are
+  linked keys: one unlinked, one linked only to a jar check, the range item `L4.15–L4.16`
+  reached through the noted key L4.15 (PARTIAL), the range `L10.6–L10.7` reached by two keys
+  of C10.7 (linked once), and L4.13 and L11.25 marked
+  predicted so that a fully observing check yields CONFIRMED) with the `good` station (every
+  linked check PASS: CONFIRMED and PARTIAL), the `bad` one (L1.25, L4.13, L11.25, L11.26 and
+  L11.32 CONTRADICTED), no `--install`, the `root`
+  fixture (its one linked check is a jar check: exit 2), a bad `--date` and a broken bog.
+  `TestVerifyPredictionsTrainingStation` (with `COURSE_TRAINING_STATION` and
+  `NIAGARA_RESEARCH_DIR`) pins only that no predicted item is CONTRADICTED, none is CONFIRMED
+  and some are PARTIAL on the live station. `TestCheckKeysReal` resolves every linked key in the real labs.md.
 - `oracle_test.go`: the recall oracle (plain regexes over the raw files, its own range
   expansion) must equal the parsed ID set on the fixture, and on the real checkout when
   `NIAGARA_RESEARCH_DIR` is set, where the counts per group and per status are pinned.

@@ -3,10 +3,8 @@ package course
 import (
 	"archive/zip"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
-	"regexp"
 	"sort"
 	"strings"
 
@@ -32,6 +30,7 @@ type station struct {
 	dir     string // the station directory (holds config.bog and shared/)
 	name    string // the root component's stationName, else the directory name
 	b       *bog.Bog
+	nested  bool   // read with bog.Options.NestedSlots: Comp.Nested holds the dotted slots
 	install string // "" when --install was not given
 	jars    map[string]*jarFile
 }
@@ -41,18 +40,18 @@ type jarFile struct {
 	err error
 }
 
-// openStation reads a station directory or a bog file inside one. The error is the bog
-// reader's message (exit 2).
-func openStation(path, install string) (*station, error) {
+// openStation reads a station directory or a bog file inside one; nested also reads the values
+// stored below composite slots (Comp.Nested). The error is the bog reader's message (exit 2).
+func openStation(path, install string, nested bool) (*station, error) {
 	file, dir := path, filepath.Dir(path)
 	if st, err := os.Stat(path); err == nil && st.IsDir() {
 		file, dir = filepath.Join(path, "config.bog"), path
 	}
-	b, err := bog.Load(file)
+	b, err := bog.LoadOptions(file, bog.Options{NestedSlots: nested})
 	if err != nil {
 		return nil, err
 	}
-	s := &station{dir: dir, name: filepath.Base(dir), b: b, install: install, jars: map[string]*jarFile{}}
+	s := &station{dir: dir, name: filepath.Base(dir), b: b, nested: nested, install: install, jars: map[string]*jarFile{}}
 	for _, h := range b.Roots {
 		if c, _ := b.Comps.Get(h); c != nil {
 			if sl, ok := c.Slots.Get("stationName"); ok && sl.Value != nil && *sl.Value != "" {
@@ -61,6 +60,27 @@ func openStation(path, install string) (*station, error) {
 		}
 	}
 	return s, nil
+}
+
+// needsNested reports whether a check reads a dotted (nested) slot, so the bog must be read
+// with bog.Options.NestedSlots.
+func needsNested(checks []*Check) bool {
+	for _, ck := range checks {
+		if ck.Kind == kindSlot && ck.dotted() {
+			return true
+		}
+	}
+	return false
+}
+
+// dotted reports whether the slot or one of the Stored slots is nested.
+func (ck *Check) dotted() bool {
+	for _, sl := range append([]string{ck.Slot}, ck.Stored...) {
+		if strings.Contains(sl, ".") {
+			return true
+		}
+	}
+	return false
 }
 
 func (s *station) close() {
@@ -184,8 +204,15 @@ func (s *station) checkType(ck *Check) (string, string) {
 }
 
 // effective is the value of a slot as the station runs it: the stored value (a composite's
-// nested value), else the type default. stored is false when the bog keeps no value.
+// nested value), else the type default. stored is false when the bog keeps no value. A dotted
+// slot (address.port) is a value below a composite slot, read from Comp.Nested.
 func effective(c *bog.Comp, slot, def string) (value string, stored bool) {
+	if strings.Contains(slot, ".") {
+		if v, ok := c.Nested.Get(slot); ok {
+			return v, true
+		}
+		return def, false
+	}
 	if sl, ok := c.Slots.Get(slot); ok {
 		if sl.Value != nil {
 			return *sl.Value, true
@@ -209,6 +236,11 @@ func describe(c *bog.Comp, slot, value string, stored bool) string {
 }
 
 func (s *station) checkSlot(ck *Check) (string, string) {
+	if ck.dotted() && !s.nested {
+		// Never pass a nested slot on its type default because the values were not read.
+		return verdictSkip, strings.Join(append([]string{ck.Slot}, ck.Stored...), ", ") +
+			" is a nested slot: the station was read without nested values"
+	}
 	cs := s.comps(ck.Type)
 	if len(cs) == 0 {
 		return verdictFail, "no " + ck.Type + " component (searched " + plural(s.b.Comps.Len(), "component") + ")"
@@ -241,13 +273,22 @@ func (s *station) checkSlot(ck *Check) (string, string) {
 		if first == "" {
 			first = describe(c, ck.Slot, v, stored)
 		}
+		why := describe(c, ck.Slot, v, stored)
+		for _, also := range ck.Stored {
+			if av, astored := effective(c, also, ""); pass && !astored {
+				pass, why = false, describe(c, also, av, astored)
+			}
+		}
 		if !pass {
-			bad = append(bad, describe(c, ck.Slot, v, stored))
+			bad = append(bad, why)
 		}
 	}
 	target := "want " + ck.Want
 	if ck.Set {
 		target = "want it stored"
+	}
+	if len(ck.Stored) > 0 {
+		target += " with " + strings.Join(ck.Stored, ", ") + " stored"
 	}
 	if len(bad) == 0 {
 		if len(cs) == 1 {
@@ -324,122 +365,6 @@ func (s *station) checkFiles(ck *Check) (string, string) {
 		}
 	}
 	return verdict(ok), ev
-}
-
-// globRe turns a jar-entry glob into a regexp: ** crosses '/', * and ? do not.
-func globRe(glob string) *regexp.Regexp {
-	var b strings.Builder
-	b.WriteString("^")
-	for i := 0; i < len(glob); i++ {
-		switch {
-		case strings.HasPrefix(glob[i:], "**/"):
-			b.WriteString("(?:.*/)?")
-			i += 2
-		case strings.HasPrefix(glob[i:], "**"):
-			b.WriteString(".*")
-			i++
-		case glob[i] == '*':
-			b.WriteString("[^/]*")
-		case glob[i] == '?':
-			b.WriteString("[^/]")
-		default:
-			b.WriteString(regexp.QuoteMeta(glob[i : i+1]))
-		}
-	}
-	b.WriteString("$")
-	return regexp.MustCompile(b.String())
-}
-
-func (s *station) jar(name string) (*zip.ReadCloser, error) {
-	if j, ok := s.jars[name]; ok {
-		return j.zr, j.err
-	}
-	zr, err := zip.OpenReader(filepath.Join(s.install, "modules", name+".jar"))
-	s.jars[name] = &jarFile{zr, err}
-	return zr, err
-}
-
-func (s *station) checkJar(ck *Check) (string, string) {
-	rel := "modules/" + ck.Jar + ".jar"
-	if s.install == "" {
-		return verdictSkip, "no --install DIR: " + rel + " not checked"
-	}
-	zr, err := s.jar(ck.Jar)
-	if os.IsNotExist(err) {
-		return verdictFail, "missing " + rel + " under " + s.install
-	}
-	if err != nil {
-		return verdictSkip, fmt.Sprintf("cannot read %s: %v", rel, err)
-	}
-	switch ck.Kind {
-	case kindJar:
-		return verdictPass, fmt.Sprintf("%s (%s)", rel, entryCount(len(zr.File)))
-	case kindJarSigned:
-		sf, block := entries(zr, globRe("META-INF/*.SF")), entries(zr, regexp.MustCompile(`^META-INF/[^/]+\.(?:RSA|DSA|EC)$`))
-		if len(sf) == 0 || len(block) == 0 {
-			return verdictFail, fmt.Sprintf("%s: %d signature files (.SF), %d signature blocks (.RSA/.DSA/.EC)", rel, len(sf), len(block))
-		}
-		return verdictPass, fmt.Sprintf("%s: %s, %s", rel, sf[0].Name, block[0].Name)
-	case kindJarEntry:
-		found := entries(zr, globRe(ck.Glob))
-		ok := countOK(ck.Op, len(found), ck.N)
-		var ev string
-		if len(found) == 1 {
-			ev = fmt.Sprintf("%s: 1 entry matches %s", rel, ck.Glob)
-		} else {
-			ev = fmt.Sprintf("%s: %d entries match %s", rel, len(found), ck.Glob)
-		}
-		if !ok {
-			ev += fmt.Sprintf(", want %s (searched %s)", want(ck.Op, ck.N), entryCount(len(zr.File)))
-		}
-		return verdict(ok), ev
-	default: // kindJarText
-		return jarText(zr, rel, ck)
-	}
-}
-
-func entries(zr *zip.ReadCloser, re *regexp.Regexp) []*zip.File {
-	var out []*zip.File
-	for _, f := range zr.File {
-		if re.MatchString(f.Name) {
-			out = append(out, f)
-		}
-	}
-	return out
-}
-
-func jarText(zr *zip.ReadCloser, rel string, ck *Check) (string, string) {
-	found := entries(zr, globRe(ck.Glob))
-	if len(found) == 0 {
-		return verdictFail, fmt.Sprintf("%s: no entry %s (searched %s)", rel, ck.Glob, entryCount(len(zr.File)))
-	}
-	rc, err := found[0].Open()
-	if err != nil {
-		return verdictSkip, fmt.Sprintf("cannot read %s!%s: %v", rel, found[0].Name, err)
-	}
-	defer rc.Close()
-	data, err := io.ReadAll(io.LimitReader(rc, 16<<20))
-	if err != nil {
-		return verdictSkip, fmt.Sprintf("cannot read %s!%s: %v", rel, found[0].Name, err)
-	}
-	var missing []string
-	for _, want := range ck.Contains {
-		if !strings.Contains(string(data), want) {
-			missing = append(missing, want)
-		}
-	}
-	if len(missing) > 0 {
-		return verdictFail, fmt.Sprintf("%s!%s lacks %s (%d of %d found)", rel, found[0].Name,
-			strings.Join(missing, ", "), len(ck.Contains)-len(missing), len(ck.Contains))
-	}
-	return verdictPass, fmt.Sprintf("%s!%s has %s", rel, found[0].Name, strings.Join(ck.Contains, ", "))
-}
-
-func entryCount(n int) string {
-	if n == 1 {
-		return "1 entry"
-	}
-	return fmt.Sprintf("%d entries", n)
 }
 
 // globEscape makes s match only itself in a filepath.Glob pattern: each meta character becomes a

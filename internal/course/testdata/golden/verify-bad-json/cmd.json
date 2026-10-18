@@ -1,0 +1,1 @@
+{"args": ["verify-predictions", "--root", "predict-root", "--station", "stations/bad/config.bog", "--date", "2026-10-17", "--json"]}

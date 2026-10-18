@@ -1,0 +1,5 @@
+ID    VERDICT    EVIDENCE
+L1.4  UNDECIDED  no check covers it
+L2.6  UNDECIDED  C2.3 SKIP: no --install DIR: modules/training-rt.jar not checked
+LB.1  UNDECIDED  no check covers it
+predicted 3: CONFIRMED 0, PARTIAL 0, CONTRADICTED 0, UNDECIDED 3; 1 check run; station GoodStation (237 components, 16 links), install (none: jar checks skipped)

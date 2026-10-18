@@ -4,6 +4,7 @@ import (
 	"os"
 	"reflect"
 	"regexp"
+	"slices"
 	"strings"
 	"testing"
 )
@@ -12,7 +13,7 @@ const goodStation = "testdata/stations/good"
 
 func runAll(t *testing.T, stationPath, install string) []Result {
 	t.Helper()
-	st, err := openStation(stationPath, install)
+	st, err := openStation(stationPath, install, true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -25,7 +26,8 @@ func runAll(t *testing.T, stationPath, install string) []Result {
 }
 
 // TestCheckSpecShape: unique IDs named after their lab, keys in the lab's own group, the
-// fields each kind reads, 3-8 checks per lab with station state, none for lab 8.
+// fields each kind reads, 3-8 checks per lab with station state (17 for lab 11, whose nested
+// Tcp Config and ping-health slots are one check each), none for lab 8.
 func TestCheckSpecShape(t *testing.T) {
 	seen := map[string]bool{}
 	perLab := map[string]int{}
@@ -39,6 +41,11 @@ func TestCheckSpecShape(t *testing.T) {
 		group := "L" + ck.Lab + "."
 		if len(ck.Keys) == 0 || ck.Desc == "" {
 			t.Errorf("%s: no keys or description", ck.ID)
+		}
+		for k, note := range ck.Unobserved {
+			if !slices.Contains(ck.Keys, k) || note == "" {
+				t.Errorf("%s: unobserved note for %s is empty or %s is not one of its keys", ck.ID, k, k)
+			}
 		}
 		for _, k := range ck.Keys {
 			if !strings.HasPrefix(k, group) {
@@ -67,8 +74,8 @@ func TestCheckSpecShape(t *testing.T) {
 		}
 	}
 	for _, lab := range []string{"1", "2", "3", "4", "6", "7", "9", "10", "11", "B"} {
-		if n := perLab[lab]; n < 3 || n > 8 {
-			t.Errorf("lab %s has %d checks, want 3-8", lab, n)
+		if n, most := perLab[lab], map[bool]int{true: 17, false: 8}[lab == "11"]; n < 3 || n > most {
+			t.Errorf("lab %s has %d checks, want 3-%d", lab, n, most)
 		}
 	}
 	if perLab["5"] == 0 || perLab["8"] != 0 {
@@ -93,7 +100,24 @@ func TestCheckKeysReal(t *testing.T) {
 			}
 		}
 	}
+	// A link to a predicted item must say what of the prediction the check does not observe,
+	// unless it was audited as observing all of it: the answer key would be marked verified from a
+	// CONFIRMED verdict. The links are resolved as verify-predictions resolves them (itemLinks).
+	links := itemLinks(c, checkSpec)
+	for _, it := range c.Items {
+		for _, l := range links[it] {
+			if it.hasStatus("predicted") && len(l.Notes) == 0 && !fullyObserved[l.Check.ID+" "+it.ID] {
+				t.Errorf("%s: links predicted %s (%s:%d): add an Unobserved note or audit it into fullyObserved",
+					l.Check.ID, it.ID, it.File, it.Line)
+			}
+		}
+	}
 }
+
+// fullyObserved lists the "check item" links to a predicted item of the real answer key that were
+// audited as observing the whole prediction (2026-10-17: none; every predicted item a check links
+// also predicts a console line, a log, a view or a runtime status).
+var fullyObserved = map[string]bool{}
 
 // stationDiffers lists the checks the live TrainingStation fails because it really differs
 // from the lab, with the evidence read from its config.bog (2026-10-17).

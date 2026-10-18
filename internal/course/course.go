@@ -28,13 +28,17 @@ exit: 0 found; 1 searched, no match (show: any unknown ID, even when the
 others were printed); 2 cannot search (no root, a missing or ambiguous answer
 key, a missing text file). check: 0 no FAIL (SKIPs are counted, never passed);
 1 at least one FAIL; 2 the station cannot be read, or every check was skipped.
+verify-predictions: 0 no predicted item contradicted; 1 at least one
+CONTRADICTED; 2 cannot search, the station cannot be read, or every linked
+check was skipped.
 
 examples:
   course show L1.9 RA1.R6 P2
   course status --lab 6 --status predicted
   course text L5.16
   course check --station ~/Niagara4.15/tridium/stations/TrainingStation \
-    --install /opt/Niagara/Niagara-4.15.6.20 --lab 4 --lab 10`
+    --install /opt/Niagara/Niagara-4.15.6.20 --lab 4 --lab 10
+  course verify-predictions --station ~/Niagara4.15/tridium/stations/TrainingStation`
 
 // rootParent holds --root: None on the main parser, SUPPRESS on the subcommands, so the
 // flag works before or after the subcommand.
@@ -81,6 +85,11 @@ func buildParser() *argparse.Parser {
 	ck.Add(argparse.Arg{Metavar: "DIR", Help: "Niagara install whose modules/ holds the built jars (jar checks SKIP without it)"}, "--install")
 	ck.Add(argparse.Arg{Action: argparse.Append, Metavar: "N", Help: "only this lab (1-11, B); repeatable"}, "--lab")
 	ck.Add(jsonHelp, "--json")
+	vp := add("verify-predictions", "run the checks linked to every *(predicted)* item: CONFIRMED, CONTRADICTED or UNDECIDED")
+	vp.Add(argparse.Arg{Required: true, Metavar: "PATH", Help: "station directory, or its config.bog (zipped or plain XML)"}, "--station")
+	vp.Add(argparse.Arg{Metavar: "DIR", Help: "Niagara install whose modules/ holds the built jars (jar checks SKIP without it)"}, "--install")
+	vp.Add(argparse.Arg{Metavar: "YYYY-MM-DD", Help: "date written in the suggested *(verified live ...)* lines (default: today)"}, "--date")
+	vp.Add(jsonHelp, "--json")
 	return p
 }
 
@@ -109,6 +118,8 @@ func Main(args []string, s cli.Stdio) int {
 	switch ns.String("cmd") {
 	case "show":
 		return cmdShow(c, s, ns.Strings("ids"), ns.Bool("json"))
+	case "verify-predictions":
+		return cmdVerifyPredictions(c, s, ns.String("station"), ns.String("install"), ns.String("date"), ns.Bool("json"))
 	case "status":
 		return cmdStatus(c, s, ns.Get("lab") != nil, ns.String("lab"), ns.String("status"), ns.Bool("json"))
 	default:

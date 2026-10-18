@@ -1,0 +1,12 @@
+usage: course verify-predictions [-h] [--root DIR] --station PATH [--install DIR]
+                                 [--date YYYY-MM-DD] [--json]
+
+options:
+  -h, --help         show this help message and exit
+  --root DIR         niagara-research checkout (default: $NIAGARA_RESEARCH_DIR, then found from
+                     cwd)
+  --station PATH     station directory, or its config.bog (zipped or plain XML)
+  --install DIR      Niagara install whose modules/ holds the built jars (jar checks SKIP without
+                     it)
+  --date YYYY-MM-DD  date written in the suggested *(verified live ...)* lines (default: today)
+  --json             machine JSON output

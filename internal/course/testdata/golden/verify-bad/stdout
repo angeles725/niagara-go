@@ -1,0 +1,16 @@
+ID             VERDICT       EVIDENCE
+L1.4           UNDECIDED     no check covers it
+L1.14          PARTIAL       C1.6 PASS: modules/training-rt.jar!META-INF/module.xml has name="FirstComponent"; not observed: module-include.xml itself and the class attribute (the jar holds the built module.xml)
+L1.25          CONTRADICTED  C1.2 FAIL: no training:FirstComponent component (searched 236 components)
+L3.9           UNDECIDED     no check covers it
+L4.13          CONTRADICTED  C4.5 FAIL: 0 of 1 pass, want 2.0: Lab4/My Tstat.diff = 0.0 (default)
+L4.15–L4.16    PARTIAL       C4.6 PASS: Lab4/My Tstat.action = reverse (stored); not observed: the outputs at 72.5 (both false, held in band)
+L10.6–L10.7    CONFIRMED     C10.7 PASS: modules/training-rt.jar!META-INF/module.xml has name="history-rt", name="file-rt", name="bql-rt"
+L11.7          PARTIAL       C11.1 PASS: found 1: Drivers/TrafficLightServerNetwork; C11.15 PASS: Drivers/TrafficLightServerNetwork/tcpConfig.address.ipAddress = 127.0.0.1 (stored); C11.16 PASS: Drivers/TrafficLightServerNetwork/tcpConfig.address.port = 23 (stored); C11.17 PASS: Drivers/TrafficLightServerNetwork/tcpConfig.serverEnabled = true (stored); not observed: the Px view with the lights of every intersection
+L11.25         CONTRADICTED  C11.10 FAIL: 0 of 1 pass, want 23: Drivers/TrafficLightDriverNetwork/tcpConfig.address.port = 0 (default)
+L11.26         CONTRADICTED  C11.11 FAIL: 0 of 1 pass, want it stored: Drivers/TrafficLightDriverNetwork.health.lastOkTime = "" (default); C11.12 FAIL: 0 of 1 pass, want false with health.lastOkTime stored: Drivers/TrafficLightDriverNetwork.health.down = true (stored)
+L11.32         CONTRADICTED  C11.13 FAIL: 3 of 4 pass, want it stored: Drivers/TrafficLightDriverNetwork/Device d.health.lastOkTime = "" (default); C11.14 FAIL: 3 of 4 pass, want false with health.lastOkTime stored: Drivers/TrafficLightDriverNetwork/Device d.health.lastOkTime = "" (default)
+
+suggested updates (CONFIRMED only; course never edits the answer key):
+L10.6–L10.7: *(verified live 2026-10-17)* evidence: C10.7 modules/training-rt.jar!META-INF/module.xml has name="history-rt", name="file-rt", name="bql-rt"
+predicted 11: CONFIRMED 1, PARTIAL 3, CONTRADICTED 5, UNDECIDED 2; 15 checks run; station BadStation (236 components, 15 links), install install
