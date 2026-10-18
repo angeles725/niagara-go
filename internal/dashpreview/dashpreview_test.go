@@ -11,6 +11,9 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"regexp"
+	"runtime"
+	"strconv"
 	"strings"
 	"sync"
 	"testing"
@@ -18,6 +21,7 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/cli"
 	"github.com/angeles725/niagara-go/internal/golden"
+	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 )
 
@@ -94,11 +98,43 @@ func TestStartupBanners(t *testing.T) {
 			}
 			cancel()
 			norm := func(x string) string { return strings.ReplaceAll(x, td, "{TD}") }
-			if code != c.Exit || norm(out.String()) != c.Stdout || norm(errb.String()) != c.Stderr {
-				t.Errorf("exit %d stdout %q stderr %q\nwant %d %q %q", code, norm(out.String()), norm(errb.String()), c.Exit, c.Stdout, c.Stderr)
+			wantOut, wantErr := nativeTD(c.Stdout), nativeTD(c.Stderr)
+			if code != c.Exit || norm(out.String()) != wantOut || norm(errb.String()) != wantErr {
+				t.Errorf("exit %d stdout %q stderr %q\nwant %d %q %q", code, norm(out.String()), norm(errb.String()), c.Exit, wantOut, wantErr)
 			}
 		})
 	}
+}
+
+// tdPath is a path below the testdata directory in a frozen banner ({TD}/ux/src/rc).
+var tdPath = regexp.MustCompile(`\{TD\}/\S*`)
+
+// nativeTD writes the {TD} paths of a Linux-captured banner with the native separator: the
+// tool prints os.path.abspath(--rc), which uses backslashes on Windows.
+func nativeTD(s string) string {
+	return tdPath.ReplaceAllStringFunc(s, filepath.FromSlash)
+}
+
+// windowsRefused rewrites a Linux-captured live-down step as Windows CPython words it: the
+// URLError holds "[WinError 10061] <system message>" there (in the host language), not
+// "[Errno 111] Connection refused"; the body is ensure_ascii JSON, so Content-Length follows.
+func windowsRefused(st httpStep) httpStep {
+	if st.Body == nil {
+		return st
+	}
+	linux := "[Errno 111] Connection refused"
+	win := strings.Trim(pyjson.EncodeString(pycompat.WinErrorString(10061), true), `"`)
+	body := strings.ReplaceAll(*st.Body, linux, win)
+	st.Body = &body
+	headers := make([][2]string, len(st.RespHeaders))
+	for i, kv := range st.RespHeaders {
+		if kv[0] == "Content-Length" {
+			kv[1] = strconv.Itoa(len(body))
+		}
+		headers[i] = kv
+	}
+	st.RespHeaders = headers
+	return st
 }
 
 type httpStep struct {
@@ -228,6 +264,9 @@ func runHTTPConfig(t *testing.T, rc string, c httpConfig) {
 		}
 	}
 	for i, st := range c.Steps {
+		if c.Config.Live == "down" && runtime.GOOS == "windows" {
+			st = windowsRefused(st)
+		}
 		if st.Advance != nil {
 			clock += *st.Advance
 			continue
