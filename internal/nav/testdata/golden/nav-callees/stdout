@@ -1,0 +1,12 @@
+
+  CALLEES of BCaller.work: 6 calls
+
+                             CALLED METHOD  MODULE                   
+  -----------------------------------------------------------------
+                               BTarget.run  target-wb                
+                org.x.Outer.Inner.copyInto  ?                        
+                      Outer.Inner.copyInto  ?                        
+                              BTarget.stop  target-wb                
+                             Helper.<init>  ?                        
+                         util.Strings.join  ?                        
+

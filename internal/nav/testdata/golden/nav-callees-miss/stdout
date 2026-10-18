@@ -1,0 +1,6 @@
+
+  No callees found for 'BCaller.nothing'.
+  BCaller has 2 methods with calls. Try:
+    callees BCaller <init>
+    callees BCaller work
+

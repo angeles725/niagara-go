@@ -10,7 +10,7 @@ import (
 	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
-// The lookups of cmd_callers, and the lines they print.
+// The lookups of cmd_callers and cmd_callees, and the lines they print.
 
 // Callers is `callers <Class> <method>` (cmd_callers with a method).
 type Callers struct {
@@ -155,4 +155,129 @@ func (m MethodRow) Line() string {
 // Line is the call-site table line of s.
 func (s SiteRow) Line() string {
 	return fmt.Sprintf("  %s  %s  %s", core.RJust(s.Caller, 40), core.LJust(s.Module, 25), s.Method)
+}
+
+// CalleeRow is one called method with the module of its class.
+type CalleeRow struct{ Callee, Module string }
+
+// calleeRow is the row of callee: its class is the name before the last '.'.
+func calleeRow(classes *index.Object, callee string) CalleeRow {
+	cls := callee
+	if dot := strings.LastIndexByte(callee, '.'); dot > 0 {
+		cls = callee[:dot]
+	}
+	return CalleeRow{callee, ModuleOf(classes, cls)}
+}
+
+// Callees is `callees <Class> <method>`: the calls of Class.method in index
+// order; on a miss, Rows is empty and ClassMethods lists the class's methods
+// with calls (sorted keys).
+type Callees struct {
+	Key          string
+	Rows         []CalleeRow
+	ClassMethods []string
+}
+
+// CalleesOf is cmd_callees with a method.
+func (g *Graph) CalleesOf(classes *index.Object, class, method string) Callees {
+	key := class + "." + method
+	r := Callees{Key: key}
+	for i, caller := range g.callers {
+		if caller == key {
+			for _, c := range g.callees[i] {
+				r.Rows = append(r.Rows, calleeRow(classes, c))
+			}
+		}
+	}
+	if len(r.Rows) > 0 {
+		return r
+	}
+	prefix := class + "."
+	for _, caller := range g.callers {
+		if strings.HasPrefix(caller, prefix) {
+			r.ClassMethods = append(r.ClassMethods, caller)
+		}
+	}
+	slices.Sort(r.ClassMethods)
+	return r
+}
+
+// CalleesHeader and CalleesRule head the callee table of `callees <Class> <method>`.
+var (
+	CalleesHeader = fmt.Sprintf("  %s  %s", core.RJust("CALLED METHOD", 40), core.LJust("MODULE", 25))
+	CalleesRule   = "  " + strings.Repeat("-", 65)
+)
+
+// Line is the callee table line of r.
+func (r CalleeRow) Line() string {
+	return fmt.Sprintf("  %s  %s", core.RJust(r.Callee, 40), core.LJust(r.Module, 25))
+}
+
+// ArrowLine is the `callees <Class>` line of r under its method.
+func (r CalleeRow) ArrowLine() string {
+	return fmt.Sprintf("    -> %s  [%s]", core.LJust(r.Callee, 40), r.Module)
+}
+
+// MethodCallees is one method of `callees <Class>` with its calls.
+type MethodCallees struct {
+	Key, Method string // Method is the key after its first '.'
+	Calls       int
+	Rows        []CalleeRow // the first 10 calls
+}
+
+// ClassCallees is `callees <Class>`: the methods of the class with calls
+// (sorted keys), or on a miss the class names that contain Class ignoring case.
+type ClassCallees struct {
+	Methods    []MethodCallees
+	Total      int // calls of every method
+	Module     string
+	DidYouMean []string // on a miss: up to 10 sorted class names
+}
+
+// CalleesOfClass is cmd_callees without a method.
+func (g *Graph) CalleesOfClass(classes *index.Object, class string) ClassCallees {
+	prefix := class + "."
+	var r ClassCallees
+	type entry struct {
+		key   string
+		calls []string
+	}
+	var entries []entry // callers are unique keys of the index
+	for i, caller := range g.callers {
+		if strings.HasPrefix(caller, prefix) {
+			entries = append(entries, entry{caller, g.callees[i]})
+		}
+	}
+	if len(entries) == 0 {
+		lower := textfold.Lower(class)
+		var names []string
+		for _, caller := range g.callers {
+			head := caller
+			if k := strings.IndexByte(caller, '.'); k >= 0 {
+				head = caller[:k]
+			}
+			if strings.Contains(textfold.Lower(head), lower) {
+				names = append(names, head)
+			}
+		}
+		slices.Sort(names)
+		names = slices.Compact(names)
+		r.DidYouMean = names[:min(10, len(names))]
+		return r
+	}
+	slices.SortFunc(entries, func(a, b entry) int { return strings.Compare(a.key, b.key) })
+	r.Module = ModuleOf(classes, class)
+	for _, e := range entries {
+		r.Total += len(e.calls)
+		m := e.key
+		if k := strings.IndexByte(e.key, '.'); k >= 0 {
+			m = e.key[k+1:]
+		}
+		mc := MethodCallees{Key: e.key, Method: m, Calls: len(e.calls)}
+		for _, c := range e.calls[:min(10, len(e.calls))] {
+			mc.Rows = append(mc.Rows, calleeRow(classes, c))
+		}
+		r.Methods = append(r.Methods, mc)
+	}
+	return r
 }

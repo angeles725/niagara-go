@@ -201,6 +201,13 @@ CASES = [
     ("callers-class-ambiguous", ["callers", "bcase"], NO_CORPUS, CG_BASE),
     ("callers-class-miss", ["callers", "BNothing"], NO_CORPUS, CG_BASE),
     ("callers-empty-graph", ["callers", "BTarget", "run"], NO_CORPUS, "fixture/cg-empty"),
+    ("callees", ["callees", "BCaller", "work"], NO_CORPUS, CG_BASE),
+    ("callees-n", ["callees", "BCaller", "work", "-n", "2"], NO_CORPUS, CG_BASE),
+    ("callees-miss", ["callees", "BCaller", "nothing"], NO_CORPUS, CG_BASE),
+    ("callees-class", ["callees", "BCaller"], NO_CORPUS, CG_BASE),
+    ("callees-class-n", ["callees", "BCaller", "-n", "1"], NO_CORPUS, CG_BASE),
+    ("callees-class-miss", ["callees", "caller"], NO_CORPUS, CG_BASE),
+    ("callees-empty-method", ["callees", "BCaller", ""], NO_CORPUS, CG_BASE),
 ]
 
 
@@ -563,7 +570,7 @@ def build_lic():
         f.write(b"not a zip file\n")
 
 
-# callers: a small call graph with a qualified callee filed under
+# callers and callees: a small call graph with a qualified callee filed under
 # its dotted suffixes, a caller recording one callee twice (qualified and
 # simple), 16 classes with a `go` method (the "... and N more" partial
 # list), two classes differing only in case, a method with 12 callees, and

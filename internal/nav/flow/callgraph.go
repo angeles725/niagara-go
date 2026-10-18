@@ -11,7 +11,8 @@ import (
 	"github.com/angeles725/niagara-go/internal/nav/registry"
 )
 
-// callers (callgraph.py cmd_callers): the CLI view of the nav/callgraph lookups.
+// callers and callees (callgraph.py cmd_callers, cmd_callees): the CLI view of
+// the nav/callgraph lookups.
 
 // load is load_callgraph plus `if not cg: return` and the class table
 // (`ci_data.get("classes", {}) if ci_data else {}`): nil when the call graph
@@ -130,3 +131,70 @@ func callersOfClass(env *registry.Env, g *callgraph.Graph, classes *index.Object
 	}
 	fmt.Fprintln(w)
 }
+
+func runCallees(env *registry.Env, ns *argparse.Namespace) int {
+	class, limit := ns.String("class_name"), ns.Int("n")
+	g, classes := load(env)
+	if g == nil {
+		return env.ExitCode()
+	}
+	w := env.Out
+	if method, _ := ns.Get("method").(string); method != "" {
+		r := g.CalleesOf(classes, class, method)
+		if len(r.Rows) == 0 {
+			fmt.Fprintln(w)
+			fmt.Fprintf(w, "  No callees found for '%s'.\n", r.Key)
+			if len(r.ClassMethods) > 0 {
+				fmt.Fprintf(w, "  %s has %d methods with calls. Try:\n", class, len(r.ClassMethods))
+				for _, k := range r.ClassMethods[:min(10, len(r.ClassMethods))] {
+					fmt.Fprintf(w, "    callees %s %s\n", class, afterFirstDot(k))
+				}
+			}
+			fmt.Fprintln(w)
+			return env.ExitCode()
+		}
+		fmt.Fprintln(w)
+		fmt.Fprintf(w, "  CALLEES of %s: %d calls\n", r.Key, len(r.Rows))
+		fmt.Fprintln(w)
+		fmt.Fprintln(w, callgraph.CalleesHeader)
+		fmt.Fprintln(w, callgraph.CalleesRule)
+		for _, row := range r.Rows[:max(0, min(limit, len(r.Rows)))] {
+			fmt.Fprintln(w, row.Line())
+		}
+		more(env, len(r.Rows), limit)
+		fmt.Fprintln(w)
+		return env.ExitCode()
+	}
+	r := g.CalleesOfClass(classes, class)
+	if len(r.Methods) == 0 {
+		fmt.Fprintln(w)
+		fmt.Fprintf(w, "  No call data found for class '%s'.\n", class)
+		if len(r.DidYouMean) > 0 {
+			fmt.Fprintf(w, "  Did you mean: %s\n", strings.Join(r.DidYouMean, ", "))
+		}
+		fmt.Fprintln(w)
+		return env.ExitCode()
+	}
+	fmt.Fprintln(w)
+	fmt.Fprintf(w, "  CALLEES of %s (all methods): %d methods, %d total calls\n", class, len(r.Methods), r.Total)
+	fmt.Fprintf(w, "  Module: %s\n", r.Module)
+	fmt.Fprintln(w)
+	for _, m := range r.Methods[:max(0, min(limit, len(r.Methods)))] {
+		fmt.Fprintf(w, "  %s (%d calls):\n", m.Method, m.Calls)
+		for _, row := range m.Rows {
+			fmt.Fprintln(w, row.ArrowLine())
+		}
+		if m.Calls > 10 {
+			fmt.Fprintf(w, "    ... and %d more\n", m.Calls-10)
+		}
+		fmt.Fprintln(w)
+	}
+	if len(r.Methods) > limit {
+		fmt.Fprintf(w, "  ... and %d more methods (use -n %d to see all)\n", len(r.Methods)-limit, len(r.Methods))
+		fmt.Fprintln(w)
+	}
+	return env.ExitCode()
+}
+
+// afterFirstDot is key.split('.', 1)[1].
+func afterFirstDot(key string) string { return key[strings.IndexByte(key, '.')+1:] }
