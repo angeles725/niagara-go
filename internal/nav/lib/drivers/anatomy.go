@@ -2,6 +2,7 @@ package drivers
 
 import (
 	"path/filepath"
+	"slices"
 	"sort"
 	"strings"
 
@@ -109,7 +110,7 @@ func sortedSet(xs []string) []string {
 func (cx *corpus) subclasses(items []item, base string) []string {
 	var names []string
 	for _, it := range items {
-		if contains(cx.chain(it.e), base) {
+		if slices.Contains(cx.chain(it.e), base) {
 			names = append(names, it.name)
 		}
 	}
@@ -138,7 +139,7 @@ func (cx *corpus) inherited(e *index.Object, base string) ([]string, string) {
 
 func family(chain []string) string {
 	for _, f := range families {
-		if contains(chain, f[0]) {
+		if slices.Contains(chain, f[0]) {
 			return f[1]
 		}
 	}
@@ -202,7 +203,7 @@ func anatomy(cx *corpus, it item, organized string, features map[string][]string
 	fam := cx.byFamily[dir]
 	declared := sortedSet(deviceTypes(organized, it.path()))
 	r := &DriverRow{Network: it.name, Module: sub, Package: core.Str(it.e, "package"), Path: it.path(),
-		Abstract: contains(core.Strs(it.e, "modifiers"), "abstract"), Extends: simple(extendsOf(it.e)),
+		Abstract: slices.Contains(core.Strs(it.e, "modifiers"), "abstract"), Extends: simple(extendsOf(it.e)),
 		Family: family(append([]string{it.name}, cx.chain(it.e)...))}
 	r.Devices, r.DevicesFrom = cx.inherited(it.e, "BDevice")
 	r.DevicesVia = "subclasses"
@@ -216,7 +217,7 @@ func anatomy(cx *corpus, it item, organized string, features map[string][]string
 		ch := cx.chain(f.e)
 		isManager := false
 		for _, b := range managerBases {
-			isManager = isManager || contains(ch, b)
+			isManager = isManager || slices.Contains(ch, b)
 		}
 		if isManager || (strings.HasSuffix(f.module(), "-ux") && strings.HasPrefix(f.name, "B") &&
 			strings.HasSuffix(f.name, "Manager")) {

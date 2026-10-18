@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"sort"
 	"strings"
 	"unicode/utf8"
@@ -17,15 +18,6 @@ import (
 // The doc module of a driver (drivers.py _doc_target): the module its lexicon
 // names in help.guide.base, else the doc submodule named like its module
 // directory.
-
-func contains(xs []string, x string) bool {
-	for _, y := range xs {
-		if y == x {
-			return true
-		}
-	}
-	return false
-}
 
 // docIndex holds _doc_modules ({lower-case core: doc submodule}, in inventory
 // order) and _doc_submodules ({doc module name: its submodule}).
@@ -206,7 +198,7 @@ func helpGuideBases(organized, dir, sub string) []string {
 		if len(found) == 0 {
 			continue
 		}
-		if v := unescape(found[len(found)-1][1]); !contains(values, v) {
+		if v := unescape(found[len(found)-1][1]); !slices.Contains(values, v) {
 			values = append(values, v)
 		}
 	}

@@ -2,6 +2,7 @@ package drivers
 
 import (
 	"fmt"
+	"slices"
 	"sort"
 	"strings"
 
@@ -80,7 +81,7 @@ func Drivers(in DriverInputs) (rows []*DriverRow, scope string) {
 		items := append([]item(nil), cx.bySub[sub]...)
 		sort.SliceStable(items, func(a, b int) bool { return items[a].name < items[b].name })
 		for _, it := range items {
-			if contains(cx.chain(it.e), "BDeviceNetwork") {
+			if slices.Contains(cx.chain(it.e), "BDeviceNetwork") {
 				rows = append(rows, anatomy(cx, it, in.Organized, in.Features, docs))
 				modules[sub] = true
 			}
