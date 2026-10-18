@@ -8,6 +8,8 @@ import (
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/pycompat"
+	"github.com/angeles725/niagara-go/internal/pyhtml"
+	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
 var widgets = map[string]bool{"Label": true, "Picture": true, "BoundLabel": true, "ImageButton": true,
@@ -50,7 +52,7 @@ func parseFont(s string) (weight, size, family string) {
 	if s == "" {
 		return
 	}
-	toks := pycompat.Fields(s)
+	toks := textfold.Fields(s)
 	if len(toks) > 0 && (toks[0] == "bold" || toks[0] == "italic") {
 		weight, toks = toks[0], toks[1:]
 	}
@@ -187,7 +189,7 @@ func (r *renderer) widget(e *element, base string) error {
 		wt, sz, fam := parseFont(e.attr("font"))
 		r.parts = append(r.parts, fmt.Sprintf(`<div style="%sdisplay:flex;align-items:center;font-family:%s,Arial,`+
 			`sans-serif;font-weight:%s;font-size:%spx;color:#16233a;line-height:1.05;overflow:hidden;`+
-			`white-space:pre-wrap;">%s</div>`, base, fam, wt, sz, pycompat.HTMLEscape(pycompat.HTMLUnescape(e.attr("text")))))
+			`white-space:pre-wrap;">%s</div>`, base, fam, wt, sz, pycompat.HTMLEscape(pyhtml.Unescape(e.attr("text")))))
 	case "Picture":
 		if img := e.attr("image"); img != "" {
 			uri, err := r.a.dataURI(img)
