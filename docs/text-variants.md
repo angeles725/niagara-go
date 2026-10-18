@@ -28,7 +28,7 @@ Unicode 15 and would still need the Python lower-case and whitespace rules.
 
 Also in `textfold`: `Lower` (= `str.lower()`, final sigma included), `Fields` (= `str.split()`,
 which also splits on `\x1c`-`\x1f`), `ParseQuery`/`Score` (the textsearch substring layer) and the
-textsearch ranking terms `Terms`, `QueryTerms`, `Stem`, `Normalize`, `Tokens`, `IsStopword`.
+textsearch ranking terms `Terms`, `QueryTerms`, `Stem`, `Normalize`, `Tokens`.
 
 ## BM25 (`internal/bm25`)
 
