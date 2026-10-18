@@ -1,10 +1,10 @@
 usage: niagara_help [-h] [--niagara-version VERSION]
-                    {class,search,guide,guide-search,devguide,pdf,method,source,package,slots,find,devguide-search,stats,source-grep,freshness,selftest,versions} ...
+                    {class,search,guide,guide-search,devguide,pdf,method,source,package,slots,find,devguide-search,stats,source-grep,coverage,freshness,selftest,versions} ...
 
 Niagara N4 Documentation Navigator
 
 positional arguments:
-  {class,search,guide,guide-search,devguide,pdf,method,source,package,slots,find,devguide-search,stats,source-grep,freshness,selftest,versions}
+  {class,search,guide,guide-search,devguide,pdf,method,source,package,slots,find,devguide-search,stats,source-grep,coverage,freshness,selftest,versions}
                         Available commands
     class               Look up a class by name (package, inheritance, methods)
     search              Search classes by glob pattern
@@ -20,6 +20,8 @@ positional arguments:
     devguide-search     Full-text search in devguide-clean/ with relevance ranking
     stats               Corpus overview with counts and sizes
     source-grep         Full-text regex search across ALL source files
+    coverage            Documentation coverage report (overview exits 1 on guide folders with
+                        unindexed HTML pages)
     freshness           Check whether indexes are in sync with the raw corpus
     selftest            Assert core search behaviours (exits non-zero on failure)
     versions            Manage Niagara versions: 'versions add <install>' onboards a new install
