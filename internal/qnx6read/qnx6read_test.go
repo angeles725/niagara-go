@@ -19,15 +19,13 @@ import (
 func TestValidateImageMatchesGoldenUsageMessages(t *testing.T) {
 	cases := map[string]string{"usage-no-image": "", "usage-missing-image": "images/missing.img",
 		"usage-directory-image": "images", "usage-char-device": "/dev/null"}
+	frozen, err := golden.Load(root)
+	if err != nil {
+		t.Fatal(err)
+	}
 	stderr := map[string][]byte{}
-	for _, suite := range []string{root, filepath.Join(root, "linux")} {
-		frozen, err := golden.Load(suite)
-		if err != nil {
-			t.Fatal(err)
-		}
-		for _, c := range frozen {
-			stderr[c.Name] = c.Stderr
-		}
+	for _, c := range frozen {
+		stderr[c.Name] = c.Stderr
 	}
 	t.Chdir(runDir)
 	for name, image := range cases {

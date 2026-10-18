@@ -8,7 +8,6 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
-	"runtime"
 	"sort"
 	"strings"
 	"testing"
@@ -17,10 +16,10 @@ import (
 )
 
 // root is a fresh directory per test process, so concurrent `go test` runs of this package never
-// share files: root/golden links to (or, without symlink privilege, copies) testdata/golden,
-// root/linux/golden to testdata/linux/golden (TestGoldenLinux), and root/run (the cwd_fixture of every case)
-// holds the sparse disk images of testdata/inputs/images.txt (the real P2/P3 offsets are 129 MiB
-// and 3.5 GiB) and the extract outputs. TestMain removes it afterwards.
+// share files: root/golden links to (or, without symlink privilege, copies) testdata/golden, and
+// root/run (the cwd_fixture of every case) holds the sparse disk images of
+// testdata/inputs/images.txt (the real P2/P3 offsets are 129 MiB and 3.5 GiB) and the extract
+// outputs. TestMain removes it afterwards.
 var root, runDir string
 
 func TestMain(m *testing.M) {
@@ -43,12 +42,6 @@ func withImages(m *testing.M) (int, error) {
 	}
 	defer os.RemoveAll(dir)
 	if err := linkOrCopy(filepath.Join(testdata, "golden"), filepath.Join(dir, "golden"), os.Symlink); err != nil {
-		return 0, err
-	}
-	if err := os.Mkdir(filepath.Join(dir, "linux"), 0o755); err != nil {
-		return 0, err
-	}
-	if err := linkOrCopy(filepath.Join(testdata, "linux", "golden"), filepath.Join(dir, "linux", "golden"), os.Symlink); err != nil {
 		return 0, err
 	}
 	if err := materializeImages(testdata, dir); err != nil {
@@ -141,7 +134,9 @@ var extracted = map[string]string{
 }
 
 // TestGolden runs every case through Main (intended differences come from each case's
-// intended.json), then checks the bytes every successful extract case wrote.
+// intended.json), then checks the bytes every successful extract case wrote. usage-char-device
+// requires linux: /dev/null is a character device there, while Python on Windows finds no such
+// file and says "image not found".
 func TestGolden(t *testing.T) {
 	golden.Run(t, root, Main)
 	cases, err := golden.Load(root)
@@ -169,15 +164,6 @@ func TestGolden(t *testing.T) {
 	for _, dst := range unmatchedHashes(extracted, seen) {
 		t.Errorf("extracted[%q] is checked by no successful extract case", dst)
 	}
-}
-
-// TestGoldenLinux runs the cases that need a Linux device node (/dev/null is a character
-// device there; Python on Windows finds no such file and says "image not found").
-func TestGoldenLinux(t *testing.T) {
-	if runtime.GOOS != "linux" {
-		t.Skip("captured on Linux: /dev/null is a character device there")
-	}
-	golden.Run(t, filepath.Join(root, "linux"), Main)
 }
 
 // unmatchedHashes returns, sorted, the keys of hashes absent from seen.
