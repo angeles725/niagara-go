@@ -1,6 +1,7 @@
 package helpbuild
 
 import (
+	"errors"
 	"flag"
 	"os"
 	"path/filepath"
@@ -102,4 +103,59 @@ func TestParityCoverageReportGolden(t *testing.T) {
 	covPython(t)
 	cases, pairs := reportGoldenCases(t)
 	checkCovGoldens(t, cases, true, pairs...)
+}
+
+// covMalformed are report indexes of an unexpected shape: the file
+// replaced in the report fixture, its text, the module ("" = overview);
+// python is what Python does (ok: a report and its status, partial: it
+// raises after printing the lines before the failing lookup, empty: it
+// raises before any line); shape is true when Go returns an
+// *IndexShapeError before any output, false when its report is Python's.
+var covMalformed = []struct {
+	name, file, text, module, python string
+	shape                            bool
+}{
+	{"class record not an object", "class-index.json", `{"BAlarmUx": [1]}`, "alarm-rt", "partial", true},
+	{"class record not an object, overview", "class-index.json", `{"BAlarmUx": [1]}`, "", "ok", false},
+	{"class index not an object, overview", "class-index.json", `["BAlarmUx"]`, "", "ok", true},
+	{"method entries a number", "method-index.json", `{"ack": 5}`, "alarm-rt", "partial", true},
+	{"method entries a non-empty string", "method-index.json", `{"ack": "x"}`, "alarm-rt", "partial", true},
+	{"method entries a non-empty object", "method-index.json", `{"ack": {"class": "BAlarm"}}`, "alarm-rt", "partial", true},
+	{"method entry not an object", "method-index.json", `{"ack": [1]}`, "alarm-rt", "partial", true},
+	{"method entries a number, overview", "method-index.json", `{"ack": 5}`, "", "ok", false},
+	{"method entries empty string and object", "method-index.json",
+		`{"ack": [{"class": "BAlarm", "section": "methods"}], "e1": "", "e2": {}}`, "alarm-rt", "ok", false},
+	{"module not a string", "source-index.json", `{"BAlarm": {"module": "alarm-rt"}, "BZeta": {"module": 5}}`, "alarm-rt", "empty", true},
+	{"module not a string, overview tie", "source-index.json", `{"BAlarm": {"module": "alarm-rt"}, "BZeta": {"module": 5}}`, "", "partial", true},
+	{"module not a string, overview", "source-index.json", `{"BAlarm": {"module": "alarm-rt"}, "BOrphan": {"module": 5}}`, "", "ok", true},
+	{"source record not an object", "source-index.json", `{"BAlarm": {"module": "alarm-rt"}, "BZeta": 5}`, "alarm-rt", "empty", true},
+	{"source record not an object, overview", "source-index.json", `{"BAlarm": {"module": "alarm-rt"}, "BZeta": 5}`, "", "partial", true},
+	{"source index not an object", "source-index.json", `["BAlarm"]`, "alarm-rt", "empty", true},
+	{"source index not an object, overview", "source-index.json", `["BAlarm"]`, "", "partial", true},
+}
+
+// TestCoverageMalformedIndexes: no Python needed; an index of an
+// unexpected shape is an *IndexShapeError before any output, and empty
+// string or object method entries count no method (Python iterates
+// nothing in them).
+func TestCoverageMalformedIndexes(t *testing.T) {
+	src := covReportBase(t, t.TempDir())
+	for _, c := range covMalformed {
+		t.Run(c.name, func(t *testing.T) {
+			base := filepath.Join(t.TempDir(), "b")
+			copyTree(t, src, base)
+			writeFile(t, filepath.Join(base, "indexes", c.file), []byte(c.text))
+			var b strings.Builder
+			_, err := Coverage(&b, base, c.module)
+			var shape *IndexShapeError
+			switch {
+			case c.shape && (!errors.As(err, &shape) || b.Len() != 0):
+				t.Errorf("err %v after %q; want an *IndexShapeError before any output", err, b.String())
+			case !c.shape && err != nil:
+				t.Errorf("err %v; want a report", err)
+			case c.name == "method entries empty string and object" && !strings.Contains(b.String(), "Total methods: 1\n"):
+				t.Errorf("report %q; want Total methods: 1", b.String())
+			}
+		})
+	}
 }

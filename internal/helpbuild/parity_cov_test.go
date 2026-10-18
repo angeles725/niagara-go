@@ -2,6 +2,7 @@ package helpbuild
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -161,6 +162,47 @@ func TestParityCoverageReport(t *testing.T) {
 				}
 			}
 			covBoth(t, "missing "+name, "coverage", []string{p, "alarm"}, []string{g, "alarm"}, p, g)
+		})
+	}
+}
+
+// TestParityCoverageMalformed pins the intended difference on indexes of
+// an unexpected shape (covMalformed): Go returns an *IndexShapeError
+// before any output where Python raises after printing the lines before
+// the failing lookup (partial) or before any line (empty), and where
+// Python reads no bad value (ok) the Go report is Python's byte for byte,
+// except the rows Go rejects up front.
+func TestParityCoverageMalformed(t *testing.T) {
+	covPython(t)
+	src := covReportBase(t, t.TempDir())
+	for _, c := range covMalformed {
+		t.Run(c.name, func(t *testing.T) {
+			p, g := covCopies(t, src)
+			for _, b := range []string{p, g} {
+				writeFile(t, filepath.Join(b, "indexes", c.file), []byte(c.text))
+			}
+			args := func(base string) []string {
+				if c.module == "" {
+					return []string{base}
+				}
+				return []string{base, c.module}
+			}
+			if c.python == "ok" && !c.shape {
+				covBoth(t, c.name, "coverage", args(p), args(g), p, g)
+				return
+			}
+			py := runCovDriver(t, append([]string{"coverage"}, args(p)...)...)
+			var out string
+			if err := json.Unmarshal([]byte(strings.TrimSuffix(strings.TrimPrefix(py[0], `["out", `), "]")), &out); err != nil {
+				t.Fatal(err)
+			}
+			raised := py[1] == `["raise"]`
+			switch got := map[bool]string{true: "empty", false: "partial"}[out == ""]; {
+			case c.python == "ok" && raised, c.python != "ok" && !raised:
+				t.Errorf("python %s, want %s", py[1], c.python)
+			case c.python != "ok" && got != c.python:
+				t.Errorf("python raised after %q, want %s output", out, c.python)
+			}
 		})
 	}
 }

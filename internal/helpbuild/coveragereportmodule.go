@@ -87,8 +87,10 @@ func moduleCoverage(w io.Writer, x *coverageIndexes, hasDoc map[string]bool, mod
 			undocumented = append(undocumented, c)
 		}
 	}
-	// Every value is computed before printing, as a Python error would
-	// stop the report half printed only after the lines before it.
+	// Every value is computed before printing: an index of an unexpected
+	// shape is an *IndexShapeError before any output, where Python raises
+	// after printing the lines before the failing lookup (an intended
+	// difference, pinned by TestCoverageMalformedIndexes).
 	pkgs := make([]string, len(undocumented))
 	for i, c := range undocumented {
 		if pkgs[i], err = classPackage(x.class, c); err != nil {
@@ -131,19 +133,34 @@ type moduleStat struct {
 	module      string
 }
 
-func overviewCoverage(w io.Writer, source *index.Object, hasDoc map[string]bool) error {
-	byModule := map[string][]string{}
-	var order []string
-	documented := 0
+// moduleGroups are the source-index classes by module, modules in
+// first-seen order (by_module).
+type moduleGroups struct {
+	order    []string
+	byModule map[string][]string
+}
+
+// groupByModule is the by_module loop; a record of an unexpected shape is
+// an *IndexShapeError, returned before the report prints anything.
+func groupByModule(source *index.Object) (*moduleGroups, error) {
+	g := &moduleGroups{byModule: map[string][]string{}}
 	for i, cls := range source.Keys() {
 		mod, err := sourceModule(cls, source.Values()[i], "unknown")
 		if err != nil {
-			return err
+			return nil, err
 		}
-		if _, seen := byModule[mod]; !seen {
-			order = append(order, mod)
+		if _, seen := g.byModule[mod]; !seen {
+			g.order = append(g.order, mod)
 		}
-		byModule[mod] = append(byModule[mod], cls)
+		g.byModule[mod] = append(g.byModule[mod], cls)
+	}
+	return g, nil
+}
+
+func overviewCoverage(w io.Writer, source *index.Object, groups *moduleGroups, hasDoc map[string]bool) error {
+	order, byModule := groups.order, groups.byModule
+	documented := 0
+	for _, cls := range source.Keys() {
 		if hasDoc[cls] {
 			documented++
 		}

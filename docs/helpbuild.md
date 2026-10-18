@@ -670,6 +670,7 @@ CPython 3.15 python3:
 | `TestCoverageReportGolden`, `TestDocJarCoverageGolden` | no Python: the Go reports of the synthetic fixtures against `testdata/cov/golden/*.jsonl` (Python's output; `go test -run 'TestParity.*Golden' -args -update-cov` rewrites them) |
 | `TestParityCoverageReportGolden`, `TestParityDocJarCoverageGolden` | the golden files are still Python's output |
 | `TestParityDocJarCoverage` | the gate on the synthetic install (11 jars: every index kind indexed, not indexed and not extracted, every exclusion reason, unmapped and unknown entries, duplicates, an unreadable jar, a module help jar, a jar name cut at 34 code points around non-ASCII letters, a content type cut at 20) by version id and identified from the data root, an unregistered version, no `install_dir`, no registry, more than 25 gaps, a PASS, a FAIL from a guide folder alone, no indexes, a malformed index; the listing cache each side saves is byte-identical |
+| `TestCoverageMalformedIndexes`, `TestParityCoverageMalformed` | indexes of an unexpected shape (see the intended differences) |
 | `TestParityCoverageReport` | the overview (ties on the percentage, a class without module, non-ASCII modules, `str.replace` of every `.txt`), module reports (`alarm-rt`, `ALARM`, `alarm-ux`, `zeta-rt`, `école`, `rt`), a miss, the guide coverage alone, an empty source index, each missing index |
 | `TestParityCoverageReal` | `coverage`, `coverage alarm-rt`, the guide coverage and `coverage --doc-jars` on the real data roots and installs (4.14.0.162 with `HELPBUILD_PARITY_REAL=1`, 4.15.6.20 with `HELPBUILD_PARITY_415=1`, or the `HELPBUILD_PARITY_COVERAGE` list); each side saves its listing cache in a temporary repository holding a copy of the registry, and the full-text index must already be up to date (the test never writes the corpus); on 4.14.0.162 the SHA-256 and exit status of the three Go reports also equal the `coverage`, `coverage-module` and `coverage-doc-jars` cases of the reference's `tests/golden/cli.json` |
 
@@ -685,11 +686,17 @@ over /mnt/c, so the page cache (cold or warm) decides most of them.
 
 ### S10b-1 intended differences
 
-- **An index of an unexpected shape** (a list where a dict is expected, a record without
-  its `path` or `package`, a non-string module) is an `*IndexShapeError` before the report
-  prints; Python raises `AttributeError`/`TypeError`/`KeyError`, in the overview after the
-  guide coverage and its header are printed. A non-string `package` prints Python's
-  `str()` of it.
+- **An index of an unexpected shape** (a top level that is not an object in any of the four
+  report indexes, a class, source or method record of another type, a non-string module)
+  is an `*IndexShapeError` before any output. Python raises after printing the lines before
+  the failing lookup (the module report up to its methods line, the overview up to its
+  header) or before any line (a source-index problem in a module report); where it reads
+  no bad value it prints the whole report: a class or method index the overview does not
+  read, a non-string module whose percentage ties with no other (it prints `str()` of it).
+  `TestCoverageMalformedIndexes` pins the Go side, `TestParityCoverageMalformed` Python's
+  for each case. Empty string or object method entries count no method on both sides. A
+  non-string `package` prints Python's `str()` of it. In the doc-jar gate the scan finishes
+  before anything prints, so a bad index there prints nothing on both sides.
 - **A jar whose central directory has an invalid UTF-8 name under the UTF-8 flag**:
   `_entries` catches only `BadZipFile`/`OSError`, so Python stops with a
   `UnicodeDecodeError` traceback; Go counts the jar unreadable (one gap row), as
