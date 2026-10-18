@@ -8,5 +8,9 @@ if [ -n "$unformatted" ]; then
   echo "$unformatted" >&2
   exit 1
 fi
+# A test that shells out to `git init/commit/tag` in a temp dir would otherwise inherit
+# GIT_DIR/GIT_INDEX_FILE/GIT_WORK_TREE from this hook and write into the shared clone
+# (it once flipped core.bare). Strip them so every child git call stands on its own.
+unset GIT_DIR GIT_INDEX_FILE GIT_WORK_TREE
 go vet ./...
 go test -short ./...
