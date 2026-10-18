@@ -1,0 +1,310 @@
+schema	index	sqlite_autoindex_meta_1	meta	NULL
+schema	table	docs	docs	CREATE TABLE docs(id INTEGER PRIMARY KEY, source TEXT, path TEXT, title TEXT, line INTEGER, page INTEGER)
+schema	table	fts	fts	CREATE VIRTUAL TABLE fts USING fts5(title, body, content='')
+schema	table	fts_config	fts_config	CREATE TABLE 'fts_config'(k PRIMARY KEY, v) WITHOUT ROWID
+schema	table	fts_data	fts_data	CREATE TABLE 'fts_data'(id INTEGER PRIMARY KEY, block BLOB)
+schema	table	fts_docsize	fts_docsize	CREATE TABLE 'fts_docsize'(id INTEGER PRIMARY KEY, sz BLOB)
+schema	table	fts_idx	fts_idx	CREATE TABLE 'fts_idx'(segid, term, pgno, PRIMARY KEY(segid, term)) WITHOUT ROWID
+schema	table	meta	meta	CREATE TABLE meta(key TEXT PRIMARY KEY, value TEXT)
+config	version	4
+meta	'fingerprint'	'engine=3|bajadoc-clean=$ROOT/bajadoc-clean:6:278:1700000041123456789:c27ace988328f11307ff483f5546e76d5c2c9ef2|devguide-clean=$ROOT/devguide-clean:7:272:1700000029123456789:12209e225a3aa9d2f5007c2f52dbbfe55a6b495e|guides-clean=$ROOT/guides-clean:5:178:1700000034123456789:f6303dd7ec21230defedcfb7fca245d551c79080|docs-text=$ROOT/docs-text:3:131:1700000026123456789:56ffe354b85b3423f542eef1158eac60bb2df96f|course-text=$ROOT/course-text:2:53:1700000026123456789:547fb101f348067cb53df8f40c23b5861d73424d|source=$ROOT/source:1:60:1700000026123456789:bffa3156e7bafc38e833e3fc2abe38c85e74d08d|devguide-rc=$ROOT/devguide-rc:2:56:1700000024123456789:b89fbe83a7e6d6a2aab98e01769d5070fd706a0b|devguide-examples=$ROOT/devguide-examples:5:89:1700000034123456789:f0b9840ba451d79c0f967d051f0e7e4f6e3e9469'
+docs	1	'bajadoc-clean'	'Upper.txt'	'Upper'	3	0
+docs	2	'bajadoc-clean'	'Zeta.txt'	'Zeta'	4	0
+docs	3	'bajadoc-clean'	'_under.txt'	'_under'	1	0
+docs	4	'bajadoc-clean'	'a.txt'	'a'	3	0
+docs	5	'bajadoc-clean'	'javax/baja/sys/BAbsTime.txt'	'BAbsTime'	3	0
+docs	6	'bajadoc-clean'	'javax/baja/sys/BObject.txt'	'BObject (javax.baja.sys)'	4	0
+docs	7	'devguide-clean'	'bad.txt'	'Bad � bytes �� end'	3	0
+docs	8	'devguide-clean'	'bom.txt'	'bom'	1	0
+docs	9	'devguide-clean'	'crlf.txt'	'CRLF page'	3	0
+docs	10	'devguide-clean'	'empty.txt'	'empty'	1	0
+docs	11	'devguide-clean'	'intro.txt'	'Introducción a la configuración'	3	0
+docs	12	'devguide-clean'	'onlyheader.txt'	'Only'	2	0
+docs	13	'devguide-clean'	'spaces.txt'	'Spaced'	3	0
+docs	14	'guides-clean'	'.hidden.txt'	'Hidden'	3	0
+docs	15	'guides-clean'	'Key Space.txt'	'Key Space'	3	0
+docs	16	'guides-clean'	'lower.txt'	'lower'	1	0
+docs	17	'guides-clean'	'noheader.txt'	'noheader'	1	0
+docs	18	'guides-clean'	'alarm/alarm-intro.txt'	'Alarm intro'	3	0
+docs	19	'docs-text'	'CR_Pages.txt'	'CR Pages'	1	1
+docs	20	'docs-text'	'CR_Pages.txt'	'CR Pages'	3	2
+docs	21	'docs-text'	'CR_Pages.txt'	'CR Pages'	5	3
+docs	22	'docs-text'	'Modbus_Guide.txt'	'Modbus Guide'	1	1
+docs	23	'docs-text'	'Modbus_Guide.txt'	'Modbus Guide'	4	2
+docs	24	'docs-text'	'Modbus_Guide.txt'	'Modbus Guide'	8	4
+docs	25	'docs-text'	'Modbus_Guide.txt'	'Modbus Guide'	10	6
+docs	26	'docs-text'	'NoFF_Manual.txt'	'NoFF Manual'	1	0
+docs	27	'course-text'	'readme.txt'	'Course readme'	3	0
+docs	28	'course-text'	'day1/lab_1.txt'	'Course: day1/lab_1'	1	1
+docs	29	'course-text'	'day1/lab_1.txt'	'Course: day1/lab_1'	2	2
+docs	30	'source'	'javax/baja/Foo.java'	'Foo'	1	0
+docs	31	'devguide-rc'	'Example.java'	'Example'	3	0
+docs	32	'devguide-rc'	'notes.txt'	'RC notes'	3	0
+docs	33	'devguide-examples'	'Thing.px'	'Thing'	1	0
+docs	34	'devguide-examples'	'page.html'	'page'	1	0
+docs	35	'devguide-examples'	'view.hbs'	'view'	1	0
+docs	36	'devguide-examples'	'sub/ext/inner.js'	'inner'	1	0
+docs	37	'devguide-examples'	'web/app.js'	'app'	1	0
+docsize	1	0202
+docsize	2	0105
+docsize	3	0202
+docsize	4	0003
+docsize	5	0306
+docsize	6	020E
+docsize	7	0402
+docsize	8	0203
+docsize	9	0306
+docsize	10	0200
+docsize	11	0408
+docsize	12	0200
+docsize	13	0206
+docsize	14	0202
+docsize	15	0404
+docsize	16	0204
+docsize	17	0206
+docsize	18	0406
+docsize	19	0202
+docsize	20	0202
+docsize	21	0201
+docsize	22	0206
+docsize	23	0204
+docsize	24	0202
+docsize	25	0202
+docsize	26	0404
+docsize	27	0202
+docsize	28	0502
+docsize	29	0502
+docsize	30	010C
+docsize	31	0102
+docsize	32	0101
+docsize	33	0201
+docsize	34	0201
+docsize	35	0201
+docsize	36	0205
+docsize	37	0208
+averages	2556810B
+inst	1	5	body	2
+inst	1	28	title	4
+inst	1	29	title	4
+inst	2	11	body	7
+inst	22	5	body	3
+inst	3rd	5	body	4
+inst	72	11	body	1
+inst	abs	5	title	1
+inst	ack	6	body	8
+inst	after	2	body	2
+inst	after	13	body	1
+inst	alarm	6	body	7
+inst	alarm	18	body	2
+inst	alarm	18	body	5
+inst	alarm	18	title	0
+inst	alarm	18	title	2
+inst	alarmack	6	body	6
+inst	alarmservic	18	body	1
+inst	an	13	body	2
+inst	app	37	body	3
+inst	app	37	title	0
+inst	app	37	title	1
+inst	babstim	5	title	0
+inst	bad	7	title	0
+inst	bad	7	title	3
+inst	baja	30	body	2
+inst	bar	30	body	7
+inst	bobject	6	body	1
+inst	bobject	6	title	0
+inst	body	1	body	1
+inst	body	2	body	0
+inst	body	3	body	1
+inst	body	7	body	0
+inst	body	8	body	2
+inst	body	13	body	0
+inst	body	15	body	0
+inst	body	16	body	3
+inst	bom	8	body	1
+inst	bom	8	title	0
+inst	bom	8	title	1
+inst	byt	7	title	1
+inst	caf	11	body	5
+inst	class	30	body	4
+inst	class	31	body	0
+inst	configur	6	body	9
+inst	configuracion	11	body	0
+inst	configuracion	11	title	2
+inst	cours	27	title	0
+inst	cours	28	title	0
+inst	cours	29	title	0
+inst	cr	19	title	0
+inst	cr	20	title	0
+inst	cr	21	title	0
+inst	crlf	9	title	0
+inst	crlf	9	title	2
+inst	day	28	title	2
+inst	day	29	title	2
+inst	day1	28	title	1
+inst	day1	29	title	1
+inst	deg	11	body	3
+inst	degf	11	body	2
+inst	dot	14	body	0
+inst	empty	4	body	0
+inst	empty	10	title	0
+inst	empty	10	title	1
+inst	end	7	title	2
+inst	event	6	body	10
+inst	exampl	31	body	1
+inst	exampl	31	title	0
+inst	ext	36	body	4
+inst	feed	26	body	2
+inst	ff	26	title	2
+inst	fil	11	body	6
+inst	fil	14	body	1
+inst	fiv	21	body	0
+inst	foo	30	body	6
+inst	foo	30	title	0
+inst	foobar	30	body	5
+inst	form	26	body	1
+inst	four	20	body	1
+inst	four	24	body	1
+inst	function	37	body	0
+inst	get	30	body	10
+inst	getvalu	30	body	9
+inst	guid	22	body	2
+inst	guid	22	title	1
+inst	guid	23	title	1
+inst	guid	24	title	1
+inst	guid	25	title	1
+inst	header	2	body	4
+inst	header	15	body	3
+inst	header	17	body	3
+inst	her	26	body	3
+inst	hidden	14	title	0
+inst	hidden	14	title	1
+inst	http	6	body	12
+inst	httpserver	6	body	11
+inst	ideographic	13	body	3
+inst	ignor	2	title	0
+inst	init	37	body	2
+inst	initapp	37	body	1
+inst	inner	36	title	0
+inst	inner	36	title	1
+inst	int	30	body	8
+inst	intro	11	title	3
+inst	intro	18	title	1
+inst	intro	18	title	3
+inst	introduccion	11	title	0
+inst	is	6	body	3
+inst	javax	30	body	1
+inst	key	15	title	0
+inst	key	15	title	2
+inst	key	16	body	2
+inst	la	11	title	1
+inst	lab	28	title	3
+inst	lab	29	title	3
+inst	level	36	body	3
+inst	lex	37	body	6
+inst	lexonly	37	body	5
+inst	lin	9	body	0
+inst	lin	9	body	2
+inst	lin	9	body	4
+inst	lin	13	body	5
+inst	lin	17	body	5
+inst	lower	16	body	1
+inst	lower	16	title	0
+inst	lower	16	title	1
+inst	manual	26	title	3
+inst	modbu	22	body	1
+inst	modbu	22	title	0
+inst	modbu	23	body	2
+inst	modbu	23	title	0
+inst	modbu	24	title	0
+inst	modbu	25	title	0
+inst	mor	23	body	3
+inst	naiv	11	body	4
+inst	no	26	body	0
+inst	no	26	title	1
+inst	no	27	body	0
+inst	noff	26	title	0
+inst	noheader	17	title	0
+inst	noheader	17	title	1
+inst	not	15	body	2
+inst	not	32	body	0
+inst	not	32	title	0
+inst	not	36	body	0
+inst	object	6	body	2
+inst	object	6	title	1
+inst	one	9	body	1
+inst	one	19	body	0
+inst	one	22	body	4
+inst	one	28	body	1
+inst	only	12	title	0
+inst	only	37	body	7
+inst	onlyheader	12	title	1
+inst	packag	30	body	0
+inst	pag	9	title	1
+inst	pag	19	title	1
+inst	pag	20	title	1
+inst	pag	21	title	1
+inst	pag	22	body	3
+inst	pag	23	body	0
+inst	pag	24	body	0
+inst	pag	25	body	0
+inst	pag	27	body	1
+inst	pag	34	body	0
+inst	pag	34	title	0
+inst	pag	34	title	1
+inst	plain	17	body	0
+inst	public	30	body	3
+inst	px	33	body	0
+inst	rd	5	body	5
+inst	readm	27	title	1
+inst	return	37	body	4
+inst	right	2	body	1
+inst	root	6	body	5
+inst	rout	18	body	4
+inst	second	17	body	4
+inst	server	6	body	13
+inst	servic	18	body	3
+inst	six	25	body	1
+inst	slid	28	body	0
+inst	slid	29	body	0
+inst	spac	13	body	4
+inst	spac	13	title	0
+inst	spac	13	title	1
+inst	spac	15	title	1
+inst	spac	15	title	3
+inst	text	7	body	1
+inst	text	17	body	1
+inst	text	22	body	5
+inst	the	2	body	3
+inst	the	6	body	0
+inst	the	6	body	4
+inst	the	18	body	0
+inst	the	36	body	1
+inst	thing	33	title	0
+inst	thing	33	title	1
+inst	thre	9	body	5
+inst	thre	20	body	0
+inst	tim	5	body	0
+inst	tim	5	title	2
+inst	titl	4	body	1
+inst	titl	8	body	0
+inst	titl	15	body	1
+inst	titl	16	body	0
+inst	titl	22	body	0
+inst	titl	35	body	0
+inst	top	36	body	2
+inst	two	9	body	3
+inst	two	19	body	1
+inst	two	23	body	1
+inst	two	29	body	1
+inst	under	3	body	0
+inst	under	3	title	0
+inst	under	3	title	1
+inst	upper	1	body	0
+inst	upper	1	title	0
+inst	upper	1	title	1
+inst	valu	4	body	2
+inst	valu	5	body	1
+inst	valu	30	body	11
+inst	view	35	title	0
+inst	view	35	title	1
+inst	without	17	body	2
