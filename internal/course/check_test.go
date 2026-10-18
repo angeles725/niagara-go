@@ -26,6 +26,7 @@ const miniStation = `<?xml version="1.0" encoding="UTF-8"?>
  <p n="Dev2" h="8" t="x:Device"/>
  <p n="Net" h="9" m="n=net" t="n:Network">
   <p n="health" t="d:PingHealth"><p n="lastOkTime" v="2026-10-16T15:13:00.000-06:00"/></p>
+  <p n="dev" h="b" t="n:Dev"/>
   <p n="tcp" h="a" t="n:TcpConfig"><p n="address" t="n:IpAddress"><p n="ipAddress" v="localhost"/><p n="port" v="23"/></p></p>
  </p>
 </p>
@@ -70,7 +71,7 @@ func TestCheckKinds(t *testing.T) {
 			verdictFail, "1 of 2 pass, want it stored: Svc2.lastSuccess = \"\" (default)"},
 		{Check{Kind: kindSlot, Type: "lateModule:Device", Slot: "id", Default: "A", Distinct: true, Op: opMin, N: 2},
 			verdictPass, "2 distinct id over 2 components: A, b"},
-		{Check{Kind: kindSlot, Type: "training:Add", Slot: "out", Set: true}, verdictFail, "no training:Add component (searched 10 components)"},
+		{Check{Kind: kindSlot, Type: "training:Add", Slot: "out", Set: true}, verdictFail, "no training:Add component (searched 11 components)"},
 		{Check{Kind: kindSlot, Type: "net:TcpConfig", Slot: "address.port", Want: "23", Default: "0"}, verdictPass, "Net/tcp.address.port = 23 (stored)"},
 		{Check{Kind: kindSlot, Type: "net:TcpConfig", Slot: "address.sessionId", Want: "5", Default: "-1"},
 			verdictFail, "0 of 1 pass, want 5: Net/tcp.address.sessionId = -1 (default)"},
@@ -78,6 +79,12 @@ func TestCheckKinds(t *testing.T) {
 			"Net.health.lastOkTime = 2026-10-16T15:13:00.000-06:00 (stored)"},
 		{Check{Kind: kindSlot, Type: "net:Network", Slot: "health.down", Want: "false", Default: "false"}, verdictPass,
 			"Net.health.down = false (default)"},
+		// down = false on a component never pinged is the default: Stored requires lastOkTime too.
+		{Check{Kind: kindSlot, Type: "net:Network", Slot: "health.down", Want: "false", Default: "false",
+			Stored: []string{"health.lastOkTime"}}, verdictPass, "Net.health.down = false (default)"},
+		{Check{Kind: kindSlot, Type: "net:Dev", Slot: "health.down", Want: "false", Default: "false",
+			Stored: []string{"health.lastOkTime"}}, verdictFail,
+			"0 of 1 pass, want false with health.lastOkTime stored: Net/dev.health.lastOkTime = \"\" (default)"},
 		{Check{Kind: kindLink, From: "control:NumericWritable", FromSlot: "out", Type: "training:Tstat", Slot: "cv", Op: opMin, N: 1},
 			verdictPass, "found 1: Point.out -> Tstat.cv"},
 		{Check{Kind: kindLink, From: "control:NumericWritable", FromSlot: "out", Type: "training:Tstat", Slot: "sp", Op: opMin, N: 1},
@@ -162,8 +169,9 @@ func TestCheckNestedNeedsNestedLoad(t *testing.T) {
 	if r.Verdict != verdictSkip || r.Evidence != "health.down is a nested slot: the station was read without nested values" {
 		t.Errorf("%s %q", r.Verdict, r.Evidence)
 	}
-	if !needsNested([]*Check{{Kind: kindJar}, {Kind: kindSlot, Slot: "a.b"}}) || needsNested([]*Check{{Kind: kindSlot, Slot: "diff"}}) {
-		t.Error("needsNested: want true only for a dotted slot")
+	if !needsNested([]*Check{{Kind: kindJar}, {Kind: kindSlot, Slot: "a.b"}}) || needsNested([]*Check{{Kind: kindSlot, Slot: "diff"}}) ||
+		!needsNested([]*Check{{Kind: kindSlot, Slot: "diff", Stored: []string{"a.b"}}}) {
+		t.Error("needsNested: want true only for a dotted slot (Slot or Stored)")
 	}
 }
 

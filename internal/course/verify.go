@@ -10,6 +10,9 @@ import (
 	"github.com/angeles725/niagara-go/internal/cli"
 )
 
+// now is the clock of the default --date; tests replace it.
+var now = time.Now
+
 // Prediction verdicts of verify-predictions. CONFIRMED needs every linked check PASS and one of
 // them observing the whole answer (no Unobserved note for the item); PARTIAL is every check PASS
 // but each observes only the stored part; one FAIL contradicts; anything else (no check, a SKIP)
@@ -24,12 +27,51 @@ const (
 // prediction is one answer-key item still marked *(predicted)* and the checks that link it.
 type prediction struct {
 	Item    *Item
-	Results []Result // the results of the checks whose Keys name the item, in spec order
+	Results []linkedResult // the checks whose keys resolve to the item, once each, in spec order
 	Verdict string
 	Reason  string // the evidence (CONFIRMED, CONTRADICTED; PARTIAL with what is not observed) or why it is undecided
 }
 
-func joinResults(results []Result, verdict string) string {
+// link is one check whose keys resolve to an item (Corpus.lookup: the ID, a range ID or a covered
+// ID), once per check; Notes are the Unobserved notes of the matched keys (none = the check
+// observes the whole answer).
+type link struct {
+	Check *Check
+	Notes []string
+}
+
+// linkedResult is a link's check run on the station.
+type linkedResult struct {
+	Result
+	Notes []string
+}
+
+// itemLinks resolves every key of the spec to its item, as verify-predictions and
+// TestCheckKeysReal both do: a note is read under the key that matched, never the item's ID, and
+// a check whose several keys reach one item is one link carrying every matched note.
+func itemLinks(c *Corpus, spec []Check) map[*Item][]link {
+	links := map[*Item][]link{}
+	for i := range spec {
+		ck := &spec[i]
+		for _, k := range ck.Keys {
+			it := c.lookup(k)
+			if it == nil {
+				continue
+			}
+			ls := links[it]
+			if len(ls) == 0 || ls[len(ls)-1].Check != ck {
+				ls = append(ls, link{Check: ck})
+			}
+			if note, ok := ck.Unobserved[k]; ok && !slices.Contains(ls[len(ls)-1].Notes, note) {
+				ls[len(ls)-1].Notes = append(ls[len(ls)-1].Notes, note)
+			}
+			links[it] = ls
+		}
+	}
+	return links
+}
+
+func joinResults(results []linkedResult, verdict string) string {
 	var parts []string
 	for _, r := range results {
 		if verdict == "" || r.Verdict == verdict {
@@ -40,7 +82,7 @@ func joinResults(results []Result, verdict string) string {
 }
 
 // decide turns the results of an item's checks into its verdict and reason.
-func decide(id string, results []Result) (string, string) {
+func decide(results []linkedResult) (string, string) {
 	if len(results) == 0 {
 		return predUndecided, "no check covers it"
 	}
@@ -57,12 +99,13 @@ func decide(id string, results []Result) (string, string) {
 	}
 	var notes []string
 	for _, r := range results {
-		note, partial := r.Unobserved[id]
-		if !partial {
+		if len(r.Notes) == 0 {
 			return predConfirmed, joinResults(results, "") // this check observes the whole answer
 		}
-		if !slices.Contains(notes, note) {
-			notes = append(notes, note)
+		for _, n := range r.Notes {
+			if !slices.Contains(notes, n) {
+				notes = append(notes, n)
+			}
 		}
 	}
 	return predPartial, joinResults(results, "") + "; not observed: " + strings.Join(notes, "; ")
@@ -70,7 +113,7 @@ func decide(id string, results []Result) (string, string) {
 
 // suggestion is the line a human (or an agent) applies to a CONFIRMED item; course never edits
 // the answer key.
-func suggestion(id, date string, results []Result) string {
+func suggestion(id, date string, results []linkedResult) string {
 	ev := make([]string, len(results))
 	for i, r := range results {
 		ev[i] = r.ID + " " + r.Evidence
@@ -83,18 +126,14 @@ func suggestion(id, date string, results []Result) string {
 // station.
 func verifyPredictions(c *Corpus, path, install string) ([]prediction, *station, error) {
 	var preds []prediction
-	linked := map[*Item][]*Check{}
+	links := itemLinks(c, checkSpec)
 	var checks []*Check
 	seen := map[*Check]bool{}
-	for i := range checkSpec {
-		ck := &checkSpec[i]
-		for _, k := range ck.Keys {
-			if it := c.lookup(k); it != nil && it.hasStatus("predicted") {
-				linked[it] = append(linked[it], ck)
-				if !seen[ck] {
-					seen[ck] = true
-					checks = append(checks, ck)
-				}
+	for _, it := range c.Items {
+		for _, l := range links[it] {
+			if it.hasStatus("predicted") && !seen[l.Check] {
+				seen[l.Check] = true
+				checks = append(checks, l.Check)
 			}
 		}
 	}
@@ -111,10 +150,10 @@ func verifyPredictions(c *Corpus, path, install string) ([]prediction, *station,
 			continue
 		}
 		p := prediction{Item: it}
-		for _, ck := range linked[it] {
-			p.Results = append(p.Results, results[ck])
+		for _, l := range links[it] {
+			p.Results = append(p.Results, linkedResult{Result: results[l.Check], Notes: l.Notes})
 		}
-		p.Verdict, p.Reason = decide(it.ID, p.Results)
+		p.Verdict, p.Reason = decide(p.Results)
 		preds = append(preds, p)
 	}
 	return preds, st, nil
@@ -142,7 +181,7 @@ type predictionJSON struct {
 // cannot be read, a bad --date, or every linked check was skipped.
 func cmdVerifyPredictions(c *Corpus, s cli.Stdio, stationPath, install, date string, asJSON bool) int {
 	if date == "" {
-		date = time.Now().Format(time.DateOnly)
+		date = now().Format(time.DateOnly)
 	} else if _, err := time.Parse(time.DateOnly, date); err != nil {
 		fmt.Fprintf(s.Err, "course: --date %s is not a YYYY-MM-DD date\n", date)
 		return cli.ExitCannotSearch

@@ -95,23 +95,26 @@ func TestCheckKeysReal(t *testing.T) {
 	}
 	for _, ck := range checkSpec {
 		for _, k := range ck.Keys {
-			it := c.lookup(k)
-			if it == nil {
+			if c.lookup(k) == nil {
 				t.Errorf("%s: key %s is not an item of %s", ck.ID, k, labsFile)
-				continue
 			}
-			// A link to a predicted item must say what of the prediction the check does not
-			// observe, unless it was audited as observing all of it: the answer key would be
-			// marked verified from a CONFIRMED verdict.
-			if _, noted := ck.Unobserved[k]; it.hasStatus("predicted") && !noted && !fullyObserved[ck.ID+" "+k] {
-				t.Errorf("%s: key %s is predicted (%s:%d): add an Unobserved note or audit it into fullyObserved",
-					ck.ID, k, it.File, it.Line)
+		}
+	}
+	// A link to a predicted item must say what of the prediction the check does not observe,
+	// unless it was audited as observing all of it: the answer key would be marked verified from a
+	// CONFIRMED verdict. The links are resolved as verify-predictions resolves them (itemLinks).
+	links := itemLinks(c, checkSpec)
+	for _, it := range c.Items {
+		for _, l := range links[it] {
+			if it.hasStatus("predicted") && len(l.Notes) == 0 && !fullyObserved[l.Check.ID+" "+it.ID] {
+				t.Errorf("%s: links predicted %s (%s:%d): add an Unobserved note or audit it into fullyObserved",
+					l.Check.ID, it.ID, it.File, it.Line)
 			}
 		}
 	}
 }
 
-// fullyObserved lists the "check key" links to a predicted item of the real answer key that were
+// fullyObserved lists the "check item" links to a predicted item of the real answer key that were
 // audited as observing the whole prediction (2026-10-17: none; every predicted item a check links
 // also predicts a console line, a log, a view or a runtime status).
 var fullyObserved = map[string]bool{}

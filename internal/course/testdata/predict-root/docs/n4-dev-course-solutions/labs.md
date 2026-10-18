@@ -23,13 +23,15 @@
 ## Lab 4 — Tstat (`LI:20-29`)
 
 - **L4.13** · Set diff to 2 (`LI:21`) · *(predicted)* `diff` = 2.
-- **L4.15** · Action = Reverse (`LI:22`) · *(predicted)* both hold `false` in band.
-- **L4.16** · Confirm heating (`LI:23`) · Written, not predicted: never reported.
+- **L4.15–L4.16** · Action = Reverse; confirm heating (`LI:22-23`) · *(predicted)* both hold `false` in
+  band. A range item: C4.6 reaches it through its covered ID L4.15, whose note makes it PARTIAL.
 
 ---
 
 ## Lab 10 — Jobs (`LI:30-39`)
 
+- **L10.6–L10.7** · Depend on history-rt and file-rt (`LI:30`) · *(predicted)* both in module.xml. C10.7
+  reaches it through two of its keys: one link, listed once.
 - **L10.23** · Files: ten CSV files (`LI:31`) · *(verified live 2026-10-15)* already verified: not reported.
 
 ---

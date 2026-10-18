@@ -35,11 +35,12 @@ type Check struct {
 	Op     string // type, link, files, jar-entry, slot with Distinct: opMin or opEq
 	N      int
 
-	Slot     string // slot: the slot; link: the target slot
-	Want     string // slot: the expected effective value
-	Default  string // slot: the type's default, the value of a slot the bog does not store
-	Set      bool   // slot: the slot must be stored (differ from its default) instead of Want
-	Distinct bool   // slot: N distinct effective values across the components instead of Want
+	Slot     string   // slot: the slot; link: the target slot
+	Want     string   // slot: the expected effective value
+	Default  string   // slot: the type's default, the value of a slot the bog does not store
+	Set      bool     // slot: the slot must be stored (differ from its default) instead of Want
+	Distinct bool     // slot: N distinct effective values across the components instead of Want
+	Stored   []string // slot: further slots every component must also store (a down = false is the default on a component never pinged)
 
 	From     string // link: source type "module:Type"
 	FromSlot string // link: source slot

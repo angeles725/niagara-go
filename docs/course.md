@@ -159,7 +159,7 @@ own prefixes (`t:`, `tld:`) are resolved through its `m=` declarations.
 | Kind | Checks | PASS when |
 |---|---|---|
 | `type` | components of a type, optionally under an ancestor type (`Within`) | the count is at least / exactly N |
-| `slot` | a slot on every component of a type; its effective value is the stored value (a composite's nested `value`), else the type default. A dotted slot (`address.port`, `health.lastOkTime`) is a value below a composite slot of the component | every value equals `Want`; or (`Set`) every slot is stored; or (`Distinct`) the distinct values reach N |
+| `slot` | a slot on every component of a type; its effective value is the stored value (a composite's nested `value`), else the type default. A dotted slot (`address.port`, `health.lastOkTime`) is a value below a composite slot of the component | every value equals `Want`, and every `Stored` slot is stored (`health.down = false` is also the default of a device never pinged, so C11.12 and C11.14 need `health.lastOkTime` stored); or (`Set`) every slot is stored; or (`Distinct`) the distinct values reach N |
 | `link` | links `From.FromSlot -> Type.Slot`, source by handle or `slot:` ord | the count is at least / exactly N |
 | `files` | files matching a glob under the station dir, `{station}` = the `stationName` slot | the count is at least / exactly N |
 | `jar` | `modules/<part>.jar` | it exists |
@@ -201,8 +201,10 @@ not done.
 
 `course verify-predictions --station <dir|config.bog> [--install DIR] [--date YYYY-MM-DD] [--json]`
 reads the answer keys (it needs the root, like `show`) and the station, and decides every item
-still marked `*(predicted)*` from the checks whose `Keys` name it (`c.lookup`, so a key also
-finds a range item). Only those linked checks run; the bog is read with nested values only when
+still marked `*(predicted)*` from the checks whose `Keys` resolve to it (`Corpus.lookup`: the ID,
+a range ID or a covered ID, so key `L4.15` reaches the range item `L4.15–L4.16`). A check is
+linked once per item however many of its keys reach it, and its `Unobserved` note is read under
+the key that matched, not the item's ID (`itemLinks`, which `TestCheckKeysReal` uses too). Only those linked checks run; the bog is read with nested values only when
 one of them has a dotted slot.
 
 | Verdict | When | Printed |
@@ -225,7 +227,7 @@ item is CONFIRMED, one ready-to-apply line per CONFIRMED item (never for PARTIAL
     L4.13: *(verified live 2026-10-17)* evidence: C4.5 Lab4/My Tstat.diff = 2.0 (stored)
 
 `course` never edits the Markdown: a human or an agent applies the line. `--date` is the date
-written in the lines (default: today, local time); a value that is not `YYYY-MM-DD` is exit 2.
+written in the lines (default: today, local time; the clock is injectable for tests); a value that is not `YYYY-MM-DD` is exit 2.
 
 Summary: `predicted N: CONFIRMED c, PARTIAL p, CONTRADICTED x, UNDECIDED u; K checks run; station ...`.
 With `--json`, stdout is a list of `{id, verdict, reason, checks: [{id, verdict, evidence}],
@@ -257,7 +259,8 @@ not observed.
 - `check_test.go` and the `check-*` goldens: synthetic stations under
   `internal/course/testdata/stations/` (`good`: every check PASS; `bad`: no FirstComponent,
   default Tstat diff, no Add.out -> Output link, nine CSV files, a driver Tcp Config on the
-  default port and a network whose ping failed (`health.down` true, no `lastOkTime`); `broken`:
+  default port, a network whose ping failed (`health.down` true, no `lastOkTime`) and a driver
+  device never pinged (no `health`); `broken`:
   not a bog) and a synthetic install under `testdata/install/`, whose jars are generated from the table in
   `fixturejars_test.go` (`COURSE_UPDATE_FIXTURES=1 go test -run TestFixtureJars`; the test fails
   when a jar drifts). The zipped form of a bog is covered by `TestCheckZippedBog`.
@@ -267,10 +270,12 @@ not observed.
   nested values is SKIP.
 - `verify_test.go` and the `verify-*` goldens: the verdict rules (`TestDecidePrediction`) and
   the command over `testdata/predict-root/` (a synthetic answer key whose predicted IDs are
-  linked keys: one unlinked, one linked only to a jar check, and L4.13 and L11.25 marked
+  linked keys: one unlinked, one linked only to a jar check, the range item `L4.15–L4.16`
+  reached through the noted key L4.15 (PARTIAL), the range `L10.6–L10.7` reached by two keys
+  of C10.7 (linked once), and L4.13 and L11.25 marked
   predicted so that a fully observing check yields CONFIRMED) with the `good` station (every
-  linked check PASS: CONFIRMED and PARTIAL), the `bad` one (L1.25, L4.13, L11.25 and L11.26
-  CONTRADICTED), no `--install`, the `root`
+  linked check PASS: CONFIRMED and PARTIAL), the `bad` one (L1.25, L4.13, L11.25, L11.26 and
+  L11.32 CONTRADICTED), no `--install`, the `root`
   fixture (its one linked check is a jar check: exit 2), a bad `--date` and a broken bog.
   `TestVerifyPredictionsTrainingStation` (with `COURSE_TRAINING_STATION` and
   `NIAGARA_RESEARCH_DIR`) pins only that no predicted item is CONTRADICTED, none is CONFIRMED
