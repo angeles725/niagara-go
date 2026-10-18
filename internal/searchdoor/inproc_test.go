@@ -195,15 +195,20 @@ func TestInprocUnknownCalls(t *testing.T) {
 	code := stubScript(t, filepath.Join(dir, "tools", "module_nav.py"))
 	blocks := stubScript(t, filepath.Join(dir, "tools", "corpus-nav.py"))
 	b := &inprocBackend{clock: time.Now, paths: Paths{Blocks: blocks, Docs: filepath.Join(dir, "absent.py"), Code: code}}
-	for argv, want := range map[*[]string]string{
-		{b.paths.Docs, "find", "alarm", "-n", "5"}: "unavailable: tool not found at " + pyPath(b.paths.Docs),
-		{dir, "find", "alarm", "-n", "5"}:          "unavailable: tool not found at " + pyPath(dir),
-		{code}:                                     "unavailable: no in-process answer for `module_nav.py` (a call nsearch never makes)",
-		{stubScript(t, filepath.Join(dir, "other.py")), "x"}: "unavailable: no in-process answer for `other.py x` (a call nsearch never makes)",
-		{blocks, "grep", "alarm", "--limit", "50"}:           "unavailable: no in-process answer for `corpus-nav.py grep alarm --limit 50` (a call nsearch never makes)",
+	for _, c := range []struct {
+		argv []string
+		want string
+	}{
+		{[]string{b.paths.Docs, "find", "alarm", "-n", "5"}, "unavailable: tool not found at " + pyPath(b.paths.Docs)},
+		{[]string{dir, "find", "alarm", "-n", "5"}, "unavailable: tool not found at " + pyPath(dir)},
+		{[]string{code}, "unavailable: no in-process answer for `module_nav.py` (a call nsearch never makes)"},
+		{[]string{stubScript(t, filepath.Join(dir, "other.py")), "x"},
+			"unavailable: no in-process answer for `other.py x` (a call nsearch never makes)"},
+		{[]string{blocks, "grep", "alarm", "--limit", "50"},
+			"unavailable: no in-process answer for `corpus-nav.py grep alarm --limit 50` (a call nsearch never makes)"},
 	} {
-		if raw := b.Run(*argv, 5); raw.State != Unavailable || raw.Reason != want || raw.HasRC {
-			t.Errorf("%v: %+v, want %q", *argv, raw, want)
+		if raw := b.Run(c.argv, 5); raw.State != Unavailable || raw.Reason != c.want || raw.HasRC {
+			t.Errorf("%v: %+v, want %q", c.argv, raw, c.want)
 		}
 	}
 	if raw := b.Run([]string{blocks, "find", "alarm", "--limit", "50"}, 0); raw.Reason != "unavailable: timed out after 0s" {

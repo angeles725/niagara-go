@@ -35,8 +35,8 @@ func docsFind(argv []string) answer {
 	if repo == "" {
 		repo = toolDir(argv[0], false)
 	}
-	if repo == "" {
-		return noAnswer
+	if repo == "" { // nh Main without a niagara-help directory (exit 1)
+		return exact(1, "ERROR: Cannot find niagara-help directory.\nSet NIAGARA_HELP_DIR or run from tools/ directory.\n", "")
 	}
 	id, root, err := scope.Resolve(repo, version, os.Getenv)
 	if err != nil { // nh prints these on stdout

@@ -89,7 +89,9 @@ func (b *inprocBackend) Run(argv []string, timeout float64) Raw {
 	return Classify(a.rc, a.stdout, a.stderr, int(b.clock().Sub(t0)/time.Millisecond))
 }
 
-// unknownCall is the Raw of a backend call no in-process source answers.
+// unknownCall is the Raw of a backend call no in-process source answers: an
+// argv the door never builds (every source answers each call the door makes,
+// its environment errors included).
 func unknownCall(argv []string) Raw {
 	return Raw{State: Unavailable, Reason: "unavailable: no in-process answer for `" +
 		strings.Join(append([]string{filepath.Base(argv[0])}, argv[1:]...), " ") + "` (a call nsearch never makes)"}
@@ -228,8 +230,8 @@ func blocksFind(argv []string) answer {
 	if root == "" {
 		root = toolDir(argv[0], true)
 	}
-	if root == "" {
-		return noAnswer
+	if root == "" { // the script's folder cannot be resolved (corpus-nav.py's own _root)
+		return exact(2, "", "corpus-nav: cannot locate the corpus from "+pyPath(argv[0])+"\n")
 	}
 	limit, _ := strconv.Atoi(v[1])
 	c := blocksearch.New(root, os.Getenv("CORPUS_NAV_INDEX_DIR"))
