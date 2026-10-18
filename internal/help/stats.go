@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/angeles725/niagara-go/internal/help/scope"
 	"github.com/angeles725/niagara-go/internal/index"
 )
 
@@ -105,7 +106,7 @@ func (e *Env) Stats(asJSON bool) error {
 		callEntries += pyLen(v)
 	}
 	abs, _ := filepath.Abs(e.BaseDir)
-	vid := identify(e.BaseDir)
+	vid := scope.Identify(e.BaseDir)
 	n := func(name string) int { return idx[name].Len() }
 	if asJSON {
 		var version any
