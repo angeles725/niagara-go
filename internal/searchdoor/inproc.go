@@ -66,12 +66,21 @@ func (b *inprocBackend) Run(argv []string, timeout float64) Raw {
 	left := timeout - b.clock().Sub(t0).Seconds()
 	switch {
 	case !done || (!a.ok && left <= 0):
-		return Raw{State: Unavailable, Reason: "unavailable: timed out after " + formatG3(timeout) + "s",
-			MS: int(timeout * 1000)}
+		return timedOut(timeout)
 	case !a.ok:
-		return b.exec.Run(argv, left)
+		raw := b.exec.Run(argv, left)
+		if raw.State == Unavailable && raw.Reason == timedOut(left).Reason {
+			return timedOut(timeout) // name the call's budget, as the Python door does
+		}
+		return raw
 	}
 	return Classify(a.rc, a.stdout, a.stderr, int(b.clock().Sub(t0)/time.Millisecond))
+}
+
+// timedOut is the Raw of a call killed at its timeout.
+func timedOut(timeout float64) Raw {
+	return Raw{State: Unavailable, Reason: "unavailable: timed out after " + formatG3(timeout) + "s",
+		MS: int(timeout * 1000)}
 }
 
 // route picks the in-process answer for a backend call, or nil for exec.
