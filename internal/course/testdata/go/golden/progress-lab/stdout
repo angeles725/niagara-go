@@ -1,8 +1,8 @@
 group  items  checked  CONFIRMED  PARTIAL  CONTRADICTED  UNDECIDED  live  offline
-RA1        7        4          1        0             1          5     0        0
+RA1        7        4          1        1             1          4     0        0
 RA2        1        1          1        0             0          0     0        0
 RAX        1        1          0        1             0          0     0        0
-total      9        6          2        1             1          5     0        0
+total      9        6          2        2             1          4     0        0
 checked: items at least one check links; live, offline: items already marked verified
 
 next steps (redo: a FAIL check, then the steps it links; mark: the line a CONFIRMED item without a marker takes):
@@ -10,4 +10,4 @@ mark RA1.M2 (review-assignments.md:12): *(verified offline 2026-10-18)* evidence
 redo CRA1.10 (RA1): ComponentWithId in the folder Config/Review: found 0 in Review (2 in total), want at least 1; elsewhere: Cristian_Angeles_Review/ComponentWithId, Cristian_Angeles_Review/ComponentWithId1
   RA1.V9–V11 (review-assignments.md:15, Review Assignment 1.txt:8-9): Station steps
 mark RA2.R1 (review-assignments.md:51): *(verified offline 2026-10-18)* evidence: CRA2.1 modules/Cristian_Angeles_Review-rt.jar!META-INF/module.xml has name="control-rt"
-progress 9: checked 6, CONFIRMED 2, PARTIAL 1, CONTRADICTED 1, UNDECIDED 5; 9 checks run; station ReviewStation (9 components, 0 links), install install, solutions (none: solutions checks skipped)
+progress 9: checked 6, CONFIRMED 2, PARTIAL 2, CONTRADICTED 1, UNDECIDED 4; 9 checks run; station ReviewStation (9 components, 0 links), install install, solutions (none: solutions checks skipped)

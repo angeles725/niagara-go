@@ -5,9 +5,9 @@
       "items": 3,
       "checked": 3,
       "confirmed": 0,
-      "partial": 0,
+      "partial": 1,
       "contradicted": 1,
-      "undecided": 2,
+      "undecided": 1,
       "verified_live": 0,
       "verified_offline": 0
     },
@@ -72,9 +72,9 @@
     "items": 13,
     "checked": 12,
     "confirmed": 1,
-    "partial": 2,
+    "partial": 3,
     "contradicted": 7,
-    "undecided": 3,
+    "undecided": 2,
     "verified_live": 1,
     "verified_offline": 0
   },

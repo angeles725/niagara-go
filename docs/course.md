@@ -491,6 +491,13 @@ one of them has a dotted slot.
 | `CONTRADICTED` | at least one linked check FAIL | the FAIL checks and their evidence |
 | `UNDECIDED` | no linked check (`no check covers it`), or a SKIP and no FAIL | the reason: the SKIP checks |
 
+A linked check that is SKIP only because a tree it reads was not given (`--install`, `--source`,
+`--labsrc`, `--solutions`: `Result.Absent`) does not lower what the other checks decide: the item
+gets the verdict of the checks that ran, and the reason ends with `not run: <the SKIP checks>`
+(L1.14 without `--labsrc` stays PARTIAL from C1.6; with it, C1.12 makes it CONFIRMED). The marker's
+evidence is that of the checks that ran. A tree that was given but cannot be read, and every other
+SKIP, still leaves the item UNDECIDED; an item none of whose checks ran is UNDECIDED.
+
 A check proves what the station and the jars store, never a console line, a job log, a Px view
 or a runtime status. So a spec row may carry `Unobserved`, a map from a key to what of that
 item's answer the check does not observe (C1.2 -> L1.25: `the Hello, World! line in the station
@@ -798,6 +805,13 @@ FAILs, no CONTRADICTED prediction, the item and status counts), not this table.
   (a blank variable alone is the plain usage error, before a bad root and `--date`) and
   `verify-predictions-none` (no `--lab`: the honest zero over every group of the synthetic
   `testdata/nopredict-root/`, whose answer key carries no predicted item).
+- `check/verify_test.go` `TestDecideAbsentTree` (an absent tree beside a PASS: CONFIRMED or PARTIAL
+  with `not run`; alone: UNDECIDED; an unreadable tree or a FAIL still decides) and
+  `TestRunMarksAbsent` (which SKIPs are absent). The goldens pin both sides: `verify-good` (no
+  `--labsrc`: L1.14 PARTIAL) and the Go-only `verify-good-labsrc` (L1.14 CONFIRMED), `progress-lab`
+  (no `--solutions`: RA1.R1 PARTIAL) and `progress-lab-solutions` (RA1.R1 CONFIRMED).
+  `TestAnnotationReal` runs the lab-source rows under `COURSE_LAB_SOURCES` and the solutions rows
+  under `COURSE_SOLUTIONS`, each gated by its own variable.
 - `progress_test.go` (with `--labsrc testdata/labsrc`: L1.14 gets a `mark` line, offline) and the
   Go-only goldens `progress-good`, `progress-bad-json` (the `bad`
   station: `redo` lines, exit 1), `progress-lab` (`--lab RA` on the review fixture) and

@@ -119,26 +119,38 @@ class BAdd {}
 	}
 }
 
-// TestAnnotationReal runs the annotation rows on the participant's real lab modules when
-// COURSE_LAB_SOURCES names them (the Niagara dev home holding training/ and trafficLightDriver/),
-// and the solutions rows on the corpus solutions when COURSE_SOLUTIONS names them.
+// TestAnnotationReal runs the annotation rows on the participant's real trees: the lab-source rows
+// when COURSE_LAB_SOURCES names the Niagara dev home (training/, trafficLightDriver/), the solutions
+// rows when COURSE_SOLUTIONS names the corpus solutions; each variable gates its own rows.
 func TestAnnotationReal(t *testing.T) {
-	labsrc := os.Getenv("COURSE_LAB_SOURCES")
-	if labsrc == "" {
-		t.Skip("COURSE_LAB_SOURCES is not set: the real lab modules are not checked")
-	}
-	solutions := os.Getenv("COURSE_SOLUTIONS")
-	st := &Station{labsrc: labsrc, solutions: solutions}
-	n := 0
-	for i := range Spec {
-		if Spec[i].Kind == kindAnnotation && (solutions != "" || Spec[i].Root != rootSolutions) {
-			n++
-			if r := st.Run(&Spec[i]); r.Verdict != Pass {
-				t.Errorf("%s %s: %s", r.ID, r.Verdict, r.Evidence)
+	for _, tree := range []struct {
+		env  string
+		root string
+	}{{"COURSE_LAB_SOURCES", rootLabsrc}, {"COURSE_SOLUTIONS", rootSolutions}} {
+		t.Run(tree.root, func(t *testing.T) {
+			dir := os.Getenv(tree.env)
+			if dir == "" {
+				t.Skipf("%s is not set: the real %s rows are not checked", tree.env, tree.root)
 			}
-		}
-	}
-	if n == 0 {
-		t.Fatal("no annotation row in the spec")
+			st := &Station{labsrc: dir, solutions: dir}
+			n := 0
+			for i := range Spec {
+				ck := &Spec[i]
+				root := ck.Root
+				if root == rootStation {
+					root = rootLabsrc
+				}
+				if ck.Kind != kindAnnotation || root != tree.root {
+					continue
+				}
+				n++
+				if r := st.Run(ck); r.Verdict != Pass {
+					t.Errorf("%s %s: %s", r.ID, r.Verdict, r.Evidence)
+				}
+			}
+			if n == 0 {
+				t.Fatalf("no %s annotation row in the spec", tree.root)
+			}
+		})
 	}
 }

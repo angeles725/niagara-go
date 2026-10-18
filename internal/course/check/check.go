@@ -25,6 +25,10 @@ type Result struct {
 	*Check
 	Verdict  string
 	Evidence string
+	// Absent: the check is SKIP because a tree it reads (--install, --source, --labsrc,
+	// --solutions) was not given, not because one was unreadable; verify does not let such a check
+	// lower what the others decide (Decide).
+	Absent bool
 }
 
 // Station is the input of a check run: the parsed bog, its directory and the optional install.
@@ -196,7 +200,33 @@ func (s *Station) Run(ck *Check) Result {
 	default:
 		r.Verdict, r.Evidence = s.checkJar(ck)
 	}
+	r.Absent = r.Verdict == Skip && s.treeNotGiven(ck)
 	return r
+}
+
+// treeNotGiven reports whether a tree the check reads was not given to the run: the install for
+// the jar kinds, the source tree for source-text, the root of an annotation, files, file-text or
+// jar-cert pem row.
+func (s *Station) treeNotGiven(ck *Check) bool {
+	if strings.HasPrefix(ck.Kind, "jar") && s.install == "" {
+		return true
+	}
+	if ck.Kind == kindSourceText {
+		return s.source == ""
+	}
+	root := ck.Root
+	if ck.Kind == kindAnnotation && root == rootStation {
+		root = rootLabsrc
+	}
+	switch root {
+	case rootInstall:
+		return s.install == ""
+	case rootLabsrc:
+		return s.labsrc == ""
+	case rootSolutions:
+		return s.solutions == ""
+	}
+	return false
 }
 
 func verdict(ok bool) string {

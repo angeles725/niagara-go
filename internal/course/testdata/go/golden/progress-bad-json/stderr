@@ -1,1 +1,1 @@
-progress 13: checked 12, CONFIRMED 1, PARTIAL 2, CONTRADICTED 7, UNDECIDED 3; 23 checks run; station BadStation (236 components, 15 links), install install, labsrc (none: lab-source checks skipped)
+progress 13: checked 12, CONFIRMED 1, PARTIAL 3, CONTRADICTED 7, UNDECIDED 2; 23 checks run; station BadStation (236 components, 15 links), install install, labsrc (none: lab-source checks skipped)
