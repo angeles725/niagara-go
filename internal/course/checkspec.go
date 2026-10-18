@@ -22,13 +22,15 @@ var checkSpec = []Check{
 	// doExecute (:28-32) sets it to now.
 	{ID: "C1.1", Lab: "1", Keys: []string{"L1.24"}, Kind: kindType, Desc: "a FirstComponent in the station",
 		Type: "training:FirstComponent", Op: opMin, N: 1},
-	{ID: "C1.2", Lab: "1", Keys: []string{"L1.25"}, Kind: kindSlot, Desc: "FirstComponent executed (timeExecuted stored)",
+	{ID: "C1.2", Lab: "1", Keys: []string{"L1.25"},
+		Unobserved: map[string]string{"L1.25": "the Hello, World! line in the station console"}, Kind: kindSlot, Desc: "FirstComponent executed (timeExecuted stored)",
 		Type: "training:FirstComponent", Slot: "timeExecuted", Set: true},
 	{ID: "C1.3", Lab: "1", Keys: []string{"L1.13", "L1.15"}, Kind: kindJar, Desc: "training-rt jar built", Jar: trainingRT},
 	{ID: "C1.4", Lab: "1", Keys: []string{"L1.15"}, Kind: kindJar, Desc: "training-wb jar built", Jar: "training-wb"},
 	{ID: "C1.5", Lab: "1", Keys: []string{"L1.16"}, Kind: kindJarEntry, Desc: "BFirstComponent.class in training-rt",
 		Jar: trainingRT, Glob: "com/tridiumuniversity/training/BFirstComponent.class", Op: opMin, N: 1},
-	{ID: "C1.6", Lab: "1", Keys: []string{"L1.14"}, Kind: kindJarText, Desc: "module.xml registers FirstComponent",
+	{ID: "C1.6", Lab: "1", Keys: []string{"L1.14"},
+		Unobserved: map[string]string{"L1.14": "module-include.xml itself and the class attribute (the jar holds the built module.xml)"}, Kind: kindJarText, Desc: "module.xml registers FirstComponent",
 		Jar: trainingRT, Glob: trainingXML, Contains: []string{`name="FirstComponent"`}},
 	{ID: "C1.7", Lab: "1", Keys: []string{"L1.11", "L1.18"}, Kind: kindJarText, Desc: "palette lists FirstComponent",
 		Jar: trainingRT, Glob: "module.palette", Contains: []string{`n="FirstComponent"`}},
@@ -44,7 +46,9 @@ var checkSpec = []Check{
 		Jar: trainingRT, Glob: trainingXML, Contains: []string{`name="Add"`}},
 
 	// Lab 3. LAB/Lab3 Add Part 2/BAdd.java:18-45 (same slots); changed() writes out (:49-106),
-	// so a stored out proves the callback ran. Links per Lab Instructions LI:560-576.
+	// so a stored out proves the callback ran. Links per Lab Instructions LI:560-576. C3.5 does
+	// not link L3.9 (Output = Point1 + Point2 + Point3): a stored Add.out says nothing of the
+	// Output point, which the live TrainingStation does not even have (C3.4).
 	{ID: "C3.1", Lab: "3", Keys: []string{"L3.5"}, Kind: kindLink, Desc: "NumericWritable.out -> Add.in1",
 		From: numericWritable, FromSlot: "out", Type: "training:Add", Slot: "in1", Op: opMin, N: 1},
 	{ID: "C3.2", Lab: "3", Keys: []string{"L3.5"}, Kind: kindLink, Desc: "NumericWritable.out -> Add.in2",
@@ -53,7 +57,7 @@ var checkSpec = []Check{
 		From: numericWritable, FromSlot: "out", Type: "training:Add", Slot: "in3", Op: opMin, N: 1},
 	{ID: "C3.4", Lab: "3", Keys: []string{"L3.7"}, Kind: kindLink, Desc: "Add.out -> NumericWritable.in10 (Output)",
 		From: "training:Add", FromSlot: "out", Type: numericWritable, Slot: "in10", Op: opMin, N: 1},
-	{ID: "C3.5", Lab: "3", Keys: []string{"L3.8", "L3.9"}, Kind: kindSlot, Desc: "Add computed a sum (out stored)",
+	{ID: "C3.5", Lab: "3", Keys: []string{"L3.8"}, Kind: kindSlot, Desc: "Add computed a sum (out stored)",
 		Type: "training:Add", Slot: "out", Set: true},
 
 	// Lab 4. BTstat.java:35-44 diff default 0, action default BLoopAction.DEFAULT;
@@ -69,7 +73,8 @@ var checkSpec = []Check{
 		From: numericWritable, FromSlot: "out", Type: "training:Tstat", Slot: "sp", Op: opMin, N: 1},
 	{ID: "C4.5", Lab: "4", Keys: []string{"L4.13"}, Kind: kindSlot, Desc: "training Tstat diff = 2",
 		Type: "training:Tstat", Slot: "diff", Want: "2.0", Default: "0.0"},
-	{ID: "C4.6", Lab: "4", Keys: []string{"L4.15"}, Kind: kindSlot, Desc: "training Tstat action = reverse",
+	{ID: "C4.6", Lab: "4", Keys: []string{"L4.15"},
+		Unobserved: map[string]string{"L4.15": "the outputs at 72.5 (both false, held in band)"}, Kind: kindSlot, Desc: "training Tstat action = reverse",
 		Type: "training:Tstat", Slot: "action", Want: "reverse", Default: "direct"},
 	{ID: "C4.7", Lab: "4", Keys: []string{"L4.7"}, Kind: kindSlot, Desc: "Reference Tstat nullOnInControl = false",
 		Type: "kitControl:Tstat", Slot: "nullOnInControl", Want: "false", Default: "true"},
@@ -105,7 +110,8 @@ var checkSpec = []Check{
 		Jar: "training-rtTest", Glob: "org/mockito/**", Op: opMin, N: 1},
 	{ID: "C7.4", Lab: "7", Keys: []string{"L7.13"}, Kind: kindJarEntry, Desc: "training-rt.lexicon in training-rt",
 		Jar: trainingRT, Glob: "training-rt.lexicon", Op: opMin, N: 1},
-	{ID: "C7.5", Lab: "7", Keys: []string{"L7.18"}, Kind: kindSlot, Desc: "WorkOrderService url restored",
+	{ID: "C7.5", Lab: "7", Keys: []string{"L7.18"},
+		Unobserved: map[string]string{"L7.18": "faultCause cleared, the fault bit and the {ok} status"}, Kind: kindSlot, Desc: "WorkOrderService url restored",
 		Type: "training:WorkOrderService", Slot: "url", Want: "http://localhost:3001/workOrders",
 		Default: "http://localhost:3001/workOrders"},
 
@@ -127,13 +133,18 @@ var checkSpec = []Check{
 
 	// Lab 10. BHistoryExt enabled default false
 	// (organized/history/history-rt/decompiled/javax/baja/history/ext/BHistoryExt.java:106).
-	{ID: "C10.1", Lab: "10", Keys: []string{"L10.4", "L10.22"}, Kind: kindType, Desc: "one HistoriesToCsvService, under Services",
+	// The lab copies only the point, "Keep all links" (LI:1934-1936): one Ramp feeds all ten
+	// points, so C10.2 wants one Ramp, not ten (the live station has one Ramp per point).
+	{ID: "C10.1", Lab: "10", Keys: []string{"L10.4", "L10.22"},
+		Unobserved: map[string]string{"L10.22": "the Success state and the job log lines"}, Kind: kindType, Desc: "one HistoriesToCsvService, under Services",
 		Type: "training:HistoriesToCsvService", Within: services, Op: opEq, N: 1},
-	{ID: "C10.2", Lab: "10", Keys: []string{"L10.16", "L10.19"}, Kind: kindType, Desc: "ten kitControl Ramps",
-		Type: "kitControl:Ramp", Op: opMin, N: 10},
-	{ID: "C10.3", Lab: "10", Keys: []string{"L10.17", "L10.19"}, Kind: kindType, Desc: "ten NumericCov history extensions",
+	{ID: "C10.2", Lab: "10", Keys: []string{"L10.16"}, Kind: kindType, Desc: "a kitControl Ramp",
+		Type: "kitControl:Ramp", Op: opMin, N: 1},
+	{ID: "C10.3", Lab: "10", Keys: []string{"L10.17", "L10.19"},
+		Unobserved: map[string]string{"L10.19": "the copy names NumericWritable1-9 and that they share the one Ramp"}, Kind: kindType, Desc: "ten NumericCov history extensions",
 		Type: "history:NumericCovHistoryExt", Op: opMin, N: 10},
-	{ID: "C10.4", Lab: "10", Keys: []string{"L10.16", "L10.19"}, Kind: kindLink, Desc: "Ramp.out -> NumericWritable.in16, ten times",
+	{ID: "C10.4", Lab: "10", Keys: []string{"L10.16", "L10.19"},
+		Unobserved: map[string]string{"L10.19": "the copy names NumericWritable1-9 and that they share the one Ramp"}, Kind: kindLink, Desc: "Ramp.out -> NumericWritable.in16, ten times",
 		From: "kitControl:Ramp", FromSlot: "out", Type: numericWritable, Slot: "in16", Op: opMin, N: 10},
 	{ID: "C10.5", Lab: "10", Keys: []string{"L10.17", "L10.20"}, Kind: kindSlot, Desc: "every NumericCov enabled",
 		Type: "history:NumericCovHistoryExt", Slot: "enabled", Want: "true", Default: "false"},
@@ -143,7 +154,8 @@ var checkSpec = []Check{
 		Jar: trainingRT, Glob: trainingXML, Contains: []string{`name="history-rt"`, `name="file-rt"`, `name="bql-rt"`}},
 
 	// Lab 11. Intersections A-Q (L11.8): 17 server devices, four lights each.
-	{ID: "C11.1", Lab: "11", Keys: []string{"L11.7"}, Kind: kindType, Desc: "one TrafficLightServerNetwork",
+	{ID: "C11.1", Lab: "11", Keys: []string{"L11.7"},
+		Unobserved: map[string]string{"L11.7": "the Px view with the lights of every intersection"}, Kind: kindType, Desc: "one TrafficLightServerNetwork",
 		Type: "trafficLightServer:TrafficLightServerNetwork", Op: opEq, N: 1},
 	{ID: "C11.2", Lab: "11", Keys: []string{"L11.8"}, Kind: kindType, Desc: "17 server devices (intersections A-Q)",
 		Type: "trafficLightServer:TrafficLightServerDevice", Op: opEq, N: 17},
@@ -172,19 +184,26 @@ var checkSpec = []Check{
 		Type: "trafficLightDriver:TrafficLightDriverTcpCommConfig", Slot: "address.ipAddress", Want: "localhost", Default: "local"},
 	{ID: "C11.10", Lab: "11", Keys: []string{"L11.25"}, Kind: kindSlot, Desc: "driver Tcp Config port = 23",
 		Type: "trafficLightDriver:TrafficLightDriverTcpCommConfig", Slot: "address.port", Want: "23", Default: "0"},
-	{ID: "C11.11", Lab: "11", Keys: []string{"L11.26"}, Kind: kindSlot, Desc: "network pinged ok (health.lastOkTime stored)",
+	{ID: "C11.11", Lab: "11", Keys: []string{"L11.26"},
+		Unobserved: map[string]string{"L11.26": "the {ok} status (the bog reader keeps no status slot) and that the ping was just now"}, Kind: kindSlot, Desc: "network pinged ok (health.lastOkTime stored)",
 		Type: "trafficLightDriver:TrafficLightDriverNetwork", Slot: "health.lastOkTime", Set: true},
-	{ID: "C11.12", Lab: "11", Keys: []string{"L11.26"}, Kind: kindSlot, Desc: "network health down = false",
+	{ID: "C11.12", Lab: "11", Keys: []string{"L11.26"},
+		Unobserved: map[string]string{"L11.26": "the {ok} status (the bog reader keeps no status slot) and that the ping was just now"}, Kind: kindSlot, Desc: "network health down = false",
 		Type: "trafficLightDriver:TrafficLightDriverNetwork", Slot: "health.down", Want: "false", Default: "false"},
-	{ID: "C11.13", Lab: "11", Keys: []string{"L11.32"}, Kind: kindSlot, Desc: "every driver device pinged ok (health.lastOkTime stored)",
+	{ID: "C11.13", Lab: "11", Keys: []string{"L11.32"},
+		Unobserved: map[string]string{"L11.32": "the {ok} status (the bog reader keeps no status slot)"}, Kind: kindSlot, Desc: "every driver device pinged ok (health.lastOkTime stored)",
 		Type: "trafficLightDriver:TrafficLightDriverDevice", Slot: "health.lastOkTime", Set: true},
-	{ID: "C11.14", Lab: "11", Keys: []string{"L11.32"}, Kind: kindSlot, Desc: "no driver device down",
+	{ID: "C11.14", Lab: "11", Keys: []string{"L11.32"},
+		Unobserved: map[string]string{"L11.32": "the {ok} status (the bog reader keeps no status slot)"}, Kind: kindSlot, Desc: "no driver device down",
 		Type: "trafficLightDriver:TrafficLightDriverDevice", Slot: "health.down", Want: "false", Default: "false"},
-	{ID: "C11.15", Lab: "11", Keys: []string{"L11.7"}, Kind: kindSlot, Desc: "server Tcp Config address = 127.0.0.1",
+	{ID: "C11.15", Lab: "11", Keys: []string{"L11.7"},
+		Unobserved: map[string]string{"L11.7": "the Px view with the lights of every intersection"}, Kind: kindSlot, Desc: "server Tcp Config address = 127.0.0.1",
 		Type: "trafficLightServer:TrafficLightServerTcpCommConfig", Slot: "address.ipAddress", Want: "127.0.0.1", Default: "local"},
-	{ID: "C11.16", Lab: "11", Keys: []string{"L11.7"}, Kind: kindSlot, Desc: "server Tcp Config port = 23",
+	{ID: "C11.16", Lab: "11", Keys: []string{"L11.7"},
+		Unobserved: map[string]string{"L11.7": "the Px view with the lights of every intersection"}, Kind: kindSlot, Desc: "server Tcp Config port = 23",
 		Type: "trafficLightServer:TrafficLightServerTcpCommConfig", Slot: "address.port", Want: "23", Default: "0"},
-	{ID: "C11.17", Lab: "11", Keys: []string{"L11.7"}, Kind: kindSlot, Desc: "server Tcp Config serverEnabled = true",
+	{ID: "C11.17", Lab: "11", Keys: []string{"L11.7"},
+		Unobserved: map[string]string{"L11.7": "the Px view with the lights of every intersection"}, Kind: kindSlot, Desc: "server Tcp Config serverEnabled = true",
 		Type: "trafficLightServer:TrafficLightServerTcpCommConfig", Slot: "serverEnabled", Want: "true", Default: "false"},
 
 	// Bonus lab. BTrafficLightDriverDevice.java (LAB/Lab11 NDriver/4 ...):64-67 intersectionId

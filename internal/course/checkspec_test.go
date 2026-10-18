@@ -4,6 +4,7 @@ import (
 	"os"
 	"reflect"
 	"regexp"
+	"slices"
 	"strings"
 	"testing"
 )
@@ -40,6 +41,11 @@ func TestCheckSpecShape(t *testing.T) {
 		group := "L" + ck.Lab + "."
 		if len(ck.Keys) == 0 || ck.Desc == "" {
 			t.Errorf("%s: no keys or description", ck.ID)
+		}
+		for k, note := range ck.Unobserved {
+			if !slices.Contains(ck.Keys, k) || note == "" {
+				t.Errorf("%s: unobserved note for %s is empty or %s is not one of its keys", ck.ID, k, k)
+			}
 		}
 		for _, k := range ck.Keys {
 			if !strings.HasPrefix(k, group) {
@@ -89,12 +95,26 @@ func TestCheckKeysReal(t *testing.T) {
 	}
 	for _, ck := range checkSpec {
 		for _, k := range ck.Keys {
-			if c.lookup(k) == nil {
+			it := c.lookup(k)
+			if it == nil {
 				t.Errorf("%s: key %s is not an item of %s", ck.ID, k, labsFile)
+				continue
+			}
+			// A link to a predicted item must say what of the prediction the check does not
+			// observe, unless it was audited as observing all of it: the answer key would be
+			// marked verified from a CONFIRMED verdict.
+			if _, noted := ck.Unobserved[k]; it.hasStatus("predicted") && !noted && !fullyObserved[ck.ID+" "+k] {
+				t.Errorf("%s: key %s is predicted (%s:%d): add an Unobserved note or audit it into fullyObserved",
+					ck.ID, k, it.File, it.Line)
 			}
 		}
 	}
 }
+
+// fullyObserved lists the "check key" links to a predicted item of the real answer key that were
+// audited as observing the whole prediction (2026-10-17: none; every predicted item a check links
+// also predicts a console line, a log, a view or a runtime status).
+var fullyObserved = map[string]bool{}
 
 // stationDiffers lists the checks the live TrainingStation fails because it really differs
 // from the lab, with the evidence read from its config.bog (2026-10-17).

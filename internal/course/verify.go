@@ -3,18 +3,22 @@ package course
 import (
 	"fmt"
 	"io"
+	"slices"
 	"strings"
 	"time"
 
 	"github.com/angeles725/niagara-go/internal/cli"
 )
 
-// Prediction verdicts of verify-predictions. CONFIRMED needs at least one linked check and
-// every one of them PASS; one FAIL contradicts; anything else (no check, a SKIP) is undecided.
+// Prediction verdicts of verify-predictions. CONFIRMED needs every linked check PASS and one of
+// them observing the whole answer (no Unobserved note for the item); PARTIAL is every check PASS
+// but each observes only the stored part; one FAIL contradicts; anything else (no check, a SKIP)
+// is undecided.
 const (
 	predConfirmed    = "CONFIRMED"
 	predContradicted = "CONTRADICTED"
 	predUndecided    = "UNDECIDED"
+	predPartial      = "PARTIAL"
 )
 
 // prediction is one answer-key item still marked *(predicted)* and the checks that link it.
@@ -22,7 +26,7 @@ type prediction struct {
 	Item    *Item
 	Results []Result // the results of the checks whose Keys name the item, in spec order
 	Verdict string
-	Reason  string // the evidence (CONFIRMED, CONTRADICTED) or why it is undecided
+	Reason  string // the evidence (CONFIRMED, CONTRADICTED; PARTIAL with what is not observed) or why it is undecided
 }
 
 func joinResults(results []Result, verdict string) string {
@@ -36,7 +40,7 @@ func joinResults(results []Result, verdict string) string {
 }
 
 // decide turns the results of an item's checks into its verdict and reason.
-func decide(results []Result) (string, string) {
+func decide(id string, results []Result) (string, string) {
 	if len(results) == 0 {
 		return predUndecided, "no check covers it"
 	}
@@ -51,7 +55,17 @@ func decide(results []Result) (string, string) {
 	case skip:
 		return predUndecided, joinResults(results, verdictSkip)
 	}
-	return predConfirmed, joinResults(results, "")
+	var notes []string
+	for _, r := range results {
+		note, partial := r.Unobserved[id]
+		if !partial {
+			return predConfirmed, joinResults(results, "") // this check observes the whole answer
+		}
+		if !slices.Contains(notes, note) {
+			notes = append(notes, note)
+		}
+	}
+	return predPartial, joinResults(results, "") + "; not observed: " + strings.Join(notes, "; ")
 }
 
 // suggestion is the line a human (or an agent) applies to a CONFIRMED item; course never edits
@@ -100,7 +114,7 @@ func verifyPredictions(c *Corpus, path, install string) ([]prediction, *station,
 		for _, ck := range linked[it] {
 			p.Results = append(p.Results, results[ck])
 		}
-		p.Verdict, p.Reason = decide(p.Results)
+		p.Verdict, p.Reason = decide(it.ID, p.Results)
 		preds = append(preds, p)
 	}
 	return preds, st, nil
@@ -123,9 +137,9 @@ type predictionJSON struct {
 }
 
 // cmdVerifyPredictions prints a verdict per predicted item, the suggestion lines of the
-// CONFIRMED ones and a summary (stdout; stderr with --json). Exit: 0 nothing contradicted,
-// 1 at least one CONTRADICTED, 2 the station cannot be read, a bad --date, or every linked
-// check was skipped.
+// CONFIRMED ones (only those) and a summary (stdout; stderr with --json). Exit: 0 nothing
+// contradicted (PARTIAL counts like UNDECIDED), 1 at least one CONTRADICTED, 2 the station
+// cannot be read, a bad --date, or every linked check was skipped.
 func cmdVerifyPredictions(c *Corpus, s cli.Stdio, stationPath, install, date string, asJSON bool) int {
 	if date == "" {
 		date = time.Now().Format(time.DateOnly)
@@ -170,8 +184,8 @@ func cmdVerifyPredictions(c *Corpus, s cli.Stdio, stationPath, install, date str
 	} else {
 		printPredictions(s.Out, preds, date)
 	}
-	fmt.Fprintf(summary, "predicted %d: CONFIRMED %d, CONTRADICTED %d, UNDECIDED %d; %s run; station %s (%s, %s), install %s\n",
-		len(preds), counts[predConfirmed], counts[predContradicted], counts[predUndecided], plural(len(ran), "check"),
+	fmt.Fprintf(summary, "predicted %d: CONFIRMED %d, PARTIAL %d, CONTRADICTED %d, UNDECIDED %d; %s run; station %s (%s, %s), install %s\n",
+		len(preds), counts[predConfirmed], counts[predPartial], counts[predContradicted], counts[predUndecided], plural(len(ran), "check"),
 		st.name, plural(st.b.Comps.Len(), "component"), plural(len(st.b.Links), "link"), orNone(install))
 	switch {
 	case counts[predContradicted] > 0:
@@ -201,8 +215,7 @@ func printPredictions(w io.Writer, preds []prediction, date string) {
 	}
 	if len(lines) > 0 {
 		fmt.Fprintln(w)
-		fmt.Fprintln(w, "suggested updates (course never edits the answer key; the evidence covers what the station")
-		fmt.Fprintln(w, "and the jars store, not a console, log or UI observation: read each item before applying):")
+		fmt.Fprintln(w, "suggested updates (CONFIRMED only; course never edits the answer key):")
 		for _, l := range lines {
 			fmt.Fprintln(w, l)
 		}

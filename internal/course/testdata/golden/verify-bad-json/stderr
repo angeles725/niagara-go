@@ -1,1 +1,1 @@
-predicted 8: CONFIRMED 4, CONTRADICTED 2, UNDECIDED 2; 12 checks run; station BadStation (235 components, 15 links), install (none: jar checks skipped)
+predicted 10: CONFIRMED 0, PARTIAL 3, CONTRADICTED 4, UNDECIDED 3; 14 checks run; station BadStation (235 components, 15 links), install (none: jar checks skipped)

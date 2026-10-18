@@ -5,7 +5,7 @@
     "reason": "no check covers it",
     "checks": [],
     "file": "docs/n4-dev-course-solutions/labs.md",
-    "line": 10,
+    "line": 11,
     "suggestion": null
   },
   {
@@ -20,7 +20,7 @@
       }
     ],
     "file": "docs/n4-dev-course-solutions/labs.md",
-    "line": 11,
+    "line": 12,
     "suggestion": null
   },
   {
@@ -35,28 +35,37 @@
       }
     ],
     "file": "docs/n4-dev-course-solutions/labs.md",
-    "line": 12,
+    "line": 13,
     "suggestion": null
   },
   {
     "id": "L3.9",
-    "verdict": "CONFIRMED",
-    "reason": "C3.5 PASS: Lab2/Add.out = 6.0 (stored)",
+    "verdict": "UNDECIDED",
+    "reason": "no check covers it",
+    "checks": [],
+    "file": "docs/n4-dev-course-solutions/labs.md",
+    "line": 19,
+    "suggestion": null
+  },
+  {
+    "id": "L4.13",
+    "verdict": "CONTRADICTED",
+    "reason": "C4.5 FAIL: 0 of 1 pass, want 2.0: Lab4/My Tstat.diff = 0.0 (default)",
     "checks": [
       {
-        "id": "C3.5",
-        "verdict": "PASS",
-        "evidence": "Lab2/Add.out = 6.0 (stored)"
+        "id": "C4.5",
+        "verdict": "FAIL",
+        "evidence": "0 of 1 pass, want 2.0: Lab4/My Tstat.diff = 0.0 (default)"
       }
     ],
     "file": "docs/n4-dev-course-solutions/labs.md",
-    "line": 18,
-    "suggestion": "L3.9: *(verified live 2026-10-17)* evidence: C3.5 Lab2/Add.out = 6.0 (stored)"
+    "line": 25,
+    "suggestion": null
   },
   {
     "id": "L4.15",
-    "verdict": "CONFIRMED",
-    "reason": "C4.6 PASS: Lab4/My Tstat.action = reverse (stored)",
+    "verdict": "PARTIAL",
+    "reason": "C4.6 PASS: Lab4/My Tstat.action = reverse (stored); not observed: the outputs at 72.5 (both false, held in band)",
     "checks": [
       {
         "id": "C4.6",
@@ -65,13 +74,13 @@
       }
     ],
     "file": "docs/n4-dev-course-solutions/labs.md",
-    "line": 25,
-    "suggestion": "L4.15: *(verified live 2026-10-17)* evidence: C4.6 Lab4/My Tstat.action = reverse (stored)"
+    "line": 26,
+    "suggestion": null
   },
   {
     "id": "L11.7",
-    "verdict": "CONFIRMED",
-    "reason": "C11.1 PASS: found 1: Drivers/TrafficLightServerNetwork; C11.15 PASS: Drivers/TrafficLightServerNetwork/tcpConfig.address.ipAddress = 127.0.0.1 (stored); C11.16 PASS: Drivers/TrafficLightServerNetwork/tcpConfig.address.port = 23 (stored); C11.17 PASS: Drivers/TrafficLightServerNetwork/tcpConfig.serverEnabled = true (stored)",
+    "verdict": "PARTIAL",
+    "reason": "C11.1 PASS: found 1: Drivers/TrafficLightServerNetwork; C11.15 PASS: Drivers/TrafficLightServerNetwork/tcpConfig.address.ipAddress = 127.0.0.1 (stored); C11.16 PASS: Drivers/TrafficLightServerNetwork/tcpConfig.address.port = 23 (stored); C11.17 PASS: Drivers/TrafficLightServerNetwork/tcpConfig.serverEnabled = true (stored); not observed: the Px view with the lights of every intersection",
     "checks": [
       {
         "id": "C11.1",
@@ -95,8 +104,28 @@
       }
     ],
     "file": "docs/n4-dev-course-solutions/labs.md",
-    "line": 37,
-    "suggestion": "L11.7: *(verified live 2026-10-17)* evidence: C11.1 found 1: Drivers/TrafficLightServerNetwork; C11.15 Drivers/TrafficLightServerNetwork/tcpConfig.address.ipAddress = 127.0.0.1 (stored); C11.16 Drivers/TrafficLightServerNetwork/tcpConfig.address.port = 23 (stored); C11.17 Drivers/TrafficLightServerNetwork/tcpConfig.serverEnabled = true (stored)"
+    "line": 39,
+    "suggestion": null
+  },
+  {
+    "id": "L11.25",
+    "verdict": "CONTRADICTED",
+    "reason": "C11.10 FAIL: 0 of 1 pass, want 23: Drivers/TrafficLightDriverNetwork/tcpConfig.address.port = 0 (default)",
+    "checks": [
+      {
+        "id": "C11.9",
+        "verdict": "PASS",
+        "evidence": "Drivers/TrafficLightDriverNetwork/tcpConfig.address.ipAddress = localhost (stored)"
+      },
+      {
+        "id": "C11.10",
+        "verdict": "FAIL",
+        "evidence": "0 of 1 pass, want 23: Drivers/TrafficLightDriverNetwork/tcpConfig.address.port = 0 (default)"
+      }
+    ],
+    "file": "docs/n4-dev-course-solutions/labs.md",
+    "line": 40,
+    "suggestion": null
   },
   {
     "id": "L11.26",
@@ -115,13 +144,13 @@
       }
     ],
     "file": "docs/n4-dev-course-solutions/labs.md",
-    "line": 39,
+    "line": 41,
     "suggestion": null
   },
   {
     "id": "L11.32",
-    "verdict": "CONFIRMED",
-    "reason": "C11.13 PASS: 3 of 3: Drivers/TrafficLightDriverNetwork/Intersection A.health.lastOkTime = 2026-10-16T15:13:00.000-06:00 (stored); C11.14 PASS: 3 of 3: Drivers/TrafficLightDriverNetwork/Intersection A.health.down = false (default)",
+    "verdict": "PARTIAL",
+    "reason": "C11.13 PASS: 3 of 3: Drivers/TrafficLightDriverNetwork/Intersection A.health.lastOkTime = 2026-10-16T15:13:00.000-06:00 (stored); C11.14 PASS: 3 of 3: Drivers/TrafficLightDriverNetwork/Intersection A.health.down = false (default); not observed: the {ok} status (the bog reader keeps no status slot)",
     "checks": [
       {
         "id": "C11.13",
@@ -135,7 +164,7 @@
       }
     ],
     "file": "docs/n4-dev-course-solutions/labs.md",
-    "line": 40,
-    "suggestion": "L11.32: *(verified live 2026-10-17)* evidence: C11.13 3 of 3: Drivers/TrafficLightDriverNetwork/Intersection A.health.lastOkTime = 2026-10-16T15:13:00.000-06:00 (stored); C11.14 3 of 3: Drivers/TrafficLightDriverNetwork/Intersection A.health.down = false (default)"
+    "line": 42,
+    "suggestion": null
   }
 ]

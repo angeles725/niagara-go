@@ -207,33 +207,44 @@ one of them has a dotted slot.
 
 | Verdict | When | Printed |
 |---|---|---|
-| `CONFIRMED` | at least one linked check, and every one PASS | each check's ID, verdict and evidence |
+| `CONFIRMED` | every linked check PASS, and at least one observes the whole answer (no `Unobserved` note for the item) | each check's ID, verdict and evidence |
+| `PARTIAL` | every linked check PASS, but each observes only the stored part | the evidence, then `not observed: ...` (the notes) |
 | `CONTRADICTED` | at least one linked check FAIL | the FAIL checks and their evidence |
 | `UNDECIDED` | no linked check (`no check covers it`), or a SKIP and no FAIL | the reason: the SKIP checks |
 
+A check proves what the station and the jars store, never a console line, a job log, a Px view
+or a runtime status. So a spec row may carry `Unobserved`, a map from a key to what of that
+item's answer the check does not observe (C1.2 -> L1.25: `the Hello, World! line in the station
+console`). `TestCheckKeysReal` fails on a link to an item the real key marks predicted that has
+no note, unless the link is audited into `fullyObserved` (empty on 2026-10-17: every predicted
+item a check links also predicts something no bog or jar holds).
+
 The table `ID  VERDICT  EVIDENCE` lists the predicted items in answer-key order, then, when any
-item is CONFIRMED, one ready-to-apply line per such item:
+item is CONFIRMED, one ready-to-apply line per CONFIRMED item (never for PARTIAL):
 
-    L10.23: *(verified live 2026-10-17)* evidence: C10.6 found 10 shared/...
+    L4.13: *(verified live 2026-10-17)* evidence: C4.5 Lab4/My Tstat.diff = 2.0 (stored)
 
-`course` never edits the Markdown: a human or an agent applies the line. A check proves what
-the station and the jars store, not a console line, a job log or a Px view, so a CONFIRMED item
-whose prediction is also an observation (L1.25 `Hello, World!`, L10.22 the job log) is confirmed
-only in its stored part: read the item before applying. `--date` is the date written in the
-lines (default: today, local time); a value that is not `YYYY-MM-DD` is exit 2.
+`course` never edits the Markdown: a human or an agent applies the line. `--date` is the date
+written in the lines (default: today, local time); a value that is not `YYYY-MM-DD` is exit 2.
 
-Summary: `predicted N: CONFIRMED c, CONTRADICTED x, UNDECIDED u; K checks run; station ...`.
+Summary: `predicted N: CONFIRMED c, PARTIAL p, CONTRADICTED x, UNDECIDED u; K checks run; station ...`.
 With `--json`, stdout is a list of `{id, verdict, reason, checks: [{id, verdict, evidence}],
 file, line, suggestion}` (`suggestion` is null unless CONFIRMED) and the summary goes to stderr.
 
-Exit: 0 no item CONTRADICTED (UNDECIDED items are counted, never confirmed); 1 at least one
+Exit: 0 no item CONTRADICTED (PARTIAL and UNDECIDED items are counted, never confirmed); 1 at least one
 CONTRADICTED; 2 the answer keys or the station cannot be read, a bad `--date`, or every linked
 check was skipped (nothing could be checked, as in `course check`).
 
 The live TrainingStation and the real answer key (2026-10-17, with the 4.15.6.20 install):
-40 predicted, 10 CONFIRMED (L1.14, L1.25, L3.9, L4.15, L7.18, L10.19, L10.22, L11.7, L11.26,
-L11.32), 0 CONTRADICTED, 30 UNDECIDED (no check covers them: console, log and UI observations);
-17 checks run.
+40 predicted, 0 CONFIRMED, 9 PARTIAL (L1.14, L1.25, L4.15, L7.18, L10.19, L10.22, L11.7,
+L11.26, L11.32), 0 CONTRADICTED, 31 UNDECIDED (no check covers them); 15 checks run.
+
+Audit of the links to predicted items (2026-10-17): C3.5 (Add.out stored) no longer links L3.9
+(`Output = Point1 + Point2 + Point3`): it says nothing of the Output point, which the live
+station does not have (C3.4). C10.2 wants one Ramp, not ten, and links only L10.16: the lab
+copies the point alone with "Keep all links" (`LI:1934-1936`), so one Ramp feeds all ten
+points; the live station has one Ramp per point, which the PARTIAL note of L10.19 records as
+not observed.
 
 ## Tests
 
@@ -256,12 +267,14 @@ L11.32), 0 CONTRADICTED, 30 UNDECIDED (no check covers them: console, log and UI
   nested values is SKIP.
 - `verify_test.go` and the `verify-*` goldens: the verdict rules (`TestDecidePrediction`) and
   the command over `testdata/predict-root/` (a synthetic answer key whose predicted IDs are
-  linked keys: one unlinked, one linked only to a jar check) with the `good` station (every
-  linked check PASS), the `bad` one (L1.25 and L11.26 CONTRADICTED), no `--install`, the `root`
+  linked keys: one unlinked, one linked only to a jar check, and L4.13 and L11.25 marked
+  predicted so that a fully observing check yields CONFIRMED) with the `good` station (every
+  linked check PASS: CONFIRMED and PARTIAL), the `bad` one (L1.25, L4.13, L11.25 and L11.26
+  CONTRADICTED), no `--install`, the `root`
   fixture (its one linked check is a jar check: exit 2), a bad `--date` and a broken bog.
   `TestVerifyPredictionsTrainingStation` (with `COURSE_TRAINING_STATION` and
-  `NIAGARA_RESEARCH_DIR`) pins only that no predicted item is CONTRADICTED and at least one is
-  CONFIRMED on the live station. `TestCheckKeysReal` resolves every linked key in the real labs.md.
+  `NIAGARA_RESEARCH_DIR`) pins only that no predicted item is CONTRADICTED, none is CONFIRMED
+  and some are PARTIAL on the live station. `TestCheckKeysReal` resolves every linked key in the real labs.md.
 - `oracle_test.go`: the recall oracle (plain regexes over the raw files, its own range
   expansion) must equal the parsed ID set on the fixture, and on the real checkout when
   `NIAGARA_RESEARCH_DIR` is set, where the counts per group and per status are pinned.

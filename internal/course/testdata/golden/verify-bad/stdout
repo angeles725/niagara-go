@@ -1,18 +1,12 @@
 ID      VERDICT       EVIDENCE
 L1.4    UNDECIDED     no check covers it
-L1.14   CONFIRMED     C1.6 PASS: modules/training-rt.jar!META-INF/module.xml has name="FirstComponent"
+L1.14   PARTIAL       C1.6 PASS: modules/training-rt.jar!META-INF/module.xml has name="FirstComponent"; not observed: module-include.xml itself and the class attribute (the jar holds the built module.xml)
 L1.25   CONTRADICTED  C1.2 FAIL: no training:FirstComponent component (searched 235 components)
-L3.9    CONFIRMED     C3.5 PASS: Lab2/Add.out = 6.0 (stored)
-L4.15   CONFIRMED     C4.6 PASS: Lab4/My Tstat.action = reverse (stored)
-L11.7   CONFIRMED     C11.1 PASS: found 1: Drivers/TrafficLightServerNetwork; C11.15 PASS: Drivers/TrafficLightServerNetwork/tcpConfig.address.ipAddress = 127.0.0.1 (stored); C11.16 PASS: Drivers/TrafficLightServerNetwork/tcpConfig.address.port = 23 (stored); C11.17 PASS: Drivers/TrafficLightServerNetwork/tcpConfig.serverEnabled = true (stored)
+L3.9    UNDECIDED     no check covers it
+L4.13   CONTRADICTED  C4.5 FAIL: 0 of 1 pass, want 2.0: Lab4/My Tstat.diff = 0.0 (default)
+L4.15   PARTIAL       C4.6 PASS: Lab4/My Tstat.action = reverse (stored); not observed: the outputs at 72.5 (both false, held in band)
+L11.7   PARTIAL       C11.1 PASS: found 1: Drivers/TrafficLightServerNetwork; C11.15 PASS: Drivers/TrafficLightServerNetwork/tcpConfig.address.ipAddress = 127.0.0.1 (stored); C11.16 PASS: Drivers/TrafficLightServerNetwork/tcpConfig.address.port = 23 (stored); C11.17 PASS: Drivers/TrafficLightServerNetwork/tcpConfig.serverEnabled = true (stored); not observed: the Px view with the lights of every intersection
+L11.25  CONTRADICTED  C11.10 FAIL: 0 of 1 pass, want 23: Drivers/TrafficLightDriverNetwork/tcpConfig.address.port = 0 (default)
 L11.26  CONTRADICTED  C11.11 FAIL: 0 of 1 pass, want it stored: Drivers/TrafficLightDriverNetwork.health.lastOkTime = "" (default); C11.12 FAIL: 0 of 1 pass, want false: Drivers/TrafficLightDriverNetwork.health.down = true (stored)
-L11.32  CONFIRMED     C11.13 PASS: 3 of 3: Drivers/TrafficLightDriverNetwork/Intersection A.health.lastOkTime = 2026-10-16T15:13:00.000-06:00 (stored); C11.14 PASS: 3 of 3: Drivers/TrafficLightDriverNetwork/Intersection A.health.down = false (default)
-
-suggested updates (course never edits the answer key; the evidence covers what the station
-and the jars store, not a console, log or UI observation: read each item before applying):
-L1.14: *(verified live 2026-10-17)* evidence: C1.6 modules/training-rt.jar!META-INF/module.xml has name="FirstComponent"
-L3.9: *(verified live 2026-10-17)* evidence: C3.5 Lab2/Add.out = 6.0 (stored)
-L4.15: *(verified live 2026-10-17)* evidence: C4.6 Lab4/My Tstat.action = reverse (stored)
-L11.7: *(verified live 2026-10-17)* evidence: C11.1 found 1: Drivers/TrafficLightServerNetwork; C11.15 Drivers/TrafficLightServerNetwork/tcpConfig.address.ipAddress = 127.0.0.1 (stored); C11.16 Drivers/TrafficLightServerNetwork/tcpConfig.address.port = 23 (stored); C11.17 Drivers/TrafficLightServerNetwork/tcpConfig.serverEnabled = true (stored)
-L11.32: *(verified live 2026-10-17)* evidence: C11.13 3 of 3: Drivers/TrafficLightDriverNetwork/Intersection A.health.lastOkTime = 2026-10-16T15:13:00.000-06:00 (stored); C11.14 3 of 3: Drivers/TrafficLightDriverNetwork/Intersection A.health.down = false (default)
-predicted 8: CONFIRMED 5, CONTRADICTED 2, UNDECIDED 1; 12 checks run; station BadStation (235 components, 15 links), install install
+L11.32  PARTIAL       C11.13 PASS: 3 of 3: Drivers/TrafficLightDriverNetwork/Intersection A.health.lastOkTime = 2026-10-16T15:13:00.000-06:00 (stored); C11.14 PASS: 3 of 3: Drivers/TrafficLightDriverNetwork/Intersection A.health.down = false (default); not observed: the {ok} status (the bog reader keeps no status slot)
+predicted 10: CONFIRMED 0, PARTIAL 4, CONTRADICTED 4, UNDECIDED 2; 14 checks run; station BadStation (235 components, 15 links), install install

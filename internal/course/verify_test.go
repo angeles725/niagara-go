@@ -8,6 +8,12 @@ import (
 func TestDecidePrediction(t *testing.T) {
 	pass := Result{Check: &Check{ID: "C1.1"}, Verdict: verdictPass, Evidence: "found 1"}
 	pass2 := Result{Check: &Check{ID: "C1.2"}, Verdict: verdictPass, Evidence: "x = 1 (stored)"}
+	part := Result{Check: &Check{ID: "C1.5", Unobserved: map[string]string{"L1.1": "the console line"}},
+		Verdict: verdictPass, Evidence: "y stored"}
+	part2 := Result{Check: &Check{ID: "C1.6", Unobserved: map[string]string{"L1.1": "the console line", "L1.2": "z"}},
+		Verdict: verdictPass, Evidence: "w stored"}
+	other := Result{Check: &Check{ID: "C1.7", Unobserved: map[string]string{"L1.9": "not this item"}},
+		Verdict: verdictPass, Evidence: "v stored"}
 	fail := Result{Check: &Check{ID: "C1.3"}, Verdict: verdictFail, Evidence: "found 0, want at least 1"}
 	skip := Result{Check: &Check{ID: "C1.4"}, Verdict: verdictSkip, Evidence: "no --install DIR"}
 	cases := []struct {
@@ -19,9 +25,17 @@ func TestDecidePrediction(t *testing.T) {
 		{[]Result{pass, fail, skip}, predContradicted, "C1.3 FAIL: found 0, want at least 1"},
 		{[]Result{pass, skip}, predUndecided, "C1.4 SKIP: no --install DIR"},
 		{[]Result{skip}, predUndecided, "C1.4 SKIP: no --install DIR"},
+		{[]Result{part, fail}, predContradicted, "C1.3 FAIL: found 0, want at least 1"},
+		{[]Result{part, skip}, predUndecided, "C1.4 SKIP: no --install DIR"},
+		// Every passing check observes only the stored part: PARTIAL, with what remains.
+		{[]Result{part, part2}, predPartial, "C1.5 PASS: y stored; C1.6 PASS: w stored; not observed: the console line"},
+		// One check that observes the whole prediction is enough.
+		{[]Result{part, pass}, predConfirmed, "C1.5 PASS: y stored; C1.1 PASS: found 1"},
+		// Coverage is per item: a note for another item does not make this one partial.
+		{[]Result{other}, predConfirmed, "C1.7 PASS: v stored"},
 	}
 	for _, c := range cases {
-		if v, r := decide(c.results); v != c.verdict || r != c.reason {
+		if v, r := decide("L1.1", c.results); v != c.verdict || r != c.reason {
 			t.Errorf("decide(%d results) = %s %q, want %s %q", len(c.results), v, r, c.verdict, c.reason)
 		}
 	}
@@ -59,7 +73,7 @@ func TestVerifyPredictionsTrainingStation(t *testing.T) {
 			t.Errorf("%s is not a predicted item", p.Item.ID)
 		}
 	}
-	if counts[predConfirmed] == 0 {
-		t.Errorf("no predicted item confirmed on the live station: %v", counts)
+	if counts[predConfirmed] != 0 || counts[predPartial] == 0 {
+		t.Errorf("want no CONFIRMED and some PARTIAL on the live station: %v", counts)
 	}
 }
