@@ -3,61 +3,12 @@ package domain
 import (
 	"fmt"
 	"io"
-	"strings"
 
 	"github.com/angeles725/niagara-go/internal/argparse"
 	"github.com/angeles725/niagara-go/internal/index"
 	"github.com/angeles725/niagara-go/internal/nav/core"
 	"github.com/angeles725/niagara-go/internal/nav/registry"
 )
-
-// row is one driver network (the dict _anatomy returns).
-type row struct {
-	network, module, pkg, path string
-	abstract                   bool
-	extends, family            string
-	devices                    []string
-	devicesFrom, devicesVia    string
-	pdx                        []string
-	pdxFrom                    string
-	proxy                      []string
-	proxyFrom                  string
-	managers, jobs, license    []string
-	doc                        docTarget
-}
-
-func optStr(s *string) any {
-	if s == nil {
-		return nil
-	}
-	return *s
-}
-
-// object is the row as Python's dict, in its key order (for --json).
-func (r *row) object() *index.Object {
-	o := index.NewObject()
-	var exists any
-	if r.doc.exists != nil {
-		exists = *r.doc.exists
-	}
-	for _, kv := range []struct {
-		k string
-		v any
-	}{
-		{"network", r.network}, {"module", r.module}, {"package", r.pkg}, {"abstract", r.abstract},
-		{"extends", r.extends}, {"family", r.family}, {"devices", r.devices},
-		{"devices_from", r.devicesFrom}, {"devices_resolved_via", r.devicesVia},
-		{"point_device_exts", r.pdx}, {"point_device_exts_from", r.pdxFrom},
-		{"proxy_exts", r.proxy}, {"proxy_exts_from", r.proxyFrom}, {"managers", r.managers},
-		{"discovery_jobs", r.jobs}, {"license_features", r.license},
-		{"help_guide_base", optStr(r.doc.base)}, {"help_guide_base_others", r.doc.others},
-		{"help_doc_module", optStr(r.doc.target)}, {"help_doc_module_exists", exists},
-		{"doc_module", optStr(r.doc.doc)}, {"doc_module_via", optStr(r.doc.via)}, {"path", r.path},
-	} {
-		o.Set(kv.k, kv.v)
-	}
-	return o
-}
 
 func runDrivers(env *registry.Env, ns *argparse.Namespace) int {
 	module, given := ns.Get("module").(string)
@@ -66,7 +17,7 @@ func runDrivers(env *registry.Env, ns *argparse.Namespace) int {
 }
 
 // driversJSON is json.dumps({"module", "scope", "networks"}, indent=2).
-func driversJSON(module string, given bool, scope string, rows []*row) string {
+func driversJSON(module string, given bool, scope string, rows []*DriverRow) string {
 	o := index.NewObject()
 	if given {
 		o.Set("module", module)
@@ -76,7 +27,7 @@ func driversJSON(module string, given bool, scope string, rows []*row) string {
 	o.Set("scope", scope)
 	networks := []any{}
 	for _, r := range rows {
-		networks = append(networks, r.object())
+		networks = append(networks, r.Object())
 	}
 	o.Set("networks", networks)
 	return core.Dumps(o, 2)
@@ -89,12 +40,7 @@ func cmdDrivers(env *registry.Env, module string, given, asJSON bool) {
 		return
 	}
 	if module != "" {
-		var wanted []*row
-		for _, r := range rows {
-			if module == r.module || module == familyDir(r.path) {
-				wanted = append(wanted, r)
-			}
-		}
+		wanted := DriversIn(rows, module)
 		if len(wanted) == 0 {
 			driversMiss(env, module, rows, scope, asJSON)
 			return
@@ -106,7 +52,9 @@ func cmdDrivers(env *registry.Env, module string, given, asJSON bool) {
 		fmt.Fprintln(env.Out, driversJSON(module, given, scope, rows))
 	case module != "":
 		for _, r := range rows {
-			printAnatomy(env.Out, r)
+			for _, line := range FormatAnatomy(r) {
+				fmt.Fprintln(env.Out, line)
+			}
 		}
 	default:
 		printTable(env.Out, rows, scope)
@@ -115,7 +63,7 @@ func cmdDrivers(env *registry.Env, module string, given, asJSON bool) {
 
 // driversMiss is _miss: with --json, stdout stays pure JSON and the miss line
 // goes to stderr.
-func driversMiss(env *registry.Env, module string, rows []*row, scope string, asJSON bool) {
+func driversMiss(env *registry.Env, module string, rows []*DriverRow, scope string, asJSON bool) {
 	if asJSON {
 		fmt.Fprintln(env.Out, driversJSON(module, true, scope, nil))
 		out := env.Runtime.Out
@@ -142,108 +90,23 @@ func driversMiss(env *registry.Env, module string, rows []*row, scope string, as
 	}
 	var mods []string
 	for _, r := range rows {
-		mods = append(mods, r.module)
+		mods = append(mods, r.Module)
 	}
 	env.Report(subject, scope, module, sortedSet(mods), "drivers")
 }
 
-// first is _first: the first value and how many more.
-func first(values []string) string {
-	switch len(values) {
-	case 0:
-		return "-"
-	case 1:
-		return values[0]
-	}
-	return fmt.Sprintf("%s (+%d)", values[0], len(values)-1)
-}
-
-func docCell(r *row) string {
-	if r.doc.doc != nil && *r.doc.doc != "" {
-		if r.doc.via != nil && *r.doc.via == "by name" {
-			return *r.doc.doc + " (by name)"
-		}
-		return *r.doc.doc
-	}
-	if r.doc.target != nil && *r.doc.target != "" {
-		return *r.doc.target + " (missing)"
-	}
-	return "-"
-}
-
-func docLine(r *row) string {
-	if r.doc.base == nil {
-		return docCell(r)
-	}
-	note := ""
-	if r.doc.exists != nil && !*r.doc.exists {
-		note = fmt.Sprintf("; %s is not in organized/", core.PyStr(optStr(r.doc.target)))
-	}
-	if len(r.doc.others) > 0 {
-		note += "; other submodule lexicons: " + strings.Join(r.doc.others, ", ")
-	}
-	doc := "-"
-	if r.doc.doc != nil && *r.doc.doc != "" {
-		doc = *r.doc.doc
-	}
-	return fmt.Sprintf("%s  [help.guide.base=%s%s]", doc, *r.doc.base, note)
-}
-
-func printTable(w io.Writer, rows []*row, scope string) {
-	line := func(cols ...string) {
-		fmt.Fprintf(w, "  %s %s %s %s %s %s\n", core.LJust(cols[0], 30), core.LJust(cols[1], 24),
-			core.LJust(cols[2], 11), core.LJust(cols[3], 30), core.LJust(cols[4], 24), cols[5])
-	}
+func printTable(w io.Writer, rows []*DriverRow, scope string) {
 	fmt.Fprintln(w)
 	fmt.Fprintf(w, "  DRIVER NETWORKS: %s\n", scope)
 	fmt.Fprintln(w)
-	line("NETWORK", "MODULE", "FAMILY", "DEVICE", "LICENSE", "DOC")
-	fmt.Fprintln(w, "  "+strings.Repeat("-", 140))
+	for _, line := range DriverTableHeader() {
+		fmt.Fprintln(w, line)
+	}
 	for _, r := range rows {
-		name := r.network
-		if r.abstract {
-			name += " *"
-		}
-		line(name, r.module, r.family, first(r.devices), first(r.license), docCell(r))
+		fmt.Fprintln(w, FormatDriverRow(r))
 	}
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "  * abstract. DOC: the doc module help.guide.base names, else the one named like")
 	fmt.Fprintln(w, "  the module directory (by name). Full anatomy: drivers <module>   (e.g. drivers modbusTcp-rt)")
-	fmt.Fprintln(w)
-}
-
-func printAnatomy(w io.Writer, r *row) {
-	abstract := ""
-	if r.abstract {
-		abstract = " (abstract)"
-	}
-	fmt.Fprintln(w)
-	fmt.Fprintf(w, "  DRIVER %s%s  (%s, %s)\n", r.network, abstract, r.module, r.pkg)
-	fmt.Fprintln(w, "  "+strings.Repeat("=", 70))
-	fmt.Fprintf(w, "  %s %s (extends %s)\n", core.LJust("family", 18), r.family, r.extends)
-	devicesFrom := r.devicesFrom
-	if r.devicesVia == "getDeviceType()" {
-		devicesFrom = "getDeviceType()"
-	}
-	for _, f := range []struct {
-		label  string
-		values []string
-		origin string
-	}{
-		{"devices", r.devices, devicesFrom}, {"point-device-ext", r.pdx, r.pdxFrom},
-		{"proxy-ext", r.proxy, r.proxyFrom}, {"managers", r.managers, ""},
-		{"discovery jobs", r.jobs, ""}, {"license", r.license, ""},
-	} {
-		values, note := "-", ""
-		if len(f.values) > 0 {
-			values = strings.Join(f.values, ", ")
-			if f.origin != "" && f.origin != r.module {
-				note = "  [from " + f.origin + "]"
-			}
-		}
-		fmt.Fprintf(w, "  %s %s%s\n", core.LJust(f.label, 18), values, note)
-	}
-	fmt.Fprintf(w, "  %s %s\n", core.LJust("doc module", 18), docLine(r))
-	fmt.Fprintf(w, "  %s %s\n", core.LJust("source", 18), r.path)
 	fmt.Fprintln(w)
 }
