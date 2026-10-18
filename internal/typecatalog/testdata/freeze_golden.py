@@ -52,7 +52,7 @@ elif i and not lines[i - 1].strip():
     i -= 1
 del lines[i:j]
 linecache.cache[tool] = (None, None, lines, tool)
-if not sys.flags.safe_path:
+if not getattr(sys.flags, "safe_path", False):  # -P / -I (Python 3.11+)
     sys.path[0] = os.path.dirname(tool)
 mod = sys.modules["__main__"] = types.ModuleType("__main__")
 mod.__file__ = tool
@@ -106,6 +106,8 @@ def slug(cmd):
 
 
 def main():
+    if LINUX_PATHS - set(CASES):
+        sys.exit(f"LINUX_PATHS names no case: {sorted(LINUX_PATHS - set(CASES))}")
     rc, out, err = run(["build", "loose", "javasrc"])
     if rc != 0:
         sys.exit(f"build loose javasrc failed: {err!r}")

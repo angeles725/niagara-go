@@ -58,7 +58,7 @@ elif i and not lines[i - 1].strip():
     i -= 1
 del lines[i:j]
 linecache.cache[tool] = (None, None, lines, tool)
-if not sys.flags.safe_path:
+if not getattr(sys.flags, "safe_path", False):  # -P / -I (Python 3.11+)
     sys.path[0] = os.path.dirname(tool)
 mod = sys.modules["__main__"] = types.ModuleType("__main__")
 mod.__file__ = tool
@@ -74,9 +74,9 @@ except BaseException as exc:
 FIX = os.path.join(HERE, "fixtures")
 DATE = (2020, 1, 1, 0, 0, 0)
 ENV = dict(os.environ, COLUMNS="100", NO_COLOR="1")
-# A Python traceback names the tool by path: the goldens keep the checkout they were first captured in,
-# so a run from any worktree of the tag gives the same bytes.
-CAPTURED_TOOL = b"/home/cristian/niagara-research/tools/bog-write.py"
+# A Python traceback names its frames' files by path: the goldens keep the checkout they were first
+# captured in, so a run from any worktree of the tag gives the same bytes.
+CAPTURED_ROOT = b"/home/cristian/niagara-research"
 
 PLAN = {  # tools/tests/test_bog_write.py PLAN
     "root": {"name": "Demo", "type": "baja:Folder"},
@@ -205,7 +205,7 @@ GENERATED = [
 def run(args, cwd):
     res = subprocess.run([sys.executable, "-I", "-c", FROZEN, TOOL, *args], cwd=cwd, env=ENV, capture_output=True,
                          timeout=120)
-    res.stderr = res.stderr.replace(b'"' + TOOL.encode() + b'"', b'"' + CAPTURED_TOOL + b'"')
+    res.stderr = res.stderr.replace(b'File "' + ROOT.encode() + b'/', b'File "' + CAPTURED_ROOT + b'/')
     return res
 
 
