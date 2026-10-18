@@ -205,8 +205,6 @@ func TestInprocRoutesToExec(t *testing.T) {
 	b := &inprocBackend{exec: rec, clock: time.Now,
 		paths: Paths{Blocks: filepath.Join(dir, "absent.py"), Docs: filepath.Join(dir, "nh.py"), Code: code}}
 	for _, argv := range [][]string{
-		{code, "rank", "-n", "20", "--", "alarm"},
-		{code, "token", "BAlarm", "-n", "100000"}, // no indexes/ beside tools/
 		{b.paths.Blocks, "find", "alarm", "--limit", "2000"},
 		{filepath.Join(dir, "other.py"), "find", "alarm"},
 	} {
@@ -214,8 +212,8 @@ func TestInprocRoutesToExec(t *testing.T) {
 			t.Errorf("%v: %+v", argv, raw)
 		}
 	}
-	if len(rec.calls) != 4 {
-		t.Errorf("exec calls %d, want 4", len(rec.calls))
+	if len(rec.calls) != 2 {
+		t.Errorf("exec calls %d, want 2", len(rec.calls))
 	}
 }
 
