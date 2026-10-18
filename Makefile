@@ -68,16 +68,30 @@ wintest:
 	GO=$(GO) scripts/wintest.sh
 
 # Not part of ci: checks against the real niagara-research corpus (NIAGARA_RESEARCH, the checkout).
-# The search-quality gate of tools/searchdoor/golden.py: hit@1/hit@5 per source must not fall
-# below the floor in internal/searchdoor/quality_test.go. See docs/goldens.md.
+# The search-quality gate TestSearchQuality (internal/searchdoor/quality_test.go): hit@1/hit@5 per
+# source must not fall below its floor. See docs/goldens.md.
 NIAGARA_RESEARCH ?= $(HOME)/niagara-research
+RESEARCH := $(abspath $(NIAGARA_RESEARCH))
+# Live/station suites (course, bog) read host-specific data that never enters the repo, so they are
+# opt-in: export their env to run them, otherwise they skip visibly.
+#   course: COURSE_TRAINING_STATION=<...>/TrainingStation/config.bog [COURSE_NIAGARA_INSTALL=<install>]
+#   bog recall: BOG_RECALL_FILES=<bog>[:<bog>...]  bog parity: BOG_PARITY_FILES + BOG_PARITY_DIR
+#     (the dump dir that internal/bog/testdata/gen_fixtures.py --dump wrote, kept outside the repo)
 parity: parity-helpbuild
-	NSEARCH_QUALITY_ROOT=$(abspath $(NIAGARA_RESEARCH)) $(GO) test -count=1 -v -timeout 30m \
+	NSEARCH_QUALITY_ROOT=$(RESEARCH) $(GO) test -count=1 -v -timeout 30m \
 		-run '^(TestSearchQuality|TestQualityFixtureMatchesResearch)$$' ./internal/searchdoor
-	MODULE_NAVIGATOR_DIR=$(abspath $(NIAGARA_RESEARCH))/module-navigator $(GO) test -count=1 -timeout 30m \
+	MODULE_NAVIGATOR_DIR=$(RESEARCH)/module-navigator $(GO) test -count=1 -timeout 30m \
 		-run '^TestGoldenReal$$' ./internal/nav
-	NIAGARA_HELP_DIR=$(abspath $(NIAGARA_RESEARCH))/niagara-help $(GO) test -count=1 -timeout 30m \
+	NIAGARA_HELP_DIR=$(RESEARCH)/niagara-help $(GO) test -count=1 -timeout 30m \
 		-run '^TestGoldenReal$$' ./internal/help
+	NIAGARA_RESEARCH=$(RESEARCH) $(GO) test -count=1 -timeout 30m \
+		-run '^TestParity' ./internal/navbuild
+	NIAGARA_HELP_DIR=$(RESEARCH)/niagara-help $(GO) test -count=1 -timeout 90m -parallel 2 \
+		-run '^TestBuildMatchesPythonOnRegisteredVersions$$' ./internal/helpbuild/fulltext
+	NIAGARA_RESEARCH_DIR=$(RESEARCH) $(GO) test -count=1 -timeout 30m \
+		-run '^(TestCheckTrainingStation|TestVerifyPredictionsTrainingStation)$$' ./internal/course
+	$(GO) test -count=1 -timeout 30m \
+		-run '^(TestRecallRealBogs|TestParityRealBogs)$$' ./internal/bog
 
 hooks:
 	git config core.hooksPath scripts/git-hooks
