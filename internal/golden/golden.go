@@ -4,7 +4,7 @@
 // Layout, one directory per case under <testdata>/golden/<case>/:
 //
 //	cmd.json  {"args": [...], "stdin_file": "...", "env": {...}, "cwd_fixture": "...",
-//	           "requires": {"machine_id_sha256": "..."}}
+//	           "requires": {"machine_id_sha256": "...", "goos": ["linux", ...]}}
 //	stdout    expected standard output (exact bytes)
 //	stderr    expected standard error (exact bytes; missing file = empty)
 //	exit      expected exit code as decimal text
@@ -19,7 +19,7 @@
 // <testdata> (or <testdata>/<cwd_fixture>) as its working directory. Every case
 // gets COLUMNS=100 and NO_COLOR=1 unless its env overrides them. "{tmp}" in
 // args or env values is a fresh temporary directory (see bind.go); a case with
-// "requires" is skipped, with a reason, on any other host.
+// "requires" is skipped, with a reason, on any other host or operating system.
 package golden
 
 import (
@@ -107,6 +107,9 @@ func loadCase(dir string) (Case, error) {
 	dec := json.NewDecoder(strings.NewReader(string(raw)))
 	dec.DisallowUnknownFields()
 	if err := dec.Decode(&c); err != nil {
+		return c, fmt.Errorf("cmd.json: %w", err)
+	}
+	if err := c.Requires.validate(); err != nil {
 		return c, fmt.Errorf("cmd.json: %w", err)
 	}
 	if c.Stdout, err = os.ReadFile(filepath.Join(dir, "stdout")); err != nil {
