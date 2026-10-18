@@ -16,7 +16,7 @@ func Str(o *index.Object, k string) string {
 // Truthy is bool(o.get(k)).
 func Truthy(o *index.Object, k string) bool {
 	v, _ := o.Get(k)
-	return truthy(v)
+	return index.Truthy(v)
 }
 
 // Int is o[k] as an int (0 when missing or not an integer).

@@ -16,7 +16,7 @@ import (
 // is name; nil when that entry is missing or empty.
 func inheritanceEntry(inh *index.Object, name string) *index.Object {
 	v, _ := inh.Get(name)
-	if !truthy(v) {
+	if !index.Truthy(v) {
 		for _, k := range inh.Keys() {
 			if stripGenerics(k) == name {
 				v, _ = inh.Get(k)
@@ -24,7 +24,7 @@ func inheritanceEntry(inh *index.Object, name string) *index.Object {
 			}
 		}
 	}
-	if !truthy(v) {
+	if !index.Truthy(v) {
 		return nil
 	}
 	o, _ := v.(*index.Object)
@@ -176,13 +176,13 @@ func (e *Env) printInheritedSlots(name string, chain []string, merged [][]inheri
 		return pyStr(s.name) + ": " + pyStr(s.typ) + defaultSuffix(s.slot, 50) + flagsSuffix(s.slot)
 	})
 	section("ACTIONS", actions, func(s inheritedSlot) string {
-		if truthy(s.typ) {
+		if index.Truthy(s.typ) {
 			return pyStr(s.name) + " (" + pyStr(s.typ) + ")"
 		}
 		return pyStr(s.name) + "()"
 	})
 	section("TOPICS", topics, func(s inheritedSlot) string {
-		if truthy(s.typ) {
+		if index.Truthy(s.typ) {
 			return pyStr(s.name) + " -> " + pyStr(s.typ)
 		}
 		return pyStr(s.name)

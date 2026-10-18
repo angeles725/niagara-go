@@ -32,7 +32,7 @@ func newInheritanceKeys(inh *index.Object) *inheritanceKeys {
 		s := stripGenerics(key)
 		setDefault(k.stripped, s, key)
 		setDefault(k.lowerK, lowerStr(s), key)
-		if pv := get(inh.Object(key), "package", nil); truthy(pv) {
+		if pv := get(inh.Object(key), "package", nil); index.Truthy(pv) {
 			pkg, simple := pyStr(pv), s
 			if strings.HasPrefix(s, pkg+".") {
 				simple = s[len(pkg)+1:]

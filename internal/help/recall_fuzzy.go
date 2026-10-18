@@ -160,7 +160,7 @@ func (e *Env) fuzzy(query string, topN int) error {
 		if score, pos := fuzzyScore(lowerStr(folder), words); score > 0 {
 			count := get(data, "total_topics", get(data, "html_count", nil)) // nil: the falsy default 0
 			extra := ""
-			if truthy(count) {
+			if index.Truthy(count) {
 				extra = fmt.Sprintf(" (%s topics, %s)", pyStr(count), orStr(data, "source_jar", "", ""))
 			}
 			guideHits = append(guideHits, fuzzyHit{score, pos, folder, folder + extra})

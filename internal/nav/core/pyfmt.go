@@ -114,21 +114,3 @@ func Cut(s string, n int) string {
 	}
 	return s
 }
-
-// truthy is Python's bool(v) for a decoded JSON value.
-func truthy(v any) bool {
-	switch t := v.(type) {
-	case nil:
-		return false
-	case bool:
-		return t
-	case string:
-		return t != ""
-	case []any:
-		return len(t) > 0
-	case *index.Object:
-		return t.Len() > 0
-	}
-	f, _ := index.Float(v)
-	return f != 0
-}

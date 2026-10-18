@@ -6,8 +6,6 @@ import (
 	"strings"
 	"testing"
 	"time"
-
-	"github.com/angeles725/niagara-go/internal/index"
 )
 
 // laterBuilders are the builders that read the class index: each runs after
@@ -123,21 +121,5 @@ func TestReadClassIndex(t *testing.T) {
 	}
 	if _, err := readClassIndex(newBase(t)); err == nil || !strings.Contains(err.Error(), "Run ./reindex.sh") {
 		t.Errorf("missing class index: %v", err)
-	}
-}
-
-func TestTruthy(t *testing.T) {
-	for _, tc := range []struct {
-		doc  string
-		want bool
-	}{{`null`, false}, {`""`, false}, {`"x"`, true}, {`0`, false}, {`0.0`, false}, {`-0`, false},
-		{`2`, true}, {`NaN`, true}, {`1e999`, true}, {`[]`, false}, {`[0]`, true}, {`{}`, false}, {`{"a":1}`, true}, {`false`, false}} {
-		v, err := index.Decode([]byte(tc.doc))
-		if err != nil {
-			t.Fatal(err)
-		}
-		if got := truthy(v); got != tc.want {
-			t.Errorf("truthy(%s) = %v, want %v", tc.doc, got, tc.want)
-		}
 	}
 }

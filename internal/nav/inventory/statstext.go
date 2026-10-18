@@ -52,7 +52,7 @@ func printStats(env *registry.Env, stats *index.Object, ci summary, files []inde
 		for _, f := range [][2]string{{"Top-level classes:      ", "top_level"}, {"Inner classes:          ", "inner_classes"},
 			{"Interfaces:             ", "interfaces"}, {"Enums:                  ", "enums"},
 			{"Abstract classes:       ", "abstract_classes"}, {"Unique packages:        ", "packages"}} {
-			if v, _ := cx.Get(f[1]); truthy(v) {
+			if v, _ := cx.Get(f[1]); index.Truthy(v) {
 				line(f[0], v, ">7,")
 			}
 		}

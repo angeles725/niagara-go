@@ -36,26 +36,6 @@ func pyStr(v any) string {
 	return fmt.Sprint(v)
 }
 
-// truthy is bool(v) for a decoded JSON value.
-func truthy(v any) bool {
-	switch x := v.(type) {
-	case nil:
-		return false
-	case bool:
-		return x
-	case string:
-		return x != ""
-	case json.Number:
-		f, err := x.Float64()
-		return err != nil || f != 0
-	case []any:
-		return len(x) > 0
-	case *index.Object:
-		return x != nil && x.Len() > 0
-	}
-	return true
-}
-
 // get is o.get(k, def); a nil object is an empty dict.
 func get(o *index.Object, k string, def any) any {
 	if o == nil {
@@ -73,7 +53,7 @@ func getStr(o *index.Object, k, def string) string { return pyStr(get(o, k, def)
 // orStr is `o.get(k, def) or alt`.
 func orStr(o *index.Object, k, def, alt string) string {
 	v := get(o, k, def)
-	if !truthy(v) {
+	if !index.Truthy(v) {
 		return alt
 	}
 	return pyStr(v)
