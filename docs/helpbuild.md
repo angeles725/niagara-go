@@ -380,7 +380,11 @@ Go does not export its table, so `isHTML5Entity` reads it through `html.Unescape
   `parse_guides` / `parse_devguide` fail and the old clean tree is kept. Go returns an
   error at the same point (same outcome, an error instead of a traceback);
   `guides-index.json` spells such names as Python does (`\udcXX`, sorted as decoded
-  names). A licence text with such a name is printed raw in the `excluded` line.
+  names). A licence text with such a name is printed raw in the `excluded` line. On
+  Windows the only such name is an unpaired surrogate (UTF-16 names; Go reads it as
+  WTF-8, CPython as `\udcXX`), and both sides fail the same way.
+- **The `excluded (licence text)` line** is `os.path.relpath` unchanged, so it keeps the
+  host separator (`devguide\sub\lgpl-2.1.txt` on Windows) while `SOURCE:` headers use `/`.
 
 ### S5/S6 shared-helper candidates
 
