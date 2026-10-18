@@ -120,20 +120,25 @@ func TestAddVersionRefusals(t *testing.T) {
 			}
 		})
 	}
+	registry := filepath.Join(repo, "versions", "registry.json")
 	writeRegistry(t, repo, map[string][3]string{"1.2.3.4": {"Other", "/elsewhere", "versions/1.2.3.4"}})
-	before := readText(t, filepath.Join(repo, "versions", "registry.json"))
+	before := readText(t, registry)
 	id := "1.2.3.4"
 	if out, status := addRun(t, repo, install, AddOptions{ID: &id}); status != 2 ||
 		out != "ERROR: version 1.2.3.4 is already registered for /elsewhere\n" {
 		t.Errorf("other install: %d %q", status, out)
 	}
+	if got := readText(t, registry); got != before {
+		t.Errorf("refused add (other install) rewrote the registry:\n%s", got)
+	}
 	writeRegistry(t, repo, map[string][3]string{"1.2.3.4": {"Same", install, "versions/1.2.3.4"}})
+	before = readText(t, registry)
 	if out, status := addRun(t, repo, install+"/.", AddOptions{ID: &id}); status != 2 ||
 		out != "ERROR: version 1.2.3.4 is already registered; pass --force to extract and index it again\n" {
 		t.Errorf("same install without --force: %d %q", status, out)
 	}
-	if got := readText(t, filepath.Join(repo, "versions", "registry.json")); got == before {
-		t.Log("registry rewritten by the test only")
+	if got := readText(t, registry); got != before {
+		t.Errorf("refused add (same install) rewrote the registry:\n%s", got)
 	}
 }
 

@@ -36,7 +36,10 @@ func versionsExtractArgs(sub *argparse.Subparsers) {
 
 // fulltextDocs is the FulltextDocs of nh: open_index(root).docs(), the index
 // built first when it is missing or stale (scope.OpenFulltext: the building
-// notes on stderr, the build lock).
+// notes on stderr, the build lock). The handle is closed, releasing the lock,
+// before the docs are read: safe because every fulltext build writes a temp
+// file and renames it into place (helpbuild/fulltext build.go), so a reader
+// never sees a half-written index.
 func (e *Env) fulltextDocs(root string) (map[string]bool, error) {
 	x, err := scope.OpenFulltext(e.Err)(root, "")
 	if err != nil {

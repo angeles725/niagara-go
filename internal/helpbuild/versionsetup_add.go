@@ -226,8 +226,13 @@ func AddVersion(repo, install string, w io.Writer, opt AddOptions) (int, error) 
 	}
 	out("registered %s (%s) -> versions/%s/", vid, label, vid)
 	res, err := ExtractAndIndex(repo, vid, SetupOptions{Force: opt.Force, Rebuild: opt.Rebuild, Now: opt.Now})
-	for _, line := range res.Log {
-		out("%s", line)
+	if res != nil {
+		for _, line := range res.Log {
+			out("%s", line)
+		}
+	}
+	if err == nil && res == nil {
+		err = fmt.Errorf("extract %s returned no result", vid)
 	}
 	if err != nil {
 		rollback(regPath, before, root, rootExisted, out)
