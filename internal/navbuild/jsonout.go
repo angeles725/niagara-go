@@ -26,27 +26,19 @@ var now = time.Now
 
 // Field is one member of an object written in a fixed key order (a _meta
 // block or an index entry).
-type Field struct {
-	Key   string
-	Value pyjson.Value
-}
+type Field = pyjson.Field
 
-// object is the dict literal {fields...} in their order.
-func object(fields ...Field) pyjson.Value {
-	o := pyjson.NewObject()
-	for _, f := range fields {
-		o.Set(f.Key, f.Value)
-	}
-	return o
-}
-
-func str(s string) pyjson.Value { return pyjson.String(s) }
+// The value constructors the builders use: object is the dict literal
+// {fields...} in their order.
+var (
+	object  = pyjson.ObjectOf
+	str     = pyjson.String
+	boolean = pyjson.BoolValue
+	float   = pyjson.FloatValue
+	strList = pyjson.StringList
+)
 
 func integer(n int) pyjson.Value { return pyjson.IntValue(int64(n)) }
-
-func boolean(b bool) pyjson.Value { return pyjson.Value{Kind: pyjson.Bool, B: b} }
-
-func float(f float64) pyjson.Value { return pyjson.Value{Kind: pyjson.Float, F: f} }
 
 // optStr is a str, or None for "".
 func optStr(s string) pyjson.Value {
@@ -54,14 +46,6 @@ func optStr(s string) pyjson.Value {
 		return pyjson.Value{}
 	}
 	return str(s)
-}
-
-func strList(ss []string) pyjson.Value {
-	a := make([]pyjson.Value, len(ss))
-	for i, s := range ss {
-		a[i] = str(s)
-	}
-	return pyjson.Value{Kind: pyjson.Array, A: a}
 }
 
 // round1 is Python's round(x, 1): correctly rounded, ties to even, which is

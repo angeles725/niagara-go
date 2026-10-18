@@ -14,8 +14,9 @@ import (
 // FromAny reads the Go values the ports hold (decoded index values, dict literals,
 // slices and scalars), so every port prints json.dumps through Dumps.
 
-// Field is one member of a dict literal built with ObjectOf.
-type Field struct {
+// Field is one member of a dict literal built with ObjectOf. Like KV it aliases an
+// unnamed struct so other packages can write Field{"key", v} past go vet.
+type Field = struct {
 	Key   string
 	Value Value
 }
