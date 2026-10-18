@@ -32,6 +32,8 @@ func TestValidateImageMatchesGoldenUsageMessages(t *testing.T) {
 	t.Chdir(runDir)
 	for name, image := range cases {
 		if name == "usage-char-device" {
+			// This guard is what protects Windows: there /dev/null does not exist (Stat fails),
+			// so the Linux-only character-device case is skipped instead of failing.
 			if st, err := os.Stat(image); err != nil || st.Mode()&os.ModeCharDevice == 0 {
 				continue
 			}
