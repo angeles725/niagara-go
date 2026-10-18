@@ -9,6 +9,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/angeles725/niagara-go/internal/pyjson"
 	"github.com/angeles725/niagara-go/internal/slotomatic"
 )
 
@@ -78,14 +79,15 @@ func Key(t slotomatic.Type) string {
 	return t.Package + "." + t.Class
 }
 
-// JSON is json.dumps(cat, indent=1, sort_keys=True).
-func (c *Catalog) JSON() (string, error) {
+// JSON is json.dumps(cat, indent=1, sort_keys=True): the keys are sorted here, so the dump keeps
+// insertion order.
+func (c *Catalog) JSON() string {
 	keys := append([]string(nil), c.Keys...)
 	sort.Strings(keys)
-	top := make([]kv, len(keys))
+	top := make(pyjson.Obj, len(keys))
 	for i, k := range keys {
 		r := c.m[k]
-		top[i] = kv{k, []kv{
+		top[i] = pyjson.KV{Key: k, Val: pyjson.Obj{
 			{"actions", decls(r.Actions)},
 			{"class", r.Class},
 			{"extends", r.Extends},
@@ -95,7 +97,7 @@ func (c *Catalog) JSON() (string, error) {
 			{"topics", decls(r.Topics)},
 		}}
 	}
-	return dumps(top, 1)
+	return pyjson.DumpsAny(top, pyjson.Defaults(1))
 }
 
 func decls(ds []slotomatic.Decl) []any {
@@ -105,8 +107,9 @@ func decls(ds []slotomatic.Decl) []any {
 		if args == nil {
 			args = []string{}
 		}
-		out[i] = []kv{{"args", args}, {"default", d.Default}, {"facets", d.Facets},
-			{"flagLetters", d.FlagLetters}, {"flags", d.FlagValue()}, {"name", d.Name}}
+		flags := pyjson.Value{Kind: pyjson.Int, I: d.FlagValue()} // a Python int: no bound
+		out[i] = pyjson.Obj{{"args", args}, {"default", d.Default}, {"facets", d.Facets},
+			{"flagLetters", d.FlagLetters}, {"flags", flags}, {"name", d.Name}}
 	}
 	return out
 }
