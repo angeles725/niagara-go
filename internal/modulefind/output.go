@@ -3,9 +3,8 @@ package modulefind
 import (
 	"fmt"
 	"io"
-	"strings"
 
-	"github.com/angeles725/niagara-go/internal/pycompat"
+	"github.com/angeles725/niagara-go/internal/pycsv"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 )
 
@@ -53,17 +52,18 @@ func render(rows []row, o *opts, line func(row) string, empty string) int {
 		fmt.Fprintln(o.out, jsonDumps(items))
 	case o.csv:
 		if len(rows) > 0 {
-			keys := make([]string, len(rows[0]))
+			keys, header := make([]string, len(rows[0])), make([]any, len(rows[0]))
 			for i, f := range rows[0] {
-				keys[i] = f.key
+				keys[i], header[i] = f.key, f.key
 			}
-			writeCSV(o.out, keys)
+			w := pycsv.NewWriter(o.out)
+			_ = w.WriteRow(header)
 			for _, r := range rows {
-				vals := make([]string, len(keys))
+				vals := make([]any, len(keys))
 				for i, k := range keys {
-					vals[i] = csvStr(r.get(k))
+					vals[i] = csvValue(r.get(k))
 				}
-				writeCSV(o.out, vals)
+				_ = w.WriteRow(vals)
 			}
 		}
 	case len(rows) == 0:
@@ -102,38 +102,16 @@ func capRows(rows []row, o *opts, text bool) ([]row, string) {
 	return rows[:o.limit], note
 }
 
-// csvStr is how csv.writer writes a value: str(), None as "".
-func csvStr(v any) string {
-	switch x := v.(type) {
-	case nil:
-		return ""
-	case *float64:
+// csvValue is a row value as csv.writer receives it: a *float64 is the float, or None
+// when nil.
+func csvValue(v any) any {
+	if x, ok := v.(*float64); ok {
 		if x == nil {
-			return ""
+			return nil
 		}
-		return pycompat.FloatRepr(*x)
-	case bool:
-		if x {
-			return "True"
-		}
-		return "False"
-	case int:
-		return fmt.Sprint(x)
+		return *x
 	}
-	return v.(string)
-}
-
-// writeCSV is csv.writer(sys.stdout).writerow (excel dialect): fields quoted only when
-// they hold a comma, a quote, CR or LF (quotes doubled), a lone empty field quoted, CRLF.
-func writeCSV(w io.Writer, fields []string) {
-	out := make([]string, len(fields))
-	for i, f := range fields {
-		if strings.ContainsAny(f, ",\"\r\n") || (f == "" && len(fields) == 1) {
-			f = `"` + strings.ReplaceAll(f, `"`, `""`) + `"`
-		}
-		out[i] = f
-	}
-	fmt.Fprint(w, strings.Join(out, ",")+"\r\n")
+	return v
 }
 
 // jsonDumps is json.dumps(v, indent=2) (ensure_ascii) of rows (ordered dicts), lists,
