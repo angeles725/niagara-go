@@ -1,6 +1,6 @@
 {
  "args": [
-  "inputs/station/shared/px/dir-ref.px",
+  "inputs/station/shared/px/main.px",
   "--shared",
   "inputs/station/shared",
   "--out",
@@ -8,5 +8,9 @@
   "--organized",
   "inputs/organized"
  ],
- "cwd_fixture": ".."
+ "requires": {
+  "goos": [
+   "linux"
+  ]
+ }
 }
