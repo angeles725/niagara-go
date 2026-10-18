@@ -1,0 +1,8 @@
+CLASS: BAbstractService
+PACKAGE: javax.baja.sys
+EXTENDS: BComponent
+SUBCLASSES: 
+
+METHODS:
+  void added(Property p)
+  Type getType()

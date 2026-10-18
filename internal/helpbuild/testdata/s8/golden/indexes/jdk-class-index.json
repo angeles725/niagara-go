@@ -1,0 +1,25 @@
+{
+  "Object": {
+    "path": "../jdk/java/lang/Object.bajadoc",
+    "package": "java.lang",
+    "type": "class",
+    "module": "java.base"
+  },
+  "Override": {
+    "path": "../jdk/java/lang/Override.bajadoc",
+    "package": "java.lang",
+    "type": "annotation"
+  },
+  "Timer": {
+    "path": "../jdk/java/util/Timer.bajadoc",
+    "package": "java.util",
+    "type": "class",
+    "others": [
+      {
+        "path": "../jdk/javax/swing/Timer.bajadoc",
+        "package": "javax.swing",
+        "type": "class"
+      }
+    ]
+  }
+}

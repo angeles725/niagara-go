@@ -1,0 +1,2 @@
+# exact bytes: fixtures hold CRLF, lone CR and bytes that are not UTF-8
+* -text

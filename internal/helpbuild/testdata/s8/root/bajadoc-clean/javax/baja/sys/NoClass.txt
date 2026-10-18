@@ -1,0 +1,4 @@
+PACKAGE: javax.baja.sys
+EXTENDS: BObject
+
+CLASS: Late

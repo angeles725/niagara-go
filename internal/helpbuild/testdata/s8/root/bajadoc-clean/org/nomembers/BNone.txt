@@ -1,0 +1,7 @@
+CLASS: BNone
+PACKAGE: org.nomembers
+METHODS:
+  void inHeader()
+FIELDS:
+
+  int x

@@ -1,0 +1,140 @@
+{
+  "Ann": {
+    "path": "../devguide/baja/javax/baja/sys/Pair.bajadoc",
+    "package": "javax.baja.sys",
+    "type": "annotation"
+  },
+  "BAlarmRecord": {
+    "path": "javax/baja/alarm/BAlarmRecord.html",
+    "package": "javax.baja.alarm",
+    "type": "class"
+  },
+  "BBroken": {
+    "path": "../devguide/control/com/tridium/control/BBroken.bajadoc",
+    "package": "com.tridium.control",
+    "type": "class",
+    "module": "control"
+  },
+  "BCaf\u00e9": {
+    "path": "../devguide/control/com/tridium/control/Latin.bajadoc",
+    "package": "com.tridium.control",
+    "type": "class",
+    "module": "control"
+  },
+  "BComponent": {
+    "path": "javax/baja/sys/BComponent.html",
+    "package": "javax.baja.sys",
+    "type": "class",
+    "module": "baja-rt",
+    "others": [
+      {
+        "path": "../guides/clHVAC/com/hvac/BComponent.bajadoc",
+        "package": "com.hvac",
+        "type": "class",
+        "module": "clHVAC"
+      },
+      {
+        "path": "../devguide/control/com/tridium/control/BComponent.bajadoc",
+        "package": "com.tridium.control",
+        "type": "class",
+        "module": "control"
+      }
+    ]
+  },
+  "BFolder": {
+    "path": "javax/baja/util/BFolder.html",
+    "package": "javax.baja.util",
+    "type": "class",
+    "others": [
+      {
+        "path": "../devguide/control/com/tridium/control/BFolder.bajadoc",
+        "package": "com.tridium.control",
+        "type": "class",
+        "module": "control"
+      }
+    ]
+  },
+  "BIObject": {
+    "path": "javax/baja/sys/BIObject.html",
+    "package": "javax.baja.sys",
+    "type": "interface",
+    "module": "baja"
+  },
+  "BMode": {
+    "path": "javax/baja/sys/BMode.html",
+    "package": "javax.baja.sys",
+    "type": "enum"
+  },
+  "BPairA": {
+    "path": "../devguide/baja/javax/baja/sys/Pair.bajadoc",
+    "package": "javax.baja.sys",
+    "type": "enum",
+    "module": "baja"
+  },
+  "BSame": {
+    "path": "../devguide/control/a-first/com/a/BSame.bajadoc",
+    "package": "com.a",
+    "type": "class",
+    "module": "a",
+    "others": [
+      {
+        "path": "../devguide/control/Z/com/z/BSame.bajadoc",
+        "package": "com.z",
+        "type": "class"
+      }
+    ]
+  },
+  "BSpan\u00c4": {
+    "path": "javax/baja/util/BSpan\u00c4.html",
+    "package": "javax.baja.util",
+    "type": "class"
+  },
+  "B\u00dcber": {
+    "path": "javax/baja/util/B\u00dcber.html",
+    "package": "javax.baja.util",
+    "type": "class",
+    "module": "\u00fcber"
+  },
+  "B\ufffdad": {
+    "path": "javax/baja/util/Bad.html",
+    "package": "javax.baja.util",
+    "type": "class"
+  },
+  "Cat": {
+    "path": "../devguide/baja/javax/baja/sys/Pair.bajadoc",
+    "package": "javax.baja.sys",
+    "type": "annotation"
+  },
+  "Cursor": {
+    "path": "../devguide/baja/javax/baja/util/Cursor.bajadoc",
+    "package": "javax.baja.util",
+    "type": "interface",
+    "module": "baja"
+  },
+  "Cursor&lt;E&gt;": {
+    "path": "javax/baja/util/Cursor.html",
+    "package": "javax.baja.util",
+    "type": "interface"
+  },
+  "En": {
+    "path": "../devguide/baja/javax/baja/sys/Pair.bajadoc",
+    "package": "javax.baja.sys",
+    "type": "enum"
+  },
+  "Marker": {
+    "path": "javax/baja/sys/Marker.html",
+    "package": "javax.baja.sys",
+    "type": "annotation"
+  },
+  "Outer.Inner": {
+    "path": "../guides/clHVAC/com/hvac/Outer.bajadoc",
+    "package": "com.hvac",
+    "type": "class",
+    "module": "clHVAC"
+  },
+  "Spl\nit": {
+    "path": "javax/baja/x/Split.html",
+    "package": "javax.baja.x",
+    "type": "class"
+  }
+}

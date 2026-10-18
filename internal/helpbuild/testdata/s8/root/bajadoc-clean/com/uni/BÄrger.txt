@@ -1,0 +1,8 @@
+CLASS: BÄrger
+PACKAGE: com.uni
+EXTENDS: BÖbject
+IMPLEMENTS: BIété, BIx
+
+METHODS:
+  void grüß(int x)
+  void added(Property p)

@@ -1,0 +1,7 @@
+INTERFACE:   BIObject  
+PACKAGE: javax.baja.sys
+EXTENDS:
+SUBCLASSES: BIParent, BComponent, BIThing
+
+METHODS:
+  Type getType()
