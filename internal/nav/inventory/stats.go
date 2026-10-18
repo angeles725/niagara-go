@@ -19,7 +19,8 @@ import (
 
 // stats (inventory/stats.py cmd_stats): corpus and index summary, the sizes
 // and _meta counters of every index, the Help Navigator status and the
-// historical command list.
+// historical command list. Index summaries come from statsCache, so a run
+// after the first one reads only the module inventory.
 
 // indexFile is one entry of the INDEXES list.
 type indexFile struct {
@@ -170,7 +171,7 @@ func (s section) object() *index.Object {
 
 func runStats(env *registry.Env, ns *argparse.Namespace) int {
 	dir := filepath.Join(env.BaseDir, "indexes")
-	reader := directReader{}
+	reader := openStatsCache(dir)
 	var files []indexFile
 	if names, err := readDirNames(dir); err == nil {
 		sort.Strings(names)

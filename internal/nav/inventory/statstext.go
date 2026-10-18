@@ -19,7 +19,7 @@ import (
 
 // printStats is the text view of cmd_stats.
 func printStats(env *registry.Env, stats *index.Object, ci summary, files []indexFile, totalBytes int64,
-	present map[string]bool, reader directReader) {
+	present map[string]bool, reader *statsCache) {
 	w := env.Out
 	obj := func(k string) *index.Object { return stats.Object(k) }
 	line := func(label string, v any, spec string) { fmt.Fprintf(w, "    %s%s\n", label, format(v, spec)) }
@@ -155,7 +155,7 @@ func printStats(env *registry.Env, stats *index.Object, ci summary, files []inde
 
 // printHelpStatus is the HELP NAVIGATOR INTEGRATION block (help_bridge
 // get_help_nav_status): niagara-help/ next to the base directory.
-func printHelpStatus(w io.Writer, baseDir string, reader directReader) {
+func printHelpStatus(w io.Writer, baseDir string, reader *statsCache) {
 	fmt.Fprintln(w, "  HELP NAVIGATOR INTEGRATION:")
 	help := pycompat.PosixJoin(posixDirname(baseDir), "niagara-help")
 	idx := filepath.Join(help, "indexes")
