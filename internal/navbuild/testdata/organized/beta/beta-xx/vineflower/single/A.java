@@ -1,0 +1,2 @@
+package single;
+class A {}
