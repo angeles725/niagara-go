@@ -59,11 +59,12 @@ func hasSuffixFold(s, suffix string) bool {
 func SanitizePDFName(name string) string {
 	// re.sub(r'\.pdf$', '', name, flags=re.I): $ also matches before a
 	// trailing newline.
+	const ext = ".pdf"
 	switch {
-	case hasSuffixFold(name, ".pdf"):
-		name = name[:len(name)-4]
-	case strings.HasSuffix(name, "\n") && hasSuffixFold(name[:len(name)-1], ".pdf"):
-		name = name[:len(name)-5] + "\n"
+	case hasSuffixFold(name, ext):
+		name = name[:len(name)-len(ext)]
+	case strings.HasSuffix(name, "\n") && hasSuffixFold(name[:len(name)-len("\n")], ext):
+		name = name[:len(name)-len(ext+"\n")] + "\n"
 	}
 	var b strings.Builder
 	under := false // the last rune written is "_" from a run being collapsed

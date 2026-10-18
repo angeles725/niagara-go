@@ -241,7 +241,7 @@ S3/S4 parity (`testdata/parity/textdriver.py`, modes `pdf`, `course`, `plan`):
 
 | Test | Compares |
 |---|---|
-| `TestParityPDFSynthetic` | stdout (data root relabeled, the `Time:` value normalized), exit status and both whole repo trees after each of: unregistered root (SKIP, docs dir `None`), unregistered root with manuals, corrupt index (bad JSON, not an object, not UTF-8) with nothing to rebuild from, install not mounted, a docs dir with no PDF, pdftotext not on PATH, then 13 hand-written PDFs (two pages with an unmapped bullet, a WinAnsi degree sign, short and blank pages, a stem collision, hardware, top-level, nested, non-ASCII and punctuated names, a symlinked folder) with a corrupt PDF, output that is not UTF-8 and a timeout (fake pdftotext, 1 s on both sides): failures keep the last good text and its re-dumped entry, a corrupt index is rebuilt, a clean run prunes |
+| `TestParityPDFSynthetic` | stdout (data root relabeled, the `Time:` value normalized), exit status and both whole repo trees after each of: unregistered root (SKIP, docs dir `None`), unregistered root with manuals, corrupt index (bad JSON, not an object, not UTF-8) with nothing to rebuild from, install not mounted, a docs dir with no PDF, pdftotext not on PATH, then 13 hand-written PDFs (two pages with an unmapped bullet, a WinAnsi degree sign, short and blank pages, a stem collision, hardware, top-level, nested, non-ASCII and punctuated names, a symlinked folder) with a corrupt PDF, output that is not UTF-8 and a timeout (fake pdftotext, 1 s on both sides for that PDF only): failures keep the last good text and its re-dumped entry, a corrupt index is rebuilt, a clean run prunes |
 | `TestParityPDFReal` | the same on five EC-Net 4.3.58.18 manuals (the largest, `Getting Started`, 9.6 MB; `Station Security`, whose bullets come out as U+FFFD; the smallest; a hardware guide; the platform guide); `HELPBUILD_PARITY_PDF_DOCS` converts a whole docs dir instead; skipped with `-short` |
 | `TestParityCoursePlanSynthetic` | every `plan` row plus the `(course)` exclude rule id over the test_course_source fixture and 18 more files (nested text, upper-case extension, dev readme.md, .js and doc pages, key material, solutions, PDFs, non-ASCII names, a symlinked folder) |
 | `TestParityCourseExtractorSynthetic` | stdout, stderr, exit status and both repo trees: bound by a relative and an absolute `course_dir`, unbound (earlier copies removed; a symlink in their place refused), `course_dir` missing, unregistered root, rebuilt after the course changed, a copy that fails (mode 000 file), a named pipe in the course, a registry that is not JSON |
@@ -291,7 +291,9 @@ S3/S4 intended differences (none changes an output Python produces):
 Found while porting (the Python code wins, kept for parity):
 
 - The parity driver shortens the 120 s timeout only for the timeout fixture
-  (`HB_PDF_TIMEOUT` replaces `timeout=120` in the one `subprocess.run` call that passes it).
+  (`HB_PDF_TIMEOUT` replaces `timeout=120` of `extract_text` for a PDF with a
+  `<pdf>.sleep` side file); the Go side does the same through the `pdfTimeout` hook.
+  Every other PDF keeps 120 s on both sides.
 
 ## Shared-helper candidates
 

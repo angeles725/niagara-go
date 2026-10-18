@@ -134,6 +134,7 @@ func TestPDFPruneRunsAfterTheIndexIsSaved(t *testing.T) { // test_prune_runs_aft
 	r := newPDFRun(t)
 	r.texts(t, map[string]string{"docA/A.pdf": strings.Repeat("new text A ", 10), "docB/B.pdf": strings.Repeat("new text B ", 10)})
 	saved := writePDFIndex
+	t.Cleanup(func() { writePDFIndex = saved })
 	writePDFIndex = func(string, pyjson.Value) error { return errors.New("disk full") }
 	_, err := ExtractPDFs(r.root, PDFOptions{DocsDir: r.docs, Pdftotext: r.script})
 	writePDFIndex = saved

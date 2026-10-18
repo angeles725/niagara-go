@@ -88,14 +88,14 @@ func pyToolLines(t *testing.T, root string, rows [][]any) []string {
 }
 
 // pdfStep runs one pdf_extractor on both data roots and compares.
-func pdfStep(t *testing.T, what, pyRoot, goRoot, pyBase, goBase, docs string, timeout time.Duration) {
+func pdfStep(t *testing.T, what, pyRoot, goRoot, pyBase, goBase, docs string) {
 	t.Helper()
 	args := []string{"pdf", pyBase}
 	if docs != "" {
 		args = append(args, docs)
 	}
 	py := pyToolLines(t, pyRoot, runTextDriver(t, args...))
-	res, err := ExtractPDFs(goBase, PDFOptions{DocsDir: docs, Timeout: timeout})
+	res, err := ExtractPDFs(goBase, PDFOptions{DocsDir: docs})
 	outcome := fmt.Sprintf("exit %d", res.Status)
 	if err != nil {
 		t.Logf("go error: %v", err)
@@ -188,8 +188,17 @@ func TestParityPDFSynthetic(t *testing.T) {
 	real := needPdftotext(t)
 	dir := t.TempDir()
 	t.Setenv("PATH", fakeBin(t, dir, real)+string(os.PathListSeparator)+os.Getenv("PATH"))
-	const timeout = time.Second
+	// Only the timeout fixture (<pdf>.sleep) gets 1 s, on both sides;
+	// every other PDF keeps the 120 s default.
 	t.Setenv("HB_PDF_TIMEOUT", "1")
+	saved := pdfTimeout
+	t.Cleanup(func() { pdfTimeout = saved })
+	pdfTimeout = func(pdf string, d time.Duration) time.Duration {
+		if isRegular(pdf + ".sleep") {
+			return time.Second
+		}
+		return d
+	}
 	install := filepath.Join(dir, "install")
 	syntheticDocs(t, filepath.Join(install, "docs"))
 	emptyDocs := filepath.Join(dir, "empty-docs")
@@ -209,7 +218,7 @@ func TestParityPDFSynthetic(t *testing.T) {
 	}
 	step := func(what, base, docs string) {
 		t.Helper()
-		pdfStep(t, what, pyRepo, goRepo, filepath.Join(pyRepo, base), filepath.Join(goRepo, base), docs, timeout)
+		pdfStep(t, what, pyRepo, goRepo, filepath.Join(pyRepo, base), filepath.Join(goRepo, base), docs)
 	}
 	index := func(base, text string) {
 		onBoth(t, repos, func(r string) { writeFile(t, filepath.Join(r, base, "indexes", "pdf-index.json"), []byte(text)) })
@@ -307,7 +316,7 @@ func TestParityPDFReal(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	pdfStep(t, "real manuals", pyRoot, goRoot, pyRoot, goRoot, docs, 0)
+	pdfStep(t, "real manuals", pyRoot, goRoot, pyRoot, goRoot, docs)
 	logTreeSize(t, goRoot)
 }
 

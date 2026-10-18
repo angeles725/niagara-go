@@ -9,8 +9,8 @@ prints JSON lines the Go test rebuilds from internal/helpbuild.
                     DOCS): ["stdout", text], then ["exit", code] or
                     ["raise", exception class name]. pdftotext is what
                     PATH resolves; $HB_PDF_TIMEOUT, when set, replaces the
-                    120 s timeout of one PDF (the timeout fixture), nothing
-                    else of subprocess.run changes.
+                    120 s timeout of a PDF with a <pdf>.sleep side file (the
+                    timeout fixture); nothing else of subprocess.run changes.
   course BASE       course_extractor.main() with argv [BASE]: ["stdout",
                     text], ["stderr", text], ["exit", code] or ["raise",
                     class name]
@@ -33,14 +33,16 @@ from niagara_help_lib import course, install_rules  # noqa: E402
 
 
 class _Subprocess:
-    """pdf_extractor's subprocess module, with the 120 s pdftotext timeout
-    replaced by $HB_PDF_TIMEOUT (the fixture cannot wait two minutes)."""
+    """pdf_extractor's subprocess module, with the 120 s pdftotext timeout of
+    the timeout fixture (<pdf>.sleep) replaced by $HB_PDF_TIMEOUT (it cannot
+    wait two minutes); every other PDF keeps 120 s."""
 
     def __getattr__(self, name):
         return getattr(subprocess, name)
 
     def run(self, argv, **kw):
-        if kw.get("timeout") == 120 and os.environ.get("HB_PDF_TIMEOUT"):
+        if (kw.get("timeout") == 120 and os.environ.get("HB_PDF_TIMEOUT")
+                and os.path.exists(argv[-2] + ".sleep")):
             kw["timeout"] = float(os.environ["HB_PDF_TIMEOUT"])
         return subprocess.run(argv, **kw)
 

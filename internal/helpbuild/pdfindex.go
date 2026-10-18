@@ -182,7 +182,12 @@ func ExtractPDFs(baseDir string, opt PDFOptions) (res *PDFResult, err error) {
 	if err != nil {
 		return res, err
 	}
-	hasPDFs := docs != "" && isDir(docs) && len(FindPDFs(docs)) > 0
+	// One walk for the check and the run (Python walks twice).
+	var pdfs []string
+	if docs != "" && isDir(docs) {
+		pdfs = FindPDFs(docs)
+	}
+	hasPDFs := len(pdfs) > 0
 	nPrev := len(previous.Keys)
 	switch {
 	case corrupt && !hasPDFs:
@@ -228,15 +233,20 @@ func ExtractPDFs(baseDir string, opt PDFOptions) (res *PDFResult, err error) {
 			return res, err
 		}
 	}
-	return res, extractAll(res, docs, outputDir, indexPath, previous, prog, opt.Timeout)
+	return res, extractAll(res, docs, pdfs, outputDir, indexPath, previous, prog, opt.Timeout)
 }
 
-// extractAll is main()'s loop, the index save, the prune and the summary.
-func extractAll(res *PDFResult, docs, outputDir, indexPath string, previous pyjson.Value, prog string, timeout time.Duration) error {
+// pdfTimeout is the timeout of one PDF; the parity test shortens it for
+// its timeout fixture only, as its Python driver does.
+var pdfTimeout = func(pdfPath string, timeout time.Duration) time.Duration { return timeout }
+
+// extractAll is main()'s loop over pdfs (FindPDFs of docs), the index
+// save, the prune and the summary.
+func extractAll(res *PDFResult, docs string, pdfs []string, outputDir, indexPath string, previous pyjson.Value,
+	prog string, timeout time.Duration) error {
 	if timeout == 0 {
 		timeout = PDFTimeout
 	}
-	pdfs := FindPDFs(docs)
 	total := len(pdfs)
 	res.out("Found %d PDFs in %s", total, docs)
 	res.Stats.Total = total
@@ -257,7 +267,7 @@ func extractAll(res *PDFResult, docs, outputDir, indexPath string, previous pyjs
 		if err != nil {
 			return err
 		}
-		text, pages, err := ExtractPDFText(prog, pdfPath, timeout)
+		text, pages, err := ExtractPDFText(prog, pdfPath, pdfTimeout(pdfPath, timeout))
 		var in *interruptError
 		if errors.As(err, &in) {
 			return err // KeyboardInterrupt: nothing is saved or pruned
@@ -335,7 +345,7 @@ func pruneText(outputDir string, written map[string]bool) error {
 		return err
 	}
 	for _, e := range ents {
-		if n := e.Name(); strings.HasSuffix(n, ".txt") && !written[n[:len(n)-4]] {
+		if n := e.Name(); strings.HasSuffix(n, ".txt") && !written[strings.TrimSuffix(n, ".txt")] {
 			if err := removeFile(filepath.Join(outputDir, n)); err != nil {
 				return err
 			}

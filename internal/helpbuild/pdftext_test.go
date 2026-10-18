@@ -3,7 +3,6 @@ package helpbuild
 import (
 	"context"
 	"errors"
-	"os"
 	"path/filepath"
 	"reflect"
 	"runtime"
@@ -81,15 +80,15 @@ func TestFindPDFs(t *testing.T) {
 		writeFile(t, filepath.Join(dir, "docs", rel), []byte("%PDF"))
 	}
 	docs := filepath.Join(dir, "docs")
-	if err := os.Symlink(filepath.Join(docs, "outside"), filepath.Join(docs, "linked")); err != nil {
-		t.Fatal(err)
-	}
-	if err := os.Symlink(filepath.Join(docs, "x.pdf"), filepath.Join(docs, "b", "alias.pdf")); err != nil {
-		t.Fatal(err)
-	}
+	symlinkOrSkip(t, filepath.Join(docs, "outside"), filepath.Join(docs, "linked"))
+	symlinkOrSkip(t, filepath.Join(docs, "x.pdf"), filepath.Join(docs, "b", "alias.pdf"))
 	var rels []string
 	for _, p := range FindPDFs(docs) {
-		rels = append(rels, strings.TrimPrefix(p, docs+"/"))
+		rel, err := filepath.Rel(docs, p)
+		if err != nil {
+			t.Fatal(err)
+		}
+		rels = append(rels, filepath.ToSlash(rel))
 	}
 	want := []string{"a/y.PDF", "b/alias.pdf", "b/z.pdf", "c/d/e.Pdf", "outside/o.pdf", "x.pdf"}
 	if !reflect.DeepEqual(rels, want) {

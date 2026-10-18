@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 )
 
@@ -181,5 +182,50 @@ func TestCourseFilesOrder(t *testing.T) {
 	}
 	if want := []string{"B", "c", "a/b", "a/z/y", "b/x", "outside/o"}; !reflect.DeepEqual(rels, want) {
 		t.Errorf("courseFiles = %q, want %q", rels, want)
+	}
+}
+
+// course_extractor.main()'s stdout lines and exit status for a bound, an
+// unbound and a missing course, checked without the Python driver.
+func TestCourseExtractorLines(t *testing.T) {
+	dir := t.TempDir()
+	repo := courseRepo(t, dir, map[string]string{"C": "../no-course"})
+	for _, c := range []struct{ id, line string }{
+		{"A", "course: 3 page text files -> course-text/, 3 example code files -> devguide-examples/course/ (from " +
+			filepath.Join(dir, "course-src") + ")"},
+		{"B", "course: no course bound to this version; skipped"},
+		{"C", "course: course_dir not found: " + filepath.Join(dir, "no-course") + "; skipped (the course is " +
+			"optional: course-text/ and devguide-examples/course/ keep their last copy)"},
+	} {
+		out, err := CourseExtractor(filepath.Join(repo, "versions", c.id), mustDefault(t))
+		if err != nil || out.Status != 0 || len(out.Stderr) != 0 || !reflect.DeepEqual(out.Stdout, []string{c.line}) {
+			t.Errorf("%s: CourseExtractor = %+v, %v\nwant stdout %q", c.id, out, err, c.line)
+		}
+	}
+}
+
+// A symlink in place of course-text/ is refused like shutil.rmtree
+// (OSError(None, None, path)): nothing behind it is removed and
+// course_extractor reports the copy failure (exit 2).
+func TestRemoveCourseCopiesRefusesASymlink(t *testing.T) {
+	dir := t.TempDir()
+	b := filepath.Join(courseRepo(t, dir, nil), "versions", "B")
+	target := filepath.Join(dir, "elsewhere")
+	writeFile(t, filepath.Join(target, "keep.txt"), []byte("not ours"))
+	link := filepath.Join(b, CourseTextDir)
+	symlinkOrSkip(t, target, link)
+	removed, err := RemoveCourseCopies(b)
+	want := "[Errno None] None: " + pycompat.FSRepr(link)
+	if err == nil || err.Error() != want || len(removed) != 0 {
+		t.Errorf("RemoveCourseCopies = %q, %v; want the error %q", removed, err, want)
+	}
+	out, err := CourseExtractor(b, mustDefault(t))
+	line := "ERROR: course: cannot copy the course into " + b + ": " + want +
+		" (course-text/ and devguide-examples/course/ keep their last copy)"
+	if err != nil || out.Status != 2 || len(out.Stdout) != 0 || !reflect.DeepEqual(out.Stderr, []string{line}) {
+		t.Errorf("CourseExtractor = %+v, %v\nwant stderr %q", out, err, line)
+	}
+	if !isRegular(filepath.Join(target, "keep.txt")) {
+		t.Error("the symlink's target was emptied")
 	}
 }
