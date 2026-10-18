@@ -1,0 +1,42 @@
+{
+  "module": "multi",
+  "artifacts": [
+    {
+      "artifact": "multi-rt",
+      "palette_count": 1,
+      "palette_entries": [
+        {
+          "n": "Net",
+          "t": "m:Net",
+          "m": "m=multi"
+        }
+      ],
+      "lexicon_keys": 14,
+      "duplicate_bare_keys": {
+        "Zed.lexicon:z": 2,
+        "b.lexicon:k": 3,
+        "caf\u00e9.lexicon:\u00e9": 2,
+        "k": 2,
+        "sub/dir/c.lexicon:c": 2,
+        "sub/multi-rt.lexicon:k": 2
+      },
+      "agents": [
+        {
+          "type_name": "Net",
+          "type_class": "com.m.BNet",
+          "on_types": [
+            "m:A"
+          ]
+        }
+      ]
+    },
+    {
+      "artifact": "multi-wb",
+      "palette_count": 0,
+      "palette_entries": [],
+      "lexicon_keys": 1,
+      "duplicate_bare_keys": {},
+      "agents": []
+    }
+  ]
+}

@@ -101,10 +101,20 @@ question set drifts from the niagara-research one (skipped when that file is abs
 
 `internal/nav/testdata/golden-real/` and `internal/help/testdata/golden-real/` hold the
 keep-set cases (decision D32) of the two hashed Python golden suites, module-navigator and
-niagara-help `tests/golden_cli.py`, as real bytes: 66 mnav cases (44 command cases, 21
+niagara-help `tests/golden_cli.py`, as real bytes: 70 mnav cases (48 command cases, 21
 `help-<command>`, `help`) and 61 nh cases (42 command cases, 17 `<command>--help`, `help`,
 `no-command`). Retired-command ids are dropped. `help` (and nh `no-command`) keep Python's
 output and declare the Go one in `intended.json` (reason D32: only kept commands are listed).
+
+`palette-lexicon-agents` follows niagara-research `tools/palette-lexicon-agents.py`, not
+`module_nav.py` (D39 e), so its cases come from that script: the kept
+`palette-lexicon-agents` case and the four `palette-lexicon-agents-*` cases hold its output,
+and `help-palette-lexicon-agents` keeps `module_nav.py`'s bytes with the Go help in
+`intended.json` (the script's own `--help` names another program). They are written by
+`internal/nav/testdata/gen_palette_lexicon.py --real bin/mnav`, which `capture.py` runs after
+its own capture; the same script writes the hermetic cases under
+`internal/nav/audits/testdata/palette/`. The real cases count corpus modules (the `--all`
+census, "N module dirs"), so re-run `gen_palette_lexicon.py --real` after a corpus change.
 
 The case layout is the one above, but the stored bytes are the harness's normalized output,
 whose SHA-256 is the `cli.json` hash: mnav replaces the scratch base, run directory, `organized/`

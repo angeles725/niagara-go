@@ -1,0 +1,146 @@
+{
+  "module": "easyBinding",
+  "artifacts": [
+    {
+      "artifact": "easyBinding-doc",
+      "palette_count": 0,
+      "palette_entries": [],
+      "lexicon_keys": 0,
+      "duplicate_bare_keys": {},
+      "agents": []
+    },
+    {
+      "artifact": "easyBinding-rt",
+      "palette_count": 6,
+      "palette_entries": [
+        {
+          "t": "b:Folder",
+          "m": "b=baja"
+        },
+        {
+          "n": "Utilities",
+          "t": "b:UnrestrictedFolder",
+          "m": "eb=easyBinding"
+        },
+        {
+          "n": "EasyBindingSupportService",
+          "t": "eb:EasyBindingSupportService"
+        },
+        {
+          "n": "Widgets",
+          "t": "b:UnrestrictedFolder",
+          "m": "eb=easyBinding"
+        },
+        {
+          "n": "EasyPicture",
+          "t": "eb:EasyPicture"
+        },
+        {
+          "n": "EasyLabel",
+          "t": "eb:EasyLabel"
+        }
+      ],
+      "lexicon_keys": 0,
+      "duplicate_bare_keys": {},
+      "agents": []
+    },
+    {
+      "artifact": "easyBinding-ux",
+      "palette_count": 1,
+      "palette_entries": [
+        {
+          "t": "b:UnrestrictedFolder",
+          "m": "b=baja"
+        }
+      ],
+      "lexicon_keys": 31,
+      "duplicate_bare_keys": {},
+      "agents": [
+        {
+          "type_name": "EasyBinding",
+          "type_class": "com.honeywell.easybinding.easybinding.BEasyBinding",
+          "on_types": [
+            "file:PxFile",
+            "driver:PointFolder",
+            "baja:Folder",
+            "bajaui:PxInclude",
+            "driver:DeviceNetwork",
+            "driver:DriverContainer",
+            "driver:Device",
+            "driver:PointDeviceExt"
+          ]
+        }
+      ]
+    },
+    {
+      "artifact": "easyBinding-wb",
+      "palette_count": 1,
+      "palette_entries": [
+        {
+          "t": "b:UnrestrictedFolder",
+          "m": "b=baja"
+        }
+      ],
+      "lexicon_keys": 69,
+      "duplicate_bare_keys": {},
+      "agents": [
+        {
+          "type_name": "EbAlarmBinding",
+          "type_class": "com.honeywell.easybinding.bindings.BEbAlarmBinding",
+          "on_types": [
+            "workbench:WebWidget"
+          ]
+        },
+        {
+          "type_name": "EbOverrideBinding",
+          "type_class": "com.honeywell.easybinding.bindings.BEbOverrideBinding",
+          "on_types": [
+            "workbench:WebWidget"
+          ]
+        },
+        {
+          "type_name": "EbValueBinding",
+          "type_class": "com.honeywell.easybinding.bindings.BEbValueBinding",
+          "on_types": [
+            "workbench:WebWidget"
+          ]
+        },
+        {
+          "type_name": "EasyBaseBinding",
+          "type_class": "com.honeywell.easybinding.bindings.BEasyBaseBinding",
+          "on_types": [
+            "workbench:WebWidget"
+          ]
+        },
+        {
+          "type_name": "HxPxEasyBindingCanvasPane",
+          "type_class": "com.honeywell.easybinding.ui.BHxPxEasyBindingCanvasPane",
+          "on_types": [
+            "easyBinding:EasyBindingCanvasPane"
+          ]
+        },
+        {
+          "type_name": "HxPxEasyBindingWidget",
+          "type_class": "com.honeywell.easybinding.ui.BHxPxEasyBindingWidget",
+          "on_types": [
+            "easyBinding:EasyBindingWidget"
+          ]
+        },
+        {
+          "type_name": "HxPxEasyPicture",
+          "type_class": "com.honeywell.easybinding.easywidgets.BHxPxEasyPicture",
+          "on_types": [
+            "easyBinding:EasyPicture"
+          ]
+        },
+        {
+          "type_name": "HxPxEasyLabel",
+          "type_class": "com.honeywell.easybinding.easywidgets.BHxPxEasyLabel",
+          "on_types": [
+            "easyBinding:EasyLabel"
+          ]
+        }
+      ]
+    }
+  ]
+}

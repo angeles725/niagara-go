@@ -1,0 +1,34 @@
+
+  =================================================================
+  PALETTE / LEXICON / AGENTS: mixed
+  =================================================================
+
+  Artifacts scanned:   2
+  Palette entries:     0
+  Lexicon keys:        4
+  Duplicate bare keys: 1
+  Agent registrations: 0
+
+  ------------------------------------------------------------
+  Artifact: mixed-rt
+
+  [PALETTE]  0 entries
+
+  [LEXICON]  1 keys total
+    No duplicate bare keys.
+
+  [AGENTS]   0 registration(s)
+    (none)
+
+  ------------------------------------------------------------
+  Artifact: mixed-ux
+
+  [PALETTE]  0 entries
+
+  [LEXICON]  3 keys total
+  *** DUPLICATE BARE KEYS DETECTED (B759 hazard) ***
+    DUP key='u'  occurrences=2
+
+  [AGENTS]   0 registration(s)
+    (none)
+

@@ -1,0 +1,20 @@
+{
+  "module": "jar",
+  "artifacts": [
+    {
+      "artifact": "jar-rt",
+      "palette_count": 1,
+      "palette_entries": [
+        {
+          "n": "J"
+        }
+      ],
+      "lexicon_keys": 6,
+      "duplicate_bare_keys": {
+        "a": 2,
+        "other/x.lexicon:x": 3
+      },
+      "agents": []
+    }
+  ]
+}

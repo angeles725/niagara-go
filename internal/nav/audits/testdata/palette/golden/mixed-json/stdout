@@ -1,0 +1,23 @@
+{
+  "module": "mixed",
+  "artifacts": [
+    {
+      "artifact": "mixed-rt",
+      "palette_count": 0,
+      "palette_entries": [],
+      "lexicon_keys": 1,
+      "duplicate_bare_keys": {},
+      "agents": []
+    },
+    {
+      "artifact": "mixed-ux",
+      "palette_count": 0,
+      "palette_entries": [],
+      "lexicon_keys": 3,
+      "duplicate_bare_keys": {
+        "u": 2
+      },
+      "agents": []
+    }
+  ]
+}

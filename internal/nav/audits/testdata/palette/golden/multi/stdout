@@ -1,0 +1,40 @@
+
+  =================================================================
+  PALETTE / LEXICON / AGENTS: multi
+  =================================================================
+
+  Artifacts scanned:   2
+  Palette entries:     1
+  Lexicon keys:        15
+  Duplicate bare keys: 6
+  Agent registrations: 1
+
+  ------------------------------------------------------------
+  Artifact: multi-rt
+
+  [PALETTE]  1 entries
+    <p n=Net  t=m:Net  m=m=multi>
+
+  [LEXICON]  14 keys total
+  *** DUPLICATE BARE KEYS DETECTED (B759 hazard) ***
+    DUP key='Zed.lexicon:z'  occurrences=2
+    DUP key='b.lexicon:k'  occurrences=3
+    DUP key='café.lexicon:é'  occurrences=2
+    DUP key='k'  occurrences=2
+    DUP key='sub/dir/c.lexicon:c'  occurrences=2
+    DUP key='sub/multi-rt.lexicon:k'  occurrences=2
+
+  [AGENTS]   1 registration(s)
+    type_name='Net'  class='com.m.BNet'  on=['m:A']
+
+  ------------------------------------------------------------
+  Artifact: multi-wb
+
+  [PALETTE]  0 entries
+
+  [LEXICON]  1 keys total
+    No duplicate bare keys.
+
+  [AGENTS]   0 registration(s)
+    (none)
+
