@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bajadoc>
+<class qualifiedName="javax.baja.sys.BMethodsOnly" name="BMethodsOnly" packageName="javax.baja.sys" module="baja">
+<method name="run"><return><type class="void"/></return></method>
+</class>
+</bajadoc>

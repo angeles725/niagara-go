@@ -1,0 +1,86 @@
+{
+  "BComponent": {
+    "module": "baja-rt",
+    "path": "baja-rt/javax/baja/sys/BComponent.java",
+    "package": "javax.baja.sys",
+    "lines": 35
+  },
+  "BIObject": {
+    "module": "baja-rt",
+    "path": "baja-rt/javax/baja/sys/iface/BIObject.java",
+    "package": "javax.baja.sys",
+    "lines": 5
+  },
+  "BObject": {
+    "module": "baja-rt",
+    "path": "baja-rt/javax/baja/sys/object/BObject.java",
+    "package": "javax.baja.sys",
+    "lines": 24
+  },
+  "Lexicon": {
+    "module": "baja-rt",
+    "path": "baja-rt/javax/baja/util/Lexicon.java",
+    "package": "javax.baja.util",
+    "lines": 7
+  },
+  "BCafé": {
+    "module": "cafe-rt",
+    "path": "cafe-rt/javax/baja/sys/BCafé.java",
+    "package": "javax.baja.sys",
+    "lines": 7
+  },
+  "BNumericPoint": {
+    "module": "control-rt",
+    "path": "control-rt/javax/baja/control/BNumericPoint.java",
+    "package": "javax.baja.control",
+    "lines": 13
+  },
+  "Mode": {
+    "module": "nopkg-rt",
+    "path": "nopkg-rt/enum/Mode.java",
+    "package": "enumpkg",
+    "lines": 2
+  },
+  "Marker": {
+    "module": "nopkg-rt",
+    "path": "nopkg-rt/marker/Marker.java",
+    "package": "marker",
+    "lines": 2
+  },
+  "Odd": {
+    "module": "nopkg-rt",
+    "path": "nopkg-rt/odd/Odd.java",
+    "package": "",
+    "lines": 4
+  },
+  "NoDecl.java": {
+    "module": "nopkg-rt",
+    "path": "nopkg-rt/odd/nodecl/NoDecl.java.java",
+    "package": "",
+    "lines": 3
+  },
+  "Sample": {
+    "module": "nopkg-rt",
+    "path": "nopkg-rt/plain/Sample.java",
+    "package": "",
+    "lines": 3
+  },
+  "BObject (shadow-rt)": {
+    "module": "shadow-rt",
+    "path": "shadow-rt/javax/baja/control/BObject.java",
+    "package": "javax.baja.control",
+    "lines": 4
+  },
+  "Sample (devguide-rc)": {
+    "module": "devguide-rc",
+    "path": "../devguide-rc/Sample.java",
+    "package": "examples",
+    "lines": 6
+  },
+  "BMyPoint": {
+    "module": "devguide-rc",
+    "path": "../devguide-rc/examples/BMyPoint.java",
+    "package": "examples",
+    "lines": 10
+  }
+}

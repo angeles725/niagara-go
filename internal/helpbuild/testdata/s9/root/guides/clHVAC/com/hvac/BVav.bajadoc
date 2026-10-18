@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bajadoc>
+<class qualifiedName="com.hvac.BVav" name="BVav" packageName="com.hvac" module="clHVAC" runtimeProfile="rt">
+<property name="damper" flags=""><type class="com.tridium.hvac.BDamper"/></property>
+<action name="flush" flags="">
+<parameter name="p"><type class="javax.baja.sys.BRelTime"/></parameter>
+<parameter name="q"><type class="int"/></parameter>
+</action>
+</class>
+</bajadoc>

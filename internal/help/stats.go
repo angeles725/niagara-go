@@ -1,7 +1,8 @@
 package help
 
 // Corpus overview (stats.py): index entry counts, text directory file
-// counts and sizes, raw HTML counts and the call index.
+// counts and sizes and raw HTML counts. call-index.json is retired (I3-5):
+// it is neither counted nor listed, even when a stale one is on disk.
 
 import (
 	"fmt"
@@ -97,15 +98,6 @@ func (e *Env) Stats(asJSON bool) error {
 			packages[p] = true
 		}
 	}
-	calls, err := e.loadIndex("call-index.json", false)
-	if err != nil {
-		return err
-	}
-	callEntries := 0
-	for _, k := range calls.Keys() {
-		v, _ := calls.Get(k)
-		callEntries += pyLen(v)
-	}
 	abs, _ := filepath.Abs(e.BaseDir)
 	vid := scope.Identify(e.BaseDir)
 	n := func(name string) int { return idx[name].Len() }
@@ -132,7 +124,6 @@ func (e *Env) Stats(asJSON bool) error {
 				{"xref-index", pyjson.Obj{{"classes", n("xref-index")}, {"edges", edges}}},
 				{"slots-index", pyjson.Obj{{"classes", n("slots-index")}, {"properties", props},
 					{"actions", actions}, {"topics", topics}}},
-				{"call-index", pyjson.Obj{{"methods", calls.Len()}, {"entries", callEntries}}},
 			}},
 			{"text_dirs", dirs},
 			{"packages", len(packages)},
@@ -149,9 +140,6 @@ func (e *Env) Stats(asJSON bool) error {
 		totalBytes += text[d].bytes
 	}
 	indexCount := 9
-	if calls.Len() > 0 {
-		indexCount = 10
-	}
 	out := e.Out
 	fmt.Fprintf(out, "Niagara Help Navigator - Corpus Statistics\n%s\n", strings.Repeat("=", 55))
 	fmt.Fprintf(out, "Niagara version: %s  (%s)\n", vid, abs)
@@ -173,9 +161,6 @@ func (e *Env) Stats(asJSON bool) error {
 	fmt.Fprint(out, "\nRAW HTML:\n\n")
 	for _, d := range []string{"bajadoc", "devguide", "guides"} {
 		fmt.Fprintf(out, "  %s %s HTML\n", ljust(d+"/", 17), w(countFiles(filepath.Join(e.BaseDir, d), ".html").files))
-	}
-	if calls.Len() > 0 {
-		fmt.Fprintf(out, "\nCALL INDEX:\n  call-index.json       %s methods (%s call entries)\n", w(calls.Len()), thousands(callEntries))
 	}
 	fmt.Fprintf(out, "\nINDEXES: %d\nCLI: 53 commands + REPL\n", indexCount)
 	return nil

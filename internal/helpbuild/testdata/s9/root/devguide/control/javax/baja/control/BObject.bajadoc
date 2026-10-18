@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bajadoc>
+<class qualifiedName="javax.baja.control.BObject" name="BObject" packageName="javax.baja.control" module="control">
+<property name="shadow" flags=""><type class="int"/></property>
+<topic name="moved" flags=""><eventType><type class="javax.baja.sys.BValue"/></eventType></topic>
+</class>
+<class name="NoQualified" packageName="javax.baja.control"><property name="lost"><type class="int"/></property></class>
+</bajadoc>

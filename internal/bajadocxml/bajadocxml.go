@@ -359,6 +359,10 @@ func Parse(data []byte) (classes []Class, ok bool) {
 	return classes, true
 }
 
+// Simple is _simple for the builders (the S9 slots index types its
+// .bajadoc slots with it).
+func Simple(name string) string { return simpleType(name) }
+
 // simpleType is _simple: javax.baja.* and com.tridium.* names shortened to
 // their simple name, java.* kept qualified like the javadoc text.
 func simpleType(name string) string {

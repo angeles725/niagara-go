@@ -189,7 +189,9 @@ keep-set cases (decision D32) of the two hashed Python golden suites, module-nav
 niagara-help `tests/golden_cli.py`, as real bytes: 70 mnav cases (48 command cases, 21
 `help-<command>`, `help`) and 61 nh cases (42 command cases, 17 `<command>--help`, `help`,
 `no-command`). Retired-command ids are dropped. `help` (and nh `no-command`) keep Python's
-output and declare the Go one in `intended.json` (reason D32: only kept commands are listed).
+output and declare the Go one in `intended.json` (reason D32: only kept commands are listed);
+nh `stats` and `stats-json` do the same with reason I3-5 (`call-index.json` is retired: nh
+counts 9 indexes and prints no call-index line). `capture.py`'s `INTENDED` names them.
 
 `palette-lexicon-agents` follows niagara-research `tools/palette-lexicon-agents.py`, not
 `module_nav.py` (D39 e), so its cases come from that script: the kept

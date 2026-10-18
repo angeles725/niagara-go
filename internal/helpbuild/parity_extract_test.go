@@ -389,6 +389,37 @@ func TestParityEmptyIndexes(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	diffLines(t, "_empty_indexes", py, []string{pyjson.Dumps(stringsValue(lines), DumpDefault)})
+	// Intended difference (decision I3-5): call-index.json is retired, so
+	// Python writes an empty one and EmptyIndexes does not. Its line and
+	// file must be in Python's output (else the difference is gone and this
+	// exception should go too) and are then removed before comparing.
+	retired := "  EMPTY call-index.json (its source is not in this install)"
+	var pyLines []string
+	if len(py) == 1 {
+		v, err := pyjson.Loads([]rune(py[0]))
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, l := range v.A {
+			if l.S != retired {
+				pyLines = append(pyLines, l.S)
+			}
+		}
+		if len(pyLines) != len(v.A)-1 {
+			t.Fatalf("Python's _empty_indexes no longer writes call-index.json (%s): drop the I3-5 exception", py[0])
+		}
+	}
+	diffLines(t, "_empty_indexes", []string{pyjson.Dumps(stringsValue(pyLines), DumpDefault)},
+		[]string{pyjson.Dumps(stringsValue(lines), DumpDefault)})
+	stale := filepath.Join(roots[0], "indexes", "call-index.json")
+	if data, err := os.ReadFile(stale); err != nil || string(data) != "{}" {
+		t.Fatalf("Python's empty call-index.json: %q, %v", data, err)
+	}
+	if err := os.Remove(stale); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(filepath.Join(roots[1], "indexes", "call-index.json")); !os.IsNotExist(err) {
+		t.Errorf("EmptyIndexes wrote call-index.json (retired, I3-5): %v", err)
+	}
 	diffLines(t, "_empty_indexes tree", treeLines(t, roots[0]), treeLines(t, roots[1]))
 }

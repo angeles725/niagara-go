@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bajadoc>
+<class qualifiedName="javax.baja.sys.BComponent" name="BComponent" packageName="javax.baja.sys" module="baja" runtimeProfile="rt">
+<property name="out" flags="s"><type class="javax.baja.status.BStatusNumeric"/></property>
+<property name="slotOnlyInXml" flags=""><type class="javax.baja.sys.BValue"/></property>
+<property name="slotOnlyInXml" flags=""><type class="int"/></property>
+<property name="map" flags=""><type class="java.util.Map"><parameterizedType><type class="java.lang.String"/><type class="javax.baja.sys.BValue"/></parameterizedType></type></property>
+<action name="execute" flags="a"><return><type class="void"/></return></action>
+<action name="fire" flags="">
+<parameter name="parameter"><type class="javax.baja.sys.BBoolean"/></parameter>
+<return><type class="javax.baja.sys.BValue"/></return>
+</action>
+<action name="noop" flags=""><return><type class="void"/></return></action>
+<action name="bare" flags=""></action>
+<topic name="evt" flags=""><eventType><type class="com.tridium.sys.BEvent"/></eventType></topic>
+<topic name="silent" flags=""></topic>
+<method name="get"><return><type class="int"/></return></method>
+<field name="TYPE"><type class="javax.baja.sys.Type"/></field>
+</class>
+</bajadoc>

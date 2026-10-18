@@ -35,6 +35,12 @@ devguide miss scopes. Its cases run with `"cwd_fixture": "s4"`, captured with
 `NIAGARA_HELP_DIR=<testdata>/s4`; misses and `stats` print the absolute data root, so they
 live in `misses/s4-*.txt` and are checked by `s4miss_test.go`.
 
+`call-index.json` is retired (decision I3-5): the Go port neither builds nor reads it.
+`s4/indexes/call-index.json` stays as a stale file on disk, and `misses/s4-stats.txt` and
+`misses/s4-stats-json.txt` are no longer Python output: they hold what nh prints (9 indexes,
+no `CALL INDEX` block, no `call-index` entry). The real `stats` and `stats-json` cases under
+`golden-real/` keep Python's bytes and declare nh's in `intended.json` (reason I3-5).
+
 `s3adv/` (no method-index.json; cyclic and self-extending chains, an untyped property, a
 class named `B`) is one more checkout for the S3 review advisories of `slots --inherited`,
 captured the same way with its own `NIAGARA_HELP_DIR`.
