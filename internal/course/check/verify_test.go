@@ -97,7 +97,7 @@ func TestVerifyPredictionsThroughRange(t *testing.T) {
 }
 
 // confirmedLive are the predicted items the live TrainingStation confirms. L10.24 was the one (the
-// file checks of its exported CSVs) until labs.md recorded it from the CSV on 2026-10-17: it is no
+// file checks of its exported CSVs) until labs.md marked it verified live on 2026-10-17: it is no
 // longer predicted, so none is.
 var confirmedLive = map[string]bool{}
 

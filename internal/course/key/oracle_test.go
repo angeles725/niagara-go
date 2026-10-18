@@ -200,9 +200,8 @@ func TestRecallReal(t *testing.T) {
 		}
 	}
 	got := *rows["total"]
-	// 2026-10-17: L10.24 carries "*(verified live 2026-10-15, read offline 2026-10-17)*", which is not
-	// the verified marker (*(verified live <date>)*), so it counts as written, no longer predicted.
-	pinned := Counts{Items: 370, Predicted: 39, Unverified: 20, Corrected: 10, Identical: 50, Verified: 4, Written: 259}
+	// 2026-10-17: L10.24 is verified live (from the exported CSV), no longer predicted.
+	pinned := Counts{Items: 370, Predicted: 39, Unverified: 20, Corrected: 10, Identical: 50, Verified: 5, Written: 258}
 	if got != pinned {
 		t.Errorf("totals = %+v, want %+v", got, pinned)
 	}

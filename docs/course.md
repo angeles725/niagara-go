@@ -340,13 +340,13 @@ of `course check`), so `course verify --status written` with the three station v
 decides the lab, review and exam items in one run. An unknown group is exit 1 with the group list.
 
 The live stations and the real answer key (2026-10-17, with the 4.15.6.20 install and source tree):
-`verify --status written` decides 259 items: 58 CONFIRMED, 8 PARTIAL, 3 CONTRADICTED (L3.7: C3.4,
+`verify --status written` decides 258 items: 57 CONFIRMED, 8 PARTIAL, 3 CONTRADICTED (L3.7: C3.4,
 the missing Add.out -> Output link; RA1.M3: the description typo; RA1.V9–V14: no folder
-`Review`), 190 UNDECIDED (no check covers them); 78 checks run on the TrainingStation and the
+`Review`), 190 UNDECIDED (no check covers them); 75 checks run on the TrainingStation and the
 review station (no written item links an exam check: the exam items are verified). L10.18 (the
 NumericWritable chart has data) and L10.21 (ten histories named after their points) became
-CONFIRMED from the history files (C10.12, C10.13); L10.24 counts as written since labs.md recorded it
-from the CSV with a marker that is not the verified one.
+CONFIRMED from the history files (C10.12, C10.13). L10.24 is now verified: `verify --status
+verified` decides 5 items, 5 CONFIRMED (L10.24 by C10.8-C10.10).
 
 `course verify-predictions` is `course verify --status predicted` over every group: the same
 stdout, stderr and exit (`TestVerifyPredictionsIsVerifyStatusPredicted`).
@@ -407,7 +407,7 @@ tree): 39 predicted, 0 CONFIRMED, 10 PARTIAL (L1.14, L1.25, L4.8, L4.15, L7.18, 
 L11.7, L11.26, L11.32), 0 CONTRADICTED, 29 UNDECIDED (no check covers them); 22 checks run. L4.8
 moved from UNDECIDED to PARTIAL (C4.8, the audited set); L7.18, L10.19 and L10.22 stay PARTIAL with
 more evidence (C7.6-C7.8 from the 4.15 source, C10.11-C10.12 from the histories, C10.14 from the
-lexicon). L10.24, CONFIRMED before, is no longer predicted in labs.md.
+lexicon). L10.24, CONFIRMED before, is now marked verified live in labs.md.
 
 Audit of the links to predicted items (2026-10-17): C3.5 (Add.out stored) no longer links L3.9
 (`Output = Point1 + Point2 + Point3`): it says nothing of the Output point, which the live
@@ -474,7 +474,7 @@ not observed.
   L11.32 CONTRADICTED), no `--install`, the `root`
   fixture (its one linked check is a jar check: exit 2), a bad `--date` and a broken bog.
   `TestVerifyPredictionsTrainingStation` (with `COURSE_TRAINING_STATION` and
-  `NIAGARA_RESEARCH_DIR`) pins only that no predicted item is CONTRADICTED, none is CONFIRMED (L10.24, the one that was, is no longer predicted)
+  `NIAGARA_RESEARCH_DIR`) pins only that no predicted item is CONTRADICTED, none is CONFIRMED (L10.24, the one that was, is now verified)
   and some are PARTIAL on the live station. `TestCheckKeysReal` resolves every linked key in the real labs.md.
 - `testdata/go/golden/` (D46, `TestGoldenGo` via `golden.RunGo`, regenerated with `GOLDEN_UPDATE=1`
   and reviewed in the diff): `verify-predictions-no-station` (the missing `--station` before a bad
