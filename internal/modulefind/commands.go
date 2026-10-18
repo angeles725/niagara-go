@@ -12,8 +12,8 @@ import (
 	"github.com/angeles725/niagara-go/internal/pyre"
 )
 
-// The cmd_* functions of module-find.py. A search command returns its row count (0 means
-// exit 1); the others return -1.
+// The cmd_* functions of module-find.py. A search command (and extends --of) returns its
+// match count (0 means exit 1); the others return -1.
 
 // scope is modulefind.sources.scope: java files read, plus the unreadable ones.
 func scope(m *module, where string) string {
@@ -110,6 +110,19 @@ func cmdWriters(m *module, o *opts, slot string) {
 		}
 	}
 	dyn := slices.Sorted(maps.Keys(all))
+	if o.csv {
+		var rows []row
+		for _, kind := range []struct {
+			name    string
+			writers []string
+		}{{"static", w}, {"dynamic", dyn}} {
+			for _, x := range kind.writers {
+				rows = append(rows, row{{"slot", slot}, {"kind", kind.name}, {"writer", x}})
+			}
+		}
+		render(rows, o, nil, "(no writers of "+slot+")")
+		return
+	}
 	if o.json {
 		fmt.Fprintln(o.out, jsonDumps(row{{"slot", slot}, {"writers", w}, {"dynamic", dyn}}))
 		return
@@ -132,15 +145,28 @@ func cmdWriters(m *module, o *opts, slot string) {
 	}
 }
 
-func cmdExtends(m *module, o *opts, of string, hasOf bool) {
+// cmdExtends lists class -> superclass, or with --of the chain of one class: a class with no
+// extends declaration in the tree is a miss (0), a resolved chain a match (1).
+func cmdExtends(m *module, o *opts, of string, hasOf bool) int {
 	if hasOf && of != "" {
 		chain := m.resolveChain(of)
-		if o.json {
-			fmt.Fprintln(o.out, jsonDumps(row{{"class", of}, {"chain", chain}}))
-			return
+		found := 0
+		if len(chain) > 1 {
+			found = 1
 		}
-		fmt.Fprintln(o.out, strings.Join(chain, " -> "))
-		return
+		empty := "(no extends declaration for " + of + ")"
+		switch {
+		case o.json:
+			fmt.Fprintln(o.out, jsonDumps(row{{"class", of}, {"chain", chain}}))
+			if found == 0 {
+				fmt.Fprintf(o.err, "%s -- %s\n", empty, o.scope)
+			}
+		case found == 0:
+			miss(o, empty)
+		default:
+			fmt.Fprintln(o.out, strings.Join(chain, " -> "))
+		}
+		return found
 	}
 	if o.json {
 		r := row{}
@@ -148,11 +174,12 @@ func cmdExtends(m *module, o *opts, of string, hasOf bool) {
 			r = append(r, field{cls, m.extends.m[cls]})
 		}
 		fmt.Fprintln(o.out, jsonDumps(r))
-		return
+		return -1
 	}
 	for _, cls := range m.extends.sortedKeys() {
 		fmt.Fprintf(o.out, "%s -> %s\n", cls, m.extends.m[cls])
 	}
+	return -1
 }
 
 func cmdOrds(m *module, o *opts, name *pyre.Regexp) int {

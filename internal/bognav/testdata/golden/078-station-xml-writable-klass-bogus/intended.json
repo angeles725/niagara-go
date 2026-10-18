@@ -1,0 +1,4 @@
+{
+ "reason": "Python's argparse took prog from the invoked script (tools/<tool>.py); the Go binaries are run as their installed command (tools/install.sh), so usage and help name that command, not a retired .py script.",
+ "stderr": "usage: bognav [bog] writable [-h] [--json] [--csv] [--limit N] [--module MODULE]\n                             [--klass {simple,complex,bare,other}] [--src SRC]\nbognav [bog] writable: error: argument --klass: invalid choice: 'bogus' (choose from 'simple', 'complex', 'bare', 'other')\n"
+}

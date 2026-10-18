@@ -1,0 +1,4 @@
+{
+ "reason": "Python's argparse took prog from the invoked script (tools/<tool>.py); the Go binaries are run as their installed command (tools/install.sh), so usage and help name that command, not a retired .py script.",
+ "stdout": "usage: modfind [root] extends [-h] [--json] [--csv] [--limit N] [--of OF]\n\noptions:\n  -h, --help     show this help message and exit\n  --json         machine JSON output\n  --csv          CSV output (header + rows)\n  --limit, -n N  print at most N rows (default: all); the cut is reported\n  --of OF        resolve the full chain of one class\n"
+}

@@ -137,7 +137,7 @@ func selftest(out io.Writer) int {
 	write(filepath.Join(da, "BX.java"), "class BX extends BComponent {\n@NiagaraProperty(name=\"a\", type=\"double\")\n}")
 	write(filepath.Join(db, "BX.java"), "class BX extends BComponent {\n@NiagaraProperty(name=\"a\", type=\"int\")\n"+
 		"@NiagaraProperty(name=\"defrostSkipped\", type=\"boolean\")\n}")
-	outCmp := call(func(o *opts) { cmdCompare(newModule(da), o, db) })
+	outCmp := call(func(o *opts) { cmdCompare(newModule(da), newModule(db), o) })
 	check(strings.Contains(outCmp, "slot-added") && strings.Contains(outCmp, "defrostSkipped"),
 		"compare: detects an added slot")
 	check(strings.Contains(outCmp, "slot-retyped") && strings.Contains(outCmp, "double -> int"),

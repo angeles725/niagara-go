@@ -1,6 +1,7 @@
 package typecatalog
 
-// description is the module docstring of tools/n4-type-catalog.py, the --help description.
+// description is the module docstring of tools/n4-type-catalog.py, the --help description; its
+// Usage lines name the installed n4-type-catalog command.
 const description = `n4-type-catalog: static catalog of Niagara 4 component slot declarations (B1185 route T2, gap AM30).
 
 WHY: a station's .bog stores only NON-DEFAULT values, and the live station serves its own type contract only
@@ -17,9 +18,9 @@ decodes the flag expression to an int + letter list, and emits one record per ty
 {package, class, extends, properties[], actions[], topics[]}. Value expressions stay STRINGS (never evaluated).
 
 Read-only, stdlib only. Usage:
-    n4-type-catalog.py build <dir>... [--out catalog.json]
-    n4-type-catalog.py show <catalog.json|dir> <BClass|pkg.BClass|module:Type|Type>
-    n4-type-catalog.py selftest
+    n4-type-catalog build <dir>... [--out catalog.json]
+    n4-type-catalog show <catalog.json|dir> <BClass|pkg.BClass|module:Type|Type>
+    n4-type-catalog selftest
 Provenance rule: a catalog entry is ` + "`" + `[CERT]` + "`" + `-grade only for the file/line it was parsed from; inherited slots
 are NOT merged (use ` + "`" + `extends` + "`" + ` to walk), and a type with no declarations is omitted.
 `

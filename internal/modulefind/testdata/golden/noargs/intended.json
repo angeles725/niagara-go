@@ -1,0 +1,4 @@
+{
+ "reason": "Python's argparse took prog from the invoked script (tools/<tool>.py); the Go binaries are run as their installed command (tools/install.sh), so usage and help name that command, not a retired .py script.",
+ "stderr": "usage: modfind [-h] [--json] [--csv] [--limit N] [--version]\n               [root]\n               {slots,actions,writers,extends,ords,grep,slot-types,ext-writable,compare,callers,selftest} ...\nmodfind: error: the following arguments are required: cmd\n"
+}

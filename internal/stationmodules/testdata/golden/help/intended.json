@@ -1,0 +1,4 @@
+{
+ "reason": "Python's argparse took prog from the invoked script (tools/<tool>.py); the Go binaries are run as their installed command (tools/install.sh), so usage and help name that command, not a retired .py script.",
+ "stdout": "usage: station-modules [-h] {check,doctor} ...\n\nResolve a station's module deps against a Niagara install.\n\npositional arguments:\n  {check,doctor}\n    check         station-driven dependency check\n    doctor        install-integrity check (unresolved deps of installed parts)\n\noptions:\n  -h, --help      show this help message and exit\n"
+}

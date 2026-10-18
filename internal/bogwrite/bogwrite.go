@@ -29,7 +29,7 @@ import (
 const description = "" +
 	"bog-write: offline BOG-XML generator + validator for planned station logic (B1186, gap AM31).\n" +
 	"\n" +
-	"WHY: tools/bog-nav.py only READS bogs. The MCP's offline route (R-F) needs the opposite: turn a PLAN\n" +
+	"WHY: bognav only READS bogs. The MCP's offline route (R-F) needs the opposite: turn a PLAN\n" +
 	"(components, slot values, links, wire-sheet positions) into an importable `.bog` snippet and refuse malformed\n" +
 	"documents before anyone imports them. Grammar facts are those read from real artefacts in B1186:\n" +
 	"`<p n h m t f v>` nodes, ZIP container with one entry `file.xml` (or plain XML), links = persistent children\n" +
@@ -37,9 +37,9 @@ const description = "" +
 	"module prefixes declared on first use (document order), `wsAnnotation` = \"x,y,w[,h]\".\n" +
 	"\n" +
 	"Usage:\n" +
-	"    bog-write.py generate <plan.json> --out file.bog [--plain]\n" +
-	"    bog-write.py validate <file.bog|backup.dist|file.xml>\n" +
-	"    bog-write.py selftest\n" +
+	"    bog-write generate <plan.json> --out file.bog [--plain]\n" +
+	"    bog-write validate <file.bog|backup.dist|file.xml>\n" +
+	"    bog-write selftest\n" +
 	"\n" +
 	"Plan JSON:\n" +
 	"  {\"root\": {\"name\": \"Demo\", \"type\": \"baja:Folder\"},\n" +
@@ -51,7 +51,7 @@ const description = "" +
 	"structural gate, the live import stays a tracked PoC (B1186 AM32).\n"
 
 func parser() *argparse.Parser {
-	p := argparse.New(argparse.Config{Prog: "bog-write.py", Description: description,
+	p := argparse.New(argparse.Config{Prog: "bog-write", Description: description,
 		Formatter: argparse.RawDescriptionHelpFormatter})
 	sub := p.AddSubparsers(argparse.SubparsersConfig{Dest: "cmd", Required: true})
 	g := sub.AddParser("generate", argparse.SubparserConfig{})

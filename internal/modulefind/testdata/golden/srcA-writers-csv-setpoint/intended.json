@@ -1,0 +1,4 @@
+{
+ "reason": "Python ignored --csv for writers and printed the text listing; --csv is now honoured: one slot,kind,writer row per static and dynamic writer (D-I2-6).",
+ "stdout": "slot,kind,writer\r\nsetpoint,static,BColdRoom: setSetpoint(...)\r\nsetpoint,dynamic,\"BDashServlet: comp.set(prop, ...)  [slot resolved at runtime]\"\r\n"
+}

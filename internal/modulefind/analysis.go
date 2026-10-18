@@ -93,8 +93,7 @@ func cmdExtWritable(m *module, o *opts) {
 
 // cmdCompare is cmd_compare: the annotation-level schema diff of root (A, older) and
 // srcB (B, newer): added/removed/retyped/reflagged slots, added/removed actions.
-func cmdCompare(a *module, o *opts, srcB string) {
-	b := newModule(srcB)
+func cmdCompare(a, b *module, o *opts) {
 	classes := map[string]bool{}
 	for _, om := range []*omap[*omap[slotInfo]]{a.slots, b.slots} {
 		for _, k := range om.keys {

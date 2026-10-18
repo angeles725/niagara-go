@@ -1,0 +1,4 @@
+{
+ "reason": "Python's argparse took prog from the invoked script (tools/<tool>.py); the Go binaries are run as their installed command (tools/install.sh), so usage and help name that command, not a retired .py script.",
+ "stderr": "usage: modfind [root] grep [-h] [--json] [--csv] [--limit N] [--source] regex\nmodfind [root] grep: error: argument regex: invalid regex '[': unterminated character set at position 0\n"
+}
