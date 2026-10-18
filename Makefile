@@ -104,12 +104,14 @@ clean:
 
 # Real-corpus parity (Python vs Go on the installs under /mnt/c and the niagara-help
 # versions/ trees): off in `test` and `ci`; `make parity` runs it first, then the search gate.
+# The S8 indexes (class, inheritance, method) are compared on three versions (about 30 s).
 # A green run prints the result lines (subtests included) and the skips; a failing run
 # prints the whole -v output but the === progress lines, so every failure message and
 # diff is kept. The exit status is go test's.
 .PHONY: parity-helpbuild
 parity-helpbuild:
 	@out=$$(HELPBUILD_PARITY_REAL=1 HELPBUILD_PARITY_FULL=1 HELPBUILD_PARITY_415=1 \
+		HELPBUILD_PARITY_INDEXES=4.14.0.162:4.15.6.20:4.3.58.18 \
 		$(GO) test -count=1 -timeout 60m -run Parity -v ./internal/helpbuild/ 2>&1); st=$$?; \
 		if [ $$st -eq 0 ]; then \
 			printf '%s\n' "$$out" | grep -E '^ *(--- |ok|FAIL|PASS)|real-data parity|not mounted|not found|parity driver python'; \
