@@ -146,3 +146,73 @@ func TestBuildFailureKeepsThePreviousIndex(t *testing.T) {
 		t.Errorf("indexes/ holds %d entries after a failed build, want 1", len(entries))
 	}
 }
+
+// writeBigTree is writeTree plus n generated guide pages, enough to span
+// several tokenizing batches.
+func writeBigTree(t *testing.T, n int) string {
+	t.Helper()
+	root := writeTree(t)
+	dir := filepath.Join(root, "guides-clean", "generated")
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	for i := range n {
+		text := fmt.Sprintf("TITLE: Page %d\n\nalarmClass%d routes point%d to the BAlarmService\n", i, i%7, i%13)
+		if err := os.WriteFile(filepath.Join(dir, fmt.Sprintf("p%04d.txt", i)), []byte(text), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	return root
+}
+
+func TestBuildLogGroupsThousands(t *testing.T) {
+	root := writeBigTree(t, 1000)
+	res, err := Build(root, Options{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	// 1,000 generated pages plus the synthetic tree's documents.
+	want := fmt.Sprintf("full-text index: 1,%03d documents -> %s", res.Documents-1000, res.Path)
+	if res.Documents < 1000 || len(res.Log) != 1 || res.Log[0] != want {
+		t.Errorf("Log = %q (%d documents), want [%q]", res.Log, res.Documents, want)
+	}
+}
+
+func TestBuildIndexModeIsWhatSQLiteWouldCreate(t *testing.T) {
+	root := writeTree(t)
+	res, err := Build(root, Options{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	// A file created with 0666 shows the mode the umask leaves, which is
+	// what SQLite and Python give a new database.
+	probe := filepath.Join(t.TempDir(), "probe")
+	if err := os.WriteFile(probe, nil, 0o666); err != nil {
+		t.Fatal(err)
+	}
+	want, _ := os.Stat(probe)
+	got, err := os.Stat(res.Path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.Mode().Perm() != want.Mode().Perm() {
+		t.Errorf("index mode %v, want %v", got.Mode().Perm(), want.Mode().Perm())
+	}
+}
+
+func TestBuildRenameFailureLeavesNoTempFile(t *testing.T) {
+	root := writeTree(t)
+	parent := t.TempDir()
+	// The target is a non-empty directory: the database is filled, then the
+	// rename onto it fails.
+	target := filepath.Join(parent, fts.DBName)
+	if err := os.MkdirAll(filepath.Join(target, "keep"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := Build(root, Options{Output: target}); err == nil {
+		t.Fatal("Build onto a non-empty directory succeeded")
+	}
+	if entries, _ := os.ReadDir(parent); len(entries) != 1 {
+		t.Errorf("%d entries beside the target after a failed rename, want 1 (no temp file)", len(entries))
+	}
+}

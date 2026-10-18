@@ -109,13 +109,24 @@ func pyJoin(first string, rest ...string) string {
 	return out
 }
 
-// tempPath creates an empty file beside final for the build to fill.
+// tempPath creates an empty file beside final for the build to fill. It is
+// created with mode 0666 minus the umask, as SQLite and Python create a
+// database (os.CreateTemp's 0600 would make the renamed index private to
+// its owner): CreateTemp only reserves a unique name.
 func tempPath(final string) (string, error) {
 	f, err := os.CreateTemp(filepath.Dir(final), filepath.Base(final)+".*.tmp")
 	if err != nil {
 		return "", err
 	}
 	name := f.Name()
+	f.Close()
+	if err := os.Remove(name); err != nil {
+		return "", err
+	}
+	f, err = os.OpenFile(name, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0o666)
+	if err != nil {
+		return "", err
+	}
 	if err := f.Close(); err != nil {
 		os.Remove(name)
 		return "", err

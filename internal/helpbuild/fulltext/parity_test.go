@@ -102,3 +102,19 @@ func niagaraHelpDir() string {
 	}
 	return filepath.Join(root, "niagara-help")
 }
+
+func TestBuildIsTheSameForAnyWorkerCount(t *testing.T) {
+	root := writeBigTree(t, 600) // several 256-file batches
+	var dumps []string
+	for _, n := range []int{1, 7} {
+		out := filepath.Join(t.TempDir(), fts.DBName)
+		if _, err := Build(root, Options{Output: out, Workers: n}); err != nil {
+			t.Fatal(err)
+		}
+		dumps = append(dumps, dumpText(out, hideRoot(root)))
+	}
+	if dumps[0] != dumps[1] {
+		_, diffs := compareDumps(lines(dumps[0]), lines(dumps[1]), 5)
+		t.Fatalf("1 and 7 workers build different indexes:\n%s", strings.Join(diffs, "\n"))
+	}
+}
