@@ -384,7 +384,12 @@ Go does not export its table, so `isHTML5Entity` reads it through `html.Unescape
 ## Real-data parity
 
 Every test that reads a real install or the real corpus runs only on request, `-short`
-or not; without its variable it skips and the message names the variable. The synthetic,
+or not; without its variable it skips and the message names the variable. A switch
+(`REAL`, `FULL`, `415`) counts only when set to `1`: any other value fails the test,
+naming the variable and the accepted value. A selection that leaves nothing to compare
+(no version for `TestParityGuidesReal`, a `HELPBUILD_PARITY_JARS` naming no jar, a
+`HELPBUILD_PARITY_PDF_DOCS` without a PDF, a `HELPBUILD_PARITY_COURSE` without files)
+fails too, and an explicit jar list or course never skips as "not mounted". The synthetic,
 cache, glob, toc and fuzz parity tests (5,000 snippets) stay on in `go test`.
 
 | Variable | Turns on |

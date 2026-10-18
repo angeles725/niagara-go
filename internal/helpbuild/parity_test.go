@@ -266,43 +266,40 @@ func TestParitySyntheticJars(t *testing.T) {
 // defaultRealJars: five jars of different kinds from the EC-Net 4.3 install
 // (the biggest doc jar, a small doc jar, an -rt, a -wb with an extract rule,
 // a -ux with jsdoc/) and ffmpeg-wb.jar of 4.15, the one jar with a source
-// archive. HELPBUILD_PARITY_JARS (path-list separated) replaces the list.
+// archive.
 func defaultRealJars() []string {
-	if env := os.Getenv("HELPBUILD_PARITY_JARS"); env != "" {
-		return filepath.SplitList(env)
-	}
 	m43 := "/mnt/c/Niagara/EC-Net4-4.3.58.18/modules/"
 	return []string{m43 + "docDeveloper-doc.jar", m43 + "docLinuxN4-doc.jar", m43 + "alarm-rt.jar",
 		m43 + "workbench-wb.jar", m43 + "batchJob-ux.jar", "/mnt/c/Niagara/Niagara-4.15.6.20/modules/ffmpeg-wb.jar"}
 }
 
-// realParityVar is the umbrella switch of every test that reads a real
-// install or the real corpus (minutes of work, so off by default, -short or
-// not); the finer HELPBUILD_PARITY_* variables of a test also turn it on.
-const realParityVar = "HELPBUILD_PARITY_REAL"
-
-// needRealParity skips t, naming the variables, unless
-// HELPBUILD_PARITY_REAL=1 or one of the finer variables is set.
-func needRealParity(t *testing.T, finer ...string) {
-	t.Helper()
-	if os.Getenv(realParityVar) == "1" {
-		return
+// realJars is the TestParityRealJars list: HELPBUILD_PARITY_JARS (path-list
+// separated, empty entries dropped; explicit) else defaultRealJars. An
+// explicit list with no jar is an error, never an empty comparison.
+func realJars() (jars []string, explicit bool, err error) {
+	env := os.Getenv("HELPBUILD_PARITY_JARS")
+	if env == "" {
+		return defaultRealJars(), false, nil
 	}
-	names := realParityVar + "=1"
-	for _, v := range finer {
-		if os.Getenv(v) != "" {
-			return
+	for _, j := range filepath.SplitList(env) {
+		if j != "" {
+			jars = append(jars, j)
 		}
-		names += " or " + v
 	}
-	t.Skipf("real-data parity runs only on request: set %s", names)
+	if len(jars) == 0 {
+		return nil, true, fmt.Errorf("HELPBUILD_PARITY_JARS=%q names no jar: nothing to compare", env)
+	}
+	return jars, true, nil
 }
 
 func TestParityRealJars(t *testing.T) {
 	needRealParity(t, "HELPBUILD_PARITY_JARS")
 	driver(t)
-	jars := defaultRealJars()
-	if _, err := os.Stat(jars[0]); err != nil {
+	jars, explicit, err := realJars()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(jars[0]); err != nil && !explicit {
 		t.Skipf("real install not mounted (%v): parity not checked", err)
 	}
 	for _, j := range jars {

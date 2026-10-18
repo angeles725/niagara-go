@@ -365,7 +365,7 @@ func TestParityExtractReal(t *testing.T) {
 // The whole 4.3 install: help_jars lists every module jar (~25 s per side
 // over /mnt/c), so it runs only with HELPBUILD_PARITY_FULL=1.
 func TestParityHelpJarsFullInstall(t *testing.T) {
-	if os.Getenv("HELPBUILD_PARITY_FULL") == "" {
+	if !parityOn(t, "HELPBUILD_PARITY_FULL") {
 		t.Skip("HELPBUILD_PARITY_FULL unset: the whole-install help_jars sweep is not run")
 	}
 	driver(t)

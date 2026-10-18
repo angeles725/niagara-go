@@ -329,12 +329,9 @@ func realBase(t *testing.T, vid string) string {
 func TestParityGuidesReal(t *testing.T) {
 	needRealParity(t, "HELPBUILD_PARITY_415")
 	driver(t)
-	var vids []string
-	if os.Getenv(realParityVar) == "1" {
-		vids = append(vids, "4.3.58.18")
-	}
-	if os.Getenv("HELPBUILD_PARITY_415") == "1" {
-		vids = append(vids, "4.15.6.20")
+	vids, err := guidesRealVersions()
+	if err != nil {
+		t.Fatal(err)
 	}
 	for _, vid := range vids {
 		t.Run(vid, func(t *testing.T) {
