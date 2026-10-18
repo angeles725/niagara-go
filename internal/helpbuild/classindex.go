@@ -61,7 +61,7 @@ type namedClass struct {
 // allclasses-noframe.html lists, in page order.
 func classHTMLEntries(baseDir string) ([]namedClass, error) {
 	path := pycompat.Join(baseDir, "bajadoc", "allclasses-noframe.html")
-	if !isRegular(path) {
+	if !pycompat.IsFile(path) {
 		return nil, nil
 	}
 	page, err := readPage(path)
@@ -84,7 +84,7 @@ func classXMLEntries(baseDir string, dirs []string, res *IndexResult) ([]namedCl
 	var out []namedClass
 	for _, d := range dirs {
 		root := pycompat.Join(baseDir, d)
-		if !isDir(root) {
+		if !pycompat.IsDir(root) {
 			continue
 		}
 		var paths, rels []string
@@ -215,7 +215,7 @@ func BuildClassIndex(baseDir string) (*IndexResult, error) {
 	if err := writeClassIndex(res, baseDir, "class-index.json", mergeClasses(append(html, xml...))); err != nil {
 		return res, err
 	}
-	if isDir(pycompat.Join(baseDir, "jdk")) {
+	if pycompat.IsDir(pycompat.Join(baseDir, "jdk")) {
 		jdk, err := classXMLEntries(baseDir, []string{"jdk"}, res)
 		if err != nil {
 			return res, err

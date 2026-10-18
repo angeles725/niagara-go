@@ -137,16 +137,6 @@ func DestPath(jarName, entry string, rules *Rules) (rel string, ok bool) {
 	return "guides/" + GuideFolder(jarName) + "/" + strings.TrimPrefix(entry, "doc/"), true
 }
 
-func isDir(p string) bool {
-	st, err := os.Stat(p)
-	return err == nil && st.IsDir()
-}
-
-func isRegular(p string) bool {
-	st, err := os.Stat(p)
-	return err == nil && st.Mode().IsRegular()
-}
-
 // sortedNames is sorted(os.listdir(dir)) (os.ReadDir sorts by name; byte
 // order is code-point order for UTF-8 names).
 func sortedNames(dir string) ([]string, error) {
@@ -167,7 +157,7 @@ func sortedNames(dir string) ([]string, error) {
 // has no entries.
 func HelpJars(installDir string, ls *Listings, rules *Rules) ([]string, error) {
 	modules := pycompat.Join(installDir, "modules")
-	if !isDir(modules) {
+	if !pycompat.IsDir(modules) {
 		return nil, nil
 	}
 	if ls == nil {
@@ -199,7 +189,7 @@ func HelpJars(installDir string, ls *Listings, rules *Rules) ([]string, error) {
 func ListDocJars(installDir string, withHelpJars bool, ls *Listings) ([]string, error) {
 	var jars []string
 	modules := pycompat.Join(installDir, "modules")
-	if isDir(modules) {
+	if pycompat.IsDir(modules) {
 		names, err := sortedNames(modules)
 		if err != nil {
 			return nil, err
@@ -210,7 +200,7 @@ func ListDocJars(installDir string, withHelpJars bool, ls *Listings) ([]string, 
 			}
 		}
 	}
-	if javadoc := pycompat.Join(installDir, "javadoc", JavadocJar); isRegular(javadoc) {
+	if javadoc := pycompat.Join(installDir, "javadoc", JavadocJar); pycompat.IsFile(javadoc) {
 		jars = append(jars, javadoc)
 	}
 	if withHelpJars {

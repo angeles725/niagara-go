@@ -141,7 +141,7 @@ func (s *DocJarScan) scanEntry(indexed *indexedViews, name, entry string, rules 
 	if mapped {
 		path = pycompat.Join(indexed.root, rel)
 	}
-	if path != "" && isRegular(path) {
+	if path != "" && pycompat.IsFile(path) {
 		row.Extracted++
 	}
 	if verdict == VerdictExclude {
@@ -154,7 +154,7 @@ func (s *DocJarScan) scanEntry(indexed *indexedViews, name, entry string, rules 
 	case verdict == VerdictIndex && !mapped:
 		why = "index rule for an unmapped entry (" + detail + ")"
 	case verdict == VerdictIndex:
-		if isRegular(path) {
+		if pycompat.IsFile(path) {
 			ok, err := indexed.check(detail, rel)
 			if err != nil {
 				return err
@@ -165,7 +165,7 @@ func (s *DocJarScan) scanEntry(indexed *indexedViews, name, entry string, rules 
 			}
 		}
 		why = "not indexed (" + detail + ")"
-		if !isRegular(path) {
+		if !pycompat.IsFile(path) {
 			why = "not extracted"
 		}
 	default:
@@ -245,7 +245,7 @@ func DocJarCoverage(w io.Writer, repoRoot, baseDir, versionID string, docs Fullt
 		return 0, err
 	}
 	out := &reportWriter{w: w}
-	if install == "" || !isDir(install) {
+	if install == "" || !pycompat.IsDir(install) {
 		if install == "" {
 			install = "?"
 		}

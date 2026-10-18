@@ -13,6 +13,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyref"
 )
 
@@ -126,7 +127,7 @@ func normalizeRebuild(text string, stderr bool) []string {
 // (intended difference; a pdf-index.json copied in is compared as it is).
 func rebuildTreeLines(t *testing.T, root string, python, pdfRan bool) []string {
 	t.Helper()
-	if !isDir(root) {
+	if !pycompat.IsDir(root) {
 		return []string{"<absent>"}
 	}
 	path := filepath.Join(root, "indexes", ".manifest.json")
@@ -358,7 +359,7 @@ func TestParityRebuildReal(t *testing.T) {
 				t.Fatalf("%s: version %s is not registered", rebuildParityVar, vid)
 			}
 			src := filepath.Join(help, filepath.FromSlash(entry["data_root"]))
-			if !isDir(src) {
+			if !pycompat.IsDir(src) {
 				missingReference(t, fmt.Sprintf("version %s has no data root (%s)", vid, src))
 			}
 			repo := t.TempDir()
@@ -366,7 +367,7 @@ func TestParityRebuildReal(t *testing.T) {
 			if c := entry["course_dir"]; c != "" {
 				copied["course_dir"] = filepath.Join(help, filepath.FromSlash(c))
 			}
-			if !isDir(entry["install_dir"]) {
+			if !pycompat.IsDir(entry["install_dir"]) {
 				t.Logf("%s: install %s not mounted (the PDF step reports it on both sides)", vid, entry["install_dir"])
 			}
 			regData, err := json.Marshal(map[string]any{"default": vid, "versions": map[string]any{vid: copied}})

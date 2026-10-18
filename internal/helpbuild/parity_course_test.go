@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 )
 
@@ -234,7 +235,7 @@ func TestParityCourseReal(t *testing.T) {
 		if countFiles(explicit, func(string) bool { return true }) == 0 {
 			t.Fatalf("HELPBUILD_PARITY_COURSE=%q is no folder holding files: nothing to compare", explicit)
 		}
-	} else if src == "" || !isDir(src) {
+	} else if src == "" || !pycompat.IsDir(src) {
 		t.Skipf("developer course %q not found: real course parity not checked", src)
 	}
 	coursePlanParity(t, "n4-dev-course", src)

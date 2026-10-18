@@ -15,6 +15,7 @@ import (
 	"github.com/angeles725/niagara-go/internal/help/fts"
 	ftbuild "github.com/angeles725/niagara-go/internal/helpbuild/fulltext"
 	"github.com/angeles725/niagara-go/internal/index"
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // Parity of the whole-install sweep (install_sweep.cmd_sweep) through
@@ -260,7 +261,7 @@ func TestParitySweepReal(t *testing.T) {
 			if !ok {
 				t.Fatalf("version %s is not registered in %s", vid, help)
 			}
-			if !isDir(entry.InstallDir) {
+			if !pycompat.IsDir(entry.InstallDir) {
 				t.Fatalf("install of %s not mounted: %s", vid, entry.InstallDir)
 			}
 			base := filepath.Join(help, filepath.FromSlash(entry.DataRoot))

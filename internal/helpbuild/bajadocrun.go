@@ -74,7 +74,7 @@ func ParseBajadoc(baseDir string) (*BajadocResult, error) {
 	res := &BajadocResult{}
 	bajadocDir := pycompat.Join(baseDir, "bajadoc", "javax", "baja")
 	outputDir := pycompat.Join(baseDir, "bajadoc-clean")
-	if !isDir(bajadocDir) {
+	if !pycompat.IsDir(bajadocDir) {
 		res.out("ERROR: bajadoc directory not found: %s", bajadocDir)
 		res.Status = 1
 		return res, nil

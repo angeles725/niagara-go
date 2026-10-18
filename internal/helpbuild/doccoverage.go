@@ -260,7 +260,7 @@ func (x *indexedViews) check(kind, rel string) (bool, error) {
 			folder = "guides"
 		}
 		page := dropPrefixRunes(rel, len(folder)+1)
-		return isRegular(pycompat.Join(x.root, folder+"-clean",
+		return pycompat.IsFile(pycompat.Join(x.root, folder+"-clean",
 			CleanTextName(page, pycompat.Join(x.root, folder)))), nil
 	case "guide-toc":
 		tocs, err := x.guideTocs()

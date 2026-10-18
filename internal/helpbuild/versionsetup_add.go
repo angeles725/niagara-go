@@ -86,7 +86,7 @@ func readJarEntry(jar, name string) ([]byte, error) {
 // does not exist (load_registry's None).
 func registryFile(repo string) (*pyjson.Value, error) {
 	path := pycompat.Join(repo, index.RegistryRel)
-	if !isRegular(path) {
+	if !pycompat.IsFile(path) {
 		return nil, nil
 	}
 	v, err := loadJSON(path)
@@ -184,7 +184,7 @@ func AddVersion(repo, install string, w io.Writer, opt AddOptions) (int, error) 
 	if err != nil {
 		return 2, err
 	}
-	if !isDir(pycompat.Join(install, "modules")) {
+	if !pycompat.IsDir(pycompat.Join(install, "modules")) {
 		out("ERROR: %s is not a Niagara install (no modules/ folder)", install)
 		return 2, nil
 	}
@@ -213,7 +213,7 @@ func AddVersion(repo, install string, w io.Writer, opt AddOptions) (int, error) 
 	}
 	regPath := pycompat.Join(repo, index.RegistryRel)
 	var before []byte
-	if isRegular(regPath) {
+	if pycompat.IsFile(regPath) {
 		if before, err = os.ReadFile(regPath); err != nil {
 			return 2, err
 		}
@@ -305,7 +305,7 @@ func rollback(regPath string, before []byte, root string, rootExisted bool, out 
 	ok := true
 	var err error
 	if before == nil {
-		if isRegular(regPath) {
+		if pycompat.IsFile(regPath) {
 			err = os.Remove(regPath)
 		}
 	} else {
@@ -316,7 +316,7 @@ func rollback(regPath string, before []byte, root string, rootExisted bool, out 
 		out("ERROR: the registry entry could not be rolled back (%s); remove it from %s by hand",
 			pycompat.OSErrorText(err), regPath)
 	}
-	if !rootExisted && isDir(root) {
+	if !rootExisted && pycompat.IsDir(root) {
 		if err := os.RemoveAll(root); err != nil {
 			ok = false
 			out("ERROR: the partial data root %s could not be removed (%s); remove it by hand",

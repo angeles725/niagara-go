@@ -85,7 +85,7 @@ type GuideFolderCoverage struct {
 func GuideCoverage(baseDir string) ([]GuideFolderCoverage, error) {
 	guides := pycompat.Join(baseDir, "guides")
 	clean := pycompat.Join(baseDir, "guides-clean")
-	if !isDir(guides) {
+	if !pycompat.IsDir(guides) {
 		return nil, nil
 	}
 	names, err := sortedNames(guides)
@@ -95,7 +95,7 @@ func GuideCoverage(baseDir string) ([]GuideFolderCoverage, error) {
 	var rows []GuideFolderCoverage
 	for _, folder := range names {
 		path := pycompat.Join(guides, folder)
-		if !isDir(path) {
+		if !pycompat.IsDir(path) {
 			continue
 		}
 		rows = append(rows, GuideFolderCoverage{Folder: folder,
@@ -191,7 +191,7 @@ func loadCoverageIndexes(baseDir string) (*coverageIndexes, error) {
 func documentedClasses(baseDir string) map[string]bool {
 	has := map[string]bool{}
 	dir := pycompat.Join(baseDir, "bajadoc-clean")
-	if !isDir(dir) {
+	if !pycompat.IsDir(dir) {
 		return has
 	}
 	pyWalk(dir, func(_ string, dirs, files []string) []string {

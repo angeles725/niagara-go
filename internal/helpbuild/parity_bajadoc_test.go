@@ -11,6 +11,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // Parity of the S7a bajadoc parser (bajadoc/javax/baja/**.html ->
@@ -220,7 +222,7 @@ func registeredDataRoot(t *testing.T, vid string) string {
 func realBajadocBase(t *testing.T, vid string) string {
 	t.Helper()
 	src := filepath.Join(registeredDataRoot(t, vid), "bajadoc")
-	if !isDir(filepath.Join(src, "javax", "baja")) {
+	if !pycompat.IsDir(filepath.Join(src, "javax", "baja")) {
 		missingReference(t, fmt.Sprintf("version %s has no bajadoc/javax/baja (%s)", vid, src))
 	}
 	base := t.TempDir()

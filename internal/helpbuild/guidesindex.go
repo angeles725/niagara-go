@@ -91,7 +91,7 @@ func KnownJarNames(baseDir string) (names []string, ok bool, err error) {
 	}
 	for _, repo := range []string{baseDir, filepath.Dir(filepath.Dir(abs))} {
 		manifest := pycompat.Join(repo, "versions", vid+".manifest.json")
-		if !isRegular(manifest) {
+		if !pycompat.IsFile(manifest) {
 			continue
 		}
 		data, err := loadJSON(manifest)
@@ -130,7 +130,7 @@ func ModulesDirOf(baseDir string) (string, error) {
 	if err != nil || install == "" {
 		return "", err
 	}
-	if modules := pycompat.Join(install, "modules"); isDir(modules) {
+	if modules := pycompat.Join(install, "modules"); pycompat.IsDir(modules) {
 		return modules, nil
 	}
 	return "", nil
@@ -166,7 +166,7 @@ func jarForFolder(folder, rawFolder string, src JarSources, rules *Rules) (jar p
 	if src.ModulesDir == "" {
 		return pyjson.Value{}, false
 	}
-	if isRegular(pycompat.Join(src.ModulesDir, rawFolder+".jar")) {
+	if pycompat.IsFile(pycompat.Join(src.ModulesDir, rawFolder+".jar")) {
 		return pyjson.String(folder + ".jar"), true
 	}
 	return pyjson.Value{}, true
@@ -216,7 +216,7 @@ func GuidesIndex(baseDir string, src JarSources) (index pyjson.Value, kept, warn
 	for fi, rawFolder := range folders {
 		folder := keys[fi]
 		path := pycompat.Join(guides, rawFolder)
-		if !isDir(path) {
+		if !pycompat.IsDir(path) {
 			continue
 		}
 		var pages []string

@@ -255,7 +255,7 @@ func FidelityJar(jarPath, root string, rep *FidelityReport) error {
 	return m.each(skip, func(x *zipInfo, rel string) error {
 		rep.Checked++
 		path := pycompat.Join(root, rel)
-		if !isRegular(path) {
+		if !pycompat.IsFile(path) {
 			rep.Missing = append(rep.Missing, rel)
 			return nil
 		}

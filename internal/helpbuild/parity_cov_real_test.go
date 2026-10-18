@@ -11,6 +11,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // Real-data parity of the coverage reports: `coverage`, `coverage
@@ -211,7 +213,7 @@ func TestParityCoverageReal(t *testing.T) {
 				}
 				checkCovGolden(t, goldens, "coverage-module", b.String(), 0)
 			}
-			if !isDir(install) {
+			if !pycompat.IsDir(install) {
 				if explicit {
 					t.Fatalf("%s: install %s not mounted (%s lists the version)", vid, install, covVar)
 				}

@@ -103,7 +103,7 @@ func RemoveCourseCopies(baseDir string) ([]string, error) {
 	var removed []string
 	for _, d := range []string{CourseTextDir, CourseCodeDir} {
 		p := filepath.Join(baseDir, d)
-		if !isDir(p) {
+		if !pycompat.IsDir(p) {
 			continue
 		}
 		if st, err := os.Lstat(p); err == nil && st.Mode()&os.ModeSymlink != 0 {
@@ -146,7 +146,7 @@ func BuildCourse(baseDir string, rules *Rules) (*CourseCounts, error) {
 		_, err := RemoveCourseCopies(baseDir)
 		return nil, err
 	}
-	if !isDir(src) {
+	if !pycompat.IsDir(src) {
 		return nil, &CourseDirMissingError{src}
 	}
 	counts := &CourseCounts{CourseDir: src}

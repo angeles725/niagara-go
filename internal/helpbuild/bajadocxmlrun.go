@@ -39,7 +39,7 @@ func ParseBajadocXML(baseDir string) (*BajadocXMLResult, error) {
 	seen := map[[2]string]bool{}
 	for _, d := range bajadocXMLDirs {
 		root := pycompat.Join(baseDir, d)
-		if !isDir(root) {
+		if !pycompat.IsDir(root) {
 			continue
 		}
 		classes, err := bajadocXMLClasses(root)
@@ -111,7 +111,7 @@ func bajadocXMLClasses(root string) ([]bajadocxml.Class, error) {
 // hasHTMLPage is has_html_page: bajadoc/<package path>/<Name>.html is a
 // file (os.path.isfile, links followed).
 func hasHTMLPage(baseDir, pkg, name string) bool {
-	return isRegular(pycompat.Join(baseDir, "bajadoc",
+	return pycompat.IsFile(pycompat.Join(baseDir, "bajadoc",
 		strings.ReplaceAll(pkg, ".", string(filepath.Separator)), name+".html"))
 }
 

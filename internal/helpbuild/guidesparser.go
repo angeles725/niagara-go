@@ -97,7 +97,7 @@ func parseGuidesInto(res *TextResult, guidesDir, outDir string) error {
 	var werr error
 	for _, folder := range folders {
 		folderPath := pycompat.Join(guidesDir, folder)
-		if !isDir(folderPath) {
+		if !pycompat.IsDir(folderPath) {
 			continue
 		}
 		toc := &Toc{}
