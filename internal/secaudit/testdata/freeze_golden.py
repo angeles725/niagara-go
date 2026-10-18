@@ -36,8 +36,12 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 PY_REF_ENV = "NIAGARA_RESEARCH_PY_REF"
 PY_REF_REV = "c846ce1e5eb92ee6d938efbb3585473a545f7e50"  # niagara-research tag pre-go-retire
 PY_REF_DEFAULT = os.path.join("~", "niagara-research-worktrees", "pre-go-retire-niagara-research")
-# Run the frozen Python of the script given as argv[1], not its D35 exec switch to the Go port.
-RUNNER = "import runpy, sys; sys.argv = sys.argv[1:]; runpy.run_path(sys.argv[0], run_name='frozen')['main']()"
+# Run the frozen Python of the script given as argv[1], not its D35 exec switch to the Go port: its
+# own directory first on sys.path (as `python3 script.py` would put it, which -I and -c do not), and
+# main()'s return value as the exit status (as sys.exit(main()) would).
+RUNNER = ("import os, runpy, sys; sys.argv = sys.argv[1:]; "
+          "sys.path.insert(0, os.path.dirname(os.path.abspath(sys.argv[0]))); "
+          "sys.exit(runpy.run_path(sys.argv[0], run_name='frozen')['main']())")
 
 
 def freeze(tool, golden, cwd):

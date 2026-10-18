@@ -11,6 +11,9 @@ import (
 // reported REBIND OK whenever a BBMD answered; see golden/bbmd-confirmed-no-cross/intended.json).
 //   - forwarded-other-subnet: 127.0.0.7 is a BBMD whose only I-Am is the device's, forwarded
 //     from 10.9.9.9, outside the device subnet 127.0.0.4/32: not crossed, exit 1.
+//   - forwarded-device-subnet: its companion; 127.0.0.8 forwards the I-Am from 127.0.0.4, inside
+//     the device subnet: crossed, REBIND OK (BBMD confirmed), exit 0. Only the forwarded origin
+//     differs, so the pair pins that the verdict follows it, not the UDP source.
 //   - bbmd-no-cross-json: the --json form of golden/bbmd-confirmed-no-cross.
 //
 // GOLDEN_UPDATE=1 rewrites their outputs from Main first.

@@ -17,9 +17,10 @@ import (
 // answers only unicast Who-Is, 127.0.0.6 sends odd frames (forwarded, routed,
 // non-device and truncated I-Ams), 127.0.0.4 is silent, and 0.0.0.0:47932 is
 // held so a --src-port bind fails. startFake is the same fake in Go; nothing
-// is ever sent beyond 127.0.0.0/8. 127.0.0.7 serves only the Go-only cases
-// (golden_go_test.go): a BBMD that answers a Who-Is with the device's I-Am
-// forwarded from another subnet (10.9.9.9).
+// is ever sent beyond 127.0.0.0/8. 127.0.0.7 and 127.0.0.8 serve only the
+// Go-only cases (golden_go_test.go): BBMDs that answer a Who-Is with the
+// device's I-Am forwarded from another subnet (10.9.9.9) and from inside the
+// device subnet (127.0.0.4).
 const fakePort, busyPort = 47931, 47932
 
 func iam(inst uint32, objType uint32) []byte {
@@ -70,6 +71,15 @@ var personalities = map[string]func(fn byte) [][]byte{
 		case 0x02:
 			return [][]byte{bvlcWrap(0x03, cat(addr6("127.0.0.7", 0xBAC0), []byte{255, 255, 255, 255},
 				addr6("10.9.9.1", 0xBAC0), []byte{255, 255, 255, 0}))}
+		}
+		return nil
+	},
+	"127.0.0.8": func(fn byte) [][]byte {
+		switch fn {
+		case 0x0A, 0x0B:
+			return [][]byte{bvlcWrap(fnForwardedNPDU, cat(addr6("127.0.0.4", 0xBAC0), []byte{1, 0}, iam(1234, 8)))}
+		case 0x02:
+			return [][]byte{bvlcWrap(0x03, cat(addr6("127.0.0.8", 0xBAC0), []byte{255, 255, 255, 255}))}
 		}
 		return nil
 	},

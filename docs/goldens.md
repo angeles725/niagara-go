@@ -151,7 +151,16 @@ question set drifts from the niagara-research one (skipped when that file is abs
 history named by `HDBREAD_REAL_HDB` and checks the HARBOR UMA14 Ret history (682 records, the
 first at 2018-09-26T17:30:00.008Z, ascending timestamps, a 15-minute median step, every value in
 (0, 60) degC). The client data never enters this repo. Unset, the test skips; `make parity` sets
-it to that file in the checkout (`HDBREAD_REAL_HDB= make parity` skips it), and a missing file fails.
+it to that file in the checkout (`make parity HDBREAD_REAL_HDB=` skips it), and a missing file fails.
+
+make expands `$` in an overriding value, whether it comes from the command line or the
+environment (`make -e` too): `UMA14$20Ret.hdb` reaches the test as `UMA140Ret.hdb`. Write each `$`
+of a path as `$$` in either form (checked with GNU Make 4.3); `go test` takes the plain path:
+
+```sh
+make parity HDBREAD_REAL_HDB='/path/to/seg1/UMA14$$20Ret.hdb'
+HDBREAD_REAL_HDB='/path/to/seg1/UMA14$20Ret.hdb' go test -run TestRealHarborHistory ./internal/hdbread
+```
 
 ## Real-corpus goldens: mnav and nh keep sets
 

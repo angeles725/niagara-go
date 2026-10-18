@@ -75,7 +75,8 @@ RESEARCH := $(abspath $(NIAGARA_RESEARCH))
 #   bog recall: BOG_RECALL_FILES=<bog>[:<bog>...]  bog parity: BOG_PARITY_FILES + BOG_PARITY_DIR
 #     (the dump dir that internal/bog/testdata/gen_fixtures.py --dump wrote, kept outside the repo)
 # hdbread real history: HDBREAD_REAL_HDB, by default the HARBOR UMA14 Ret history of the checkout
-# (682 records); an empty value skips it, a missing file fails.
+# (682 records); an empty value skips it, a missing file fails. Write a `$` of an overriding path
+# as `$$`, on the command line or in the environment (docs/goldens.md).
 HDBREAD_REAL_HDB ?= $(RESEARCH)/clients/distech-merida-harbor/HM_BMS_backup_08_09_2026/HM_BMS/history/station/seg1/UMA14$$20Ret.hdb
 parity: parity-helpbuild
 	NSEARCH_QUALITY_ROOT=$(RESEARCH) $(GO) test -count=1 -v -timeout 30m \
