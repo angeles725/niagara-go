@@ -1,4 +1,5 @@
-usage: course [-h] [--root DIR] [--version] {show,status,text,check,verify-predictions,verify} ...
+usage: course [-h] [--root DIR] [--version]
+              {show,status,text,check,verify-predictions,find,verify} ...
 
 Look up the N4 developer-course answer keys of a niagara-research checkout
 (labs, review assignments, certification exam) by item ID, count them by
@@ -10,7 +11,7 @@ working directory (then above this executable) that holds
 docs/n4-dev-course-solutions/labs.md.
 
 exit: 0 found; 1 searched, no match (show: any unknown ID, even when the
-others were printed); 2 cannot search (no root, a missing or ambiguous answer
+others were printed; find: no item matches); 2 cannot search (no root, a missing or ambiguous answer
 key, a missing text file). check: 0 no FAIL (SKIPs are counted, never passed);
 1 at least one FAIL; 2 the station cannot be read, or every check was skipped.
 verify, verify-predictions (= verify --status predicted): 0 no item
@@ -29,9 +30,10 @@ examples:
     --install /opt/Niagara/Niagara-4.15.6.20 --lab 4 --lab 10
   course verify-predictions --station ~/Niagara4.15/tridium/stations/TrainingStation
   course verify --status written --lab RA1
+  course find -i 'history:'
 
 positional arguments:
-  {show,status,text,check,verify-predictions,verify}
+  {show,status,text,check,verify-predictions,find,verify}
     show                print items by ID (any case; L2.3 also finds the range item L2.2–L2.4)
     status              items per group and status; --status lists the matching items
     text                print the course text lines an item (or a lab) points at
@@ -39,6 +41,8 @@ positional arguments:
                         PASS/FAIL/SKIP per check
     verify-predictions  run the checks linked to every *(predicted)* item: CONFIRMED, CONTRADICTED
                         or UNDECIDED
+    find                items whose step or answer matches a regexp: group, ID, status and the
+                        first matching line
     verify              decide every item of a status from its linked checks: CONFIRMED, PARTIAL,
                         CONTRADICTED or UNDECIDED
 

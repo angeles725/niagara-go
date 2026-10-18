@@ -143,6 +143,13 @@ exits 2: an answer key that cannot be read without ambiguity is not searched.
 - `course status [--lab G] [--status S] [--json]`: items per group and status (columns
   overlap), then with `--status` the matching IDs and steps (truncated to 80 characters).
   No match is exit 1 with the scope and counts.
+- `course find REGEXP [-i]`: every item whose step or one of its answer lines matches the Go
+  regexp (RE2 syntax, not Python's `re`; `-i` folds case), in answer-key order, one row each:
+  group, ID, statuses and the first matching line (the step first, then the answer lines,
+  trimmed, cut at 120 characters), the columns aligned. No match is exit 1 with
+  `course: no item matches <q> (searched N items in labs.md, review-assignments.md,
+  certification-exam.md)` on stderr, the scope `show` prints; a regexp that does not compile
+  is exit 2.
 - `course text ID|GROUP`: the text-file lines of the item's (or the lab's) ranges, numbered,
   with no trailing whitespace (a blank line prints only its number).
   No range is exit 1; a missing text file or a range past its end is exit 2. Requirements
@@ -353,6 +360,8 @@ not observed.
   `TestGolden` clears the `COURSE_*` variables first, so a developer's defaults never reach a
   case; `check-env-defaults`, `check-env-blank` and `check-flag-beats-env` set them in `cmd.json`.
   `check/stations_test.go`: the station roles and one read per station path.
+- `find_test.go` and the `find-*` goldens: step and answer matches, case folding, the honest
+  zero and a bad regexp.
 - `root_test.go`: the discovery order (flag, variable, cwd walk, executable walk) and the
   not-found error, run from a temporary directory with the executable stubbed, so no `labs.md`
   above the real checkout can leak in.

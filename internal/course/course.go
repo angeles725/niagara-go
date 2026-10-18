@@ -26,7 +26,7 @@ working directory (then above this executable) that holds
 docs/n4-dev-course-solutions/labs.md.
 
 exit: 0 found; 1 searched, no match (show: any unknown ID, even when the
-others were printed); 2 cannot search (no root, a missing or ambiguous answer
+others were printed; find: no item matches); 2 cannot search (no root, a missing or ambiguous answer
 key, a missing text file). check: 0 no FAIL (SKIPs are counted, never passed);
 1 at least one FAIL; 2 the station cannot be read, or every check was skipped.
 verify, verify-predictions (= verify --status predicted): 0 no item
@@ -44,7 +44,8 @@ examples:
   course check --station ~/Niagara4.15/tridium/stations/TrainingStation \
     --install /opt/Niagara/Niagara-4.15.6.20 --lab 4 --lab 10
   course verify-predictions --station ~/Niagara4.15/tridium/stations/TrainingStation
-  course verify --status written --lab RA1`
+  course verify --status written --lab RA1
+  course find -i 'history:'`
 
 // rootParent holds --root: None on the main parser, SUPPRESS on the subcommands, so the
 // flag works before or after the subcommand.
@@ -103,6 +104,9 @@ func buildParser() (*argparse.Parser, map[string]*argparse.Parser) {
 	vp.Add(installArg, "--install")
 	vp.Add(argparse.Arg{Metavar: "YYYY-MM-DD", Help: "date written in the suggested *(verified live ...)* lines (default: today)"}, "--date")
 	vp.Add(jsonHelp, "--json")
+	fd := add("find", "items whose step or answer matches a regexp: group, ID, status and the first matching line")
+	fd.Add(argparse.Arg{Metavar: "REGEXP", Help: "a Go regexp (RE2), matched line by line"}, "query")
+	fd.Add(argparse.Arg{Action: argparse.StoreTrue, Help: "ignore case"}, "-i", "--ignore-case")
 	vf := add("verify", "decide every item of a status from its linked checks: CONFIRMED, PARTIAL, CONTRADICTED or UNDECIDED")
 	vf.Add(argparse.Arg{Required: true, Choices: choices, Help: "the status of the items to decide (written = no marker)"}, "--status")
 	vf.Add(argparse.Arg{Metavar: "GROUP", Help: "one group: a lab number (3 or L3), B, A, RA1, RA2, RAX, RA (all three), EXAM"}, "--lab")
@@ -144,6 +148,8 @@ func Main(args []string, s cli.Stdio) int {
 		return cmdShow(c, s, ns.Strings("ids"), ns.Bool("json"))
 	case "verify-predictions":
 		return cmdVerify(c, s, o, "predicted", nil, ns.String("date"), ns.Bool("json"))
+	case "find":
+		return cmdFind(c, s, ns.String("query"), ns.Bool("ignore_case"))
 	case "verify":
 		var groups []string
 		if ns.Get("lab") != nil {
