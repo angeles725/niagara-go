@@ -67,7 +67,8 @@ func TestLiterals(t *testing.T) {
 		{"block blank line does not set indentation", "\"\"\"\n    a\n  \v  \n    b\n    \"\"\"", "a\n\nb\n"},
 		{"block trailing white space stops at no-break space", "\"\"\"\n  a\v \u00a0\n  b\u00a0\n  \"\"\"", "a\v \u00a0\nb\u00a0\n"},
 		{"block indentation counts characters", "\"\"\"\n  a\n\u3000\u3000b\n  \"\"\"", "a\nb\n"},
-		{"block form feed and vertical tab indent", "\"\"\"\n\v\v a\n     b\n  \"\"\"", " a\n   b\n"},
+		{"block vertical tab indent", "\"\"\"\n\v\v a\n     b\n  \"\"\"", " a\n   b\n"},
+		{"block form feed indent", "\"\"\"\n\f\f a\n     b\n  \"\"\"", " a\n   b\n"},
 	}
 	for _, c := range cases {
 		toks, err := lex(c.lit)
