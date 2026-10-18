@@ -54,6 +54,38 @@ func loadAllowlist(t *testing.T, root string) map[string]int {
 	return allowed
 }
 
+// gated reports whether the limit applies to the repo-relative path rel: every
+// .go file outside testdata/ (Go files there are fixtures, not source) and
+// every .py file anywhere, testdata/ included, because the Python generator and
+// parity scripts live there.
+func gated(rel string) bool {
+	switch {
+	case strings.HasSuffix(rel, ".py"):
+		return true
+	case strings.HasSuffix(rel, ".go"):
+		return !strings.HasPrefix(rel, "testdata/") && !strings.Contains(rel, "/testdata/")
+	}
+	return false
+}
+
+func TestGatedPaths(t *testing.T) {
+	for rel, want := range map[string]bool{
+		"main.go":                                 true,
+		"internal/index/parse.go":                 true,
+		"internal/golden/testdata/toy/main.go":    false,
+		"testdata/x.go":                           false,
+		"internal/nav/testdata/gen_golden.py":     true,
+		"internal/helpbuild/testdata/parity/a.py": true,
+		"tools/x.py":                              true,
+		"internal/nav/testdata/golden/case/out":   false,
+		"README.md":                               false,
+	} {
+		if got := gated(rel); got != want {
+			t.Errorf("gated(%q) = %v, want %v", rel, got, want)
+		}
+	}
+}
+
 func TestSourceFilesStayUnderLimit(t *testing.T) {
 	root := repoRoot(t)
 	allowed := loadAllowlist(t, root)
@@ -64,20 +96,20 @@ func TestSourceFilesStayUnderLimit(t *testing.T) {
 		}
 		if d.IsDir() {
 			name := d.Name()
-			if path != root && (strings.HasPrefix(name, ".") || name == "testdata" || name == "bin") {
+			if path != root && (strings.HasPrefix(name, ".") || name == "bin") {
 				return filepath.SkipDir
 			}
 			return nil
 		}
-		if !strings.HasSuffix(path, ".go") {
+		rel, _ := filepath.Rel(root, path)
+		rel = filepath.ToSlash(rel)
+		if !gated(rel) {
 			return nil
 		}
 		data, err := os.ReadFile(path)
 		if err != nil {
 			return err
 		}
-		rel, _ := filepath.Rel(root, path)
-		rel = filepath.ToSlash(rel)
 		n := bytes.Count(data, []byte("\n"))
 		limit := maxLines
 		if l, ok := allowed[rel]; ok {

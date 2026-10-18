@@ -11,7 +11,7 @@ no cgo.
 | `cmd/<tool>/main.go` | Thin entry point: `cli.Run(<tool>.Main)`. One directory per installed command. |
 | `internal/<tool>/` | The tool's logic, split by command group; exports `Main(args, cli.Stdio) int`. |
 | `internal/cli` | Exit codes (0 found, 1 searched-no-match, 2 cannot search) and injectable stdio. |
-| `internal/sizegate` | Test that keeps every `.go` file at 500 lines or less (allowlist may only shrink). |
+| `internal/sizegate` | Test that keeps every `.go` file outside `testdata/` and every `.py` script at 500 lines or less (allowlist may only shrink). |
 | `scripts/git-hooks/` | Pre-commit gate: gofmt, `go vet`, `go test -short`. |
 
 Shared libraries live in their own `internal/` packages; a tool never imports another
