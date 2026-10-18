@@ -26,8 +26,8 @@ func navDir(script string) string {
 }
 
 // codeToken is `module_nav token <word> -n N` (rankedCode): the compact table and
-// the module summary, or the miss with the similar tokens. Exec answers when the
-// token index is missing or unreadable (module_nav's exit-2 errors).
+// the module summary, or the miss (tokenMiss). Exec answers when the token index
+// is missing or unreadable (module_nav's exit-2 errors).
 func codeToken(argv []string) answer {
 	v, _, ok := shape(argv[1:], []string{"token", "*", "-n", "#"})
 	base := navDir(argv[0])
@@ -50,17 +50,8 @@ func codeToken(argv []string) answer {
 		return viaExec
 	}
 	var b strings.Builder
-	if len(hits) == 0 { // source.tokenMiss without a module filter
-		similar, err := codesearch.SimilarTokens(db, word)
-		if err != nil {
-			return viaExec
-		}
-		fmt.Fprintf(&b, "\n  0 matches for token '%s' in the postings of token-index.db.\n", word)
-		if len(similar) > 0 {
-			fmt.Fprintf(&b, "  Similar tokens: %s\n", strings.Join(similar, ", "))
-		}
-		b.WriteString("\n")
-		return exact(1, b.String(), "")
+	if len(hits) == 0 { // source.tokenMiss without a module filter, minus its similar tokens
+		return exact(1, tokenMiss(word), "")
 	}
 	fmt.Fprintf(&b, "\n%s\n\n", codesearch.FormatTokenHeader(word, "", hits))
 	head := codesearch.TokenTableHeader()
@@ -76,6 +67,15 @@ func codeToken(argv []string) answer {
 	}
 	b.WriteString("\n")
 	return exact(0, b.String(), "")
+}
+
+// tokenMiss is module_nav's token miss WITHOUT its "Similar tokens:" line
+// (intended difference): that line is a LIKE scan of every posting, seconds on
+// the real 1 GB index (slower in pure-Go SQLite than the Python run it would
+// replace), and rankedCode reads only the state of a token miss (a miss line,
+// exit 1: EMPTY with no reason), never its text, so nsearch prints the same bytes.
+func tokenMiss(word string) string {
+	return "\n  0 matches for token '" + word + "' in the postings of token-index.db.\n\n"
 }
 
 // tokenRows is source.tokenCompact's table: up to limit rows by module, then a

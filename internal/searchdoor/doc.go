@@ -54,6 +54,8 @@
 // panic inside one source is typed UNAVAILABLE as "panic: <value>" where Python
 // named the exception type; the course index is not cached between questions
 // (one process answers one question); `--version` describes the Go build (D18);
+// an in-process token miss leaves out module_nav's "Similar tokens:" line (a
+// full scan of the postings; the code source reads only the miss state);
 // an in-process call past its --timeout budget is typed timed out like a killed
 // process, but the library work is not interrupted (it ends with the process).
 package searchdoor
