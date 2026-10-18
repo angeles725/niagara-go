@@ -118,10 +118,9 @@ func listMore(env *registry.Env, items []string, limit int) {
 	}
 }
 
-// jarNames is zipfile.ZipFile(path).namelist(): the central directory names
-// in order, UTF-8 when the entry says so, else cp437, cut at a NUL. Errors
-// read as Python's: "File is not a zip file" for a malformed archive, the
-// OSError text for a file that cannot be opened.
+// jarNames is zipfile.ZipFile(path).namelist() (core.ZipName). Errors read
+// as Python's: "File is not a zip file" for a malformed archive, the OSError
+// text for a file that cannot be opened.
 func jarNames(path string) ([]string, error) {
 	zr, err := zip.OpenReader(path)
 	var pe *fs.PathError
@@ -136,42 +135,7 @@ func jarNames(path string) ([]string, error) {
 	defer zr.Close()
 	names := make([]string, len(zr.File))
 	for i, f := range zr.File {
-		n := f.Name
-		if f.Flags&0x800 == 0 {
-			n = decodeCP437(n)
-		}
-		if k := strings.IndexByte(n, 0); k >= 0 {
-			n = n[:k]
-		}
-		names[i] = n
+		names[i] = core.ZipName(f)
 	}
 	return names, nil
-}
-
-// cp437High maps bytes 0x80-0xFF of code page 437 to their characters.
-const cp437High = "ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜ¢£¥₧ƒáíóúñÑªº¿⌐¬½¼¡«»░▒▓│┤╡╢╖╕╣║╗╝╜╛┐└┴┬├─┼╞╟╚╔╩╦╠═╬╧╨╤╥╙╘╒╓╫╪┘┌█▄▌▐▀αßΓπΣσµτΦΘΩδ∞φε∩≡±≥≤⌠⌡÷≈°∙·√ⁿ²■ "
-
-var cp437Runes = []rune(cp437High)
-
-// decodeCP437 is bytes.decode("cp437"): ASCII as is, the high half by table.
-func decodeCP437(s string) string {
-	ascii := true
-	for i := 0; i < len(s); i++ {
-		if s[i] >= 0x80 {
-			ascii = false
-			break
-		}
-	}
-	if ascii {
-		return s
-	}
-	var b strings.Builder
-	for i := 0; i < len(s); i++ {
-		if c := s[i]; c < 0x80 {
-			b.WriteByte(c)
-		} else {
-			b.WriteRune(cp437Runes[c-0x80])
-		}
-	}
-	return b.String()
 }
