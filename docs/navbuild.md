@@ -67,11 +67,9 @@ type at another indent (`\tclass Tabbed` after `class NB`); `implements A extend
 `extends: ""` (a reversed slice) and `implements: ["A extends B"]`; `extends ,` gives
 `null`; a header without a brace in 40 lines keeps every `implements` word.
 
-`core.MatchDecl` does not return the match end that `declaration_header` starts from;
-`declEnd` recovers it (the name after Modifiers+Kind and whitespace, confirmed by
-re-matching the cut line, which skips the same text inside an annotation argument).
-Export requests to the owners: `core.MatchDecl`'s end offset (Integrante2) and the
-`nav/license` `commentSpans` twin (one shared Java-text helper).
+`declaration_header` starts at the end of the declaration match: `core.MatchDecl` returns it
+as `Decl.End`, and comment stripping uses the shared `license.CommentSpans` (the
+`internal/nav/lib/license` Java-text helper), so navbuild keeps no copy of either.
 
 ## Inheritance
 
