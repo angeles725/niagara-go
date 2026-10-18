@@ -20,6 +20,14 @@ palette-lexicon-agents case get the script's output. help-palette-lexicon-agents
 keeps module_nav.py's bytes and gets an intended.json with GO_MNAV_BIN's help: the
 script's own --help names another program and takes --base-dir itself, so it is no
 reference. The real cases count corpus modules: re-run --real after a corpus change.
+
+Code and data (D47, niagara-go internal/pyref): the script is niagara-research's
+pre-go-retire worktree ($NIAGARA_RESEARCH_PY_REF), whose __main__ is already the
+exec shim of the Go mnav, so it runs through FROZEN (the pre-switch source, as in
+internal/bogcycles/testdata/capture.py); the harness is module-navigator's
+pre-go-retire worktree ($MODULE_NAVIGATOR_PY_REF).
+The data stays live: the real cases run in MODULE_NAVIGATOR_DIR (../organized is
+the corpus) and the harness links its indexes/ (harness()).
 """
 
 import importlib
@@ -33,8 +41,56 @@ import zipfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.expanduser("~/niagara-research")
-TOOL = os.path.join(REPO, "tools", "palette-lexicon-agents.py")
 NAV = os.environ.get("MODULE_NAVIGATOR_DIR") or os.path.join(REPO, "module-navigator")
+
+
+def py_ref(repo, env, rev):  # D47: a clean worktree of <repo> tag pre-go-retire (docs/goldens.md)
+    root = os.environ.get(env) or os.path.expanduser("~/niagara-research-worktrees/pre-go-retire-" + repo)
+    git = lambda *a: subprocess.run(["git", "-C", root, *a], capture_output=True, text=True).stdout.strip()  # noqa: E731
+    if git("rev-parse", "HEAD") != rev or git("status", "--porcelain"):
+        sys.exit(f"{env}={root}: not a clean worktree of {repo} tag pre-go-retire ({rev[:9]}); see docs/goldens.md")
+    return root
+
+
+PYREF = py_ref("niagara-research", "NIAGARA_RESEARCH_PY_REF", "c846ce1e5eb92ee6d938efbb3585473a545f7e50")
+NAV_PYREF = py_ref("module-navigator", "MODULE_NAVIGATOR_PY_REF", "f897268e900138e08a82bf1b389a1715c1be26e1")
+os.environ["MODULE_NAV_PYTHON"] = "1"  # a tag shim runs its Python, never Go
+TOOL = os.path.join(PYREF, "tools", "palette-lexicon-agents.py")
+
+# At the tag, running tools/<x>.py execs the Go port (its D35 switch block); the Python under that block
+# is the frozen specification. `python3 [-I] -c FROZEN <tool> <args>` runs it like `python3 [-I] <tool>
+# <args>` did before the switch: the block is cut out (giving back the 06b317d7b^ code; only the module
+# docstring, 3 lines shorter at the tag, differs), the code runs as __main__ under the tool's own path, and
+# a traceback skips this frame. Copied from internal/bogcycles/testdata/capture.py.
+FROZEN = r"""
+import linecache, os, sys, types
+del sys.argv[0]
+tool = sys.argv[0]
+with open(tool, encoding="utf-8") as fh:
+    lines = fh.read().splitlines(True)
+i = next(n for n, line in enumerate(lines) if line.startswith('if __name__ == "__main__":  # Go switch (D35)'))
+j = i + 1
+while j < len(lines) and lines[j][:1] in (" ", "\t"):
+    j += 1
+if j < len(lines) and not lines[j].strip():
+    j += 1
+elif i and not lines[i - 1].strip():
+    i -= 1
+del lines[i:j]
+linecache.cache[tool] = (None, None, lines, tool)
+if not getattr(sys.flags, "safe_path", False):  # -P / -I (Python 3.11+)
+    sys.path[0] = os.path.dirname(tool)
+mod = sys.modules["__main__"] = types.ModuleType("__main__")
+mod.__file__ = tool
+try:
+    exec(compile("".join(lines), tool, "exec"), mod.__dict__)
+except SystemExit:
+    raise
+except BaseException as exc:
+    exc = exc.with_traceback(exc.__traceback__.tb_next)
+    sys.excepthook(type(exc), exc, exc.__traceback__)
+    sys.exit(1)
+"""
 PALETTE = os.path.join(HERE, "..", "audits", "testdata", "palette")
 REAL = os.path.join(HERE, "golden-real")
 CMD = "palette-lexicon-agents"
@@ -147,24 +203,43 @@ def write_case(d, args, rc, stdout, stderr, mode="w"):
 def capture_hermetic():
     env = dict(os.environ, PYTHONHASHSEED="0", COLUMNS="100")
     for cid, args in CASES:
-        p = subprocess.run([sys.executable, "-I", TOOL] + tool_args(args), cwd=PALETTE, env=env,
-                           stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        p = subprocess.run([sys.executable, "-I", "-c", FROZEN, TOOL] + tool_args(args), cwd=PALETTE,
+                           env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         write_case(os.path.join(PALETTE, "golden", cid), args, p.returncode, p.stdout, p.stderr, "wb")
 
 
-def capture_real(gobin):
-    sys.path.insert(0, os.path.join(NAV, "tests"))
+def harness():
+    """module-navigator's tests/golden_cli.py from NAV_PYREF reading the live data: its
+    BASE_DIR is NAV while scratch_base and run_dir run (indexes/, niagara-help/)."""
+    sys.path.insert(0, os.path.join(NAV_PYREF, "tests"))
     h = importlib.import_module("golden_cli")
+    os.environ.setdefault("NAV_CORPUS_BASE", os.path.join(os.path.dirname(NAV), "organized"))
+
+    def on_data(f):
+        def run(*args):
+            code, h.BASE_DIR = h.BASE_DIR, NAV
+            try:
+                return f(*args)
+            finally:
+                h.BASE_DIR = code
+        return run
+    h.scratch_base, h.run_dir = on_data(h.scratch_base), on_data(h.run_dir)
+    return h
+
+
+def capture_real(gobin):
+    h = harness()
     run = h.run_dir()
     env = dict(os.environ, PYTHONHASHSEED="0", COLUMNS="100")
 
     def tool(args, base):
         argv = [a.replace("{tmp}", base) for a in tool_args(args)]
-        p = subprocess.run([sys.executable, "-I", TOOL] + argv, cwd=h.BASE_DIR, env=env,
+        p = subprocess.run([sys.executable, "-I", "-c", FROZEN, TOOL] + argv, cwd=NAV, env=env,
                            stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
                            timeout=h.TIMEOUT)
-        return (p.returncode, h.normalize(p.stdout, base),
-                h.normalize(p.stderr, base, h._NORMALIZE_STDERR))
+        # <NAV> is the checkout the case ran in (the harness's BASE_DIR is the tag's)
+        return (p.returncode, h.normalize(p.stdout.replace(NAV, "<NAV>"), base),
+                h.normalize(p.stderr.replace(NAV, "<NAV>"), base, h._NORMALIZE_STDERR))
 
     try:
         for cid, args in REAL_CASES:

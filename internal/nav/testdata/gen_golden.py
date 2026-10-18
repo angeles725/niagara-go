@@ -2,12 +2,11 @@
 
     python3 -I internal/nav/testdata/gen_golden.py [--fixture | --search]
 
---fixture first rebuilds fixture/ (a small class index and module inventory cut
-from the real module-navigator indexes, plus a synthetic module.xml), and
---search rebuilds only the synthetic grep/source/token corpus; then
-every case below is run through Python module_nav.py from this directory
-(COLUMNS=100, NO_COLOR=1) and written to golden/<case>/: the nav-<case>
-command runs on the fixture, and the parser-only PARSE_CASES.
+--fixture first rebuilds fixture/ (a small class index and module inventory cut from the real
+module-navigator indexes, plus a synthetic module.xml), and --search rebuilds only the synthetic
+grep/source/token corpus; then every case below is run from this directory through the frozen
+module_nav.py of the pre-go-retire worktree (PYREF; MODULE_NAV_PYTHON=1, COLUMNS=100, NO_COLOR=1)
+and written to golden/<case>/: nav-<case> runs on the fixture, and the parser-only PARSE_CASES.
 """
 
 import glob
@@ -20,8 +19,9 @@ import sys
 import time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-NAV = os.path.expanduser("~/niagara-research/module-navigator")
-CLI = os.path.join(NAV, "tools", "module_nav.py")
+NAV = os.path.expanduser("~/niagara-research/module-navigator")  # the live data (indexes/); the code is PYREF's
+PYREF = os.environ.get("MODULE_NAVIGATOR_PY_REF") or os.path.expanduser("~/niagara-research-worktrees/pre-go-retire-module-navigator")
+CLI = os.path.join(PYREF, "tools", "module_nav.py")  # pyref (niagara-go internal/pyref, D47)
 BASE = "fixture/nav"
 NO_CORPUS = {"NAV_CORPUS_BASE": "fixture/no-corpus"}
 DRV = {"NAV_CORPUS_BASE": "fixture/drivers-organized"}
@@ -835,7 +835,7 @@ def build_fixture():
 
 def capture(cid, args, env, base=BASE):
     argv = ["--base-dir", base] + args
-    full_env = dict(os.environ, COLUMNS="100", NO_COLOR="1", **env)
+    full_env = dict(os.environ, MODULE_NAV_PYTHON="1", COLUMNS="100", NO_COLOR="1", **env)
     p = subprocess.run([sys.executable, CLI] + argv, cwd=HERE, env=full_env,
                        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     d = os.path.join(HERE, "golden", cid)

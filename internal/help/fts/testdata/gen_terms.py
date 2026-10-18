@@ -1,6 +1,6 @@
 """Regenerate terms.json: the niagara-help tokenizer and query parser on tricky inputs.
 
-Run: python3 -I internal/help/fts/testdata/gen_terms.py   (NIAGARA_RESEARCH overrides the checkout)
+Run: python3 -I internal/help/fts/testdata/gen_terms.py   (NIAGARA_HELP_PY_REF overrides the pre-go-retire worktree)
 
 Each record holds the outputs of the real fulltext_terms functions (terms, word_terms of every
 word, parse_query plain and relaxed, stem of every word) for one input text, plus
@@ -8,11 +8,23 @@ search_lang.STOP_WORDS.
 """
 import json
 import os
+import subprocess
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-NR = os.environ.get("NIAGARA_RESEARCH", "/home/cristian/niagara-research")
-sys.path[:0] = [os.path.join(NR, "niagara-help", "tools")]
+
+
+def py_ref(repo, env, rev):  # D47: a clean worktree of <repo> tag pre-go-retire (docs/goldens.md)
+    root = os.environ.get(env) or os.path.expanduser("~/niagara-research-worktrees/pre-go-retire-" + repo)
+    git = lambda *a: subprocess.run(["git", "-C", root, *a], capture_output=True, text=True).stdout.strip()  # noqa: E731
+    if git("rev-parse", "HEAD") != rev or git("status", "--porcelain"):
+        sys.exit(f"{env}={root}: not a clean worktree of {repo} tag pre-go-retire ({rev[:9]}); see docs/goldens.md")
+    return root
+
+
+PYREF = py_ref("niagara-help", "NIAGARA_HELP_PY_REF", "8410d74511673e38b87622f7214fa5210ba25a63")
+os.environ["NIAGARA_HELP_PYTHON"] = "1"  # a tag shim runs its Python, never Go
+sys.path[:0] = [os.path.join(PYREF, "tools")]
 
 from niagara_help_lib import fulltext_terms as ft  # noqa: E402
 

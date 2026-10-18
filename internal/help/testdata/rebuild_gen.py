@@ -1,6 +1,6 @@
 """Freeze what the Python niagara-help does when the full-text index must be rebuilt.
 
-Run: python3 -I internal/help/testdata/rebuild_gen.py   (NIAGARA_RESEARCH overrides the checkout)
+Run: python3 -I internal/help/testdata/rebuild_gen.py   (NIAGARA_HELP_PY_REF overrides the pre-go-retire worktree)
 
 fulltext_index.open_index rebuilds indexes/fulltext.sqlite in process whenever it is missing or
 its stored fingerprint differs from the current text sources: it prints "building the full-text
@@ -27,8 +27,19 @@ import sys
 import tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-NR = os.environ.get("NIAGARA_RESEARCH", "/home/cristian/niagara-research")
-TOOLS = os.path.join(NR, "niagara-help", "tools")
+
+
+def py_ref(repo, env, rev):  # D47: a clean worktree of <repo> tag pre-go-retire (docs/goldens.md)
+    root = os.environ.get(env) or os.path.expanduser("~/niagara-research-worktrees/pre-go-retire-" + repo)
+    git = lambda *a: subprocess.run(["git", "-C", root, *a], capture_output=True, text=True).stdout.strip()  # noqa: E731
+    if git("rev-parse", "HEAD") != rev or git("status", "--porcelain"):
+        sys.exit(f"{env}={root}: not a clean worktree of {repo} tag pre-go-retire ({rev[:9]}); see docs/goldens.md")
+    return root
+
+
+PYREF = py_ref("niagara-help", "NIAGARA_HELP_PY_REF", "8410d74511673e38b87622f7214fa5210ba25a63")
+os.environ["NIAGARA_HELP_PYTHON"] = "1"  # a tag shim runs its Python, never Go
+TOOLS = os.path.join(PYREF, "tools")
 sys.path[:0] = [TOOLS]
 
 from niagara_help_lib import fulltext_index, text_sources  # noqa: E402
@@ -100,7 +111,8 @@ def run_case(tmp, vid, setup, args):
     for d in locked:
         os.chmod(d, stat.S_IRUSR | stat.S_IXUSR)
     env = {"PATH": os.environ.get("PATH", ""), "COLUMNS": "100", "NO_COLOR": "1",
-           "PYTHONHASHSEED": "0", "NIAGARA_HELP_DIR": checkout, "XDG_CACHE_HOME": cache_home}
+           "PYTHONHASHSEED": "0", "NIAGARA_HELP_DIR": checkout, "XDG_CACHE_HOME": cache_home,
+           "NIAGARA_HELP_PYTHON": "1", "NIAGARA_GO_BIN_DIR": os.environ.get("NIAGARA_GO_BIN_DIR", "")}
     argv = ["--niagara-version", vid] + args
     try:
         p = subprocess.run([sys.executable, "-I", os.path.join(TOOLS, "niagara_help.py")] + argv,
