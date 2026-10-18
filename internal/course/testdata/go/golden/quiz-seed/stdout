@@ -1,0 +1,30 @@
+quiz: 5 of 5 questions (why, decision, trap; every group), seed 1
+
+Q1. T1.1 (trap · 1. Review Assignment 1 — BWithId)
+    What goes wrong, and what does this solution do? TRANSIENT on `id`
+
+Q2. L1.1 (why · Lab 1 — First component (`LI:1-12`))
+    Start the console (`LI:2-3`)
+    *Why the console?*
+    sources/n4-dev-course/text/Lab Instructions.txt:2-3 (L1.1)
+        2  Lab Instructions fixture line 2
+        3  Lab Instructions fixture line 3
+
+Q3. D1.1 (decision · 1. Review Assignment 1 — BWithId)
+    Why this decision? Runtime only
+
+Q4. L2.1 (why · Lab 2 — Executors (`LI:13-20`))
+    `gradlew jar`, restart · *Why reuse it?* (`LI:13-14`)
+    sources/n4-dev-course/text/Lab Instructions.txt:13-14 (L2.1)
+       13  Lab Instructions fixture line 13
+       14  Lab Instructions fixture line 14
+
+Q5. L1.5 (why · Lab 1 — First component (`LI:1-12`))
+    *Why restart?*
+    sources/n4-dev-course/text/Lab Instructions.txt:8-9, 11-12 (L1.5)
+        8  Lab Instructions fixture line 8
+        9  Lab Instructions fixture line 9
+       11  Lab Instructions fixture line 11
+       12  Lab Instructions fixture line 12
+
+answers: course quiz --seed 1 --answers

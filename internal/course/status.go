@@ -20,7 +20,8 @@ type statusJSON struct {
 	Matches []match    `json:"matches"`
 }
 
-const tableFooter = "an item counts under every status it carries; written = none of them"
+const tableFooter = "an item counts under every status it carries; written = none of them;\n" +
+	"live, offline: the verified items by the evidence of their markers (station, or jar/source)"
 
 func truncate(s string, n int) string {
 	r := []rune(s)
@@ -96,7 +97,7 @@ func cmdStatus(c *key.Corpus, s cli.Stdio, hasLab bool, lab, status string, asJS
 }
 
 func printTable(s cli.Stdio, rows []countRow) {
-	headers := []string{"items", "predicted", "unverified", "corrected", "identical", "verified", "written"}
+	headers := key.CountColumns
 	w0 := len("group")
 	for _, r := range rows {
 		w0 = max(w0, len(r.Group))

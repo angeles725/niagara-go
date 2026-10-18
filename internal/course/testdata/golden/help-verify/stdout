@@ -22,5 +22,6 @@ options:
   --labsrc DIR          lab module sources: the Niagara dev home holding training/ and
                         trafficLightDriver/ (default: $COURSE_LAB_SOURCES; annotation checks SKIP
                         without either)
-  --date YYYY-MM-DD     date written in the suggested *(verified live ...)* lines (default: today)
+  --date YYYY-MM-DD     date written in the suggested *(verified live|offline ...)* lines
+                        (default: today)
   --json                machine JSON output

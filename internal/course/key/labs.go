@@ -186,6 +186,7 @@ func (p *labsParser) finish() {
 		it.TextFile = LabText
 	}
 	it.Status = markers(strings.Join(body, "\n"), headingStatus(it.Section)...)
+	it.Verified = evidence(strings.Join(body, "\n"))
 	p.c.add(it)
 }
 

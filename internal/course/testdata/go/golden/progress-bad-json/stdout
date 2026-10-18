@@ -1,0 +1,251 @@
+{
+  "groups": [
+    {
+      "group": "L1",
+      "items": 3,
+      "checked": 2,
+      "confirmed": 0,
+      "partial": 1,
+      "contradicted": 1,
+      "undecided": 1,
+      "verified_live": 0,
+      "verified_offline": 0
+    },
+    {
+      "group": "L3",
+      "items": 1,
+      "checked": 0,
+      "confirmed": 0,
+      "partial": 0,
+      "contradicted": 0,
+      "undecided": 1,
+      "verified_live": 0,
+      "verified_offline": 0
+    },
+    {
+      "group": "L4",
+      "items": 2,
+      "checked": 2,
+      "confirmed": 0,
+      "partial": 1,
+      "contradicted": 1,
+      "undecided": 0,
+      "verified_live": 0,
+      "verified_offline": 0
+    },
+    {
+      "group": "L10",
+      "items": 3,
+      "checked": 3,
+      "confirmed": 1,
+      "partial": 0,
+      "contradicted": 2,
+      "undecided": 0,
+      "verified_live": 1,
+      "verified_offline": 0
+    },
+    {
+      "group": "L11",
+      "items": 4,
+      "checked": 4,
+      "confirmed": 0,
+      "partial": 1,
+      "contradicted": 3,
+      "undecided": 0,
+      "verified_live": 0,
+      "verified_offline": 0
+    },
+    {
+      "group": "EXAM",
+      "items": 0,
+      "checked": 0,
+      "confirmed": 0,
+      "partial": 0,
+      "contradicted": 0,
+      "undecided": 0,
+      "verified_live": 0,
+      "verified_offline": 0
+    }
+  ],
+  "total": {
+    "group": "total",
+    "items": 13,
+    "checked": 11,
+    "confirmed": 1,
+    "partial": 3,
+    "contradicted": 7,
+    "undecided": 2,
+    "verified_live": 1,
+    "verified_offline": 0
+  },
+  "actions": [
+    {
+      "kind": "redo",
+      "id": "C1.2",
+      "group": "L1",
+      "text": "FirstComponent executed (timeExecuted stored): no training:FirstComponent component (searched 236 components)",
+      "items": [
+        {
+          "id": "L1.25",
+          "source": "labs.md:13",
+          "text": "LI:4",
+          "step": "Invoke Execute (`LI:4`)"
+        }
+      ]
+    },
+    {
+      "kind": "redo",
+      "id": "C4.5",
+      "group": "L4",
+      "text": "training Tstat diff = 2: 0 of 1 pass, want 2.0: Lab4/My Tstat.diff = 0.0 (default)",
+      "items": [
+        {
+          "id": "L4.13",
+          "source": "labs.md:25",
+          "text": "LI:21",
+          "step": "Set diff to 2 (`LI:21`)"
+        }
+      ]
+    },
+    {
+      "kind": "mark",
+      "id": "L10.6–L10.7",
+      "group": "L10",
+      "text": "*(verified offline 2026-10-18)* evidence: C10.7 modules/training-rt.jar!META-INF/module.xml has name=\"history-rt\", name=\"file-rt\", name=\"bql-rt\"",
+      "items": [
+        {
+          "id": "L10.6–L10.7",
+          "source": "labs.md:33",
+          "text": "LI:30",
+          "step": "Depend on history-rt and file-rt (`LI:30`)"
+        }
+      ]
+    },
+    {
+      "kind": "redo",
+      "id": "C10.6",
+      "group": "L10",
+      "text": "ten exported CSV files in the Station Home: found 9 shared/BadStation_NumericWritable*.csv, want exactly 10: BadStation_NumericWritable.csv … BadStation_NumericWritable8.csv",
+      "items": [
+        {
+          "id": "L10.23",
+          "source": "labs.md:35",
+          "text": "LI:31",
+          "step": "Files: ten CSV files (`LI:31`)"
+        }
+      ]
+    },
+    {
+      "kind": "redo",
+      "id": "C10.8",
+      "group": "L10",
+      "text": "CSV line 1 names the history: 0 of 9 files pass, want line 1 =~ ^history:{station}/NumericWritable\\d*$: shared/BadStation_NumericWritable.csv:1 = Timestamp,Value,Status",
+      "items": [
+        {
+          "id": "L10.24",
+          "source": "labs.md:36",
+          "text": "LI:32",
+          "step": "Open one CSV (`LI:32`)"
+        }
+      ]
+    },
+    {
+      "kind": "redo",
+      "id": "C10.9",
+      "group": "L10",
+      "text": "CSV header on line 3: 0 of 9 files pass, want line 3 =~ ^Timestamp,Trend Flags,Status,Value$: shared/BadStation_NumericWritable.csv has 2 lines",
+      "items": [
+        {
+          "id": "L10.24",
+          "source": "labs.md:36",
+          "text": "LI:32",
+          "step": "Open one CSV (`LI:32`)"
+        }
+      ]
+    },
+    {
+      "kind": "redo",
+      "id": "C10.10",
+      "group": "L10",
+      "text": "CSV rows: timestamp, trend flags, status, value: 0 of 9 files pass, want at least 1 line =~ ^\\d{1,2} \\S+ \\d{4} \\d{2}:\\d{2}:\\d{2} \\S+,\\{[^}]*\\},\\{[^}]*\\},\"?-?\\d+(?:[.,]\\d+)?\"?$: shared/BadStation_NumericWritable.csv: 0 lines match",
+      "items": [
+        {
+          "id": "L10.24",
+          "source": "labs.md:36",
+          "text": "LI:32",
+          "step": "Open one CSV (`LI:32`)"
+        }
+      ]
+    },
+    {
+      "kind": "redo",
+      "id": "C11.10",
+      "group": "L11",
+      "text": "driver Tcp Config port = 23: 0 of 1 pass, want 23: Drivers/TrafficLightDriverNetwork/tcpConfig.address.port = 0 (default)",
+      "items": [
+        {
+          "id": "L11.25",
+          "source": "labs.md:44",
+          "text": "LI:42",
+          "step": "Tcp Config `localhost`, port `23` (`LI:42`)"
+        }
+      ]
+    },
+    {
+      "kind": "redo",
+      "id": "C11.11",
+      "group": "L11",
+      "text": "network pinged ok (health.lastOkTime stored): 0 of 1 pass, want it stored: Drivers/TrafficLightDriverNetwork.health.lastOkTime = \"\" (default)",
+      "items": [
+        {
+          "id": "L11.26",
+          "source": "labs.md:45",
+          "text": "LI:43",
+          "step": "Ping the network (`LI:43`)"
+        }
+      ]
+    },
+    {
+      "kind": "redo",
+      "id": "C11.12",
+      "group": "L11",
+      "text": "network pinged and not down (health.down = false, lastOkTime stored): 0 of 1 pass, want false with health.lastOkTime stored: Drivers/TrafficLightDriverNetwork.health.down = true (stored)",
+      "items": [
+        {
+          "id": "L11.26",
+          "source": "labs.md:45",
+          "text": "LI:43",
+          "step": "Ping the network (`LI:43`)"
+        }
+      ]
+    },
+    {
+      "kind": "redo",
+      "id": "C11.13",
+      "group": "L11",
+      "text": "every driver device pinged ok (health.lastOkTime stored): 3 of 4 pass, want it stored: Drivers/TrafficLightDriverNetwork/Device d.health.lastOkTime = \"\" (default)",
+      "items": [
+        {
+          "id": "L11.32",
+          "source": "labs.md:46",
+          "text": "LI:44",
+          "step": "Ping the device (`LI:44`)"
+        }
+      ]
+    },
+    {
+      "kind": "redo",
+      "id": "C11.14",
+      "group": "L11",
+      "text": "every driver device pinged and not down: 3 of 4 pass, want false with health.lastOkTime stored: Drivers/TrafficLightDriverNetwork/Device d.health.lastOkTime = \"\" (default)",
+      "items": [
+        {
+          "id": "L11.32",
+          "source": "labs.md:46",
+          "text": "LI:44",
+          "step": "Ping the device (`LI:44`)"
+        }
+      ]
+    }
+  ]
+}

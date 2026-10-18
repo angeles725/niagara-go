@@ -52,7 +52,7 @@ func printItem(w io.Writer, it *key.Item) {
 	}
 	field("step", it.Step)
 	field("text", textLine(it))
-	field("status", strings.Join(it.StatusList(), ", "))
+	field("status", strings.Join(it.StatusList(), ", ")) // nsearch renders the same line (searchdoor TestShowLinesMatchCourseShow)
 	if it.LiveRun {
 		field("live run", "needed")
 	}
@@ -78,6 +78,7 @@ type itemJSON struct {
 	TextFile   string   `json:"text_file"`
 	Ranges     []string `json:"ranges"`
 	Status     []string `json:"status"`
+	Verified   []string `json:"verified"`
 	LiveRun    bool     `json:"live_run"`
 	File       string   `json:"file"`
 	Line       int      `json:"line"`
@@ -87,7 +88,7 @@ type itemJSON struct {
 func toJSON(it *key.Item) itemJSON {
 	j := itemJSON{ID: it.ID, Covers: append([]string{}, it.Covers...), Kind: it.Kind, Group: it.Group,
 		Section: it.Section, Subsection: it.Subsection, Step: it.Step, TextFile: it.TextFile,
-		Ranges: []string{}, Status: it.StatusList(), LiveRun: it.LiveRun, File: it.File, Line: it.Line, Answer: it.Answer}
+		Ranges: []string{}, Status: it.StatusList(), Verified: append([]string{}, it.Verified...), LiveRun: it.LiveRun, File: it.File, Line: it.Line, Answer: it.Answer}
 	for _, r := range it.Ranges {
 		j.Ranges = append(j.Ranges, r.String())
 	}
@@ -124,6 +125,19 @@ func cmdShow(c *key.Corpus, s cli.Stdio, ids []string, asJSON bool) int {
 	return code
 }
 
+// readText returns the lines of a course text file (relative to the root, with "/"), or why it
+// cannot: "missing text file F", "cannot read F: err".
+func readText(root, file string) ([]string, string) {
+	raw, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(file)))
+	if os.IsNotExist(err) {
+		return nil, "missing text file " + file
+	}
+	if err != nil {
+		return nil, fmt.Sprintf("cannot read %s: %v", file, err)
+	}
+	return key.SplitLines(raw), ""
+}
+
 // cmdText prints the numbered text lines of an item's or a group's ranges.
 func cmdText(c *key.Corpus, s cli.Stdio, root, target string) int {
 	var file, label string
@@ -142,16 +156,11 @@ func cmdText(c *key.Corpus, s cli.Stdio, root, target string) int {
 		fmt.Fprintf(s.Err, "course: %s has no text range\n", label)
 		return cli.ExitNoMatch
 	}
-	raw, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(file)))
-	if os.IsNotExist(err) {
-		fmt.Fprintf(s.Err, "course: missing text file %s\n", file)
+	lines, msg := readText(root, file)
+	if msg != "" {
+		fmt.Fprintf(s.Err, "course: %s\n", msg)
 		return cli.ExitCannotSearch
 	}
-	if err != nil {
-		fmt.Fprintf(s.Err, "course: cannot read %s: %v\n", file, err)
-		return cli.ExitCannotSearch
-	}
-	lines := key.SplitLines(raw)
 	for _, r := range ranges {
 		if r.A < 1 || r.B < r.A || r.B > len(lines) {
 			fmt.Fprintf(s.Err, "course: %s: range %s is outside %s (%s)\n", label, r, file, key.Plural(len(lines), "line"))

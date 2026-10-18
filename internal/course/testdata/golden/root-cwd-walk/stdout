@@ -2,7 +2,7 @@ LA.1 (lab item)
   section:  Appendix A — Debugging (`LI:25-26`)
   step:     Attach the debugger (`LI:25-26`)
   text:     sources/n4-dev-course/text/Lab Instructions.txt:25-26
-  status:   written
+  status:   verified
   source:   docs/n4-dev-course-solutions/labs.md:47
   answer:
-    `suspend=n` lets it run.
+    *(verified offline 2026-10-18)* `suspend=n` lets it run.

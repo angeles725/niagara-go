@@ -1,0 +1,1 @@
+{"args": ["--root", "root", "quiz", "--lab", "1", "--kind", "why", "--seed", "2", "--answers"], "cwd_fixture": ".."}

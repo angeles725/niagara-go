@@ -13,5 +13,5 @@ L11.26         CONTRADICTED  C11.11 FAIL: 0 of 1 pass, want it stored: Drivers/T
 L11.32         CONTRADICTED  C11.13 FAIL: 3 of 4 pass, want it stored: Drivers/TrafficLightDriverNetwork/Device d.health.lastOkTime = "" (default); C11.14 FAIL: 3 of 4 pass, want false with health.lastOkTime stored: Drivers/TrafficLightDriverNetwork/Device d.health.lastOkTime = "" (default)
 
 suggested updates (CONFIRMED only; course never edits the answer key):
-L10.6–L10.7: *(verified live 2026-10-17)* evidence: C10.7 modules/training-rt.jar!META-INF/module.xml has name="history-rt", name="file-rt", name="bql-rt"
+L10.6–L10.7: *(verified offline 2026-10-17)* evidence: C10.7 modules/training-rt.jar!META-INF/module.xml has name="history-rt", name="file-rt", name="bql-rt"
 predicted 12: CONFIRMED 1, PARTIAL 3, CONTRADICTED 6, UNDECIDED 2; 18 checks run; station BadStation (236 components, 15 links), install install
