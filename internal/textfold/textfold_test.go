@@ -17,7 +17,6 @@ type fixtures struct {
 	Unicode   string              `json:"unicode"`
 	FoldOrder []string            `json:"fold_order"`
 	Cases     [][]json.RawMessage `json:"cases"`
-	Score     [][]json.RawMessage `json:"score"`
 	Digests   map[string]string   `json:"digests"`
 }
 
@@ -157,19 +156,6 @@ func TestLowerParseQueryAndTerms(t *testing.T) {
 		}
 		if got := QueryTerms(r.in); !equal(got, r.queryTerm) {
 			t.Errorf("QueryTerms(%q) = %q, Python %q", r.in, got, r.queryTerm)
-		}
-	}
-}
-
-func TestScore(t *testing.T) {
-	for _, c := range load(t).Score {
-		var q, text string
-		var want int
-		decode(t, c[0], &q)
-		decode(t, c[1], &text)
-		decode(t, c[2], &want)
-		if got := Score(ParseQuery(q), text); got != want {
-			t.Errorf("Score(%q, %q) = %d, Python %d", q, text, got, want)
 		}
 	}
 }

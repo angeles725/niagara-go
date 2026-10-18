@@ -344,7 +344,7 @@ func TestEveryCodePoint(t *testing.T) {
 	checks := map[string]func(rune) (string, bool){
 		"alpha": is(IsAlpha), "decimal": is(IsDecimal), "digit": is(IsDigit), "numeric": is(IsNumeric),
 		"alnum": is(IsAlnum), "printable": is(IsPrintable), "space": is(IsSpace), "word": is(IsWordRune),
-		"linebreak": is(IsLineBreak),
+		"linebreak": is(func(r rune) bool { return len(SplitLines("a"+string(r)+"b", false)) == 2 }),
 		"isupper":   isStr(IsUpper), "islower": isStr(IsLower), "istitle": isStr(IsTitle),
 		"upper": mapStr(Upper), "title": mapStr(Title), "capitalize": mapStr(Capitalize),
 		"swapcase":     mapStr(SwapCase),

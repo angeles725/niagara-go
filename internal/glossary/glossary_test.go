@@ -74,7 +74,7 @@ func TestEmbeddedCopyMatchesCanonical(t *testing.T) {
 }
 
 func TestCanonicalKeys(t *testing.T) {
-	if got, want := Default().Keys(), load(t).Canonical.Keys; !reflect.DeepEqual(got, want) {
+	if got, want := Default().keys, load(t).Canonical.Keys; !reflect.DeepEqual(got, want) {
 		t.Fatalf("keys: %d, Python %d", len(got), len(want))
 	}
 }
@@ -160,7 +160,7 @@ func TestHelpView(t *testing.T) {
 		t.Fatalf("HelpExcluded %q, Python EXCLUDED %q", HelpExcluded, f.Excluded)
 	}
 	h := Help()
-	if got := h.Keys(); !reflect.DeepEqual(got, f.Keys) {
+	if got := h.keys; !reflect.DeepEqual(got, f.Keys) {
 		t.Fatalf("Help keys: %d, Python %d", len(got), len(f.Keys))
 	}
 	for _, c := range f.Lookup {
@@ -179,8 +179,8 @@ func TestParseRules(t *testing.T) {
 		g, bad, err := Parse([]byte(c.Input))
 		var entries [][]json.RawMessage
 		if err == nil {
-			for _, k := range g.Keys() {
-				terms, _ := g.Terms(k)
+			for _, k := range g.keys {
+				terms := g.terms[k]
 				kb, _ := json.Marshal(k)
 				tb, _ := json.Marshal(terms)
 				entries = append(entries, []json.RawMessage{kb, tb})

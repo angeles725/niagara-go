@@ -1,4 +1,4 @@
-// Package fnmatch ports Python 3.15 fnmatch: Fnmatch, FnmatchCase, Filter and Translate.
+// Package fnmatch ports Python 3.15 fnmatch matching: Fnmatch and FnmatchCase.
 //
 // Fnmatch applies os.path.normcase on POSIX, which is the identity, so it is case-sensitive
 // like FnmatchCase. On Windows Python's ntpath.normcase lowercases both strings and turns
@@ -6,8 +6,8 @@
 // not; tools that need that lower both sides themselves (as the niagara-help and
 // module-navigator searches already do).
 //
-// Translate returns Python's regular expression text byte for byte. Matching does not run
-// that text: it uses an equivalent RE2 expression (RE2 has no atomic groups or (?!)).
+// Matching follows fnmatch.translate part by part but writes RE2 text: RE2 has no atomic
+// groups or (?!), so those become a lazy group and an empty class.
 package fnmatch
 
 import (
@@ -17,18 +17,10 @@ import (
 	"sync"
 )
 
-// part is one translated pattern element: its Python regex text and its RE2 equivalent.
+// part is one translated pattern element: the RE2 equivalent of Python's regex text.
 type part struct {
-	py, re2 string
-	star    bool
-}
-
-// reEscape is re.escape for one character.
-func reEscape(c rune) string {
-	if strings.ContainsRune("()[]{}?*+-|^$\\.&~# \t\n\r\v\f", c) {
-		return `\` + string(c)
-	}
-	return string(c)
+	re2  string
+	star bool
 }
 
 // translateParts is fnmatch._translate(pat, '*', '.').
@@ -41,12 +33,12 @@ func translateParts(pattern string) []part {
 		i++
 		switch c {
 		case '*':
-			res = append(res, part{py: ".*", re2: ".*", star: true})
+			res = append(res, part{re2: ".*", star: true})
 			for i < n && pat[i] == '*' {
 				i++
 			}
 		case '?':
-			res = append(res, part{py: ".", re2: "."})
+			res = append(res, part{re2: "."})
 		case '[':
 			j := i
 			if j < n && pat[j] == '!' {
@@ -59,16 +51,16 @@ func translateParts(pattern string) []part {
 				j++
 			}
 			if j >= n {
-				res = append(res, part{py: `\[`, re2: `\[`})
+				res = append(res, part{re2: `\[`})
 				continue
 			}
 			stuff := setStuff(pat, i, j)
 			i = j + 1
 			switch {
 			case stuff == "":
-				res = append(res, part{py: "(?!)", re2: `[^\x{0}-\x{10FFFF}]`})
+				res = append(res, part{re2: `[^\x{0}-\x{10FFFF}]`})
 			case stuff == "!":
-				res = append(res, part{py: ".", re2: "."})
+				res = append(res, part{re2: "."})
 			default:
 				stuff = setOps.ReplaceAllString(stuff, `\$1`)
 				if stuff[0] == '!' {
@@ -76,10 +68,10 @@ func translateParts(pattern string) []part {
 				} else if stuff[0] == '^' || stuff[0] == '[' {
 					stuff = `\` + stuff
 				}
-				res = append(res, part{py: "[" + stuff + "]", re2: re2Class(stuff)})
+				res = append(res, part{re2: re2Class(stuff)})
 			}
 		default:
-			res = append(res, part{py: reEscape(c), re2: regexp.QuoteMeta(string(c))})
+			res = append(res, part{re2: regexp.QuoteMeta(string(c))})
 		}
 	}
 	return res
@@ -170,15 +162,10 @@ func re2Class(stuff string) string {
 	return b.String()
 }
 
-// join is _join_translated_parts: fixed parts before the first star, (?>.*?...) between
-// stars, .* and the tail after the last; RE2 uses a plain lazy group for the atomic one.
-func join(parts []part, re2 bool) string {
-	text := func(p part) string {
-		if re2 {
-			return p.re2
-		}
-		return p.py
-	}
+// join is _join_translated_parts in RE2: fixed parts before the first star, a lazy
+// (?:.*?...) group between stars where Python uses the atomic (?>.*?...), .* and the tail
+// after the last.
+func join(parts []part) string {
 	var b strings.Builder
 	b.WriteString("(?s:")
 	var stars []int
@@ -189,36 +176,29 @@ func join(parts []part, re2 bool) string {
 	}
 	if len(stars) == 0 {
 		for _, p := range parts {
-			b.WriteString(text(p))
+			b.WriteString(p.re2)
 		}
 	} else {
 		for _, p := range parts[:stars[0]] {
-			b.WriteString(text(p))
+			b.WriteString(p.re2)
 		}
 		i := stars[0] + 1
-		group := "(?>.*?"
-		if re2 {
-			group = "(?:.*?"
-		}
 		for _, j := range stars[1:] {
-			b.WriteString(group)
+			b.WriteString("(?:.*?")
 			for _, p := range parts[i:j] {
-				b.WriteString(text(p))
+				b.WriteString(p.re2)
 			}
 			b.WriteByte(')')
 			i = j + 1
 		}
 		b.WriteString(".*")
 		for _, p := range parts[i:] {
-			b.WriteString(text(p))
+			b.WriteString(p.re2)
 		}
 	}
 	b.WriteString(`)\z`)
 	return b.String()
 }
-
-// Translate is fnmatch.translate(pat): Python's regular expression text.
-func Translate(pat string) string { return join(translateParts(pat), false) }
 
 var (
 	cacheMu sync.Mutex
@@ -236,7 +216,7 @@ func compile(pat string) *regexp.Regexp {
 	if len(cache) >= cacheSize {
 		clear(cache)
 	}
-	re := regexp.MustCompile(`^` + join(translateParts(pat), true))
+	re := regexp.MustCompile(`^` + join(translateParts(pat)))
 	cache[pat] = re
 	return re
 }
@@ -246,15 +226,3 @@ func FnmatchCase(name, pat string) bool { return compile(pat).MatchString(name) 
 
 // Fnmatch is fnmatch.fnmatch(name, pat) with POSIX os.path.normcase (see the package doc).
 func Fnmatch(name, pat string) bool { return FnmatchCase(name, pat) }
-
-// Filter is fnmatch.filter(names, pat): the names that match, in order.
-func Filter(names []string, pat string) []string {
-	re := compile(pat)
-	var out []string
-	for _, n := range names {
-		if re.MatchString(n) {
-			out = append(out, n)
-		}
-	}
-	return out
-}

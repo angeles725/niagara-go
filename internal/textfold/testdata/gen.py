@@ -153,13 +153,6 @@ def random_corpus():
     return out
 
 
-SCORE_CASES = [
-    ("alarm fault", "alarm and fault and alarm again"), ("alarm fault", "just alarm"),
-    ("alarm fault", "nothing here"), ("", "anything"), ("aa", "aaaaa"), ("ión", "migración estación"),
-    ("ΣΟΦΟΣ", "σοφος σοφοσ"), ("İ", "i̇stanbul"), ("x", ""),
-]
-
-
 def dump(obj, path):
     """JSON with one top-level member (or list element of one) per line, for readable diffs."""
     lines = ["{"]
@@ -195,7 +188,6 @@ def main():
         # [input, fold per FOLDS order..., lower, parse_query, terms, query_terms]
         "cases": [[s] + [f(s) for f in FOLDS.values()] + [s.lower(), textsearch.parse_query(s),
                   textsearch.terms(s), textsearch.query_terms(s)] for s in CORPUS + random_corpus() + EXTRA_TERMS],
-        "score": [[q, text, textsearch.score(textsearch.parse_query(q), text)] for q, text in SCORE_CASES],
         "digests": {name: digest(f(ch) for ch in chars()) for name, f in FOLDS.items()},
     }
     out["digests"]["lower"] = digest(ch.lower() for ch in chars())
