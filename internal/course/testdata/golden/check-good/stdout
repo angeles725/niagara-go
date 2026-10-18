@@ -37,6 +37,9 @@ C7.2    7    PASS     BWorkOrderServiceTest.class in training-rtTest [L7.1 L7.2]
 C7.3    7    PASS     Mockito in the test uberjar [L7.3]                                             modules/training-rtTest.jar: 1 entry matches org/mockito/**
 C7.4    7    PASS     training-rt.lexicon in training-rt [L7.13]                                     modules/training-rt.jar: 1 entry matches training-rt.lexicon
 C7.5    7    PASS     WorkOrderService url restored [L7.18]                                          Services/WorkOrderService.url = http://localhost:3001/workOrders (default)
+C7.6    7    PASS     4.15 configOk() clears faultCause, updates status [L7.18]                      baja/javax/baja/sys/BAbstractService.java: 1 match (first at line 25: configOk() …)
+C7.7    7    PASS     4.15 fault bit only on a fatal or config fault [L7.18]                         baja/javax/baja/sys/BAbstractService.java: 1 match (first at line 15: if (fatalFault || configFault) …)
+C7.8    7    PASS     4.15 BAbstractService: three properties, no Last Ok [L7.18]                    baja/javax/baja/sys/BAbstractService.java: 3 matches (first at line 7: public static final Property status = newProperty()
 C9.1    9    PASS     a ClientThreadExecutor [L9.8]                                                  found 1: Lab9/ClientThreadExecutor
 C9.2    9    PASS     a DedicatedThreadExecutor [L9.8]                                               found 1: Lab9/DedicatedThreadExecutor
 C9.3    9    PASS     an EngineThreadExecutor [L9.8]                                                 found 1: Lab9/EngineThreadExecutor
@@ -56,6 +59,7 @@ C10.9   10   PASS     CSV header on line 3 [L10.24]                             
 C10.10  10   PASS     CSV rows: timestamp, trend flags, status, value [L10.24]                       10 of 10 files: shared/GoodStation_NumericWritable.csv: 2 lines match
 C10.11  10   PASS     paste added NumericWritable1-9 (audit) [L10.19]                                history/station/seg7/AuditHistory.hdb: 9 of 12 audit records match; first 2026-10-15T18:42:35.959Z Added /Lab10.NumericWritable1 = 36,3 {ok} @ 16
 C10.12  10   PASS     NumericWritable histories ramp in 0..100 [L10.18 L10.19]                       10 of 10 files: history/station/seg0/NumericWritable.hdb: 6 distinct values, 40..57.5
+C10.14  10   PASS     job log texts in training-rt.lexicon [L10.22]                                  modules/training-rt.jar!training-rt.lexicon has =Beginning export of {0} histories, =Exporting history {0}, =Completed histories export
 C10.13  10   PASS     ten NumericWritable histories by point name [L10.21]                           found 10 history/*/*/NumericWritable*.hdb: NumericWritable.hdb … NumericWritable8.hdb
 C11.1   11   PASS     one TrafficLightServerNetwork [L11.7]                                          found 1: Drivers/TrafficLightServerNetwork
 C11.2   11   PASS     17 server devices (intersections A-Q) [L11.8]                                  found 17: Drivers/TrafficLightServerNetwork/A, Drivers/TrafficLightServerNetwork/B, Drivers/TrafficLightServerNetwork/C, … (+14)
@@ -78,4 +82,4 @@ CB.1    B    PASS     devices added by discovery (distinct intersection ids) [LB
 CB.2    B    PASS     device discovery leaf in trafficLightDriver-rt [LB.16]                         modules/trafficLightDriver-rt.jar: 1 entry matches com/tridiumuniversity/trafficLightDriver/learn/BTrafficLightDriverDeviceDiscoveryLeaf.class
 CB.3    B    PASS     point discovery leaf in trafficLightDriver-rt [LB.19]                          modules/trafficLightDriver-rt.jar: 1 entry matches com/tridiumuniversity/trafficLightDriver/point/BTrafficLightDriverPointDiscoveryLeaf.class
 CB.4    B    PASS     point manager in trafficLightDriver-wb [LB.8]                                  modules/trafficLightDriver-wb.jar: 1 entry matches **/BTrafficLightDriverPointManager*.class
-checked 79: PASS 79, FAIL 0, SKIP 0; station GoodStation (237 components, 16 links), install install
+checked 83: PASS 83, FAIL 0, SKIP 0; station GoodStation (237 components, 16 links), install install, source source

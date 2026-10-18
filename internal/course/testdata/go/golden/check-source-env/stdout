@@ -1,0 +1,10 @@
+ID    LAB  VERDICT  DESCRIPTION                                                  EVIDENCE
+C7.1  7    PASS     training-rtTest jar built [L7.7 L7.8]                        modules/training-rtTest.jar (2 entries)
+C7.2  7    PASS     BWorkOrderServiceTest.class in training-rtTest [L7.1 L7.2]   modules/training-rtTest.jar: 1 entry matches test/com/tridiumuniversity/training/workOrder/BWorkOrderServiceTest.class
+C7.3  7    PASS     Mockito in the test uberjar [L7.3]                           modules/training-rtTest.jar: 1 entry matches org/mockito/**
+C7.4  7    PASS     training-rt.lexicon in training-rt [L7.13]                   modules/training-rt.jar: 1 entry matches training-rt.lexicon
+C7.5  7    PASS     WorkOrderService url restored [L7.18]                        Services/WorkOrderService.url = http://localhost:3001/workOrders (default)
+C7.6  7    PASS     4.15 configOk() clears faultCause, updates status [L7.18]    baja/javax/baja/sys/BAbstractService.java: 1 match (first at line 25: configOk() …)
+C7.7  7    PASS     4.15 fault bit only on a fatal or config fault [L7.18]       baja/javax/baja/sys/BAbstractService.java: 1 match (first at line 15: if (fatalFault || configFault) …)
+C7.8  7    PASS     4.15 BAbstractService: three properties, no Last Ok [L7.18]  baja/javax/baja/sys/BAbstractService.java: 3 matches (first at line 7: public static final Property status = newProperty()
+checked 8: PASS 8, FAIL 0, SKIP 0; station GoodStation (237 components, 16 links), install install, source source

@@ -157,14 +157,20 @@ exits 2: an answer key that cannot be read without ambiguity is not searched.
 
 ## course check
 
-`course check [--station <dir|config.bog>] [--install DIR] [--lab N ...] [--json]` verifies what a
-correct solution of each lab leaves in a station and in the install, and prints one verdict
-per check. It reads the station and the jars only; it needs no niagara-research root.
+`course check [--station <dir|config.bog>] [--install DIR] [--source DIR] [--lab N ...] [--json]`
+verifies what a correct solution of each lab leaves in a station and in the install, and prints one
+verdict per check. It reads the station, the jars and the source tree only; it needs no
+niagara-research root.
 
 - `--station`: the station directory (its `config.bog`, zipped or plain XML, and `shared/`), or
   the bog file itself (its directory is the station directory). Every selected check runs on it.
 - `--install`: a Niagara install; the jar checks read `<install>/modules/<part>.jar`. Without it
   (and without `COURSE_NIAGARA_INSTALL`) every jar check is SKIP.
+- `--source`: a Niagara source tree, one directory per module part (`baja/javax/baja/sys/...`):
+  the 4.15.6.20 sources a niagara-research checkout holds in
+  `niagara-help/versions/4.15.6.20/source`. The `source-text` checks read it; without it (and
+  without `COURSE_NIAGARA_SOURCE`) they are SKIP, and the summary says `source (none: source
+  checks skipped)`. The summary names the tree only when a selected check reads it.
 - `--lab`: repeatable; `3`, `03`, `L3`, `B`, `LB`, `RA1`, `RA2`, `EXAM` (any case). A lab without
   checks (8) is exit 1. Without `--lab` only the labs run (1-11, B: the TrainingStation); `RA1`,
   `RA2` and `EXAM` run only when named, on their own station.
@@ -174,6 +180,7 @@ Defaults (explicit flags win; a blank variable counts as unset):
 | Flag | Default |
 |---|---|
 | `--install` | `COURSE_NIAGARA_INSTALL` |
+| `--source` | `COURSE_NIAGARA_SOURCE` |
 | `--station` | per check, the variable of its station role: `COURSE_TRAINING_STATION` for the labs (1-11, B), `COURSE_REVIEW_STATION` for RA1 and RA2, `COURSE_CERT_STATION` for EXAM |
 
 Without `--station`, a run whose checks span several roles reads each role's station once, and
@@ -205,6 +212,7 @@ own prefixes (`t:`, `tld:`) are resolved through its `m=` declarations.
 | `audit` | the records of every history file matching a glob under the station dir (`history/*/*/AuditHistory.hdb`), decoded by `internal/hdbread`; `Hist` holds Go regexps on `operation`, `target`, `slotName`, `oldValue`, `value` (empty = any) | the matching records, summed over the files, are at least / exactly N |
 | `log` | as `audit`, over `history:LogRecord` files; regexps on `logName`, `level` (`INFO`, `SEVERE`, ...), `message` | as `audit` |
 | `trend` | every trend history matching the glob (`history/*/*/NumericWritable*.hdb`); a boolean value counts 0/1, an enum its ordinal | each file has at least / exactly N records (`Distinct`: N distinct values), and every value lies in `Hist.Min..Max` (NaN never does) |
+| `source-text` | one file of the `--source` tree (`Glob` is its path, `/`-separated); `Match` is a Go regexp over the whole text (`(?s)` and `\s*` cross lines) | the matches are at least / exactly N; the evidence gives the first one's line. No `--source` is SKIP, a missing file FAIL |
 
 Nested slots: the bog reader keeps only a composite slot's direct `value` and `status`, so a
 dotted slot is read from `Comp.Nested`, which `bog.LoadOptions` fills only with
@@ -215,8 +223,8 @@ composite slot: the Tcp Config of a driver network is its own component (`tcpCon
 handle), so its port is `address.port` on `trafficLightDriver:TrafficLightDriverTcpCommConfig`.
 
 Checks per lab: 1: 7, 2: 4, 3: 5, 4: 8 (C4.8 an `audit`), 5: 3 (jars only: the station holds nothing of code
-signing), 6: 6, 7: 5, 9: 7, 10: 13 (three of them `file-text` on the exported CSVs, three on the
-history files), 11: 17 (8 of them nested: C11.9-C11.16, the driver and server
+signing), 6: 6, 7: 8 (C7.6-C7.8 `source-text`), 9: 7, 10: 14 (three of them `file-text` on the
+exported CSVs, three on the history files, C10.14 the job's lexicon), 11: 17 (8 of them nested: C11.9-C11.16, the driver and server
 Tcp Config addresses and the ping health of the network and of every driver device; C11.17
 `serverEnabled` is a plain slot), B: 4. Lab 8 (ORDs) writes no code and changes nothing, so it
 has none (its station steps, such as L8.15 and L8.17, happen in the Workbench UI). Appendix A
@@ -242,6 +250,24 @@ L11.42 (the order of Write and Read Value) and L11.43 (the audit shows `intersec
 and `lightId` N <-> S, but the WARNING it predicts was logged long before the log's window, and S is a
 known light) stay as they were. The audit also shows why L10.19's one Ramp is not observed: the live
 paste added `Ramp1`..`Ramp9` with the copies.
+
+Source tree. labs.md derived its predictions from the 4.14 decompiled code (`labs.md:9-12`); the
+`source-text` rows re-derive one from the 4.15.6.20 source:
+
+| Row | Item | Reads (`baja/javax/baja/sys/BAbstractService.java`, 4.15.6.20) |
+|---|---|---|
+| C7.6 | L7.18 | `configOk()` sets `faultCause` to `""` and calls `updateStatus()` (:280-294) |
+| C7.7 | L7.18 | `updateStatus()` sets the fault bit only on a fatal or a config fault (:229-236) |
+| C7.8 | L7.18 | three properties, `status`, `faultCause`, `enabled` (:69, :95, :121): no "Last Ok" slot |
+
+L7.18 stays PARTIAL: the `{ok}` status and the empty Fault Cause after the restored submit are
+runtime state. C10.14 decides L10.22's texts from the built jar, not the source: the job logs
+through lexicon keys (`historiesToCsvJob.beginningHistoriesExport`, ...), and `training-rt.lexicon`
+holds `Beginning export of {0} histories`, `Exporting history {0}` and `Completed histories export`
+(PARTIAL: the Success state and the log of a run). The 4.15 source does not answer L5.3 (the
+signature check is `com.tridium.sys.module`, which the extraction does not hold: only `javax` and a
+few `com.tridium` modules), L1.17 (the registry rebuild is `com.tridium.sys.registry`, absent too)
+or L9.10 (the executors are lab code, the training module's, not framework code).
 
 Verdicts: PASS; FAIL with what was found instead (`found 9 ..., want exactly 10`,
 `0 of 1 pass, want 2.0: Lab4/My Tstat.diff = 0.0 (default)`); SKIP when the check could not run
@@ -303,7 +329,7 @@ not done.
 
 ## course verify
 
-`course verify --status S [--lab GROUP] [--station <dir|config.bog>] [--install DIR] [--date YYYY-MM-DD] [--json]`
+`course verify --status S [--lab GROUP] [--station <dir|config.bog>] [--install DIR] [--source DIR] [--date YYYY-MM-DD] [--json]`
 decides every item carrying status `S` (the vocabulary of `status`: `predicted`, `unverified`,
 `corrected`, `identical`, `verified`, `written`) in the group `--lab` (the spellings of `status
 --lab`: `3`, `L3`, `RA1`, `RA` for RA1, RA2 and RAX, `EXAM`; every group without it), with the
@@ -323,7 +349,7 @@ stdout, stderr and exit (`TestVerifyPredictionsIsVerifyStatusPredicted`).
 
 ## course verify-predictions
 
-`course verify-predictions [--station <dir|config.bog>] [--install DIR] [--date YYYY-MM-DD] [--json]`
+`course verify-predictions [--station <dir|config.bog>] [--install DIR] [--source DIR] [--date YYYY-MM-DD] [--json]`
 reads the answer keys (it needs the root, like `show`) and the station, and decides every item
 still marked `*(predicted)*` from the checks whose `Keys` resolve to it (`Corpus.Lookup`: the ID,
 a range ID or a covered ID, so key `L4.15` reaches the range item `L4.15–L4.16`). A check is
@@ -403,6 +429,11 @@ not observed.
   history files generated from the table `fixtureHistories` (`COURSE_UPDATE_FIXTURES=1 go test -run
   TestFixtureHistories`; the test fails when one drifts): `bad` audits three copies and a set without
   units, one constant trend and one out of 0..100.
+- `check/sourcetext_test.go`: the `source-text` kind over the synthetic `testdata/source/` (a
+  stand-in `BAbstractService.java` with only the members C7.6-C7.8 read), a variant with a fourth
+  property (FAIL), no `--source` (SKIP), a missing file, a bad regexp and the read bound;
+  `TestSourceTextReal` runs the rows on `COURSE_NIAGARA_SOURCE`. The `check-source-env` Go-only
+  golden reads the tree from the variable; `check-bad` runs without it (SKIP).
 - `check/filetext_test.go`: the `file-text` kind over a BOM + CRLF trend CSV, an old-format CSV, a
   short file, a line count, no matching file, a bad regexp and a file over the read bound (SKIP).
 - `check/check_test.go` and the `check-*` goldens: synthetic stations under
@@ -415,8 +446,8 @@ not observed.
   when a jar drifts). The zipped form of a bog is covered by `TestCheckZippedBog`.
   `TestCheckLiveStations` runs the rows of each role against its live station
   (`COURSE_TRAINING_STATION`, `COURSE_REVIEW_STATION`, `COURSE_CERT_STATION`, and the jars of
-  `COURSE_NIAGARA_INSTALL`) and pins the known station differences; a role whose variable is unset
-  skips, visibly. The synthetic `stations/review` mirrors the live review station (components in
+  `COURSE_NIAGARA_INSTALL`, the tree of `COURSE_NIAGARA_SOURCE`) and pins the known station
+  differences; a role whose variable is unset skips, visibly, and a role with no row fails. The synthetic `stations/review` mirrors the live review station (components in
   `Cristian_Angeles_Review`, so CRA1.10 FAILs); the `check-review` golden runs it. `stations/cert`
   is a passing exam station (`check-exam`); `check-mixed-roles` reads three stations in one run and
   `check-missing-role` is the usage error of a role without a station. `stations/cert-bad` holds

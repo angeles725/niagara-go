@@ -15,6 +15,10 @@ import (
 // TrainingStation, RA1 and RA2 on the review station, EXAM on the exam station.
 const installEnv = "COURSE_NIAGARA_INSTALL"
 
+// sourceEnv stands in for --source: a Niagara source tree, one directory per module part (the
+// 4.15.6.20 sources of a niagara-research checkout: niagara-help/versions/4.15.6.20/source).
+const sourceEnv = "COURSE_NIAGARA_SOURCE"
+
 var stationEnv = map[string]string{
 	check.RoleTraining: "COURSE_TRAINING_STATION",
 	check.RoleReview:   "COURSE_REVIEW_STATION",
@@ -29,6 +33,8 @@ type stationOpts struct {
 	hasStation bool
 	install    string
 	hasInstall bool
+	source     string
+	hasSource  bool
 	// usage prints the subcommand's usage error and returns its exit (2).
 	usage func(message string) int
 }
@@ -91,6 +97,31 @@ func roleGroups(role string, checks []*check.Check) (string, string) {
 	return label, "need"
 }
 
+// sourceDir is --source, else COURSE_NIAGARA_SOURCE, else "" (the source-text checks SKIP).
+func (o stationOpts) sourceDir() string {
+	if o.hasSource {
+		return o.source
+	}
+	return getenv(sourceEnv)
+}
+
+// scope is the summary's "station ..., install <dir>", with ", source <dir>" when a check reads the
+// source tree.
+func (o stationOpts) scope(ss *check.Stations, checks []*check.Check) string {
+	out := fmt.Sprintf("%s, install %s", ss.Scope(), orNone(o.installDir()))
+	if check.NeedsSource(checks) {
+		out += ", source " + orNoSource(o.sourceDir())
+	}
+	return out
+}
+
+func orNoSource(s string) string {
+	if s == "" {
+		return "(none: source checks skipped)"
+	}
+	return s
+}
+
 // open reads the station of every role the checks run on: --station for all of them, else the
 // role's variable. A role with neither is the usage error of a missing --station, naming the
 // role's groups and variable; a station that cannot be read is exit 2.
@@ -106,7 +137,7 @@ func (o stationOpts) open(s cli.Stdio, checks []*check.Check) (*check.Stations, 
 			return nil, o.missingStation(r, checks)
 		}
 	}
-	ss, err := check.OpenStations(checks, path, o.installDir())
+	ss, err := check.OpenStations(checks, path, o.installDir(), o.sourceDir())
 	if err != nil {
 		fmt.Fprintf(s.Err, "course: cannot check the station: %v\n", err)
 		return nil, cli.ExitCannotSearch

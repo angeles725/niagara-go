@@ -22,6 +22,10 @@ const (
 	auditGlob  = "history/*/*/AuditHistory.hdb"
 	nwHistGlob = "history/*/*/NumericWritable*.hdb" // the Lab 10 trend histories, named after their points
 	oneRamp    = "that the copies share the one Ramp"
+	// The 4.15.6.20 source of the services' base class, relative to the --source tree.
+	abstractService = "baja/javax/baja/sys/BAbstractService.java"
+	liveSubmit      = "that the live submit cleared the fault: the {ok} status and the empty Fault Cause are runtime state"
+	jobLog          = "the Success state and the job log of a run (its ten Exporting lines are runtime state; the lexicon holds the texts)"
 )
 
 // Spec is every check: the labs, the review assignments, the exam. A run without --lab selects only
@@ -132,6 +136,20 @@ var labSpec = []Check{
 		Unobserved: map[string]string{"L7.18": "faultCause cleared, the fault bit and the {ok} status"}, Kind: kindSlot, Desc: "WorkOrderService url restored",
 		Type: "training:WorkOrderService", Slot: "url", Want: "http://localhost:3001/workOrders",
 		Default: "http://localhost:3001/workOrders"},
+	// L7.18 from the 4.15.6.20 source (--source): configOk() clears faultCause and recomputes the status
+	// (baja/javax/baja/sys/BAbstractService.java:280-294), whose fault bit is set only by a fatal or a
+	// config fault (:229-236); the class declares three properties, status, faultCause and enabled
+	// (:69, :95, :121), so no "Last Ok" slot.
+	{ID: "C7.6", Lab: "7", Keys: []string{"L7.18"}, Unobserved: map[string]string{"L7.18": liveSubmit},
+		Kind: kindSourceText, Desc: "4.15 configOk() clears faultCause, updates status", Glob: abstractService,
+		Match: `configOk\(\)\s*\{(?:[^{}]|\{[^{}]*\})*?setFaultCause\(""\);\s*updateStatus\(\);`, Op: opEq, N: 1},
+	{ID: "C7.7", Lab: "7", Keys: []string{"L7.18"}, Unobserved: map[string]string{"L7.18": liveSubmit},
+		Kind: kindSourceText, Desc: "4.15 fault bit only on a fatal or config fault", Glob: abstractService,
+		Match: `if \(fatalFault \|\| configFault\)\s*\{\s*newStatus \|= BStatus\.FAULT;\s*\}\s*else\s*\{\s*newStatus &= ~BStatus\.FAULT;`,
+		Op:    opEq, N: 1},
+	{ID: "C7.8", Lab: "7", Keys: []string{"L7.18"}, Unobserved: map[string]string{"L7.18": liveSubmit},
+		Kind: kindSourceText, Desc: "4.15 BAbstractService: three properties, no Last Ok", Glob: abstractService,
+		Match: `public static final Property \w+ = newProperty\(`, Op: opEq, N: 3},
 
 	// Lab 9. BWorkerThreadExecutor.java:28-31 worker = new BTrainingWorker() (a child component).
 	{ID: "C9.1", Lab: "9", Keys: []string{"L9.8"}, Kind: kindType, Desc: "a ClientThreadExecutor",
@@ -155,7 +173,7 @@ var labSpec = []Check{
 	// points, so C10.2 wants one Ramp, not ten (the live station has one Ramp per point: its audit
 	// shows Ramp1-Ramp9 pasted with the copies, so L10.19's one Ramp stays not observed).
 	{ID: "C10.1", Lab: "10", Keys: []string{"L10.4", "L10.22"},
-		Unobserved: map[string]string{"L10.22": "the Success state and the job log lines"}, Kind: kindType, Desc: "one HistoriesToCsvService, under Services",
+		Unobserved: map[string]string{"L10.22": jobLog}, Kind: kindType, Desc: "one HistoriesToCsvService, under Services",
 		Type: "training:HistoriesToCsvService", Within: services, Op: opEq, N: 1},
 	{ID: "C10.2", Lab: "10", Keys: []string{"L10.16"}, Kind: kindType, Desc: "a kitControl Ramp",
 		Type: "kitControl:Ramp", Op: opMin, N: 1},
@@ -191,6 +209,11 @@ var labSpec = []Check{
 	{ID: "C10.12", Lab: "10", Keys: []string{"L10.18", "L10.19"}, Unobserved: map[string]string{"L10.19": oneRamp},
 		Kind: kindTrend, Desc: "NumericWritable histories ramp in 0..100", Glob: nwHistGlob,
 		Distinct: true, Op: opMin, N: 2, Hist: &HistMatch{Min: 0, Max: 100}},
+	// L10.22: the job writes its log through lexicon keys (BHistoriesToCsvJob.class names
+	// historiesToCsvJob.beginningHistoriesExport, ...), so the texts are those of the built lexicon.
+	{ID: "C10.14", Lab: "10", Keys: []string{"L10.22"}, Unobserved: map[string]string{"L10.22": jobLog},
+		Kind: kindJarText, Desc: "job log texts in training-rt.lexicon", Jar: trainingRT, Glob: "training-rt.lexicon",
+		Contains: []string{"=Beginning export of {0} histories", "=Exporting history {0}", "=Completed histories export"}},
 	{ID: "C10.13", Lab: "10", Keys: []string{"L10.21"}, Kind: kindFiles, Desc: "ten NumericWritable histories by point name",
 		Glob: nwHistGlob, Op: opEq, N: 10},
 

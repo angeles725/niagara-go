@@ -53,7 +53,8 @@ func cmdVerify(c *key.Corpus, s cli.Stdio, o stationOpts, status string, groups 
 	if code, empty := honestZero(c, s, status, groups, keep); empty {
 		return code
 	}
-	st, code := o.open(s, check.LinkedChecks(c, keep))
+	linked := check.LinkedChecks(c, keep)
+	st, code := o.open(s, linked)
 	if st == nil {
 		return code
 	}
@@ -90,9 +91,9 @@ func cmdVerify(c *key.Corpus, s cli.Stdio, o stationOpts, status string, groups 
 	} else {
 		printPredictions(s.Out, preds, date)
 	}
-	fmt.Fprintf(summary, "%s %d: CONFIRMED %d, PARTIAL %d, CONTRADICTED %d, UNDECIDED %d; %s run; %s, install %s\n",
+	fmt.Fprintf(summary, "%s %d: CONFIRMED %d, PARTIAL %d, CONTRADICTED %d, UNDECIDED %d; %s run; %s\n",
 		status, len(preds), counts[check.Confirmed], counts[check.Partial], counts[check.Contradicted], counts[check.Undecided], key.Plural(len(ran), "check"),
-		st.Scope(), orNone(o.installDir()))
+		o.scope(st, linked))
 	switch {
 	case counts[check.Contradicted] > 0:
 		return cli.ExitNoMatch

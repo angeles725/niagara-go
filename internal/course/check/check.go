@@ -33,6 +33,7 @@ type Station struct {
 	b       *bog.Bog
 	nested  bool   // read with bog.Options.NestedSlots: Comp.Nested holds the dotted slots
 	install string // "" when --install was not given
+	source  string // the source tree of the source-text kind; "" when --source was not given
 	jars    map[string]*jarFile
 }
 
@@ -175,6 +176,8 @@ func (s *Station) Run(ck *Check) Result {
 		r.Verdict, r.Evidence = s.checkFileText(ck)
 	case kindAudit, kindLog, kindTrend:
 		r.Verdict, r.Evidence = s.checkHistory(ck)
+	case kindSourceText:
+		r.Verdict, r.Evidence = s.checkSourceText(ck)
 	default:
 		r.Verdict, r.Evidence = s.checkJar(ck)
 	}

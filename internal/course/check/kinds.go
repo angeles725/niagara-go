@@ -2,18 +2,19 @@ package check
 
 // Check kinds.
 const (
-	kindType      = "type"       // components of Type (under a Within ancestor) counted against N
-	kindSlot      = "slot"       // the effective value of Slot on every Type component
-	kindLink      = "link"       // links From.FromSlot -> Type.Slot counted against N
-	kindFiles     = "files"      // files matching Glob under the station directory
-	kindJar       = "jar"        // <install>/modules/<Jar>.jar exists
-	kindJarEntry  = "jar-entry"  // entries of the jar matching Glob counted against N
-	kindJarText   = "jar-text"   // the jar entry Glob holds every Contains string
-	kindJarSigned = "jar-signed" // the jar has a META-INF signature file and signature block
-	kindFileText  = "file-text"  // every file matching Glob has Line (or N lines) matching Match
-	kindAudit     = "audit"      // audit records of the Glob history files matching Hist, counted against N
-	kindLog       = "log"        // log records of the Glob history files matching Hist, counted against N
-	kindTrend     = "trend"      // every Glob trend history: N records (Distinct: N values), values in Hist's range
+	kindType       = "type"        // components of Type (under a Within ancestor) counted against N
+	kindSlot       = "slot"        // the effective value of Slot on every Type component
+	kindLink       = "link"        // links From.FromSlot -> Type.Slot counted against N
+	kindFiles      = "files"       // files matching Glob under the station directory
+	kindJar        = "jar"         // <install>/modules/<Jar>.jar exists
+	kindJarEntry   = "jar-entry"   // entries of the jar matching Glob counted against N
+	kindJarText    = "jar-text"    // the jar entry Glob holds every Contains string
+	kindJarSigned  = "jar-signed"  // the jar has a META-INF signature file and signature block
+	kindFileText   = "file-text"   // every file matching Glob has Line (or N lines) matching Match
+	kindAudit      = "audit"       // audit records of the Glob history files matching Hist, counted against N
+	kindLog        = "log"         // log records of the Glob history files matching Hist, counted against N
+	kindTrend      = "trend"       // every Glob trend history: N records (Distinct: N values), values in Hist's range
+	kindSourceText = "source-text" // the matches of Match in the source-tree file Glob counted against N
 )
 
 // Count operators.
@@ -37,7 +38,7 @@ type Check struct {
 	Type   string // component type "module:Type" (type, slot, link target)
 	Within string // type, slot: an ancestor type "module:Type" every counted component must have
 	Under  string // type, slot: a folder path ("Review2") every counted component must be below
-	Op     string // type, link, files, jar-entry, slot with Distinct, file-text without Line, audit, log, trend: opMin or opEq
+	Op     string // type, link, files, jar-entry, slot with Distinct, file-text without Line, audit, log, trend, source-text: opMin or opEq
 	N      int
 
 	Slot     string   // slot: the slot; link: the target slot
@@ -50,12 +51,12 @@ type Check struct {
 	From     string // link: source type "module:Type"
 	FromSlot string // link: source slot
 
-	Glob     string   // files, file-text, audit, log, trend: path under the station dir ({station} = station name); jar-*: entry
+	Glob     string   // files, file-text, audit, log, trend: path under the station dir ({station} = station name); jar-*: entry; source-text: path under the source tree
 	Jar      string   // jar-*: module part name, e.g. training-rt
 	Contains []string // jar-text
 
 	Line  int    // file-text: the 1-based line that must match (a BOM and CR line ends dropped); 0 = count lines
-	Match string // file-text: a Go regexp; {station} = the station name, quoted
+	Match string // file-text: a Go regexp; {station} = the station name, quoted; source-text: a Go regexp over the whole file
 
 	Hist *HistMatch // audit, log: the record fields to match; trend: the value range
 }

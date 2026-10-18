@@ -23,7 +23,9 @@ var fixtureJars = map[string]map[string]string{
 		"META-INF/CODESIGN.RSA": "stand-in signature block\n",
 		"META-INF/module.xml":   fixtureModuleXML,
 		"module.palette":        `<p n="FirstComponent"/><p n="kitControl"><p n="Add"/></p>` + "\n",
-		"training-rt.lexicon":   "url=Url\n",
+		"training-rt.lexicon": "url=Url\nhistoriesToCsvJob.beginningHistoriesExport=Beginning export of {0} histories\n" +
+			"historiesToCsvJob.beginningHistoryExport=Exporting history {0}\n" +
+			"historiesToCsvJob.completedHistoriesExport=Completed histories export\n",
 		"META-INF/maven/com.fasterxml.jackson.core/jackson-databind/pom.properties": "version=2.21.2\n",
 		"com/tridiumuniversity/training/BFirstComponent.class":                      "stand-in class\n",
 		"com/tridiumuniversity/training/kitControl/BAdd.class":                      "stand-in class\n",

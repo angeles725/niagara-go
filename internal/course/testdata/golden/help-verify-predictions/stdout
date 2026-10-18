@@ -1,4 +1,4 @@
-usage: course verify-predictions [-h] [--root DIR] [--station PATH] [--install DIR]
+usage: course verify-predictions [-h] [--root DIR] [--station PATH] [--install DIR] [--source DIR]
                                  [--date YYYY-MM-DD] [--json]
 
 options:
@@ -10,5 +10,8 @@ options:
                      $COURSE_CERT_STATION for EXAM
   --install DIR      Niagara install whose modules/ holds the built jars (default:
                      $COURSE_NIAGARA_INSTALL; jar checks SKIP without either)
+  --source DIR       Niagara source tree, one directory per module part, e.g. niagara-
+                     help/versions/4.15.6.20/source (default: $COURSE_NIAGARA_SOURCE; source
+                     checks SKIP without either)
   --date YYYY-MM-DD  date written in the suggested *(verified live ...)* lines (default: today)
   --json             machine JSON output
