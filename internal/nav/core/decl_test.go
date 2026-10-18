@@ -17,6 +17,7 @@ func TestDeclScannersMatchPython(t *testing.T) {
 	var cases []struct {
 		Line       string    `json:"line"`
 		Decl       *[]string `json:"decl"`
+		End        *int      `json:"end"` // m.end() in code points
 		Type       *string   `json:"type"`
 		Annotation bool      `json:"annotation"`
 		Package    *string   `json:"package"`
@@ -33,6 +34,11 @@ func TestDeclScannersMatchPython(t *testing.T) {
 			want := *c.Decl
 			if !ok || d.Indent != want[0] || d.Modifiers != want[1] || d.Kind != want[2] || d.Name != want[3] {
 				t.Errorf("MatchDecl(%q) = %+v %v, Python %q", c.Line, d, ok, want)
+			}
+			if c.End == nil || *c.End < 0 || *c.End > len([]rune(c.Line)) {
+				t.Errorf("decl.json %q: decl without a valid end %v (rerun gen_decl.py)", c.Line, c.End)
+			} else if end := len(string([]rune(c.Line)[:*c.End])); ok && d.End != end {
+				t.Errorf("MatchDecl(%q).End = %d, Python m.end() %d (byte %d)", c.Line, d.End, *c.End, end)
 			}
 		}
 		name, ok := TypeDeclName(c.Line)

@@ -1,7 +1,3 @@
-// Package nav is module-nav (module-navigator tools/module_nav.py): the parser built
-// from the command registry, base directory detection and dispatch. Each command group
-// lives in its own package under nav/ and registers itself; importing them here is
-// what makes them part of the CLI.
 package nav
 
 import (
@@ -46,7 +42,11 @@ func Main(args []string, s cli.Stdio) int {
 	}
 	baseDir := ns.String("base_dir")
 	if baseDir == "" {
-		baseDir = DetectBaseDir()
+		var err error
+		if baseDir, err = DetectBaseDir(); err != nil {
+			fmt.Fprintf(s.Err, "mnav: %v\n", err)
+			return cli.ExitCannotSearch
+		}
 	}
 	if baseDir == "" {
 		fmt.Fprintln(s.Out, "ERROR: Cannot detect base directory.")

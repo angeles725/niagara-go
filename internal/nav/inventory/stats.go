@@ -13,6 +13,7 @@ import (
 	"github.com/angeles725/niagara-go/internal/argparse"
 	"github.com/angeles725/niagara-go/internal/index"
 	"github.com/angeles725/niagara-go/internal/nav/core"
+	"github.com/angeles725/niagara-go/internal/nav/lib/modlist"
 	"github.com/angeles725/niagara-go/internal/nav/registry"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 )
@@ -207,7 +208,7 @@ func runStats(env *registry.Env, ns *argparse.Namespace) int {
 		if core.Truthy(v, "zkm") {
 			zkm++
 		}
-		t := typeOrStandalone(v)
+		t := modlist.TypeOrStandalone(v)
 		n, _ := types.Get(t)
 		c, _ := n.(int64)
 		types.Set(t, c+1)

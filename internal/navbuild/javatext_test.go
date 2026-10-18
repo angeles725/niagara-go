@@ -62,7 +62,9 @@ func TestParseExtendsImplements(t *testing.T) {
 	}
 }
 
-func TestDeclEnd(t *testing.T) {
+// TestDeclMatchEnd: the header starts at core.Decl.End (m.end()), also when
+// the declaration text appears inside an annotation argument first.
+func TestDeclMatchEnd(t *testing.T) {
 	for line, rest := range map[string]string{
 		"public class A extends B {\n":                               " extends B {\n",
 		"@Doc(\"public class A\") public class A extends B {\n":      " extends B {\n",
@@ -75,8 +77,8 @@ func TestDeclEnd(t *testing.T) {
 		if !ok {
 			t.Fatalf("no declaration in %q", line)
 		}
-		if end := declEnd(line, d); end < 0 || line[end:] != rest {
-			t.Errorf("declEnd(%q) = %d, want the rest %q", line, end, rest)
+		if line[d.End:] != rest {
+			t.Errorf("MatchDecl(%q).End = %d, want the rest %q", line, d.End, rest)
 		}
 	}
 }

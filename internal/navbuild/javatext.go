@@ -4,7 +4,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/angeles725/niagara-go/internal/nav/core"
+	"github.com/angeles725/niagara-go/internal/nav/lib/license"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
@@ -13,63 +13,19 @@ import (
 // Python code compares only ASCII characters, so stepping bytes instead of
 // code points finds the same positions.
 
-// commentSpans is java_text.comment_spans: the [start, end) byte range of
-// every // and /* */ comment, skipping string and char literals (which end at
-// a newline). (A twin lives unexported in nav/license; see docs/navbuild.md.)
-func commentSpans(text string) [][2]int {
-	var spans [][2]int
-	n := len(text)
-	for i := 0; i < n; {
-		c := text[i]
-		switch {
-		case c == '"' || c == '\'':
-			j := i + 1
-			for j < n && text[j] != c && text[j] != '\n' {
-				if text[j] == '\\' {
-					j += 2
-				} else {
-					j++
-				}
-			}
-			i = j + 1
-		case strings.HasPrefix(text[i:], "//"):
-			j := strings.IndexByte(text[i:], '\n')
-			if j < 0 {
-				j = n
-			} else {
-				j += i
-			}
-			spans = append(spans, [2]int{i, j})
-			i = j
-		case strings.HasPrefix(text[i:], "/*"):
-			j := strings.Index(text[i+2:], "*/")
-			if j < 0 {
-				j = n
-			} else {
-				j += i + 4
-			}
-			spans = append(spans, [2]int{i, j})
-			i = j
-		default:
-			i++
-		}
-	}
-	return spans
-}
-
 // stripComments is java_text.strip_comments: text with every comment replaced
 // by one space.
 func stripComments(text string) string {
-	spans := commentSpans(text)
+	spans := license.CommentSpans(text)
 	if len(spans) == 0 {
 		return text
 	}
 	var b strings.Builder
 	last := 0
 	for _, s := range spans {
-		b.WriteString(text[last:s[0]])
+		b.WriteString(text[last:s.Start])
 		b.WriteByte(' ')
-		last = s[1]
+		last = s.End
 	}
 	b.WriteString(text[last:])
 	return b.String()
@@ -100,35 +56,6 @@ func declarationHeader(lines []string, index, start int) string {
 		raw += "\n" + lines[j]
 	}
 	return strings.Join(pycompat.Fields(text), " ")
-}
-
-// declEnd is m.end() of the corpus.DECL_RE match d of line, which
-// core.MatchDecl does not report: the end of the declared name. The name
-// follows Modifiers+Kind and at least one space; a candidate position is
-// confirmed by matching the line cut there (plus " (" for the record
-// lookahead) to the same declaration, which rules out the same text inside
-// an annotation argument. -1 when no candidate confirms (never for a line
-// MatchDecl matched).
-func declEnd(line string, d core.Decl) int {
-	head := d.Modifiers + d.Kind
-	for p := len(d.Indent); p < len(line); {
-		k := strings.Index(line[p:], head)
-		if k < 0 {
-			break
-		}
-		a := p + k + len(head)
-		e := spanFunc(line, a, pycompat.IsSpace)
-		if e > a && strings.HasPrefix(line[e:], d.Name) {
-			end := e + len(d.Name)
-			if r, _ := utf8.DecodeRuneInString(line[end:]); end == len(line) || !(r == '$' || pycompat.IsWordRune(r)) {
-				if got, ok := core.MatchDecl(line[:end] + " ("); ok && got == d {
-					return end
-				}
-			}
-		}
-		p += k + 1
-	}
-	return -1
 }
 
 // spanFunc advances over the runes of s from i that satisfy ok.

@@ -1,6 +1,7 @@
 package core
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 )
@@ -12,11 +13,41 @@ var NavMarker = filepath.Join("indexes", "module-inventory.json")
 // Executable is os.Executable, replaceable in tests.
 var Executable = os.Executable
 
-// FindNavDir returns the module-navigator checkout: the first of the working directory,
-// the executable's directory and their parents that holds indexes/module-inventory.json,
-// or "" when none does. Python derives it from the script's own path (NAV_DIR); a Go
-// binary has no such path, so the checkout is searched from where it runs.
+// NavDirVars name the module-navigator checkout, first set wins: an installed
+// binary (outside any checkout) is pointed at its indexes with them.
+// NAV_DIR is an alias.
+var NavDirVars = []string{"MODULE_NAVIGATOR_DIR", "NAV_DIR"}
+
+// LocateNavDir returns the module-navigator checkout: the directory the first
+// set NavDirVars variable names (made absolute), which must hold indexes/ (else an error
+// naming the variable, "VAR=value: ...", and "" - never a fallback to the
+// search); with none set, the search of FindNavDir.
+func LocateNavDir() (string, error) {
+	for _, name := range NavDirVars {
+		v := os.Getenv(name)
+		if v == "" {
+			continue
+		}
+		if st, err := os.Stat(filepath.Join(v, "indexes")); err != nil || !st.IsDir() {
+			return "", fmt.Errorf("%s=%s: not a module-navigator checkout (no indexes/ directory)", name, v)
+		}
+		return absPath(v), nil
+	}
+	return searchNavDir(), nil
+}
+
+// FindNavDir is LocateNavDir without its error: "" when a NavDirVars variable
+// names no checkout.
 func FindNavDir() string {
+	dir, _ := LocateNavDir()
+	return dir
+}
+
+// searchNavDir returns the first of the working directory, the executable's
+// directory and their parents that holds indexes/module-inventory.json, or ""
+// when none does. Python derives the checkout from the script's own path
+// (NAV_DIR); a Go binary has no such path, so it is searched from where it runs.
+func searchNavDir() string {
 	var starts []string
 	if wd, err := os.Getwd(); err == nil {
 		starts = append(starts, wd)

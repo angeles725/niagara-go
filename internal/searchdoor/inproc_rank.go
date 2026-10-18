@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/angeles725/niagara-go/internal/nav/classrank"
 	"github.com/angeles725/niagara-go/internal/nav/core"
+	"github.com/angeles725/niagara-go/internal/nav/lib/classrank"
 )
 
 // codeRank is `module_nav rank -n N -- <question>` (ranked) through classrank:

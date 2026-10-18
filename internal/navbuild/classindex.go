@@ -59,9 +59,9 @@ type declaration struct {
 }
 
 // parseJavaFile is parse_java_file: the declarations, line count and package
-// of one source (none of them for an unreadable file). The error is a
-// declaration line whose match end declEnd cannot recover, which would be a
-// bug in declEnd: the build stops instead of writing a wrong header.
+// of one source (none of them for an unreadable file). It no longer fails
+// (core.Decl carries the match end); the error result keeps ScanClasses'
+// contract unchanged.
 func parseJavaFile(path string) ([]declaration, int, string, error) {
 	text, err := pycompat.ReadTextReplace(path)
 	if err != nil {
@@ -98,11 +98,7 @@ func parseJavaFile(path string) ([]declaration, int, string, error) {
 		if !ok {
 			continue
 		}
-		end := declEnd(line, d)
-		if end < 0 {
-			return nil, 0, "", fmt.Errorf("%s:%d: no match end for the declaration of %s", path, i+1, d.Name)
-		}
-		ext, impl := parseExtendsImplements(declarationHeader(lines, i, end))
+		ext, impl := parseExtendsImplements(declarationHeader(lines, i, d.End))
 		decls = append(decls, declaration{
 			topLevel:   d.Indent == "",
 			modifiers:  pycompat.Fields(d.Modifiers),
