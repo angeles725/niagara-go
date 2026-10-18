@@ -161,6 +161,7 @@ func TestDocsFindRebuildsTheFulltextIndex(t *testing.T) {
 func TestDocsFindMatchesNhOnVersionErrors(t *testing.T) {
 	testdata := helpTestdata(t)
 	t.Setenv("XDG_CACHE_HOME", t.TempDir())
+	t.Setenv("NIAGARA_HELP_DIR", "")
 	t.Setenv("NIAGARA_HELP_VERSION", "")
 	checkout := ftsfixture.Checkout(t, testdata, false)
 	script := stubScript(t, filepath.Join(checkout, "tools", "niagara_help.py"))

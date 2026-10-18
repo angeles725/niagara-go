@@ -47,15 +47,18 @@ func docsFind(argv []string) answer {
 		mode = "or"
 	}
 	var stderr strings.Builder
+	cannotSearch := func(err error) answer { // nh's run: the ERROR line on stderr, exit 2
+		return exact(2, "", stderr.String()+scope.ErrorLine(err)+"\n")
+	}
 	query := v[0]
 	r, err := fts.SearchUsing(scope.OpenFulltext(&stderr), root, id, query, nil, mode)
 	if err != nil {
-		return exact(2, "", stderr.String()+scope.ErrorLine(err)+"\n")
+		return cannotSearch(err)
 	}
 	if len(r.Hits) == 0 {
-		lines, err := scope.Miss(root, "find", query, "fulltext", nil)
-		if err != nil {
-			return exact(2, "", stderr.String()+scope.ErrorLine(err)+"\n")
+		lines, missErr := scope.Miss(root, "find", query, "fulltext", nil)
+		if missErr != nil {
+			return cannotSearch(missErr)
 		}
 		return exact(1, strings.Join(lines, "\n")+"\n", stderr.String())
 	}

@@ -4,7 +4,6 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/angeles725/niagara-go/internal/corpusnav/blocksearch"
@@ -15,8 +14,8 @@ import (
 // calls are answered by the libraries the Go ports share, producing the exact text the
 // backend CLI prints, so parse.go and the goldens see the same rows without a
 // process start. Every case the library cannot answer exactly (no code or blocks
-// data, a miss whose text belongs to a printing package, an argv shape this file
-// does not know) runs the backend through exec as before:
+// data, a module_nav error or note whose text belongs to a printing package, an
+// argv shape this file does not know) runs the backend through exec as before:
 // the exec path stays the parity oracle and NSEARCH_EXEC=1 forces it.
 
 // ExecEnv names the variable that forces every backend through exec.
@@ -141,8 +140,9 @@ func exact(rc int, stdout, stderr string) answer { return answer{rc, stdout, std
 var viaExec = answer{}
 
 // shape matches argv[1:] against a fixed command line: a literal word, "*" for one
-// positional that must not look like an option (argparse would read it as one),
-// "#" for a positive integer. opt lists the optional trailing flags.
+// positional (any text: a query that starts with "-" is searched as text, where
+// the Python backends' argparse read it as an option and failed), "#" for a
+// positive integer. opt lists the optional trailing flags.
 func shape(args []string, want []string, opt ...string) (vals []string, flag string, ok bool) {
 	if len(args) < len(want) || len(args) > len(want)+1 {
 		return nil, "", false
@@ -151,9 +151,6 @@ func shape(args []string, want []string, opt ...string) (vals []string, flag str
 		a := args[i]
 		switch w {
 		case "*":
-			if a == "" || strings.HasPrefix(a, "-") {
-				return nil, "", false
-			}
 			vals = append(vals, a)
 		case "#":
 			if n, err := strconv.Atoi(a); err != nil || n < 1 || strconv.Itoa(n) != a {
@@ -198,7 +195,8 @@ func isDir(p string) bool { st, err := os.Stat(p); return err == nil && st.IsDir
 
 // blocksFind is `corpus-nav find <query> --limit N [--and|--or]` (blocksJob) through
 // blocksearch, on the corpus corpus-nav.py would use: $CORPUS_NAV_ROOT, else the
-// parent of its tools/ folder; a folder without CATALOG.md is left to exec.
+// parent of its tools/ folder (a folder without CATALOG.md is searched like
+// corpus-nav does: no block titles).
 func blocksFind(argv []string) answer {
 	v, flag, ok := shape(argv[1:], []string{"find", "*", "--limit", "#"}, "--and", "--or")
 	if !ok {
@@ -208,7 +206,7 @@ func blocksFind(argv []string) answer {
 	if root == "" {
 		root = toolDir(argv[0], true)
 	}
-	if root == "" || !isFile(filepath.Join(root, "CATALOG.md")) {
+	if root == "" {
 		return viaExec
 	}
 	limit, _ := strconv.Atoi(v[1])

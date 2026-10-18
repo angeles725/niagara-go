@@ -1,6 +1,7 @@
 package searchdoor
 
 import (
+	"bytes"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -8,6 +9,9 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/angeles725/niagara-go/internal/cli"
+	"github.com/angeles725/niagara-go/internal/corpusnav"
 )
 
 // The in-process answers are compared with what the PYTHON backends printed on
@@ -76,14 +80,38 @@ func TestBlocksFindMatchesCorpusNav(t *testing.T) {
 				readOracle(t, filepath.Join("..", "corpusnav", "testdata", "golden", golden)))
 		})
 	}
-	for _, args := range [][]string{{"find", "-x", "--limit", "50"}, {"find", "alarm", "--limit", "0"},
+	for _, args := range [][]string{{"find", "alarm", "--limit", "0"},
 		{"find", "alarm", "--in", "all"}, {"grep", "alarm", "--limit", "50"}} {
 		if blocksFind(append([]string{script}, args...)).ok {
 			t.Errorf("%v: answered in process, want exec", args)
 		}
 	}
-	if blocksFind([]string{filepath.Join(t.TempDir(), "tools", "corpus-nav.py"), "find", "a", "--limit", "5"}).ok {
-		t.Error("a folder without CATALOG.md: answered in process, want exec")
+	// A query that starts with "-" is searched as text (corpus-nav's argparse read it as an option).
+	if a := blocksFind(append([]string{script}, "find", "-zzqq", "--limit", "50")); !a.ok || a.rc != 1 ||
+		!MissLine.MatchString(a.stdout) {
+		t.Errorf("a query starting with '-': %+v", a)
+	}
+}
+
+// TestBlocksFindWithoutCatalogMatchesCorpusNav: a folder without CATALOG.md is
+// searched in process exactly as corpus-nav searches it.
+func TestBlocksFindWithoutCatalogMatchesCorpusNav(t *testing.T) {
+	t.Setenv("CORPUS_NAV_FIND_INDEX", "off")
+	t.Setenv("CORPUS_NAV_INDEX_DIR", t.TempDir())
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, "niagara-mental-model-bloque7.md"),
+		[]byte("# Block 7\n\nalarm routing notes\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	script := stubScript(t, filepath.Join(root, "tools", "corpus-nav.py"))
+	for _, query := range []string{"alarm", "zzqq"} {
+		args := []string{"find", query, "--limit", "2000"}
+		t.Setenv("CORPUS_NAV_ROOT", "")
+		got := blocksFind(append([]string{script}, args...))
+		t.Setenv("CORPUS_NAV_ROOT", root)
+		var out, errb bytes.Buffer
+		rc := corpusnav.Main(args, cli.Stdio{In: strings.NewReader(""), Out: &out, Err: &errb})
+		checkAnswer(t, got, oracle{rc, out.String(), errb.String()})
 	}
 }
 

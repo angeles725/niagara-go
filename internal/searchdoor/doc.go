@@ -59,5 +59,7 @@
 // an in-process token miss leaves out module_nav's "Similar tokens:" line (a
 // full scan of the postings; the code source reads only the miss state);
 // an in-process call past its --timeout budget is typed timed out like a killed
-// process, but the library work is not interrupted (it ends with the process).
+// process, but the library work is not interrupted (it ends with the process);
+// a query that starts with "-" is searched as text by the in-process sources
+// (the Python backends' argparse read it as an option and exited 2).
 package searchdoor
