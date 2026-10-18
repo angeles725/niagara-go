@@ -91,10 +91,10 @@ func recordStore(recs [][]byte) []byte {
 	return append(out, page...)
 }
 
-// trendTable is a one-page fixed table of version-2 NumericTrendRecords (6-byte time, status and
-// trend-flags bytes, a float32), one sample a second from t0.
-func trendTable(values []float64) []byte {
-	const recSize = 12
+// trendTable is a one-page fixed table of version-2 trend records (6-byte time, status and
+// trend-flags bytes, then the value: size bytes each), one sample a second from t0.
+func trendTable(size int, values [][]byte) []byte {
+	recSize := 8 + size
 	pageSize := 8 + recSize*max(len(values), 1)
 	out := make([]byte, 64)
 	for i, v := range []int{1, pageSize, 1, recSize, len(values), 0, 0} {
@@ -107,7 +107,7 @@ func trendTable(values []float64) []byte {
 		var e hdbEnc
 		e.ts(t0 + int64(j)*1000)
 		e.b = append(e.b, 0, 0)
-		e.b = binary.BigEndian.AppendUint32(e.b, math.Float32bits(float32(v)))
+		e.b = append(e.b, v...)
 		copy(page[8+j*recSize:], e.b)
 	}
 	return append(out, page...)
@@ -153,8 +153,34 @@ func logHDB(station string, recs []logRec) []byte {
 	return hdbFile("/"+station+"/LogHistory", "history:LogRecord", recordStore(out))
 }
 
+// trendHDB is a NumericTrendRecord history: each value a float32.
 func trendHDB(station, point string, values []float64) []byte {
-	return hdbFile("/"+station+"/"+point, "history:NumericTrendRecord", trendTable(values))
+	raw := make([][]byte, len(values))
+	for i, v := range values {
+		raw[i] = binary.BigEndian.AppendUint32(nil, math.Float32bits(float32(v)))
+	}
+	return hdbFile("/"+station+"/"+point, "history:NumericTrendRecord", trendTable(4, raw))
+}
+
+// booleanTrendHDB is a BooleanTrendRecord history: each value one byte, 0 or 1.
+func booleanTrendHDB(station, point string, values []bool) []byte {
+	raw := make([][]byte, len(values))
+	for i, v := range values {
+		raw[i] = []byte{0}
+		if v {
+			raw[i][0] = 1
+		}
+	}
+	return hdbFile("/"+station+"/"+point, "history:BooleanTrendRecord", trendTable(1, raw))
+}
+
+// enumTrendHDB is an EnumTrendRecord history: each value an int32 ordinal.
+func enumTrendHDB(station, point string, ordinals []int32) []byte {
+	raw := make([][]byte, len(ordinals))
+	for i, v := range ordinals {
+		raw[i] = binary.BigEndian.AppendUint32(nil, uint32(v))
+	}
+	return hdbFile("/"+station+"/"+point, "history:EnumTrendRecord", trendTable(4, raw))
 }
 
 // ramp is a triangle from lo by step, n samples: the live Ramp's samples (offset 50, amplitude 50).

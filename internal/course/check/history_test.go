@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/angeles725/niagara-go/internal/hdbread"
 )
 
 // writeHistories writes .hdb files into a mini station's history/station/seg0 directory.
@@ -39,6 +41,9 @@ func TestHistoryKinds(t *testing.T) {
 		"AuditHistory.hdb": audit, "LogHistory.hdb": log, "Garbage.hdb": []byte("not a history"),
 		"Point1.hdb": trendHDB("Mini", "Point1", []float64{10, 20, 20}),
 		"Point2.hdb": trendHDB("Mini", "Point2", []float64{5, math.NaN()}),
+		"NaNs.hdb":   trendHDB("Mini", "NaNs", []float64{5, math.NaN(), math.NaN()}),
+		"Switch.hdb": booleanTrendHDB("Mini", "Switch", []bool{true, false, true}),
+		"Mode.hdb":   enumTrendHDB("Mini", "Mode", []int32{0, 2, 2, 5}),
 	})
 	st, err := Open(dir, "", false)
 	if err != nil {
@@ -69,9 +74,16 @@ func TestHistoryKinds(t *testing.T) {
 			"history/station/seg0/Point1.hdb: 2 distinct values, 10..20, want at least 3"},
 		{Check{Kind: kindTrend, Glob: seg + "Point1.hdb", Hist: &HistMatch{Min: 0, Max: 15}, Op: opMin, N: 1}, Fail,
 			"history/station/seg0/Point1.hdb: 3 records, 10..20, want every value in 0..15: 20 at 2026-10-15T18:42:33.959Z"},
-		// NaN is never within a range.
+		// NaN is never within a range, and never a distinct value or a bound of the min..max.
 		{Check{Kind: kindTrend, Glob: seg + "Point*.hdb", Hist: &HistMatch{Min: 0, Max: 100}, Op: opMin, N: 1}, Fail,
-			"history/station/seg0/Point2.hdb: 2 records"},
+			"history/station/seg0/Point2.hdb: 2 records, 5..5, want every value in 0..100: NaN at 2026-10-15T18:42:33.959Z"},
+		{Check{Kind: kindTrend, Glob: seg + "NaNs.hdb", Hist: &HistMatch{}, Distinct: true, Op: opEq, N: 1}, Pass,
+			"history/station/seg0/NaNs.hdb: 1 distinct value, 5..5"},
+		// A boolean counts as 0/1, an enum as its ordinal.
+		{Check{Kind: kindTrend, Glob: seg + "Switch.hdb", Hist: &HistMatch{Min: 0, Max: 1}, Distinct: true, Op: opEq, N: 2}, Pass,
+			"history/station/seg0/Switch.hdb: 2 distinct values, 0..1"},
+		{Check{Kind: kindTrend, Glob: seg + "Mode.hdb", Hist: &HistMatch{Min: 0, Max: 4}, Distinct: true, Op: opMin, N: 2}, Fail,
+			"history/station/seg0/Mode.hdb: 3 distinct values, 0..5, want every value in 0..4: 5 at 2026-10-15T18:42:35.959Z"},
 		{Check{Kind: kindTrend, Glob: seg + "Point1.hdb", Hist: &HistMatch{}, Op: opEq, N: 3}, Pass,
 			"history/station/seg0/Point1.hdb: 3 records, 10..20"},
 		{Check{Kind: kindAudit, Glob: seg + "Nothing.hdb", Hist: &HistMatch{}, Op: opMin, N: 1}, Fail, "no file history/station/seg0/Nothing.hdb"},
@@ -88,6 +100,20 @@ func TestHistoryKinds(t *testing.T) {
 		if r.Verdict != c.verdict || !strings.HasPrefix(r.Evidence, c.evidence) {
 			t.Errorf("%s %s %+v:\n got %s %q\nwant %s %q", c.ck.Kind, c.ck.Glob, *c.ck.Hist, r.Verdict, r.Evidence, c.verdict, c.evidence)
 		}
+	}
+}
+
+// A trend value of another type than the decoder's float64, bool and int64 cannot be read as a
+// number: the check is SKIP, never a 0 that could pass a range.
+func TestTrendUnsupportedValue(t *testing.T) {
+	h := &hdbread.History{RecordType: "history:NumericTrendRecord", Records: []hdbread.Record{
+		{Timestamp: "2026-10-15T18:42:32.959Z", Trend: &hdbread.TrendRecord{Value: 1.5}},
+		{Timestamp: "2026-10-15T18:42:33.959Z", Trend: &hdbread.TrendRecord{Value: "0"}},
+	}}
+	ck := &Check{Kind: kindTrend, Op: opMin, N: 1}
+	verdict, ev := checkTrend(ck, &HistMatch{Min: 0, Max: 100}, []string{"T.hdb"}, []*hdbread.History{h})
+	if want := "T.hdb: unsupported trend value string at 2026-10-15T18:42:33.959Z"; verdict != Skip || ev != want {
+		t.Errorf("got %s %q, want SKIP %q", verdict, ev, want)
 	}
 }
 

@@ -185,32 +185,47 @@ func fieldsText(fields []histField) string {
 	return strings.Join(parts, ", ")
 }
 
-// trendValue is a trend sample as a number: a float, an enum ordinal, a boolean as 0/1.
-func trendValue(r hdbread.Record) float64 {
+// trendValue is a trend sample as a number: a float, an enum ordinal, a boolean as 0/1. ok is
+// false for any other value: the check cannot read it (SKIP), never a 0 that could pass.
+func trendValue(r hdbread.Record) (v float64, ok bool) {
+	if r.Trend == nil {
+		return 0, false
+	}
 	switch v := r.Trend.Value.(type) {
 	case float64:
-		return v
+		return v, true
 	case int64:
-		return float64(v)
+		return float64(v), true
 	case bool:
 		if v {
-			return 1
+			return 1, true
 		}
+		return 0, true
 	}
-	return 0
+	return 0, false
 }
 
 // checkTrend: every file holds at least / exactly N records (with Distinct, N distinct values), every
-// value within [Min, Max] when the range is set.
+// value within [Min, Max] when the range is set. NaN is never within the range, and is neither a
+// distinct value nor a bound of the evidence's min..max.
 func checkTrend(ck *Check, m *HistMatch, rels []string, hs []*hdbread.History) (string, string) {
 	first, bad := "", ""
 	for i, h := range hs {
 		seen := map[float64]bool{}
 		lo, hi, out := math.Inf(1), math.Inf(-1), ""
 		for _, r := range h.Records {
-			v := trendValue(r)
-			seen[v] = true
-			lo, hi = math.Min(lo, v), math.Max(hi, v)
+			v, ok := trendValue(r)
+			if !ok {
+				var val any
+				if r.Trend != nil {
+					val = r.Trend.Value
+				}
+				return Skip, fmt.Sprintf("%s: unsupported trend value %T at %s", rels[i], val, r.Timestamp)
+			}
+			if !math.IsNaN(v) {
+				seen[v] = true
+				lo, hi = math.Min(lo, v), math.Max(hi, v)
+			}
 			if m.Max > m.Min && out == "" && !(v >= m.Min && v <= m.Max) { // NaN is out of range
 				out = fmt.Sprintf("%v at %s", v, r.Timestamp)
 			}
@@ -220,7 +235,7 @@ func checkTrend(ck *Check, m *HistMatch, rels []string, hs []*hdbread.History) (
 			n, noun = len(seen), "distinct value"
 		}
 		ev := fmt.Sprintf("%s: %s", rels[i], key.Plural(n, noun))
-		if len(h.Records) > 0 {
+		if lo <= hi { // a value other than NaN
 			ev += fmt.Sprintf(", %v..%v", lo, hi)
 		}
 		if first == "" {

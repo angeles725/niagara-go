@@ -214,7 +214,7 @@ own prefixes (`t:`, `tld:`) are resolved through its `m=` declarations.
 | `file-text` | every file matching a glob under the station dir (`{station}` as for `files`), read as text: a UTF-8 BOM and CRLF line ends dropped; `Match` is a Go regexp (`{station}` = the station name, quoted) | `Line` > 0: that line matches; `Line` 0: the matching lines are at least / exactly N. No matching file is FAIL; a file over 16 MiB is SKIP (`cannot read`), never checked on its first part |
 | `audit` | the records of every history file matching a glob under the station dir (`history/*/*/AuditHistory.hdb`), decoded by `internal/hdbread`; `Hist` holds Go regexps on `operation`, `target`, `slotName`, `oldValue`, `value` (empty = any) | the matching records, summed over the files, are at least / exactly N |
 | `log` | as `audit`, over `history:LogRecord` files; regexps on `logName`, `level` (`INFO`, `SEVERE`, ...), `message` | as `audit` |
-| `trend` | every trend history matching the glob (`history/*/*/NumericWritable*.hdb`); a boolean value counts 0/1, an enum its ordinal | each file has at least / exactly N records (`Distinct`: N distinct values), and every value lies in `Hist.Min..Max` (NaN never does) |
+| `trend` | every trend history matching the glob (`history/*/*/NumericWritable*.hdb`); a boolean value counts 0/1, an enum its ordinal; any other value type is SKIP | each file has at least / exactly N records (`Distinct`: N distinct values, NaN not counted), and every value lies in `Hist.Min..Max` (NaN never does; the evidence's min..max leaves it out) |
 | `source-text` | one file of the `--source` tree (`Glob` is its path, `/`-separated); `Match` is a Go regexp over the whole text (`(?s)` and `\s*` cross lines) | the matches are at least / exactly N; the evidence gives the first one's line. No `--source`, or a tree that cannot be read, is SKIP; a missing file FAIL |
 
 Nested slots: the bog reader keeps only a composite slot's direct `value` and `status`, so a
@@ -434,8 +434,10 @@ not observed.
   above the real checkout can leak in.
 - `check/history_test.go`: the `audit`, `log` and `trend` kinds over `.hdb` files built by
   `check/fixturehdb_test.go` (a one-page record store, a one-page fixed trend table, the layouts of
-  `internal/hdbread`): matches and misses, several files, a value range with NaN, no file, another
-  record type and an undecodable file (SKIP), a bad regexp. The `good` and `bad` stations carry
+  `internal/hdbread`; numeric, boolean and enum trend tables): matches and misses, several files,
+  a value range with NaN (the failure reason) and NaN left out of the distinct values, boolean and
+  enum values, an unsupported value type (SKIP), no file, another record type and an undecodable
+  file (SKIP), a bad regexp. The `good` and `bad` stations carry
   history files generated from the table `fixtureHistories` (`COURSE_UPDATE_FIXTURES=1 go test -run
   TestFixtureHistories`; the test fails when one drifts): `bad` audits three copies and a set without
   units, one constant trend and one out of 0..100.
