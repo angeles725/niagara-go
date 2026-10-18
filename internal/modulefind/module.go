@@ -138,19 +138,18 @@ func addTo(set map[string]map[string]bool, key, value string) {
 
 func (m *module) scanFile(cls, content string) {
 	text := []rune(content)
-	extendsRe := pyre.MustCompile(`\bclass\s+`+escape(cls)+`\s+extends\s+(\w+)`, 0)
-	if mt := extendsRe.SearchRunes(text, 0); mt != nil {
-		m.extends.set(cls, mt.Group(1))
+	if sup, ok := extendsOf(text, cls); ok {
+		m.extends.set(cls, sup)
 	}
 	for _, mt := range setLiteralRe.FindIter(text) {
 		addTo(m.writers, mt.Group(1), cls+`: .set("`+mt.Group(1)+`", ...)`)
 	}
-	for _, mt := range setterRe.FindIter(text) {
+	for _, mt := range findIterFrom(setterRe, setRunes, text) {
 		g := []rune(mt.Group(1))
 		slot := string(unicode.ToLower(g[0])) + string(g[1:])
 		addTo(m.writers, slot, cls+": set"+mt.Group(1)+"(...)")
 	}
-	for _, mt := range dynSetRe.FindIter(text) {
+	for _, mt := range dynSetMatches(text) {
 		addTo(m.dynWriters, cls, cls+": "+mt.Group(1)+".set("+mt.Group(2)+", ...)  [slot resolved at runtime]")
 	}
 	for _, mt := range ordRe.FindIter(text) {
