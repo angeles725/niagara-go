@@ -11,8 +11,8 @@ import (
 	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
-// SnippetWidth is the default width of snippet and clip.
-const SnippetWidth = 160
+// snippetWidth is the default width of snippet and clip.
+const snippetWidth = 160
 
 // isHeaderLine is fulltext_index._HEADER (`^([A-Z][A-Z ]*):\s?(.*)$`)
 // matching a line split at "\n": an upper-case key, then a colon.
@@ -136,7 +136,7 @@ func Snippet(dirs []SourceDir, h *Hit, groups []Group) (int, string) {
 	if bestLine == 0 {
 		return 0, ""
 	}
-	return bestLine, Clip(best, groups, SnippetWidth)
+	return bestLine, Clip(best, groups, snippetWidth)
 }
 
 // Clip is fulltext.clip: a line longer than width code points is cut to

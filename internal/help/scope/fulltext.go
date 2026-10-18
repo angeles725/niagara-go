@@ -12,7 +12,9 @@ package scope
 // concurrent nh / nsearch processes build an index once: the others wait,
 // then use the index the first one wrote. A lock left by a process that died
 // (Ctrl-C) is taken over at once (lock_unix.go / lock_windows.go check its
-// pid), one older than lockStale too.
+// pid), one older than lockStale too. A search waits lockWait for a live
+// holder, longer while the holder keeps touching the lock: a corpus rebuild
+// (nh rebuild-all) holds the same lock with a heartbeat for its whole run.
 
 import (
 	"bytes"
@@ -38,6 +40,9 @@ var (
 	lockPoll  = 100 * time.Millisecond // how often a waiting process retries the lock
 	lockWait  = 2 * time.Minute        // how long it waits before building anyway
 	lockStale = 10 * time.Minute       // a lock older than this is taken over, live pid or not
+	// lockFollowMax caps how long a search follows a heartbeating rebuild
+	// (a holder whose heartbeat outlives its hung work): then it builds anyway.
+	lockFollowMax = 30 * time.Minute
 	// guardStale is the age after which a takeover guard is abandoned.
 	guardStale = time.Minute
 )
@@ -98,7 +103,7 @@ func ensure(baseDir string, stderr io.Writer) (path string, rebuilt bool, err er
 	// open_index's places, spelled as Python names them in its notes.
 	for _, out := range []string{ftbuild.DefaultOutput(baseDir), fts.CachePath(baseDir)} {
 		dir := strings.TrimSuffix(out, string(filepath.Separator)+fts.DBName)
-		p, built, err := buildAt(baseDir, out, current, announce)
+		p, built, err := buildAt(baseDir, out, current, announce, stderr)
 		if err == nil {
 			for _, line := range built {
 				fmt.Fprintln(stderr, line)
@@ -115,13 +120,14 @@ func ensure(baseDir string, stderr io.Writer) (path string, rebuilt bool, err er
 
 // buildAt builds the index of baseDir at out under its lock. When another
 // process wrote an up-to-date index while this one waited for the lock, it
-// returns that index's path and no log lines.
-func buildAt(baseDir, out, current string, announce func()) (path string, log []string, err error) {
+// returns that index's path and no log lines. Waiting on a corpus rebuild is
+// noted once on stderr.
+func buildAt(baseDir, out, current string, announce func(), stderr io.Writer) (path string, log []string, err error) {
 	if err := os.MkdirAll(filepath.Dir(out), 0o777); err != nil {
 		return "", nil, err
 	}
 	lock := out + ".lock"
-	mine, err := acquire(lock)
+	mine, err := acquireFollowing(lock, func(holder []byte) { fmt.Fprint(stderr, waitingNote(lock, holder)) })
 	if err != nil {
 		return "", nil, err
 	}
@@ -149,8 +155,26 @@ func buildAt(baseDir, out, current string, announce func()) (path string, log []
 // the caller builds anyway (a build writes a temp file and renames it, so
 // concurrent builds stay safe). An error means the lock cannot be created:
 // the location is not writable.
-func acquire(lock string) (mine []byte, err error) {
-	deadline := time.Now().Add(lockWait)
+func acquire(lock string) (mine []byte, err error) { return acquireLock(lock, nil) }
+
+// acquireFollowing is acquire for a search about to build the index: past
+// lockWait it keeps waiting while the same lock's mtime moved within the
+// last lockWait, the heartbeat of a corpus rebuild (WithBuildLock), so the
+// search never indexes a half-rewritten corpus; onWait runs once, when
+// that extra wait starts. A lock that stops moving (a plain index build, a
+// hung or remote holder) gets acquire's build-anyway lockWait after its last
+// move, a new holder gets a fresh lockWait, a dead holder's lock is still
+// taken over (stale), and after lockFollowMax the search builds anyway.
+func acquireFollowing(lock string, onWait func(holder []byte)) ([]byte, error) {
+	return acquireLock(lock, onWait)
+}
+
+func acquireLock(lock string, onWait func(holder []byte)) (mine []byte, err error) {
+	start := time.Now()
+	deadline := start.Add(lockWait)
+	var lastSeen []byte
+	var lastMtime, lastMove time.Time
+	waiting := false
 	for {
 		content := lockContent()
 		f, err := os.OpenFile(lock, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o666)
@@ -176,8 +200,28 @@ func acquire(lock string) (mine []byte, err error) {
 		if rerr == nil && serr == nil && stale(seen, st.ModTime()) && takeOver(lock, seen) {
 			continue
 		}
-		if time.Now().After(deadline) {
-			return nil, nil
+		now := time.Now()
+		if onWait != nil && now.Sub(start) > lockFollowMax {
+			return nil, nil // checked first: changing holders reset the deadline below
+		}
+		if rerr == nil && serr == nil && len(seen) > 0 { // empty: a lock being written
+			if !bytes.Equal(seen, lastSeen) { // another holder: its moves count from now
+				if lastSeen != nil && onWait != nil {
+					deadline = now.Add(lockWait) // and it gets a full wait of its own
+				}
+				lastSeen, lastMtime, lastMove = seen, st.ModTime(), time.Time{}
+			} else if st.ModTime().After(lastMtime) {
+				lastMtime, lastMove = st.ModTime(), now
+			}
+		}
+		if now.After(deadline) {
+			if onWait == nil || lastMove.IsZero() || now.Sub(lastMove) > lockWait {
+				return nil, nil
+			}
+			if !waiting {
+				waiting = true
+				onWait(lastSeen)
+			}
 		}
 		time.Sleep(lockPoll)
 	}
@@ -284,4 +328,11 @@ func absPath(p string) string {
 		return a
 	}
 	return p
+}
+
+// waitingNote is the stderr line of a search that waits past lockWait for a
+// corpus rebuild still touching its lock.
+func waitingNote(lock string, holder []byte) string {
+	return fmt.Sprintf("full-text: waiting for a corpus rebuild to finish (%s held by %s)\n",
+		lock, strings.TrimSpace(string(holder)))
 }

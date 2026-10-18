@@ -6,6 +6,7 @@ package fts
 
 import (
 	"regexp"
+	"slices"
 	"sort"
 
 	"github.com/angeles725/niagara-go/internal/bm25"
@@ -226,7 +227,7 @@ func SearchUsing(open Opener, baseDir, versionID, query string, srcs []string, m
 	}
 	var use []string
 	for _, s := range srcs {
-		if contains(available, s) {
+		if slices.Contains(available, s) {
 			use = append(use, s)
 		}
 	}

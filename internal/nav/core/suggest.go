@@ -12,8 +12,8 @@ import (
 	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
-// MaxSuggestions is suggest.MAX_SUGGESTIONS.
-const MaxSuggestions = 8
+// maxSuggestions is suggest.MAX_SUGGESTIONS.
+const maxSuggestions = 8
 
 // nameCore is suggest._core: "BConversion" -> "conversion"; other names only
 // lose their case.
@@ -110,7 +110,7 @@ func CloseNames(query string, names []string, limit int) []string {
 // Report is suggest.report: Miss plus a "Did you mean" line when close names exist.
 func (r *Runtime) Report(subject, scope, query string, names []string, hint string) []string {
 	r.Miss(subject, scope, hint)
-	s := CloseNames(query, names, MaxSuggestions)
+	s := CloseNames(query, names, maxSuggestions)
 	if len(s) > 0 {
 		fmt.Fprintf(r.Out, "  Did you mean: %s\n", strings.Join(s, ", "))
 	}

@@ -32,7 +32,7 @@ func TestCloseNamesMatchesPython(t *testing.T) {
 		if err := json.Unmarshal(c[1], &want); err != nil {
 			t.Fatal(err)
 		}
-		limit := MaxSuggestions
+		limit := maxSuggestions
 		if q, ok := strings.CutSuffix(query, " limit 2"); ok {
 			query, limit = q, 2
 		}

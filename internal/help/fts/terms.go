@@ -5,6 +5,7 @@ package fts
 // stemmed; a query word matches whole tokens only.
 
 import (
+	"slices"
 	"sort"
 	"strings"
 	"sync"
@@ -172,22 +173,13 @@ func WordTerms(w string) []string {
 	if parts := camelParts(w); len(parts) > 1 {
 		for _, p := range parts {
 			t := Stem(textfold.Lower(p))
-			if utf8.RuneCountInString(t) >= 2 && !contains(out, t) {
+			if utf8.RuneCountInString(t) >= 2 && !slices.Contains(out, t) {
 				out = append(out, t)
 			}
 		}
 	}
 	wordTermsCache[w] = out
 	return out
-}
-
-func contains(xs []string, x string) bool {
-	for _, y := range xs {
-		if y == x {
-			return true
-		}
-	}
-	return false
 }
 
 // Terms is fulltext_terms.terms: every index term of a text in order,

@@ -15,17 +15,17 @@ var NavMarker = filepath.Join("indexes", "module-inventory.json")
 // Executable is os.Executable, replaceable in tests.
 var Executable = os.Executable
 
-// NavDirVars name the module-navigator checkout, first set wins: an installed
+// navDirVars name the module-navigator checkout, first set wins: an installed
 // binary (outside any checkout) is pointed at its indexes with them.
 // NAV_DIR is an alias.
-var NavDirVars = []string{"MODULE_NAVIGATOR_DIR", "NAV_DIR"}
+var navDirVars = []string{"MODULE_NAVIGATOR_DIR", "NAV_DIR"}
 
 // LocateNavDir returns the module-navigator checkout: the directory the first
-// set NavDirVars variable names (made absolute), which must hold indexes/ (else an error
+// set navDirVars variable names (made absolute), which must hold indexes/ (else an error
 // naming the variable, "VAR=value: ...", and "" - never a fallback to the
 // search); with none set, the search of FindNavDir.
 func LocateNavDir() (string, error) {
-	if name, v := locate.FirstEnv(os.Getenv, NavDirVars...); v != "" {
+	if name, v := locate.FirstEnv(os.Getenv, navDirVars...); v != "" {
 		if !locate.HasDir("indexes")(v) {
 			return "", fmt.Errorf("%s=%s: not a module-navigator checkout (no indexes/ directory)", name, v)
 		}
@@ -34,7 +34,7 @@ func LocateNavDir() (string, error) {
 	return searchNavDir(), nil
 }
 
-// FindNavDir is LocateNavDir without its error: "" when a NavDirVars variable
+// FindNavDir is LocateNavDir without its error: "" when a navDirVars variable
 // names no checkout.
 func FindNavDir() string {
 	dir, _ := LocateNavDir()
