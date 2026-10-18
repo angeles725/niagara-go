@@ -1,6 +1,9 @@
-package pxrender
+package pycompat
 
-import "testing"
+import (
+	"runtime"
+	"testing"
+)
 
 // ntJoinCases: ntpath.join(*parts) as Windows CPython 3.13 returns it (the same table
 // Linux CPython's pure-Python ntpath gives).
@@ -62,10 +65,53 @@ var ntJoinCases = []struct {
 	{[]string{"c:\\a", "C:b"}, "C:\\a\\b"},
 }
 
-func TestNTJoin(t *testing.T) {
+// posixJoinCases: posixpath.join(*parts) as CPython returns it on any host.
+var posixJoinCases = []struct {
+	parts []string
+	want  string
+}{
+	{[]string{""}, ""},
+	{[]string{"", "", ""}, ""},
+	{[]string{"a"}, "a"},
+	{[]string{"a", "b", "c"}, "a/b/c"},
+	{[]string{"a/", "b"}, "a/b"},
+	{[]string{"a//", "b"}, "a//b"},
+	{[]string{"", "a"}, "a"},
+	{[]string{"a", ""}, "a/"},
+	{[]string{"a", "", "b"}, "a/b"},
+	{[]string{"a", "/b"}, "/b"},
+	{[]string{"/a", "b", "/c", "d"}, "/c/d"},
+	{[]string{"a", "b/", ""}, "a/b/"},
+	{[]string{"a\\", "b"}, "a\\/b"},
+	{[]string{"C:\\st", "x"}, "C:\\st/x"},
+	{[]string{"//srv/share", "x"}, "//srv/share/x"},
+}
+
+func TestNtJoin(t *testing.T) {
 	for _, c := range ntJoinCases {
-		if got := ntJoin(c.parts[0], c.parts[1:]...); got != c.want {
-			t.Errorf("ntJoin(%q) = %q, want %q", c.parts, got, c.want)
+		if got := NtJoin(c.parts[0], c.parts[1:]...); got != c.want {
+			t.Errorf("NtJoin(%q) = %q, want %q", c.parts, got, c.want)
+		}
+	}
+}
+
+func TestPosixJoinTable(t *testing.T) {
+	for _, c := range posixJoinCases {
+		if got := PosixJoin(c.parts[0], c.parts[1:]...); got != c.want {
+			t.Errorf("PosixJoin(%q) = %q, want %q", c.parts, got, c.want)
+		}
+	}
+}
+
+// TestJoinFollowsTheHost: Join is ntpath.join on Windows and posixpath.join elsewhere.
+func TestJoinFollowsTheHost(t *testing.T) {
+	cases, flavour := posixJoinCases, PosixJoin
+	if runtime.GOOS == "windows" {
+		cases, flavour = ntJoinCases, NtJoin
+	}
+	for _, c := range cases {
+		if got, want := Join(c.parts[0], c.parts[1:]...), flavour(c.parts[0], c.parts[1:]...); got != want {
+			t.Errorf("Join(%q) = %q, want %q", c.parts, got, want)
 		}
 	}
 }

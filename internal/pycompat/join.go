@@ -1,25 +1,23 @@
-package pxrender
+package pycompat
 
 import (
 	"runtime"
 	"strings"
-
-	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
-// pyJoin is os.path.join: posixpath.join off Windows, ntpath.join on Windows (backslash
-// separators, "/" in a part kept as given, nothing normalised).
-func pyJoin(first string, rest ...string) string {
+// Join is os.path.join for the host: posixpath.join off Windows, ntpath.join on Windows.
+// Nothing is normalised, so a "/" inside a part stays as given on Windows.
+func Join(first string, rest ...string) string {
 	if runtime.GOOS == "windows" {
-		return ntJoin(first, rest...)
+		return NtJoin(first, rest...)
 	}
-	return pycompat.PosixJoin(first, rest...)
+	return PosixJoin(first, rest...)
 }
 
-// ntJoin is CPython's ntpath.join: a rooted part restarts the path (keeping the drive), a part
-// on another drive replaces it, and a backslash goes between parts unless one already ends in
-// a separator.
-func ntJoin(first string, rest ...string) string {
+// NtJoin is CPython's ntpath.join: a rooted part restarts the path (keeping the drive), a
+// part on another drive replaces it, and a backslash goes between parts unless one already
+// ends in a separator. Drive letters compare case-insensitively; the later spelling wins.
+func NtJoin(first string, rest ...string) string {
 	drive, root, path := ntSplitRoot(first)
 	for _, p := range rest {
 		pDrive, pRoot, pPath := ntSplitRoot(p)
