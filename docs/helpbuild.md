@@ -25,6 +25,7 @@ document disagree, the code wins and this document is corrected.
 | **S9** (done) | source / slots / xref indexes; `call-index.json` is retired (decision I3-5), not ported | `source_indexer.py`, `slots_indexer.py`, `xref_builder.py` | ~2,000 with tests |
 | **S10a** (done) | `rebuild-all` in process (plan, `--only`, `--dry-run`, `--stamp-only`, the corpus manifest), the `build.log` hook of `extract_and_index` | `maintenance.py` (`BUILDERS`, `cmd_rebuild_all`, the fingerprint), `version_setup._rebuild` | ~1,000 with tests |
 | S10 | orchestration (`extract`, `versions add`, `freshness`) and the nh wiring of `rebuild-all` | `extract_version.py`, `version_setup.py`, `version_report.py`, `maintenance.py` (rest) | ~750 |
+| **S10b-2** (done) | `versions add` (detect, register, extract and index, both gates, the summary, the rollback) and the nh wiring of `versions add` and `versions extract` | `version_setup.py` (rest), `version_report.py`, `extract_version.py` (CLI) | ~1,300 with tests |
 | **S10b-1** (done) | the coverage reports: `coverage`, `coverage <module>`, `coverage --doc-jars` (library + printers; the nh wiring is a later slice) | `coverage_report.py`, `doc_coverage.py` (+ `doc_types.classify`, `classify_unmapped`, `content_type`, `example_skip_reason`) | ~1,300 + tests |
 | **S11a** (done) | whole-install sweep gate (`coverage --sweep`, a `versions add` gate) as a library + report, on S10b-1's `Classify` and `Indexed`; nh wiring is a later slice | `install_sweep.py`, `course.gate` / `print_gate` | ~1,700 with tests |
 
@@ -904,6 +905,65 @@ Most of the time is pdftotext on the manuals (the same binary on both sides).
   (Python's `open("w")` is not atomic and takes 0666 less the umask; the same bytes and
   mode under the usual umask 022).
 
+## S10b-2: versions add and versions extract
+
+| File | Ports | Notes |
+|---|---|---|
+| `versionsetup_add.go` | `valid_version_id`, `detect_version`, `register`, `_restore_registry`, `_rollback`, `add_version` | `AddVersion(repo, install, w, AddOptions)` writes add_version's lines to `w` and returns its status (0 ready, 1 a gate or the fidelity check failed, 2 cannot add); an error is what Python raises, after the rollback when extraction raised; `\d`/`\s` are Unicode classes as in Python's `re` |
+| `versionreport.go` | `run_gates`, `_result_line`, `_counts`, `print_summary`, `KINDS`, `GATES_LOG` | `RunGates` runs `DocJarCoverage` then `RunSweep` into buffers of their own, writes both to `<data root>/gates.log`; `PrintSummary` counts the full-text documents per source through the `FulltextDocs` it is given |
+
+API for nh (`internal/help/cmds_maint_versions.go`):
+
+```go
+status, err := helpbuild.AddVersion(repoRoot, install, os.Stdout, helpbuild.AddOptions{
+	Label: label, Default: makeDefault, Force: force, ID: idOrNil, // nil: detected
+	Rebuild:  helpbuild.RebuildToLog(os.Stderr), // the extraction's rebuild-all
+	Fulltext: rebuildingDocs,                    // open_index(root).docs(), building under scope's lock
+})
+```
+
+`versions extract <id> [--force] [--verify-only] [--fill-missing] [--no-index]` is
+`extract_version.py` (which had no nh entry) over `ExtractAndIndex`: an empty id, an
+unknown id (resolved against the registry only, no `NIAGARA_HELP_VERSION`, no default) and
+a refusal print `ERROR: ...` on stderr with exit 2; otherwise exit 0 verified, 1 the
+fidelity check failed. Its cases are Go-only (`internal/help/testdata/go/golden`, D46).
+
+S10b-2 parity (`testdata/versions/driver.py`: `add_version` as `cli/cmd_versions.py` calls it,
+`build_call_index.py` taken out of `BUILDERS`, stdout line-buffered). Each scenario runs in
+one repository path under `$HOME` (never `/tmp`): set up, run by Python, observed, removed,
+set up again, run by Go, observed, so printed paths are equal. Compared: stdout, the exit
+status and the whole repository tree byte for byte (registry, version manifest, jar-listing
+cache, every data-root file, `gates.log`), except `generated_utc` of the version manifest,
+`stamped_utc` of `indexes/.manifest.json`, the `Done in`/`Time:` run times of `build.log`
+and, in `indexes/fulltext.sqlite` (compared as its `docs` and `meta` rows, not its bytes),
+the newest-mtime and SHA-1 fields of each source of the meta fingerprint; Python's PDF page
+counts are adjusted as `pyPDFTreeLines` does. stderr is not compared.
+
+| Test | Compares |
+|---|---|
+| `TestValidVersionID`, `TestDetectVersion`, `TestRegister`, `TestAddVersionRefusals`, `TestAddVersionHappyPath`, `TestAddVersionRollsBackARefusal`, `TestAddVersionRollsBackAnError`, `TestResultLine` | no Python: every refusal line, detection order and fallbacks, the registry bytes, a full add, the rollbacks |
+| `TestParityVersionsAddSynthetic` | the synthetic install plus a `baja.jar`: the refusals before registering (no install, a bad `--id`, an empty `--id`, Unicode digits), an add, the same add again, a forced re-add with `--default` and a non-ASCII `--label`, a second install spelling with `--id`, a data root that already holds a raw folder (rollback of a registry the add did not create) |
+| `TestParityVersionsAddReal` | `HELPBUILD_PARITY_VERSIONS_ADD=<install>`: its `baja.jar`, the `realSubset` jars it has and its two smallest PDF manuals, copied under `$HOME` |
+
+Measured 2026-10-18 on the EC-Net 4.3.58.18 subset: 21,287 observed lines identical; Python
+68.2 s, Go 17.0 s (both including the PDF conversion and the gates).
+
+### S10b-2 intended differences
+
+- **The registry** is written in one atomic write with its trailing newline (Python writes the
+  JSON atomically, then appends the newline).
+- **A `baja.jar` whose `module.xml` cannot be inflated** falls back to the folder name like a
+  bad zip (Python raises `zlib.error`, which `detect_version` does not catch). An encrypted
+  entry or an unsupported method is an error on both sides.
+- **A registry of an unexpected shape** (top level or `versions` not an object, an entry or its
+  `install_dir`/`label` of another type) is an error, as in S10b-1.
+- **What Python raises** (a traceback, exit 1) is nh's `ERROR: ...` with exit 2, as for every
+  nh command; the rollback runs first in both.
+- **Output timing**: the lines of the extraction step are written when it returns (Python
+  prints them as they come), the same bytes in the same order.
+- **`gates.log`** is LF on every OS (Python's text mode writes CRLF on Windows), as `build.log`.
+- **A full-text index no location can hold** is `scope.UnwritableIndexError` (exit 2), as in S11a.
+
 ## Real-data parity
 
 Every test that reads a real install or the real corpus runs only on request, `-short`
@@ -932,6 +992,7 @@ cache, glob, toc and fuzz parity tests (5,000 snippets) stay on in `go test`.
 `make parity` sets `REAL`, `FULL`, `415`, `INDEXES=4.14.0.162:4.15.6.20:4.3.58.18`, `COVERAGE=4.14.0.162:4.15.6.20` and `SWEEP=4.15.6.20:4.3.58.18` and runs every `Parity` test of the package (the sweep adds about 100 s over a warm jar-listing cache).
 
 | `HELPBUILD_PARITY_REBUILD=a:b` | `TestParityRebuildReal` on that list of version ids (off otherwise; not part of the `REAL` umbrella) |
+| `HELPBUILD_PARITY_VERSIONS_ADD=<install>` | `TestParityVersionsAddReal` on a subset copy of that install (off otherwise; not part of the `REAL` umbrella; `make parity` sets the EC-Net 4.3.58.18 install) |
 
 `make parity` sets `REAL`, `FULL`, `415`, `INDEXES=4.14.0.162:4.15.6.20:4.3.58.18` and `REBUILD=4.3.58.18` and runs every `Parity` test of the package.
 Timings on the development laptop: `go test ./internal/helpbuild/` about 20 s without the
@@ -943,7 +1004,6 @@ about 80 s of it); `make parity` 8 to 10 min (the full-install sweep 80 s or mor
 
 - `maintenance.ORPHAN_INDEXES` is `[]` (its cleanup loop never runs).
 - `maintenance.BUILDERS` `skip_if` is always `None` (the skip branch is unreachable).
-- `extract_version --no-index` has no caller.
 - `bajadoc_parser.format_output` exists only as a re-export for `bajadoc_xml_parser`; both
   are retired in Phase 5.
 - `doc_jars.fidelity_jar(report=None)` default is used only by tests.

@@ -111,7 +111,8 @@ clean:
 # --doc-jars) on two (2 to 4 min, mostly the --doc-jars reads over /mnt/c), the
 # whole-install sweep gate (S11a) on 4.15.6.20 and 4.3.58.18 (about 90 s over a warm
 # jar-listing cache, 6 min cold), and rebuild-all (S10a) rebuilds a copy of 4.3.58.18 on
-# each side, PDF manuals included (about 4 min).
+# each side, PDF manuals included (about 4 min), and versions add (S10b-2) adds a subset
+# copy of the 4.3.58.18 install on each side (about 90 s).
 # A green run prints the result lines (subtests included) and the skips; a failing run
 # prints the whole -v output but the === progress lines, so every failure message and
 # diff is kept. The exit status is go test's.
@@ -122,6 +123,7 @@ parity-helpbuild:
 		HELPBUILD_PARITY_COVERAGE=4.14.0.162:4.15.6.20 \
 		HELPBUILD_PARITY_SWEEP=4.15.6.20:4.3.58.18 \
 		HELPBUILD_PARITY_REBUILD=4.3.58.18 \
+		HELPBUILD_PARITY_VERSIONS_ADD=/mnt/c/Niagara/EC-Net4-4.3.58.18 \
 		$(GO) test -count=1 -timeout 60m -run Parity -v ./internal/helpbuild/ 2>&1); st=$$?; \
 		if [ $$st -eq 0 ]; then \
 			printf '%s\n' "$$out" | grep -E '^ *(--- |ok|FAIL|PASS)|real-data parity|not mounted|not found|parity driver python'; \

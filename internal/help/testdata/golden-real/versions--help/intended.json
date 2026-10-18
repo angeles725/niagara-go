@@ -1,0 +1,6 @@
+{
+ "exit": 0,
+ "reason": "D34: 'versions extract' (extract_version.py, which had no niagara_help entry) is a Go-only subcommand, so the subcommand list names it",
+ "stderr": "",
+ "stdout": "usage: niagara_help versions [-h] {add,extract,list} ...\n\npositional arguments:\n  {add,extract,list}\n    add               Register a Niagara install, extract and index all of its documentation, run\n                      both gates and print a summary\n    extract           Extract a registered version's doc jars, build its indexes and verify every\n                      file (exit 0 verified, 1 the fidelity check failed, 2 cannot run)\n    list              Registered versions, their data roots and whether they are extracted\n\noptions:\n  -h, --help          show this help message and exit\n"
+}
