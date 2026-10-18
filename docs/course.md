@@ -235,7 +235,7 @@ own prefixes (`t:`, `tld:`) are resolved through its `m=` declarations.
 | `jar-text` | the first entry matching a glob | it holds every listed string |
 | `jar-signed` | `META-INF/*.SF` and `META-INF/*.RSA`, `.DSA` or `.EC` | both exist |
 | `jar-cert` | the signer certificate of the jar's first signature block (`META-INF/*.RSA`, `.DSA`, `.EC`: a PKCS#7 SignedData, below); `Fact` `subject`, `issuer` (the DN, RFC 2253 order, CN first), `chain`, `timestamp`, `same` (`CertOf`: another jar part), `pem` (`Glob` under `Root`) | `subject`/`issuer`: the DN matches `Match`; `chain`: the signer's path inside the block (each next certificate is the issuer by name and signed the one before, up to a self-signed root) has at least / exactly N certificates; `timestamp`: the signer carries an RFC 3161 token (`id-aa-timeStampToken`) whose signer's subject matches `Match`; `same`: both jars' signer certificates are the same DER; `pem`: the signer is the first `CERTIFICATE` of the PEM file. No jar or no block is FAIL; a block that cannot be read is SKIP |
-| `file-text` | every file matching a glob under the row's root (globs as for `files`), read as text: a UTF-8 BOM and CRLF line ends dropped; `Match` is a Go regexp (`{station}` = the station name, quoted, station root only) | `Line` > 0: that line matches; `Line` 0: the matching lines are at least / exactly N; `Whole`: the matches over the whole text (lines joined with `\n`, so `\s*` crosses them; `(?m)` for `^`/`$` per line) are at least / exactly N, the evidence gives the first one's line and text; with `Names`, the first match's group 1 is a comma-separated `NAME=value` list (a DN) whose names, sorted, equal `Names` (each once, none other). No matching file is FAIL; a file over 16 MiB is SKIP (`cannot read`), never checked on its first part |
+| `file-text` | every file matching a glob under the row's root (globs as for `files`), read as text: a UTF-8 BOM and CRLF line ends dropped; `Match` is a Go regexp (`{station}` = the station name, quoted, station root only) | `Line` > 0: that line matches; `Line` 0: the matching lines are at least / exactly N; `Whole`: the matches over the whole text (lines joined with `\n`, so `\s*` crosses them; `(?m)` for `^`/`$` per line) are at least / exactly N, the evidence gives the first one's line and text; with `Names`, the first match's group 1 is a comma-separated `NAME=value` list (a DN) whose names, sorted, equal `Names` (each once, none other); a comma escaped with a backslash (RFC 2253 `\,`) or inside a double-quoted value belongs to the value. No matching file is FAIL; a file over 16 MiB is SKIP (`cannot read`), never checked on its first part |
 | `audit` | the records of every history file matching a glob under the station dir (`history/*/*/AuditHistory.hdb`), decoded by `internal/hdbread`; `Hist` holds Go regexps on `operation`, `target`, `slotName`, `oldValue`, `value` (empty = any) | the matching records, summed over the files, are at least / exactly N |
 | `log` | as `audit`, over `history:LogRecord` files; regexps on `logName`, `level` (`INFO`, `SEVERE`, ...), `message` | as `audit` |
 | `trend` | every trend history matching the glob (`history/*/*/NumericWritable*.hdb`); a boolean value counts 0/1, an enum its ordinal; any other value type is SKIP | each file has at least / exactly N records (`Distinct`: N distinct values, NaN not counted), and every value lies in `Hist.Min..Max` (NaN never does; the evidence's min..max leaves it out) |
@@ -277,7 +277,7 @@ SignedData; it verifies only the certificate chain (`CheckSignatureFrom`), never
 A malformed block is an error, never a panic (`FuzzParseSignedData`). The unsigned attributes hold
 only the timestamp: an attribute or a token that cannot be read costs the `timestamp` fact alone
 (SKIP `cannot read the timestamp token of ...`), never the signer, issuer, chain, `same` or `pem`
-facts. The rows (2026-10-18):
+facts; a token that carries a token of its own is such an error. The rows (2026-10-18):
 
 | Row | Item | Reads (`training-rt`, live) |
 |---|---|---|
@@ -492,7 +492,9 @@ one of them has a dotted slot.
 | `UNDECIDED` | no linked check (`no check covers it`), or a SKIP and no FAIL | the reason: the SKIP checks |
 
 A linked check that is SKIP only because a tree it reads was not given (`--install`, `--source`,
-`--labsrc`, `--solutions`: `Result.Absent`, the flag) does not lower what the other checks decide,
+`--labsrc`, `--solutions`: `Result.Absent`, the flag; set only when the SKIP is that tree's own `no
+--X DIR` message, so a read or parse failure that comes first, such as an unreadable jar block, stays
+a plain SKIP) does not lower what the other checks decide,
 and never lets the item reach CONFIRMED either (never claim more than was checked): the item gets
 the verdict of the checks that ran, capped at PARTIAL, and the reason ends with `not run: C1.12, C5.6
 (--labsrc not given); C1.3 (--install not given)`. Such an item gets no marker line (`verify`) and no

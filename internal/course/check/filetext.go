@@ -150,12 +150,27 @@ func (s *Station) checkFileText(ck *Check) (string, string) {
 	return Fail, fmt.Sprintf("%d of %d files pass, want %s: %s", pass, len(files), target, bad)
 }
 
-// attrNames is the sorted, space-joined names of a comma-separated NAME=value list.
+// attrNames is the sorted, space-joined names of a comma-separated NAME=value list (a DN): a comma
+// escaped with a backslash (RFC 2253 \,) or inside a double-quoted value is part of the value.
 func attrNames(list string) string {
 	var names []string
-	for _, a := range strings.Split(list, ",") {
-		name, _, _ := strings.Cut(a, "=")
+	start, quoted := 0, false
+	for i := 0; i <= len(list); i++ {
+		if i < len(list) {
+			switch c := list[i]; {
+			case c == '\\':
+				i++ // the escaped character, whatever it is
+				continue
+			case c == '"':
+				quoted = !quoted
+				continue
+			case c != ',' || quoted:
+				continue
+			}
+		}
+		name, _, _ := strings.Cut(list[start:i], "=")
 		names = append(names, strings.TrimSpace(name))
+		start = i + 1
 	}
 	sort.Strings(names)
 	return strings.Join(names, " ")

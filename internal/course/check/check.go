@@ -201,8 +201,10 @@ func (s *Station) Run(ck *Check) Result {
 	default:
 		r.Verdict, r.Evidence = s.checkJar(ck)
 	}
-	if r.Verdict == Skip {
-		r.Absent = s.treeNotGiven(ck)
+	// Absent only when the missing tree caused the SKIP (its "no --X DIR" message): a read or parse
+	// failure that happens first stays a plain SKIP, which leaves the item UNDECIDED.
+	if t := s.treeNotGiven(ck); r.Verdict == Skip && t != "" && strings.HasPrefix(r.Evidence, "no "+t+" DIR:") {
+		r.Absent = t
 	}
 	return r
 }

@@ -36,18 +36,18 @@ func TestRowValidation(t *testing.T) {
 }
 
 // A station name holding glob or brace characters matches only itself: {station} is replaced after
-// the row's own {a,b} groups are expanded.
+// the row's own {a,b} groups are expanded. The name uses characters every OS allows in a file name.
 func TestStationNameBraces(t *testing.T) {
 	dir := writeStation(t)
 	bog, err := os.ReadFile(filepath.Join(dir, "config.bog"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	name := "Mi{a,b}*"
+	name := "Mi{a,b}[ab]"
 	if err := os.WriteFile(filepath.Join(dir, "config.bog"), []byte(strings.Replace(string(bog), `v="Mini"`, `v="`+name+`"`, 1)), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	for _, f := range []string{name + "_1.csv", "Mia_1.csv", "Mib_1.csv", name + "_2.txt"} {
+	for _, f := range []string{name + "_1.csv", "Mia_1.csv", "Mib_1.csv", "Mi{a,b}a_1.csv", name + "_2.txt"} {
 		if err := os.WriteFile(filepath.Join(dir, "shared", f), nil, 0o644); err != nil {
 			t.Fatal(err)
 		}
@@ -80,6 +80,23 @@ func TestDnameAttributes(t *testing.T) {
 		st := &Station{labsrc: filepath.Join(labs, "dev")}
 		if r := st.Run(specRow("C5.7")); r.Verdict != c.verdict {
 			t.Errorf("%s: %s %q, want %s", c.dname, r.Verdict, r.Evidence, c.verdict)
+		}
+	}
+}
+
+// attrNames splits a DN on the commas between attributes only: an escaped comma (RFC 2253 \,) or a
+// comma inside a quoted value is part of the value.
+func TestAttrNames(t *testing.T) {
+	for in, want := range map[string]string{
+		"C=MX,ST=S,L=L,O=O,CN=x":               "C CN L O ST",
+		`C=MX,ST=S,L=L,O=Veytrix\, Inc.,CN=x`:  "C CN L O ST",
+		`C=MX,ST=S,L=L,O="Veytrix, Inc.",CN=x`: "C CN L O ST",
+		`C=MX,ST=S,L=L,O="a\"b, c",CN=x`:       "C CN L O ST",
+		`C=MX,ST=S,L=L,O=Veytrix, Inc.,CN=x`:   "C CN Inc. L O ST", // an unescaped comma separates
+		`C=MX,ST=S,L=L,O=x\\,OU=y,CN=x`:        "C CN L O OU ST",   // an escaped backslash ends before the comma
+	} {
+		if got := attrNames(in); got != want {
+			t.Errorf("attrNames(%s) = %q, want %q", in, got, want)
 		}
 	}
 }

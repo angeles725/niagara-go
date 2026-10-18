@@ -238,7 +238,7 @@ func TestTimestampIsolated(t *testing.T) {
 		{Check{Jar: "bad-token", Fact: certTimestamp, Match: `O=DigiCert`}, Skip, "cannot read the timestamp token of modules/bad-token.jar!META-INF/CODESIGN.RSA: "},
 		{Check{Jar: "ski", Fact: certSubject, Match: `^CN=Tridium University Root`}, Pass, "modules/ski.jar!META-INF/CODESIGN.RSA: signer CN=Tridium University Root"},
 		{Check{Jar: "nested", Fact: certTimestamp, Match: `O=DigiCert`}, Pass, "modules/nested.jar!META-INF/CODESIGN.RSA: timestamped by CN=Fixture Timestamp Responder"},
-		{Check{Jar: "nested", Fact: certSame, CertOf: "good"}, Pass, "modules/nested.jar!"},
+		{Check{Jar: "nested", Fact: certSame, CertOf: "good"}, Pass, "modules/nested.jar!META-INF/CODESIGN.RSA: signer CN=(CodeSigning),O=Fixture,C=XX (serial 45e7), the same as modules/good.jar!META-INF/CODESIGN.RSA"},
 	} {
 		c.ck.Kind = kindJarCert
 		if r := st.Run(&c.ck); r.Verdict != c.verdict || !strings.HasPrefix(r.Evidence, c.evidence) {
@@ -250,5 +250,42 @@ func TestTimestampIsolated(t *testing.T) {
 	si := fixtureSignerInfo(fixtureSid(fixtureSigner.cert), tlv(classContext, 1, true, attr))
 	if sd, err := parseSignedData(fixtureSignedDataSI([]*x509.Certificate{fixtureSigner.cert}, si)); err != nil || sd.timestampErr == nil {
 		t.Errorf("malformed attribute: %v, %+v", err, sd)
+	}
+}
+
+// A timestamp token that carries a token of its own is malformed: the outer block's timestamp
+// error says so (the timestamp fact SKIPs), the signer still reads.
+func TestTimestampInsideTimestamp(t *testing.T) {
+	inner := fixtureToken
+	token := fixtureSignedData([]*x509.Certificate{fixtureTSA.cert, fixtureTSARoot.cert}, fixtureTSA.cert, inner)
+	sd, err := parseSignedData(fixtureSignedData([]*x509.Certificate{fixtureSigner.cert, fixtureRoot.cert}, fixtureSigner.cert, token))
+	if err != nil || sd.timestamp != nil || sd.timestampErr == nil || !strings.Contains(sd.timestampErr.Error(), "a timestamp token inside a timestamp token") {
+		t.Errorf("nested token: %v, %+v", err, sd)
+	}
+}
+
+// A SKIP is Absent only when the missing tree caused it: with --install given and --labsrc not, a
+// pem row whose jar block cannot be read is a plain SKIP (it would SKIP with the tree too).
+func TestAbsentOnlyForTheMissingTree(t *testing.T) {
+	install := writeInstall(t, map[string][]byte{"garbage": []byte("stand-in signature block\n"), "good": fixtureBlock})
+	st, err := Open(writeStation(t), install, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer st.Close()
+	pem := func(jar string) *Check {
+		return &Check{Kind: kindJarCert, Jar: jar, Fact: certPEM, Root: rootLabsrc, Glob: "../certificates/code_signing.pem"}
+	}
+	bad := st.Run(pem("garbage"))
+	if bad.Verdict != Skip || bad.Absent != "" {
+		t.Errorf("unreadable block, labsrc missing: %s %q absent %q, want a plain SKIP", bad.Verdict, bad.Evidence, bad.Absent)
+	}
+	if r := st.Run(pem("good")); r.Verdict != Skip || r.Absent != "--labsrc" {
+		t.Errorf("readable block, labsrc missing: %s %q absent %q", r.Verdict, r.Evidence, r.Absent)
+	}
+	// The mixed item: a PASS beside the unreadable one stays UNDECIDED, never PARTIAL.
+	pass := LinkedResult{Result: Result{Check: &Check{ID: "C1.1", Kind: kindType}, Verdict: Pass, Evidence: "found 1"}}
+	if v, _ := Decide([]LinkedResult{pass, {Result: bad}}); v != Undecided {
+		t.Errorf("mixed: %s, want UNDECIDED", v)
 	}
 }

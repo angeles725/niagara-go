@@ -335,6 +335,9 @@ func readTimestamp(unsigned []byte, depth int) (*signedData, error) {
 		if err != nil {
 			return nil, fmt.Errorf("timestamp token: %v", err)
 		}
+		if ts.timestampErr != nil { // the token's own unsigned attributes are malformed or hold a token
+			return nil, fmt.Errorf("timestamp token: %v", ts.timestampErr)
+		}
 		return ts, nil
 	}
 	return nil, nil
