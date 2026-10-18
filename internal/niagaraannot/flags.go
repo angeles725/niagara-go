@@ -4,45 +4,15 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+
+	"github.com/angeles725/niagara-go/internal/slotomatic"
 )
-
-// Flag is one javax.baja.sys.Flags constant: its name, mask and Slot Sheet letter.
-type Flag struct {
-	Name   string
-	Mask   uint32
-	Letter byte
-}
-
-// Flags is the FLAGS table of javax.baja.sys.Flags in its own order, the order
-// encodeToString writes the letters in (docSource baja/javax/baja/sys/Flags.java:183-228,
-// encodeToString :638-644). NON_CRITICAL comes before LINK_TARGET there although its bit is
-// higher.
-var Flags = []Flag{
-	{"READONLY", 0x00000001, 'r'},
-	{"TRANSIENT", 0x00000002, 't'},
-	{"HIDDEN", 0x00000004, 'h'},
-	{"SUMMARY", 0x00000008, 's'},
-	{"ASYNC", 0x00000010, 'a'},
-	{"NO_RUN", 0x00000020, 'n'},
-	{"DEFAULT_ON_CLONE", 0x00000040, 'd'},
-	{"CONFIRM_REQUIRED", 0x00000080, 'c'},
-	{"OPERATOR", 0x00000100, 'o'},
-	{"EXECUTE_ON_CHANGE", 0x00000200, 'x'},
-	{"FAN_IN", 0x00000400, 'f'},
-	{"NO_AUDIT", 0x00000800, 'A'},
-	{"COMPOSITE", 0x00001000, 'p'},
-	{"REMOVE_ON_CLONE", 0x00002000, 'R'},
-	{"METADATA", 0x00004000, 'm'},
-	{"NON_CRITICAL", 0x00010000, 'N'},
-	{"LINK_TARGET", 0x00008000, 'L'},
-	{"USER_DEFINED_1", 0x10000000, '1'},
-	{"USER_DEFINED_2", 0x20000000, '2'},
-	{"USER_DEFINED_3", 0x40000000, '3'},
-	{"USER_DEFINED_4", 0x80000000, '4'},
-}
 
 // FlagMask evaluates a flags expression: Flags.X (also javax.baja.sys.Flags.X) and int literals
 // joined with | or +, in parentheses or not; "" is 0. Any other term or operator is an error.
+// The names, bits and letters are slotomatic.Flags, the one table of javax.baja.sys.Flags; its
+// DecodeFlags is not used because it ignores a term it cannot read, where an annotation check
+// must refuse to decide.
 func FlagMask(expr string) (uint32, error) {
 	toks, err := lex(expr)
 	if err != nil {
@@ -69,12 +39,13 @@ func FlagLetters(expr string) (string, error) {
 	return EncodeFlags(m), nil
 }
 
-// EncodeFlags is Flags.encodeToString: the letter of each set flag, in table order.
+// EncodeFlags is Flags.encodeToString: the letter of each set flag, in the order of
+// slotomatic.Flags (the FLAGS array encodeToString walks).
 func EncodeFlags(m uint32) string {
 	var b strings.Builder
-	for _, f := range Flags {
-		if m&f.Mask != 0 {
-			b.WriteByte(f.Letter)
+	for _, f := range slotomatic.Flags {
+		if m&uint32(f.Bit) != 0 {
+			b.WriteString(f.Letter)
 		}
 	}
 	return b.String()
@@ -154,9 +125,9 @@ func (e *flagEval) term() (uint32, error) {
 	if len(path) < 2 || (q != "Flags."+path[len(path)-1] && q != "javax.baja.sys.Flags."+path[len(path)-1]) {
 		return 0, e.fail()
 	}
-	for _, f := range Flags {
+	for _, f := range slotomatic.Flags {
 		if f.Name == path[len(path)-1] {
-			return f.Mask, nil
+			return uint32(f.Bit), nil
 		}
 	}
 	return 0, fmt.Errorf("unknown flag %s in %q", q, e.expr)

@@ -17,7 +17,7 @@
 // @Generated markers of a generated region, are not the type's.
 //
 // FlagLetters turns a flags expression (Flags.SUMMARY | Flags.READONLY, a number, or 0) into
-// the letters Flags.encodeToString writes and the AX Slot Sheet shows ("rs"); an expression it
-// cannot evaluate is an error, never a guess. Enum.Constants applies the Slot-o-Matic naming and
+// the letters Flags.encodeToString writes and the AX Slot Sheet shows ("rs"), from the flag table
+// of internal/slotomatic; an expression it cannot evaluate is an error, never a guess. Enum.Constants applies the Slot-o-Matic naming and
 // numbering of a range (toActive → TO_ACTIVE; an omitted ordinal is the previous one plus 1).
 package niagaraannot
