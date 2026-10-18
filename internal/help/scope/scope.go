@@ -183,7 +183,7 @@ func dirCount(baseDir string, sources []fts.SourceDir, name string) string {
 			shared = " (shared from Niagara " + owner + ")"
 		}
 	}
-	return fmt.Sprintf("%s/: %s files%s", name, pycompat.Commas(walkCount(path)), shared)
+	return fmt.Sprintf("%s/: %s files%s", name, pycompat.Commas(fts.CountFiles(path)), shared)
 }
 
 // Identify is versions.identify: the registered version whose data root is

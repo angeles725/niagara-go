@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/angeles725/niagara-go/internal/bajadocxml"
+	"github.com/angeles725/niagara-go/internal/help/fts"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
@@ -71,8 +72,8 @@ func walkMatching(root string, pred func(name string) bool) []string {
 	if !pycompat.IsDir(root) {
 		return out
 	}
-	walkSorted(root, func(path, name string) {
-		if pred(name) {
+	fts.WalkFiles(root, func(path string) {
+		if pred(filepath.Base(path)) {
 			out = append(out, path)
 		}
 	})
@@ -266,43 +267,13 @@ func sortedMembers(set map[memberKey]bool) []memberKey {
 	return out
 }
 
-// walkSorted calls fn for every file under root in os.walk order with
-// sorted directories and sorted names (the _walk / iter_classes order).
-func walkSorted(root string, fn func(path, name string)) {
-	entries, err := os.ReadDir(root)
-	if err != nil {
-		return
-	}
-	var dirs, files []string
-	for _, d := range entries {
-		p := filepath.Join(root, d.Name())
-		if d.IsDir() || (d.Type()&os.ModeSymlink != 0 && pycompat.IsDir(p)) {
-			dirs = append(dirs, d.Name())
-		} else {
-			files = append(files, d.Name())
-		}
-	}
-	sort.Strings(dirs)
-	sort.Strings(files)
-	for _, n := range files {
-		fn(filepath.Join(root, n), n)
-	}
-	for _, d := range dirs {
-		p := filepath.Join(root, d)
-		if st, err := os.Lstat(p); err == nil && st.Mode()&os.ModeSymlink != 0 {
-			continue // os.walk lists a link to a directory but does not enter it
-		}
-		walkSorted(p, fn)
-	}
-}
-
 // iterBajadocClasses is iter_classes: every class of the .bajadoc files
 // under root (module-index.bajadoc excluded), each with its file. failed
 // receives every file that could not be parsed.
 func iterBajadocClasses(root string, failed func(path string)) []bajadocxml.Class {
 	var out []bajadocxml.Class
-	walkSorted(root, func(path, name string) {
-		if !strings.HasSuffix(name, ".bajadoc") || name == "module-index.bajadoc" {
+	fts.WalkFiles(root, func(path string) {
+		if name := filepath.Base(path); !strings.HasSuffix(name, ".bajadoc") || name == "module-index.bajadoc" {
 			return
 		}
 		classes, ok := bajadocxml.ParseFile(path)

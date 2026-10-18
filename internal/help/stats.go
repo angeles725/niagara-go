@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/angeles725/niagara-go/internal/help/fts"
 	"github.com/angeles725/niagara-go/internal/help/scope"
 	"github.com/angeles725/niagara-go/internal/index"
 	"github.com/angeles725/niagara-go/internal/pycompat"
@@ -27,7 +28,7 @@ func countFiles(dir, ext string) fileCount {
 	if !pycompat.IsDir(dir) {
 		return c
 	}
-	pyWalkFiles(dir, func(path string) {
+	fts.WalkFiles(dir, func(path string) {
 		if strings.HasSuffix(filepath.Base(path), ext) {
 			c.files++
 			if st, err := os.Stat(path); err == nil {

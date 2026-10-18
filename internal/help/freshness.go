@@ -13,6 +13,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/angeles725/niagara-go/internal/help/fts"
 	"github.com/angeles725/niagara-go/internal/index"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 )
@@ -35,7 +36,7 @@ func fingerprintDir(path, ext string) *dirPrint {
 		return nil
 	}
 	fp := &dirPrint{}
-	pyWalkFiles(path, func(p string) {
+	fts.WalkFiles(path, func(p string) {
 		if ext != "" && !strings.HasSuffix(lowerStr(filepath.Base(p)), ext) {
 			return
 		}

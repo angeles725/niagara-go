@@ -161,7 +161,7 @@ func IterFiles(label, dir string) []string {
 		}
 	}
 	var out []string
-	walkFiles(dir, func(path string) {
+	WalkFiles(dir, func(path string) {
 		name := filepath.Base(path)
 		ok := false
 		for _, e := range exts {
@@ -174,11 +174,13 @@ func IterFiles(label, dir string) []string {
 	return out
 }
 
-// walkFiles calls fn for every file os.walk(dir) lists, in its top-down
-// order with sorted names: an entry whose stat says directory is a folder
-// (a symbolic link to one is listed but not entered), anything else a file.
-// An unreadable folder lists nothing, like os.walk without onerror.
-func walkFiles(dir string, fn func(path string)) {
+// WalkFiles calls fn for every file os.walk(dir) lists, in its top-down
+// order with sorted names: a directory's files, then its subdirectories.
+// An entry whose stat says directory is a folder (a symbolic link to one is
+// listed but not entered, followlinks=False), anything else - a dangling
+// link included - a file. An unreadable folder lists nothing, like os.walk
+// without onerror. It is the one os.walk of nh (help, help/scope, fts).
+func WalkFiles(dir string, fn func(path string)) {
 	entries, err := os.ReadDir(dir)
 	if err != nil {
 		return
@@ -197,14 +199,14 @@ func walkFiles(dir string, fn func(path string)) {
 		}
 	}
 	for _, d := range dirs {
-		walkFiles(d, fn)
+		WalkFiles(d, fn)
 	}
 }
 
 // CountFiles is sum(len(files) for os.walk(dir)): every file, indexed or not.
 func CountFiles(dir string) int {
 	n := 0
-	walkFiles(dir, func(string) { n++ })
+	WalkFiles(dir, func(string) { n++ })
 	return n
 }
 
