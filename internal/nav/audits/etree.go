@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"strings"
-	"unicode/utf8"
 )
 
 // etElement is the part of xml.etree.ElementTree palette-lexicon-agents uses:
@@ -175,26 +174,9 @@ func etName(uri, local string) string {
 	return "{" + uri + "}" + local
 }
 
-// charsetReader decodes the 8-bit encodings expat knows besides UTF-8.
-func charsetReader(label string, input io.Reader) (io.Reader, error) {
-	switch strings.ToLower(label) {
-	case "iso-8859-1", "latin-1", "latin1":
-		return latin1Reader{input}, nil
-	case "us-ascii", "ascii":
-		return input, nil
-	}
-	return nil, fmt.Errorf("unknown encoding")
-}
-
-// latin1Reader turns ISO-8859-1 bytes into UTF-8.
-type latin1Reader struct{ r io.Reader }
-
-func (l latin1Reader) Read(p []byte) (int, error) {
-	buf := make([]byte, len(p)/2+1)
-	n, err := l.r.Read(buf)
-	out := p[:0]
-	for _, b := range buf[:n] {
-		out = utf8.AppendRune(out, rune(b))
-	}
-	return len(out), err
+// charsetReader keeps the text as it is whatever encoding the declaration
+// names: ET.fromstring(str) hands expat the string already decoded and
+// ignores the declared encoding (ISO-8859-1, an unknown name, ...).
+func charsetReader(_ string, input io.Reader) (io.Reader, error) {
+	return input, nil
 }

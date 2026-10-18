@@ -2,6 +2,7 @@ package audits
 
 import (
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -34,6 +35,13 @@ func TestParseETMatchesElementTree(t *testing.T) {
 		{"comment after the root", "<a><p n=\"z\"/></a><!-- ok -->\n", []map[string]string{{"n": "z"}}},
 		{"unclosed", `<a><p n="1"/>`, nil},
 		{"doctype", `<!DOCTYPE a><a><p n="d"/></a>`, []map[string]string{{"n": "d"}}},
+		// fromstring(str) parses the text as it is and ignores the declared encoding.
+		{"declared latin-1", `<?xml version="1.0" encoding="ISO-8859-1"?><a><p n="é€"/></a>`,
+			[]map[string]string{{"n": "é€"}}},
+		{"declared unknown encoding", `<?xml version="1.0" encoding="bogus"?><a><p n="é"/></a>`,
+			[]map[string]string{{"n": "é"}}},
+		{"declared latin-1 past a read buffer", `<?xml version="1.0" encoding="latin1"?><a><p n="` +
+			strings.Repeat("é", 5000) + `"/></a>`, []map[string]string{{"n": strings.Repeat("é", 5000)}}},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
