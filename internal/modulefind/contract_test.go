@@ -2,6 +2,8 @@ package modulefind
 
 import (
 	"bytes"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/angeles725/niagara-go/internal/cli"
@@ -38,5 +40,40 @@ func TestExitContract(t *testing.T) {
 					code, out.String(), errb.String(), tt.exit, tt.stdout, tt.stderr)
 			}
 		})
+	}
+}
+
+// plainTree is a module root holding one .java file that declares no slot, action, extends,
+// ORD or writer: every command searches it and finds nothing.
+func plainTree(t *testing.T) {
+	t.Helper()
+	t.Chdir(t.TempDir())
+	if err := os.MkdirAll(filepath.Join("plain", "x"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join("plain", "x", "Plain.java"), []byte("package x;\npublic class Plain {}\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// TestNonSearchCommandsExitZeroWhenEmpty pins the run convention: a command that lists or
+// summarizes (it returns -1) exits 0 even when it has nothing to list; only a search that
+// matched nothing (it returns 0) exits 1.
+func TestNonSearchCommandsExitZeroWhenEmpty(t *testing.T) {
+	plainTree(t)
+	for _, args := range [][]string{
+		{"plain", "slot-types"},
+		{"plain", "slot-types", "--json"},
+		{"plain", "ext-writable"},
+		{"plain", "ext-writable", "--csv"},
+		{"plain", "extends"},
+		{"plain", "extends", "--json"},
+		{"plain", "compare", "plain"},
+		{"selftest"},
+	} {
+		var out, errb bytes.Buffer
+		if code := Main(args, cli.Stdio{Out: &out, Err: &errb}); code != 0 {
+			t.Errorf("%v: exit %d, want 0 (stdout %q stderr %q)", args, code, out.String(), errb.String())
+		}
 	}
 }

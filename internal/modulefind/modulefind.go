@@ -143,8 +143,11 @@ func regexArg(ns *argparse.Namespace, dest string) *pyre.Regexp {
 	return re
 }
 
-// run dispatches one command: a command that can miss returns its match count (0 is exit 1),
-// any other -1.
+// run dispatches one command and returns what Main turns into the exit code. A command that
+// can miss (a search, extends --of) returns its match count, and Main exits 1 only on 0. Every
+// other command (a listing or summary such as slot-types, ext-writable, extends, compare)
+// returns -1, so it exits 0 even when it has nothing to list: an empty listing is an answer,
+// not a miss. A new command returns -1 unless the exit contract says it can miss.
 func run(m, b *module, o *opts, cmd string, ns *argparse.Namespace) int {
 	switch cmd {
 	case "slots":
