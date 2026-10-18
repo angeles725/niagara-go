@@ -33,7 +33,7 @@ func TestExtractAndIndexWritesTheManifest(t *testing.T) {
 		t.Fatalf("%+v %v", res, err)
 	}
 	wantLog := "extracted 3 files (34 bytes)|fidelity 1.0.0.0: jars 1 checked 3 sha256-exact 3 eol-only 0 mismatched 0 missing 0|" +
-		"manifest -> versions/1.0.0.0.manifest.json"
+		"manifest -> " + filepath.FromSlash("versions/1.0.0.0.manifest.json") // os.path.relpath: native separator
 	if strings.Join(res.Log, "|") != wantLog {
 		t.Fatalf("log %q", res.Log)
 	}

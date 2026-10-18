@@ -41,12 +41,8 @@ func symlinkOrSkip(t *testing.T, oldname, newname string) {
 func TestPyWalk(t *testing.T) {
 	top := t.TempDir()
 	writeTree(t, top, map[string]string{"a/x": "", "a/skip/y": "", "f": "", "real/z": ""})
-	if err := os.Symlink(filepath.Join(top, "real"), filepath.Join(top, "a", "link")); err != nil {
-		t.Fatal(err)
-	}
-	if err := os.Symlink(filepath.Join(top, "missing"), filepath.Join(top, "broken")); err != nil {
-		t.Fatal(err)
-	}
+	symlinkOrSkip(t, filepath.Join(top, "real"), filepath.Join(top, "a", "link"))
+	symlinkOrSkip(t, filepath.Join(top, "missing"), filepath.Join(top, "broken"))
 	var got []string
 	pyWalk(top, func(dir string, dirs, files []string) []string {
 		rel, _ := filepath.Rel(top, dir)

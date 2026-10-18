@@ -1,5 +1,6 @@
 {
  "args": [
   "inputs"
- ]
+ ],
+ "cwd_fixture": ".."
 }

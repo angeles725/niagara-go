@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 	"time"
 
@@ -118,6 +119,9 @@ func TestBuildDefaultPathAndFailure(t *testing.T) {
 }
 
 func TestBuildFailureKeepsThePreviousIndex(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("mode 0555 does not make a directory read-only on Windows")
+	}
 	if os.Geteuid() == 0 {
 		t.Skip("root ignores directory permissions")
 	}

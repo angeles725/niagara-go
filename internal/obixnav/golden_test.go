@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"runtime"
 	"strings"
 	"sync"
 	"testing"
@@ -16,8 +17,11 @@ import (
 )
 
 // stationAddr is where the golden cases expect the fake station: the Python capture ran against
-// a scripted station on this fixed port, and the URLs are part of the frozen output.
-const stationAddr = "127.0.0.1:47913"
+// a scripted station on this fixed port, and the URLs are part of the frozen output. The port is
+// outside the TCP ranges Windows reserves here (netsh int ipv4 show excludedportrange, the
+// 49152+ dynamic ports) and outside the Linux ephemeral range, which WSL mirrored networking
+// holds on the Windows side (44619-48715 on the capture host).
+const stationAddr = "127.0.0.1:39213"
 
 // exchange is one recorded request/response pair of testdata/inputs/recording.json.
 type exchange struct {
@@ -113,4 +117,15 @@ func TestGolden(t *testing.T) {
 	if u := station.takeUnexpected(); len(u) > 0 {
 		t.Errorf("requests not in the recording:\n%s", strings.Join(u, "\n---\n"))
 	}
+}
+
+// TestGoldenLinux runs the case whose expected text is Linux's ECONNREFUSED message (Windows
+// CPython's urllib says "[WinError 10061] <system message>" there); it runs from testdata
+// (cwd_fixture ".."). Its refused port, 47914, stays inside the Linux ephemeral range: under
+// WSL mirrored networking a closed port outside it times out instead of refusing.
+func TestGoldenLinux(t *testing.T) {
+	if runtime.GOOS != "linux" {
+		t.Skip("captured on Linux: a refused connection is [Errno 111] there")
+	}
+	golden.Run(t, "testdata/linux", Main)
 }

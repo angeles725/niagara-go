@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -42,6 +43,12 @@ func TestBuildMatchesPythonOnSyntheticTree(t *testing.T) {
 		t.Fatal(err)
 	}
 	got := dumpText(out, hideRoot(root))
+	if runtime.GOOS == "windows" {
+		// Captured on Linux: the fingerprint row holds the native-separator source paths and
+		// the file system's mtime resolution (100 ns on NTFS); every other record must match.
+		// The row is still the reader's fingerprint (checked below).
+		want, got = []byte(dropFingerprint(string(want))), dropFingerprint(got)
+	}
 	if got != string(want) {
 		_, diffs := compareDumps(lines(string(want)), lines(got), 10)
 		t.Fatalf("Go dump differs from the Python one:\n%s", strings.Join(diffs, "\n"))
@@ -56,6 +63,17 @@ func TestBuildMatchesPythonOnSyntheticTree(t *testing.T) {
 	if len(res.Log) != 1 || res.Log[0] != wantLog {
 		t.Errorf("Log = %q, want [%q]", res.Log, wantLog)
 	}
+}
+
+// dropFingerprint removes the meta fingerprint record from a dump.
+func dropFingerprint(dump string) string {
+	var b strings.Builder
+	for _, l := range strings.SplitAfter(dump, "\n") {
+		if !strings.HasPrefix(l, "meta\t'fingerprint'\t") {
+			b.WriteString(l)
+		}
+	}
+	return b.String()
 }
 
 func lines(s string) func(func(string) bool) {

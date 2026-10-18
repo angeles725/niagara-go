@@ -57,17 +57,17 @@ func exists(p string) bool {
 // moduleCandidates: the station's bundled copy under shared/px/<mod>/<rel>, then the corpus
 // organized/<mod>/<mod>-{wb,rt,ux}/extracted/<rel>, then any artifact of that module.
 func (a *assets) moduleCandidates(mod, rel string) []string {
-	c := []string{pycompat.PosixJoin(a.shared, "px", mod, rel)}
+	c := []string{pycompat.Join(a.shared, "px", mod, rel)}
 	if a.organized == "" {
 		return c
 	}
 	for _, kind := range []string{"wb", "rt", "ux"} {
-		c = append(c, pycompat.PosixJoin(a.organized, mod, mod+"-"+kind, "extracted", rel))
+		c = append(c, pycompat.Join(a.organized, mod, mod+"-"+kind, "extracted", rel))
 	}
-	matches, _ := filepath.Glob(pycompat.PosixJoin(a.organized, mod, "*", "extracted", rel))
+	matches, _ := filepath.Glob(pycompat.Join(a.organized, mod, "*", "extracted", rel))
 	sort.Strings(matches)
 	// filepath.Glob returns cleaned paths, so compare against the cleaned module directory.
-	prefix := filepath.Clean(pycompat.PosixJoin(a.organized, mod)) + string(filepath.Separator)
+	prefix := filepath.Clean(pycompat.Join(a.organized, mod)) + string(filepath.Separator)
 	for _, m := range matches {
 		if rest, ok := strings.CutPrefix(filepath.Clean(m), prefix); !ok || !strings.HasPrefix(rest, ".") {
 			c = append(c, m) // like Python glob, '*' does not match a hidden artifact directory
@@ -81,7 +81,7 @@ func (a *assets) resolve(ref string) string {
 	case ref == "":
 		return ""
 	case strings.HasPrefix(ref, "file:^"):
-		if p := pycompat.PosixJoin(a.shared, ref[len("file:^"):]); exists(p) {
+		if p := pycompat.Join(a.shared, ref[len("file:^"):]); exists(p) {
 			return p
 		}
 	case strings.HasPrefix(ref, "module://"):

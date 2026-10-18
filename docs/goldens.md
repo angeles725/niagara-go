@@ -23,6 +23,11 @@ One directory per case under `<package>/testdata/golden/<case>/`:
   in the command's stdout/stderr is folded back to `{tmp}` before comparing.
 - `"requires": {"machine_id_sha256": "<hex>"}` binds a case to the capture host (SHA-256 of the
   trimmed `/etc/machine-id`). On any other host the case is skipped with a reason, never passed.
+- `"requires": {"goos": ["linux", ...]}` binds a case to the listed operating systems
+  (`runtime.GOOS` values). On any other OS the case is skipped with a reason, never passed.
+  Use it for a case whose frozen bytes cannot hold on that OS (for example `make wintest` on
+  Windows) instead of a skip in the package test. An empty list or an unknown GOOS name fails
+  the load. Both requirements may be combined; each must hold.
 
 Cases run sequentially, sorted by directory name. A package wires them with one test:
 

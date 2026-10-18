@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -156,15 +157,28 @@ func TestParseDevguideSiblings(t *testing.T) {
 	if s := readText(t, filepath.Join(clean, "changes.txt.txt")); s != "TITLE: changes.txt\nSOURCE: devguide/changes.txt\n\nplain text page words\n" {
 		t.Errorf("changes.txt.txt = %q", s)
 	}
-	want := []string{"  excluded (licence text): devguide/sub/lgpl-2.1.txt", "Extracted 2 devguide files to devguide-clean/ (0.0 MB text)"}
+	// The excluded line is os.path.relpath unchanged: it keeps the host separator
+	// (devguide\sub\lgpl-2.1.txt on Windows), unlike the SOURCE header.
+	want := []string{"  excluded (licence text): " + filepath.Join("devguide", "sub", "lgpl-2.1.txt"), "Extracted 2 devguide files to devguide-clean/ (0.0 MB text)"}
 	if !reflect.DeepEqual(res.Log, want) {
 		t.Errorf("Log = %q", res.Log)
 	}
 }
 
+// nonUTF8PageName is a page name that is not valid UTF-8 on the host. Windows
+// names are UTF-16, so the only such name there is an unpaired surrogate: Go
+// spells it in WTF-8 (U+DCFF is "\xed\xb3\xbf"), CPython as "\udcff", and
+// write_text's strict UTF-8 encode of the header fails on it as on Linux.
+func nonUTF8PageName() string {
+	if runtime.GOOS == "windows" {
+		return "a\xed\xb3\xbf.html"
+	}
+	return "a\xff.html"
+}
+
 func TestParseGuidesRefusesNonUTF8Names(t *testing.T) {
 	root := t.TempDir()
-	writeFile(t, filepath.Join(root, "guides", "F", "a\xff.html"), guidePage("A", "a"))
+	writeFile(t, filepath.Join(root, "guides", "F", nonUTF8PageName()), guidePage("A", "a"))
 	writeFile(t, filepath.Join(root, "guides-clean", "kept.txt"), []byte("old"))
 	if _, err := ParseGuides(root); err == nil {
 		t.Fatal("ParseGuides accepted a page name that is not UTF-8")

@@ -7,5 +7,10 @@
   "/dev/null",
   "--organized",
   "inputs/organized"
- ]
+ ],
+ "requires": {
+  "goos": [
+   "linux"
+  ]
+ }
 }

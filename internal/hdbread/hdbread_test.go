@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"math"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -113,5 +114,20 @@ func TestRunMissingFileIsExit2(t *testing.T) {
 	code := Run(Options{Path: "testdata/no-such.hdb"}, cli.Stdio{Out: &out, Err: &errb})
 	if code != cli.ExitCannotSearch || !strings.Contains(errb.String(), "No such file or directory") {
 		t.Fatalf("code %d, stderr %q", code, errb.String())
+	}
+}
+
+// TestRunDirectoryNamesTheOpenError: Python's open() of a directory fails with EISDIR on Linux
+// and, through the C runtime, with EACCES on Windows (CPython 3.13 says "Permission denied"
+// there, where Go's read of a directory handle reports ERROR_INVALID_FUNCTION).
+func TestRunDirectoryNamesTheOpenError(t *testing.T) {
+	want := "hdbread: cannot read testdata: Is a directory\n"
+	if runtime.GOOS == "windows" {
+		want = "hdbread: cannot read testdata: Permission denied\n"
+	}
+	var out, errb bytes.Buffer
+	code := Run(Options{Path: "testdata"}, cli.Stdio{Out: &out, Err: &errb})
+	if code != cli.ExitCannotSearch || !strings.HasPrefix(errb.String(), want) {
+		t.Fatalf("code %d, stderr %q, want prefix %q", code, errb.String(), want)
 	}
 }

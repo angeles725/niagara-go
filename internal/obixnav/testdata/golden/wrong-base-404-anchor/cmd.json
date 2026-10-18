@@ -1,7 +1,7 @@
 {
  "args": [
   "--base",
-  "http://127.0.0.1:47913/wrong/obix",
+  "http://127.0.0.1:39213/wrong/obix",
   "--pass-file",
   "inputs/pass.txt",
   "map",

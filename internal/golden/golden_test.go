@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 
@@ -189,6 +190,61 @@ func TestHostBoundCaseRunsOnlyOnItsHost(t *testing.T) {
 	})
 	if !skipped {
 		t.Fatal("host-bound case was not skipped on another host")
+	}
+}
+
+func TestOSBoundCaseRunsOnlyOnListedOS(t *testing.T) {
+	old := hostGOOS
+	hostGOOS = "windows"
+	defer func() { hostGOOS = old }()
+	for _, tt := range []struct {
+		name     string
+		goos     []string
+		wantSkip bool
+	}{
+		{"no requirement", nil, false},
+		{"listed", []string{"linux", "windows"}, false},
+		{"not listed", []string{"linux", "darwin"}, true},
+	} {
+		var skipped bool
+		t.Run(tt.name, func(t *testing.T) {
+			defer func() { skipped = t.Skipped() }()
+			skipUnlessHost(t, Case{Requires: Requires{GOOS: tt.goos}})
+		})
+		if skipped != tt.wantSkip {
+			t.Errorf("%s: skipped = %v, want %v", tt.name, skipped, tt.wantSkip)
+		}
+	}
+}
+
+func TestRequiresGOOSIsValidatedOnLoad(t *testing.T) {
+	for name, tt := range map[string]struct {
+		requires string
+		wantErr  string
+	}{
+		"empty list": {`{"goos": []}`, "never run"},
+		"typo":       {`{"goos": ["linux", "window"]}`, `unknown GOOS "window"`},
+		"valid":      {`{"goos": ["linux", "windows"]}`, ""},
+	} {
+		t.Run(name, func(t *testing.T) {
+			dir := t.TempDir()
+			c := filepath.Join(dir, "golden", "case")
+			if err := os.MkdirAll(c, 0o755); err != nil {
+				t.Fatal(err)
+			}
+			write(t, filepath.Join(c, "cmd.json"), `{"args":[], "requires": `+tt.requires+`}`)
+			write(t, filepath.Join(c, "stdout"), "")
+			write(t, filepath.Join(c, "exit"), "0")
+			cases, err := Load(dir)
+			switch {
+			case tt.wantErr == "" && err != nil:
+				t.Fatalf("Load: %v", err)
+			case tt.wantErr == "" && !slices.Equal(cases[0].Requires.GOOS, []string{"linux", "windows"}):
+				t.Fatalf("goos = %v", cases[0].Requires.GOOS)
+			case tt.wantErr != "" && (err == nil || !strings.Contains(err.Error(), tt.wantErr)):
+				t.Fatalf("Load error = %v, want %q", err, tt.wantErr)
+			}
+		})
 	}
 }
 

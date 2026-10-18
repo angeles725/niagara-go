@@ -8,9 +8,12 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"regexp"
+	"runtime"
 	"strings"
+	"syscall"
 
 	"github.com/angeles725/niagara-go/internal/cli"
 	"github.com/angeles725/niagara-go/internal/honest"
@@ -96,9 +99,23 @@ func schemaOf(xml string) (id, recordType string, fields []string) {
 	return firstGroup(idRE, xml, "?"), firstGroup(recordTypeRE, xml, "?"), fields
 }
 
+// errorAccessDenied is the Win32 ERROR_ACCESS_DENIED (EACCES through the C runtime).
+const errorAccessDenied = 5
+
+// readFile is Python's open(path, "rb").read(). On Windows the C runtime's open() refuses a
+// directory with ERROR_ACCESS_DENIED, where Go opens it and only the read fails
+// (ERROR_INVALID_FUNCTION, "Invalid argument"); the error carries Python's code instead.
+func readFile(path string) ([]byte, error) {
+	data, err := os.ReadFile(path)
+	if err != nil && runtime.GOOS == "windows" && pycompat.IsDir(path) {
+		return nil, &fs.PathError{Op: "open", Path: path, Err: syscall.Errno(errorAccessDenied)}
+	}
+	return data, err
+}
+
 // Run executes one hdbread invocation and returns its exit code.
 func Run(o Options, s cli.Stdio) int {
-	data, err := os.ReadFile(o.Path)
+	data, err := readFile(o.Path)
 	if err != nil {
 		return honest.Fail(s.Err, "hdbread", fmt.Sprintf("cannot read %s: %s", o.Path, pycompat.StrerrorOf(err)), honest.ExitInput)
 	}
