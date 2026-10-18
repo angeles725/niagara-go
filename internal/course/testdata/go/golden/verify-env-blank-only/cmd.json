@@ -1,0 +1,1 @@
+{"args": ["--root", "norelated", "verify", "--status", "predicted", "--date", "17/10/2026"], "env": {"COURSE_TRAINING_STATION": "  "}, "cwd_fixture": ".."}

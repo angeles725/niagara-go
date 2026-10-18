@@ -166,21 +166,16 @@ func TestParseErrorsFixture(t *testing.T) {
 	}
 }
 
-// counts is the number of items per status ("items": every item), as course status counts them.
-type counts map[string]int
-
-func countsByGroup(c *Corpus) map[string]counts {
-	rows := map[string]counts{"total": {}}
+// countsByGroup counts the items per group and in total through Counts.Add, the counter of
+// course status, so the pinned numbers are the ones the command prints.
+func countsByGroup(c *Corpus) map[string]*Counts {
+	rows := map[string]*Counts{"total": {}}
 	for _, it := range c.Items {
 		if rows[it.Group] == nil {
-			rows[it.Group] = counts{}
+			rows[it.Group] = &Counts{}
 		}
-		for _, g := range []string{it.Group, "total"} {
-			rows[g]["items"]++
-			for _, s := range it.StatusList() {
-				rows[g][s]++
-			}
-		}
+		rows[it.Group].Add(it)
+		rows["total"].Add(it)
 	}
 	return rows
 }
@@ -200,14 +195,14 @@ func TestRecallReal(t *testing.T) {
 	want := map[string]int{"L1": 26, "L2": 12, "L3": 11, "L4": 16, "L5": 25, "L6": 35, "L7": 21, "L8": 17,
 		"L9": 15, "L10": 25, "L11": 43, "LB": 21, "LA": 4, "RA1": 39, "RA2": 47, "RAX": 10, "EXAM": 3}
 	for g, n := range want {
-		if rows[g] == nil || rows[g]["items"] != n {
+		if rows[g] == nil || rows[g].Items != n {
 			t.Errorf("group %s items = %v, want %d", g, rows[g], n)
 		}
 	}
-	got := rows["total"]
-	pinned := counts{"items": 370, "predicted": 40, "unverified": 20, "corrected": 10, "identical": 50,
-		"verified": 4, "written": 258}
-	if !reflect.DeepEqual(got, pinned) {
+	got := *rows["total"]
+	// 2026-10-17: L10.24 is verified live (from the exported CSV), no longer predicted.
+	pinned := Counts{Items: 370, Predicted: 39, Unverified: 20, Corrected: 10, Identical: 50, Verified: 5, Written: 258}
+	if got != pinned {
 		t.Errorf("totals = %+v, want %+v", got, pinned)
 	}
 	live, ids := 0, len(parsedIDs(c))

@@ -4,6 +4,9 @@ C7.2      7     SKIP     BWorkOrderServiceTest.class in training-rtTest [L7.1 L7
 C7.3      7     SKIP     Mockito in the test uberjar [L7.3]                                   no --install DIR: modules/training-rtTest.jar not checked
 C7.4      7     SKIP     training-rt.lexicon in training-rt [L7.13]                           no --install DIR: modules/training-rt.jar not checked
 C7.5      7     PASS     WorkOrderService url restored [L7.18]                                Services/WorkOrderService.url = http://localhost:3001/workOrders (default)
+C7.6      7     SKIP     4.15 configOk() clears faultCause, updates status [L7.18]            no --source DIR: baja/javax/baja/sys/BAbstractService.java not checked
+C7.7      7     SKIP     4.15 fault bit only on a fatal or config fault [L7.18]               no --source DIR: baja/javax/baja/sys/BAbstractService.java not checked
+C7.8      7     SKIP     4.15 BAbstractService: three properties, no Last Ok [L7.18]          no --source DIR: baja/javax/baja/sys/BAbstractService.java not checked
 CRA2.1    RA2   SKIP     depends on control-rt [RA2.R1]                                       no --install DIR: modules/Cristian_Angeles_Review-rt.jar not checked
 CRA2.2    RA2   SKIP     BPointSummaryService.class built [RA2.R2 X1]                         no --install DIR: modules/Cristian_Angeles_Review-rt.jar not checked
 CRA2.3    RA2   SKIP     palette lists PointSummaryService [RA2.R7]                           no --install DIR: modules/Cristian_Angeles_Review-rt.jar not checked
@@ -14,6 +17,7 @@ CRA2.7    RA2   PASS     one PointSummaryService, under Services [RA2.V12 RA2.R2
 CRA2.8    RA2   PASS     summaryFile = file:^Review.txt [RA2.V13 RA2.R3]                      Services/PointSummaryService.summaryFile = file:^Review.txt (stored)
 CRA2.9    RA2   PASS     Review.txt in the station's Files space [RA2.V15 X6]                 found 1 shared/Review.txt: Review.txt
 CRA2.10   RA2   PASS     Review.txt lines: name: value {status} @ priority [RA2.R5b RA2.V15]  shared/Review.txt: 2 lines match
+CRA2.11   RA2   PASS     distinct fallback values in Config/Review2 [RA2.V11]                 2 distinct fallback.value over 2 components: 33.0, 54.0
 CEXAM.1   EXAM  PASS     a Limiter in Config/Test [P1]                                        found 1 in Test: Test/Limiter
 CEXAM.2   EXAM  PASS     Limiter min = 25 [P1]                                                Test/Limiter.min = 25.0 (stored)
 CEXAM.3   EXAM  PASS     Limiter max = 75 [P1]                                                Test/Limiter.max = 75.0 (stored)
@@ -33,4 +37,4 @@ CEXAM.16  EXAM  PASS     device pinged ok (health.lastOkTime stored) [P3]       
 CEXAM.17  EXAM  SKIP     websiteDriver-rt is signed [P3]                                      no --install DIR: modules/websiteDriver-rt.jar not checked
 CEXAM.18  EXAM  SKIP     network, device and folder classes built [P3]                        no --install DIR: modules/websiteDriver-rt.jar not checked
 CEXAM.19  EXAM  SKIP     websiteDriver requests NETWORK_COMMUNICATION [P3]                    no --install DIR: modules/websiteDriver-rt.jar not checked
-checked 34: PASS 19, FAIL 0, SKIP 15; station GoodStation (237 components, 16 links), station ReviewStation (9 components, 0 links), station CertStation (9 components, 1 link), install (none: jar checks skipped)
+checked 38: PASS 20, FAIL 0, SKIP 18; station GoodStation (237 components, 16 links), station ReviewStation (9 components, 0 links), station CertStation (9 components, 1 link), install (none: jar checks skipped), source (none: source checks skipped)

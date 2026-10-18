@@ -1,0 +1,1 @@
+{"args": ["--root", "nopredict-root", "verify-predictions", "--station", "stations/good"], "cwd_fixture": ".."}

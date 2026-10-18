@@ -70,6 +70,44 @@ func (it *Item) StatusList() []string {
 	return it.Status
 }
 
+// Counts is one row of course status: the items, then the items per status. An item counts under
+// every status it carries (the columns overlap); written = none of the others.
+type Counts struct {
+	Items      int `json:"items"`
+	Predicted  int `json:"predicted"`
+	Unverified int `json:"unverified"`
+	Corrected  int `json:"corrected"`
+	Identical  int `json:"identical"`
+	Verified   int `json:"verified"`
+	Written    int `json:"written"`
+}
+
+// Add counts one item.
+func (r *Counts) Add(it *Item) {
+	r.Items++
+	for _, s := range it.StatusList() {
+		switch s {
+		case "predicted":
+			r.Predicted++
+		case "unverified":
+			r.Unverified++
+		case "corrected":
+			r.Corrected++
+		case "identical":
+			r.Identical++
+		case "verified":
+			r.Verified++
+		case "written":
+			r.Written++
+		}
+	}
+}
+
+// Values are the counts in column order: items, then Statuses.
+func (r *Counts) Values() []int {
+	return []int{r.Items, r.Predicted, r.Unverified, r.Corrected, r.Identical, r.Verified, r.Written}
+}
+
 // Group is a lab, a review assignment, the needs-a-run section or the exam.
 type Group struct {
 	Key      string

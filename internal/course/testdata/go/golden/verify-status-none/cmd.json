@@ -1,0 +1,1 @@
+{"args": ["--root", "root", "verify", "--status", "predicted", "--lab", "RA1", "--station", "stations/good"], "cwd_fixture": ".."}

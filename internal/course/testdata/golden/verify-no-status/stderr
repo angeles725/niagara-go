@@ -1,4 +1,5 @@
 usage: course verify [-h] [--root DIR]
                      --status {predicted,unverified,corrected,identical,verified,written}
-                     [--lab GROUP] [--station PATH] [--install DIR] [--date YYYY-MM-DD] [--json]
+                     [--lab GROUP] [--station PATH] [--install DIR] [--source DIR]
+                     [--date YYYY-MM-DD] [--json]
 course verify: error: the following arguments are required: --status

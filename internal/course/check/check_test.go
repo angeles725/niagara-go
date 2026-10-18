@@ -75,6 +75,11 @@ func TestCheckKinds(t *testing.T) {
 			"Services/Svc.lastSuccess = 2026-10-14T11:31:12.108-06:00 (stored)"},
 		{Check{Kind: kindSlot, Type: "training:WorkOrderService", Under: "Lab", Slot: "lastSuccess", Set: true}, Fail,
 			"no training:WorkOrderService component in Lab (2 in total)"},
+		// Within filters a slot check too: Svc2 (outside Services, lastSuccess not stored) is not read.
+		{Check{Kind: kindSlot, Type: "training:WorkOrderService", Within: "baja:ServiceContainer", Slot: "lastSuccess", Set: true}, Pass,
+			"Services/Svc.lastSuccess = 2026-10-14T11:31:12.108-06:00 (stored)"},
+		{Check{Kind: kindSlot, Type: "training:Tstat", Within: "baja:ServiceContainer", Slot: "diff", Want: "2.0", Default: "0.0"}, Fail,
+			"no training:Tstat component under baja:ServiceContainer (1 in total)"},
 		{Check{Kind: kindSlot, Type: "training:Tstat", Slot: "diff", Want: "2.0", Default: "0.0"}, Pass, "Tstat.diff = 2.0 (stored)"},
 		{Check{Kind: kindSlot, Type: "training:Tstat", Slot: "action", Want: "reverse", Default: "direct"},
 			Fail, "0 of 1 pass, want reverse: Tstat.action = direct (default)"},
@@ -198,6 +203,12 @@ func TestGlobRe(t *testing.T) {
 		{"META-INF/*.SF", "META-INF/X.SF", true},
 		{"META-INF/*.SF", "META-INF/a/X.SF", false},
 		{"module.palette", "moduleXpalette", false},
+		{"a/B{Net,Dev}.class", "a/BNet.class", true},
+		{"a/B{Net,Dev}.class", "a/BDev.class", true},
+		{"a/B{Net,Dev}.class", "a/BDevFolder.class", false},
+		{"a/B{Net,Dev}.class", "a/B{Net,Dev}.class", false},
+		{"a/{x.y}", "a/xzy", false},
+		{"a/{b", "a/{b", true},
 	}
 	for _, c := range cases {
 		if got := globRe(c.glob).MatchString(c.name); got != c.match {

@@ -1,0 +1,3 @@
+usage: course verify-predictions [-h] [--root DIR] [--station PATH] [--install DIR] [--source DIR]
+                                 [--date YYYY-MM-DD] [--json]
+course verify-predictions: error: the following arguments are required: --station

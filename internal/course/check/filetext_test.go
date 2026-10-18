@@ -54,3 +54,25 @@ func TestFileTextKind(t *testing.T) {
 		}
 	}
 }
+
+// A file larger than the read bound is not checked on its first part: the check is SKIP "cannot read".
+func TestFileTextTooLarge(t *testing.T) {
+	defer func(n int) { maxFileText = n }(maxFileText)
+	maxFileText = 16
+	dir := writeStation(t)
+	if err := os.WriteFile(filepath.Join(dir, "shared", "Review.txt"), []byte("a: 1 {ok} @ def\nb: 2 {ok} @ def\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	st, err := Open(dir, "", false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	r := st.Run(&Check{Kind: kindFileText, Glob: "shared/Review.txt", Line: 1, Match: `^a:`})
+	if want := "cannot read shared/Review.txt: larger than 16 bytes"; r.Verdict != Skip || r.Evidence != want {
+		t.Errorf("%s %q, want SKIP %q", r.Verdict, r.Evidence, want)
+	}
+	maxFileText = 32 // exactly the file's size: read whole
+	if r := st.Run(&Check{Kind: kindFileText, Glob: "shared/Review.txt", Line: 1, Match: `^a:`}); r.Verdict != Pass {
+		t.Errorf("a file of exactly the bound: %s %q", r.Verdict, r.Evidence)
+	}
+}

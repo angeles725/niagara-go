@@ -12,12 +12,21 @@ import (
 
 // The jar kinds (jar, jar-entry, jar-text, jar-signed): they read <install>/modules/<part>.jar.
 
-// globRe turns a jar-entry glob into a regexp: ** crosses '/', * and ? do not.
+// globRe turns a jar-entry glob into a regexp: ** crosses '/', * and ? do not, {a,b} is one of
+// the literal names a or b (so a check can list exact entries).
 func globRe(glob string) *regexp.Regexp {
 	var b strings.Builder
 	b.WriteString("^")
 	for i := 0; i < len(glob); i++ {
 		switch {
+		case glob[i] == '{' && strings.IndexByte(glob[i:], '}') > 0:
+			end := i + strings.IndexByte(glob[i:], '}')
+			alts := strings.Split(glob[i+1:end], ",")
+			for j, a := range alts {
+				alts[j] = regexp.QuoteMeta(a)
+			}
+			b.WriteString("(?:" + strings.Join(alts, "|") + ")")
+			i = end
 		case strings.HasPrefix(glob[i:], "**/"):
 			b.WriteString("(?:.*/)?")
 			i += 2

@@ -11,7 +11,7 @@ import (
 // reach a case; the cases that test them set them in cmd.json.
 func clearStationEnv(t *testing.T) {
 	t.Helper()
-	for _, name := range []string{installEnv, stationEnv["training"], stationEnv["review"], stationEnv["cert"]} {
+	for _, name := range []string{installEnv, sourceEnv, stationEnv["training"], stationEnv["review"], stationEnv["cert"]} {
 		t.Setenv(name, "")
 	}
 }
@@ -31,4 +31,11 @@ func TestGoldenLinux(t *testing.T) {
 	}
 	clearStationEnv(t)
 	golden.Run(t, "testdata/linux", Main)
+}
+
+// TestGoldenGo runs the Go-only cases under testdata/go/golden (D46: regenerated with GOLDEN_UPDATE=1
+// and reviewed in the diff); they run from testdata (cwd_fixture ".."), over the same fixtures.
+func TestGoldenGo(t *testing.T) {
+	clearStationEnv(t)
+	golden.RunGo(t, Main)
 }

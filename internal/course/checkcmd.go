@@ -59,8 +59,7 @@ func cmdCheck(s cli.Stdio, o stationOpts, labs []string, asJSON bool) int {
 	} else {
 		printResults(s.Out, results)
 	}
-	scope := fmt.Sprintf("%s, install %s", st.Scope(), orNone(o.installDir()))
-	fmt.Fprintf(summary, "checked %d: PASS %d, FAIL %d, SKIP %d; %s\n", len(results), pass, fail, skip, scope)
+	fmt.Fprintf(summary, "checked %d: PASS %d, FAIL %d, SKIP %d; %s\n", len(results), pass, fail, skip, o.scope(st, checks))
 	switch {
 	case fail > 0:
 		return cli.ExitNoMatch

@@ -58,8 +58,8 @@ func cmdStatus(c *key.Corpus, s cli.Stdio, hasLab bool, lab, status string, asJS
 			continue
 		}
 		searched++
-		rows[it.Group].count(it)
-		total.count(it)
+		rows[it.Group].Add(it)
+		total.Add(it)
 		if status != "" && it.HasStatus(status) {
 			matches = append(matches, match{it.ID, it.Step})
 		}
@@ -110,7 +110,7 @@ func printTable(s cli.Stdio, rows []countRow) {
 	for _, r := range rows {
 		b.Reset()
 		b.WriteString(fmt.Sprintf("%-*s", w0, r.Group))
-		for i, v := range r.values() {
+		for i, v := range r.Values() {
 			b.WriteString(fmt.Sprintf("  %*d", len(headers[i]), v))
 		}
 		fmt.Fprintln(s.Out, b.String())
@@ -118,38 +118,8 @@ func printTable(s cli.Stdio, rows []countRow) {
 	fmt.Fprintln(s.Out, tableFooter)
 }
 
-// countRow is one line of the status table (and its JSON object).
+// countRow is one line of the status table (and its JSON object): the group, then key.Counts.
 type countRow struct {
-	Group      string `json:"group"`
-	Items      int    `json:"items"`
-	Predicted  int    `json:"predicted"`
-	Unverified int    `json:"unverified"`
-	Corrected  int    `json:"corrected"`
-	Identical  int    `json:"identical"`
-	Verified   int    `json:"verified"`
-	Written    int    `json:"written"`
-}
-
-func (r *countRow) values() []int {
-	return []int{r.Items, r.Predicted, r.Unverified, r.Corrected, r.Identical, r.Verified, r.Written}
-}
-
-func (r *countRow) count(it *key.Item) {
-	r.Items++
-	for _, s := range it.StatusList() {
-		switch s {
-		case "predicted":
-			r.Predicted++
-		case "unverified":
-			r.Unverified++
-		case "corrected":
-			r.Corrected++
-		case "identical":
-			r.Identical++
-		case "verified":
-			r.Verified++
-		case "written":
-			r.Written++
-		}
-	}
+	Group string `json:"group"`
+	key.Counts
 }

@@ -13,13 +13,15 @@ import (
 
 const goodStation = "../testdata/stations/good"
 
-// runAll runs every check of one station role (the labs: RoleTraining) on a station.
-func runAll(t *testing.T, stationPath, install, role string) []Result {
+// runAll runs every check of one station role (the labs: RoleTraining) on a station, with the
+// install and the source tree ("" = none).
+func runAll(t *testing.T, stationPath, install, source, role string) []Result {
 	t.Helper()
 	st, err := Open(stationPath, install, true)
 	if err != nil {
 		t.Fatal(err)
 	}
+	st.source = source
 	defer st.Close()
 	var out []Result
 	for i := range Spec {
@@ -30,9 +32,10 @@ func runAll(t *testing.T, stationPath, install, role string) []Result {
 	return out
 }
 
-// mostChecks are the labs with more than 8 checks: lab 10 (three file-text checks of one CSV) and
+// mostChecks are the labs with more than 8 checks: lab 10 (three file-text checks of one CSV, three of
+// its history files, the job's lexicon) and
 // lab 11 (its nested Tcp Config and ping-health slots are one check each).
-var mostChecks = map[string]int{"10": 10, "11": 17}
+var mostChecks = map[string]int{"10": 14, "11": 17}
 
 // keyGroups are the ID prefixes a check of the lab may key: the lab's own items; for a review
 // assignment also the needs-a-run checks X<n>; for the exam the problems P<n>.
@@ -95,6 +98,14 @@ func TestCheckSpecShape(t *testing.T) {
 			ok = ck.Jar != "" && ck.Glob != "" && ck.N > 0
 		case kindJarText:
 			ok = ck.Jar != "" && ck.Glob != "" && len(ck.Contains) > 0
+		case kindAudit, kindLog:
+			_, err := histFields(ck.Kind, ck.Hist)
+			ok = ck.Glob != "" && ck.Hist != nil && err == nil && ck.Op != "" && ck.N > 0
+		case kindTrend:
+			ok = ck.Glob != "" && ck.Hist != nil && ck.Hist.Max > ck.Hist.Min && ck.Op != "" && ck.N > 0
+		case kindSourceText:
+			_, err := regexp.Compile(ck.Match)
+			ok = ck.Glob != "" && ck.Match != "" && err == nil && ck.Op != "" && ck.N > 0
 		case kindFileText:
 			_, err := regexp.Compile(ck.Match)
 			ok = ck.Glob != "" && ck.Match != "" && err == nil && (ck.Line > 0 || (ck.Op != "" && ck.N > 0))
@@ -179,11 +190,17 @@ func TestCheckLiveStations(t *testing.T) {
 			if path == "" {
 				t.Skipf("%s is not set: the live %s station is not checked", live.env, live.role)
 			}
-			install := os.Getenv("COURSE_NIAGARA_INSTALL")
+			install, source := os.Getenv("COURSE_NIAGARA_INSTALL"), os.Getenv("COURSE_NIAGARA_SOURCE")
 			got := map[string]string{}
-			for _, r := range runAll(t, path, install, live.role) {
+			results := runAll(t, path, install, source, live.role)
+			if len(results) == 0 {
+				// A role with no rows would pass without checking anything.
+				t.Fatalf("no check runs on the %s station: the spec has no row of this role", live.role)
+			}
+			for _, r := range results {
 				switch {
 				case r.Verdict == Skip && install == "" && strings.HasPrefix(r.Kind, "jar"):
+				case r.Verdict == Skip && source == "" && r.Kind == kindSourceText:
 				case r.Verdict == Fail && live.differs[r.ID] != "":
 					got[r.ID] = r.Evidence
 				case r.Verdict != Pass:

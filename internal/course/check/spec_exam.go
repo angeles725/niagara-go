@@ -51,7 +51,8 @@ var examSpec = []Check{
 	{ID: "CEXAM.13", Lab: "EXAM", Keys: []string{"P2"}, Kind: kindJarEntry, Desc: "BHistoryExportService.class built",
 		Jar: certRT, Glob: "**/BHistoryExportService.class", Op: opMin, N: 1},
 
-	// Problem 3: Drivers -> WebsiteDriverNetwork -> WebsiteDriverDevice, Website set, Ping ok.
+	// Problem 3: Drivers -> WebsiteDriverNetwork -> WebsiteDriverDevice, Website set, Ping ok. The class
+	// names are those of the live websiteDriver-rt.jar (com/certExam/websiteDriver/, 2026-10-16).
 	{ID: "CEXAM.14", Lab: "EXAM", Keys: []string{"P3"}, Kind: kindType, Desc: "a WebsiteDriverDevice under Drivers",
 		Type: websiteDevice, Within: "driver:DriverContainer", Op: opMin, N: 1},
 	{ID: "CEXAM.15", Lab: "EXAM", Keys: []string{"P3"}, Kind: kindSlot, Desc: "device website set",
@@ -61,7 +62,7 @@ var examSpec = []Check{
 		Desc: "device pinged ok (health.lastOkTime stored)", Type: websiteDevice, Slot: "health.lastOkTime", Set: true},
 	{ID: "CEXAM.17", Lab: "EXAM", Keys: []string{"P3"}, Kind: kindJarSigned, Desc: "websiteDriver-rt is signed", Jar: websiteRT},
 	{ID: "CEXAM.18", Lab: "EXAM", Keys: []string{"P3"}, Kind: kindJarEntry, Desc: "network, device and folder classes built",
-		Jar: websiteRT, Glob: "**/websiteDriver/BWebsiteDriver*.class", Op: opMin, N: 3},
+		Jar: websiteRT, Glob: "**/websiteDriver/BWebsiteDriver{Network,Device,DeviceFolder}.class", Op: opEq, N: 3},
 	{ID: "CEXAM.19", Lab: "EXAM", Keys: []string{"P3"}, Kind: kindJarText, Desc: "websiteDriver requests NETWORK_COMMUNICATION",
 		Jar: websiteRT, Glob: trainingXML, Contains: []string{"<name>NETWORK_COMMUNICATION</name>"}},
 }
