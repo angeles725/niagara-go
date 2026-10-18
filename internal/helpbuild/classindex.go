@@ -95,8 +95,8 @@ func classXMLEntries(baseDir string, dirs []string, res *IndexResult) ([]namedCl
 			if f.failed {
 				res.addParseFailure(paths[i])
 			}
-			for _, h := range f.heads {
-				e := classEntry{Path: "../" + d + "/" + rels[i], Package: h.Package, Type: classKinds[h.Kind], Module: h.Module}
+			for _, h := range f.classes {
+				e := classEntry{Path: "../" + d + "/" + rels[i], Package: h.Pkg, Type: classKinds[h.Kind], Module: h.Module}
 				out = append(out, namedClass{h.Name, e})
 			}
 		}

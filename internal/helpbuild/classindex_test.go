@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/angeles725/niagara-go/internal/pyjson"
-	"github.com/angeles725/niagara-go/internal/pyxml"
 )
 
 // checkS8Golden runs the Go builder of mode on a copy of testdata/s8/root/
@@ -93,50 +92,5 @@ func TestMergeClassesRanking(t *testing.T) {
 		`"package":"javax.baja.a","path":"javax/baja/a/BX.html","type":"interface"}}`
 	if got != want {
 		t.Errorf("merge:\n got %s\nwant %s", got, want)
-	}
-}
-
-// _sanitize keeps references to XML characters and replaces the others
-// (NUL, other C0 controls, surrogates, U+FFFE/U+FFFF, beyond U+10FFFF,
-// values beyond any integer type) with "?".
-func TestSanitizeCharRefs(t *testing.T) {
-	for _, c := range []struct{ in, want string }{
-		{"&#x0;&#0;&#x9;&#10;&#13;&#x1F;", "??&#x9;&#10;&#13;?"},
-		{"&#x41;&#00000065;&#x0000041;", "&#x41;&#00000065;&#x0000041;"},
-		{"&#xD800;&#xDFFF;&#xD7FF;&#xE000;", "??&#xD7FF;&#xE000;"},
-		{"&#xFFFE;&#xFFFF;&#xFFFD;&#x10000;&#x10FFFF;&#x110000;", "??&#xFFFD;&#x10000;&#x10FFFF;?"},
-		{"&#99999999999999999999;&#xFFFFFFFFFFFFFFFFFF;", "??"},
-		{"&#X0;&#x;&#;&amp;&#x0", "&#X0;&#x;&#;&amp;&#x0"},
-	} {
-		if got := string(sanitizeCharRefs([]byte(c.in))); got != c.want {
-			t.Errorf("%q: %q, want %q", c.in, got, c.want)
-		}
-	}
-}
-
-// bajadoc_xml._kind: enum, then annotation, then interface; module gets
-// "-<runtimeProfile>" when the profile is not empty.
-func TestClassHead(t *testing.T) {
-	for _, c := range []struct {
-		attrs string
-		want  bajadocClassHead
-	}{
-		{``, bajadocClassHead{Kind: "class"}},
-		{`name="A" packageName="p" module="m" runtimeProfile="ux"`, bajadocClassHead{"A", "p", "m-ux", "class"}},
-		{`module="m" runtimeProfile=""`, bajadocClassHead{Module: "m", Kind: "class"}},
-		{`runtimeProfile="rt"`, bajadocClassHead{Module: "-rt", Kind: "class"}},
-		{`interface="true" annotation="true" enum="true"`, bajadocClassHead{Kind: "enum"}},
-		{`interface="true" category="annotation"`, bajadocClassHead{Kind: "annotation_type"}},
-		{`interface="true" category="enum"`, bajadocClassHead{Kind: "enum"}},
-		{`interface="TRUE"`, bajadocClassHead{Kind: "class"}},
-		{`interface="true"`, bajadocClassHead{Kind: "interface"}},
-	} {
-		root, err := pyxml.Parse([]byte(`<c `+c.attrs+`/>`), pyxml.Mode{ETree: true})
-		if err != nil {
-			t.Fatal(err)
-		}
-		if got := classHead(root); got != c.want {
-			t.Errorf("%s: %+v, want %+v", c.attrs, got, c.want)
-		}
 	}
 }

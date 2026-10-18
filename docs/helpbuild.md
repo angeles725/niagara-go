@@ -312,14 +312,11 @@ Found while porting (the Python code wins, kept for parity):
 package; `pyJoin`/`pyAbspath`/`pyBasename` belong next to `pycompat.PosixJoin` once a
 second package needs them.
 
-S8 adds two: `pyTextLines` (`inheritread.go`, a text file read line by line with
+S8 adds one: `pyTextLines` (`inheritread.go`, a text file read line by line with
 TextIOWrapper's chunked strict decoding) belongs in `pycompat` next to `ReadText` once a
-second package needs Python's decode-error text; `bajadocClassHeads` (`classindexxml.go`)
-reads only the class attributes of a `.bajadoc` file, which S7b's full `parse_file` port
-also reads, so once S7b lands the class index can take its heads from that port (one
-parser, the class index keeping its own concurrency). `HELPBUILD_PARITY_INDEXES` joins
-`parityVars` from `parity_s8_test.go`'s `init`; it can move into the list in
-`parity_vars_test.go` when that file is next edited.
+second package needs Python's decode-error text. The class index reads `.bajadoc` files
+through `bajadocxml.Parse`, as S7b does; S7b's sequential walk (`bajadocXMLClasses`) could
+take `parseBajadocFiles` (`classindexxml.go`) for the same concurrency.
 
 ## S5 and S6 files
 
@@ -462,7 +459,7 @@ moved there unchanged from `internal/help/bajadocxml.go`; its `doc.go` holds the
 
 | File | Ports | Notes |
 |---|---|---|
-| `internal/bajadocxml/bajadocxml.go` | `bajadoc_xml.render_type`, `parse_class`, `_sanitize`, `parse_file` (`ParseFile`; `Parse` on bytes already read), `_simple`, `to_clean_info`, `format_output` | `encoding/xml` builds an ElementTree-like tree (an element's text is the character data before its first child; comments and processing instructions dropped); a document that does not parse is parsed again with the character references XML forbids replaced by `?`; `CleanInfo.Subclasses` is the caller's to fill, `FormatCleanInfo` prints `SUBCLASSES:` when it is not empty |
+| `internal/bajadocxml/bajadocxml.go` | `bajadoc_xml.render_type`, `parse_class`, `_sanitize`, `parse_file` (`ParseFile`; `Parse` on bytes already read), `_simple`, `to_clean_info`, `format_output` | `encoding/xml` builds an ElementTree-like tree (an element's text is the character data before its first child; comments and processing instructions dropped); the declared encoding is decoded as expat does for UTF-8, ISO-8859-1 and US-ASCII (a `CharsetReader`); a document that does not parse is parsed again with the character references XML forbids replaced by `?`; `CleanInfo.Subclasses` is the caller's to fill, `FormatCleanInfo` prints `SUBCLASSES:` when it is not empty |
 | `bajadocxmlrun.go` | `bajadoc_xml_parser.build`, `main`, `has_html_page`, `bajadoc_xml.iter_classes` | walks `devguide/` then `guides/` (os.walk order, links to folders not entered, links to files read), skips `module-index.bajadoc`, a class already seen (the first walked wins) and a class whose `bajadoc/<package path>/<Name>.html` is a file; `SUBCLASSES` lists the classes whose simplified `extends` is the class name, so a `com.vendor.BBase` superclass (kept qualified by `_simple`) or a parameterized one never matches; every page is written after the whole walk with S7a's `writeCleanClass` |
 
 API for S10 (`maintenance.BUILDERS` runs `bajadoc_xml_parser.py <data root>` after
@@ -496,16 +493,18 @@ Go, wall time of one run of each step):
 
 - **A class name that would put its page outside `bajadoc-clean/`**: `ErrUnsafeClassName`,
   as in S7a.
-- **Encodings other than UTF-8** (an `encoding="ISO-8859-1"` declaration): expat decodes
-  them, `encoding/xml` has no charset reader here, so such a file counts as unparseable. Every
-  `.bajadoc` of the four registered versions declares UTF-8.
+- **Encodings other than UTF-8, ISO-8859-1 and US-ASCII** (`encoding="windows-1252"`,
+  `"latin1"`): expat hands them to Python's codecs, which decode any single-byte codec and
+  raise `LookupError` for an unknown name; `encoding/xml` has no reader for them, so such a
+  file counts as unparseable. Every `.bajadoc` of the four registered versions declares
+  UTF-8.
 
 ## S8 files
 
 | File | Ports | Notes |
 |---|---|---|
 | `classindex.go` | `build_class_index` (`html_entries`, `xml_entries`, `_rank`, `merge`, `build`, `build_jdk`, `count_classes`, `_write`, `main`) | the `_LI` regex runs through `internal/pyre`; `allclasses-noframe.html` is read with `errors="replace"` and universal newlines; `IndexResult` is the result type of the three builders |
-| `classindexxml.go` | `bajadoc_xml.iter_classes`, `parse_file` and `parse_class` reduced to name, package, module, kind; `_sanitize`, `_xml_char` | `ET.parse` is `internal/pyxml` in ETree mode; a file that is not well-formed is parsed again with the forbidden character references replaced by `?`, and one that still fails is a `ParseFailures` entry (`PARSE_FAILURES`); the files are parsed on half the CPUs and taken in walk order |
+| `classindexxml.go` | `bajadoc_xml.iter_classes`; `parse_file` is `bajadocxml.Parse` (S7b's shared reader) | the file is read here, so one that cannot be read is the error `ET.parse` raises; one that stays unparseable after sanitizing is a `ParseFailures` entry (`PARSE_FAILURES`); the files are parsed on half the CPUs and taken in walk order |
 | `inheritance.go` | `inheritance_builder.parse_txt_file`, `main`, `verify_samples` | the header ends at the first empty line; `sort_keys=True` is done by building the object in sorted order (same bytes) |
 | `inheritread.go` | `for line in open(p, encoding="utf-8")` | `pyTextLines`: strict UTF-8 decoded 8,192 bytes at a time as TextIOWrapper does, universal newlines (a `\r` that ends a chunk waits for the next one), stopping when the caller breaks; a decode error is raised when its chunk is read and names the position inside that chunk, so `inheritance.json`'s error lines match (an invalid byte after the header in the same chunk is an error, one in a later chunk is not) |
 | `methodindex.go` | `method_indexer.parse_members`, `build_method_index` | `_METHOD_NAME` (`[^(]*?(\w+)\s*\(`) is hand-ported: the name is the whole `\w` run before the first `(` (whitespace allowed in between); `\w`, `\s`, `strip()` and `split()` are Python's Unicode classes (`pycompat.IsWordRune`, `IsSpace`) |
@@ -557,13 +556,9 @@ path in `pyjson.EncodeString` is the place to win it back.
 - **The `.bajadoc` files are parsed concurrently**: after an unreadable file Python stops,
   Go has also read the files after it; the entries, `ParseFailures` and the error are the
   walk-order ones, so nothing printed or written changes.
-- **Encoding declarations** other than UTF-8, US-ASCII and Latin-1 follow `pyxml`: an
-  unknown name is a parse failure (no class), where Python decodes any single-byte codec
-  and raises `LookupError` for an unknown name. Every one of the 27,804 `.bajadoc`
-  declarations in the corpus is UTF-8.
-- **`PARSE_FAILURES`** is a process-wide set in Python (read by `selftest --recall`); Go
-  returns the failures of one run in `IndexResult.ParseFailures`, in walk order.
-- **File names that are not UTF-8** are not modelled (as in S5-S7a).
+- **Encoding declarations** other than UTF-8, ISO-8859-1 and US-ASCII follow
+  `bajadocxml` (see the S7b intended differences): such a file is a parse failure. Every
+  one of the 27,804 `.bajadoc` declarations in the corpus is UTF-8.
 
 ## Real-data parity
 

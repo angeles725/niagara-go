@@ -24,10 +24,8 @@ import (
 var updateS8 = flag.Bool("update-s8", false, "rewrite testdata/s8/golden/ from the Python builders (TestParityS8Synthetic)")
 
 // s8IndexesVar selects the versions of TestParityS8Real (a path-list of
-// version ids); it counts as a parity request like the other variables.
+// version ids); it is one of parityVars, so it counts as a parity request.
 const s8IndexesVar = "HELPBUILD_PARITY_INDEXES"
-
-func init() { parityVars = append(parityVars, s8IndexesVar) }
 
 // s8Modes are the driver modes, in the order rebuild-all runs the builders.
 var s8Modes = []string{"class", "inherit", "method"}

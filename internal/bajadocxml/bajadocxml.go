@@ -10,6 +10,7 @@ import (
 	"bytes"
 	"encoding/xml"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"regexp"
@@ -64,6 +65,7 @@ func (x *xmlElem) findAll(tag string) []*xmlElem {
 // parseXML builds the element tree of one document (ET.fromstring).
 func parseXML(data []byte) (*xmlElem, error) {
 	d := xml.NewDecoder(bytes.NewReader(data))
+	d.CharsetReader = charsetReader
 	var stack []*xmlElem
 	var root *xmlElem
 	for {
@@ -104,6 +106,30 @@ func parseXML(data []byte) (*xmlElem, error) {
 		return nil, errors.New("no element found")
 	}
 	return root, nil
+}
+
+// charsetReader decodes the two encodings expat knows besides UTF-8 and
+// UTF-16, as ET.fromstring does: ISO-8859-1 (every byte is its code point)
+// and US-ASCII (a byte above 0x7F is not well-formed). Any other name stays
+// an error, so such a document is unparseable (Python decodes a single-byte
+// codec it knows and raises LookupError for an unknown name).
+func charsetReader(label string, in io.Reader) (io.Reader, error) {
+	enc := strings.ToLower(label)
+	if enc != "iso-8859-1" && enc != "us-ascii" {
+		return nil, fmt.Errorf("unknown encoding %q", label)
+	}
+	raw, err := io.ReadAll(in)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]byte, 0, len(raw))
+	for _, b := range raw {
+		if b >= utf8.RuneSelf && enc == "us-ascii" {
+			return nil, errors.New("not well-formed (invalid token)")
+		}
+		out = utf8.AppendRune(out, rune(b))
+	}
+	return bytes.NewReader(out), nil
 }
 
 func qname(n xml.Name) string {
