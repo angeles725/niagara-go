@@ -1,0 +1,5 @@
+ANNOTATION TYPE: Marker
+PACKAGE: javax.baja.sys
+
+DESCRIPTION:
+A marker.

@@ -1,0 +1,9 @@
+ENUM: BMode
+PACKAGE: javax.baja.sys
+EXTENDS: java.lang.Enum&lt;
+
+DESCRIPTION:
+Modes.
+
+FIELDS:
+  static BMode AUTO - Automatic.

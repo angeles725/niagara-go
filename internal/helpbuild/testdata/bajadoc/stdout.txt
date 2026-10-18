@@ -1,0 +1,7 @@
+Found 15 HTML files to parse
+
+Done in <t>s
+  Parsed: 12
+  Skipped: 3
+  Errors: 0
+  Output: <base>/bajadoc-clean

@@ -1,0 +1,6 @@
+CLASS: Cursor&lt;E&gt;
+PACKAGE: javax.baja.util
+EXTENDS: java.lang.Object
+
+DESCRIPTION:
+A cursor over E.

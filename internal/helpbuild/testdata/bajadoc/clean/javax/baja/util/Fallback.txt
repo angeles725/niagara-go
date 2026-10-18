@@ -1,0 +1,2 @@
+CLASS: Fallback
+PACKAGE: javax.baja.util
