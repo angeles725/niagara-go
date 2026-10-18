@@ -42,9 +42,11 @@ func unreadableIndex(err error) *Failure {
 }
 
 // Scan is license_report over baseDir/indexes/token-index.db and the
-// organized/ corpus: the report, or the Failure that stopped it (missing
-// token index or corpus, a database error, or no candidate file readable).
-// When only some candidate files cannot be read the report carries Warning.
+// organized/ corpus (NAV_CORPUS_BASE or the default location): the report,
+// or the Failure that stopped it (missing token index or corpus, a database
+// error, or no candidate file readable). When only some candidate files
+// cannot be read the report carries Warning. It is ScanIndex with the paths
+// module-nav uses.
 func Scan(baseDir string) (*Report, *Failure) {
 	dbPath := filepath.Join(baseDir, "indexes", "token-index.db")
 	if st, err := os.Stat(dbPath); err != nil || !st.Mode().IsRegular() {
@@ -63,6 +65,30 @@ func Scan(baseDir string) (*Report, *Failure) {
 	if root == "" {
 		return nil, &Failure{message, hint}
 	}
+	return ScanDB(db, meta, root)
+}
+
+// ScanIndex is Scan with explicit inputs: the token index at dbPath and the
+// corpus root organized (no environment lookup).
+func ScanIndex(dbPath, organized string) (*Report, *Failure) {
+	if st, err := os.Stat(dbPath); err != nil || !st.Mode().IsRegular() {
+		return nil, &Failure{fmt.Sprintf("token index not found: %s", dbPath), "Run: ./reindex.sh"}
+	}
+	db, err := index.OpenSQLite(dbPath)
+	if err != nil {
+		return nil, unreadableIndex(err)
+	}
+	defer db.Close()
+	meta, err := metaTable(db)
+	if err != nil {
+		return nil, unreadableIndex(err)
+	}
+	return ScanDB(db, meta, organized)
+}
+
+// ScanDB scans an open token index (its meta table already read) against
+// the corpus root.
+func ScanDB(db *sql.DB, meta *index.Object, root string) (*Report, *Failure) {
 	type candidate struct{ path, module, class string }
 	var cands []candidate
 	rows, err := db.Query("SELECT DISTINCT f.path, f.module, f.class_name FROM postings p "+

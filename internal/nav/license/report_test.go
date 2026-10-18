@@ -92,3 +92,18 @@ func TestScan(t *testing.T) {
 		t.Errorf("no token index: report %v, stderr %q, exit %d", rep, stderr, code)
 	}
 }
+
+// TestScanIndexTakesExplicitInputs: the explicit-input entry ignores
+// NAV_CORPUS_BASE and reads the corpus it is given.
+func TestScanIndexTakesExplicitInputs(t *testing.T) {
+	src := `class C { void f() { Sys.getLicenseManager().checkFeature("v", "f"); } }`
+	base, corpus := tokenBase(t, map[string]string{"m/m-rt/a/C.java": src})
+	t.Setenv("NAV_CORPUS_BASE", t.TempDir())
+	rep, f := ScanIndex(filepath.Join(base, "indexes", "token-index.db"), corpus)
+	if f != nil || len(rep.Calls) != 1 || len(rep.Sites) != 1 || rep.Sites[0].Features[0] != "f" {
+		t.Fatalf("ScanIndex = %+v, %v", rep, f)
+	}
+	if _, f := ScanIndex(filepath.Join(base, "missing.db"), corpus); f == nil || f.Hint != "Run: ./reindex.sh" {
+		t.Errorf("missing index: %v", f)
+	}
+}
