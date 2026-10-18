@@ -83,8 +83,15 @@ clean:
 
 # Real-corpus parity (Python vs Go on the installs under /mnt/c and the niagara-help
 # versions/ trees): off in `test` and `ci`, run on request before handing a builder PR.
+# A green run prints the result lines (subtests included) and the skips; a failing run
+# prints the whole -v output but the === progress lines, so every failure message and
+# diff is kept. The exit status is go test's.
 .PHONY: parity
 parity:
 	@out=$$(HELPBUILD_PARITY_REAL=1 HELPBUILD_PARITY_FULL=1 HELPBUILD_PARITY_415=1 \
 		$(GO) test -count=1 -timeout 60m -run Parity -v ./internal/helpbuild/ 2>&1); st=$$?; \
-		printf '%s\n' "$$out" | grep -E '^(--- |ok|FAIL|PASS)|real-data parity|not mounted|not found'; exit $$st
+		if [ $$st -eq 0 ]; then \
+			printf '%s\n' "$$out" | grep -E '^ *(--- |ok|FAIL|PASS)|real-data parity|not mounted|not found|parity driver python'; \
+		else \
+			printf '%s\n' "$$out" | grep -vE '^ *=== (RUN|PAUSE|CONT|NAME)'; \
+		fi; exit $$st
