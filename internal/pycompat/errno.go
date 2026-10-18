@@ -114,14 +114,10 @@ func platformErrno() *errnoTable {
 	return linuxErrno()
 }
 
-// Strerror is os.strerror(n): glibc's text ("Unknown error n" when unknown), or the C
-// runtime's on Windows.
-func Strerror(n int) string { return platformErrno().strerror(n) }
-
 // StrerrorOf is e.strerror of the OSError Python raises where the Go os package returned
-// err: Strerror of the errno in err, found through *fs.PathError, *os.LinkError,
-// *os.SyscallError and any other wrapping; on Windows the Win32 code first becomes an errno
-// as in OSErrorText. An error that holds no syscall.Errno is returned as err.Error(), and
+// err: os.strerror of the errno in err (glibc's text, or the C runtime's on Windows), found
+// through *fs.PathError, *os.LinkError, *os.SyscallError and any other wrapping; on Windows
+// the Win32 code first becomes an errno as in OSErrorText. An error that holds no syscall.Errno is returned as err.Error(), and
 // nil as "".
 func StrerrorOf(err error) string { return strerrorOf(err, platformErrno()) }
 

@@ -71,8 +71,8 @@ func TestOSErrorText(t *testing.T) {
 			if got := OSErrorText(err); got != want || OSErrorName(err) != "FileNotFoundError" {
 				t.Errorf("OSErrorText(%v) = %q (%s), want %q", err, got, OSErrorName(err), want)
 			}
-			if got := Strerror(2); got != "No such file or directory" {
-				t.Errorf("Strerror(2) = %q", got)
+			if got := StrerrorOf(err); got != "No such file or directory" {
+				t.Errorf("StrerrorOf(%v) = %q", err, got)
 			}
 		}
 	}

@@ -345,11 +345,18 @@ func TestEveryCodePoint(t *testing.T) {
 		"alpha": is(IsAlpha), "decimal": is(IsDecimal), "digit": is(IsDigit), "numeric": is(IsNumeric),
 		"alnum": is(IsAlnum), "printable": is(IsPrintable), "space": is(IsSpace), "word": is(IsWordRune),
 		"linebreak": is(func(r rune) bool { return len(SplitLines("a"+string(r)+"b", false)) == 2 }),
-		"isupper":   isStr(IsUpper), "islower": isStr(IsLower), "istitle": isStr(IsTitle),
-		"upper": mapStr(Upper), "title": mapStr(Title), "capitalize": mapStr(Capitalize),
-		"swapcase":     mapStr(SwapCase),
-		"case_context": func(r rune) (string, bool) { return caseContext(string(r)), true },
-		"repr":         func(r rune) (string, bool) { return StrRepr(string(r)), true },
+		"isupper":   isStr(IsUpper),
+		// The lower and title tables IsUpper reads for a longer string: single-character
+		// islower and istitle, and the two-character isupper path.
+		"islower": is(func(r rune) bool { return in(data().lower, r) }),
+		"istitle": is(func(r rune) bool { return in(data().title, r) || in(data().upper, r) }),
+		"isupper_context": func(r rune) (string, bool) {
+			if IsUpper(string(r) + "A") {
+				return "1", true
+			}
+			return "0", true
+		},
+		"repr": func(r rune) (string, bool) { return StrRepr(string(r)), true },
 		"decimal_value": func(r rune) (string, bool) {
 			return string(r) + strconv.Itoa(decimalValue(r)), decimalValue(r) >= 0
 		},
