@@ -59,11 +59,12 @@ func TestKeytoolChecks(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(home, "security", "truststore.jks"), []byte("x"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	rows := rowsByID(t, probeEnv("", "RSA 1024-bit key\nRSA 2048-bit key\nRSA 1024-bit key\n", "", nil), home, "")
+	rows := rowsByID(t, probeEnv("", "Keystore type: JKS\nSubject Public Key Algorithm: 1024-bit RSA key\n"+
+		"Subject Public Key Algorithm: 2048-bit RSA key\n", "", nil), home, "")
 	if r := rows["SEC-02"]; r.verdict != "FAIL" || r.observed != "opens with 'changeit'" {
 		t.Errorf("SEC-02 = %+v", r)
 	}
-	if r := rows["SEC-11"]; r.verdict != "FAIL" || r.observed != "key sizes [1024, 2048]; FIPS keystore absent" {
+	if r := rows["SEC-11"]; r.verdict != "FAIL" || r.observed != "key sizes RSA [1024, 2048]; weak RSA [1024]; FIPS keystore absent" {
 		t.Errorf("SEC-11 = %+v", r)
 	}
 	rows = rowsByID(t, probeEnv("keytool error: java.io.IOException: Keystore was tampered with, or password was incorrect", "", "", nil), home, "")
@@ -162,7 +163,8 @@ func TestKeytoolFailureIsNeverAPass(t *testing.T) {
 			"not verified (keytool exit 3: )", "SKIP",
 			"key sizes not read (keytool exit 3: ); FIPS keystore absent", "SKIP"},
 		{"wrong-password words with exit 0", result{stdout: []byte("Keystore type: JKS\nalias: password was incorrect\n")},
-			"opens with 'changeit'", "FAIL", "key sizes n/a; FIPS keystore absent", "PASS"},
+			"opens with 'changeit'", "FAIL",
+			"key sizes not parsed from keytool -list -v (entry count not found); FIPS keystore absent", "SKIP"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			rows := rowsByID(t, keytoolEnv(tc.r), home, "")
@@ -201,8 +203,11 @@ func TestKeytoolPasswordStaysOffTheCommandLine(t *testing.T) {
 		t.Fatal(err)
 	}
 	ts := filepath.Join(home, "security", "truststore.jks")
-	want := "-list\n-keystore\n" + ts + "\n-storepass:env\n" + storepassVar + "\nenv=changeit\n" +
-		"-list\n-v\n-keystore\n" + ts + "\n-storepass:env\n" + storepassVar + "\nenv=changeit\n"
+	// The JVM locale options come last on every run, so keytool prints English whatever the host
+	// locale (a Spanish one prints "Su almacén de claves contiene 2 entradas").
+	locale := "-J-Duser.language=en\n-J-Duser.country=US\n"
+	want := "-list\n-keystore\n" + ts + "\n-storepass:env\n" + storepassVar + "\n" + locale + "env=changeit\n" +
+		"-list\n-v\n-keystore\n" + ts + "\n-storepass:env\n" + storepassVar + "\n" + locale + "env=changeit\n"
 	if string(data) != want {
 		t.Errorf("keytool saw:\n%s\nwant:\n%s", data, want)
 	}

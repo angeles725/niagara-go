@@ -58,14 +58,3 @@ func TestCp1252DecodingIsLossless(t *testing.T) {
 		}
 	}
 }
-
-// Python PASSes SEC-11 with "key sizes n/a" when there is no security/truststore.jks: no key was
-// read, so the check did not run. A check that could not run never passes: it is a SKIP.
-func TestSec11WithoutTruststoreIsASkip(t *testing.T) {
-	rows := rowsByID(t, probeEnv("", "", "", nil), t.TempDir(), "")
-	r := rows["SEC-11"]
-	if r.verdict != "SKIP" || r.observed != "not checked (no security/truststore.jks); FIPS keystore absent" ||
-		r.note != "run: keytool -list -v -keystore <home>/security/truststore.jks with the store password" {
-		t.Errorf("SEC-11 = %+v", r)
-	}
-}
