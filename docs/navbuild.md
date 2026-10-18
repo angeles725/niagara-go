@@ -21,7 +21,7 @@ document disagree, the code wins and this document is corrected.
 | B5 | Java member scanner + method index | `build_method_index.py` |
 | ~~B6~~ | field index: dropped, no kept reader (D32) | `build_field_index.py` |
 | B7 | call graph | `build_callgraph_index.py` |
-| **B8** | `mnav reindex` orchestration | `reindex.sh` |
+| B8 | `mnav reindex` orchestration | `reindex.sh` |
 
 ## Foundations
 
@@ -232,6 +232,9 @@ copies (`reindex_test.go`), never a real `indexes/`.
 | full-corpus `inheritance.json` normalised byte diff | 0 (3,740,761 bytes); Python 1.6 s, Go 0.5 s |
 | full-corpus `xref-index.json` normalised byte diff | 0 (19,290,729 bytes); Python 12.3 s, Go 4.7 s |
 | full-corpus `token-index.db` logical dump | 0 differences in 15,581,950 records (53,324 files, 15,528,521 postings; 1,006,706,688 bytes, the same size as Python's); Python 3m13s, Go 2m49s on a loaded host |
+| full-corpus `method-index.json` normalised byte diff | 0 (149,377,514 bytes); Python 10m05s / 700 MiB peak RSS, Go 8.4 s / 561 MiB, on a host at load 20 |
+| full-corpus `callgraph-index.json` normalised byte diff | 0 (31,017,690 bytes); Python 4m14s / 352 MiB, Go 18.6 s / 349 MiB, same host |
+| `mnav reindex` of the full corpus into a temp base dir | all seven indexes validated in 4m53s, peak RSS 2.1 GB (the token index: 216 s, its in-memory index sorts); the Go `token` and `class` commands read the result |
 | `selftest --recall` on the Go-built index (`TestRecallOnGoBuiltIndex`; the Python oracle via `--base-dir`, since the Go `mnav selftest` is not ported) | 100.00% (55,931/55,931), supertypes 44,369/44,369 |
 
 ## Parity harness
