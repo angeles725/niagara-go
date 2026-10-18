@@ -13,7 +13,8 @@ $NIAGARA_HELP_PY_REF; the data stays NIAGARA_HELP_DIR, the live checkout (its
 fulltext.sqlite and versions/ trees are not in the tag), see harness().
 Each case's sha256(stdout), sha256(stderr) and exit code must equal
 tests/golden/cli.json, or nothing is written. The INTENDED cases (help and
-no-command: D32; stats and stats-json: call-index retired, I3-5) also get
+no-command: D32; stats and stats-json: call-index retired, I3-5; versions--help:
+D34, the Go-only versions extract) also get
 intended.json with the output of GO_NH_BIN run through the same harness.
 On success every case directory next to this script is replaced.
 """
@@ -49,7 +50,10 @@ D32 = ("D32: the Go port lists only the kept commands; retired commands print on
 I3_5 = ("call-index retired (I3-5): the Go port neither builds nor reads call-index.json, "
         "so stats counts 9 indexes and has no CALL INDEX block or call-index entry, "
         "even when a stale file is on disk")
-INTENDED = {"help": D32, "no-command": D32, "stats": I3_5, "stats-json": I3_5}
+D34_EXTRACT = ("D34: 'versions extract' (extract_version.py, which had no niagara_help entry) is a "
+               "Go-only subcommand, so the subcommand list names it")
+INTENDED = {"help": D32, "no-command": D32, "stats": I3_5, "stats-json": I3_5,
+            "versions--help": D34_EXTRACT}
 
 
 def sha(text):

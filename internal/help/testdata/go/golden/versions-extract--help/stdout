@@ -1,0 +1,13 @@
+usage: niagara_help versions extract [-h] [--verify-only] [--force] [--no-index] [--fill-missing]
+                                     version
+
+positional arguments:
+  version         Registered version id (or a unique prefix)
+
+options:
+  -h, --help      show this help message and exit
+  --verify-only   Only run the sha256 fidelity check and write the manifest
+  --force         delete existing raw+derived dirs before extracting
+  --no-index      Extract without running rebuild-all
+  --fill-missing  only write jar entries whose file is absent (never overwrites; allowed on the
+                  repo root)

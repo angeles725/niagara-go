@@ -21,7 +21,7 @@ var versionCommands = []command{
 }
 
 func versionsArgs(p *argparse.Parser) {
-	sub := p.AddSubparsers(argparse.SubparsersConfig{Dest: "action", Metavar: "{add,list}"})
+	sub := p.AddSubparsers(argparse.SubparsersConfig{Dest: "action", Metavar: "{add,extract,list}"})
 	sub.SetRequired(true)
 	add := sub.AddParser("add", argparse.SubparserConfig{Help: "Register a Niagara install, " +
 		"extract and index all of its documentation, run both gates and print a summary"})
@@ -32,13 +32,17 @@ func versionsArgs(p *argparse.Parser) {
 		"from modules/baja.jar or the folder name"}, "--id")
 	add.Add(argparse.Arg{Action: argparse.StoreTrue, Help: "Extract and index an already " +
 		"registered version again (same install)"}, "--force")
+	versionsExtractArgs(sub)
 	sub.AddParser("list", argparse.SubparserConfig{Help: "Registered versions, their data roots " +
 		"and whether they are extracted"})
 }
 
 func runVersions(e *Env, ns *argparse.Namespace) error {
-	if ns.String("action") == "add" {
+	switch ns.String("action") {
+	case "add":
 		return e.addVersion(ns.String("install"))
+	case "extract":
+		return e.extractVersion(ns)
 	}
 	return e.listVersions()
 }
