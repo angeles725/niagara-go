@@ -108,3 +108,16 @@ func TestObjectOfAndConstructors(t *testing.T) {
 		t.Errorf("DumpsAny = %q", got)
 	}
 }
+
+// shortDict is a Dict whose Values is shorter than its Keys.
+type shortDict struct{}
+
+func (shortDict) Keys() []string { return []string{"a", "b"} }
+func (shortDict) Values() []any  { return []any{1} }
+
+// A Dict with mismatched Keys and Values is an error, not a panic.
+func TestFromAnyMismatchedDict(t *testing.T) {
+	if _, err := FromAny(shortDict{}); err == nil || !strings.Contains(err.Error(), "2 keys but 1 values") {
+		t.Fatalf("FromAny(shortDict) error = %v, want the key/value count mismatch", err)
+	}
+}

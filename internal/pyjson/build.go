@@ -138,8 +138,11 @@ func dictValue(d Dict) (Value, error) {
 	if rv := reflect.ValueOf(d); rv.Kind() == reflect.Pointer && rv.IsNil() {
 		return o, nil
 	}
-	vals := d.Values()
-	for i, k := range d.Keys() {
+	keys, vals := d.Keys(), d.Values()
+	if len(keys) != len(vals) {
+		return Value{}, fmt.Errorf("pyjson.FromAny: %T has %d keys but %d values", d, len(keys), len(vals))
+	}
+	for i, k := range keys {
 		val, err := FromAny(vals[i])
 		if err != nil {
 			return Value{}, err
