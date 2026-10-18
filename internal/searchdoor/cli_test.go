@@ -39,10 +39,15 @@ func TestDefaultPathsHonourEachVariable(t *testing.T) {
 	t.Setenv("NSEARCH_NIAGARA_HELP", "")
 	t.Setenv("NSEARCH_MODULE_NAV", "x/nav.py")
 	t.Setenv("NSEARCH_COURSE_ROOT", "")
+	t.Setenv("NSEARCH_COURSE_KEYS", "")
 	want := Paths{Blocks: "/r/tools/corpus-nav.py", Docs: "/r/niagara-help/tools/niagara_help.py",
-		Code: "x/nav.py", Course: "/r/sources/n4-dev-course"}
+		Code: "x/nav.py", Course: "/r/sources/n4-dev-course", Keys: "/r"}
 	if got := defaultPaths(); got != want {
 		t.Errorf("defaultPaths() = %+v, want %+v", got, want)
+	}
+	t.Setenv("NSEARCH_COURSE_KEYS", "k")
+	if got := defaultPaths().Keys; got != "k" {
+		t.Errorf("defaultPaths().Keys = %q, want NSEARCH_COURSE_KEYS", got)
 	}
 }
 

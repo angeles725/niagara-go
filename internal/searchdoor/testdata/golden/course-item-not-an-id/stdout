@@ -1,0 +1,56 @@
+
+Query: 'P2P alarm history L99.1'   mode=backend default   docs=niagara-help default
+
+========================================================================
+SOURCE 1 · OUR BLOCKS   (corpus-nav find)
+========================================================================
+   1. B101 · Block 101 — p2p research (default mode, --limit 2000)
+        12: > a line about p2p in block 101
+   2. B102 · Block 102 — alarm research (default mode, --limit 2000)
+        13: > a line about alarm in block 102
+   3. B103 · Block 103 — history research (default mode, --limit 2000)
+        14: > a line about history in block 103
+   4. B104 · Block 104 — l99.1 research (default mode, --limit 2000)
+        15: > a line about l99.1 in block 104
+
+========================================================================
+SOURCE 2 · OFFICIAL DOCS   (niagara_help find)
+========================================================================
+  7 files matching 'P2P alarm history L99.1' (docs default, default mode):
+  by source: guides-clean 3, devguide-clean 2
+   1. guides-clean/P2P/page1.html  [guides-clean] P2P guide, page 1
+        L10: how the p2p setting works
+   2. guides-clean/Alarm/page2.html  [guides-clean] Alarm guide, page 2
+        L11: how the alarm setting works
+   3. guides-clean/History/page3.html  [guides-clean] History guide, page 3
+        L12: how the history setting works
+   4. guides-clean/L99.1/page4.html  [guides-clean] L99.1 guide, page 4
+        L13: how the l99.1 setting works
+   5. P2P guide, page 5  [guides-clean] P2P guide, page 5
+        L14: how the p2p setting works
+
+========================================================================
+SOURCE 3 · CODE   (module_nav rank)
+========================================================================
+  Rank 'P2P alarm history L99.1': 8 matching classes (terms: p2p, alarm, history, l99.1)
+   1. BP2PService  [demo-rt]  score 9.250
+        com/demo/BP2PService.java
+   2. BP2PExt  [demo-rt]  score 9.000
+        com/demo/BP2PExt.java
+   3. BAlarmService  [demo-rt]  score 8.750
+        com/demo/BAlarmService.java
+   4. BAlarmExt  [demo-rt]  score 8.500
+        com/demo/BAlarmExt.java
+   5. BHistoryService  [demo-rt]  score 8.250
+        com/demo/BHistoryService.java
+  ... 3 more ranked (raise --limit)
+  -- course code   (BM25 over course/{course,solutions,niagara-4.15.6.20/dev}/**/*.java) --
+    searched 4 .java files of the N4 developer course (course 2, verified solution 1, dev kit example 1)
+     1. BHistoryExportService  [course]  score 2.651
+          course/slides/BHistoryExportService.java
+     2. BAlarmCounter  [course]  score 1.497
+          course/lab3/BAlarmCounter.java
+     3. BRoomPanel  [verified solution]  score 0.700
+          solutions/exam/BRoomPanel.java
+
+Summary: blocks 4 ranked · docs 5 ranked · code 8 ranked + course code 3 ranked

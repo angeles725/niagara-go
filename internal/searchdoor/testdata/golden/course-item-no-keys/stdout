@@ -1,0 +1,56 @@
+
+Query: 'L10.23 alarm'   mode=backend default   docs=niagara-help default
+
+========================================================================
+COURSE ITEM · answer key   (course show L10.23)
+========================================================================
+  [!] unavailable: --root empty-course has no docs/n4-dev-course-solutions/labs.md   (unavailable: not a zero)
+
+========================================================================
+SOURCE 1 · OUR BLOCKS   (corpus-nav find)
+========================================================================
+   1. B101 · Block 101 — l10.23 research (default mode, --limit 2000)
+        12: > a line about l10.23 in block 101
+   2. B102 · Block 102 — alarm research (default mode, --limit 2000)
+        13: > a line about alarm in block 102
+   3. B103 · Block 103 — l10.23 research (default mode, --limit 2000)
+        14: > a line about l10.23 in block 103
+   4. B104 · Block 104 — alarm research (default mode, --limit 2000)
+        15: > a line about alarm in block 104
+
+========================================================================
+SOURCE 2 · OFFICIAL DOCS   (niagara_help find)
+========================================================================
+  5 files matching 'L10.23 alarm' (docs default, default mode):
+  by source: guides-clean 3, devguide-clean 2
+   1. guides-clean/L10.23/page1.html  [guides-clean] L10.23 guide, page 1
+        L10: how the l10.23 setting works
+   2. guides-clean/Alarm/page2.html  [guides-clean] Alarm guide, page 2
+        L11: how the alarm setting works
+   3. guides-clean/L10.23/page3.html  [guides-clean] L10.23 guide, page 3
+        L12: how the l10.23 setting works
+   4. guides-clean/Alarm/page4.html  [guides-clean] Alarm guide, page 4
+        L13: how the alarm setting works
+   5. L10.23 guide, page 5  [guides-clean] L10.23 guide, page 5
+        L14: how the l10.23 setting works
+
+========================================================================
+SOURCE 3 · CODE   (module_nav rank)
+========================================================================
+  Rank 'L10.23 alarm': 4 matching classes (terms: l10.23, alarm)
+   1. BL1023Service  [demo-rt]  score 9.250
+        com/demo/BL1023Service.java
+   2. BL1023Ext  [demo-rt]  score 9.000
+        com/demo/BL1023Ext.java
+   3. BAlarmService  [demo-rt]  score 8.750
+        com/demo/BAlarmService.java
+   4. BAlarmExt  [demo-rt]  score 8.500
+        com/demo/BAlarmExt.java
+  -- course code   (BM25 over course/{course,solutions,niagara-4.15.6.20/dev}/**/*.java) --
+    searched 4 .java files of the N4 developer course (course 2, verified solution 1, dev kit example 1)
+     1. BAlarmCounter  [course]  score 1.497
+          course/lab3/BAlarmCounter.java
+     2. BRoomPanel  [verified solution]  score 0.700
+          solutions/exam/BRoomPanel.java
+
+Summary: course UNAVAILABLE · blocks 4 ranked · docs 5 ranked · code 4 ranked + course code 2 ranked

@@ -15,9 +15,12 @@ type Item struct {
 	Keyed   bool
 	Display string
 	Snippet string
+	Body    []string
 }
 
-func keyed(key, display, snippet string) Item { return Item{key, true, display, snippet} }
+func keyed(key, display, snippet string) Item {
+	return Item{Key: key, Keyed: true, Display: display, Snippet: snippet}
+}
 
 func unkeyed(display string) Item { return Item{Display: display} }
 

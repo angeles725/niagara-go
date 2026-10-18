@@ -20,8 +20,8 @@ const (
 	scopeLines   = 6
 )
 
-// Paths are the backend scripts and the course-code root.
-type Paths struct{ Blocks, Docs, Code, Course string }
+// Paths are the backend scripts, the course-code root and the answer-key checkout.
+type Paths struct{ Blocks, Docs, Code, Course, Keys string }
 
 // door runs the sources with a Backend and a monotonic clock in seconds.
 type door struct {
@@ -280,11 +280,16 @@ func runJobs(jobs []job) []*Outcome {
 	return out
 }
 
-// search is door.search: the blocks, docs and code outcomes for a free-text query.
+// search is door.search: the blocks, docs and code outcomes for a free-text query,
+// led by the course items it names (courseItems, decision D41).
 func (d *door) search(query string, p Paths, limit int, mode string, timeout int, docVersion string) []*Outcome {
-	return runJobs([]job{
+	outcomes := runJobs([]job{
 		d.blocksJob(p.Blocks, query, limit, mode, timeout, "SOURCE 1 · OUR BLOCKS"),
 		d.docsJob(p.Docs, query, limit, mode, timeout, "SOURCE 2 · OFFICIAL DOCS", false, docVersion),
 		d.codeJob(p.Code, query, timeout, "SOURCE 3 · CODE", p.Course),
 	})
+	if lead := d.courseItems(query, p.Keys); lead != nil {
+		outcomes = append([]*Outcome{lead}, outcomes...)
+	}
+	return outcomes
 }

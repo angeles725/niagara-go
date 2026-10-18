@@ -41,6 +41,9 @@ func renderRows(w io.Writer, o *Outcome, limit int, zero, indent string) {
 		if it.Snippet != "" {
 			fmt.Fprintf(w, "%s      %s\n", indent, it.Snippet)
 		}
+		for _, ln := range it.Body { // a whole answer (a course item), verbatim
+			fmt.Fprintln(w, strings.TrimRight(indent+"  "+ln, " "))
+		}
 	}
 	if len(o.Items) > shown {
 		more := "ranked (raise --limit)"
