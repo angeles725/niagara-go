@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strconv"
 	"strings"
 	"testing"
@@ -84,6 +85,8 @@ func TestGenerated(t *testing.T) {
 
 // checkZip compares the ZIP Go wrote with Python's: one deflated file.xml with the same
 // header fields and content. The deflate bytes and the timestamp (local time now) differ.
+// The reference was written on Linux (version made by 3 = Unix); Windows CPython's ZipInfo
+// sets create_system 0 (MS-DOS), so on Windows the expected creator is 0<<8 | 20.
 func checkZip(t *testing.T, gotPath, wantPath string, xml []byte, start time.Time) {
 	t.Helper()
 	got, err := zip.OpenReader(gotPath)
@@ -100,6 +103,12 @@ func checkZip(t *testing.T, gotPath, wantPath string, xml []byte, start time.Tim
 		t.Fatalf("entries: got %d want %d", len(got.File), len(want.File))
 	}
 	g, w := got.File[0].FileHeader, want.File[0].FileHeader
+	if w.CreatorVersion != 3<<8|20 {
+		t.Fatalf("reference version made by %#x, want Unix 2.0 (0x314)", w.CreatorVersion)
+	}
+	if runtime.GOOS == "windows" {
+		w.CreatorVersion = 0<<8 | 20
+	}
 	if g.Name != w.Name || g.Method != w.Method || g.Flags != w.Flags || g.CreatorVersion != w.CreatorVersion ||
 		g.ReaderVersion != w.ReaderVersion || g.ExternalAttrs != w.ExternalAttrs || !bytes.Equal(g.Extra, w.Extra) ||
 		g.CRC32 != w.CRC32 || g.UncompressedSize64 != w.UncompressedSize64 {
