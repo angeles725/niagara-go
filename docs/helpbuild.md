@@ -25,7 +25,7 @@ document disagree, the code wins and this document is corrected.
 | **S9** (done) | source / slots / xref indexes; `call-index.json` is retired (decision I3-5), not ported | `source_indexer.py`, `slots_indexer.py`, `xref_builder.py` | ~2,000 with tests |
 | S10 | orchestration (`extract`, `versions add`, `rebuild-all`, `freshness`) | `extract_version.py`, `version_setup.py`, `version_report.py`, `maintenance.py` | ~750 |
 | **S10b-1** (done) | the coverage reports: `coverage`, `coverage <module>`, `coverage --doc-jars` (library + printers; the nh wiring is a later slice) | `coverage_report.py`, `doc_coverage.py` (+ `doc_types.classify`, `classify_unmapped`, `content_type`, `example_skip_reason`) | ~1,300 + tests |
-| (S11) | whole-install sweep gate, if it moves to Go | `install_sweep.py` | — |
+| **S11a** (done) | whole-install sweep gate (`coverage --sweep`, a `versions add` gate) as a library + report, on S10b-1's `Classify` and `Indexed`; nh wiring is a later slice | `install_sweep.py`, `course.gate` / `print_gate` | ~1,700 with tests |
 
 `fulltext.sqlite` is outside this plan (owned by the full-text port).
 
@@ -705,6 +705,91 @@ over /mnt/c, so the page cache (cold or warm) decides most of them.
   `install_dir` of another type) is an error, where Python raises or, for a non-string
   `install_dir`, calls `os.path.isdir` on it.
 
+## S11a files
+
+The whole-install sweep (`coverage --sweep`, and with `coverage --doc-jars` a required
+gate of `versions add`, niagara-help TOOLING-GUIDELINES.md): every documentation-like
+entry of every jar of the install, and every file of its `docs/`, is indexed, excluded
+with a reason, or UNCLASSIFIED; a directory the walk cannot list is UNCLASSIFIED too.
+
+| File | Ports | Notes |
+|---|---|---|
+| `sweep.go` | `install_sweep.find_jars`, `location`, `is_installed`, `Sweep` (`installed_entry`, `_mapped`, `classify`, `_shadowed`, `shadowed_entries`, `classify_loose_doc`), `scan` | the walks are `os.walk(onerror=...)` (`pyWalkFn`, sorted folders and files); in-jar collisions use `MappedEntries`, the extractor's rule |
+| `sweepreport.go` | `install_sweep.cmd_sweep`, `print_report`, `_print_pdf_line`; `course.gate`, `print_gate`; the read-only side of `open_index` (`FreshFulltextPath`, `FreshFulltextDocs`) | widths and comma groups through `pyFmt` (code points, as `str.format`); reasons sort by (-count, rule, reason) |
+
+One rule per concept, shared with the S10b-1 coverage gate: `Classify` and `Reasons`
+(`doccoverageclassify.go`), `doc_coverage.Indexed` (`indexedViews.check`,
+`doccoverage.go`), the `FulltextDocs` reader type and `FulltextDocsAt`,
+`loadReportIndex` / `IndexShapeError` for the index files, and `registeredInstall`, the
+`reg["versions"].get(vid, {}).get("install_dir", "")` read both `cmd_sweep` and
+`cmd_doc_jar_coverage` make.
+
+API for the wiring slice (nh `coverage --sweep`, and the `versions add` gate of S10):
+
+```go
+status, err := helpbuild.RunSweep(repo, baseDir, versionID, os.Stdout, helpbuild.SweepOptions{
+	Fulltext: rebuildingDocs, // a FulltextDocs; nil: FreshFulltextDocs (read only, *fts.StaleIndexError when stale)
+})
+// status: helpbuild.SweepPass (0), SweepFail (1, at least one UNCLASSIFIED entry),
+// SweepUnavailable (2, one "INSTALL SWEEP <vid>: install not available (...)" line).
+// The report ends with the RESULT line: "RESULT: PASS - every documentation-like entry is
+// indexed or excluded with a reason" or "RESULT: FAIL - <n> unclassified entr{y,ies}".
+// err != nil is what Python raises (a traceback, exit 1); the lines printed before it
+// were written to w.
+```
+
+`versionID` "" is identified from `baseDir` (`versions.identify`; an unregistered root
+prints `None`). The jar listings go through `<repo>/.cache/jar-listings/` (the S1 cache,
+byte-identical with Python's). `SweepOptions.Rules` replaces `install_rules.default()`
+everywhere `cmd_sweep` reads it (scan, course gate, the documentation-like line). The
+lower-level pieces are exported for `coverage --doc-jars` and tests: `Scan` (the `scan`
+dict as `*SweepResult`), `SweepReport` (the report lines), `GateCourse`, `FindJars`,
+`FreshFulltextDocs`.
+
+`SweepOptions.Fulltext` exists because Python's `open_index` **builds** a missing or
+stale full-text index (in `indexes/`, then the user cache, then memory) before the course
+gate or an `example` check reads it, printing notes on stderr. The library prints nothing
+and does not build: the default `FreshFulltextDocs` reads the up-to-date database or
+returns `*fts.StaleIndexError`. nh should pass the same rebuilding `FulltextDocs` it
+gives `DocJarCoverage` (backed by `internal/help/scope`'s opener: a path-returning export
+of its `ensure`, then `FulltextDocsAt`), which keeps Python's behaviour and adds the build
+lock. The index is opened only when a course is bound or an `example` entry has
+its corpus file, as in Python.
+
+S11a parity (`testdata/parity/sweepdriver.py`, modes `fixture` and `sweep`; each side gets
+a repository of its own, a copy of the registry, so each writes its own jar-listing cache):
+
+| Test | Compares |
+|---|---|
+| `TestSweepClassifiesEveryEntry`, `TestRunSweepReport`, `TestSweepListingCache`, `TestSweepCorners`, `TestSweepShadowedEntries`, `TestFreshFulltextDocs`, `TestIndexedViewsCheck` (every `check` kind) | no Python needed: the assertions of niagara-help `test_install_sweep.py` (12 tests) and the sweep cases of `test_t3a_advisories.py` / `test_n3_advisories.py` on a Go-extracted fixture, plus the whole report of that fixture |
+| `TestParitySweepSynthetic` | the report lines, the exit status and both jar-listing caches (byte for byte), cold then warm, on the driver's fixture (extracted and rebuilt by Python's rebuild-all, full-text index built by `open_index`): every content kind, installed copies identical and changed, in-jar duplicates identical and different, empty, corrupt, upper-case and non-ASCII jars, a root jar, a location longer than its column, more than 25 gaps, loose PDFs in and out of `pdf-index.json` in any case, unreadable folders in the install and under `docs/`, the course row; for version 1.0 with the shipped and the test rules, an identified version, a version sharing the install but never extracted (PDF fallback and course note), an install that is not registered, an unknown version and an unregistered data root |
+| `TestParitySweepReal` | the same on real registered versions (`HELPBUILD_PARITY_SWEEP`); nothing is written into niagara-help: the repositories are temporary (seeded with niagara-help's jar-listing cache of the install when it has one), and a stale `indexes/fulltext.sqlite` (Python would rebuild it in place) is replaced by an index the Go builder writes in a temporary `XDG_CACHE_HOME`, open_index's second place |
+
+Measured 2026-10-18 (report and cache byte-identical; RESULT PASS on both versions; the
+gate's own time, a shared laptop, installs over /mnt/c):
+
+| Version | Jar-listing cache | Python | Go |
+|---|---|---|---|
+| 4.15.6.20 | cold (every jar listed) | 255.5 s | 67.3 s |
+| 4.15.6.20 | warm (niagara-help's cache) | 24 to 33 s | 25 to 35 s |
+| 4.3.58.18 | cold | 36.3 s | 13.7 s |
+| 4.3.58.18 | warm | 15 to 20 s | 12 to 13 s |
+
+A warm sweep is bound by the walk and the per-jar `stat` over /mnt/c, so both sides take
+about the same time; Go wins on listing the jars. `indexes/fulltext.sqlite` of 4.3.58.18
+(and 4.13.2.18) is stale in niagara-help (Python's fingerprint agrees), which is why the
+real test builds a temporary one.
+
+### S11a intended differences
+
+- **A stale or missing full-text index** with the default finder is an error (exit 1)
+  where Python rebuilds it; with nh's rebuilding finder the behaviour is Python's except
+  the in-memory last resort (see `scope.UnwritableIndexError`).
+- **Registry and index shapes Python trips over**: as in S10b-1 (the shared
+  `registeredInstall` and `loadReportIndex`), plus a `pdf-index.json` row that is not an
+  object or a non-string truthy `source_pdf`, which are an error naming the file.
+- **File names that are not UTF-8** are not modelled (as in S7a and S9).
+
 ## Real-data parity
 
 Every test that reads a real install or the real corpus runs only on request, `-short`
@@ -728,8 +813,9 @@ cache, glob, toc and fuzz parity tests (5,000 snippets) stay on in `go test`.
 | `HELPBUILD_PARITY_BAJADOCXML=a:b` | `TestParityBajadocXMLReal` on that list of version ids instead |
 | `HELPBUILD_PARITY_INDEXES=a:b` | `TestParityS8Real` and `TestParityS9Real` on that list of version ids instead |
 | `HELPBUILD_PARITY_COVERAGE=a:b` | `TestParityCoverageReal` on that list of version ids instead; an install that is not mounted then fails instead of skipping `--doc-jars` |
+| `HELPBUILD_PARITY_SWEEP=a:b` | `TestParitySweepReal` on that list of version ids (only this variable turns it on; a list naming no version fails) |
 
-`make parity` sets `REAL`, `FULL`, `415`, `INDEXES=4.14.0.162:4.15.6.20:4.3.58.18` and `COVERAGE=4.14.0.162:4.15.6.20` and runs every `Parity` test of the package.
+`make parity` sets `REAL`, `FULL`, `415`, `INDEXES=4.14.0.162:4.15.6.20:4.3.58.18`, `COVERAGE=4.14.0.162:4.15.6.20` and `SWEEP=4.15.6.20:4.3.58.18` and runs every `Parity` test of the package (the sweep adds about 100 s over a warm jar-listing cache).
 Timings on the development laptop: `go test ./internal/helpbuild/` about 20 s without the
 variables (about 170 s when the real tests ran by default); `HELPBUILD_PARITY_REAL=1 go test ./internal/helpbuild/` about 2.5 min (the 4.14 coverage reports
 about 80 s of it); `make parity` 8 to 10 min (the full-install sweep 80 s or more over /mnt/c,

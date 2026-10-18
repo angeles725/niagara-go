@@ -23,7 +23,14 @@ import (
 // symlinked subdirectory is listed but not descended. A directory that
 // cannot be read is skipped silently (onerror=None).
 func pyWalk(top string, visit func(dir string, dirs, files []string) []string) {
-	walkPy(top, os.ReadDir, visit)
+	walkPy(top, os.ReadDir, nil, visit)
+}
+
+// pyWalkFn is pyWalk with os.walk's onerror: it receives each directory
+// that cannot be read (as joined from top) and the error, then the walk
+// goes on without it.
+func pyWalkFn(top string, onerror func(dir string, err error), visit func(dir string, dirs, files []string) []string) {
+	walkPy(top, os.ReadDir, onerror, visit)
 }
 
 // pyWalkDirOrder is pyWalk with each directory listed in the order the
@@ -31,7 +38,7 @@ func pyWalk(top string, visit func(dir string, dirs, files []string) []string) {
 // builders that do not sort what os.walk yields (source_indexer's files,
 // slots_indexer's folders and files): their output order follows it.
 func pyWalkDirOrder(top string, visit func(dir string, dirs, files []string) []string) {
-	walkPy(top, readDirUnsorted, visit)
+	walkPy(top, readDirUnsorted, nil, visit)
 }
 
 // readDirUnsorted is os.ReadDir without the sort.
@@ -44,9 +51,13 @@ func readDirUnsorted(dir string) ([]fs.DirEntry, error) {
 	return f.ReadDir(-1)
 }
 
-func walkPy(top string, list func(string) ([]fs.DirEntry, error), visit func(dir string, dirs, files []string) []string) {
+func walkPy(top string, list func(string) ([]fs.DirEntry, error), onerror func(dir string, err error),
+	visit func(dir string, dirs, files []string) []string) {
 	ents, err := list(top)
 	if err != nil {
+		if onerror != nil {
+			onerror(top, err)
+		}
 		return
 	}
 	var dirs, files []string
@@ -67,7 +78,7 @@ func walkPy(top string, list func(string) ([]fs.DirEntry, error), visit func(dir
 		if st, err := os.Lstat(sub); err == nil && st.Mode()&fs.ModeSymlink != 0 {
 			continue
 		}
-		walkPy(sub, list, visit)
+		walkPy(sub, list, onerror, visit)
 	}
 }
 

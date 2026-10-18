@@ -4,6 +4,9 @@ import (
 	"errors"
 	"path/filepath"
 	"testing"
+
+	"github.com/angeles725/niagara-go/internal/help/fts"
+	ftbuild "github.com/angeles725/niagara-go/internal/helpbuild/fulltext"
 )
 
 // Classification of corpus paths and unmapped entries (doc_types.classify,
@@ -44,6 +47,9 @@ func TestClassify(t *testing.T) {
 		{"guides/A/weird", VerdictUnknown, "", "guides weird"},
 		{"guides/A/.hidden", VerdictUnknown, "", "guides .hidden"},
 		{"other/x.html", VerdictUnknown, "", "other .html"},
+		{"bajadoc/p/Package-Summary.HTML", VerdictExclude, Reasons["javadoc-nav"], "bajadoc .html"},
+		{"devguide/sub/x.txt", VerdictIndex, "devguide-page", "devguide .txt"},
+		{"devguide-examples/a/b.png", VerdictUnknown, "", "devguide-examples .png"},
 	} {
 		v, d := Classify(c.rel)
 		if v != c.verdict || d != c.detail || ContentType(c.rel) != c.ctype {
@@ -119,4 +125,61 @@ func TestParityDocJarCoverageGolden(t *testing.T) {
 	covPython(t)
 	cases, pairs := docJarGoldenCases(t)
 	checkCovGoldens(t, cases, true, pairs...)
+}
+
+const bajadocXML = `<?xml version="1.0"?><bajadoc><class qualifiedName="p.q.B" name="B" packageName="p.q"/></bajadoc>`
+
+// Indexed.check: each kind is searchable only where its index says so.
+func TestIndexedViewsCheck(t *testing.T) {
+	root := t.TempDir()
+	w := func(rel, data string) { writeFile(t, filepath.Join(root, filepath.FromSlash(rel)), []byte(data)) }
+	w("indexes/class-index.json", `{"A": {"package": "p.q", "others": [{"package": "r"}]}, "B": {"package": "p.q"}}`)
+	w("indexes/jdk-class-index.json", `{"Object": {"package": "java.lang"}}`)
+	w("indexes/source-index.json", `{"x": {"path": "a/./B.java"}}`)
+	w("indexes/guides-index.json", `{"G": {"toc": [1]}, "H": {"toc": []}}`)
+	w("indexes/devguide-toc.json", `{"sections": [1]}`)
+	w("devguide/javax/B.bajadoc", bajadocXML)
+	w("devguide/bad.bajadoc", "<bajadoc><class")
+	w("jdk/Object.bajadoc", `<bajadoc><class qualifiedName="java.lang.Object" name="Object" packageName="java.lang"/></bajadoc>`)
+	w("devguide/page.html", "<p>x")
+	w("devguide-clean/page.txt", "TITLE: x\n")
+	w("guides/G/a.md", "# a")
+	w("guides/G/b.html", "<p>b")
+	w("guides-clean/G/a.md.txt", "TITLE: a\n")
+	w("devguide-examples/x/demo.js", "function demo() {}\n")
+	w("devguide-examples/x/other.js", "function other() {}\n")
+	if _, err := ftbuild.Build(root, ftbuild.Options{}); err != nil {
+		t.Fatal(err)
+	}
+	w("devguide-examples/x/late.js", "function late() {}\n") // after the build: the index is stale
+
+	x := newIndexedViews(root, func(string) (map[string]bool, error) { return FulltextDocsAt(fts.DBPath(root)) })
+	for _, c := range []struct {
+		kind, rel string
+		want      bool
+	}{
+		{"javadoc-class", "bajadoc/p/q/A.html", true},
+		{"javadoc-class", "bajadoc/r/A.html", true},
+		{"javadoc-class", "bajadoc/p/q/C.html", false},
+		{"bajadoc-xml", "devguide/javax/B.bajadoc", true},
+		{"bajadoc-xml", "devguide/bad.bajadoc", false},
+		{"jdk-xml", "jdk/Object.bajadoc", true},
+		{"bajadoc-xml", "jdk/Object.bajadoc", false},
+		{"devguide-page", "devguide/page.html", true},
+		{"guide-page", "guides/G/a.md", true},
+		{"guide-page", "guides/G/b.html", false},
+		{"guide-toc", "guides/G/toc.xml", true},
+		{"guide-toc", "guides/H/toc.xml", false},
+		{"devguide-toc", "devguide/toc.xml", true},
+		{"java", "source/a/B.java", true},
+		{"java", "source/a/C.java", false},
+		{"example", "devguide-examples/x/demo.js", true},
+		{"example", "devguide-examples/x/late.js", false},
+		{"no-such-kind", "guides/G/a.md", false},
+	} {
+		got, err := x.check(c.kind, c.rel)
+		if err != nil || got != c.want {
+			t.Errorf("Check(%q, %q) = %v, %v; want %v", c.kind, c.rel, got, err, c.want)
+		}
+	}
 }

@@ -23,7 +23,7 @@ import (
 // HELPBUILD_PARITY_* variable (make parity) fails (missingReference).
 
 // parityDrivers are the Python sides of the parity tests.
-var parityDrivers = []string{"driver.py", "htmldriver.py", "textdriver.py", "bajadocdriver.py"}
+var parityDrivers = []string{"driver.py", "htmldriver.py", "textdriver.py", "bajadocdriver.py", "sweepdriver.py"}
 
 func driver(t *testing.T) (python, tools string) {
 	t.Helper()
