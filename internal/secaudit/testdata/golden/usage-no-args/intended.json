@@ -1,0 +1,4 @@
+{
+ "reason": "I4-2 (D34): the Python script is retired; help, usage and error lines name the installed Go command niagara-security-audit instead of niagara-security-audit.py",
+ "stderr": "usage: niagara-security-audit [-h] [--station STATION] [--host HOST] [--scan-logs DIR] [--json]\n                              niagara_home\nniagara-security-audit: error: the following arguments are required: niagara_home\n"
+}

@@ -20,8 +20,8 @@ import (
 	"github.com/angeles725/niagara-go/internal/pyjson"
 )
 
-// Prog keeps the Python script name so usage and errors match the original.
-const Prog = "dashboard-preview.py"
+// Prog is the installed command name used in usage and error lines (I4-2).
+const Prog = "dashboard-preview"
 
 // Options are the parsed dashboard-preview.py arguments.
 type Options struct {

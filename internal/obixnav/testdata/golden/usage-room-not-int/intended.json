@@ -1,0 +1,4 @@
+{
+ "reason": "I4-2 (D34): the Python script is retired; help, usage and error lines name the installed Go command obix-nav instead of obix-nav.py",
+ "stderr": "usage: obix-nav map [-h] [--room ROOM] [--json]\nobix-nav map: error: argument --room: invalid int value: 'x'\n"
+}

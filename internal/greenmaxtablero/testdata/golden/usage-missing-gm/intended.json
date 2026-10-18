@@ -1,0 +1,4 @@
+{
+ "reason": "I4-2 (D34): the Python script is retired; help, usage and error lines name the installed Go command greenmax-tablero-gen instead of greenmax-tablero-gen.py",
+ "stderr": "usage: greenmax-tablero-gen [-h] --gm GM [--out OUT] [--tab TAB] [--legend] [--stdout] src\ngreenmax-tablero-gen: error: the following arguments are required: --gm\n"
+}

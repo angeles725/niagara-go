@@ -1,0 +1,4 @@
+{
+ "reason": "I4-2 (D34): the Python script is retired; help, usage and error lines name the installed Go command dashboard-preview instead of dashboard-preview.py",
+ "stderr": "usage: dashboard-preview [-h] [--rc RC] [--prefix PREFIX] [--port PORT] [--mock MOCK]\n                         [--auto-mock] [--reader Reader.java] [--live BASE_URL] [--config-login]\n                         [--config-password CONFIG_PASSWORD] [--config-ttl CONFIG_TTL] [--editor]\ndashboard-preview: error: argument --port: invalid int value: 'abc'\n"
+}

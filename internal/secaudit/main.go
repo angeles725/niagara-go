@@ -16,8 +16,8 @@ import (
 	"github.com/angeles725/niagara-go/internal/pyjson"
 )
 
-// prog is the Python program name, kept for byte-identical usage and error lines.
-const prog = "niagara-security-audit.py"
+// prog is the installed command name used in usage and error lines (I4-2).
+const prog = "niagara-security-audit"
 
 func newParser() *argparse.Parser {
 	p := argparse.New(argparse.Config{Prog: prog})

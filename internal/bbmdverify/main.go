@@ -5,8 +5,8 @@ import (
 	"github.com/angeles725/niagara-go/internal/cli"
 )
 
-// Prog keeps the Python script name so usage and errors match the original.
-const Prog = "bacnet-bbmd-verify.py"
+// Prog is the installed command name used in usage and error lines (I4-2).
+const Prog = "bacnet-bbmd-verify"
 
 func newParser() *argparse.Parser {
 	p := argparse.New(argparse.Config{Prog: Prog,

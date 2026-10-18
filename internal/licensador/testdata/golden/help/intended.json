@@ -1,0 +1,4 @@
+{
+ "reason": "I4-2 (D34): the Python script is retired; help, usage and error lines name the installed Go command licensador instead of licensador.py",
+ "stdout": "usage: licensador [-h] {genkeys,issue,verify,inspect,hostid,revoke,selftest} ...\n\nREF-License — licenciamiento firmado propio (referencia)\n\npositional arguments:\n  {genkeys,issue,verify,inspect,hostid,revoke,selftest}\n    genkeys             genera raiz privada + publica\n    issue               emite una licencia .refl\n    verify              verifica una licencia (pipeline completo)\n    inspect             muestra los claims sin verificar\n    hostid              calcula el REF-... de esta maquina\n    revoke              firma una blacklist de seriales\n    selftest            matriz de aceptacion A1..A10\n\noptions:\n  -h, --help            show this help message and exit\n"
+}

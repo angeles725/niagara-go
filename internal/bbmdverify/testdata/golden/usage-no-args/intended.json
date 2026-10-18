@@ -1,0 +1,4 @@
+{
+ "reason": "I4-2 (D34): the Python script is retired; help, usage and error lines name the installed Go command bacnet-bbmd-verify instead of bacnet-bbmd-verify.py",
+ "stderr": "usage: bacnet-bbmd-verify [-h] --device-ip DEVICE_IP [--device-prefix DEVICE_PREFIX]\n                          [--local-bcast LOCAL_BCAST] [--bbmd BBMD] [--port PORT]\n                          [--src-port SRC_PORT] [--timeout TIMEOUT] [--json]\nbacnet-bbmd-verify: error: the following arguments are required: --device-ip\n"
+}

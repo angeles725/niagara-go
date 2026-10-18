@@ -15,8 +15,8 @@ import (
 	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
-// prog is the Python program name, kept for byte-identical usage and error lines.
-const prog = "greenmax-tablero-gen.py"
+// prog is the installed command name used in usage and error lines (I4-2).
+const prog = "greenmax-tablero-gen"
 
 func newParser() *argparse.Parser {
 	p := argparse.New(argparse.Config{Prog: prog, Description: "Generate a redesigned GreenMAX tablero Px."})

@@ -1,0 +1,4 @@
+{
+ "reason": "I4-2 (D34): the Python script is retired; help, usage and error lines name the installed Go command licensador instead of licensador.py",
+ "stderr": "usage: licensador verify [-h] --root ROOT --file FILE [--product PRODUCT] [--host HOST]\n                         [--state STATE] [--blacklist BLACKLIST]\nlicensador verify: error: the following arguments are required: --root\n"
+}

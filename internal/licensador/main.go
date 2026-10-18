@@ -6,7 +6,7 @@ import (
 )
 
 func newParser() *argparse.Parser {
-	p := argparse.New(argparse.Config{Prog: "licensador.py",
+	p := argparse.New(argparse.Config{Prog: "licensador",
 		Description: "REF-License — licenciamiento firmado propio (referencia)"})
 	sub := p.AddSubparsers(argparse.SubparsersConfig{Dest: "cmd", Required: true})
 	req := argparse.Arg{Required: true}

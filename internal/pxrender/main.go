@@ -8,7 +8,7 @@ import (
 // Main is the px-render command line (Python argparse parity). --organized has no default here:
 // the Python tool falls back to the organized/ corpus next to its own file.
 func Main(args []string, s cli.Stdio) int {
-	p := argparse.New(argparse.Config{Prog: "px-render.py",
+	p := argparse.New(argparse.Config{Prog: "px-render",
 		Description: "Render a Niagara Px as a self-contained HTML page."})
 	p.Add(argparse.Arg{Help: "path to .px file (or 'selftest')"}, "px")
 	p.Add(argparse.Arg{Help: "station shared/ root (auto-detected if omitted)"}, "--shared")

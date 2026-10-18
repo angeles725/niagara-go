@@ -2,7 +2,7 @@ package nlicense
 
 // usage is the tool's module docstring, printed verbatim by -h and on bad usage.
 const usage = "\n" +
-	"niagara-license-tool.py — OEM license tooling for Niagara N4 `.license` files.\n" +
+	"nlicense — OEM license tooling for Niagara N4 `.license` files.\n" +
 	"\n" +
 	"Replicates the platform's license signing/verification (validated against a REAL\n" +
 	"signed license, pentest B316-L12/B322):\n" +

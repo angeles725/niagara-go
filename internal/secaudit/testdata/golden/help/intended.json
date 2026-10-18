@@ -1,0 +1,4 @@
+{
+ "reason": "I4-2 (D34): the Python script is retired; help, usage and error lines name the installed Go command niagara-security-audit instead of niagara-security-audit.py",
+ "stdout": "usage: niagara-security-audit [-h] [--station STATION] [--host HOST] [--scan-logs DIR] [--json]\n                              niagara_home\n\npositional arguments:\n  niagara_home\n\noptions:\n  -h, --help         show this help message and exit\n  --station STATION\n  --host HOST\n  --scan-logs DIR    forensic mode: harvest signature/verification IOCs from a log tree (B112)\n  --json\n"
+}

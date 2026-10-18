@@ -1,0 +1,4 @@
+{
+ "reason": "I4-2 (D34): the Python script is retired; help, usage and error lines name the installed Go command greenmax-tablero-gen instead of greenmax-tablero-gen.py",
+ "stdout": "usage: greenmax-tablero-gen [-h] --gm GM [--out OUT] [--tab TAB] [--legend] [--stdout] src\n\nGenerate a redesigned GreenMAX tablero Px.\n\npositional arguments:\n  src         original tablero .px from the station backup\n\noptions:\n  -h, --help  show this help message and exit\n  --gm GM     control-folder tag, e.g. GM08 (plain number, no leading zero)\n  --out OUT   output .md path (fenced Px). Omit with --stdout.\n  --tab TAB   PxView/tablero display name for the doc header\n  --legend    also add the read-only 'Horarios' legend\n  --stdout    print the .md to stdout instead of a file\n"
+}

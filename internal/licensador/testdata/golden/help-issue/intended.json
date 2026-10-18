@@ -1,0 +1,4 @@
+{
+ "reason": "I4-2 (D34): the Python script is retired; help, usage and error lines name the installed Go command licensador instead of licensador.py",
+ "stdout": "usage: licensador issue [-h] --key KEY --product PRODUCT --host HOST [--licensee LICENSEE]\n                        [--expires EXPIRES] --out OUT [--feature FEATURE]\n\noptions:\n  -h, --help           show this help message and exit\n  --key KEY\n  --product PRODUCT\n  --host HOST\n  --licensee LICENSEE\n  --expires EXPIRES\n  --out OUT\n  --feature FEATURE    NAME o NAME:QTY (repetible)\n"
+}
