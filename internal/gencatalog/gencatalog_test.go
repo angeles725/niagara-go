@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -144,10 +145,14 @@ func TestUnreadableIsCannotCheck(t *testing.T) {
 	if err := os.Mkdir(bad, 0o755); err != nil {
 		t.Fatal(err)
 	}
+	reason := "Is a directory"
+	if runtime.GOOS == "windows" {
+		reason = "Permission denied" // the C runtime's open() refuses a directory with EACCES
+	}
 	for _, args := range [][]string{{"--check"}, {"--stdout"}, {}} {
 		var out, errb bytes.Buffer
 		code := Main(args, cli.Stdio{In: strings.NewReader(""), Out: &out, Err: &errb})
-		if want := "gen-catalog: cannot read " + bad + ": Is a directory\n"; code != 2 || out.Len() != 0 || errb.String() != want {
+		if want := "gen-catalog: cannot read " + bad + ": " + reason + "\n"; code != 2 || out.Len() != 0 || errb.String() != want {
 			t.Errorf("%v: exit %d, stdout %q, stderr %q", args, code, out.String(), errb.String())
 		}
 	}

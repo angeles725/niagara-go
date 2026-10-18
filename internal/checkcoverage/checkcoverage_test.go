@@ -3,6 +3,8 @@ package checkcoverage
 import (
 	"bytes"
 	"os"
+	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -69,15 +71,24 @@ func TestJSONReportEscapes(t *testing.T) {
 func unreadableCorpus(t *testing.T, body string) (root, bad string) {
 	t.Helper()
 	root = t.TempDir()
-	if err := os.WriteFile(root+"/niagara-mental-model-bloque4.md", []byte("# Alarms\n"+body+"\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(root, "niagara-mental-model-bloque4.md"), []byte("# Alarms\n"+body+"\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	bad = root + "/niagara-mental-model-bloque9.md"
+	bad = filepath.Join(root, "niagara-mental-model-bloque9.md")
 	if err := os.Mkdir(bad, 0o755); err != nil {
 		t.Fatal(err)
 	}
 	useRoot(t, func() (string, error) { return root, nil })
 	return root, bad
+}
+
+// dirReason is why Python's open() fails on a directory: EISDIR, or EACCES from the
+// Windows C runtime.
+func dirReason() string {
+	if runtime.GOOS == "windows" {
+		return "Permission denied"
+	}
+	return "Is a directory"
 }
 
 // TestUnreadableBlockIsNamedAndNeverClear: Python skips a block it cannot read and may
@@ -86,7 +97,7 @@ func unreadableCorpus(t *testing.T, body string) (root, bad string) {
 // gate-not-run code) instead; coverage found elsewhere still exits 2.
 func TestUnreadableBlockIsNamedAndNeverClear(t *testing.T) {
 	_, bad := unreadableCorpus(t, "nothing here")
-	warn := "check-coverage: cannot read " + bad + ": Is a directory\n"
+	warn := "check-coverage: cannot read " + bad + ": " + dirReason() + "\n"
 	var out, errb bytes.Buffer
 	code := Main([]string{"zzqq"}, cli.Stdio{In: strings.NewReader(""), Out: &out, Err: &errb})
 	wantOut := "prior-coverage gate — scanned 2 block(s), 1 unreadable\n\n" +
@@ -110,7 +121,7 @@ func TestUnreadableBlockKeepsCoverageVerdict(t *testing.T) {
 	var out, errb bytes.Buffer
 	code := Main([]string{"honeywellSpyderTool"}, cli.Stdio{In: strings.NewReader(""), Out: &out, Err: &errb})
 	if code != 2 || !strings.Contains(out.String(), "VERDICT: prior coverage found.") ||
-		errb.String() != "check-coverage: cannot read "+bad+": Is a directory\n" {
+		errb.String() != "check-coverage: cannot read "+bad+": "+dirReason()+"\n" {
 		t.Errorf("exit %d\nstdout %q\nstderr %q", code, out.String(), errb.String())
 	}
 }

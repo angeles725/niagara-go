@@ -1,1 +1,1 @@
-{"args": ["srcA", "grep", "--source", "set", "-n", "3"], "env": {"COLUMNS": "80", "GIT_DIR": "/nonexistent"}}
+{"args": ["srcA", "grep", "--source", "set", "-n", "3"], "env": {"COLUMNS": "80", "GIT_DIR": "/nonexistent"}, "requires": {"goos": ["linux"]}}

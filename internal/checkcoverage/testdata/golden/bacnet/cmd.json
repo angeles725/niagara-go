@@ -1,1 +1,1 @@
-{"args": ["bacnet"], "env": {"COLUMNS": "80"}, "cwd_fixture": "corpus"}
+{"args": ["bacnet"], "env": {"COLUMNS": "80"}, "cwd_fixture": "corpus", "requires": {"goos": ["linux"]}}

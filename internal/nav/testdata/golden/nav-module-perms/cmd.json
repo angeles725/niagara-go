@@ -1,1 +1,1 @@
-{"args": ["--base-dir", "fixture/nav", "module", "alarm-rt", "--permissions", "--dependencies"], "env": {"NAV_CORPUS_BASE": "fixture/organized"}}
+{"args": ["--base-dir", "fixture/nav", "module", "alarm-rt", "--permissions", "--dependencies"], "env": {"NAV_CORPUS_BASE": "fixture/organized"}, "requires": {"goos": ["linux"]}}

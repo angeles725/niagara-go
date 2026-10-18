@@ -80,7 +80,9 @@ func TestRankErrorPaths(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			base := newBase(t, c.files)
 			stdout, stderr, code := run(t, base, "alarm", 20)
-			if want := strings.ReplaceAll(c.stderr, "{base}", base); stderr != want {
+			// {base}/indexes/<name> is os.path.join(base, "indexes", name): "\" on Windows.
+			indexes := filepath.Join(base, "indexes") + string(filepath.Separator)
+			if want := strings.ReplaceAll(c.stderr, "{base}/indexes/", indexes); stderr != want {
 				t.Errorf("stderr = %q, want %q", stderr, want)
 			}
 			if stdout != c.stdout || code != c.code {

@@ -1,1 +1,1 @@
-{"args": ["--base-dir", "fixture/lic", "resources", "lic-wb"], "env": {"NAV_CORPUS_BASE": "fixture/lic-organized"}}
+{"args": ["--base-dir", "fixture/lic", "resources", "lic-wb"], "env": {"NAV_CORPUS_BASE": "fixture/lic-organized"}, "requires": {"goos": ["linux"]}}
