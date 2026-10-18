@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/angeles725/niagara-go/internal/procgroup"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
@@ -320,7 +321,7 @@ func fakeKeytool(t *testing.T, timeout time.Duration, body func(sleep, dir strin
 // returned up, never read as a failed probe that lets the next check run.
 func TestInterruptInAnyProbeStopsTheAudit(t *testing.T) {
 	interrupted := func() *env {
-		e := fakeEnv(nil, nil, 0, &interruptError{os.Interrupt})
+		e := fakeEnv(nil, nil, 0, &procgroup.InterruptError{Signal: os.Interrupt})
 		e.lookPath = func(string) string { return "" }
 		e.winpath = func(string) string { return "" }
 		return e
@@ -339,13 +340,13 @@ func TestInterruptInAnyProbeStopsTheAudit(t *testing.T) {
 				t.Fatal(err)
 			}
 			return home
-		}, "", func() *env { return fakeEnv(nil, nil, 0, &interruptError{os.Interrupt}) }},
+		}, "", func() *env { return fakeEnv(nil, nil, 0, &procgroup.InterruptError{Signal: os.Interrupt}) }},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.e().audit(tc.home(t), "", tc.host, nil, &report{})
-			var in *interruptError
+			var in *procgroup.InterruptError
 			if !errors.As(err, &in) {
-				t.Errorf("audit = %v, want the *interruptError", err)
+				t.Errorf("audit = %v, want the *procgroup.InterruptError", err)
 			}
 		})
 	}

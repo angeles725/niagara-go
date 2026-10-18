@@ -119,10 +119,9 @@ func pyPDFTreeLines(t *testing.T, root, base string) []string {
 	if err != nil || v.Kind != pyjson.Object {
 		return lines // missing or not an index: compared as it is
 	}
-	changed := false
+	var less []string // the stems whose pages Python counted one too many
 	for _, stem := range v.Keys {
-		e := v.M[stem]
-		p, ok := e.Get("pages")
+		p, ok := v.M[stem].Get("pages")
 		if !ok || p.Kind != pyjson.Int || p.I.Sign() <= 0 {
 			continue
 		}
@@ -130,11 +129,24 @@ func pyPDFTreeLines(t *testing.T, root, base string) []string {
 		if err != nil || !bytes.HasSuffix(text, []byte("\f")) {
 			continue
 		}
-		e.Set("pages", pyjson.IntValue(p.I.Int64()-1))
-		changed = true
+		less = append(less, stem)
 	}
-	if !changed {
+	if len(less) == 0 {
 		return lines // byte for byte: also an index the test wrote itself
+	}
+	// The adjusted index is re-dumped by Go, so first require that a re-dump
+	// of Python's index as it is reproduces Python's bytes: a serialization
+	// drift must fail here, not hide in the rebuilt hash.
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	diffLines(t, "pyjson.Dumps of Python's pdf-index.json", strings.Split(string(raw), "\n"),
+		strings.Split(pyjson.Dumps(v, DumpPDFIndex), "\n"))
+	for _, stem := range less {
+		e := v.M[stem]
+		p, _ := e.Get("pages")
+		e.Set("pages", pyjson.IntValue(p.I.Int64()-1))
 	}
 	data := []byte(pyjson.Dumps(v, DumpPDFIndex))
 	sum := sha256.Sum256(data)

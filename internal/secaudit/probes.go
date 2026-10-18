@@ -16,6 +16,7 @@ import (
 	"time"
 	"unicode/utf8"
 
+	"github.com/angeles725/niagara-go/internal/procgroup"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
@@ -35,12 +36,6 @@ type timeoutError struct{ msg string }
 
 func (e *timeoutError) Error() string { return e.msg }
 
-// interruptError is a SIGINT or SIGTERM that came while a probe child ran. It ends the audit
-// (see reraise); it is returned only if the audit outlives the re-raised signal.
-type interruptError struct{ sig os.Signal }
-
-func (e *interruptError) Error() string { return "interrupted by " + e.sig.String() }
-
 // env holds the probes and file tests one audit uses.
 type env struct {
 	// run starts argv with stdin; extraEnv ("KEY=value") is added to this child's environment only.
@@ -56,17 +51,17 @@ func defaultEnv() *env {
 
 // runProgram is subprocess.run(argv, input=stdin, capture_output=True, timeout=timeout), with
 // extraEnv appended to the inherited environment of the child. On Unix the child runs in its own
-// process group, which a timeout or a Ctrl-C of the audit kills whole (see relayInterrupts).
+// process group, which a timeout or a Ctrl-C of the audit kills whole; the Ctrl-C then ends the
+// audit (procgroup re-raises it) and is returned as a *procgroup.InterruptError only if the audit
+// outlives it.
 func runProgram(argv []string, stdin []byte, timeout time.Duration, extraEnv ...string) (result, error) {
-	base, interrupt := context.WithCancelCause(context.Background())
-	defer interrupt(nil)
-	ctx := base
+	ctx := context.Background()
 	if timeout > 0 {
 		var cancel context.CancelFunc
-		ctx, cancel = context.WithTimeout(base, timeout)
+		ctx, cancel = context.WithTimeout(ctx, timeout)
 		defer cancel()
 	}
-	cmd := exec.CommandContext(ctx, argv[0], argv[1:]...)
+	cmd := procgroup.CommandContext(ctx, argv[0], argv[1:]...)
 	cmd.Stdin = bytes.NewReader(stdin)
 	if len(extraEnv) > 0 {
 		cmd.Env = append(os.Environ(), extraEnv...)
@@ -74,14 +69,9 @@ func runProgram(argv []string, stdin []byte, timeout time.Duration, extraEnv ...
 	var out, errb bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &out, &errb
 	cmd.WaitDelay = time.Second
-	killTreeOnCancel(cmd)
-	stop := relayInterrupts(interrupt)
 	err := cmd.Run()
-	stop()
-	var in *interruptError
-	if errors.As(context.Cause(base), &in) {
-		reraise(in.sig)
-		return result{}, in
+	if procgroup.IsInterrupt(err) {
+		return result{}, err
 	}
 	if ctx.Err() != nil {
 		return result{}, &timeoutError{fmt.Sprintf("Command %s timed out after %s seconds",
@@ -213,27 +203,20 @@ func (e *env) keytoolKeysizes(path string) (keys []key, entries digits, blocks [
 // Only an interrupt is returned as an error: it ends the audit instead of skipping the check.
 func (e *env) tlsSubject(host string, port int) (string, error) {
 	r, err := e.run([]string{"openssl", "s_client", "-connect", host + ":" + strconv.Itoa(port)}, nil, 15*time.Second)
-	if isInterrupt(err) {
+	if procgroup.IsInterrupt(err) {
 		return "", err
 	}
 	if err != nil || !utf8.Valid(r.stdout) {
 		return "", nil
 	}
 	c, err := e.run([]string{"openssl", "x509", "-noout", "-subject"}, r.stdout, 0)
-	if isInterrupt(err) {
+	if procgroup.IsInterrupt(err) {
 		return "", err
 	}
 	if err != nil || !utf8.Valid(c.stdout) {
 		return "", nil
 	}
 	return pycompat.Strip(string(c.stdout)), nil
-}
-
-// isInterrupt reports whether err is the *interruptError of a signal that came while a probe
-// child ran; every caller of e.run returns it up so the audit stops.
-func isInterrupt(err error) bool {
-	var in *interruptError
-	return errors.As(err, &in)
 }
 
 // icaclsPaths is where WSL keeps icacls when System32 is not on PATH.
@@ -256,7 +239,7 @@ func (e *env) findIcacls() string {
 // or a non-zero exit. An interrupt is returned as the error instead: it ends the audit.
 func (e *env) runIcacls(exe, winpath string) (listing, why string, err error) {
 	r, err := e.run([]string{exe, winpath}, nil, 60*time.Second)
-	if isInterrupt(err) {
+	if procgroup.IsInterrupt(err) {
 		return "", "", err
 	}
 	if err != nil {
