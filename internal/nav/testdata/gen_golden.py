@@ -31,6 +31,7 @@ SRC = {"NAV_CORPUS_BASE": "fixture/search-organized"}
 SRC_BASE = "fixture/search"
 LIC = {"NAV_CORPUS_BASE": "fixture/lic-organized"}
 LIC_BASE = "fixture/lic"
+CG_BASE = "fixture/cg"
 
 CLASS_NAMES = ["BAlarmService", "BAlarmClass", "BAlarmRecord", "AlarmDbConnection", "BAckState",
                "AlarmSupport", "BAlarmArchive", "BAlarmablePointMarkerTag", "BAlarm", "Entry",
@@ -188,6 +189,18 @@ CASES = [
     ("resources-miss", ["resources", "lic"], LIC, LIC_BASE),
     ("resources-bad-jar", ["resources", "lic-wb"], LIC, LIC_BASE),
     ("resources-no-corpus", ["resources", "lic-rt"], NO_CORPUS, LIC_BASE),
+    ("callers", ["callers", "BTarget", "run"], NO_CORPUS, CG_BASE),
+    ("callers-n", ["callers", "BTarget", "run", "-n", "1"], NO_CORPUS, CG_BASE),
+    ("callers-negative-n", ["callers", "BTarget", "run", "-n", "-1"], NO_CORPUS, CG_BASE),
+    ("callers-case", ["callers", "btarget", "RUN"], NO_CORPUS, CG_BASE),
+    ("callers-suffix", ["callers", "Inner", "copyInto"], NO_CORPUS, CG_BASE),
+    ("callers-miss", ["callers", "BTarget", "go"], NO_CORPUS, CG_BASE),
+    ("callers-class", ["callers", "BTarget"], NO_CORPUS, CG_BASE),
+    ("callers-class-n", ["callers", "BTarget", "-n", "2"], NO_CORPUS, CG_BASE),
+    ("callers-class-case", ["callers", "outer.inner"], NO_CORPUS, CG_BASE),
+    ("callers-class-ambiguous", ["callers", "bcase"], NO_CORPUS, CG_BASE),
+    ("callers-class-miss", ["callers", "BNothing"], NO_CORPUS, CG_BASE),
+    ("callers-empty-graph", ["callers", "BTarget", "run"], NO_CORPUS, "fixture/cg-empty"),
 ]
 
 
@@ -550,6 +563,47 @@ def build_lic():
         f.write(b"not a zip file\n")
 
 
+# callers: a small call graph with a qualified callee filed under
+# its dotted suffixes, a caller recording one callee twice (qualified and
+# simple), 16 classes with a `go` method (the "... and N more" partial
+# list), two classes differing only in case, a method with 12 callees, and
+# an empty JSON object as the graph. (A missing index is an error naming its
+# absolute path, which a frozen case cannot hold.)
+def cg_calls():
+    calls = {
+        "BCaller.work": ["BTarget.run", "org.x.Outer.Inner.copyInto", "Outer.Inner.copyInto",
+                         "BTarget.stop", "Helper.<init>", "util.Strings.join"],
+        "BCaller.<init>": ["BTarget.<init>"],
+        "BOther.run": ["BTarget.run", "BTarget.run", "BCase.get", "Bcase.get"],
+        "BTarget.restart": ["BTarget.stop", "BTarget.run"],
+        "Zeta.go": ["BTarget.run"],
+        ".odd": ["noDots", "a..b", "trail."],
+        "BMany.calls": ["Many{:02d}.go".format(i) for i in range(12)],
+    }
+    for i in range(16):
+        calls["C{:02d}.go".format(i)] = ["K{:02d}.go".format(i)]
+    return calls
+
+
+def build_cg():
+    fx = os.path.join(HERE, "fixture")
+    for name in ("cg", "cg-empty"):
+        shutil.rmtree(os.path.join(fx, name), ignore_errors=True)
+        os.makedirs(os.path.join(fx, name, "indexes"))
+    calls = cg_calls()
+    cg = {"_meta": {"timestamp": "2026-04-05T06:07:08", "total_edges": sum(len(v) for v in calls.values())},
+          "calls": calls}
+    with open(os.path.join(fx, "cg", "indexes", "callgraph-index.json"), "w", encoding="utf-8") as f:
+        json.dump(cg, f)
+    with open(os.path.join(fx, "cg-empty", "indexes", "callgraph-index.json"), "w", encoding="utf-8") as f:
+        f.write("{}")
+    classes = {"BTarget": [{"module": "target-rt", "outer_class": "X"}, {"module": "target-wb"}],
+               "BCaller": [{"module": "caller-rt"}], "BOther": [{"module": "other-rt", "outer_class": "Y"}],
+               "Inner": [], "BCase": [{"module": "case-rt"}]}
+    with open(os.path.join(fx, "cg", "indexes", "class-index.json"), "w", encoding="utf-8") as f:
+        json.dump({"_meta": {"timestamp": "2026-04-05T06:07:08"}, "classes": classes}, f)
+
+
 def build_fixture():
     fx = os.path.join(HERE, "fixture")
     shutil.rmtree(fx, ignore_errors=True)
@@ -607,7 +661,7 @@ def capture(cid, args, env, base=BASE):
 
 def main():
     """--fixture rebuilds every fixture; --search only the grep/source/token one,
-    --lic only the license/resources one.
+    --lic only the license/resources one, --cg only the call graph one.
     --only a,b captures just those case ids (without the nav- prefix)."""
     if "--fixture" in sys.argv:
         build_fixture()
@@ -616,6 +670,8 @@ def main():
         build_search()
     if "--fixture" in sys.argv or "--lic" in sys.argv:
         build_lic()
+    if "--fixture" in sys.argv or "--cg" in sys.argv:
+        build_cg()
     only = set(sys.argv[sys.argv.index("--only") + 1].split(",")) if "--only" in sys.argv else None
     fresh_class_index()
     for cid, args, env, *base in CASES:

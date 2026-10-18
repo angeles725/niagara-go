@@ -1,0 +1,21 @@
+  0 matches for callers of 'BTarget.go' in 45 call edges from 23 caller methods (static, this/super, new and Class.method calls; calls on instance variables are not resolved), index built 2026-04-05T06:07:08.
+  Try: grep '\.go\('
+
+  Other classes with callers for 'go':
+    K00.go (1 callers)
+    K01.go (1 callers)
+    K02.go (1 callers)
+    K03.go (1 callers)
+    K04.go (1 callers)
+    K05.go (1 callers)
+    K06.go (1 callers)
+    K07.go (1 callers)
+    K08.go (1 callers)
+    K09.go (1 callers)
+    K10.go (1 callers)
+    K11.go (1 callers)
+    K12.go (1 callers)
+    K13.go (1 callers)
+    K14.go (1 callers)
+    ... and 13 more
+

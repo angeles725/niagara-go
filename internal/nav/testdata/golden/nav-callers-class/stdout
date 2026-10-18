@@ -1,0 +1,20 @@
+
+  CALLERS of BTarget.*: 3 methods with callers, 7 call sites
+  Target module: target-wb
+
+                                    METHOD  CALLERS
+  --------------------------------------------------
+                                       run        4
+                                      stop        2
+                                    <init>        1
+
+                             CALLER METHOD  MODULE                     CALLS
+  ------------------------------------------------------------------------------------------
+                              BCaller.work  caller-rt                  run
+                                BOther.run  other-rt                   run
+                           BTarget.restart  target-wb                  run
+                                   Zeta.go  ?                          run
+                              BCaller.work  caller-rt                  stop
+                           BTarget.restart  target-wb                  stop
+                            BCaller.<init>  caller-rt                  <init>
+

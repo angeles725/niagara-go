@@ -9,7 +9,7 @@ import (
 
 func init() {
 	registry.Register("flow", []registry.Command{
-		{Name: "callers", Help: "Who calls this method (or, without one, every method of the class)", Args: argsCallers},
+		{Name: "callers", Help: "Who calls this method (or, without one, every method of the class)", Args: argsCallers, Run: runCallers},
 		{Name: "callees", Help: "What methods this class/method calls", Args: argsCallees},
 		{Name: "call-chain", Help: "Transitive call chain (tree)", Args: argsCallChain},
 		{Name: "hotspots", Help: "Most-called methods (hub analysis)", Args: argsHotspots},
