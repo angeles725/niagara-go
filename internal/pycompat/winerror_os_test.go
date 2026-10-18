@@ -103,3 +103,20 @@ func TestWinListdirError(t *testing.T) {
 		t.Errorf("off Windows winListdirError(%v) = %v, want it unchanged", missing, got)
 	}
 }
+
+func TestWinStrerrorOf(t *testing.T) {
+	missing := &fs.PathError{Op: "open", Path: "/x", Err: syscall.Errno(3)}
+	if runtime.GOOS != "windows" {
+		if got, want := winStrerrorOf(missing, true), "The system cannot find the path specified"; got != want {
+			t.Errorf("winStrerrorOf(%v, true) = %q, want %q", missing, got, want)
+		}
+	}
+	for _, err := range []error{missing, syscall.Errno(1<<29 + 7), errors.New("x"), nil} {
+		if got, want := winStrerrorOf(err, false), StrerrorOf(err); got != want {
+			t.Errorf("winStrerrorOf(%v, false) = %q, want StrerrorOf %q", err, got, want)
+		}
+	}
+	if got, want := winStrerrorOf(syscall.Errno(1<<29+7), true), StrerrorOf(syscall.Errno(1<<29+7)); got != want {
+		t.Errorf("winStrerrorOf(invented, true) = %q, want %q", got, want)
+	}
+}

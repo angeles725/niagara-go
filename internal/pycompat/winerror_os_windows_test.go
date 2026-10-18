@@ -11,10 +11,11 @@ import (
 )
 
 // TestWinOSErrorTextMatchesPython runs the Windows Python named by PYCOMPAT_WINPY
-// (testdata/winerror/pyoserr.py) and compares str(e) and type(e).__name__ of real socket and
-// os failures with WinOSErrorText and OSErrorName of the error Go returns for the same call
-// (through WinListdirError for os.listdir; OSErrorText for open(), which goes through the C
-// runtime). From WSL: WSLENV=PYCOMPAT_WINPY/p PYCOMPAT_WINPY=<python.exe>.
+// (testdata/winerror/pyoserr.py) and compares str(e), e.strerror and type(e).__name__ of real
+// socket and os failures with WinOSErrorText, WinStrerrorOf and OSErrorName of the error Go
+// returns for the same call (through WinListdirError for os.listdir; OSErrorText and
+// StrerrorOf for open(), which goes through the C runtime). From WSL:
+// WSLENV=PYCOMPAT_WINPY/p PYCOMPAT_WINPY=<python.exe>.
 func TestWinOSErrorTextMatchesPython(t *testing.T) {
 	py := os.Getenv("PYCOMPAT_WINPY")
 	if py == "" {
@@ -30,7 +31,7 @@ func TestWinOSErrorTextMatchesPython(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	var want map[string]struct{ Text, Class string }
+	var want map[string]struct{ Text, Strerror, Class string }
 	if err := json.Unmarshal(b, &want); err != nil {
 		t.Fatal(err)
 	}
@@ -66,7 +67,7 @@ func TestWinOSErrorTextMatchesPython(t *testing.T) {
 	compareOSError(t, "open", open, OSErrorText(open), want["open"])
 }
 
-func compareOSError(t *testing.T, name string, err error, got string, want struct{ Text, Class string }) {
+func compareOSError(t *testing.T, name string, err error, got string, want struct{ Text, Strerror, Class string }) {
 	t.Helper()
 	if err == nil {
 		t.Errorf("%s: Go returned no error, Python %q", name, want.Text)
@@ -74,6 +75,13 @@ func compareOSError(t *testing.T, name string, err error, got string, want struc
 	}
 	if got != want.Text {
 		t.Errorf("%s: Go %q (%v), Python %q", name, got, err, want.Text)
+	}
+	strerror := WinStrerrorOf(err)
+	if name == "open" {
+		strerror = StrerrorOf(err)
+	}
+	if strerror != want.Strerror {
+		t.Errorf("%s: strerror %q, Python %q", name, strerror, want.Strerror)
 	}
 	if c := OSErrorName(err); c != want.Class {
 		t.Errorf("%s: OSErrorName %q, Python %s", name, c, want.Class)

@@ -1,7 +1,8 @@
 """Print str(OSError) and its class for real Windows failures, for winerror_os_windows_test.go.
 
 Usage: <Windows python.exe> -I pyoserr.py OUT.json DIR ; DIR is an existing empty directory the
-Go test also uses. Writes UTF-8 JSON {case: {"text": str(e), "class": type(e).__name__}}:
+Go test also uses. Writes UTF-8 JSON {case: {"text": str(e), "strerror": e.strerror,
+"class": type(e).__name__}}:
   refused    socket.create_connection(("127.0.0.1", 1))
   addrinuse  binding a second socket to a bound 127.0.0.1 port
   stat       os.stat(DIR\\no\\such)          statfile  os.stat(DIR\\missing.txt)
@@ -27,7 +28,7 @@ def raised(f):
     try:
         f()
     except OSError as e:
-        return {"text": str(e), "class": type(e).__name__}
+        return {"text": str(e), "strerror": e.strerror, "class": type(e).__name__}
     return None
 
 

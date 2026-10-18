@@ -42,6 +42,18 @@ func winOSErrorText(err error, windows bool) string {
 	return head
 }
 
+// WinStrerrorOf is e.strerror of that OSError: on Windows WinErrorText of the Win32 code in
+// err (what os.walk's onerror or a socket error's strerror holds), otherwise StrerrorOf(err).
+func WinStrerrorOf(err error) string { return winStrerrorOf(err, runtime.GOOS == "windows") }
+
+func winStrerrorOf(err error, windows bool) string {
+	var e syscall.Errno
+	if !windows || !errors.As(err, &e) || uint64(e) >= goInventedErrno {
+		return StrerrorOf(err)
+	}
+	return WinErrorText(uint32(e))
+}
+
 // Win32 codes FindFirstFileW reports for "<dir>\*.*" (CPython's os.listdir and os.scandir).
 const (
 	errorFileNotFound = 2   // ERROR_FILE_NOT_FOUND: what Go's open says for a missing directory
