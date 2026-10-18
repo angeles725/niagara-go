@@ -17,16 +17,16 @@ import (
 const markerWord = `(?:CERT|INFER)(?:-[\w-]+)?`
 
 var (
-	markerTokenRe = pyre.MustCompile(`\[\s*(`+markerWord+`(?:\s*[/+,]\s*`+markerWord+`)*)(?![\w-])[^\[\]]*\]`, 0)
-	markerSepRe   = pyre.MustCompile(`\s*[/+,]\s*`, 0)
+	markerTokenRe = lazyRe(`\[\s*(`+markerWord+`(?:\s*[/+,]\s*`+markerWord+`)*)(?![\w-])[^\[\]]*\]`, 0)
+	markerSepRe   = lazyRe(`\s*[/+,]\s*`, 0)
 )
 
 // markerComponents is browse.marker_components: every marker component, combined tokens
 // ([A/B], [A+B], [A, B]) expanded.
 func markerComponents(text string) []string {
 	var out []string
-	for _, m := range markerTokenRe.FindIter([]rune(text)) {
-		for _, part := range splitRe(m.Group(1), markerSepRe) {
+	for _, m := range markerTokenRe().FindIter([]rune(text)) {
+		for _, part := range splitRe(m.Group(1), markerSepRe()) {
 			if part != "" {
 				out = append(out, part)
 			}
