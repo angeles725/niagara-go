@@ -2,6 +2,7 @@ package help
 
 import (
 	"archive/zip"
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"strings"
@@ -90,13 +91,25 @@ func TestVersionsAddEndToEnd(t *testing.T) {
 	}
 }
 
+// registerNine registers version 1.2.3.4 (Nine) on install in the checkout
+// at dir. The install path goes through json.Marshal: a raw Windows path
+// (backslashes) inside a JSON string literal is invalid JSON.
+func registerNine(t *testing.T, dir, install string) {
+	t.Helper()
+	installJSON, err := json.Marshal(install)
+	if err != nil {
+		t.Fatal(err)
+	}
+	write(t, filepath.Join(dir, "versions", "registry.json"), `{"default": "1.2.3.4", "versions": {"1.2.3.4": `+
+		`{"label": "Nine", "install_dir": `+string(installJSON)+`, "data_root": "versions/1.2.3.4"}}}`)
+}
+
 // `versions extract` (extract_version.py): a refusal on stderr with exit
 // 2, --force re-extracts, --verify-only and --fill-missing verify, a
 // changed file fails the fidelity check (exit 1).
 func TestVersionsExtract(t *testing.T) {
 	dir, install := versionsInstall(t)
-	write(t, filepath.Join(dir, "versions", "registry.json"), `{"default": "1.2.3.4", "versions": {"1.2.3.4": `+
-		`{"label": "Nine", "install_dir": "`+install+`", "data_root": "versions/1.2.3.4"}}}`)
+	registerNine(t, dir, install)
 	root := filepath.Join(dir, "versions", "1.2.3.4")
 	out, errs, code := run(t, dir, "versions", "extract", "1.2", "--no-index")
 	if code != 0 || errs != "" || out != "extracted 2 files (49 bytes)\n"+
@@ -128,4 +141,35 @@ func TestVersionsExtract(t *testing.T) {
 	if code != 2 || errs != "ERROR: Unknown Niagara version '7'. Known versions: 1.2.3.4\n" {
 		t.Errorf("unknown: code %d err %q", code, errs)
 	}
+}
+
+// `versions extract` errors that are not a refusal: a registry that cannot
+// be read (not an UnknownVersionError) is one ERROR line on stderr, exit 2,
+// nothing on stdout; an error after ExtractAndIndex logged lines keeps those
+// lines on stdout, then the ERROR line on stderr, exit 2.
+func TestVersionsExtractGenericErrors(t *testing.T) {
+	t.Run("unreadable registry", func(t *testing.T) {
+		dir := repo(t, `{"default": null}`)
+		out, errs, code := run(t, dir, "versions", "extract", "1.2.3.4")
+		// The registry path is the repository root as located, so only its
+		// tail is pinned (a symlinked temp dir resolves differently).
+		if code != 2 || out != "" || !strings.HasPrefix(errs, "ERROR: ") || strings.Count(errs, "\n") != 1 ||
+			!strings.HasSuffix(errs, "registry.json: \"versions\" is missing or not an object\n") {
+			t.Errorf("code %d out %q err %q", code, out, errs)
+		}
+	})
+	t.Run("error after log lines", func(t *testing.T) {
+		dir, install := versionsInstall(t)
+		registerNine(t, dir, install)
+		// The manifest path is a non-empty directory: writing it fails after
+		// the extract and fidelity lines were logged.
+		write(t, filepath.Join(dir, "versions", "1.2.3.4.manifest.json", "keep"), "x")
+		out, errs, code := run(t, dir, "versions", "extract", "1.2.3.4", "--no-index")
+		wantOut := "extracted 2 files (49 bytes)\n" +
+			"fidelity 1.2.3.4: jars 1 checked 2 sha256-exact 2 eol-only 0 mismatched 0 missing 0\n"
+		if code != 2 || out != wantOut || !strings.HasPrefix(errs, "ERROR: ") ||
+			strings.Count(errs, "\n") != 1 || !strings.HasSuffix(errs, "\n") {
+			t.Errorf("code %d out %q err %q", code, out, errs)
+		}
+	})
 }
