@@ -50,7 +50,6 @@ func joined(lines []string) string { return strings.Join(lines, "\n") + "\n" }
 func TestMissOnFulltextCheckout(t *testing.T) {
 	t.Setenv("XDG_CACHE_HOME", t.TempDir())
 	checkout := ftsfixture.Checkout(t, abs(t, helpTestdata), false)
-	ftsfixture.RefreshAll(t, checkout, func(base string) string { return fts.Fingerprint(fts.SourceDirs(base)) })
 	tests := []struct {
 		file, version, command, query, scope string
 	}{

@@ -5,29 +5,29 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/angeles725/niagara-go/internal/help/fts/ftsfixture"
+	"github.com/angeles725/niagara-go/internal/help/fts/ftsfixture/rawfixture"
 )
 
 const testdata = "../testdata"
 
 func dataRoot(checkout, vid string) string {
-	return filepath.Join(checkout, ftsfixture.Versions[vid])
+	return filepath.Join(checkout, rawfixture.Versions[vid])
 }
 
-// hostFingerprint is what ftsfixture.Refresh stores on Windows.
+// hostFingerprint is what rawfixture.Refresh stores on Windows.
 func hostFingerprint(base string) string { return Fingerprint(SourceDirs(base)) }
 
-// indexedCheckout is ftsfixture.Checkout with its indexes, their fingerprints
-// rewritten for the host on Windows (ftsfixture.Refresh).
+// indexedCheckout is rawfixture.Checkout with its indexes, their fingerprints
+// rewritten for the host on Windows (rawfixture.Refresh).
 func indexedCheckout(t *testing.T) string {
 	t.Helper()
-	checkout := ftsfixture.Checkout(t, testdata, false)
-	ftsfixture.RefreshAll(t, checkout, hostFingerprint)
+	checkout := rawfixture.Checkout(t, testdata, false)
+	rawfixture.RefreshAll(t, checkout, hostFingerprint)
 	return checkout
 }
 
 func TestSourceDirsBorrowManuals(t *testing.T) {
-	checkout := ftsfixture.Checkout(t, testdata, true)
+	checkout := rawfixture.Checkout(t, testdata, true)
 	got := SourceDirs(dataRoot(checkout, "2.0"))
 	want := []SourceDir{{"guides-clean", filepath.Join(checkout, "versions/2.0/guides-clean")},
 		{"docs-text", filepath.Join(checkout, "docs-text")}}
@@ -48,7 +48,7 @@ func TestSourceDirsBorrowManuals(t *testing.T) {
 }
 
 func TestIterFilesSkipsBundledAndMinified(t *testing.T) {
-	checkout := ftsfixture.Checkout(t, testdata, true)
+	checkout := rawfixture.Checkout(t, testdata, true)
 	dir := filepath.Join(checkout, "devguide-examples")
 	var got []string
 	for _, p := range IterFiles("devguide-examples", dir) {

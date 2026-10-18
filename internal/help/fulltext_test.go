@@ -14,24 +14,18 @@ import (
 	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
-// rootPath is <ROOT> and the "/"-joined rest of a path in a recorded output.
-var rootPath = regexp.MustCompile(`<ROOT>(/[^\s)'"]*)`)
-
 // rootSourceRepr is a quoted source file path, os.path.join(base_dir,
 // "source", data["path"]) in source_search.py: on Windows only the joins are
 // "\" (the index path keeps its "/").
 var rootSourceRepr = regexp.MustCompile(`'<ROOT>/source/([^']*)'`)
 
-// atRoot is a recorded Linux output with <ROOT> replaced by the checkout:
-// os.path.join builds every path after it, so on Windows its "/" become "\".
+// atRoot is ftsfixture.AtRoot after rootSourceRepr: a recorded Linux output
+// with <ROOT> replaced by the checkout, its os.path.join paths for the host.
 func atRoot(recorded, checkout string) string {
 	s := rootSourceRepr.ReplaceAllStringFunc(recorded, func(m string) string {
 		return pycompat.FSRepr(pycompat.Join(checkout, "source", rootSourceRepr.FindStringSubmatch(m)[1]))
 	})
-	s = rootPath.ReplaceAllStringFunc(s, func(m string) string {
-		return checkout + filepath.FromSlash(m[len(ftsfixture.Root):])
-	})
-	return strings.ReplaceAll(s, ftsfixture.Root, checkout)
+	return ftsfixture.AtRoot(s, checkout)
 }
 
 // TestFulltextCommandsMatchPython runs find, guide-search, devguide-search
@@ -58,7 +52,6 @@ func TestFulltextCommandsMatchPython(t *testing.T) {
 	}
 	t.Setenv("XDG_CACHE_HOME", t.TempDir())
 	checkout := ftsfixture.Checkout(t, testdata, false)
-	ftsfixture.RefreshAll(t, checkout, func(base string) string { return fts.Fingerprint(fts.SourceDirs(base)) })
 	for _, c := range cases {
 		t.Run(c.Name, func(t *testing.T) {
 			want, err := os.ReadFile(filepath.Join(testdata, "fulltext-cli", c.Name+".txt"))
