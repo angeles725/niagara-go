@@ -87,8 +87,10 @@ func TestWriterMatchesPython(t *testing.T) {
 		w := NewWriter(&b)
 		w.Delimiter, _ = utf8.DecodeRuneInString(delim)
 		w.LineTerminator = term
-		if err := w.WriteRows(rows); err != nil {
-			t.Fatal(err)
+		for _, row := range rows {
+			if err := w.WriteRow(row); err != nil {
+				t.Fatal(err)
+			}
 		}
 		if b.String() != want {
 			t.Errorf("delimiter %q terminator %q rows %v:\n got %q\nwant %q", delim, term, rows, b.String(), want)

@@ -31,7 +31,7 @@ document disagree, the code wins and this document is corrected.
 | `jsonWriter` | the same layouts, streamed | each member value is `pyjson.Dumps` on its own, re-indented to its depth, so a 33 MB index never exists as one `pyjson` tree |
 | `stamped` | the last two `_meta` members of every builder | `build_time_sec` = `round(elapsed, 1)` (ties to even, as Python), `timestamp` = local `%Y-%m-%dT%H:%M:%S` |
 | `writeIndex` | `build.write_json` | `helpbuild.WriteText`: temp file + rename; the temp name is `.tmp-*<name>` instead of `<name>.tmp`, and the text is written without newline translation (Python's text mode would write CRLF on Windows) |
-| `NormalizeVolatile` | — | replaces `timestamp`, `build_time_sec`, `source` and `source_root` inside the leading `_meta` object only |
+| `NormalizeVolatile` (test helper, `normalize_test.go`) | — | replaces `timestamp`, `build_time_sec`, `source` and `source_root` inside the leading `_meta` object only |
 
 Builders take the base directory explicitly and write `<base>/indexes/<index>`; how the
 CLI finds the base directory (D24) is B8's concern.

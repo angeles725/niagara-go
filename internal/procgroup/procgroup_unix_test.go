@@ -330,3 +330,37 @@ func alive(pid int) bool {
 	fields := strings.Fields(string(stat))
 	return len(fields) < 3 || fields[2] != "Z"
 }
+
+// Output and CombinedOutput kill the whole group on timeout. *Cmd embeds
+// *exec.Cmd, so if this package's overrides were deleted both calls would
+// still compile and run exec.Cmd's own Run, which kills only the child: this
+// test is what keeps a dead-code sweep from removing them.
+func TestOutputMethodsKillTheGroup(t *testing.T) {
+	needProc(t)
+	for name, call := range map[string]func(*Cmd) ([]byte, error){
+		"Output":         (*Cmd).Output,
+		"CombinedOutput": (*Cmd).CombinedOutput,
+	} {
+		t.Run(name, func(t *testing.T) {
+			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+			defer cancel()
+			c, pidFile := forking(t, ctx)
+			done := make(chan error, 1)
+			go func() { _, err := call(c); done <- err }()
+			child, grand, ok := waitPids(ctx, pidFile)
+			select {
+			case err := <-done:
+				if err == nil {
+					t.Fatalf("%s = nil: want the timeout", name)
+				}
+			case <-time.After(15 * time.Second):
+				t.Fatalf("%s did not return 13 s after the timeout: the group was not killed", name)
+			}
+			if !ok {
+				t.Skip("the forking helper did not write its pids before the timeout")
+			}
+			waitGone(t, child)
+			waitGone(t, grand)
+		})
+	}
+}

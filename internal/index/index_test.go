@@ -158,8 +158,8 @@ func TestDataRootAndExtraction(t *testing.T) {
 		t.Error("extracted before class-index.json exists")
 	}
 	writeFile(t, Path(repo, "class-index.json"), "{}")
-	if !IsExtracted(repo) || Dir(repo) != filepath.Join(repo, "indexes") {
-		t.Error("IsExtracted/Dir after class-index.json exists")
+	if !IsExtracted(repo) || Path(repo, "class-index.json") != filepath.Join(repo, "indexes", "class-index.json") {
+		t.Error("IsExtracted/Path after class-index.json exists")
 	}
 	reg, err := LoadRegistry(repo)
 	if err != nil {

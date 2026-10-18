@@ -9,12 +9,10 @@ space-separated hex ranges lo-hi:
   P str.isprintable
 str.isspace is internal/textfold's IsSpace (its unicode.txt "s" record).
 isalnum is A|D|G|N and re's \\w on str patterns is isalnum or '_' (checked by a digest).
-The case records are CPython's per-character flags, probed through the str methods:
+The case records are the CPython per-character flags str.isupper() needs, probed through
+the str methods:
   U upper (ch.isupper())   L lower (ch.islower())
   T title or both upper and lower (neither ch+"A" isupper nor ch+"a" islower)
-  C cased (ch+"a").title() keeps the "a"   I case-ignorable (the final-sigma probe)
-and the full mappings cp:cp.cp... of the single character where they differ:
-  u ch.upper()   t ch.title()
 str.lower() is internal/textfold's Lower.
 
 errno_linux.txt holds this Linux Python's os.strerror(n) ("E n text", omitted when it is
@@ -78,16 +76,8 @@ PREDICATES = {"A": str.isalpha, "D": str.isdecimal, "G": str.isdigit, "N": str.i
               "P": str.isprintable}
 
 
-SIGMA, FINAL = "\u03a3", "\u03c2"
 CASE = {"U": str.isupper, "L": str.islower,
-        "T": lambda ch: not (ch + "A").isupper() and not (ch + "a").islower(),
-        "C": lambda ch: (ch + "a").title()[-1] == "a",
-        "I": lambda ch: ("A" + ch + SIGMA).lower()[-1] == FINAL and (ch + SIGMA).lower()[-1] != FINAL}
-MAPS = {"u": str.upper, "t": str.title}
-
-
-def seq(s):
-    return ".".join("%04X" % ord(c) for c in s)
+        "T": lambda ch: not (ch + "A").isupper() and not (ch + "a").islower()}
 
 
 def write_unicode():
@@ -95,8 +85,6 @@ def write_unicode():
              % (sys.version.split()[0], unicodedata.unidata_version)]
     for kind, pred in list(PREDICATES.items()) + list(CASE.items()):
         lines += pack(kind, ["%04X-%04X" % r for r in ranges(pred)])
-    for kind, fn in MAPS.items():
-        lines += pack(kind, ["%04X:%s" % (ord(ch), seq(fn(ch))) for ch in chars() if fn(ch) != ch])
     with open(os.path.join(PKG, "unicode.txt"), "w", encoding="utf-8") as fh:
         fh.write("\n".join(lines) + "\n")
 
@@ -277,13 +265,6 @@ def format_golden(values, keep):
 JOINS = [["a", "b"], ["a/", "b"], ["a", "/b", "c"], ["", "a"], ["a", ""], ["/", "x"], ["a", "b/", "c"]]
 
 
-def case_context(ch):
-    """The multi-character paths of the case methods around ch, joined with '|'."""
-    flags = "%d%d%d%d" % ((ch + "A").isupper(), (ch + "a").islower(), (ch + "ab").istitle(), ("A" + ch).istitle())
-    return "|".join([flags, ("a" + ch + "b").title(), ("A" + ch + SIGMA).swapcase(), ("x" + ch).capitalize(),
-                     (ch + SIGMA + "a").title(), ("A" + SIGMA + ch).capitalize()])
-
-
 def float_samples():
     rnd = random.Random(20261017)
     out = list(FLOATS)
@@ -333,9 +314,8 @@ def main():
         "html": [[s, html.escape(s), html.unescape(s)] for s in HTML],
         "paths": [[p, posixpath.basename(p), posixpath.splitext(p)[0]] for p in PATHS],
         "joins": [[parts, posixpath.join(*parts)] for parts in JOINS],
-        "case": [[c, c.isupper(), c.islower(), c.istitle(), c.upper(), c.lower(), c.title(), c.capitalize(),
-                  c.swapcase()] for c in CASES],
-        "just": [[s, f, [[s.ljust(w, f), s.rjust(w, f), s.center(w, f)] for w in WIDTHS]]
+        "case": [[c, c.isupper(), c.lower()] for c in CASES],
+        "just": [[s, f, [[s.ljust(w, f), s.rjust(w, f)] for w in WIDTHS]]
                  for s in JUST for f in FILLS],
         "cut": [[s, [s[:n] for n in range(-8, 9)]] for s in CUTS],
         "os_errors": os_errors(),
@@ -356,11 +336,7 @@ def main():
             "isupper": digest(ch for ch in chars() if ch.isupper()),
             "islower": digest(ch for ch in chars() if ch.islower()),
             "istitle": digest(ch for ch in chars() if ch.istitle()),
-            "upper": digest(ch.upper() for ch in chars()),
-            "title": digest(ch.title() for ch in chars()),
-            "capitalize": digest(ch.capitalize() for ch in chars()),
-            "swapcase": digest(ch.swapcase() for ch in chars()),
-            "case_context": digest(case_context(ch) for ch in chars()),
+            "isupper_context": digest(str(int((ch + "A").isupper())) for ch in chars()),
         },
     }
     write_json(os.path.join(HERE, "fixtures.json"), out)

@@ -178,9 +178,6 @@ func Resolve(repoRoot, requested string, getenv func(string) string) (id, root s
 	return id, root, err
 }
 
-// Dir is the index directory of a data root.
-func Dir(root string) string { return filepath.Join(root, "indexes") }
-
 // Path is the path of one index file of a data root.
 func Path(root, name string) string { return filepath.Join(root, "indexes", name) }
 

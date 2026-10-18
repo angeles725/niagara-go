@@ -14,12 +14,13 @@ var volatileMeta = []struct {
 	{regexp.MustCompile(`("source(?:_root)?":\s*)"(?:[^"\\]|\\.)*"`), `${1}"<SOURCE>"`},
 }
 
-// NormalizeVolatile returns doc with the volatile members of its leading
-// "_meta" object replaced by fixed placeholders (timestamp -> "<TIMESTAMP>",
-// whatever its format; build_time_sec -> 0; source and source_root ->
-// "<SOURCE>"), so a Python-built and a Go-built index compare byte for byte.
-// Only the _meta object is touched; a document that does not start with one
-// is returned unchanged.
+// NormalizeVolatile, a helper of the parity and class-index tests, returns
+// doc with the volatile members of its leading "_meta" object replaced by
+// fixed placeholders (timestamp -> "<TIMESTAMP>", whatever its format;
+// build_time_sec -> 0; source and source_root -> "<SOURCE>"), so a
+// Python-built and a Go-built index compare byte for byte. Only the _meta
+// object is touched; a document that does not start with one is returned
+// unchanged.
 func NormalizeVolatile(doc []byte) []byte {
 	start, end, ok := metaSpan(doc)
 	if !ok {

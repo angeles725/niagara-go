@@ -71,6 +71,10 @@ func (c *Cmd) Run() error {
 	return c.Wait()
 }
 
+// Output and CombinedOutput have no caller today but are not dead code: *Cmd
+// embeds *exec.Cmd, so without them c.Output() would resolve to exec.Cmd's own
+// Run and bypass the process-group kill.
+//
 // Output is exec.Cmd.Output through this Cmd's Run: stdout is returned,
 // and stderr, unless the caller set Stderr, goes into an *exec.ExitError.
 func (c *Cmd) Output() ([]byte, error) {
