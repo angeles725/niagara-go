@@ -60,6 +60,14 @@ func TestLiterals(t *testing.T) {
 		{"block closing sets indentation", "\"\"\"\n    a\n  \"\"\"", "  a\n"},
 		{"block blank line and trailing spaces", "\"\"\"\n  a   \n\n  b\"\"\"", "a\n\nb"},
 		{"block escapes after stripping", "\"\"\"\n  a\\n\\\n  b\"\"\"", "a\nb"},
+		// Expected values are String.stripIndent's (JDK 21), which javac applies: Character.isWhitespace
+		// counts \v, form feed and U+3000 as white space and U+00A0 as content.
+		{"block vertical tab line is blank", "\"\"\"\n  a\n\v\n  b\n  \"\"\"", "a\n\nb\n"},
+		{"block no-break space line is content", "\"\"\"\n  a\n\u00a0\n  b\n  \"\"\"", "  a\n\u00a0\n  b\n"},
+		{"block blank line does not set indentation", "\"\"\"\n    a\n  \v  \n    b\n    \"\"\"", "a\n\nb\n"},
+		{"block trailing white space stops at no-break space", "\"\"\"\n  a\v \u00a0\n  b\u00a0\n  \"\"\"", "a\v \u00a0\nb\u00a0\n"},
+		{"block indentation counts characters", "\"\"\"\n  a\n\u3000\u3000b\n  \"\"\"", "a\nb\n"},
+		{"block form feed and vertical tab indent", "\"\"\"\n\v\v a\n     b\n  \"\"\"", " a\n   b\n"},
 	}
 	for _, c := range cases {
 		toks, err := lex(c.lit)
