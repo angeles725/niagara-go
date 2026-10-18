@@ -2,49 +2,12 @@ package pyjson
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 	"unicode/utf8"
 
 	"github.com/angeles725/niagara-go/internal/pycompat"
 )
-
-// EncodeString mirrors json's py_encode_basestring(_ascii).
-func EncodeString(s string, ensureASCII bool) string {
-	var b strings.Builder
-	b.WriteByte('"')
-	for _, r := range Runes(s) {
-		switch r {
-		case '"':
-			b.WriteString(`\"`)
-		case '\\':
-			b.WriteString(`\\`)
-		case '\n':
-			b.WriteString(`\n`)
-		case '\r':
-			b.WriteString(`\r`)
-		case '\t':
-			b.WriteString(`\t`)
-		case '\b':
-			b.WriteString(`\b`)
-		case '\f':
-			b.WriteString(`\f`)
-		default:
-			switch {
-			case r < 0x20:
-				fmt.Fprintf(&b, `\u%04x`, r)
-			case r < 0x7F || !ensureASCII:
-				b.WriteString(WTF8([]rune{r}))
-			case r > 0xFFFF:
-				r -= 0x10000
-				fmt.Fprintf(&b, `\u%04x\u%04x`, 0xD800|(r>>10)&0x3FF, 0xDC00|r&0x3FF)
-			default:
-				fmt.Fprintf(&b, `\u%04x`, r)
-			}
-		}
-	}
-	b.WriteByte('"')
-	return b.String()
-}
 
 // DumpOpts mirrors the json.dumps keyword arguments the tools use.
 type DumpOpts struct {
@@ -66,44 +29,37 @@ func Dumps(v Value, o DumpOpts) string {
 }
 
 func dumpTo(b *strings.Builder, v Value, o DumpOpts, level int) {
-	open := func(c byte) (string, string) {
-		if o.Indent < 0 {
-			return string(c), o.ItemSep
-		}
-		nl := "\n" + strings.Repeat(" ", o.Indent*(level+1))
-		return string(c) + nl, o.ItemSep + nl
-	}
-	closing := func(c byte) {
-		if o.Indent >= 0 {
-			b.WriteString("\n" + strings.Repeat(" ", o.Indent*level))
-		}
-		b.WriteByte(c)
-	}
 	switch v.Kind {
 	case Null:
 		b.WriteString("null")
 	case Bool:
-		b.WriteString(map[bool]string{true: "true", false: "false"}[v.B])
+		if v.B {
+			b.WriteString("true")
+		} else {
+			b.WriteString("false")
+		}
 	case Int:
 		b.WriteString(v.I.String())
 	case Float:
 		b.WriteString(pycompat.JSONFloat(v.F))
 	case Str:
-		b.WriteString(EncodeString(v.S, o.EnsureASCII))
+		writeString(b, v.S, o.EnsureASCII)
 	case Array:
 		if len(v.A) == 0 {
 			b.WriteString("[]")
 			return
 		}
-		start, sep := open('[')
-		b.WriteString(start)
+		b.WriteByte('[')
+		newline(b, o, level+1)
 		for i, x := range v.A {
 			if i > 0 {
-				b.WriteString(sep)
+				b.WriteString(o.ItemSep)
+				newline(b, o, level+1)
 			}
 			dumpTo(b, x, o, level+1)
 		}
-		closing(']')
+		newline(b, o, level)
+		b.WriteByte(']')
 	case Object:
 		if len(v.Keys) == 0 {
 			b.WriteString("{}")
@@ -111,19 +67,36 @@ func dumpTo(b *strings.Builder, v Value, o DumpOpts, level int) {
 		}
 		keys := v.Keys
 		if o.SortKeys {
-			keys = SortedKeys(keys)
+			// Byte order, as SortedKeys and Python's str ordering of WTF-8 text.
+			keys = slices.Clone(keys)
+			slices.Sort(keys)
 		}
-		start, sep := open('{')
-		b.WriteString(start)
+		b.WriteByte('{')
+		newline(b, o, level+1)
 		for i, k := range keys {
 			if i > 0 {
-				b.WriteString(sep)
+				b.WriteString(o.ItemSep)
+				newline(b, o, level+1)
 			}
-			b.WriteString(EncodeString(k, o.EnsureASCII))
+			writeString(b, k, o.EnsureASCII)
 			b.WriteString(o.KeySep)
 			dumpTo(b, v.M[k], o, level+1)
 		}
-		closing('}')
+		newline(b, o, level)
+		b.WriteByte('}')
+	}
+}
+
+const spaces = "                                                                "
+
+// newline writes the line break and indentation of nesting level when o is indented.
+func newline(b *strings.Builder, o DumpOpts, level int) {
+	if o.Indent < 0 {
+		return
+	}
+	b.WriteByte('\n')
+	for n := o.Indent * level; n > 0; n -= len(spaces) {
+		b.WriteString(spaces[:min(n, len(spaces))])
 	}
 }
 
