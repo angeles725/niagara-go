@@ -1,0 +1,10 @@
+usage: niagara_help versions [-h] {add,list} ...
+
+positional arguments:
+  {add,list}
+    add       Register a Niagara install, extract and index all of its documentation, run both
+              gates and print a summary
+    list      Registered versions, their data roots and whether they are extracted
+
+options:
+  -h, --help  show this help message and exit

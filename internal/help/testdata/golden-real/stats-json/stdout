@@ -1,0 +1,56 @@
+{
+  "niagara_version": "4.14.0.162",
+  "base_dir": "<REPO>",
+  "indexes": {
+    "class-index": 6133,
+    "devguide-toc": 96,
+    "guides-index": 115,
+    "inheritance": 6310,
+    "pdf-index": 364,
+    "method-index": {
+      "names": 45070,
+      "entries": 91366
+    },
+    "source-index": {
+      "classes": 2605,
+      "lines": 680644
+    },
+    "xref-index": {
+      "classes": 3001,
+      "edges": 20365
+    },
+    "slots-index": {
+      "classes": 1890,
+      "properties": 7941,
+      "actions": 1048,
+      "topics": 162
+    },
+    "call-index": {
+      "methods": 12517,
+      "entries": 139226
+    }
+  },
+  "text_dirs": {
+    "bajadoc-clean": {
+      "files": 6312,
+      "bytes": 5630114
+    },
+    "devguide-clean": {
+      "files": 482,
+      "bytes": 5175248
+    },
+    "guides-clean": {
+      "files": 9053,
+      "bytes": 16818728
+    },
+    "docs-text": {
+      "files": 364,
+      "bytes": 47985847
+    },
+    "source": {
+      "files": 2603,
+      "bytes": 19463900
+    }
+  },
+  "packages": 724
+}

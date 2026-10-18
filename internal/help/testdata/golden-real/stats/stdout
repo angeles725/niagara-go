@@ -1,0 +1,35 @@
+Niagara Help Navigator - Corpus Statistics
+=======================================================
+Niagara version: 4.14.0.162  (<REPO>)
+
+INDEXES (10):
+
+  class-index.json        6,133 classes (724 packages)
+  devguide-toc.json          96 guides
+  guides-index.json         115 folders
+  inheritance.json        6,310 entries
+  pdf-index.json            364 PDFs
+  method-index.json      45,070 names (91,366 entries)
+  source-index.json       2,605 classes (680,644 lines)
+  xref-index.json         3,001 classes (20,365 edges)
+  slots-index.json        1,890 classes (7,941 props, 1048 actions, 162 topics)
+
+TEXT SOURCES (90.7 MB total):
+
+  bajadoc-clean/     6,312 files  (5.4 MB)
+  devguide-clean/      482 files  (4.9 MB)
+  guides-clean/      9,053 files  (16.0 MB)
+  docs-text/           364 files  (45.8 MB)
+  source/            2,603 files  (18.6 MB)
+
+RAW HTML:
+
+  bajadoc/           3,591 HTML
+  devguide/            472 HTML
+  guides/            9,044 HTML
+
+CALL INDEX:
+  call-index.json       12,517 methods (139,226 call entries)
+
+INDEXES: 10
+CLI: 53 commands + REPL

@@ -1,0 +1,20 @@
+SOURCE: BAlarmService
+MODULE: alarm-rt
+PACKAGE: javax.baja.alarm
+LINES: 1760
+PATH: source/alarm-rt/javax/baja/alarm/BAlarmService.java
+
+Grep 'ackAlarm':
+  L153:   name = "ackAlarm",
+  L381:   //region Action "ackAlarm"
+  L384:    * Slot for the {@code ackAlarm} action.
+  L386:    * @see #ackAlarm(BAlarmRecord parameter)
+  L388:   public static final Action ackAlarm = newAction(Flags.HIDDEN, new BAlarmRecord(), null);
+  L391:    * Invoke the {@code ackAlarm} action.
+  L393:    * @see #ackAlarm
+  L395:   public void ackAlarm(BAlarmRecord parameter) { invoke(ackAlarm, parameter, null); }
+  L397:   //endregion Action "ackAlarm"
+  L989:   public void doAckAlarm(BAlarmRecord alarm)
+  L1114:           ((BIAlarmSource) source).ackAlarm(alarm);
+  L1165:       ((BIAlarmablePlatformService) source).ackAlarm(record);
+  L1653:       //ackState is set in doAckAlarm
