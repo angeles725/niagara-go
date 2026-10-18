@@ -46,12 +46,12 @@ func rebuildLines(root string) string {
 func TestEnsureFulltextBuildsOnceThenReuses(t *testing.T) {
 	root := noIndexCheckout(t)
 	var errb bytes.Buffer
-	rebuilt, err := EnsureFulltext(root, &errb)
+	_, rebuilt, err := ensure(root, &errb)
 	if err != nil || !rebuilt || errb.String() != rebuildLines(root) {
 		t.Fatalf("first: rebuilt %v err %v stderr %q", rebuilt, err, errb.String())
 	}
 	errb.Reset()
-	if rebuilt, err := EnsureFulltext(root, &errb); err != nil || rebuilt || errb.Len() != 0 {
+	if _, rebuilt, err := ensure(root, &errb); err != nil || rebuilt || errb.Len() != 0 {
 		t.Errorf("second: rebuilt %v err %v stderr %q", rebuilt, err, errb.String())
 	}
 	if _, err := os.Stat(fts.DBPath(root) + ".lock"); !errors.Is(err, fs.ErrNotExist) {
@@ -77,7 +77,7 @@ func TestEnsureFulltextConcurrentCallersBuildOnce(t *testing.T) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			rebuilt[i], errs[i] = EnsureFulltext(root, &bufs[i])
+			_, rebuilt[i], errs[i] = ensure(root, &bufs[i])
 		}()
 	}
 	wg.Wait()
@@ -95,6 +95,9 @@ func TestEnsureFulltextConcurrentCallersBuildOnce(t *testing.T) {
 
 // TestEnsureFulltextWaitsForTheLockHolder: a live lock (another process
 // building) is waited for; the index it writes is used without a rebuild.
+// The holder checks that ensure has not returned before it starts building:
+// until then the index is missing and the lock held, so an early return can
+// only mean ensure did not wait (no wall-clock bound that load can trip).
 func TestEnsureFulltextWaitsForTheLockHolder(t *testing.T) {
 	lockTiming(t, 5*time.Millisecond, time.Minute, time.Hour)
 	root := noIndexCheckout(t)
@@ -102,23 +105,32 @@ func TestEnsureFulltextWaitsForTheLockHolder(t *testing.T) {
 	if err := os.WriteFile(lock, []byte("1 other\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
+	returned := make(chan struct{})
 	done := make(chan error, 1)
+	start := time.Now() // before the holder's 50 ms, so a waiting ensure takes at least that
 	go func() {
 		time.Sleep(50 * time.Millisecond)
+		select {
+		case <-returned:
+			done <- errors.New("ensure returned while the lock holder had not built the index yet")
+			return
+		default:
+		}
 		_, err := ftbuild.Build(root, ftbuild.Options{})
 		if rerr := os.Remove(lock); err == nil {
 			err = rerr
 		}
 		done <- err
 	}()
-	start := time.Now()
 	var errb bytes.Buffer
-	rebuilt, err := EnsureFulltext(root, &errb)
+	_, rebuilt, err := ensure(root, &errb)
+	elapsed := time.Since(start)
+	close(returned)
 	if berr := <-done; berr != nil {
 		t.Fatal(berr)
 	}
-	if err != nil || rebuilt || errb.Len() != 0 || time.Since(start) < 50*time.Millisecond {
-		t.Errorf("rebuilt %v err %v stderr %q after %v", rebuilt, err, errb.String(), time.Since(start))
+	if err != nil || rebuilt || errb.Len() != 0 || elapsed < 50*time.Millisecond {
+		t.Errorf("rebuilt %v err %v stderr %q after %v", rebuilt, err, errb.String(), elapsed)
 	}
 }
 
@@ -137,7 +149,7 @@ func TestEnsureFulltextTakesOverAStaleLock(t *testing.T) {
 	}
 	start := time.Now()
 	var errb bytes.Buffer
-	rebuilt, err := EnsureFulltext(root, &errb)
+	_, rebuilt, err := ensure(root, &errb)
 	if err != nil || !rebuilt || errb.String() != rebuildLines(root) || time.Since(start) > 30*time.Second {
 		t.Errorf("rebuilt %v err %v stderr %q after %v", rebuilt, err, errb.String(), time.Since(start))
 	}
@@ -157,7 +169,7 @@ func TestEnsureFulltextBuildsAfterTheWait(t *testing.T) {
 		t.Fatal(err)
 	}
 	var errb bytes.Buffer
-	rebuilt, err := EnsureFulltext(root, &errb)
+	_, rebuilt, err := ensure(root, &errb)
 	if err != nil || !rebuilt || errb.String() != rebuildLines(root) {
 		t.Errorf("rebuilt %v err %v stderr %q", rebuilt, err, errb.String())
 	}
@@ -186,13 +198,13 @@ func TestEnsureFulltextUnwritableFailsOnce(t *testing.T) {
 		defer os.Chmod(d, 0o755)
 	}
 	var errb bytes.Buffer
-	_, err := EnsureFulltext(root, &errb)
+	_, _, err := ensure(root, &errb)
 	var ue *UnwritableIndexError
 	if !errors.As(err, &ue) || !ue.Missing || errb.Len() == 0 {
 		t.Fatalf("err %v stderr %q", err, errb.String())
 	}
 	errb.Reset()
-	if _, err2 := EnsureFulltext(root, &errb); err2 != err || errb.Len() != 0 {
+	if _, _, err2 := ensure(root, &errb); err2 != err || errb.Len() != 0 {
 		t.Errorf("second call: err %v stderr %q", err2, errb.String())
 	}
 }
@@ -239,7 +251,7 @@ func TestEnsureFulltextTakesOverADeadHoldersLock(t *testing.T) {
 	}
 	start := time.Now()
 	var errb bytes.Buffer
-	rebuilt, err := EnsureFulltext(root, &errb)
+	_, rebuilt, err := ensure(root, &errb)
 	if err != nil || !rebuilt || errb.String() != rebuildLines(root) || time.Since(start) > 30*time.Second {
 		t.Errorf("rebuilt %v err %v stderr %q after %v", rebuilt, err, errb.String(), time.Since(start))
 	}
@@ -344,7 +356,7 @@ func TestEnsureFulltextStaleLockTwoWaitersBuildOnce(t *testing.T) {
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
-				rebuilt[i], errs[i] = EnsureFulltext(root, io.Discard)
+				_, rebuilt[i], errs[i] = ensure(root, io.Discard)
 			}()
 		}
 		wg.Wait()
