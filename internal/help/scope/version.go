@@ -36,7 +36,7 @@ func VersionLines(err error) []string {
 	lines := []string{ErrorLine(err)}
 	var ne *NotExtractedError
 	if errors.As(err, &ne) {
-		lines = append(lines, "Run: python3 tools/extract_version.py "+ne.ID)
+		lines = append(lines, "Run: nh versions extract "+ne.ID)
 	}
 	return lines
 }

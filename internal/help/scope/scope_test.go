@@ -145,7 +145,7 @@ func TestResolveAndVersionLines(t *testing.T) {
 
 	_, _, err = Resolve(dir, "", noEnv) // the default 2.0.0.1 has no indexes
 	want := "ERROR: Niagara version 2.0.0.1 is registered but not extracted at " +
-		filepath.Join(dir, "versions", "2.0.0.1") + ".\nRun: python3 tools/extract_version.py 2.0.0.1\n"
+		filepath.Join(dir, "versions", "2.0.0.1") + ".\nRun: nh versions extract 2.0.0.1\n"
 	if joined(VersionLines(err)) != want {
 		t.Errorf("not extracted: %q", VersionLines(err))
 	}
@@ -162,9 +162,8 @@ func TestErrorLineForMissingFulltextIndex(t *testing.T) {
 	checkout := ftsfixture.Checkout(t, abs(t, helpTestdata), true)
 	_, err := fts.Search(checkout, "1.0", "alarm", nil, "and")
 	var stale *fts.StaleIndexError
-	want := "ERROR: full-text index indexes/fulltext.sqlite under " + checkout + " is missing; this port " +
-		"reads it but never builds it, rebuild it with: python3 tools/niagara_help.py " +
-		"--niagara-version 1.0 find index"
+	want := "ERROR: full-text index indexes/fulltext.sqlite under " + checkout + " is missing; this reader " +
+		"never builds it, rebuild it with: nh --niagara-version 1.0 find index"
 	if !errors.As(err, &stale) || ErrorLine(err) != want {
 		t.Errorf("err %v line %q", err, ErrorLine(err))
 	}

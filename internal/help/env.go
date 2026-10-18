@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 
+	"github.com/angeles725/niagara-go/internal/helpbuild"
 	"github.com/angeles725/niagara-go/internal/index"
 )
 
@@ -34,13 +35,10 @@ type ExitCode int
 func (c ExitCode) Error() string { return fmt.Sprintf("exit status %d", int(c)) }
 
 // MissingIndexError is index_cache.MissingIndexError: a required index file
-// is absent, so the lookup cannot search (exit 2 with "ERROR: ...").
-type MissingIndexError struct{ Name, BaseDir string }
-
-func (e *MissingIndexError) Error() string {
-	return fmt.Sprintf("index indexes/%s is missing under %s; rebuild the indexes "+
-		"with: python3 tools/niagara_help.py rebuild-all", e.Name, e.BaseDir)
-}
+// is absent, so the lookup cannot search (exit 2 with "ERROR: ..."). It is
+// helpbuild's type, which the coverage reports return too, so the two
+// spell one message.
+type MissingIndexError = helpbuild.MissingIndexError
 
 // loadIndex returns indexes/<name> of the selected data root, parsed once per
 // Env (index_cache.load_index). A missing file is an empty object, or a

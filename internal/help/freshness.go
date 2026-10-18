@@ -339,7 +339,7 @@ func (e *Env) versionFreshness(reg *index.Registry, vid string) (string, error) 
 		return "", err
 	}
 	if !index.IsExtracted(root) {
-		return fmt.Sprintf("NOT EXTRACTED (tools/extract_version.py %s)", vid), nil
+		return fmt.Sprintf("NOT EXTRACTED (nh versions extract %s)", vid), nil
 	}
 	idx, err := indexStatus(root)
 	if err != nil {

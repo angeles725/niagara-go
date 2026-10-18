@@ -97,7 +97,7 @@ func TestVersionResolutionErrors(t *testing.T) {
 	dir := repo(t, twoVersions, ".")
 	out, _, code := run(t, dir, "class", "X") // default 2.0.0.1 is not extracted
 	want := "ERROR: Niagara version 2.0.0.1 is registered but not extracted at " +
-		filepath.Join(dir, "versions", "2.0.0.1") + ".\nRun: python3 tools/extract_version.py 2.0.0.1\n"
+		filepath.Join(dir, "versions", "2.0.0.1") + ".\nRun: nh versions extract 2.0.0.1\n"
 	if code != 2 || out != want {
 		t.Errorf("not extracted: code %d out %q", code, out)
 	}
