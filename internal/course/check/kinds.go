@@ -10,6 +10,7 @@ const (
 	kindJarEntry  = "jar-entry"  // entries of the jar matching Glob counted against N
 	kindJarText   = "jar-text"   // the jar entry Glob holds every Contains string
 	kindJarSigned = "jar-signed" // the jar has a META-INF signature file and signature block
+	kindFileText  = "file-text"  // every file matching Glob has Line (or N lines) matching Match
 )
 
 // Count operators.
@@ -32,7 +33,7 @@ type Check struct {
 
 	Type   string // component type "module:Type" (type, slot, link target)
 	Within string // type: an ancestor type "module:Type" every counted component must have
-	Op     string // type, link, files, jar-entry, slot with Distinct: opMin or opEq
+	Op     string // type, link, files, jar-entry, slot with Distinct, file-text without Line: opMin or opEq
 	N      int
 
 	Slot     string   // slot: the slot; link: the target slot
@@ -45,7 +46,10 @@ type Check struct {
 	From     string // link: source type "module:Type"
 	FromSlot string // link: source slot
 
-	Glob     string   // files: path under the station dir ({station} = station name); jar-*: entry
+	Glob     string   // files, file-text: path under the station dir ({station} = station name); jar-*: entry
 	Jar      string   // jar-*: module part name, e.g. training-rt
 	Contains []string // jar-text
+
+	Line  int    // file-text: the 1-based line that must match (a BOM and CR line ends dropped); 0 = count lines
+	Match string // file-text: a Go regexp; {station} = the station name, quoted
 }

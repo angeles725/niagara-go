@@ -15,6 +15,7 @@ const (
 	trainingRT      = "training-rt"
 	trainingXML     = "META-INF/module.xml"
 	services        = "baja:ServiceContainer"
+	csvGlob         = "shared/{station}_NumericWritable*.csv" // the Lab 10 export (LI:1976-1977)
 )
 
 var Spec = []Check{
@@ -149,9 +150,19 @@ var Spec = []Check{
 	{ID: "C10.5", Lab: "10", Keys: []string{"L10.17", "L10.20"}, Kind: kindSlot, Desc: "every NumericCov enabled",
 		Type: "history:NumericCovHistoryExt", Slot: "enabled", Want: "true", Default: "false"},
 	{ID: "C10.6", Lab: "10", Keys: []string{"L10.23"}, Kind: kindFiles, Desc: "ten exported CSV files in the Station Home",
-		Glob: "shared/{station}_NumericWritable*.csv", Op: opEq, N: 10},
+		Glob: csvGlob, Op: opEq, N: 10},
 	{ID: "C10.7", Lab: "10", Keys: []string{"L10.6", "L10.7", "L10.15"}, Kind: kindJarText, Desc: "depends on history-rt, file-rt, bql-rt",
 		Jar: trainingRT, Glob: trainingXML, Contains: []string{`name="history-rt"`, `name="file-rt"`, `name="bql-rt"`}},
+	// L10.24 (open one CSV): every exported file is a trend CSV as the live TrainingStation wrote it
+	// (shared/TrainingStation_NumericWritable1.csv, 2026-10-15): a BOM, the line history:<station>/<point>,
+	// a blank line, the header Timestamp,Trend Flags,Status,Value, then one row per record with the
+	// locale's decimal comma ("82,9" under es-MX). The file is the whole answer: no Unobserved note.
+	{ID: "C10.8", Lab: "10", Keys: []string{"L10.24"}, Kind: kindFileText, Desc: "CSV line 1 names the history",
+		Glob: csvGlob, Line: 1, Match: `^history:{station}/NumericWritable\d*$`},
+	{ID: "C10.9", Lab: "10", Keys: []string{"L10.24"}, Kind: kindFileText, Desc: "CSV header on line 3",
+		Glob: csvGlob, Line: 3, Match: `^Timestamp,Trend Flags,Status,Value$`},
+	{ID: "C10.10", Lab: "10", Keys: []string{"L10.24"}, Kind: kindFileText, Desc: "CSV rows: timestamp, trend flags, status, value",
+		Glob: csvGlob, Match: `^\d{1,2} \S+ \d{4} \d{2}:\d{2}:\d{2} \S+,\{[^}]*\},\{[^}]*\},"?-?\d+(?:[.,]\d+)?"?$`, Op: opMin, N: 1},
 
 	// Lab 11. Intersections A-Q (L11.8): 17 server devices, four lights each.
 	{ID: "C11.1", Lab: "11", Keys: []string{"L11.7"},

@@ -188,6 +188,7 @@ own prefixes (`t:`, `tld:`) are resolved through its `m=` declarations.
 | `jar-entry` | entries matching a glob (`**` crosses `/`) | the count reaches N |
 | `jar-text` | the first entry matching a glob | it holds every listed string |
 | `jar-signed` | `META-INF/*.SF` and `META-INF/*.RSA`, `.DSA` or `.EC` | both exist |
+| `file-text` | every file matching a glob under the station dir (`{station}` as for `files`), read as text: a UTF-8 BOM and CRLF line ends dropped; `Match` is a Go regexp (`{station}` = the station name, quoted) | `Line` > 0: that line matches; `Line` 0: the matching lines are at least / exactly N. No matching file is FAIL |
 
 Nested slots: the bog reader keeps only a composite slot's direct `value` and `status`, so a
 dotted slot is read from `Comp.Nested`, which `bog.LoadOptions` fills only with
@@ -198,7 +199,7 @@ composite slot: the Tcp Config of a driver network is its own component (`tcpCon
 handle), so its port is `address.port` on `trafficLightDriver:TrafficLightDriverTcpCommConfig`.
 
 Checks per lab: 1: 7, 2: 4, 3: 5, 4: 7, 5: 3 (jars only: the station holds nothing of code
-signing), 6: 6, 7: 5, 9: 7, 10: 7, 11: 17 (8 of them nested: C11.9-C11.16, the driver and server
+signing), 6: 6, 7: 5, 9: 7, 10: 10 (three of them `file-text` on the exported CSVs), 11: 17 (8 of them nested: C11.9-C11.16, the driver and server
 Tcp Config addresses and the ping health of the network and of every driver device; C11.17
 `serverEnabled` is a plain slot), B: 4. Lab 8 (ORDs) writes no code and changes nothing, so it
 has none (its station steps, such as L8.15 and L8.17, happen in the Workbench UI). Appendix A
@@ -216,7 +217,7 @@ the summary goes to stderr.
 Exit: 0 no FAIL (the SKIPs are in the summary); 1 at least one FAIL; 2 the station cannot be
 read (no such file, not a BOG document) or every selected check was skipped.
 
-The live TrainingStation (2026-10-17, with the 4.15.6.20 install): 72 checked, 71 PASS, 1 FAIL.
+The live TrainingStation (2026-10-17, with the 4.15.6.20 install): 75 checked, 74 PASS, 1 FAIL.
 C3.4 fails because the station really differs: its Lab2 folder has Point1..Point4 linked to
 Add.in1..in4 and no `Output` point, so Lab 3 step 11 (`LI:576`, Add.Out -> Output.In10) was
 not done.
@@ -242,8 +243,17 @@ A check proves what the station and the jars store, never a console line, a job 
 or a runtime status. So a spec row may carry `Unobserved`, a map from a key to what of that
 item's answer the check does not observe (C1.2 -> L1.25: `the Hello, World! line in the station
 console`). `TestCheckKeysReal` fails on a link to an item the real key marks predicted that has
-no note, unless the link is audited into `fullyObserved` (empty on 2026-10-17: every predicted
+no note, unless the link is audited into `fullyObserved` (2026-10-17: only C10.8-C10.10 ->
+L10.24, whose answer is the content of the exported CSV the checks read; every other predicted
 item a check links also predicts something no bog or jar holds).
+
+L10.24 (open one CSV) is decided by the CSVs the live station exported
+(`shared/TrainingStation_NumericWritable1.csv`): a UTF-8 BOM, `history:TrainingStation/NumericWritable1`,
+a blank line, the header `Timestamp,Trend Flags,Status,Value`, then rows such as
+`15 oct 2026 12:43:20 CST,{start},{ok},"82,9"` (the es-MX locale's decimal comma, so the value is
+quoted). C10.8 (line 1), C10.9 (line 3) and C10.10 (the rows) check exactly that, so the item is
+CONFIRMED; its answer text (`a header row, then timestamp / value / status rows`) predicts other
+columns and no history line, and must be corrected with the verified marker.
 
 The table `ID  VERDICT  EVIDENCE` lists the predicted items in answer-key order, then, when any
 item is CONFIRMED, one ready-to-apply line per CONFIRMED item (never for PARTIAL):
@@ -262,8 +272,8 @@ CONTRADICTED; 2 the answer keys or the station cannot be read, a bad `--date`, o
 check was skipped (nothing could be checked, as in `course check`).
 
 The live TrainingStation and the real answer key (2026-10-17, with the 4.15.6.20 install):
-40 predicted, 0 CONFIRMED, 9 PARTIAL (L1.14, L1.25, L4.15, L7.18, L10.19, L10.22, L11.7,
-L11.26, L11.32), 0 CONTRADICTED, 31 UNDECIDED (no check covers them); 15 checks run.
+40 predicted, 1 CONFIRMED (L10.24), 9 PARTIAL (L1.14, L1.25, L4.15, L7.18, L10.19, L10.22, L11.7,
+L11.26, L11.32), 0 CONTRADICTED, 30 UNDECIDED (no check covers them); 18 checks run.
 
 Audit of the links to predicted items (2026-10-17): C3.5 (Add.out stored) no longer links L3.9
 (`Output = Point1 + Point2 + Point3`): it says nothing of the Output point, which the live
@@ -283,9 +293,11 @@ not observed.
 - `root_test.go`: the discovery order (flag, variable, cwd walk, executable walk) and the
   not-found error, run from a temporary directory with the executable stubbed, so no `labs.md`
   above the real checkout can leak in.
+- `check/filetext_test.go`: the `file-text` kind over a BOM + CRLF trend CSV, an old-format CSV, a
+  short file, a line count, no matching file and a bad regexp.
 - `check/check_test.go` and the `check-*` goldens: synthetic stations under
   `internal/course/testdata/stations/` (`good`: every check PASS; `bad`: no FirstComponent,
-  default Tstat diff, no Add.out -> Output link, nine CSV files, a driver Tcp Config on the
+  default Tstat diff, no Add.out -> Output link, nine CSV files in the old header-first format, a driver Tcp Config on the
   default port, a network whose ping failed (`health.down` true, no `lastOkTime`) and a driver
   device never pinged (no `health`); `broken`:
   not a bog) and a synthetic install under `testdata/install/`, whose jars are generated from the table in
@@ -299,13 +311,13 @@ not observed.
   the command over `testdata/predict-root/` (a synthetic answer key whose predicted IDs are
   linked keys: one unlinked, one linked only to a jar check, the range item `L4.15–L4.16`
   reached through the noted key L4.15 (PARTIAL), the range `L10.6–L10.7` reached by two keys
-  of C10.7 (linked once), and L4.13 and L11.25 marked
+  of C10.7 (linked once), L10.24 decided by the file-text checks, and L4.13 and L11.25 marked
   predicted so that a fully observing check yields CONFIRMED) with the `good` station (every
   linked check PASS: CONFIRMED and PARTIAL), the `bad` one (L1.25, L4.13, L11.25, L11.26 and
   L11.32 CONTRADICTED), no `--install`, the `root`
   fixture (its one linked check is a jar check: exit 2), a bad `--date` and a broken bog.
   `TestVerifyPredictionsTrainingStation` (with `COURSE_TRAINING_STATION` and
-  `NIAGARA_RESEARCH_DIR`) pins only that no predicted item is CONTRADICTED, none is CONFIRMED
+  `NIAGARA_RESEARCH_DIR`) pins only that no predicted item is CONTRADICTED, only L10.24 is CONFIRMED
   and some are PARTIAL on the live station. `TestCheckKeysReal` resolves every linked key in the real labs.md.
 - `key/oracle_test.go`: the recall oracle (plain regexes over the raw files, its own range
   expansion) must equal the parsed ID set on the fixture, and on the real checkout when

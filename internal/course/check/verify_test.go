@@ -96,6 +96,10 @@ func TestVerifyPredictionsThroughRange(t *testing.T) {
 	}
 }
 
+// confirmedLive are the predicted items the live TrainingStation confirms: L10.24 through the file
+// checks of its exported CSVs (its answer text still predicts other columns; reported for a fix).
+var confirmedLive = map[string]bool{"L10.24": true}
+
 // TestVerifyPredictionsTrainingStation runs verify-predictions on the live TrainingStation
 // against the real answer key; it pins only what the live check test pins: C3.4 is the one
 // FAIL, so no predicted item may be CONTRADICTED (L3.7, its key, is not predicted).
@@ -113,6 +117,9 @@ func TestVerifyPredictionsTrainingStation(t *testing.T) {
 	for _, p := range preds {
 		counts[p.Verdict]++
 		t.Logf("%s %s %s", p.Item.ID, p.Verdict, p.Reason)
+		if (p.Verdict == Confirmed) != confirmedLive[p.Item.ID] {
+			t.Errorf("%s %s, want CONFIRMED only for %v", p.Item.ID, p.Verdict, confirmedLive)
+		}
 		if p.Verdict == Contradicted {
 			t.Errorf("%s CONTRADICTED: %s", p.Item.ID, p.Reason)
 		}
@@ -120,7 +127,7 @@ func TestVerifyPredictionsTrainingStation(t *testing.T) {
 			t.Errorf("%s is not a predicted item", p.Item.ID)
 		}
 	}
-	if counts[Confirmed] != 0 || counts[Partial] == 0 {
-		t.Errorf("want no CONFIRMED and some PARTIAL on the live station: %v", counts)
+	if counts[Confirmed] != len(confirmedLive) || counts[Partial] == 0 {
+		t.Errorf("want CONFIRMED only %v and some PARTIAL on the live station: %v", confirmedLive, counts)
 	}
 }

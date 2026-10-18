@@ -93,6 +93,31 @@
     "suggestion": null
   },
   {
+    "id": "L10.24",
+    "verdict": "CONTRADICTED",
+    "reason": "C10.8 FAIL: 0 of 9 files pass, want line 1 =~ ^history:{station}/NumericWritable\\d*$: shared/BadStation_NumericWritable.csv:1 = Timestamp,Value,Status; C10.9 FAIL: 0 of 9 files pass, want line 3 =~ ^Timestamp,Trend Flags,Status,Value$: shared/BadStation_NumericWritable.csv has 2 lines; C10.10 FAIL: 0 of 9 files pass, want at least 1 line =~ ^\\d{1,2} \\S+ \\d{4} \\d{2}:\\d{2}:\\d{2} \\S+,\\{[^}]*\\},\\{[^}]*\\},\"?-?\\d+(?:[.,]\\d+)?\"?$: shared/BadStation_NumericWritable.csv: 0 lines match",
+    "checks": [
+      {
+        "id": "C10.8",
+        "verdict": "FAIL",
+        "evidence": "0 of 9 files pass, want line 1 =~ ^history:{station}/NumericWritable\\d*$: shared/BadStation_NumericWritable.csv:1 = Timestamp,Value,Status"
+      },
+      {
+        "id": "C10.9",
+        "verdict": "FAIL",
+        "evidence": "0 of 9 files pass, want line 3 =~ ^Timestamp,Trend Flags,Status,Value$: shared/BadStation_NumericWritable.csv has 2 lines"
+      },
+      {
+        "id": "C10.10",
+        "verdict": "FAIL",
+        "evidence": "0 of 9 files pass, want at least 1 line =~ ^\\d{1,2} \\S+ \\d{4} \\d{2}:\\d{2}:\\d{2} \\S+,\\{[^}]*\\},\\{[^}]*\\},\"?-?\\d+(?:[.,]\\d+)?\"?$: shared/BadStation_NumericWritable.csv: 0 lines match"
+      }
+    ],
+    "file": "docs/n4-dev-course-solutions/labs.md",
+    "line": 36,
+    "suggestion": null
+  },
+  {
     "id": "L11.7",
     "verdict": "PARTIAL",
     "reason": "C11.1 PASS: found 1: Drivers/TrafficLightServerNetwork; C11.15 PASS: Drivers/TrafficLightServerNetwork/tcpConfig.address.ipAddress = 127.0.0.1 (stored); C11.16 PASS: Drivers/TrafficLightServerNetwork/tcpConfig.address.port = 23 (stored); C11.17 PASS: Drivers/TrafficLightServerNetwork/tcpConfig.serverEnabled = true (stored); not observed: the Px view with the lights of every intersection",
@@ -119,7 +144,7 @@
       }
     ],
     "file": "docs/n4-dev-course-solutions/labs.md",
-    "line": 41,
+    "line": 43,
     "suggestion": null
   },
   {
@@ -139,7 +164,7 @@
       }
     ],
     "file": "docs/n4-dev-course-solutions/labs.md",
-    "line": 42,
+    "line": 44,
     "suggestion": null
   },
   {
@@ -159,7 +184,7 @@
       }
     ],
     "file": "docs/n4-dev-course-solutions/labs.md",
-    "line": 43,
+    "line": 45,
     "suggestion": null
   },
   {
@@ -179,7 +204,7 @@
       }
     ],
     "file": "docs/n4-dev-course-solutions/labs.md",
-    "line": 44,
+    "line": 46,
     "suggestion": null
   }
 ]

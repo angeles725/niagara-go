@@ -39,7 +39,11 @@ func TestCheckZippedBog(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, c := range csvs {
-		if err := os.WriteFile(filepath.Join(dir, "shared", filepath.Base(c)), nil, 0o644); err != nil {
+		data, err := os.ReadFile(c)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(dir, "shared", filepath.Base(c)), data, 0o644); err != nil {
 			t.Fatal(err)
 		}
 	}

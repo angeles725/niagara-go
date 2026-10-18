@@ -171,6 +171,8 @@ func (s *Station) Run(ck *Check) Result {
 		r.Verdict, r.Evidence = s.checkLink(ck)
 	case kindFiles:
 		r.Verdict, r.Evidence = s.checkFiles(ck)
+	case kindFileText:
+		r.Verdict, r.Evidence = s.checkFileText(ck)
 	default:
 		r.Verdict, r.Evidence = s.checkJar(ck)
 	}

@@ -27,9 +27,13 @@ func runAll(t *testing.T, stationPath, install string) []Result {
 	return out
 }
 
+// mostChecks are the labs with more than 8 checks: lab 10 (three file-text checks of one CSV) and
+// lab 11 (its nested Tcp Config and ping-health slots are one check each).
+var mostChecks = map[string]int{"10": 10, "11": 17}
+
 // TestCheckSpecShape: unique IDs named after their lab, keys in the lab's own group, the
-// fields each kind reads, 3-8 checks per lab with station state (17 for lab 11, whose nested
-// Tcp Config and ping-health slots are one check each), none for lab 8.
+// fields each kind reads, 3-8 checks per lab with station state (more in mostChecks), none for
+// lab 8.
 func TestCheckSpecShape(t *testing.T) {
 	seen := map[string]bool{}
 	perLab := map[string]int{}
@@ -70,13 +74,16 @@ func TestCheckSpecShape(t *testing.T) {
 			ok = ck.Jar != "" && ck.Glob != "" && ck.N > 0
 		case kindJarText:
 			ok = ck.Jar != "" && ck.Glob != "" && len(ck.Contains) > 0
+		case kindFileText:
+			_, err := regexp.Compile(ck.Match)
+			ok = ck.Glob != "" && ck.Match != "" && err == nil && (ck.Line > 0 || (ck.Op != "" && ck.N > 0))
 		}
 		if !ok {
 			t.Errorf("%s: kind %q lacks a field it reads", ck.ID, ck.Kind)
 		}
 	}
 	for _, lab := range []string{"1", "2", "3", "4", "6", "7", "9", "10", "11", "B"} {
-		if n, most := perLab[lab], map[bool]int{true: 17, false: 8}[lab == "11"]; n < 3 || n > most {
+		if n, most := perLab[lab], max(8, mostChecks[lab]); n < 3 || n > most {
 			t.Errorf("lab %s has %d checks, want 3-%d", lab, n, most)
 		}
 	}
@@ -102,7 +109,7 @@ func TestCheckKeysReal(t *testing.T) {
 			}
 		}
 	}
-	// A link to a predicted item must say what of the Prediction the check does not observe,
+	// A link to a predicted item must say what of the prediction the check does not observe,
 	// unless it was audited as observing all of it: the answer key would be marked verified from a
 	// CONFIRMED verdict. The links are resolved as verify-predictions resolves them (itemLinks).
 	links := itemLinks(c, Spec)
@@ -117,9 +124,10 @@ func TestCheckKeysReal(t *testing.T) {
 }
 
 // fullyObserved lists the "check item" links to a predicted item of the real answer key that were
-// audited as observing the whole Prediction (2026-10-17: none; every predicted item a check links
-// also predicts a console line, a log, a view or a runtime status).
-var fullyObserved = map[string]bool{}
+// audited as observing the whole prediction. 2026-10-17: only L10.24 (open one CSV), whose answer is
+// the file content the three file-text checks read; every other predicted item a check links also
+// predicts a console line, a log, a view or a runtime status.
+var fullyObserved = map[string]bool{"C10.8 L10.24": true, "C10.9 L10.24": true, "C10.10 L10.24": true}
 
 // stationDiffers lists the checks the live TrainingStation fails because it really differs
 // from the lab, with the evidence read from its config.bog (2026-10-17).
