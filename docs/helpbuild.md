@@ -195,6 +195,10 @@ S2 additions (none changes an output Python produces from a well-formed install)
   folders of the repository itself. Go refuses with the same message whenever the data
   root is the repository once cleaned, made absolute and (when it exists) followed
   through symlinks (`os.SameFile`).
+- **A data root above the repository** (`..`, an absolute parent): a `--force` run there
+  removes the fixed raw and derived folder names, which deletes the repository when its
+  folder has one of them. Go refuses with `refusing to extract over a folder that holds the
+  repo; use --verify-only`; Python goes ahead.
 - **Registry entries**: a non-string `install_dir`, `data_root` or `label` is an error
   before any work (Python fails later or copies a non-string label); a missing `label`
   is an error up front where Python raises `KeyError` after extraction and fidelity.

@@ -287,3 +287,27 @@ func keysOf(m map[string][3]string) []string {
 	}
 	return ks
 }
+
+// A data root above the repository (".." and its other spellings) holds the repository, so a forced
+// extraction there could remove it when the repository folder has one of the raw or derived names:
+// refused like the repository itself (review-aa2a16b40c7c2120).
+func TestExtractAndIndexRefusesAFolderAboveTheRepo(t *testing.T) {
+	repo, install := setupFixture(t)
+	abs, err := filepath.Abs(repo)
+	if err != nil {
+		t.Fatal(err)
+	}
+	parent := filepath.Dir(abs)
+	keep := filepath.Join(parent, "source", "keep.txt")
+	writeFile(t, keep, []byte("outside file"))
+	for _, spelling := range []string{"..", "../", "versions/../..", parent, filepath.Dir(parent)} {
+		writeRegistry(t, repo, map[string][3]string{"1.0.0.0": {"fixture", install, spelling}})
+		res, err := ExtractAndIndex(repo, "1.0.0.0", SetupOptions{Force: true})
+		if err != nil || res.Status != 2 || res.Error != "refusing to extract over a folder that holds the repo; use --verify-only" {
+			t.Errorf("data_root %q: %+v %v", spelling, res, err)
+		}
+		if _, err := os.Stat(keep); err != nil {
+			t.Fatalf("data_root %q removed %s: %v", spelling, keep, err)
+		}
+	}
+}

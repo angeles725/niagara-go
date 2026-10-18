@@ -197,6 +197,28 @@ func isRepoRoot(repo, root string) (bool, error) {
 	return os.SameFile(rs, as), nil
 }
 
+// holdsRepo reports whether root is a folder above the repository (intended difference: Python
+// only refuses the repository itself), comparing the cleaned paths and, where both exist, the
+// paths with symlinks resolved.
+func holdsRepo(repo, root string) (bool, error) {
+	abs, err := filepath.Abs(repo)
+	if err != nil {
+		return false, err
+	}
+	if under(filepath.Clean(root), abs) {
+		return true, nil
+	}
+	r, err1 := filepath.EvalSymlinks(root)
+	a, err2 := filepath.EvalSymlinks(abs)
+	return err1 == nil && err2 == nil && under(r, a), nil
+}
+
+// under reports whether path lies strictly below dir.
+func under(dir, path string) bool {
+	rel, err := filepath.Rel(dir, path)
+	return err == nil && rel != "." && rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator))
+}
+
 // extractStep is the full extraction: refusals, removal of the raw and
 // derived folders, Extract, then the optional rebuild. done is true after
 // a refusal (res holds it).
@@ -207,6 +229,14 @@ func extractStep(res *SetupResult, repo, root, dataRootRel, install string, ls *
 	}
 	if same || dataRootRel == "." || dataRootRel == "" {
 		res.refuse("refusing to extract over the repo root; use --verify-only")
+		return true, nil
+	}
+	above, err := holdsRepo(repo, root)
+	if err != nil {
+		return false, err
+	}
+	if above { // a forced extraction removes fixed folder names there, the repository's among them
+		res.refuse("refusing to extract over a folder that holds the repo; use --verify-only")
 		return true, nil
 	}
 	var present []string
