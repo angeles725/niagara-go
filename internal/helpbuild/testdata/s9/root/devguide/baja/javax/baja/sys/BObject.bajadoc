@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bajadoc>
+<class qualifiedName="javax.baja.sys.BObject" name="BObject" packageName="javax.baja.sys" module="baja">
+<property name="rootSlot" flags=""><type class="javax.baja.sys.BString"/></property>
+</class>
+</bajadoc>

@@ -19,9 +19,10 @@ import (
 // javadoc-backed, then by package and path) and lists the rest under
 // "others". Both files are json.dumps(indent=2), ensure_ascii on.
 
-// IndexResult is what one S8 index builder printed.
+// IndexResult is what one S8 or S9 index builder printed.
 type IndexResult struct {
 	Log    []string // stdout lines
+	Stderr []string // stderr lines (the S9 builders' warnings)
 	Status int      // exit status (inheritance_builder: 1 when bajadoc-clean/ is missing)
 	// ParseFailures are the .bajadoc files that stayed unparseable after
 	// sanitizing (bajadoc_xml.PARSE_FAILURES, which the script never prints),

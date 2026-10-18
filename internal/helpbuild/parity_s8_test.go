@@ -30,12 +30,16 @@ const s8IndexesVar = "HELPBUILD_PARITY_INDEXES"
 // s8Modes are the driver modes, in the order rebuild-all runs the builders.
 var s8Modes = []string{"class", "inherit", "method"}
 
-// runIndexDriver runs indexdriver.py and returns its lines (the "took" line
+// runIndexDriver runs the indexdriver.py of mode's slice (s8 or s9) and returns its lines (the "took" line
 // removed) and the builder's own run time.
 func runIndexDriver(t *testing.T, mode, base string) ([]string, time.Duration) {
 	t.Helper()
 	python, tools := driver(t)
-	script, err := filepath.Abs(filepath.Join("testdata", "s8", "indexdriver.py"))
+	slice := "s8"
+	if s9Builders[mode] != nil {
+		slice = "s9"
+	}
+	script, err := filepath.Abs(filepath.Join("testdata", slice, "indexdriver.py"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -65,6 +69,9 @@ func goIndexBuild(mode, base string) (*IndexResult, error) {
 	case "method":
 		return BuildMethodIndex(base)
 	}
+	if build := s9Builders[mode]; build != nil {
+		return build(base)
+	}
 	return nil, fmt.Errorf("unknown mode %s", mode)
 }
 
@@ -77,6 +84,9 @@ func goIndexRun(mode, base string) ([]string, time.Duration) {
 	if res != nil {
 		for _, l := range res.Log {
 			out = append(out, dumpLine(str("out"), str(l)))
+		}
+		for _, l := range res.Stderr {
+			out = append(out, dumpLine(str("err"), str(l)))
 		}
 	}
 	if err != nil {
@@ -295,10 +305,18 @@ func s8Versions() ([]string, error) {
 // s8Inputs are the folders of a data root the S8 builders read.
 var s8Inputs = []string{"bajadoc", "devguide", "guides", "jdk", "bajadoc-clean"}
 
-// realS8Base makes a temporary data root whose input folders link to the
-// registered data root of vid (only read; indexes/ is written in the
+// realS8Base makes a temporary data root whose S8 input folders link to
+// the registered data root of vid (only read; indexes/ is written in the
 // temporary root).
 func realS8Base(t *testing.T, vid string) string {
+	t.Helper()
+	return realIndexBase(t, vid, s8Inputs, "bajadoc-clean")
+}
+
+// realIndexBase links the inputs of the registered data root of vid into a
+// temporary data root; a version without the folder need is a missing
+// reference.
+func realIndexBase(t *testing.T, vid string, inputs []string, need string) string {
 	t.Helper()
 	tools := niagaraHelpTools()
 	if tools == "" {
@@ -322,11 +340,11 @@ func realS8Base(t *testing.T, vid string) string {
 		t.Fatalf("version %s has no data_root in the registry", vid)
 	}
 	src := filepath.Join(help, filepath.FromSlash(entry.DataRoot))
-	if !isDir(filepath.Join(src, "bajadoc-clean")) {
-		missingReference(t, fmt.Sprintf("version %s has no bajadoc-clean/ (%s)", vid, src))
+	if !isDir(filepath.Join(src, need)) {
+		missingReference(t, fmt.Sprintf("version %s has no %s/ (%s)", vid, need, src))
 	}
 	base := t.TempDir()
-	for _, d := range s8Inputs {
+	for _, d := range inputs {
 		if isDir(filepath.Join(src, d)) {
 			if err := os.Symlink(filepath.Join(src, d), filepath.Join(base, d)); err != nil {
 				t.Fatal(err)

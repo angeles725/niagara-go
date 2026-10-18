@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bajadoc>
+<class qualifiedName="Sample" name="Sample" module="clX">
+<property name="q" flags=""><type class="int"/></property>
+</class>
+<class qualifiedName="Loose" name="Loose">
+<property name="r" flags=""><type class="int"/></property>
+</class>
+<class qualifiedName="Loose2" name="Loose" >
+<property name="s" flags=""><type class="int"/></property>
+</class>
+</bajadoc>
