@@ -3,10 +3,11 @@ package fts
 // Reading the full-text index (fulltext_index.py). The Python tool keeps one
 // contentless FTS5 database per data root, indexes/fulltext.sqlite, or a copy
 // in the user cache directory when the data root is not writable, and
-// rebuilds it whenever the text sources change. Go only reads it: a database
-// is used when its stored fingerprint equals the fingerprint Python computes
-// for the current sources; otherwise the search cannot run (exit 2) and the
-// error names the Python command that rebuilds it.
+// rebuilds it whenever the text sources change. This package only reads it: a
+// database is used when its stored fingerprint equals the fingerprint Python
+// computes for the current sources. Open refuses a missing or stale index
+// (*StaleIndexError); nh searches through internal/help/scope.OpenFulltext,
+// which rebuilds it first like open_index (decision D38).
 
 import (
 	"context"
@@ -73,7 +74,7 @@ func CachePath(baseDir string) string {
 }
 
 // StaleIndexError means no index whose fingerprint matches the current text
-// sources exists: Go never builds one (the search exits 2).
+// sources exists: Open never builds one (scope.OpenFulltext does).
 type StaleIndexError struct {
 	BaseDir   string
 	VersionID string // for the rebuild command; "" without a registry
@@ -97,26 +98,45 @@ func (e *StaleIndexError) Error() string {
 // Index is an open, up-to-date full-text database (fulltext_index.FtsIndex).
 type Index struct{ db *sql.DB }
 
+// Opener opens the up-to-date index of a data root for a search: Open, or a
+// caller's opener that rebuilds a missing or stale index first.
+type Opener func(baseDir, versionID string) (*Index, error)
+
 // Open is fulltext_index.open_index restricted to reading: the first of
 // indexes/fulltext.sqlite and the cache copy whose stored fingerprint equals
 // the current one, else a *StaleIndexError.
 func Open(baseDir, versionID string) (*Index, error) {
-	current := Fingerprint(SourceDirs(baseDir))
-	missing := true
-	for _, path := range []string{DBPath(baseDir), CachePath(baseDir)} {
-		if !isFile(path) {
+	path, missing := FreshPath(baseDir, Fingerprint(SourceDirs(baseDir)))
+	if path == "" {
+		return nil, &StaleIndexError{BaseDir: baseDir, VersionID: versionID, Missing: missing}
+	}
+	return OpenPath(path)
+}
+
+// FreshPath is open_index's lookup: the first of indexes/fulltext.sqlite and
+// the cache copy whose stored fingerprint equals fingerprint, "" when none
+// does; missing reports that neither file exists.
+func FreshPath(baseDir, fingerprint string) (path string, missing bool) {
+	missing = true
+	for _, p := range []string{DBPath(baseDir), CachePath(baseDir)} {
+		if !isFile(p) {
 			continue
 		}
 		missing = false
-		if storedFingerprint(path) == current {
-			db, err := index.OpenSQLite(path)
-			if err != nil {
-				return nil, err
-			}
-			return &Index{db}, nil
+		if storedFingerprint(p) == fingerprint {
+			return p, false
 		}
 	}
-	return nil, &StaleIndexError{BaseDir: baseDir, VersionID: versionID, Missing: missing}
+	return "", missing
+}
+
+// OpenPath opens the full-text database at path, read only.
+func OpenPath(path string) (*Index, error) {
+	db, err := index.OpenSQLite(path)
+	if err != nil {
+		return nil, err
+	}
+	return &Index{db}, nil
 }
 
 // storedFingerprint is fulltext_index._stored_fingerprint: "" when the

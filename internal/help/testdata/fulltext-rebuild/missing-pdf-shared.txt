@@ -1,0 +1,8 @@
+1 PDF manuals matching 'discovery':
+  (this version ships no PDF manuals; searching the shared manuals of Niagara 1.0)
+
+  docBacnet (3 pages, 120 KB, software)
+    source: docBacnet/docBacnet.pdf
+    L7 p.2: Chapter 1 Discovery
+    path: docs-text/docBacnet.txt
+

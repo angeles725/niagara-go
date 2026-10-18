@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -13,10 +14,9 @@ import (
 // TestS5CommandsMatchPython runs every case of testdata/s5-cli/cases.json on
 // the testdata/s5 checkout and compares it with what tools/niagara_help.py
 // printed there (testdata/s5-cli, written by
-// testdata/s5_gen.py; <ROOT> is the checkout). A null stderr is a case where
-// Python built its full-text index first: Go never builds it, so method
-// orders without doc prominence and says so on stderr (intended difference;
-// with no indexed text both orders are the same).
+// testdata/s5_gen.py; <ROOT> is the checkout). Like the generator, every
+// case runs on a fresh copy of the checkout: method builds the full-text
+// index there first, as Python does (decision D38).
 func TestS5CommandsMatchPython(t *testing.T) {
 	raw, err := os.ReadFile("testdata/s5-cli/cases.json")
 	if err != nil {
@@ -26,12 +26,12 @@ func TestS5CommandsMatchPython(t *testing.T) {
 		Name   string   `json:"name"`
 		Args   []string `json:"args"`
 		Exit   int      `json:"exit"`
-		Stderr *string  `json:"stderr"`
+		Stderr string   `json:"stderr"`
 	}
 	if err := json.Unmarshal(raw, &cases); err != nil {
 		t.Fatal(err)
 	}
-	root, err := filepath.Abs(filepath.Join("testdata", "s5"))
+	src, err := filepath.Abs(filepath.Join("testdata", "s5"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -42,6 +42,7 @@ func TestS5CommandsMatchPython(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
+			root := copyTree(t, src)
 			var out, errs string
 			var code int
 			if strings.HasPrefix(c.Name, "fuzzy-") {
@@ -55,16 +56,44 @@ func TestS5CommandsMatchPython(t *testing.T) {
 			if code != c.Exit || out != wantOut {
 				t.Errorf("exit %d (want %d) stdout:\n%s\nwant:\n%s", code, c.Exit, out, wantOut)
 			}
-			switch {
-			case c.Stderr == nil:
-				if !strings.HasSuffix(errs, "; results are not ordered by doc prominence\n") {
-					t.Errorf("stderr %q, want the full-text unavailable note", errs)
-				}
-			case errs != strings.ReplaceAll(*c.Stderr, "<ROOT>", root):
-				t.Errorf("stderr %q, want %q", errs, *c.Stderr)
+			if wantErr := strings.ReplaceAll(c.Stderr, "<ROOT>", root); errs != wantErr {
+				t.Errorf("stderr %q, want %q", errs, wantErr)
 			}
 		})
 	}
+}
+
+// copyTree copies the directory src to a temporary folder like shutil.copytree
+// (file modes and modification times kept, as the freshness cases need) and
+// returns the copy's path.
+func copyTree(t *testing.T, src string) string {
+	t.Helper()
+	dst := filepath.Join(t.TempDir(), "checkout")
+	err := filepath.WalkDir(src, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		target := filepath.Join(dst, strings.TrimPrefix(path, src))
+		info, err := d.Info()
+		if err != nil {
+			return err
+		}
+		if d.IsDir() {
+			return os.MkdirAll(target, 0o755)
+		}
+		data, err := os.ReadFile(path)
+		if err != nil {
+			return err
+		}
+		if err := os.WriteFile(target, data, info.Mode().Perm()); err != nil {
+			return err
+		}
+		return os.Chtimes(target, info.ModTime(), info.ModTime())
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	return dst
 }
 
 // runFuzzy runs the fuzzy search the recall oracle samples (the `fuzzy`

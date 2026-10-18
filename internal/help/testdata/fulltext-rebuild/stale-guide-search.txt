@@ -1,0 +1,10 @@
+2 guides files matching 'wiretap' (all terms):
+
+  [Bacnet] Setting up a wiretap
+    L3: Wiretaps evaluate (sniff) messages after they have been processed by a network port, and you add each wiretap as a child of the NetworkPorts container in the sa...
+    path: guides-clean/Bacnet/wiretap.txt
+
+  [guides-clean] index
+    L1: Guides overview: alarm, discovery and wiretap pages.
+    path: guides-clean/index.txt
+

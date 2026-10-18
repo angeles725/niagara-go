@@ -203,9 +203,16 @@ func enough(hits []*Hit, srcs []string) bool {
 // source) for query. mode "and" tries strict AND, then relaxed AND when that
 // found nothing, and keeps the AND result when it has MIN_AND_HITS
 // documentation files (or the query is one word); otherwise, and in mode
-// "or", it is the ranked OR fallback. The index is opened only when some
-// requested source exists.
+// "or", it is the ranked OR fallback. The index is opened (Open) only when
+// the query has a word and some requested source exists.
 func Search(baseDir, versionID, query string, srcs []string, mode string) (*Result, error) {
+	return SearchUsing(Open, baseDir, versionID, query, srcs, mode)
+}
+
+// SearchUsing is Search with the index opened by open, at the point where
+// fulltext.search calls open_index (so a rebuilding opener builds nothing
+// for a query without words or without an available source).
+func SearchUsing(open Opener, baseDir, versionID, query string, srcs []string, mode string) (*Result, error) {
 	strict := ParseQuery(query, false)
 	if len(strict) == 0 {
 		return nil, &UsageError{"query '" + query + "' has no searchable word"}
@@ -227,7 +234,7 @@ func Search(baseDir, versionID, query string, srcs []string, mode string) (*Resu
 		return &Result{Groups: strict, ModeUsed: mode}, nil
 	}
 	relaxed := ParseQuery(query, true)
-	x, err := Open(baseDir, versionID)
+	x, err := open(baseDir, versionID)
 	if err != nil {
 		return nil, err
 	}

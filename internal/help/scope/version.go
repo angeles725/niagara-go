@@ -42,6 +42,6 @@ func VersionLines(err error) []string {
 }
 
 // ErrorLine is the "ERROR: <err>" line nh prints on stderr, then exits 2, for
-// a lookup that cannot search (a missing required index, a missing or stale
-// full-text index, a query without a searchable word).
+// a lookup that cannot search (a missing required index, a full-text index
+// that cannot be built, a query without a searchable word).
 func ErrorLine(err error) string { return "ERROR: " + err.Error() }

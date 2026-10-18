@@ -61,6 +61,18 @@ install the databases with `<ROOT>` replaced by that folder; the fingerprint tes
 that Go computes exactly the fingerprint Python stored. Regenerate everything after changing
 `fulltext/`.
 
+## Full-text rebuild
+
+`rebuild_gen.py` (`python3 -I internal/help/testdata/rebuild_gen.py`) freezes what Python does
+when the full-text index must be rebuilt (`fulltext_index.open_index`): each case runs the
+Python niagara-help on a fresh copy of `fulltext/` with no index (`missing`), an index whose
+stored fingerprint was changed (`stale`), a read-only `indexes/` (`ro-indexes`: Python builds in
+the cache directory) or a read-only `indexes/` and cache directory (`ro-everywhere`: Python keeps
+the index in memory). `fulltext-rebuild/<case>.txt` is its stdout and `fulltext-rebuild/cases.json`
+its arguments, exit status, stderr (`<ROOT>`, `<CACHE>` for `XDG_CACHE_HOME`, `<CACHEDIR>` and
+`<CACHEDB>` for the data root's cache folder and database) and where an up-to-date index exists
+afterwards (`indexes`, `cache` or `none`).
+
 ## s5 fixture
 
 `s5/` is a checkout for the commands ported after S6 (source, method, freshness, class --jdk,
