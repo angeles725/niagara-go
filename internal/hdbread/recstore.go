@@ -45,6 +45,9 @@ const (
 	recstoreHeaderSize = 256        // RecordStoreHeader.java:10
 	pageHeaderSize     = 12         // Page.java:10
 	blockHeaderSize    = 8          // Block.java:4
+	// storeFieldsSize is the 7 header ints readStoreHeader reads, magic through recordCount
+	// (RecordStoreHeader.java:98-114); the rest of the 256-byte header is padding.
+	storeFieldsSize = 7 * 4
 )
 
 // storeHeader is the record-store header and the page geometry derived from it.
@@ -66,7 +69,7 @@ func be32(b []byte, i int) int { return int(int32(binary.BigEndian.Uint32(b[i:])
 // readStoreHeader checks the header and the geometry; the pages must fit in the section.
 func readStoreHeader(sect []byte) (storeHeader, error) {
 	var h storeHeader
-	if len(sect) < 28 {
+	if len(sect) < storeFieldsSize {
 		return h, formatErr("data section of %d bytes has no record-store header", len(sect))
 	}
 	if m := binary.BigEndian.Uint32(sect); m != recstoreMagic {

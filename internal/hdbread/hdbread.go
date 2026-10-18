@@ -160,22 +160,21 @@ func report(o Options, f *file, s cli.Stdio) int {
 	return cli.ExitFound
 }
 
+// runRecords is --records: the library's decode picks the decoder, the CLI only prints.
 func runRecords(o Options, data []byte, s cli.Stdio) int {
-	if f, err := parse(data); err == nil {
-		if _, ok := varDecoders[firstGroup(recordTypeRE, f.xml, "?")]; ok {
-			return runVarRecords(o, data, s)
-		}
-	}
-	t, err := decodeTrend(data)
+	d, err := decode(data)
 	if err != nil {
 		var exit exitError
 		if errors.As(err, &exit) {
 			fmt.Fprintln(s.Err, err)
-		} else {
-			honest.Fail(s.Err, "hdbread", "--records: "+err.Error(), cli.ExitNoMatch)
+			return cli.ExitNoMatch
 		}
-		return cli.ExitNoMatch
+		return honest.Fail(s.Err, "hdbread", "--records: "+err.Error(), cli.ExitNoMatch)
 	}
+	if d.store != nil {
+		return printVarRecords(o, d.store, s)
+	}
+	t := d.trend
 	if o.JSON {
 		printJSON(s.Out, t.records)
 	} else {

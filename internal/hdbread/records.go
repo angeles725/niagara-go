@@ -84,40 +84,66 @@ func ReadRecords(path string) (*History, error) {
 // DecodeRecords decodes the bytes of a .hdb file: fixed-length trend records or record-store
 // LogRecord/AuditRecord records. Any other record type is a FormatError.
 func DecodeRecords(data []byte) (*History, error) {
+	d, err := decode(data)
+	if err != nil || d.store != nil {
+		return d.store, err
+	}
+	return trendHistory(d.trend, d.id), nil
+}
+
+// decoded is a .hdb file decoded by the one decoder its record type takes: exactly one of store
+// and trend is set. The CLI prints a trend table with the frozen Python formatting.
+type decoded struct {
+	id    string
+	store *History    // a record-store (LogRecord or AuditRecord) history
+	trend *trendTable // any other record type: fixed-length trend records
+}
+
+// decode is the single choice between the record-store and the trend decoder, by record type.
+func decode(data []byte) (decoded, error) {
 	f, err := parse(data)
 	if err != nil {
-		return nil, err
+		return decoded{}, err
 	}
 	id, rt, _ := schemaOf(f.xml)
-	decode, ok := varDecoders[rt]
+	read, ok := varDecoders[rt]
 	if !ok { // a trend history, or the refusal of a type nothing here decodes
-		return trendHistory(data, id)
+		t, err := decodeTrend(data)
+		return decoded{id: id, trend: t}, err
 	}
 	out := &History{ID: id, RecordType: rt, Version: f.version}
 	h, err := walkStore(f.section, func(h storeHeader, s storedRecord) error {
-		rec, err := decodeStored(s, h.blockSize-blockHeaderSize, decode)
+		rec, err := decodeStored(s, h.blockSize-blockHeaderSize, read)
 		out.Records = append(out.Records, rec)
 		return err
 	})
 	if err != nil {
-		return nil, err
+		return decoded{}, err
 	}
 	out.Declared = h.recordCount
-	return out, nil
+	return decoded{id: id, store: out}, nil
 }
 
-func trendHistory(data []byte, id string) (*History, error) {
-	t, err := decodeTrend(data)
-	if err != nil {
-		return nil, err
-	}
+func trendHistory(t *trendTable, id string) *History {
 	out := &History{ID: id, RecordType: t.recordType, Version: t.version, Declared: t.expected}
 	for _, r := range t.records {
-		v := map[byte]any{'f': r.value.f, 'b': r.value.b, 'i': r.value.i}[r.value.kind]
 		out.Records = append(out.Records, Record{Timestamp: r.timestamp, Millis: r.millis,
-			Trend: &TrendRecord{Status: r.status, TrendFlags: r.trendFlags, Value: v}})
+			Trend: &TrendRecord{Status: r.status, TrendFlags: r.trendFlags, Value: r.value.goValue()}})
 	}
-	return out, nil
+	return out
+}
+
+// goValue is the Go value of a trend value: float64, bool or int64 by its kind.
+func (v value) goValue() any {
+	switch v.kind {
+	case 'f':
+		return v.f
+	case 'b':
+		return v.b
+	case 'i':
+		return v.i
+	}
+	return nil
 }
 
 // decodedTypes lists every record type DecodeRecords decodes, sorted.

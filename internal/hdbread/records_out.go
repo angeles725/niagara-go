@@ -2,7 +2,6 @@ package hdbread
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"strconv"
@@ -128,17 +127,8 @@ func varSummary(h *History) string {
 	return line
 }
 
-// runVarRecords is --records for a LogRecord or AuditRecord history.
-func runVarRecords(o Options, data []byte, s cli.Stdio) int {
-	h, err := DecodeRecords(data)
-	if err != nil {
-		var exit exitError
-		if errors.As(err, &exit) {
-			fmt.Fprintln(s.Err, err)
-			return cli.ExitNoMatch
-		}
-		return honest.Fail(s.Err, "hdbread", "--records: "+err.Error(), cli.ExitNoMatch)
-	}
+// printVarRecords is --records for a decoded LogRecord or AuditRecord history.
+func printVarRecords(o Options, h *History, s cli.Stdio) int {
 	if o.Mask {
 		for i, r := range h.Records {
 			h.Records[i] = maskRecord(r)
