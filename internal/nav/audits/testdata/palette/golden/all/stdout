@@ -1,0 +1,17 @@
+
+  module                    palette  lexKeys  dupKeys  agents
+  ------------------------------------------------------------
+  jar                             1        6        2       0
+  mixed                           0        4        1       0
+  multi                           1       15        6       1
+
+  Modules with DUPLICATE bare lexicon keys (B759 hazard): 3 / 3
+    jar  jar-rt:a  x2
+    jar  jar-rt:other/x.lexicon:x  x3
+    mixed  mixed-ux:u  x2
+    multi  multi-rt:Zed.lexicon:z  x2
+    multi  multi-rt:b.lexicon:k  x3
+    multi  multi-rt:café.lexicon:é  x2
+    multi  multi-rt:k  x2
+    multi  multi-rt:sub/dir/c.lexicon:c  x2
+    multi  multi-rt:sub/multi-rt.lexicon:k  x2

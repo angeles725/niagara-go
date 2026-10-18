@@ -1,0 +1,234 @@
+{
+  "module": "pal",
+  "artifacts": [
+    {
+      "artifact": "pal-rt",
+      "palette_count": 3,
+      "palette_entries": [
+        {
+          "t": "b:Folder",
+          "m": "b=baja"
+        },
+        {
+          "n": "Net",
+          "t": "x:Net",
+          "m": "x=pal"
+        },
+        {
+          "n": "Caf\u00e9 '&'"
+        }
+      ],
+      "lexicon_keys": 5,
+      "duplicate_bare_keys": {
+        "key": 3,
+        "other": 2
+      },
+      "agents": [
+        {
+          "type_name": "Net",
+          "type_class": "com.x.BNet",
+          "on_types": [
+            "x:A",
+            "x:B"
+          ]
+        },
+        {
+          "type_name": "Net",
+          "type_class": "com.x.BNet",
+          "on_types": []
+        },
+        {
+          "type_name": "View",
+          "type_class": "com.x.BView",
+          "on_types": [
+            ""
+          ]
+        }
+      ]
+    },
+    {
+      "artifact": "pal-ux",
+      "palette_count": 0,
+      "palette_entries": [],
+      "lexicon_keys": 0,
+      "duplicate_bare_keys": {},
+      "agents": []
+    },
+    {
+      "artifact": "pal-wb",
+      "palette_count": 55,
+      "palette_entries": [
+        {
+          "n": "e0"
+        },
+        {
+          "n": "e1"
+        },
+        {
+          "n": "e2"
+        },
+        {
+          "n": "e3"
+        },
+        {
+          "n": "e4"
+        },
+        {
+          "n": "e5"
+        },
+        {
+          "n": "e6"
+        },
+        {
+          "n": "e7"
+        },
+        {
+          "n": "e8"
+        },
+        {
+          "n": "e9"
+        },
+        {
+          "n": "e10"
+        },
+        {
+          "n": "e11"
+        },
+        {
+          "n": "e12"
+        },
+        {
+          "n": "e13"
+        },
+        {
+          "n": "e14"
+        },
+        {
+          "n": "e15"
+        },
+        {
+          "n": "e16"
+        },
+        {
+          "n": "e17"
+        },
+        {
+          "n": "e18"
+        },
+        {
+          "n": "e19"
+        },
+        {
+          "n": "e20"
+        },
+        {
+          "n": "e21"
+        },
+        {
+          "n": "e22"
+        },
+        {
+          "n": "e23"
+        },
+        {
+          "n": "e24"
+        },
+        {
+          "n": "e25"
+        },
+        {
+          "n": "e26"
+        },
+        {
+          "n": "e27"
+        },
+        {
+          "n": "e28"
+        },
+        {
+          "n": "e29"
+        },
+        {
+          "n": "e30"
+        },
+        {
+          "n": "e31"
+        },
+        {
+          "n": "e32"
+        },
+        {
+          "n": "e33"
+        },
+        {
+          "n": "e34"
+        },
+        {
+          "n": "e35"
+        },
+        {
+          "n": "e36"
+        },
+        {
+          "n": "e37"
+        },
+        {
+          "n": "e38"
+        },
+        {
+          "n": "e39"
+        },
+        {
+          "n": "e40"
+        },
+        {
+          "n": "e41"
+        },
+        {
+          "n": "e42"
+        },
+        {
+          "n": "e43"
+        },
+        {
+          "n": "e44"
+        },
+        {
+          "n": "e45"
+        },
+        {
+          "n": "e46"
+        },
+        {
+          "n": "e47"
+        },
+        {
+          "n": "e48"
+        },
+        {
+          "n": "e49"
+        },
+        {
+          "n": "e50"
+        },
+        {
+          "n": "e51"
+        },
+        {
+          "n": "e52"
+        },
+        {
+          "n": "e53"
+        },
+        {
+          "n": "e54"
+        }
+      ],
+      "lexicon_keys": 2,
+      "duplicate_bare_keys": {
+        "a": 2
+      },
+      "agents": []
+    }
+  ]
+}

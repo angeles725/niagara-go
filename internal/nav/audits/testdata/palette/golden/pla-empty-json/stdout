@@ -1,0 +1,4 @@
+{
+  "module": "empty",
+  "error": "No artifacts for module 'empty'; searched ../../../testdata/fixture/pla (2 module dirs)"
+}

@@ -33,7 +33,6 @@ LIC = {"NAV_CORPUS_BASE": "fixture/lic-organized"}
 LIC_BASE = "fixture/lic"
 CG_BASE = "fixture/cg"
 STATS_BASE = "fixture/stats/base"
-PLA_BASE = "fixture/pla"
 RECALL = {"NAV_CORPUS_BASE": "fixture/recall/organized"}
 RECALL_CLEAN = {"NAV_CORPUS_BASE": "fixture/recall/clean"}
 RECALL_BASE = "fixture/recall/base"
@@ -220,12 +219,6 @@ CASES = [
     ("stats-json", ["stats", "--json"], NO_CORPUS, STATS_BASE),
     ("stats-sparse", ["stats"], NO_CORPUS, "fixture/stats-sparse/base"),
     ("stats-sparse-json", ["stats", "--json"], NO_CORPUS, "fixture/stats-sparse/base"),
-    ("palette-lexicon-agents", ["palette-lexicon-agents", "pal"], NO_CORPUS, PLA_BASE),
-    ("palette-lexicon-agents-json", ["palette-lexicon-agents", "pal", "--json"], NO_CORPUS, PLA_BASE),
-    ("palette-lexicon-agents-empty", ["palette-lexicon-agents", "empty"], NO_CORPUS, PLA_BASE),
-    ("palette-lexicon-agents-empty-json", ["palette-lexicon-agents", "empty", "--json"], NO_CORPUS, PLA_BASE),
-    ("palette-lexicon-agents-missing", ["palette-lexicon-agents", "nope"], NO_CORPUS, PLA_BASE),
-    ("palette-lexicon-agents-missing-json", ["palette-lexicon-agents", "nope", "--json"], NO_CORPUS, PLA_BASE),
     ("selftest", ["selftest", "--recall"], RECALL, RECALL_BASE),
     ("selftest-sample", ["selftest", "--recall", "--sample", "3"], RECALL, RECALL_BASE),
     ("selftest-sample-all", ["selftest", "--recall", "--sample", "50"], RECALL, RECALL_BASE),
@@ -707,9 +700,10 @@ def build_stats():
         f.write('{"_meta": {"top_level_classes": 1}, "classes": ')
 
 
-# palette-lexicon-agents: module pal with an extracted artifact (nested and
-# attribute-less <p>, a lexicon with duplicate keys, agents with and without
-# <on>), a JAR-only artifact (palette and lexicon read from the JAR, a
+# palette-lexicon-agents (read by gen_palette_lexicon.py's pla-* cases, which
+# come from niagara-research tools/palette-lexicon-agents.py, D39 e): module pal
+# with an extracted artifact (nested and attribute-less <p>, a lexicon with
+# duplicate keys, agents with and without <on>), a JAR-only artifact (palette and lexicon read from the JAR, a
 # malformed module.xml ignored), an artifact whose palette is not well formed
 # (a late XML declaration), 55 palette entries (the "... and N more" line) and
 # a directory that is not an artifact; module empty has no artifact.

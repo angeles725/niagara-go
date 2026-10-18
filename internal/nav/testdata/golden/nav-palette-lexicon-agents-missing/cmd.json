@@ -1,1 +1,0 @@
-{"args": ["--base-dir", "fixture/pla", "palette-lexicon-agents", "nope"], "env": {"NAV_CORPUS_BASE": "fixture/no-corpus"}}

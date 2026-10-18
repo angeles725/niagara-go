@@ -16,11 +16,14 @@ import (
 	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
-// palette-lexicon-agents (palette_lexicon_agents.py): for every artifact of
-// <base-dir>/<module>, the <p> entries of module.palette, the keys of
-// <artifact>.lexicon with its duplicate bare keys (B759 hazard), and the
-// <agent> registrations of extracted/META-INF/module.xml. Files come from
-// extracted/, module.palette and the lexicon also from the artifact JAR.
+// palette-lexicon-agents (niagara-research tools/palette-lexicon-agents.py,
+// decision D39 e): for every artifact of <base-dir>/<module>, the <p> entries
+// of module.palette, the keys of every **/*.lexicon with their duplicate bare
+// keys (B759 hazard), and the <agent> registrations of
+// extracted/META-INF/module.xml. Files come from extracted/; module.palette and
+// the lexicons also from the artifact JAR. --all is the census of every module
+// under <base-dir>. Without the global --base-dir the base is the organized/
+// corpus (the script's default), not the module-navigator checkout.
 
 // paletteEntry is one <p> element: its n, t and m attributes when present.
 type paletteEntry struct{ keys, values []string }
@@ -36,8 +39,7 @@ type artifactData struct {
 	artifact    string
 	palette     []paletteEntry
 	lexiconKeys int
-	dupKeys     []string // duplicate bare keys in first-occurrence order
-	dupCounts   map[string]int
+	dups        *index.Object // duplicate bare key ("<file>:" unless <artifact>.lexicon) -> count
 	agents      []agent
 }
 
@@ -161,16 +163,20 @@ func parseAgents(text string) []agent {
 	return out
 }
 
-// collectArtifact is _collect_artifact_data.
+// collectArtifact is collect_artifact_data.
 func collectArtifact(dir, artifact string) artifactData {
-	d := artifactData{artifact: artifact, dupCounts: map[string]int{}}
+	d := artifactData{artifact: artifact, dups: index.NewObject()}
 	if text, ok := readArtifactFile(dir, artifact, "module.palette"); ok {
 		d.palette = parsePalette(text)
 	}
-	if text, ok := readArtifactFile(dir, artifact, artifact+".lexicon"); ok {
-		keys := lexiconKeys(text)
-		d.lexiconKeys = len(keys)
-		counts := map[string]int{}
+	for _, lex := range artifactLexicons(filepath.Join(dir, "extracted"), filepath.Join(dir, artifact+".jar")) {
+		prefix := lex.rel + ":"
+		if lex.rel == artifact+".lexicon" {
+			prefix = ""
+		}
+		keys := lexiconKeys(lex.text)
+		d.lexiconKeys += len(keys)
+		counts := map[string]int64{}
 		var order []string
 		for _, k := range keys {
 			if counts[k] == 0 {
@@ -180,8 +186,7 @@ func collectArtifact(dir, artifact string) artifactData {
 		}
 		for _, k := range order {
 			if counts[k] > 1 {
-				d.dupKeys = append(d.dupKeys, k)
-				d.dupCounts[k] = counts[k]
+				d.dups.Set(prefix+k, counts[k])
 			}
 		}
 	}
@@ -220,37 +225,48 @@ func isDir(p string) bool {
 	return err == nil && st.IsDir()
 }
 
+// collectModule is collect_module: the data of every artifact of
+// <base>/<module>, none when it is not a directory.
+func collectModule(base, module string) []artifactData {
+	moduleDir := pycompat.PosixJoin(base, module)
+	var all []artifactData
+	for _, a := range findArtifacts(moduleDir) {
+		all = append(all, collectArtifact(pycompat.PosixJoin(moduleDir, a), a))
+	}
+	return all
+}
+
 func runPaletteLexiconAgents(env *registry.Env, ns *argparse.Namespace) int {
 	module, asJSON := ns.String("module"), ns.Bool("pla_json")
 	w := env.Out
-	moduleDir := pycompat.PosixJoin(env.BaseDir, module)
-	if !isDir(moduleDir) {
-		msg := "Module directory not found: " + moduleDir
-		if asJSON {
-			o := index.NewObject()
-			o.Set("error", msg)
-			fmt.Fprintln(w, core.Dumps(o, 2))
-		} else {
-			fmt.Fprintln(w, "  ERROR: "+msg)
-		}
-		return env.ExitCode()
+	base := env.BaseDir
+	if ns.String("base_dir") == "" {
+		// The script's default is the corpus, not the checkout (D39 e). TODO: env.OrganizedDir() after i2/nav-runat.
+		base = core.OrganizedDir()
 	}
-	artifacts := findArtifacts(moduleDir)
-	if len(artifacts) == 0 {
-		msg := "No artifacts found in: " + moduleDir
+	if !isDir(base) {
+		fmt.Fprintf(env.Err, "ERROR: base-dir not found: %s\n", base)
+		return core.StatusError
+	}
+	if ns.Bool("pla_all") {
+		return paletteCensus(env, base, asJSON)
+	}
+	if module == "" {
+		return ns.Get("pla_parser").(*argparse.Parser).Error(env.Err, "give a module name or --all")
+	}
+	all := collectModule(base, module)
+	if len(all) == 0 {
+		msg := fmt.Sprintf("No artifacts for module '%s'; searched %s (%d module dirs)",
+			module, base, countDirs(base))
 		if asJSON {
 			o := index.NewObject()
 			o.Set("module", module)
 			o.Set("error", msg)
 			fmt.Fprintln(w, core.Dumps(o, 2))
 		} else {
-			fmt.Fprintln(w, "  WARNING: "+msg)
+			fmt.Fprintln(env.Err, "  ERROR: "+msg)
 		}
-		return env.ExitCode()
-	}
-	var all []artifactData
-	for _, a := range artifacts {
-		all = append(all, collectArtifact(pycompat.PosixJoin(moduleDir, a), a))
+		return core.StatusMiss
 	}
 	if asJSON {
 		fmt.Fprintln(w, core.Dumps(paletteJSON(module, all), 2))
@@ -272,10 +288,6 @@ func paletteJSON(module string, all []artifactData) *index.Object {
 			}
 			entries[j] = o
 		}
-		dups := index.NewObject()
-		for _, k := range d.dupKeys {
-			dups.Set(k, int64(d.dupCounts[k]))
-		}
 		agents := make([]any, len(d.agents))
 		for j, a := range d.agents {
 			o := index.NewObject()
@@ -289,9 +301,8 @@ func paletteJSON(module string, all []artifactData) *index.Object {
 		o.Set("palette_count", int64(len(d.palette)))
 		o.Set("palette_entries", entries)
 		o.Set("lexicon_keys", int64(d.lexiconKeys))
-		o.Set("duplicate_bare_keys", dups)
+		o.Set("duplicate_bare_keys", d.dups)
 		o.Set("agents", agents)
-		o.Set("errors", []any{})
 		list[i] = o
 	}
 	out := index.NewObject()
@@ -300,7 +311,7 @@ func paletteJSON(module string, all []artifactData) *index.Object {
 	return out
 }
 
-// printPaletteReport is _print_report.
+// printPaletteReport is _module_report.
 func printPaletteReport(w io.Writer, module string, all []artifactData) {
 	sep := strings.Repeat("=", 65)
 	fmt.Fprintf(w, "\n  %s\n  PALETTE / LEXICON / AGENTS: %s\n  %s\n", sep, module, sep)
@@ -309,14 +320,14 @@ func printPaletteReport(w io.Writer, module string, all []artifactData) {
 		palette += len(d.palette)
 		lexicon += d.lexiconKeys
 		agents += len(d.agents)
-		dups += len(d.dupKeys)
+		dups += d.dups.Len()
 	}
 	fmt.Fprintln(w)
-	fmt.Fprintf(w, "  Artifacts scanned:  %d\n", len(all))
-	fmt.Fprintf(w, "  Palette entries:    %d\n", palette)
-	fmt.Fprintf(w, "  Lexicon keys:       %d\n", lexicon)
-	fmt.Fprintf(w, "  Duplicate bare keys:%d\n", dups)
-	fmt.Fprintf(w, "  Agent registrations:%d\n", agents)
+	fmt.Fprintf(w, "  Artifacts scanned:   %d\n", len(all))
+	fmt.Fprintf(w, "  Palette entries:     %d\n", palette)
+	fmt.Fprintf(w, "  Lexicon keys:        %d\n", lexicon)
+	fmt.Fprintf(w, "  Duplicate bare keys: %d\n", dups)
+	fmt.Fprintf(w, "  Agent registrations: %d\n", agents)
 	fmt.Fprintln(w)
 	for _, d := range all {
 		fmt.Fprintf(w, "  %s\n  Artifact: %s\n\n", strings.Repeat("-", 60), d.artifact)
@@ -333,12 +344,10 @@ func printPaletteReport(w io.Writer, module string, all []artifactData) {
 		}
 		fmt.Fprintln(w)
 		fmt.Fprintf(w, "  [LEXICON]  %d keys total\n", d.lexiconKeys)
-		if len(d.dupKeys) > 0 {
+		if d.dups.Len() > 0 {
 			fmt.Fprintln(w, "  *** DUPLICATE BARE KEYS DETECTED (B759 hazard) ***")
-			keys := append([]string(nil), d.dupKeys...)
-			sort.Strings(keys)
-			for _, k := range keys {
-				fmt.Fprintf(w, "    DUP key=%s  occurrences=%d\n", pycompat.StrRepr(k), d.dupCounts[k])
+			for _, k := range sortedKeys(d.dups) {
+				fmt.Fprintf(w, "    DUP key=%s  occurrences=%d\n", pycompat.StrRepr(k), dupCount(d.dups, k))
 			}
 		} else {
 			fmt.Fprintln(w, "    No duplicate bare keys.")

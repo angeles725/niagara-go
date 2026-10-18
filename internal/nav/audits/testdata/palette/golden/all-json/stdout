@@ -1,0 +1,38 @@
+{
+  "base_dir": "tree",
+  "modules": [
+    {
+      "module": "jar",
+      "palette": 1,
+      "lexicon_keys": 6,
+      "dup_keys": {
+        "jar-rt:a": 2,
+        "jar-rt:other/x.lexicon:x": 3
+      },
+      "agents": 0
+    },
+    {
+      "module": "mixed",
+      "palette": 0,
+      "lexicon_keys": 4,
+      "dup_keys": {
+        "mixed-ux:u": 2
+      },
+      "agents": 0
+    },
+    {
+      "module": "multi",
+      "palette": 1,
+      "lexicon_keys": 15,
+      "dup_keys": {
+        "multi-rt:Zed.lexicon:z": 2,
+        "multi-rt:b.lexicon:k": 3,
+        "multi-rt:caf\u00e9.lexicon:\u00e9": 2,
+        "multi-rt:k": 2,
+        "multi-rt:sub/dir/c.lexicon:c": 2,
+        "multi-rt:sub/multi-rt.lexicon:k": 2
+      },
+      "agents": 1
+    }
+  ]
+}

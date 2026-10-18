@@ -1,0 +1,9 @@
+
+  module                    palette  lexKeys  dupKeys  agents
+  ------------------------------------------------------------
+  pal                            58        7        3       3
+
+  Modules with DUPLICATE bare lexicon keys (B759 hazard): 1 / 1
+    pal  pal-rt:key  x3
+    pal  pal-rt:other  x2
+    pal  pal-wb:a  x2

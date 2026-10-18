@@ -13,8 +13,12 @@ func init() {
 	})
 }
 
-// argsPaletteLexiconAgents declares `palette-lexicon-agents`.
+// argsPaletteLexiconAgents declares `palette-lexicon-agents`. The parser rides
+// in the namespace so the command can report "give a module name or --all"
+// as the script's p.error does.
 func argsPaletteLexiconAgents(p *argparse.Parser) {
-	p.Add(argparse.Arg{Help: "Module name in organized/ (e.g. alarm)"}, "module")
+	p.Add(argparse.Arg{Nargs: argparse.Optional, Help: "Module name in organized/ (e.g. alarm)"}, "module")
+	p.Add(argparse.Arg{Action: argparse.StoreTrue, Help: "Census of every module under the base directory (summary table)", Dest: "pla_all"}, "--all")
 	p.Add(argparse.Arg{Action: argparse.StoreTrue, Help: "Structured JSON output", Dest: "pla_json"}, "--json")
+	p.SetDefaults("pla_parser", p)
 }

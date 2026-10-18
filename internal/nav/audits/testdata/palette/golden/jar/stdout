@@ -1,0 +1,25 @@
+
+  =================================================================
+  PALETTE / LEXICON / AGENTS: jar
+  =================================================================
+
+  Artifacts scanned:   1
+  Palette entries:     1
+  Lexicon keys:        6
+  Duplicate bare keys: 2
+  Agent registrations: 0
+
+  ------------------------------------------------------------
+  Artifact: jar-rt
+
+  [PALETTE]  1 entries
+    <p n=J>
+
+  [LEXICON]  6 keys total
+  *** DUPLICATE BARE KEYS DETECTED (B759 hazard) ***
+    DUP key='a'  occurrences=2
+    DUP key='other/x.lexicon:x'  occurrences=3
+
+  [AGENTS]   0 registration(s)
+    (none)
+
