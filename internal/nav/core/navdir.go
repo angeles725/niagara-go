@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+
+	"github.com/angeles725/niagara-go/internal/locate"
 )
 
 // NavMarker is the file that identifies a module-navigator checkout: its module
@@ -23,12 +25,8 @@ var NavDirVars = []string{"MODULE_NAVIGATOR_DIR", "NAV_DIR"}
 // naming the variable, "VAR=value: ...", and "" - never a fallback to the
 // search); with none set, the search of FindNavDir.
 func LocateNavDir() (string, error) {
-	for _, name := range NavDirVars {
-		v := os.Getenv(name)
-		if v == "" {
-			continue
-		}
-		if st, err := os.Stat(filepath.Join(v, "indexes")); err != nil || !st.IsDir() {
+	if name, v := locate.FirstEnv(os.Getenv, NavDirVars...); v != "" {
+		if !locate.HasDir("indexes")(v) {
 			return "", fmt.Errorf("%s=%s: not a module-navigator checkout (no indexes/ directory)", name, v)
 		}
 		return absPath(v), nil
@@ -48,27 +46,12 @@ func FindNavDir() string {
 // when none does. Python derives the checkout from the script's own path
 // (NAV_DIR); a Go binary has no such path, so it is searched from where it runs.
 func searchNavDir() string {
-	var starts []string
-	if wd, err := os.Getwd(); err == nil {
-		starts = append(starts, wd)
-	}
-	if exe, err := Executable(); err == nil {
-		if real, err := filepath.EvalSymlinks(exe); err == nil {
-			exe = real
-		}
-		starts = append(starts, filepath.Dir(exe))
-	}
-	for _, start := range starts {
-		for dir := filepath.Clean(start); ; dir = filepath.Dir(dir) {
-			if st, err := os.Stat(filepath.Join(dir, NavMarker)); err == nil && st.Mode().IsRegular() {
-				return dir
-			}
-			if filepath.Dir(dir) == dir {
-				break
-			}
-		}
-	}
-	return ""
+	dir, _ := locate.Find(locate.Options{
+		Starts:     []locate.Start{locate.FromCwd, locate.FromExecutable},
+		Marker:     locate.HasFile(NavMarker),
+		Executable: Executable,
+	})
+	return dir
 }
 
 // OrganizedDir is corpus.organized_dir(): $NAV_CORPUS_BASE when set (the only path

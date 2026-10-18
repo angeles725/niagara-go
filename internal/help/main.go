@@ -10,13 +10,13 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/argparse"
 	"github.com/angeles725/niagara-go/internal/cli"
 	"github.com/angeles725/niagara-go/internal/help/scope"
 	"github.com/angeles725/niagara-go/internal/index"
+	"github.com/angeles725/niagara-go/internal/locate"
 )
 
 // EnvDir names the variable that points at the niagara-help checkout.
@@ -74,35 +74,13 @@ func Main(args []string, s cli.Stdio) int {
 // from the working directory. (Python only knows the parent of tools/; a Go
 // binary has no tools/ folder, so this is an intended difference.)
 func repoRoot() string {
-	if d := os.Getenv(EnvDir); d != "" {
-		return d
-	}
-	if exe, err := executable(); err == nil && exe != "" {
-		if real, err := filepath.EvalSymlinks(exe); err == nil {
-			exe = real
-		}
-		if r := findUp(filepath.Dir(exe)); r != "" {
-			return r
-		}
-	}
-	if wd, err := os.Getwd(); err == nil {
-		return findUp(wd)
-	}
-	return ""
-}
-
-// findUp returns the first of dir and its ancestors that holds an indexes/ folder.
-func findUp(dir string) string {
-	for {
-		if st, err := os.Stat(filepath.Join(dir, "indexes")); err == nil && st.IsDir() {
-			return dir
-		}
-		parent := filepath.Dir(dir)
-		if parent == dir {
-			return ""
-		}
-		dir = parent
-	}
+	dir, _ := locate.Find(locate.Options{
+		Env:        []string{EnvDir},
+		Starts:     []locate.Start{locate.FromExecutable, locate.FromCwd},
+		Marker:     locate.HasDir("indexes"),
+		Executable: executable,
+	})
+	return dir
 }
 
 const versionEq = "--niagara-version="
