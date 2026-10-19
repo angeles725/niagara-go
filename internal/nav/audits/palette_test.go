@@ -53,7 +53,8 @@ func runPalette(t *testing.T, nav string, args []string) (stdout, stderr string,
 
 // TestPaletteLexiconAgentsCases replays testdata/palette/golden: what
 // niagara-research tools/palette-lexicon-agents.py printed for each command
-// line over the synthetic trees next to it (gen_palette_lexicon.py).
+// line over the synthetic trees next to it (written by the retired
+// gen_palette_lexicon.py; frozen since D47).
 func TestPaletteLexiconAgentsCases(t *testing.T) {
 	dir, err := filepath.Abs(filepath.Join("testdata", "palette"))
 	if err != nil {
