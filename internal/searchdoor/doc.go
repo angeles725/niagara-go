@@ -3,9 +3,9 @@
 // once, each answering with ranked rows, an honest zero with its scope line,
 // or a typed UNAVAILABLE line (never a silent zero).
 //
-//	blocks  our research blocks   tools/corpus-nav.py find
-//	docs    official docs         niagara-help/tools/niagara_help.py find
-//	code    decompiled code       module-navigator/tools/module_nav.py token/rank
+//	blocks  our research blocks   corpus-nav find
+//	docs    official docs         niagara_help find
+//	code    decompiled code       module_nav token/rank
 //	                              (grep when rank cannot search, flagged DEGRADED),
 //	                              plus the structure sub-scope (hierarchy,
 //	                              implementors, drivers) and the course-code
@@ -35,10 +35,12 @@
 // find-<scope>.nsearch.gob, beside corpus-nav's; rank shares module_nav's Go
 // cache (indexes/.mnav-cache/class-rank.gob).
 //
-// Locating the backends (decision D24 style; a binary has no source path). The
-// script paths are not run: each one names its tool's checkout (the parent of
-// its tools/ folder), as the Python tools find theirs from __file__, and a path
-// that is not a file is that source's "tool not found".
+// Locating the backends (decision D24 style; a binary has no source path). No
+// backend path is run and none needs a Python shim: each one names its tool's
+// checkout, either that directory itself (the defaults) or a script inside it
+// (the parent of the script's tools/ folder, as the Python tools find theirs from
+// __file__). A path that is neither a directory nor a file is that source's
+// "tool not found".
 //
 //	root    $NSEARCH_ROOT, else the first niagara-research checkout
 //	        (locate.ResearchCheckout: CATALOG.md and a bloque file, or the legacy
@@ -46,14 +48,15 @@
 //	        (symlinks resolved), else from the working directory, else the
 //	        executable directory's parent (the Python layout: the binary
 //	        installed in <root>/tools/)
-//	blocks  $NSEARCH_CORPUS_NAV    else <root>/tools/corpus-nav.py
-//	docs    $NSEARCH_NIAGARA_HELP  else <root>/niagara-help/tools/niagara_help.py
-//	code    $NSEARCH_MODULE_NAV    else <root>/module-navigator/tools/module_nav.py
+//	blocks  $NSEARCH_CORPUS_NAV    else <root>
+//	docs    $NSEARCH_NIAGARA_HELP  else <root>/niagara-help
+//	code    $NSEARCH_MODULE_NAV    else <root>/module-navigator
 //	course  $NSEARCH_COURSE_ROOT   else <root>/sources/n4-dev-course
 //	keys    $NSEARCH_COURSE_KEYS   else <root> (holds docs/n4-dev-course-solutions)
 //
-// The first four NSEARCH_* path variables are the same seam the Python front door
-// reads (searchdoor/backend.py); NSEARCH_COURSE_KEYS is Go only. An empty value
+// The first four NSEARCH_* path variables are the variables the Python front door
+// read (searchdoor/backend.py), and a script path in them keeps working;
+// NSEARCH_COURSE_KEYS is Go only. An empty value
 // keeps the default. The root search is locate.Find (decision D44). Every
 // variable this package reads (these, and the sources' CORPUS_NAV_ROOT,
 // CORPUS_NAV_INDEX_DIR, NIAGARA_HELP_DIR, the docs version and NAV_CORPUS_BASE)
@@ -64,8 +67,10 @@
 // answer with their Go port (scriptFakes).
 //
 // Intended differences from Python (none golden-covered): no backend runs as a
-// process, so $NSEARCH_PYTHON and $NSEARCH_EXEC are gone and a script path that
-// exists but is not a regular file is "tool not found"; a panic inside one
+// process, so $NSEARCH_PYTHON and $NSEARCH_EXEC are gone; the defaults name the
+// checkout directories, not the scripts, so a checkout without the shims still
+// answers, and a backend path that exists but is neither a regular file nor a
+// directory is "tool not found"; a panic inside one
 // source is typed UNAVAILABLE as "panic: <value>" where Python named the
 // exception type; the course index is not cached between questions (one process
 // answers one question); `--version` describes the Go build (D18); an in-process

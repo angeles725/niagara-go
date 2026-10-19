@@ -204,7 +204,8 @@ func TestInprocUnknownCalls(t *testing.T) {
 		want string
 	}{
 		{docsSource, []string{docs, "find", "alarm", "-n", "5"}, "unavailable: tool not found at " + pypath.PurePosixPath(docs)},
-		{blocksSource, []string{dir, "find", "alarm", "-n", "5"}, "unavailable: tool not found at " + pypath.PurePosixPath(dir)},
+		{blocksSource, []string{filepath.Join(dir, "absent"), "find", "alarm", "-n", "5"},
+			"unavailable: tool not found at " + pypath.PurePosixPath(filepath.Join(dir, "absent"))},
 		{codeSource, []string{code}, "unavailable: no in-process answer for `module_nav.py` (a call nsearch never makes)"},
 		{source(0), []string{stubScript(t, filepath.Join(dir, "other.py")), "x"},
 			"unavailable: no in-process answer for `other.py x` (a call nsearch never makes)"},
@@ -310,5 +311,68 @@ func TestInprocBudget(t *testing.T) {
 	raw := b.Run(codeSource, []string{script, "token", "BAlarm", "-n", "5"}, 0.01)
 	if raw.State != Unavailable || raw.Reason != "unavailable: timed out after 0.01s" || raw.MS != 10 {
 		t.Errorf("timed out: %+v", raw)
+	}
+}
+
+// TestDefaultsReachEverySourceWithoutTheShims: a checkout that holds no Python
+// shim (the corpus files, niagara-help/ and module-navigator/ only) still reaches
+// every source through its defaults, each source's checkout is its directory, and
+// a missing checkout directory is still "tool not found".
+func TestDefaultsReachEverySourceWithoutTheShims(t *testing.T) {
+	root := t.TempDir()
+	for _, name := range []string{"CATALOG.md", "niagara-mental-model-bloque1.md"} {
+		stubScript(t, filepath.Join(root, name))
+	}
+	for _, dir := range []string{"niagara-help", "module-navigator"} {
+		if err := os.Mkdir(filepath.Join(root, dir), 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	p := defaultPaths(envOf(map[string]string{"NSEARCH_ROOT": root}))
+	reached := map[source]string{}
+	pick := func(src source, _ envFunc, argv []string) func([]string) answer {
+		reached[src] = argv[0]
+		return func([]string) answer { return exact(0, "a row\n", "") }
+	}
+	b := &inprocBackend{clock: time.Now, pick: pick}
+	for _, c := range []struct {
+		src       source
+		path, dir string
+	}{
+		{blocksSource, p.Blocks, root},
+		{docsSource, p.Docs, filepath.Join(root, "niagara-help")},
+		{codeSource, p.Code, filepath.Join(root, "module-navigator")},
+	} {
+		if raw := b.Run(c.src, []string{c.path, "find", "alarm"}, 5); raw.State == Unavailable {
+			t.Errorf("source %d at %s: %+v, want it reached", c.src, c.path, raw)
+		}
+		if reached[c.src] != c.path {
+			t.Errorf("source %d: reached with %q, want %q", c.src, reached[c.src], c.path)
+		}
+		if got := toolDir(c.path, false); got != c.dir {
+			t.Errorf("toolDir(%q) = %q, want the checkout %q", c.path, got, c.dir)
+		}
+	}
+	if err := os.Remove(filepath.Join(root, "module-navigator")); err != nil {
+		t.Fatal(err)
+	}
+	want := "unavailable: tool not found at " + pypath.PurePosixPath(p.Code)
+	if raw := b.Run(codeSource, []string{p.Code, "token", "BAlarm", "-n", "5"}, 5); raw.State != Unavailable || raw.Reason != want {
+		t.Errorf("a missing module-navigator/: %+v, want %q", raw, want)
+	}
+}
+
+// A blocks root without block files is not the corpus: the blocks source answers
+// corpus-nav's "cannot search" (exit 2), never a ranked zero, now that the default
+// backend path is the checkout directory itself and always exists.
+func TestBlocksFindOnARootWithoutBlocksCannotSearch(t *testing.T) {
+	root := t.TempDir()
+	getenv := func(string) string { return "" }
+	a := blocksFind(getenv, []string{root, "find", "alarm", "--limit", "20"})
+	if !a.ok || a.rc != 2 || a.stdout != "" || !strings.Contains(a.stderr, "cannot search: no block files under") {
+		t.Errorf("blocksFind on an empty root = rc %d stdout %q stderr %q, want rc 2 and cannot search", a.rc, a.stdout, a.stderr)
+	}
+	if _, err := os.Stat(filepath.Join(root, "tools")); err == nil {
+		t.Errorf("blocksFind wrote under a root it cannot search")
 	}
 }

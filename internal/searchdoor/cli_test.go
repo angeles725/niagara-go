@@ -44,10 +44,9 @@ func envOf(vars map[string]string) envFunc { return func(name string) string { r
 func TestDefaultPathsHonourEachVariable(t *testing.T) {
 	t.Parallel()
 	vars := map[string]string{"NSEARCH_ROOT": "/r", "NSEARCH_CORPUS_NAV": "", "NSEARCH_MODULE_NAV": "x/nav.py"}
-	// Python joins REPO / "tools" / ... with pathlib: native separators (\r\tools\corpus-nav.py on Windows).
-	want := Paths{Blocks: filepath.Join("/r", "tools", "corpus-nav.py"),
-		Docs: filepath.Join("/r", "niagara-help", "tools", "niagara_help.py"),
-		Code: "x/nav.py", Course: filepath.Join("/r", "sources", "n4-dev-course"), Keys: "/r"}
+	// The defaults are the checkout directories, joined with native separators
+	// (\r\niagara-help on Windows); a variable may still name a script.
+	want := Paths{Blocks: "/r", Docs: filepath.Join("/r", "niagara-help"), Code: "x/nav.py", Course: filepath.Join("/r", "sources", "n4-dev-course"), Keys: "/r"}
 	if got := defaultPaths(envOf(vars)); got != want {
 		t.Errorf("defaultPaths() = %+v, want %+v", got, want)
 	}

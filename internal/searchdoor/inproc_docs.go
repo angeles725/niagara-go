@@ -15,7 +15,7 @@ const findMaxResults = 10
 
 // docsFind is `niagara_help [--niagara-version V] find <query> -n N [--and|--or]`
 // (docsJob) as nh answers it, on the data root niagara_help.py would resolve:
-// $NIAGARA_HELP_DIR, else the parent of its tools/ folder, then the requested (or
+// $NIAGARA_HELP_DIR, else the backend's checkout (toolDir), then the requested (or
 // default) version. A version that cannot be resolved prints nh's ERROR lines
 // (exit 2); a missing or stale full-text index is rebuilt first, atomically and
 // with nh's notices on stderr (help/scope.OpenFulltext, decision D38); a search
