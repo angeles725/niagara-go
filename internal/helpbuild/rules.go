@@ -3,7 +3,6 @@ package helpbuild
 import (
 	_ "embed"
 	"fmt"
-	"os"
 	"regexp"
 	"sort"
 	"strings"
@@ -334,15 +333,6 @@ func rules(doc pyjson.Value, key string, globs map[string][]string) ([]*Rule, er
 		out = append(out, rule)
 	}
 	return out, nil
-}
-
-// Load reads the data file at path.
-func Load(path string) (*Rules, error) {
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return nil, err
-	}
-	return Parse(data, path)
 }
 
 var defaultRules = sync.OnceValues(func() (*Rules, error) { return Parse(embeddedRules, RulesFile) })

@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -69,6 +70,40 @@ func TestCacheFileRoundTrip(t *testing.T) {
 		if got, err := f.postings(term); got != nil || err != nil {
 			t.Errorf("postings(%q) = %v, %v; want none", term, got, err)
 		}
+	}
+}
+
+// TestWriteCacheFileModeAndFailure: the cache file is private to its owner (0600) and no
+// temp file is left beside it; a failed write (the target is a non-empty directory) keeps
+// the directory as it was.
+func TestWriteCacheFileModeAndFailure(t *testing.T) {
+	_, mem := fixtureIndex(t)
+	dir := t.TempDir()
+	path := filepath.Join(dir, "find-all.gob")
+	if err := writeCacheFile(mem, "fp", path); err != nil {
+		t.Fatal(err)
+	}
+	st, err := os.Stat(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if runtime.GOOS != "windows" && st.Mode().Perm() != 0o600 {
+		t.Errorf("mode %v, want 0600", st.Mode().Perm())
+	}
+	blocked := filepath.Join(dir, "blocked.gob")
+	if err := os.MkdirAll(filepath.Join(blocked, "keep"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := writeCacheFile(mem, "fp", blocked); err == nil {
+		t.Fatal("writing over a non-empty directory succeeded")
+	}
+	entries, _ := os.ReadDir(dir)
+	var names []string
+	for _, e := range entries {
+		names = append(names, e.Name())
+	}
+	if strings.Join(names, ",") != "blocked.gob,find-all.gob" {
+		t.Errorf("directory holds %q, want only the two targets (no temp file)", names)
 	}
 }
 

@@ -46,7 +46,8 @@ type PDFStats struct{ Total, Extracted, Empty, Failed, Software, Hardware int }
 
 // PDFResult is what main() printed and returned. A Log entry is one
 // print() line, except an entry starting with "\r", which is a progress
-// write without a newline (sys.stdout.write); Stdout joins them back.
+// write without a newline (sys.stdout.write); the tests' Stdout joins them
+// back into the printed text.
 type PDFResult struct {
 	Log           []string
 	Status        int // main()'s return value, the exit code
@@ -63,18 +64,6 @@ func (r *PDFResult) add(entry string) {
 }
 
 func (r *PDFResult) out(format string, a ...any) { r.add(fmt.Sprintf(format, a...)) }
-
-// Stdout is the exact stdout of pdf_extractor.py for this run.
-func (r *PDFResult) Stdout() string {
-	var b strings.Builder
-	for _, e := range r.Log {
-		b.WriteString(e)
-		if !strings.HasPrefix(e, "\r") {
-			b.WriteByte('\n')
-		}
-	}
-	return b.String()
-}
 
 // writePDFIndex saves pdf-index.json; the tests replace it to fail the
 // save. Text that is not UTF-8 (a lone surrogate kept from the previous

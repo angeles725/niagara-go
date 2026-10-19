@@ -7,8 +7,9 @@ import (
 	"hash/crc32"
 	"io"
 	"os"
-	"path/filepath"
 	"sort"
+
+	"github.com/angeles725/niagara-go/internal/atomicfile"
 )
 
 // The find cache file (schema go-2). A warm find used to gob-decode every term's postings
@@ -177,27 +178,15 @@ func (f *cacheFile) postings(term string) (map[int]int, error) {
 	return post, nil
 }
 
-// writeCacheFile writes mem with fingerprint fp to path atomically: a temp file in the
-// same directory, then rename.
+// writeCacheFile writes mem with fingerprint fp to path atomically
+// (atomicfile.WriteStream: a temp file in the same directory, then rename),
+// with mode 0600.
 func writeCacheFile(mem *MemIndex, fp, path string) error {
-	if err := os.MkdirAll(filepath.Dir(path), 0o777); err != nil {
+	data := encodeCache(mem, fp)
+	return atomicfile.WriteStream(path, 0o600, func(w io.Writer) error {
+		_, err := w.Write(data)
 		return err
-	}
-	tmp, err := os.CreateTemp(filepath.Dir(path), filepath.Base(path)+".*.tmp")
-	if err != nil {
-		return err
-	}
-	_, err = tmp.Write(encodeCache(mem, fp))
-	if cerr := tmp.Close(); err == nil {
-		err = cerr
-	}
-	if err == nil {
-		err = os.Rename(tmp.Name(), path)
-	}
-	if err != nil {
-		os.Remove(tmp.Name())
-	}
-	return err
+	})
 }
 
 // encodeCache is the cache file bytes of mem: each term's pairs in document order.

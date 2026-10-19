@@ -3,8 +3,11 @@ package core
 import (
 	"bytes"
 	"encoding/gob"
+	"io"
 	"os"
 	"path/filepath"
+
+	"github.com/angeles725/niagara-go/internal/atomicfile"
 )
 
 // The Go-only caches of module-nav (the inventory stats, the call graph and
@@ -24,33 +27,20 @@ func ResolvedPath(p string) string {
 	return p
 }
 
-// WriteGob writes the gob encoding of v to path atomically: through a
-// temporary file "<base>.*.tmp" in its directory (created with mode 0700;
-// the file is 0600) and a rename. It returns false, leaving nothing behind,
-// when v cannot be encoded or the file cannot be written.
+// WriteGob writes the gob encoding of v to path atomically
+// (atomicfile.WriteStream: a temp file in its directory, created with mode
+// 0700, and a rename; the file is 0600). It returns false, leaving nothing
+// behind, when v cannot be encoded or the file cannot be written.
 func WriteGob(path string, v any) bool {
 	var buf bytes.Buffer
 	if gob.NewEncoder(&buf).Encode(v) != nil {
 		return false
 	}
-	dir := filepath.Dir(path)
-	if os.MkdirAll(dir, 0o700) != nil {
+	if os.MkdirAll(filepath.Dir(path), 0o700) != nil {
 		return false
 	}
-	f, err := os.CreateTemp(dir, filepath.Base(path)+".*.tmp")
-	if err != nil {
-		return false
-	}
-	_, werr := f.Write(buf.Bytes())
-	if cerr := f.Close(); werr == nil {
-		werr = cerr
-	}
-	if werr == nil {
-		werr = os.Rename(f.Name(), path)
-	}
-	if werr != nil {
-		os.Remove(f.Name())
-		return false
-	}
-	return true
+	return atomicfile.WriteStream(path, 0o600, func(w io.Writer) error {
+		_, err := w.Write(buf.Bytes())
+		return err
+	}) == nil
 }

@@ -171,9 +171,6 @@ func NewListings(path string) *Listings {
 	return ls
 }
 
-// Len is the number of jars in the cache.
-func (ls *Listings) Len() int { return len(ls.jars.Keys) }
-
 // Listing returns the listing of jarPath (nil when unreadable), from the
 // cache when the jar's size and mtime are unchanged. A jar that cannot be
 // stat'ed is nil and not cached.

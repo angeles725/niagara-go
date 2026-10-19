@@ -9,16 +9,11 @@ package help
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"regexp"
 	"sort"
-	"strings"
 
-	"github.com/angeles725/niagara-go/internal/bajadocxml"
 	"github.com/angeles725/niagara-go/internal/help/scope"
-	"github.com/angeles725/niagara-go/internal/index"
 	"github.com/angeles725/niagara-go/internal/pycompat"
-	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
 // sortStable is sorted() with a less function (a stable sort).
@@ -76,297 +71,35 @@ func classQName(k classKey) string { return k.pkg + "." + k.name }
 
 func memberLabel(m memberKey) string { return m.pkg + "." + m.class + "#" + m.member }
 
-// checkAll is recall.check_all.
+// checkAll is recall.check_all: the rows of every recall family, in the
+// table's order. A resolver error fails the run after every row ran; an
+// error expanding the class index or running a sample fails it at once.
 func (e *Env) checkAll(samples bool) ([]recallRow, float64, error) {
-	truth := groundTruth(e.BaseDir)
-	load := func(name string) (*index.Object, error) { return e.loadIndex(name, false) }
-	var err error
-	idx := map[string]*index.Object{}
-	for _, n := range []string{"class-index.json", "jdk-class-index.json", "method-index.json",
-		"slots-index.json", "source-index.json", "inheritance.json", "xref-index.json", "guides-index.json"} {
-		if idx[n], err = load(n); err != nil {
-			return nil, 0, err
-		}
+	c, err := e.newRecallCheck()
+	if err != nil {
+		return nil, 0, err
 	}
-	ci, jdkCI, mi, si := idx["class-index.json"], idx["jdk-class-index.json"], idx["method-index.json"], idx["slots-index.json"]
-	src, inh, xref, gi := idx["source-index.json"], idx["inheritance.json"], idx["xref-index.json"], idx["guides-index.json"]
-
-	var firstErr error
-	hasClass := func(ix *index.Object, k classKey) bool {
-		hits, err := classMatches(ix, classQName(k))
-		if err != nil && firstErr == nil {
-			firstErr = err
-		}
-		for _, h := range hits {
-			if h.Package == k.pkg {
-				return true
-			}
-		}
-		return false
+	rows, err := c.classRows()
+	if err != nil {
+		return nil, 0, err
 	}
-	var rows []recallRow
-	rows = append(rows, newRow("(.bajadoc parse)", truth.xmlFiles, func(s string) string { return s },
-		func(rel string) bool { return !truth.xmlFailed[rel] }, "an unparseable file would hide its classes"))
-	keys := truth.classes
-	rows = append(rows, newRow("class", keys, classQName, func(k classKey) bool { return hasClass(ci, k) }, ""))
-	rows = append(rows, newRow("search", keys, classQName, func(k classKey) bool {
-		if !ci.Has(k.name) {
-			return false
-		}
-		hits, err := classMatches(ci, k.name)
-		if err != nil && firstErr == nil {
-			firstErr = err
-		}
-		for _, h := range hits {
-			if h.Package == k.pkg {
-				return true
-			}
-		}
-		return false
-	}, ""))
-	pkgs := map[string]map[string]bool{}
-	for _, key := range ci.Keys() {
-		all, err := expand(key, ci.Object(key))
+	rows = append(rows, c.implementorsRow(), c.enumRow(), c.moduleRow(), c.jdkRow())
+	rows = append(rows, c.memberRows()...)
+	rows = append(rows, c.sourceRows()...)
+	rows = append(rows, c.guideRows()...)
+	if samples {
+		sampled, err := c.sampleRows()
 		if err != nil {
 			return nil, 0, err
 		}
-		for _, c := range all {
-			if pkgs[c.Package] == nil {
-				pkgs[c.Package] = map[string]bool{}
-			}
-			pkgs[c.Package][key] = true
-		}
+		rows = append(rows, sampled...)
 	}
-	rows = append(rows, newRow("package", keys, classQName, func(k classKey) bool { return pkgs[k.pkg][k.name] }, ""))
-	rows = append(rows, newRow("api / related", keys, classQName, func(k classKey) bool {
-		hits, err := classMatches(ci, classQName(k))
-		if err != nil && firstErr == nil {
-			firstErr = err
-		}
-		return len(hits) > 0 && hits[0].Package == k.pkg
-	}, "shared resolver resolve_entry"))
-	ikeys := newInheritanceKeys(inh)
-	rows = append(rows, newRow("hierarchy", keys, classQName, func(k classKey) bool { return ikeys.resolve(classQName(k)) != "" }, ""))
-
-	// implementors lists classes; an interface's super-interfaces are its
-	// hierarchy, not implementors.
-	type implPair struct{ iface, name, pkg string }
-	pairSet := map[implPair]bool{}
-	var pairs []implPair
-	for _, c := range truth.xml {
-		if c.Kind != "class" && c.Kind != "enum" {
-			continue
-		}
-		for _, iface := range c.Implements {
-			simple := strings.ReplaceAll(strings.SplitN(iface, "<", 2)[0], "$", ".")
-			simple = simple[strings.LastIndex(simple, ".")+1:]
-			if p := (implPair{simple, c.Name, c.Pkg}); !pairSet[p] {
-				pairSet[p] = true
-				pairs = append(pairs, p)
-			}
-		}
-	}
-	sortStable(pairs, func(a, b implPair) bool {
-		if a.iface != b.iface {
-			return a.iface < b.iface
-		}
-		if a.name != b.name {
-			return a.name < b.name
-		}
-		return a.pkg < b.pkg
-	})
-	implCache := map[string]map[implementor]bool{}
-	rows = append(rows, newRow("implementors", pairs,
-		func(p implPair) string { return p.iface + " <- " + p.pkg + "." + p.name },
-		func(p implPair) bool {
-			if implCache[p.iface] == nil {
-				set := map[implementor]bool{}
-				for _, im := range implementorMatches(inh, p.iface) {
-					set[im] = true
-				}
-				implCache[p.iface] = set
-			}
-			return implCache[p.iface][implementor{p.name, p.pkg}]
-		}, ""))
-
-	// extends keeps the first position and the last value of a repeated
-	// (package, name); simple_ext keeps the first per simple name.
-	var extOrder []classKey
-	extends := map[classKey]string{}
-	for _, c := range truth.xml {
-		k := classKey{c.Pkg, c.Name}
-		if _, ok := extends[k]; !ok {
-			extOrder = append(extOrder, k)
-		}
-		extends[k] = c.Extends
-	}
-	simpleExt := map[string]string{}
-	for _, k := range extOrder {
-		if _, ok := simpleExt[k.name]; !ok {
-			simpleExt[k.name] = extends[k]
-		}
-	}
-	isEnum := func(c bajadocxml.Class) bool {
-		seen := map[string]bool{}
-		for cur := c.Extends; cur != "" && !seen[cur]; {
-			seen[cur] = true
-			s := strings.SplitN(cur, "<", 2)[0]
-			s = s[strings.LastIndex(s, ".")+1:]
-			if recallEnumRoots[s] {
-				return true
-			}
-			cur = simpleExt[s]
-		}
-		return false
-	}
-	enumSet := map[classKey]bool{}
-	var enums []classKey
-	for _, c := range truth.xml {
-		if k := (classKey{c.Pkg, c.Name}); !enumSet[k] && isEnum(c) {
-			enumSet[k] = true
-			enums = append(enums, k)
-		}
-	}
-	sortStable(enums, lessClassKey)
-	rows = append(rows, newRow("enum", enums, classQName,
-		func(k classKey) bool { return resolveEnum(src, inh, ikeys, classQName(k)) }, ""))
-
-	modSet := map[string]bool{}
-	var modules []string
-	for _, c := range truth.xml {
-		if c.Module != "" && !modSet[c.Module] {
-			modSet[c.Module] = true
-			modules = append(modules, c.Module)
-		}
-	}
-	sortStable(modules, func(a, b string) bool { return a < b })
-	rows = append(rows, newRow("module", modules, func(s string) string { return s },
-		func(m string) bool { return len(moduleClassMatches(ci, m)) > 0 }, ""))
-
-	jdkSet := map[classKey]bool{}
-	var jdkKeys []classKey
-	for _, c := range truth.jdk {
-		if k := (classKey{c.Pkg, c.Name}); !jdkSet[k] {
-			jdkSet[k] = true
-			jdkKeys = append(jdkKeys, k)
-		}
-	}
-	sortStable(jdkKeys, lessClassKey)
-	rows = append(rows, newRow("class --jdk", jdkKeys, classQName, func(k classKey) bool { return hasClass(jdkCI, k) }, ""))
-
-	miLower := lowerKeys(mi)
-	memberCache := map[string][]*index.Object{}
-	rows = append(rows, newRow("method", truth.methods, memberLabel, func(m memberKey) bool {
-		entries, ok := memberCache[m.member]
-		if !ok {
-			entries = memberMatches(mi, miLower, m.member)
-			memberCache[m.member] = entries
-		}
-		for _, en := range entries {
-			if noGenerics.ReplaceAllString(orStr(en, "class", "", ""), "") == m.class &&
-				strEq(get(en, "package", nil), m.pkg) {
-				return true
-			}
-		}
-		return false
-	}, ""))
-
-	sk := slotKeys(si)
-	rows = append(rows, newRow("slots", truth.slots, memberLabel, func(m memberKey) bool {
-		for _, k := range sk[textfold.Lower(m.class)] {
-			data := si.Object(k)
-			if !strEq(get(data, "package", nil), m.pkg) {
-				continue
-			}
-			for _, sec := range []string{"properties", "actions", "topics"} {
-				for _, s := range objList(data, sec) {
-					if v, ok := get(s, "name", nil).(string); ok && v == m.member {
-						return true
-					}
-				}
-			}
-		}
-		return false
-	}, ""))
-
-	rows = append(rows, newRow("source", truth.java, func(s string) string { return s }, func(rel string) bool {
-		simple := strings.TrimSuffix(pycompat.PosixBasename(rel), ".java")
-		for _, sm := range sourceMatches(src, simple) {
-			if corpusPath(sm.data) == rel {
-				return true
-			}
-		}
-		return false
-	}, ""))
-	rows = append(rows, newRow("xref", truth.java, func(s string) string { return s }, func(rel string) bool {
-		simple := strings.TrimSuffix(pycompat.PosixBasename(rel), ".java")
-		entry := getObj(xref, simple)
-		return entry != nil && entry.Has("package")
-	}, "the file's own entry (package), not only used_by"))
-
-	gclean, gsrc := filepath.Join(e.BaseDir, "guides-clean"), filepath.Join(e.BaseDir, "guides")
-	rows = append(rows, newRow("guide-search", truth.guides, func(s string) string { return s }, func(rel string) bool {
-		return isRegularFile(filepath.Join(gclean, filepath.FromSlash(cleanTextName(rel, gsrc))))
-	}, ""))
-	topics := map[string]map[string]bool{}
-	for _, f := range gi.Keys() {
-		d := gi.Object(f)
-		list := strList(d, "topics")
-		if d.Has("all_topics") {
-			list = strList(d, "all_topics")
-		}
-		set := map[string]bool{}
-		for _, t := range list {
-			set[t] = true
-		}
-		topics[f] = set
-	}
-	rows = append(rows, newRow("guide", truth.guides, func(s string) string { return s }, func(rel string) bool {
-		folder, rest, _ := strings.Cut(rel, "/")
-		stem, _ := pycompat.PosixSplitext(rest)
-		return topics[folder][rest] || topics[folder][stem]
-	}, "topic = page path in guides-index.json"))
-	dclean, dsrc := filepath.Join(e.BaseDir, "devguide-clean"), filepath.Join(e.BaseDir, "devguide")
-	rows = append(rows, newRow("devguide-search", truth.devguide, func(s string) string { return s }, func(rel string) bool {
-		return isRegularFile(filepath.Join(dclean, filepath.FromSlash(cleanTextName(rel, dsrc))))
-	}, ""))
-
-	if samples {
-		var named []classKey
-		for _, k := range keys {
-			if !strings.HasPrefix(k.name, "_") {
-				named = append(named, k)
-			}
-		}
-		sample := recallSampleOf(named, recallSample)
-		var sampleErr error
-		in := func(fn func(sub *Env) error, k classKey) bool {
-			if sampleErr != nil {
-				return false
-			}
-			out, err := e.captured(fn)
-			if err != nil {
-				sampleErr = err
-				return false
-			}
-			return strings.Contains(out, k.name)
-		}
-		rows = append(rows, newRow("find", sample, classQName, func(k classKey) bool {
-			return in(func(sub *Env) error { return sub.Find(FulltextParams{Query: k.name, Max: 500}) }, k)
-		}, fmt.Sprintf("sample %d of %d classes (full corpus scan per query)", len(sample), len(keys))))
-		rows = append(rows, newRow("fuzzy", sample, classQName, func(k classKey) bool {
-			return in(func(sub *Env) error { return sub.fuzzy(k.name, 15) }, k)
-		}, fmt.Sprintf("sample %d of %d classes", len(sample), len(keys))))
-		if sampleErr != nil {
-			return nil, 0, sampleErr
-		}
-	}
-	if firstErr != nil {
-		return nil, 0, firstErr
+	if c.firstErr != nil {
+		return nil, 0, c.firstErr
 	}
 	rows = append(rows, recallRow{command: "callers", note: "excluded: keyed by call sites; a method " +
 		"with no caller has no entry by definition (its class is covered by source/xref recall)"})
-	return rows, truth.seconds, nil
+	return rows, c.truth.seconds, nil
 }
 
 // strEq is `value == s` for a decoded JSON value and a string.
