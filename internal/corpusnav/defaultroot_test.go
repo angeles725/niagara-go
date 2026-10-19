@@ -4,7 +4,19 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/angeles725/niagara-go/internal/locate"
 )
+
+// skipIfExecutableInCheckout skips when the test binary itself sits inside a
+// checkout (GOTMPDIR or a `go test -c` output there): the executable walk wins first.
+func skipIfExecutableInCheckout(t *testing.T) {
+	t.Helper()
+	if root, ok := locate.Find(locate.Options{Getenv: func(string) string { return "" },
+		Marker: locate.ResearchCheckout, Starts: []locate.Start{locate.FromExecutable}}); ok {
+		t.Skipf("test binary is inside the checkout %s", root)
+	}
+}
 
 // With CORPUS_NAV_ROOT unset and an executable outside any checkout (the test
 // binary), the corpus is found by walking up from the working directory with the
@@ -21,20 +33,25 @@ func TestDefaultRootFindsTheCheckoutFromTheWorkingDirectory(t *testing.T) {
 	if err := os.MkdirAll(sub, 0o755); err != nil {
 		t.Fatal(err)
 	}
+	skipIfExecutableInCheckout(t)
 	t.Chdir(sub)
 	got, err := defaultRoot()
 	if err != nil {
 		t.Fatal(err)
 	}
-	want, _ := filepath.EvalSymlinks(root)
-	if g, _ := filepath.EvalSymlinks(got); g != want {
-		t.Errorf("defaultRoot() = %q, want %q", got, root)
+	want, err := filepath.EvalSymlinks(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if g, err := filepath.EvalSymlinks(got); err != nil || g != want {
+		t.Errorf("defaultRoot() = %q (resolved %q, %v), want %q", got, g, err, want)
 	}
 }
 
 // Outside any checkout the executable's grandparent stays the answer, so the
 // cannot-search message still names a concrete root.
 func TestDefaultRootOutsideACheckoutIsTheExecutableGrandparent(t *testing.T) {
+	skipIfExecutableInCheckout(t)
 	t.Chdir(t.TempDir())
 	exe, err := os.Executable()
 	if err != nil {
