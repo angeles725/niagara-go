@@ -20,7 +20,7 @@ import (
 
 // stats (inventory/stats.py cmd_stats): corpus and index summary, the sizes
 // and _meta counters of every index, the Help Navigator status and the
-// historical command list. Index summaries come from statsCache, so a run
+// commands the binary runs. Index summaries come from statsCache, so a run
 // after the first one reads only the module inventory.
 
 // indexFile is one entry of the INDEXES list.

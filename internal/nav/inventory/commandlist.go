@@ -1,46 +1,18 @@
 package inventory
 
-// statsCommands is STATS_COMMAND_LIST (inventory/command_list.py): the
-// historical, hand-kept list stats prints under COMMANDS, kept verbatim so
-// the output does not change. It lags the registry (and names commands the
-// Go port retired); the registry, not this list, is authoritative.
-var statsCommands = []string{
-	"inventory", "module", "modules", "class", "search", "package", "grep", "source", "source --batch",
-	"snippet", "imports", "imports --external-only", "license-feature", "license-features", "hierarchy",
-	"implementors", "xref", "xref --importers", "xref --imports", "deps", "deps --reverse", "method",
-	"method --module", "method --class", "methods", "methods --public", "methods --grep", "ui dialogs",
-	"ui sizes", "ui colors", "ui fonts", "ui class", "ui customizable", "slots", "slots --properties",
-	"slots --actions", "slots --topics", "slots --by-type", "slots --by-type --module", "annotations",
-	"annotations --module", "stats", "profile", "repl", "full-profile", "cross-ref", "patch-target",
-	"patch-plan", "extract", "orphans", "deps-graph", "api-surface", "security-audit", "strings", "resources",
-	"trace-type", "version-diff", "callers", "callees", "call-chain", "hotspots", "fields", "fields --static",
-	"fields --public", "fields --grep", "field", "field --module", "type-consumers", "type-consumers --module",
-	"type-producers", "type-producers --module", "type-flow", "module-calls", "module-api-usage", "coupling",
-	"patterns", "pattern services", "pattern drivers", "pattern points", "pattern views", "pattern extensions",
-	"pattern enums", "pattern structs", "pattern --module", "bog-trace", "bog-classes", "bog-coverage",
-	"throws", "throws --module", "catches", "catches --module", "export --html", "export --mermaid",
-	"export --dot", "token", "token --context", "impact", "impact <method>", "impact --depth", "find",
-	"find --source", "find --module", "deprecated", "deprecated --module", "deprecated-users",
-	"deprecated-users <method>", "deprecated-risk", "deprecated-risk --module", "similar", "clones",
-	"clones --module", "config-usage", "config-usage --module", "config-keys", "resources-usage", "serial",
-	"serial-audit", "serial-audit --module", "serial-conflicts", "thread-safety", "thread-scan",
-	"thread-scan --module", "lifecycle", "lifecycle --pattern", "lifecycle --pattern --module",
-	"lifecycle-scan", "lifecycle-scan --module", "string-search", "string-search --module", "string-constants",
-	"ask", "servlets", "servlets --module", "routes", "routes --verb", "servlet", "ords", "ords --scheme",
-	"ords --module", "ord-usage", "ord-usage --module", "ord-flow", "topics", "topics --module", "subscribers",
-	"pub-sub", "bql", "bql --module", "bql --type", "bql-tables", "bql-tables --module", "bql-class",
-	"permissions", "permissions --module", "permissions --declared", "permission-flow", "credentials",
-	"credentials --module", "alarm-flow", "alarm-flow --module", "alarm-types", "alarm-trace", "cycles",
-	"cycles --depth", "god-classes", "god-classes --threshold", "layer-check", "complexity", "complexity-scan",
-	"complexity-scan --module", "metrics", "bookmark", "bookmarks", "bookmarks --sort", "unbookmark", "history",
-	"history --all", "history --grep", "unified", "unified --limit", "compare", "integration-contract",
-	"integration-contract --min-callers", "integration-contract --json",
-	"integration-contract --resolve-virtual", "example-mine", "example-mine --pattern", "example-mine --top",
-	"example-mine --exclude-tridium", "example-mine --include-docsource", "example-mine --min-lines",
-	"example-mine --json", "virtual-callers", "virtual-callers --depth", "virtual-callers --no-self",
-	"virtual-callers --json", "feature-brief", "feature-brief --depth quick", "feature-brief --depth full",
-	"feature-brief --out", "feature-brief --json", "slot-validate", "slot-validate --kind action",
-	"slot-validate --kind topic", "slot-validate --json", "session save", "session load", "session list",
-	"session note", "session export", "session export --as json", "session export --out", "session delete",
-	"full-stack-trace",
+import "github.com/angeles725/niagara-go/internal/nav/registry"
+
+// statsCommands is the COMMANDS list stats prints: every registered command
+// the binary runs, sorted. Python printed a hand-kept STATS_COMMAND_LIST
+// (inventory/command_list.py) that lagged the registry; reading the registry
+// keeps the list from naming a retired command again (intended difference,
+// golden-real/stats and golden/nav-stats*).
+func statsCommands() []string {
+	var out []string
+	for _, n := range registry.Names() {
+		if c, _ := registry.Lookup(n); c.Run != nil {
+			out = append(out, n)
+		}
+	}
+	return out
 }
