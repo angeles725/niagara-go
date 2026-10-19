@@ -1,0 +1,2 @@
+["out", "DOC-JAR COVERAGE 4.0.0.0: install not available (?); cannot read the jars, gate not evaluated.\n"]
+["status", 2]

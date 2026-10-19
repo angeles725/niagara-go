@@ -1,0 +1,2 @@
+["out", "DOCUMENTATION COVERAGE: zeta-rt\n============================================================\n\nClasses: 2 total, 1 documented, 1 undocumented\nCoverage: 50.0%\n\nUNDOCUMENTED CLASSES:\n  Bx.txt ()\n\nSlot coverage: 1/2 classes have @Niagara annotations\nTotal methods: 0\n"]
+["status", null]

@@ -1,0 +1,2 @@
+["out", "DOCUMENTATION COVERAGE: rt\n============================================================\n\nClasses: 9 total, 4 documented, 5 undocumented\nCoverage: 44.4%\n\nUNDOCUMENTED CLASSES:\n  BAlarmUx ()\n  BAlarmWb (javax.baja.alarm.wb)\n  BNoMod ()\n  BOrphan ()\n  Bx.txt ()\n\nSlot coverage: 2/9 classes have @Niagara annotations\nTotal methods: 3\n"]
+["status", null]

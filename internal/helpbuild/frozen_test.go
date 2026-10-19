@@ -4,6 +4,7 @@ import (
 	"flag"
 	"os"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"strings"
 	"testing"
@@ -42,12 +43,17 @@ func relabeled(lines []string, pairs ...string) []string {
 	return out
 }
 
-// checkFrozen compares got (an element may hold several lines) with
-// testdata/frozen/<name>.txt, or rewrites the file under -update-frozen.
+// frozenTemp matches a t.TempDir() path ($TMPDIR/<test name><digits>/<seq>)
+// that no relabel named: checkFrozen shows it as <tmp>.
+var frozenTemp = regexp.MustCompile(regexp.QuoteMeta(os.TempDir()) + `/[^/"]+/[0-9]+`)
+
+// checkFrozen compares got (an element may hold several lines; a temporary
+// directory left in it shows as <tmp>) with testdata/frozen/<name>.txt, or
+// rewrites the file under -update-frozen.
 func checkFrozen(t *testing.T, name string, got []string) {
 	t.Helper()
 	path := filepath.Join("testdata", "frozen", filepath.FromSlash(name)+".txt")
-	text := strings.Join(got, "\n")
+	text := frozenTemp.ReplaceAllString(strings.Join(got, "\n"), "<tmp>")
 	if *updateFrozen {
 		writeFile(t, path, []byte(text+"\n"))
 		return

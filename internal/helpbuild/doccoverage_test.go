@@ -113,18 +113,11 @@ func docJarGoldenCases(t *testing.T) (cases []covGoldenCase, pairs []string) {
 	}, []string{install, "<install>", base, "<base>", repo, "<repo>"}
 }
 
-// TestDocJarCoverageGolden: no Python needed; the Go gate on the synthetic
-// install against its golden files.
+// TestDocJarCoverageGolden: the Go gate on the synthetic install against
+// its golden files.
 func TestDocJarCoverageGolden(t *testing.T) {
 	cases, pairs := docJarGoldenCases(t)
-	checkCovGoldens(t, cases, false, pairs...)
-}
-
-// TestParityDocJarCoverageGolden: the golden files are Python's output.
-func TestParityDocJarCoverageGolden(t *testing.T) {
-	covPython(t)
-	cases, pairs := docJarGoldenCases(t)
-	checkCovGoldens(t, cases, true, pairs...)
+	checkCovGoldens(t, cases, pairs...)
 }
 
 const bajadocXML = `<?xml version="1.0"?><bajadoc><class qualifiedName="p.q.B" name="B" packageName="p.q"/></bajadoc>`
