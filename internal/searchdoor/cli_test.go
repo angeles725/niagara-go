@@ -85,6 +85,27 @@ func TestRootIsFoundAboveTheExecutableThenTheWorkingDirectory(t *testing.T) {
 	}
 }
 
+// TestRootIsFoundByTheCorpusFilesWithoutTheShims: a checkout that holds
+// CATALOG.md and a bloque file but no tools/*.py is still the root.
+func TestRootIsFoundByTheCorpusFilesWithoutTheShims(t *testing.T) {
+	checkout := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(checkout, "tools", "sub"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	for _, f := range []string{"CATALOG.md", "niagara-mental-model-bloque1.md"} {
+		if err := os.WriteFile(filepath.Join(checkout, f), nil, 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	saved := executable
+	t.Cleanup(func() { executable = saved })
+	executable = func() (string, error) { return filepath.Join(checkout, "tools", "sub", "nsearch"), nil }
+	t.Chdir(t.TempDir())
+	if got := root(envOf(nil)); got != checkout {
+		t.Errorf("root = %q, want the shim-less checkout %q", got, checkout)
+	}
+}
+
 // TestMainReadsTheEnvironmentOfItsStdio: the binaries read every path variable
 // through cli.Stdio.Env, never the process when the Stdio brings its own.
 func TestMainReadsTheEnvironmentOfItsStdio(t *testing.T) {

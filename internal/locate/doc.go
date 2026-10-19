@@ -20,6 +20,13 @@
 //	        caller's own predicate). Each start is walked up, itself first, to the
 //	        file-system root; the first directory the marker accepts is the answer.
 //
+// ResearchCheckout is the shared marker of a niagara-research checkout, free of
+// the Python shims (searchdoor uses it): CATALOG.md and a top-level
+// niagara-mental-model-bloque*.md, both regular files (what corpus-nav reads),
+// or the legacy tools/corpus-nav.py as any non-directory, so the clones that
+// still hold the shims keep being found. A repository that is not the corpus
+// but holds both corpus files at its top level would be a false positive.
+//
 // Getenv, Getwd and Executable default to the process (os.Getenv, os.Getwd,
 // os.Executable); tests inject them, so a test needs neither os.Setenv nor
 // t.Chdir and can run in parallel. Find never prints and never fails: a

@@ -15,9 +15,6 @@ type envFunc = func(string) string
 var pathEnv = [5]string{"NSEARCH_CORPUS_NAV", "NSEARCH_NIAGARA_HELP", "NSEARCH_MODULE_NAV", "NSEARCH_COURSE_ROOT",
 	"NSEARCH_COURSE_KEYS"}
 
-// marker identifies a niagara-research checkout.
-var marker = filepath.Join("tools", "corpus-nav.py")
-
 // executable is os.Executable with symlinks resolved; tests replace it.
 var executable = func() (string, error) {
 	exe, err := os.Executable()
@@ -27,17 +24,10 @@ var executable = func() (string, error) {
 	return filepath.EvalSymlinks(exe)
 }
 
-// isCheckout holds the marker as any non-directory (the Python seam's is_file
-// would also refuse a device; no checkout holds one).
-func isCheckout(dir string) bool {
-	st, err := os.Stat(filepath.Join(dir, marker))
-	return err == nil && !st.IsDir()
-}
-
 // root locates the niagara-research checkout (see the package doc).
 func root(getenv envFunc) string {
 	if r, ok := locate.Find(locate.Options{Env: []string{"NSEARCH_ROOT"}, Getenv: getenv,
-		Starts: []locate.Start{locate.FromExecutable, locate.FromCwd}, Marker: isCheckout,
+		Starts: []locate.Start{locate.FromExecutable, locate.FromCwd}, Marker: locate.ResearchCheckout,
 		Executable: executable}); ok {
 		return r
 	}
