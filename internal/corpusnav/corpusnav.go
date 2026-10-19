@@ -89,14 +89,17 @@ func buildParser() *argparse.Parser {
 		"--limit", "-n")
 	add("stats", "corpus totals + marker counts")
 	add("selftest", "assert core search behaviours (exits non-zero on failure)")
-	sem := add("semantic", "rank blocks by embedding similarity (fastembed), TF-IDF fallback", "rank")
+	// The embedding options of the Python tool stay accepted so existing scripts keep
+	// working (decision D10: semantic ranks with TF-IDF only).
+	sem := add("semantic", "rank blocks by TF-IDF similarity to a query", "rank")
 	sem.Add(argparse.Arg{Nargs: argparse.Optional, Help: "natural-language query string"}, "query")
 	sem.Add(argparse.Arg{Type: argparse.PositiveInt, Default: 15, Help: "number of top results to show (default: 15)"}, "--limit", "-n")
-	sem.Add(argparse.Arg{Action: argparse.StoreTrue, Help: "embed changed blocks into tools/.corpus-index/ (needs fastembed)"}, "--build-index")
-	sem.Add(argparse.Arg{Help: "fastembed model (default: $CORPUS_NAV_MODEL or BAAI/bge-small-en-v1.5)"}, "--model")
-	sem.Add(argparse.Arg{Action: argparse.StoreTrue, Help: "force the stdlib TF-IDF ranking"}, "--tfidf")
-	sem.Add(argparse.Arg{Type: argparse.Int, Help: "ONNX/OMP threads (default: $CORPUS_NAV_THREADS, else " +
-		"$OMP_NUM_THREADS, else min(4, CPUs))"}, "--threads")
+	sem.Add(argparse.Arg{Action: argparse.StoreTrue,
+		Help: "retired: there is no embedding index; exits 2 (kept for compatibility)"}, "--build-index")
+	sem.Add(argparse.Arg{Help: "ignored; kept for compatibility (embeddings are retired)"}, "--model")
+	sem.Add(argparse.Arg{Action: argparse.StoreTrue,
+		Help: "kept for compatibility; the ranking is always TF-IDF"}, "--tfidf")
+	sem.Add(argparse.Arg{Type: argparse.Int, Help: "ignored; kept for compatibility (embeddings are retired)"}, "--threads")
 	return p
 }
 
