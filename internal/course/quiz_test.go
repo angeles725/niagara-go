@@ -12,7 +12,7 @@ import (
 )
 
 // The quiz pool of the root fixture: the why questions L1.1 (leading its answer), L1.5 and L2.1
-// (in the step), the decision D1.1 and the trap T1.1.
+// (in the step), the decision D1.1, the trap T1.1 and the predict L1.4 (L2.6 answers too briefly).
 func TestQuizPool(t *testing.T) {
 	cases := []struct {
 		name string
@@ -22,7 +22,7 @@ func TestQuizPool(t *testing.T) {
 		not  []string
 	}{
 		{"every kind", []string{"-n", "9", "--seed", "1"}, 0,
-			[]string{"quiz: 5 of 5 questions (why, decision, trap; every group), seed 1\n", "L1.1 ", "L1.5 ", "L2.1 ", "D1.1 ", "T1.1 ",
+			[]string{"quiz: 6 of 6 questions (why, decision, trap, recall, predict; every group), seed 1\n", "L1.1 ", "L1.5 ", "L2.1 ", "D1.1 ", "T1.1 ", "L1.4 (predict",
 				"answers: course quiz -n 9 --seed 1 --answers\n"},
 			[]string{"L1.2 ", "\nanswers\n"}},
 		{"a why question leading the answer", []string{"--kind", "why", "--lab", "1", "--seed", "3", "--answers"}, 0,
@@ -82,7 +82,7 @@ func TestQuizSeed(t *testing.T) {
 	}
 }
 
-// A question prints at most quizContext text lines, then the command that prints them all.
+// An answer is followed by at most quizContext text lines, then the command that prints them all.
 func TestQuizContextCap(t *testing.T) {
 	lines := make([]string, 20)
 	for i := range lines {
@@ -90,7 +90,7 @@ func TestQuizContextCap(t *testing.T) {
 	}
 	it := &key.Item{ID: "L9.1", Section: "Lab 9", Step: "*Why?*", TextFile: key.LabText, Ranges: []key.Range{{A: 2, B: 6}, {A: 10, B: 15}}}
 	var b strings.Builder
-	printQuestion(&b, 1, question{it: it, kind: quizWhy, prompt: it.Step}, lines)
+	printContext(&b, it, lines)
 	out := b.String()
 	if !strings.Contains(out, "   10  line 10\n       11  line 11\n       12  line 12\n    … more: course text L9.1\n") ||
 		strings.Contains(out, "line 13") {

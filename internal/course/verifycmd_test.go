@@ -66,6 +66,8 @@ func TestJSONWriteErrorIsExit2(t *testing.T) {
 		{"show", "L4.13", "--json"},
 		{"status", "--json"},
 		{"verify", "--status", "predicted", "--station", goodStation, "--date", "2026-10-17", "--json"},
+		{"check", "--station", goodStation, "--json"},
+		{"progress", "--station", goodStation, "--date", "2026-10-17", "--json"},
 	} {
 		var errb bytes.Buffer
 		code := Main(append([]string{"--root", "testdata/predict-root"}, args...),

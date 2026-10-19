@@ -145,13 +145,16 @@ func buildParser() (*argparse.Parser, map[string]*argparse.Parser) {
 	pg.Add(solutionsArg, "--solutions")
 	pg.Add(argparse.Arg{Metavar: "YYYY-MM-DD", Help: "date written in the suggested *(verified live|offline ...)* lines (default: today)"}, "--date")
 	pg.Add(jsonHelp, "--json")
-	qz := add("quiz", "draw why, decision and trap questions from the answer keys; --answers prints the answers after them")
+	qz := add("quiz", "draw why, decision, trap, recall and predict questions from the answer keys; --answers prints the answers after them")
 	qz.Add(argparse.Arg{Metavar: "GROUP", Help: "one group: a lab number (3 or L3), B, A, RA1, RA2, RAX, RA (all three), EXAM"}, "--lab")
-	qz.Add(argparse.Arg{Choices: []any{quizWhy, quizDecision, quizTrap}, Help: "one kind: why (a lab *Why ...?* question), " +
-		"decision (a review-assignment design decision), trap (a review-assignment trap)"}, "--kind")
+	qz.Add(argparse.Arg{Choices: []any{quizWhy, quizDecision, quizTrap, quizRecall, quizPredict}, Help: "one kind: why (a lab *Why ...?* question), " +
+		"decision (a review-assignment design decision), trap (a review-assignment trap), " +
+		"recall (a lab Name = `value` step), predict (a lab *Observe* step)"}, "--kind")
 	qz.Add(argparse.Arg{Type: argparse.Int, Default: 5, Metavar: "N", Help: "questions to draw (default: 5; fewer when the selection holds fewer)"}, "-n")
 	qz.Add(argparse.Arg{Type: argparse.Int, Metavar: "S", Help: "the draw's seed: the same seed draws the same quiz (default: from the clock, printed)"}, "--seed")
-	qz.Add(argparse.Arg{Action: argparse.StoreTrue, Help: "print every answer and its status after the questions"}, "--answers")
+	qz.Add(argparse.Arg{Action: argparse.StoreTrue, Help: "print every answer, its status and its course text after the questions"}, "--answers")
+	qz.Add(argparse.Arg{Action: argparse.StoreTrue, Help: "print no course text after the answers (and read none)"}, "--no-context")
+	qz.Add(argparse.Arg{Metavar: "ID,ID,...", Help: "ask exactly these items, in this order (-n and --seed do not apply): re-ask the ones you missed"}, "--ids")
 	return p, subs
 }
 
@@ -208,7 +211,8 @@ func Main(args []string, s cli.Stdio) int {
 		return cmdVerify(c, s, o, ns.String("status"), groups, ns.String("date"), ns.Bool("json"))
 	case "quiz":
 		return cmdQuiz(c, s, root, quizOpts{lab: ns.String("lab"), hasLab: ns.Get("lab") != nil, kind: ns.String("kind"),
-			count: ns.Int("n"), seed: ns.Int("seed"), hasSeed: ns.Get("seed") != nil, answers: ns.Bool("answers")})
+			count: ns.Int("n"), seed: ns.Int("seed"), hasSeed: ns.Get("seed") != nil, answers: ns.Bool("answers"), noContext: ns.Bool("no_context"),
+			ids: ns.String("ids"), hasIDs: ns.Get("ids") != nil, usage: o.usage})
 	case "status":
 		return cmdStatus(c, s, ns.Get("lab") != nil, ns.String("lab"), ns.String("status"), ns.Bool("json"))
 	default:

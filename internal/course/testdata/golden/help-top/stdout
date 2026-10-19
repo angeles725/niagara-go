@@ -54,8 +54,8 @@ positional arguments:
                         CONTRADICTED or UNDECIDED
     progress            where you are: verify's verdicts per group over every item, then the steps
                         to redo and the markers to add
-    quiz                draw why, decision and trap questions from the answer keys; --answers
-                        prints the answers after them
+    quiz                draw why, decision, trap, recall and predict questions from the answer
+                        keys; --answers prints the answers after them
 
 options:
   -h, --help            show this help message and exit
