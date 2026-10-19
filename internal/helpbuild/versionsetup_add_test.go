@@ -279,10 +279,11 @@ func TestAddVersionRollsBackANilResult(t *testing.T) {
 	repo, install := addFixture(t, "Niagara-1.2.3.4", "")
 	root := filepath.Join(repo, "versions", "1.2.3.4")
 	opt := addOpts()
+	opt.Force = true // must reach SetupOptions.Force through the Extract seam
 	called := false
 	opt.Extract = func(r, vid string, so SetupOptions) (*SetupResult, error) {
 		called = true
-		if r != repo || vid != "1.2.3.4" || so.Rebuild == nil || so.Now == nil {
+		if r != repo || vid != "1.2.3.4" || !so.Force || so.Rebuild == nil || so.Now == nil {
 			t.Errorf("Extract(%q, %q, %+v)", r, vid, so)
 		}
 		writeFile(t, filepath.Join(root, "bajadoc", "partial.html"), nil)
