@@ -87,7 +87,7 @@ make cross     # linux-amd64 and windows-amd64 binaries
 make wintest   # the test suites as Windows processes (WSL only; not part of ci)
 ```
 
-`make ci` (check, lint, cross) is what `.github/workflows/ci.yml` runs.
+`make ci` (check, lint, cross) is what `.github/workflows/ci.yml` runs, as three separate jobs.
 
 ### Windows test run
 

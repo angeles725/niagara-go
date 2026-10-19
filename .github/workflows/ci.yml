@@ -7,8 +7,17 @@ on:
 permissions:
   contents: read
 
+# A newer push to the same branch or PR supersedes the run in progress.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+# The three `make ci` targets run as separate jobs so one failure does not hide the others
+# (make stops at the first failing target), and each can be a required check on its own.
+# Real-data and Python-parity suites (make realdata/pyparity) need off-host data and stay local.
 jobs:
-  ci:
+  check:
+    name: check (fmt, vet, test)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -16,4 +25,31 @@ jobs:
         with:
           go-version-file: go.mod # the exact version of its go directive
           cache: true # module and build cache, keyed on go.sum
-      - run: make ci
+      - run: make check
+
+  cross:
+    name: cross (static linux + windows)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - run: make cross
+
+  lint:
+    name: lint (staticcheck, linux + windows)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      # make lint installs the pinned staticcheck into bin/tools when missing; cache it per version.
+      - uses: actions/cache@v4
+        with:
+          path: bin/tools
+          key: staticcheck-${{ runner.os }}-${{ hashFiles('Makefile', 'go.mod') }}
+      - run: make lint
