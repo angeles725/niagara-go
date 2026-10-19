@@ -36,15 +36,17 @@ func TestCacheFileRoundTrip(t *testing.T) {
 		t.Errorf("header: %q %q %q", f.schema, f.fingerprint, f.unreadable)
 	}
 	total := 0
-	for i, d := range mem.docs {
+	for _, d := range mem.docs {
 		total += d.Length
+	}
+	if len(f.docs) != len(mem.docs) || f.totalLen != total {
+		t.Fatalf("%d docs, total %d; want %d, %d", len(f.docs), f.totalLen, len(mem.docs), total)
+	}
+	for i, d := range mem.docs {
 		g := f.docs[i]
 		if g.Display != d.Display || g.Label != d.Label || g.Path != d.Path || g.Length != d.Length {
 			t.Errorf("doc %d: %+v, want %+v", i, g, d)
 		}
-	}
-	if len(f.docs) != len(mem.docs) || f.totalLen != total {
-		t.Errorf("%d docs, total %d; want %d, %d", len(f.docs), f.totalLen, len(mem.docs), total)
 	}
 	want := map[string]map[int]int{}
 	for i, tf := range mem.tfs {

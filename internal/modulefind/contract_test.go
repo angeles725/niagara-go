@@ -11,8 +11,8 @@ import (
 
 // TestExitContract pins the D-I2-6 fixes the goldens do not reach: a compare srcB that holds
 // no .java file is refused like <root>, an extends --of miss in JSON keeps the chain on stdout
-// and reports the miss on stderr (extends --csv follows the JSON shape), and writers --csv with
-// no static writer lists the dynamic ones.
+// and reports the miss on stderr (extends --csv follows the JSON shape), and writers with no
+// static writer lists the dynamic ones as a hit, in text and in CSV.
 func TestExitContract(t *testing.T) {
 	t.Chdir("testdata")
 	for _, tt := range []struct {
@@ -39,6 +39,10 @@ func TestExitContract(t *testing.T) {
 			stderr: "(no extends declaration for Nope) -- searched srcA: 4 java files\n", exit: 1},
 		{name: "writers --csv with only dynamic writers", args: []string{"srcA", "writers", "nobody", "--csv"},
 			stdout: "slot,kind,writer\r\nnobody,dynamic,\"BDashServlet: comp.set(prop, ...)  [slot resolved at runtime]\"\r\n"},
+		{name: "writers text with only dynamic writers", args: []string{"srcA", "writers", "nobody"},
+			stdout: "nobody: no STATIC writer (.set(\"nobody\",...) or setNobody(...))\n" +
+				"  dynamic writers (slot chosen at runtime \u2014 any slot could be the target):\n" +
+				"    BDashServlet: comp.set(prop, ...)  [slot resolved at runtime]\n"},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
 			var out, errb bytes.Buffer
@@ -110,6 +114,33 @@ func TestWritersMiss(t *testing.T) {
 			code := Main(tt.args, cli.Stdio{Out: &out, Err: &errb})
 			if code != 1 || out.String() != tt.stdout || errb.String() != tt.stderr {
 				t.Errorf("exit %d stdout %q stderr %q\nwant exit 1 stdout %q stderr %q",
+					code, out.String(), errb.String(), tt.stdout, tt.stderr)
+			}
+		})
+	}
+}
+
+// TestEmptyListingOutput pins what an empty listing prints, not only its exit: extends --csv
+// with no declaration writes no header and reports the empty scope on stderr; --json writes
+// the empty class map, which needs no notice.
+func TestEmptyListingOutput(t *testing.T) {
+	plainTree(t)
+	const scope = " -- searched plain: 1 java files\n"
+	for _, tt := range []struct {
+		name           string
+		args           []string
+		stdout, stderr string
+	}{
+		{name: "extends --csv", args: []string{"plain", "extends", "--csv"},
+			stderr: "(no extends declarations)" + scope},
+		{name: "extends --json", args: []string{"plain", "extends", "--json"},
+			stdout: "{}\n"},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			var out, errb bytes.Buffer
+			code := Main(tt.args, cli.Stdio{Out: &out, Err: &errb})
+			if code != 0 || out.String() != tt.stdout || errb.String() != tt.stderr {
+				t.Errorf("exit %d stdout %q stderr %q\nwant exit 0 stdout %q stderr %q",
 					code, out.String(), errb.String(), tt.stdout, tt.stderr)
 			}
 		})
