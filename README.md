@@ -46,6 +46,7 @@ owner before adding to a shared package.
 | `pyhtml` | Python `html` module family (D37) | Integrante3 |
 | `bajadocxml` | Niagara `.bajadoc` XML reader | Integrante3 |
 | `niagaraannot` | Slot-o-Matic annotations of a Niagara Java source | Integrante3 |
+| `pypath` | Python `pathlib` string forms: `PurePosixPath` and the host's `Path` | Integrante2 |
 
 ## Working
 
