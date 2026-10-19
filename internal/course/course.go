@@ -46,6 +46,7 @@ examples:
   course show L1.9 RA1.R6 P2
   course status --lab 6 --status predicted
   course text L5.16
+  course text '8 ORDs:343'
   course check --station ~/Niagara4.15/tridium/stations/TrainingStation \
     --install /opt/Niagara/Niagara-4.15.6.20 --lab 4 --lab 10
   course verify-predictions --station ~/Niagara4.15/tridium/stations/TrainingStation
@@ -106,8 +107,9 @@ func buildParser() (*argparse.Parser, map[string]*argparse.Parser) {
 	}
 	st.Add(argparse.Arg{Choices: choices, Help: "list the items carrying this status (written = no marker)"}, "--status")
 	st.Add(jsonHelp, "--json")
-	t := add("text", "print the course text lines an item (or a lab) points at")
-	t.Add(argparse.Arg{Metavar: "ID|GROUP", Help: "item ID or group (L3, 3, B, A)"}, "target")
+	t := add("text", "print the course text lines an item (or a lab) points at, or lines of a deck")
+	t.Add(argparse.Arg{Metavar: "ID|GROUP|DECK:LINE", Help: "item ID or group (L3, 3, B, A), or DECK:A[-B] " +
+		"(\"8 ORDs:343\", \"9:110-163\"; a deck name or a unique prefix of one, as find --slides prints it)"}, "target")
 	ck := add("check", "check what each lab leaves in a station (and the built jars): PASS/FAIL/SKIP per check")
 	ck.Add(stationArg, "--station")
 	ck.Add(installArg, "--install")

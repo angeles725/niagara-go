@@ -51,3 +51,48 @@ func TestDecksReal(t *testing.T) {
 	}
 	t.Logf("%d decks, %d lines", len(decks), total)
 }
+
+func TestResolveDeck(t *testing.T) {
+	decks, _ := listDecks("testdata/root")
+	cases := []struct{ name, want, candidates string }{
+		{"8 ORDs", "8 ORDs", ""},
+		{"8 ords.TXT", "8 ORDs", ""},
+		{"sources/n4-dev-course/text/8 ORDs.txt", "8 ORDs", ""},
+		{"LI", "Lab Instructions", ""},
+		{"1", "1 Niagara 4 Overview", ""}, // ends a word: wins over 10 Drivers
+		{"10", "10 Drivers", ""},
+		{"Review", "Review Assignment 1", ""},
+		{"lab instr", "Lab Instructions", ""},
+		{"B", "", "Bonus Slides|BQL Reference"},
+		{"Nope", "", ""},
+		{"Overview", "", ""}, // a prefix, never a substring
+	}
+	for _, c := range cases {
+		d, cand := resolveDeck(decks, c.name)
+		got := ""
+		if d != nil {
+			got = d.name
+		}
+		names := make([]string, len(cand))
+		for i, x := range cand {
+			names[i] = x.name
+		}
+		if got != c.want || strings.Join(names, "|") != c.candidates {
+			t.Errorf("resolveDeck(%q) = %q, %v; want %q, %s", c.name, got, names, c.want, c.candidates)
+		}
+	}
+}
+
+// The two deck lines the real answer keys cite resolve and are inside their files.
+func TestDeckCitationsReal(t *testing.T) {
+	root := os.Getenv(key.RootEnv)
+	if root == "" || !key.HasMarker(root) {
+		t.Skipf("%s is not a niagara-research checkout: the real deck citations are not checked", key.RootEnv)
+	}
+	for _, ref := range []string{"8 ORDs.txt:343", "sources/n4-dev-course/text/9 Multithreaded Development.txt:110-163"} {
+		code, out, errs := run("--root", root, "text", ref)
+		if code != 0 || errs != "" || !strings.Contains(out, ".txt:") {
+			t.Errorf("text %q: exit %d, stderr %q", ref, code, errs)
+		}
+	}
+}

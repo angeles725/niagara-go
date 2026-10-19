@@ -172,6 +172,17 @@ exits 2: an answer key that cannot be read without ambiguity is not searched.
   with no trailing whitespace (a blank line prints only its number).
   No range is exit 1; a missing text file or a range past its end is exit 2. Requirements
   print their `Review Assignment <k>.txt` lines.
+- `course text DECK:A[-B]`: lines A..B of one course text file, in the same numbered shape
+  (head `<file>:<range> (<deck>)`), so a `find --slides` hit or a key's citation opens as is.
+  A target with a colon is a deck reference (no item ID or group holds one). The deck name is
+  matched case folded, without any directory or `.txt` (`8 ORDs`, `8 ORDs.txt`,
+  `sources/n4-dev-course/text/8 ORDs.txt` are the same deck); `LI` is `Lab Instructions`, as
+  the keys cite it; otherwise a unique prefix, one that ends a word winning over one that cuts
+  a word (`1` is `1 Niagara 4 Overview`, not `10 Drivers`; `9` is `9 Multithreaded
+  Development`). An unknown deck is exit 1 naming the decks searched; an ambiguous prefix
+  (`course: text file B is ambiguous: Bonus Slides, BQL Reference`), a range outside the file
+  (`course: 8 ORDs: range 4-9 is outside <file> (5 lines)`, the message of an item range) or a
+  missing text directory is exit 2.
 
 ## course check
 
@@ -738,7 +749,12 @@ FAILs, no CONTRADICTED prediction, the item and status counts), not this table.
   beside the fixture's two text files (`1 Niagara 4 Overview`, `8 ORDs`, `10 Drivers`, `BQL
   Reference`, `Bonus Slides`): a hit, `-i` across decks, the honest zero with its line count, a
   bad regexp and a root without the text directory (`nopredict-root`). `slides_test.go`: the deck
-  order; `TestDecksReal` lists and reads every real deck when `NIAGARA_RESEARCH_DIR` is set.
+  order and `resolveDeck` (exact, `.txt` and directory stripped, the `LI` alias, word prefix
+  over cut prefix, ambiguous, unknown, a substring that is no prefix); `TestDecksReal` lists and
+  reads every real deck and `TestDeckCitationsReal` opens the two deck lines the keys cite, when
+  `NIAGARA_RESEARCH_DIR` is set. The Go-only `text-deck*` goldens: a range, a key citation, a
+  word prefix (with a blank line), the alias, an ambiguous prefix, an unknown deck, a range past
+  the end and a reversed range.
 - `root_test.go`: the discovery order (flag, variable, cwd walk, executable walk) and the
   not-found error, run from a temporary directory with the executable stubbed, so no `labs.md`
   above the real checkout can leak in.

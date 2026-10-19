@@ -31,6 +31,7 @@ examples:
   course show L1.9 RA1.R6 P2
   course status --lab 6 --status predicted
   course text L5.16
+  course text '8 ORDs:343'
   course check --station ~/Niagara4.15/tridium/stations/TrainingStation \
     --install /opt/Niagara/Niagara-4.15.6.20 --lab 4 --lab 10
   course verify-predictions --station ~/Niagara4.15/tridium/stations/TrainingStation
@@ -44,7 +45,8 @@ positional arguments:
   {show,status,text,check,verify-predictions,find,verify,progress,quiz}
     show                print items by ID (any case; L2.3 also finds the range item L2.2–L2.4)
     status              items per group and status; --status lists the matching items
-    text                print the course text lines an item (or a lab) points at
+    text                print the course text lines an item (or a lab) points at, or lines of a
+                        deck
     check               check what each lab leaves in a station (and the built jars):
                         PASS/FAIL/SKIP per check
     verify-predictions  run the checks linked to every *(predicted)* item: CONFIRMED, PARTIAL,

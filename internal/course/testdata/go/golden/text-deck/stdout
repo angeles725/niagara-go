@@ -1,0 +1,3 @@
+sources/n4-dev-course/text/8 ORDs.txt:2-3 (8 ORDs)
+    2  An ORD is a list of queries: scheme:body.
+    3  BOrdScheme parses one scheme.

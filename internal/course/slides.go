@@ -103,3 +103,72 @@ func cmdFindSlides(s cli.Stdio, root, q string, re *regexp.Regexp) int {
 	}
 	return cli.ExitFound
 }
+
+// deckRefRe is a deck line reference: "8 ORDs:343", "8 ORDs.txt:110-163" or the text path a key
+// cites; an item ID or a group never holds a colon.
+var deckRefRe = regexp.MustCompile(`^(.+):(\d+)(?:-(\d+))?$`)
+
+// deckAliases are the abbreviations the answer keys cite a text file by (`LI:7`).
+var deckAliases = map[string]string{"li": "lab instructions"}
+
+// resolveDeck finds the deck a name stands for: its basename, without any directory or ".txt",
+// case folded; an alias; else the one deck the name is a prefix of, a prefix that ends a word
+// winning over one that cuts a word ("1" is "1 Niagara 4 Overview", not "10 Drivers"). It
+// returns the deck, or the candidates when the name is ambiguous (none: unknown).
+func resolveDeck(decks []deck, name string) (*deck, []deck) {
+	q := strings.ToLower(name[strings.LastIndex(name, "/")+1:])
+	q = strings.TrimSuffix(q, ".txt")
+	if a, ok := deckAliases[q]; ok {
+		q = a
+	}
+	var prefix, word []deck
+	for i, d := range decks {
+		n := strings.ToLower(d.name)
+		if n == q {
+			return &decks[i], nil
+		}
+		if strings.HasPrefix(n, q) {
+			prefix = append(prefix, d)
+			if rest := n[len(q):]; rest[0] == ' ' {
+				word = append(word, d)
+			}
+		}
+	}
+	if len(word) > 0 {
+		prefix = word
+	}
+	if len(prefix) == 1 {
+		return &prefix[0], nil
+	}
+	return nil, prefix
+}
+
+// cmdDeckText prints the numbered lines a..b of the deck name stands for. Exit: 0 printed; 1 no
+// such deck (the decks searched on stderr); 2 an ambiguous name, a range outside the file, or the
+// text directory or the file cannot be read.
+func cmdDeckText(s cli.Stdio, root, name string, r key.Range) int {
+	decks, msg := listDecks(root)
+	if msg != "" {
+		fmt.Fprintf(s.Err, "course: %s\n", msg)
+		return cli.ExitCannotSearch
+	}
+	d, candidates := resolveDeck(decks, name)
+	if d == nil && len(candidates) > 0 {
+		names := make([]string, len(candidates))
+		for i, c := range candidates {
+			names[i] = c.name
+		}
+		fmt.Fprintf(s.Err, "course: text file %s is ambiguous: %s\n", name, strings.Join(names, ", "))
+		return cli.ExitCannotSearch
+	}
+	if d == nil {
+		names := make([]string, len(decks))
+		for i, c := range decks {
+			names[i] = c.name
+		}
+		fmt.Fprintf(s.Err, "course: no text file %s (searched %s in %s: %s)\n", name,
+			key.Plural(len(decks), "text file"), textDir, strings.Join(names, ", "))
+		return cli.ExitNoMatch
+	}
+	return printText(s, root, d.file, d.name, []key.Range{r})
+}
