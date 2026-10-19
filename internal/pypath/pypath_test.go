@@ -15,11 +15,12 @@ func TestPurePosixPath(t *testing.T) {
 	}
 }
 
-// TestPosixStr pins the off-Windows spelling of Str, computed on any host. "//srv/x"
-// folds to "/srv/x", where CPython keeps "//srv/x" (the package's recorded follow-up).
+// TestPosixStr pins the off-Windows spelling of Str (CPython 3.13 PosixPath), computed
+// on any host: exactly two leading slashes stay, three or more become one.
 func TestPosixStr(t *testing.T) {
 	for in, want := range map[string]string{
-		"a//b/./c/": "a/b/c", "./a": "a", ".": ".", "": ".", "/x/../y": "/x/../y", "//srv/x": "/srv/x",
+		"a//b/./c/": "a/b/c", "./a": "a", ".": ".", "": ".", "/x/../y": "/x/../y", "//srv/x": "//srv/x",
+		"///x": "/x", "//": "//", "/": "/", "//srv/./x/": "//srv/x",
 	} {
 		if got := str(in, false); got != want {
 			t.Errorf("str(%q, posix) = %q, want %q", in, got, want)

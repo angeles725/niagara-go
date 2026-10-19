@@ -33,8 +33,8 @@ var (
 type courseFile struct{ label, path, rel string }
 
 // courseFiles lists (area label, path) for every .java under the three areas,
-// each area in pathlib's sorted(rglob("*.java")) order (path parts compared
-// in turn; symlinked directories are not entered).
+// each area in pathlib's sorted(rglob("*.java")) order (pypath.Less: path parts
+// compared in turn, case-folded on Windows; symlinked directories are not entered).
 func courseFiles(root string) []courseFile {
 	var out []courseFile
 	for _, area := range courseAreas {
@@ -51,24 +51,13 @@ func courseFiles(root string) []courseFile {
 			}
 			return nil
 		})
-		sort.Slice(paths, func(i, j int) bool { return lessParts(paths[i], paths[j]) })
+		sort.Slice(paths, func(i, j int) bool { return pypath.Less(paths[i], paths[j]) })
 		for _, p := range paths {
 			rel, _ := filepath.Rel(root, p)
 			out = append(out, courseFile{area[1], p, filepath.ToSlash(rel)})
 		}
 	}
 	return out
-}
-
-// lessParts orders paths like PurePath.__lt__: by their parts, in turn.
-func lessParts(a, b string) bool {
-	pa, pb := strings.Split(filepath.ToSlash(a), "/"), strings.Split(filepath.ToSlash(b), "/")
-	for i := 0; i < len(pa) && i < len(pb); i++ {
-		if pa[i] != pb[i] {
-			return pa[i] < pb[i]
-		}
-	}
-	return len(pa) < len(pb)
 }
 
 // stem is PurePath.stem: the last part without its last suffix.

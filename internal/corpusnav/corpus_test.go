@@ -20,7 +20,7 @@ func testCorpus(t *testing.T) (*corpus, *bytes.Buffer, *bytes.Buffer) {
 
 func TestPyPath(t *testing.T) {
 	for in, want := range map[string]string{"a//b/./c/": "a/b/c", "./a": "a", ".": ".", "": ".", "/x/../y": "/x/../y",
-		"//srv/x": "/srv/x"} {
+		"//srv/x": "//srv/x", "///srv/x": "/srv/x"} {
 		if runtime.GOOS == "windows" && strings.HasPrefix(in, "//") {
 			continue // a UNC share on Windows (pypath TestWindowsPathlib)
 		}

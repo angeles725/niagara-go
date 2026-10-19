@@ -23,6 +23,15 @@ import (
 	"github.com/angeles725/niagara-go/internal/version"
 )
 
+// executable is os.Executable with symlinks resolved; tests replace it.
+var executable = func() (string, error) {
+	exe, err := os.Executable()
+	if err != nil {
+		return "", err
+	}
+	return filepath.EvalSymlinks(exe)
+}
+
 // defaultRoot locates the corpus when $CORPUS_NAV_ROOT is unset: the first
 // niagara-research checkout (locate.ResearchCheckout) walking up from the
 // executable, then from the working directory; outside any checkout, the
@@ -30,14 +39,11 @@ import (
 // replace it.
 var defaultRoot = func() (string, error) {
 	if root, ok := locate.Find(locate.Options{Marker: locate.ResearchCheckout,
-		Starts: []locate.Start{locate.FromExecutable, locate.FromCwd}}); ok {
+		Starts: []locate.Start{locate.FromExecutable, locate.FromCwd}, Executable: executable}); ok {
 		return root, nil
 	}
-	exe, err := os.Executable()
+	exe, err := executable()
 	if err != nil {
-		return "", err
-	}
-	if exe, err = filepath.EvalSymlinks(exe); err != nil {
 		return "", err
 	}
 	return filepath.Dir(filepath.Dir(exe)), nil
