@@ -116,3 +116,13 @@ func TestGoldenSynthetic(t *testing.T) {
 		t.Run(index, func(t *testing.T) { checkGolden(t, base, index, goldenPath(index)) })
 	}
 }
+
+// TestGoldenClassIndexWithoutInventory: the class index of a base dir that
+// has no module inventory (zkm_source null for every class).
+func TestGoldenClassIndexWithoutInventory(t *testing.T) {
+	base := newBase(t)
+	if _, err := BuildClassIndex(base, syntheticCorpus(t)); err != nil {
+		t.Fatal(err)
+	}
+	checkGolden(t, base, ClassIndexFile, filepath.Join("testdata", "golden", "class-index-no-inventory.json.golden"))
+}
