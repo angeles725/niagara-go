@@ -149,8 +149,9 @@ func printStats(env *registry.Env, stats *index.Object, ci summary, files []inde
 	}
 	fmt.Fprintf(w, "    %s %s MB\n\n", core.LJust("TOTAL", 30), core.RJust(core.Fixed(roundMB(totalBytes), 1), 6))
 	printHelpStatus(w, env.BaseDir, reader)
-	fmt.Fprintf(w, "  COMMANDS: %d available\n", len(statsCommands))
-	fmt.Fprintf(w, "    %s\n\n", strings.Join(statsCommands, ", "))
+	commands := statsCommands()
+	fmt.Fprintf(w, "  COMMANDS: %d available\n", len(commands))
+	fmt.Fprintf(w, "    %s\n\n", strings.Join(commands, ", "))
 }
 
 // printHelpStatus is the HELP NAVIGATOR INTEGRATION block (help_bridge
