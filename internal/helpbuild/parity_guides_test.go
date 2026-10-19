@@ -1,9 +1,11 @@
 package helpbuild
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -342,4 +344,23 @@ func TestParityGuidesReal(t *testing.T) {
 			}
 		})
 	}
+}
+
+// runHTMLDriver runs htmldriver.py with stdin and returns its lines.
+func runHTMLDriver(t *testing.T, stdin string, args ...string) []string {
+	t.Helper()
+	python, tools := driver(t)
+	script, err := filepath.Abs(filepath.Join("testdata", "parity", "htmldriver.py"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	cmd := exec.Command(python, append([]string{"-I", "-B", script, tools}, args...)...)
+	cmd.Stdin = strings.NewReader(stdin)
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+	out, err := cmd.Output()
+	if err != nil {
+		t.Fatalf("htmldriver %v: %v\n%s", args, err, stderr.String())
+	}
+	return strings.Split(strings.TrimSuffix(string(out), "\n"), "\n")
 }
