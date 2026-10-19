@@ -3,9 +3,9 @@
 // by-marker, by-focus, connections, graph, path, lint-refs, stats, semantic (TF-IDF;
 // the embedding backend is retired, decision D10) and selftest.
 //
-// The corpus root is the parent of the directory holding the executable, symlinks
-// resolved (Python: tools/corpusnav/../.. resolved), unless $CORPUS_NAV_ROOT names
-// another; $CORPUS_NAV_INDEX_DIR moves the find cache (default <root>/tools/.corpus-index)
+// The corpus root is $CORPUS_NAV_ROOT, else the niagara-research checkout found by
+// walking up from the executable and then the working directory (locate.ResearchCheckout),
+// else the parent of the directory holding the executable; $CORPUS_NAV_INDEX_DIR moves the find cache (default <root>/tools/.corpus-index)
 // and $CORPUS_NAV_FIND_INDEX=off ranks find in memory. A root without block files is not
 // the corpus: every lookup there exits 2 (cannot search) instead of reporting no match.
 package corpusnav
@@ -19,11 +19,20 @@ import (
 	"github.com/angeles725/niagara-go/internal/argparse"
 	"github.com/angeles725/niagara-go/internal/blockfiles"
 	"github.com/angeles725/niagara-go/internal/cli"
+	"github.com/angeles725/niagara-go/internal/locate"
 	"github.com/angeles725/niagara-go/internal/version"
 )
 
-// defaultRoot locates the corpus from the executable; tests replace it.
+// defaultRoot locates the corpus when $CORPUS_NAV_ROOT is unset: the first
+// niagara-research checkout (locate.ResearchCheckout) walking up from the
+// executable, then from the working directory; outside any checkout, the
+// executable's grandparent, which the cannot-search message then names. Tests
+// replace it.
 var defaultRoot = func() (string, error) {
+	if root, ok := locate.Find(locate.Options{Marker: locate.ResearchCheckout,
+		Starts: []locate.Start{locate.FromExecutable, locate.FromCwd}}); ok {
+		return root, nil
+	}
 	exe, err := os.Executable()
 	if err != nil {
 		return "", err
