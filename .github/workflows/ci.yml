@@ -7,10 +7,11 @@ on:
 permissions:
   contents: read
 
-# A newer push to the same branch or PR supersedes the run in progress.
+# A newer push to the same branch or PR supersedes the run in progress, except on main:
+# every merge to main keeps its own complete run.
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 # The three `make ci` targets run as separate jobs so one failure does not hide the others
 # (make stops at the first failing target), and each can be a required check on its own.
