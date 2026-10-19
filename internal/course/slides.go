@@ -85,18 +85,21 @@ func scanDecks(root string, re *regexp.Regexp, hit func(d deck, n int, line stri
 }
 
 // cmdFindSlides prints <deck>:<line>: <text> for every course text line re matches. Exit: 0 at
-// least one; 1 none (what was searched on stderr); 2 the text directory or a file cannot be read.
+// least one; 1 none (what was searched on stderr); 2 the text directory or a file cannot be read,
+// with nothing on stdout (the hits are printed only once every deck was read).
 func cmdFindSlides(s cli.Stdio, root, q string, re *regexp.Regexp) int {
-	found := 0
+	var hits []string
 	lines, files, msg := scanDecks(root, re, func(d deck, n int, line string) {
-		found++
-		fmt.Fprintf(s.Out, "%s:%d: %s\n", d.name, n, truncate(strings.TrimSpace(line), 120))
+		hits = append(hits, fmt.Sprintf("%s:%d: %s\n", d.name, n, truncate(strings.TrimSpace(line), 120)))
 	})
 	if msg != "" {
 		fmt.Fprintf(s.Err, "course: %s\n", msg)
 		return cli.ExitCannotSearch
 	}
-	if found == 0 {
+	for _, h := range hits {
+		fmt.Fprint(s.Out, h)
+	}
+	if len(hits) == 0 {
 		fmt.Fprintf(s.Err, "course: no text line matches %s (searched %s in %s in %s)\n", q,
 			key.Plural(lines, "line"), key.Plural(files, "text file"), textDir)
 		return cli.ExitNoMatch
@@ -118,6 +121,9 @@ var deckAliases = map[string]string{"li": "lab instructions"}
 func resolveDeck(decks []deck, name string) (*deck, []deck) {
 	q := strings.ToLower(name[strings.LastIndex(name, "/")+1:])
 	q = strings.TrimSuffix(q, ".txt")
+	if q == "" { // a directory or a bare ".txt": no name, so no deck (an empty prefix fits them all)
+		return nil, nil
+	}
 	if a, ok := deckAliases[q]; ok {
 		q = a
 	}

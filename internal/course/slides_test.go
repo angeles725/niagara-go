@@ -2,6 +2,7 @@ package course
 
 import (
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -66,6 +67,8 @@ func TestResolveDeck(t *testing.T) {
 		{"B", "", "Bonus Slides|BQL Reference"},
 		{"Nope", "", ""},
 		{"Overview", "", ""}, // a prefix, never a substring
+		{"sources/", "", ""}, // nothing left of the name: unknown, not a prefix of every deck
+		{".txt", "", ""},
 	}
 	for _, c := range cases {
 		d, cand := resolveDeck(decks, c.name)
@@ -93,6 +96,33 @@ func TestDeckCitationsReal(t *testing.T) {
 		code, out, errs := run("--root", root, "text", ref)
 		if code != 0 || errs != "" || !strings.Contains(out, ".txt:") {
 			t.Errorf("text %q: exit %d, stderr %q", ref, code, errs)
+		}
+	}
+}
+
+// A deck that cannot be read fails the whole search before any hit is printed: stdout never
+// carries a partial result next to the exit 2.
+func TestFindSlidesUnreadableDeckPrintsNothing(t *testing.T) {
+	root := t.TempDir()
+	if err := os.CopyFS(root, os.DirFS("testdata/root")); err != nil {
+		t.Fatal(err)
+	}
+	broken := filepath.Join(root, filepath.FromSlash(textDir), "zz Broken.txt")
+	if err := os.Symlink(filepath.Join(root, "missing.txt"), broken); err != nil {
+		t.Skipf("no symlink: %v", err)
+	}
+	code, out, errs := run("--root", root, "find", "--slides", "-i", "a")
+	if code != 2 || out != "" || !strings.Contains(errs, "zz Broken.txt") {
+		t.Errorf("exit %d, stdout %q, stderr %q", code, out, errs)
+	}
+}
+
+// Line 0 and a line number past int fail like any range outside the file (exit 2).
+func TestTextDeckBadLineNumbers(t *testing.T) {
+	for _, ref := range []string{"8 ORDs:0", "8 ORDs:0-2", "8 ORDs:99999999999999999999999"} {
+		code, out, errs := run("--root", "testdata/root", "text", ref)
+		if code != 2 || out != "" || !strings.Contains(errs, "8 ORDs") {
+			t.Errorf("text %q: exit %d, stdout %q, stderr %q", ref, code, out, errs)
 		}
 	}
 }
