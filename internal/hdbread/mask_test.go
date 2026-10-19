@@ -411,31 +411,36 @@ func hostileSection(n int) []byte {
 	return []byte(b.String())
 }
 
-// --mask stays near-linear in the record count: four times the hostile records may cost about four
-// times as long, not sixteen (the quadratic planMask took 14 s for 20k). A ratio of two sizes, best of
-// three runs each, instead of a wall-clock cap, so a slow or -race build does not flake.
+// --mask stays near-linear in the record count: eight times the hostile records may cost about eight
+// times as long, not sixty-four (the quadratic planMask took 14 s for 20k). A ratio of two sizes
+// instead of a wall-clock cap, so a slow or -race build does not flake: the best of five runs each,
+// interleaved so a load spike on a busy host hits both sizes, and a threshold (22, about the geometric
+// mean of 8 and 64) far from both the linear and the quadratic ratio.
 func TestMaskScalesToManyRecords(t *testing.T) {
 	if testing.Short() {
 		t.Skip("timing ratio test; run without -short")
 	}
-	best := func(n int) time.Duration {
-		rec := hostileSection(n)
-		var min time.Duration
-		for i := 0; i < 3; i++ {
-			start := time.Now()
-			lines := maskedStrings(rec)
-			if d := time.Since(start); i == 0 || d < min {
-				min = d
-			}
-			if l, bad := verbatimNotOp(lines); bad {
-				t.Fatalf("rule v5: %q printed verbatim", l)
-			}
+	run := func(rec []byte) time.Duration {
+		start := time.Now()
+		lines := maskedStrings(rec)
+		d := time.Since(start)
+		if l, bad := verbatimNotOp(lines); bad {
+			t.Fatalf("rule v5: %q printed verbatim", l)
 		}
-		return min
+		return d
 	}
-	small, large := best(5000), best(20000)
-	if ratio := float64(large) / float64(small); ratio > 8 {
-		t.Errorf("--strings --mask: 5k records %s, 20k records %s (ratio %.1f > 8: not near-linear)", small, large, ratio)
+	smallRec, largeRec := hostileSection(4000), hostileSection(32000)
+	var small, large time.Duration
+	for i := 0; i < 5; i++ {
+		if d := run(smallRec); i == 0 || d < small {
+			small = d
+		}
+		if d := run(largeRec); i == 0 || d < large {
+			large = d
+		}
+	}
+	if ratio := float64(large) / float64(small); ratio > 22 {
+		t.Errorf("--strings --mask: 4k records %s, 32k records %s (ratio %.1f > 22: not near-linear)", small, large, ratio)
 	}
 }
 
