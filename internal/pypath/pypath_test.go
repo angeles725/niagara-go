@@ -65,6 +65,17 @@ func TestJoin(t *testing.T) {
 		{"testdata/corpus", "CATALOG.md", true, `testdata\corpus\CATALOG.md`},
 		{".", "a.md", false, "a.md"},
 		{"r", "a.md", false, "r/a.md"},
+		// The rows of blockfiles' former joinFor, every expectation unchanged.
+		{`C:\r`, "a.md", true, `C:\r\a.md`},
+		{`C:\r\`, "a.md", true, `C:\r\a.md`},
+		{"C:/r/", "a.md", true, `C:\r\a.md`},
+		{"testdata/r", "a.md", true, `testdata\r\a.md`},
+		{"r/", "a.md", false, "r/a.md"},
+		// The two inputs where joinFor differed ("/x", `\x`, `C:\x`); no blockfiles
+		// caller passes them (roots are pathlib- or filepath-cleaned).
+		{"", "x", false, "x"},
+		{"", "x", true, "x"},
+		{"C:", "x", true, "C:x"},
 	} {
 		if got := join(tt.a, tt.b, tt.windows); got != tt.want {
 			t.Errorf("join(%q, %q, %v) = %q, want %q", tt.a, tt.b, tt.windows, got, tt.want)
