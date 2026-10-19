@@ -21,11 +21,18 @@ func scope(c *key.Corpus) string {
 	return fmt.Sprintf("searched %s in %s", key.Plural(len(c.Items), "item"), strings.Join(names, ", "))
 }
 
-func writeJSON(w io.Writer, v any) {
-	enc := json.NewEncoder(w)
+// writeJSON writes v to stdout as one indented JSON document. A failed write (a closed pipe, a full
+// disk) is reported on stderr and returns false, so the command exits 2 instead of 0 over a
+// truncated document.
+func writeJSON(s cli.Stdio, v any) bool {
+	enc := json.NewEncoder(s.Out)
 	enc.SetEscapeHTML(false)
 	enc.SetIndent("", "  ")
-	_ = enc.Encode(v)
+	if err := enc.Encode(v); err != nil {
+		fmt.Fprintf(s.Err, "course: --json: %v\n", err)
+		return false
+	}
+	return true
 }
 
 func textLine(it *key.Item) string {
@@ -113,7 +120,9 @@ func cmdShow(c *key.Corpus, s cli.Stdio, ids []string, asJSON bool) int {
 		for _, it := range found {
 			out = append(out, toJSON(it))
 		}
-		writeJSON(s.Out, out)
+		if !writeJSON(s, out) {
+			return cli.ExitCannotSearch
+		}
 		return code
 	}
 	for i, it := range found {

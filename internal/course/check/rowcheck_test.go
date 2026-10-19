@@ -22,12 +22,12 @@ func TestRowValidation(t *testing.T) {
 		ck   Check
 		want string
 	}{
-		{Check{Kind: kindSlot, Root: rootLabsrc, Type: numericWritable, Slot: "out", Want: "1"}, "bad row: Root labsrc on kind slot"},
-		{Check{Kind: kindFileText, Glob: "shared/a", Match: ".", Whole: true, Line: 1}, "bad row: Whole and Line together"},
+		{Check{Kind: kindSlot, Root: rootLabsrc, Type: numericWritable, Slot: "out", Want: "1"}, "bad row: root labsrc on kind slot"},
+		{Check{Kind: kindFileText, Glob: "shared/a", Match: ".", Whole: true, Line: 1}, "bad row: both Whole and Line set"},
 		{Check{Kind: kindFiles, Root: rootInstall, Glob: "{station}.txt", N: 1}, "bad row: {station} outside the station root"},
-		{Check{Kind: kindAnnotation, Root: rootInstall, Glob: "A.java", Fact: factSlots, Want: "x"}, "bad row: Root install on kind annotation"},
+		{Check{Kind: kindAnnotation, Root: rootInstall, Glob: "A.java", Fact: factSlots, Want: "x"}, "bad row: root install on kind annotation"},
 		{Check{Kind: kindFiles, Root: "elsewhere", Glob: "a", N: 1}, "bad row: unknown Root elsewhere"},
-		{Check{Kind: kindFileText, Glob: "shared/a", Match: "(.)", Names: "C", Op: opMin, N: 1}, "bad row: Names without a Whole file-text row"},
+		{Check{Kind: kindFileText, Glob: "shared/a", Match: "(.)", Names: "C", Op: opMin, N: 1}, "bad row: set Names without a Whole file-text row"},
 	} {
 		if r := st.Run(&c.ck); r.Verdict != Skip || r.Evidence != c.want {
 			t.Errorf("%+v: %s %q, want SKIP %q", c.ck, r.Verdict, r.Evidence, c.want)
@@ -94,6 +94,7 @@ func TestAttrNames(t *testing.T) {
 		`C=MX,ST=S,L=L,O="a\"b, c",CN=x`:       "C CN L O ST",
 		`C=MX,ST=S,L=L,O=Veytrix, Inc.,CN=x`:   "C CN Inc. L O ST", // an unescaped comma separates
 		`C=MX,ST=S,L=L,O=x\\,OU=y,CN=x`:        "C CN L O OU ST",   // an escaped backslash ends before the comma
+		`CN=a,O=b\`:                            "CN O",             // a trailing backslash is a literal of the last value
 	} {
 		if got := attrNames(in); got != want {
 			t.Errorf("attrNames(%s) = %q, want %q", in, got, want)

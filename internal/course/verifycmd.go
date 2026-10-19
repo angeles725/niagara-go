@@ -87,7 +87,9 @@ func cmdVerify(c *key.Corpus, s cli.Stdio, o stationOpts, status string, groups 
 			}
 			out[i] = j
 		}
-		writeJSON(s.Out, out)
+		if !writeJSON(s, out) {
+			return cli.ExitCannotSearch
+		}
 	} else {
 		printPredictions(s.Out, preds, date)
 	}

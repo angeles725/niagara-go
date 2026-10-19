@@ -55,7 +55,9 @@ func cmdCheck(s cli.Stdio, o stationOpts, labs []string, asJSON bool) int {
 			out[i] = resultJSON{ID: r.ID, Lab: r.Lab, Keys: append([]string{}, r.Keys...), Kind: r.Kind,
 				Description: r.Desc, Verdict: r.Verdict, Evidence: r.Evidence}
 		}
-		writeJSON(s.Out, out)
+		if !writeJSON(s, out) {
+			return cli.ExitCannotSearch
+		}
 	} else {
 		printResults(s.Out, results)
 	}

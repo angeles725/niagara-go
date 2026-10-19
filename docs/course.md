@@ -650,7 +650,7 @@ behind them). Inputs: the stations `TrainingStation`, `Cristian_Angeles_Review` 
 `Cristian_Angeles_Cert` (Niagara 4.15), the install `Niagara-4.15.6.20`, the 4.15.6.20 source tree of
 niagara-research, the participant's lab sources `N4_Labs/niagara_dev_home` (and `N4_Labs/certificates`
 beside it), the corpus solutions `sources/n4-dev-course/solutions`, and the niagara-research answer
-keys at `9e7c8a7eb`.
+keys at `5abc827e9`.
 
 | Command (2026-10-18) | Result |
 |---|---|
@@ -658,13 +658,13 @@ keys at `9e7c8a7eb`.
 | `course check --lab RA1 --lab RA2` | 31 checked: PASS 29, FAIL 2 (CRA1.2, CRA1.10) |
 | `course check --lab EXAM` | 19 checked: PASS 19 |
 | `course verify --status predicted` | 39: CONFIRMED 1 (L1.14, offline), PARTIAL 14, CONTRADICTED 0, UNDECIDED 24; 30 checks run |
-| `course verify --status written` | 201: CONFIRMED 10 (RA2.V10–V15 live; L5.2, L5.8, L5.9, L5.17, RA1.R1, RA1.R2, RA1.R4, RA2.R3, RA2.R8 offline), PARTIAL 15, CONTRADICTED 3 (L3.7, RA1.M3, RA1.V9–V14), UNDECIDED 173; 38 checks run |
+| `course verify --status written` | 191: CONFIRMED 0, PARTIAL 15, CONTRADICTED 3 (L3.7, RA1.M3, RA1.V9–V14), UNDECIDED 173; 23 checks run |
 | `course verify --status identical` | 50: CONFIRMED 9 (offline), PARTIAL 7, CONTRADICTED 0, UNDECIDED 34; 16 checks run |
 | `course verify --status corrected` | 10: CONFIRMED 2 (offline), UNDECIDED 8; 2 checks run |
-| `course verify --status unverified` | 20: CONFIRMED 1 (live), PARTIAL 5, UNDECIDED 14; 7 checks run |
-| `course verify --status verified` | 72: CONFIRMED 72 (30 live, 42 offline lines); 90 checks run |
-| `course progress` | 370 items: checked 125, CONFIRMED 83, PARTIAL 39, CONTRADICTED 3, UNDECIDED 245; 155 checks run; 3 `redo` (C3.4, CRA1.2, CRA1.10), 11 `mark` (live: RA2.V10–V15; offline: L1.14, L5.2, L5.8, L5.9, L5.17, RA1.R1, RA1.R2, RA1.R4, RA2.R3, RA2.R8) |
-| `course status` | verified 72: live 33, offline 39 |
+| `course verify --status unverified` | 20: CONFIRMED 1 (X6, live), PARTIAL 5, UNDECIDED 14; 7 checks run |
+| `course verify --status verified` | 83: CONFIRMED 83 (31 live, 52 offline lines); 110 checks run |
+| `course progress` | 370 items: checked 125, CONFIRMED 83, PARTIAL 39, CONTRADICTED 3, UNDECIDED 245; 155 checks run; 3 `redo` (C3.4, CRA1.2, CRA1.10), 0 `mark` |
+| `course status` | verified 83: live 34, offline 49 |
 | `course quiz -n 500` | 89 questions: why 34, decision 29, trap 26 |
 
 To regenerate it, set the variables and run the commands of the table (zsh: run loops in `bash -c`):

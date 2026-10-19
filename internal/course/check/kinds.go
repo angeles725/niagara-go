@@ -15,12 +15,16 @@ const (
 	kindJarCert    = "jar-cert"    // the Fact of the signer certificate of the jar's signature block (jarcert.go)
 	kindFileText   = "file-text"   // every file matching Glob under Root has Line (or N lines, or Whole: N matches) matching Match
 	kindAudit      = "audit"       // audit records of the Glob history files matching Hist, counted against N
-	kindLog        = "log"         // log records of the Glob history files matching Hist, counted against N
+	kindLog        = "log"         // log records of the Glob history files matching Hist, counted against N (no spec row yet: see below)
 	kindTrend      = "trend"       // every Glob trend history: N records (Distinct: N values), values in Hist's range
 	kindSourceText = "source-text" // the matches of Match in the source-tree file Glob counted against N
 	kindAnnotation = "annotation"  // the Fact the annotations of the lab-source file Glob declare equals Want
 	kindListing    = "listing"     // the station file Glob names exactly the Type components, each with its Slot value (listing.go)
 )
+
+// kindLog has no spec row yet, on purpose: the LogHistory keeps its last 500 records only, so no log
+// line of a lab step outlives the session that ran it (docs/course.md, "What the histories do not
+// decide"). A log row needs a check run in that same live session; history_test.go covers the kind.
 
 // evidenceOf is the evidence kind of a verified marker each check kind gives (key.EvidenceLive,
 // key.EvidenceOffline): live for what a station stores (its bog, the files in its directory, its
