@@ -76,7 +76,7 @@ Paths are under `tools/niagara_help_lib/` of the niagara-help repository.
 | `export-html` | `cli/cmd_export.py`, `html_export.py` | `pre-go-retire` (8410d7451) | alias of `export --html`; never ported |
 | `export-module` | `cli/cmd_export.py`, `module_export.py` | `pre-go-retire` (8410d7451) | alias of `export --module`; never ported |
 | `diff-api` | `cli/cmd_export.py`, `api_diff.py` | `pre-go-retire` (8410d7451) | never ported |
-| `build-call-index` | `cli/cmd_admin.py`, `../build_call_index.py` | `pre-go-retire` (8410d7451) | index builder: stays in Python until the Phase 4 builders |
+| `build-call-index` | `cli/cmd_admin.py`, `../build_call_index.py` | `pre-go-retire` (8410d7451) | index builder; never ported (D32) |
 | `repl` | `cli/cmd_admin.py`, `cli/repl.py` | `pre-go-retire` (8410d7451) | never ported |
 
 ## mnav (module-navigator)
@@ -84,6 +84,10 @@ Paths are under `tools/niagara_help_lib/` of the niagara-help repository.
 Kept: class, search, inventory, module, modules, rank, ask, hierarchy, implementors, drivers,
 grep, source, token, license-feature, license-features, resources, callers, callees, stats,
 palette-lexicon-agents, selftest (with --recall).
+
+Before module-navigator deleted its Python CLI tests, D48 checked them against Go mnav: every
+difference is in a retired command or is already marked intended, so no kept command has a gap
+([d48-mnav-cli-test-triage.md](d48-mnav-cli-test-triage.md)).
 
 Python: module-navigator `tools/module_nav.py`. Module paths are relative to `tools/`; "registered in" is the `commands/` file that declares the subcommand.
 

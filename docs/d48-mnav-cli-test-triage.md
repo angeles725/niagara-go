@@ -1,5 +1,9 @@
 # D48: Go mnav vs the module-navigator Python CLI tests
 
+**Status: done (2026-10-18).** The triage landed in niagara-go `03af3600`; module-navigator
+deleted the Python CLI tests in `ab44b68` (PR #2, merge `237ef10`). This page is kept as the
+historical record; the conclusion is folded into [retired-commands.md](retired-commands.md).
+
 module-navigator deletes its Python CLI tests (branch `i2/lib-retire`). Before that, every
 behaviour those tests pin was checked against the Go `mnav`, so that no difference is dropped
 without a reason. Rule D48: a difference in a command outside the D32 keep set is dropped (the

@@ -70,7 +70,7 @@ Pass an absolute path: `go test` runs in the package directory, so a relative pa
 
 The nsearch/find3 goldens (internal/searchdoor) skip in exec mode: their backends are the Go
 port of the fake scripts (`scriptFakes`), which exist only in process. The nsearch binary is
-checked on the real corpus by `make parity` (`TestSearchQuality`).
+checked on the real corpus by `make realdata` (`TestSearchQuality`).
 
 ## Freezing and regenerating
 
@@ -116,7 +116,7 @@ answered. The real-corpus captures (`internal/{nav,help}/testdata/golden-real/ca
 the harness and the CLI from the tag and the data (indexes/, organized/, fulltext.sqlite,
 versions/) from the live `MODULE_NAVIGATOR_DIR` / `NIAGARA_HELP_DIR`. Go tests reach the same
 worktrees through `internal/pyref`: `Dir` (same pin and clean check; a missing worktree skips
-unless `PYREF_REQUIRED=1`, which `make parity` exports, then fails), `Python` (python3; skips off
+unless `PYREF_REQUIRED=1`, which `make pyparity` exports, then fails), `Python` (python3; skips off
 Linux, where the references write CRLF and hit cp1252) and `Env` (the escape). A Go test that
 only checks a value the Python once recorded (a hash, an exit status) copies it
 into its own testdata with the tag it came from instead of reading the reference: helpbuild's
@@ -137,11 +137,11 @@ keeps them; a re-capture also keeps every `cmd.json` key it does not write (`gen
 `args` and `env`, so a hand-added `requires` survives). Unit-test fixtures of shared packages follow the same rule (`testdata/gen.py`,
 `gen_fixtures.py`).
 
-In the Python suites of the source repos (niagara-research `tools/tests/goldencli.py`),
-`GOLDEN_UPDATE=1` rewrites the Python goldens, and `GOLDEN_BIN_<TOOL>` (script name
-without `.py`, upper-cased, `-` -> `_`, e.g. `GOLDEN_BIN_BOG_NAV`) runs a tool's Python golden
-suite against the Go binary, and `GOLDEN_UPDATE` refuses to run with such an override so the
-port's output is never frozen as the expectation.
+In the Python suites of the source repos (niagara-research `tools/tests/goldencli.py`, deleted
+in Phase 5 and kept at the `pre-go-retire` tag), `GOLDEN_UPDATE=1` rewrote the Python goldens,
+and `GOLDEN_BIN_<TOOL>` (script name without `.py`, upper-cased, `-` -> `_`, e.g.
+`GOLDEN_BIN_BOG_NAV`) ran a tool's Python golden suite against the Go binary; `GOLDEN_UPDATE`
+refused to run with such an override so the port's output was never frozen as the expectation.
 
 ## Go-only cases (D34)
 
@@ -167,9 +167,9 @@ Nothing outside `testdata/go/` is written: `golden.Run` never rewrites a Python 
 whose output the new behaviour changes keeps its Python bytes and declares the Go output in
 `intended.json` with a D34 reason (hdbread `records-audit-type`, `usage-help`).
 
-## Search quality: `make parity`
+## Search quality: `make realdata`
 
-`make parity` runs `TestSearchQuality` (internal/searchdoor/quality_test.go), the search quality
+`make realdata` (and so `make parity`) runs `TestSearchQuality` (internal/searchdoor/quality_test.go), the search quality
 gate. It runs the search in process on the real corpus (`NIAGARA_RESEARCH`, default
 `~/niagara-research`) and measures hit@1/hit@5 per source over
 `testdata/quality/golden-queries.jsonl` (99 questions, docs pinned to 4.14.0.162) and the warm
@@ -188,15 +188,15 @@ question set drifts from the niagara-research one (skipped when that file is abs
 (niagara-research `pre-go-retire:tools/tests/test_t6c_hdb_trend.py`): it decodes a real .hdb
 history named by `HDBREAD_REAL_HDB` and checks the HARBOR UMA14 Ret history (682 records, the
 first at 2018-09-26T17:30:00.008Z, ascending timestamps, a 15-minute median step, every value in
-(0, 60) degC). The client data never enters this repo. Unset, the test skips; `make parity` sets
-it to that file in the checkout (`make parity HDBREAD_REAL_HDB=` skips it), and a missing file fails.
+(0, 60) degC). The client data never enters this repo. Unset, the test skips; `make realdata` sets
+it to that file in the checkout (`make realdata HDBREAD_REAL_HDB=` skips it), and a missing file fails.
 
 make expands `$` in an overriding value, whether it comes from the command line or the
 environment (`make -e` too): `UMA14$20Ret.hdb` reaches the test as `UMA140Ret.hdb`. Write each `$`
 of a path as `$$` in either form (checked with GNU Make 4.3); `go test` takes the plain path:
 
 ```sh
-make parity HDBREAD_REAL_HDB='/path/to/seg1/UMA14$$20Ret.hdb'
+make realdata HDBREAD_REAL_HDB='/path/to/seg1/UMA14$$20Ret.hdb'
 HDBREAD_REAL_HDB='/path/to/seg1/UMA14$20Ret.hdb' go test -run TestRealHarborHistory ./internal/hdbread
 ```
 
@@ -267,7 +267,6 @@ python3 -I internal/nav/testdata/golden-real/capture.py bin/mnav
 python3 -I internal/help/testdata/golden-real/capture.py bin/nh
 ```
 
-These cases replace both Python harnesses for the kept commands: once Phase 5 removes the
-frozen Python tools, module-navigator and niagara-help `tests/golden_cli.py` (and their
-`tests/golden/cli.json`) can be deleted (D39 (b)); the generators then run only from a
-`pre-go-retire` worktree.
+These cases replaced both Python harnesses for the kept commands: Phase 5 deleted
+module-navigator and niagara-help `tests/golden_cli.py` and their `tests/golden/cli.json`
+(D39 (b)), so the generators run only from a `pre-go-retire` worktree.
