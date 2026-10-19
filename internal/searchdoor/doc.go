@@ -40,10 +40,12 @@
 // its tools/ folder), as the Python tools find theirs from __file__, and a path
 // that is not a file is that source's "tool not found".
 //
-//	root    $NSEARCH_ROOT, else the first directory holding tools/corpus-nav.py
-//	        walking up from the executable's directory (symlinks resolved), else
-//	        from the working directory, else the executable directory's parent
-//	        (the Python layout: the binary installed in <root>/tools/)
+//	root    $NSEARCH_ROOT, else the first niagara-research checkout
+//	        (locate.ResearchCheckout: CATALOG.md and a bloque file, or the legacy
+//	        tools/corpus-nav.py) walking up from the executable's directory
+//	        (symlinks resolved), else from the working directory, else the
+//	        executable directory's parent (the Python layout: the binary
+//	        installed in <root>/tools/)
 //	blocks  $NSEARCH_CORPUS_NAV    else <root>/tools/corpus-nav.py
 //	docs    $NSEARCH_NIAGARA_HELP  else <root>/niagara-help/tools/niagara_help.py
 //	code    $NSEARCH_MODULE_NAV    else <root>/module-navigator/tools/module_nav.py
