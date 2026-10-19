@@ -75,3 +75,37 @@ func TestMainReindexKeepsOtherLines(t *testing.T) {
 		t.Errorf("RunAt reindex: exit %d, stderr %q", code, errb.String())
 	}
 }
+
+// TestMainReindexNotRouted: "reindex" that is not the command word (an
+// argument of class or search) and a line whose command is not reindex never
+// reach the index rebuild: Main prints no "Corpus:" line and answers exactly
+// as module-nav (run) does for the same line.
+func TestMainReindexNotRouted(t *testing.T) {
+	root := t.TempDir()
+	nav := filepath.Join(root, "module-navigator")
+	for _, d := range []string{filepath.Join(nav, "indexes"), filepath.Join(root, "organized")} {
+		if err := os.MkdirAll(d, 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	t.Setenv("NAV_CORPUS_BASE", "")
+	rebuild := "Corpus: " + filepath.Join(root, "organized") + "\n"
+	for _, args := range [][]string{
+		{"-d", nav, "class", "reindex"},
+		{"-d", nav, "class", "reindex", "--check"},
+		{"--base-dir", nav, "class"},
+		{"--base-dir", nav, "class", "Foo"},
+		{"-d", nav, "search", "reindex"},
+		{"-d", nav, "--", "search", "reindex", "--check"},
+	} {
+		var out, errb bytes.Buffer
+		code := Main(args, cli.Stdio{In: strings.NewReader(""), Out: &out, Err: &errb})
+		var wantOut, wantErr bytes.Buffer
+		wantCode := run("", args, cli.Stdio{In: strings.NewReader(""), Out: &wantOut, Err: &wantErr})
+		got := ansiColour.ReplaceAllString(out.String(), "")
+		if strings.HasPrefix(got, rebuild) || code != wantCode || out.String() != wantOut.String() || errb.String() != wantErr.String() {
+			t.Errorf("Main(%q): exit %d, stdout %q, stderr %q; want module-nav's exit %d, stdout %q, stderr %q",
+				args, code, got, errb.String(), wantCode, wantOut.String(), wantErr.String())
+		}
+	}
+}
