@@ -26,13 +26,15 @@ const helpPyRefEnv = "NIAGARA_HELP_PY_REF"
 // a missingReference (a failure when the run requested parity, even without
 // PYREF_REQUIRED=1, and pyref.Dir's failure with it), an existing one must
 // pass pyref.Dir's pin and clean-worktree check (once per directory and test
-// binary: every parity test asks).
+// binary: every parity test asks). The directory is cleaned before it is
+// cached or compared, so x/ and x are one reference, checked once.
 func helpPyRef(t *testing.T) string {
 	t.Helper()
 	dir := os.Getenv(helpPyRefEnv)
 	if dir == "" {
 		dir = pyref.DefaultDir("niagara-help")
 	}
+	dir = filepath.Clean(dir)
 	if st, err := os.Stat(dir); (err != nil || !st.IsDir()) && os.Getenv(pyref.RequiredEnv) != "1" {
 		missingReference(t, fmt.Sprintf("no niagara-help Python reference at %s (%s unset or wrong; create it with "+
 			"git -C <niagara-help checkout> worktree add --detach %s %s): parity not checked",
@@ -43,7 +45,7 @@ func helpPyRef(t *testing.T) string {
 	}
 	// pyref.Dir resolves the same variable and default: the directory it
 	// checked is the one cached under dir, never another.
-	if ref := pyref.Dir(t, "niagara-help"); ref != dir {
+	if ref := pyref.Dir(t, "niagara-help"); filepath.Clean(ref) != dir {
 		t.Fatalf("niagara-help Python reference: pyref.Dir checked %s, not %s", ref, dir)
 	}
 	helpPyRefChecked.Store(dir, true)
@@ -51,7 +53,7 @@ func helpPyRef(t *testing.T) string {
 }
 
 // helpPyRefChecked holds the reference directories pyref.Dir accepted,
-// keyed as helpPyRef resolves them.
+// keyed as helpPyRef resolves them (cleaned).
 var helpPyRefChecked sync.Map
 
 // helpDataMarker is the file that makes a folder a niagara-help data root.
