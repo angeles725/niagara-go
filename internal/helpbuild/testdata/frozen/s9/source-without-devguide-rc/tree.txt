@@ -1,0 +1,68 @@
+devguide d--------- 755
+devguide/baja d--------- 755
+devguide/baja/javax d--------- 755
+devguide/baja/javax/baja d--------- 755
+devguide/baja/javax/baja/sys d--------- 755
+devguide/baja/javax/baja/sys/BComponent.bajadoc ---------- 644 1270 0ca89081e3082a7b63a5e59ee08569930e9b300aa54660b5f0751b9883b78a9f
+devguide/baja/javax/baja/sys/BMethodsOnly.bajadoc ---------- 644 250 e56757c931da89cf8ad5c9e2eaa4c4eeedfa350dda5707edd22582e9c70c8969
+devguide/baja/javax/baja/sys/BObject.bajadoc ---------- 644 259 1f72a25c925a7f2d634b07379eb5a08b7ccee7d054302df41fcd37c67a27b756
+devguide/baja/module-index.bajadoc ---------- 644 234 9ff915163e1c072c51ed410eee7b17df654babc43d219d1ec4e4ee449126742d
+devguide/control d--------- 755
+devguide/control/javax d--------- 755
+devguide/control/javax/baja d--------- 755
+devguide/control/javax/baja/control d--------- 755
+devguide/control/javax/baja/control/BObject.bajadoc ---------- 644 467 d73cfcb8138d4c5eac2526ca9732841f177c6b0291ad1ed389a774e52a8d5752
+guides d--------- 755
+guides/clHVAC d--------- 755
+guides/clHVAC/com d--------- 755
+guides/clHVAC/com/hvac d--------- 755
+guides/clHVAC/com/hvac/BVav.bajadoc ---------- 644 428 da9eb19184d64d2cac07d6a23bfb1828bbe909021f04a6efbc14ebf9ba562e57
+guides/clX d--------- 755
+guides/clX/Sample.bajadoc ---------- 644 410 cd83f92d6a7f85d63edf419179ff7ed8b9cb1c378f9f6836a3637ae75fb5f33f
+guides/clX/broken d--------- 755
+guides/clX/broken/BBroken.bajadoc ---------- 644 163 964b96caefc5888905c5948f23cace16f3c3d4fea526d57c14f510f0150c1002
+guides/clX/readme.txt ---------- 644 14 0f5db895f00b423ffbf9b7ac4ef748f8d86cc5c2766e24836531f144dfa05d72
+indexes d--------- 755
+indexes/slots-index.json ---------- 644 4049 bbd3432f4af39a9fc9d49a30b65769d74fa51a846d8dc03fb2a17ee52b94d081
+indexes/source-index.json ---------- 644 1705 5c269ae7602e6c8bfd99a564ccd3a411a201150d68b34281baaf5533c85ce21c
+indexes/xref-index.json ---------- 644 1526 3409eb9aedddf2cc242237c2ac419b1eeb718f29818b482e16aa8726eaab34e5
+readme.txt ---------- 644 0 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+source d--------- 755
+source/baja-rt d--------- 755
+source/baja-rt/javax d--------- 755
+source/baja-rt/javax/baja d--------- 755
+source/baja-rt/javax/baja/sys d--------- 755
+source/baja-rt/javax/baja/sys/BComponent.java ---------- 644 1514 6b8c3d6f94ec95271b091086c3e3fa4e9be3b7cb9c7e25bb28202053db79517e
+source/baja-rt/javax/baja/sys/iface d--------- 755
+source/baja-rt/javax/baja/sys/iface/BIObject.java ---------- 644 55 fda2b1df9efcb38462bbef3931a14bff7232096b1df86e1b605b3646549563b4
+source/baja-rt/javax/baja/sys/object d--------- 755
+source/baja-rt/javax/baja/sys/object/BObject.java ---------- 644 503 ffb5df1f881801226d9c4223070d687843bc3803518bab5fde56b5a3864ac7d6
+source/baja-rt/javax/baja/util d--------- 755
+source/baja-rt/javax/baja/util/Lexicon.java ---------- 644 83 961c1248c1e71933b86eb294d4dd43a3e57a7f0c0a05a8ff135eab475d435909
+source/baja-rt/javax/baja/util/notes.txt ---------- 644 16 a4f9aa4348e613410829b1183b6810918a54be7696fcb90ec02621ce170fa8ac
+source/cafe-rt d--------- 755
+source/cafe-rt/javax d--------- 755
+source/cafe-rt/javax/baja d--------- 755
+source/cafe-rt/javax/baja/sys d--------- 755
+source/cafe-rt/javax/baja/sys/BCafé.java ---------- 644 162 02b8bbeef172ec69b5cba5c6f3bb56428b1cbfe064e60e170f512680a784b0cd
+source/control-rt d--------- 755
+source/control-rt/javax d--------- 755
+source/control-rt/javax/baja d--------- 755
+source/control-rt/javax/baja/control d--------- 755
+source/control-rt/javax/baja/control/BNumericPoint.java ---------- 644 322 f291b92f1ecdf4e807296511aea7995d5341b76c31bbc365ed918d66ca319df2
+source/nopkg-rt d--------- 755
+source/nopkg-rt/enum d--------- 755
+source/nopkg-rt/enum/Mode.java ---------- 644 46 bd24c331670c1a486acaa97208b7cb2000fb917afef735033e4c25473000ca27
+source/nopkg-rt/marker d--------- 755
+source/nopkg-rt/marker/Marker.java ---------- 644 45 36a9c6397459d0f28c22795c90533c727ec7e8c1a4e79a311138cc64f6e86802
+source/nopkg-rt/odd d--------- 755
+source/nopkg-rt/odd/Odd.java ---------- 644 110 cf6c176d6cb4fb33a01d494ce7afe8e552d2d21207f073f583061c9598e7a29f
+source/nopkg-rt/odd/nodecl d--------- 755
+source/nopkg-rt/odd/nodecl/NoDecl.java.java ---------- 644 80 d8ef34ca0d13a54f7330ef9ee8b86c1318e48d87589f81fd2f30cf207a708ce8
+source/nopkg-rt/plain d--------- 755
+source/nopkg-rt/plain/Sample.java ---------- 644 93 0da0d83599d78291b6c927db0d1d44d122216b84f58c2acf451afc521261c3c6
+source/shadow-rt d--------- 755
+source/shadow-rt/javax d--------- 755
+source/shadow-rt/javax/baja d--------- 755
+source/shadow-rt/javax/baja/control d--------- 755
+source/shadow-rt/javax/baja/control/BObject.java ---------- 644 114 2cc5d4ee2571251ee94590709d09d333b011e6d4cd2c0caf8d5a022427be4f69

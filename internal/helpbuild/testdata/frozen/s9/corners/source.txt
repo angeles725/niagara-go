@@ -1,0 +1,6 @@
+["out", "Built source-index.json: 24 classes, 157 total lines from source/"]
+["exit", 0]
+indexes:
+slots-index.json ---------- 644 4049 bbd3432f4af39a9fc9d49a30b65769d74fa51a846d8dc03fb2a17ee52b94d081
+source-index.json ---------- 644 3242 c28dd0e8b5c0e0218b369589725bcc87f1423e5eb93b2efe96173068585b8760
+xref-index.json ---------- 644 1874 1c3275d1898be4c06a94b320585a8333e5946e511ad56d32c1af29a8ebccf679

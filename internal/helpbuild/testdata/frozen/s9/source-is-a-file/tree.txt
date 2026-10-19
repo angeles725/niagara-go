@@ -1,0 +1,7 @@
+devguide-rc d--------- 755
+devguide-rc/R.java ---------- 644 11 eb790f0abe007dee139df6e4c870a875f48b34963450918ca97a8c15b3571407
+indexes d--------- 755
+indexes/source-index.json ---------- 644 116 b55ea0aa2c028f3ab5d19d18dbdaef5c7430c796965e2267074c03d63caf3d10
+indexes/xref-index.json ---------- 644 34 27e21b035696db1d31a437450a0e9041aa8869fa25d0b37444fb21f1404d59fe
+readme.txt ---------- 644 0 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+source ---------- 644 0 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855

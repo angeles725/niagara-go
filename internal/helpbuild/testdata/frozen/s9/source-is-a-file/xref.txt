@@ -1,0 +1,6 @@
+["out", "Built xref-index.json: 1 classes, 0 dependency edges from 1 source files"]
+["err", "WARNING: <base> has no source/ directory; indexing devguide-rc/ only"]
+["exit", 0]
+indexes:
+source-index.json ---------- 644 116 b55ea0aa2c028f3ab5d19d18dbdaef5c7430c796965e2267074c03d63caf3d10
+xref-index.json ---------- 644 34 27e21b035696db1d31a437450a0e9041aa8869fa25d0b37444fb21f1404d59fe

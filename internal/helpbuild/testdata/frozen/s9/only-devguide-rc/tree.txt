@@ -1,0 +1,8 @@
+devguide-rc d--------- 755
+devguide-rc/Sample.java ---------- 644 147 784709d6739096744d79bfb183451e7d26139e130ca934a779c9696985b05d88
+devguide-rc/examples d--------- 755
+devguide-rc/examples/BMyPoint.java ---------- 644 208 4f8cd8a11dda35cd00c631ee544b68bb76d7ee8ae46c71e4dc58daf8341a4742
+indexes d--------- 755
+indexes/source-index.json ---------- 644 280 0ed863e5d764ebebb7c4836fb19493051182ab75c25cada662d5755105f67943
+indexes/xref-index.json ---------- 644 395 011917f06e91de7c67d1508b556ea071de48b696866f5ae4b507523ba9d2c3cb
+readme.txt ---------- 644 0 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855

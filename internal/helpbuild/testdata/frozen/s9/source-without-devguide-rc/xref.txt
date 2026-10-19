@@ -1,0 +1,6 @@
+["out", "Built xref-index.json: 17 classes, 13 dependency edges from 12 source files"]
+["exit", 0]
+indexes:
+slots-index.json ---------- 644 4049 bbd3432f4af39a9fc9d49a30b65769d74fa51a846d8dc03fb2a17ee52b94d081
+source-index.json ---------- 644 1705 5c269ae7602e6c8bfd99a564ccd3a411a201150d68b34281baaf5533c85ce21c
+xref-index.json ---------- 644 1526 3409eb9aedddf2cc242237c2ac419b1eeb718f29818b482e16aa8726eaab34e5
