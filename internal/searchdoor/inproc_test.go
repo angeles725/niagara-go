@@ -12,6 +12,7 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/cli"
 	"github.com/angeles725/niagara-go/internal/corpusnav"
+	"github.com/angeles725/niagara-go/internal/pypath"
 )
 
 // The in-process answers are compared with what the PYTHON backends printed on
@@ -202,8 +203,8 @@ func TestInprocUnknownCalls(t *testing.T) {
 		argv []string
 		want string
 	}{
-		{docsSource, []string{docs, "find", "alarm", "-n", "5"}, "unavailable: tool not found at " + pyPath(docs)},
-		{blocksSource, []string{dir, "find", "alarm", "-n", "5"}, "unavailable: tool not found at " + pyPath(dir)},
+		{docsSource, []string{docs, "find", "alarm", "-n", "5"}, "unavailable: tool not found at " + pypath.PurePosixPath(docs)},
+		{blocksSource, []string{dir, "find", "alarm", "-n", "5"}, "unavailable: tool not found at " + pypath.PurePosixPath(dir)},
 		{codeSource, []string{code}, "unavailable: no in-process answer for `module_nav.py` (a call nsearch never makes)"},
 		{source(0), []string{stubScript(t, filepath.Join(dir, "other.py")), "x"},
 			"unavailable: no in-process answer for `other.py x` (a call nsearch never makes)"},

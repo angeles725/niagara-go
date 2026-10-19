@@ -10,6 +10,7 @@ import (
 	"unicode"
 
 	"github.com/angeles725/niagara-go/internal/pycompat"
+	"github.com/angeles725/niagara-go/internal/pypath"
 	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
@@ -27,7 +28,7 @@ const fakeSleep = 10.0
 
 func (scriptFakes) Run(src source, argv []string, timeout float64) Raw {
 	if _, err := os.Stat(argv[0]); err != nil {
-		return Raw{State: Unavailable, Reason: "unavailable: tool not found at " + pyPath(argv[0])}
+		return Raw{State: Unavailable, Reason: "unavailable: tool not found at " + pypath.PurePosixPath(argv[0])}
 	}
 	if timeout <= 0 {
 		return timedOut(timeout)

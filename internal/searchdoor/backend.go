@@ -81,40 +81,6 @@ func Classify(rc int, stdout, stderr string, ms int) Raw {
 // formatG3 is Python's f"{x:.3g}".
 func formatG3(x float64) string { return strconv.FormatFloat(x, 'g', 3, 64) }
 
-// textOf decodes like subprocess text mode: UTF-8 with errors="replace" and
-// universal newlines ("\r\n" and "\r" read as "\n").
-func textOf(b []byte) string {
-	return pycompat.UniversalNewlines(pycompat.DecodeReplace(b))
-}
-
-// pyPath is str(pathlib.PurePosixPath(p)): repeated slashes and "." parts
-// dropped, no trailing slash, ".." kept.
-func pyPath(p string) string {
-	if p == "" {
-		return "."
-	}
-	lead := ""
-	switch {
-	case strings.HasPrefix(p, "//") && !strings.HasPrefix(p, "///"):
-		lead = "//"
-	case strings.HasPrefix(p, "/"):
-		lead = "/"
-	}
-	var parts []string
-	for _, part := range strings.Split(p, "/") {
-		if part != "" && part != "." {
-			parts = append(parts, part)
-		}
-	}
-	if len(parts) == 0 {
-		if lead != "" {
-			return lead
-		}
-		return "."
-	}
-	return lead + strings.Join(parts, "/")
-}
-
 // nonblank is backend.nonblank: the right-stripped lines that are not blank.
 func nonblank(text string) []string {
 	var out []string

@@ -11,6 +11,7 @@ import (
 	"github.com/angeles725/niagara-go/internal/bm25"
 	"github.com/angeles725/niagara-go/internal/glossary"
 	"github.com/angeles725/niagara-go/internal/pycompat"
+	"github.com/angeles725/niagara-go/internal/pypath"
 )
 
 // The course code: the N4 developer course's Java as a labelled, BM25-ranked
@@ -89,8 +90,7 @@ func (d *door) courseIndex(root string, deadline float64) (*bm25.Index[int], []c
 		if d.now() >= deadline {
 			return nil, nil, nil, fmt.Sprintf("read %d of %d .java files", n, len(files))
 		}
-		data, _ := os.ReadFile(f.path)
-		text := textOf(data)
+		text, _ := pycompat.ReadTextReplace(f.path)
 		s := stem(f.rel)
 		title := s + " " + strings.Join(camelRx.FindAll(s), " ")
 		docs = append(docs, bm25.Doc[int]{Key: n, Title: title, Body: strings.ReplaceAll(f.rel, "/", " ") + "\n" + text})
@@ -105,7 +105,7 @@ func (d *door) courseIndex(root string, deadline float64) (*bm25.Index[int], []c
 func (d *door) courseSearch(root, query string, deadline float64) *Outcome {
 	command := "BM25 over " + root + "/{course,solutions,niagara-4.15.6.20/dev}/**/*.java"
 	if st, err := os.Stat(root); err != nil || !st.IsDir() {
-		return unavailable("code", courseTitle, command, "unavailable: course root not found: "+pyPath(root))
+		return unavailable("code", courseTitle, command, "unavailable: course root not found: "+pypath.PurePosixPath(root))
 	}
 	ix, files, counts, spent := d.courseIndex(root, deadline)
 	if spent != "" {
@@ -124,7 +124,7 @@ func (d *door) courseSearch(root, query string, deadline float64) *Outcome {
 		strings.Join(parts, ", "))}
 	if len(files) == 0 {
 		o.State = Unavailable
-		o.Reason = "unavailable: no .java file under " + pyPath(root) + " (course, solutions, niagara-4.15.6.20/dev)"
+		o.Reason = "unavailable: no .java file under " + pypath.PurePosixPath(root) + " (course, solutions, niagara-4.15.6.20/dev)"
 		return o
 	}
 	for _, hit := range ix.Rank(query, false, glossary.Default().WeightedTerms(query)) {

@@ -9,6 +9,7 @@ import (
 	"github.com/angeles725/niagara-go/internal/cli"
 	"github.com/angeles725/niagara-go/internal/corpusnav/blocksearch"
 	"github.com/angeles725/niagara-go/internal/pycompat"
+	"github.com/angeles725/niagara-go/internal/pypath"
 )
 
 // The backends, all in process (decisions D29, D30, D38, D42): the blocks source
@@ -66,7 +67,7 @@ type answer struct {
 // argv the door never sends) is typed UNAVAILABLE, never a silent zero.
 func (b *inprocBackend) Run(src source, argv []string, timeout float64) Raw {
 	if !isFile(argv[0]) {
-		return Raw{State: Unavailable, Reason: "unavailable: tool not found at " + pyPath(argv[0])}
+		return Raw{State: Unavailable, Reason: "unavailable: tool not found at " + pypath.PurePosixPath(argv[0])}
 	}
 	if timeout <= 0 { // subprocess.run(timeout=0) never lets the backend answer
 		return timedOut(timeout)
@@ -239,7 +240,7 @@ func blocksFind(getenv envFunc, argv []string) answer {
 		root = toolDir(argv[0], true)
 	}
 	if root == "" { // the script's folder cannot be resolved (corpus-nav.py's own _root)
-		return exact(2, "", "corpus-nav: cannot locate the corpus from "+pyPath(argv[0])+"\n")
+		return exact(2, "", "corpus-nav: cannot locate the corpus from "+pypath.PurePosixPath(argv[0])+"\n")
 	}
 	limit, _ := strconv.Atoi(v[1])
 	c := blocksearch.New(root, getenv("CORPUS_NAV_INDEX_DIR"))

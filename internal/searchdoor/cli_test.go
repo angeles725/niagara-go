@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/angeles725/niagara-go/internal/cli"
+	"github.com/angeles725/niagara-go/internal/pypath"
 )
 
 func TestSplitLicense(t *testing.T) {
@@ -120,7 +121,7 @@ func TestMainReadsTheEnvironmentOfItsStdio(t *testing.T) {
 	if rc != cli.ExitCannotSearch {
 		t.Errorf("exit %d, want %d (every source unavailable)\n%s%s", rc, cli.ExitCannotSearch, out.String(), errb.String())
 	}
-	want := "tool not found at " + pyPath(vars["NSEARCH_CORPUS_NAV"])
+	want := "tool not found at " + pypath.PurePosixPath(vars["NSEARCH_CORPUS_NAV"])
 	if !strings.Contains(out.String(), want) || strings.Contains(out.String(), "process") {
 		t.Errorf("the blocks source does not use the injected path (%q):\n%s", want, out.String())
 	}

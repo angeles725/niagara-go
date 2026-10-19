@@ -7,6 +7,7 @@ import (
 	"unicode"
 
 	"github.com/angeles725/niagara-go/internal/course/key"
+	"github.com/angeles725/niagara-go/internal/pypath"
 )
 
 // Item-ID routing (decision D41): a query that names an item of the N4 developer
@@ -111,7 +112,7 @@ func (d *door) courseItems(query, keys string) (o *Outcome) {
 	}()
 	if !key.HasMarker(keys) {
 		return unavailable("course", courseItemTitle, command,
-			"unavailable: "+pyPath(keys)+" has no "+key.LabsFile+" (set NSEARCH_COURSE_KEYS)")
+			"unavailable: "+pypath.PurePosixPath(keys)+" has no "+key.LabsFile+" (set NSEARCH_COURSE_KEYS)")
 	}
 	c, problems := key.Load(keys)
 	if c == nil {
