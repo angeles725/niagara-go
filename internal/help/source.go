@@ -13,6 +13,7 @@ import (
 	"github.com/angeles725/niagara-go/internal/fnmatch"
 	"github.com/angeles725/niagara-go/internal/index"
 	"github.com/angeles725/niagara-go/internal/pycompat"
+	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
 // sourceMatch is one source-index entry: its key and its data.
@@ -68,7 +69,7 @@ func sourceLines(file string) ([]string, error) {
 }
 
 // rstrip is str.rstrip().
-func rstrip(s string) string { return strings.TrimRightFunc(s, pycompat.IsSpace) }
+func rstrip(s string) string { return strings.TrimRightFunc(s, textfold.IsSpace) }
 
 // SourceParams are the arguments of `source`.
 type SourceParams struct {
@@ -107,10 +108,10 @@ func (e *Env) Source(p SourceParams) error {
 	}
 	name := p.Name
 	if !idx.Has(name) {
-		want := pycompat.Lower(name)
+		want := textfold.Lower(name)
 		var fold []string
 		for _, k := range idx.Keys() {
-			if pycompat.Lower(k) == want {
+			if textfold.Lower(k) == want {
 				fold = append(fold, k)
 			}
 		}

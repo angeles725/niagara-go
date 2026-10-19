@@ -3,8 +3,6 @@ package pycompat
 import (
 	"strings"
 	"unicode/utf8"
-
-	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
 func in(rs []runeRange, r rune) bool { return find(rs, r) >= 0 }
@@ -30,9 +28,6 @@ func IsUpper(s string) bool {
 	}
 	return cased
 }
-
-// Lower is str.lower(), final sigma included (textfold.Lower).
-func Lower(s string) string { return textfold.Lower(s) }
 
 // LJust is str.ljust(width, fill): s padded on the right to width code points.
 func LJust(s string, width int, fill rune) string {

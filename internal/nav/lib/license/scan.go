@@ -6,7 +6,6 @@ import (
 	"unicode/utf8"
 
 	"github.com/angeles725/niagara-go/internal/nav/lib/javatext"
-	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
@@ -62,7 +61,7 @@ func window(text string, pos int) string {
 	return text[start:pos]
 }
 
-func rstrip(s string) string { return strings.TrimRightFunc(s, pycompat.IsSpace) }
+func rstrip(s string) string { return strings.TrimRightFunc(s, textfold.IsSpace) }
 
 // receiver is _receiver: "getLicenseManager()", a dotted receiver ("?" when
 // none), "this", or ok=false for a declaration (`Feature getFeature(...)`).

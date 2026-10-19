@@ -8,12 +8,12 @@ import (
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/fnmatch"
-	"github.com/angeles725/niagara-go/internal/pycompat"
+	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
 // lowerGlob is fnmatch(name.lower(), pat.lower()).
 func lowerGlob(name, pat string) bool {
-	return fnmatch.Fnmatch(pycompat.Lower(name), pycompat.Lower(pat))
+	return fnmatch.Fnmatch(textfold.Lower(name), textfold.Lower(pat))
 }
 
 // SearchParams are the arguments of `search`.
@@ -116,16 +116,16 @@ func (e *Env) Package(p PackageParams) error {
 		}
 		return nil
 	}
-	want := pycompat.Lower(p.Name)
+	want := textfold.Lower(p.Name)
 	var matched []string
 	for _, pkg := range order {
-		if pycompat.Lower(pkg) == want {
+		if textfold.Lower(pkg) == want {
 			matched = append(matched, pkg)
 		}
 	}
 	if len(matched) == 0 {
 		for _, pkg := range order {
-			if strings.Contains(pycompat.Lower(pkg), want) {
+			if strings.Contains(textfold.Lower(pkg), want) {
 				matched = append(matched, pkg)
 			}
 		}

@@ -13,6 +13,7 @@ import (
 	"github.com/angeles725/niagara-go/internal/index"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyjson"
+	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
 // slotSections are the three slot lists of a slots-index entry, in order.
@@ -68,10 +69,10 @@ func (e *Env) Slots(p SlotsParams) error {
 // classSlotKeys is class_slot_entries without a package: the keys naming a
 // class case-insensitively, plus the "Name (module)" keys of colliding names.
 func classSlotKeys(idx *index.Object, name string) []string {
-	low := pycompat.Lower(name)
+	low := textfold.Lower(name)
 	var out []string
 	for _, k := range idx.Keys() {
-		if kl := pycompat.Lower(k); kl == low || strings.HasPrefix(kl, low+" (") {
+		if kl := textfold.Lower(k); kl == low || strings.HasPrefix(kl, low+" (") {
 			out = append(out, k)
 		}
 	}
@@ -119,12 +120,12 @@ func slotLists(cls string, o *index.Object, sections ...string) ([][]*index.Obje
 // lower-cased query must equal the value or only occur in it.
 func globOrFold(value, query string, exact bool) bool {
 	if strings.ContainsAny(query, "*?") {
-		return fnmatch.Fnmatch(value, query) || fnmatch.Fnmatch(pycompat.Lower(value), pycompat.Lower(query))
+		return fnmatch.Fnmatch(value, query) || fnmatch.Fnmatch(textfold.Lower(value), textfold.Lower(query))
 	}
 	if exact {
-		return pycompat.Lower(query) == pycompat.Lower(value)
+		return textfold.Lower(query) == textfold.Lower(value)
 	}
-	return strings.Contains(pycompat.Lower(value), pycompat.Lower(query))
+	return strings.Contains(textfold.Lower(value), textfold.Lower(query))
 }
 
 // slotsByName is mode 3 of cmd_slots: slot names containing (or globbing)

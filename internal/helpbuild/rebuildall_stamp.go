@@ -9,6 +9,7 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyjson"
+	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
 // The corpus manifest indexes/.manifest.json that rebuild-all stamps and
@@ -36,7 +37,7 @@ func fingerprintDir(path, ext string) pyjson.Value {
 	var files, total int64
 	pyWalk(path, func(dir string, dirs, names []string) []string {
 		for _, name := range names {
-			if ext != "" && !strings.HasSuffix(pycompat.Lower(name), ext) {
+			if ext != "" && !strings.HasSuffix(textfold.Lower(name), ext) {
 				continue
 			}
 			if st, err := os.Stat(pycompat.Join(dir, name)); err == nil {

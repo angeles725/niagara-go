@@ -10,6 +10,7 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/help/fts"
 	"github.com/angeles725/niagara-go/internal/pycompat"
+	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
 // SelftestParams are the arguments of `selftest`.
@@ -30,7 +31,7 @@ func (e *Env) Selftest(p SelftestParams) error {
 // leadingCount is `int(out.split()[0]) if out.strip() and
 // out.split()[0].isdigit() else 0`: the file count a ranked search prints first.
 func leadingCount(out string) int {
-	f := pycompat.Fields(out)
+	f := textfold.Fields(out)
 	if len(f) == 0 || !isDigits(f[0]) {
 		return 0
 	}

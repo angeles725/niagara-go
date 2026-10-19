@@ -7,6 +7,7 @@ import (
 	"github.com/angeles725/niagara-go/internal/bog"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyxml"
+	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
 func errorf(format string, a ...any) finding { return finding{"ERROR", fmt.Sprintf(format, a...)} }
@@ -54,7 +55,7 @@ func (v *validator) add(format string, a ...any) {
 
 func (v *validator) walk(el *pyxml.Element, path string) {
 	m, _ := el.Get("m")
-	for _, decl := range pycompat.Fields(m) {
+	for _, decl := range textfold.Fields(m) {
 		if a, b, ok := strings.Cut(decl, "="); ok {
 			v.declared[pycompat.Strip(a)] = pycompat.Strip(b)
 		}

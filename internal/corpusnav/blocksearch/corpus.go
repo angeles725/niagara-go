@@ -99,7 +99,7 @@ func catalogRow(line string) (label, title string, ok bool) {
 		return "", "", false
 	}
 	// \s*\[[^\]]+\]\([^)]+\)\s*\|
-	rest = strings.TrimLeftFunc(rest, pycompat.IsSpace)
+	rest = strings.TrimLeftFunc(rest, textfold.IsSpace)
 	if rest, found = strings.CutPrefix(rest, "["); !found {
 		return "", "", false
 	}
@@ -113,12 +113,12 @@ func catalogRow(line string) (label, title string, ok bool) {
 	if i = strings.IndexByte(rest, ')'); i < 1 {
 		return "", "", false
 	}
-	rest = strings.TrimLeftFunc(rest[i+1:], pycompat.IsSpace)
+	rest = strings.TrimLeftFunc(rest[i+1:], textfold.IsSpace)
 	if rest, found = strings.CutPrefix(rest, "|"); !found {
 		return "", "", false
 	}
 	// \s*(.*?)\s*\|\s*$
-	if title, found = strings.CutSuffix(strings.TrimRightFunc(rest, pycompat.IsSpace), "|"); !found {
+	if title, found = strings.CutSuffix(strings.TrimRightFunc(rest, textfold.IsSpace), "|"); !found {
 		return "", "", false
 	}
 	return pycompat.Strip(cell), pycompat.Strip(title), true

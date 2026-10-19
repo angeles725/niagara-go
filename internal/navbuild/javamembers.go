@@ -6,6 +6,7 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/nav/core"
 	"github.com/angeles725/niagara-go/internal/pycompat"
+	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
 // The Java member scanner of build_method_index.py (count_braces,
@@ -128,8 +129,8 @@ func extractParamType(param string) string {
 		param = pycompat.Strip(param[len("final "):])
 	}
 	// param.rsplit(None, 1)[0]
-	if i := strings.LastIndexFunc(param, pycompat.IsSpace); i >= 0 {
-		return strings.TrimRightFunc(param[:i], pycompat.IsSpace)
+	if i := strings.LastIndexFunc(param, textfold.IsSpace); i >= 0 {
+		return strings.TrimRightFunc(param[:i], textfold.IsSpace)
 	}
 	return param
 }
@@ -149,7 +150,7 @@ func tryParseMethod(stripped string, lines []string, i int) (m javaMethod, extra
 	if paren < 0 {
 		return m, 0, false
 	}
-	before := strings.TrimRightFunc(stripped[:paren], pycompat.IsSpace)
+	before := strings.TrimRightFunc(stripped[:paren], textfold.IsSpace)
 	j := len(before)
 	for j > 0 {
 		r, n := utf8.DecodeLastRuneInString(before[:j])
@@ -162,7 +163,7 @@ func tryParseMethod(stripped string, lines []string, i int) (m javaMethod, extra
 		return m, 0, false
 	}
 	name := before[j:]
-	prefix := strings.TrimRightFunc(before[:j], pycompat.IsSpace)
+	prefix := strings.TrimRightFunc(before[:j], textfold.IsSpace)
 	first, _ := utf8.DecodeRuneInString(name)
 	if notMethodNames[name] || !(pycompat.IsAlpha(first) || first == '_') {
 		return m, 0, false
@@ -173,7 +174,7 @@ func tryParseMethod(stripped string, lines []string, i int) (m javaMethod, extra
 	var mods []string
 	returnType := ""
 	if prefix != "" {
-		tokens := pycompat.Fields(prefix)
+		tokens := textfold.Fields(prefix)
 		typeStart := 0
 		for k, tok := range tokens {
 			if tok == "new" {

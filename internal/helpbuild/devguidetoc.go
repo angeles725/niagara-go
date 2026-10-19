@@ -10,6 +10,7 @@ import (
 	"github.com/angeles725/niagara-go/internal/pyhtml"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 	"github.com/angeles725/niagara-go/internal/pyre"
+	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
 // The port of tools/build_devguide_toc.py: indexes/devguide-toc.json from
@@ -41,7 +42,7 @@ func pyreSub(re *pyre.Regexp, text []rune, repl string) []rune {
 // dgClean is _clean: tags dropped, entities decoded, whitespace collapsed,
 // leading ":,.; " and one trailing "." removed.
 func dgClean(text string) string {
-	text = strings.Join(pycompat.Fields(pyhtml.Unescape(string(pyreSub(dgTag, []rune(text), "")))), " ")
+	text = strings.Join(textfold.Fields(pyhtml.Unescape(string(pyreSub(dgTag, []rune(text), "")))), " ")
 	text = strings.TrimLeft(text, ":,.; ")
 	return strings.TrimSuffix(text, ".")
 }

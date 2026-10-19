@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/angeles725/niagara-go/internal/pycompat"
+	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
 // The cross-reference index (build_xref.py): class imports and their reverse,
@@ -242,18 +243,18 @@ func findImports(text string) []importMatch {
 // rest fails after it, "static" is read as the start of the imported name, as
 // the regex backtracks.
 func matchImport(s string, p int) (importMatch, int, bool) {
-	i := spanFunc(s, p, pycompat.IsSpace)
+	i := spanFunc(s, p, textfold.IsSpace)
 	if !strings.HasPrefix(s[i:], "import") {
 		return importMatch{}, 0, false
 	}
 	i += len("import")
-	j := spanFunc(s, i, pycompat.IsSpace)
+	j := spanFunc(s, i, textfold.IsSpace)
 	if j == i {
 		return importMatch{}, 0, false
 	}
 	if strings.HasPrefix(s[j:], "static") {
 		k := j + len("static")
-		if m := spanFunc(s, k, pycompat.IsSpace); m > k {
+		if m := spanFunc(s, k, textfold.IsSpace); m > k {
 			if path, end, ok := importPath(s, m); ok {
 				return importMatch{true, path}, end, true
 			}
@@ -273,11 +274,11 @@ func importPath(s string, i int) (string, int, bool) {
 	if w == i {
 		return "", 0, false
 	}
-	if e := spanFunc(s, w, pycompat.IsSpace); e < len(s) && s[e] == ';' {
+	if e := spanFunc(s, w, textfold.IsSpace); e < len(s) && s[e] == ';' {
 		return s[i:w], e + 1, true
 	}
 	if w-1 > i && s[w-1] == '.' && w < len(s) && s[w] == '*' {
-		if e := spanFunc(s, w+1, pycompat.IsSpace); e < len(s) && s[e] == ';' {
+		if e := spanFunc(s, w+1, textfold.IsSpace); e < len(s) && s[e] == ';' {
 			return s[i : w+1], e + 1, true
 		}
 	}

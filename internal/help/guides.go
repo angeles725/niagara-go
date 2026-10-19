@@ -11,6 +11,7 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/index"
 	"github.com/angeles725/niagara-go/internal/pycompat"
+	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
 // objList is o.get(k, []) keeping its object items (Python would raise on
@@ -46,21 +47,21 @@ func (e *Env) Guide(query string) error {
 	if err != nil {
 		return err
 	}
-	q := pycompat.Lower(query)
+	q := textfold.Lower(query)
 	var hits []guideHit
 	for _, folder := range idx.Keys() {
 		data := idx.Object(folder)
 		h := guideHit{folder: folder, data: data}
-		if strings.Contains(pycompat.Lower(folder), q) {
+		if strings.Contains(textfold.Lower(folder), q) {
 			h.score += 10
 		}
-		if strings.Contains(pycompat.Lower(truthyStr(data, "source_jar")), q) {
+		if strings.Contains(textfold.Lower(truthyStr(data, "source_jar")), q) {
 			h.score += 5
 		}
 		titles := getObj(data, "titles")
 		for _, topic := range strList(data, "topics") {
 			title := getStr(titles, topic, "")
-			if strings.Contains(pycompat.Lower(topic), q) || strings.Contains(pycompat.Lower(title), q) {
+			if strings.Contains(textfold.Lower(topic), q) || strings.Contains(textfold.Lower(title), q) {
 				if title != "" {
 					topic = title + " (" + topic + ")"
 				}
@@ -105,14 +106,14 @@ func (e *Env) Devguide(query string) error {
 	if err != nil {
 		return err
 	}
-	q := pycompat.Lower(query)
+	q := textfold.Lower(query)
 	var hits []devguideHit
 	for _, section := range objList(toc, "sections") {
 		secTitle := getStr(section, "title", "")
 		for _, item := range objList(section, "items") {
-			title := pycompat.Lower(getStr(item, "title", ""))
-			desc := pycompat.Lower(getStr(item, "description", ""))
-			file := pycompat.Lower(getStr(item, "file", ""))
+			title := textfold.Lower(getStr(item, "title", ""))
+			desc := textfold.Lower(getStr(item, "description", ""))
+			file := textfold.Lower(getStr(item, "file", ""))
 			score := 0
 			if strings.Contains(title, q) {
 				score += 10
@@ -123,7 +124,7 @@ func (e *Env) Devguide(query string) error {
 			if strings.Contains(file, q) {
 				score += 3
 			}
-			for _, w := range pycompat.Fields(q) {
+			for _, w := range textfold.Fields(q) {
 				if runeLen(w) < 3 {
 					continue
 				}

@@ -13,7 +13,7 @@ import (
 	"github.com/angeles725/niagara-go/internal/help/fts"
 	"github.com/angeles725/niagara-go/internal/help/scope"
 	"github.com/angeles725/niagara-go/internal/index"
-	"github.com/angeles725/niagara-go/internal/pycompat"
+	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
 // MethodParams are the arguments of `method`.
@@ -40,7 +40,7 @@ func memberMatches(idx *index.Object, lower map[string][]string, name string) []
 		return memberEntries(idx, name)
 	}
 	var out []*index.Object
-	for _, k := range lower[pycompat.Lower(name)] {
+	for _, k := range lower[textfold.Lower(name)] {
 		out = append(out, memberEntries(idx, k)...)
 	}
 	return out
@@ -50,7 +50,7 @@ func memberMatches(idx *index.Object, lower map[string][]string, name string) []
 func lowerKeys(idx *index.Object) map[string][]string {
 	m := map[string][]string{}
 	for _, k := range idx.Keys() {
-		l := pycompat.Lower(k)
+		l := textfold.Lower(k)
 		m[l] = append(m[l], k)
 	}
 	return m
@@ -198,7 +198,7 @@ func (e *Env) Method(p MethodParams) error {
 		entries := inSection(memberEntries(idx, p.Name), p.Section)
 		return e.printMemberResults(p.Name, e.byRelevance(p.Name, entries), p.Section)
 	}
-	if fold := lowerKeys(idx)[pycompat.Lower(p.Name)]; len(fold) > 0 {
+	if fold := lowerKeys(idx)[textfold.Lower(p.Name)]; len(fold) > 0 {
 		for _, k := range fold {
 			entries := inSection(memberEntries(idx, k), p.Section)
 			if err := e.printMemberResults(k, e.byRelevance(k, entries), p.Section); err != nil {

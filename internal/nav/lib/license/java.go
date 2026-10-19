@@ -5,7 +5,7 @@
 //
 // The Python scanner is built on `re`; Go's regexp differs in \w, \s and \b
 // (ASCII only), so each pattern is a small hand-written matcher with Python's
-// Unicode classes (pycompat.IsWordRune, pycompat.IsSpace) and the same
+// Unicode classes (pycompat.IsWordRune, textfold.IsSpace) and the same
 // leftmost-first backtracking result. Texts are UTF-8 with byte offsets; the
 // one code-point window of _receiver is measured in runes.
 package license

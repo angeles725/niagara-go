@@ -7,6 +7,7 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyre"
+	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
 // source is the backend a call goes to: the blocks (corpus-nav), docs (niagara_help) or
@@ -119,7 +120,7 @@ func nonblank(text string) []string {
 	var out []string
 	for _, ln := range pycompat.SplitLines(text, false) {
 		if pycompat.Strip(ln) != "" {
-			out = append(out, strings.TrimRightFunc(ln, pycompat.IsSpace))
+			out = append(out, strings.TrimRightFunc(ln, textfold.IsSpace))
 		}
 	}
 	return out

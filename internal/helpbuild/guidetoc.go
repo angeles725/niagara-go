@@ -8,6 +8,7 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyxml"
+	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
 // The port of niagara_help_lib/guide_toc.py: the JavaHelp toc.xml of a
@@ -38,7 +39,7 @@ func FindToc(folder string) string {
 		return ""
 	}
 	for _, name := range names {
-		if p := pycompat.Join(folder, name); pycompat.Lower(name) == "toc.xml" && pycompat.IsFile(p) {
+		if p := pycompat.Join(folder, name); textfold.Lower(name) == "toc.xml" && pycompat.IsFile(p) {
 			return p
 		}
 	}
@@ -76,7 +77,7 @@ func ParseToc(path string) (toc *Toc, warning string) {
 				continue
 			}
 			text, _ := item.Get("text")
-			text = strings.Join(pycompat.Fields(text), " ")
+			text = strings.Join(textfold.Fields(text), " ")
 			target, _ := item.Get("target")
 			target, _, _ = strings.Cut(target, "#")
 			target = strings.ReplaceAll(pycompat.Strip(target), `\`, "/")

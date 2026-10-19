@@ -20,6 +20,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/angeles725/niagara-go/internal/pycompat"
+	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
 // xmlElem is one parsed element (ElementTree Element).
@@ -235,7 +236,7 @@ func xmlText(el *xmlElem) string {
 	if el == nil || el.text == nil {
 		return ""
 	}
-	return strings.Join(pycompat.Fields(markupTag.ReplaceAllString(*el.text, "")), " ")
+	return strings.Join(textfold.Fields(markupTag.ReplaceAllString(*el.text, "")), " ")
 }
 
 func parseMember(el *xmlElem, kind string) Member {
@@ -428,7 +429,7 @@ func ToCleanInfo(c Class) CleanInfo {
 
 // methodSortKey is s.split("(")[0].split()[-1]: the method name.
 func methodSortKey(s string) string {
-	f := pycompat.Fields(strings.SplitN(s, "(", 2)[0])
+	f := textfold.Fields(strings.SplitN(s, "(", 2)[0])
 	if len(f) == 0 {
 		return ""
 	}
@@ -457,7 +458,7 @@ func FormatCleanInfo(info CleanInfo) string {
 	if info.Desc != "" {
 		lines = append(lines, "DESCRIPTION:")
 		current := ""
-		for _, w := range pycompat.Fields(info.Desc) {
+		for _, w := range textfold.Fields(info.Desc) {
 			if current != "" && runeLen(current)+1+runeLen(w) > 78 {
 				lines = append(lines, current)
 				current = w

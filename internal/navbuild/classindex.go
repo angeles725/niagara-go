@@ -11,6 +11,7 @@ import (
 	"github.com/angeles725/niagara-go/internal/nav/lib/javatext"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyjson"
+	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
 // The class index (build_class_index.py): every type declared in a vineflower
@@ -79,7 +80,7 @@ func parseJavaFile(path string) ([]declaration, int, string, error) {
 	var decls []declaration
 	inBlock := false
 	for i, line := range lines {
-		stripped := strings.TrimLeftFunc(line, pycompat.IsSpace)
+		stripped := strings.TrimLeftFunc(line, textfold.IsSpace)
 		if inBlock {
 			if strings.Contains(stripped, "*/") {
 				inBlock = false
@@ -102,7 +103,7 @@ func parseJavaFile(path string) ([]declaration, int, string, error) {
 		ext, impl := parseExtendsImplements(javatext.DeclarationHeader(lines, i, d.End))
 		decls = append(decls, declaration{
 			topLevel:   d.Indent == "",
-			modifiers:  pycompat.Fields(d.Modifiers),
+			modifiers:  textfold.Fields(d.Modifiers),
 			kind:       d.Kind,
 			name:       d.Name,
 			extends:    ext,

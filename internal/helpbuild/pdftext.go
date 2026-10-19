@@ -14,6 +14,7 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/procgroup"
 	"github.com/angeles725/niagara-go/internal/pycompat"
+	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
 // PDF text through pdftotext (pdf_extractor.py, the per-PDF part): the
@@ -69,7 +70,7 @@ func SanitizePDFName(name string) string {
 	var b strings.Builder
 	under := false // the last rune written is "_" from a run being collapsed
 	for _, r := range name {
-		if strings.ContainsRune(`<>:"/\|?*&`, r) || pycompat.IsSpace(r) {
+		if strings.ContainsRune(`<>:"/\|?*&`, r) || textfold.IsSpace(r) {
 			r = '_'
 		}
 		// [<>...&] -> "_", \s+ -> "_", then _+ -> "_": every run of

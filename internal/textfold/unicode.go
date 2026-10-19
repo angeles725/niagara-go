@@ -138,7 +138,7 @@ func decompose(r rune) (string, bool) {
 }
 
 // IsSpace reports Python's str.isspace() for one rune: the separators of str.split().
-// It is the one isspace table of the module; pycompat.IsSpace and pycompat.Fields use it.
+// It is the one isspace table of the module; pycompat.Strip and the str.split() callers use it.
 func IsSpace(r rune) bool {
 	switch r {
 	case ' ', '\t', '\n', '\v', '\f', '\r', 0x1c, 0x1d, 0x1e, 0x1f:

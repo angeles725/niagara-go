@@ -5,6 +5,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/angeles725/niagara-go/internal/pycompat"
+	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
 // frameKind is the kind of an open element on the parser stack.
@@ -144,7 +145,7 @@ func (p *parser) property(t tag) {
 	m, _ := attr(t.full, attrM)
 	flags, _ := attr(t.full, attrF)
 
-	for _, part := range pycompat.Fields(m) {
+	for _, part := range textfold.Fields(m) {
 		if k, mod, ok := strings.Cut(part, "="); ok {
 			p.b.Prefixes.Set(k, mod)
 		}

@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/pycompat"
+	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
 // The content-type classification of doc-jar entries the coverage gate
@@ -80,7 +81,7 @@ var Reasons = map[string]string{
 // lowerExt is doc_types._ext: os.path.splitext(name)[1].lower().
 func lowerExt(name string) string {
 	_, ext := pycompat.PosixSplitext(name)
-	return pycompat.Lower(ext)
+	return textfold.Lower(ext)
 }
 
 func isOneOf(s string, set []string) bool {
@@ -98,7 +99,7 @@ func ExampleSkipReason(rel string) string {
 	if top, _, _ := strings.Cut(rel, "/"); top == "ext" {
 		return Reasons["third-party-bundle"]
 	}
-	if strings.HasSuffix(pycompat.Lower(rel), ".min.js") {
+	if strings.HasSuffix(textfold.Lower(rel), ".min.js") {
 		return Reasons["minified"]
 	}
 	return ""
@@ -109,7 +110,7 @@ func ExampleSkipReason(rel string) string {
 func Classify(rel string) (verdict, detail string) {
 	parts := strings.Split(rel, "/")
 	top, name := parts[0], parts[len(parts)-1]
-	low, ext := pycompat.Lower(name), lowerExt(name)
+	low, ext := textfold.Lower(name), lowerExt(name)
 	if top == "devguide-examples" {
 		return classifyExample(strings.Join(parts[1:], "/"), ext)
 	}

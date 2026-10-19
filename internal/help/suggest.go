@@ -8,7 +8,7 @@ import (
 	"sort"
 
 	"github.com/angeles725/niagara-go/internal/difflib"
-	"github.com/angeles725/niagara-go/internal/pycompat"
+	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
 // editDistance is the Levenshtein distance of a and b, or limit+1 once it
@@ -77,10 +77,10 @@ func suggest(names []string, query string, n int) []string {
 		size int
 		name string
 	}
-	q := pycompat.Lower(query)
+	q := textfold.Lower(query)
 	var hits []scored
 	for _, name := range names {
-		if sim := typoSimilarity(q, pycompat.Lower(name)); sim != 0 {
+		if sim := typoSimilarity(q, textfold.Lower(name)); sim != 0 {
 			hits = append(hits, scored{sim, runeLen(name), name})
 		}
 	}

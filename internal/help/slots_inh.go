@@ -9,8 +9,8 @@ import (
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/index"
-	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyjson"
+	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
 // inheritanceEntry is the entry _get_chain follows for name: the exact key
@@ -68,9 +68,9 @@ func reversed(s []string) []string {
 // resolveStripped is the case-insensitive fallback of the chain commands:
 // the generic-stripped form of the first inheritance key matching name.
 func resolveStripped(inh *index.Object, name string) (string, bool) {
-	want := pycompat.Lower(name)
+	want := textfold.Lower(name)
 	for _, k := range inh.Keys() {
-		if s := stripGenerics(k); pycompat.Lower(s) == want {
+		if s := stripGenerics(k); textfold.Lower(s) == want {
 			return s, true
 		}
 	}

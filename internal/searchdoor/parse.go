@@ -33,7 +33,7 @@ func lines(s string) []string { return pycompat.SplitLines(s, false) }
 // clip is parse.clip: whitespace runs folded to one space, cut to width
 // code points with a trailing ellipsis.
 func clip(text string, width int) string {
-	r := []rune(strings.Join(pycompat.Fields(text), " "))
+	r := []rune(strings.Join(textfold.Fields(text), " "))
 	if len(r) <= width {
 		return string(r)
 	}
@@ -320,7 +320,7 @@ func parseLicense(out string) ([]string, []Item) {
 			strings.HasPrefix(r, "Try:") {
 			continue
 		}
-		items = append(items, keyed(pycompat.Fields(r)[0], clip(r, 170), ""))
+		items = append(items, keyed(textfold.Fields(r)[0], clip(r, 170), ""))
 	}
 	return []string{pycompat.Strip(ls[0])}, items
 }
