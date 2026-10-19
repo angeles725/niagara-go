@@ -644,10 +644,10 @@ questions from the answer keys; it reads no station.
 
 | Kind | Items | Prompt | Answer |
 |---|---|---|---|
-| `why` | lab items whose step asks `*Why ...?*` (any case), or whose answer holds one anywhere (the question then joins the prompt) | the step | the answer after the question |
+| `why` | lab items whose step asks `*Why ...?*` (any case), or whose answer holds one anywhere (the question then joins the prompt) | the step | the answer after the question (in the answers block, the answer text before it first, as `before the why: <text>`) |
 | `decision` | the review-assignment decisions (`D<k>.<n>`, the `Why` tables) | `Why this decision? <decision>` | the `Why` cell |
 | `trap` | the review-assignment traps (`T<k>.<n>`) | `What goes wrong, and what does this solution do? <trap>` | what goes wrong + this solution |
-| `recall` | lab items whose step is ``Name = `value` `` (a plain name; Lab 8's ORDs) | `What is the ORD of <Name>?` in a section about ORDs, else `What is <Name>?` | the value (without its `LI:` citation), then the item's own answer |
+| `recall` | lab items whose step is ``Name = `value` `` (a plain name; Lab 8's ORDs) | `What is the ORD of <Name>?` in a section naming the word `ORD` or `ORDs` (not `RECORDS`), else `What is <Name>?` | the value (without its `LI:` citation), then the item's own answer |
 | `predict` | lab items whose step asks to `*Observe*` (any case of the O) | `Predict what you observe, and why: <step>` | the answer |
 
 A lab item takes the first kind that fits, in the order of the table (so an `*Observe*` step whose
@@ -689,7 +689,7 @@ selection, or no question of the kinds in the
 groups (`course: no why, decision, trap, recall, predict question in RAX (searched 10 items)`); 2 the answer keys
 or a text file cannot be read, a drawn item's range lies outside its text file (the message of
 `course text`, before any question is printed; checked without `--answers` too, so the replay line
-works, but not under `--no-context`), `-n` below 1, or an empty or unknown `--ids` ID (a usage
+works, but not under `--no-context`), `-n` below 1 without `--ids`, or an empty or unknown `--ids` ID (a usage
 error). The replay line shell-quotes a
 `--lab` value the shell would split or expand.
 

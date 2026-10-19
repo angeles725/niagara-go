@@ -23,8 +23,8 @@ func TestQuizKinds(t *testing.T) {
 		{"why in the middle of the answer", []string{"--kind", "why"},
 			[]string{"quiz: 2 of 2 questions (why; every group)", "L1.1 (why", "L1.9 (why",
 				"    Read the log (`LI:2-3`)\n    *Why the console?*\n",
-				"    It keeps every station message, even after Workbench closes.\n"},
-			[]string{"L1.8 (", "The console shows it."}},
+				"    before the why: The console shows it.\n    It keeps every station message, even after Workbench closes.\n"},
+			[]string{"L1.8 (", "    The console shows it."}},
 		{"recall", []string{"--kind", "recall"},
 			[]string{"quiz: 2 of 2 questions (recall; every group)", "L1.2 (recall", "L1.3 (recall",
 				"    What is the ORD of My Host?\n", "    What is the ORD of Alarm?\n",
@@ -244,5 +244,26 @@ func TestQuizIDs(t *testing.T) {
 	_, out, _ := run("--root", "testdata/quiz-root", "quiz", "--ids", "L1.4,L1.2", "--lab", "1", "--no-context")
 	if want := "answers: course quiz --lab 1 --ids L1.4,L1.2 --no-context --answers\n"; !strings.HasSuffix(out, want) {
 		t.Errorf("want the replay line %q:\n%s", want, out)
+	}
+}
+
+// The recall prompt asks for an ORD only in a section naming the word ORD or ORDs, never in one
+// that only holds the letters (RECORDS, Recording).
+func TestRecallORDSection(t *testing.T) {
+	cases := []struct{ section, want string }{
+		{"Lab 8 — Investigating ORDs", "What is the ORD of My Host?"},
+		{"ORD basics", "What is the ORD of My Host?"},
+		{"Lab 9 — the ORD", "What is the ORD of My Host?"},
+		{"Lab 9 — RECORDS", "What is My Host?"},
+		{"Lab 9 — Recording a history", "What is My Host?"},
+		{"Lab 9 — WORDS", "What is My Host?"},
+	}
+	for _, c := range cases {
+		it := &key.Item{ID: "L9.1", Kind: "lab item", Section: c.section, Step: "My Host = `local:` (`LI:4`)",
+			Answer: "One query.", TextFile: key.LabText, Ranges: []key.Range{{A: 4, B: 4}}}
+		q, ok := asQuestion(it)
+		if !ok || q.kind != quizRecall || q.prompt != c.want {
+			t.Errorf("%s: %v %s %q; want recall %q", c.section, ok, q.kind, q.prompt, c.want)
+		}
 	}
 }
