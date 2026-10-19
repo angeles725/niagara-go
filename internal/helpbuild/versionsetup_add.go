@@ -169,7 +169,8 @@ type AddOptions struct {
 	Default, Force bool    // --default, --force
 	ID             *string // --id; nil: DetectVersion (an explicit "" is validated, never detected)
 	Rebuild        func(root string) ([]string, error)
-	Fulltext       FulltextDocs // the gates and the summary; nil: FreshFulltextDocs
+	Extract        func(repo, vid string, opt SetupOptions) (*SetupResult, error) // nil: ExtractAndIndex
+	Fulltext       FulltextDocs                                                   // the gates and the summary; nil: FreshFulltextDocs
 	Now            func() time.Time
 }
 
@@ -226,7 +227,11 @@ func AddVersion(repo, install string, w io.Writer, opt AddOptions) (int, error) 
 		return 2, err
 	}
 	out("registered %s (%s) -> versions/%s/", vid, label, vid)
-	res, err := ExtractAndIndex(repo, vid, SetupOptions{Force: opt.Force, Rebuild: opt.Rebuild, Now: opt.Now})
+	extract := opt.Extract
+	if extract == nil {
+		extract = ExtractAndIndex
+	}
+	res, err := extract(repo, vid, SetupOptions{Force: opt.Force, Rebuild: opt.Rebuild, Now: opt.Now})
 	if res != nil {
 		for _, line := range res.Log {
 			out("%s", line)

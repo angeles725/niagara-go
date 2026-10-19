@@ -167,8 +167,10 @@ func TestVersionsExtractGenericErrors(t *testing.T) {
 		out, errs, code := run(t, dir, "versions", "extract", "1.2.3.4", "--no-index")
 		wantOut := "extracted 2 files (49 bytes)\n" +
 			"fidelity 1.2.3.4: jars 1 checked 2 sha256-exact 2 eol-only 0 mismatched 0 missing 0\n"
+		// The ERROR line names the manifest it could not write.
 		if code != 2 || out != wantOut || !strings.HasPrefix(errs, "ERROR: ") ||
-			strings.Count(errs, "\n") != 1 || !strings.HasSuffix(errs, "\n") {
+			strings.Count(errs, "\n") != 1 || !strings.HasSuffix(errs, "\n") ||
+			!strings.Contains(errs, "1.2.3.4.manifest.json") {
 			t.Errorf("code %d out %q err %q", code, out, errs)
 		}
 	})

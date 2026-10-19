@@ -220,3 +220,16 @@ func TestBuildRenameFailureLeavesNoTempFile(t *testing.T) {
 		t.Errorf("%d entries beside the target after a failed rename, want 1 (no temp file)", len(entries))
 	}
 }
+
+// DefaultOutput is the same path for a version root with and without a
+// trailing separator (os.path.join drops the empty segment), the path the
+// scope build lock and the fulltext checks name for either spelling.
+func TestDefaultOutputTrailingSeparator(t *testing.T) {
+	root := filepath.Join("versions", "1.2.3.4")
+	want := filepath.Join(root, "indexes", fts.DBName)
+	for _, r := range []string{root, root + string(filepath.Separator)} {
+		if got := DefaultOutput(r); got != want {
+			t.Errorf("DefaultOutput(%q) = %q, want %q", r, got, want)
+		}
+	}
+}

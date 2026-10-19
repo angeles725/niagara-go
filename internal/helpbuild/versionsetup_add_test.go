@@ -272,6 +272,38 @@ func TestAddVersionRollsBackAnError(t *testing.T) {
 	}
 }
 
+// An extraction that returns neither a result nor an error is an error too:
+// the registry entry and the data root it left behind are rolled back, and
+// only the registered line was written.
+func TestAddVersionRollsBackANilResult(t *testing.T) {
+	repo, install := addFixture(t, "Niagara-1.2.3.4", "")
+	root := filepath.Join(repo, "versions", "1.2.3.4")
+	opt := addOpts()
+	called := false
+	opt.Extract = func(r, vid string, so SetupOptions) (*SetupResult, error) {
+		called = true
+		if r != repo || vid != "1.2.3.4" || so.Rebuild == nil || so.Now == nil {
+			t.Errorf("Extract(%q, %q, %+v)", r, vid, so)
+		}
+		writeFile(t, filepath.Join(root, "bajadoc", "partial.html"), nil)
+		return nil, nil
+	}
+	var out bytes.Buffer
+	status, err := AddVersion(repo, install, &out, opt)
+	if !called || status != 2 || err == nil || err.Error() != "extract 1.2.3.4 returned no result" {
+		t.Fatalf("called %v status %d err %v", called, status, err)
+	}
+	if want := "registered 1.2.3.4 (Niagara-1.2.3.4) -> versions/1.2.3.4/\n"; out.String() != want {
+		t.Errorf("out %q, want %q", out.String(), want)
+	}
+	if _, err := os.Lstat(root); !errors.Is(err, os.ErrNotExist) {
+		t.Errorf("data root kept: %v", err)
+	}
+	if pycompat.IsFile(filepath.Join(repo, "versions", "registry.json")) {
+		t.Error("registry kept")
+	}
+}
+
 func TestResultLine(t *testing.T) {
 	for text, want := range map[string]string{"": "(no RESULT line)", "a\nRESULT: one\nRESULT: two\nx": "two",
 		" RESULT: no\n": "(no RESULT line)", "RESULT: cr\rRESULT: last\r\n": "last"} {
