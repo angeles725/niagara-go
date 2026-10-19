@@ -1,6 +1,8 @@
 package helpbuild
 
 import (
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -11,8 +13,8 @@ import (
 // The S5 tokenizer and converter (pyhtml.Parse, pyhtml.Feed, HTMLToText)
 // and the html5 entity table against their frozen Python output
 // (frozen_test.go): html.parser's callbacks and html_text.convert on the
-// corner pages, and one feed() without close() on them and on the feed
-// corners.
+// corner pages, one feed() without close() on them and on the feed corners,
+// and html.entities.html5 with html.unescape around every name.
 
 // eventRecorder records the pyhtml callbacks as html.parser's would be.
 type eventRecorder struct{ events []pyjson.Value }
@@ -110,4 +112,66 @@ func TestHTMLFeedCornersFrozen(t *testing.T) {
 		got = append(got, pyjson.Dumps(goFeedEvents(page), DumpDefault))
 	}
 	checkFrozen(t, "html/feed-corners", got)
+}
+
+// TestHTML5EntitiesFrozen: testdata/frozen/html/entities.txt holds, per
+// key of html.entities.html5 (CPython 3.15), html.unescape of "a&KEY b",
+// "&KEY=" and "&KEY&KEY". pyhtml.IsHTML5Entity must hold every key and no
+// near miss of one, and pyhtml.Unescape must give the frozen texts.
+func TestHTML5EntitiesFrozen(t *testing.T) {
+	data, err := os.ReadFile(filepath.Join("testdata", "frozen", "html", "entities.txt"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var keys []string
+	for _, line := range strings.Split(strings.TrimSuffix(string(data), "\n"), "\n") {
+		v, err := pyjson.Loads(pyjson.Runes(line))
+		if err != nil || v.Kind != pyjson.Array || len(v.A) != 4 {
+			t.Fatalf("entities.txt line %q: %v", line, err)
+		}
+		keys = append(keys, v.A[0].S)
+	}
+	if len(keys) < 2000 {
+		t.Fatalf("only %d html5 entities", len(keys))
+	}
+	in := map[string]bool{}
+	for _, k := range keys {
+		in[k] = true
+	}
+	bad := 0
+	for _, k := range keys {
+		base := strings.TrimSuffix(k, ";")
+		for _, p := range []string{k, base, base + ";", base + "x", base + "x;", base[:len(base)-1], base[:len(base)-1] + ";"} {
+			if p == "" || p == ";" || !isAlnumName(p) {
+				continue
+			}
+			if got := pyhtml.IsHTML5Entity(p); got != in[p] {
+				bad++
+				if bad <= 10 {
+					t.Errorf("IsHTML5Entity(%q) = %v, html5 has it: %v", p, got, in[p])
+				}
+			}
+		}
+	}
+	var got []string
+	for _, k := range keys {
+		got = append(got, dumpLine(str(k), str(pyhtml.Unescape("a&"+k+" b")), str(pyhtml.Unescape("&"+k+"=")),
+			str(pyhtml.Unescape("&"+k+"&"+k))))
+	}
+	checkFrozen(t, "html/entities", got)
+}
+
+// isAlnumName: the attr_charref name shape, [a-zA-Z][a-zA-Z0-9]*;?.
+func isAlnumName(p string) bool {
+	p = strings.TrimSuffix(p, ";")
+	letter := func(c byte) bool { return c|0x20 >= 'a' && c|0x20 <= 'z' }
+	if p == "" || !letter(p[0]) {
+		return false
+	}
+	for i := 1; i < len(p); i++ {
+		if !letter(p[i]) && (p[i] < '0' || p[i] > '9') {
+			return false
+		}
+	}
+	return true
 }
