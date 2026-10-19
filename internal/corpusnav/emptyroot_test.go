@@ -19,6 +19,13 @@ var corpusCommands = [][]string{
 	{"semantic", "alarm", "--tfidf"}, {"rank", "alarm"},
 }
 
+// cannotSearch is the stderr line Main prints for a root without block files; it names
+// the root as pyPath spells it, as Main does.
+func cannotSearch(root string) string {
+	return "corpus-nav: cannot search: no block files under " + pyPath(root) +
+		" (set CORPUS_NAV_ROOT to the niagara-research checkout)\n"
+}
+
 func runMain(args ...string) (int, string, string) {
 	var out, errb bytes.Buffer
 	code := Main(args, cli.Stdio{In: strings.NewReader(""), Out: &out, Err: &errb})
@@ -31,8 +38,7 @@ func runMain(args ...string) (int, string, string) {
 func TestEmptyRootCannotSearch(t *testing.T) {
 	root := t.TempDir()
 	t.Setenv("CORPUS_NAV_ROOT", root)
-	want := "corpus-nav: cannot search: no block files under " + root +
-		" (set CORPUS_NAV_ROOT to the niagara-research checkout)\n"
+	want := cannotSearch(root)
 	for _, args := range corpusCommands {
 		code, out, errs := runMain(args...)
 		if code != 2 || out != "" || errs != want {
@@ -45,18 +51,48 @@ func TestEmptyRootCannotSearch(t *testing.T) {
 }
 
 // TestDefaultRootWithoutBlocks: with CORPUS_NAV_ROOT unset the root is the executable's
-// grandparent (an install directory, not a checkout); the message names it.
+// grandparent (an install directory, not a checkout); the message names it the pathlib
+// way. The root is spelled with a trailing "/." so the expected pyPath spelling differs
+// from the raw one.
 func TestDefaultRootWithoutBlocks(t *testing.T) {
-	root := t.TempDir()
+	root := t.TempDir() + "/."
 	t.Setenv("CORPUS_NAV_ROOT", "")
 	saved := defaultRoot
 	defaultRoot = func() (string, error) { return root, nil }
 	t.Cleanup(func() { defaultRoot = saved })
 	code, out, errs := runMain("find", "bacnet")
-	want := "corpus-nav: cannot search: no block files under " + root +
-		" (set CORPUS_NAV_ROOT to the niagara-research checkout)\n"
+	want := cannotSearch(root)
 	if code != 2 || out != "" || errs != want {
 		t.Errorf("exit %d\nstdout %q\nstderr %q", code, out, errs)
+	}
+}
+
+// TestSemanticInputErrorsBeforeCorpus: semantic and rank report their own input errors
+// first, so on an empty root --build-index still gives the retirement message and a
+// missing query still gives the usage error, each exit 2, never the cannot-search one.
+func TestSemanticInputErrorsBeforeCorpus(t *testing.T) {
+	root := t.TempDir()
+	t.Setenv("CORPUS_NAV_ROOT", root)
+	retired := "corpus-nav: cannot build the embedding index: embeddings are not part of the Go port " +
+		"(decision D10); semantic ranks with TF-IDF\n"
+	noQuery := "corpus-nav: semantic needs a query (or --build-index)\n"
+	for _, tc := range []struct {
+		args []string
+		want string
+	}{
+		{[]string{"semantic", "--build-index"}, retired},
+		{[]string{"semantic", "alarm", "--build-index"}, retired},
+		{[]string{"rank", "--build-index"}, retired},
+		{[]string{"semantic"}, noQuery},
+		{[]string{"rank"}, noQuery},
+	} {
+		code, out, errs := runMain(tc.args...)
+		if code != 2 || out != "" || errs != tc.want {
+			t.Errorf("%v: exit %d\nstdout %q\nstderr %q", tc.args, code, out, errs)
+		}
+	}
+	if entries, _ := os.ReadDir(root); len(entries) != 0 {
+		t.Errorf("the empty root gained %d entries (first %s)", len(entries), entries[0].Name())
 	}
 }
 
