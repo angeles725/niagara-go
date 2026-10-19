@@ -196,3 +196,53 @@ func TestQuizNoContextReadsNoText(t *testing.T) {
 		t.Errorf("exit %d, want 0; stdout:\n%s\nstderr: %s", code, out, errb)
 	}
 }
+
+// --ids asks exactly those items, in their order, once each: the stateless way to re-ask the
+// questions you missed. An ID the keys do not hold is a usage error (exit 2); an item that is no
+// question of the selection is refused before any question is printed (exit 1).
+func TestQuizIDs(t *testing.T) {
+	cases := []struct {
+		name   string
+		args   []string
+		exit   int
+		want   []string
+		stderr []string
+	}{
+		{"in the given order", []string{"--ids", "L1.4,l1.2", "--answers"}, 0,
+			[]string{"quiz: 2 of 8 questions (why, decision, trap, recall, predict; every group), ids L1.4,L1.2\n\nQ1. L1.4 (predict",
+				"\nQ2. L1.2 (recall", "\nA1. L1.4 ", "\nA2. L1.2 "}, nil},
+		{"once each", []string{"--ids", "L1.2,L1.2"}, 0,
+			[]string{"quiz: 1 of 8 questions", "answers: course quiz --ids L1.2 --answers\n"}, nil},
+		{"unknown ID", []string{"--ids", "L1.4,Z9"}, 2, nil, []string{"usage: ", "error: --ids: no item Z9"}},
+		{"empty ID", []string{"--ids", "L1.4,"}, 2, nil, []string{"error: --ids: an empty ID in L1.4,"}},
+		{"not a question", []string{"--ids", "L1.4,L1.5,P1"}, 1, nil,
+			[]string{"course: L1.5, P1: not a question of why, decision, trap, recall, predict in every group (8 questions)\n"}},
+		{"outside --kind", []string{"--ids", "L1.4", "--kind", "recall"}, 1, nil,
+			[]string{"course: L1.4: not a question of recall in every group (2 questions)\n"}},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			code, out, errb := run(append([]string{"--root", "testdata/quiz-root", "quiz"}, c.args...)...)
+			if code != c.exit {
+				t.Fatalf("exit %d, want %d; stdout:\n%s\nstderr: %s", code, c.exit, out, errb)
+			}
+			for _, w := range c.want {
+				if !strings.Contains(out, w) {
+					t.Errorf("stdout lacks %q:\n%s", w, out)
+				}
+			}
+			for _, w := range c.stderr {
+				if !strings.Contains(errb, w) {
+					t.Errorf("stderr lacks %q:\n%s", w, errb)
+				}
+			}
+			if c.exit != 0 && out != "" {
+				t.Errorf("stdout on exit %d:\n%s", c.exit, out)
+			}
+		})
+	}
+	_, out, _ := run("--root", "testdata/quiz-root", "quiz", "--ids", "L1.4,L1.2", "--lab", "1", "--no-context")
+	if want := "answers: course quiz --lab 1 --ids L1.4,L1.2 --no-context --answers\n"; !strings.HasSuffix(out, want) {
+		t.Errorf("want the replay line %q:\n%s", want, out)
+	}
+}

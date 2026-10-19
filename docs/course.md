@@ -618,7 +618,7 @@ lines); `next` would name only the second half, and `progress` reads naturally w
 
 ## course quiz
 
-`course quiz [--lab GROUP] [--kind why|decision|trap|recall|predict] [-n N] [--seed S] [--answers] [--no-context]` draws study
+`course quiz [--lab GROUP] [--kind why|decision|trap|recall|predict] [-n N] [--seed S] [--answers] [--no-context] [--ids ID,ID,...]` draws study
 questions from the answer keys; it reads no station.
 
 | Kind | Items | Prompt | Answer |
@@ -650,14 +650,26 @@ the same quiz with its answers (`answers: course quiz --lab 3 --seed 1 --answers
 to eight lines of the item's course text (the lines of `course text`, then `… more: course text
 <ID>`). The course text follows the answer, never the question, because it may state the answer
 (L4.14's `LI:787-789` names the 1-degree band); `--no-context` prints none and reads none (a
-missing text file then stops nothing), and the replay line keeps it. Non-interactive by design
-(testable, no state files; spaced repetition is out of scope).
+missing text file then stops nothing), and the replay line keeps it.
 
-Exit: 0 at least one question drawn; 1 an unknown group, or no question of the kinds in the
+`--ids L4.14,L8.2` asks exactly those items, in that order and once each (any case; a range item
+answers for every ID it covers), instead of a seeded draw: `-n` and `--seed` do not apply, and the
+header ends `ids L4.14,L8.2` instead of `seed S`. It is how you re-ask the questions you missed,
+statelessly: the replay line keeps `--ids`. `--lab` and `--kind` still narrow the pool the IDs
+must belong to. An empty ID or one the keys do not hold is a usage error (exit 2, `course quiz:
+error: --ids: no item Z9 (...)`); an item that is no question of the selection (a requirement,
+an item the pool leaves out, one outside `--kind`) is refused before any question is printed
+(exit 1, `course: L3.1: not a question of why, decision, trap, recall, predict in every group (125
+questions)`). Non-interactive by design (testable, no state files; spaced repetition is out of
+scope).
+
+Exit: 0 at least one question drawn; 1 an unknown group, an `--ids` item that is no question of the
+selection, or no question of the kinds in the
 groups (`course: no why, decision, trap, recall, predict question in RAX (searched 10 items)`); 2 the answer keys
 or a text file cannot be read, a drawn item's range lies outside its text file (the message of
 `course text`, before any question is printed; checked without `--answers` too, so the replay line
-works, but not under `--no-context`), or `-n` below 1. The replay line shell-quotes a
+works, but not under `--no-context`), `-n` below 1, or an empty or unknown `--ids` ID (a usage
+error). The replay line shell-quotes a
 `--lab` value the shell would split or expand.
 
 ## Live run
@@ -852,6 +864,9 @@ FAILs, no CONTRADICTED prediction, the item and status counts), not this table.
   `TestQuizContextAfterAnswers`: the course text after the answers only, `--no-context` (kept by
   the replay line) and the `[predicted]`/`[unverified]` tags (L1.10, predicted then verified, has
   none); `TestQuizNoContextReadsNoText`: a missing text file stops nothing under `--no-context`.
+  `TestQuizIDs`: `--ids` in the given order and once each, the replay line, the usage errors of an
+  empty or unknown ID and the refusal of an item that is no question (L1.5, P1) or is outside
+  `--kind`.
   `TestProgressCannotCheck` pins the two exit-2 paths of progress (a bad `--date` with a station;
   every linked check skipped), `TestProgressJSONGroup` the group key of the actions.
 - `check/verify_test.go` `TestSuggestionEvidence` and `TestEvidenceOfEveryKind`: the live/offline

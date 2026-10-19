@@ -160,6 +160,10 @@ type quizOpts struct {
 	hasSeed   bool
 	answers   bool
 	noContext bool
+	ids       string // --ids as given; hasIDs when it was
+	hasIDs    bool
+	picked    []string // the IDs --ids asked, as the keys spell them
+	usage     func(message string) int
 }
 
 // again is the command that draws the same quiz with its answers.
@@ -171,10 +175,14 @@ func (o quizOpts) again() string {
 	if o.kind != "" {
 		parts = append(parts, "--kind "+o.kind)
 	}
-	if o.count != 5 {
-		parts = append(parts, "-n "+strconv.Itoa(o.count))
+	switch {
+	case o.hasIDs:
+		parts = append(parts, "--ids "+shellQuote(strings.Join(o.picked, ",")))
+	case o.count != 5:
+		parts = append(parts, "-n "+strconv.Itoa(o.count), "--seed "+strconv.Itoa(o.seed))
+	default:
+		parts = append(parts, "--seed "+strconv.Itoa(o.seed))
 	}
-	parts = append(parts, "--seed "+strconv.Itoa(o.seed))
 	if o.noContext {
 		parts = append(parts, "--no-context")
 	}
@@ -182,7 +190,7 @@ func (o quizOpts) again() string {
 }
 
 // safeArg is a word the shell neither splits nor expands.
-var safeArg = regexp.MustCompile(`^[A-Za-z0-9._/+-]+$`)
+var safeArg = regexp.MustCompile(`^[A-Za-z0-9._/+,-]+$`)
 
 // shellQuote returns s as one POSIX shell word: as is when safe, else single-quoted.
 func shellQuote(s string) string {
@@ -192,17 +200,18 @@ func shellQuote(s string) string {
 	return "'" + strings.ReplaceAll(s, "'", `'\''`) + "'"
 }
 
-// cmdQuiz draws count questions (why, decision, trap; one kind with --kind) from the selected
-// groups in the order of the seed, prints each prompt with its course text, then, with --answers,
-// every answer and its status. Exit: 0 drawn; 1 an unknown group or no question in the selection
-// (the honest zero); 2 -n below 1, or a text file that cannot be read or does not hold a drawn
-// item's range (the errors of course text).
+// cmdQuiz draws count questions (every kind; one with --kind) from the selected groups in the
+// order of the seed, or asks the --ids items in their order, prints each prompt, then, with
+// --answers, every answer, its status and its course text. Exit: 0 drawn; 1 an unknown group, no
+// question in the selection (the honest zero) or an --ids item that is no question of it; 2 -n
+// below 1, an --ids ID the keys do not hold (a usage error), or a text file that cannot be read or
+// does not hold a drawn item's range (the errors of course text).
 func cmdQuiz(c *key.Corpus, s cli.Stdio, root string, o quizOpts) int {
 	if o.count < 1 {
 		fmt.Fprintf(s.Err, "course: -n %d asks no question (want 1 or more)\n", o.count)
 		return cli.ExitCannotSearch
 	}
-	if !o.hasSeed {
+	if !o.hasSeed && !o.hasIDs {
 		o.seed = int(now().UnixNano() % 1000000)
 	}
 	groups, scopeLabel := []string(nil), "every group"
@@ -218,13 +227,21 @@ func cmdQuiz(c *key.Corpus, s cli.Stdio, root string, o quizOpts) int {
 		kinds = []string{o.kind}
 	}
 	pool, searched := buildPool(c, groups, kinds)
-	if len(pool) == 0 {
+	var drawn []question
+	if o.hasIDs {
+		var code int
+		if drawn, code = pickIDs(c, s, &o, pool, kinds, scopeLabel); drawn == nil {
+			return code
+		}
+	} else if len(pool) == 0 {
 		fmt.Fprintf(s.Err, "course: no %s question in %s (searched %s)\n", strings.Join(kinds, ", "), scopeLabel,
 			key.Plural(searched, "item"))
 		return cli.ExitNoMatch
 	}
-	shuffle(pool, uint64(o.seed))
-	drawn := pool[:min(o.count, len(pool))]
+	if !o.hasIDs {
+		shuffle(pool, uint64(o.seed))
+		drawn = pool[:min(o.count, len(pool))]
+	}
 	texts := map[string][]string{}
 	for _, q := range drawn {
 		if o.noContext {
@@ -243,8 +260,12 @@ func cmdQuiz(c *key.Corpus, s cli.Stdio, root string, o quizOpts) int {
 			return cli.ExitCannotSearch
 		}
 	}
-	fmt.Fprintf(s.Out, "quiz: %d of %s (%s; %s), seed %d\n", len(drawn), key.Plural(len(pool), "question"),
-		strings.Join(kinds, ", "), scopeLabel, o.seed)
+	order := "seed " + strconv.Itoa(o.seed)
+	if o.hasIDs {
+		order = "ids " + strings.Join(o.picked, ",")
+	}
+	fmt.Fprintf(s.Out, "quiz: %d of %s (%s; %s), %s\n", len(drawn), key.Plural(len(pool), "question"),
+		strings.Join(kinds, ", "), scopeLabel, order)
 	for i, q := range drawn {
 		fmt.Fprintln(s.Out)
 		printQuestion(s.Out, i+1, q)
@@ -261,6 +282,42 @@ func cmdQuiz(c *key.Corpus, s cli.Stdio, root string, o quizOpts) int {
 		printContext(s.Out, q.it, texts[q.it.TextFile])
 	}
 	return cli.ExitFound
+}
+
+// pickIDs returns the pool questions of the --ids items, in their order and once each, and
+// records their IDs in o.picked; nil and the exit when an ID is empty or not in the keys (a usage
+// error) or an item is no question of the pool (the IDs on stderr, exit 1).
+func pickIDs(c *key.Corpus, s cli.Stdio, o *quizOpts, pool []question, kinds []string, scopeLabel string) ([]question, int) {
+	var picked []question
+	var outside []string
+	seen := map[*key.Item]bool{}
+	for _, id := range strings.Split(o.ids, ",") {
+		id = strings.TrimSpace(id)
+		if id == "" {
+			return nil, o.usage("--ids: an empty ID in " + o.ids)
+		}
+		it := c.Lookup(id)
+		if it == nil {
+			return nil, o.usage(fmt.Sprintf("--ids: no item %s (%s)", id, scope(c)))
+		}
+		if seen[it] {
+			continue
+		}
+		seen[it] = true
+		i := slices.IndexFunc(pool, func(q question) bool { return q.it == it })
+		if i < 0 {
+			outside = append(outside, it.ID)
+			continue
+		}
+		picked = append(picked, pool[i])
+		o.picked = append(o.picked, it.ID)
+	}
+	if len(outside) > 0 {
+		fmt.Fprintf(s.Err, "course: %s: not a question of %s in %s (%s)\n", strings.Join(outside, ", "),
+			strings.Join(kinds, ", "), scopeLabel, key.Plural(len(pool), "question"))
+		return nil, cli.ExitNoMatch
+	}
+	return picked, cli.ExitFound
 }
 
 // rangeOutside is course text's refusal for the first range of it that its
