@@ -1,0 +1,4 @@
+{
+ "reason": "Python's argparse took prog from the invoked script (tools/<tool>.py); the Go binaries are run as their installed command (tools/install.sh), so usage and help name that command, not a retired .py script.",
+ "stdout": "usage: cnav connections [-h] [--bare] N\n\npositional arguments:\n  N           block id: 720, B720, 1-3 or TI\n\noptions:\n  -h, --help  show this help message and exit\n  --bare      also count bare B<N> mentions (outside code) of existing blocks\n              as citations\n"
+}

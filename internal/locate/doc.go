@@ -22,9 +22,9 @@
 //
 // ResearchCheckout is the shared marker of a niagara-research checkout, free of
 // the Python shims (searchdoor uses it): CATALOG.md and a top-level
-// niagara-mental-model-bloque*.md, both regular files (what corpus-nav reads),
-// or the legacy tools/corpus-nav.py as any non-directory, so the clones that
-// still hold the shims keep being found. A repository that is not the corpus
+// niagara-mental-model-bloque*.md, both regular files (what corpus-nav reads).
+// The legacy tools/corpus-nav.py as any non-directory is a compatibility
+// fallback only, kept while that shim exists. A repository that is not the corpus
 // but holds both corpus files at its top level would be a false positive.
 //
 // Getenv, Getwd and Executable default to the process (os.Getenv, os.Getwd,

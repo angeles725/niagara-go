@@ -1,0 +1,4 @@
+{
+ "reason": "Python's argparse took prog from the invoked script (tools/<tool>.py); the Go binaries are run as their installed command (tools/install.sh), so usage and help name that command, not a retired .py script.",
+ "stderr": "usage: cnav [-h] [--version] <command> ...\ncnav: error: unrecognized arguments: --json\n"
+}
