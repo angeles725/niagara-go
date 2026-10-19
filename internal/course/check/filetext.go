@@ -159,7 +159,9 @@ func attrNames(list string) string {
 		if i < len(list) {
 			switch c := list[i]; {
 			case c == '\\':
-				i++ // the escaped character, whatever it is
+				if i+1 < len(list) {
+					i++ // the escaped character, whatever it is
+				} // a trailing backslash is a literal of the last value, which still ends at len(list)
 				continue
 			case c == '"':
 				quoted = !quoted

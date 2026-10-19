@@ -2,6 +2,7 @@ package course
 
 import (
 	"bytes"
+	"errors"
 	"strings"
 	"testing"
 	"time"
@@ -48,6 +49,29 @@ func TestVerifyPredictionsIsVerifyStatusPredicted(t *testing.T) {
 		c2, o2, e2 := run(gen...)
 		if c1 != c2 || o1 != o2 || e1 != e2 {
 			t.Errorf("%v:\nverify-predictions exit %d\n%s%s\nverify --status predicted exit %d\n%s%s", tail, c1, o1, e1, c2, o2, e2)
+		}
+	}
+}
+
+// failWriter refuses every write, the way a closed pipe or a full disk does.
+type failWriter struct{}
+
+func (failWriter) Write([]byte) (int, error) { return 0, errors.New("write refused") }
+
+// A --json document that cannot be written is exit 2 with the reason on stderr, never exit 0.
+func TestJSONWriteErrorIsExit2(t *testing.T) {
+	t.Setenv(stationEnv["training"], "")
+	t.Setenv(installEnv, "")
+	for _, args := range [][]string{
+		{"show", "L4.13", "--json"},
+		{"status", "--json"},
+		{"verify", "--status", "predicted", "--station", goodStation, "--date", "2026-10-17", "--json"},
+	} {
+		var errb bytes.Buffer
+		code := Main(append([]string{"--root", "testdata/predict-root"}, args...),
+			cli.Stdio{In: strings.NewReader(""), Out: failWriter{}, Err: &errb})
+		if code != cli.ExitCannotSearch || !strings.Contains(errb.String(), "course: --json: write refused\n") {
+			t.Errorf("%v: exit %d, stderr %q; want 2 and the write error", args, code, errb.String())
 		}
 	}
 }

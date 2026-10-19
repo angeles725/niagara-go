@@ -74,7 +74,9 @@ func cmdStatus(c *key.Corpus, s cli.Stdio, hasLab bool, lab, status string, asJS
 		if status != "" {
 			out.Status = &status
 		}
-		writeJSON(s.Out, out)
+		if !writeJSON(s, out) {
+			return cli.ExitCannotSearch
+		}
 	} else {
 		printTable(s, append(ordered, total))
 		if status != "" && len(matches) > 0 {

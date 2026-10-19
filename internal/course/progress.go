@@ -183,7 +183,9 @@ func cmdProgress(c *key.Corpus, s cli.Stdio, o stationOpts, groups []string, dat
 	summary := s.Out
 	if asJSON {
 		summary = s.Err
-		writeJSON(s.Out, progressJSON{Groups: ordered, Total: total, Actions: append([]action{}, actions...)})
+		if !writeJSON(s, progressJSON{Groups: ordered, Total: total, Actions: append([]action{}, actions...)}) {
+			return cli.ExitCannotSearch
+		}
 	} else {
 		printProgress(s.Out, append(ordered, total), actions)
 	}

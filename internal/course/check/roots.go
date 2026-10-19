@@ -156,13 +156,13 @@ func (ck *Check) validate() error {
 		ok = ok || ck.Fact == certPEM
 	}
 	if !ok {
-		return fmt.Errorf("Root %s on kind %s", ck.Root, ck.Kind)
+		return fmt.Errorf("root %s on kind %s", ck.Root, ck.Kind)
 	}
 	if ck.Whole && ck.Line > 0 {
-		return fmt.Errorf("Whole and Line together")
+		return fmt.Errorf("both Whole and Line set")
 	}
 	if ck.Names != "" && (ck.Kind != kindFileText || !ck.Whole) {
-		return fmt.Errorf("Names without a Whole file-text row")
+		return fmt.Errorf("set Names without a Whole file-text row")
 	}
 	if ck.Root != rootStation && (ck.Kind == kindFiles || ck.Kind == kindFileText) &&
 		(strings.Contains(ck.Glob, "{station}") || strings.Contains(ck.Match, "{station}")) {

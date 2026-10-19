@@ -224,6 +224,11 @@ func TestRunMarksAbsent(t *testing.T) {
 		{Check{Kind: kindAnnotation, Glob: "A.java", Fact: factSlots, Want: "x"}, "--labsrc"},
 		{Check{Kind: kindAnnotation, Root: rootSolutions, Glob: "A.java", Fact: factSlots, Want: "x"}, "--solutions"},
 		{Check{Kind: kindFiles, Root: rootLabsrc, Glob: "a", Op: opMin, N: 1}, "--labsrc"},
+		{Check{Kind: kindFiles, Root: rootInstall, Glob: "a", Op: opMin, N: 1}, "--install"},
+		{Check{Kind: kindFileText, Root: rootInstall, Glob: "a", Line: 1, Match: "."}, "--install"},
+		{Check{Kind: kindJarEntry, Jar: "x", Glob: "a", Op: opMin, N: 1}, "--install"},
+		{Check{Kind: kindJarText, Jar: "x", Glob: "a", Contains: []string{"b"}}, "--install"},
+		{Check{Kind: kindJarSigned, Jar: "x"}, "--install"},
 		{Check{Kind: kindFileText, Glob: "shared/a", Line: 1, Match: "("}, ""}, // a bad pattern
 	} {
 		if r := st.Run(&c.ck); r.Verdict != Skip || r.Absent != c.absent {
