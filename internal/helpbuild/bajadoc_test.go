@@ -16,8 +16,8 @@ import (
 // skipped pages, class-use/ folders, a missing package, CRLF and bytes that
 // are not UTF-8, a description wrapped at 78 code points, member rows whose
 // fragments feed() holds back). The golden output (testdata/bajadoc/clean/,
-// stdout.txt) is Python's, see testdata/parity/bajadocdriver.py;
-// TestParityBajadocSynthetic re-checks it against the live interpreter.
+// stdout.txt) is Python's, frozen when D47 retired the Python reference;
+// TestBajadocCornersFrozen covers what the fixture cannot hold.
 
 // bajadocDone is the elapsed-time line, the one volatile line of the log.
 var bajadocDone = regexp.MustCompile(`^Done in \d+\.\ds$`)

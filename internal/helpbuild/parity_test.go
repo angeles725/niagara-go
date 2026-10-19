@@ -26,7 +26,7 @@ import (
 // (niagaraHelpData: versions/, the course); its Python is never read.
 
 // parityDrivers are the Python sides of the parity tests.
-var parityDrivers = []string{"driver.py", "htmldriver.py", "textdriver.py", "bajadocdriver.py", "sweepdriver.py"}
+var parityDrivers = []string{"driver.py", "htmldriver.py", "textdriver.py", "sweepdriver.py"}
 
 // driver is the parity interpreter and the tools/ folder of the niagara-help
 // Python reference; the interpreter is checked first, so a wrong python3 is

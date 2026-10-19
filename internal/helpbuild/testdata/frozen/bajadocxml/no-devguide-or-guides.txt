@@ -1,0 +1,5 @@
+["out", "bajadoc-clean/ from .bajadoc XML: 0 classes (javadoc HTML pages keep their own text)"]
+["exit", 0]
+tree:
+devguide-not d--------- 755
+devguide-not/x.bajadoc ---------- 644 10 25fdc172e70b8a2e36f4db20829d11586f582c5e331cac5543fdb0ef86571830

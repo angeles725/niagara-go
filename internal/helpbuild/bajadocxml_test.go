@@ -17,8 +17,8 @@ import (
 // not parse even sanitized, a forbidden character reference, CRLF, files
 // that are not .bajadoc, and the SUBCLASSES lines derived from extends.
 // The golden output (testdata/bajadocxml/clean/, stdout.txt) is Python's,
-// see testdata/parity/bajadocdriver.py (mode xmlrun);
-// TestParityBajadocXMLSynthetic re-checks it against the live interpreter.
+// frozen when D47 retired the Python reference; TestBajadocXMLCornersFrozen
+// covers what the fixture cannot hold.
 
 func TestParseBajadocXMLFixture(t *testing.T) {
 	base := t.TempDir()

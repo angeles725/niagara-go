@@ -1,0 +1,6 @@
+["out", "ERROR: bajadoc directory not found: <base>/bajadoc/javax/baja"]
+["exit", 1]
+tree:
+bajadoc d--------- 755
+bajadoc/javax d--------- 755
+bajadoc/javax/readme.txt ---------- 644 0 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
