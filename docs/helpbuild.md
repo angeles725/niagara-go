@@ -64,8 +64,8 @@ res, err := helpbuild.ExtractAndIndex(repo, vid, helpbuild.SetupOptions{
 
 `Rebuild` is `_rebuild` minus the parts the library keeps: `ExtractAndIndex` writes the
 `indexes/pdf-index.json` stub before the hook and the `{}` empty indexes after it. A nil
-hook skips the step, which is `extract_and_index(no_index=True)`; that is what the parity
-tests compare, since the index builders are later slices. `extract_version --no-index`
+hook skips the step, which is `extract_and_index(no_index=True)`; that is what
+`TestExtractFrozen` runs, since the index builders are later slices. `extract_version --no-index`
 has no caller and is not ported as a flag.
 
 ### Why a zip reader of its own
@@ -92,55 +92,44 @@ other's cache without opening a jar.
 as a byte-for-byte copy of niagara-help `tools/niagara_help_lib/install_docs.json`, kept equal
 by a drift test; with the Python tools retired the Go copy is the only one maintained, so the
 drift test is gone and a rule changes here, followed by `go test ./internal/helpbuild/`. The
-parity drivers still load the tag's own `install_docs.json` through the Python reference, so a
-rule changed here diverges from the Python on purpose and the parity cases it touches must say so.
+frozen expectations below are Python's output under the tag's rules, so a rule changed here
+changes the ones it touches on purpose: regenerate them from Go and name the change in the commit.
 
-## Parity harness
+## Frozen expectations
 
-`testdata/parity/driver.py` imports the niagara-help modules of the pinned Python reference
-(`python3 -I -B`: isolated, no `__pycache__` written into the reference; its tools directory
-put on `sys.path` explicitly) and prints JSON lines; `parity_test.go` rebuilds every line from
-this package and requires an empty diff. The reference is the `pre-go-retire` worktree of
-niagara-help (`8410d7451`, D47) named by `NIAGARA_HELP_PY_REF`, default
-`~/niagara-research-worktrees/pre-go-retire-niagara-help`; `internal/pyref` refuses one whose
-HEAD is not the tag or that has local changes (see docs/goldens.md). The live checkout's
-`tools/` is never read: it holds exec shims of the Go ports, so comparing against it would
-compare Go with Go. The live checkout is only the data the real-data tests read
-(`versions/registry.json`, the version roots, `../sources/n4-dev-course`): `$NIAGARA_HELP_DIR`;
-else `$NIAGARA_RESEARCH/niagara-help` when it holds `versions/registry.json`; else the first
-one met walking up from the test directory as `<dir>/niagara-help` or
-`<dir>/niagara-research/niagara-help` (a worktree under `~/niagara-go-worktrees` finds
-`~/niagara-research/niagara-help`). A plain run skips visibly without `python3` or the
-reference. A run that set any `HELPBUILD_PARITY_*` variable or `PYREF_REQUIRED=1` (`make
-parity` sets both) fails instead of skipping when `python3`, the reference or a real version's
-`versions/` tree is missing, the message naming the variable. The interpreter must be CPython
-3.15.x (`html.parser` and the other stdlib behaviour the drivers compare change between minor
-releases), checked before the reference: another version is a missing reference like the rest
-(skipped visibly in a plain run, every parity test failing when a `HELPBUILD_PARITY_*` variable
-is set), and `-v` logs the version and reference used (`parity driver python: CPython 3.15.0
-(...), reference ...`). The CLI goldens `TestParityCoverageReal` checks on 4.14.0.162 are the
-`coverage`, `coverage-module` and `coverage-doc-jars` cases of niagara-help
-`tests/golden/cli.json` at the tag, copied into `testdata/cov/cli-goldens.json`.
+Until D47 the tests here compared this package with the niagara-help Python reference (the
+`pre-go-retire` worktree) through driver scripts under `testdata/`. The drivers are gone. Each
+synthetic comparison whose output is deterministic became a Go-only test against
+`testdata/frozen/<area>/` (`frozen_test.go`); every frozen file was checked byte-identical to
+the driver output of the same fixture before the drivers were deleted, so it is Python's
+output. Paths are relabeled (`<base>`, `<root>`, `<dir>`; any other temporary folder shows as
+`<tmp>`), trees are `treeLines` listings (or, per step, the `treeDelta` / `lineDelta` of the
+listing), and the frozen tests run on Linux only, as the parity tests did. A deliberate change
+is regenerated from Go and reviewed:
 
-| Test | Driver mode | Compares |
-|---|---|---|
-| `TestParitySyntheticJars` | `classify` | per jar the compact listing JSON, per entry: `is_doc_like`, extract rule, exclude rule + reason, the `(course)` exclude rule, `course_kind`, `is_guide_page`, `is_licence`, `is_source_archive("guides/"+entry)`, `clean_text_name(entry, src)` (with a sibling tree) |
-| `TestParityRealJars` | `classify` | the same on five EC-Net 4.3.58.18 jars (`docDeveloper-doc` the biggest doc jar, `docLinuxN4-doc`, `alarm-rt`, `workbench-wb`, `batchJob-ux`) plus `ffmpeg-wb.jar` of 4.15.6.20 (the only source archive); `HELPBUILD_PARITY_JARS` replaces the list; only with `HELPBUILD_PARITY_REAL=1` (see Real-data parity) |
-| `TestParityListingCache` | `cache` | a fresh cache written by each side (byte-identical), each side reading the other's cache (0 jars opened), an update of a Python cache by each side (byte-identical, dict order kept) |
-| `TestParityCachePath` | `path` | `cache_path` for absolute, relative, `..`, double-slash and non-ASCII install paths |
-| `TestParityGlob` | `glob` | 468 pattern/path pairs through `glob_re` |
+```sh
+go test ./internal/helpbuild -run <Test> -update-frozen
+```
 
-S2 adds (driver modes `map`, `helpjars`, `docjars`, `setup`, `emptyindexes`; every
-Python exception becomes `["raise"]`, compared against a Go error):
+Dropped with the drivers: the real-data parity runs and the cases whose output was not
+deterministic (fuzz snippets drawn by Python's RNG, listing-cache bytes that hold jar mtimes,
+the file system's directory order, text that depends on the pdftotext build).
+`TestCoverageRealGoldens` (S10b-1) is the one real-data check left: it needs no Python.
 
-| Test | Compares |
+| Test | Checks |
 |---|---|
-| `TestParityExtractSynthetic` | `extract_and_index` result lines and both whole repo trees (path, kind, permission bits, size, sha256; manifests inline with `generated_utc` normalized) after each of: install not mounted, repo-root refusal, verify-only over the repo root, extract, already-extracted refusal, verify after mismatched / EOL-only / missing edits, fill-missing, force |
-| `TestParityDocJarCorners` | `extract`, `fill_missing`, `fidelity` (also over what extract left) and the trees (a root one side did not create counts as a difference) on twelve one-jar installs: bad CRC, local name ≠ central name, encrypted, unknown method, overlapped entries, a shared local header, `file_size` shorter than the data, cp437 and NUL names, prepended data, a zip64 end record, not a zip, a folder named like a jar |
-| `TestParityDocJarMapping` | `is_doc_jar` … `guide_folder`, `dest_path`, `is_help_entry`, `mapped_entries` over every synthetic jar plus a grid of 27 jar kinds × 32 entry shapes; `help_jars` / `list_doc_jars` of the synthetic install |
-| `TestParityExtractReal` | extract + verify of a copied EC-Net 4.3.58.18 subset (`docDeveloper-doc`, `docDeveloper-ux`, `docDeveloper-rt`, `docLinuxN4-doc`, `docObix-doc`, plus `workbench-wb`, `batchJob-ux`, `alarm-rt`); only with `HELPBUILD_PARITY_REAL=1` (see Real-data parity) |
-| `TestParityHelpJarsFullInstall` | `help_jars` / `list_doc_jars` of the whole 4.3 install (578 module jars, ~25 s a side); only with `HELPBUILD_PARITY_FULL=1` |
-| `TestParityEmptyIndexes` | `_empty_indexes` lines and tree |
+| `TestClassifyFrozen` | per jar the compact listing JSON, per entry: `is_doc_like`, extract rule, exclude rule + reason, the `(course)` exclude rule, `course_kind`, `is_guide_page`, `is_licence`, `is_source_archive("guides/"+entry)`, `clean_text_name(entry, src)` (with a sibling tree) |
+| `TestCachePathFrozen` | `cache_path` for absolute, relative, `..`, double-slash, non-ASCII, `.` and UNC install paths (run in `/`, so the relative ones hash the same paths everywhere) |
+| `TestGlobFrozen` | 468 pattern/path pairs through `glob_re` |
+
+S2 adds (a Go error is `["raise"]`, where Python raised):
+
+| Test | Checks |
+|---|---|
+| `TestExtractFrozen` | `extract_and_index` result lines and the repo tree delta (path, kind, permission bits, size, sha256; manifests inline with `generated_utc` normalized; the jar-listing cache entry masked) after each of: install not mounted, repo-root refusal, verify-only over the repo root, extract, already-extracted refusal, verify after mismatched / EOL-only / missing edits, fill-missing, force |
+| `TestDocJarCornersFrozen` | `extract`, `fill_missing`, `fidelity` (also over what extract left) and the trees (or `<absent>`) on twelve one-jar installs: bad CRC, local name ≠ central name, encrypted, unknown method, overlapped entries, a shared local header, `file_size` shorter than the data, cp437 and NUL names, prepended data, a zip64 end record, not a zip, a folder named like a jar |
+| `TestDocJarMappingFrozen` | `is_doc_jar` … `guide_folder`, `dest_path`, `is_help_entry`, `mapped_entries` over every synthetic jar plus a grid of 27 jar kinds × 32 entry shapes (one line per jar); `help_jars` / `list_doc_jars` of the synthetic install |
+| `TestEmptyIndexesFrozen` | `_empty_indexes` lines and tree |
 
 The synthetic jars mirror the `test_doc_jar_completeness` and `test_install_sweep`
 fixtures and add the central-directory corners: duplicate names, directory entries, empty
@@ -158,7 +147,7 @@ produces.
 
 - **Zip version above 6.3**: Python raises `NotImplementedError`, which `read_listing`
   does not catch (the whole tool stops); `ReadListing` reports the jar unreadable
-  (`readListing` returns `ErrUnsupportedZip`). Not in the parity set for that reason.
+  (`readListing` returns `ErrUnsupportedZip`). Not in the frozen set for that reason.
 - **Malformed cache content** (a cache whose top level, `jars` or a jar record is not a
   dict, or a listing of another shape): Python fails with `AttributeError`/`TypeError` on
   first use; Go treats it as a miss (the jar is listed again).
@@ -180,7 +169,7 @@ produces.
 - **Windows**: `os.Rename` is `MoveFileEx(MOVEFILE_REPLACE_EXISTING)`, the call behind
   `os.replace`, so replacing an existing file matches; zip names get `\` → `/` like
   `_sanitize_filename` on Windows; `clean_text_name`'s sibling join uses `filepath` there.
-  Parity runs only on Linux.
+  The frozen tests run only on Linux.
 - **Case folding of non-ASCII pattern literals** follows Go; the shipped patterns are
   ASCII and the one ASCII gap (`i` ~ `İ` `ı` in sre) is handled explicitly.
 
@@ -249,19 +238,16 @@ out, err := helpbuild.CourseExtractor(root, rules) // rules from helpbuild.Defau
 ```
 
 `Pdftotext` (`"pdftotext"`) is resolved on PATH when each run starts, as `subprocess.run`
-does without a shell; `PDFOptions.Pdftotext` names another program. The parity tests make
-both sides resolve the same binary (pdftotext 26.10.0 of linuxbrew): the test puts a fake
-`pdftotext` first on PATH that hands every real PDF to that binary.
+does without a shell; `PDFOptions.Pdftotext` names another program. The tests put a fake
+`pdftotext` first on PATH (`fakeBin`) that hands every real PDF to the real binary.
 
-S3/S4 parity (`testdata/parity/textdriver.py`, modes `pdf`, `course`, `plan`):
+S3/S4 frozen tests:
 
-| Test | Compares |
+| Test | Checks |
 |---|---|
-| `TestParityPDFSynthetic` | stdout (data root relabeled, the `Time:` value normalized), exit status and both whole repo trees after each of: unregistered root (SKIP, docs dir `None`), unregistered root with manuals, corrupt index (bad JSON, not an object, not UTF-8) with nothing to rebuild from, install not mounted, a docs dir with no PDF, pdftotext not on PATH, then 13 hand-written PDFs (two pages with an unmapped bullet, a WinAnsi degree sign, short and blank pages, a stem collision, hardware, top-level, nested, non-ASCII and punctuated names, a symlinked folder) with a corrupt PDF, output that is not UTF-8 and a timeout (fake pdftotext, 1 s on both sides for that PDF only): failures keep the last good text and its re-dumped entry, a corrupt index is rebuilt, a clean run prunes |
-| `TestParityPDFReal` | the same on five EC-Net 4.3.58.18 manuals (the largest, `Getting Started`, 9.6 MB; `Station Security`, whose bullets come out as U+FFFD; the smallest; a hardware guide; the platform guide); `HELPBUILD_PARITY_PDF_DOCS` converts a whole docs dir instead; only with `HELPBUILD_PARITY_REAL=1` (see Real-data parity) |
-| `TestParityCoursePlanSynthetic` | every `plan` row plus the `(course)` exclude rule id over the test_course_source fixture and 18 more files (nested text, upper-case extension, dev readme.md, .js and doc pages, key material, solutions, PDFs, non-ASCII names, a symlinked folder) |
-| `TestParityCourseExtractorSynthetic` | stdout, stderr, exit status and both repo trees: bound by a relative and an absolute `course_dir`, unbound (earlier copies removed; a symlink in their place refused), `course_dir` missing, unregistered root, rebuilt after the course changed, a copy that fails (mode 000 file), a named pipe in the course, a registry that is not JSON |
-| `TestParityCourseReal` | plan rows and the copy of `sources/n4-dev-course` (334 files: 20 text, 169 code, 17 PDFs, 128 not copied; `HELPBUILD_PARITY_COURSE` replaces it); only with `HELPBUILD_PARITY_REAL=1` (see Real-data parity) |
+| `TestPDFIndexStatesFrozen` | stdout (repository relabeled, the `Time:` value normalized), exit status and the repo tree delta after each state that converts no PDF: unregistered root (SKIP, docs dir `None`), unregistered root with manuals, corrupt index (bad JSON, not an object, not UTF-8) with nothing to rebuild from, install not mounted, a docs dir with no PDF, pdftotext not on PATH. The conversions (two pages with an unmapped bullet, a corrupt PDF, output that is not UTF-8, a timeout, keep-last-good, pruning) are `pdfindex_test.go`'s, with the fake pdftotext |
+| `TestCoursePlanFrozen` | every `plan` row plus the `(course)` exclude rule id over the test_course_source fixture and 18 more files (nested text, upper-case extension, dev readme.md, .js and doc pages, key material, solutions, PDFs, non-ASCII names, a symlinked folder) |
+| `TestCourseExtractorFrozen` | stdout, stderr, exit status and the repo tree delta: bound by a relative and an absolute `course_dir`, unbound (earlier copies removed; a symlink in their place refused), `course_dir` missing, unregistered root, rebuilt after the course changed, a copy that fails (mode 000 file), a named pipe in the course, a registry that is not JSON |
 
 S3/S4 intended differences (none changes an output Python produces):
 
@@ -289,8 +275,8 @@ S3/S4 intended differences (none changes an output Python produces):
   behaviours; text that is only whitespace is 0 pages on both sides. Measured: 4.14
   `MtgWiring/12997(LON)-C.pdf` is 4 pages in `pdfinfo`, 5 in Python's index, 4 in Go's;
   on EC-Net 4.3.58.18 every one of the 66 manuals drops by exactly 1 (3407 → 3341). The
-  parity tests compare Python's `pdf-index.json` with `pages` lowered by one wherever
-  the entry's `docs-text/<stem>.txt` ends with a form feed (`pyPDFTreeLines`).
+  parity tests compared Python's `pdf-index.json` with `pages` lowered by one wherever
+  the entry's `docs-text/<stem>.txt` ends with a form feed; the frozen files hold Go's counts.
 - **stdin** of pdftotext is the null device; Python lets it inherit stdin. pdftotext never
   reads it with `-` as the output file. stderr is dropped on both sides.
 - **`PDFOptions.DocsDir` ""** means "not given" (registry lookup); `--docs-dir ''` in Python
@@ -301,15 +287,14 @@ S3/S4 intended differences (none changes an output Python produces):
   string `data_root`) both skip the entry.
 - **`os.path.normpath` keeps a leading `//`**, `filepath.Clean` does not; registry paths
   never start with two slashes.
-- **File names that are not UTF-8** (Python's surrogateescape) are not modelled; parity runs
-  on Linux with UTF-8 names.
+- **File names that are not UTF-8** (Python's surrogateescape) are not modelled; the tests
+  run on Linux with UTF-8 names.
 
-Found while porting (the Python code wins, kept for parity):
+Found while porting (the Python code wins):
 
-- The parity driver shortens the 120 s timeout only for the timeout fixture
-  (`HB_PDF_TIMEOUT` replaces `timeout=120` of `extract_text` for a PDF with a
-  `<pdf>.sleep` side file); the Go side does the same through the `pdfTimeout` hook.
-  Every other PDF keeps 120 s on both sides.
+- A test shortens the 120 s timeout only for its timeout fixture (a PDF with a
+  `<pdf>.sleep` side file) through the `pdfTimeout` hook; the parity driver did the same
+  with `HB_PDF_TIMEOUT`. Every other PDF keeps 120 s.
 
 ## Shared-helper candidates
 
@@ -353,8 +338,8 @@ Both indexes are `json.dumps(indent=2)` with `ensure_ascii` on (`DumpIndent2`).
 
 The port lives in the shared `internal/pyhtml` package (decision D37, owner Integrante3;
 its `doc.go` holds the contract), which depends on `textfold` only so that
-`pycompat.HTMLUnescape` can forward to it. Its parity tests stay here, next to their
-driver.
+`pycompat.HTMLUnescape` can forward to it. Its frozen tests stay here
+(`htmlfrozen_test.go`).
 
 One `feed()` of the whole page and `close()` parse exactly like one `goahead(end=1)`: each
 early stop of the feed pass leaves the state unchanged and `close()` resumes there, and
@@ -383,23 +368,21 @@ UTF-8: every delimiter is ASCII and every class excludes ASCII bytes only.
 
 `html.unescape` is `pyhtml.Unescape` (`pycompat.HTMLUnescape` forwards to it): Go's
 `html` entity table plus `&nGt;` and `&nLt;`, the two WHATWG names it lacks (found by the
-parity test over all 2,231 names of `html.entities.html5`). The attribute rule
+parity test over all 2,231 names of `html.entities.html5`, now `TestHTML5EntitiesFrozen`). The attribute rule
 (`_unescape_attrvalue`) needs `name in html5`; Go does not export its table, so
 `pyhtml.IsHTML5Entity` reads it through `html.UnescapeString` (an exact name decodes to 1 or 2 code points, a prefix match leaves the rest of the name).
 
-### Parity tests (`testdata/parity/htmldriver.py`)
+### Frozen tests
 
-| Test | Compares |
+| Test | Checks |
 |---|---|
-| `TestParityHTMLCorners` | the parser callbacks and `convert()` of 60 hand-written pages (the Python tests' fixtures, unterminated constructs, raw text, attribute quoting, charrefs) |
-| `TestParityHTMLFuzz` | the same on 5,000 seeded random snippets of tag/charref/whitespace fragments, some cut at a random point (400 with `-short`) |
-| `TestParityHTMLFeed` | `pyhtml.Feed` (one `feed()` without `close()`, bajadoc's `strip_tags`) against the same on the corner pages plus held-back ends (cut references inside and outside the 34-code-point look-back, raw text without its end tag, a lone `<`) and on 5,000 seeded random snippets (400 with `-short`) |
-| `TestParityHTML5Entities` | `pyhtml.IsHTML5Entity` on every `html5` name and its near misses, `pyhtml.Unescape` against `html.unescape` on 46,851 texts |
-| `TestParityTocFiles` | `parse_toc` (order, titles, trails), `count_items` and the stderr warning on the synthetic toc.xml files and corners (namespaced, root `tocitem`, empty, undefined entity, BOM + ISO-8859-1 / US-ASCII / UTF-8 / UTF-16 (one real 4.3/4.15 toc.xml is BOM + ISO-8859-1; `pyxml` applies the declared encoding after a BOM as expat does), junk, missing file) |
-| `TestParityGuidesSynthetic` | stdout/stderr lines, return value and both whole trees after each builder (and a second run) on a synthetic root: the `test_extraction` pages, toc.xml corners, Markdown, `.txt` beside `.html`, licence texts, a non-UTF-8 page body, CRLF, a broken toc, `TOC.XML` |
-| `TestParityGuidesIndexSources` | `guides-index.json` of a registered root with a manifest and a mounted install, an unmounted install, and no manifest (values kept from an earlier index) |
-| `TestParityNonUTF8Names` | page and folder names that are not UTF-8 |
-| `TestParityGuidesReal` | all four builders on EC-Net 4.3.58.18 (guides/ and devguide/ linked into a temporary registered root): 5,077 files, 15,528,757 bytes; `HELPBUILD_PARITY_415=1` adds 4.15.6.20 (6,640 files, 34,680,193 bytes); only with `HELPBUILD_PARITY_REAL=1` (see Real-data parity) |
+| `TestHTMLCornersFrozen` | the parser callbacks and `convert()` of 60 hand-written pages (the Python tests' fixtures, unterminated constructs, raw text, attribute quoting, charrefs); `FuzzHTMLToText` fuzzes `convert()` natively (the parity's 5,000 random snippets were drawn by Python's RNG and are gone) |
+| `TestHTMLFeedCornersFrozen` | `pyhtml.Feed` (one `feed()` without `close()`, bajadoc's `strip_tags`) on the corner pages plus held-back ends (cut references inside and outside the 34-code-point look-back, raw text without its end tag, a lone `<`) |
+| `TestHTML5EntitiesFrozen` | `pyhtml.IsHTML5Entity` on every name of CPython 3.15's `html.entities.html5` and its near misses, `pyhtml.Unescape` of `a&NAME b`, `&NAME=` and `&NAME&NAME` against `html.unescape` (`testdata/frozen/html/entities.txt`, one line per name) |
+| `TestTocFilesFrozen` | `parse_toc` (order, titles, trails), `count_items` and the stderr warning on the synthetic toc.xml files and corners (namespaced, root `tocitem`, empty, undefined entity, BOM + ISO-8859-1 / US-ASCII / UTF-8 / UTF-16 (one real 4.3/4.15 toc.xml is BOM + ISO-8859-1; `pyxml` applies the declared encoding after a BOM as expat does), junk, missing file) |
+| `TestGuidesFrozen` | stdout/stderr lines, return value and the tree delta after each builder (and a second run) on a synthetic root: the `test_extraction` pages, toc.xml corners, Markdown, `.txt` beside `.html`, licence texts, a non-UTF-8 page body, CRLF, a broken toc, `TOC.XML` |
+| `TestGuidesIndexSourcesFrozen` | `guides-index.json` of a registered root with a manifest and a mounted install, an unmounted install, and no manifest (values kept from an earlier index) |
+| `TestGuidesNonUTF8NamesFrozen` | page and folder names that are not UTF-8 |
 
 ### S5/S6 intended differences
 
@@ -429,18 +412,18 @@ res, err := helpbuild.ParseBajadoc(root)
 // err != nil is a Python traceback (exit 1), res.Log holds what was printed before it.
 ```
 
-The `Done in %.1fs` line is the real elapsed time on both sides; the parity tests print it
-as `Done in <t>s` (as S3 does with `Time:`).
+The `Done in %.1fs` line is the real elapsed time; the tests show it as `Done in <t>s` (as
+S3 does with `Time:`).
 
-S7a parity (`testdata/parity/bajadocdriver.py`, mode `run`):
+S7a tests:
 
-| Test | Compares |
+| Test | Checks |
 |---|---|
-| `TestParseBajadocFixture` | no Python needed: `ParseBajadoc` on `testdata/bajadoc/root/` against the golden `testdata/bajadoc/clean/` and `stdout.txt` (Python's output, regenerated with the driver's `run` mode; the driver's docstring says how) |
-| `TestParityBajadocSynthetic` | stdout lines, exit status and both whole trees: the fixture (classes, an interface with subinterfaces, an enum, an annotation type, a generic class name, the `<title>` fallback, skipped pages, `class-use/` folders, no package, CRLF and bytes that are not UTF-8, a 78-code-point wrap, member rows whose fragments `feed()` holds back), then an unreadable page, a dangling link, links to a page and to a folder, a page under its escaped name, an unrelated S7b page, a second run, and a root without `bajadoc/javax/baja` (exit 1); it also fails when the golden files are no longer Python's output |
-| `TestParityBajadocReal` | the same on a real version's `bajadoc/` (linked into a temporary data root): 4.14.0.162 with `HELPBUILD_PARITY_REAL=1`, 4.15.6.20 with `HELPBUILD_PARITY_415=1`, or the `HELPBUILD_PARITY_BAJADOC` list; logs both run times |
+| `TestParseBajadocFixture` | `ParseBajadoc` on `testdata/bajadoc/root/` (classes, an interface with subinterfaces, an enum, an annotation type, a generic class name, the `<title>` fallback, skipped pages, `class-use/` folders, no package, CRLF and bytes that are not UTF-8, a 78-code-point wrap, member rows whose fragments `feed()` holds back) against the golden `testdata/bajadoc/clean/` and `stdout.txt` (Python's output, frozen) |
+| `TestBajadocCornersFrozen` | stdout lines, exit status and the whole tree after an unreadable page, a dangling link, links to a page and to a folder, a page under its escaped name, an unrelated S7b page, a second run, and a root without `bajadoc/javax/baja` (exit 1) |
 
-Measured 2026-10-17 (whole trees identical, Python 3.15 vs Go, wall time of one run):
+Measured 2026-10-17 by the parity run (whole trees identical, Python 3.15 vs Go, wall time of
+one run):
 
 | Version | Pages parsed | Files written (bytes) | Python | Go |
 |---|---|---|---|---|
@@ -455,7 +438,7 @@ Measured 2026-10-17 (whole trees identical, Python 3.15 vs Go, wall time of one 
   `ParseBajadoc` stops with `ErrUnsafeClassName` before writing (safety over parity, as
   S2's `ErrUnsafeEntry`). Javadoc class names hold no `/`.
 - **Page names that are not UTF-8** (Python's surrogateescape, sorted as decoded names) are
-  not modelled; parity runs on Linux with UTF-8 names.
+  not modelled; the tests run on Linux with UTF-8 names.
 
 ## S7b files
 
@@ -478,16 +461,15 @@ res, err := helpbuild.ParseBajadocXML(root)
 // that cannot be read (ET.parse raises the OSError, nothing is written) or a failed write.
 ```
 
-S7b parity (`testdata/parity/bajadocdriver.py`, mode `xmlrun`):
+S7b tests:
 
-| Test | Compares |
+| Test | Checks |
 |---|---|
-| `TestParseBajadocXMLFixture` | no Python needed: `ParseBajadocXML` on `testdata/bajadocxml/root/` against the golden `testdata/bajadocxml/clean/` and `stdout.txt` (Python's output, regenerated with the driver's `xmlrun` mode) |
-| `TestParityBajadocXMLSynthetic` | stdout lines, exit status and both whole trees: the fixture (a class with every member kind, varargs, parameterized, wildcard and type-variable types, markup, a comment and CDATA in a description, two `@since` tags, two `<implements>` elements of which only the first is read; an enum, an annotation type, an interface, a generic name, no package; a class with a javadoc page; a class in both trees and in two devguide modules; an index file; an empty and an unclosed file; a forbidden character reference; CRLF; files that are not `.bajadoc`), then a page under its escaped name, S7a's page of the class with a javadoc page, links to a file and to a folder, a second run, a dangling link and an unreadable file (both raise), and a root without `devguide/` or `guides/`; it also fails when the golden files are no longer Python's output |
-| `TestParityBajadocXMLReal` | the build's order on a real version (`bajadoc/`, `devguide/`, `guides/` linked into a temporary data root): S7a (`run`) then S7b (`xmlrun`) on each side, the lines of both steps and the whole `bajadoc-clean/` tree; 4.3.58.18 and 4.14.0.162 with `HELPBUILD_PARITY_REAL=1`, 4.15.6.20 with `HELPBUILD_PARITY_415=1`, or the `HELPBUILD_PARITY_BAJADOCXML` list; logs the run times of each step |
+| `TestParseBajadocXMLFixture` | `ParseBajadocXML` on `testdata/bajadocxml/root/` (a class with every member kind, varargs, parameterized, wildcard and type-variable types, markup, a comment and CDATA in a description, two `@since` tags, two `<implements>` elements of which only the first is read; an enum, an annotation type, an interface, a generic name, no package; a class with a javadoc page; a class in both trees and in two devguide modules; an index file; an empty and an unclosed file; a forbidden character reference; CRLF; files that are not `.bajadoc`) against the golden `testdata/bajadocxml/clean/` and `stdout.txt` (Python's output, frozen) |
+| `TestBajadocXMLCornersFrozen` | stdout lines, exit status and the whole tree after a page under its escaped name, S7a's page of the class with a javadoc page, links to a file and to a folder, a second run, a dangling link and an unreadable file (both raise), and a root without `devguide/` or `guides/` |
 
-Measured 2026-10-17 (S7a then S7b; whole `bajadoc-clean/` trees identical, Python 3.15 vs
-Go, wall time of one run of each step):
+Measured 2026-10-17 by the parity run (S7a then S7b; whole `bajadoc-clean/` trees identical,
+Python 3.15 vs Go, wall time of one run of each step):
 
 | Version | S7a pages | S7b classes | Files (bytes) | S7a Python / Go | S7b Python / Go |
 |---|---|---|---|---|---|
@@ -530,19 +512,17 @@ res, err := helpbuild.BuildMethodIndex(root) // indexes/method-index.json
 `inheritance.json` adds `sort_keys=True, ensure_ascii=False`; `method-index.json` is
 `indent=2, ensure_ascii=False` in first-seen key order (`DumpIndent2Unicode`).
 
-S8 parity (`testdata/s8/indexdriver.py`, modes `class`, `inherit`, `method`; the driver also
-prints each builder's own run time):
+S8 tests:
 
-| Test | Compares |
+| Test | Checks |
 |---|---|
-| `TestBuildClassIndexFixture`, `TestBuildInheritanceFixture`, `TestBuildMethodIndexFixture` | no Python needed: each Go builder on `testdata/s8/root/` against `testdata/s8/golden/` (stdout lines and indexes, Python's output; `go test -run TestParityS8Synthetic -args -update-s8` rewrites them) |
-| `TestParityS8Synthetic` | stdout lines, exit status and both whole trees after each builder on the fixture: a javadoc list with spans, CRLF, a byte that is not UTF-8, a duplicate and a non-class title; `.bajadoc` classes of every kind (attributes and categories), modules with and without a runtime profile, a class without a qualified name, nested and namespaced classes, a file fixed by sanitizing (`&#x0;`, `&#0;`, a value beyond any integer), one that stays broken, Latin-1, simple names shared across javax.baja, javadoc and sibling trees; bajadoc-clean pages with every header line, CRLF and lone CR, a BOM, Unicode whitespace, duplicate names (preferred, no package, empty package, twice the same), member sections with generic returns, Unicode names and spaces, field descriptions; then the corners (decode errors in, after and past the header, across a chunk end, a `\r` at a chunk end, a truncated end, a line longer than a chunk, symlinked folders and files) and roots without the folders each builder reads; it also fails when the golden files are no longer Python's output |
-| `TestParityS8Unreadable` | stdout lines and exit status with an unreadable `.bajadoc`, an unreadable page and a dangling `.bajadoc` link (class and method index raise, inheritance lists the page under `Errors`) |
-| `TestS8UnreadableInputKeepsThePreviousIndexes` | no Python needed: an unreadable `.bajadoc` (class-index) or `bajadoc-clean/` page (method-index) is an error and the previous index files stay as they were, no temp file left |
-| `TestParityS8Real` | the three builders on a real version's `bajadoc/`, `devguide/`, `guides/`, `jdk/` and `bajadoc-clean/` (linked into a temporary data root): 4.14.0.162 with `HELPBUILD_PARITY_REAL=1`, 4.15.6.20 with `HELPBUILD_PARITY_415=1`, or the `HELPBUILD_PARITY_INDEXES` list; logs sizes and both run times |
+| `TestBuildClassIndexFixture`, `TestBuildInheritanceFixture`, `TestBuildMethodIndexFixture` | each Go builder on `testdata/s8/root/` (a javadoc list with spans, CRLF, a byte that is not UTF-8, a duplicate and a non-class title; `.bajadoc` classes of every kind, modules with and without a runtime profile, a class without a qualified name, nested and namespaced classes, a file fixed by sanitizing, one that stays broken, Latin-1, shared simple names; bajadoc-clean pages with every header line, CRLF and lone CR, a BOM, Unicode whitespace, duplicate names, member sections) against `testdata/s8/golden/` (stdout lines and indexes, Python's output; `-update-s8` rewrites them from Go) |
+| `TestS8CornersFrozen` | stdout lines, exit status and `indexes/` after each builder, then the whole tree, on the corners (decode errors in, after and past the header, across a chunk end, a `\r` at a chunk end, a truncated end, a line longer than a chunk, symlinked folders and files) and on roots without the folders each builder reads |
+| `TestS8UnreadableFrozen` | stdout lines and exit status with an unreadable `.bajadoc`, an unreadable page and a dangling `.bajadoc` link (class and method index raise, inheritance lists the page under `Errors`) |
+| `TestS8UnreadableInputKeepsThePreviousIndexes` | an unreadable `.bajadoc` (class-index) or `bajadoc-clean/` page (method-index) is an error and the previous index files stay as they were, no temp file left |
 
-Measured 2026-10-17 (every file byte-identical, builder time only, CPython 3.15 vs Go, a
-shared machine):
+Measured 2026-10-17 by the parity run (every file byte-identical, builder time only, CPython
+3.15 vs Go, a shared machine):
 
 | Version | `class-index.json` | `jdk-class-index.json` | `inheritance.json` | `method-index.json` | class: Python / Go | inherit | method |
 |---|---|---|---|---|---|---|---|
@@ -592,19 +572,16 @@ res, err := helpbuild.BuildXrefIndex(root)   // indexes/xref-index.json
 The three files are `json.dumps(indent=2, ensure_ascii=False)` in insertion order
 (`DumpIndent2Unicode`); xref's keys are sorted by construction.
 
-S9 parity (`testdata/s9/indexdriver.py`, modes `source`, `slots`, `xref`; the driver
-prints stdout lines, then stderr lines as `["err", line]`, and each builder's own run
-time):
+S9 tests:
 
-| Test | Compares |
+| Test | Checks |
 |---|---|
-| `TestBuildSourceIndexFixture`, `TestBuildSlotsIndexFixture`, `TestBuildXrefIndexFixture` | no Python needed: each Go builder on `testdata/s9/root/` against `testdata/s9/golden/`, byte for byte: the fixture holds at most one `.java` per folder and one annotated file per module, so its output does not depend on the file system's directory order (`checkS9Fixture` fails otherwise; the order-dependent cases are corners, seen only by the Python parity tests); `go test -run TestParityS9Synthetic -args -update-s9` rewrites them |
-| `TestParityS9Synthetic` | lines, exit status and both whole trees after each builder on the fixture (multi-line annotations, nested parentheses, literals holding commas, quotes and `=`, comments in and around annotations, unnamed, empty and repeated keys, a closer that does not match, an annotation inside a comment, a package split over two lines, an indented package, a default package, `X.java.java`, non-ASCII names, static, wildcard and self imports, `.bajadoc` slots with and without a source entry, module or package, an index file and a broken file); then the corners written at test time (one class name in three folders of one module and five identical copies with the `#n` warning, both order-dependent; CRLF, a lone CR, a form feed, U+2028, bytes that are not UTF-8, a literal left open by a final backslash, a `\` in a file name, a linked module, a linked folder inside a module, linked and dangling `.java` files); then roots without `source/`, without `devguide-rc/`, a `source` that is a file, and an import ending with `.` (xref raises); it also fails when the golden files are no longer Python's output |
-| `TestParityS9Unreadable` | lines and index with an unreadable `.java` (source and slots skip it, xref names it after its file) and an unreadable `.bajadoc` (slots raises) |
-| `TestParityS9Real` | the three builders on a real version's `source/`, `devguide-rc/`, `devguide/` and `guides/` (linked into a temporary data root), on the versions of `TestParityS8Real` (`HELPBUILD_PARITY_INDEXES`, or the `REAL` and `415` switches); logs sizes and both run times |
+| `TestBuildSourceIndexFixture`, `TestBuildSlotsIndexFixture`, `TestBuildXrefIndexFixture` | each Go builder on `testdata/s9/root/` (multi-line annotations, nested parentheses, literals holding commas, quotes and `=`, comments in and around annotations, unnamed, empty and repeated keys, a closer that does not match, an annotation inside a comment, a package split over two lines, an indented package, a default package, `X.java.java`, non-ASCII names, static, wildcard and self imports, `.bajadoc` slots with and without a source entry, module or package) against `testdata/s9/golden/`, byte for byte: the fixture holds at most one `.java` per folder and one annotated file per module, so its output does not depend on the file system's directory order (`checkS9Fixture` fails otherwise); `-update-s9` rewrites them from Go |
+| `TestS9CornersFrozen` | lines, exit status and `indexes/` after each builder, then the whole tree, on the corners written at test time (CRLF, a lone CR, a form feed, U+2028, bytes that are not UTF-8, a literal left open by a final backslash, a `\` in a file name, a linked module, a linked folder inside a module, linked and dangling `.java` files), then on roots without `source/`, without `devguide-rc/`, a `source` that is a file, and an import ending with `.` (xref raises). The parity's order-dependent corners (one class in three folders of a module, five copies with the `#n` warning) cannot be frozen and are gone |
+| `TestS9UnreadableFrozen` | lines and index with an unreadable `.java` (source and slots skip it, xref names it after its file) and an unreadable `.bajadoc` (slots raises) |
 
-Measured 2026-10-18 (every file byte-identical, builder time only, CPython 3.15 vs Go, a
-shared machine):
+Measured 2026-10-18 by the parity run (every file byte-identical, builder time only, CPython
+3.15 vs Go, a shared machine):
 
 | Version | `source-index.json` | `slots-index.json` | `xref-index.json` | source: Python / Go | slots | xref |
 |---|---|---|---|---|---|---|
@@ -620,13 +597,13 @@ The slots time is mostly the `.bajadoc` XML of `devguide/` and `guides/`; xref's
 
 - **`call-index.json` is retired** (decision I3-5): `build_call_index.py` is not ported,
   `BuilderIndexes` no longer lists it, so `EmptyIndexes` (Python's `_empty_indexes`) does
-  not write an empty one for a new version (`TestParityEmptyIndexes` removes Python's line
-  and file before comparing, and fails once Python stops writing it); nh `stats` neither
+  not write an empty one for a new version (`TestEmptyIndexesFrozen` holds Python's output
+  without that line and file); nh `stats` neither
   counts nor prints it, even when a stale file is on disk, and nh's search scopes have no
   `calls` scope.
 
 - **File names that are not UTF-8** (Python's surrogateescape, sorted as decoded names)
-  are not modelled, as in S7a; parity runs on Linux with UTF-8 names.
+  are not modelled, as in S7a; the tests run on Linux with UTF-8 names.
 - **The `.bajadoc` files are parsed concurrently** (as in S8): after an unreadable file
   Python stops, Go has also read the files after it; nothing printed or written changes.
 
@@ -664,24 +641,21 @@ status, err := helpbuild.DocJarCoverage(os.Stdout, repoRoot, baseDir, versionID,
 `PrintGuideCoverage(w, baseDir)` is `cmd_guide_coverage` alone (`GuideCoverage` its rows);
 `ScanDocJars(install, root, jars, docs)` is `scan` (rows, reasons in first-met order, gaps).
 
-S10b-1 parity (`testdata/cov/covdriver.py`, modes `docjars`, `coverage`, `guides`; each
-prints `["out", <stdout>]` then `["status", <return value>]`, `["missing", str(e)]` for
-`MissingIndexError` or `["raise"]`; `scope.report_miss` is replaced by a `["miss", ...]`
-line, the scope block being `internal/help`'s). The Python side is the pre-go-retire
-reference (`internal/pyref`: `pyref.Dir(t, "niagara-help")`, `pyref.Python`) run by a
-CPython 3.15 python3:
+S10b-1 tests (a run is two lines: `["out", <stdout>]`, then `["status", <return value>]`,
+`["missing", str(e)]` for a `MissingIndexError` or `["raise"]`; `scope.report_miss` is a
+`["miss", ...]` line, the scope block being `internal/help`'s):
 
-| Test | Compares |
+| Test | Checks |
 |---|---|
-| `TestClassify`, `TestPyNormpath`, `TestModuleClasses`, `TestScanDocJarsNeedsFulltextForExamples` | no Python: one row per classification branch, `posixpath.normpath`, the module match, the full-text reader requirement |
-| `TestCoverageReportGolden`, `TestDocJarCoverageGolden` | no Python: the Go reports of the synthetic fixtures against `testdata/cov/golden/*.jsonl` (Python's output; `go test -run 'TestParity.*Golden' -args -update-cov` rewrites them) |
-| `TestParityCoverageReportGolden`, `TestParityDocJarCoverageGolden` | the golden files are still Python's output |
-| `TestParityDocJarCoverage` | the gate on the synthetic install (11 jars: every index kind indexed, not indexed and not extracted, every exclusion reason, unmapped and unknown entries, duplicates, an unreadable jar, a module help jar, a jar name cut at 34 code points around non-ASCII letters, a content type cut at 20) by version id and identified from the data root, an unregistered version, no `install_dir`, no registry, more than 25 gaps, a PASS, a FAIL from a guide folder alone, no indexes, a malformed index; the listing cache each side saves is byte-identical |
-| `TestCoverageMalformedIndexes`, `TestParityCoverageMalformed` | indexes of an unexpected shape (see the intended differences) |
-| `TestParityCoverageReport` | the overview (ties on the percentage, a class without module, non-ASCII modules, `str.replace` of every `.txt`), module reports (`alarm-rt`, `ALARM`, `alarm-ux`, `zeta-rt`, `école`, `rt`), a miss, the guide coverage alone, an empty source index, each missing index |
-| `TestParityCoverageReal` | `coverage`, `coverage alarm-rt`, the guide coverage and `coverage --doc-jars` on the real data roots and installs (4.14.0.162 with `HELPBUILD_PARITY_REAL=1`, 4.15.6.20 with `HELPBUILD_PARITY_415=1`, or the `HELPBUILD_PARITY_COVERAGE` list); each side saves its listing cache in a temporary repository holding a copy of the registry, and the full-text index must already be up to date (the test never writes the corpus); on 4.14.0.162 the SHA-256 and exit status of the three Go reports also equal the `coverage`, `coverage-module` and `coverage-doc-jars` cases of niagara-help `tests/golden/cli.json` at `pre-go-retire`, copied into `testdata/cov/cli-goldens.json` (the first two before the install is looked at: only `--doc-jars` needs it mounted) |
+| `TestClassify`, `TestPyNormpath`, `TestModuleClasses`, `TestScanDocJarsNeedsFulltextForExamples` | one row per classification branch, `posixpath.normpath`, the module match, the full-text reader requirement |
+| `TestCoverageReportGolden`, `TestDocJarCoverageGolden` | the Go reports of the synthetic fixtures against `testdata/cov/golden/*.jsonl` (Python's output; `-update-cov` rewrites them from Go) |
+| `TestDocJarCoverageFrozen` | the gate on the synthetic install (11 jars: every index kind indexed, not indexed and not extracted, every exclusion reason, unmapped and unknown entries, duplicates, an unreadable jar, a module help jar, a jar name cut at 34 code points around non-ASCII letters, a content type cut at 20) by version id and identified from the data root, an unregistered version, no `install_dir`, no registry, more than 25 gaps, a PASS, a FAIL from a guide folder alone, no indexes, a malformed index |
+| `TestCoverageMalformedIndexes`, `TestCoverageMalformedFrozen` | indexes of an unexpected shape (see the intended differences): the Go outcome of each, and the frozen report where Python read no bad value |
+| `TestCoverageReportFrozen` | the overview (ties on the percentage, a class without module, non-ASCII modules, `str.replace` of every `.txt`), module reports (`alarm-rt`, `ALARM`, `alarm-ux`, `zeta-rt`, `école`, `rt`), a miss, the guide coverage alone, an empty source index, each missing index |
+| `TestCoverageRealGoldens` | with `NIAGARA_HELP_DIR` (`make realdata`; skipped with `-short`): the SHA-256 and exit status of `coverage`, `coverage alarm-rt` and, with the install mounted, `coverage --doc-jars` on 4.14.0.162 against the `coverage`, `coverage-module` and `coverage-doc-jars` cases of niagara-help `tests/golden/cli.json` at `pre-go-retire`, copied into `testdata/cov/cli-goldens.json`; the full-text index must be up to date (the test never writes the corpus) and the listing cache goes to a temporary repository |
 
-Measured 2026-10-18 (byte-identical; wall time, Python's driver start-up included):
+Measured 2026-10-18 by the parity run (byte-identical; wall time, Python's driver start-up
+included):
 
 | Version | `coverage` | `coverage alarm-rt` | `--doc-jars` (report bytes) | `--doc-jars` Python / Go |
 |---|---|---|---|---|
@@ -700,8 +674,8 @@ over /mnt/c, so the page cache (cold or warm) decides most of them.
   header) or before any line (a source-index problem in a module report); where it reads
   no bad value it prints the whole report: a class or method index the overview does not
   read, a non-string module whose percentage ties with no other (it prints `str()` of it).
-  `TestCoverageMalformedIndexes` pins the Go side, `TestParityCoverageMalformed` Python's
-  for each case. Empty string or object method entries count no method on both sides. A
+  `TestCoverageMalformedIndexes` pins the Go side; the `python` field of `covMalformed`
+  records what Python did in each case. Empty string or object method entries count no method on both sides. A
   non-string `package` prints Python's `str()` of it. In the doc-jar gate the scan finishes
   before anything prints, so a bad index there prints nothing on both sides.
 - **A jar whose central directory has an invalid UTF-8 name under the UTF-8 flag**:
@@ -763,18 +737,16 @@ of its `ensure`, then `FulltextDocsAt`), which keeps Python's behaviour and adds
 lock. The index is opened only when a course is bound or an `example` entry has
 its corpus file, as in Python.
 
-S11a parity (`testdata/parity/sweepdriver.py`, modes `fixture` and `sweep`; each side gets
-a repository of its own, a copy of the registry, so each writes its own jar-listing cache):
+S11a tests:
 
-| Test | Compares |
+| Test | Checks |
 |---|---|
-| `TestGateCourseBoundCourse`, `TestRunSweepRegistryErrorExitsOne` | no Python needed: the COURSE gate on a bound, an unbound and a missing course (every Dest prefix cut, PDF pairing, not-indexed rows); an unreadable registry exits 1 with nothing printed |
-| `TestSweepClassifiesEveryEntry`, `TestRunSweepReport`, `TestSweepListingCache`, `TestSweepCorners`, `TestSweepShadowedEntries`, `TestFreshFulltextDocs`, `TestIndexedViewsCheck` (every `check` kind) | no Python needed: the assertions of niagara-help `test_install_sweep.py` (12 tests) and the sweep cases of `test_t3a_advisories.py` / `test_n3_advisories.py` on a Go-extracted fixture, plus the whole report of that fixture |
-| `TestParitySweepSynthetic` | the report lines, the exit status and both jar-listing caches (byte for byte), cold then warm, on the driver's fixture (extracted and rebuilt by Python's rebuild-all, full-text index built by `open_index`): every content kind, installed copies identical and changed, in-jar duplicates identical and different, empty, corrupt, upper-case and non-ASCII jars, a root jar, a location longer than its column, more than 25 gaps, loose PDFs in and out of `pdf-index.json` in any case, unreadable folders in the install and under `docs/`, the course row; for version 1.0 with the shipped and the test rules, an identified version, a version sharing the install but never extracted (PDF fallback and course note), an install that is not registered, an unknown version and an unregistered data root |
-| `TestParitySweepReal` | the same on real registered versions (`HELPBUILD_PARITY_SWEEP`); nothing is written into niagara-help: the repositories are temporary (seeded with niagara-help's jar-listing cache of the install when it has one), and a stale `indexes/fulltext.sqlite` (Python would rebuild it in place) is replaced by an index the Go builder writes in a temporary `XDG_CACHE_HOME`, open_index's second place |
+| `TestGateCourseBoundCourse`, `TestRunSweepRegistryErrorExitsOne` | the COURSE gate on a bound, an unbound and a missing course (every Dest prefix cut, PDF pairing, not-indexed rows); an unreadable registry exits 1 with nothing printed |
+| `TestSweepClassifiesEveryEntry`, `TestRunSweepReport`, `TestSweepListingCache`, `TestSweepCorners`, `TestSweepShadowedEntries`, `TestFreshFulltextDocs`, `TestIndexedViewsCheck` (every `check` kind) | the assertions of niagara-help `test_install_sweep.py` (12 tests) and the sweep cases of `test_t3a_advisories.py` / `test_n3_advisories.py` on a Go-extracted fixture, plus the whole report of that fixture |
+| `TestSweepFrozen` | the report lines and exit status, cold and (as a `lineDelta`) warm, on the fixture the parity driver built, now built by `sweepFrozenFixture` with the Go ports of its steps (extract, rebuild-all, the full-text index): every content kind, installed copies identical and changed, in-jar duplicates identical and different, empty, corrupt, upper-case and non-ASCII jars, a root jar, a location longer than its column, more than 25 gaps, loose PDFs in and out of `pdf-index.json` in any case, unreadable folders in the install and under `docs/`, the course row; for version 1.0 with the shipped and the test rules, an identified version, a version sharing the install but never extracted (PDF fallback and course note), an install that is not registered, an unknown version and an unregistered data root |
 
-Measured 2026-10-18 (report and cache byte-identical; RESULT PASS on both versions; the
-gate's own time, a shared laptop, installs over /mnt/c):
+Measured 2026-10-18 by the parity run (report and cache byte-identical; RESULT PASS on both
+versions; the gate's own time, a shared laptop, installs over /mnt/c):
 
 | Version | Jar-listing cache | Python | Go |
 |---|---|---|---|
@@ -810,12 +782,11 @@ module, as Python does. Both gates get nh's rebuilding `FulltextDocs`: `scope.Op
 `FreshFulltextDocs`. `helpbuild.MissingIndexError` is the one missing-index type; nh's
 `MissingIndexError` is an alias of it.
 
-`TestParityMaintReal` (`NH_PARITY_MAINT=<version id>[:...]`, with the pinned reference of
-`NIAGARA_HELP_PY_REF`) runs `coverage --help`, `coverage`, `coverage alarm-rt`, a module
-miss, `--doc-jars`, `--sweep` and `--sweep --doc-jars` through the pinned `niagara_help.py`
-(`NIAGARA_HELP_PYTHON=1`) and through nh's `Main`, on a temporary checkout whose registry
-holds the version with its absolute data root, and compares stdout, stderr, the exit status
-and the jar-listing cache (both seeded from niagara-help's). Measured 2026-10-18 on
+Until D47, `TestParityMaintReal` ran `coverage --help`, `coverage`, `coverage alarm-rt`, a
+module miss, `--doc-jars`, `--sweep` and `--sweep --doc-jars` through the pinned
+`niagara_help.py` and through nh's `Main`, on a temporary checkout whose registry held the
+version with its absolute data root, and compared stdout, stderr, the exit status and the
+jar-listing cache (both seeded from niagara-help's). Measured 2026-10-18 on
 4.3.58.18 (all seven identical, warm cache): `--doc-jars` 25.4 / 21.9 s, `--sweep` 42.7 /
 45.5 s, both 64.6 / 74.5 s (Python / Go); the reports alone take under 1.1 s on either side.
 
@@ -829,22 +800,19 @@ lockStale is not taken over; a crashed holder's lock still is. A live lock still
 the wait is `*scope.LockBusyError` and the rebuild does not run. A dry run writes nothing
 and takes no lock.
 
-`TestParityRebuildReal` (`NH_PARITY_REBUILD=<version id>[:...]`) runs `rebuild-all --help`,
-`--dry-run`, `--only build_ --dry-run` and `--dry-run --only zzz` on the live data root,
-then a real `--only build_class` and `--stamp-only` on a copy of the data root's
-`devguide/` and `indexes/` in a temporary folder under `$HOME` (removed afterwards), through
-the pinned `niagara_help.py` (stdout unbuffered: run order) and nh's `Main`. Elapsed and
-stamp times are folded and Python's `build_call_index.py` row is dropped (I3-5); stdout,
-stderr, exit status and the rewritten `class-index.json`, `jdk-class-index.json` and
-manifest are compared. Measured 2026-10-18 on 4.3.58.18: all six identical (3.8 s in all).
+Until D47, `TestParityRebuildReal` ran `rebuild-all --help`, `--dry-run`, `--only build_
+--dry-run` and `--dry-run --only zzz` on the live data root, then a real `--only
+build_class` and `--stamp-only` on a copy of the data root's `devguide/` and `indexes/`,
+through the pinned `niagara_help.py` and nh's `Main`, with elapsed and stamp times folded and
+Python's `build_call_index.py` row dropped (I3-5), and compared stdout, stderr, exit status
+and the rewritten `class-index.json`, `jdk-class-index.json` and manifest. Measured 2026-10-18 on 4.3.58.18: all six identical (3.8 s in all).
 
 ### S11 intended differences
 
 - **The hints name nh** (D34): a missing index says `rebuild the indexes with: nh
   rebuild-all`, a stale full-text index `rebuild it with: nh [--niagara-version <id> ]find
   index`, an unextracted version `Run: nh versions extract <id>` (and `freshness --all`
-  `NOT EXTRACTED (nh versions extract <id>)`). The coverage parity drivers map Python's
-  rebuild hint to Go's before comparing.
+  `NOT EXTRACTED (nh versions extract <id>)`). The frozen coverage reports hold Go's hint.
 - **An index of an unexpected shape or a registry Python trips over**, and a rebuild-all
   error (a stream or the manifest that cannot be written), is nh's `ERROR:` line and exit
   2, where Python prints a traceback and exits 1 (the nh convention for a malformed
@@ -911,29 +879,24 @@ data root. Every index file is replaced by rename, never truncated in place:
 | `indexes/pdf-index.json` stub (`ExtractAndIndex` only, when the file is absent) | `atomicfile.WriteText` (Python: a plain `open("w")`) | no file or `{}` |
 | `build.log` (`RebuildToLog` only) | plain truncating write, as Python | a growing log; nh reads none |
 
-### S10a parity (`testdata/rebuild/driver.py`, modes `plan`, `run`, `log`)
+### S10a tests
 
-The driver runs the `tools/` of the pinned niagara-help reference (`pyref.Dir(t,
-"niagara-help")`, the `pre-go-retire` worktree, with `pyref.Env`) under the CPython 3.15 the
-other drivers check; the real version roots are untracked, so they are copied from the
-live checkout. The driver takes `build_call_index.py` out of `maintenance.BUILDERS` before anything runs
-and sets the parent's stdout line-buffered (see the intended differences). Each scenario
-runs on one data-root path: built, run by Python (its builders as child processes),
-observed, removed, built again, run by Go, observed; so printed paths and the directory
-order the unsorted walks follow are equal and stdout, stderr and the whole tree
-(`build.log` included) are compared as they are. Normalized: `Done in`/`Time:` values,
-`stamped_utc` (checked to be `isoformat()`), a traceback on stderr against Go's
-`ERROR: <script> raised:` line (both `<raised>`), and the PDF page counts of Python's
-`pdf-index.json` (as `pyPDFTreeLines`).
+`TestRebuildPlanFrozen` and `TestRebuildFrozen` check the plan and each scenario against
+`testdata/frozen/rebuild/`, checked against `testdata/rebuild/driver.py` before it was
+deleted (it ran the tag's tools, Python's builders as child processes, on the same data-root
+path, with `build_call_index.py` taken out of `maintenance.BUILDERS` and the parent's stdout
+line-buffered; see the intended differences). Per step: stdout and stderr with the
+`Done in`/`Time:` values, the stamp time and a traceback against Go's `ERROR: <script>
+raised:` line (both `<raised>`) normalized; the tree delta; and the manifest (`stamped_utc`
+checked to be `isoformat()`, then normalized) and `build.log` texts.
 
-| Test | Compares |
+| Test | Checks |
 |---|---|
-| `TestParityRebuildPlan` | the plan rows (script, artifacts, source, skip-if `None`) and `OPTIONAL_ARTIFACTS` against `BUILDERS` minus exactly `build_call_index.py` |
-| `TestParityRebuildSynthetic` | the S7a, S7b, S8 and S9 fixtures merged with the S5 guide pages: a dry run, `--dry-run --only build_`, a full run, `--stamp-only`, a second run, the `build.log` hook (`_rebuild`: stub, log, tail, EMPTY lines); a root with no corpus folder (dry run, run, hook); a stamp, then a run where `bajadoc_parser` exits 1 and `xref_builder` raises (manifest kept), then the hook; `--only zzz` (nothing runs, the manifest is stamped) |
-| `TestParityRebuildReal` | `--dry-run`, then a full rebuild-all of a copy of each listed version root (`HELPBUILD_PARITY_REBUILD=<id>[:<id>...]`), registered in a temporary repo with its real `install_dir` and `course_dir`, so the PDF manuals and the course are converted too; logs both run times |
+| `TestRebuildPlanFrozen` | the plan rows (script, artifacts, source, skip-if `None`) and `OPTIONAL_ARTIFACTS`: `BUILDERS` minus exactly `build_call_index.py` |
+| `TestRebuildFrozen` | the S7a, S7b, S8 and S9 fixtures merged with the S5 guide pages: a dry run, `--dry-run --only build_`, a full run, `--stamp-only`, a second run, the `build.log` hook (`_rebuild`: stub, log, tail, EMPTY lines); a root with no corpus folder (dry run, run, hook); a stamp, then a run where `bajadoc_parser` exits 1 and `xref_builder` raises (manifest kept), then the hook; `--only zzz` (nothing runs, the manifest is stamped) |
 
-Measured 2026-10-18 (dry run then full run; stdout, stderr and the whole data-root tree
-identical after both steps, CPython 3.15 with the builders as child processes vs Go in
+Measured 2026-10-18 by the parity run (dry run then full run; stdout, stderr and the whole
+data-root tree identical after both steps, CPython 3.15 with the builders as child processes vs Go in
 process, wall time of the two steps, PDFs converted from the installs under /mnt/c):
 
 | Version | Lines compared (both steps) | Python | Go |
@@ -957,7 +920,7 @@ Most of the time is pdftotext on the manuals (the same binary on both sides).
   order on any stream. Python's own lines are line-buffered only on a terminal: to a pipe
   or a file (`nh rebuild-all | tee`, the `build.log` of `extract_version`) they wait in
   the block buffer and come after all the builders' output. The `build.log` tail
-  (`SKIP`/`FAIL`/`Ran` lines) is the same either way; the parity driver line-buffers to
+  (`SKIP`/`FAIL`/`Ran` lines) is the same either way; the parity driver line-buffered to
   compare the terminal order.
 - **stdout and stderr of one builder** are written when it returns, stdout first
   (pdf_extractor's stdout streams); on a terminal Python's child interleaves them as it
@@ -989,24 +952,26 @@ unknown id (resolved against the registry only, no `NIAGARA_HELP_VERSION`, no de
 a refusal print `ERROR: ...` on stderr with exit 2; otherwise exit 0 verified, 1 the
 fidelity check failed. Its cases are Go-only (`internal/help/testdata/go/golden`, D46).
 
-S10b-2 parity (`testdata/versions/driver.py`: `add_version` as `cli/cmd_versions.py` calls it,
-`build_call_index.py` taken out of `BUILDERS`, stdout line-buffered). Each scenario runs in
-one repository path under `$HOME` (never `/tmp`): set up, run by Python, observed, removed,
-set up again, run by Go, observed, so printed paths are equal. Compared: stdout, the exit
-status and the whole repository tree byte for byte (registry, version manifest, jar-listing
-cache, every data-root file, `gates.log`), except `generated_utc` of the version manifest,
-`stamped_utc` of `indexes/.manifest.json`, the `Done in`/`Time:` run times of `build.log`
-and, in `indexes/fulltext.sqlite` (compared as its `docs` and `meta` rows, not its bytes),
-the newest-mtime and SHA-1 fields of each source of the meta fingerprint; Python's PDF page
-counts are adjusted as `pyPDFTreeLines` does. stderr is not compared.
+S10b-2 tests: `TestVersionsAddFrozen` checks `versions add` against
+`testdata/frozen/versions/`, checked against `testdata/versions/driver.py` (`add_version` as
+`cli/cmd_versions.py` calls it, `build_call_index.py` taken out of `BUILDERS`, stdout
+line-buffered) before it was deleted. Each scenario runs in one repository path under `$HOME`
+(never `/tmp`); per step: stdout, the exit status and the change of the observed repository
+(`lineDelta`): the whole tree (registry, version manifest, every data-root file, `gates.log`)
+with `generated_utc` of the version manifest, `stamped_utc` of `indexes/.manifest.json`, the
+`Done in`/`Time:` run times of `build.log` and, in `indexes/fulltext.sqlite` (listed as its
+`docs` and `meta` rows), the newest-mtime and SHA-1 fields of each fingerprint source
+normalized; `gates.log` and `versions/registry.json` are listed as text with the folder as
+`<dir>` and the jar-listing cache entry is masked, so the expectation holds under any `$HOME`.
+stderr is not recorded.
 
-| Test | Compares |
+| Test | Checks |
 |---|---|
-| `TestValidVersionID`, `TestDetectVersion`, `TestRegister`, `TestAddVersionRefusals`, `TestAddVersionHappyPath`, `TestAddVersionRollsBackARefusal`, `TestAddVersionRollsBackAnError`, `TestResultLine` | no Python: every refusal line, detection order and fallbacks, the registry bytes, a full add, the rollbacks |
-| `TestParityVersionsAddSynthetic` | the synthetic install plus a `baja.jar`: the refusals before registering (no install, a bad `--id`, an empty `--id`, Unicode digits), an add, the same add again, a forced re-add with `--default` and a non-ASCII `--label`, a second install spelling with `--id`, a data root that already holds a raw folder (rollback of a registry the add did not create) |
-| `TestParityVersionsAddReal` | `HELPBUILD_PARITY_VERSIONS_ADD=<install>`: its `baja.jar`, the `realSubset` jars it has and its two smallest PDF manuals, copied under `$HOME` |
+| `TestValidVersionID`, `TestDetectVersion`, `TestRegister`, `TestAddVersionRefusals`, `TestAddVersionHappyPath`, `TestAddVersionRollsBackARefusal`, `TestAddVersionRollsBackAnError`, `TestResultLine` | every refusal line, detection order and fallbacks, the registry bytes, a full add, the rollbacks |
+| `TestVersionsAddFrozen` | the synthetic install plus a `baja.jar`: the refusals before registering (no install, a bad `--id`, an empty `--id`, Unicode digits), an add, the same add again, a forced re-add with `--default` and a non-ASCII `--label`, a second install spelling with `--id`, a data root that already holds a raw folder (rollback of a registry the add did not create) |
 
-Measured 2026-10-18 on the EC-Net 4.3.58.18 subset: 21,287 observed lines identical; Python
+Measured 2026-10-18 by the parity run on the EC-Net 4.3.58.18 subset: 21,287 observed lines
+identical; Python
 68.2 s, Go 17.0 s (both including the PDF conversion and the gates).
 
 ### S10b-2 intended differences
@@ -1025,41 +990,14 @@ Measured 2026-10-18 on the EC-Net 4.3.58.18 subset: 21,287 observed lines identi
 - **`gates.log`** is LF on every OS (Python's text mode writes CRLF on Windows), as `build.log`.
 - **A full-text index no location can hold** is `scope.UnwritableIndexError` (exit 2), as in S11a.
 
-## Real-data parity
+## Real data
 
-Every test that reads a real install or the real corpus runs only on request, `-short`
-or not; without its variable it skips and the message names the variable. A switch
-(`REAL`, `FULL`, `415`) counts only when set to `1`: any other value fails the test,
-naming the variable and the accepted value. A selection that leaves nothing to compare
-(no version for `TestParityGuidesReal`, `TestParityBajadocReal`, `TestParityBajadocXMLReal`, `TestParityS8Real`, `TestParityS9Real` or `TestParityCoverageReal`, a `HELPBUILD_PARITY_JARS` naming no jar, a
-`HELPBUILD_PARITY_PDF_DOCS` without a PDF, a `HELPBUILD_PARITY_COURSE` without files)
-fails too, and an explicit jar list or course never skips as "not mounted". The synthetic,
-cache, glob, toc and fuzz parity tests (5,000 snippets) stay on in `go test`.
-
-| Variable | Turns on |
-|---|---|
-| `HELPBUILD_PARITY_REAL=1` | the umbrella: `TestParityRealJars` (five 4.3 jars + 4.15 `ffmpeg-wb.jar`), `TestParityExtractReal` (the 4.3 subset), `TestParityPDFReal` (five 4.3 manuals), `TestParityCourseReal`, `TestParityGuidesReal` (4.3.58.18), `TestParityBajadocReal` (4.14.0.162), `TestParityBajadocXMLReal` (4.3.58.18 and 4.14.0.162), `TestParityS8Real` and `TestParityS9Real` (4.14.0.162), `TestParityCoverageReal` (4.14.0.162) |
-| `HELPBUILD_PARITY_JARS=a.jar:b.jar` | `TestParityRealJars` on that list instead |
-| `HELPBUILD_PARITY_FULL=1` | `TestParityHelpJarsFullInstall` (all 578 module jars of 4.3) |
-| `HELPBUILD_PARITY_PDF_DOCS=<dir>` | `TestParityPDFReal` over a whole docs folder (the 66-PDF run) |
-| `HELPBUILD_PARITY_COURSE=<dir>` | `TestParityCourseReal` on that course tree |
-| `HELPBUILD_PARITY_415=1` | `TestParityGuidesReal`, `TestParityBajadocReal`, `TestParityBajadocXMLReal`, `TestParityS8Real`, `TestParityS9Real` and `TestParityCoverageReal` on 4.15.6.20 too |
-| `HELPBUILD_PARITY_BAJADOC=a:b` | `TestParityBajadocReal` on that list of version ids instead (for example `4.13.2.18`) |
-| `HELPBUILD_PARITY_BAJADOCXML=a:b` | `TestParityBajadocXMLReal` on that list of version ids instead |
-| `HELPBUILD_PARITY_INDEXES=a:b` | `TestParityS8Real` and `TestParityS9Real` on that list of version ids instead |
-| `HELPBUILD_PARITY_COVERAGE=a:b` | `TestParityCoverageReal` on that list of version ids instead; an install that is not mounted then fails instead of skipping `--doc-jars` |
-| `HELPBUILD_PARITY_SWEEP=a:b` | `TestParitySweepReal` on that list of version ids (only this variable turns it on; a list naming no version fails) |
-
-`make parity` sets `REAL`, `FULL`, `415`, `INDEXES=4.14.0.162:4.15.6.20:4.3.58.18`, `COVERAGE=4.14.0.162:4.15.6.20` and `SWEEP=4.15.6.20:4.3.58.18` and runs every `Parity` test of the package (the sweep adds about 100 s over a warm jar-listing cache).
-
-| `HELPBUILD_PARITY_REBUILD=a:b` | `TestParityRebuildReal` on that list of version ids (off otherwise; not part of the `REAL` umbrella) |
-| `HELPBUILD_PARITY_VERSIONS_ADD=<install>` | `TestParityVersionsAddReal` on a subset copy of that install (off otherwise; not part of the `REAL` umbrella; `make parity` sets the EC-Net 4.3.58.18 install) |
-
-`make parity` sets `REAL`, `FULL`, `415`, `INDEXES=4.14.0.162:4.15.6.20:4.3.58.18` and `REBUILD=4.3.58.18` and runs every `Parity` test of the package.
-Timings on the development laptop: `go test ./internal/helpbuild/` about 20 s without the
-variables (about 170 s when the real tests ran by default); `HELPBUILD_PARITY_REAL=1 go test ./internal/helpbuild/` about 2.5 min (the 4.14 coverage reports
-about 80 s of it); `make parity` 8 to 10 min (the full-install sweep 80 s or more over /mnt/c,
-4.3 + 4.15 guides about 135 s, the coverage reports of 4.14 and 4.15 2 to 4 min).
+`TestCoverageRealGoldens` (S10b-1) is the package's one real-data test:
+`NIAGARA_HELP_DIR=~/niagara-research/niagara-help go test ./internal/helpbuild -run
+TestCoverageRealGoldens`, part of `make realdata`; it skips with `-short` or without the
+variable. The `HELPBUILD_PARITY_*` variables and the real-version parity runs retired with
+D47; their last measurements stay in the sections above. `go test ./internal/helpbuild/`
+takes about 20 s on the development laptop.
 
 ## Dead code not ported
 

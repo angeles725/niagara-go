@@ -1,0 +1,2 @@
+["out", ""]
+["missing", "index indexes/slots-index.json is missing under <base>; rebuild the indexes with: nh rebuild-all"]

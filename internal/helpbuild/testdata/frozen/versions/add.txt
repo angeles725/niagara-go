@@ -1,0 +1,677 @@
+## <dir>/install
+# stdout
+registered 1.0.0.0 (install) -> versions/1.0.0.0/
+extracted 39 files (1,084 bytes)
+  COLLISION guides/ClHVACTest/Tasks.html (docClHVACTest-doc.jar overwritten by docClHVACTest-doc.jar)
+  COLLISION guides/Foo/x.html (docFoo-doc.jar overwritten by docFoo.jar)
+  COLLISION guides/thing-ux/rc/notes.md (thing-ux.jar overwritten by thing-ux.jar)
+  SKIP  inheritance_builder.py     -> inheritance.json  (source 'bajadoc-clean/' absent)
+  SKIP  method_indexer.py          -> method-index.json  (source 'bajadoc-clean/' absent)
+Ran 12, skipped 2, failed 0.
+  EMPTY inheritance.json (its source is not in this install)
+  EMPTY method-index.json (its source is not in this install)
+fidelity 1.0.0.0: jars 13 checked 39 sha256-exact 38 eol-only 0 mismatched 1 missing 0
+manifest -> versions/1.0.0.0.manifest.json
+
+SUMMARY 1.0.0.0
+  install:   <dir>/install
+  data root: versions/1.0.0.0
+  extracted: 39 files (1,084 bytes) from 13 doc jars (sha256-exact 38 of 39)
+  classes:   0 in class-index.json
+  guide folders: 6
+  searchable full-text files per source kind:
+    bajadoc-clean            0  API class pages (javadoc HTML + .bajadoc XML)
+    devguide-clean           3  Developer Guide pages
+    guides-clean            19  guide and module help pages
+    source                   1  Java source files
+    devguide-rc              2  devguide rc/ example sources
+    devguide-examples        1  developer example sources
+    docs-text                0  PDF manuals  (none: no docs/ PDFs here and no registered version has any)
+    course-text              0  developer course pages
+  gates (full reports: versions/1.0.0.0/gates.log):
+    coverage --doc-jars  exit 1  FAIL - 6 unexplained entries
+    coverage --sweep     exit 1  FAIL - 9 unclassified entries
+RESULT: NOT READY - see the gate reports above
+
+# exit 1
+# tree
+@@ 0,0 0,326
++ fulltext.sqlite:
++ [meta fingerprint engine=3|devguide-clean=<dir>/repo/versions/1.0.0.0/devguide-clean:3:135:<mtime>:<sha1>|guides-clean=<dir>/repo/versions/1.0.0.0/guides-clean:19:1068:<mtime>:<sha1>|source=<dir>/repo/versions/1.0.0.0/source:1:24:<mtime>:<sha1>|devguide-rc=<dir>/repo/versions/1.0.0.0/devguide-rc:2:26:<mtime>:<sha1>|devguide-examples=<dir>/repo/versions/1.0.0.0/devguide-examples:1:9:<mtime>:<sha1>   ]
++ [docs 1 devguide-clean changes37.txt changes37.txt 4 0]
++ [docs 2 devguide-clean index.txt T 4 0]
++ [docs 3 devguide-clean o.txt T 4 0]
++ [docs 4 guides-clean ClHVACTest/README.txt README.txt 4 0]
++ [docs 5 guides-clean ClHVACTest/Tasks.txt T 4 0]
++ [docs 6 guides-clean ClHVACTest/crlf.txt crlf.txt 4 0]
++ [docs 7 guides-clean ClHVACTest/emoji😀.txt emoji😀.txt 4 0]
++ [docs 8 guides-clean ClHVACTest/empty.txt empty.txt 4 0]
++ [docs 9 guides-clean ClHVACTest/index.txt T 4 0]
++ [docs 10 guides-clean ClHVACTest/Ünïcode ñ.txt T 4 0]
++ [docs 11 guides-clean ClHVACTest/日本語.md.txt 日本語.md 4 0]
++ [docs 12 guides-clean ClHVACTest/a b/c.md.txt c.md 4 0]
++ [docs 13 guides-clean ClHVACTest/sub/Overview.txt T 4 0]
++ [docs 14 guides-clean Foo/x.txt x 4 0]
++ [docs 15 guides-clean Foo/y.txt y.txt 4 0]
++ [docs 16 guides-clean Stored/s.txt s.txt 4 0]
++ [docs 17 guides-clean Stored/z.txt T 4 0]
++ [docs 18 guides-clean ascHelp/About-Asc.txt T 4 0]
++ [docs 19 guides-clean thing-ux/jsdoc/a/b.txt T 4 0]
++ [docs 20 guides-clean thing-ux/rc/notes.md.txt Notes 4 0]
++ [docs 21 guides-clean workbench-wb/com/tridium/workbench/media/about.txt T 4 0]
++ [docs 22 guides-clean workbench-wb/res/x/home.txt T 4 0]
++ [docs 23 source baja-rt/javax/baja/sys/BSrc.java BSrc 1 0]
++ [docs 24 devguide-rc com/x/A.java A 1 0]
++ [docs 25 devguide-rc com/x/BVal.java BVal 1 0]
++ [docs 26 devguide-examples examples/bajaux/ZorbWidget.js ZorbWidget 1 0]
++ build.log:
++ REBUILD-ALL 
++ ============================================================
++   RUN   bajadoc_parser.py          -> bajadoc-clean/
++ Found 1 HTML files to parse
++ 
++ Done in <t>s
++   Parsed: 0
++   Skipped: 1
++   Errors: 0
++   Output: <dir>/repo/versions/1.0.0.0/bajadoc-clean
++   RUN   bajadoc_xml_parser.py      -> bajadoc-clean/
++ bajadoc-clean/ from .bajadoc XML: 0 classes (javadoc HTML pages keep their own text)
++   RUN   build_class_index.py       -> class-index.json, jdk-class-index.json (when jdk/ exists)
++ class-index.json: 0 names, 0 classes -> <dir>/repo/versions/1.0.0.0/indexes/class-index.json
++ jdk-class-index.json: 0 names, 0 classes -> <dir>/repo/versions/1.0.0.0/indexes/jdk-class-index.json
++   SKIP  inheritance_builder.py     -> inheritance.json  (source 'bajadoc-clean/' absent)
++   SKIP  method_indexer.py          -> method-index.json  (source 'bajadoc-clean/' absent)
++   RUN   source_indexer.py          -> source-index.json
++ Built source-index.json: 3 classes, 3 total lines from source/
++   RUN   slots_indexer.py           -> slots-index.json
++ Merged 0 slots from .bajadoc XML
++ Built slots-index.json: 0 classes (0 properties, 0 actions, 0 topics) from 0 files
++   RUN   xref_builder.py            -> xref-index.json
++ Built xref-index.json: 3 classes, 0 dependency edges from 3 source files
++   RUN   guides_parser.py           -> guides-clean/
++ Extracted 19 guide files to guides-clean/ (0.0 MB text, 0 errors, 0 titled from toc.xml)
++   RUN   build_guides_index.py      -> guides-index.json
++ guides-index.json: 6 folders -> <dir>/repo/versions/1.0.0.0/indexes/guides-index.json
++   RUN   devguide_parser.py         -> devguide-clean/
++   excluded (licence text): devguide/jsdoc/m/Apache-License-2.0.txt
++ Extracted 3 devguide files to devguide-clean/ (0.0 MB text)
++   RUN   build_devguide_toc.py      -> devguide-toc.json
++ devguide-toc.json: 0 sections -> <dir>/repo/versions/1.0.0.0/indexes/devguide-toc.json
++   RUN   pdf_extractor.py           -> pdf-index.json, docs-text/
++ SKIP: no PDF manuals for <dir>/repo/versions/1.0.0.0 (docs dir: <dir>/install/docs); search uses the shared manuals.
++   RUN   course_extractor.py        -> course-text/
++ course: no course bound to this version; skipped
++ 
++ Ran 12, skipped 2, failed 0.
++ Manifest re-stamped. Run 'freshness' to confirm FRESH.
++ data root:
++ bajadoc d--------- 755
++ bajadoc/index.html ---------- 644 63 96755e18c0435ec50f84a35f7d6a869aa402e1306ba69750058d264e06bd5379
++ bajadoc/javax d--------- 755
++ bajadoc/javax/baja d--------- 755
++ bajadoc/javax/baja/sys d--------- 755
++ bajadoc/javax/baja/sys/BObject.html ---------- 644 63 96755e18c0435ec50f84a35f7d6a869aa402e1306ba69750058d264e06bd5379
++ devguide d--------- 755
++ devguide/changes37.txt ---------- 644 6 3dc3ae00e6d09d5e491895aca9237b14a87deabad03bfb9f5679eb49ff8b9744
++ devguide/index.html ---------- 644 63 96755e18c0435ec50f84a35f7d6a869aa402e1306ba69750058d264e06bd5379
++ devguide/jsdoc d--------- 755
++ devguide/jsdoc/m d--------- 755
++ devguide/jsdoc/m/Apache-License-2.0.txt ---------- 644 7 8178ac72b28d77fcb851fcd301583182bd05d9663ed2ec8131e60f057c2795f7
++ devguide/o.html ---------- 644 63 96755e18c0435ec50f84a35f7d6a869aa402e1306ba69750058d264e06bd5379
++ devguide-clean d--------- 755
++ devguide-clean/changes37.txt ---------- 644 59 3780c6b9c7a0a9082270a0560596cd5f87832c5830788f7fd00e9dbe60f78306
++ devguide-clean/index.txt ---------- 644 40 9d37060b0e8483f8a5f82749dc6db5a853fca8e286fa5908aefb891568a7e3f7
++ devguide-clean/o.txt ---------- 644 36 ada55c2a8b5bd908e084620801787f165f8ed939e2df982f758845dca4800ac6
++ devguide-examples d--------- 755
++ devguide-examples/docDeveloper-ux.lexicon ---------- 644 4 af33f4d149217e9d87375f4a99398f3dd82ec79ecdf714501f39550f91c274da
++ devguide-examples/examples d--------- 755
++ devguide-examples/examples/bajaux d--------- 755
++ devguide-examples/examples/bajaux/ZorbWidget.js ---------- 644 9 1c257d3c8111e943ea265d39d700ab8a6d8681147c54476fcec52fe2f44afe0b
++ devguide-examples/rc d--------- 755
++ devguide-examples/rc/Playground.built.min.js ---------- 644 6 be879445c87d7e72059ad71c41a8f0f484d12032e91d14f996d1dabc7db1ae1e
++ devguide-rc d--------- 755
++ devguide-rc/com d--------- 755
++ devguide-rc/com/x d--------- 755
++ devguide-rc/com/x/A.class ---------- 644 2 03346f0e7990de2423a3bca5335bf92cdc0bd14bef2206b87c63f18a1e996c52
++ devguide-rc/com/x/A.java ---------- 644 12 83f23308fc99b44c3b8d187622dab54653555919f62fb41491358231d9c9e7e0
++ devguide-rc/com/x/BVal.java ---------- 644 14 ffe1d6fdacdcbb2e56d5d1d23d23fd0a1c16b7a1d3b1492de69ba3520e2dce02
++ gates.log ---------- 644 text:
++ | DOC-JAR COVERAGE 1.0.0.0 (13 jars from <dir>/install)
++ |   jar                                content type          in-jar extracted indexed excluded  gaps
++ |   ascHelp.jar                        (module, not doc/)         3         0       0        3     0
++ |   ascHelp.jar                        guides .css                1         1       0        1     0
++ |   ascHelp.jar                        guides .html               1         1       1        0     0
++ |   ascHelp.jar                        guides .txt                1         1       0        1     0
++ |   ascHelp.jar                        guides .xz                 1         0       0        1     0
++ |   docClHVACTest-doc.jar              (unmapped) .MF             1         0       0        1     0
++ |   docClHVACTest-doc.jar              guides .bajadoc            1         1       0        0     1  <- GAP
++ |   docClHVACTest-doc.jar              guides .html               5         5       5        0     0
++ |   docClHVACTest-doc.jar              guides .md                 2         2       2        0     0
++ |   docClHVACTest-doc.jar              guides .txt                4         4       4        0     0
++ |   docClHVACTest-doc.jar              guides .xml                1         1       1        0     0
++ |   docDeveloper-doc.jar               (unmapped) .txt            1         0       0        0     1  <- GAP
++ |   docDeveloper-doc.jar               devguide .html             2         2       2        0     0
++ |   docDeveloper-doc.jar               devguide .txt              2         2       1        1     0
++ |   docDeveloper-doc.jar               devguide-rc .class         1         1       0        1     0
++ |   docDeveloper-doc.jar               devguide-rc .java          1         1       1        0     0
++ |   docDeveloper-rt.jar                (unmapped) .class          1         0       0        1     0
++ |   docDeveloper-rt.jar                (unmapped) .lexicon        1         0       0        1     0
++ |   docDeveloper-rt.jar                (unmapped) .palette        1         0       0        1     0
++ |   docDeveloper-rt.jar                devguide-rc .java          1         1       1        0     0
++ |   docDeveloper-ux.jar                (unmapped) .MF             1         0       0        1     0
++ |   docDeveloper-ux.jar                (unmapped) .class          1         0       0        1     0
++ |   docDeveloper-ux.jar                devguide-examples .j       2         2       1        1     0
++ |   docDeveloper-ux.jar                devguide-examples .l       1         1       0        1     0
++ |   docFoo-doc.jar                     guides .html               1         1       1        0     0
++ |   docFoo-doc.jar                     guides .txt                1         1       1        0     0
++ |   docFoo.jar                         guides .html               1         1       1        0     0
++ |   docJdk-doc.jar                     (unmapped) .txt            1         0       0        0     1  <- GAP
++ |   docJdk-doc.jar                     jdk .bajadoc               1         1       0        0     1  <- GAP
++ |   docSource-doc.jar                  source .html               1         1       0        1     0
++ |   docSource-doc.jar                  source .java               1         1       1        0     0
++ |   docStored-doc.jar                  guides .html               1         1       1        0     0
++ |   docStored-doc.jar                  guides .txt                1         1       1        0     0
++ |   niagaraJavadoc.jar                 (unmapped) .txt            1         0       0        0     1  <- GAP
++ |   niagaraJavadoc.jar                 bajadoc .html              2         2       0        1     1  <- GAP
++ |   thing-ux.jar                       (module, not doc/)         2         0       0        2     0
++ |   thing-ux.jar                       guides .html               1         1       1        0     0
++ |   thing-ux.jar                       guides .md                 2         2       2        0     0
++ |   workbench-wb.jar                   guides .html               2         2       2        0     0
++ |   TOTAL                                                        56        41      30       20     6
++ | 
++ | EXCLUDED WITH REASON:
++ |         5  module code and resources outside the jar's doc/ help folder (not documentation)
++ |         3  compiled example class (its .java source is indexed)
++ |         2  jar metadata (META-INF/)
++ |         2  licence text
++ |         2  translation lexicon (UI strings, not documentation)
++ |         1  Workbench palette (component templates, not prose)
++ |         1  minified build bundle (its readable sources are indexed)
++ |         1  source browser navigation page (every .java is indexed)
++ |         1  javadoc navigation/listing page (its classes are indexed one by one)
++ |         1  stylesheet / web font
++ |         1  third-party source archive (licence source offer, not documentation; not extracted)
++ | 
++ | GAPS (first 6 of 6):
++ |   docClHVACTest-doc.jar  guides/ClHVACTest/cl/hvac/BAbsolute.bajadoc  -- not indexed (bajadoc-xml)
++ |   docDeveloper-doc.jar  other/x.txt  -- unknown content type (no index rule, no exclusion)
++ |   docJdk-doc.jar  jdk/jdk-se/java/util/HashMap.bajadoc  -- not indexed (jdk-xml)
++ |   docJdk-doc.jar  other.txt  -- unknown content type (no index rule, no exclusion)
++ |   niagaraJavadoc.jar  bajadoc/javax/baja/sys/BObject.html  -- not indexed (javadoc-class)
++ |   niagaraJavadoc.jar  other.txt  -- unknown content type (no index rule, no exclusion)
++ | 
++ | GUIDE FOLDERS: every folder fully extracted
++ | RESULT: FAIL - 6 unexplained entries
++ | 
++ | INSTALL SWEEP 1.0.0.0 (16 jars under <dir>/install; 10 listed anew, the rest from the jar-listing cache)
++ |   documentation-like: .html .htm .xhtml .md .markdown .txt .text .pdf .rtf .doc .docx .odt .rst .adoc .bajadoc + toc.xml
++ |   location                       jars with-docs  doc-like  indexed excluded UNCLASSIFIED
++ |   javadoc/                          1         1         3        0        1            2
++ |   modules/                         15        12        38       25        7            7
++ |   TOTAL                            16        13        41       25        8            9
++ | 
++ | EXCLUDED (rule: reason):
++ |         2  doc_types: licence text
++ |         2  doc_types: stylesheet / web font
++ |         1  doc_types: javadoc navigation/listing page (its classes are indexed one by one)
++ |         1  doc_types: source browser navigation page (every .java is indexed)
++ |         1  doc_types: third-party source archive (licence source offer, not documentation; not extracted)
++ |         1  node-modules: bundled npm package (READMEs, changelogs and test pages of third-party JavaScript libraries)
++ | 
++ | PDF MANUALS: none (no registered version has docs-text/)
++ | 
++ | COURSE: none bound to this version
++ | 
++ | UNCLASSIFIED (first 9 of 9):
++ |   javadoc/niagaraJavadoc.jar  doc/javax/baja/sys/BObject.html  -- maps to bajadoc/javax/baja/sys/BObject.html but it is not indexed
++ |   javadoc/niagaraJavadoc.jar  other.txt  -- no extract or exclude rule matches (add one to install_docs.json)
++ |   modules/broken-rt.jar  (whole jar)  -- unreadable jar (corrupt zip or I/O error)
++ |   modules/docClHVACTest-doc.jar  doc/Tasks.html  -- maps to guides/ClHVACTest/Tasks.html, which the earlier entry doc/Tasks.html of this jar fills: not extracted, and its content differs
++ |   modules/docClHVACTest-doc.jar  doc/cl/hvac/BAbsolute.bajadoc  -- maps to guides/ClHVACTest/cl/hvac/BAbsolute.bajadoc but it is not indexed
++ |   modules/docDeveloper-doc.jar  other/x.txt  -- no extract or exclude rule matches (add one to install_docs.json)
++ |   modules/docJdk-doc.jar  doc/jdk-se/java/util/HashMap.bajadoc  -- maps to jdk/jdk-se/java/util/HashMap.bajadoc but it is not indexed
++ |   modules/docJdk-doc.jar  other.txt  -- no extract or exclude rule matches (add one to install_docs.json)
++ |   modules/thing-ux.jar  doc/rc/notes.md  -- maps to guides/thing-ux/rc/notes.md, which the earlier entry rc/notes.md of this jar fills: not extracted, and its content differs
++ | RESULT: FAIL - 9 unclassified entries
++ | 
++ guides d--------- 755
++ guides/ClHVACTest d--------- 755
++ guides/ClHVACTest/README.txt ---------- 644 14 fbc89db890c926337f6981a1a816af63b2ba1b4baca1f698a2cc75fb3180965e
++ guides/ClHVACTest/Tasks.html ---------- 644 63 96755e18c0435ec50f84a35f7d6a869aa402e1306ba69750058d264e06bd5379
++ guides/ClHVACTest/a b d--------- 755
++ guides/ClHVACTest/a b/c.md ---------- 644 1 2e7d2c03a9507ae265ecf5b5356885a53393a2029d241394997265a1a25aefc6
++ guides/ClHVACTest/cl d--------- 755
++ guides/ClHVACTest/cl/hvac d--------- 755
++ guides/ClHVACTest/cl/hvac/BAbsolute.bajadoc ---------- 644 4 2a31f44da4bd7decbbd3ddfd1a37ae04d02ec665e2c2688816ccc65631586ed1
++ guides/ClHVACTest/crlf.txt ---------- 644 6 58055bdcc73787eb88c78d36f0b4939e9c5dc1c3ad17e25cc85a6833cf1a0cab
++ guides/ClHVACTest/emoji😀.txt ---------- 644 1 3f79bb7b435b05321651daefd374cdc681dc06faa65e374e38337b88ca046dea
++ guides/ClHVACTest/empty.txt ---------- 644 0 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
++ guides/ClHVACTest/index.html ---------- 644 63 96755e18c0435ec50f84a35f7d6a869aa402e1306ba69750058d264e06bd5379
++ guides/ClHVACTest/sub d--------- 755
++ guides/ClHVACTest/sub/Overview.html ---------- 644 63 96755e18c0435ec50f84a35f7d6a869aa402e1306ba69750058d264e06bd5379
++ guides/ClHVACTest/toc.xml ---------- 644 6 d19dc9afb954213b2a09ea9cb7f17d72be467fa5b8e2c7652c96b429ef268ccd
++ guides/ClHVACTest/Ünïcode ñ.html ---------- 644 63 96755e18c0435ec50f84a35f7d6a869aa402e1306ba69750058d264e06bd5379
++ guides/ClHVACTest/日本語.md ---------- 644 2 21262a3cb5337627b0fad9d891c16adb40706bd3e57534416dd02bbe5917d184
++ guides/Foo d--------- 755
++ guides/Foo/x.html ---------- 644 23 8f3bbec9ca1e03360839b4777ec9b9a78dba692cf035bd2505e3137ecf09f4ec
++ guides/Foo/y.txt ---------- 644 13 033b8a13c4c1dc107936a84f75d87a966865d80506cedadd9d424521428ffedb
++ guides/Stored d--------- 755
++ guides/Stored/s.txt ---------- 644 14 10fc57f1018d9e17fd81e6a15dae65beb1c301cbd27575e06201ebb0f42773f7
++ guides/Stored/z.html ---------- 644 63 96755e18c0435ec50f84a35f7d6a869aa402e1306ba69750058d264e06bd5379
++ guides/ascHelp d--------- 755
++ guides/ascHelp/About-Asc.html ---------- 644 63 96755e18c0435ec50f84a35f7d6a869aa402e1306ba69750058d264e06bd5379
++ guides/ascHelp/lgpl-2.1.txt ---------- 644 4 7c10ea93bd0151bea60dff9f79b8edb1267c552100814b0f144f0eeeb15c2970
++ guides/ascHelp/style.css ---------- 644 3 806db221261eade44c886da5317adb894822d146f0f69ed009e59cae83afcbd6
++ guides/thing-ux d--------- 755
++ guides/thing-ux/jsdoc d--------- 755
++ guides/thing-ux/jsdoc/a d--------- 755
++ guides/thing-ux/jsdoc/a/b.html ---------- 644 63 96755e18c0435ec50f84a35f7d6a869aa402e1306ba69750058d264e06bd5379
++ guides/thing-ux/rc d--------- 755
++ guides/thing-ux/rc/notes.md ---------- 644 8 365d0b84ae63c2afc293dedd2b00bdf0dc8d6ef70c9297d90f9e5682ab0d72ee
++ guides/workbench-wb d--------- 755
++ guides/workbench-wb/com d--------- 755
++ guides/workbench-wb/com/tridium d--------- 755
++ guides/workbench-wb/com/tridium/workbench d--------- 755
++ guides/workbench-wb/com/tridium/workbench/media d--------- 755
++ guides/workbench-wb/com/tridium/workbench/media/about.html ---------- 644 63 96755e18c0435ec50f84a35f7d6a869aa402e1306ba69750058d264e06bd5379
++ guides/workbench-wb/res d--------- 755
++ guides/workbench-wb/res/x d--------- 755
++ guides/workbench-wb/res/x/home.html ---------- 644 63 96755e18c0435ec50f84a35f7d6a869aa402e1306ba69750058d264e06bd5379
++ guides-clean d--------- 755
++ guides-clean/ClHVACTest d--------- 755
++ guides-clean/ClHVACTest/README.txt ---------- 644 70 6358b1860296ef0544300e87e3b554ce3ed43f6aeefb1b88df9458d6970dd582
++ guides-clean/ClHVACTest/Tasks.txt ---------- 644 49 52b74be92186c22d0969320b1b33859c44a8ae47aed23f67dd39d837283d6613
++ guides-clean/ClHVACTest/a b d--------- 755
++ guides-clean/ClHVACTest/a b/c.md.txt ---------- 644 50 fd7c6af6688004d9180a301a5a0d790825d1ebf662c48131c2656aabe15ca51d
++ guides-clean/ClHVACTest/crlf.txt ---------- 644 56 97e539092008dcf9fcd0ede8543c42434e1912910e18d3403c30d6245cd7c865
++ guides-clean/ClHVACTest/emoji😀.txt ---------- 644 64 b521e602eb0e52793c8413e5706889c86efe77a5a184dc9926504f639d1e5429
++ guides-clean/ClHVACTest/empty.txt ---------- 644 54 dbd6f0454dd5515f2718f3c34cfedb61247b56e3cb2e3c15931fdbffd82fd351
++ guides-clean/ClHVACTest/index.txt ---------- 644 49 cf6d53cad29f0876b4ec308d14c8ebed228805a5f5701bc1258b211bb96a35a7
++ guides-clean/ClHVACTest/sub d--------- 755
++ guides-clean/ClHVACTest/sub/Overview.txt ---------- 644 56 fe3567bd83e921e983451531120f9b091da730405d25d93f3a9a9d761c815718
++ guides-clean/ClHVACTest/Ünïcode ñ.txt ---------- 644 56 ca8f60cc00599c53b09596b845abd4e5ccd924a30c0969e1fd839dec25bdaac4
++ guides-clean/ClHVACTest/日本語.md.txt ---------- 644 63 4b2e256f9533c6e4576533dcd4f573d3dc1aab7920a8440de7471cc2841a99b2
++ guides-clean/Foo d--------- 755
++ guides-clean/Foo/x.txt ---------- 644 59 092e399902ed670fff9db97d8dd76f2b7fdfc4b27d58f72fff9bb33d7711e2ef
++ guides-clean/Foo/y.txt ---------- 644 53 352ab808c1a2cbc2368b7ec79a1824de885d243a65aa34cb2ef809cf1bbb609f
++ guides-clean/Stored d--------- 755
++ guides-clean/Stored/s.txt ---------- 644 54 d5495d7dc71ab1a664d69954989f8d5191e798958813ce206f252da006dd82b9
++ guides-clean/Stored/z.txt ---------- 644 41 991cb311265f5ac7c3e8afd343e49c90de7a6cd13e0a24052d3444f57c03bf99
++ guides-clean/ascHelp d--------- 755
++ guides-clean/ascHelp/About-Asc.txt ---------- 644 50 5a3579b4aa17bc678c02497a7f5bba006956ac44f029f1671beb431d3a6954ea
++ guides-clean/thing-ux d--------- 755
++ guides-clean/thing-ux/jsdoc d--------- 755
++ guides-clean/thing-ux/jsdoc/a d--------- 755
++ guides-clean/thing-ux/jsdoc/a/b.txt ---------- 644 51 59ff2c61d72f7039a81e6fab2772f4d03a9d1e82b901a45adaf97ff165f2974f
++ guides-clean/thing-ux/rc d--------- 755
++ guides-clean/thing-ux/rc/notes.md.txt ---------- 644 58 49666ee7892a19d9aa6b40917aa3eb849826783f55dd2c6d4dd8fbe84cac38c7
++ guides-clean/workbench-wb d--------- 755
++ guides-clean/workbench-wb/com d--------- 755
++ guides-clean/workbench-wb/com/tridium d--------- 755
++ guides-clean/workbench-wb/com/tridium/workbench d--------- 755
++ guides-clean/workbench-wb/com/tridium/workbench/media d--------- 755
++ guides-clean/workbench-wb/com/tridium/workbench/media/about.txt ---------- 644 79 00ed029971e58b7795a67c0bd60da473016446ffbaf5c9bdf4d57147dc269aa1
++ guides-clean/workbench-wb/res d--------- 755
++ guides-clean/workbench-wb/res/x d--------- 755
++ guides-clean/workbench-wb/res/x/home.txt ---------- 644 56 d6cd230b314fb2ed83814ec956f777908735e84faba7152a459101e49662eb0c
++ indexes d--------- 755
++ indexes/class-index.json ---------- 644 2 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a
++ indexes/devguide-toc.json ---------- 644 20 6bdcb024aaaf24a6ad3986b5fdcde3e032796ee1a2b1981423cb40da9a574c37
++ indexes/guides-index.json ---------- 644 1157 6004758efb57e1bc870c3a083112194ddf70e6e721d832a443037320a59daacc
++ indexes/inheritance.json ---------- 644 2 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a
++ indexes/jdk-class-index.json ---------- 644 2 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a
++ indexes/method-index.json ---------- 644 2 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a
++ indexes/pdf-index.json ---------- 644 3 ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356
++ indexes/slots-index.json ---------- 644 2 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a
++ indexes/source-index.json ---------- 644 386 f5057687412a7b51d3e123d3a4d5006b45c476e86e7ef267fe2e1c4b47c6841c
++ indexes/xref-index.json ---------- 644 118 b437c9a094678e5c18504c8c07e9c6aa57560511940a11579665bd34ce18cd15
++ jdk d--------- 755
++ jdk/jdk-se d--------- 755
++ jdk/jdk-se/java d--------- 755
++ jdk/jdk-se/java/util d--------- 755
++ jdk/jdk-se/java/util/HashMap.bajadoc ---------- 644 4 2a31f44da4bd7decbbd3ddfd1a37ae04d02ec665e2c2688816ccc65631586ed1
++ source d--------- 755
++ source/baja-rt d--------- 755
++ source/baja-rt/javax d--------- 755
++ source/baja-rt/javax/baja d--------- 755
++ source/baja-rt/javax/baja/sys d--------- 755
++ source/baja-rt/javax/baja/sys/BSrc.java ---------- 644 24 bf84075c261a6ea776b7e6bd4420c3d8609532dbe03f57f383590dcda3b22929
++ source/doc d--------- 755
++ source/doc/index.html ---------- 644 63 96755e18c0435ec50f84a35f7d6a869aa402e1306ba69750058d264e06bd5379
++ indexes/.manifest.json 644
++ {
++   "stamped_utc": "<utc>",
++   "sources": {
++     "bajadoc": {
++       "files": 2,
++       "bytes": 126
++     },
++     "source": {
++       "files": 2,
++       "bytes": 87
++     },
++     "guides": {
++       "files": 23,
++       "bytes": 666
++     },
++     "devguide": {
++       "files": 4,
++       "bytes": 139
++     },
++     "docs": null
++   }
++ }
+@@ 1,1 327,344
++ .cache d--------- 755
++ .cache/jar-listings d--------- 755
++ .cache/jar-listings/<install hash>.json ---------- 644 <size> <sha256>
++ versions d--------- 755
++ versions/1.0.0.0.manifest.json ---------- 644 {
+ "version": "1.0.0.0",
+ "label": "install",
+ "install_dir": "<dir>/install",
+ "data_root": "versions/1.0.0.0",
+ "generated_utc": "<utc>",
+ "fidelity": {
+  "jars": 13,
+  "checked": 39,
+  "matched": 38
+ },
+ "eol_only_count": 0,
+ "mismatched": [
+  "guides/Foo/x.html"
+ ],
+ "missing": [],
+ "jars": [
+  {
+   "jar": "modules/docClHVACTest-doc.jar",
+   "bytes": 2285,
+   "sha256": "737fdac8910f86a18e102d4270e14a267a713706b6c7aa6cec4412bd6bd8477d",
+   "mapped_entries": 13
+  },
+  {
+   "jar": "modules/docDeveloper-doc.jar",
+   "bytes": 1103,
+   "sha256": "40f5906a4210aac21b31085c924c78deeaec8923fa8f0313037664fe7a5040a9",
+   "mapped_entries": 6
+  },
+  {
+   "jar": "modules/docDeveloper-rt.jar",
+   "bytes": 596,
+   "sha256": "63e965122ef27e0f23072d68e45fcee0a32acdd1650516873c325bfd82db7fb5",
+   "mapped_entries": 1
+  },
+  {
+   "jar": "modules/docDeveloper-ux.jar",
+   "bytes": 916,
+   "sha256": "801adf6dfa17c8e0ef267ee7f640393ac08b48ca0197fe2d5001f0228a167d9e",
+   "mapped_entries": 3
+  },
+  {
+   "jar": "modules/docFoo-doc.jar",
+   "bytes": 278,
+   "sha256": "b27913407b6996f30a92e9df72c93d1c1424d624f2efdbdd8c5abfc1a9c6a456",
+   "mapped_entries": 2
+  },
+  {
+   "jar": "modules/docFoo.jar",
+   "bytes": 164,
+   "sha256": "78479a4ba62980a642019be93cac83d807255204a2530c5a5d0d0e162acc0b03",
+   "mapped_entries": 1
+  },
+  {
+   "jar": "modules/docJdk-doc.jar",
+   "bytes": 324,
+   "sha256": "038518f29ddd02072b03f679b8a5b5c6894ae39ea98a23fc5fc3923b5c534a5a",
+   "mapped_entries": 1
+  },
+  {
+   "jar": "modules/docSource-doc.jar",
+   "bytes": 491,
+   "sha256": "180a67c75dee416fdba05a2e310d2d1620dbce14182fc68628818574d177fed0",
+   "mapped_entries": 2
+  },
+  {
+   "jar": "modules/docStored-doc.jar",
+   "bytes": 321,
+   "sha256": "08a23207d5c0b193da69ad9ae48b0bca2df6aec6ee801d9b3d5b2111e0723cd2",
+   "mapped_entries": 2
+  },
+  {
+   "jar": "javadoc/niagaraJavadoc.jar",
+   "bytes": 554,
+   "sha256": "a5558a2ecbae4431b569a5568fddc501b07279ca2aa4e4675fe7fab5f9c7b14a",
+   "mapped_entries": 2
+  }
+ ]
+}
++ versions/registry.json ---------- 644 text:
++ | {
++ |   "default": "1.0.0.0",
++ |   "versions": {
++ |     "1.0.0.0": {
++ |       "label": "install",
++ |       "install_dir": "<dir>/install",
++ |       "data_root": "versions/1.0.0.0"
++ |     }
++ |   }
++ | }
++ | 
+## <dir>/install
+# stdout
+ERROR: version 1.0.0.0 is already registered; pass --force to extract and index it again
+
+# exit 2
+# tree
+## <dir>/install --force --default --label Synthetic ñ
+# stdout
+registered 1.0.0.0 (Synthetic ñ) -> versions/1.0.0.0/
+extracted 39 files (1,084 bytes)
+  COLLISION guides/ClHVACTest/Tasks.html (docClHVACTest-doc.jar overwritten by docClHVACTest-doc.jar)
+  COLLISION guides/Foo/x.html (docFoo-doc.jar overwritten by docFoo.jar)
+  COLLISION guides/thing-ux/rc/notes.md (thing-ux.jar overwritten by thing-ux.jar)
+  SKIP  inheritance_builder.py     -> inheritance.json  (source 'bajadoc-clean/' absent)
+  SKIP  method_indexer.py          -> method-index.json  (source 'bajadoc-clean/' absent)
+Ran 12, skipped 2, failed 0.
+  EMPTY inheritance.json (its source is not in this install)
+  EMPTY method-index.json (its source is not in this install)
+fidelity 1.0.0.0: jars 13 checked 39 sha256-exact 38 eol-only 0 mismatched 1 missing 0
+manifest -> versions/1.0.0.0.manifest.json
+
+SUMMARY 1.0.0.0
+  install:   <dir>/install
+  data root: versions/1.0.0.0
+  extracted: 39 files (1,084 bytes) from 13 doc jars (sha256-exact 38 of 39)
+  classes:   0 in class-index.json
+  guide folders: 6
+  searchable full-text files per source kind:
+    bajadoc-clean            0  API class pages (javadoc HTML + .bajadoc XML)
+    devguide-clean           3  Developer Guide pages
+    guides-clean            19  guide and module help pages
+    source                   1  Java source files
+    devguide-rc              2  devguide rc/ example sources
+    devguide-examples        1  developer example sources
+    docs-text                0  PDF manuals  (none: no docs/ PDFs here and no registered version has any)
+    course-text              0  developer course pages
+  gates (full reports: versions/1.0.0.0/gates.log):
+    coverage --doc-jars  exit 1  FAIL - 6 unexplained entries
+    coverage --sweep     exit 1  FAIL - 9 unclassified entries
+RESULT: NOT READY - see the gate reports above
+
+# exit 1
+# tree
+@@ 168,169 168,169
+- | INSTALL SWEEP 1.0.0.0 (16 jars under <dir>/install; 10 listed anew, the rest from the jar-listing cache)
++ | INSTALL SWEEP 1.0.0.0 (16 jars under <dir>/install; 0 listed anew, the rest from the jar-listing cache)
+@@ 282,283 282,283
+- indexes/guides-index.json ---------- 644 1157 6004758efb57e1bc870c3a083112194ddf70e6e721d832a443037320a59daacc
++ indexes/guides-index.json ---------- 644 1236 155614e109f7600dd3ba1d6a6f76698d20fef8baab9d11664d70c1782bd24e43
+@@ 331,332 331,332
+- versions/1.0.0.0.manifest.json ---------- 644 {
+ "version": "1.0.0.0",
+ "label": "install",
+ "install_dir": "<dir>/install",
+ "data_root": "versions/1.0.0.0",
+ "generated_utc": "<utc>",
+ "fidelity": {
+  "jars": 13,
+  "checked": 39,
+  "matched": 38
+ },
+ "eol_only_count": 0,
+ "mismatched": [
+  "guides/Foo/x.html"
+ ],
+ "missing": [],
+ "jars": [
+  {
+   "jar": "modules/docClHVACTest-doc.jar",
+   "bytes": 2285,
+   "sha256": "737fdac8910f86a18e102d4270e14a267a713706b6c7aa6cec4412bd6bd8477d",
+   "mapped_entries": 13
+  },
+  {
+   "jar": "modules/docDeveloper-doc.jar",
+   "bytes": 1103,
+   "sha256": "40f5906a4210aac21b31085c924c78deeaec8923fa8f0313037664fe7a5040a9",
+   "mapped_entries": 6
+  },
+  {
+   "jar": "modules/docDeveloper-rt.jar",
+   "bytes": 596,
+   "sha256": "63e965122ef27e0f23072d68e45fcee0a32acdd1650516873c325bfd82db7fb5",
+   "mapped_entries": 1
+  },
+  {
+   "jar": "modules/docDeveloper-ux.jar",
+   "bytes": 916,
+   "sha256": "801adf6dfa17c8e0ef267ee7f640393ac08b48ca0197fe2d5001f0228a167d9e",
+   "mapped_entries": 3
+  },
+  {
+   "jar": "modules/docFoo-doc.jar",
+   "bytes": 278,
+   "sha256": "b27913407b6996f30a92e9df72c93d1c1424d624f2efdbdd8c5abfc1a9c6a456",
+   "mapped_entries": 2
+  },
+  {
+   "jar": "modules/docFoo.jar",
+   "bytes": 164,
+   "sha256": "78479a4ba62980a642019be93cac83d807255204a2530c5a5d0d0e162acc0b03",
+   "mapped_entries": 1
+  },
+  {
+   "jar": "modules/docJdk-doc.jar",
+   "bytes": 324,
+   "sha256": "038518f29ddd02072b03f679b8a5b5c6894ae39ea98a23fc5fc3923b5c534a5a",
+   "mapped_entries": 1
+  },
+  {
+   "jar": "modules/docSource-doc.jar",
+   "bytes": 491,
+   "sha256": "180a67c75dee416fdba05a2e310d2d1620dbce14182fc68628818574d177fed0",
+   "mapped_entries": 2
+  },
+  {
+   "jar": "modules/docStored-doc.jar",
+   "bytes": 321,
+   "sha256": "08a23207d5c0b193da69ad9ae48b0bca2df6aec6ee801d9b3d5b2111e0723cd2",
+   "mapped_entries": 2
+  },
+  {
+   "jar": "javadoc/niagaraJavadoc.jar",
+   "bytes": 554,
+   "sha256": "a5558a2ecbae4431b569a5568fddc501b07279ca2aa4e4675fe7fab5f9c7b14a",
+   "mapped_entries": 2
+  }
+ ]
+}
++ versions/1.0.0.0.manifest.json ---------- 644 {
+ "version": "1.0.0.0",
+ "label": "Synthetic \u00f1",
+ "install_dir": "<dir>/install",
+ "data_root": "versions/1.0.0.0",
+ "generated_utc": "<utc>",
+ "fidelity": {
+  "jars": 13,
+  "checked": 39,
+  "matched": 38
+ },
+ "eol_only_count": 0,
+ "mismatched": [
+  "guides/Foo/x.html"
+ ],
+ "missing": [],
+ "jars": [
+  {
+   "jar": "modules/docClHVACTest-doc.jar",
+   "bytes": 2285,
+   "sha256": "737fdac8910f86a18e102d4270e14a267a713706b6c7aa6cec4412bd6bd8477d",
+   "mapped_entries": 13
+  },
+  {
+   "jar": "modules/docDeveloper-doc.jar",
+   "bytes": 1103,
+   "sha256": "40f5906a4210aac21b31085c924c78deeaec8923fa8f0313037664fe7a5040a9",
+   "mapped_entries": 6
+  },
+  {
+   "jar": "modules/docDeveloper-rt.jar",
+   "bytes": 596,
+   "sha256": "63e965122ef27e0f23072d68e45fcee0a32acdd1650516873c325bfd82db7fb5",
+   "mapped_entries": 1
+  },
+  {
+   "jar": "modules/docDeveloper-ux.jar",
+   "bytes": 916,
+   "sha256": "801adf6dfa17c8e0ef267ee7f640393ac08b48ca0197fe2d5001f0228a167d9e",
+   "mapped_entries": 3
+  },
+  {
+   "jar": "modules/docFoo-doc.jar",
+   "bytes": 278,
+   "sha256": "b27913407b6996f30a92e9df72c93d1c1424d624f2efdbdd8c5abfc1a9c6a456",
+   "mapped_entries": 2
+  },
+  {
+   "jar": "modules/docFoo.jar",
+   "bytes": 164,
+   "sha256": "78479a4ba62980a642019be93cac83d807255204a2530c5a5d0d0e162acc0b03",
+   "mapped_entries": 1
+  },
+  {
+   "jar": "modules/docJdk-doc.jar",
+   "bytes": 324,
+   "sha256": "038518f29ddd02072b03f679b8a5b5c6894ae39ea98a23fc5fc3923b5c534a5a",
+   "mapped_entries": 1
+  },
+  {
+   "jar": "modules/docSource-doc.jar",
+   "bytes": 491,
+   "sha256": "180a67c75dee416fdba05a2e310d2d1620dbce14182fc68628818574d177fed0",
+   "mapped_entries": 2
+  },
+  {
+   "jar": "modules/docStored-doc.jar",
+   "bytes": 321,
+   "sha256": "08a23207d5c0b193da69ad9ae48b0bca2df6aec6ee801d9b3d5b2111e0723cd2",
+   "mapped_entries": 2
+  },
+  {
+   "jar": "javadoc/niagaraJavadoc.jar",
+   "bytes": 554,
+   "sha256": "a5558a2ecbae4431b569a5568fddc501b07279ca2aa4e4675fe7fab5f9c7b14a",
+   "mapped_entries": 2
+  }
+ ]
+}
+@@ 337,338 337,338
+- |       "label": "install",
++ |       "label": "Synthetic \u00f1",
+## <dir>/install/. --id 1.0.0.0
+# stdout
+ERROR: version 1.0.0.0 is already registered; pass --force to extract and index it again
+
+# exit 2
+# tree

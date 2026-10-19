@@ -1,0 +1,7 @@
+## <dir>/install
+# stdout
+registered 1.0.0.0 (install) -> versions/1.0.0.0/
+ERROR: <dir>/repo/versions/1.0.0.0 already holds guides; pass --force to re-extract (registry entry rolled back)
+
+# exit 2
+# tree

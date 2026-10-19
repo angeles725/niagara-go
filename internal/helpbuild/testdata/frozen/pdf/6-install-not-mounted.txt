@@ -1,0 +1,4 @@
+stdout "ERROR: <root>/versions/9.9/indexes/pdf-index.json lists 1 PDF manual(s) but the docs dir <tmp>/install-missing/docs is missing; pdf-index.json and docs-text/ are kept unchanged. Mount the install or pass --docs-dir PATH."
+stdout ""
+exit 2
+tree:

@@ -1,0 +1,167 @@
+["out", "fidelity 1.0.0.0: jars 13 checked 39 sha256-exact 31 eol-only 3 mismatched 2 missing 3"]
+["out", "manifest -> versions/1.0.0.0.manifest.json"]
+["result", 1, null, null, {"checked": 39, "matched": 31, "mismatched": ["guides/ClHVACTest/Tasks.html", "guides/Foo/x.html"], "missing": ["guides/ClHVACTest/README.txt", "devguide-rc/com/x/BVal.java", "bajadoc/index.html"], "eol_only": ["guides/ClHVACTest/crlf.txt", "devguide-rc/com/x/A.java", "guides/Stored/s.txt"], "collisions": [["guides/ClHVACTest/Tasks.html", "docClHVACTest-doc.jar", "docClHVACTest-doc.jar"], ["guides/thing-ux/rc/notes.md", "thing-ux.jar", "thing-ux.jar"]], "jars": 13}]
+tree:
++ versions/1.0.0.0.manifest.json ---------- 644 {
+ "version": "1.0.0.0",
+ "label": "fixture \u00f1",
+ "install_dir": "<tmp>/install",
+ "data_root": "versions/1.0.0.0",
+ "generated_utc": "<utc>",
+ "fidelity": {
+  "jars": 13,
+  "checked": 39,
+  "matched": 31
+ },
+ "eol_only_count": 3,
+ "mismatched": [
+  "guides/ClHVACTest/Tasks.html",
+  "guides/Foo/x.html"
+ ],
+ "missing": [
+  "guides/ClHVACTest/README.txt",
+  "devguide-rc/com/x/BVal.java",
+  "bajadoc/index.html"
+ ],
+ "jars": [
+  {
+   "jar": "modules/docClHVACTest-doc.jar",
+   "bytes": 2285,
+   "sha256": "737fdac8910f86a18e102d4270e14a267a713706b6c7aa6cec4412bd6bd8477d",
+   "mapped_entries": 13
+  },
+  {
+   "jar": "modules/docDeveloper-doc.jar",
+   "bytes": 1103,
+   "sha256": "40f5906a4210aac21b31085c924c78deeaec8923fa8f0313037664fe7a5040a9",
+   "mapped_entries": 6
+  },
+  {
+   "jar": "modules/docDeveloper-rt.jar",
+   "bytes": 596,
+   "sha256": "63e965122ef27e0f23072d68e45fcee0a32acdd1650516873c325bfd82db7fb5",
+   "mapped_entries": 1
+  },
+  {
+   "jar": "modules/docDeveloper-ux.jar",
+   "bytes": 916,
+   "sha256": "801adf6dfa17c8e0ef267ee7f640393ac08b48ca0197fe2d5001f0228a167d9e",
+   "mapped_entries": 3
+  },
+  {
+   "jar": "modules/docFoo-doc.jar",
+   "bytes": 278,
+   "sha256": "b27913407b6996f30a92e9df72c93d1c1424d624f2efdbdd8c5abfc1a9c6a456",
+   "mapped_entries": 2
+  },
+  {
+   "jar": "modules/docFoo.jar",
+   "bytes": 164,
+   "sha256": "78479a4ba62980a642019be93cac83d807255204a2530c5a5d0d0e162acc0b03",
+   "mapped_entries": 1
+  },
+  {
+   "jar": "modules/docJdk-doc.jar",
+   "bytes": 324,
+   "sha256": "038518f29ddd02072b03f679b8a5b5c6894ae39ea98a23fc5fc3923b5c534a5a",
+   "mapped_entries": 1
+  },
+  {
+   "jar": "modules/docSource-doc.jar",
+   "bytes": 491,
+   "sha256": "180a67c75dee416fdba05a2e310d2d1620dbce14182fc68628818574d177fed0",
+   "mapped_entries": 2
+  },
+  {
+   "jar": "modules/docStored-doc.jar",
+   "bytes": 321,
+   "sha256": "08a23207d5c0b193da69ad9ae48b0bca2df6aec6ee801d9b3d5b2111e0723cd2",
+   "mapped_entries": 2
+  },
+  {
+   "jar": "javadoc/niagaraJavadoc.jar",
+   "bytes": 554,
+   "sha256": "a5558a2ecbae4431b569a5568fddc501b07279ca2aa4e4675fe7fab5f9c7b14a",
+   "mapped_entries": 2
+  }
+ ]
+}
+- versions/1.0.0.0.manifest.json ---------- 644 {
+ "version": "1.0.0.0",
+ "label": "fixture \u00f1",
+ "install_dir": "<tmp>/install",
+ "data_root": "versions/1.0.0.0",
+ "generated_utc": "<utc>",
+ "fidelity": {
+  "jars": 13,
+  "checked": 39,
+  "matched": 38
+ },
+ "eol_only_count": 0,
+ "mismatched": [
+  "guides/Foo/x.html"
+ ],
+ "missing": [],
+ "jars": [
+  {
+   "jar": "modules/docClHVACTest-doc.jar",
+   "bytes": 2285,
+   "sha256": "737fdac8910f86a18e102d4270e14a267a713706b6c7aa6cec4412bd6bd8477d",
+   "mapped_entries": 13
+  },
+  {
+   "jar": "modules/docDeveloper-doc.jar",
+   "bytes": 1103,
+   "sha256": "40f5906a4210aac21b31085c924c78deeaec8923fa8f0313037664fe7a5040a9",
+   "mapped_entries": 6
+  },
+  {
+   "jar": "modules/docDeveloper-rt.jar",
+   "bytes": 596,
+   "sha256": "63e965122ef27e0f23072d68e45fcee0a32acdd1650516873c325bfd82db7fb5",
+   "mapped_entries": 1
+  },
+  {
+   "jar": "modules/docDeveloper-ux.jar",
+   "bytes": 916,
+   "sha256": "801adf6dfa17c8e0ef267ee7f640393ac08b48ca0197fe2d5001f0228a167d9e",
+   "mapped_entries": 3
+  },
+  {
+   "jar": "modules/docFoo-doc.jar",
+   "bytes": 278,
+   "sha256": "b27913407b6996f30a92e9df72c93d1c1424d624f2efdbdd8c5abfc1a9c6a456",
+   "mapped_entries": 2
+  },
+  {
+   "jar": "modules/docFoo.jar",
+   "bytes": 164,
+   "sha256": "78479a4ba62980a642019be93cac83d807255204a2530c5a5d0d0e162acc0b03",
+   "mapped_entries": 1
+  },
+  {
+   "jar": "modules/docJdk-doc.jar",
+   "bytes": 324,
+   "sha256": "038518f29ddd02072b03f679b8a5b5c6894ae39ea98a23fc5fc3923b5c534a5a",
+   "mapped_entries": 1
+  },
+  {
+   "jar": "modules/docSource-doc.jar",
+   "bytes": 491,
+   "sha256": "180a67c75dee416fdba05a2e310d2d1620dbce14182fc68628818574d177fed0",
+   "mapped_entries": 2
+  },
+  {
+   "jar": "modules/docStored-doc.jar",
+   "bytes": 321,
+   "sha256": "08a23207d5c0b193da69ad9ae48b0bca2df6aec6ee801d9b3d5b2111e0723cd2",
+   "mapped_entries": 2
+  },
+  {
+   "jar": "javadoc/niagaraJavadoc.jar",
+   "bytes": 554,
+   "sha256": "a5558a2ecbae4431b569a5568fddc501b07279ca2aa4e4675fe7fab5f9c7b14a",
+   "mapped_entries": 2
+  }
+ ]
+}

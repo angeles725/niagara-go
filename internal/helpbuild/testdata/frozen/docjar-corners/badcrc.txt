@@ -1,0 +1,19 @@
+extract:
+["raise"]
+tree:
+guides d--------- 755
+guides/Case d--------- 755
+guides/Case/a.txt ---------- 644 0 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+guides/Case/ok.html ---------- 644 2 2689367b205c16ce32ed4200942b8b8b1e262dfc70d9bc9fbc77c49699a4f1df
+fill:
+["raise"]
+tree:
+guides d--------- 755
+guides/Case d--------- 755
+guides/Case/ok.html ---------- 644 2 2689367b205c16ce32ed4200942b8b8b1e262dfc70d9bc9fbc77c49699a4f1df
+fidelity:
+["ok", {"checked": 2, "matched": 0, "mismatched": [], "missing": ["guides/Case/ok.html", "guides/Case/a.txt"], "eol_only": [], "collisions": [], "jars": 1}]
+tree:
+<absent>
+fidelity after extract:
+["raise"]

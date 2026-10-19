@@ -1,0 +1,7 @@
+["out", "Merged 14 slots from .bajadoc XML"]
+["out", "Built slots-index.json: 16 classes (18 properties, 2 actions, 3 topics) from 12 files"]
+["exit", 0]
+indexes:
+slots-index.json ---------- 644 5195 7cb64c2e2636256c7d9a0a94276c509f408f2c795c1df7ad63a48ff12d38c92a
+source-index.json ---------- 644 3242 c28dd0e8b5c0e0218b369589725bcc87f1423e5eb93b2efe96173068585b8760
+xref-index.json ---------- 644 1874 1c3275d1898be4c06a94b320585a8333e5946e511ad56d32c1af29a8ebccf679

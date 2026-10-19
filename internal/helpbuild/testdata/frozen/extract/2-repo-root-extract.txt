@@ -1,0 +1,2 @@
+["result", 2, "refusing to extract over the repo root; use --verify-only", null, null]
+tree:

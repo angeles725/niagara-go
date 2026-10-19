@@ -1,0 +1,2 @@
+["out", "GUIDE COVERAGE (guides/ HTML vs guides-clean/ text)\n============================================================\nOverall: 0/0 pages indexed across 0 folders, 0 gap folder(s)\n\nDOCUMENTATION COVERAGE OVERVIEW\n============================================================\n\nOverall: 0/0 classes documented (0.0%)\n\n cover  total   docs   miss  module\n -----  -----   ----   ----  ------\n"]
+["status", 0]

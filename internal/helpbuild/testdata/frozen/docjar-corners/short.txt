@@ -1,0 +1,18 @@
+extract:
+["ok", {"files": 1, "bytes": 3, "collisions": []}]
+tree:
+guides d--------- 755
+guides/Case d--------- 755
+guides/Case/a.txt ---------- 644 3 d6a81f224bbf2f7c22baddbd5d40730eb20cfb0b3d74e10cab61788214caceb1
+fill:
+["ok", {"written": ["guides/Case/a.txt"]}]
+tree:
+guides d--------- 755
+guides/Case d--------- 755
+guides/Case/a.txt ---------- 644 3 d6a81f224bbf2f7c22baddbd5d40730eb20cfb0b3d74e10cab61788214caceb1
+fidelity:
+["ok", {"checked": 1, "matched": 0, "mismatched": [], "missing": ["guides/Case/a.txt"], "eol_only": [], "collisions": [], "jars": 1}]
+tree:
+<absent>
+fidelity after extract:
+["ok", {"checked": 1, "matched": 1, "mismatched": [], "missing": [], "eol_only": [], "collisions": [], "jars": 1}]

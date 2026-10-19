@@ -1,0 +1,132 @@
+["out", "Built xref-index.json: 19 classes, 18 dependency edges from 15 source files"]
+["exit", 0]
+index:
+{
+  "BCafé": {
+    "package": "javax.baja.sys"
+  },
+  "BComponent": {
+    "uses": [
+      "BFrozen",
+      "BStatusNumeric",
+      "NiagaraAction",
+      "NiagaraProperty",
+      "NiagaraTopic"
+    ],
+    "used_by": [
+      "BNumericPoint",
+      "Sample"
+    ],
+    "package": "javax.baja.sys"
+  },
+  "BFrozen": {
+    "used_by": [
+      "BComponent"
+    ]
+  },
+  "BIObject": {
+    "package": "javax.baja.sys"
+  },
+  "BLocked": {
+    "package": ""
+  },
+  "BMyPoint": {
+    "uses": [
+      "BNumericPoint",
+      "Marker",
+      "Mode"
+    ],
+    "package": "examples"
+  },
+  "BNumericPoint": {
+    "uses": [
+      "BComponent",
+      "Lexicon",
+      "NiagaraProperty"
+    ],
+    "used_by": [
+      "BMyPoint"
+    ],
+    "package": "javax.baja.control"
+  },
+  "BObject": {
+    "uses": [
+      "Lexicon",
+      "NiagaraType",
+      "Sample"
+    ],
+    "used_by": [
+      "Lexicon",
+      "Point"
+    ],
+    "package": "javax.baja.control"
+  },
+  "BStatusNumeric": {
+    "used_by": [
+      "BComponent"
+    ]
+  },
+  "Lexicon": {
+    "uses": [
+      "BObject"
+    ],
+    "used_by": [
+      "BNumericPoint",
+      "BObject"
+    ],
+    "package": "javax.baja.util"
+  },
+  "Marker": {
+    "used_by": [
+      "BMyPoint"
+    ],
+    "package": "marker"
+  },
+  "Mode": {
+    "used_by": [
+      "BMyPoint"
+    ],
+    "package": "enumpkg"
+  },
+  "NiagaraAction": {
+    "used_by": [
+      "BComponent"
+    ]
+  },
+  "NiagaraProperty": {
+    "used_by": [
+      "BComponent",
+      "BNumericPoint",
+      "Sample"
+    ]
+  },
+  "NiagaraTopic": {
+    "used_by": [
+      "BComponent"
+    ]
+  },
+  "NiagaraType": {
+    "used_by": [
+      "BObject"
+    ]
+  },
+  "NoDecl": {
+    "package": ""
+  },
+  "Point": {
+    "uses": [
+      "BObject"
+    ],
+    "package": "indented.pkg"
+  },
+  "Sample": {
+    "uses": [
+      "BComponent",
+      "NiagaraProperty"
+    ],
+    "used_by": [
+      "BObject"
+    ],
+    "package": "examples"
+  }
+}

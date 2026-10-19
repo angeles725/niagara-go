@@ -1,0 +1,4 @@
+stdout "SKIP: no PDF manuals for <root>/fresh (docs dir: None); search uses the shared manuals."
+stdout ""
+exit 0
+tree:

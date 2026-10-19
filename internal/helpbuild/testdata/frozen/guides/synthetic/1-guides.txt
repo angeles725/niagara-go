@@ -1,0 +1,34 @@
+["out", "Extracted 20 guide files to guides-clean/ (0.0 MB text, 0 errors, 6 titled from toc.xml)"]
+["err", "WARNING: toc not read, page titles fall back to <title>: <base>/guides/Bad/toc.xml: mismatched tag: line 1, column 16"]
+["result", 20]
+tree:
++ guides-clean d--------- 755
++ guides-clean/Bad d--------- 755
++ guides-clean/Bad/a.txt ---------- 644 38 bcb09e5c6292f7721793ce17860b831a5d2d39df185134ce5f52a854d408a453
++ guides-clean/Spy d--------- 755
++ guides-clean/Spy/A d--------- 755
++ guides-clean/Spy/A/Compile.txt ---------- 644 63 6056496aab7119122135f22a61858e995d81a963c7d6f6e2b93e0f4b84dea614
++ guides-clean/Spy/B d--------- 755
++ guides-clean/Spy/B/Compile.txt ---------- 644 62 0b08bce90f0dd9e70dbf1a01d25ec5351fbd78184825419aff01f6a357a599a5
++ guides-clean/Spy/B/Deep d--------- 755
++ guides-clean/Spy/B/Deep/legacy.htm.txt ---------- 644 67 e52bdb7d1a0803be9167b73387205f193d749c1285f88614c28157535400ccb9
++ guides-clean/Spy/stub.txt ---------- 644 38 b2463b9bf6020189f44680b616e390d842888bdfbf76e0d658195c562c2ac288
++ guides-clean/Spy/top.htm.txt ---------- 644 57 162433b93659677b7106675f4287e9e4b797dbe48980e4ff546b1c365107cbd3
++ guides-clean/Spy/top.txt ---------- 644 54 bc8d71071bf697f23ec3ef5a9328865599a05ebe2264c64dac0346b0cdda8a47
++ guides-clean/Toc d--------- 755
++ guides-clean/Toc/Empty.txt ---------- 644 47 cde99f6aab6cb6190a12f6a82cbb906401de777a17e16f96564af444cb4f72ff
++ guides-clean/Toc/Plain.txt ---------- 644 54 28b672af76d754bf9d2b33610c770a9cee7d0381d636debdbb2a6235a6882074
++ guides-clean/Toc/Plain.txt.txt ---------- 644 126 b6c7bc28f93230e9f6fc5e3afb85b3e55629dc33363150b833b5164e0250ca9d
++ guides-clean/Toc/Tasks.txt ---------- 644 126 0708c888d38f0c205d8af3acf7224460bd783db048fc2d65e0a9dfdc4d122955
++ guides-clean/Toc/bad.txt ---------- 644 54 f8cd043a5ec2cf8a2c4cf64beda5e05e7c704ef2cb5490101fdb521930396702
++ guides-clean/Toc/index.txt ---------- 644 69 c3937cb2e1784e2f56b1aa833d2ba9bdbac00c177442e4801e5758f0bcb36f88
++ guides-clean/Toc/lgpl-2.1.htm.txt ---------- 644 82 c005914c04279f11caeba94f1e193dbddfc8cd0b815aabd3ba1240e58dabcd0b
++ guides-clean/Toc/notes.md.txt ---------- 644 145 d4a262da6f22ae95d1c1f676ba24cb4ba2d57bed3401183c9cad4040c7d9f1ad
++ guides-clean/Toc/readme.MD.txt ---------- 644 58 e22649b8dd88076b8a0c7f329d0fe75431beb7d7063fce9ff91d7c18545ecec2
++ guides-clean/Toc/sub d--------- 755
++ guides-clean/Toc/sub/Deep.txt ---------- 644 134 f77246d23423287b63ca42e802752975612ae849dcfcd3ca56b51c691f4d2107
++ guides-clean/Upper d--------- 755
++ guides-clean/Upper/x.txt ---------- 644 61 e489787ba0b157b1bed8a2247f00ab56ea6368ab05f2cde5eef3c4fd75913a2f
++ guides-clean/Upper/y.txt ---------- 644 40 eace435989f57fce86d3cbbe2afefcb6fe4e804533d7fb54296dea03c2737b2a
++ guides-clean/Ünïcode d--------- 755
++ guides-clean/Ünïcode/a.txt ---------- 644 51 f2f1a3c6cd9ed8327154375bdf7b4b74abb5357d94d24572e1a39702721645fa

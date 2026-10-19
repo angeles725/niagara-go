@@ -10,7 +10,7 @@ import (
 
 // Native fuzzing of html_text.convert (the tokenizer has its own,
 // pyhtml.FuzzParse): no input may panic, take longer than fuzzDeadline, or
-// turn valid UTF-8 into output that is not. The seeds are the parity corner
+// turn valid UTF-8 into output that is not. The seeds are the frozen corner
 // pages; the parser assumes valid UTF-8 (pages are read with
 // errors="replace"), so a raw input is converted as is (no panic, no hang)
 // and then as strings.ToValidUTF8 for the output check. Run with

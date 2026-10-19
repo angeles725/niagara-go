@@ -17,12 +17,13 @@ nh: 'hierarchy' was retired in the Go port (no recorded use); see docs/retired-c
 ## Restore path
 
 The Phase 5 deletion of the Python tools left the tag `pre-go-retire` on each repository:
-niagara-help `8410d7451`, module-navigator `f897268`, niagara-research `c846ce1e5` (D47: their
-worktrees live at `$HOME/niagara-research-worktrees/pre-go-retire-<repo>`). To use a retired
-command, run the Python tool in that worktree (`NIAGARA_HELP_PYTHON=1 python3 tools/niagara_help.py
-<command> ...` in niagara-help, whose tagged script is already the Go shim; `python3
-tools/module_nav.py <command> ...` in module-navigator); to bring it back into Go, port it from
-that tag with the golden cases of `tests/golden_cli.py`. A command that once had a Go port can also be
+niagara-help `8410d7451`, module-navigator `f897268`, niagara-research `c846ce1e5`. The
+worktrees of that tag that the Go tests once read (D47) are retired with them; the tag remains.
+To use a retired command, check the tag out in a worktree of its repository and run the Python
+tool there (`NIAGARA_HELP_PYTHON=1 python3 tools/niagara_help.py <command> ...` in
+niagara-help, whose tagged script is already the Go shim; `python3 tools/module_nav.py
+<command> ...` in module-navigator); to bring it back into Go, port it from that tag with the
+golden cases of `tests/golden_cli.py`. A command that once had a Go port can also be
 recovered from this repository's history (the commit that retired it names the files).
 
 ## nh (niagara-help)

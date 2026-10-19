@@ -12,8 +12,9 @@ import (
 // Frozen from Python module_nav.py (COLUMNS=100, base dir /nonexistent-base): the
 // top-level help, a help-<cmd> sample covering every command group and both nested
 // subparsers, the no-command help and usage errors; and, as nav-<case>, the ported
-// commands run against the small indexes under testdata/fixture (gen_golden.py
-// regenerates both). Cases of commands retired by decision D32 keep Python's
+// commands run against the small indexes under testdata/fixture (written by
+// gen_golden.py, retired with the Python reference in D47: the cases are frozen
+// and change only from reviewed Go output, docs/goldens.md). Cases of commands retired by decision D32 keep Python's
 // output and declare the Go result (one "retired" line, exit 2; the shorter
 // --help list) in intended.json. The module-navigator golden suite
 // (tests/golden_cli.py with GOLDEN_BIN) covers every command against the real corpus.

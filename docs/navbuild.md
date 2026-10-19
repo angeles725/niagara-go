@@ -14,7 +14,7 @@ document disagree, the code wins and this document is corrected.
 
 | Slice | Scope | Python source |
 |---|---|---|
-| B1 | foundations (JSON layouts, `_meta`, atomic write, normalisation, parity driver) + module inventory | `build_module_inventory.py`, `module_nav_lib/build.py` |
+| B1 | foundations (JSON layouts, `_meta`, atomic write, normalisation) + module inventory | `build_module_inventory.py`, `module_nav_lib/build.py` |
 | B2 | `declaration_header` / `strip_comments` + class index | `build_class_index.py`, `module_nav_lib/java_text.py` |
 | B3 | inheritance + xref | `build_inheritance.py`, `build_xref.py` |
 | B4 | token index (SQLite) | `build_token_index.py` |
@@ -234,35 +234,21 @@ copies (`reindex_test.go`), never a real `indexes/`.
 | full-corpus `method-index.json` normalised byte diff | 0 (149,377,514 bytes); Python 10m05s / 700 MiB peak RSS, Go 8.4 s / 561 MiB, on a host at load 20 |
 | full-corpus `callgraph-index.json` normalised byte diff | 0 (31,017,690 bytes); Python 4m14s / 352 MiB, Go 18.6 s / 349 MiB, same host |
 | `mnav reindex` of the full corpus into a temp base dir | all seven indexes validated in 4m53s, peak RSS 2.1 GB (the token index: 216 s, its in-memory index sorts); the Go `token` and `class` commands read the result |
-| `selftest --recall` on the Go-built index (`TestRecallOnGoBuiltIndex`; the Python oracle via `--base-dir`, since the Go `mnav selftest` is not ported) | 100.00% (55,931/55,931), supertypes 44,369/44,369 |
+| `selftest --recall` on the Go-built index (the retired `TestRecallOnGoBuiltIndex`: the Python oracle via `--base-dir`) | 100.00% (55,931/55,931), supertypes 44,369/44,369 |
 
-## Parity harness
+## Golden tests
 
-`parity_test.go` runs the real Python builder (`python3 -E -B tools/<builder> --base-dir
-<temp>`, `NAV_CORPUS_BASE=<corpus>`; `-E` leaves the hash seed random) and the Go builder
-into another temp base over the same corpus, then byte-diffs both indexes after
-`NormalizeVolatile`. The builders are the frozen module-navigator Python, its
-`pre-go-retire` worktree (`internal/pyref`, D47: `$MODULE_NAVIGATOR_PY_REF`, see
-docs/goldens.md); `$NAVBUILD_PY_NAV` overrides it with any checkout whose builders take
-`--base-dir`, unchecked against the tag. A missing reference or python3 skips visibly, or
-fails under `PYREF_REQUIRED=1` (`make parity`); off Linux the tests skip. The corpora stay
-live data (`$NIAGARA_RESEARCH/organized`).
-
-| Corpus | When |
-|---|---|
-| `testdata/organized` (synthetic: Java headers with generics, comments, annotations, records, sealed types, CRLF/CR, invalid UTF-8, U+00A0, `$` names, line-break characters, a late package line; recon files with BOM, invalid JSON and UTF-8 recon files, `{}` recon, float and big-int recon values, a duplicate submodule name, unknown suffix, standalone submodule, a non-submodule dir, the `com.niagaraX` prefix quirk, a non-ASCII package) | always |
-| real modules linked into a temp `organized/` (`$NAVBUILD_PARITY_MODULES`, default `alarm,backup,ColdRoomPan,CentralineAhuPx,kitControl`) | not with `-short` |
-| the whole corpus (`$NAV_CORPUS_BASE`, else `$NIAGARA_RESEARCH/organized`) | `NAVBUILD_PARITY_FULL=1` |
-
-`TestParityLaterIndexes` builds the chain (inventory, class index, then every later
-builder in `laterBuilders`) on both sides; `$NAVBUILD_PARITY_ONLY` (comma-separated index
-names) limits the later indexes it checks (inheritance always runs, the call graph reads
-it). Each run logs wall time and peak RSS: on the full corpus the Go builder runs in a child
-process (the test binary re-executed through `TestMain`), and both sides run under GNU
-`/usr/bin/time` when it exists, because Linux keeps a process's RSS high-water mark across
-`exec`, so the rusage of a child of the (large) test process would report the parent's peak.
-
-`testdata/golden/<index>.golden` hold the normalised PYTHON outputs of the synthetic corpus;
-`TestGoldenSynthetic` checks the Go builders against them without Python. Regenerate with
-`go test ./internal/navbuild -run Parity -args -update` (Python and the module-navigator
-checkout required), then rerun without `-update`.
+Until D47 `parity_test.go` ran the frozen module-navigator Python builders (the
+`pre-go-retire` worktree) and the Go builders over the same corpus and byte-diffed the indexes
+after `NormalizeVolatile`, on the synthetic corpus, on real modules and on the whole corpus;
+it retired with the Python reference. `testdata/golden/<index>.golden` hold the normalised
+Python outputs of the synthetic corpus (`testdata/organized`: Java headers with generics,
+comments, annotations, records, sealed types, CRLF/CR, invalid UTF-8, U+00A0, `$` names,
+line-break characters, a late package line; recon files with BOM, invalid JSON and UTF-8 recon
+files, `{}` recon, float and big-int recon values, a duplicate submodule name, unknown suffix,
+standalone submodule, a non-submodule dir, the `com.niagaraX` prefix quirk, a non-ASCII
+package). `TestGoldenSynthetic` checks the whole chain against them and
+`TestGoldenClassIndexWithoutInventory` the class index of a base dir without an inventory
+(`class-index-no-inventory.json.golden`, `zkm_source` null). A deliberate change regenerates
+them from the Go builders: `go test ./internal/navbuild -run Golden -args -update`, then review
+the diff and rerun without `-update`.

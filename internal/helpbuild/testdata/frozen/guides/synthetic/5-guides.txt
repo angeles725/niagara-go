@@ -1,0 +1,4 @@
+["out", "Extracted 20 guide files to guides-clean/ (0.0 MB text, 0 errors, 6 titled from toc.xml)"]
+["err", "WARNING: toc not read, page titles fall back to <title>: <base>/guides/Bad/toc.xml: mismatched tag: line 1, column 16"]
+["result", 20]
+tree:

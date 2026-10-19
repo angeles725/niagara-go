@@ -29,9 +29,9 @@ One directory per case under `<package>/testdata/golden/<case>/`:
   Windows) instead of a skip in the package test. An empty list or an unknown GOOS name fails
   the load. Both requirements may be combined; each must hold.
   Bind a case only after checking that the port's output on that OS is what the frozen Python
-  tool prints there: for Windows, run both on the Windows host (Windows CPython against the
-  pre-switch script, niagara-research `e21fe8825^`) from a copy of `testdata/` with the case's
-  args and env. A difference there is a bug to fix in the port, not a case to bind. Text-mode
+  tool printed there (the cases bound so far were checked against Windows CPython on the
+  pre-switch script, niagara-research `e21fe8825^`, before D47 retired the Python); a
+  difference there is a bug to fix in the port, not a case to bind. Text-mode
   `print` writes CRLF on Windows and the ports write LF; that difference is not checked.
 
 Cases run sequentially, sorted by directory name. A package wires them with one test:
@@ -74,68 +74,41 @@ checked on the real corpus by `make realdata` (`TestSearchQuality`).
 
 ## Freezing and regenerating
 
-A Python golden has no update mode: it is Python's output, so the Go side never rewrites it
-(Go-only cases, below, are the exception). Each package freezes its cases with a generator
-next to them, run against the Python tool, for example:
+The Python goldens were frozen by generators next to them that ran the Python tool from a
+worktree of the source repo's `pre-go-retire` tag (D47). With the Go ports the only
+implementation, the generators, `internal/pyref` (which found those worktrees) and `make
+pyparity` (the Go-vs-Python suites) are retired: the committed goldens are the permanent oracle
+and no test runs the Python tools. The tag stays in each source repo (niagara-research
+`c846ce1e5`, module-navigator `f897268`, niagara-help `8410d7451`) for a rollback or a
+question about the old behaviour, and this repository's history keeps the generators.
 
-```sh
-python3 -I internal/typecatalog/testdata/freeze_golden.py
-python3 -I internal/nav/testdata/gen_golden.py
-python3 -I internal/bognav/testdata/convert_golden.py
-```
+A golden changes only on purpose, from the Go side:
 
-The generator's docstring states its inputs. Phase 5 deleted the Python from the live
-checkouts, so a generator reads it from a worktree of the source repo's `pre-go-retire` tag
-(D47), named by one variable per repo:
+1. Make the change and run the package's goldens: each failing case shows the new bytes.
+2. Regenerate the expectation from Go. A case under `testdata/golden/<case>/` holds Python's
+   bytes and `golden.Run` never rewrites it: run the Go binary (`make build`) with the case's
+   `cmd.json` arguments in `testdata/` (or `testdata/<cwd_fixture>`), with `COLUMNS=100`,
+   `NO_COLOR=1` and the case `env`, and write its `stdout`, `stderr` and `exit`; when the case
+   has an `intended.json`, rewrite that file's fields instead and keep the Python bytes. A
+   Go-only case is rewritten by `GOLDEN_UPDATE=1` (below). Test-data goldens have their own
+   update flags: helpbuild `-update-frozen` (`testdata/frozen/`), `-update-s8`, `-update-s9`
+   and `-update-cov`, navbuild and helpbuild/fulltext `-update`. A fixture a retired
+   generator wrote (the `testdata/*.json` of the shared packages) is edited from the Go
+   output.
+3. Review the diff and list each intended change, with its reason, in the commit message.
 
-| Variable | Repo | Pinned revision |
-|---|---|---|
-| `NIAGARA_RESEARCH_PY_REF` | niagara-research | `c846ce1e5` |
-| `MODULE_NAVIGATOR_PY_REF` | module-navigator | `f897268` |
-| `NIAGARA_HELP_PY_REF` | niagara-help | `8410d7451` |
+A golden never changes only because Go now prints something else: a difference no one
+intended is a bug in the port. A fixture once cut from live indexes stays frozen input
+(`internal/nav/testdata/fixture/nav/`, whose `_meta` timestamps the goldens print).
 
-Each defaults to `$HOME/niagara-research-worktrees/pre-go-retire-<repo>`; create it once with
-
-```sh
-git -C ~/niagara-research worktree add --detach ~/niagara-research-worktrees/pre-go-retire-niagara-research pre-go-retire
-```
-
-(the same with `-C <module-navigator or niagara-help checkout>` for the other two). Every
-generator carries the same `py_ref` snippet: it refuses a worktree whose HEAD is not the pinned
-revision or that has local changes or untracked files (also in `internal/secaudit/testdata/freeze_golden.py`) (ignored files such as `__pycache__` pass). Rerunning a generator from the tag must leave `git status`
-clean; that is the proof its fixtures are still the Python's output. A generator therefore
-reads no live data that changes: a fixture once cut from live indexes is committed and stays
-frozen input (`internal/nav/testdata/fixture/nav/`, whose `_meta` timestamps the goldens
-print), and only synthetic fixtures are rebuilt.
-
-A tag script that carries an escape runs with it: `MODULE_NAV_PYTHON=1` (module_nav.py is still
-full Python at the tag) or `NIAGARA_HELP_PYTHON=1` (niagara_help.py is a shim there), set in
-`os.environ` and in any subprocess environment a generator builds from scratch, which also passes
-`NIAGARA_GO_BIN_DIR` through: a run with `NIAGARA_GO_BIN_DIR=/nonexistent` proves no Go port
-answered. The real-corpus captures (`internal/{nav,help}/testdata/golden-real/capture.py`) take
-the harness and the CLI from the tag and the data (indexes/, organized/, fulltext.sqlite,
-versions/) from the live `MODULE_NAVIGATOR_DIR` / `NIAGARA_HELP_DIR`. Go tests reach the same
-worktrees through `internal/pyref`: `Dir` (same pin and clean check; a missing worktree skips
-unless `PYREF_REQUIRED=1`, which `make pyparity` exports, then fails), `Python` (python3; skips off
-Linux, where the references write CRLF and hit cp1252) and `Env` (the escape). A Go test that
-only checks a value the Python once recorded (a hash, an exit status) copies it
-into its own testdata with the tag it came from instead of reading the reference: helpbuild's
-`testdata/cov/cli-goldens.json` holds the coverage cases of niagara-help `tests/golden/cli.json`.
-
-At the tag the switched entry scripts exec the Go ports (D35), so running `tools/<x>.py` would
-record Go checking itself. The capture scripts that run a CLI (`internal/{bogcycles,bognav,
-bogwrite,stationmodules,typecatalog}/testdata`) run it through `FROZEN`: the switch block is cut
-out, which gives back the exact source of the parent of the switch commit, and the code runs as
-`__main__` under the tool's own path and line numbers. The older converters export the frozen
-tools from niagara-research at that parent commit (`git archive`), check each run against the
-frozen JSON in text mode and write the exact bytes (`internal/{corpusnav,checkcoverage,
-modulefind,gencatalog}/testdata/convert_golden.py`). A case that needs state git cannot hold (an empty root, a mode-000 file, a
-CATALOG.md state) lives in its own `testdata/<set>/golden/` and a package test stages it in a
-temporary directory before calling `golden.Run` on it. When a generator owns the cases it also writes
-their `intended.json` (see `INTENDED` in `internal/nav/testdata/gen_golden_cases.py`), so a re-run
-keeps them; a re-capture also keeps every `cmd.json` key it does not write (`gen_golden.py` owns
-`args` and `env`, so a hand-added `requires` survives). Unit-test fixtures of shared packages follow the same rule (`testdata/gen.py`,
-`gen_fixtures.py`).
+The capture scripts ran a CLI at the tag through `FROZEN` (the switch block that exec'd the
+Go port cut out) or exported the frozen tools from niagara-research at the parent of the
+switch commit (`git archive`); a case that needs state git cannot hold (an empty root, a
+mode-000 file, a CATALOG.md state) lives in its own `testdata/<set>/golden/` and a package
+test stages it in a temporary directory before calling `golden.Run` on it. A Go test that only
+checks a value the Python once recorded (a hash, an exit status) keeps a copy of it in its own
+testdata with the tag it came from: helpbuild's `testdata/cov/cli-goldens.json` holds the
+coverage cases of niagara-help `tests/golden/cli.json`.
 
 In the Python suites of the source repos (niagara-research `tools/tests/goldencli.py`, deleted
 in Phase 5 and kept at the `pre-go-retire` tag), `GOLDEN_UPDATE=1` rewrote the Python goldens,
@@ -169,7 +142,7 @@ whose output the new behaviour changes keeps its Python bytes and declares the G
 
 ## Search quality: `make realdata`
 
-`make realdata` (and so `make parity`) runs `TestSearchQuality` (internal/searchdoor/quality_test.go), the search quality
+`make realdata` (`make parity` is an alias) runs `TestSearchQuality` (internal/searchdoor/quality_test.go), the search quality
 gate. It runs the search in process on the real corpus (`NIAGARA_RESEARCH`, default
 `~/niagara-research`) and measures hit@1/hit@5 per source over
 `testdata/quality/golden-queries.jsonl` (99 questions, docs pinned to 4.14.0.162) and the warm
@@ -211,18 +184,17 @@ output and declare the Go one in `intended.json` (reason D32: only kept commands
 nh `stats` and `stats-json` do the same with reason I3-5 (`call-index.json` is retired: nh
 counts 9 indexes and prints no call-index line). mnav `stats` (golden-real and the hermetic
 `nav-stats`, `nav-stats-sparse`) lists the registry's runnable commands instead of Python's
-hand-kept list (D32), and golden-real counts 11 niagara-help indexes (I3-5). `capture.py`'s
-`INTENDED` names the help cases.
+hand-kept list (D32), and golden-real counts 11 niagara-help indexes (I3-5).
 
 `palette-lexicon-agents` follows niagara-research `tools/palette-lexicon-agents.py`, not
 `module_nav.py` (D39 e), so its cases come from that script: the kept
 `palette-lexicon-agents` case and the four `palette-lexicon-agents-*` cases hold its output,
 and `help-palette-lexicon-agents` keeps `module_nav.py`'s bytes with the Go help in
-`intended.json` (the script's own `--help` names another program). They are written by
-`internal/nav/testdata/gen_palette_lexicon.py --real bin/mnav`, which `capture.py` runs after
-its own capture; the same script writes the hermetic cases under
+`intended.json` (the script's own `--help` names another program). The retired
+`gen_palette_lexicon.py` wrote them and the hermetic cases under
 `internal/nav/audits/testdata/palette/`. The real cases count corpus modules (the `--all`
-census, "N module dirs"), so re-run `gen_palette_lexicon.py --real` after a corpus change.
+census, "N module dirs"), so a corpus change changes them: regenerate them from `bin/mnav`
+("Freezing and regenerating").
 
 The case layout is the one above, but the stored bytes are the harness's normalized output,
 whose SHA-256 is the `cli.json` hash: mnav replaces the scratch base, run directory, `organized/`
@@ -257,19 +229,11 @@ mnav also needs the `organized/` corpus (`$NAV_CORPUS_BASE`, else next to the ch
 uses `niagara-help/` next to the checkout when it exists. nh must be the main checkout
 (untracked files there change several counts, see the harness docstring).
 
-To re-capture, run the generator next to the cases. It runs each kept case through the
-harness's own `run_case`/`run_isolated`, with `MODULE_NAV_PYTHON=1` / `NIAGARA_HELP_PYTHON=1`
-so a tag shim runs Python and never Go, refuses to write anything when a hash differs from
-`cli.json`, and takes the Go binary for the `intended.json` output. The code (harness,
-`cli.json`, the CLI) comes from the frozen `pre-go-retire` worktree, the data
-(`MODULE_NAVIGATOR_DIR` / `NIAGARA_HELP_DIR`) from the live checkout ("Freezing and regenerating"):
-
-```sh
-make build
-python3 -I internal/nav/testdata/golden-real/capture.py bin/mnav
-python3 -I internal/help/testdata/golden-real/capture.py bin/nh
-```
+The cases are frozen: `golden-real/capture.py` of each package (it ran the kept cases through
+the tag's harness and refused to write when a hash differed from `cli.json`) retired with D47.
+A change is regenerated from the Go binary as for any case ("Freezing and regenerating"), with
+the normalization of `TestGoldenReal` applied to the bytes it writes.
 
 These cases replaced both Python harnesses for the kept commands: Phase 5 deleted
 module-navigator and niagara-help `tests/golden_cli.py` and their `tests/golden/cli.json`
-(D39 (b)), so the generators run only from a `pre-go-retire` worktree.
+(D39 (b)).

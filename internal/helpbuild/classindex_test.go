@@ -1,6 +1,7 @@
 package helpbuild
 
 import (
+	"flag"
 	"os"
 	"path/filepath"
 	"strings"
@@ -9,10 +10,13 @@ import (
 	"github.com/angeles725/niagara-go/internal/pyjson"
 )
 
+var updateS8 = flag.Bool("update-s8", false, "rewrite testdata/s8/golden/ from the Go builders (review the diff)")
+
 // checkS8Golden runs the Go builder of mode on a copy of testdata/s8/root/
 // and compares its lines with testdata/s8/golden/<mode>.stdout and the
-// named indexes with testdata/s8/golden/indexes/ (Python's output, see
-// indexdriver.py); no Python is needed.
+// named indexes with testdata/s8/golden/indexes/ (the Python builders'
+// output, frozen when D47 retired the Python reference); -update-s8
+// rewrites them from the Go builder.
 func checkS8Golden(t *testing.T, mode string, indexes ...string) {
 	t.Helper()
 	base := t.TempDir()
@@ -28,12 +32,18 @@ func checkS8Golden(t *testing.T, mode string, indexes ...string) {
 		lines = append(lines, dumpLine(str("out"), str(l)))
 	}
 	lines = append(lines, dumpLine(str("exit"), intV(res.Status)))
+	got := fileTexts(t, filepath.Join(base, "indexes"))
+	if *updateS8 {
+		writeFile(t, filepath.Join("testdata", "s8", "golden", mode+".stdout"), []byte(strings.Join(lines, "\n")+"\n"))
+		for _, name := range indexes {
+			writeFile(t, filepath.Join("testdata", "s8", "golden", "indexes", name), []byte(got[name]))
+		}
+	}
 	want, err := os.ReadFile(filepath.Join("testdata", "s8", "golden", mode+".stdout"))
 	if err != nil {
 		t.Fatal(err)
 	}
 	diffLines(t, mode+" stdout", strings.Split(strings.TrimSuffix(string(want), "\n"), "\n"), lines)
-	got := fileTexts(t, filepath.Join(base, "indexes"))
 	if len(got) != len(indexes) {
 		t.Errorf("indexes/ holds %d files, want %d (%q)", len(got), len(indexes), indexes)
 	}
@@ -43,7 +53,7 @@ func checkS8Golden(t *testing.T, mode string, indexes ...string) {
 			t.Fatal(err)
 		}
 		if got[name] != string(golden) {
-			t.Errorf("%s differs:\n go     %s\n python %s", name, around(got[name], string(golden)), around(string(golden), got[name]))
+			t.Errorf("%s differs:\n go     %s\n golden %s", name, around(got[name], string(golden)), around(string(golden), got[name]))
 		}
 	}
 }

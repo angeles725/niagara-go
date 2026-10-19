@@ -10,7 +10,7 @@ import (
 )
 
 // TestCloseNamesMatchesPython compares CloseNames with suggest.close_names on
-// testdata/suggest.json (gen_suggest.py).
+// testdata/suggest.json (frozen output of the retired gen_suggest.py).
 func TestCloseNamesMatchesPython(t *testing.T) {
 	raw, err := os.ReadFile(filepath.Join("testdata", "suggest.json"))
 	if err != nil {

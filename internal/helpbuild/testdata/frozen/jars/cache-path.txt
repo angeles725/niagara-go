@@ -1,0 +1,6 @@
+"<repo>/.cache/jar-listings/33afc5c35bcecf5f.json"
+"<repo>/.cache/jar-listings/4a2b2c75b01f370c.json"
+"<repo>/.cache/jar-listings/a51458f8d2c1fbd8.json"
+"<repo>/.cache/jar-listings/d13c8a9d85e4009d.json"
+"<repo>/.cache/jar-listings/42099b4af021e53f.json"
+"<repo>/.cache/jar-listings/29f38fe9b980cbd1.json"

@@ -1,0 +1,2 @@
+["out", "DOCUMENTATION COVERAGE: \u00e9cole\n============================================================\n\nClasses: 1 total, 1 documented, 0 undocumented\nCoverage: 100.0%\n\nSlot coverage: 0/1 classes have @Niagara annotations\nTotal methods: 0\n"]
+["status", null]

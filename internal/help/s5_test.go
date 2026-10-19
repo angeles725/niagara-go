@@ -14,7 +14,7 @@ import (
 // TestS5CommandsMatchPython runs every case of testdata/s5-cli/cases.json on
 // the testdata/s5 checkout and compares it with what tools/niagara_help.py
 // printed there (testdata/s5-cli, written by
-// testdata/s5_gen.py; <ROOT> is the checkout). Like the generator, every
+// the retired s5_gen.py; <ROOT> is the checkout). Like the generator, every
 // case runs on a fresh copy of the checkout: method builds the full-text
 // index there first, as Python does (decision D38).
 func TestS5CommandsMatchPython(t *testing.T) {

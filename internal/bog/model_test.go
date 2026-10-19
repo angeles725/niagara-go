@@ -160,11 +160,7 @@ func pairs[V any](o *Ordered[V]) [][2]any {
 	return out
 }
 
-// realRefComps is REAL_REF_COMPS of gen_fixtures.py: Resolve refs of real bogs come from the
-// first 200 components only (Resolve is linear in the component count).
-const realRefComps = 200
-
-// dumpBog renders a graph in the shape gen_fixtures.py dump() writes; refComps < 0 takes Resolve
+// dumpBog renders a graph in the shape the retired gen_fixtures.py dump() wrote; refComps < 0 takes Resolve
 // refs from every component.
 func dumpBog(b *Bog, refComps int) map[string]any {
 	comps := []any{}
@@ -234,33 +230,5 @@ func dumpBog(b *Bog, refComps int) map[string]any {
 	return map[string]any{
 		"comps": comps, "handle_count": pairs(&b.HandleCount), "prefix_map": pairs(&b.Prefixes),
 		"roots": roots, "links": links, "link_rows": rows, "resolve": resolved,
-	}
-}
-
-// TestParityRealBogs compares the graph of each real bog in BOG_PARITY_FILES with the dump
-// gen_fixtures.py --dump wrote to BOG_PARITY_DIR/<path with '/' -> '_'>.json. Both stay outside
-// the repository.
-func TestParityRealBogs(t *testing.T) {
-	list, dir := os.Getenv("BOG_PARITY_FILES"), os.Getenv("BOG_PARITY_DIR")
-	if list == "" || dir == "" {
-		t.Skip("BOG_PARITY_FILES / BOG_PARITY_DIR not set")
-	}
-	for _, path := range filepath.SplitList(list) {
-		data, err := os.ReadFile(filepath.Join(dir, strings.ReplaceAll(path, "/", "_")+".json"))
-		if err != nil {
-			t.Fatal(err)
-		}
-		var want map[string]any
-		if err := json.Unmarshal(data, &want); err != nil {
-			t.Fatal(err)
-		}
-		b, err := Load(path)
-		if err != nil {
-			t.Fatal(err)
-		}
-		got := normalize(t, dumpBog(b, realRefComps))
-		for _, key := range []string{"comps", "handle_count", "prefix_map", "roots", "links", "link_rows", "resolve"} {
-			compareJSON(t, key, got[key], want[key])
-		}
 	}
 }

@@ -3,7 +3,6 @@ package fts
 import (
 	"errors"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -11,49 +10,26 @@ import (
 	"time"
 
 	"github.com/angeles725/niagara-go/internal/help/fts/ftsfixture/rawfixture"
-	"github.com/angeles725/niagara-go/internal/pyref"
 )
 
 // TestFingerprintMatchesPython compares Fingerprint with the one Python
 // stored in each fixture index (fulltext_gen.py), including 2.0's docs-text
 // borrowed from 1.0 and the devguide-examples files that are skipped. Those
-// were computed on Linux; on Windows the Windows Python ($PYCOMPAT_WINPY, with
-// the tools/ of the pinned niagara-help reference, internal/pyref) computes
-// them on the same checkout.
+// were computed on Linux from the checkout's paths and mtimes, so they hold
+// only there; the Windows Python that recomputed them on the Windows host
+// retired with D47.
 func TestFingerprintMatchesPython(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("the stored fingerprints are a Linux run's: Windows paths and mtime resolution differ")
+	}
 	checkout := rawfixture.Checkout(t, testdata, false)
 	for vid := range rawfixture.Versions {
 		base := dataRoot(checkout, vid)
 		got, want := Fingerprint(SourceDirs(base)), storedFingerprint(DBPath(base))
-		if runtime.GOOS == "windows" {
-			want = winPythonFingerprint(t, base)
-		}
 		if want == "" || got != want {
 			t.Errorf("%s fingerprint:\n got %s\nwant %s", vid, got, want)
 		}
 	}
-}
-
-// winPythonFingerprint is fulltext_index._fingerprint(text_sources.source_dirs(base))
-// run by the Windows Python on the pinned niagara-help reference
-// (pyref.Dir: $NIAGARA_HELP_PY_REF or the pre-go-retire worktree); the test
-// skips when PYCOMPAT_WINPY is unset or the reference is missing.
-func winPythonFingerprint(t *testing.T, base string) string {
-	t.Helper()
-	py := os.Getenv("PYCOMPAT_WINPY")
-	if py == "" {
-		t.Skip("PYCOMPAT_WINPY unset: the Linux-built fingerprints never match " +
-			"on Windows and no Windows Python computes them")
-	}
-	tools := filepath.Join(pyref.Dir(t, "niagara-help"), "tools")
-	const script = "import sys; sys.path[:0] = [sys.argv[1]]\n" +
-		"from niagara_help_lib import fulltext_index, text_sources\n" +
-		"sys.stdout.write(fulltext_index._fingerprint(text_sources.source_dirs(sys.argv[2])))"
-	out, err := exec.Command(py, "-I", "-c", script, tools, base).Output()
-	if err != nil {
-		t.Fatalf("%s fingerprint: %v", py, err)
-	}
-	return string(out)
 }
 
 func TestOpenRefusesMissingAndStaleIndexes(t *testing.T) {

@@ -1,0 +1,483 @@
+## run --dry-run
+# stdout
+REBUILD-ALL (dry run)
+============================================================
+  PLAN  bajadoc_parser.py          -> bajadoc-clean/
+  PLAN  bajadoc_xml_parser.py      -> bajadoc-clean/
+  PLAN  build_class_index.py       -> class-index.json, jdk-class-index.json (when jdk/ exists)
+  PLAN  inheritance_builder.py     -> inheritance.json
+  PLAN  method_indexer.py          -> method-index.json
+  PLAN  source_indexer.py          -> source-index.json
+  PLAN  slots_indexer.py           -> slots-index.json
+  PLAN  xref_builder.py            -> xref-index.json
+  PLAN  guides_parser.py           -> guides-clean/
+  PLAN  build_guides_index.py      -> guides-index.json
+  PLAN  devguide_parser.py         -> devguide-clean/
+  PLAN  build_devguide_toc.py      -> devguide-toc.json
+  PLAN  pdf_extractor.py           -> pdf-index.json, docs-text/
+  PLAN  course_extractor.py        -> course-text/
+
+Dry run — nothing executed. Drop --dry-run to build.
+# stderr
+
+# tree
+# texts
+## run --dry-run --only build_
+# stdout
+REBUILD-ALL (dry run)
+============================================================
+  PLAN  build_class_index.py       -> class-index.json, jdk-class-index.json (when jdk/ exists)
+  PLAN  build_guides_index.py      -> guides-index.json
+  PLAN  build_devguide_toc.py      -> devguide-toc.json
+
+Dry run — nothing executed. Drop --dry-run to build.
+# stderr
+
+# tree
+# texts
+## run
+# stdout
+REBUILD-ALL 
+============================================================
+  RUN   bajadoc_parser.py          -> bajadoc-clean/
+Found 16 HTML files to parse
+
+Done in <t>s
+  Parsed: 12
+  Skipped: 4
+  Errors: 0
+  Output: <root>/bajadoc-clean
+  RUN   bajadoc_xml_parser.py      -> bajadoc-clean/
+bajadoc-clean/ from .bajadoc XML: 33 classes (javadoc HTML pages keep their own text)
+  RUN   build_class_index.py       -> class-index.json, jdk-class-index.json (when jdk/ exists)
+class-index.json: 36 names, 43 classes -> <root>/indexes/class-index.json
+jdk-class-index.json: 3 names, 4 classes -> <root>/indexes/jdk-class-index.json
+  RUN   inheritance_builder.py     -> inheritance.json
+Found 58 .txt files in bajadoc-clean/
+Parsed 50 entries from 53 files (7 duplicate names resolved with FQN)
+Errors (5):
+  No CLASS/INTERFACE in: <root>/bajadoc-clean/com/bom/BBom.txt
+  No CLASS/INTERFACE in: <root>/bajadoc-clean/com/space/BSpace.txt
+  No CLASS/INTERFACE in: <root>/bajadoc-clean/javax/baja/sys/Empty.txt
+  No CLASS/INTERFACE in: <root>/bajadoc-clean/javax/baja/sys/NoClass.txt
+  No CLASS/INTERFACE in: <root>/bajadoc-clean/javax/baja/sys/NoHeaderClass.txt
+Wrote <root>/indexes/inheritance.json (0.01 MB)
+
+--- Verification ---
+BComponent:
+  extends: None
+  implements: []
+  subclasses count: 1
+  package: javax.baja.sys
+BAbstractService:
+  extends: BComponent
+  subclasses count: 0
+BIObject:
+  extends: None
+  subclasses count: 0
+  of which interfaces (BI*): 0
+
+Stats:
+  Total entries: 50
+  With extends: 19
+  With subclasses: 7
+  With implements: 3
+  RUN   method_indexer.py          -> method-index.json
+Built method-index.json: 30 unique names, 39 total members from 58 files
+  RUN   source_indexer.py          -> source-index.json
+Built source-index.json: 14 classes, 125 total lines from source/
+  RUN   slots_indexer.py           -> slots-index.json
+Merged 17 slots from .bajadoc XML
+Built slots-index.json: 10 classes (12 properties, 2 actions, 2 topics) from 5 files
+  RUN   xref_builder.py            -> xref-index.json
+Built xref-index.json: 18 classes, 18 dependency edges from 14 source files
+  RUN   guides_parser.py           -> guides-clean/
+Extracted 21 guide files to guides-clean/ (0.0 MB text, 0 errors, 6 titled from toc.xml)
+  RUN   build_guides_index.py      -> guides-index.json
+guides-index.json: 9 folders -> <root>/indexes/guides-index.json
+  RUN   devguide_parser.py         -> devguide-clean/
+  excluded (licence text): devguide/lgpl-2.1.txt
+  excluded (licence text): devguide/sub/COPYING.txt
+Extracted 7 devguide files to devguide-clean/ (0.0 MB text)
+  RUN   build_devguide_toc.py      -> devguide-toc.json
+devguide-toc.json: 2 sections -> <root>/indexes/devguide-toc.json
+  RUN   pdf_extractor.py           -> pdf-index.json, docs-text/
+SKIP: no PDF manuals for <root> (docs dir: None); search uses the shared manuals.
+  RUN   course_extractor.py        -> course-text/
+course: no course bound to this version; skipped
+
+Ran 14, skipped 0, failed 0.
+Manifest re-stamped. Run 'freshness' to confirm FRESH.
+# stderr
+WARNING: toc not read, page titles fall back to <title>: <root>/guides/Bad/toc.xml: mismatched tag: line 1, column 16
+WARNING: toc not read, page titles fall back to <title>: <root>/guides/Bad/toc.xml: mismatched tag: line 1, column 16
+# tree
++ bajadoc-clean/BTop.txt ---------- 644 63 3dcc8db131023c3bc61c916beca5af9fb3c79b9fd4b573d96eea22fdf6bcda53
++ bajadoc-clean/Loose.txt ---------- 644 23 fbbac7c8a6c4252c2313648e7cd41fd6bff3ec26c3a17e3af33918458e7e5a48
++ bajadoc-clean/NoPre.txt ---------- 644 23 49f0b74d94238ef0be0972f07cf60cdfe6d7439d16c53c9ea863c8d8d37a7ffd
++ bajadoc-clean/Sample.txt ---------- 644 24 6a4bbb16b62d24dd9a317d95fff052e7eb74cf98f3dddeaa52f3906c7e7ac793
++ bajadoc-clean/com/a/BSame.txt ---------- 644 28 696f816693b224e4ecff58327c3a20c2ee1a202726482024b6d5acfa14bf606f
++ bajadoc-clean/com/hvac d--------- 755
++ bajadoc-clean/com/hvac/BComponent.txt ---------- 644 54 17af513e41b2252de4ae30deedea5feb4ae414da6ea8b8be32c780658dbf1ca0
++ bajadoc-clean/com/hvac/BVav.txt ---------- 644 30 1ed3f8525b90cd0212cb1bb738232af92ade6e8c27da5f061058dc953b5d53fd
++ bajadoc-clean/com/hvac/Outer.Inner.txt ---------- 644 37 0ae097d5c321699bdde8058eea76cfb8cef6e3bf1674b4855618be8bd31a1936
++ bajadoc-clean/com/tridium/control/BBroken.txt ---------- 644 60 6aecf0f94bb021ca7766b08d396886e742c9b1db6b9831516f00455e9f51bb8f
++ bajadoc-clean/com/tridium/control/BCafé.txt ---------- 644 43 62c8ea2742919a06bb8c09619e9ea817566557d0f0db624fa592a6ea4fbe8425
++ bajadoc-clean/com/tridium/control/BComponent.txt ---------- 644 65 eebfbbd0fd77ea6d3b243eaee3c90ae805cbfd651be85f7505d10935950ea476
++ bajadoc-clean/com/tridium/control/BFolder.txt ---------- 644 44 841c7555afd63a06d6ae6b15c35f31aa4f7229eb742d7337476c19f0c2cc0768
++ bajadoc-clean/com/vendor d--------- 755
++ bajadoc-clean/com/vendor/BAWidget.txt ---------- 644 51 139aeb8ad8c2a25c44b779543fe25f139ea99705ab9d974486e942edc261faaa
++ bajadoc-clean/com/vendor/BVendorBase.txt ---------- 644 158 d9d010a63735ca4c5b82d978f87eae81d10c7022125721bcf27ac842836d023a
++ bajadoc-clean/com/vendor/BVendorChild.txt ---------- 644 72 62c72106e1611d3cbee95cb39c151193cc077b3eb3ae2b1d823957371ab417fa
++ bajadoc-clean/com/vendor/BWidget.txt ---------- 644 89 94941e14d65fc09034c9cddaa1e59b6d4410e4e61bd6e0036edf2848fabd4c51
++ bajadoc-clean/com/z d--------- 755
++ bajadoc-clean/com/z/BSame.txt ---------- 644 28 4e9b0de6a65b15faa36f0d42088d324916423a14bbf643cfe3dd502485c4e5bd
++ bajadoc-clean/javax/baja/control d--------- 755
++ bajadoc-clean/javax/baja/control/BObject.txt ---------- 644 43 c0a6a81326a9e8a56eb5a6009587efd1fa6aa8175a8ccb046d4998e996c86fd9
++ bajadoc-clean/javax/baja/demo d--------- 755
++ bajadoc-clean/javax/baja/demo/BDemo.txt ---------- 644 650 d64733c454b34d74a5ad6b3423d122544ce53e239bba5fbd1303a9a3587d451c
++ bajadoc-clean/javax/baja/demo/BDup.txt ---------- 644 103 ad98ecf544340e8ffa1384b386fe423af75a1e183fa50b704df692bdcd92b9ca
++ bajadoc-clean/javax/baja/demo/BIDemo.txt ---------- 644 71 f966b005113aa2ce7ce370a41ff28e212167701017db5bca023ba00504cbc9db
++ bajadoc-clean/javax/baja/demo/BMode.txt ---------- 644 127 46f7740941c1c1f6186c6aff960cf471e4a82a071ee00339770af8556285c99f
++ bajadoc-clean/javax/baja/demo/BNulRef.txt ---------- 644 122 26ce06ccbb28d5caa6d3db93811ae7fcdb095a17e867bb32214466eba96bc7c1
++ bajadoc-clean/javax/baja/demo/Box.txt ---------- 644 65 4c234c39dcd55cd2ccc3881b7ef45ae68e832ba1301289fd8c0c6c586a029550
++ bajadoc-clean/javax/baja/demo/Marker.txt ---------- 644 95 cb23f1bab1b7e7d85c2d69525d425c0df3a7a66aec0efdeb7b81dcfbd61151df
++ bajadoc-clean/javax/baja/sys/Ann.txt ---------- 644 45 7b456629cc5ebae5b5cf87b7c17e7f1a1bd471bbcc382207aa3087871493b1b7
++ bajadoc-clean/javax/baja/sys/BComponent.txt ---------- 644 103 faeef881b6c8c33ee55de1632caba0cacc0a56e85208aa1601a7f6ff36231daf
++ bajadoc-clean/javax/baja/sys/BIObject.txt ---------- 644 44 70d52a0a3ee923a60eb8657dfe069b9b61a40c4475d145a1ff781b317a21bcd1
++ bajadoc-clean/javax/baja/sys/BIParent.txt ---------- 644 97 02676e0835fb73e7a7dc99c0e9c89fb0125ebf24615dd33c35e711039784c265
++ bajadoc-clean/javax/baja/sys/BIThing.txt ---------- 644 144 ce94f0bf25c5c52f9e0e4ad937001197cac1e7d349b2316c168cc815b8eb7f3f
++ bajadoc-clean/javax/baja/sys/BMethodsOnly.txt ---------- 644 67 65658555de94b70b65e8048d5cfa2f2602d95809b6c56e386ca63e5810292881
++ bajadoc-clean/javax/baja/sys/BMode.txt ---------- 644 127 a153e97afc41cb798ed5c2c98310cd5da932afc2b03ed6c82bfbf9cd60498322
++ bajadoc-clean/javax/baja/sys/BObject.txt ---------- 644 39 9fc69bd9997279bcb125ce0951e6fc3fcb0e93b83adfc899db5afe7d54c182f0
++ bajadoc-clean/javax/baja/sys/BPairA.txt ---------- 644 37 b889dddb059eb572eccce79c2e33fa2fc8b8f05f5978813f8eb94f17c2ed4d44
++ bajadoc-clean/javax/baja/sys/BSample.txt ---------- 644 961 e0677bf9b42c80d32c66a57e0236b5449b0f3197273bf9c48e083485ad0f9f04
++ bajadoc-clean/javax/baja/sys/Cat.txt ---------- 644 45 f9ae3e6192c8557c2cafd41e04156f10d39cac405285bb34181f61372e0a29a7
++ bajadoc-clean/javax/baja/sys/En.txt ---------- 644 33 12aaef7e81e5d694e5bbdde4a714fcd64363f0f855173df30769befdc1db1312
++ bajadoc-clean/javax/baja/sys/Marker.txt ---------- 644 72 6225bd448dd6053ca73b439ef53945e88cf05592cc1971b3692c9dd8070c2772
++ bajadoc-clean/javax/baja/util/BIFallback.txt ---------- 644 77 a84d51e7c1779a6fa0192ed89ae8e2a0e16cb5ed75be3b6fe7fc5ed4663b585a
++ bajadoc-clean/javax/baja/util/BÜber.txt ---------- 644 39 bac7e1bb53282f5281d42fdc9b4be1978c0a33feafc67f89d20f419a9e07720b
++ bajadoc-clean/javax/baja/util/CrLf.txt ---------- 644 118 a31fcddea1ca05f08f30769958f4874be4121d82576d2c6d5210f4a644f3db33
++ bajadoc-clean/javax/baja/util/Cursor.txt ---------- 644 105 f7813d4286de0f925a1c98b37e86f277722bb6d8cff00183ac560fc781dee6ed
++ bajadoc-clean/javax/baja/util/Fallback.txt ---------- 644 41 d87def406b4b61a7b6f8d3101629a3069ddafada9301b7c9457616a4f36b5fad
++ bajadoc-clean/javax/baja/util/Ünicode.txt ---------- 644 90 34d3a3319a60f8289205277983ffe5779f56e134d17f3aeafcfe67916fe353dd
++ devguide-clean d--------- 755
++ devguide-clean/changes.txt ---------- 644 70 e3aa92a02f581baf5968e452b9f86dbd0d40241f272cd86bb159bb49c535345b
++ devguide-clean/changes.txt.txt ---------- 644 71 a5ca7a4473a8be14d3263abfcc07764ecab3c2c935dcbee0d86d77da5b42ba28
++ devguide-clean/demo-rt d--------- 755
++ devguide-clean/demo-rt/javax d--------- 755
++ devguide-clean/demo-rt/javax/baja d--------- 755
++ devguide-clean/demo-rt/javax/baja/demo d--------- 755
++ devguide-clean/demo-rt/javax/baja/demo/notes.txt ---------- 644 83 1fa1777acd54cf27eaefbed08e88fc11a357f2ae9342e9a92bd37cd80a0238ef
++ devguide-clean/index.txt ---------- 644 239 c4a34c1e3e172c3bfff619d4cacb201efc93b7710533f3d9cb9b91f62bcb0a16
++ devguide-clean/sub d--------- 755
++ devguide-clean/sub/deeper d--------- 755
++ devguide-clean/sub/deeper/empty.txt ---------- 644 48 f005bbfdd82be15f8a7de5a510ac3849f4ccaf24e3584b8da096bf4d94b90d85
++ devguide-clean/sub/deeper/releaseNotes.txt ---------- 644 76 774518c9be35bf2914816ed580c730abb47183480dc56e742bd62d309f40ebb5
++ devguide-clean/sub/page.txt ---------- 644 54 d33a2a0f12f3a310420758304753baf7a16d3cba2ca727fc58fff1ef9ffcac65
++ guides-clean d--------- 755
++ guides-clean/Bad d--------- 755
++ guides-clean/Bad/a.txt ---------- 644 38 bcb09e5c6292f7721793ce17860b831a5d2d39df185134ce5f52a854d408a453
++ guides-clean/Spy d--------- 755
++ guides-clean/Spy/A d--------- 755
++ guides-clean/Spy/A/Compile.txt ---------- 644 63 6056496aab7119122135f22a61858e995d81a963c7d6f6e2b93e0f4b84dea614
++ guides-clean/Spy/B d--------- 755
++ guides-clean/Spy/B/Compile.txt ---------- 644 62 0b08bce90f0dd9e70dbf1a01d25ec5351fbd78184825419aff01f6a357a599a5
++ guides-clean/Spy/B/Deep d--------- 755
++ guides-clean/Spy/B/Deep/legacy.htm.txt ---------- 644 67 e52bdb7d1a0803be9167b73387205f193d749c1285f88614c28157535400ccb9
++ guides-clean/Spy/stub.txt ---------- 644 38 b2463b9bf6020189f44680b616e390d842888bdfbf76e0d658195c562c2ac288
++ guides-clean/Spy/top.htm.txt ---------- 644 57 162433b93659677b7106675f4287e9e4b797dbe48980e4ff546b1c365107cbd3
++ guides-clean/Spy/top.txt ---------- 644 54 bc8d71071bf697f23ec3ef5a9328865599a05ebe2264c64dac0346b0cdda8a47
++ guides-clean/Toc d--------- 755
++ guides-clean/Toc/Empty.txt ---------- 644 47 cde99f6aab6cb6190a12f6a82cbb906401de777a17e16f96564af444cb4f72ff
++ guides-clean/Toc/Plain.txt ---------- 644 54 28b672af76d754bf9d2b33610c770a9cee7d0381d636debdbb2a6235a6882074
++ guides-clean/Toc/Plain.txt.txt ---------- 644 126 b6c7bc28f93230e9f6fc5e3afb85b3e55629dc33363150b833b5164e0250ca9d
++ guides-clean/Toc/Tasks.txt ---------- 644 126 0708c888d38f0c205d8af3acf7224460bd783db048fc2d65e0a9dfdc4d122955
++ guides-clean/Toc/bad.txt ---------- 644 54 f8cd043a5ec2cf8a2c4cf64beda5e05e7c704ef2cb5490101fdb521930396702
++ guides-clean/Toc/index.txt ---------- 644 69 c3937cb2e1784e2f56b1aa833d2ba9bdbac00c177442e4801e5758f0bcb36f88
++ guides-clean/Toc/lgpl-2.1.htm.txt ---------- 644 82 c005914c04279f11caeba94f1e193dbddfc8cd0b815aabd3ba1240e58dabcd0b
++ guides-clean/Toc/notes.md.txt ---------- 644 145 d4a262da6f22ae95d1c1f676ba24cb4ba2d57bed3401183c9cad4040c7d9f1ad
++ guides-clean/Toc/readme.MD.txt ---------- 644 58 e22649b8dd88076b8a0c7f329d0fe75431beb7d7063fce9ff91d7c18545ecec2
++ guides-clean/Toc/sub d--------- 755
++ guides-clean/Toc/sub/Deep.txt ---------- 644 134 f77246d23423287b63ca42e802752975612ae849dcfcd3ca56b51c691f4d2107
++ guides-clean/Upper d--------- 755
++ guides-clean/Upper/x.txt ---------- 644 61 e489787ba0b157b1bed8a2247f00ab56ea6368ab05f2cde5eef3c4fd75913a2f
++ guides-clean/Upper/y.txt ---------- 644 40 eace435989f57fce86d3cbbe2afefcb6fe4e804533d7fb54296dea03c2737b2a
++ guides-clean/clX d--------- 755
++ guides-clean/clX/readme.txt ---------- 644 63 78b45b251b5fc7b68d929ec99782c606b57cfea621e2a72a8b86cb8c5f78dbe6
++ guides-clean/Ünïcode d--------- 755
++ guides-clean/Ünïcode/a.txt ---------- 644 51 f2f1a3c6cd9ed8327154375bdf7b4b74abb5357d94d24572e1a39702721645fa
++ indexes d--------- 755
++ indexes/class-index.json ---------- 644 6240 6d12d8893fc3cb2fb0315b6b5684dc9c78d92b3ae663aa74ee11503f477d5b58
++ indexes/devguide-toc.json ---------- 644 702 ae7b3a91813da1c6f8dda40e6cc7364a744c7ac3a67df5d324b736942cef3d98
++ indexes/guides-index.json ---------- 644 1793 2c9b35b1ad35d8b2511936b40b4452b774878e92d3eca8087a113b9caadfc966
++ indexes/inheritance.json ---------- 644 6441 3ade648cfe5e5161feb6c1c7fe9b67b71a560214c45e00af5f334f7ff8a0ce01
++ indexes/jdk-class-index.json ---------- 644 527 f3141bfc5b6eff1e1a910385ed2f354f399e92e742c0fc188e128ad603ca9abb
++ indexes/method-index.json ---------- 644 6209 7bef44b752c5c44ebea603a49c529327611d09439c26d5984b0ca8441761af40
++ indexes/slots-index.json ---------- 644 4495 f2e7587bf5e483af4b18c0de2bd8886dab8f08055cb0974a42378d833ce3a230
++ indexes/source-index.json ---------- 644 1997 738375707e911b1330249f56980a03b2881f577789d168539127dd8e520df6fb
++ indexes/xref-index.json ---------- 644 1874 1c3275d1898be4c06a94b320585a8333e5946e511ad56d32c1af29a8ebccf679
+- bajadoc-clean/com/tridium/control/BFolder.txt ---------- 644 99 24ec4f4158049a26deba7bde1a596cee06622aeb7cc0b6071097a7a9dbe91378
+- bajadoc-clean/javax/baja/sys/BComponent.txt ---------- 644 740 81ac728075b8f8c300ddbfe3f32c6be8d0823002a205601d37a01bcf75936b52
+- bajadoc-clean/javax/baja/sys/BIObject.txt ---------- 644 133 b5bc212443deea143db06debeeded9a5d27800f754dd5dae93594d3373a74611
+- bajadoc-clean/javax/baja/sys/BMode.txt ---------- 644 84 1e03d3e3d5d7ded8bbd9bc519cb55aebfb7c1db7395a9d03f1808a84528020ba
+- bajadoc-clean/javax/baja/sys/Marker.txt ---------- 644 74 1c4f72121c3e408078d3fbc23223bc536bc1007ae17e4ffcdea59e9f781dce9b
+# texts
+indexes/.manifest.json 644
+{
+  "stamped_utc": "<utc>",
+  "sources": {
+    "bajadoc": {
+      "files": 22,
+      "bytes": 19063
+    },
+    "source": {
+      "files": 13,
+      "bytes": 3143
+    },
+    "guides": {
+      "files": 34,
+      "bytes": 4542
+    },
+    "devguide": {
+      "files": 38,
+      "bytes": 11926
+    },
+    "docs": null
+  }
+}
+## run --stamp-only
+# stdout
+Manifest stamped at <utc> (baseline = current corpus).
+# stderr
+
+# tree
+# texts
+indexes/.manifest.json 644
+{
+  "stamped_utc": "<utc>",
+  "sources": {
+    "bajadoc": {
+      "files": 22,
+      "bytes": 19063
+    },
+    "source": {
+      "files": 13,
+      "bytes": 3143
+    },
+    "guides": {
+      "files": 34,
+      "bytes": 4542
+    },
+    "devguide": {
+      "files": 38,
+      "bytes": 11926
+    },
+    "docs": null
+  }
+}
+## run
+# stdout
+REBUILD-ALL 
+============================================================
+  RUN   bajadoc_parser.py          -> bajadoc-clean/
+Found 16 HTML files to parse
+
+Done in <t>s
+  Parsed: 12
+  Skipped: 4
+  Errors: 0
+  Output: <root>/bajadoc-clean
+  RUN   bajadoc_xml_parser.py      -> bajadoc-clean/
+bajadoc-clean/ from .bajadoc XML: 33 classes (javadoc HTML pages keep their own text)
+  RUN   build_class_index.py       -> class-index.json, jdk-class-index.json (when jdk/ exists)
+class-index.json: 36 names, 43 classes -> <root>/indexes/class-index.json
+jdk-class-index.json: 3 names, 4 classes -> <root>/indexes/jdk-class-index.json
+  RUN   inheritance_builder.py     -> inheritance.json
+Found 58 .txt files in bajadoc-clean/
+Parsed 50 entries from 53 files (7 duplicate names resolved with FQN)
+Errors (5):
+  No CLASS/INTERFACE in: <root>/bajadoc-clean/com/bom/BBom.txt
+  No CLASS/INTERFACE in: <root>/bajadoc-clean/com/space/BSpace.txt
+  No CLASS/INTERFACE in: <root>/bajadoc-clean/javax/baja/sys/Empty.txt
+  No CLASS/INTERFACE in: <root>/bajadoc-clean/javax/baja/sys/NoClass.txt
+  No CLASS/INTERFACE in: <root>/bajadoc-clean/javax/baja/sys/NoHeaderClass.txt
+Wrote <root>/indexes/inheritance.json (0.01 MB)
+
+--- Verification ---
+BComponent:
+  extends: None
+  implements: []
+  subclasses count: 1
+  package: javax.baja.sys
+BAbstractService:
+  extends: BComponent
+  subclasses count: 0
+BIObject:
+  extends: None
+  subclasses count: 0
+  of which interfaces (BI*): 0
+
+Stats:
+  Total entries: 50
+  With extends: 19
+  With subclasses: 7
+  With implements: 3
+  RUN   method_indexer.py          -> method-index.json
+Built method-index.json: 30 unique names, 39 total members from 58 files
+  RUN   source_indexer.py          -> source-index.json
+Built source-index.json: 14 classes, 125 total lines from source/
+  RUN   slots_indexer.py           -> slots-index.json
+Merged 17 slots from .bajadoc XML
+Built slots-index.json: 10 classes (12 properties, 2 actions, 2 topics) from 5 files
+  RUN   xref_builder.py            -> xref-index.json
+Built xref-index.json: 18 classes, 18 dependency edges from 14 source files
+  RUN   guides_parser.py           -> guides-clean/
+Extracted 21 guide files to guides-clean/ (0.0 MB text, 0 errors, 6 titled from toc.xml)
+  RUN   build_guides_index.py      -> guides-index.json
+guides-index.json: 9 folders -> <root>/indexes/guides-index.json
+  RUN   devguide_parser.py         -> devguide-clean/
+  excluded (licence text): devguide/lgpl-2.1.txt
+  excluded (licence text): devguide/sub/COPYING.txt
+Extracted 7 devguide files to devguide-clean/ (0.0 MB text)
+  RUN   build_devguide_toc.py      -> devguide-toc.json
+devguide-toc.json: 2 sections -> <root>/indexes/devguide-toc.json
+  RUN   pdf_extractor.py           -> pdf-index.json, docs-text/
+SKIP: no PDF manuals for <root> (docs dir: None); search uses the shared manuals.
+  RUN   course_extractor.py        -> course-text/
+course: no course bound to this version; skipped
+
+Ran 14, skipped 0, failed 0.
+Manifest re-stamped. Run 'freshness' to confirm FRESH.
+# stderr
+WARNING: toc not read, page titles fall back to <title>: <root>/guides/Bad/toc.xml: mismatched tag: line 1, column 16
+WARNING: toc not read, page titles fall back to <title>: <root>/guides/Bad/toc.xml: mismatched tag: line 1, column 16
+# tree
+# texts
+indexes/.manifest.json 644
+{
+  "stamped_utc": "<utc>",
+  "sources": {
+    "bajadoc": {
+      "files": 22,
+      "bytes": 19063
+    },
+    "source": {
+      "files": 13,
+      "bytes": 3143
+    },
+    "guides": {
+      "files": 34,
+      "bytes": 4542
+    },
+    "devguide": {
+      "files": 38,
+      "bytes": 11926
+    },
+    "docs": null
+  }
+}
+## log
+# stdout
+Ran 14, skipped 0, failed 0.
+# stderr
+WARNING: toc not read, page titles fall back to <title>: <root>/guides/Bad/toc.xml: mismatched tag: line 1, column 16
+WARNING: toc not read, page titles fall back to <title>: <root>/guides/Bad/toc.xml: mismatched tag: line 1, column 16
+# tree
++ indexes/pdf-index.json ---------- 644 3 ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356
+# texts
+indexes/.manifest.json 644
+{
+  "stamped_utc": "<utc>",
+  "sources": {
+    "bajadoc": {
+      "files": 22,
+      "bytes": 19063
+    },
+    "source": {
+      "files": 13,
+      "bytes": 3143
+    },
+    "guides": {
+      "files": 34,
+      "bytes": 4542
+    },
+    "devguide": {
+      "files": 38,
+      "bytes": 11926
+    },
+    "docs": null
+  }
+}
+build.log 644
+REBUILD-ALL 
+============================================================
+  RUN   bajadoc_parser.py          -> bajadoc-clean/
+Found 16 HTML files to parse
+
+Done in <t>s
+  Parsed: 12
+  Skipped: 4
+  Errors: 0
+  Output: <root>/bajadoc-clean
+  RUN   bajadoc_xml_parser.py      -> bajadoc-clean/
+bajadoc-clean/ from .bajadoc XML: 33 classes (javadoc HTML pages keep their own text)
+  RUN   build_class_index.py       -> class-index.json, jdk-class-index.json (when jdk/ exists)
+class-index.json: 36 names, 43 classes -> <root>/indexes/class-index.json
+jdk-class-index.json: 3 names, 4 classes -> <root>/indexes/jdk-class-index.json
+  RUN   inheritance_builder.py     -> inheritance.json
+Found 58 .txt files in bajadoc-clean/
+Parsed 50 entries from 53 files (7 duplicate names resolved with FQN)
+Errors (5):
+  No CLASS/INTERFACE in: <root>/bajadoc-clean/com/bom/BBom.txt
+  No CLASS/INTERFACE in: <root>/bajadoc-clean/com/space/BSpace.txt
+  No CLASS/INTERFACE in: <root>/bajadoc-clean/javax/baja/sys/Empty.txt
+  No CLASS/INTERFACE in: <root>/bajadoc-clean/javax/baja/sys/NoClass.txt
+  No CLASS/INTERFACE in: <root>/bajadoc-clean/javax/baja/sys/NoHeaderClass.txt
+Wrote <root>/indexes/inheritance.json (0.01 MB)
+
+--- Verification ---
+BComponent:
+  extends: None
+  implements: []
+  subclasses count: 1
+  package: javax.baja.sys
+BAbstractService:
+  extends: BComponent
+  subclasses count: 0
+BIObject:
+  extends: None
+  subclasses count: 0
+  of which interfaces (BI*): 0
+
+Stats:
+  Total entries: 50
+  With extends: 19
+  With subclasses: 7
+  With implements: 3
+  RUN   method_indexer.py          -> method-index.json
+Built method-index.json: 30 unique names, 39 total members from 58 files
+  RUN   source_indexer.py          -> source-index.json
+Built source-index.json: 14 classes, 125 total lines from source/
+  RUN   slots_indexer.py           -> slots-index.json
+Merged 17 slots from .bajadoc XML
+Built slots-index.json: 10 classes (12 properties, 2 actions, 2 topics) from 5 files
+  RUN   xref_builder.py            -> xref-index.json
+Built xref-index.json: 18 classes, 18 dependency edges from 14 source files
+  RUN   guides_parser.py           -> guides-clean/
+Extracted 21 guide files to guides-clean/ (0.0 MB text, 0 errors, 6 titled from toc.xml)
+  RUN   build_guides_index.py      -> guides-index.json
+guides-index.json: 9 folders -> <root>/indexes/guides-index.json
+  RUN   devguide_parser.py         -> devguide-clean/
+  excluded (licence text): devguide/lgpl-2.1.txt
+  excluded (licence text): devguide/sub/COPYING.txt
+Extracted 7 devguide files to devguide-clean/ (0.0 MB text)
+  RUN   build_devguide_toc.py      -> devguide-toc.json
+devguide-toc.json: 2 sections -> <root>/indexes/devguide-toc.json
+  RUN   pdf_extractor.py           -> pdf-index.json, docs-text/
+SKIP: no PDF manuals for <root> (docs dir: None); search uses the shared manuals.
+  RUN   course_extractor.py        -> course-text/
+course: no course bound to this version; skipped
+
+Ran 14, skipped 0, failed 0.
+Manifest re-stamped. Run 'freshness' to confirm FRESH.

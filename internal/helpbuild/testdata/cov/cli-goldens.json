@@ -1,5 +1,5 @@
 {
- "_source": "niagara-help tests/golden/cli.json at tag pre-go-retire (8410d7451): the rc and stdout SHA-256 of the cases golden_cli.py recorded on 4.14.0.162; copied so TestParityCoverageReal needs no niagara-help tests/ tree",
+ "_source": "niagara-help tests/golden/cli.json at tag pre-go-retire (8410d7451): the rc and stdout SHA-256 of the cases golden_cli.py recorded on 4.14.0.162; copied so TestCoverageRealGoldens needs no niagara-help tests/ tree",
  "coverage": {
   "rc": 0,
   "stdout": "df091448b12748371ce37117bc855b0db57225093033e23c19de1b7e6fb8cdf0"

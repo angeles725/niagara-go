@@ -41,13 +41,14 @@ classes, every store/append/count/extend/version action, `nargs=N`, help `%(...)
 
 ## How parity is proven
 
-`internal/argparse/testdata/matrix.py` declares one parser per feature family plus
+`internal/argparse/testdata/matrix.py` (retired with the Python reference in D47; the
+fixtures it produced are frozen) declared one parser per feature family plus
 replicas of bog-nav, module-nav, niagara-help, corpus-nav, searchdoor and qnx6read, and
 the argv cases: help at COLUMNS 100 and 80 (and 14 to 200 for wrapping), success
 parses, and every error class (required, invalid choice with and without a suggestion,
 invalid type, unrecognized, ambiguous abbreviation, not allowed with, expected N
 arguments, ignored explicit argument), `--`, negative numbers, version and help exits.
-`gen_fixtures.py` runs each case through Python and writes `fixtures.json`;
+`gen_fixtures.py` ran each case through Python and wrote `fixtures.json`;
 `TestFixtures` rebuilds the same parser through the Go API and compares stdout, stderr,
 exit status and `repr()` of the namespace.
 

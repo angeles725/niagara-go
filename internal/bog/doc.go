@@ -2,7 +2,8 @@
 //
 // It is the Go port of niagara-research tools/lib/bogio.py (ReadBytes, ReadText, ReadError) and
 // tools/bognav/model.py (Parse, Load, Bog, Comp, Resolve, LinkRow), behaviour-identical to them:
-// testdata/gen_fixtures.py regenerates the parity fixtures from the Python originals.
+// the fixtures under testdata/ hold the Python originals' output, frozen when D47 retired their
+// generator (gen_fixtures.py); they change only from reviewed Go output.
 //
 // Reading detects the input by content (a config.bog ZIP, a .dist backup with a nested
 // config.bog, or plain BOG XML) and fails with a *ReadError carrying bogio's message, which

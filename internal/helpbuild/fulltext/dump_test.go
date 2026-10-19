@@ -1,6 +1,7 @@
 package fulltext
 
-// The canonical dump that defines parity with the Python builder. SQLite
+// The canonical dump of an index (testdata/synthetic.dump holds the Python
+// builder's, frozen when D47 retired the Python reference). SQLite
 // files are never byte-identical (page layout, FTS5 segment ids and merge
 // history differ), so two indexes are equal when these records are: the
 // schema text, the FTS5 config, meta (the fingerprint), every docs row with
@@ -144,7 +145,7 @@ func compareDumps(a, b iter.Seq[string], max int) (n int, diffs []string) {
 		n++
 		if la != lb || okA != okB {
 			if len(diffs) < max {
-				diffs = append(diffs, fmt.Sprintf("record %d:\n  python: %q\n  go:     %q", n, la, lb))
+				diffs = append(diffs, fmt.Sprintf("record %d:\n  want: %q\n  got:  %q", n, la, lb))
 			} else {
 				return n, append(diffs, "... (stopped)")
 			}

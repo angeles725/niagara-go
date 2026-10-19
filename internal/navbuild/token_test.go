@@ -120,21 +120,6 @@ func tokenDump(path string) iter.Seq[string] {
 	}
 }
 
-// sameTokenDB compares two token indexes record by record (both streams are
-// read in step, so a full-corpus index is never held in memory). With -update
-// on the synthetic corpus it writes the Python dump as the golden.
-func sameTokenDB(t *testing.T, pyPath, goPath string) {
-	t.Helper()
-	if *update && strings.HasSuffix(t.Name(), "/synthetic") {
-		writeGoldenLines(t, goldenPath(TokenFile), tokenDump(pyPath))
-	}
-	if n, diff := diffSeqs(tokenDump(pyPath), tokenDump(goPath)); diff != "" {
-		t.Errorf("%s differs at record %d: %s", TokenFile, n, diff)
-	} else {
-		t.Logf("%s: %d records identical", TokenFile, n)
-	}
-}
-
 // diffSeqs walks two record streams in step: the number of records compared
 // and, at the first difference, both records.
 func diffSeqs(want, got iter.Seq[string]) (int, string) {
@@ -146,17 +131,17 @@ func diffSeqs(want, got iter.Seq[string]) (int, string) {
 		g, ok := next()
 		// A failed dump is a difference even when both sides fail alike.
 		if strings.HasPrefix(w, "error\t") || strings.HasPrefix(g, "error\t") {
-			return n, fmt.Sprintf("dump failed: python: %.300q, go: %.300q", w, g)
+			return n, fmt.Sprintf("dump failed: want %.300q, got %.300q", w, g)
 		}
 		if !ok {
-			return n, fmt.Sprintf("python: %.300q, go: <end>", w)
+			return n, fmt.Sprintf("want %.300q, got <end>", w)
 		}
 		if g != w {
-			return n, fmt.Sprintf("python: %.300q, go: %.300q", w, g)
+			return n, fmt.Sprintf("want %.300q, got %.300q", w, g)
 		}
 	}
 	if g, ok := next(); ok {
-		return n + 1, fmt.Sprintf("python: <end>, go: %.300q", g)
+		return n + 1, fmt.Sprintf("want <end>, got %.300q", g)
 	}
 	if n == 0 {
 		return 0, "no records on either side"

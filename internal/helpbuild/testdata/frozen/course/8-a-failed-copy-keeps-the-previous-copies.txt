@@ -1,0 +1,5 @@
+stdout ""
+stderr "ERROR: course: cannot copy the course into <root>/versions/A: [Errno 13] Permission denied: '<tmp>/course-src/course/Labs/Lab1 First/src/BFirst.java' (course-text/ and devguide-examples/course/ keep their last copy)"
+stderr ""
+exit 2
+tree:

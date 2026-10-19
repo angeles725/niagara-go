@@ -1,0 +1,5 @@
+stdout "course: no course bound to this version; skipped"
+stdout ""
+stderr ""
+exit 0
+tree:

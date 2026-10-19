@@ -1,0 +1,116 @@
+bajadoc d--------- 755
+bajadoc/allclasses-noframe.html L--------- 777
+bajadoc/allclasses-noframe.html.real ---------- 644 1407 b681e4fb76b41b1939ec52d4fd9321dcc28c33edb1a8c7be8659ec9173d2493f
+bajadoc-clean d--------- 755
+bajadoc-clean/com d--------- 755
+bajadoc-clean/com/a d--------- 755
+bajadoc-clean/com/a/BFolder.txt ---------- 644 47 3a4812027bd726553710888899c18f40130edc8e28a35fad753c4afbf691ed13
+bajadoc-clean/com/bom d--------- 755
+bajadoc-clean/com/bom/BBom.txt ---------- 644 32 d90027f4c95e695c474aa8a80da46f1254774ac65741e87f2eed4b8a0ca33deb
+bajadoc-clean/com/emptypkg d--------- 755
+bajadoc-clean/com/emptypkg/BFolder.txt ---------- 644 25 d1f875766ee846aced1bcde51f7ab85ef4241f8fb6c935988d39a3509dd94845
+bajadoc-clean/com/nopkg d--------- 755
+bajadoc-clean/com/nopkg/BFolder.txt ---------- 644 51 414db67c6f9559ee2616c907208c5688c51fd36942ddaaa884071e5ed0823109
+bajadoc-clean/com/space d--------- 755
+bajadoc-clean/com/space/BSpace.txt ---------- 644 74 e2a42161c153ab1f26b89990d74bdbd4d3bd01e8a5e78841f4fbd361738b7abd
+bajadoc-clean/com/tridium d--------- 755
+bajadoc-clean/com/tridium/control d--------- 755
+bajadoc-clean/com/tridium/control/BFolder.txt ---------- 644 99 24ec4f4158049a26deba7bde1a596cee06622aeb7cc0b6071097a7a9dbe91378
+bajadoc-clean/com/twice d--------- 755
+bajadoc-clean/com/twice/One.txt ---------- 644 47 535c9420432e8a6842efb2da88069eed00eeb07f0ac083cce769366f770d021f
+bajadoc-clean/com/twice/Two.txt ---------- 644 48 1b17cfe87345a5e29b0429fbaaa94a62c51321180d4df975e1b9e807bc42565b
+bajadoc-clean/com/uni d--------- 755
+bajadoc-clean/com/uni/BÄrger.txt ---------- 644 131 cf7e01b7be04ef3a822ef08fc1e0f056e5cc3b5227d5c064205724f8d37d890c
+bajadoc-clean/javax d--------- 755
+bajadoc-clean/javax/baja d--------- 755
+bajadoc-clean/javax/baja/sys d--------- 755
+bajadoc-clean/javax/baja/sys/BAbstractService.txt ---------- 644 133 2490b8f8bebde03d384acc25994cb0d7bba846579b71834dd106053eb41a8a71
+bajadoc-clean/javax/baja/sys/BComponent.txt ---------- 644 740 81ac728075b8f8c300ddbfe3f32c6be8d0823002a205601d37a01bcf75936b52
+bajadoc-clean/javax/baja/sys/BIObject.txt ---------- 644 133 b5bc212443deea143db06debeeded9a5d27800f754dd5dae93594d3373a74611
+bajadoc-clean/javax/baja/sys/BMode.txt ---------- 644 84 1e03d3e3d5d7ded8bbd9bc519cb55aebfb7c1db7395a9d03f1808a84528020ba
+bajadoc-clean/javax/baja/sys/Empty.txt ---------- 644 0 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+bajadoc-clean/javax/baja/sys/Marker.txt ---------- 644 74 1c4f72121c3e408078d3fbc23223bc536bc1007ae17e4ffcdea59e9f781dce9b
+bajadoc-clean/javax/baja/sys/NoClass.txt ---------- 644 54 490cd5c7aa1d9dadfb5ba36909a766a7bfd6975861321e89cdb586d26ef7d6b3
+bajadoc-clean/javax/baja/sys/NoHeaderClass.txt ---------- 644 19 250f71312055abb38a61088e0fd694fda4ce83c2574dd638ac6a459c2ff8c57a
+bajadoc-clean/javax/baja/sys/notes.TXT ---------- 644 13 56dc84647d74c092c73974ce0dbccfef5d4477e29dd30fd30d6d71fd36b83c42
+bajadoc-clean/javax/baja/util d--------- 755
+bajadoc-clean/javax/baja/util/BFolder.txt ---------- 644 87 376575c3b0d941c67fdb274f5df1bf84010e16d7c6eb4e95a94f5c2874df643f
+bajadoc-clean/org d--------- 755
+bajadoc-clean/org/nomembers d--------- 755
+bajadoc-clean/org/nomembers/BNone.txt ---------- 644 80 92ceeaa8c3b60b1b264cec245fce81cff2ec7c642a97c3d000e9348811b5cc9b
+bajadoc-clean/zz d--------- 755
+bajadoc-clean/zz/AfterHeader.txt ---------- 644 40 2c1fa5399105fe0c713169d3a516e54331270312176cf19082c08d065a45a61f
+bajadoc-clean/zz/CrAtChunk.txt ---------- 644 8193 2493e3172ca20676f7318af368328e79bf981559402aa8910da60e69e87964cf
+bajadoc-clean/zz/CutAtChunk.txt ---------- 644 8196 34d751bcbe99df8c60d8fa88254a7cc20f09dcb3a19fe2139cdc84504a0c6d47
+bajadoc-clean/zz/CutBad.txt ---------- 644 8195 e9815e46eaeb40176f2644aa5e7db4d4ba5386cffdd8d3f87dd4777ba57edb8b
+bajadoc-clean/zz/InHeader.txt ---------- 644 30 367d88aed416edbfe2ad5f8e277fe843d6340dee216d39ef8446af43353db8d3
+bajadoc-clean/zz/LongLine.txt ---------- 644 20043 c1d77415f3d9adff38ef4890c1449496ccf4d37f5910765ffca17f48f5b27045
+bajadoc-clean/zz/PastChunk.txt ---------- 644 8194 9787c31eead24566f83d81bf25b1afd4e1afc7e607ee5ed5fb769527ade00358
+bajadoc-clean/zz/Truncated.txt ---------- 644 45 ab7a0eb4fed76c700943b4946cd6c7afb0f3a06d7b498b18181651a1746d3d1f
+bajadoc-clean/zz/linked L--------- 777
+devguide d--------- 755
+devguide/baja d--------- 755
+devguide/baja/javax d--------- 755
+devguide/baja/javax/baja d--------- 755
+devguide/baja/javax/baja/sys d--------- 755
+devguide/baja/javax/baja/sys/BComponent.bajadoc ---------- 644 259 d61a403ee0e0440661e51b6b32d7392c64196ace8678739108d19ebe1fdeb233
+devguide/baja/javax/baja/sys/BIObject.bajadoc ---------- 644 194 1a8968c7b0dbfa4a900f9994dc6c0d785b452e5f68c307b1f3349a2b1ff9171b
+devguide/baja/javax/baja/sys/Pair.bajadoc ---------- 644 717 8a6c7c38b4d3f96e5b023e78af02c6d4d6e0270dee8b23a0bebdda3eb1f371cc
+devguide/baja/javax/baja/util d--------- 755
+devguide/baja/javax/baja/util/Cursor.bajadoc ---------- 644 192 b181a8fb33c70e0875a34324144341e4d67144ba588deb7e88bb078e11e354ac
+devguide/baja/module-index.bajadoc ---------- 644 131 fcf662dc0def67737c7f33834326c72a54a272aa4672c407bf0160d597bce484
+devguide/control d--------- 755
+devguide/control/Z d--------- 755
+devguide/control/Z/com d--------- 755
+devguide/control/Z/com/z d--------- 755
+devguide/control/Z/com/z/BSame.bajadoc ---------- 644 139 5b0a97e273bc21651de4173b99b1824d9082523956c779028f94ab50f657f55e
+devguide/control/a-first d--------- 755
+devguide/control/a-first/com d--------- 755
+devguide/control/a-first/com/a d--------- 755
+devguide/control/a-first/com/a/BSame.bajadoc ---------- 644 150 a300d2ae040bbd81bfbbb6480412b34a028c020a04e0a90d157d8c5a34663ddb
+devguide/control/b d--------- 755
+devguide/control/b/com d--------- 755
+devguide/control/b/com/a d--------- 755
+devguide/control/b/com/a/BSame.bajadoc ---------- 644 150 cfb79e74757bebbeb42673b5c4dcd000ee37b1e8635e7aaf4df7e6dbbb02786f
+devguide/control/com d--------- 755
+devguide/control/com/tridium d--------- 755
+devguide/control/com/tridium/control d--------- 755
+devguide/control/com/tridium/control/BBroken.bajadoc ---------- 644 282 b22d9f4e8505b487e0557302f302fa1f8db2b56e4525f678cfc62242458d4443
+devguide/control/com/tridium/control/BComponent.bajadoc ---------- 644 194 32e283fd204c790ba9ecdbb354386d9b620f746f764d87ebdb0ab68b3b1cabf2
+devguide/control/com/tridium/control/BFolder.bajadoc ---------- 644 206 823c89871eafb1122c7db7b476b278bc82107f4ffdc5746486cee92af5ad9457
+devguide/control/com/tridium/control/BHopeless.bajadoc ---------- 644 78 a4dcd7a0f5da1be556e4937c4aeac7a19962015c0e07360fd07120c0fb4ad1d1
+devguide/control/com/tridium/control/Latin.bajadoc ---------- 644 189 61aaac621c9f1b90bb48f6006865d0439b5cbda70a47c0e4425d318d4c9e222f
+devguide/control/com/tridium/control/Ns.bajadoc ---------- 644 111 cce3da5ba2d1388f65c1478df329c9a9488b4032305d1d1558e559605a9ad476
+devguide/control/com/tridium/control/Upper.BAJADOC ---------- 644 167 5440880a0bbdcd530bb696f6c6c92fe5688497ce76dd9b95416149495dbfc9a9
+devguide/mod é d--------- 755
+devguide/mod é/javax d--------- 755
+devguide/mod é/javax/baja d--------- 755
+devguide/mod é/javax/baja/util d--------- 755
+devguide/mod é/javax/baja/util/BÜber.bajadoc ---------- 644 176 2969c9a90d2eb16d2bec7cff0662b25b67d777cae1a6111420ada0226c2fb20a
+devguide/zz d--------- 755
+devguide/zz/Alias.bajadoc L--------- 777
+devguide/zz/alias L--------- 777
+devguide/zz/real d--------- 755
+devguide/zz/real/BLinked.bajadoc ---------- 644 86 0cd9eb6e70ac9550f31b0e4ec370bb14e9c3b23bf050418e39032a6294f64e3b
+guides d--------- 755
+guides/clHVAC d--------- 755
+guides/clHVAC/com d--------- 755
+guides/clHVAC/com/hvac d--------- 755
+guides/clHVAC/com/hvac/BComponent.bajadoc ---------- 644 171 1c82853be9234c3c32884994255e29a7a7da7d00f717110dc63aaaba5f893795
+guides/clHVAC/com/hvac/Outer.bajadoc ---------- 644 173 960130a38fcb268d22b53c8236956bcd2673cfd74c6ebe30d12fa236453fe3f4
+guides/readme.txt ---------- 644 14 0f5db895f00b423ffbf9b7ac4ef748f8d86cc5c2766e24836531f144dfa05d72
+indexes d--------- 755
+indexes/class-index.json ---------- 644 3598 51c4eac560a6662680adfb5d96d3d79bcb223ae00db326d01f49a92a3489fcca
+indexes/inheritance.json ---------- 644 1682 628fbb44a4f350651014b5fde74cd927d2ae91aba5025997b09498e120c09955
+indexes/jdk-class-index.json ---------- 644 527 f3141bfc5b6eff1e1a910385ed2f354f399e92e742c0fc188e128ad603ca9abb
+indexes/method-index.json ---------- 644 4008 ee75bffa2a8e3c7393624d70e2ae592c5b737236545a0245a1a95afe13dcdd06
+jdk d--------- 755
+jdk/java d--------- 755
+jdk/java/lang d--------- 755
+jdk/java/lang/Object.bajadoc ---------- 644 168 9767164b1c5a5dcc39115310e703af45d9a4fbd3480784766f2439e395c43f63
+jdk/java/lang/Override.bajadoc ---------- 644 171 116a2c8e9c7562eafec3556a793bf1ef8bc9ce0397bc621182e0814e24c73812
+jdk/java/util d--------- 755
+jdk/java/util/Timer.bajadoc ---------- 644 147 c2daf56621f9934d72afab7302118fe6cee6ceb0a32a23ea0a5e66434b7d2c3e
+jdk/javax d--------- 755
+jdk/javax/swing d--------- 755
+jdk/javax/swing/Timer.bajadoc ---------- 644 151 fd27d4b29b8a789a19840d584170c167c54f7b7ae5d8641616594a3805d43ed3

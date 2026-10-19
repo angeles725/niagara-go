@@ -1,0 +1,43 @@
+stdout "course: 6 page text files -> course-text/, 7 example code files -> devguide-examples/course/ (from <tmp>/course-src)"
+stdout ""
+stderr ""
+exit 0
+tree:
++ versions/A/course-text d--------- 755
++ versions/A/course-text/8 ORDs.txt ---------- 644 40 2957b310694ad7839888baf5598b580aea2258f1c271fb2e524c4525583e5408
++ versions/A/course-text/Review Assignment 1.txt ---------- 644 77 9c4928b829791858e87375c1929f62a0bbc8648299bcfb4ee4ff2aed4e292f21
++ versions/A/course-text/UPPER.TXT ---------- 644 6 e83189db38554920ea572093f9ad32facf682f28ccecdac085c1511735a2b492
++ versions/A/course-text/niagara-4.15.6.20 d--------- 755
++ versions/A/course-text/niagara-4.15.6.20/dev d--------- 755
++ versions/A/course-text/niagara-4.15.6.20/dev/demo d--------- 755
++ versions/A/course-text/niagara-4.15.6.20/dev/demo/README.md.txt ---------- 644 7 31ca6c61ca3fcc54029a62bd082448b88718b913d24e195794969dd2d123b990
++ versions/A/course-text/niagara-4.15.6.20/dev/demo/readme-first.txt ---------- 644 6 b640e840b19d378660b32fb51ae18d67dccb4a8596a29e7bd72c1b2ae5928f41
++ versions/A/course-text/niagara-4.15.6.20/dev/demo/readme.txt ---------- 644 23 bfcad4c3e05282969ba5aa89bdafd5cc9843b275f3b017bd27b73f33a3c231f5
++ versions/A/devguide-examples d--------- 755
++ versions/A/devguide-examples/course d--------- 755
++ versions/A/devguide-examples/course/course d--------- 755
++ versions/A/devguide-examples/course/course/Labs d--------- 755
++ versions/A/devguide-examples/course/course/Labs/Lab1 First d--------- 755
++ versions/A/devguide-examples/course/course/Labs/Lab1 First/src d--------- 755
++ versions/A/devguide-examples/course/course/Labs/Lab1 First/src/BFirst.java ---------- 644 54 3114d9239497416a1f698bdbb584df991dd65ee9550121f056da3f20599b0207
++ versions/A/devguide-examples/course/course/Labs/Lab2 Ñandú d--------- 755
++ versions/A/devguide-examples/course/course/Labs/Lab2 Ñandú/src d--------- 755
++ versions/A/devguide-examples/course/course/Labs/Lab2 Ñandú/src/BÑandú.java ---------- 644 18 1d105b049e1cd4772ae4a8595b86009a6fc648f28846b01dd30c85acc4b9e357
++ versions/A/devguide-examples/course/course/Slide Code d--------- 755
++ versions/A/devguide-examples/course/course/Slide Code/slides d--------- 755
++ versions/A/devguide-examples/course/course/Slide Code/slides/slides-rt d--------- 755
++ versions/A/devguide-examples/course/course/Slide Code/slides/slides-rt/src d--------- 755
++ versions/A/devguide-examples/course/course/Slide Code/slides/slides-rt/src/BSlide.java ---------- 644 23 f379d789cda82d5f00e7153f221e5e83a4c1f401754eba765f860f4f307fd912
++ versions/A/devguide-examples/course/course/Slide Code/slides/slides-ux d--------- 755
++ versions/A/devguide-examples/course/course/Slide Code/slides/slides-ux/src d--------- 755
++ versions/A/devguide-examples/course/course/Slide Code/slides/slides-ux/src/doc d--------- 755
++ versions/A/devguide-examples/course/course/Slide Code/slides/slides-ux/src/doc/p.html ---------- 644 13 0c0f8b92294ef86d6a0d47bc0bf310430dd29628250b7f0f497ba821b232c4e1
++ versions/A/devguide-examples/course/niagara-4.15.6.20 d--------- 755
++ versions/A/devguide-examples/course/niagara-4.15.6.20/dev d--------- 755
++ versions/A/devguide-examples/course/niagara-4.15.6.20/dev/demo d--------- 755
++ versions/A/devguide-examples/course/niagara-4.15.6.20/dev/demo/src d--------- 755
++ versions/A/devguide-examples/course/niagara-4.15.6.20/dev/demo/src/BDemo.java ---------- 644 22 938f99f7bdf360340a4d3204d2e6d6dc0c08f614e31e04206221bfeba3fa0d21
++ versions/A/devguide-examples/course/niagara-4.15.6.20/dev/demo/src/doc d--------- 755
++ versions/A/devguide-examples/course/niagara-4.15.6.20/dev/demo/src/doc/index.html ---------- 644 18 a7e5e3e2b0d15c87c18e18094ed03b2b5386d0ded3eda7a40ddeeda5608d125c
++ versions/A/devguide-examples/course/niagara-4.15.6.20/dev/demo/src/rc d--------- 755
++ versions/A/devguide-examples/course/niagara-4.15.6.20/dev/demo/src/rc/app.js ---------- 644 16 801006a6bf6cf71d7dbd33b05cb5b10626564c14095a16b0bfb34f6870870164

@@ -1,0 +1,7 @@
+stdout "course: 6 page text files -> course-text/, 7 example code files -> devguide-examples/course/ (from <tmp>/course-src)"
+stdout ""
+stderr ""
+exit 0
+tree:
++ versions/A/course-text/9 New.txt ---------- 644 9 81dcb6094a76ed2444c23a98731f09d8c1bd8a8ac238196303c42e1a6b6e5ad4
+- versions/A/course-text/8 ORDs.txt ---------- 644 40 2957b310694ad7839888baf5598b580aea2258f1c271fb2e524c4525583e5408

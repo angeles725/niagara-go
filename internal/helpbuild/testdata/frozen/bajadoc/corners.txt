@@ -1,0 +1,61 @@
+["out", "Found 18 HTML files to parse"]
+["out", "  ERROR parsing <base>/bajadoc/javax/baja/util/Dangling.html: [Errno 2] No such file or directory: '<base>/bajadoc/javax/baja/util/Dangling.html'"]
+["out", "  ERROR parsing <base>/bajadoc/javax/baja/util/Locked.html: [Errno 13] Permission denied: '<base>/bajadoc/javax/baja/util/Locked.html'"]
+["out", ""]
+["out", "Done in <t>s"]
+["out", "  Parsed: 13"]
+["out", "  Skipped: 3"]
+["out", "  Errors: 2"]
+["out", "  Output: <base>/bajadoc-clean"]
+["exit", 0]
+tree:
+bajadoc d--------- 755
+bajadoc/javax d--------- 755
+bajadoc/javax/baja d--------- 755
+bajadoc/javax/baja/BTop.html ---------- 644 611 53d0618c638d821ea27a323a20c987f0178157641456bc0dca6385421c299ffa
+bajadoc/javax/baja/sys d--------- 755
+bajadoc/javax/baja/sys/BIParent.html ---------- 644 992 851bf7b1e02a5e642b505b2f66e5d889304baf3c2634b03adee8ac753dde138a
+bajadoc/javax/baja/sys/BIThing.html ---------- 644 1767 411e782b9947861f7ced53e209b7cf18763da05bdb6e4f9f0ed9ea387bc569e3
+bajadoc/javax/baja/sys/BMode.html ---------- 644 1281 648683ee6c6c79bbc39b7da04e0f999a28057bb56590e0e4d8968bd61c4b8322
+bajadoc/javax/baja/sys/BSample.html ---------- 644 5773 890acd085fc0c546e17984233877c7177ae5533de0ebfd700d7e70f76f830e64
+bajadoc/javax/baja/sys/Marker.html ---------- 644 717 f9b3f75a5e761839ba1514168321941b65b5816c63d4fb6e7f9cb924c1fa7c04
+bajadoc/javax/baja/util d--------- 755
+bajadoc/javax/baja/util/Alias.html L--------- 777
+bajadoc/javax/baja/util/CrLf.html ---------- 644 710 a304806ba357dc1c7275aeb4001f51dab7f9a93b21c76474d3dfd3f6527f6769
+bajadoc/javax/baja/util/Cursor.html ---------- 644 748 219e72392ed4b84e225600fe8abdc5c2c7b5076e1baa092ea602d6dba475d09b
+bajadoc/javax/baja/util/Dangling.html L--------- 777
+bajadoc/javax/baja/util/Junk.html ---------- 644 85 851f6c31cf991126cf03992314c8dd4093724cc04718066b2c9ed1bc71f85d91
+bajadoc/javax/baja/util/Locked.html ---------- 644 35 a1f6c56f1f1b1c3a75645228414f8c7fd40c88a06cae6289f2ac4db32c555fa5
+bajadoc/javax/baja/util/NoH2.html ---------- 644 594 7d78d32e6f18086f16408f2989878cbfaed8f5d0370aa5ebaa6e07e44c586f5f
+bajadoc/javax/baja/util/NoH2Class.html ---------- 644 514 8341f6417fc52fb4f5652d350c513f34cc6d830eba03ed5192164761c7eafa85
+bajadoc/javax/baja/util/NoPre.html ---------- 644 599 2588da2926a04c88695047e0b0855083d5bb5171a932655020711fe16cf11d8d
+bajadoc/javax/baja/util/PkgSummaryClass.html ---------- 644 595 9738a76397a817ed07da9c8f6b55e23a4147ae47889a9f4891a89788586d124b
+bajadoc/javax/baja/util/Upper.HTML ---------- 644 565 9b8d5cba02474d79eb2c5268bffc68cfde0324761ff6f5c9d677f865e8fd62e6
+bajadoc/javax/baja/util/class-use d--------- 755
+bajadoc/javax/baja/util/class-use/Cursor.html ---------- 644 212 cb84dd017370afb5be41f1106e0d9d8269a9bc851db67b5780a67469c4cb30c1
+bajadoc/javax/baja/util/class-use/deep d--------- 755
+bajadoc/javax/baja/util/class-use/deep/Hidden.html ---------- 644 568 d98fea165b0fd074f9d9fdc3442a4636d4ffd6ae02079e0e35c3a91e0741428f
+bajadoc/javax/baja/util/linked L--------- 777
+bajadoc/javax/baja/util/package-frame.html ---------- 644 13 b633a587c652d02386c4f16f8c6f6aab7352d97f16367c3c40576214372dd628
+bajadoc/javax/baja/util/package-summary.html ---------- 644 589 22bfef98e45f6b0fc5ea45d32291e293e3f35b3331a0c92ee44666e124f55e72
+bajadoc/javax/baja/util/readme.txt ---------- 644 8 356b3e7e291882aef232a9f887fad961b469086c2b69bf14929cd9adc690a4a1
+bajadoc/javax/baja/util/Ünicode.html ---------- 644 664 06c0301428cafcd69a6cfd6aa54989e70b14dd89d0180f8ae56f7df3011e129b
+bajadoc-clean d--------- 755
+bajadoc-clean/BTop.txt ---------- 644 48 45509afec8a8dacb89ce7fddeb8abd6ffb25ea80e91e2389be2664a25e617af6
+bajadoc-clean/NoPre.txt ---------- 644 23 49f0b74d94238ef0be0972f07cf60cdfe6d7439d16c53c9ea863c8d8d37a7ffd
+bajadoc-clean/javax d--------- 755
+bajadoc-clean/javax/baja d--------- 755
+bajadoc-clean/javax/baja/sys d--------- 755
+bajadoc-clean/javax/baja/sys/BIParent.txt ---------- 644 97 02676e0835fb73e7a7dc99c0e9c89fb0125ebf24615dd33c35e711039784c265
+bajadoc-clean/javax/baja/sys/BIThing.txt ---------- 644 144 ce94f0bf25c5c52f9e0e4ad937001197cac1e7d349b2316c168cc815b8eb7f3f
+bajadoc-clean/javax/baja/sys/BMode.txt ---------- 644 127 a153e97afc41cb798ed5c2c98310cd5da932afc2b03ed6c82bfbf9cd60498322
+bajadoc-clean/javax/baja/sys/BSample.txt ---------- 644 961 e0677bf9b42c80d32c66a57e0236b5449b0f3197273bf9c48e083485ad0f9f04
+bajadoc-clean/javax/baja/sys/Marker.txt ---------- 644 72 6225bd448dd6053ca73b439ef53945e88cf05592cc1971b3692c9dd8070c2772
+bajadoc-clean/javax/baja/util d--------- 755
+bajadoc-clean/javax/baja/util/BIFallback.txt ---------- 644 77 a84d51e7c1779a6fa0192ed89ae8e2a0e16cb5ed75be3b6fe7fc5ed4663b585a
+bajadoc-clean/javax/baja/util/CrLf.txt ---------- 644 118 a31fcddea1ca05f08f30769958f4874be4121d82576d2c6d5210f4a644f3db33
+bajadoc-clean/javax/baja/util/Cursor.txt ---------- 644 105 f7813d4286de0f925a1c98b37e86f277722bb6d8cff00183ac560fc781dee6ed
+bajadoc-clean/javax/baja/util/Fallback.txt ---------- 644 41 d87def406b4b61a7b6f8d3101629a3069ddafada9301b7c9457616a4f36b5fad
+bajadoc-clean/javax/baja/util/Ünicode.txt ---------- 644 90 34d3a3319a60f8289205277983ffe5779f56e134d17f3aeafcfe67916fe353dd
+bajadoc-clean/javax/baja/xml d--------- 755
+bajadoc-clean/javax/baja/xml/BFromXml.txt ---------- 644 16 0bfa1b4600fad9d794f3f50ac13fbabf586b747a27e4eccd51b4aa8120acb48d

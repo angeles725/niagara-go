@@ -1,0 +1,10 @@
+stdout "course: no course bound to this version; skipped"
+stdout ""
+stderr ""
+exit 0
+tree:
+- versions/B/course-text d--------- 755
+- versions/B/course-text/stale.txt ---------- 644 15 165e4aa2bdc3760af32dbb44abf49598b80405ef34c35b93b6c607af1da1bca6
+- versions/B/devguide-examples/course d--------- 755
+- versions/B/devguide-examples/course/x d--------- 755
+- versions/B/devguide-examples/course/x/Stale.java ---------- 644 1 2d711642b726b04401627ca9fbac32f5c8530fb1903cc4db02258717921a4881

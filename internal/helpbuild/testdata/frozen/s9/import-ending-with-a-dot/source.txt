@@ -1,0 +1,4 @@
+["out", "Built source-index.json: 3 classes, 9 total lines from source/"]
+["exit", 0]
+indexes:
+source-index.json ---------- 644 302 8681aa07ad773d28981467bc9777574caa9fd3ee038546a94ab520043bf5b561

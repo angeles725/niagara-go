@@ -1,0 +1,5 @@
+["out", "Built source-index.json: 0 classes, 0 total lines from source/"]
+["err", "WARNING: <base> has no source/ directory; indexing devguide-rc/ only"]
+["exit", 0]
+indexes:
+source-index.json ---------- 644 2 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a

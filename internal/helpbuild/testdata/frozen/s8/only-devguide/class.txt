@@ -1,0 +1,4 @@
+["out", "class-index.json: 12 names, 14 classes -> <base>/indexes/class-index.json"]
+["exit", 0]
+indexes:
+class-index.json ---------- 644 2251 6c807d18201c8db4c0ce808ad88415e32a98a1e97c8f4f9b1917dde750144af5

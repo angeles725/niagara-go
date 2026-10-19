@@ -1,0 +1,170 @@
+["out", "extracted 39 files (1,084 bytes)"]
+["out", "  COLLISION guides/ClHVACTest/Tasks.html (docClHVACTest-doc.jar overwritten by docClHVACTest-doc.jar)"]
+["out", "  COLLISION guides/Foo/x.html (docFoo-doc.jar overwritten by docFoo.jar)"]
+["out", "  COLLISION guides/thing-ux/rc/notes.md (thing-ux.jar overwritten by thing-ux.jar)"]
+["out", "fidelity 1.0.0.0: jars 13 checked 39 sha256-exact 38 eol-only 0 mismatched 1 missing 0"]
+["out", "manifest -> versions/1.0.0.0.manifest.json"]
+["result", 1, null, {"files": 39, "bytes": 1084, "collisions": [["guides/ClHVACTest/Tasks.html", "docClHVACTest-doc.jar", "docClHVACTest-doc.jar"], ["guides/Foo/x.html", "docFoo-doc.jar", "docFoo.jar"], ["guides/thing-ux/rc/notes.md", "thing-ux.jar", "thing-ux.jar"]]}, {"checked": 39, "matched": 38, "mismatched": ["guides/Foo/x.html"], "missing": [], "eol_only": [], "collisions": [["guides/ClHVACTest/Tasks.html", "docClHVACTest-doc.jar", "docClHVACTest-doc.jar"], ["guides/thing-ux/rc/notes.md", "thing-ux.jar", "thing-ux.jar"]], "jars": 13}]
+tree:
++ versions/1.0.0.0 d--------- 755
++ versions/1.0.0.0/bajadoc d--------- 755
++ versions/1.0.0.0/bajadoc/index.html ---------- 644 63 96755e18c0435ec50f84a35f7d6a869aa402e1306ba69750058d264e06bd5379
++ versions/1.0.0.0/bajadoc/javax d--------- 755
++ versions/1.0.0.0/bajadoc/javax/baja d--------- 755
++ versions/1.0.0.0/bajadoc/javax/baja/sys d--------- 755
++ versions/1.0.0.0/bajadoc/javax/baja/sys/BObject.html ---------- 644 63 96755e18c0435ec50f84a35f7d6a869aa402e1306ba69750058d264e06bd5379
++ versions/1.0.0.0/devguide d--------- 755
++ versions/1.0.0.0/devguide/changes37.txt ---------- 644 6 3dc3ae00e6d09d5e491895aca9237b14a87deabad03bfb9f5679eb49ff8b9744
++ versions/1.0.0.0/devguide/index.html ---------- 644 63 96755e18c0435ec50f84a35f7d6a869aa402e1306ba69750058d264e06bd5379
++ versions/1.0.0.0/devguide/jsdoc d--------- 755
++ versions/1.0.0.0/devguide/jsdoc/m d--------- 755
++ versions/1.0.0.0/devguide/jsdoc/m/Apache-License-2.0.txt ---------- 644 7 8178ac72b28d77fcb851fcd301583182bd05d9663ed2ec8131e60f057c2795f7
++ versions/1.0.0.0/devguide/o.html ---------- 644 63 96755e18c0435ec50f84a35f7d6a869aa402e1306ba69750058d264e06bd5379
++ versions/1.0.0.0/devguide-examples d--------- 755
++ versions/1.0.0.0/devguide-examples/docDeveloper-ux.lexicon ---------- 644 4 af33f4d149217e9d87375f4a99398f3dd82ec79ecdf714501f39550f91c274da
++ versions/1.0.0.0/devguide-examples/examples d--------- 755
++ versions/1.0.0.0/devguide-examples/examples/bajaux d--------- 755
++ versions/1.0.0.0/devguide-examples/examples/bajaux/ZorbWidget.js ---------- 644 9 1c257d3c8111e943ea265d39d700ab8a6d8681147c54476fcec52fe2f44afe0b
++ versions/1.0.0.0/devguide-examples/rc d--------- 755
++ versions/1.0.0.0/devguide-examples/rc/Playground.built.min.js ---------- 644 6 be879445c87d7e72059ad71c41a8f0f484d12032e91d14f996d1dabc7db1ae1e
++ versions/1.0.0.0/devguide-rc d--------- 755
++ versions/1.0.0.0/devguide-rc/com d--------- 755
++ versions/1.0.0.0/devguide-rc/com/x d--------- 755
++ versions/1.0.0.0/devguide-rc/com/x/A.class ---------- 644 2 03346f0e7990de2423a3bca5335bf92cdc0bd14bef2206b87c63f18a1e996c52
++ versions/1.0.0.0/devguide-rc/com/x/A.java ---------- 644 12 83f23308fc99b44c3b8d187622dab54653555919f62fb41491358231d9c9e7e0
++ versions/1.0.0.0/devguide-rc/com/x/BVal.java ---------- 644 14 ffe1d6fdacdcbb2e56d5d1d23d23fd0a1c16b7a1d3b1492de69ba3520e2dce02
++ versions/1.0.0.0/guides d--------- 755
++ versions/1.0.0.0/guides/ClHVACTest d--------- 755
++ versions/1.0.0.0/guides/ClHVACTest/README.txt ---------- 644 14 fbc89db890c926337f6981a1a816af63b2ba1b4baca1f698a2cc75fb3180965e
++ versions/1.0.0.0/guides/ClHVACTest/Tasks.html ---------- 644 63 96755e18c0435ec50f84a35f7d6a869aa402e1306ba69750058d264e06bd5379
++ versions/1.0.0.0/guides/ClHVACTest/a b d--------- 755
++ versions/1.0.0.0/guides/ClHVACTest/a b/c.md ---------- 644 1 2e7d2c03a9507ae265ecf5b5356885a53393a2029d241394997265a1a25aefc6
++ versions/1.0.0.0/guides/ClHVACTest/cl d--------- 755
++ versions/1.0.0.0/guides/ClHVACTest/cl/hvac d--------- 755
++ versions/1.0.0.0/guides/ClHVACTest/cl/hvac/BAbsolute.bajadoc ---------- 644 4 2a31f44da4bd7decbbd3ddfd1a37ae04d02ec665e2c2688816ccc65631586ed1
++ versions/1.0.0.0/guides/ClHVACTest/crlf.txt ---------- 644 6 58055bdcc73787eb88c78d36f0b4939e9c5dc1c3ad17e25cc85a6833cf1a0cab
++ versions/1.0.0.0/guides/ClHVACTest/emoji😀.txt ---------- 644 1 3f79bb7b435b05321651daefd374cdc681dc06faa65e374e38337b88ca046dea
++ versions/1.0.0.0/guides/ClHVACTest/empty.txt ---------- 644 0 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
++ versions/1.0.0.0/guides/ClHVACTest/index.html ---------- 644 63 96755e18c0435ec50f84a35f7d6a869aa402e1306ba69750058d264e06bd5379
++ versions/1.0.0.0/guides/ClHVACTest/sub d--------- 755
++ versions/1.0.0.0/guides/ClHVACTest/sub/Overview.html ---------- 644 63 96755e18c0435ec50f84a35f7d6a869aa402e1306ba69750058d264e06bd5379
++ versions/1.0.0.0/guides/ClHVACTest/toc.xml ---------- 644 6 d19dc9afb954213b2a09ea9cb7f17d72be467fa5b8e2c7652c96b429ef268ccd
++ versions/1.0.0.0/guides/ClHVACTest/Ünïcode ñ.html ---------- 644 63 96755e18c0435ec50f84a35f7d6a869aa402e1306ba69750058d264e06bd5379
++ versions/1.0.0.0/guides/ClHVACTest/日本語.md ---------- 644 2 21262a3cb5337627b0fad9d891c16adb40706bd3e57534416dd02bbe5917d184
++ versions/1.0.0.0/guides/Foo d--------- 755
++ versions/1.0.0.0/guides/Foo/x.html ---------- 644 23 8f3bbec9ca1e03360839b4777ec9b9a78dba692cf035bd2505e3137ecf09f4ec
++ versions/1.0.0.0/guides/Foo/y.txt ---------- 644 13 033b8a13c4c1dc107936a84f75d87a966865d80506cedadd9d424521428ffedb
++ versions/1.0.0.0/guides/Stored d--------- 755
++ versions/1.0.0.0/guides/Stored/s.txt ---------- 644 14 10fc57f1018d9e17fd81e6a15dae65beb1c301cbd27575e06201ebb0f42773f7
++ versions/1.0.0.0/guides/Stored/z.html ---------- 644 63 96755e18c0435ec50f84a35f7d6a869aa402e1306ba69750058d264e06bd5379
++ versions/1.0.0.0/guides/ascHelp d--------- 755
++ versions/1.0.0.0/guides/ascHelp/About-Asc.html ---------- 644 63 96755e18c0435ec50f84a35f7d6a869aa402e1306ba69750058d264e06bd5379
++ versions/1.0.0.0/guides/ascHelp/lgpl-2.1.txt ---------- 644 4 7c10ea93bd0151bea60dff9f79b8edb1267c552100814b0f144f0eeeb15c2970
++ versions/1.0.0.0/guides/ascHelp/style.css ---------- 644 3 806db221261eade44c886da5317adb894822d146f0f69ed009e59cae83afcbd6
++ versions/1.0.0.0/guides/thing-ux d--------- 755
++ versions/1.0.0.0/guides/thing-ux/jsdoc d--------- 755
++ versions/1.0.0.0/guides/thing-ux/jsdoc/a d--------- 755
++ versions/1.0.0.0/guides/thing-ux/jsdoc/a/b.html ---------- 644 63 96755e18c0435ec50f84a35f7d6a869aa402e1306ba69750058d264e06bd5379
++ versions/1.0.0.0/guides/thing-ux/rc d--------- 755
++ versions/1.0.0.0/guides/thing-ux/rc/notes.md ---------- 644 8 365d0b84ae63c2afc293dedd2b00bdf0dc8d6ef70c9297d90f9e5682ab0d72ee
++ versions/1.0.0.0/guides/workbench-wb d--------- 755
++ versions/1.0.0.0/guides/workbench-wb/com d--------- 755
++ versions/1.0.0.0/guides/workbench-wb/com/tridium d--------- 755
++ versions/1.0.0.0/guides/workbench-wb/com/tridium/workbench d--------- 755
++ versions/1.0.0.0/guides/workbench-wb/com/tridium/workbench/media d--------- 755
++ versions/1.0.0.0/guides/workbench-wb/com/tridium/workbench/media/about.html ---------- 644 63 96755e18c0435ec50f84a35f7d6a869aa402e1306ba69750058d264e06bd5379
++ versions/1.0.0.0/guides/workbench-wb/res d--------- 755
++ versions/1.0.0.0/guides/workbench-wb/res/x d--------- 755
++ versions/1.0.0.0/guides/workbench-wb/res/x/home.html ---------- 644 63 96755e18c0435ec50f84a35f7d6a869aa402e1306ba69750058d264e06bd5379
++ versions/1.0.0.0/jdk d--------- 755
++ versions/1.0.0.0/jdk/jdk-se d--------- 755
++ versions/1.0.0.0/jdk/jdk-se/java d--------- 755
++ versions/1.0.0.0/jdk/jdk-se/java/util d--------- 755
++ versions/1.0.0.0/jdk/jdk-se/java/util/HashMap.bajadoc ---------- 644 4 2a31f44da4bd7decbbd3ddfd1a37ae04d02ec665e2c2688816ccc65631586ed1
++ versions/1.0.0.0/source d--------- 755
++ versions/1.0.0.0/source/baja-rt d--------- 755
++ versions/1.0.0.0/source/baja-rt/javax d--------- 755
++ versions/1.0.0.0/source/baja-rt/javax/baja d--------- 755
++ versions/1.0.0.0/source/baja-rt/javax/baja/sys d--------- 755
++ versions/1.0.0.0/source/baja-rt/javax/baja/sys/BSrc.java ---------- 644 24 bf84075c261a6ea776b7e6bd4420c3d8609532dbe03f57f383590dcda3b22929
++ versions/1.0.0.0/source/doc d--------- 755
++ versions/1.0.0.0/source/doc/index.html ---------- 644 63 96755e18c0435ec50f84a35f7d6a869aa402e1306ba69750058d264e06bd5379
++ versions/1.0.0.0.manifest.json ---------- 644 {
+ "version": "1.0.0.0",
+ "label": "fixture \u00f1",
+ "install_dir": "<tmp>/install",
+ "data_root": "versions/1.0.0.0",
+ "generated_utc": "<utc>",
+ "fidelity": {
+  "jars": 13,
+  "checked": 39,
+  "matched": 38
+ },
+ "eol_only_count": 0,
+ "mismatched": [
+  "guides/Foo/x.html"
+ ],
+ "missing": [],
+ "jars": [
+  {
+   "jar": "modules/docClHVACTest-doc.jar",
+   "bytes": 2285,
+   "sha256": "737fdac8910f86a18e102d4270e14a267a713706b6c7aa6cec4412bd6bd8477d",
+   "mapped_entries": 13
+  },
+  {
+   "jar": "modules/docDeveloper-doc.jar",
+   "bytes": 1103,
+   "sha256": "40f5906a4210aac21b31085c924c78deeaec8923fa8f0313037664fe7a5040a9",
+   "mapped_entries": 6
+  },
+  {
+   "jar": "modules/docDeveloper-rt.jar",
+   "bytes": 596,
+   "sha256": "63e965122ef27e0f23072d68e45fcee0a32acdd1650516873c325bfd82db7fb5",
+   "mapped_entries": 1
+  },
+  {
+   "jar": "modules/docDeveloper-ux.jar",
+   "bytes": 916,
+   "sha256": "801adf6dfa17c8e0ef267ee7f640393ac08b48ca0197fe2d5001f0228a167d9e",
+   "mapped_entries": 3
+  },
+  {
+   "jar": "modules/docFoo-doc.jar",
+   "bytes": 278,
+   "sha256": "b27913407b6996f30a92e9df72c93d1c1424d624f2efdbdd8c5abfc1a9c6a456",
+   "mapped_entries": 2
+  },
+  {
+   "jar": "modules/docFoo.jar",
+   "bytes": 164,
+   "sha256": "78479a4ba62980a642019be93cac83d807255204a2530c5a5d0d0e162acc0b03",
+   "mapped_entries": 1
+  },
+  {
+   "jar": "modules/docJdk-doc.jar",
+   "bytes": 324,
+   "sha256": "038518f29ddd02072b03f679b8a5b5c6894ae39ea98a23fc5fc3923b5c534a5a",
+   "mapped_entries": 1
+  },
+  {
+   "jar": "modules/docSource-doc.jar",
+   "bytes": 491,
+   "sha256": "180a67c75dee416fdba05a2e310d2d1620dbce14182fc68628818574d177fed0",
+   "mapped_entries": 2
+  },
+  {
+   "jar": "modules/docStored-doc.jar",
+   "bytes": 321,
+   "sha256": "08a23207d5c0b193da69ad9ae48b0bca2df6aec6ee801d9b3d5b2111e0723cd2",
+   "mapped_entries": 2
+  },
+  {
+   "jar": "javadoc/niagaraJavadoc.jar",
+   "bytes": 554,
+   "sha256": "a5558a2ecbae4431b569a5568fddc501b07279ca2aa4e4675fe7fab5f9c7b14a",
+   "mapped_entries": 2
+  }
+ ]
+}

@@ -1,0 +1,5 @@
+stdout ""
+stderr "ERROR: course: cannot copy the course into <root>/versions/B: [Errno None] None: '<root>/versions/B/course-text' (course-text/ and devguide-examples/course/ keep their last copy)"
+stderr ""
+exit 2
+tree:
