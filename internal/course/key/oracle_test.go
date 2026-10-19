@@ -202,7 +202,9 @@ func TestRecallReal(t *testing.T) {
 	got := *rows["total"]
 	// 2026-10-17: L10.24 is verified live (from the exported CSV), no longer predicted.
 	// 2026-10-18: every verified marker is live (L10.23, L10.24 and the exam's file status); none offline yet.
-	pinned := Counts{Items: 370, Predicted: 39, Unverified: 20, Corrected: 10, Identical: 50, Verified: 5, Live: 5, Written: 258}
+	// 2026-10-18 (keys 9e7c8a7eb, 5abc827e9): the course progress marks were applied, 83 verified (34 live,
+	// 49 offline) and one more live-run item; docs/course.md "Live run" has the same totals.
+	pinned := Counts{Items: 370, Predicted: 39, Unverified: 20, Corrected: 10, Identical: 50, Verified: 83, Live: 34, Offline: 49, Written: 191}
 	if got != pinned {
 		t.Errorf("totals = %+v, want %+v", got, pinned)
 	}
@@ -212,8 +214,8 @@ func TestRecallReal(t *testing.T) {
 			live++
 		}
 	}
-	if live != 10 || ids != 382 {
-		t.Errorf("live-run items = %d (want 10), distinct IDs with ranges expanded = %d (want 382)", live, ids)
+	if live != 11 || ids != 382 {
+		t.Errorf("live-run items = %d (want 11), distinct IDs with ranges expanded = %d (want 382)", live, ids)
 	}
 	text := strings.Split(strings.TrimSuffix(readSource(t, root, LabText), "\n"), "\n")
 	for _, it := range c.Items {
