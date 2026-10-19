@@ -16,6 +16,7 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/angeles725/niagara-go/internal/atomicfile"
 	"github.com/angeles725/niagara-go/internal/help/fts"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 
@@ -68,10 +69,7 @@ func Build(versionRoot string, opts Options) (*Result, error) {
 	if final == "" {
 		final = DefaultOutput(versionRoot)
 	}
-	if err := os.MkdirAll(filepath.Dir(final), 0o777); err != nil {
-		return nil, err
-	}
-	tmp, err := tempPath(final)
+	tmp, err := atomicfile.TempPath(final) // 0666 less the umask, as SQLite creates a database
 	if err != nil {
 		return nil, err
 	}
@@ -79,12 +77,10 @@ func Build(versionRoot string, opts Options) (*Result, error) {
 	for _, d := range dirs {
 		res.Sources = append(res.Sources, d.Label)
 	}
-	if err := fill(tmp, dirs, fingerprint, workers(opts.Workers), res); err != nil {
-		os.Remove(tmp)
-		return nil, err
-	}
-	if err := os.Rename(tmp, final); err != nil {
-		os.Remove(tmp)
+	err = atomicfile.Replace(final, tmp, func(tmp string) error {
+		return fill(tmp, dirs, fingerprint, workers(opts.Workers), res)
+	}, nil)
+	if err != nil {
 		return nil, err
 	}
 	n, err := pycompat.Format(res.Documents, ",")
@@ -100,31 +96,6 @@ func Build(versionRoot string, opts Options) (*Result, error) {
 // writes and names in its log line when Options.Output is "".
 func DefaultOutput(versionRoot string) string {
 	return pycompat.Join(versionRoot, "indexes", fts.DBName)
-}
-
-// tempPath creates an empty file beside final for the build to fill. It is
-// created with mode 0666 minus the umask, as SQLite and Python create a
-// database (os.CreateTemp's 0600 would make the renamed index private to
-// its owner): CreateTemp only reserves a unique name.
-func tempPath(final string) (string, error) {
-	f, err := os.CreateTemp(filepath.Dir(final), filepath.Base(final)+".*.tmp")
-	if err != nil {
-		return "", err
-	}
-	name := f.Name()
-	f.Close()
-	if err := os.Remove(name); err != nil {
-		return "", err
-	}
-	f, err = os.OpenFile(name, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0o666)
-	if err != nil {
-		return "", err
-	}
-	if err := f.Close(); err != nil {
-		os.Remove(name)
-		return "", err
-	}
-	return name, nil
 }
 
 func workers(n int) int {

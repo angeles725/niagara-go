@@ -2,8 +2,8 @@ package navbuild
 
 import (
 	"bufio"
+	"io"
 	"math"
-	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -134,36 +134,17 @@ func IndexPath(baseDir, name string) string {
 }
 
 // writeIndexStream writes <baseDir>/indexes/<name> atomically like
-// writeIndex, streaming: fill writes the document into a buffered temp file
-// beside the index, which is renamed into place (mode 0644) only when fill and
-// every write succeeded.
-func writeIndexStream(baseDir, name string, fill func(w *bufio.Writer) error) (err error) {
-	path := IndexPath(baseDir, name)
-	f, err := os.CreateTemp(filepath.Dir(path), ".tmp-*"+name)
-	if err != nil {
-		return err
-	}
-	tmp := f.Name()
-	defer func() {
-		if err != nil {
-			f.Close()
-			os.Remove(tmp)
+// writeIndex, streaming (atomicfile.WriteStream): fill writes the document
+// through a 1 MiB buffer into a temp file beside the index, which is renamed
+// into place (mode 0644) only when fill and every write succeeded.
+func writeIndexStream(baseDir, name string, fill func(w *bufio.Writer) error) error {
+	return atomicfile.WriteStream(IndexPath(baseDir, name), 0o644, func(f io.Writer) error {
+		w := bufio.NewWriterSize(f, 1<<20)
+		if err := fill(w); err != nil {
+			return err
 		}
-	}()
-	w := bufio.NewWriterSize(f, 1<<20)
-	if err = fill(w); err != nil {
-		return err
-	}
-	if err = w.Flush(); err != nil {
-		return err
-	}
-	if err = f.Close(); err != nil {
-		return err
-	}
-	if err = os.Chmod(tmp, 0o644); err != nil { // CreateTemp makes 0600
-		return err
-	}
-	return os.Rename(tmp, path)
+		return w.Flush()
+	})
 }
 
 // writeIndex writes data to <baseDir>/indexes/<name> atomically (build.write_json:

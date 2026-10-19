@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/angeles725/niagara-go/internal/atomicfile"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 
 	_ "modernc.org/sqlite" // database/sql driver "sqlite"
@@ -50,17 +51,9 @@ func writeTokenDB(ti *TokenIndex, sources []tokenSource) error {
 	if err := os.MkdirAll(filepath.Dir(ti.Path), 0o777); err != nil {
 		return err
 	}
-	tmp := ti.Path + ".tmp"
+	tmp := ti.Path + ".tmp" // a fixed name, so the next build finds a killed build's leftover
 	removeDB(tmp)
-	if err := fillTokenDB(tmp, ti, sources); err != nil {
-		removeDB(tmp)
-		return err
-	}
-	if err := os.Rename(tmp, ti.Path); err != nil {
-		removeDB(tmp)
-		return err
-	}
-	return nil
+	return atomicfile.Replace(ti.Path, tmp, func(tmp string) error { return fillTokenDB(tmp, ti, sources) }, removeDB)
 }
 
 func removeDB(path string) {
