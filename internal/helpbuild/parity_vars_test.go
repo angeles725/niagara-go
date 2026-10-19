@@ -38,21 +38,11 @@ func parityVar(name string) (bool, error) {
 	return false, fmt.Errorf("%s=%q: the accepted value is 1 (unset turns it off)", name, v)
 }
 
-// parityOn is parityVar failing t on a malformed switch.
-func parityOn(t *testing.T, name string) bool {
-	t.Helper()
-	on, err := parityVar(name)
-	if err != nil {
-		t.Fatal(err)
-	}
-	return on
-}
-
 // parityVars are every HELPBUILD_PARITY_* variable, switches first.
 var parityVars = []string{realParityVar, "HELPBUILD_PARITY_FULL", "HELPBUILD_PARITY_415",
 	"HELPBUILD_PARITY_JARS", "HELPBUILD_PARITY_PDF_DOCS", "HELPBUILD_PARITY_COURSE", "HELPBUILD_PARITY_BAJADOC",
 	"HELPBUILD_PARITY_BAJADOCXML", "HELPBUILD_PARITY_INDEXES", "HELPBUILD_PARITY_COVERAGE", "HELPBUILD_PARITY_SWEEP",
-	rebuildParityVar}
+	"HELPBUILD_PARITY_REBUILD"}
 
 // parityRequested names the first HELPBUILD_PARITY_* variable set (as
 // "NAME=value"), "" when none is: the run asked for parity, so a missing

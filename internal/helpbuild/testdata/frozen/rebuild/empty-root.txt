@@ -1,0 +1,132 @@
+## run --dry-run
+# stdout
+REBUILD-ALL (dry run)
+============================================================
+  SKIP  bajadoc_parser.py          -> bajadoc-clean/  (source 'bajadoc/' absent)
+  SKIP  bajadoc_xml_parser.py      -> bajadoc-clean/  (source 'devguide/' absent)
+  SKIP  build_class_index.py       -> class-index.json, jdk-class-index.json (when jdk/ exists)  (source 'devguide/' absent)
+  SKIP  inheritance_builder.py     -> inheritance.json  (source 'bajadoc-clean/' absent)
+  SKIP  method_indexer.py          -> method-index.json  (source 'bajadoc-clean/' absent)
+  SKIP  source_indexer.py          -> source-index.json  (source 'source/' absent)
+  SKIP  slots_indexer.py           -> slots-index.json  (source 'source/' absent)
+  SKIP  xref_builder.py            -> xref-index.json  (source 'source/' absent)
+  SKIP  guides_parser.py           -> guides-clean/  (source 'guides/' absent)
+  SKIP  build_guides_index.py      -> guides-index.json  (source 'guides/' absent)
+  SKIP  devguide_parser.py         -> devguide-clean/  (source 'devguide/' absent)
+  SKIP  build_devguide_toc.py      -> devguide-toc.json  (source 'devguide/' absent)
+  PLAN  pdf_extractor.py           -> pdf-index.json, docs-text/
+  PLAN  course_extractor.py        -> course-text/
+
+Dry run — nothing executed. Drop --dry-run to build.
+# stderr
+
+# tree
+# texts
+## run
+# stdout
+REBUILD-ALL 
+============================================================
+  SKIP  bajadoc_parser.py          -> bajadoc-clean/  (source 'bajadoc/' absent)
+  SKIP  bajadoc_xml_parser.py      -> bajadoc-clean/  (source 'devguide/' absent)
+  SKIP  build_class_index.py       -> class-index.json, jdk-class-index.json (when jdk/ exists)  (source 'devguide/' absent)
+  SKIP  inheritance_builder.py     -> inheritance.json  (source 'bajadoc-clean/' absent)
+  SKIP  method_indexer.py          -> method-index.json  (source 'bajadoc-clean/' absent)
+  SKIP  source_indexer.py          -> source-index.json  (source 'source/' absent)
+  SKIP  slots_indexer.py           -> slots-index.json  (source 'source/' absent)
+  SKIP  xref_builder.py            -> xref-index.json  (source 'source/' absent)
+  SKIP  guides_parser.py           -> guides-clean/  (source 'guides/' absent)
+  SKIP  build_guides_index.py      -> guides-index.json  (source 'guides/' absent)
+  SKIP  devguide_parser.py         -> devguide-clean/  (source 'devguide/' absent)
+  SKIP  build_devguide_toc.py      -> devguide-toc.json  (source 'devguide/' absent)
+  RUN   pdf_extractor.py           -> pdf-index.json, docs-text/
+SKIP: no PDF manuals for <root> (docs dir: None); search uses the shared manuals.
+  RUN   course_extractor.py        -> course-text/
+course: no course bound to this version; skipped
+
+Ran 2, skipped 12, failed 0.
+Manifest re-stamped. Run 'freshness' to confirm FRESH.
+# stderr
+
+# tree
++ indexes d--------- 755
+# texts
+indexes/.manifest.json 644
+{
+  "stamped_utc": "<utc>",
+  "sources": {
+    "bajadoc": null,
+    "source": null,
+    "guides": null,
+    "devguide": null,
+    "docs": null
+  }
+}
+## log
+# stdout
+  SKIP  bajadoc_parser.py          -> bajadoc-clean/  (source 'bajadoc/' absent)
+  SKIP  bajadoc_xml_parser.py      -> bajadoc-clean/  (source 'devguide/' absent)
+  SKIP  build_class_index.py       -> class-index.json, jdk-class-index.json (when jdk/ exists)  (source 'devguide/' absent)
+  SKIP  inheritance_builder.py     -> inheritance.json  (source 'bajadoc-clean/' absent)
+  SKIP  method_indexer.py          -> method-index.json  (source 'bajadoc-clean/' absent)
+  SKIP  source_indexer.py          -> source-index.json  (source 'source/' absent)
+  SKIP  slots_indexer.py           -> slots-index.json  (source 'source/' absent)
+  SKIP  xref_builder.py            -> xref-index.json  (source 'source/' absent)
+  SKIP  guides_parser.py           -> guides-clean/  (source 'guides/' absent)
+  SKIP  build_guides_index.py      -> guides-index.json  (source 'guides/' absent)
+  SKIP  devguide_parser.py         -> devguide-clean/  (source 'devguide/' absent)
+  SKIP  build_devguide_toc.py      -> devguide-toc.json  (source 'devguide/' absent)
+Ran 2, skipped 12, failed 0.
+  EMPTY class-index.json (its source is not in this install)
+  EMPTY inheritance.json (its source is not in this install)
+  EMPTY method-index.json (its source is not in this install)
+  EMPTY source-index.json (its source is not in this install)
+  EMPTY slots-index.json (its source is not in this install)
+  EMPTY xref-index.json (its source is not in this install)
+  EMPTY guides-index.json (its source is not in this install)
+  EMPTY devguide-toc.json (its source is not in this install)
+# stderr
+
+# tree
++ indexes/class-index.json ---------- 644 2 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a
++ indexes/devguide-toc.json ---------- 644 2 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a
++ indexes/guides-index.json ---------- 644 2 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a
++ indexes/inheritance.json ---------- 644 2 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a
++ indexes/method-index.json ---------- 644 2 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a
++ indexes/pdf-index.json ---------- 644 3 ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356
++ indexes/slots-index.json ---------- 644 2 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a
++ indexes/source-index.json ---------- 644 2 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a
++ indexes/xref-index.json ---------- 644 2 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a
+# texts
+indexes/.manifest.json 644
+{
+  "stamped_utc": "<utc>",
+  "sources": {
+    "bajadoc": null,
+    "source": null,
+    "guides": null,
+    "devguide": null,
+    "docs": null
+  }
+}
+build.log 644
+REBUILD-ALL 
+============================================================
+  SKIP  bajadoc_parser.py          -> bajadoc-clean/  (source 'bajadoc/' absent)
+  SKIP  bajadoc_xml_parser.py      -> bajadoc-clean/  (source 'devguide/' absent)
+  SKIP  build_class_index.py       -> class-index.json, jdk-class-index.json (when jdk/ exists)  (source 'devguide/' absent)
+  SKIP  inheritance_builder.py     -> inheritance.json  (source 'bajadoc-clean/' absent)
+  SKIP  method_indexer.py          -> method-index.json  (source 'bajadoc-clean/' absent)
+  SKIP  source_indexer.py          -> source-index.json  (source 'source/' absent)
+  SKIP  slots_indexer.py           -> slots-index.json  (source 'source/' absent)
+  SKIP  xref_builder.py            -> xref-index.json  (source 'source/' absent)
+  SKIP  guides_parser.py           -> guides-clean/  (source 'guides/' absent)
+  SKIP  build_guides_index.py      -> guides-index.json  (source 'guides/' absent)
+  SKIP  devguide_parser.py         -> devguide-clean/  (source 'devguide/' absent)
+  SKIP  build_devguide_toc.py      -> devguide-toc.json  (source 'devguide/' absent)
+  RUN   pdf_extractor.py           -> pdf-index.json, docs-text/
+SKIP: no PDF manuals for <root> (docs dir: None); search uses the shared manuals.
+  RUN   course_extractor.py        -> course-text/
+course: no course bound to this version; skipped
+
+Ran 2, skipped 12, failed 0.
+Manifest re-stamped. Run 'freshness' to confirm FRESH.

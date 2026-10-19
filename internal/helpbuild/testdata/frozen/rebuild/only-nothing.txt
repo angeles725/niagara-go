@@ -1,0 +1,35 @@
+## run --only zzz
+# stdout
+REBUILD-ALL 
+============================================================
+
+Ran 0, skipped 0, failed 0.
+Manifest re-stamped. Run 'freshness' to confirm FRESH.
+# stderr
+
+# tree
++ indexes d--------- 755
+# texts
+indexes/.manifest.json 644
+{
+  "stamped_utc": "<utc>",
+  "sources": {
+    "bajadoc": {
+      "files": 22,
+      "bytes": 19063
+    },
+    "source": {
+      "files": 13,
+      "bytes": 3143
+    },
+    "guides": {
+      "files": 34,
+      "bytes": 4542
+    },
+    "devguide": {
+      "files": 38,
+      "bytes": 11926
+    },
+    "docs": null
+  }
+}

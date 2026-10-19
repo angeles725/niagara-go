@@ -9,7 +9,7 @@ import (
 )
 
 // Two runs that differ only in the run times build.log records must give
-// the same tree observation (TestParityRebuildSynthetic flaked when a
+// the same tree observation (the retired rebuild parity test flaked when a
 // builder's "Done in N.Ns" differed by one digit), and build.log is put
 // back after the walk with its text and its permission bits (0666 is one
 // the umask would lower if the restore relied on the create mode).
@@ -21,7 +21,7 @@ func TestRebuildTreeLinesNormalizesBuildLogTimes(t *testing.T) {
 		if err := os.Chmod(path, 0o666); err != nil {
 			t.Fatal(err)
 		}
-		lines := rebuildTreeLines(t, root, false, false)
+		lines := rebuildTreeLines(t, root)
 		if got, err := os.ReadFile(path); err != nil || string(got) != log {
 			t.Fatalf("build.log not restored: %q, %v", got, err)
 		}
