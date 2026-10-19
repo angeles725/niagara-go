@@ -29,9 +29,10 @@ The fixtures of all three stay under `internal/course/testdata/`.
 | `docs/n4-dev-course-solutions/certification-exam.md` | exam problems `P<n>` |
 | `sources/n4-dev-course/text/Lab Instructions.txt` | read only by `course text` (lab items, labs) |
 | `sources/n4-dev-course/text/Review Assignment <k>.txt` | read only by `course text` (requirements) |
+| `sources/n4-dev-course/text/*.txt` | every course text file (the slide decks `0`-`10`, `BQL Reference`, `Bonus Slides`, `Pre Course Instructions`, the two above): read only by `course find --slides` |
 
 All three Markdown files are required: a missing one is exit 2, never an empty answer.
-The text files are needed only by `course text`.
+The text files are needed only by `course text` and `course find --slides`.
 
 ## Root discovery
 
@@ -159,6 +160,14 @@ exits 2: an answer key that cannot be read without ambiguity is not searched.
   `course: no item matches <q> (searched N items in labs.md, review-assignments.md,
   certification-exam.md)` on stderr, the scope `show` prints; a regexp that does not compile
   is exit 2.
+- `course find --slides REGEXP [-i]`: the same regexp over every line of every `.txt` file in
+  `sources/n4-dev-course/text/` (the decks the answer keys cite only twice: NEQL, Topic,
+  Subscriber or `BOrdScheme` have no item), one row per matching line, `<deck>:<line>: <text>`
+  (the deck is the file name without `.txt`; the text trimmed and cut at 120 characters), no cap.
+  Decks print in course order: the numbered ones by number (`10 Drivers` after `9 ...`), then the
+  others by name, case folded. No match is exit 1 with `course: no text line matches <q>
+  (searched N lines in M text files in sources/n4-dev-course/text)`; a missing or empty text
+  directory, or a file that cannot be read, is exit 2.
 - `course text ID|GROUP`: the text-file lines of the item's (or the lab's) ranges, numbered,
   with no trailing whitespace (a blank line prints only its number).
   No range is exit 1; a missing text file or a range past its end is exit 2. Requirements
@@ -725,7 +734,11 @@ FAILs, no CONTRADICTED prediction, the item and status counts), not this table.
   case; `check-env-defaults`, `check-env-blank` and `check-flag-beats-env` set them in `cmd.json`.
   `check/stations_test.go`: the station roles and one read per station path.
 - `find_test.go` and the `find-*` goldens: step and answer matches, case folding, the honest
-  zero and a bad regexp.
+  zero and a bad regexp. The Go-only `find-slides*` goldens run `--slides` over five small decks
+  beside the fixture's two text files (`1 Niagara 4 Overview`, `8 ORDs`, `10 Drivers`, `BQL
+  Reference`, `Bonus Slides`): a hit, `-i` across decks, the honest zero with its line count, a
+  bad regexp and a root without the text directory (`nopredict-root`). `slides_test.go`: the deck
+  order; `TestDecksReal` lists and reads every real deck when `NIAGARA_RESEARCH_DIR` is set.
 - `root_test.go`: the discovery order (flag, variable, cwd walk, executable walk) and the
   not-found error, run from a temporary directory with the executable stubbed, so no `labs.md`
   above the real checkout can leak in.

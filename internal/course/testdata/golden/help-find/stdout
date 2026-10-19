@@ -1,4 +1,4 @@
-usage: course find [-h] [--root DIR] [-i] REGEXP
+usage: course find [-h] [--root DIR] [-i] [--slides] REGEXP
 
 positional arguments:
   REGEXP             a Go regexp (RE2), matched line by line
@@ -8,3 +8,5 @@ options:
   --root DIR         niagara-research checkout (default: $NIAGARA_RESEARCH_DIR, then found from
                      cwd)
   -i, --ignore-case  ignore case
+  --slides           search the course text files instead (slide decks, BQL reference, lab and
+                     review instructions): one <deck>:<line>: <text> row per matching line

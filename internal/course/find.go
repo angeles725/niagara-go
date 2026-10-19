@@ -16,9 +16,10 @@ type findHit struct {
 }
 
 // cmdFind prints one row per item whose step or answer matches the Go regexp q (case folded
-// with -i): group, ID, statuses and the first matching line. Exit: 0 at least one match; 1 none
-// (the scope on stderr, as show prints it); 2 a regexp that does not compile.
-func cmdFind(c *key.Corpus, s cli.Stdio, q string, fold bool) int {
+// with -i): group, ID, statuses and the first matching line; with slides it searches the course
+// text files instead (cmdFindSlides). Exit: 0 at least one match; 1 none (the scope on stderr,
+// as show prints it); 2 a regexp that does not compile.
+func cmdFind(c *key.Corpus, s cli.Stdio, root, q string, fold, slides bool) int {
 	expr := q
 	if fold {
 		expr = "(?i)" + q
@@ -27,6 +28,9 @@ func cmdFind(c *key.Corpus, s cli.Stdio, q string, fold bool) int {
 	if err != nil {
 		fmt.Fprintf(s.Err, "course: bad regexp %s: %v\n", q, err)
 		return cli.ExitCannotSearch
+	}
+	if slides {
+		return cmdFindSlides(s, root, q, re)
 	}
 	var hits []findHit
 	for _, it := range c.Items {

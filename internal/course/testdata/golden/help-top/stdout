@@ -38,6 +38,7 @@ examples:
   course progress --lab 3
   course quiz --lab 3 --seed 1 --answers
   course find -i 'history:'
+  course find --slides -i neql
 
 positional arguments:
   {show,status,text,check,verify-predictions,find,verify,progress,quiz}
