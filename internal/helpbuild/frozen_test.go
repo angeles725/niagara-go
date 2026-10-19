@@ -2,6 +2,7 @@ package helpbuild
 
 import (
 	"flag"
+	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -43,6 +44,16 @@ func relabeled(lines []string, pairs ...string) []string {
 	return out
 }
 
+// frozenRoot is testdata/frozen, absolute: read at init, while the working
+// directory is the package's, so a test may change directory.
+var frozenRoot = func() string {
+	p, err := filepath.Abs(filepath.Join("testdata", "frozen"))
+	if err != nil {
+		panic(err)
+	}
+	return p
+}()
+
 // frozenTemp matches a t.TempDir() path ($TMPDIR/<test name><digits>/<seq>)
 // that no relabel named: checkFrozen shows it as <tmp>.
 var frozenTemp = regexp.MustCompile(regexp.QuoteMeta(os.TempDir()) + `/[^/"]+/[0-9]+`)
@@ -52,7 +63,7 @@ var frozenTemp = regexp.MustCompile(regexp.QuoteMeta(os.TempDir()) + `/[^/"]+/[0
 // rewrites the file under -update-frozen.
 func checkFrozen(t *testing.T, name string, got []string) {
 	t.Helper()
-	path := filepath.Join("testdata", "frozen", filepath.FromSlash(name)+".txt")
+	path := filepath.Join(frozenRoot, filepath.FromSlash(name)+".txt")
 	text := frozenTemp.ReplaceAllString(strings.Join(got, "\n"), "<tmp>")
 	if *updateFrozen {
 		writeFile(t, path, []byte(text+"\n"))
@@ -90,4 +101,57 @@ func treeDelta(prev, cur []string) []string {
 		}
 	}
 	return out
+}
+
+// around is a, cut to 160 bytes around its first difference from b (jar
+// lines of a real install are megabytes long).
+func around(a, b string) string {
+	i := 0
+	for i < len(a) && i < len(b) && a[i] == b[i] {
+		i++
+	}
+	lo, hi := i-80, i+80
+	if lo < 0 {
+		lo = 0
+	}
+	if hi > len(a) {
+		hi = len(a)
+	}
+	return fmt.Sprintf("...[%d]%q...", lo, a[lo:hi])
+}
+
+// diffLines fails t when got differs from want, showing the first ten
+// differing lines around their first difference.
+func diffLines(t *testing.T, what string, want, got []string) {
+	t.Helper()
+	n := max(len(want), len(got))
+	bad := 0
+	for i := 0; i < n; i++ {
+		var w, g string
+		if i < len(want) {
+			w = want[i]
+		}
+		if i < len(got) {
+			g = got[i]
+		}
+		if w != g {
+			bad++
+			if bad <= 10 {
+				t.Errorf("%s line %d:\n want %s\n  got %s", what, i+1, around(w, g), around(g, w))
+			}
+		}
+	}
+	if bad > 0 {
+		t.Fatalf("%s: %d of %d lines differ (want %d, got %d)", what, bad, n, len(want), len(got))
+	}
+	t.Logf("%s: %d lines identical", what, n)
+}
+
+func readBytes(t *testing.T, path string) []byte {
+	t.Helper()
+	b, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return b
 }

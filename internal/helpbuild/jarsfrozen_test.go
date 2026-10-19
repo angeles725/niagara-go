@@ -1,0 +1,209 @@
+package helpbuild
+
+import (
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+
+	"github.com/angeles725/niagara-go/internal/pyjson"
+)
+
+// The jar listing and the install rules (S1) on synthetic jars, against
+// their frozen Python output (frozen_test.go): every entry's classification,
+// the listing-cache path of odd install names, and the glob rules.
+
+func str(s string) pyjson.Value { return pyjson.String(s) }
+func boolean(b bool) pyjson.Value {
+	return pyjson.Value{Kind: pyjson.Bool, B: b}
+}
+func optStr(s string) pyjson.Value {
+	if s == "" {
+		return pyjson.Value{}
+	}
+	return str(s)
+}
+func array(vs ...pyjson.Value) pyjson.Value { return pyjson.Value{Kind: pyjson.Array, A: vs} }
+
+// goClassify is the classification of every entry of jars: the listing,
+// then per entry its doc-like, extract, exclude and course rules, the guide,
+// licence and source-archive tests and its clean text name.
+func goClassify(t *testing.T, srcDir string, jars []string) []string {
+	t.Helper()
+	rules := mustDefault(t)
+	var out []string
+	for _, jar := range jars {
+		name := filepath.Base(jar)
+		l := ReadListing(jar)
+		out = append(out, pyjson.Dumps(array(str("jar"), str(name), l.value()), DumpCompact))
+		if l == nil {
+			continue
+		}
+		for _, e := range l.Entries {
+			exclude := pyjson.Value{}
+			if r := rules.ExcludeRule(name, e.Name); r != nil {
+				exclude = array(str(r.ID), str(r.Reason))
+			}
+			course := ""
+			if r := rules.ExcludeRule("(course)", e.Name); r != nil {
+				course = r.ID
+			}
+			extract := ""
+			if r := rules.ExtractRule(name, e.Name); r != nil {
+				extract = r.ID
+			}
+			out = append(out, pyjson.Dumps(array(str("entry"), str(e.Name),
+				boolean(rules.IsDocLike(e.Name)), optStr(extract), exclude, optStr(course),
+				optStr(rules.CourseKind(e.Name)), boolean(IsGuidePage(e.Name)),
+				boolean(IsLicence(e.Name)), boolean(IsSourceArchive("guides/"+e.Name)),
+				str(CleanTextName(e.Name, srcDir))), DumpDefault))
+		}
+	}
+	return out
+}
+
+// syntheticJars mirrors test_doc_jar_completeness / test_install_sweep
+// fixtures plus the central-directory corners: duplicate names,
+// directories, odd UTF-8 names, empty entries, raw cp437 names, extra
+// fields, prepended data and unreadable files.
+func syntheticJars(t *testing.T, dir string) []string {
+	t.Helper()
+	page := "<html><head><title>T</title></head><body><p>x</p></body></html>"
+	jars := map[string][][2]string{
+		"docClHVACTest-doc.jar": {{"doc/toc.xml", "<toc/>"}, {"doc/index.html", page}, {"doc/sub/", ""},
+			{"doc/Tasks.html", page}, {"doc/sub/Overview.html", page}, {"doc/README.txt", "readme quokka\n"},
+			{"doc/Tasks.html", "duplicate"}, {"doc/empty.txt", ""}, {"doc/cl/hvac/BAbsolute.bajadoc", "<x/>"},
+			{"META-INF/MANIFEST.MF", "Manifest-Version: 1.0\n"}},
+		"docDeveloper-ux.jar": {{"examples/bajaux/ZorbWidget.js", "define();"}, {"examples/bajaux/ZorbWidget.hbs", "<div/>"},
+			{"examples/bajaux/ZorbStyle.css", ".z{}"}, {"rc/Playground.built.min.js", "var a;"},
+			{"ext/@babel/standalone/babel.min.js", "var b;"}, {"com/tridium/docdeveloper/ux/Ex.class", "\xca\xfe"},
+			{"docDeveloper-ux.lexicon", "k=v\n"}, {"META-INF/MANIFEST.MF", "M\n"}},
+		"ascHelp.jar": {{"doc/About-Asc.html", page}, {"doc/style.css", "p{}"}, {"doc/lgpl-2.1.txt", "GNU\n"},
+			{"doc/libfoo-1.0.tar.xz", "\xfd7zXZ"}, {"com/acme/asc/BAsc.class", "\xca\xfe"},
+			{"com/acme/asc/icons/asc.png", "\x89PNG"}, {"com/acme/asc/wizard.bog", "<b/>"}, {"doc/About.htm", page},
+			{"doc/readme.MD", "# r\n"}},
+		"thing-ux.jar": {{"rc/notes.md", "# Notes\n"}, {"rc/node_modules/pkg/README.md", "npm\n"}, {"rc/readme.txt", "r\n"},
+			{"rc/env/x.md", "x\n"}, {"rc/vendor/a.md", "v\n"}, {"rc/html/altHelp.html", page}, {"rc/html/page.html", page},
+			{"help.html", page}, {"jsdoc/a/b.html", page}, {"org/apache/words.txt", "a\n"}, {"javax/baja/x.txt", "x"},
+			{"javax/swing/x.txt", "x"}, {"version.txt", "1"}, {"about.html", page}, {"rc/a.css", "a{}"},
+			{"x/package.html", page}, {"lib/ace/a.js", "a"}, {"rc/thing.js", "var x;"}},
+		"workbench-wb.jar":         {{"com/tridium/workbench/media/about.html", page}, {"res/x/home.html", page}},
+		"galileoSupervisor-wb.jar": {{"res/alertonHome.html", page}, {"res/x/home.html", page}},
+		"course-files.jar": {{"text/a.txt", "a"}, {"text/sub/b.txt", "b"}, {"course/Labs/x/A.java", "class A {}"},
+			{"course/Slide Code/y/src/doc/a.html", page}, {"course/a.pdf", "%PDF"}, {"solutions/x.java", "x"},
+			{"niagara-4.15/dev/a/readme.txt", "r"}, {"niagara-4.15/dev/a/README.md", "r"}, {"x.pem", "k"},
+			{"build.gradle.kts", "k"}, {"a.properties", "p"}, {"niagara-4.15/dev/m/src/x.js", "x"}},
+		"odd-names.jar": {{"doc/Ünïcode ñ.html", page}, {"doc/日本語.md", "md"}, {"META-\u0130NF/x", "x"},
+			{"doc/l\u0131cense.txt", "l"}, {"doc/\u212aelvin.Html", page}, {"doc/\u03a3.TXT", "s"}, {"DOC/X.HTM", page},
+			{"doc/a b/c.md", "c"}, {"doc/tab\tname.txt", "t"}, {"doc/new\nline.html", page}, {"doc/Page.HTML", page},
+			{"doc/Page.txt", "p"}, {"doc/changes.txt", "c"}, {"doc/emoji\U0001F600.txt", "e"},
+			{"j\u017fdoc/a.html", page}, {"LICENSE", "l"}, {"doc/COPYING.txt", "c"}},
+	}
+	var paths []string
+	for _, name := range []string{"docClHVACTest-doc.jar", "docDeveloper-ux.jar", "ascHelp.jar", "thing-ux.jar",
+		"workbench-wb.jar", "galileoSupervisor-wb.jar", "course-files.jar", "odd-names.jar"} {
+		p := filepath.Join(dir, name)
+		writeJar(t, p, jars[name]...)
+		paths = append(paths, p)
+	}
+	var high strings.Builder
+	for b := 0x80; b <= 0xff; b++ {
+		high.WriteByte(byte(b))
+	}
+	ok := rawEntry{name: "doc/a.html", data: "a"}
+	raw := []struct {
+		name string
+		data []byte
+	}{
+		{"cp437.jar", rawZip("", []rawEntry{{name: "cp437/" + high.String() + ".txt", data: "x"}, ok}, "")},
+		{"nul.jar", rawZip("", []rawEntry{{name: "doc/a.html\x00.exe", data: "x"}}, "")},
+		{"badutf8flag.jar", rawZip("", []rawEntry{{name: "doc/\xff.html", flags: 0x800}}, "")},
+		{"unicodepath.jar", rawZip("", []rawEntry{{name: "doc/x.html", extra: unicodePath("doc/x.html", "doc/ñ.html")},
+			{name: "doc/y.html", extra: unicodePath("other", "doc/ñ.html")}, {name: "doc/z.html", extra: unicodePath("doc/z.html", "")}}, "")},
+		{"badunicodepath.jar", rawZip("", []rawEntry{{name: "doc/x.html", extra: unicodePath("doc/x.html", "\xff")}}, "")},
+		{"zip64.jar", rawZip("", []rawEntry{{name: "big.txt", data: "12345", size64: true, extra: zip64Size(5)}}, "")},
+		{"shortzip64.jar", rawZip("", []rawEntry{{name: "big.txt", size64: true, extra: extraField(1, []byte{1, 2})}}, "")},
+		{"badextra.jar", rawZip("", []rawEntry{{name: "a.txt", extra: []byte{0x99, 0x99, 0x10, 0}}}, "")},
+		{"prepended.jar", rawZip(strings.Repeat("#", 100), []rawEntry{ok}, "")},
+		{"comment.jar", rawZip("", []rawEntry{ok}, "a comment")},
+		{"zip64eocd.jar", zip64Zip("", []rawEntry{ok, {name: "doc/b.html", data: "b"}}, 1, 0)},
+		{"zip64prepended.jar", zip64Zip(strings.Repeat("#", 50), []rawEntry{ok}, 1, 0)},
+		{"zip64disks.jar", zip64Zip("", []rawEntry{ok}, 2, 0)},
+		{"zip64reloffpast.jar", zip64Zip("", []rawEntry{ok}, 1, 1000)},
+		{"zip64reloffshort.jar", zip64Zip("", []rawEntry{ok}, 1, -1)},
+		{"countone.jar", withEntryCount(rawZip("", []rawEntry{ok, {name: "doc/b.txt", data: "b"}, {name: "doc/c/", data: ""},
+			{name: "doc/d.txt", data: "d"}}, ""), 1)},
+		{"notazip.jar", []byte("plain text, no zip at all")},
+		{"empty.jar", nil},
+		{"truncated.jar", rawZip("", []rawEntry{ok}, "")[:40]},
+	}
+	for _, r := range raw {
+		p := filepath.Join(dir, r.name)
+		writeFile(t, p, r.data)
+		paths = append(paths, p)
+	}
+	d := filepath.Join(dir, "dir.jar")
+	if err := os.Mkdir(d, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	return append(paths, d)
+}
+
+// siblingSrc is a source tree for clean_text_name's X.html sibling check.
+func siblingSrc(t *testing.T) string {
+	t.Helper()
+	src := filepath.Join(t.TempDir(), "src")
+	for _, rel := range []string{"doc/Page.HTML", "doc/changes.html", "rc/readme.html"} {
+		writeFile(t, filepath.Join(src, filepath.FromSlash(rel)), []byte("<p/>"))
+	}
+	return src
+}
+
+// TestClassifyFrozen: the classification of every entry of the synthetic
+// jars, with a source tree for clean_text_name's X.html sibling check.
+func TestClassifyFrozen(t *testing.T) {
+	frozenOnly(t)
+	jars := syntheticJars(t, t.TempDir())
+	checkFrozen(t, "jars/classify", goClassify(t, siblingSrc(t), jars))
+}
+
+// TestCachePathFrozen: the listing-cache path of installs named in odd
+// ways (absolute, relative, doubled and trailing separators, non-ASCII,
+// ".", UNC). The path names a hash of the absolute install path, so the
+// test runs in "/" for the relative installs to resolve the same anywhere.
+func TestCachePathFrozen(t *testing.T) {
+	frozenOnly(t)
+	repo := t.TempDir()
+	t.Chdir("/")
+	var got []string
+	for _, in := range []string{"/srv/niagara/install", "rel/../install", "/a//b/", "/opt/niagara ñ/4.15", ".", "//net/share"} {
+		p, err := CachePath(repo, in)
+		if err != nil {
+			t.Fatal(err)
+		}
+		got = append(got, pyjson.Dumps(str(p), DumpDefault))
+	}
+	checkFrozen(t, "jars/cache-path", relabeled(got, repo, "<repo>"))
+}
+
+// TestGlobFrozen: the glob rules (GlobRe) on every pattern/path pair.
+func TestGlobFrozen(t *testing.T) {
+	pairs := [][2]string{}
+	patterns := []string{"**/node_modules/**", "rc/**.md", "rc/*.md", "res/*Home.html", "*.jar", "doc/x.html",
+		"META-INF/**", "k.jar", "jsdoc/**.html", "a?c", "**", "a+b(c)", "**/", "x**y", "course/Slide Code/**.java",
+		"**/src/doc/*.html", "?", "*"}
+	paths := []string{"node_modules/a.md", "rc/node_modules/a/b", "rc/env/x.md", "rc/x.md", "res/alertonHome.html",
+		"sw/x.jar", "x.jar", "doc/x.htmlx", "doc/x.html", "META-\u0130NF/x", "meta-\u0131nf/x", "\u212a.jar",
+		"j\u017fdoc/a.html", "a/c", "a\nc", "a\nb", "a+b(c)", "", "a/", "xy", "x/a/y", "COURSE/slide code/a/B.JAVA",
+		"m/src/doc/a.html", "src/doc/a.html", "\u00df", "\U0001F600"}
+	for _, p := range patterns {
+		for _, s := range paths {
+			pairs = append(pairs, [2]string{p, s})
+		}
+	}
+	var got []pyjson.Value
+	for _, pr := range pairs {
+		got = append(got, boolean(GlobRe(pr[0]).MatchString(pr[1])))
+	}
+	checkFrozen(t, "jars/glob", []string{pyjson.Dumps(array(got...), DumpDefault)})
+}

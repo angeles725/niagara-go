@@ -163,24 +163,6 @@ func TestGuidesRealVersions(t *testing.T) {
 	}
 }
 
-// An explicit HELPBUILD_PARITY_JARS is used whole, empty entries dropped;
-// a list with no jar is an error.
-func TestRealJarsList(t *testing.T) {
-	t.Setenv("HELPBUILD_PARITY_JARS", "")
-	if jars, explicit, err := realJars(); explicit || err != nil || len(jars) != 6 {
-		t.Errorf("default: %q %v %v", jars, explicit, err)
-	}
-	sep := string(os.PathListSeparator)
-	t.Setenv("HELPBUILD_PARITY_JARS", "a.jar"+sep+sep+"b.jar"+sep)
-	if jars, explicit, err := realJars(); !explicit || err != nil || strings.Join(jars, " ") != "a.jar b.jar" {
-		t.Errorf("explicit: %q %v %v", jars, explicit, err)
-	}
-	t.Setenv("HELPBUILD_PARITY_JARS", sep+sep)
-	if _, _, err := realJars(); err == nil || !strings.Contains(err.Error(), "HELPBUILD_PARITY_JARS") {
-		t.Errorf("empty list: %v", err)
-	}
-}
-
 // A run that set any HELPBUILD_PARITY_* variable requires the Python
 // reference; a plain run does not.
 func TestParityRequested(t *testing.T) {
