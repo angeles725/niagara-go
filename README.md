@@ -58,7 +58,7 @@ make deadcode     # report-only list of unreachable functions (test-only package
 make realdata     # real-data gates on the niagara-research checkout (not in ci)
 make pyparity     # Go vs the frozen pre-go-retire Python reference (D47; not in ci)
 make parity       # realdata + pyparity
-make ci           # check + lint + cross (what CI runs)
+make ci           # check + lint + cross (CI runs each as its own job)
 make build        # static binaries in bin/
 make cross        # bin/linux-amd64/ and bin/windows-amd64/
 ```
