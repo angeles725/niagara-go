@@ -1,0 +1,4 @@
+stdout "ERROR: no install registered for <root>/fresh, so its 1 PDF manuals cannot be refreshed; pass --docs-dir PATH."
+stdout ""
+exit 2
+tree:

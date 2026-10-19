@@ -1,0 +1,5 @@
+stdout "course: course_dir not found: <tmp>/no-course; skipped (the course is optional: course-text/ and devguide-examples/course/ keep their last copy)"
+stdout ""
+stderr ""
+exit 0
+tree:

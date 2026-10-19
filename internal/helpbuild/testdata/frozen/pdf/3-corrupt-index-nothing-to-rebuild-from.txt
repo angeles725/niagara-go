@@ -1,0 +1,4 @@
+stdout "ERROR: <root>/fresh/indexes/pdf-index.json is corrupt or unreadable (Expecting property name enclosed in double quotes: line 1 column 9 (char 8)) and cannot be rebuilt: no PDF manual in the docs dir None. It is kept as found; mount the install or pass --docs-dir PATH."
+stdout ""
+exit 2
+tree:

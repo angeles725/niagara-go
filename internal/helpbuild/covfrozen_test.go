@@ -101,9 +101,6 @@ func covCopy(t *testing.T, src string) string {
 	return dst
 }
 
-// frozenName is s as a file name: spaces as dashes.
-func frozenName(s string) string { return strings.ReplaceAll(s, " ", "-") }
-
 // TestCoverageReportFrozen: the overview, module reports (a prefix match
 // over rt/ux/wb, undocumented classes with and without a package, a module
 // that matches nothing), the guide coverage alone, an empty and a missing

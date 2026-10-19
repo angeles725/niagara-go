@@ -2,6 +2,8 @@ package helpbuild
 
 import (
 	"bytes"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -16,6 +18,7 @@ import (
 	"time"
 
 	"github.com/angeles725/niagara-go/internal/pycompat"
+	"github.com/angeles725/niagara-go/internal/pyjson"
 	"github.com/angeles725/niagara-go/internal/pyref"
 )
 
@@ -407,4 +410,60 @@ func TestParityRebuildReal(t *testing.T) {
 			t.Logf("%s rebuild-all: python %.1fs, go %.1fs", vid, py.Seconds(), gol.Seconds())
 		})
 	}
+}
+
+// pyPDFTreeLines is treeLines of the Python tree root with the intended
+// page-count difference taken out: in base's pdf-index.json every entry
+// whose docs-text/<stem>.txt ends with a form feed has one page less
+// (Python counts that trailing form feed as a page, Go does not). The file
+// on disk is left as Python wrote it, since the next step reads it back.
+func pyPDFTreeLines(t *testing.T, root, base string) []string {
+	t.Helper()
+	lines := treeLines(t, root)
+	path := filepath.Join(base, "indexes", "pdf-index.json")
+	v, err := loadJSON(path)
+	if err != nil || v.Kind != pyjson.Object {
+		return lines // missing or not an index: compared as it is
+	}
+	var less []string // the stems whose pages Python counted one too many
+	for _, stem := range v.Keys {
+		p, ok := v.M[stem].Get("pages")
+		if !ok || p.Kind != pyjson.Int || p.I.Sign() <= 0 {
+			continue
+		}
+		text, err := os.ReadFile(filepath.Join(base, "docs-text", stem+".txt"))
+		if err != nil || !bytes.HasSuffix(text, []byte("\f")) {
+			continue
+		}
+		less = append(less, stem)
+	}
+	if len(less) == 0 {
+		return lines // byte for byte: also an index the test wrote itself
+	}
+	// The adjusted index is re-dumped by Go, so first require that a re-dump
+	// of Python's index as it is reproduces Python's bytes: a serialization
+	// drift must fail here, not hide in the rebuilt hash.
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	diffLines(t, "pyjson.Dumps of Python's pdf-index.json", strings.Split(string(raw), "\n"),
+		strings.Split(pyjson.Dumps(v, DumpPDFIndex), "\n"))
+	for _, stem := range less {
+		e := v.M[stem]
+		p, _ := e.Get("pages")
+		e.Set("pages", pyjson.IntValue(p.I.Int64()-1))
+	}
+	data := []byte(pyjson.Dumps(v, DumpPDFIndex))
+	sum := sha256.Sum256(data)
+	rel, err := filepath.Rel(root, path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for i, l := range lines {
+		if f := strings.Fields(l); len(f) == 5 && f[0] == filepath.ToSlash(rel) {
+			lines[i] = fmt.Sprintf("%s %s %s %d %s", f[0], f[1], f[2], len(data), hex.EncodeToString(sum[:]))
+		}
+	}
+	return lines
 }

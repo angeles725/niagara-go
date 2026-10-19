@@ -1,0 +1,5 @@
+stdout ""
+stderr "ERROR: course: cannot copy the course into <root>/versions/A: `<tmp>/course-src/text/pipe.txt` is a named pipe (course-text/ and devguide-examples/course/ keep their last copy)"
+stderr ""
+exit 2
+tree:

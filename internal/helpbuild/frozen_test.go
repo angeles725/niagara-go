@@ -33,6 +33,23 @@ func frozenOnly(t *testing.T) {
 	}
 }
 
+// frozenName is s as a portable file name: each run of characters other
+// than ASCII letters, digits, "." and "_" becomes one "-".
+func frozenName(s string) string {
+	var b strings.Builder
+	dash := false
+	for _, r := range s {
+		if r < 0x80 && (r == '.' || r == '_' || '0' <= r && r <= '9' || 'a' <= r|0x20 && r|0x20 <= 'z') {
+			b.WriteRune(r)
+			dash = false
+		} else if !dash {
+			b.WriteByte('-')
+			dash = true
+		}
+	}
+	return strings.Trim(b.String(), "-")
+}
+
 // relabeled is lines with each path of pairs (path, label, ...) shown as its
 // label; list the longer paths first.
 func relabeled(lines []string, pairs ...string) []string {

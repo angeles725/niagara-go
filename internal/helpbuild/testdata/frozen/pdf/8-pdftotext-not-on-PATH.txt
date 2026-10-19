@@ -1,0 +1,4 @@
+stdout "ERROR: pdftotext not found on PATH. Install poppler-utils."
+stdout ""
+exit 1
+tree:
