@@ -13,14 +13,15 @@ const (
 	researchBloqueSuffix = ".md"
 )
 
-// researchLegacy is the marker of the checkouts that still hold the Python shims.
+// researchLegacy is a compatibility fallback marker: the tools/corpus-nav.py shim.
+// The corpus files are the marker; this one can go once no checkout relies on it.
 var researchLegacy = filepath.Join("tools", "corpus-nav.py")
 
 // ResearchCheckout accepts a niagara-research checkout without depending on any
 // Python file: dir holds CATALOG.md as a regular file and at least one regular
-// file niagara-mental-model-bloque*.md at its top level (what corpus-nav reads),
-// or, for the checkouts that still hold the shims, tools/corpus-nav.py as any
-// non-directory (the Python seam's is_file; no checkout holds a device there).
+// file niagara-mental-model-bloque*.md at its top level (what corpus-nav reads).
+// As a compatibility fallback only, tools/corpus-nav.py as any non-directory also
+// marks a checkout (the Python seam's is_file; no checkout holds a device there).
 // Symlinks are followed. A repository that is not the corpus but holds both a
 // CATALOG.md and a bloque file at its top level is a false positive.
 func ResearchCheckout(dir string) bool {
