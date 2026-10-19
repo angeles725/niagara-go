@@ -1,0 +1,6 @@
+["out", "Built method-index.json: 19 unique names, 25 total members from 19 files"]
+["exit", 0]
+indexes:
+class-index.json ---------- 644 2 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a
+inheritance.json ---------- 644 1580 830a832043b4807fcd86c513a377eb37f3f6a86373f25fdf81d3dc5b37ab579b
+method-index.json ---------- 644 4008 ee75bffa2a8e3c7393624d70e2ae592c5b737236545a0245a1a95afe13dcdd06

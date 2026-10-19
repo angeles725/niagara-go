@@ -1,0 +1,42 @@
+devguide d--------- 755
+devguide/baja d--------- 755
+devguide/baja/javax d--------- 755
+devguide/baja/javax/baja d--------- 755
+devguide/baja/javax/baja/sys d--------- 755
+devguide/baja/javax/baja/sys/BComponent.bajadoc ---------- 644 259 d61a403ee0e0440661e51b6b32d7392c64196ace8678739108d19ebe1fdeb233
+devguide/baja/javax/baja/sys/BIObject.bajadoc ---------- 644 194 1a8968c7b0dbfa4a900f9994dc6c0d785b452e5f68c307b1f3349a2b1ff9171b
+devguide/baja/javax/baja/sys/Pair.bajadoc ---------- 644 717 8a6c7c38b4d3f96e5b023e78af02c6d4d6e0270dee8b23a0bebdda3eb1f371cc
+devguide/baja/javax/baja/util d--------- 755
+devguide/baja/javax/baja/util/Cursor.bajadoc ---------- 644 192 b181a8fb33c70e0875a34324144341e4d67144ba588deb7e88bb078e11e354ac
+devguide/baja/module-index.bajadoc ---------- 644 131 fcf662dc0def67737c7f33834326c72a54a272aa4672c407bf0160d597bce484
+devguide/control d--------- 755
+devguide/control/Z d--------- 755
+devguide/control/Z/com d--------- 755
+devguide/control/Z/com/z d--------- 755
+devguide/control/Z/com/z/BSame.bajadoc ---------- 644 139 5b0a97e273bc21651de4173b99b1824d9082523956c779028f94ab50f657f55e
+devguide/control/a-first d--------- 755
+devguide/control/a-first/com d--------- 755
+devguide/control/a-first/com/a d--------- 755
+devguide/control/a-first/com/a/BSame.bajadoc ---------- 644 150 a300d2ae040bbd81bfbbb6480412b34a028c020a04e0a90d157d8c5a34663ddb
+devguide/control/b d--------- 755
+devguide/control/b/com d--------- 755
+devguide/control/b/com/a d--------- 755
+devguide/control/b/com/a/BSame.bajadoc ---------- 644 150 cfb79e74757bebbeb42673b5c4dcd000ee37b1e8635e7aaf4df7e6dbbb02786f
+devguide/control/com d--------- 755
+devguide/control/com/tridium d--------- 755
+devguide/control/com/tridium/control d--------- 755
+devguide/control/com/tridium/control/BBroken.bajadoc ---------- 644 282 b22d9f4e8505b487e0557302f302fa1f8db2b56e4525f678cfc62242458d4443
+devguide/control/com/tridium/control/BComponent.bajadoc ---------- 644 194 32e283fd204c790ba9ecdbb354386d9b620f746f764d87ebdb0ab68b3b1cabf2
+devguide/control/com/tridium/control/BFolder.bajadoc ---------- 644 206 823c89871eafb1122c7db7b476b278bc82107f4ffdc5746486cee92af5ad9457
+devguide/control/com/tridium/control/BHopeless.bajadoc ---------- 644 78 a4dcd7a0f5da1be556e4937c4aeac7a19962015c0e07360fd07120c0fb4ad1d1
+devguide/control/com/tridium/control/Latin.bajadoc ---------- 644 189 61aaac621c9f1b90bb48f6006865d0439b5cbda70a47c0e4425d318d4c9e222f
+devguide/control/com/tridium/control/Ns.bajadoc ---------- 644 111 cce3da5ba2d1388f65c1478df329c9a9488b4032305d1d1558e559605a9ad476
+devguide/control/com/tridium/control/Upper.BAJADOC ---------- 644 167 5440880a0bbdcd530bb696f6c6c92fe5688497ce76dd9b95416149495dbfc9a9
+devguide/mod é d--------- 755
+devguide/mod é/javax d--------- 755
+devguide/mod é/javax/baja d--------- 755
+devguide/mod é/javax/baja/util d--------- 755
+devguide/mod é/javax/baja/util/BÜber.bajadoc ---------- 644 176 2969c9a90d2eb16d2bec7cff0662b25b67d777cae1a6111420ada0226c2fb20a
+indexes d--------- 755
+indexes/class-index.json ---------- 644 2251 6c807d18201c8db4c0ce808ad88415e32a98a1e97c8f4f9b1917dde750144af5
+indexes/method-index.json ---------- 644 2 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a

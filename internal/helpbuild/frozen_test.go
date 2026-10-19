@@ -31,6 +31,17 @@ func frozenOnly(t *testing.T) {
 	}
 }
 
+// relabeled is lines with each path of pairs (path, label, ...) shown as its
+// label; list the longer paths first.
+func relabeled(lines []string, pairs ...string) []string {
+	r := strings.NewReplacer(pairs...)
+	out := make([]string, len(lines))
+	for i, l := range lines {
+		out[i] = r.Replace(l)
+	}
+	return out
+}
+
 // checkFrozen compares got (an element may hold several lines) with
 // testdata/frozen/<name>.txt, or rewrites the file under -update-frozen.
 func checkFrozen(t *testing.T, name string, got []string) {

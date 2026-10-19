@@ -1,0 +1,41 @@
+bajadoc-clean d--------- 755
+bajadoc-clean/com d--------- 755
+bajadoc-clean/com/a d--------- 755
+bajadoc-clean/com/a/BFolder.txt ---------- 644 47 3a4812027bd726553710888899c18f40130edc8e28a35fad753c4afbf691ed13
+bajadoc-clean/com/bom d--------- 755
+bajadoc-clean/com/bom/BBom.txt ---------- 644 32 d90027f4c95e695c474aa8a80da46f1254774ac65741e87f2eed4b8a0ca33deb
+bajadoc-clean/com/emptypkg d--------- 755
+bajadoc-clean/com/emptypkg/BFolder.txt ---------- 644 25 d1f875766ee846aced1bcde51f7ab85ef4241f8fb6c935988d39a3509dd94845
+bajadoc-clean/com/nopkg d--------- 755
+bajadoc-clean/com/nopkg/BFolder.txt ---------- 644 51 414db67c6f9559ee2616c907208c5688c51fd36942ddaaa884071e5ed0823109
+bajadoc-clean/com/space d--------- 755
+bajadoc-clean/com/space/BSpace.txt ---------- 644 74 e2a42161c153ab1f26b89990d74bdbd4d3bd01e8a5e78841f4fbd361738b7abd
+bajadoc-clean/com/tridium d--------- 755
+bajadoc-clean/com/tridium/control d--------- 755
+bajadoc-clean/com/tridium/control/BFolder.txt ---------- 644 99 24ec4f4158049a26deba7bde1a596cee06622aeb7cc0b6071097a7a9dbe91378
+bajadoc-clean/com/twice d--------- 755
+bajadoc-clean/com/twice/One.txt ---------- 644 47 535c9420432e8a6842efb2da88069eed00eeb07f0ac083cce769366f770d021f
+bajadoc-clean/com/twice/Two.txt ---------- 644 48 1b17cfe87345a5e29b0429fbaaa94a62c51321180d4df975e1b9e807bc42565b
+bajadoc-clean/com/uni d--------- 755
+bajadoc-clean/com/uni/BÄrger.txt ---------- 644 131 cf7e01b7be04ef3a822ef08fc1e0f056e5cc3b5227d5c064205724f8d37d890c
+bajadoc-clean/javax d--------- 755
+bajadoc-clean/javax/baja d--------- 755
+bajadoc-clean/javax/baja/sys d--------- 755
+bajadoc-clean/javax/baja/sys/BAbstractService.txt ---------- 644 133 2490b8f8bebde03d384acc25994cb0d7bba846579b71834dd106053eb41a8a71
+bajadoc-clean/javax/baja/sys/BComponent.txt ---------- 644 740 81ac728075b8f8c300ddbfe3f32c6be8d0823002a205601d37a01bcf75936b52
+bajadoc-clean/javax/baja/sys/BIObject.txt ---------- 644 133 b5bc212443deea143db06debeeded9a5d27800f754dd5dae93594d3373a74611
+bajadoc-clean/javax/baja/sys/BMode.txt ---------- 644 84 1e03d3e3d5d7ded8bbd9bc519cb55aebfb7c1db7395a9d03f1808a84528020ba
+bajadoc-clean/javax/baja/sys/Empty.txt ---------- 644 0 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+bajadoc-clean/javax/baja/sys/Marker.txt ---------- 644 74 1c4f72121c3e408078d3fbc23223bc536bc1007ae17e4ffcdea59e9f781dce9b
+bajadoc-clean/javax/baja/sys/NoClass.txt ---------- 644 54 490cd5c7aa1d9dadfb5ba36909a766a7bfd6975861321e89cdb586d26ef7d6b3
+bajadoc-clean/javax/baja/sys/NoHeaderClass.txt ---------- 644 19 250f71312055abb38a61088e0fd694fda4ce83c2574dd638ac6a459c2ff8c57a
+bajadoc-clean/javax/baja/sys/notes.TXT ---------- 644 13 56dc84647d74c092c73974ce0dbccfef5d4477e29dd30fd30d6d71fd36b83c42
+bajadoc-clean/javax/baja/util d--------- 755
+bajadoc-clean/javax/baja/util/BFolder.txt ---------- 644 87 376575c3b0d941c67fdb274f5df1bf84010e16d7c6eb4e95a94f5c2874df643f
+bajadoc-clean/org d--------- 755
+bajadoc-clean/org/nomembers d--------- 755
+bajadoc-clean/org/nomembers/BNone.txt ---------- 644 80 92ceeaa8c3b60b1b264cec245fce81cff2ec7c642a97c3d000e9348811b5cc9b
+indexes d--------- 755
+indexes/class-index.json ---------- 644 2 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a
+indexes/inheritance.json ---------- 644 1580 830a832043b4807fcd86c513a377eb37f3f6a86373f25fdf81d3dc5b37ab579b
+indexes/method-index.json ---------- 644 4008 ee75bffa2a8e3c7393624d70e2ae592c5b737236545a0245a1a95afe13dcdd06

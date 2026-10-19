@@ -1,0 +1,6 @@
+["out", "Built method-index.json: 0 unique names, 0 total members from 0 files"]
+["exit", 0]
+indexes:
+class-index.json ---------- 644 2 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a
+jdk-class-index.json ---------- 644 527 f3141bfc5b6eff1e1a910385ed2f354f399e92e742c0fc188e128ad603ca9abb
+method-index.json ---------- 644 2 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a

@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-// Go-only twin of TestParityS8Unreadable (no Python needed): an input that
+// With TestS8UnreadableFrozen (the frozen Python output): an input that
 // cannot be read (a .bajadoc for class-index, a bajadoc-clean/ page for
 // method-index) stops the builder with an error, and the indexes it would
 // have written are not replaced by partial ones: the previous files stay
