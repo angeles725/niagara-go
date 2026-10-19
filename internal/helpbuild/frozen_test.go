@@ -9,6 +9,8 @@ import (
 	"runtime"
 	"strings"
 	"testing"
+
+	"github.com/angeles725/niagara-go/internal/difflib"
 )
 
 // The frozen expectations of the tests that compared this package with the
@@ -171,4 +173,28 @@ func readBytes(t *testing.T, path string) []byte {
 		t.Fatal(err)
 	}
 	return b
+}
+
+// lineDelta is how the line sequence cur differs from prev, as hunks with
+// no context: "@@ i1,i2 j1,j2" (prev[i1:i2] becomes cur[j1:j2]), then "- "
+// before each line of prev[i1:i2] and "+ " before each of cur[j1:j2]
+// (difflib's matching blocks, without autojunk). Unlike treeDelta it keeps
+// the order and repeated lines, so it fits observations that are not tree
+// listings.
+func lineDelta(prev, cur []string) []string {
+	var out []string
+	i, j := 0, 0
+	for _, m := range difflib.New(nil, prev, cur, false).GetMatchingBlocks() {
+		if i < m.A || j < m.B {
+			out = append(out, fmt.Sprintf("@@ %d,%d %d,%d", i, m.A, j, m.B))
+			for _, l := range prev[i:m.A] {
+				out = append(out, "- "+l)
+			}
+			for _, l := range cur[j:m.B] {
+				out = append(out, "+ "+l)
+			}
+		}
+		i, j = m.A+m.Size, m.B+m.Size
+	}
+	return out
 }

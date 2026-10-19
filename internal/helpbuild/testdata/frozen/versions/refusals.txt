@@ -1,0 +1,24 @@
+## <dir>/nope
+# stdout
+ERROR: <dir>/nope is not a Niagara install (no modules/ folder)
+
+# exit 2
+# tree
+## <dir>/install --id 4.15
+# stdout
+ERROR: version id '4.15' is not of the form a.b.c.d (digits); it names the data root versions/<id>/. Pass --id a.b.c.d
+
+# exit 2
+# tree
+## <dir>/install --id 
+# stdout
+ERROR: cannot detect the Niagara version of <dir>/install (no modules/baja.jar vendorVersion, no a.b.c.d in the folder name); pass --id
+
+# exit 2
+# tree
+## <dir>/install --id ١.٢.٣.٤x
+# stdout
+ERROR: version id '١.٢.٣.٤x' is not of the form a.b.c.d (digits); it names the data root versions/<id>/. Pass --id a.b.c.d
+
+# exit 2
+# tree
