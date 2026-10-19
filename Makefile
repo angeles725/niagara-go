@@ -96,6 +96,8 @@ realdata:
 		-run '^TestCoverageRealGoldens$$' ./internal/helpbuild
 	NIAGARA_RESEARCH_DIR=$(RESEARCH) $(GO) test -count=1 -timeout 30m \
 		-run '^(TestCheckLiveStations|TestVerifyPredictionsTrainingStation)$$' ./internal/course/check
+	NIAGARA_RESEARCH_DIR=$(RESEARCH) $(GO) test -count=1 -timeout 30m \
+		-run '^(TestRecallReal|TestQuizPoolReal)$$' ./internal/course/key ./internal/course
 	$(GO) test -count=1 -timeout 30m -run '^TestRecallRealBogs$$' ./internal/bog
 	HDBREAD_REAL_HDB='$(HDBREAD_REAL_HDB)' $(GO) test -count=1 -timeout 5m \
 		-run '^TestRealHarborHistory$$' ./internal/hdbread

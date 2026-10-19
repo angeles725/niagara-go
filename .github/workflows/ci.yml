@@ -15,7 +15,7 @@ concurrency:
 
 # The three `make ci` targets run as separate jobs so one failure does not hide the others
 # (make stops at the first failing target), and each can be a required check on its own.
-# Real-data and Python-parity suites (make realdata/pyparity) need off-host data and stay local.
+# The real-data suites (make realdata) need off-host data and stay local.
 jobs:
   check:
     name: check (fmt, vet, test)
