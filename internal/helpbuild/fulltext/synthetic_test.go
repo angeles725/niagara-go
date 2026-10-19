@@ -4,17 +4,15 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
 	"testing"
 
 	"github.com/angeles725/niagara-go/internal/help/fts"
-	"github.com/angeles725/niagara-go/internal/pyref"
 )
 
-var update = flag.Bool("update", false, "regenerate testdata/synthetic.dump with the Python builder")
+var update = flag.Bool("update", false, "rewrite testdata/synthetic.dump from the Go build (review the diff)")
 
 // hideRoot rewrites the temp root in the stored fingerprint.
 func hideRoot(root string) func(string) string {
@@ -23,14 +21,20 @@ func hideRoot(root string) func(string) string {
 
 const syntheticDump = "testdata/synthetic.dump"
 
-func TestBuildMatchesPythonOnSyntheticTree(t *testing.T) {
+// TestBuildMatchesSyntheticDump compares the canonical dump of the Go build
+// of the synthetic tree with testdata/synthetic.dump, the dump of the Python
+// builder's index of the same tree (frozen when D47 retired the Python
+// reference); -update rewrites it from the Go build.
+func TestBuildMatchesSyntheticDump(t *testing.T) {
 	root := writeTree(t)
+	out := filepath.Join(t.TempDir(), "out", fts.DBName)
+	res, err := Build(root, Options{Output: out, Workers: 3})
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := dumpText(out, hideRoot(root))
 	if *update {
-		py := filepath.Join(t.TempDir(), "python.sqlite")
-		if err := pythonBuild(t, root, py); err != nil {
-			t.Fatal(err)
-		}
-		if err := os.WriteFile(syntheticDump, []byte(dumpText(py, hideRoot(root))), 0o644); err != nil {
+		if err := os.WriteFile(syntheticDump, []byte(got), 0o644); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -38,12 +42,6 @@ func TestBuildMatchesPythonOnSyntheticTree(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	out := filepath.Join(t.TempDir(), "out", fts.DBName)
-	res, err := Build(root, Options{Output: out, Workers: 3})
-	if err != nil {
-		t.Fatal(err)
-	}
-	got := dumpText(out, hideRoot(root))
 	if runtime.GOOS == "windows" {
 		// Captured on Linux: the fingerprint row holds the native-separator source paths and
 		// the file system's mtime resolution (100 ns on NTFS); every other record must match.
@@ -52,7 +50,7 @@ func TestBuildMatchesPythonOnSyntheticTree(t *testing.T) {
 	}
 	if got != string(want) {
 		_, diffs := compareDumps(lines(string(want)), lines(got), 10)
-		t.Fatalf("Go dump differs from the Python one:\n%s", strings.Join(diffs, "\n"))
+		t.Fatalf("Go dump differs from testdata/synthetic.dump:\n%s", strings.Join(diffs, "\n"))
 	}
 	if res.Fingerprint != fts.Fingerprint(fts.SourceDirs(root)) {
 		t.Errorf("Result.Fingerprint is not the reader's fingerprint")
@@ -85,37 +83,6 @@ func lines(s string) func(func(string) bool) {
 			}
 		}
 	}
-}
-
-// pythonTools is python3 and the tools/ of the frozen niagara-help Python
-// (internal/pyref, D47: the pre-go-retire worktree, $NIAGARA_HELP_PY_REF); it
-// skips when either is missing, or off Linux, and fails under PYREF_REQUIRED=1
-// (`make parity`). The data a build reads is never taken from there.
-func pythonTools(t *testing.T) (python, tools string) {
-	t.Helper()
-	python = pyref.Python(t)
-	tools = filepath.Join(pyref.Dir(t, "niagara-help"), "tools")
-	if _, err := os.Stat(filepath.Join(tools, "niagara_help_lib", "fulltext_index.py")); err != nil {
-		t.Fatalf("the niagara-help reference has no fulltext_index.py: %v", err)
-	}
-	return python, tools
-}
-
-// pythonBuild runs the reference's fulltext_index.build(root, path=out,
-// quiet=True) (pythonTools); it never writes into root's checkout.
-func pythonBuild(t *testing.T, root, out string) error {
-	t.Helper()
-	python, tools := pythonTools(t)
-	cmd := exec.Command(python, "-I", "-B", "-c",
-		"import sys; sys.path.insert(0, sys.argv[1]); "+
-			"from niagara_help_lib import fulltext_index as f; "+
-			"f.build(sys.argv[2], path=sys.argv[3], quiet=True)",
-		tools, root, out)
-	cmd.Env = append(os.Environ(), pyref.Env("niagara-help")...)
-	if b, err := cmd.CombinedOutput(); err != nil {
-		t.Fatalf("python build %s: %v\n%s", root, err, b)
-	}
-	return nil
 }
 
 func TestBuildIsTheSameForAnyWorkerCount(t *testing.T) {
