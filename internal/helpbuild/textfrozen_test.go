@@ -8,9 +8,7 @@ import (
 	"regexp"
 	"strings"
 	"testing"
-	"time"
 
-	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 )
 
@@ -81,18 +79,9 @@ func TestPDFIndexStatesFrozen(t *testing.T) {
 	frozenOnly(t)
 	real := needPdftotext(t)
 	dir := t.TempDir()
+	// pdftotext on PATH, as the parity run had it; no step here converts a
+	// PDF, so the build of the binary does not matter.
 	t.Setenv("PATH", fakeBin(t, dir, real)+string(os.PathListSeparator)+os.Getenv("PATH"))
-	// Only the timeout fixture (<pdf>.sleep) gets 1 s, on both sides;
-	// every other PDF keeps the 120 s default.
-	t.Setenv("HB_PDF_TIMEOUT", "1")
-	saved := pdfTimeout
-	t.Cleanup(func() { pdfTimeout = saved })
-	pdfTimeout = func(pdf string, d time.Duration) time.Duration {
-		if pycompat.IsFile(pdf + ".sleep") {
-			return time.Second
-		}
-		return d
-	}
 	install := filepath.Join(dir, "install")
 	syntheticDocs(t, filepath.Join(install, "docs"))
 	emptyDocs := filepath.Join(dir, "empty-docs")
