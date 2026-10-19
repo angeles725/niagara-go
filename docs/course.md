@@ -618,14 +618,26 @@ lines); `next` would name only the second half, and `progress` reads naturally w
 
 ## course quiz
 
-`course quiz [--lab GROUP] [--kind why|decision|trap] [-n N] [--seed S] [--answers]` draws study
+`course quiz [--lab GROUP] [--kind why|decision|trap|recall|predict] [-n N] [--seed S] [--answers]` draws study
 questions from the answer keys; it reads no station.
 
 | Kind | Items | Prompt | Answer |
 |---|---|---|---|
-| `why` | lab items whose step asks `*Why ...?*` (any case), or whose answer starts with one (the question then joins the prompt) | the step | the answer (without the leading question) |
+| `why` | lab items whose step asks `*Why ...?*` (any case), or whose answer holds one anywhere (the question then joins the prompt) | the step | the answer after the question |
 | `decision` | the review-assignment decisions (`D<k>.<n>`, the `Why` tables) | `Why this decision? <decision>` | the `Why` cell |
 | `trap` | the review-assignment traps (`T<k>.<n>`) | `What goes wrong, and what does this solution do? <trap>` | what goes wrong + this solution |
+| `recall` | lab items whose step is ``Name = `value` `` (a plain name; Lab 8's ORDs) | `What is the ORD of <Name>?` in a section about ORDs, else `What is <Name>?` | the value (without its `LI:` citation), then the item's own answer |
+| `predict` | lab items whose step asks to `*Observe*` (any case of the O) | `Predict what you observe, and why: <step>` | the answer |
+
+A lab item takes the first kind that fits, in the order of the table (so an `*Observe*` step whose
+answer asks `*Why ...?*` is a why question). The pool keeps only questions that can be studied:
+the answer is neither empty nor a placeholder (`(step only)`, `Setup.`, `Setup only.`); a lab
+question (why, recall, predict) points at a course text range (`LI:`), the source its answer is
+traced to; a predict answer holds at least 30 runes once its status markers and evidence lines
+are dropped (this leaves out "as stated.", "The wizard wrote it." and "standard JDWP banner.", 10
+to 21 runes; the shortest kept is 40). A recall answer is the value itself, so it has no length
+floor. Decisions and traps are answered by the review-assignment key, which has no course text
+range: they keep the empty/placeholder rule only.
 
 `--lab` and `--kind` narrow the pool; `-n` is the number of questions (default 5; fewer when the
 pool holds fewer). The order is a Fisher-Yates shuffle driven by a PCG seeded with `--seed`, so the
@@ -638,7 +650,7 @@ follows the questions: `A<n>. <ID> [<status>] <file>:<line>` and the answer. Non
 design (testable, no state files; spaced repetition is out of scope).
 
 Exit: 0 at least one question drawn; 1 an unknown group, or no question of the kinds in the
-groups (`course: no why, decision, trap question in RAX (searched 10 items)`); 2 the answer keys
+groups (`course: no why, decision, trap, recall, predict question in RAX (searched 10 items)`); 2 the answer keys
 or a text file cannot be read, a drawn item's range lies outside its text file (the message of
 `course text`, before any question is printed), or `-n` below 1. The replay line shell-quotes a
 `--lab` value the shell would split or expand.
@@ -665,7 +677,7 @@ keys at `5abc827e9`.
 | `course verify --status verified` | 83: CONFIRMED 83 (31 live, 52 offline lines); 110 checks run |
 | `course progress` | 370 items: checked 125, CONFIRMED 83, PARTIAL 39, CONTRADICTED 3, UNDECIDED 245; 155 checks run; 3 `redo` (C3.4, CRA1.2, CRA1.10), 0 `mark` |
 | `course status` | verified 83: live 34, offline 49 |
-| `course quiz -n 500` | 89 questions: why 34, decision 29, trap 26 |
+| `course quiz -n 500` | 125 questions: why 43, decision 29, trap 26, recall 11, predict 16 |
 
 To regenerate it, set the variables and run the commands of the table (zsh: run loops in `bash -c`):
 
@@ -826,6 +838,12 @@ FAILs, no CONTRADICTED prediction, the item and status counts), not this table.
   zero) and `quiz-bad-n`: the pool of the `root` fixture (L1.1 asks its why in the answer, L1.5 and
   L2.1 in the step, D1.1, T1.1), one seed one order, the clock's seed printed, the eight-line cap,
   a missing or short text file (exit 2, on a copy of the fixture) and the quoted `--lab` replay.
+  `quizpool_test.go` over the `quiz-root` fixture: a why in the middle of the answer (L1.1), the
+  recall items L1.2 and L1.3 (a step with no answer of its own), the predict items L1.4 and L1.10,
+  and the items left out (L1.5 placeholder, L1.6 too short, L1.7 and L1.8 without course text).
+  `TestQuizPoolSolid` checks every question of both fixtures (no empty, placeholder or unsourced
+  answer, no answer its prompt states, no two items with one prompt or one answer) and
+  `TestQuizPoolReal` the real keys, under `NIAGARA_RESEARCH_DIR`, logging the pool size per kind.
   `TestProgressCannotCheck` pins the two exit-2 paths of progress (a bad `--date` with a station;
   every linked check skipped), `TestProgressJSONGroup` the group key of the actions.
 - `check/verify_test.go` `TestSuggestionEvidence` and `TestEvidenceOfEveryKind`: the live/offline

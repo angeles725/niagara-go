@@ -12,7 +12,7 @@ import (
 )
 
 // The quiz pool of the root fixture: the why questions L1.1 (leading its answer), L1.5 and L2.1
-// (in the step), the decision D1.1 and the trap T1.1.
+// (in the step), the decision D1.1, the trap T1.1 and the predict L1.4 (L2.6 answers too briefly).
 func TestQuizPool(t *testing.T) {
 	cases := []struct {
 		name string
@@ -22,7 +22,7 @@ func TestQuizPool(t *testing.T) {
 		not  []string
 	}{
 		{"every kind", []string{"-n", "9", "--seed", "1"}, 0,
-			[]string{"quiz: 5 of 5 questions (why, decision, trap; every group), seed 1\n", "L1.1 ", "L1.5 ", "L2.1 ", "D1.1 ", "T1.1 ",
+			[]string{"quiz: 6 of 6 questions (why, decision, trap, recall, predict; every group), seed 1\n", "L1.1 ", "L1.5 ", "L2.1 ", "D1.1 ", "T1.1 ", "L1.4 (predict",
 				"answers: course quiz -n 9 --seed 1 --answers\n"},
 			[]string{"L1.2 ", "\nanswers\n"}},
 		{"a why question leading the answer", []string{"--kind", "why", "--lab", "1", "--seed", "3", "--answers"}, 0,

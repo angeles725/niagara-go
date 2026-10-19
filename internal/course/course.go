@@ -145,10 +145,11 @@ func buildParser() (*argparse.Parser, map[string]*argparse.Parser) {
 	pg.Add(solutionsArg, "--solutions")
 	pg.Add(argparse.Arg{Metavar: "YYYY-MM-DD", Help: "date written in the suggested *(verified live|offline ...)* lines (default: today)"}, "--date")
 	pg.Add(jsonHelp, "--json")
-	qz := add("quiz", "draw why, decision and trap questions from the answer keys; --answers prints the answers after them")
+	qz := add("quiz", "draw why, decision, trap, recall and predict questions from the answer keys; --answers prints the answers after them")
 	qz.Add(argparse.Arg{Metavar: "GROUP", Help: "one group: a lab number (3 or L3), B, A, RA1, RA2, RAX, RA (all three), EXAM"}, "--lab")
-	qz.Add(argparse.Arg{Choices: []any{quizWhy, quizDecision, quizTrap}, Help: "one kind: why (a lab *Why ...?* question), " +
-		"decision (a review-assignment design decision), trap (a review-assignment trap)"}, "--kind")
+	qz.Add(argparse.Arg{Choices: []any{quizWhy, quizDecision, quizTrap, quizRecall, quizPredict}, Help: "one kind: why (a lab *Why ...?* question), " +
+		"decision (a review-assignment design decision), trap (a review-assignment trap), " +
+		"recall (a lab Name = `value` step), predict (a lab *Observe* step)"}, "--kind")
 	qz.Add(argparse.Arg{Type: argparse.Int, Default: 5, Metavar: "N", Help: "questions to draw (default: 5; fewer when the selection holds fewer)"}, "-n")
 	qz.Add(argparse.Arg{Type: argparse.Int, Metavar: "S", Help: "the draw's seed: the same seed draws the same quiz (default: from the clock, printed)"}, "--seed")
 	qz.Add(argparse.Arg{Action: argparse.StoreTrue, Help: "print every answer and its status after the questions"}, "--answers")
