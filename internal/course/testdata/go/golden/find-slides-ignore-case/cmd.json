@@ -1,0 +1,1 @@
+{"args": ["--root", "root", "find", "--slides", "-i", "neql|bordscheme|^bql"], "cwd_fixture": ".."}

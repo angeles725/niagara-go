@@ -1,0 +1,5 @@
+ORDs
+An ORD is a list of queries: scheme:body.
+BOrdScheme parses one scheme.
+bql:select name, out from control:NumericWritable
+NEQL: n:point

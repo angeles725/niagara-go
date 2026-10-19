@@ -37,6 +37,8 @@ func TestQuizPool(t *testing.T) {
 		{"empty pool", []string{"--kind", "trap", "--lab", "1"}, 1, nil, nil},
 		{"unknown group", []string{"--lab", "9"}, 1, nil, nil},
 		{"no question asked", []string{"-n", "0"}, 2, nil, nil},
+		{"-n does not apply under --ids", []string{"--ids", "L1.1", "-n", "0", "--answers"}, 0,
+			[]string{"quiz: 1 of 6 questions (why, decision, trap, recall, predict; every group), ids L1.1\n", "A1. L1.1 "}, nil},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {

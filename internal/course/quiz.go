@@ -50,6 +50,7 @@ var (
 	markRe     = regexp.MustCompile(`\*\([^)]*\)\*`)
 	evidenceRe = regexp.MustCompile(`(?m)evidence:.*$`)
 	spaceRe    = regexp.MustCompile(`\s+`)
+	ordWordRe  = regexp.MustCompile(`\bORDs?\b`) // a section about ORDs, not RECORDS
 )
 
 // placeholders are the answers that answer nothing: a step with no answer (key/labs.go writes
@@ -62,12 +63,14 @@ type question struct {
 	kind   string
 	prompt string
 	answer string
+	before string // the answer text before a mid-answer *Why ...?*, printed with the answer
 }
 
 // asQuestion returns the item as a question, or false. A lab item is, in this order: a why
 // question when its step asks *Why ...?*, or its answer does (the question joins the prompt, the
-// answer is what follows it); a recall question when its step is Name = `value` (the value, then
-// the item's own answer, is the answer); a predict question when its step asks to *Observe*. A
+// answer is what follows it, the text before it prints with the answer); a recall question when
+// its step is Name = `value` (the value, then the item's own answer, is the answer; the prompt asks
+// for an ORD in a section naming the word ORD or ORDs); a predict question when its step asks to *Observe*. A
 // question must also be solid (see solid).
 func asQuestion(it *key.Item) (question, bool) {
 	q := question{it: it, prompt: it.Step, answer: it.Answer}
@@ -84,10 +87,11 @@ func asQuestion(it *key.Item) (question, bool) {
 		m := whyAnyRe.FindStringIndex(it.Answer)
 		q.kind, q.prompt = quizWhy, it.Step+"\n"+spaceRe.ReplaceAllString(it.Answer[m[0]:m[1]], " ")
 		q.answer = strings.TrimSpace(it.Answer[m[1]:])
+		q.before = strings.TrimSpace(spaceRe.ReplaceAllString(it.Answer[:m[0]], " "))
 	case recallRe.MatchString(it.Step):
 		m := recallRe.FindStringSubmatch(it.Step)
 		q.kind, q.prompt = quizRecall, "What is "+m[1]+"?"
-		if strings.Contains(it.Section, "ORD") {
+		if ordWordRe.MatchString(it.Section) {
 			q.prompt = "What is the ORD of " + m[1] + "?"
 		}
 		q.answer = strings.TrimSpace(liCiteRe.ReplaceAllString(m[2], ""))
@@ -204,10 +208,10 @@ func shellQuote(s string) string {
 // order of the seed, or asks the --ids items in their order, prints each prompt, then, with
 // --answers, every answer, its status and its course text. Exit: 0 drawn; 1 an unknown group, no
 // question in the selection (the honest zero) or an --ids item that is no question of it; 2 -n
-// below 1, an --ids ID the keys do not hold (a usage error), or a text file that cannot be read or
+// below 1 without --ids (where -n does not apply), an --ids ID the keys do not hold (a usage error), or a text file that cannot be read or
 // does not hold a drawn item's range (the errors of course text).
 func cmdQuiz(c *key.Corpus, s cli.Stdio, root string, o quizOpts) int {
-	if o.count < 1 {
+	if !o.hasIDs && o.count < 1 { // -n does not apply under --ids
 		fmt.Fprintf(s.Err, "course: -n %d asks no question (want 1 or more)\n", o.count)
 		return cli.ExitCannotSearch
 	}
@@ -278,6 +282,9 @@ func cmdQuiz(c *key.Corpus, s cli.Stdio, root string, o quizOpts) int {
 	fmt.Fprintln(s.Out, "answers")
 	for i, q := range drawn {
 		fmt.Fprintf(s.Out, "\nA%d. %s [%s] %s:%d\n", i+1, q.it.ID, strings.Join(q.it.StatusLabels(), ", "), q.it.File, q.it.Line)
+		if q.before != "" {
+			fmt.Fprintf(s.Out, "    before the why: %s\n", q.before)
+		}
 		printIndented(s.Out, q.answer)
 		printContext(s.Out, q.it, texts[q.it.TextFile])
 	}

@@ -29,9 +29,10 @@ The fixtures of all three stay under `internal/course/testdata/`.
 | `docs/n4-dev-course-solutions/certification-exam.md` | exam problems `P<n>` |
 | `sources/n4-dev-course/text/Lab Instructions.txt` | read only by `course text` (lab items, labs) |
 | `sources/n4-dev-course/text/Review Assignment <k>.txt` | read only by `course text` (requirements) |
+| `sources/n4-dev-course/text/*.txt` | every course text file (the slide decks `0`-`10`, `BQL Reference`, `Bonus Slides`, `Pre Course Instructions`, the two above): read only by `course find --slides` |
 
 All three Markdown files are required: a missing one is exit 2, never an empty answer.
-The text files are needed only by `course text`.
+The text files are needed only by `course text` and `course find --slides`.
 
 ## Root discovery
 
@@ -157,12 +158,32 @@ exits 2: an answer key that cannot be read without ambiguity is not searched.
   group, ID, statuses and the first matching line (the step first, then the answer lines,
   trimmed, cut at 120 characters), the columns aligned. No match is exit 1 with
   `course: no item matches <q> (searched N items in labs.md, review-assignments.md,
-  certification-exam.md)` on stderr, the scope `show` prints; a regexp that does not compile
-  is exit 2.
+  certification-exam.md)` on stderr, the scope `show` prints, then, when the course text files
+  match, `course: N slide hits: rerun with --slides` (no hint when they do not, or cannot be
+  read); a regexp that does not compile is exit 2.
+- `course find --slides REGEXP [-i]`: the same regexp over every line of every `.txt` file in
+  `sources/n4-dev-course/text/` (the decks the answer keys cite only twice: NEQL, Topic,
+  Subscriber or `BOrdScheme` have no item), one row per matching line, `<deck>:<line>: <text>`
+  (the deck is the file name without `.txt`; the text trimmed and cut at 120 characters), no cap.
+  Decks print in course order: the numbered ones by number (`10 Drivers` after `9 ...`), then the
+  others by name, case folded. No match is exit 1 with `course: no text line matches <q>
+  (searched N lines in M text files in sources/n4-dev-course/text)`; a missing or empty text
+  directory, or a file that cannot be read, is exit 2.
 - `course text ID|GROUP`: the text-file lines of the item's (or the lab's) ranges, numbered,
   with no trailing whitespace (a blank line prints only its number).
   No range is exit 1; a missing text file or a range past its end is exit 2. Requirements
   print their `Review Assignment <k>.txt` lines.
+- `course text DECK:A[-B]`: lines A..B of one course text file, in the same numbered shape
+  (head `<file>:<range> (<deck>)`), so a `find --slides` hit or a key's citation opens as is.
+  A target with a colon is a deck reference (no item ID or group holds one). The deck name is
+  matched case folded, without any directory or `.txt` (`8 ORDs`, `8 ORDs.txt`,
+  `sources/n4-dev-course/text/8 ORDs.txt` are the same deck); `LI` is `Lab Instructions`, as
+  the keys cite it; otherwise a unique prefix, one that ends a word winning over one that cuts
+  a word (`1` is `1 Niagara 4 Overview`, not `10 Drivers`; `9` is `9 Multithreaded
+  Development`). An unknown deck is exit 1 naming the decks searched; an ambiguous prefix
+  (`course: text file B is ambiguous: Bonus Slides, BQL Reference`), a range outside the file
+  (`course: 8 ORDs: range 4-9 is outside <file> (5 lines)`, the message of an item range) or a
+  missing text directory is exit 2.
 
 ## course check
 
@@ -623,10 +644,10 @@ questions from the answer keys; it reads no station.
 
 | Kind | Items | Prompt | Answer |
 |---|---|---|---|
-| `why` | lab items whose step asks `*Why ...?*` (any case), or whose answer holds one anywhere (the question then joins the prompt) | the step | the answer after the question |
+| `why` | lab items whose step asks `*Why ...?*` (any case), or whose answer holds one anywhere (the question then joins the prompt) | the step | the answer after the question (in the answers block, the answer text before it first, as `before the why: <text>`) |
 | `decision` | the review-assignment decisions (`D<k>.<n>`, the `Why` tables) | `Why this decision? <decision>` | the `Why` cell |
 | `trap` | the review-assignment traps (`T<k>.<n>`) | `What goes wrong, and what does this solution do? <trap>` | what goes wrong + this solution |
-| `recall` | lab items whose step is ``Name = `value` `` (a plain name; Lab 8's ORDs) | `What is the ORD of <Name>?` in a section about ORDs, else `What is <Name>?` | the value (without its `LI:` citation), then the item's own answer |
+| `recall` | lab items whose step is ``Name = `value` `` (a plain name; Lab 8's ORDs) | `What is the ORD of <Name>?` in a section naming the word `ORD` or `ORDs` (not `RECORDS`), else `What is <Name>?` | the value (without its `LI:` citation), then the item's own answer |
 | `predict` | lab items whose step asks to `*Observe*` (any case of the O) | `Predict what you observe, and why: <step>` | the answer |
 
 A lab item takes the first kind that fits, in the order of the table (so an `*Observe*` step whose
@@ -668,7 +689,7 @@ selection, or no question of the kinds in the
 groups (`course: no why, decision, trap, recall, predict question in RAX (searched 10 items)`); 2 the answer keys
 or a text file cannot be read, a drawn item's range lies outside its text file (the message of
 `course text`, before any question is printed; checked without `--answers` too, so the replay line
-works, but not under `--no-context`), `-n` below 1, or an empty or unknown `--ids` ID (a usage
+works, but not under `--no-context`), `-n` below 1 without `--ids`, or an empty or unknown `--ids` ID (a usage
 error). The replay line shell-quotes a
 `--lab` value the shell would split or expand.
 
@@ -725,7 +746,17 @@ FAILs, no CONTRADICTED prediction, the item and status counts), not this table.
   case; `check-env-defaults`, `check-env-blank` and `check-flag-beats-env` set them in `cmd.json`.
   `check/stations_test.go`: the station roles and one read per station path.
 - `find_test.go` and the `find-*` goldens: step and answer matches, case folding, the honest
-  zero and a bad regexp.
+  zero and a bad regexp. The Go-only `find-slides*` goldens run `--slides` over five small decks
+  beside the fixture's two text files (`1 Niagara 4 Overview`, `8 ORDs`, `10 Drivers`, `BQL
+  Reference`, `Bonus Slides`): a hit, `-i` across decks, the honest zero with its line count, a
+  bad regexp and a root without the text directory (`nopredict-root`); `find-slide-hint` (no
+  item, two slide hits) and `find-no-dir-no-hint` the hint. `slides_test.go`: the deck
+  order and `resolveDeck` (exact, `.txt` and directory stripped, the `LI` alias, word prefix
+  over cut prefix, ambiguous, unknown, a substring that is no prefix); `TestDecksReal` lists and
+  reads every real deck and `TestDeckCitationsReal` opens the two deck lines the keys cite, when
+  `NIAGARA_RESEARCH_DIR` is set. The Go-only `text-deck*` goldens: a range, a key citation, a
+  word prefix (with a blank line), the alias, an ambiguous prefix, an unknown deck, a range past
+  the end and a reversed range.
 - `root_test.go`: the discovery order (flag, variable, cwd walk, executable walk) and the
   not-found error, run from a temporary directory with the executable stubbed, so no `labs.md`
   above the real checkout can leak in.

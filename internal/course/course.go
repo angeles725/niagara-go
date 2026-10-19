@@ -46,13 +46,15 @@ examples:
   course show L1.9 RA1.R6 P2
   course status --lab 6 --status predicted
   course text L5.16
+  course text '8 ORDs:343'
   course check --station ~/Niagara4.15/tridium/stations/TrainingStation \
     --install /opt/Niagara/Niagara-4.15.6.20 --lab 4 --lab 10
   course verify-predictions --station ~/Niagara4.15/tridium/stations/TrainingStation
   course verify --status written --lab RA1
   course progress --lab 3
   course quiz --lab 3 --seed 1 --answers
-  course find -i 'history:'`
+  course find -i 'history:'
+  course find --slides -i neql`
 
 // rootParent holds --root: None on the main parser, SUPPRESS on the subcommands, so the
 // flag works before or after the subcommand.
@@ -105,8 +107,9 @@ func buildParser() (*argparse.Parser, map[string]*argparse.Parser) {
 	}
 	st.Add(argparse.Arg{Choices: choices, Help: "list the items carrying this status (written = no marker)"}, "--status")
 	st.Add(jsonHelp, "--json")
-	t := add("text", "print the course text lines an item (or a lab) points at")
-	t.Add(argparse.Arg{Metavar: "ID|GROUP", Help: "item ID or group (L3, 3, B, A)"}, "target")
+	t := add("text", "print the course text lines an item (or a lab) points at, or lines of a deck")
+	t.Add(argparse.Arg{Metavar: "ID|GROUP|DECK:LINE", Help: "item ID or group (L3, 3, B, A), or DECK:A[-B] " +
+		"(\"8 ORDs:343\", \"9:110-163\"; a deck name or a unique prefix of one, as find --slides prints it)"}, "target")
 	ck := add("check", "check what each lab leaves in a station (and the built jars): PASS/FAIL/SKIP per check")
 	ck.Add(stationArg, "--station")
 	ck.Add(installArg, "--install")
@@ -126,6 +129,8 @@ func buildParser() (*argparse.Parser, map[string]*argparse.Parser) {
 	fd := add("find", "items whose step or answer matches a regexp: group, ID, status and the first matching line")
 	fd.Add(argparse.Arg{Metavar: "REGEXP", Help: "a Go regexp (RE2), matched line by line"}, "query")
 	fd.Add(argparse.Arg{Action: argparse.StoreTrue, Help: "ignore case"}, "-i", "--ignore-case")
+	fd.Add(argparse.Arg{Action: argparse.StoreTrue, Help: "search the course text files instead (slide decks, BQL " +
+		"reference, lab and review instructions): one <deck>:<line>: <text> row per matching line"}, "--slides")
 	vf := add("verify", "decide every item of a status from its linked checks: CONFIRMED, PARTIAL, CONTRADICTED or UNDECIDED")
 	vf.Add(argparse.Arg{Required: true, Choices: choices, Help: "the status of the items to decide (written = no marker)"}, "--status")
 	vf.Add(argparse.Arg{Metavar: "GROUP", Help: "one group: a lab number (3 or L3), B, A, RA1, RA2, RAX, RA (all three), EXAM"}, "--lab")
@@ -196,7 +201,7 @@ func Main(args []string, s cli.Stdio) int {
 	case "verify-predictions":
 		return cmdVerify(c, s, o, "predicted", nil, ns.String("date"), ns.Bool("json"))
 	case "find":
-		return cmdFind(c, s, ns.String("query"), ns.Bool("ignore_case"))
+		return cmdFind(c, s, root, ns.String("query"), ns.Bool("ignore_case"), ns.Bool("slides"))
 	case "verify", "progress":
 		var groups []string
 		if ns.Get("lab") != nil {

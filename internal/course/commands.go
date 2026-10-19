@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/cli"
@@ -147,8 +148,17 @@ func readText(root, file string) ([]string, string) {
 	return key.SplitLines(raw), ""
 }
 
-// cmdText prints the numbered text lines of an item's or a group's ranges.
+// cmdText prints the numbered text lines of an item's or a group's ranges, or of a deck line
+// reference DECK:A[-B] (cmdDeckText).
 func cmdText(c *key.Corpus, s cli.Stdio, root, target string) int {
+	if m := deckRefRe.FindStringSubmatch(target); m != nil {
+		a, _ := strconv.Atoi(m[2])
+		b := a
+		if m[3] != "" {
+			b, _ = strconv.Atoi(m[3])
+		}
+		return cmdDeckText(s, root, m[1], key.Range{A: a, B: b})
+	}
 	var file, label string
 	var ranges []key.Range
 	if it := c.Lookup(target); it != nil {
@@ -165,6 +175,12 @@ func cmdText(c *key.Corpus, s cli.Stdio, root, target string) int {
 		fmt.Fprintf(s.Err, "course: %s has no text range\n", label)
 		return cli.ExitNoMatch
 	}
+	return printText(s, root, file, label, ranges)
+}
+
+// printText prints the numbered lines of ranges of a text file under a "file:range (label)" head
+// each. Exit 0, or 2 when the file cannot be read or a range is outside it.
+func printText(s cli.Stdio, root, file, label string, ranges []key.Range) int {
 	lines, msg := readText(root, file)
 	if msg != "" {
 		fmt.Fprintf(s.Err, "course: %s\n", msg)
