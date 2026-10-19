@@ -158,8 +158,9 @@ exits 2: an answer key that cannot be read without ambiguity is not searched.
   group, ID, statuses and the first matching line (the step first, then the answer lines,
   trimmed, cut at 120 characters), the columns aligned. No match is exit 1 with
   `course: no item matches <q> (searched N items in labs.md, review-assignments.md,
-  certification-exam.md)` on stderr, the scope `show` prints; a regexp that does not compile
-  is exit 2.
+  certification-exam.md)` on stderr, the scope `show` prints, then, when the course text files
+  match, `course: N slide hits: rerun with --slides` (no hint when they do not, or cannot be
+  read); a regexp that does not compile is exit 2.
 - `course find --slides REGEXP [-i]`: the same regexp over every line of every `.txt` file in
   `sources/n4-dev-course/text/` (the decks the answer keys cite only twice: NEQL, Topic,
   Subscriber or `BOrdScheme` have no item), one row per matching line, `<deck>:<line>: <text>`
@@ -748,7 +749,8 @@ FAILs, no CONTRADICTED prediction, the item and status counts), not this table.
   zero and a bad regexp. The Go-only `find-slides*` goldens run `--slides` over five small decks
   beside the fixture's two text files (`1 Niagara 4 Overview`, `8 ORDs`, `10 Drivers`, `BQL
   Reference`, `Bonus Slides`): a hit, `-i` across decks, the honest zero with its line count, a
-  bad regexp and a root without the text directory (`nopredict-root`). `slides_test.go`: the deck
+  bad regexp and a root without the text directory (`nopredict-root`); `find-slide-hint` (no
+  item, two slide hits) and `find-no-dir-no-hint` the hint. `slides_test.go`: the deck
   order and `resolveDeck` (exact, `.txt` and directory stripped, the `LI` alias, word prefix
   over cut prefix, ambiguous, unknown, a substring that is no prefix); `TestDecksReal` lists and
   reads every real deck and `TestDeckCitationsReal` opens the two deck lines the keys cite, when

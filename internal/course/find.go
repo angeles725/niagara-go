@@ -17,7 +17,7 @@ type findHit struct {
 
 // cmdFind prints one row per item whose step or answer matches the Go regexp q (case folded
 // with -i): group, ID, statuses and the first matching line; with slides it searches the course
-// text files instead (cmdFindSlides). Exit: 0 at least one match; 1 none (the scope on stderr,
+// text files instead (cmdFindSlides). No item hit counts the slide hits in a hint. Exit: 0 at least one match; 1 none (the scope on stderr,
 // as show prints it); 2 a regexp that does not compile.
 func cmdFind(c *key.Corpus, s cli.Stdio, root, q string, fold, slides bool) int {
 	expr := q
@@ -43,6 +43,12 @@ func cmdFind(c *key.Corpus, s cli.Stdio, root, q string, fold, slides bool) int 
 	}
 	if len(hits) == 0 {
 		fmt.Fprintf(s.Err, "course: no item matches %s (%s)\n", q, scope(c))
+		// The decks hold what no item covers: say when they match (a text directory that
+		// cannot be read only drops the hint).
+		n := 0
+		if _, _, msg := scanDecks(root, re, func(deck, int, string) { n++ }); msg == "" && n > 0 {
+			fmt.Fprintf(s.Err, "course: %s: rerun with --slides\n", key.Plural(n, "slide hit"))
+		}
 		return cli.ExitNoMatch
 	}
 	gw, iw, sw := 0, 0, 0

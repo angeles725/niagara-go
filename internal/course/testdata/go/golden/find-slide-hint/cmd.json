@@ -1,0 +1,1 @@
+{"args": ["--root", "root", "find", "-i", "neql|subscriber"], "cwd_fixture": ".."}
