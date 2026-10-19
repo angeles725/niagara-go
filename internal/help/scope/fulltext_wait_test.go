@@ -180,7 +180,9 @@ func TestEnsureFulltextFollowsARebuildAtMostLockFollowMax(t *testing.T) {
 // changing faster than lockWait (holders replacing each other, or a torn
 // read of a lock being written) does not extend a search past lockFollowMax.
 func TestEnsureFulltextCapIsNotResetByChangingHolders(t *testing.T) {
-	lockTiming(t, testPoll, testWait, time.Hour)
+	// lockWait above lockFollowMax: a writer goroutine stalled past a short lockWait would
+	// let the stale-wait deadline build early, so only the follow cap can end the wait here.
+	lockTiming(t, testPoll, time.Second, time.Hour)
 	followMax(t, 300*time.Millisecond)
 	root := noIndexCheckout(t)
 	lock := fts.DBPath(root) + ".lock"
