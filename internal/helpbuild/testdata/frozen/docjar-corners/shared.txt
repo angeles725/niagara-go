@@ -1,0 +1,18 @@
+extract:
+["ok", {"files": 1, "bytes": 3, "collisions": [["guides/Case/a.txt", "docCase-doc.jar", "docCase-doc.jar"]]}]
+tree:
+guides d--------- 755
+guides/Case d--------- 755
+guides/Case/a.txt ---------- 644 3 ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
+fill:
+["ok", {"written": ["guides/Case/a.txt"]}]
+tree:
+guides d--------- 755
+guides/Case d--------- 755
+guides/Case/a.txt ---------- 644 3 ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
+fidelity:
+["ok", {"checked": 1, "matched": 0, "mismatched": [], "missing": ["guides/Case/a.txt"], "eol_only": [], "collisions": [["guides/Case/a.txt", "docCase-doc.jar", "docCase-doc.jar"]], "jars": 1}]
+tree:
+<absent>
+fidelity after extract:
+["ok", {"checked": 1, "matched": 1, "mismatched": [], "missing": [], "eol_only": [], "collisions": [["guides/Case/a.txt", "docCase-doc.jar", "docCase-doc.jar"]], "jars": 1}]

@@ -1,0 +1,12 @@
+["  EMPTY inheritance.json (its source is not in this install)", "  EMPTY method-index.json (its source is not in this install)", "  EMPTY source-index.json (its source is not in this install)", "  EMPTY slots-index.json (its source is not in this install)", "  EMPTY xref-index.json (its source is not in this install)", "  EMPTY guides-index.json (its source is not in this install)", "  EMPTY devguide-toc.json (its source is not in this install)"]
+tree:
+indexes d--------- 755
+indexes/class-index.json ---------- 644 8 613fe5aa65343dbb1b9abe6abac6773f5c91bd60d3f2ffb7e2eae69e1db8b227
+indexes/devguide-toc.json ---------- 644 2 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a
+indexes/guides-index.json ---------- 644 2 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a
+indexes/inheritance.json ---------- 644 2 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a
+indexes/method-index.json ---------- 644 2 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a
+indexes/pdf-index.json ---------- 644 3 ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356
+indexes/slots-index.json ---------- 644 2 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a
+indexes/source-index.json ---------- 644 2 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a
+indexes/xref-index.json ---------- 644 2 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a

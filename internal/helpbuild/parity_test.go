@@ -1,7 +1,6 @@
 package helpbuild
 
 import (
-	"bytes"
 	"fmt"
 	"os"
 	"os/exec"
@@ -24,7 +23,7 @@ import (
 // (niagaraHelpData: versions/, the course); its Python is never read.
 
 // parityDrivers are the Python sides of the parity tests.
-var parityDrivers = []string{"driver.py", "textdriver.py", "sweepdriver.py"}
+var parityDrivers = []string{"textdriver.py", "sweepdriver.py"}
 
 // driver is the parity interpreter and the tools/ folder of the niagara-help
 // Python reference; the interpreter is checked first, so a wrong python3 is
@@ -89,22 +88,4 @@ func checkPythonMinor(v string) error {
 	return fmt.Errorf("it is CPython %q, the parity reference is CPython %s.x (html.parser and the other "+
 		"stdlib behaviour the drivers compare change between minor releases): put a %s python3 first on PATH",
 		v, parityPythonMinor, parityPythonMinor)
-}
-
-func runDriver(t *testing.T, stdin string, args ...string) []string {
-	t.Helper()
-	python, tools := driver(t)
-	script, err := filepath.Abs(filepath.Join("testdata", "parity", "driver.py"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	cmd := exec.Command(python, append([]string{"-I", "-B", script, tools}, args...)...)
-	cmd.Stdin = strings.NewReader(stdin)
-	var stderr bytes.Buffer
-	cmd.Stderr = &stderr
-	out, err := cmd.Output()
-	if err != nil {
-		t.Fatalf("driver %v: %v\n%s", args, err, stderr.String())
-	}
-	return strings.Split(strings.TrimSuffix(string(out), "\n"), "\n")
 }

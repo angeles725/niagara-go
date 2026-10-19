@@ -1,0 +1,15 @@
+extract:
+["raise"]
+tree:
+guides d--------- 755
+guides/Case d--------- 755
+fill:
+["raise"]
+tree:
+<absent>
+fidelity:
+["ok", {"checked": 2, "matched": 0, "mismatched": [], "missing": ["guides/Case/a.txt", "guides/Case/ok.html"], "eol_only": [], "collisions": [], "jars": 1}]
+tree:
+<absent>
+fidelity after extract:
+["ok", {"checked": 2, "matched": 0, "mismatched": [], "missing": ["guides/Case/a.txt", "guides/Case/ok.html"], "eol_only": [], "collisions": [], "jars": 1}]

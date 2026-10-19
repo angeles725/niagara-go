@@ -328,3 +328,13 @@ func smallestPDFs(t *testing.T, docs string, n int) []string {
 	}
 	return out
 }
+
+// realSubset: five doc jars of the EC-Net 4.3 install (the biggest, the
+// docDeveloper example-code pair, a small and a mid-size guide) plus two
+// module jars with extract-rule pages and one without docs, copied into a
+// fake install (never written in place).
+var realSubset = []string{"docDeveloper-doc.jar", "docDeveloper-ux.jar", "docDeveloper-rt.jar",
+	"docLinuxN4-doc.jar", "docObix-doc.jar", "workbench-wb.jar", "batchJob-ux.jar", "alarm-rt.jar"}
+
+// The whole 4.3 install: help_jars lists every module jar (~25 s per side
+// over /mnt/c), so it runs only with HELPBUILD_PARITY_FULL=1.

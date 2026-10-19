@@ -1,0 +1,20 @@
+extract:
+["ok", {"files": 2, "bytes": 2, "collisions": []}]
+tree:
+guides d--------- 755
+guides/Case d--------- 755
+guides/Case/n.html ---------- 644 1 1b16b1df538ba12dc3f97edbb85caa7050d46c148134290feba80f8236c83db9
+guides/Case/über.html ---------- 644 1 0bfe935e70c321c7ca3afc75ce0d0ca2f98b5422e008bb31c00c6d7f1f1c0ad6
+fill:
+["ok", {"written": ["guides/Case/\u00fcber.html", "guides/Case/n.html"]}]
+tree:
+guides d--------- 755
+guides/Case d--------- 755
+guides/Case/n.html ---------- 644 1 1b16b1df538ba12dc3f97edbb85caa7050d46c148134290feba80f8236c83db9
+guides/Case/über.html ---------- 644 1 0bfe935e70c321c7ca3afc75ce0d0ca2f98b5422e008bb31c00c6d7f1f1c0ad6
+fidelity:
+["ok", {"checked": 2, "matched": 0, "mismatched": [], "missing": ["guides/Case/\u00fcber.html", "guides/Case/n.html"], "eol_only": [], "collisions": [], "jars": 1}]
+tree:
+<absent>
+fidelity after extract:
+["ok", {"checked": 2, "matched": 2, "mismatched": [], "missing": [], "eol_only": [], "collisions": [], "jars": 1}]

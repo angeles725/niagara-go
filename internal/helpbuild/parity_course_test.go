@@ -247,3 +247,11 @@ func TestParityCourseReal(t *testing.T) {
 	courseStep(t, "n4-dev-course", pyRepo, goRepo, "versions/A")
 	logTreeSize(t, filepath.Join(goRepo, "versions", "A"))
 }
+
+// onBoth applies one tree mutation to the Python and the Go data root.
+func onBoth(t *testing.T, roots []string, f func(root string)) {
+	t.Helper()
+	for _, r := range roots {
+		f(r)
+	}
+}
