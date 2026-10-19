@@ -1,8 +1,7 @@
 # Adding a tool
 
 How a new Go-native command is added here. The Python tools are retired (Phase 5), so a new
-tool has no Python to match; the Python goldens and the `pre-go-retire` worktree serve only the
-parity of the tools already ported. The rules are decisions D2-D4, D7, D18, D29, D34 and D42 in
+tool has no Python to match; the frozen Python goldens serve only the tools already ported. The rules are decisions D2-D4, D7, D18, D29, D34 and D42 in
 niagara-research `odd/tasks/go-migration.md`.
 
 ## 1. Layout
@@ -58,22 +57,19 @@ stamp, not the Python checkout's.
    `GOLDEN_BIN=$PWD/bin/<tool> go test ./internal/<pkg> -run TestGoldenGo`.
 
 A tool ported from Python also keeps its frozen Python cases under `testdata/golden/`
-(`golden.Run(t, "testdata", Main)`), which a generator re-captures only from the
-`pre-go-retire` worktree (D47); each deliberate divergence from Python gets an `intended.json`
-with a mandatory `reason`.
+(`golden.Run(t, "testdata", Main)`); their generators retired with D47, so a deliberate change
+is regenerated from the Go binary and reviewed, and each deliberate divergence from Python gets
+an `intended.json` with a mandatory `reason`.
 
 Details: [goldens.md](goldens.md).
 
 ## 4. Size gate
 
 `internal/sizegate` fails `go test` when a `.go` file outside `testdata/`, or a `.py` file
-anywhere (the generator and parity scripts under `testdata/` included), exceeds 500 lines
-(D4). `internal/sizegate/allowlist.txt` lists the exceptions as `<path> <max-lines>`, each
+anywhere (`testdata/` included), exceeds 500 lines (D4). `internal/sizegate/allowlist.txt` lists the exceptions as `<path> <max-lines>`, each
 after a `#` line with its reason; entries may only be lowered or removed, and the test fails
-on an entry that is too high or matches no file. Split the file instead of adding an entry;
-the only accepted new entry is a frozen reference generator that D39(d) moves to the
-`pre-go-retire` tag. The list is empty today: its last entry,
-`internal/nav/testdata/gen_golden.py`, was split under the limit.
+on an entry that is too high or matches no file. Split the file instead of adding an entry.
+The list is empty today.
 
 ## 5. Checks
 
@@ -114,7 +110,8 @@ WINTEST_MIRROR=0 make wintest             # run in place from the UNC path
 PYCOMPAT_WINPY=/mnt/c/.../python.exe make wintest  # or WINTEST_PYTHON
 ```
 
-The Windows CPython that the Python-comparison tests run is auto-detected under
+The Windows CPython that pycompat's two winerror tests run (`testdata/winerror/*.py`) is
+auto-detected under
 `/mnt/c/Users/*/AppData/Local/Programs/Python/Python3*/python.exe` and passed as
 `PYCOMPAT_WINPY` through `WSLENV`; without one the script says so and those tests skip.
 
@@ -127,19 +124,12 @@ less, fixtures included. A unit near 1,200 lines fails review START with
 `lens_context_budget_exceeded`, and a golden set with hundreds of files can fail well below
 that. When fixtures and code are split into two commits, review them as one slice.
 
-## 7. Real-corpus parity (`make pyparity`)
+## 7. Real data (`make realdata`)
 
-Builder ports (`internal/helpbuild`) compare Python and Go on real data: the EC-Net
-4.3.58.18 and Niagara 4.15.6.20 installs under `/mnt/c`, their niagara-help `versions/`
-trees, the real PDFs and the developer course. These tests read gigabytes, so `go test`,
-`make test` and `make ci` skip them, each skip naming the variable that turns it on.
-`make pyparity` (and so `make parity`) sets every one (`HELPBUILD_PARITY_REAL=1`, `HELPBUILD_PARITY_FULL=1`,
-`HELPBUILD_PARITY_415=1`) and runs the package's `Parity` tests, synthetic ones included;
-it takes several minutes (see [helpbuild.md](helpbuild.md#real-data-parity) for the list
-and the timing). Run it before handing any builder PR for review, and after changing a
-helper the builders share. A real install that is not mounted skips visibly; it never
-passes without comparing. The Python reference is not optional under `make pyparity`: a
-missing `python3` or reference worktree fails every parity test with a message, where
-plain `go test` skips naming the variable. After Phase 5 the Python reference is the
-niagara-help `pre-go-retire` worktree named by `NIAGARA_HELP_PY_REF` (`internal/pyref`, D47;
-[goldens.md](goldens.md#freezing-and-regenerating)); `NIAGARA_HELP_DIR` stays the live data.
+`make realdata` runs the permanent real-data gates on the niagara-research checkout: the
+search-quality gate, the mnav and nh real-corpus goldens, helpbuild's real coverage goldens,
+the course checks, bog recall and the hdbread history. They read gigabytes or host-only data,
+so `go test`, `make test` and `make ci` skip them, each skip naming the variable that turns it
+on; set, a missing checkout fails. The Go-vs-Python suites (`make pyparity`, `internal/pyref`)
+retired with D47: the committed goldens are the oracle
+([goldens.md](goldens.md#freezing-and-regenerating)).

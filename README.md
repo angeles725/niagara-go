@@ -40,7 +40,6 @@ owner before adding to a shared package.
 | `pycsv` | Python `csv.writer` (excel dialect), byte for byte | Integrante1 |
 | `pyxml` | expat-compatible XML parser | Integrante1 |
 | `locate` | finds the checkout a tool works on (D44) | Integrante1 |
-| `pyref` | locates the frozen `pre-go-retire` Python references (D47; test only) | Integrante2 |
 | `atomicfile` | atomic file and directory-tree writes | Integrante3 |
 | `procgroup` | child processes whose stop stops everything they started (D36) | Integrante3 |
 | `pyhtml` | Python `html` module family (D37) | Integrante3 |
@@ -57,8 +56,7 @@ make lint         # staticcheck
 make cover        # coverage across ./internal/... and the total
 make deadcode     # report-only list of unreachable functions (test-only packages filtered)
 make realdata     # real-data gates on the niagara-research checkout (not in ci)
-make pyparity     # Go vs the frozen pre-go-retire Python reference (D47; not in ci)
-make parity       # realdata + pyparity
+make parity       # alias of realdata
 make ci           # check + lint + cross (CI runs each as its own job)
 make build        # static binaries in bin/
 make cross        # bin/linux-amd64/ and bin/windows-amd64/
@@ -67,7 +65,8 @@ make cross        # bin/linux-amd64/ and bin/windows-amd64/
 New tool: [docs/adding-a-tool.md](docs/adding-a-tool.md).
 
 Behaviour parity with the retired Python tools is proven by golden cases frozen from Python and
-run against the Go code (and, with `GOLDEN_BIN`, against the built binary). Behaviour added after
+run against the Go code (and, with `GOLDEN_BIN`, against the built binary); since D47 the
+committed goldens are the permanent oracle and nothing here runs the Python tools. Behaviour added after
 a tool froze has Go-only goldens (D34). Each intended difference is declared next to its case in
 `testdata/golden/<case>/intended.json`, with a mandatory reason ([docs/goldens.md](docs/goldens.md)).
 Rules: `docs/TOOLING-GUIDELINES.md` and `docs/tools-compatibility-contract.md` in

@@ -3,7 +3,8 @@
 The Python tools carry four accent folds, three BM25 scorers and three glossary copies. None
 of them is byte-identical to another, so the Go packages expose each one explicitly instead of
 unifying them. Every row below is pinned by a parity fixture generated from the real Python
-function (`python3 -I internal/<pkg>/testdata/gen.py`).
+function (by `internal/<pkg>/testdata/gen.py`, retired with the Python reference in D47: the
+fixtures are frozen and change only from reviewed Go output).
 
 ## Folds (`internal/textfold`)
 
@@ -49,7 +50,7 @@ textsearch ranking terms `Terms`, `QueryTerms`, `Stem`, `Normalize`, `Tokens`.
 CPython's `math.log` and `math.log1p` are glibc's `__log_fma` and `__log1p_fma`. Go's `math.Log`
 differs from them by one ulp on 1.4 % of idf inputs and `math.Log1p` on 66 of the integers up to
 2,000,000, so `bm25.Log` and `bm25.Log1p` port glibc 2.39's machine code (table in `logtab.go`,
-read from `libm.so.6` by `testdata/gen_logtab.py`). The fixtures pin 2,987,803 results.
+read from `libm.so.6` by the retired `testdata/gen_logtab.py`). The fixtures pin 2,987,803 results.
 
 Tokenization is part of each tool, not of `bm25`: class_rank's camel-case `identifier_terms`
 and niagara-help's `word_terms`/`stem`/`parse_query` (prefix terms, phrases) are ported with
