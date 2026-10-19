@@ -101,21 +101,5 @@ func TestPathIsPathlib(t *testing.T) {
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("paths = %q, want %q", got, want)
 	}
-	for _, tt := range []struct {
-		dir, name string
-		windows   bool
-		want      string
-	}{
-		{".", "a.md", true, "a.md"},
-		{`C:\r`, "a.md", true, `C:\r\a.md`},
-		{`C:\r\`, "a.md", true, `C:\r\a.md`},
-		{"C:/r/", "a.md", true, `C:\r\a.md`},
-		{"testdata/r", "a.md", true, `testdata\r\a.md`},
-		{"r/", "a.md", false, "r/a.md"},
-		{"r", "a.md", false, "r/a.md"},
-	} {
-		if got := joinFor(tt.dir, tt.name, tt.windows); got != tt.want {
-			t.Errorf("joinFor(%q, %q, %v) = %q, want %q", tt.dir, tt.name, tt.windows, got, tt.want)
-		}
-	}
+	// The join spellings themselves are pinned by pypath TestJoin.
 }

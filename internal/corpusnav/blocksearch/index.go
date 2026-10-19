@@ -10,6 +10,7 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/bm25"
 	"github.com/angeles725/niagara-go/internal/pycompat"
+	"github.com/angeles725/niagara-go/internal/pypath"
 	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
@@ -180,7 +181,7 @@ type Ranking struct {
 
 // IndexPath is the find cache of a scope: find-<scope><CacheTag>.gob in IndexDir.
 func (c *Corpus) IndexPath(scope string) string {
-	return PyJoin(c.IndexDir, "find-"+scope+c.CacheTag+".gob")
+	return pypath.Join(c.IndexDir, "find-"+scope+c.CacheTag+".gob")
 }
 
 // fingerprint hashes the schema, this executable and the stat of CATALOG.md and of every

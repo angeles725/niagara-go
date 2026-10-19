@@ -101,6 +101,7 @@ func TestCommandWord(t *testing.T) {
 
 func TestNoBaseDirExitsOne(t *testing.T) {
 	t.Chdir(t.TempDir())
+	t.Setenv("MODULE_NAVIGATOR_DIR", "") // an exported checkout (make realdata) would be found
 	core.Executable = func() (string, error) { return filepath.Join(t.TempDir(), "mnav"), nil }
 	t.Cleanup(func() { core.Executable = os.Executable })
 	var out, errb bytes.Buffer

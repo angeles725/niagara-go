@@ -32,15 +32,6 @@ func TestClassify(t *testing.T) {
 	}
 }
 
-func TestPyPath(t *testing.T) {
-	for in, want := range map[string]string{"a//b/./c/": "a/b/c", "./x": "x", "/a/../b": "/a/../b", "": ".",
-		"//srv/x": "//srv/x", "///x": "/x", "missing/corpus-nav.py": "missing/corpus-nav.py"} {
-		if got := pyPath(in); got != want {
-			t.Errorf("pyPath(%q) = %q, want %q", in, got, want)
-		}
-	}
-}
-
 func TestFormatG3(t *testing.T) {
 	for in, want := range map[float64]string{1: "1", 60: "60", 0.9994: "0.999", 0.99951: "1", 1000: "1e+03", 0.25: "0.25"} {
 		if got := formatG3(in); got != want {
