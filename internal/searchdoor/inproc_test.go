@@ -361,3 +361,18 @@ func TestDefaultsReachEverySourceWithoutTheShims(t *testing.T) {
 		t.Errorf("a missing module-navigator/: %+v, want %q", raw, want)
 	}
 }
+
+// A blocks root without block files is not the corpus: the blocks source answers
+// corpus-nav's "cannot search" (exit 2), never a ranked zero, now that the default
+// backend path is the checkout directory itself and always exists.
+func TestBlocksFindOnARootWithoutBlocksCannotSearch(t *testing.T) {
+	root := t.TempDir()
+	getenv := func(string) string { return "" }
+	a := blocksFind(getenv, []string{root, "find", "alarm", "--limit", "20"})
+	if !a.ok || a.rc != 2 || a.stdout != "" || !strings.Contains(a.stderr, "cannot search: no block files under") {
+		t.Errorf("blocksFind on an empty root = rc %d stdout %q stderr %q, want rc 2 and cannot search", a.rc, a.stdout, a.stderr)
+	}
+	if _, err := os.Stat(filepath.Join(root, "tools")); err == nil {
+		t.Errorf("blocksFind wrote under a root it cannot search")
+	}
+}

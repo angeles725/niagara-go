@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/angeles725/niagara-go/internal/blockfiles"
 	"github.com/angeles725/niagara-go/internal/cli"
 	"github.com/angeles725/niagara-go/internal/corpusnav/blocksearch"
 	"github.com/angeles725/niagara-go/internal/pycompat"
@@ -238,7 +239,8 @@ var (
 // blocksFind is `corpus-nav find <query> --limit N [--and|--or]` (blocksJob) through
 // blocksearch, on the corpus corpus-nav.py would use: $CORPUS_NAV_ROOT, else the
 // backend's checkout (toolDir) (a folder without CATALOG.md is searched like
-// corpus-nav does: no block titles).
+// corpus-nav does: no block titles; a folder without block files is corpus-nav's
+// "cannot search", exit 2).
 func blocksFind(getenv envFunc, argv []string) answer {
 	v, flag, ok := shape(argv[1:], []string{"find", "*", "--limit", "#"}, "--and", "--or")
 	if !ok {
@@ -250,6 +252,10 @@ func blocksFind(getenv envFunc, argv []string) answer {
 	}
 	if root == "" { // the script's folder cannot be resolved (corpus-nav.py's own _root)
 		return exact(2, "", "corpus-nav: cannot locate the corpus from "+pypath.PurePosixPath(argv[0])+"\n")
+	}
+	if len(blockfiles.MainBlocks(root)) == 0 { // corpus-nav's empty-corpus gate (exit 2)
+		return exact(2, "", "corpus-nav: cannot search: no block files under "+pypath.PurePosixPath(root)+
+			" (set CORPUS_NAV_ROOT to the niagara-research checkout)\n")
 	}
 	limit, _ := strconv.Atoi(v[1])
 	c := blocksearch.New(root, getenv("CORPUS_NAV_INDEX_DIR"))
