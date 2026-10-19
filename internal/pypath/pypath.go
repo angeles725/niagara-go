@@ -7,9 +7,6 @@
 // blockfiles and searchdoor each emulated: blocksearch imports blockfiles, so the shared
 // code cannot live in blocksearch, and pycompat (Python 3.15 behaviour in general) has
 // another owner.
-//
-// Follow-up: POSIX Str keeps today's '//'→'/' (corpusnav/corpus_test.go:23 pins it);
-// CPython keeps '//'.
 package pypath
 
 import (
@@ -50,7 +47,8 @@ func PurePosixPath(p string) string {
 }
 
 // Str is str(pathlib.Path(p)) for the host: repeated and trailing separators and "."
-// components dropped, ".." kept.
+// components dropped, ".." kept (off Windows, PurePosixPath: exactly two leading
+// slashes stay, as CPython keeps them).
 func Str(p string) string { return str(p, hostWindows) }
 
 // Join is str(Path(a) / b) for the host, for a relative b.
@@ -65,7 +63,7 @@ func Less(a, b string) bool { return less(a, b, hostWindows) }
 
 func str(p string, windows bool) string {
 	if !windows {
-		return normParts("", p, "/")
+		return PurePosixPath(p)
 	}
 	p = strings.ReplaceAll(p, "/", `\`)
 	drive := winDrive(p)
