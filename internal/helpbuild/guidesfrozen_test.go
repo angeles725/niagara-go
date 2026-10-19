@@ -1,24 +1,25 @@
 package helpbuild
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
+	"maps"
 	"os"
-	"os/exec"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 
 	"github.com/angeles725/niagara-go/internal/pyjson"
 )
 
-// Parity of the S5 parsers (guides-clean/, devguide-clean/) and the S6
-// indexes (guides-index.json, devguide-toc.json): each side builds into its
-// own copy of the input, then the printed lines and both whole trees are
-// compared (htmldriver.py run).
+// The S5 parsers (guides-clean/, devguide-clean/) and the S6 indexes
+// (guides-index.json, devguide-toc.json) against their frozen Python output
+// (frozen_test.go): the printed lines of each builder and how the tree
+// changed, and parse_toc / count_items on the toc corners.
 
-// goRun is htmldriver.py run rebuilt from this package.
+// goRun runs one builder as lines: ["out", line] and ["err", warning] per
+// line, then ["result", files] (null for the indexes) or ["raise"].
 func goRun(builder, base string) []string {
 	var res *TextResult
 	var err error
@@ -62,38 +63,18 @@ func relabelRun(lines []string, base string) []string {
 	return out
 }
 
-// runBoth runs one builder on the Python copy and the Go copy and compares
-// the lines and the two trees.
-func runBoth(t *testing.T, builder, pyBase, goBase string) {
+// guidesFrozen runs builders in order on base; each step checks the lines
+// of the builder and the tree delta it made against
+// testdata/frozen/guides/<name>/<n>-<builder>.txt.
+func guidesFrozen(t *testing.T, name, base string, builders ...string) {
 	t.Helper()
-	py := relabelRun(runHTMLDriver(t, "", "run", builder, pyBase), pyBase)
-	gol := relabelRun(goRun(builder, goBase), goBase)
-	diffLines(t, builder+" lines", py, gol)
-	files, size := diffContents(t, pyBase, goBase)
-	t.Logf("%s: %d files, %d bytes compared", builder, files, size)
-	diffLines(t, builder+" tree", treeLines(t, pyBase), treeLines(t, goBase))
-}
-
-// diffContents shows where the first few files that differ do, before
-// treeLines reports only their hashes.
-func diffContents(t *testing.T, pyBase, goBase string) (files, size int) {
-	t.Helper()
-	bad := 0
-	_ = filepath.WalkDir(pyBase, func(p string, d os.DirEntry, err error) error {
-		if err != nil || !d.Type().IsRegular() || bad >= 5 {
-			return nil
-		}
-		rel, _ := filepath.Rel(pyBase, p)
-		a, errA := os.ReadFile(p)
-		b, errB := os.ReadFile(filepath.Join(goBase, rel))
-		files, size = files+1, size+len(a)
-		if errA == nil && errB == nil && string(a) != string(b) {
-			bad++
-			t.Errorf("%s differs:\n python %s\n     go %s", rel, around(string(a), string(b)), around(string(b), string(a)))
-		}
-		return nil
-	})
-	return files, size
+	prev := treeLines(t, base)
+	for i, builder := range builders {
+		lines := append(relabelRun(goRun(builder, base), base), "tree:")
+		cur := treeLines(t, base)
+		checkFrozen(t, fmt.Sprintf("guides/%s/%d-%s", name, i+1, builder), append(lines, treeDelta(prev, cur)...))
+		prev = cur
+	}
 }
 
 const tocLatin1 = "<?xml version=\"1.0\" encoding=\"ISO-8859-1\" standalone=\"no\"?>\n" +
@@ -166,37 +147,27 @@ func guidesFixture(t *testing.T, base string) {
 	}
 }
 
-func TestParityGuidesSynthetic(t *testing.T) {
-	driver(t)
-	pyBase, goBase := filepath.Join(t.TempDir(), "py"), filepath.Join(t.TempDir(), "go")
-	for _, b := range []string{pyBase, goBase} {
-		guidesFixture(t, b)
-	}
-	for _, builder := range []string{"guides", "devguide", "guidesindex", "devguidetoc"} {
-		runBoth(t, builder, pyBase, goBase)
-	}
-	// A second run replaces the clean trees and re-reads the index it wrote.
-	for _, builder := range []string{"guides", "guidesindex"} {
-		runBoth(t, builder, pyBase, goBase)
-	}
+// TestGuidesFrozen: every builder on the synthetic corpus, then a second
+// run that replaces the clean trees and re-reads the index it wrote.
+func TestGuidesFrozen(t *testing.T) {
+	frozenOnly(t)
+	base := filepath.Join(t.TempDir(), "go")
+	guidesFixture(t, base)
+	guidesFrozen(t, "synthetic", base, "guides", "devguide", "guidesindex", "devguidetoc", "guides", "guidesindex")
 }
 
-// TestParityNonUTF8Names: page and folder names that are not UTF-8 make
-// both parsers raise (the old clean tree is kept); guides-index.json spells
-// them as Python's surrogate escapes, sorted as decoded names.
-func TestParityNonUTF8Names(t *testing.T) {
-	driver(t)
-	pyBase, goBase := filepath.Join(t.TempDir(), "py"), filepath.Join(t.TempDir(), "go")
-	for _, b := range []string{pyBase, goBase} {
-		for _, rel := range []string{"guides/Odd\xff/a\xfe.html", "guides/Odd\xff/b.html", "guides/Odd\xff/\xee\x80\x80.html",
-			"guides/Plain/c.html", "guides/\xee\x80\x80/d.html", "devguide/x\xff.html", "devguide-clean/old.txt",
-			"guides-clean/old.txt"} {
-			writeFile(t, filepath.Join(b, filepath.FromSlash(rel)), []byte("<title>T</title><p>x</p>"))
-		}
+// TestGuidesNonUTF8NamesFrozen: page and folder names that are not UTF-8
+// make both parsers raise (the old clean tree is kept); guides-index.json
+// spells them as Python's surrogate escapes, sorted as decoded names.
+func TestGuidesNonUTF8NamesFrozen(t *testing.T) {
+	frozenOnly(t)
+	base := filepath.Join(t.TempDir(), "go")
+	for _, rel := range []string{"guides/Odd\xff/a\xfe.html", "guides/Odd\xff/b.html", "guides/Odd\xff/\xee\x80\x80.html",
+		"guides/Plain/c.html", "guides/\xee\x80\x80/d.html", "devguide/x\xff.html", "devguide-clean/old.txt",
+		"guides-clean/old.txt"} {
+		writeFile(t, filepath.Join(base, filepath.FromSlash(rel)), []byte("<title>T</title><p>x</p>"))
 	}
-	for _, builder := range []string{"guides", "devguide", "guidesindex"} {
-		runBoth(t, builder, pyBase, goBase)
-	}
+	guidesFrozen(t, "non-utf8", base, "guides", "devguide", "guidesindex")
 }
 
 // registeredFixture lays out repo/versions/<vid>/ as a registered data root
@@ -228,24 +199,24 @@ func registeredFixture(t *testing.T, repo string, mounted, manifest bool) string
 	return base
 }
 
-func TestParityGuidesIndexSources(t *testing.T) {
-	driver(t)
+// TestGuidesIndexSourcesFrozen: guides-index.json's source jars from a
+// mounted install, an unmounted one and a version without a manifest, over
+// an earlier index whose unchecked values are kept.
+func TestGuidesIndexSourcesFrozen(t *testing.T) {
+	frozenOnly(t)
 	for _, c := range []struct {
 		name              string
 		mounted, manifest bool
-	}{{"mounted", true, true}, {"unmounted", false, true}, {"no manifest", true, false}} {
-		t.Run(c.name, func(t *testing.T) {
-			pyBase := registeredFixture(t, filepath.Join(t.TempDir(), "py"), c.mounted, c.manifest)
-			goBase := registeredFixture(t, filepath.Join(t.TempDir(), "go"), c.mounted, c.manifest)
-			runBoth(t, "guidesindex", pyBase, goBase)
-		})
+	}{{"mounted", true, true}, {"unmounted", false, true}, {"no-manifest", true, false}} {
+		base := registeredFixture(t, filepath.Join(t.TempDir(), "go"), c.mounted, c.manifest)
+		guidesFrozen(t, "sources-"+c.name, base, "guidesindex")
 	}
 }
 
-// TestParityTocFiles compares parse_toc and count_items on every toc.xml
-// of the synthetic corpus plus the toc corners.
-func TestParityTocFiles(t *testing.T) {
-	driver(t)
+// TestTocFilesFrozen: parse_toc and count_items on every toc.xml of the
+// synthetic corpus plus the toc corners.
+func TestTocFilesFrozen(t *testing.T) {
+	frozenOnly(t)
 	dir := t.TempDir()
 	guidesFixture(t, dir)
 	corners := map[string]string{
@@ -265,12 +236,11 @@ func TestParityTocFiles(t *testing.T) {
 		filepath.Join(dir, "guides", "Toc", "toc.xml"), filepath.Join(dir, "guides", "Bad", "toc.xml"),
 		filepath.Join(dir, "guides", "Upper", "TOC.XML"), filepath.Join(dir, "missing.xml"),
 	}
-	for name, text := range corners {
+	for _, name := range slices.Sorted(maps.Keys(corners)) {
 		p := filepath.Join(dir, name)
-		writeFile(t, p, []byte(text))
+		writeFile(t, p, []byte(corners[name]))
 		paths = append(paths, p)
 	}
-	py := runHTMLDriver(t, "", append([]string{"toc"}, paths...)...)
 	var gol []string
 	for _, p := range paths {
 		toc, warning := ParseToc(p)
@@ -289,78 +259,5 @@ func TestParityTocFiles(t *testing.T) {
 		}
 		gol = append(gol, dumpLine(str("toc"), rows, intV(CountItems(p)), warnings))
 	}
-	diffLines(t, "toc", py, gol)
-}
-
-// realBase links a real version's raw trees into a temporary registered
-// data root, so both sides build next to the read-only corpus: the
-// registry entry and the version manifest are copied, guides/ and
-// devguide/ are symlinks.
-func realBase(t *testing.T, vid string) string {
-	t.Helper()
-	help := niagaraHelpData()
-	if help == "" {
-		missingReference(t, "no niagara-help data checkout")
-	}
-	src := filepath.Join(help, "versions")
-	reg, err := os.ReadFile(filepath.Join(src, "registry.json"))
-	if err != nil {
-		missingReference(t, fmt.Sprintf("no registry: %v", err))
-	}
-	if _, err := os.Stat(filepath.Join(src, vid, "guides")); err != nil {
-		missingReference(t, fmt.Sprintf("version %s not extracted: %v", vid, err))
-	}
-	repo := t.TempDir()
-	base := filepath.Join(repo, "versions", vid)
-	writeFile(t, filepath.Join(repo, "versions", "registry.json"), reg)
-	copyFile(t, filepath.Join(src, vid+".manifest.json"), filepath.Join(repo, "versions", vid+".manifest.json"))
-	if err := os.MkdirAll(base, 0o755); err != nil {
-		t.Fatal(err)
-	}
-	for _, d := range []string{"guides", "devguide"} {
-		if err := os.Symlink(filepath.Join(src, vid, d), filepath.Join(base, d)); err != nil {
-			t.Fatal(err)
-		}
-	}
-	return base
-}
-
-// TestParityGuidesReal builds guides-clean/, devguide-clean/,
-// guides-index.json and devguide-toc.json of EC-Net 4.3.58.18 on both
-// sides with HELPBUILD_PARITY_REAL=1; HELPBUILD_PARITY_415=1 adds
-// 4.15.6.20.
-func TestParityGuidesReal(t *testing.T) {
-	needRealParity(t, "HELPBUILD_PARITY_415")
-	driver(t)
-	vids, err := guidesRealVersions()
-	if err != nil {
-		t.Fatal(err)
-	}
-	for _, vid := range vids {
-		t.Run(vid, func(t *testing.T) {
-			pyBase, goBase := realBase(t, vid), realBase(t, vid)
-			for _, builder := range []string{"guides", "devguide", "guidesindex", "devguidetoc"} {
-				runBoth(t, builder, pyBase, goBase)
-			}
-		})
-	}
-}
-
-// runHTMLDriver runs htmldriver.py with stdin and returns its lines.
-func runHTMLDriver(t *testing.T, stdin string, args ...string) []string {
-	t.Helper()
-	python, tools := driver(t)
-	script, err := filepath.Abs(filepath.Join("testdata", "parity", "htmldriver.py"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	cmd := exec.Command(python, append([]string{"-I", "-B", script, tools}, args...)...)
-	cmd.Stdin = strings.NewReader(stdin)
-	var stderr bytes.Buffer
-	cmd.Stderr = &stderr
-	out, err := cmd.Output()
-	if err != nil {
-		t.Fatalf("htmldriver %v: %v\n%s", args, err, stderr.String())
-	}
-	return strings.Split(strings.TrimSuffix(string(out), "\n"), "\n")
+	checkFrozen(t, "guides/toc", relabeled(gol, dir, "<dir>"))
 }

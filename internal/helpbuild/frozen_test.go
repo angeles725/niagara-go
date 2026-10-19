@@ -65,3 +65,29 @@ func checkFrozen(t *testing.T, name string, got []string) {
 	}
 	diffLines(t, name, strings.Split(strings.TrimSuffix(string(data), "\n"), "\n"), got)
 }
+
+// treeDelta lists how the tree listing cur differs from prev (treeLines
+// output): "+ " before each entry that is new or changed, "- " before each
+// entry that is gone. A frozen step records the delta of what it wrote, so
+// the listing of the fixture it starts from (built by the test) is not
+// stored again for every step.
+func treeDelta(prev, cur []string) []string {
+	had := map[string]bool{}
+	for _, l := range prev {
+		had[l] = true
+	}
+	has := map[string]bool{}
+	var out []string
+	for _, l := range cur {
+		has[l] = true
+		if !had[l] {
+			out = append(out, "+ "+l)
+		}
+	}
+	for _, l := range prev {
+		if !has[l] {
+			out = append(out, "- "+l)
+		}
+	}
+	return out
+}

@@ -1,0 +1,6 @@
+["out", "guides-index.json: 6 folders -> <base>/indexes/guides-index.json"]
+["err", "WARNING: toc not read, page titles fall back to <title>: <base>/guides/Bad/toc.xml: mismatched tag: line 1, column 16"]
+["result", null]
+tree:
++ indexes d--------- 755
++ indexes/guides-index.json ---------- 644 1460 ea5b174f19e56ba79060409b787de77753d2bd5a82d986379829252fc65dcbe8

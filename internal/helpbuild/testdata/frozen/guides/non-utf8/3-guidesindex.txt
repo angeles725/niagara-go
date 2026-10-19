@@ -1,0 +1,5 @@
+["out", "guides-index.json: 3 folders -> <base>/indexes/guides-index.json"]
+["result", null]
+tree:
++ indexes d--------- 755
++ indexes/guides-index.json ---------- 644 394 018bd63b57a42ac60f4f56e324cdc646d1eaea32e3ef6a277c7f1130d46203de

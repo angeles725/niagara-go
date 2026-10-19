@@ -1,0 +1,14 @@
+["out", "  excluded (licence text): devguide/lgpl-2.1.txt"]
+["out", "  excluded (licence text): devguide/sub/COPYING.txt"]
+["out", "Extracted 6 devguide files to devguide-clean/ (0.0 MB text)"]
+["result", 6]
+tree:
++ devguide-clean d--------- 755
++ devguide-clean/changes.txt ---------- 644 70 e3aa92a02f581baf5968e452b9f86dbd0d40241f272cd86bb159bb49c535345b
++ devguide-clean/changes.txt.txt ---------- 644 71 a5ca7a4473a8be14d3263abfcc07764ecab3c2c935dcbee0d86d77da5b42ba28
++ devguide-clean/index.txt ---------- 644 239 c4a34c1e3e172c3bfff619d4cacb201efc93b7710533f3d9cb9b91f62bcb0a16
++ devguide-clean/sub d--------- 755
++ devguide-clean/sub/deeper d--------- 755
++ devguide-clean/sub/deeper/empty.txt ---------- 644 48 f005bbfdd82be15f8a7de5a510ac3849f4ccaf24e3584b8da096bf4d94b90d85
++ devguide-clean/sub/deeper/releaseNotes.txt ---------- 644 76 774518c9be35bf2914816ed580c730abb47183480dc56e742bd62d309f40ebb5
++ devguide-clean/sub/page.txt ---------- 644 54 d33a2a0f12f3a310420758304753baf7a16d3cba2ca727fc58fff1ef9ffcac65

@@ -1,0 +1,7 @@
+["out", "guides-index.json: 6 folders -> <base>/indexes/guides-index.json"]
+["out", "  NOTE: 1 source_jar value(s) kept from the previous index, not re-verified (install not mounted or no version manifest): Spy"]
+["err", "WARNING: toc not read, page titles fall back to <title>: <base>/guides/Bad/toc.xml: mismatched tag: line 1, column 16"]
+["result", null]
+tree:
++ indexes/guides-index.json ---------- 644 1466 7194e4d73330cd185754fe1384a24e375784cd6527c151c3def533622257c3a6
+- indexes/guides-index.json ---------- 644 100 60484a4f553bc9836322e8a84d7eb9c68eddfb1a427b80caad540ba9d531ac4e
