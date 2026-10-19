@@ -29,6 +29,12 @@ func writeTree(tb testing.TB, root string, files []string) {
 // symlinked files (entered) and directories (listed, not entered), dangling links and an
 // unreadable directory (skipped silently).
 func TestSubBlocksBranches(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("POSIX tree: symlinks need privilege and a backslash is a separator on Windows")
+	}
+	if os.Geteuid() == 0 {
+		t.Skip("root reads a mode-0 directory, so the unreadable-directory case cannot be built")
+	}
 	root := t.TempDir()
 	writeTree(t, root, []string{
 		"niagara-reflow-block3.md", "niagara-reflow-bloque4.md", "os413-block5.md", "os413-bloque06.md",
@@ -67,9 +73,12 @@ func TestSubBlocksBranches(t *testing.T) {
 		{"w/niagara-mental-model-bloqueZ", "w/niagara-mental-model-bloqueZ.md", "w"},
 		{"x-B3", "a/x-block٣.md", "x"},
 	}
-	// One worker walks inline only; more read directories concurrently in any order.
+	// One worker walks inline only; more read directories concurrently in any order (run
+	// with -race to cover the mutex and WaitGroup paths).
+	prev := runtime.GOMAXPROCS(0)
+	t.Cleanup(func() { runtime.GOMAXPROCS(prev) })
 	for _, procs := range []int{1, 2, 16} {
-		prev := runtime.GOMAXPROCS(procs)
+		runtime.GOMAXPROCS(procs)
 		var got [][3]string
 		for _, b := range SubBlocks(root) {
 			rel, err := filepath.Rel(root, b.Path)
@@ -78,7 +87,6 @@ func TestSubBlocksBranches(t *testing.T) {
 			}
 			got = append(got, [3]string{b.Label, filepath.ToSlash(rel), b.Corpus})
 		}
-		runtime.GOMAXPROCS(prev)
 		if !reflect.DeepEqual(got, want) {
 			t.Errorf("GOMAXPROCS %d: SubBlocks =\n%q\nwant\n%q", procs, got, want)
 		}
