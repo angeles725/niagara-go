@@ -62,11 +62,12 @@ type answer struct {
 	ok             bool
 }
 
-// Run answers the call to src in process within timeout seconds. A script path that is
-// not a file is the Python door's "tool not found"; a call no source knows (an
-// argv the door never sends) is typed UNAVAILABLE, never a silent zero.
+// Run answers the call to src in process within timeout seconds. A backend path
+// that is neither a checkout directory nor a script file is the Python door's
+// "tool not found"; a call no source knows (an argv the door never sends) is
+// typed UNAVAILABLE, never a silent zero.
 func (b *inprocBackend) Run(src source, argv []string, timeout float64) Raw {
-	if !isFile(argv[0]) {
+	if !isFile(argv[0]) && !isDir(argv[0]) {
 		return Raw{State: Unavailable, Reason: "unavailable: tool not found at " + pypath.PurePosixPath(argv[0])}
 	}
 	if timeout <= 0 { // subprocess.run(timeout=0) never lets the backend answer
@@ -205,10 +206,15 @@ func shape(args []string, want []string, opt ...string) (vals []string, flag str
 	return nil, "", false
 }
 
-// toolDir is the folder above the backend script's own folder (tools/..), as the
-// Python tools find their checkout from __file__.
+// toolDir is the backend's checkout: the path itself when it is a directory, else
+// the folder above the backend script's own folder (tools/..), as the Python
+// tools find their checkout from __file__.
 func toolDir(script string, resolve bool) string {
-	dir, err := filepath.Abs(filepath.Dir(script))
+	parent := !isDir(script)
+	if parent {
+		script = filepath.Dir(script)
+	}
+	dir, err := filepath.Abs(script)
 	if err != nil {
 		return ""
 	}
@@ -216,6 +222,9 @@ func toolDir(script string, resolve bool) string {
 		if dir, err = filepath.EvalSymlinks(dir); err != nil {
 			return ""
 		}
+	}
+	if !parent {
+		return dir
 	}
 	return filepath.Dir(dir)
 }
@@ -228,7 +237,7 @@ var (
 
 // blocksFind is `corpus-nav find <query> --limit N [--and|--or]` (blocksJob) through
 // blocksearch, on the corpus corpus-nav.py would use: $CORPUS_NAV_ROOT, else the
-// parent of its tools/ folder (a folder without CATALOG.md is searched like
+// backend's checkout (toolDir) (a folder without CATALOG.md is searched like
 // corpus-nav does: no block titles).
 func blocksFind(getenv envFunc, argv []string) answer {
 	v, flag, ok := shape(argv[1:], []string{"find", "*", "--limit", "#"}, "--and", "--or")

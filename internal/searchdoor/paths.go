@@ -11,7 +11,8 @@ import (
 // map in the tests that inject their environment.
 type envFunc = func(string) string
 
-// pathEnv names the variable that re-points each source (the Python seam).
+// pathEnv names the variable that re-points each source (the variables the
+// Python front door read).
 var pathEnv = [5]string{"NSEARCH_CORPUS_NAV", "NSEARCH_NIAGARA_HELP", "NSEARCH_MODULE_NAV", "NSEARCH_COURSE_ROOT",
 	"NSEARCH_COURSE_KEYS"}
 
@@ -38,9 +39,9 @@ func root(getenv envFunc) string {
 	return filepath.Dir(exeDir)
 }
 
-// defaultPaths are the backends of the checkout, each re-pointed by its
-// NSEARCH_* variable when that is set and not empty. The checkout is only
-// located when a path still needs it.
+// defaultPaths are the backends of the checkout (each one's checkout directory,
+// no Python shim), each re-pointed by its NSEARCH_* variable when that is set
+// and not empty. The checkout is only located when a path still needs it.
 func defaultPaths(getenv envFunc) Paths {
 	vals := [len(pathEnv)]string{}
 	need := false
@@ -50,10 +51,8 @@ func defaultPaths(getenv envFunc) Paths {
 	}
 	if need {
 		r := root(getenv)
-		defaults := [len(pathEnv)]string{filepath.Join(r, "tools", "corpus-nav.py"),
-			filepath.Join(r, "niagara-help", "tools", "niagara_help.py"),
-			filepath.Join(r, "module-navigator", "tools", "module_nav.py"),
-			filepath.Join(r, "sources", "n4-dev-course"), r}
+		defaults := [len(pathEnv)]string{r, filepath.Join(r, "niagara-help"),
+			filepath.Join(r, "module-navigator"), filepath.Join(r, "sources", "n4-dev-course"), r}
 		for i := range vals {
 			if vals[i] == "" {
 				vals[i] = defaults[i]

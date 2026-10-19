@@ -15,7 +15,7 @@ import (
 // bytes mnav prints, for the checkout of the script.
 
 // navRun is module_nav <args> through nav.RunAt on the checkout module_nav.py
-// would use (navDir). A script without indexes/ beside its tools/ folder is
+// would use (navDir). A checkout without indexes/ is
 // module_nav's "Cannot detect base directory" (commands/__init__.py main, exit 1):
 // RunAt pins a checkout, so it has no such case of its own.
 func navRun(argv []string) answer {

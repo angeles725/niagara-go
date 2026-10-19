@@ -13,7 +13,7 @@ import (
 )
 
 // The code source's token and grep calls through codesearch, on the checkout
-// module_nav.py would use: the parent of its tools/ folder when that holds
+// module_nav.py would use: the backend's checkout (toolDir) when that holds
 // indexes/, and $NAV_CORPUS_BASE or the organized/ folder beside it.
 
 // navDir is module_nav's detect_base_dir for the script: "" without indexes/.
