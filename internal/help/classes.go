@@ -13,6 +13,7 @@ import (
 	"github.com/angeles725/niagara-go/internal/index"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyhtml"
+	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
 // classEntry is one class behind a class-index key (_expand): the primary
@@ -79,9 +80,9 @@ func classMatches(idx *index.Object, name string) ([]classEntry, error) {
 		}
 	}
 	var out []classEntry
-	want := pycompat.Lower(name)
+	want := textfold.Lower(name)
 	for _, key := range idx.Keys() {
-		if pycompat.Lower(key) == want {
+		if textfold.Lower(key) == want {
 			all, err := expand(key, idx.Object(key))
 			if err != nil {
 				return nil, err

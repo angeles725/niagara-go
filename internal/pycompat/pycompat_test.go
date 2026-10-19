@@ -11,6 +11,8 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+
+	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
 // The fixtures and digests are written by testdata/gen.py from Python 3.15.
@@ -257,8 +259,8 @@ func TestTextFunctions(t *testing.T) {
 		if got := Strip(s); got != stripped {
 			t.Errorf("Strip(%q) = %q, want %q", s, got, stripped)
 		}
-		if got := Fields(s); strings.Join(got, "|") != strings.Join(fields, "|") || len(got) != len(fields) {
-			t.Errorf("Fields(%q) = %q, want %q", s, got, fields)
+		if got := textfold.Fields(s); strings.Join(got, "|") != strings.Join(fields, "|") || len(got) != len(fields) {
+			t.Errorf("textfold.Fields(%q) = %q, want %q", s, got, fields)
 		}
 	}
 	for _, c := range f.HTML {
@@ -304,7 +306,7 @@ func TestSpaceClassMatchesIsSpace(t *testing.T) {
 		if r >= 0xD800 && r <= 0xDFFF {
 			continue
 		}
-		if got, want := re.MatchString(string(r)), IsSpace(r); got != want {
+		if got, want := re.MatchString(string(r)), textfold.IsSpace(r); got != want {
 			t.Fatalf("[SpaceClass()] on U+%04X = %v, str.isspace() %v", r, got, want)
 		}
 	}
@@ -339,7 +341,7 @@ func TestEveryCodePoint(t *testing.T) {
 	f := load(t)
 	checks := map[string]func(rune) (string, bool){
 		"alpha": is(IsAlpha), "decimal": is(IsDecimal), "digit": is(IsDigit), "numeric": is(IsNumeric),
-		"alnum": is(IsAlnum), "printable": is(IsPrintable), "space": is(IsSpace), "word": is(IsWordRune),
+		"alnum": is(IsAlnum), "printable": is(IsPrintable), "space": is(textfold.IsSpace), "word": is(IsWordRune),
 		"linebreak": is(func(r rune) bool { return len(SplitLines("a"+string(r)+"b", false)) == 2 }),
 		"isupper":   isStr(IsUpper),
 		// The lower and title tables IsUpper reads for a longer string: single-character

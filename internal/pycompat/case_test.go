@@ -3,6 +3,8 @@ package pycompat
 import (
 	"testing"
 	"unicode/utf8"
+
+	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
 func isStr(pred func(string) bool) func(rune) (string, bool) {
@@ -19,7 +21,7 @@ func TestCaseMethods(t *testing.T) {
 		if IsUpper(s) != upper {
 			t.Errorf("%q: isupper = %v, want %v", s, IsUpper(s), upper)
 		}
-		if got := Lower(s); got != lower {
+		if got := textfold.Lower(s); got != lower {
 			t.Errorf("%q.lower() = %q, want %q", s, got, lower)
 		}
 	}

@@ -7,6 +7,7 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/nav/lib/javatext"
 	"github.com/angeles725/niagara-go/internal/pycompat"
+	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
 // The declaration scan of the recall oracle (recall.py _TOP_LEVEL_DECL,
@@ -53,7 +54,7 @@ func spaces(s string, i int) (int, bool) {
 	j := i
 	for j < len(s) {
 		r, n := utf8.DecodeRuneInString(s[j:])
-		if !pycompat.IsSpace(r) {
+		if !textfold.IsSpace(r) {
 			break
 		}
 		j += n

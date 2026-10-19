@@ -15,6 +15,7 @@ import (
 	"github.com/angeles725/niagara-go/internal/nav/core"
 	"github.com/angeles725/niagara-go/internal/nav/registry"
 	"github.com/angeles725/niagara-go/internal/pycompat"
+	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
 // resources (extras.py cmd_resources): the non-class entries of a submodule
@@ -67,7 +68,7 @@ func runResources(env *registry.Env, ns *argparse.Namespace) int {
 		ext := "(none)"
 		if strings.Contains(r, ".") {
 			_, e := pycompat.PosixSplitext(r)
-			ext = pycompat.Lower(e)
+			ext = textfold.Lower(e)
 		}
 		if _, seen := byExt[ext]; !seen {
 			exts = append(exts, ext)
@@ -79,7 +80,7 @@ func runResources(env *registry.Env, ns *argparse.Namespace) int {
 		if !strings.HasPrefix(tf, ".") {
 			tf = "." + tf
 		}
-		filtered := byExt[pycompat.Lower(tf)]
+		filtered := byExt[textfold.Lower(tf)]
 		fmt.Fprintf(w, "  Filter: %s\n", tf)
 		fmt.Fprintf(w, "  Matches: %s\n\n", core.Commas(int64(len(filtered))))
 		listMore(env, filtered, limit)

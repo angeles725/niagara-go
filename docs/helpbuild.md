@@ -330,7 +330,7 @@ take `parseBajadocFiles` (`classindexxml.go`) for the same concurrency.
 | File | Ports | Notes |
 |---|---|---|
 | `internal/pyhtml` (shared package, D37) | `html.parser.HTMLParser` (CPython 3.15), `convert_charrefs=True`; `html.unescape`; `name in html.entities.html5` | the tokenizer below (`pyhtml.Parse`, a `pyhtml.Handler`); reports only the callbacks the tools override |
-| `htmltext.go` | `html_text.convert` as `HTMLToText(page) (title, text)` | Python's Unicode `\s`, `strip` and `\w` (`pycompat.IsSpace`, `IsWordRune`) |
+| `htmltext.go` | `html_text.convert` as `HTMLToText(page) (title, text)` | Python's Unicode `\s`, `strip` and `\w` (`textfold.IsSpace`, `pycompat.IsWordRune`) |
 | `guidetoc.go` | `guide_toc.find_toc`, `parse_toc`, `count_items` | ElementTree is `internal/pyxml` in ETree mode; the warning is returned, not printed |
 | `guidesparser.go` | `guides_parser.parse_guides`, `_markdown_title`, `devguide_parser.parse_devguide` | `RebuiltDir`; `TextResult.Log` = stdout lines, `.Warnings` = stderr lines |
 | `guidesindex.go` | `build_guides_index` (`topic_name`, `known_jar_names`, `modules_dir_of`, `jar_for_folder`, `previous_jars`, `build`, `main`) | `JarSources` replaces the `_MANIFEST` sentinels; `Unknown` is `jar_names=None`; the walk, `json.load` and registry lookups are S3's (`pyfs.go`, `registry.go`) |
@@ -636,7 +636,7 @@ The slots time is mostly the `.bajadoc` XML of `devguide/` and `guides/`; xref's
 |---|---|---|
 | `coveragereport.go` | `coverage_report.guide_coverage`, `cmd_guide_coverage`, `cmd_coverage` (entry), `index_cache.load_index` for the four report indexes, `module_export.module_classes` | `MissingIndexError` has Python's message; the four indexes (class, source, method, slots) are loaded before anything prints, in Python's order |
 | `coveragereportmodule.go` | the module and overview halves of `cmd_coverage` | `Total methods` counts each method-index entry once against the module's class set (Python's per-class loop over distinct keys gives the same number) |
-| `doccoverageclassify.go` | `doc_types.classify`, `classify_unmapped`, `content_type`, `example_skip_reason`, `REASONS`, `_GUIDE_JUNK` | extensions lower-cased with Python's full Unicode `lower()` (`pycompat.Lower`) |
+| `doccoverageclassify.go` | `doc_types.classify`, `classify_unmapped`, `content_type`, `example_skip_reason`, `REASONS`, `_GUIDE_JUNK` | extensions lower-cased with Python's full Unicode `lower()` (`textfold.Lower`) |
 | `doccoverage.go` | `doc_coverage.Indexed` | lazy views, each index loaded on first use (so an index error surfaces at the same entry); `FulltextDocsAt` is `FtsIndex.docs()` of one database |
 | `doccoveragereport.go` | `_entries`, `_verdict`, `scan`, `cmd_doc_jar_coverage`, `_print_report` | the table is `format()` through `pycompat.Format` (`{:34s}`, `{:>7,}`: code-point widths, comma groups); the listing cache is saved before the scan, as Python does |
 

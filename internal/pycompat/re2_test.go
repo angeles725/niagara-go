@@ -5,6 +5,8 @@ import (
 	"strings"
 	"testing"
 	"unicode/utf8"
+
+	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
 // TestRE2SpaceIsIsSpace matches the class RE2Space writes for \s (built on SpaceClass), bare
@@ -15,13 +17,13 @@ func TestRE2SpaceIsIsSpace(t *testing.T) {
 	var want []rune
 	for r := rune(0); r <= utf8.MaxRune; r++ {
 		if !utf8.ValidRune(r) {
-			if IsSpace(r) {
-				t.Fatalf("IsSpace(%U) on a surrogate", r)
+			if textfold.IsSpace(r) {
+				t.Fatalf("textfold.IsSpace(%U) on a surrogate", r)
 			}
 			continue
 		}
 		all.WriteRune(r)
-		if IsSpace(r) {
+		if textfold.IsSpace(r) {
 			want = append(want, r)
 		}
 	}

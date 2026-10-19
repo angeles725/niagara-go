@@ -141,10 +141,6 @@ func IsPrintable(r rune) bool {
 	return find(data().printable, r) >= 0
 }
 
-// IsSpace is str.isspace() for one code point: the separators of str.split() and strip().
-// The table lives in internal/textfold (this package already imports it for Lower).
-func IsSpace(r rune) bool { return textfold.IsSpace(r) }
-
 // SpaceClass is the body of an RE2 character class (no brackets) that matches exactly the
 // str.isspace() code points: Python re's \s on str patterns, for "[" + SpaceClass() + "]".
 func SpaceClass() string { return spaceClass() }

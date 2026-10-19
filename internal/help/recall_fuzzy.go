@@ -13,7 +13,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/angeles725/niagara-go/internal/index"
-	"github.com/angeles725/niagara-go/internal/pycompat"
+	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
 // runeIndex is str.find: the code-point index of sub in s, or -1.
@@ -87,9 +87,9 @@ func fuzzyRanked(hits []fuzzyHit) {
 // the query words, each section showing its top topN.
 func (e *Env) fuzzy(query string, topN int) error {
 	var words []string
-	for _, w := range pycompat.Fields(query) {
+	for _, w := range textfold.Fields(query) {
 		if runeLen(w) >= 2 {
-			words = append(words, pycompat.Lower(w))
+			words = append(words, textfold.Lower(w))
 		}
 	}
 	if len(words) == 0 {
@@ -110,8 +110,8 @@ func (e *Env) fuzzy(query string, topN int) error {
 	for _, cls := range classes.Keys() {
 		data := classes.Object(cls)
 		pkg := getStr(data, "package", "")
-		nameLow := pycompat.Lower(cls)
-		score, pos := fuzzyScore(nameLow+" "+pycompat.Lower(pkg), words)
+		nameLow := textfold.Lower(cls)
+		score, pos := fuzzyScore(nameLow+" "+textfold.Lower(pkg), words)
 		if score > 0 {
 			if nameScore, _ := fuzzyScore(nameLow, words); nameScore > 0 {
 				score += nameScore * 0.5
@@ -124,7 +124,7 @@ func (e *Env) fuzzy(query string, topN int) error {
 
 	var methodHits []fuzzyHit
 	for _, m := range methods.Keys() {
-		score, pos := fuzzyScore(pycompat.Lower(m), words)
+		score, pos := fuzzyScore(textfold.Lower(m), words)
 		if score > 0 {
 			entries := memberEntries(methods, m)
 			sample := "?"
@@ -143,7 +143,7 @@ func (e *Env) fuzzy(query string, topN int) error {
 		for _, section := range []string{"properties", "actions", "topics"} {
 			for _, slot := range objList(data, section) {
 				name := getStr(slot, "name", "")
-				score, pos := fuzzyScore(pycompat.Lower(name), words)
+				score, pos := fuzzyScore(textfold.Lower(name), words)
 				if score > 0 {
 					stype := get(slot, "type", get(slot, "parameterType", get(slot, "eventType", "")))
 					slotHits = append(slotHits, fuzzyHit{score, pos, name,
@@ -157,7 +157,7 @@ func (e *Env) fuzzy(query string, topN int) error {
 	var guideHits []fuzzyHit
 	for _, folder := range guides.Keys() {
 		data := guides.Object(folder)
-		if score, pos := fuzzyScore(pycompat.Lower(folder), words); score > 0 {
+		if score, pos := fuzzyScore(textfold.Lower(folder), words); score > 0 {
 			count := get(data, "total_topics", get(data, "html_count", nil)) // nil: the falsy default 0
 			extra := ""
 			if index.Truthy(count) {
@@ -166,7 +166,7 @@ func (e *Env) fuzzy(query string, topN int) error {
 			guideHits = append(guideHits, fuzzyHit{score, pos, folder, folder + extra})
 		}
 		for _, topic := range strList(data, "topics") {
-			if score, pos := fuzzyScore(pycompat.Lower(topic), words); score > 0 {
+			if score, pos := fuzzyScore(textfold.Lower(topic), words); score > 0 {
 				name := folder + "/" + topic
 				guideHits = append(guideHits, fuzzyHit{score, pos, name, name})
 			}

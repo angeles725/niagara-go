@@ -5,11 +5,12 @@ import (
 	"unicode/utf8"
 
 	"github.com/angeles725/niagara-go/internal/pycompat"
+	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
 // extract_calls_from_zone of build_callgraph_index.py. Its regular
 // expressions are matched by hand with Python's Unicode \w, \s and \b
-// (pycompat.IsWordRune, pycompat.IsSpace); each is unambiguous (a greedy
+// (pycompat.IsWordRune, textfold.IsSpace); each is unambiguous (a greedy
 // word run can only shrink onto another word character), so trying every
 // start position in order and resuming after a match is re.finditer.
 
@@ -94,7 +95,7 @@ func wordRun(s string, i int) int {
 func spaces(s string, i int) int {
 	for i < len(s) {
 		r, n := utf8.DecodeRuneInString(s[i:])
-		if !pycompat.IsSpace(r) {
+		if !textfold.IsSpace(r) {
 			break
 		}
 		i += n
@@ -284,7 +285,7 @@ func zoneCalls(lines []string, current, parent string) map[string]bool {
 			}
 			finditer(s, func(i int) int {
 				end := keywordParen(s, i, kw)
-				if end >= 0 && !strings.HasSuffix(strings.TrimRightFunc(s[:i], pycompat.IsSpace), ".") {
+				if end >= 0 && !strings.HasSuffix(strings.TrimRightFunc(s[:i], textfold.IsSpace), ".") {
 					calls[owner+".<init>"] = true
 				}
 				return end

@@ -4,6 +4,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/angeles725/niagara-go/internal/pycompat"
+	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
 // RuneAt is the rune starting at byte i of s and its width; (RuneError, 0)
@@ -34,7 +35,7 @@ func WordBefore(s string, i int) bool {
 func SkipSpace(s string, i int) int {
 	for i < len(s) {
 		r, n := utf8.DecodeRuneInString(s[i:])
-		if !pycompat.IsSpace(r) {
+		if !textfold.IsSpace(r) {
 			break
 		}
 		i += n

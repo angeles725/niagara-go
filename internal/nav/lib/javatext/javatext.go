@@ -9,13 +9,13 @@
 // byte offsets into UTF-8 text: the Python code compares only ASCII
 // characters, so stepping bytes instead of code points finds the same
 // positions; \w and \s are Python's Unicode classes (pycompat.IsWordRune,
-// pycompat.IsSpace).
+// textfold.IsSpace).
 package javatext
 
 import (
 	"strings"
 
-	"github.com/angeles725/niagara-go/internal/pycompat"
+	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
 // Span is a [Start, End) byte range.
@@ -106,7 +106,7 @@ func DeclarationHeader(lines []string, index, start int) string {
 		}
 		raw += "\n" + lines[j]
 	}
-	return strings.Join(pycompat.Fields(text), " ")
+	return strings.Join(textfold.Fields(text), " ")
 }
 
 // Modifiers and Kinds are the alternatives of the type-declaration regexes

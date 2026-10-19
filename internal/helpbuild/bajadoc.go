@@ -4,9 +4,9 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyhtml"
 	"github.com/angeles725/niagara-go/internal/pyre"
+	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
 // The page half of the port of tools/bajadoc_parser.py: parse_bajadoc_html
@@ -80,7 +80,7 @@ func stripTags(fragment string) string {
 
 // normalizeWS is re.sub(r"\s+", " ", text).strip(): \s and strip() use the
 // same str.isspace() code points as str.split().
-func normalizeWS(text string) string { return strings.Join(pycompat.Fields(text), " ") }
+func normalizeWS(text string) string { return strings.Join(textfold.Fields(text), " ") }
 
 // classNameAndKind is extract_class_name_and_kind; "" is None.
 func classNameAndKind(page []rune) (name, kind string) {

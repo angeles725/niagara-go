@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/pycompat"
+	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
 // A port of the parts of Python's textwrap that argparse uses: wrap() and fill() with the
@@ -87,7 +88,7 @@ func splitChunks(text string) [][]rune {
 
 func isBlank(chunk []rune) bool {
 	for _, r := range chunk {
-		if !pycompat.IsSpace(r) {
+		if !textfold.IsSpace(r) {
 			return false
 		}
 	}

@@ -6,6 +6,7 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/nav/lib/javatext"
 	"github.com/angeles725/niagara-go/internal/pycompat"
+	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
 // Hand scanners for the declaration regexes of corpus.py. Python's versions use
@@ -54,7 +55,7 @@ func wordEnds(s string, i int) bool { return !pycompat.IsWordRune(runeAt(s, i)) 
 //	^(\s*)(?:@(?!interface\b)[\w.]+(?:\([^)]*\))?\s+)*((?:MODIFIER\s+)*)
 //	(class|interface|@interface|enum|record(?=\s+\w+\s*[(<]))\s+([\w$]+)
 func MatchDecl(line string) (Decl, bool) {
-	i := span(line, 0, pycompat.IsSpace)
+	i := span(line, 0, textfold.IsSpace)
 	d := Decl{Indent: line[:i]}
 	for {
 		j, ok := annotation(line, i)
@@ -76,7 +77,7 @@ func MatchDecl(line string) (Decl, bool) {
 		if !strings.HasPrefix(line[i:], k) || (k == "record" && !recordHeader(line, i+len(k))) {
 			continue
 		}
-		j := span(line, i+len(k), pycompat.IsSpace)
+		j := span(line, i+len(k), textfold.IsSpace)
 		if j == i+len(k) {
 			return Decl{}, false
 		}
@@ -104,12 +105,12 @@ func annotation(s string, i int) (int, bool) {
 	}
 	if runeAt(s, j) == '(' {
 		if k := strings.IndexByte(s[j:], ')'); k >= 0 {
-			if e := span(s, j+k+1, pycompat.IsSpace); e > j+k+1 {
+			if e := span(s, j+k+1, textfold.IsSpace); e > j+k+1 {
 				return e, true
 			}
 		}
 	}
-	if e := span(s, j, pycompat.IsSpace); e > j {
+	if e := span(s, j, textfold.IsSpace); e > j {
 		return e, true
 	}
 	return i, false
@@ -119,7 +120,7 @@ func annotation(s string, i int) (int, bool) {
 func modifier(s string, i int) (int, bool) {
 	for _, m := range javatext.Modifiers {
 		if strings.HasPrefix(s[i:], m) {
-			if e := span(s, i+len(m), pycompat.IsSpace); e > i+len(m) {
+			if e := span(s, i+len(m), textfold.IsSpace); e > i+len(m) {
 				return e, true
 			}
 			return i, false
@@ -130,7 +131,7 @@ func modifier(s string, i int) (int, bool) {
 
 // recordHeader is the lookahead (?=\s+\w+\s*[(<]) at i.
 func recordHeader(s string, i int) bool {
-	j := span(s, i, pycompat.IsSpace)
+	j := span(s, i, textfold.IsSpace)
 	if j == i {
 		return false
 	}
@@ -138,7 +139,7 @@ func recordHeader(s string, i int) bool {
 	if k == j {
 		return false
 	}
-	r := runeAt(s, span(s, k, pycompat.IsSpace))
+	r := runeAt(s, span(s, k, textfold.IsSpace))
 	return r == '(' || r == '<'
 }
 
@@ -154,7 +155,7 @@ func TypeDeclName(line string) (string, bool) {
 				}
 			}
 			if name, end, ok := keywordName(line, p, "record"); ok {
-				if c := runeAt(line, span(line, end, pycompat.IsSpace)); c == '(' || c == '<' {
+				if c := runeAt(line, span(line, end, textfold.IsSpace)); c == '(' || c == '<' {
 					return name, true
 				}
 			}
@@ -170,7 +171,7 @@ func keywordName(s string, p int, keyword string) (string, int, bool) {
 	if !strings.HasPrefix(s[p:], keyword) {
 		return "", p, false
 	}
-	j := span(s, p+len(keyword), pycompat.IsSpace)
+	j := span(s, p+len(keyword), textfold.IsSpace)
 	if j == p+len(keyword) {
 		return "", p, false
 	}
@@ -193,12 +194,12 @@ func PackageName(line string) (string, bool) {
 	if !strings.HasPrefix(line, "package") {
 		return "", false
 	}
-	j := span(line, len("package"), pycompat.IsSpace)
+	j := span(line, len("package"), textfold.IsSpace)
 	if j == len("package") {
 		return "", false
 	}
 	end := span(line, j, isWordOrDot)
-	if end == j || runeAt(line, span(line, end, pycompat.IsSpace)) != ';' {
+	if end == j || runeAt(line, span(line, end, textfold.IsSpace)) != ';' {
 		return "", false
 	}
 	return line[j:end], true

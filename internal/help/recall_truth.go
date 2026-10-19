@@ -17,6 +17,7 @@ import (
 	"github.com/angeles725/niagara-go/internal/bajadocxml"
 	"github.com/angeles725/niagara-go/internal/help/fts"
 	"github.com/angeles725/niagara-go/internal/pycompat"
+	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
 // classKey is a (package, simple name) pair; keys sort like Python tuples.
@@ -119,7 +120,7 @@ var guidePageExt = []string{".html", ".htm", ".txt", ".md"}
 
 // isLicence is doc_types.is_licence.
 func isLicence(name string) bool {
-	low := pycompat.Lower(filepath.Base(name))
+	low := textfold.Lower(filepath.Base(name))
 	for _, p := range []string{"license", "licence", "copying", "notice"} {
 		if strings.HasPrefix(low, p) {
 			return true
@@ -135,7 +136,7 @@ func isLicence(name string) bool {
 
 // isGuidePage is doc_types.is_guide_page.
 func isGuidePage(name string) bool {
-	low := pycompat.Lower(name)
+	low := textfold.Lower(name)
 	for _, ext := range guidePageExt {
 		if strings.HasSuffix(low, ext) {
 			return !(strings.HasSuffix(low, ".txt") && isLicence(name))
@@ -146,7 +147,7 @@ func isGuidePage(name string) bool {
 
 // isDevguidePage is recall.is_devguide_page.
 func isDevguidePage(name string) bool {
-	low := pycompat.Lower(name)
+	low := textfold.Lower(name)
 	if strings.HasSuffix(low, ".html") {
 		return true
 	}
@@ -156,7 +157,7 @@ func isDevguidePage(name string) bool {
 // cleanTextName is doc_types.clean_text_name: the guides-clean /
 // devguide-clean path of a page path relative to srcDir.
 func cleanTextName(rel, srcDir string) string {
-	low := pycompat.Lower(rel)
+	low := textfold.Lower(rel)
 	switch {
 	case strings.HasSuffix(low, ".html"):
 		return rel[:len(rel)-len(".html")] + ".txt"
@@ -173,13 +174,13 @@ func cleanTextName(rel, srcDir string) string {
 // in any letter case.
 func hasHTMLSibling(srcDir, stem string) bool {
 	folder, base := filepath.Split(filepath.Join(srcDir, stem))
-	want := pycompat.Lower(base + ".html")
+	want := textfold.Lower(base + ".html")
 	entries, err := os.ReadDir(folder)
 	if err != nil {
 		return false
 	}
 	for _, d := range entries {
-		if pycompat.Lower(d.Name()) == want {
+		if textfold.Lower(d.Name()) == want {
 			return true
 		}
 	}

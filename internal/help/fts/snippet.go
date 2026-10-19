@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/pycompat"
+	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
 // snippetWidth is the default width of snippet and clip.
@@ -81,7 +82,7 @@ func candidateLines(dirs []SourceDir, h *Hit) []numbered {
 
 // skipSpaces skips re's \s (str.isspace) characters.
 func skipSpaces(s string) string {
-	return strings.TrimLeftFunc(s, pycompat.IsSpace)
+	return strings.TrimLeftFunc(s, textfold.IsSpace)
 }
 
 // prevNext matches `Prev\s*\|\s*Next` against the whole of s.

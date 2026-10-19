@@ -9,6 +9,7 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/index"
 	"github.com/angeles725/niagara-go/internal/pycompat"
+	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
 // The `coverage [module]` report (niagara_help_lib/coverage_report.py): the
@@ -64,7 +65,7 @@ func countTree(path string, extensions []string) int {
 	n := 0
 	pyWalk(path, func(_ string, dirs, files []string) []string {
 		for _, f := range files {
-			if hasAnySuffix(pycompat.Lower(f), extensions) {
+			if hasAnySuffix(textfold.Lower(f), extensions) {
 				n++
 			}
 		}
@@ -206,7 +207,7 @@ func documentedClasses(baseDir string) map[string]bool {
 }
 
 // moduleNorm is module_export._module_norm.
-func moduleNorm(name string) string { return strings.ReplaceAll(pycompat.Lower(name), "-", "") }
+func moduleNorm(name string) string { return strings.ReplaceAll(textfold.Lower(name), "-", "") }
 
 // sourceModule is data.get("module", def) of a source-index record.
 func sourceModule(cls string, data any, def string) (string, error) {

@@ -10,6 +10,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/angeles725/niagara-go/internal/pycompat"
+	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
 // ReadLines is open(path, encoding="utf-8", errors="replace").readlines():
@@ -24,7 +25,7 @@ func ReadLines(path string) ([]string, error) {
 }
 
 // RStrip is str.rstrip() with no argument (Python's Unicode whitespace).
-func RStrip(s string) string { return strings.TrimRightFunc(s, pycompat.IsSpace) }
+func RStrip(s string) string { return strings.TrimRightFunc(s, textfold.IsSpace) }
 
 // Ellipsis is the display cut of a source line or a name: s when it has at
 // most max code points, else its first max-3 code points and "...".

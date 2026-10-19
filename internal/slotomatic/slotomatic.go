@@ -19,6 +19,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/angeles725/niagara-go/internal/pycompat"
+	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
 // Decl is one declared slot.
@@ -218,7 +219,7 @@ func findAssign(text, name string, start int) (int, bool) {
 func skipSpace(s string, i int) int {
 	for i < len(s) {
 		r, n := utf8.DecodeRuneInString(s[i:])
-		if !pycompat.IsSpace(r) {
+		if !textfold.IsSpace(r) {
 			break
 		}
 		i += n

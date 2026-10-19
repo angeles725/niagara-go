@@ -10,6 +10,7 @@ import (
 	"unicode"
 
 	"github.com/angeles725/niagara-go/internal/pycompat"
+	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
 // scriptFakes is the Go port of the fake backend scripts the frozen nsearch goldens were
@@ -103,7 +104,7 @@ func anyZZ(words []string) bool {
 
 func (f *fakeRun) corpusNav(args []string) {
 	query := args[1]
-	words := pycompat.Fields(pycompat.Lower(query))
+	words := textfold.Fields(textfold.Lower(query))
 	limit, m := opt(args, "--limit", "50"), mode(args)
 	if slices.Contains(words, "blocksslow") {
 		f.sleep()
@@ -154,7 +155,7 @@ func (f *fakeRun) niagaraHelp(args []string) {
 		version, args = args[1], args[2:]
 	}
 	query := args[1]
-	words := pycompat.Fields(pycompat.Lower(query))
+	words := textfold.Fields(textfold.Lower(query))
 	n, _ := strconv.Atoi(opt(args, "-n", "10"))
 	m := mode(args)
 	if slices.Contains(words, "docsslow") {

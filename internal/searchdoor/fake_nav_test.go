@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/pycompat"
+	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
 // The module_nav.py fake of scriptFakes: token, rank, grep, hierarchy, implementors,
@@ -170,7 +171,7 @@ func (f *fakeRun) navToken(word string) {
 
 func (f *fakeRun) navRank(rest []string, old bool) {
 	query := rest[slices.Index(rest, "--")+1]
-	words := pycompat.Fields(pycompat.Lower(query))
+	words := textfold.Fields(textfold.Lower(query))
 	switch {
 	case old:
 		f.fail("argument command: invalid choice: 'rank'")
@@ -188,7 +189,7 @@ func (f *fakeRun) navRank(rest []string, old bool) {
 			names = append(names, fakeClass(w)+suffix)
 		}
 	}
-	if slices.Contains(pycompat.Fields(query), "BStatusNumeric") {
+	if slices.Contains(textfold.Fields(query), "BStatusNumeric") {
 		names = slices.Insert(names, min(1, len(names)), "BStatusNumeric")
 	}
 	f.print("Rank %s: %d matching classes (terms: %s)", pycompat.StrRepr(query), len(names), strings.Join(words, ", "))

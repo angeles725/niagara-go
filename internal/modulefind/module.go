@@ -11,6 +11,7 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyre"
+	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
 // omap is a Python dict: values by key, iterated in first-insertion order.
@@ -181,7 +182,7 @@ func (m *module) scanSegment(cls, seg string) {
 			info.typ = tm.Group(1)
 		}
 		if fm := flagsRe.Search(seg); fm != nil {
-			info.flags = strings.Join(pycompat.Fields(fm.Group(1)), " ")
+			info.flags = strings.Join(textfold.Fields(fm.Group(1)), " ")
 		}
 		if mm := minRe.Search(seg); mm != nil {
 			if v, ok := pyFloat(mm.Group(1)); ok {

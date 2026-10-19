@@ -5,6 +5,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/angeles725/niagara-go/internal/pycompat"
+	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
 // The declaration parsing of build_class_index.py (java_text.py itself is
@@ -119,7 +120,7 @@ func keywordSpace(text, kw string) (start, end int, ok bool) {
 		before := a == 0 || !pycompat.IsWordRune(prev)
 		after := a+len(kw) == len(text) || !pycompat.IsWordRune(next)
 		if before && after {
-			if e := spanFunc(text, a+len(kw), pycompat.IsSpace); e > a+len(kw) {
+			if e := spanFunc(text, a+len(kw), textfold.IsSpace); e > a+len(kw) {
 				return a, e, true
 			}
 		}

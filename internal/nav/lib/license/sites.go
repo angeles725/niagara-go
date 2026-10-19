@@ -7,7 +7,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/angeles725/niagara-go/internal/nav/lib/javatext"
-	"github.com/angeles725/niagara-go/internal/pycompat"
+	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
 // Site is one textual getLicenseManager() occurrence of a candidate file
@@ -164,7 +164,7 @@ func instanceofCheck(after, stmt string) bool {
 	if hasWord(seg, "instanceof") {
 		return true
 	}
-	t := strings.TrimRightFunc(stmt, pycompat.IsSpace)
+	t := strings.TrimRightFunc(stmt, textfold.IsSpace)
 	return strings.HasSuffix(t, "instanceof") && !javatext.WordBefore(t, len(t)-len("instanceof"))
 }
 
@@ -210,7 +210,7 @@ func assignedVar(stmt string) (string, bool) {
 	end := e
 	for end > 0 {
 		r, n := utf8.DecodeLastRuneInString(stmt[:end])
-		if !pycompat.IsSpace(r) {
+		if !textfold.IsSpace(r) {
 			break
 		}
 		end -= n
@@ -237,7 +237,7 @@ func typeChar(r rune) bool { return castChar(r) || r == '[' || r == ']' }
 
 // collapseSpace is re.sub(r'\s+', ' ', s).strip().
 func collapseSpace(s string) string {
-	return strings.Join(strings.FieldsFunc(s, pycompat.IsSpace), " ")
+	return strings.Join(strings.FieldsFunc(s, textfold.IsSpace), " ")
 }
 
 // braceBlocks is java_text.brace_blocks: every {...} block outside comments
@@ -319,7 +319,7 @@ func isTypeBody(text string, open int) bool {
 // a `new Type (` whose '(' follows the last ';' and precedes the closing ')'
 // that ends the head.
 func anonymousClassHead(head string) bool {
-	t := strings.TrimRightFunc(head, pycompat.IsSpace)
+	t := strings.TrimRightFunc(head, textfold.IsSpace)
 	if !strings.HasSuffix(t, ")") {
 		return false
 	}
@@ -399,7 +399,7 @@ func declaresFrom(s, name string, ok func(t int) bool) int {
 		ws := k
 		for ws > 0 {
 			r, n := utf8.DecodeLastRuneInString(s[:ws])
-			if !pycompat.IsSpace(r) {
+			if !textfold.IsSpace(r) {
 				break
 			}
 			ws -= n

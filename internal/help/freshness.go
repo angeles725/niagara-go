@@ -16,6 +16,7 @@ import (
 	"github.com/angeles725/niagara-go/internal/help/fts"
 	"github.com/angeles725/niagara-go/internal/index"
 	"github.com/angeles725/niagara-go/internal/pycompat"
+	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
 // freshnessDirs are SOURCE_DIRS: the raw corpus directories whose change
@@ -37,7 +38,7 @@ func fingerprintDir(path, ext string) *dirPrint {
 	}
 	fp := &dirPrint{}
 	fts.WalkFiles(path, func(p string) {
-		if ext != "" && !strings.HasSuffix(pycompat.Lower(filepath.Base(p)), ext) {
+		if ext != "" && !strings.HasSuffix(textfold.Lower(filepath.Base(p)), ext) {
 			return
 		}
 		if st, err := os.Stat(p); err == nil {

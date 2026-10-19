@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/angeles725/niagara-go/internal/pycompat"
+	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
 // rebuild-all (maintenance.cmd_rebuild_all): every builder of the plan in
@@ -324,7 +325,7 @@ func buildLogTail(data []byte) []string {
 	var tail []string
 	for _, line := range strings.Split(strings.ReplaceAll(text, "\r", "\n"), "\n") {
 		if strings.HasPrefix(line, "  SKIP") || strings.HasPrefix(line, "  FAIL") || strings.HasPrefix(line, "Ran ") {
-			tail = append(tail, strings.TrimRightFunc(line, pycompat.IsSpace))
+			tail = append(tail, strings.TrimRightFunc(line, textfold.IsSpace))
 		}
 	}
 	return tail

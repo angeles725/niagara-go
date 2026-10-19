@@ -6,6 +6,7 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyhtml"
+	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
 // The port of niagara_help_lib/html_text.py: an HTML help page to readable
@@ -14,7 +15,7 @@ import (
 // images as "[image: alt -> src]", lists as "- item", the "Index | Prev |
 // Next" navigation line dropped, the title from <title> else the first <h1>.
 // Whitespace classes, strip and the \w of the edge rule are Python's Unicode
-// ones (pycompat.IsSpace, pycompat.IsWordRune).
+// ones (textfold.IsSpace, pycompat.IsWordRune).
 
 var (
 	htmlBlockTags = map[string]bool{"p": true, "div": true, "br": true, "h1": true, "h2": true, "h3": true,
@@ -232,7 +233,7 @@ func collapseSpace(s string) string {
 	var b strings.Builder
 	space := false
 	for _, r := range s {
-		if pycompat.IsSpace(r) {
+		if textfold.IsSpace(r) {
 			if !space {
 				b.WriteByte(' ')
 			}
@@ -273,7 +274,7 @@ func tidyText(text string) string {
 			continue
 		}
 		if fenced {
-			out = append(out, strings.TrimRightFunc(line, pycompat.IsSpace))
+			out = append(out, strings.TrimRightFunc(line, textfold.IsSpace))
 			continue
 		}
 		line = pycompat.Strip(line)
@@ -339,9 +340,9 @@ func isPrevNext(s string) bool {
 
 // cutBar consumes \s*\|\s*.
 func cutBar(s string) (string, bool) {
-	s = strings.TrimLeftFunc(s, pycompat.IsSpace)
+	s = strings.TrimLeftFunc(s, textfold.IsSpace)
 	rest, ok := strings.CutPrefix(s, "|")
-	return strings.TrimLeftFunc(rest, pycompat.IsSpace), ok
+	return strings.TrimLeftFunc(rest, textfold.IsSpace), ok
 }
 
 // squeezeAfterFence is re.sub(r"```\n\n+", "```\n", text).

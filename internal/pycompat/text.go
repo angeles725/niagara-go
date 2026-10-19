@@ -8,10 +8,7 @@ import (
 )
 
 // Strip is str.strip() with no argument.
-func Strip(s string) string { return strings.TrimFunc(s, IsSpace) }
-
-// Fields is str.split() with no separator; it is textfold.Fields.
-func Fields(s string) []string { return textfold.Fields(s) }
+func Strip(s string) string { return strings.TrimFunc(s, textfold.IsSpace) }
 
 // LineBreakLen returns the byte length of the str.splitlines() boundary at s[i:] ("\r\n" is
 // one two-byte boundary), or 0 when s[i:] does not start with one.

@@ -7,6 +7,7 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyjson"
+	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
 // The port of tools/method_indexer.py: indexes/method-index.json, a
@@ -42,7 +43,7 @@ func leadingWord(s string) int {
 // it does not match.
 func constructorName(sig string) string {
 	n := leadingWord(sig)
-	if n > 0 && strings.HasPrefix(strings.TrimLeftFunc(sig[n:], pycompat.IsSpace), "(") {
+	if n > 0 && strings.HasPrefix(strings.TrimLeftFunc(sig[n:], textfold.IsSpace), "(") {
 		return sig[:n]
 	}
 	return ""
@@ -58,7 +59,7 @@ func methodName(sig string) string {
 	if p < 0 {
 		return ""
 	}
-	head := strings.TrimRightFunc(sig[:p], pycompat.IsSpace)
+	head := strings.TrimRightFunc(sig[:p], textfold.IsSpace)
 	start := len(head)
 	for start > 0 {
 		r, size := utf8.DecodeLastRuneInString(head[:start])
@@ -73,7 +74,7 @@ func methodName(sig string) string {
 // fieldName is `signature.split(" - ")[0].split()[-1]`, "" for no word.
 func fieldName(sig string) string {
 	head, _, _ := strings.Cut(sig, " - ")
-	parts := strings.FieldsFunc(head, pycompat.IsSpace)
+	parts := strings.FieldsFunc(head, textfold.IsSpace)
 	if len(parts) == 0 {
 		return ""
 	}
