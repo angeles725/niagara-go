@@ -618,7 +618,7 @@ lines); `next` would name only the second half, and `progress` reads naturally w
 
 ## course quiz
 
-`course quiz [--lab GROUP] [--kind why|decision|trap|recall|predict] [-n N] [--seed S] [--answers]` draws study
+`course quiz [--lab GROUP] [--kind why|decision|trap|recall|predict] [-n N] [--seed S] [--answers] [--no-context]` draws study
 questions from the answer keys; it reads no station.
 
 | Kind | Items | Prompt | Answer |
@@ -642,17 +642,22 @@ range: they keep the empty/placeholder rule only.
 `--lab` and `--kind` narrow the pool; `-n` is the number of questions (default 5; fewer when the
 pool holds fewer). The order is a Fisher-Yates shuffle driven by a PCG seeded with `--seed`, so the
 same seed draws the same quiz on every platform; without `--seed` the clock gives one (below
-1000000) and the header prints it. Each question prints `Q<n>. <ID> (<kind> · <section>)`, the
-prompt and up to eight lines of the item's course text (the lines of `course text`, then `… more:
-course text <ID>`). Without `--answers` the last line is the command that prints the same quiz
-with its answers (`answers: course quiz --lab 3 --seed 1 --answers`); with it, an `answers` block
-follows the questions: `A<n>. <ID> [<status>] <file>:<line>` and the answer. Non-interactive by
-design (testable, no state files; spaced repetition is out of scope).
+1000000) and the header prints it. Each question prints `Q<n>. <ID> (<kind> · <section>)`, then
+` [predicted]` or ` [unverified]` when its answer is not confirmed (the item carries that marker
+and no verified one), and the prompt. Without `--answers` the last line is the command that prints
+the same quiz with its answers (`answers: course quiz --lab 3 --seed 1 --answers`); with it, an
+`answers` block follows the questions: `A<n>. <ID> [<status>] <file>:<line>`, the answer, then up
+to eight lines of the item's course text (the lines of `course text`, then `… more: course text
+<ID>`). The course text follows the answer, never the question, because it may state the answer
+(L4.14's `LI:787-789` names the 1-degree band); `--no-context` prints none and reads none (a
+missing text file then stops nothing), and the replay line keeps it. Non-interactive by design
+(testable, no state files; spaced repetition is out of scope).
 
 Exit: 0 at least one question drawn; 1 an unknown group, or no question of the kinds in the
 groups (`course: no why, decision, trap, recall, predict question in RAX (searched 10 items)`); 2 the answer keys
 or a text file cannot be read, a drawn item's range lies outside its text file (the message of
-`course text`, before any question is printed), or `-n` below 1. The replay line shell-quotes a
+`course text`, before any question is printed; checked without `--answers` too, so the replay line
+works, but not under `--no-context`), or `-n` below 1. The replay line shell-quotes a
 `--lab` value the shell would split or expand.
 
 ## Live run
@@ -844,6 +849,9 @@ FAILs, no CONTRADICTED prediction, the item and status counts), not this table.
   `TestQuizPoolSolid` checks every question of both fixtures (no empty, placeholder or unsourced
   answer, no answer its prompt states, no two items with one prompt or one answer) and
   `TestQuizPoolReal` the real keys, under `NIAGARA_RESEARCH_DIR`, logging the pool size per kind.
+  `TestQuizContextAfterAnswers`: the course text after the answers only, `--no-context` (kept by
+  the replay line) and the `[predicted]`/`[unverified]` tags (L1.10, predicted then verified, has
+  none); `TestQuizNoContextReadsNoText`: a missing text file stops nothing under `--no-context`.
   `TestProgressCannotCheck` pins the two exit-2 paths of progress (a bad `--date` with a station;
   every linked check skipped), `TestProgressJSONGroup` the group key of the actions.
 - `check/verify_test.go` `TestSuggestionEvidence` and `TestEvidenceOfEveryKind`: the live/offline

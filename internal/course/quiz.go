@@ -159,6 +159,7 @@ type quizOpts struct {
 	seed      int
 	hasSeed   bool
 	answers   bool
+	noContext bool
 }
 
 // again is the command that draws the same quiz with its answers.
@@ -173,7 +174,11 @@ func (o quizOpts) again() string {
 	if o.count != 5 {
 		parts = append(parts, "-n "+strconv.Itoa(o.count))
 	}
-	return strings.Join(append(parts, "--seed "+strconv.Itoa(o.seed), "--answers"), " ")
+	parts = append(parts, "--seed "+strconv.Itoa(o.seed))
+	if o.noContext {
+		parts = append(parts, "--no-context")
+	}
+	return strings.Join(append(parts, "--answers"), " ")
 }
 
 // safeArg is a word the shell neither splits nor expands.
@@ -222,6 +227,9 @@ func cmdQuiz(c *key.Corpus, s cli.Stdio, root string, o quizOpts) int {
 	drawn := pool[:min(o.count, len(pool))]
 	texts := map[string][]string{}
 	for _, q := range drawn {
+		if o.noContext {
+			break // no course text is printed, so none is read
+		}
 		if f := q.it.TextFile; f != "" && texts[f] == nil {
 			lines, msg := readText(root, f)
 			if msg != "" {
@@ -239,7 +247,7 @@ func cmdQuiz(c *key.Corpus, s cli.Stdio, root string, o quizOpts) int {
 		strings.Join(kinds, ", "), scopeLabel, o.seed)
 	for i, q := range drawn {
 		fmt.Fprintln(s.Out)
-		printQuestion(s.Out, i+1, q, texts[q.it.TextFile])
+		printQuestion(s.Out, i+1, q)
 	}
 	fmt.Fprintln(s.Out)
 	if !o.answers {
@@ -250,6 +258,7 @@ func cmdQuiz(c *key.Corpus, s cli.Stdio, root string, o quizOpts) int {
 	for i, q := range drawn {
 		fmt.Fprintf(s.Out, "\nA%d. %s [%s] %s:%d\n", i+1, q.it.ID, strings.Join(q.it.StatusLabels(), ", "), q.it.File, q.it.Line)
 		printIndented(s.Out, q.answer)
+		printContext(s.Out, q.it, texts[q.it.TextFile])
 	}
 	return cli.ExitFound
 }
@@ -279,22 +288,47 @@ func printIndented(w io.Writer, text string) {
 	}
 }
 
-// printQuestion prints "Q<n>. <ID> (<kind> · <section>)", the prompt, and up to quizContext lines
-// of the item's course text (lines is that file, nil when it points at none).
-func printQuestion(w io.Writer, n int, q question, lines []string) {
-	fmt.Fprintf(w, "Q%d. %s (%s · %s)\n", n, q.it.ID, q.kind, q.it.Section)
+// printQuestion prints "Q<n>. <ID> (<kind> · <section>)", the unconfirmed tag of the answer
+// ([predicted], [unverified]) when it has one, and the prompt.
+func printQuestion(w io.Writer, n int, q question) {
+	tag := ""
+	if u := unconfirmed(q.it); len(u) > 0 {
+		tag = " [" + strings.Join(u, ", ") + "]"
+	}
+	fmt.Fprintf(w, "Q%d. %s (%s · %s)%s\n", n, q.it.ID, q.kind, q.it.Section, tag)
 	printIndented(w, q.prompt)
-	shown := 0
-	for _, r := range q.it.Ranges { // cmdQuiz checked every range against lines
-		if lines == nil {
-			return
+}
+
+// unconfirmed is the statuses that leave the item's answer unconfirmed: predicted and
+// unverified, unless a verified marker has confirmed it since; nil for a confirmed answer.
+func unconfirmed(it *key.Item) []string {
+	if it.HasStatus("verified") {
+		return nil
+	}
+	var out []string
+	for _, st := range []string{"predicted", "unverified"} {
+		if it.HasStatus(st) {
+			out = append(out, st)
 		}
+	}
+	return out
+}
+
+// printContext prints up to quizContext lines of the item's course text after its answer (lines
+// is that file, nil when it points at none or --no-context read none), then "… more: course text
+// <ID>" when more remain. It follows the answer because the text may state it.
+func printContext(w io.Writer, it *key.Item, lines []string) {
+	if lines == nil {
+		return
+	}
+	shown := 0
+	for _, r := range it.Ranges { // cmdQuiz checked every range against lines
 		if shown == 0 {
-			fmt.Fprintf(w, "    %s:%s (%s)\n", q.it.TextFile, rangesText(q.it.Ranges), q.it.ID)
+			fmt.Fprintf(w, "    %s:%s (%s)\n", it.TextFile, rangesText(it.Ranges), it.ID)
 		}
 		for l := r.A; l <= r.B; l++ {
 			if shown == quizContext {
-				fmt.Fprintf(w, "    … more: course text %s\n", q.it.ID)
+				fmt.Fprintf(w, "    … more: course text %s\n", it.ID)
 				return
 			}
 			fmt.Fprintln(w, strings.TrimRight(fmt.Sprintf("    %5d  %s", l, lines[l-1]), " \t"))

@@ -141,3 +141,58 @@ func TestQuizPoolReal(t *testing.T) {
 	}
 	t.Logf("real quiz pool: %v", got)
 }
+
+// The course text follows the answers, never the questions (it may state the answer: L4.14's
+// LI:787-789 names the 1-degree band); --no-context drops it. A question whose answer is not
+// confirmed (predicted or unverified, not verified since) carries its status on the question line.
+func TestQuizContextAfterAnswers(t *testing.T) {
+	quiz := func(args ...string) string {
+		t.Helper()
+		code, out, errb := run(append([]string{"--root", "testdata/quiz-root", "quiz", "-n", "20", "--seed", "1"}, args...)...)
+		if code != 0 {
+			t.Fatalf("exit %d; stdout:\n%s\nstderr: %s", code, out, errb)
+		}
+		return out
+	}
+	out := quiz("--kind", "recall", "--answers")
+	answers := strings.Index(out, "\nanswers\n")
+	if c := strings.Index(out, "quiz fixture line 4"); answers < 0 || c < answers {
+		t.Errorf("course text at %d, want after the answers at %d:\n%s", c, answers, out)
+	}
+	if want := "    `local:`\n    One query, empty body = this machine.\n" +
+		"    sources/n4-dev-course/text/Lab Instructions.txt:4 (L1.2)\n        4  Lab Instructions quiz fixture line 4\n"; !strings.Contains(out, want) {
+		t.Errorf("want the answer, then its course text:\n%s", out)
+	}
+	if out := quiz("--kind", "recall"); strings.Contains(out, "quiz fixture line") {
+		t.Errorf("course text without --answers:\n%s", out)
+	}
+	out = quiz("--no-context", "--answers")
+	if strings.Contains(out, "quiz fixture line") || strings.Contains(out, "Lab Instructions.txt:") {
+		t.Errorf("course text with --no-context:\n%s", out)
+	}
+	if out := quiz("--no-context"); !strings.Contains(out, "answers: course quiz -n 20 --seed 1 --no-context --answers\n") {
+		t.Errorf("the replay line drops --no-context:\n%s", out)
+	}
+	out = quiz()
+	for _, w := range []string{" (predict · Lab 1 — Investigating ORDs (`LI:1-12`)) [predicted]\n    Predict what you observe, and why: *Observe* two jars",
+		". L1.9 (why · Lab 1 — Investigating ORDs (`LI:1-12`)) [unverified]\n",
+		". L1.10 (predict · Lab 1 — Investigating ORDs (`LI:1-12`))\n"} {
+		if !strings.Contains(out, w) {
+			t.Errorf("stdout lacks %q:\n%s", w, out)
+		}
+	}
+}
+
+// --no-context reads no course text, so a missing text file does not stop the quiz.
+func TestQuizNoContextReadsNoText(t *testing.T) {
+	root := t.TempDir()
+	if err := os.CopyFS(root, os.DirFS("testdata/quiz-root")); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Remove(root + "/sources/n4-dev-course/text/Lab Instructions.txt"); err != nil {
+		t.Fatal(err)
+	}
+	if code, out, errb := run("--root", root, "quiz", "--no-context", "--answers", "--seed", "1"); code != 0 {
+		t.Errorf("exit %d, want 0; stdout:\n%s\nstderr: %s", code, out, errb)
+	}
+}

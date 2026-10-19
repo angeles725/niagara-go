@@ -152,7 +152,8 @@ func buildParser() (*argparse.Parser, map[string]*argparse.Parser) {
 		"recall (a lab Name = `value` step), predict (a lab *Observe* step)"}, "--kind")
 	qz.Add(argparse.Arg{Type: argparse.Int, Default: 5, Metavar: "N", Help: "questions to draw (default: 5; fewer when the selection holds fewer)"}, "-n")
 	qz.Add(argparse.Arg{Type: argparse.Int, Metavar: "S", Help: "the draw's seed: the same seed draws the same quiz (default: from the clock, printed)"}, "--seed")
-	qz.Add(argparse.Arg{Action: argparse.StoreTrue, Help: "print every answer and its status after the questions"}, "--answers")
+	qz.Add(argparse.Arg{Action: argparse.StoreTrue, Help: "print every answer, its status and its course text after the questions"}, "--answers")
+	qz.Add(argparse.Arg{Action: argparse.StoreTrue, Help: "print no course text after the answers (and read none)"}, "--no-context")
 	return p, subs
 }
 
@@ -209,7 +210,7 @@ func Main(args []string, s cli.Stdio) int {
 		return cmdVerify(c, s, o, ns.String("status"), groups, ns.String("date"), ns.Bool("json"))
 	case "quiz":
 		return cmdQuiz(c, s, root, quizOpts{lab: ns.String("lab"), hasLab: ns.Get("lab") != nil, kind: ns.String("kind"),
-			count: ns.Int("n"), seed: ns.Int("seed"), hasSeed: ns.Get("seed") != nil, answers: ns.Bool("answers")})
+			count: ns.Int("n"), seed: ns.Int("seed"), hasSeed: ns.Get("seed") != nil, answers: ns.Bool("answers"), noContext: ns.Bool("no_context")})
 	case "status":
 		return cmdStatus(c, s, ns.Get("lab") != nil, ns.String("lab"), ns.String("status"), ns.Bool("json"))
 	default:

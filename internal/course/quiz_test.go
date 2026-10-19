@@ -82,7 +82,7 @@ func TestQuizSeed(t *testing.T) {
 	}
 }
 
-// A question prints at most quizContext text lines, then the command that prints them all.
+// An answer is followed by at most quizContext text lines, then the command that prints them all.
 func TestQuizContextCap(t *testing.T) {
 	lines := make([]string, 20)
 	for i := range lines {
@@ -90,7 +90,7 @@ func TestQuizContextCap(t *testing.T) {
 	}
 	it := &key.Item{ID: "L9.1", Section: "Lab 9", Step: "*Why?*", TextFile: key.LabText, Ranges: []key.Range{{A: 2, B: 6}, {A: 10, B: 15}}}
 	var b strings.Builder
-	printQuestion(&b, 1, question{it: it, kind: quizWhy, prompt: it.Step}, lines)
+	printContext(&b, it, lines)
 	out := b.String()
 	if !strings.Contains(out, "   10  line 10\n       11  line 11\n       12  line 12\n    … more: course text L9.1\n") ||
 		strings.Contains(out, "line 13") {
