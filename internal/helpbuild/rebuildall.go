@@ -56,9 +56,6 @@ var rebuildBuilders = []Builder{
 	{"course_extractor.py", []string{"course-text/"}, "", runCourse},
 }
 
-// Builders returns the rebuild-all plan in run order (a copy).
-func Builders() []Builder { return append([]Builder(nil), rebuildBuilders...) }
-
 // RebuildOptions are rebuild-all's switches. Only keeps the builders whose
 // script name starts with it ("" keeps all); DryRun prints the plan and
 // runs nothing; StampOnly writes the manifest and nothing else. Stdout and
