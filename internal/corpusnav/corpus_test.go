@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/angeles725/niagara-go/internal/corpusnav/blocksearch"
+	"github.com/angeles725/niagara-go/internal/pypath"
 )
 
 // testCorpus is the fixture corpus (niagara-research tools/tests/fixtures/golden-cli/corpus).
@@ -22,14 +22,26 @@ func TestPyPath(t *testing.T) {
 	for in, want := range map[string]string{"a//b/./c/": "a/b/c", "./a": "a", ".": ".", "": ".", "/x/../y": "/x/../y",
 		"//srv/x": "/srv/x"} {
 		if runtime.GOOS == "windows" && strings.HasPrefix(in, "//") {
-			continue // a UNC share on Windows (blocksearch TestWindowsPathlib)
+			continue // a UNC share on Windows (pypath TestWindowsPathlib)
 		}
 		if got := pyPath(in); got != filepath.FromSlash(want) {
 			t.Errorf("pyPath(%q) = %q, want %q", in, got, filepath.FromSlash(want))
 		}
 	}
-	if !blocksearch.PathLess(filepath.FromSlash("docs/a/x.md"), filepath.FromSlash("docs/a-b.md")) {
+	if !pypath.Less(filepath.FromSlash("docs/a/x.md"), filepath.FromSlash("docs/a-b.md")) {
 		t.Error("Path order compares components, not strings")
+	}
+}
+
+// TestCorpusPathsFollowTheHost: corpus paths are pathlib's, so on Windows a docs id is
+// "docs\\guide.md" as the Python tool prints it.
+func TestCorpusPathsFollowTheHost(t *testing.T) {
+	c, _, _ := testCorpus(t)
+	if want := filepath.FromSlash("testdata/corpus/docs"); c.docs != want {
+		t.Errorf("docs = %q, want %q", c.docs, want)
+	}
+	if got := relTo(pyJoin(c.docs, "a.md"), c.root); got != filepath.FromSlash("docs/a.md") {
+		t.Errorf("relTo = %q", got)
 	}
 }
 

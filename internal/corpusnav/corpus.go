@@ -9,6 +9,7 @@ import (
 	"github.com/angeles725/niagara-go/internal/blockfiles"
 	"github.com/angeles725/niagara-go/internal/corpusnav/blocksearch"
 	"github.com/angeles725/niagara-go/internal/pycompat"
+	"github.com/angeles725/niagara-go/internal/pypath"
 	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
@@ -31,9 +32,9 @@ func (c *corpus) search() *blocksearch.Corpus {
 	return &blocksearch.Corpus{Root: c.root, Catalog: c.catalog, Docs: c.docs, Retros: c.retros, IndexDir: c.indexDir}
 }
 
-func pyPath(p string) string         { return blocksearch.PyPath(p) }
-func pyJoin(a, b string) string      { return blocksearch.PyJoin(a, b) }
-func relTo(path, root string) string { return blocksearch.RelTo(path, root) }
+func pyPath(p string) string         { return pypath.Str(p) }
+func pyJoin(a, b string) string      { return pypath.Join(a, b) }
+func relTo(path, root string) string { return pypath.RelTo(path, root) }
 func dirFiles(dir string) []string   { return blocksearch.DirFiles(dir) }
 
 func displayID(label string) string { return blocksearch.DisplayID(label) }

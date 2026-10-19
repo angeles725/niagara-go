@@ -12,6 +12,7 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/blockfiles"
 	"github.com/angeles725/niagara-go/internal/pycompat"
+	"github.com/angeles725/niagara-go/internal/pypath"
 	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
@@ -29,12 +30,12 @@ type Corpus struct {
 // New is the corpus at root with the find cache in indexDir (default
 // <root>/tools/.corpus-index).
 func New(root, indexDir string) *Corpus {
-	root = PyPath(root)
+	root = pypath.Str(root)
 	if indexDir == "" {
-		indexDir = PyJoin(PyJoin(root, "tools"), ".corpus-index")
+		indexDir = pypath.Join(pypath.Join(root, "tools"), ".corpus-index")
 	}
-	return &Corpus{Root: root, Catalog: PyJoin(root, "CATALOG.md"), Docs: PyJoin(root, "docs"),
-		Retros: PyJoin(root, "retros"), IndexDir: PyPath(indexDir)}
+	return &Corpus{Root: root, Catalog: pypath.Join(root, "CATALOG.md"), Docs: pypath.Join(root, "docs"),
+		Retros: pypath.Join(root, "retros"), IndexDir: pypath.Str(indexDir)}
 }
 
 // DisplayID is corpus.display_id: B720, B1-3, BTI; sub-corpus labels as they are.
@@ -64,7 +65,7 @@ func DirFiles(dir string) []string {
 			return
 		}
 		for _, e := range entries {
-			path := PyJoin(d, e.Name())
+			path := pypath.Join(d, e.Name())
 			if strings.HasSuffix(e.Name(), ".md") {
 				out = append(out, path)
 			}
@@ -76,7 +77,7 @@ func DirFiles(dir string) []string {
 	if st, err := os.Stat(dir); err == nil && st.IsDir() {
 		walk(dir)
 	}
-	sort.Slice(out, func(i, j int) bool { return PathLess(out[i], out[j]) })
+	sort.Slice(out, func(i, j int) bool { return pypath.Less(out[i], out[j]) })
 	return out
 }
 
@@ -187,7 +188,7 @@ func (c *Corpus) Targets(scope string) []Target {
 	for _, d := range []struct{ scope, dir string }{{"docs", c.Docs}, {"retros", c.Retros}} {
 		if scope == d.scope || scope == "all" {
 			for _, p := range DirFiles(d.dir) {
-				out = append(out, Target{RelTo(p, c.Root), p})
+				out = append(out, Target{pypath.RelTo(p, c.Root), p})
 			}
 		}
 	}
