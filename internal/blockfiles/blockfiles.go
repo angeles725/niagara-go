@@ -18,6 +18,7 @@ import (
 	"runtime"
 	"sort"
 	"strings"
+	"sync"
 
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyre"
@@ -213,45 +214,85 @@ func subLabel(root, path string) (corpus, label string, ok bool) {
 	return "", "", false
 }
 
+// mayBeSubBlock is the exact cheap test before subLabel: every name subLabel accepts
+// contains "-block" (subBlockRe) or "bloque" (subBloque and the *bloque* fallback), and
+// those patterns are case-sensitive, so the regexes never run on any other name.
+func mayBeSubBlock(name string) bool {
+	return strings.Contains(name, "-block") || strings.Contains(name, "bloque")
+}
+
+// walkWorkers bounds the directories read at once by SubBlocks.
+func walkWorkers() int { return min(runtime.GOMAXPROCS(0), 8) }
+
 // SubBlocks is sub_blocks: every sub-corpus block below root (os.walk: skipped and dot
-// directories pruned, directories sorted, symlinked directories not entered), sorted by
-// label, then path.
+// directories pruned, symlinked directories not entered, unreadable directories
+// skipped), sorted by label, then path. Directories are read in parallel; the full
+// sort makes the result independent of walk order.
 func SubBlocks(root string) []Block {
-	var out []Block
-	var walk func(dir string)
-	walk = func(dir string) {
-		entries, err := os.ReadDir(dir)
-		if err != nil {
-			return
+	w := &walker{root: root, sem: make(chan struct{}, walkWorkers()-1)}
+	w.wg.Add(1)
+	w.walk(root)
+	w.wg.Wait()
+	sortBlocks(w.out, func(a, b Block) bool { return a.Path < b.Path })
+	return w.out
+}
+
+// walker is one SubBlocks walk: sem holds a token per extra goroutine, so at most
+// walkWorkers directories are read at once; a directory with no free token is walked
+// by the goroutine that found it.
+type walker struct {
+	root string
+	sem  chan struct{}
+	wg   sync.WaitGroup
+	mu   sync.Mutex
+	out  []Block
+}
+
+func (w *walker) walk(dir string) {
+	defer w.wg.Done()
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return
+	}
+	var found []Block
+	var dirs []string
+	for _, e := range entries {
+		name := e.Name()
+		if e.Type()&os.ModeSymlink != 0 {
+			if st, err := os.Stat(join(dir, name)); err == nil && st.IsDir() {
+				continue // os.walk lists it as a directory but does not enter it
+			}
 		}
-		var dirs []string
-		for _, e := range entries {
-			name, path := e.Name(), join(dir, e.Name())
-			if e.Type()&os.ModeSymlink != 0 {
-				if st, err := os.Stat(path); err == nil && st.IsDir() {
-					continue // os.walk lists it as a directory but does not enter it
-				}
+		if e.IsDir() {
+			if !skipDirs[name] && !strings.HasPrefix(name, ".") {
+				dirs = append(dirs, join(dir, name))
 			}
-			if e.IsDir() {
-				if !skipDirs[name] && !strings.HasPrefix(name, ".") {
-					dirs = append(dirs, path)
-				}
-				continue
-			}
-			if strings.HasSuffix(name, ".md") {
-				if corpus, label, ok := subLabel(root, path); ok {
-					out = append(out, Block{label, path, corpus})
-				}
-			}
+			continue
 		}
-		sort.Strings(dirs)
-		for _, d := range dirs {
-			walk(d)
+		if strings.HasSuffix(name, ".md") && mayBeSubBlock(name) {
+			path := join(dir, name)
+			if corpus, label, ok := subLabel(w.root, path); ok {
+				found = append(found, Block{label, path, corpus})
+			}
 		}
 	}
-	walk(root)
-	sortBlocks(out, func(a, b Block) bool { return a.Path < b.Path })
-	return out
+	if len(found) > 0 {
+		w.mu.Lock()
+		w.out = append(w.out, found...)
+		w.mu.Unlock()
+	}
+	for _, d := range dirs {
+		w.wg.Add(1)
+		select {
+		case w.sem <- struct{}{}:
+			go func() {
+				defer func() { <-w.sem }()
+				w.walk(d)
+			}()
+		default:
+			w.walk(d)
+		}
+	}
 }
 
 // AllBlocks is all_blocks: the main corpus, then every sub-corpus block.
