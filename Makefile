@@ -12,7 +12,7 @@ COVERPROFILE ?= $(BIN)/cover.out
 TOOLBIN := $(abspath $(BIN))/tools
 export CGO_ENABLED=0
 
-.PHONY: all build cross test vet fmt-check check lint deadcode cover ci wintest parity hooks clean
+.PHONY: all build cross test vet fmt-check check lint deadcode cover ci wintest parity realdata pyparity hooks clean
 
 all: check build
 
@@ -44,10 +44,13 @@ lint:
 	GOOS=windows GOARCH=amd64 $(TOOLBIN)/staticcheck ./...
 
 # Report-only: lists functions unreachable from any cmd/ main (deadcode exits 0
-# on findings; only a load error fails). Test-only helpers such as internal/golden
-# are listed too.
+# on findings; only a load error fails). The test-only packages internal/golden,
+# internal/pyref and internal/help/fts/ftsfixture (with rawfixture) are filtered out:
+# no command imports them by design, so every function in them would be listed.
+DEADCODE_TESTONLY := ^internal/(golden|pyref|help/fts/ftsfixture)/
 deadcode:
-	$(GO) run $(DEADCODE) ./...
+	@out=$$($(GO) run $(DEADCODE) ./...) || exit $$?; \
+		[ -z "$$out" ] || printf '%s\n' "$$out" | grep -vE '$(DEADCODE_TESTONLY)' || true
 
 # Packages are mostly exercised from other packages' tests, so coverage is
 # measured across ./internal/... rather than per package.
@@ -65,8 +68,11 @@ wintest:
 	GO=$(GO) scripts/wintest.sh
 
 # Not part of ci: checks against the real niagara-research corpus (NIAGARA_RESEARCH, the checkout).
-# The search-quality gate TestSearchQuality (internal/searchdoor/quality_test.go): hit@1/hit@5 per
-# source must not fall below its floor. See docs/goldens.md.
+# `make realdata` runs the permanent real-data gates, which need no Python: the search-quality gate
+# TestSearchQuality (internal/searchdoor/quality_test.go; hit@1/hit@5 per source must not fall below
+# its floor), the mnav and nh real-corpus goldens, course, bog recall and hdbread. `make pyparity`
+# runs the suites that compare Go with the frozen Python reference (internal/pyref, D47), kept until
+# D47 is closed. `make parity` runs both. See docs/goldens.md.
 NIAGARA_RESEARCH ?= $(HOME)/niagara-research
 RESEARCH := $(abspath $(NIAGARA_RESEARCH))
 # Live/station suites (course, bog) read host-specific data that never enters the repo, so they are
@@ -78,25 +84,29 @@ RESEARCH := $(abspath $(NIAGARA_RESEARCH))
 # (682 records); an empty value skips it, a missing file fails. Write a `$` of an overriding path
 # as `$$`, on the command line or in the environment (docs/goldens.md).
 HDBREAD_REAL_HDB ?= $(RESEARCH)/clients/distech-merida-harbor/HM_BMS_backup_08_09_2026/HM_BMS/history/station/seg1/UMA14$$20Ret.hdb
-# PYREF_REQUIRED=1: a missing pre-go-retire Python reference (internal/pyref, D47) fails, never skips.
-parity: export PYREF_REQUIRED = 1
-parity: parity-helpbuild
+parity: realdata pyparity
+
+realdata:
 	NSEARCH_QUALITY_ROOT=$(RESEARCH) $(GO) test -count=1 -v -timeout 30m \
 		-run '^(TestSearchQuality|TestQualityFixtureMatchesResearch)$$' ./internal/searchdoor
 	MODULE_NAVIGATOR_DIR=$(RESEARCH)/module-navigator $(GO) test -count=1 -timeout 30m \
 		-run '^TestGoldenReal$$' ./internal/nav
 	NIAGARA_HELP_DIR=$(RESEARCH)/niagara-help $(GO) test -count=1 -timeout 30m \
 		-run '^TestGoldenReal$$' ./internal/help
+	NIAGARA_RESEARCH_DIR=$(RESEARCH) $(GO) test -count=1 -timeout 30m \
+		-run '^(TestCheckLiveStations|TestVerifyPredictionsTrainingStation)$$' ./internal/course/check
+	$(GO) test -count=1 -timeout 30m -run '^TestRecallRealBogs$$' ./internal/bog
+	HDBREAD_REAL_HDB='$(HDBREAD_REAL_HDB)' $(GO) test -count=1 -timeout 5m \
+		-run '^TestRealHarborHistory$$' ./internal/hdbread
+
+# PYREF_REQUIRED=1: a missing pre-go-retire Python reference (internal/pyref, D47) fails, never skips.
+pyparity: export PYREF_REQUIRED = 1
+pyparity: parity-helpbuild
 	NIAGARA_RESEARCH=$(RESEARCH) $(GO) test -count=1 -timeout 30m \
 		-run '^TestParity' ./internal/navbuild
 	NIAGARA_HELP_DIR=$(RESEARCH)/niagara-help $(GO) test -count=1 -timeout 90m -parallel 2 \
 		-run '^TestBuildMatchesPythonOnRegisteredVersions$$' ./internal/helpbuild/fulltext
-	NIAGARA_RESEARCH_DIR=$(RESEARCH) $(GO) test -count=1 -timeout 30m \
-		-run '^(TestCheckTrainingStation|TestVerifyPredictionsTrainingStation)$$' ./internal/course
-	$(GO) test -count=1 -timeout 30m \
-		-run '^(TestRecallRealBogs|TestParityRealBogs)$$' ./internal/bog
-	HDBREAD_REAL_HDB='$(HDBREAD_REAL_HDB)' $(GO) test -count=1 -timeout 5m \
-		-run '^TestRealHarborHistory$$' ./internal/hdbread
+	$(GO) test -count=1 -timeout 30m -run '^TestParityRealBogs$$' ./internal/bog
 
 hooks:
 	git config core.hooksPath scripts/git-hooks
@@ -105,7 +115,7 @@ clean:
 	rm -rf $(BIN)
 
 # Real-corpus parity (Python vs Go on the installs under /mnt/c and the niagara-help
-# versions/ trees): off in `test` and `ci`; `make parity` runs it first, then the search gate.
+# versions/ trees): off in `test` and `ci`; `make pyparity` (and so `make parity`) runs it first.
 # The S8 and S9 indexes (class, inheritance, method; source, slots, xref) are compared on
 # three versions (about 50 s), the coverage reports (coverage, coverage <module>,
 # --doc-jars) on two (2 to 4 min, mostly the --doc-jars reads over /mnt/c), the

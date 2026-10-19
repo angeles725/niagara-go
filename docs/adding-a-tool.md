@@ -1,7 +1,9 @@
 # Adding a tool
 
-How a Python tool becomes a Go command here. The rules are decisions D2-D4, D7, D18 and D29
-in niagara-research `odd/tasks/go-migration.md`.
+How a new Go-native command is added here. The Python tools are retired (Phase 5), so a new
+tool has no Python to match; the Python goldens and the `pre-go-retire` worktree serve only the
+parity of the tools already ported. The rules are decisions D2-D4, D7, D18, D29, D34 and D42 in
+niagara-research `odd/tasks/go-migration.md`.
 
 ## 1. Layout
 
@@ -27,12 +29,14 @@ func main() { cli.Run(bognav.Main) }
 
 `internal/<pkg>` exports `Main(args []string, s cli.Stdio) int`. `cli.Run` passes the process
 arguments and stdio and exits with the returned code. Return `cli.ExitFound` (0),
-`cli.ExitNoMatch` (1) or `cli.ExitCannotSearch` (2), or whatever code the Python tool uses.
+`cli.ExitNoMatch` (1) or `cli.ExitCannotSearch` (2) (a ported tool keeps the codes its Python used).
 Write only to `s.Out` and `s.Err`, so tests run `Main` in process.
 
-A tool never imports another tool's package. The one exception (D29) is a library subpackage
-`internal/<tool>/<lib>` that does not print, returns typed rows, does not depend on the tool's
-env or registry, and exports the formatter for its CLI line. Shared code goes in a shared
+A tool never imports another tool's package. There are two exceptions. D29: a library
+subpackage `internal/<tool>/<lib>` that does not print, returns typed rows, does not depend on the
+tool's env or registry, and exports the formatter for its CLI line. D42: nsearch
+(`internal/searchdoor`) renders whole mnav command outputs through `nav.RunAt`, which runs
+`nav.Main` with the checkout pinned per call and no global state. Shared code goes in a shared
 package (see the README table); ask its owner before adding to it.
 
 ## 2. Command line
@@ -44,13 +48,19 @@ stamp, not the Python checkout's.
 
 ## 3. Goldens
 
-1. Write a generator under `internal/<pkg>/testdata/` that runs the Python tool and writes
-   `golden/<case>/{cmd.json,stdout,stderr,exit}`; run it with `python3 -I`.
-2. Wire them: `func TestGolden(t *testing.T) { golden.Run(t, "testdata", Main) }`.
-3. Every deliberate divergence from Python gets an `intended.json` with a mandatory `reason`;
-   never edit `stdout`/`stderr`/`exit` by hand.
+1. Write each case as a Go-only golden (D34): `testdata/go/golden/<case>/cmd.json`, with
+   synthetic inputs built by a Go test helper and committed under `testdata/go/inputs/`.
+2. Wire them: `func TestGoldenGo(t *testing.T) { golden.RunGo(t, Main) }`.
+3. Generate the expected bytes from the Go code with
+   `GOLDEN_UPDATE=1 go test ./internal/<pkg> -run 'TestGoInputs|TestGoldenGo'`, and have a human
+   review the diff before committing; never edit `stdout`/`stderr`/`exit` by hand.
 4. After `make build`, run the same cases against the binary:
-   `GOLDEN_BIN=$PWD/bin/<tool> go test ./internal/<pkg> -run TestGolden`.
+   `GOLDEN_BIN=$PWD/bin/<tool> go test ./internal/<pkg> -run TestGoldenGo`.
+
+A tool ported from Python also keeps its frozen Python cases under `testdata/golden/`
+(`golden.Run(t, "testdata", Main)`), which a generator re-captures only from the
+`pre-go-retire` worktree (D47); each deliberate divergence from Python gets an `intended.json`
+with a mandatory `reason`.
 
 Details: [goldens.md](goldens.md).
 
@@ -117,19 +127,19 @@ less, fixtures included. A unit near 1,200 lines fails review START with
 `lens_context_budget_exceeded`, and a golden set with hundreds of files can fail well below
 that. When fixtures and code are split into two commits, review them as one slice.
 
-## 7. Real-corpus parity (`make parity`)
+## 7. Real-corpus parity (`make pyparity`)
 
 Builder ports (`internal/helpbuild`) compare Python and Go on real data: the EC-Net
 4.3.58.18 and Niagara 4.15.6.20 installs under `/mnt/c`, their niagara-help `versions/`
 trees, the real PDFs and the developer course. These tests read gigabytes, so `go test`,
 `make test` and `make ci` skip them, each skip naming the variable that turns it on.
-`make parity` sets every one (`HELPBUILD_PARITY_REAL=1`, `HELPBUILD_PARITY_FULL=1`,
+`make pyparity` (and so `make parity`) sets every one (`HELPBUILD_PARITY_REAL=1`, `HELPBUILD_PARITY_FULL=1`,
 `HELPBUILD_PARITY_415=1`) and runs the package's `Parity` tests, synthetic ones included;
 it takes several minutes (see [helpbuild.md](helpbuild.md#real-data-parity) for the list
 and the timing). Run it before handing any builder PR for review, and after changing a
 helper the builders share. A real install that is not mounted skips visibly; it never
-passes without comparing. The Python reference is not optional under `make parity`: a
-missing `python3` or niagara-help checkout fails every parity test with a message, where
-plain `go test` skips naming the variable. After Phase 5 the Python reference lives in a
-`pre-go-retire` worktree of niagara-research; point `NIAGARA_HELP_DIR` at its
-`niagara-help` folder before running `make parity`.
+passes without comparing. The Python reference is not optional under `make pyparity`: a
+missing `python3` or reference worktree fails every parity test with a message, where
+plain `go test` skips naming the variable. After Phase 5 the Python reference is the
+niagara-help `pre-go-retire` worktree named by `NIAGARA_HELP_PY_REF` (`internal/pyref`, D47;
+[goldens.md](goldens.md#freezing-and-regenerating)); `NIAGARA_HELP_DIR` stays the live data.
