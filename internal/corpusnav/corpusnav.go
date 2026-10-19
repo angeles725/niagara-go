@@ -1,7 +1,7 @@
-// Package corpusnav is tools/corpus-nav.py: navigation of the niagara-research
-// knowledge corpus (blocks, sub-corpora, docs, retros) — find, grep, show, list,
-// by-marker, by-focus, connections, graph, path, lint-refs, stats, semantic (TF-IDF;
-// the embedding backend is retired, decision D10) and selftest.
+// Package corpusnav is the cnav command (port of tools/corpus-nav.py): navigation
+// of the niagara-research knowledge corpus (blocks, sub-corpora, docs, retros) —
+// find, grep, show, list, by-marker, by-focus, connections, graph, path, lint-refs,
+// stats, semantic (TF-IDF; the embedding backend is retired, decision D10) and selftest.
 //
 // The corpus root is $CORPUS_NAV_ROOT, else the niagara-research checkout found by
 // walking up from the executable and then the working directory (locate.ResearchCheckout),
@@ -44,7 +44,7 @@ var defaultRoot = func() (string, error) {
 }
 
 func buildParser() *argparse.Parser {
-	p := argparse.New(argparse.Config{Prog: "corpus-nav.py", Formatter: argparse.RawDescriptionHelpFormatter,
+	p := argparse.New(argparse.Config{Prog: "cnav", Formatter: argparse.RawDescriptionHelpFormatter,
 		Description: "Navigate the niagara-research knowledge corpus (blocks, docs, retros)."})
 	p.Add(argparse.Arg{Action: argparse.Custom, Nargs: argparse.NoArgs, Default: argparse.Suppress,
 		Dest: argparse.Suppress, Help: "print the tools version and exit", Call: func(c *argparse.Call) error {

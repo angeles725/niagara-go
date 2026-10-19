@@ -1,0 +1,4 @@
+{
+ "reason": "Python's argparse took prog from the invoked script (tools/<tool>.py); the Go binaries are run as their installed command (tools/install.sh), so usage and help name that command, not a retired .py script.",
+ "stdout": "usage: cnav grep [-h] [--in {blocks,docs,retros,all}] [--limit LIMIT] regex\n\npositional arguments:\n  regex\n\noptions:\n  -h, --help            show this help message and exit\n  --in {blocks,docs,retros,all}\n                        corpus subset to search (default: blocks)\n  --limit, -n LIMIT     max matching lines to print (default: 50)\n"
+}
