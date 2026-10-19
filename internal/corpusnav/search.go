@@ -27,8 +27,22 @@ func (c *corpus) searchOutcome(found bool, scope string, nFiles int, unreadable 
 	return 1
 }
 
+// emptyScope reports, on stderr, a docs or retros scope that holds no file: searching
+// it is "cannot search", not "no matches". The blocks of the other scopes are required
+// by Main.
+func (c *corpus) emptyScope(scope string) bool {
+	if (scope != "docs" && scope != "retros") || len(c.targets(scope)) > 0 {
+		return false
+	}
+	fmt.Fprintf(c.err, "corpus-nav: cannot search: no files in scope %s under %s\n", scope, c.root)
+	return true
+}
+
 // cmdFind is search.cmd_find, ranked and rendered by blocksearch.
 func (c *corpus) cmdFind(query, scope string, limit int, requireAll bool) int {
+	if c.emptyScope(scope) {
+		return 2
+	}
 	r := c.search().Find(blocksearch.Query{Text: query, Scope: scope, Limit: limit, RequireAll: requireAll})
 	if r.Note != "" {
 		fmt.Fprintf(c.out, "(%s)\n", r.Note)
@@ -47,6 +61,9 @@ func (c *corpus) cmdGrep(regex, scope string, limit int) int {
 	re, err := pyre.Compile(regex, pyre.IGNORECASE)
 	if err != nil {
 		fmt.Fprintf(c.err, "Invalid regex: %v\n", err)
+		return 2
+	}
+	if c.emptyScope(scope) {
 		return 2
 	}
 	targets := c.targets(scope)

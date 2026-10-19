@@ -6,7 +6,8 @@
 // The corpus root is the parent of the directory holding the executable, symlinks
 // resolved (Python: tools/corpusnav/../.. resolved), unless $CORPUS_NAV_ROOT names
 // another; $CORPUS_NAV_INDEX_DIR moves the find cache (default <root>/tools/.corpus-index)
-// and $CORPUS_NAV_FIND_INDEX=off ranks find in memory.
+// and $CORPUS_NAV_FIND_INDEX=off ranks find in memory. A root without block files is not
+// the corpus: every lookup there exits 2 (cannot search) instead of reporting no match.
 package corpusnav
 
 import (
@@ -16,6 +17,7 @@ import (
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/argparse"
+	"github.com/angeles725/niagara-go/internal/blockfiles"
 	"github.com/angeles725/niagara-go/internal/cli"
 	"github.com/angeles725/niagara-go/internal/version"
 )
@@ -119,6 +121,11 @@ func Main(args []string, s cli.Stdio) int {
 		}
 		root = r
 	}
+	if readsCorpus(cmd, ns) && len(blockfiles.MainBlocks(root)) == 0 {
+		fmt.Fprintf(s.Err, "corpus-nav: cannot search: no block files under %s "+
+			"(set CORPUS_NAV_ROOT to the niagara-research checkout)\n", pyPath(root))
+		return 2
+	}
 	c := newCorpus(root, os.Getenv("CORPUS_NAV_INDEX_DIR"), s.Out, s.Err)
 	str := ns.String
 	switch cmd {
@@ -151,4 +158,16 @@ func Main(args []string, s cli.Stdio) int {
 	}
 	fmt.Fprintf(s.Err, "corpus-nav: unknown command %s\n", strings.TrimSpace(cmd))
 	return 2
+}
+
+// readsCorpus says whether cmd looks anything up in the corpus. lint-refs FILE... reads
+// only the files it is given, and semantic reports its own input errors first.
+func readsCorpus(cmd string, ns *argparse.Namespace) bool {
+	switch cmd {
+	case "lint-refs":
+		return len(ns.Strings("files")) == 0
+	case "semantic", "rank":
+		return !ns.Bool("build_index") && ns.Get("query") != nil
+	}
+	return true
 }
