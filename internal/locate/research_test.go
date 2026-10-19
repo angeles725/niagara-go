@@ -1,6 +1,7 @@
 package locate
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -68,5 +69,56 @@ func TestResearchCheckoutIsAFindMarker(t *testing.T) {
 		Getwd: cwdAt(filepath.Join(dir, "bin", "deep"))}
 	if got, ok := Find(o); !ok || got != dir {
 		t.Errorf("Find = %q %v, want %q true", got, ok, dir)
+	}
+}
+
+// TestResearchCheckoutSymlinkedBloque: a bloque file that is a symlink to a
+// regular file counts (symlinks are followed); a dangling one does not.
+func TestResearchCheckoutSymlinkedBloque(t *testing.T) {
+	t.Parallel()
+	for _, tt := range []struct {
+		name   string
+		target bool // create the link's target
+		want   bool
+	}{{"symlink to a regular file", true, true}, {"dangling symlink", false, false}} {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			dir := t.TempDir()
+			target := filepath.Join(t.TempDir(), "real.md")
+			if tt.target {
+				if err := os.WriteFile(target, nil, 0o644); err != nil {
+					t.Fatal(err)
+				}
+			}
+			if err := os.WriteFile(filepath.Join(dir, "CATALOG.md"), nil, 0o644); err != nil {
+				t.Fatal(err)
+			}
+			if err := os.Symlink(target, filepath.Join(dir, "niagara-mental-model-bloque1.md")); err != nil {
+				t.Skipf("symlinks unavailable: %v", err)
+			}
+			if got := ResearchCheckout(dir); got != tt.want {
+				t.Errorf("ResearchCheckout = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+// TestResearchCheckoutBloqueAfterTheFirstBatch: hasBloque reads names 256 at a
+// time; a bloque file that is not in the first batch is still found.
+func TestResearchCheckoutBloqueAfterTheFirstBatch(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	for i := range 600 {
+		if err := os.WriteFile(filepath.Join(dir, fmt.Sprintf("other-%03d.md", i)), nil, 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	for _, f := range []string{"CATALOG.md", "niagara-mental-model-bloque9.md"} {
+		if err := os.WriteFile(filepath.Join(dir, f), nil, 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if !ResearchCheckout(dir) {
+		t.Error("a bloque file among 602 entries was not found")
 	}
 }
