@@ -8,7 +8,7 @@ single gap, it MUST run this on the target's real MODULE / PACKAGE names — NOT
 abstract topic, and NEVER trusting the blocks recalled from the parent terminal.
 
 For each name it scans every corpus block file found by the shared discovery rule
-(tools/lib/blockfiles.py: the main corpus incl. the consolidated B1-3 file and suffixed
+(niagara-go internal/blockfiles: the main corpus incl. the consolidated B1-3 file and suffixed
 bloque<N>-<topic>.md names, the reflow *-block<N>.md sub-corpus,
 examinacion-optimizer-4.13/os413-bloque<N>.md and notes/bloque<N>-*.md; organized/, _backups/,
 tools/ and dot-dirs are skipped) and reports:
@@ -31,5 +31,6 @@ cited only B77/B96 and re-derived B106/B117 (+ B242/B105) that a search would ha
 Usage:
   python3 tools/check-coverage.py honeywellSpyderTool XL10NextGen honIrmConfig
   python3 tools/check-coverage.py --json honeywellVenomTools
-Pure stdlib; run from the repo root (or anywhere — paths resolve to this file's repo).
+A niagara-go binary (tools/check-coverage.py and ncov exec it); run from the repo root
+(or anywhere — paths resolve to the niagara-research checkout).
 `
