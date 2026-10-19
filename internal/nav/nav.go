@@ -18,10 +18,17 @@ import (
 	_ "github.com/angeles725/niagara-go/internal/nav/security"
 	_ "github.com/angeles725/niagara-go/internal/nav/source"
 	_ "github.com/angeles725/niagara-go/internal/nav/structure"
+	"github.com/angeles725/niagara-go/internal/navbuild/reindex"
 )
 
-// Main runs one module-nav command line and returns the process exit code.
-func Main(args []string, s cli.Stdio) int { return run("", args, s) }
+// Main runs one mnav command line and returns the process exit code: a
+// reindex line goes to the index rebuild (reindex.go), any other to run.
+func Main(args []string, s cli.Stdio) int {
+	if rest, ok := reindexArgs(args); ok {
+		return reindex.Main(rest, s)
+	}
+	return run("", args, s)
+}
 
 // run is Main, or RunAt when navDir (absolute) pins the checkout: the default
 // base directory and the runtime's corpus location.
@@ -91,32 +98,40 @@ var retired = func() map[string]bool {
 // spellings, "--"); "" when an option comes first that is not one of them
 // (help or a usage error, which the parser reports).
 func commandWord(args []string) string {
+	if i := commandIndex(args); i >= 0 {
+		return args[i]
+	}
+	return ""
+}
+
+// commandIndex is the index in args of commandWord, -1 when there is none.
+func commandIndex(args []string) int {
 	for i := 0; i < len(args); i++ {
 		a := args[i]
 		switch {
 		case a == "--":
 			if i+1 < len(args) {
-				return args[i+1]
+				return i + 1
 			}
-			return ""
+			return -1
 		case a == "-d":
 			i++
 		case strings.HasPrefix(a, "-d"):
 		case strings.HasPrefix(a, "--") && len(a) > 2:
 			name, _, hasValue := strings.Cut(a, "=")
 			if !strings.HasPrefix("--base-dir", name) {
-				return ""
+				return -1
 			}
 			if !hasValue {
 				i++
 			}
 		case strings.HasPrefix(a, "-") && a != "-":
-			return ""
+			return -1
 		default:
-			return a
+			return i
 		}
 	}
-	return ""
+	return -1
 }
 
 // orderedErr is a command's stderr: it flushes the buffered stdout before each
@@ -141,7 +156,7 @@ func BuildParser() (*argparse.Parser, error) {
 		Description: "Module Navigator - CLI for Niagara N4 decompiled modules",
 		Formatter:   argparse.RawDescriptionHelpFormatter,
 	})
-	parser.Add(argparse.Arg{Help: "Base directory (auto-detected if omitted)"}, "--base-dir", "-d")
+	addGlobalOptions(parser)
 	// The grouped list in the epilog replaces argparse's one-line {a,b,...} usage
 	// and its flat command list.
 	sub := parser.AddSubparsers(argparse.SubparsersConfig{Dest: "command", Metavar: "<command>", Help: argparse.Suppress})
@@ -154,6 +169,11 @@ func BuildParser() (*argparse.Parser, error) {
 	}
 	parser.SetEpilog(epilog)
 	return parser, nil
+}
+
+// addGlobalOptions adds module-nav's options before the command word.
+func addGlobalOptions(p *argparse.Parser) {
+	p.Add(argparse.Arg{Help: "Base directory (auto-detected if omitted)"}, "--base-dir", "-d")
 }
 
 // groupedCommands is the --help epilog: every command under its group heading, one
