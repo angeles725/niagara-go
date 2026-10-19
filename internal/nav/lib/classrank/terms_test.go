@@ -8,7 +8,8 @@ import (
 	"testing"
 )
 
-// TestTermsMatchPython replays testdata/terms.json (gen_terms.py): identifier
+// TestTermsMatchPython replays testdata/terms.json (frozen output of the retired
+// gen_terms.py): identifier
 // terms, text terms, field counts, part counts, squash and query terms of
 // class_rank.py on camel-case, accented, compatibility and stop-word inputs.
 func TestTermsMatchPython(t *testing.T) {

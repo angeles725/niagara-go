@@ -31,7 +31,7 @@ func atRoot(recorded, checkout string) string {
 // TestFulltextCommandsMatchPython runs find, guide-search, devguide-search
 // and pdf over the full-text fixture checkout and compares them with what
 // tools/niagara_help.py printed there (testdata/fulltext-cli, written by
-// testdata/fulltext_gen.py; <ROOT> is the checkout).
+// the retired fulltext_gen.py; <ROOT> is the checkout).
 func TestFulltextCommandsMatchPython(t *testing.T) {
 	raw, err := os.ReadFile("testdata/fulltext-cli/cases.json")
 	if err != nil {
@@ -69,7 +69,7 @@ func TestFulltextCommandsMatchPython(t *testing.T) {
 }
 
 // rebuildCase is one case of testdata/fulltext-rebuild/cases.json (written
-// by testdata/rebuild_gen.py) or of its intended.json, what nh prints where
+// by the retired rebuild_gen.py) or of its intended.json, what nh prints where
 // it differs from Python on purpose.
 type rebuildCase struct {
 	Name   string   `json:"name"`

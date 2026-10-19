@@ -13,7 +13,8 @@ import (
 	_ "modernc.org/sqlite"
 )
 
-// TestScanFileMatchesPython replays testdata/scan.json (gen_scan.py): the calls
+// TestScanFileMatchesPython replays testdata/scan.json (frozen output of the
+// retired gen_scan.py): the calls
 // and getLicenseManager() sites license_features._scan_file finds in sample
 // sources (call form, receiver, vendor, feature, line and arguments; site line,
 // features and reason), read back through the

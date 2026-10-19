@@ -8,7 +8,7 @@ import (
 )
 
 // TestDeclScannersMatchPython compares the hand scanners with corpus.py's
-// regexes on testdata/decl.json (gen_decl.py).
+// regexes on testdata/decl.json (frozen output of the retired gen_decl.py).
 func TestDeclScannersMatchPython(t *testing.T) {
 	raw, err := os.ReadFile(filepath.Join("testdata", "decl.json"))
 	if err != nil {
@@ -36,7 +36,7 @@ func TestDeclScannersMatchPython(t *testing.T) {
 				t.Errorf("MatchDecl(%q) = %+v %v, Python %q", c.Line, d, ok, want)
 			}
 			if c.End == nil || *c.End < 0 || *c.End > len([]rune(c.Line)) {
-				t.Errorf("decl.json %q: decl without a valid end %v (rerun gen_decl.py)", c.Line, c.End)
+				t.Errorf("decl.json %q: decl without a valid end %v (a malformed frozen case)", c.Line, c.End)
 			} else if end := len(string([]rune(c.Line)[:*c.End])); ok && d.End != end {
 				t.Errorf("MatchDecl(%q).End = %d, Python m.end() %d (byte %d)", c.Line, d.End, *c.End, end)
 			}

@@ -1,6 +1,6 @@
 // Package rawfixture installs the full-text test checkout: a copy of
 // internal/help/testdata/fulltext with the mtimes and the Python-built indexes
-// that testdata/fulltext_gen.py used, so the stored fingerprints match the
+// that the retired fulltext_gen.py used, so the stored fingerprints match the
 // copy on Linux. It does not import fts, so fts's own tests can use it;
 // every other test uses ftsfixture, which also fixes the fingerprints for
 // the host.

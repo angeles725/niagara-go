@@ -3,8 +3,11 @@
 `testdata/` is a minimal niagara-help checkout: `versions/registry.json` (the real
 registry) and, for version 4.14.0.162 whose `data_root` is `.`, a small fixture
 corpus: hand-written `indexes/*.json` and `bajadoc-clean/` texts chosen to reach the
-edge cases (name collisions, generics, case-insensitive fallbacks, CRLF text). The real indexes are megabytes; full parity is proven by
-the repository golden suite (`niagara-help/tests/golden_cli.py` with `GOLDEN_BIN`).
+edge cases (name collisions, generics, case-insensitive fallbacks, CRLF text). The real indexes are megabytes; the
+real corpus is checked by `TestGoldenReal` (`golden-real/`).
+
+The generators named below retired with the Python reference (D47): every output here is frozen
+and changes only from reviewed Go output (`docs/goldens.md`).
 
 Every case under `golden/` holds what the Python CLI printed, captured with:
 
@@ -53,8 +56,8 @@ devguide-search, pdf): version 1.0 at `.` with every text source, and 2.0 under
 hand-written to reach the edge cases: paged PDF text, change logs, code, skipped example files
 (`ext/`, `*.min.js`), CRLF text, navigation and table-of-contents lines, a line long enough to clip.
 
-`fulltext_gen.py` (`python3 -I internal/help/testdata/fulltext_gen.py`) copies `fulltext/` to a
-temporary folder, sets every file's mtime to `FIXED_NS` and runs the Python niagara-help there:
+`fulltext_gen.py` (retired with the Python reference in D47) copied `fulltext/` to a temporary
+folder, set every file's mtime to `FIXED_NS` and ran the Python niagara-help there:
 
 | Output | What Python wrote |
 |---|---|
@@ -64,12 +67,12 @@ temporary folder, sets every file's mtime to `FIXED_NS` and runs the Python niag
 
 The Go tests (`fts/ftsfixture`) copy `fulltext/` to a temporary folder with the same mtimes and
 install the databases with `<ROOT>` replaced by that folder; the fingerprint test then proves
-that Go computes exactly the fingerprint Python stored. Regenerate everything after changing
-`fulltext/`.
+that Go computes exactly the fingerprint Python stored. These outputs are frozen: a change to
+`fulltext/` needs them regenerated from the Go side and reviewed.
 
 ## Full-text rebuild
 
-`rebuild_gen.py` (`python3 -I internal/help/testdata/rebuild_gen.py`) freezes what Python does
+`rebuild_gen.py` (retired in D47) froze what Python did
 when the full-text index must be rebuilt (`fulltext_index.open_index`): each case runs the
 Python niagara-help on a fresh copy of `fulltext/` with no index (`missing`), an index whose
 stored fingerprint was changed (`stale`), a read-only `indexes/` (`ro-indexes`: Python builds in
@@ -88,6 +91,6 @@ under `devguide/`, `guides/` and `jdk/` (an unparseable file, a `&#x0;` referenc
 sanitizer gets past), Java sources (CRLF, invalid UTF-8, trailing whitespace, a colliding simple
 name, a missing file), guide and devguide pages, a stamped `indexes/.manifest.json` with every
 freshness status, and `install/` with doc jars against `versions/4.14.0.162.manifest.json`.
-`s5_gen.py` (`python3 -I internal/help/testdata/s5_gen.py`) runs the Python niagara-help on a
-fresh copy per case and writes `s5-cli/<case>.txt` (stdout, `<ROOT>` for the checkout) and
+`s5_gen.py` (retired in D47) ran the Python niagara-help on a
+fresh copy per case and wrote `s5-cli/<case>.txt` (stdout, `<ROOT>` for the checkout) and
 `s5-cli/cases.json` (arguments, exit status, stderr), checked by `s5_test.go`.

@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-// termsFixture is testdata/terms.json, written by testdata/gen_terms.py from
+// termsFixture is testdata/terms.json, written by the retired gen_terms.py from
 // the real fulltext_terms functions.
 type termsFixture struct {
 	StopWords []string `json:"stop_words"`

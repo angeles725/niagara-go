@@ -12,7 +12,7 @@ import (
 	"testing"
 )
 
-// readExpectation is one entry of testdata/read/expected.json, written by gen_fixtures.py from
+// readExpectation is one entry of testdata/read/expected.json, written by the retired gen_fixtures.py from
 // tools/lib/bogio.py: the BogReadError message ({path} = the input path) or the text's digest.
 type readExpectation struct {
 	Error  string `json:"error"`

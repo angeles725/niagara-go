@@ -160,7 +160,7 @@ func pairs[V any](o *Ordered[V]) [][2]any {
 	return out
 }
 
-// dumpBog renders a graph in the shape gen_fixtures.py dump() writes; refComps < 0 takes Resolve
+// dumpBog renders a graph in the shape the retired gen_fixtures.py dump() wrote; refComps < 0 takes Resolve
 // refs from every component.
 func dumpBog(b *Bog, refComps int) map[string]any {
 	comps := []any{}
