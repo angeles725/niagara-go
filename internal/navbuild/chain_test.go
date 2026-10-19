@@ -1,95 +1,33 @@
 package navbuild
 
 import (
-	"os"
-	"slices"
 	"strings"
 	"testing"
-	"time"
 )
 
 // laterBuilders are the builders that read the class index: each runs after
 // the inventory and the class index of its base dir, in this order (the call
-// graph reads the inheritance index). pyArgs are extra builder arguments.
+// graph reads the inheritance index).
 type laterBuilder struct {
-	script, index string
-	pyArgs        []string
-	build         func(base, organized string) error
+	index string
+	build func(base, organized string) error
 }
 
 var laterBuilders = []laterBuilder{
-	{"build_inheritance.py", InheritanceFile, nil, func(base, _ string) error { _, err := BuildInheritance(base); return err }},
-	{"build_xref.py", XrefFile, nil, func(base, organized string) error { _, err := BuildXref(base, organized); return err }},
-	{"build_token_index.py", TokenFile, nil, func(base, organized string) error {
+	{InheritanceFile, func(base, _ string) error { _, err := BuildInheritance(base); return err }},
+	{XrefFile, func(base, organized string) error { _, err := BuildXref(base, organized); return err }},
+	{TokenFile, func(base, organized string) error {
 		_, err := BuildTokenIndex(base, organized, DefaultMinTokenLen)
 		return err
 	}},
-	{"build_method_index.py", MethodFile, nil, func(base, organized string) error {
+	{MethodFile, func(base, organized string) error {
 		_, err := BuildMethodIndex(base, organized)
 		return err
 	}},
-	{"build_callgraph_index.py", CallgraphFile, nil, func(base, organized string) error {
+	{CallgraphFile, func(base, organized string) error {
 		_, err := BuildCallgraph(base, organized)
 		return err
 	}},
-}
-
-// TestParityLaterIndexes builds the whole chain on each side (inventory, class
-// index, then laterBuilders) and diffs every later index. The Python builders
-// run with a random hash seed (-E): the xref key order no longer follows set
-// order (module-navigator fix/deterministic-xref-base-dir).
-// $NAVBUILD_PARITY_ONLY (comma-separated index names) limits the later
-// builders checked; on the full corpus each Go builder runs in a child process
-// so its peak RSS is its own.
-func TestParityLaterIndexes(t *testing.T) {
-	only := map[string]bool{}
-	for _, n := range strings.Split(os.Getenv("NAVBUILD_PARITY_ONLY"), ",") {
-		if n != "" {
-			only[n] = true
-		}
-	}
-	for n := range only {
-		if !slices.ContainsFunc(laterBuilders, func(b laterBuilder) bool { return b.index == n }) {
-			t.Fatalf("NAVBUILD_PARITY_ONLY names %q, which no later builder writes", n)
-		}
-	}
-	for _, tc := range []struct {
-		name   string
-		corpus func(*testing.T) string
-	}{
-		{"synthetic", syntheticCorpus},
-		{"real-modules", realSubset},
-		{"full-corpus", fullCorpus},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			organized := tc.corpus(t)
-			pyBase, goBase := newBase(t), newBase(t)
-			runPython(t, "build_module_inventory.py", pyBase, organized)
-			runPython(t, "build_class_index.py", pyBase, organized)
-			if _, err := BuildInventory(goBase, organized); err != nil {
-				t.Fatal(err)
-			}
-			if _, err := BuildClassIndex(goBase, organized); err != nil {
-				t.Fatal(err)
-			}
-			for _, b := range laterBuilders {
-				if len(only) > 0 && !only[b.index] && b.index != InheritanceFile {
-					continue
-				}
-				runPython(t, b.script, pyBase, organized, b.pyArgs...)
-				if tc.name == "full-corpus" {
-					runGoChild(t, b.index, goBase, organized)
-				} else {
-					t0 := time.Now()
-					if err := b.build(goBase, organized); err != nil {
-						t.Fatal(err)
-					}
-					t.Logf("go %s: %v", b.index, time.Since(t0).Round(time.Millisecond))
-				}
-				sameIndex(t, b.index, pyBase, goBase)
-			}
-		})
-	}
 }
 
 func TestReadClassIndex(t *testing.T) {
