@@ -16,9 +16,9 @@ import (
 // internal/pyxml in ETree mode (expat's verdict and error text, the encoding
 // from the declaration).
 
-// TocEntry is one page of a toc.xml: its TOC title and the titles of its
+// tocEntry is one page of a toc.xml: its TOC title and the titles of its
 // ancestors, outermost first.
-type TocEntry struct {
+type tocEntry struct {
 	Title string
 	Trail []string
 }
@@ -26,14 +26,14 @@ type TocEntry struct {
 // Toc is parse_toc's dict: Pages keyed by the page path relative to the
 // toc's folder, Order their insertion order.
 type Toc struct {
-	Pages map[string]TocEntry
+	Pages map[string]tocEntry
 	Order []string
 }
 
-// FindToc is guide_toc.find_toc: the folder's toc.xml in any letter case
+// findToc is guide_toc.find_toc: the folder's toc.xml in any letter case
 // (the first in sorted order that is a file, links followed), "" when there
 // is none or the folder cannot be listed.
-func FindToc(folder string) string {
+func findToc(folder string) string {
 	names, err := sortedNames(folder)
 	if err != nil {
 		return ""
@@ -60,12 +60,12 @@ func parseTocTree(path string) (*pyxml.Element, error) {
 	return pyxml.Parse(data, pyxml.Mode{ETree: true})
 }
 
-// ParseToc is guide_toc.parse_toc. Anchors (#x) are dropped and
+// parseToc is guide_toc.parse_toc. Anchors (#x) are dropped and
 // backslashes normalized; the first entry for a page wins. A toc.xml that
 // is not well-formed (or cannot be read) yields an empty Toc and the
 // warning line Python prints on stderr.
-func ParseToc(path string) (toc *Toc, warning string) {
-	toc = &Toc{Pages: map[string]TocEntry{}}
+func parseToc(path string) (toc *Toc, warning string) {
+	toc = &Toc{Pages: map[string]tocEntry{}}
 	root, err := parseTocTree(path)
 	if err != nil {
 		return toc, "WARNING: toc not read, page titles fall back to <title>: " + path + ": " + err.Error()
@@ -82,7 +82,7 @@ func ParseToc(path string) (toc *Toc, warning string) {
 			target, _, _ = strings.Cut(target, "#")
 			target = strings.ReplaceAll(pycompat.Strip(target), `\`, "/")
 			if _, seen := toc.Pages[target]; target != "" && text != "" && !seen {
-				toc.Pages[target] = TocEntry{Title: text, Trail: append([]string(nil), trail...)}
+				toc.Pages[target] = tocEntry{Title: text, Trail: append([]string(nil), trail...)}
 				toc.Order = append(toc.Order, target)
 			}
 			sub := trail
@@ -96,9 +96,9 @@ func ParseToc(path string) (toc *Toc, warning string) {
 	return toc, ""
 }
 
-// CountItems is guide_toc.count_items: the number of <tocitem> elements,
+// countItems is guide_toc.count_items: the number of <tocitem> elements,
 // the root included (Element.iter), 0 when the file is unreadable.
-func CountItems(path string) int {
+func countItems(path string) int {
 	root, err := parseTocTree(path)
 	if err != nil {
 		return 0

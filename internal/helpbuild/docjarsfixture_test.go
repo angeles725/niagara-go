@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/angeles725/niagara-go/internal/helpbuild/internal/testkit"
 )
 
 // The synthetic install and data root of the doc-jar gate tests: one entry
@@ -35,7 +37,7 @@ func covInstall(t *testing.T, dir string) string {
 	t.Helper()
 	inst := filepath.Join(dir, "install")
 	mod := filepath.Join(inst, "modules")
-	writeJar(t, filepath.Join(mod, "docAlpha-doc.jar"),
+	testkit.WriteJar(t, filepath.Join(mod, "docAlpha-doc.jar"),
 		[2]string{"META-INF/MANIFEST.MF", "m"},
 		[2]string{"META-INF/x.averyveryverylongextension", "x"},
 		[2]string{"doc/", ""},
@@ -66,9 +68,9 @@ func covInstall(t *testing.T, dir string) string {
 		[2]string{"doc/.hidden", "h"},
 		[2]string{"doc/über ñame.html", "u"},
 	)
-	writeJar(t, filepath.Join(mod, "docBeta-doc.jar"), [2]string{"doc/b.html", "b"})
-	writeJar(t, filepath.Join(mod, longJar), [2]string{"doc/l.html", "l"}, [2]string{"doc/l.gif", "g"})
-	writeJar(t, filepath.Join(mod, "docDeveloper-doc.jar"),
+	testkit.WriteJar(t, filepath.Join(mod, "docBeta-doc.jar"), [2]string{"doc/b.html", "b"})
+	testkit.WriteJar(t, filepath.Join(mod, longJar), [2]string{"doc/l.html", "l"}, [2]string{"doc/l.gif", "g"})
+	testkit.WriteJar(t, filepath.Join(mod, "docDeveloper-doc.jar"),
 		[2]string{"doc/toc.xml", "<toc/>"},
 		[2]string{"doc/a.html", "a"},
 		[2]string{"doc/b.txt", "b"},
@@ -80,7 +82,7 @@ func covInstall(t *testing.T, dir string) string {
 		[2]string{"rc/Missing.java", "class M {}"},
 		[2]string{"other.txt", "o"},
 	)
-	writeJar(t, filepath.Join(mod, "docDeveloper-ux.jar"),
+	testkit.WriteJar(t, filepath.Join(mod, "docDeveloper-ux.jar"),
 		[2]string{"web/app.js", "var a = 1;"},
 		[2]string{"web/App.JS", "var b = 2;"},
 		[2]string{"web/view.hbs", "{{x}}"},
@@ -92,34 +94,34 @@ func covInstall(t *testing.T, dir string) string {
 		[2]string{"web/data.bin", "d"},
 		[2]string{"web/Foo.class", "\xca\xfe"},
 	)
-	writeJar(t, filepath.Join(mod, "docDeveloper-rt.jar"),
+	testkit.WriteJar(t, filepath.Join(mod, "docDeveloper-rt.jar"),
 		[2]string{"rc/Y.java", "class Y {}"},
 		[2]string{"rc/Y.class", "\xca\xfe"},
 		[2]string{"lex/x.lexicon", "l"},
 		[2]string{"a/b.txt", "b"},
 		[2]string{"README", "r"},
 	)
-	writeJar(t, filepath.Join(mod, "docSource-doc.jar"),
+	testkit.WriteJar(t, filepath.Join(mod, "docSource-doc.jar"),
 		[2]string{"javax/A.java", "class A {}"},
 		[2]string{"javax/B.java", "class B {}"},
 		[2]string{"doc/index.html", "i"},
 		[2]string{"doc/toc.xml", "<toc/>"},
 		[2]string{"x.txt", "x"},
 	)
-	writeJar(t, filepath.Join(mod, "docJdk-doc.jar"),
+	testkit.WriteJar(t, filepath.Join(mod, "docJdk-doc.jar"),
 		[2]string{"doc/java/lang/Object.bajadoc", covBajadoc("java.lang.Object")},
 		[2]string{"doc/java/lang/String.bajadoc", covBajadoc("java.lang.String")},
 		[2]string{"notdoc.txt", "n"},
 	)
-	writeFile(t, filepath.Join(mod, "docBroken-doc.jar"), []byte("not a zip"))
-	writeJar(t, filepath.Join(mod, "alarm-rt.jar"),
+	testkit.WriteFile(t, filepath.Join(mod, "docBroken-doc.jar"), []byte("not a zip"))
+	testkit.WriteJar(t, filepath.Join(mod, "alarm-rt.jar"),
 		[2]string{"META-INF/MANIFEST.MF", "m"},
 		[2]string{"com/acme/BAlarm.class", "\xca\xfe"},
 		[2]string{"doc/alarm.html", "a"},
 		[2]string{"doc/alarm.css", "c"},
 	)
-	writeJar(t, filepath.Join(mod, "plain-rt.jar"), [2]string{"com/acme/BPlain.class", "\xca\xfe"})
-	writeJar(t, filepath.Join(inst, "javadoc", JavadocJar),
+	testkit.WriteJar(t, filepath.Join(mod, "plain-rt.jar"), [2]string{"com/acme/BPlain.class", "\xca\xfe"})
+	testkit.WriteJar(t, filepath.Join(inst, "javadoc", javadocJar),
 		[2]string{"doc/index.html", "i"},
 		[2]string{"doc/package-list", "javax.baja.sys"},
 		[2]string{"doc/top.html", "t"},
@@ -158,7 +160,7 @@ func covBase(t *testing.T, dir string) string {
 	t.Helper()
 	base := filepath.Join(dir, "base")
 	for _, rel := range covExtracted {
-		writeFile(t, filepath.Join(base, rel), []byte("text "+rel+"\n"))
+		testkit.WriteFile(t, filepath.Join(base, rel), []byte("text "+rel+"\n"))
 	}
 	files := map[string]string{
 		"guides/Alpha/x.bajadoc":       covBajadoc("cl.alpha.BX"),
@@ -185,7 +187,7 @@ func covBase(t *testing.T, dir string) string {
 		"indexes/jdk-class-index.json":     `{"Object": {"package": "java.lang"}}`,
 	}
 	for rel, text := range files {
-		writeFile(t, filepath.Join(base, rel), []byte(text))
+		testkit.WriteFile(t, filepath.Join(base, rel), []byte(text))
 	}
 	return base
 }
@@ -197,6 +199,6 @@ func covRepo(t *testing.T, dir, vid, install, base string) string {
 	repo := filepath.Join(dir, "repo")
 	reg := fmt.Sprintf(`{"versions": {%q: {"label": "x", "install_dir": %q, "data_root": %q}, "9.9.9.9": {"label": "y"}}}`,
 		vid, install, base)
-	writeFile(t, filepath.Join(repo, "versions", "registry.json"), []byte(reg))
+	testkit.WriteFile(t, filepath.Join(repo, "versions", "registry.json"), []byte(reg))
 	return repo
 }

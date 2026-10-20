@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/angeles725/niagara-go/internal/helpbuild/internal/testkit"
 	"github.com/angeles725/niagara-go/internal/index"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 )
@@ -140,7 +141,7 @@ func addTreeLines(t *testing.T, repo, vid string) []string {
 	}
 	if bl := filepath.Join(root, "build.log"); pycompat.IsFile(bl) {
 		lines = append(lines, "build.log:")
-		lines = append(lines, normalizeRebuild(readText(t, bl), false)...)
+		lines = append(lines, normalizeRebuild(testkit.ReadText(t, bl), false)...)
 		inner := observeRoot
 		observeRoot = func() { setAside(t, bl, aside+".log", inner) }
 	}
@@ -159,10 +160,10 @@ func treeLinesExcept(t *testing.T, repo, skip string) []string {
 	aside := repo + ".skipped"
 	var lines []string
 	if pycompat.IsDir(skip) {
-		setAside(t, skip, aside, func() { lines = treeLines(t, repo) })
+		setAside(t, skip, aside, func() { lines = testkit.TreeLines(t, repo) })
 		return lines
 	}
-	return treeLines(t, repo)
+	return testkit.TreeLines(t, repo)
 }
 
 // pathFiles are the files (relative to the data root or the repository)
@@ -189,7 +190,7 @@ func addObservation(t *testing.T, dir, repo, vid string) []string {
 			continue
 		}
 		out = append(out, strings.Join(f[:3], " ")+" text:")
-		for _, line := range strings.Split(readText(t, filepath.Join(base, filepath.FromSlash(f[0]))), "\n") {
+		for _, line := range strings.Split(testkit.ReadText(t, filepath.Join(base, filepath.FromSlash(f[0]))), "\n") {
 			out = append(out, "| "+strings.ReplaceAll(line, dir, "<dir>"))
 		}
 	}
@@ -212,10 +213,10 @@ func addFrozen(t *testing.T, name, dir, repo, vid string, setup func(repo string
 		out, code := goAdd(t, append([]string{repo}, step...)...)
 		obs = append(append(obs, "## "+strings.Join(step, " "), "# stdout"), strings.Split(out, "\n")...)
 		cur := addObservation(t, dir, repo, vid)
-		obs = append(append(obs, fmt.Sprintf("# exit %d", code), "# tree"), lineDelta(prev, cur)...)
+		obs = append(append(obs, fmt.Sprintf("# exit %d", code), "# tree"), testkit.LineDelta(prev, cur)...)
 		prev = cur
 	}
-	checkFrozen(t, "versions/"+name, relabeled(obs, dir, "<dir>"))
+	testkit.CheckFrozen(t, "versions/"+name, testkit.Relabeled(obs, dir, "<dir>"))
 }
 
 // TestVersionsAddFrozen: on the synthetic install (every doc-jar
@@ -224,10 +225,10 @@ func addFrozen(t *testing.T, name, dir, repo, vid string, setup func(repo string
 // with --default and --label, and a data root that already holds a raw
 // folder (refused, registry rolled back).
 func TestVersionsAddFrozen(t *testing.T) {
-	frozenOnly(t)
+	testkit.FrozenOnly(t)
 	dir := homeTemp(t)
 	install := syntheticInstall(t, dir)
-	writeJar(t, filepath.Join(install, "modules", "baja.jar"), [2]string{"META-INF/module.xml", moduleXML("1.0.0.0")})
+	testkit.WriteJar(t, filepath.Join(install, "modules", "baja.jar"), [2]string{"META-INF/module.xml", moduleXML("1.0.0.0")})
 	repo := filepath.Join(dir, "repo")
 	noop := func(r string) {
 		if err := os.MkdirAll(r, 0o755); err != nil {
@@ -239,7 +240,7 @@ func TestVersionsAddFrozen(t *testing.T) {
 	addFrozen(t, "add", dir, repo, "1.0.0.0", noop, []string{install}, []string{install},
 		[]string{install, "--force", "--default", "--label", "Synthetic ñ"}, []string{install + "/.", "--id", "1.0.0.0"})
 	addFrozen(t, "existing-data-root", dir, repo, "1.0.0.0", func(r string) {
-		writeFile(t, filepath.Join(r, "versions", "1.0.0.0", "guides", "keep.html"), []byte("kept"))
+		testkit.WriteFile(t, filepath.Join(r, "versions", "1.0.0.0", "guides", "keep.html"), []byte("kept"))
 		writeRegistry(t, r, map[string][3]string{"9.9.9.9": {"Other", "/elsewhere", "versions/9.9.9.9"}})
 	}, []string{install})
 }

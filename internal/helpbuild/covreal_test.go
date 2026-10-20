@@ -13,6 +13,7 @@ import (
 	"testing"
 
 	"github.com/angeles725/niagara-go/internal/help/fts"
+	"github.com/angeles725/niagara-go/internal/helpbuild/internal/testkit"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
@@ -139,7 +140,7 @@ func freshDocs(root string) (map[string]bool, error) {
 	if path == "" {
 		return nil, errors.New("the full-text index of " + root + " is missing or stale")
 	}
-	return FulltextDocsAt(path)
+	return fulltextDocsAt(path)
 }
 
 // TestCoverageRealGoldens checks the Go reports of covGoldenVersion
@@ -177,7 +178,7 @@ func TestCoverageRealGoldens(t *testing.T) {
 		t.Fatalf("%v; rebuild it first (nh rebuild-all), this test never writes the corpus", err)
 	}
 	repo := t.TempDir()
-	writeFile(t, filepath.Join(repo, "versions", "registry.json"), registry)
+	testkit.WriteFile(t, filepath.Join(repo, "versions", "registry.json"), registry)
 	b.Reset()
 	rc, err := DocJarCoverage(&b, repo, root, covGoldenVersion, freshDocs)
 	if err != nil {

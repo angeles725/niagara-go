@@ -7,6 +7,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/angeles725/niagara-go/internal/helpbuild/internal/testkit"
+	"github.com/angeles725/niagara-go/internal/helpbuild/pyfs"
+	"github.com/angeles725/niagara-go/internal/helpbuild/zipfile"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 )
 
@@ -16,12 +19,10 @@ import (
 // permission bits, size and sha256 (manifests with generated_utc
 // normalized, inline).
 
-func intV(n int) pyjson.Value { return pyjson.IntValue(int64(n)) }
-
 func collisionsValue(cs []Collision) pyjson.Value {
 	a := make([]pyjson.Value, len(cs))
 	for i, c := range cs {
-		a[i] = array(str(c.Rel), str(c.Owner), str(c.By))
+		a[i] = testkit.Array(testkit.Str(c.Rel), testkit.Str(c.Owner), testkit.Str(c.By))
 	}
 	return pyjson.Value{Kind: pyjson.Array, A: a}
 }
@@ -32,7 +33,7 @@ func extractValue(s *ExtractStats) pyjson.Value {
 		return pyjson.Value{}
 	}
 	v := pyjson.NewObject()
-	v.Set("files", intV(s.Files))
+	v.Set("files", testkit.IntV(s.Files))
 	v.Set("bytes", uintValue(s.Bytes))
 	v.Set("collisions", collisionsValue(s.Collisions))
 	return v
@@ -44,17 +45,15 @@ func fidelityValue(r *FidelityReport) pyjson.Value {
 		return pyjson.Value{}
 	}
 	v := pyjson.NewObject()
-	v.Set("checked", intV(r.Checked))
-	v.Set("matched", intV(r.Matched))
+	v.Set("checked", testkit.IntV(r.Checked))
+	v.Set("matched", testkit.IntV(r.Matched))
 	v.Set("mismatched", stringsValue(r.Mismatched))
 	v.Set("missing", stringsValue(r.Missing))
 	v.Set("eol_only", stringsValue(r.EOLOnly))
 	v.Set("collisions", collisionsValue(r.Collisions))
-	v.Set("jars", intV(r.Jars))
+	v.Set("jars", testkit.IntV(r.Jars))
 	return v
 }
-
-func dumpLine(vs ...pyjson.Value) string { return pyjson.Dumps(array(vs...), DumpDefault) }
 
 // goSetup runs ExtractAndIndex as lines: ["out", line] per log line, then
 // ["result", status, error, extract stats, fidelity report] or ["raise"].
@@ -63,13 +62,13 @@ func goSetup(repo, vid, op string) []string {
 	var out []string
 	if res != nil {
 		for _, l := range res.Log {
-			out = append(out, dumpLine(str("out"), str(l)))
+			out = append(out, testkit.DumpLine(testkit.Str("out"), testkit.Str(l)))
 		}
 	}
 	if err != nil {
 		return append(out, `["raise"]`)
 	}
-	return append(out, dumpLine(str("result"), intV(res.Status), optStr(res.Error),
+	return append(out, testkit.DumpLine(testkit.Str("result"), testkit.IntV(res.Status), testkit.OptStr(res.Error),
 		extractValue(res.Extracted), fidelityValue(res.Fidelity)))
 }
 
@@ -79,8 +78,8 @@ func goSetup(repo, vid, op string) []string {
 func setupFrozen(t *testing.T, name, repo, vid, op string, prev []string) []string {
 	t.Helper()
 	lines := append(relabel(goSetup(repo, vid, op), repo), "tree:")
-	cur := maskListingCache(treeLines(t, repo))
-	checkFrozen(t, "extract/"+name, append(lines, treeDelta(prev, cur)...))
+	cur := maskListingCache(testkit.TreeLines(t, repo))
+	testkit.CheckFrozen(t, "extract/"+name, append(lines, testkit.TreeDelta(prev, cur)...))
 	return cur
 }
 
@@ -111,7 +110,7 @@ func relabel(lines []string, repo string) []string {
 // first extract and a refused second one, then verify, fill and force over
 // a tampered tree (mismatched, eol-only and missing files, strays).
 func TestExtractFrozen(t *testing.T) {
-	frozenOnly(t)
+	testkit.FrozenOnly(t)
 	dir := t.TempDir()
 	install := syntheticInstall(t, dir)
 	repo := filepath.Join(dir, "go")
@@ -120,26 +119,26 @@ func TestExtractFrozen(t *testing.T) {
 		"1.0.0.1": {"repo root", install, "."},
 		"9.9.9.9": {"not mounted", install + "-missing", "versions/9.9.9.9"},
 	})
-	tree := maskListingCache(treeLines(t, repo))
+	tree := maskListingCache(testkit.TreeLines(t, repo))
 	tree = setupFrozen(t, "1-not-mounted-extract", repo, "9.9.9.9", "extract", tree)
 	tree = setupFrozen(t, "2-repo-root-extract", repo, "1.0.0.1", "extract", tree)
 	tree = setupFrozen(t, "3-repo-root-verify", repo, "1.0.0.1", "verify", tree)
 	tree = setupFrozen(t, "4-extract", repo, "1.0.0.0", "extract", tree)
 	setupFrozen(t, "5-extract-again", repo, "1.0.0.0", "extract", tree)
 	r := filepath.Join(repo, "versions", "1.0.0.0")
-	writeFile(t, filepath.Join(r, "guides", "ClHVACTest", "Tasks.html"), []byte("tampered"))
-	writeFile(t, filepath.Join(r, "guides", "ClHVACTest", "crlf.txt"), []byte("a\nb\n"))
-	writeFile(t, filepath.Join(r, "guides", "Stored", "s.txt"), []byte("stored\nline\n"))
-	writeFile(t, filepath.Join(r, "devguide-rc", "com", "x", "A.java"), []byte("class A {}\n"))
+	testkit.WriteFile(t, filepath.Join(r, "guides", "ClHVACTest", "Tasks.html"), []byte("tampered"))
+	testkit.WriteFile(t, filepath.Join(r, "guides", "ClHVACTest", "crlf.txt"), []byte("a\nb\n"))
+	testkit.WriteFile(t, filepath.Join(r, "guides", "Stored", "s.txt"), []byte("stored\nline\n"))
+	testkit.WriteFile(t, filepath.Join(r, "devguide-rc", "com", "x", "A.java"), []byte("class A {}\n"))
 	for _, gone := range []string{"guides/ClHVACTest/README.txt", "devguide-rc/com/x/BVal.java", "bajadoc/index.html"} {
 		if err := os.Remove(filepath.Join(r, filepath.FromSlash(gone))); err != nil {
 			t.Fatal(err)
 		}
 	}
-	writeFile(t, filepath.Join(r, "guides", "stray.txt"), []byte("removed by --force"))
-	writeFile(t, filepath.Join(r, "indexes", "old.json"), []byte("{}"))
-	writeFile(t, filepath.Join(r, "keep.txt"), []byte("outside the raw and derived dirs"))
-	tree = maskListingCache(treeLines(t, repo))
+	testkit.WriteFile(t, filepath.Join(r, "guides", "stray.txt"), []byte("removed by --force"))
+	testkit.WriteFile(t, filepath.Join(r, "indexes", "old.json"), []byte("{}"))
+	testkit.WriteFile(t, filepath.Join(r, "keep.txt"), []byte("outside the raw and derived dirs"))
+	tree = maskListingCache(testkit.TreeLines(t, repo))
 	tree = setupFrozen(t, "6-verify", repo, "1.0.0.0", "verify", tree) // mismatched, eol-only, missing
 	tree = setupFrozen(t, "7-fill", repo, "1.0.0.0", "fill", tree)     // writes only the missing
 	setupFrozen(t, "8-force", repo, "1.0.0.0", "force", tree)          // wipes raw + derived dirs
@@ -150,19 +149,19 @@ func TestExtractFrozen(t *testing.T) {
 // a jar that is a folder. Per install, each call's line and the tree it
 // left (or <absent>), then fidelity over what extract left.
 func TestDocJarCornersFrozen(t *testing.T) {
-	frozenOnly(t)
-	ok := rawEntry{name: "doc/ok.html", data: "ok"}
+	testkit.FrozenOnly(t)
+	ok := testkit.RawEntry{Name: "doc/ok.html", Data: "ok"}
 	cases := map[string][]byte{
-		"badcrc":    rawZip("", []rawEntry{ok, {name: "doc/a.txt", data: "abc", crcXor: 1}}, ""),
-		"localname": rawZip("", []rawEntry{{name: "doc/a.txt", data: "abc", localName: "doc/b.txt"}}, ""),
-		"encrypted": rawZip("", []rawEntry{{name: "doc/a.txt", data: "abc", flags: 1}}, ""),
-		"method99":  rawZip("", []rawEntry{{name: "doc/a.txt", data: "abc", method: 99}}, ""),
-		"overlap":   rawZip("", []rawEntry{{name: "doc/a.txt", data: "abc", compPlus: 4}, ok}, ""),
-		"shared":    rawZip("", []rawEntry{{name: "doc/a.txt", data: "abc"}, {name: "doc/a.txt", data: "abc", sharedHeader: 1}}, ""),
-		"short":     rawZip("", []rawEntry{{name: "doc/a.txt", data: "hello", shortSize: 3}}, ""),
-		"cp437":     rawZip("", []rawEntry{{name: "doc/\x81ber.html", data: "u"}, {name: "doc/n.html\x00.exe", data: "n"}}, ""),
-		"prepended": rawZip(strings.Repeat("#", 33), []rawEntry{ok, {name: "doc/b.txt", data: "b"}}, ""),
-		"zip64":     zip64Zip("", []rawEntry{ok}, 1, 0),
+		"badcrc":    testkit.RawZip("", []testkit.RawEntry{ok, {Name: "doc/a.txt", Data: "abc", CRCXor: 1}}, ""),
+		"localname": testkit.RawZip("", []testkit.RawEntry{{Name: "doc/a.txt", Data: "abc", LocalName: "doc/b.txt"}}, ""),
+		"encrypted": testkit.RawZip("", []testkit.RawEntry{{Name: "doc/a.txt", Data: "abc", Flags: 1}}, ""),
+		"method99":  testkit.RawZip("", []testkit.RawEntry{{Name: "doc/a.txt", Data: "abc", Method: 99}}, ""),
+		"overlap":   testkit.RawZip("", []testkit.RawEntry{{Name: "doc/a.txt", Data: "abc", CompPlus: 4}, ok}, ""),
+		"shared":    testkit.RawZip("", []testkit.RawEntry{{Name: "doc/a.txt", Data: "abc"}, {Name: "doc/a.txt", Data: "abc", SharedHeader: 1}}, ""),
+		"short":     testkit.RawZip("", []testkit.RawEntry{{Name: "doc/a.txt", Data: "hello", ShortSize: 3}}, ""),
+		"cp437":     testkit.RawZip("", []testkit.RawEntry{{Name: "doc/\x81ber.html", Data: "u"}, {Name: "doc/n.html\x00.exe", Data: "n"}}, ""),
+		"prepended": testkit.RawZip(strings.Repeat("#", 33), []testkit.RawEntry{ok, {Name: "doc/b.txt", Data: "b"}}, ""),
+		"zip64":     testkit.Zip64Zip("", []testkit.RawEntry{ok}, 1, 0),
 		"notazip":   []byte("plain text"),
 		"folder":    nil,
 	}
@@ -175,7 +174,7 @@ func TestDocJarCornersFrozen(t *testing.T) {
 				t.Fatal(err)
 			}
 		} else {
-			writeFile(t, jar, cases[name])
+			testkit.WriteFile(t, jar, cases[name])
 		}
 		var got []string
 		for _, op := range []string{"extract", "fill", "fidelity"} {
@@ -187,7 +186,7 @@ func TestDocJarCornersFrozen(t *testing.T) {
 		// Fidelity over what extract left: an existing file makes it read
 		// the entry, so the reader's errors surface here too.
 		got = append(got, "fidelity after extract:", goDocJars("fidelity", install, filepath.Join(dir, name, "go-extract")))
-		checkFrozen(t, "docjar-corners/"+name, got)
+		testkit.CheckFrozen(t, "docjar-corners/"+name, got)
 	}
 }
 
@@ -198,7 +197,7 @@ func treeOrAbsent(t *testing.T, root string) []string {
 	if _, err := os.Lstat(root); os.IsNotExist(err) {
 		return []string{"<absent>"}
 	}
-	return treeLines(t, root)
+	return testkit.TreeLines(t, root)
 }
 
 func keysOfBytes(m map[string][]byte) []string {
@@ -215,22 +214,22 @@ func goDocJars(op, install, root string) string {
 	switch op {
 	case "extract":
 		var s *ExtractStats
-		s, err = Extract(install, root, nil)
+		s, err = extract(install, root, nil)
 		v = extractValue(s)
 	case "fill":
 		var w []string
-		w, err = FillMissing(install, root, nil)
+		w, err = fillMissing(install, root, nil)
 		v = pyjson.NewObject()
 		v.Set("written", stringsValue(w))
 	case "fidelity":
 		var r *FidelityReport
-		r, err = Fidelity(install, root, nil)
+		r, err = fidelity(install, root, nil)
 		v = fidelityValue(r)
 	}
 	if err != nil {
 		return `["raise"]`
 	}
-	return dumpLine(str("ok"), v)
+	return testkit.DumpLine(testkit.Str("ok"), v)
 }
 
 // mapPairs are the synthetic jars' central-directory names, plus a grid of
@@ -239,17 +238,17 @@ func mapPairs(t *testing.T, jars []string) [][2]any {
 	t.Helper()
 	var pairs [][2]any
 	for _, j := range jars {
-		infos, err := readCentralDir(j)
+		infos, err := zipfile.ReadCentralDir(j)
 		if err != nil {
 			continue
 		}
 		names := []string{}
 		for _, i := range infos {
-			names = append(names, i.name)
+			names = append(names, i.Name)
 		}
 		pairs = append(pairs, [2]any{filepath.Base(j), names})
 	}
-	kinds := []string{JavadocJar, "docDeveloper-doc.jar", "docDeveloper-ux.jar", "docDeveloper-rt.jar",
+	kinds := []string{javadocJar, "docDeveloper-doc.jar", "docDeveloper-ux.jar", "docDeveloper-rt.jar",
 		"docSource-doc.jar", "docJdk-doc.jar", "docHoneywell.jar", "clHVAC-doc.jar", "doc.jar", "doc-doc.jar",
 		"docX-rt.jar", "docdoc.jar", "Doc-doc.jar", "docDeveloperAnalytics-doc.jar", "x-DOC.jar", "docDeveloper.jar",
 		"docSource.jar", "docJdk.jar", "bajaScript-ux.jar", "workbench-wb.jar", "galileoSupervisor-wb.jar",
@@ -273,22 +272,22 @@ func goMap(t *testing.T, pairs [][2]any) []string {
 	var out []string
 	for _, p := range pairs {
 		jar, names := p[0].(string), p[1].([]string)
-		out = append(out, dumpLine(str("jar"), str(jar), boolean(IsDocJar(jar)), boolean(IsModuleJar(jar)),
-			str(JarStem(jar)), str(GuideFolder(jar))))
+		out = append(out, testkit.DumpLine(testkit.Str("jar"), testkit.Str(jar), testkit.Boolean(isDocJar(jar)), testkit.Boolean(isModuleJar(jar)),
+			testkit.Str(jarStem(jar)), testkit.Str(guideFolder(jar))))
 		for _, e := range names {
-			rel, ok := DestPath(jar, e, rules)
+			rel, ok := destPath(jar, e, rules)
 			d := pyjson.Value{}
 			if ok {
-				d = str(rel)
+				d = testkit.Str(rel)
 			}
-			out = append(out, dumpLine(str("entry"), str(e), d, boolean(IsHelpEntry(jar, e, rules))))
+			out = append(out, testkit.DumpLine(testkit.Str("entry"), testkit.Str(e), d, testkit.Boolean(isHelpEntry(jar, e, rules))))
 		}
-		for _, m := range MappedEntries(jar, names, rules) {
+		for _, m := range mappedEntries(jar, names, rules) {
 			first := pyjson.Value{}
 			if m.Collides {
-				first = str(m.First)
+				first = testkit.Str(m.First)
 			}
-			out = append(out, dumpLine(str("mapped"), intV(m.Pos), str(m.Entry), str(m.Rel), first))
+			out = append(out, testkit.DumpLine(testkit.Str("mapped"), testkit.IntV(m.Pos), testkit.Str(m.Entry), testkit.Str(m.Rel), first))
 		}
 	}
 	return out
@@ -297,13 +296,13 @@ func goMap(t *testing.T, pairs [][2]any) []string {
 // TestDocJarMappingFrozen: the doc-jar mapping of the synthetic install and
 // corner jars, and the help and doc jars of the install.
 func TestDocJarMappingFrozen(t *testing.T) {
-	frozenOnly(t)
+	testkit.FrozenOnly(t)
 	dir := t.TempDir()
 	install := syntheticInstall(t, dir)
 	jars, _ := filepath.Glob(filepath.Join(install, "modules", "*.jar"))
 	jars = append(jars, syntheticJars(t, filepath.Join(dir, "corners"))...)
-	lines := relabeled(append(goMap(t, mapPairs(t, jars)), goHelpJars(t, install)...), install, "<install>")
-	checkFrozen(t, "extract/mapping", perJar(lines))
+	lines := testkit.Relabeled(append(goMap(t, mapPairs(t, jars)), goHelpJars(t, install)...), install, "<install>")
+	testkit.CheckFrozen(t, "extract/mapping", perJar(lines))
 }
 
 // perJar appends each "entry" and "mapped" line to the line before it, so
@@ -322,12 +321,12 @@ func perJar(lines []string) []string {
 
 func goHelpJars(t *testing.T, install string) []string {
 	t.Helper()
-	help, err1 := HelpJars(install, nil, mustDefault(t))
-	docs, err2 := ListDocJars(install, true, nil)
+	help, err1 := helpJars(install, nil, mustDefault(t))
+	docs, err2 := listDocJars(install, true, nil)
 	if err1 != nil || err2 != nil {
 		t.Fatalf("help jars: %v %v", err1, err2)
 	}
-	return []string{dumpLine(str("help"), stringsValue(help)), dumpLine(str("doc"), stringsValue(docs))}
+	return []string{testkit.DumpLine(testkit.Str("help"), stringsValue(help)), testkit.DumpLine(testkit.Str("doc"), stringsValue(docs))}
 }
 
 // TestEmptyIndexesFrozen: _empty_indexes on a root holding some indexes:
@@ -335,17 +334,17 @@ func goHelpJars(t *testing.T, install string) []string {
 // wrote an empty call-index.json and its line; the Go output, frozen here,
 // is Python's without them.
 func TestEmptyIndexesFrozen(t *testing.T) {
-	frozenOnly(t)
+	testkit.FrozenOnly(t)
 	root := filepath.Join(t.TempDir(), "go")
-	writeFile(t, filepath.Join(root, "indexes", "class-index.json"), []byte(`{"x": 1}`))
-	writeFile(t, filepath.Join(root, "indexes", "pdf-index.json"), []byte("{}\n"))
-	lines, err := EmptyIndexes(root)
+	testkit.WriteFile(t, filepath.Join(root, "indexes", "class-index.json"), []byte(`{"x": 1}`))
+	testkit.WriteFile(t, filepath.Join(root, "indexes", "pdf-index.json"), []byte("{}\n"))
+	lines, err := emptyIndexes(root)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if _, err := os.Stat(filepath.Join(root, "indexes", "call-index.json")); !os.IsNotExist(err) {
-		t.Errorf("EmptyIndexes wrote call-index.json (retired, I3-5): %v", err)
+		t.Errorf("emptyIndexes wrote call-index.json (retired, I3-5): %v", err)
 	}
-	checkFrozen(t, "extract/empty-indexes", append([]string{pyjson.Dumps(stringsValue(lines), DumpDefault), "tree:"},
-		treeLines(t, root)...))
+	testkit.CheckFrozen(t, "extract/empty-indexes", append([]string{pyjson.Dumps(stringsValue(lines), pyfs.DumpDefault), "tree:"},
+		testkit.TreeLines(t, root)...))
 }

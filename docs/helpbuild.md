@@ -6,6 +6,25 @@ errors and writes nothing to stdout or stderr; the CLI layer (`internal/help`, `
 decides what to print. Each source file holds one responsibility and stays under 500
 lines (the size gate enforces it).
 
+## Package layout
+
+| Package | Holds | Imports (helpbuild) |
+|---|---|---|
+| `helpbuild` | doc-jar layer (rules, doctypes, jar listings, docjars, extract), guides/devguide, course, rebuild-all, coverage, sweep, versions | all below |
+| `helpbuild/indexes` | bajadoc-clean (S7a/S7b), class/inheritance/method (S8), source/slots/xref (S9) | `pyfs`, `htmltext` |
+| `helpbuild/pdftext` | PDF text and `pdf-index.json` (S3) | `pyfs`, `registry` |
+| `helpbuild/registry` | `versions/registry.json` lookups | `pyfs` |
+| `helpbuild/htmltext` | `html_text.convert` | none |
+| `helpbuild/pyfs` | `os.walk`, `os.remove`, `shutil.copyfile`, `json.load`, the atomic JSON write and its dump options | none |
+| `helpbuild/zipfile` | Python's `zipfile` central directory and entry reader | none |
+| `helpbuild/fulltext` | `fulltext.sqlite` | none |
+| `helpbuild/internal/testkit` | the shared test harness (frozen checks, tree listings, zip and PDF fixtures) | none |
+
+The coverage reports and the sweep stay in the root with the course (the sweep reports the
+course pseudo-jar) and versions setup stays with them (its gates run the coverage and the
+sweep); the doc-jar layer stays because the extract and versions frozen tests share its
+fixtures. Each package's frozen trees are under its own `testdata/frozen`.
+
 Source of truth: niagara-help `tools/` (Python 3.15). Where the Python code and this
 document disagree, the code wins and this document is corrected.
 
@@ -36,8 +55,8 @@ document disagree, the code wins and this document is corrected.
 
 | File | Ports | Notes |
 |---|---|---|
-| `internal/atomicfile` (`WriteBytes`, `WriteText`, `RebuiltDir`) and `jsonwrite.go` (`WriteJSON`) | `atomic.write_bytes/write_text/write_json/rebuilt_dir` | `atomicfile` is a leaf package (no module imports) so other commands can share it; temp file + rename in the same directory; no fsync (atomic.py has none: the guarantee is against an interrupted builder, not power loss); modes 0644 / 0755 like the explicit `chmod` calls; removing the old tree after a good swap ignores errors like `shutil.rmtree(old, ignore_errors=True)` (the rebuild succeeded; a leftover `.old-<pid>` tree is not reported) |
-| `zipdir.go` | `zipfile.ZipFile(path).infolist()` (3.15) | `_EndRecData`, `_EndRecData64`, `_RealGetContents`, `ZipInfo._decodeExtra` ported, see below |
+| `internal/atomicfile` (`WriteBytes`, `WriteText`, `RebuiltDir`) and `pyfs/jsonwrite.go` (`WriteJSON`) | `atomic.write_bytes/write_text/write_json/rebuilt_dir` | `atomicfile` is a leaf package (no module imports) so other commands can share it; temp file + rename in the same directory; no fsync (atomic.py has none: the guarantee is against an interrupted builder, not power loss); modes 0644 / 0755 like the explicit `chmod` calls; removing the old tree after a good swap ignores errors like `shutil.rmtree(old, ignore_errors=True)` (the rebuild succeeded; a leftover `.old-<pid>` tree is not reported) |
+| `zipfile/zipdir.go` | `zipfile.ZipFile(path).infolist()` (3.15) | `_EndRecData`, `_EndRecData64`, `_RealGetContents`, `ZipInfo._decodeExtra` ported, see below |
 | `jarlisting.go` | `jar_listing.cache_path/read_listing/Listings` | the cache file is byte-identical to Python's |
 | `rules.go` | `install_rules.glob_re/Rule/Rules/load/default` | `install_docs.json` embedded with `//go:embed` |
 | `doctypes.go` | `doc_types.is_source_archive/is_guide_page/is_licence/clean_text_name` | the rest of `doc_types` arrives with S2/S5 |
@@ -46,7 +65,7 @@ document disagree, the code wins and this document is corrected.
 
 | File | Ports | Notes |
 |---|---|---|
-| `zipread.go` | `ZipFile.open(info)` + `ZipExtFile.read` | local-header checks in Python's order, inflate, cut at `file_size`, CRC; `whole` = `read()`, else `copyfileobj`'s bounded reads |
+| `zipfile/zipread.go` | `ZipFile.open(info)` + `ZipExtFile.read` | local-header checks in Python's order, inflate, cut at `file_size`, CRC; `whole` = `read()`, else `copyfileobj`'s bounded reads |
 | `docjars.go` | `is_doc_jar` … `mapped_entries`, `help_jars`, `list_doc_jars` | the mapping table in the file comment; `*Rules` must be non-nil (`Default()` is Python's `None`) |
 | `extract.go` | `extract`, `fill_missing`, `fidelity_jar`, `fidelity` | |
 | `versionsetup.go`, `manifest.go` | `extract_and_index` steps 1, 3, 4, `jar_manifest`, the manifest dict, `_empty_indexes` | non-printing: the `out()` lines are `SetupResult.Log` |
@@ -108,7 +127,7 @@ listing), and the frozen tests run on Linux only, as the parity tests did. A del
 is regenerated from Go and reviewed:
 
 ```sh
-go test ./internal/helpbuild -run <Test> -update-frozen
+go test ./internal/helpbuild/... -run <Test> -update-frozen
 ```
 
 Dropped with the drivers: the real-data parity runs and the cases whose output was not
@@ -215,10 +234,10 @@ S2 additions (none changes an output Python produces from a well-formed install)
 
 | File | Ports | Notes |
 |---|---|---|
-| `pdftext.go` | `classify`, `sanitize`, `top_folder`, `find_pdfs`, `fix_unmapped_bullets`, `extract_text`, `resolve_name` | one pdftotext run: argv list, no shell, `PDFTimeout` (120 s); a failure is a `*PDFError` whose `Failure` says which of the four cases `extract_text` catches (exit status, timeout, output not UTF-8, could not start); the run goes through `internal/procgroup` (own process group, SIGINT/SIGTERM relay), shared with `internal/secaudit` |
-| `pdfindex.go` | `pdf_extractor.main()` | `ExtractPDFs`; the early exits, the `-v` probe, keep-last-good, the index save, the prune after a clean run, the summary |
-| `registry.go` | `versions.identify`, `versions.install_dir`, `course.course_dir` | read with pyjson so every malformed entry takes Python's branch: skipped where Python catches, an error where it raises |
-| `pyfs.go` | `os.walk`, `os.remove`, `shutil.copyfile`, `json.load` | `pyWalk` lists a symlinked folder without entering it and skips unreadable ones; `removeFile` refuses a directory; `pyCopyfile` raises `SameFileError` when source and destination are the same file, refuses a named pipe before opening it and a directory as source (`EISDIR`, Python's `IsADirectoryError`) or destination (the open fails); `loadJSON` returns a `*JSONLoadError` (Python's `str(e)`) for what the builders catch |
+| `pdftext/pdftext.go` | `classify`, `sanitize`, `top_folder`, `find_pdfs`, `fix_unmapped_bullets`, `extract_text`, `resolve_name` | one pdftotext run: argv list, no shell, `PDFTimeout` (120 s); a failure is a `*PDFError` whose `Failure` says which of the four cases `extract_text` catches (exit status, timeout, output not UTF-8, could not start); the run goes through `internal/procgroup` (own process group, SIGINT/SIGTERM relay), shared with `internal/secaudit` |
+| `pdftext/pdfindex.go` | `pdf_extractor.main()` | `ExtractPDFs`; the early exits, the `-v` probe, keep-last-good, the index save, the prune after a clean run, the summary |
+| `registry/registry.go` | `versions.identify`, `versions.install_dir`, `course.course_dir` | read with pyjson so every malformed entry takes Python's branch: skipped where Python catches, an error where it raises |
+| `pyfs/pyfs.go` | `os.walk`, `os.remove`, `shutil.copyfile`, `json.load` | `Walk` lists a symlinked folder without entering it and skips unreadable ones; `RemoveFile` refuses a directory; `Copyfile` raises `SameFileError` when source and destination are the same file, refuses a named pipe before opening it and a directory as source (`EISDIR`, Python's `IsADirectoryError`) or destination (the open fails); `LoadJSON` returns a `*JSONLoadError` (Python's `str(e)`) for what the builders catch |
 | `course.go` | `course.course_dir`, `_files`, `_text_dest`, `plan`, `remove_copies`, `build`, `course_extractor.main()` | both trees staged with `RebuiltDir`, nested like Python's `with` (devguide-examples/course/ swaps first) |
 
 `SOFTWARE_HIGH` of `pdf_extractor.py` is never read and is not ported.
@@ -233,7 +252,7 @@ res, err := helpbuild.ExtractPDFs(root, helpbuild.PDFOptions{
 // os.Stdout.WriteString(res.Stdout()) is pdf_extractor's stdout; exit res.Status;
 // err != nil is a Python traceback (exit 1), res.Log holds what was printed before it.
 
-out, err := helpbuild.CourseExtractor(root, rules) // rules from helpbuild.Default()
+out, err := courseExtractor(root, rules) // package-internal; rules from helpbuild.Default()
 // print out.Stdout to stdout and out.Stderr to stderr, exit out.Status; err != nil is a traceback.
 ```
 
@@ -304,31 +323,31 @@ next to `pycompat.Join` once a second package needs them. `os.path.join`,
 `os.path.isdir` and `os.path.isfile` already come from `pycompat` (`Join`, `IsDir`,
 `IsFile`).
 
-S8 adds one: `pyTextLines` (`inheritread.go`, a text file read line by line with
+S8 adds one: `pyTextLines` (`indexes/inheritread.go`, a text file read line by line with
 TextIOWrapper's chunked strict decoding) belongs in `pycompat` next to `ReadText` once a
 second package needs Python's decode-error text. The class index reads `.bajadoc` files
 through `bajadocxml.Parse`, as S7b does; S7b's sequential walk (`bajadocXMLClasses`) could
-take `parseBajadocFiles` (`classindexxml.go`) for the same concurrency.
+take `parseBajadocFiles` (`indexes/classindexxml.go`) for the same concurrency.
 
 ## S5 and S6 files
 
 | File | Ports | Notes |
 |---|---|---|
 | `internal/pyhtml` (shared package, D37) | `html.parser.HTMLParser` (CPython 3.15), `convert_charrefs=True`; `html.unescape`; `name in html.entities.html5` | the tokenizer below (`pyhtml.Parse`, a `pyhtml.Handler`); reports only the callbacks the tools override |
-| `htmltext.go` | `html_text.convert` as `HTMLToText(page) (title, text)` | Python's Unicode `\s`, `strip` and `\w` (`textfold.IsSpace`, `pycompat.IsWordRune`) |
+| `htmltext/htmltext.go` | `html_text.convert` as `HTMLToText(page) (title, text)` | Python's Unicode `\s`, `strip` and `\w` (`textfold.IsSpace`, `pycompat.IsWordRune`) |
 | `guidetoc.go` | `guide_toc.find_toc`, `parse_toc`, `count_items` | ElementTree is `internal/pyxml` in ETree mode; the warning is returned, not printed |
 | `guidesparser.go` | `guides_parser.parse_guides`, `_markdown_title`, `devguide_parser.parse_devguide` | `RebuiltDir`; `TextResult.Log` = stdout lines, `.Warnings` = stderr lines |
-| `guidesindex.go` | `build_guides_index` (`topic_name`, `known_jar_names`, `modules_dir_of`, `jar_for_folder`, `previous_jars`, `build`, `main`) | `JarSources` replaces the `_MANIFEST` sentinels; `Unknown` is `jar_names=None`; the walk, `json.load` and registry lookups are S3's (`pyfs.go`, `registry.go`) |
+| `guidesindex.go` | `build_guides_index` (`topic_name`, `known_jar_names`, `modules_dir_of`, `jar_for_folder`, `previous_jars`, `build`, `main`) | `JarSources` replaces the `_MANIFEST` sentinels; `Unknown` is `jar_names=None`; the walk, `json.load` and registry lookups are S3's (`pyfs/pyfs.go`, `registry/registry.go`) |
 | `devguidetoc.go` | `build_devguide_toc.build`, `main` | its regexes run through `internal/pyre` (Python semantics, code-point offsets) |
 
-API for S10 (`maintenance.BUILDERS` runs these as subprocesses; the Go orchestration calls
-them in process and prints `Log`, then `Warnings` on stderr):
+Guide builders (package-internal; `RebuildAll` runs them in process from its builder table in
+rebuildall.go and prints `Log`, then `Warnings` on stderr):
 
 ```go
-res, err := helpbuild.ParseGuides(root)        // guides-clean/
-res, err := helpbuild.ParseDevguide(root)      // devguide-clean/
-res, err := helpbuild.BuildGuidesIndex(root)   // indexes/guides-index.json
-res, err := helpbuild.BuildDevguideTOC(root)   // indexes/devguide-toc.json
+res, err := parseGuides(root)        // guides-clean/
+res, err := parseDevguide(root)      // devguide-clean/
+res, err := buildGuidesIndex(root)   // indexes/guides-index.json
+res, err := buildDevguideTOC(root)   // indexes/devguide-toc.json
 // err != nil is where Python raises (traceback, non-zero exit).
 ```
 
@@ -338,8 +357,8 @@ Both indexes are `json.dumps(indent=2)` with `ensure_ascii` on (`DumpIndent2`).
 
 The port lives in the shared `internal/pyhtml` package (decision D37, owner Integrante3;
 its `doc.go` holds the contract), which depends on `textfold` only so that
-`pycompat.HTMLUnescape` can forward to it. Its frozen tests stay here
-(`htmlfrozen_test.go`).
+`pycompat.HTMLUnescape` can forward to it. Its frozen tests stay in helpbuild
+(`htmltext/htmlfrozen_test.go`).
 
 One `feed()` of the whole page and `close()` parse exactly like one `goahead(end=1)`: each
 early stop of the feed pass leaves the state unchanged and `close()` resumes there, and
@@ -401,8 +420,8 @@ parity test over all 2,231 names of `html.entities.html5`, now `TestHTML5Entitie
 
 | File | Ports | Notes |
 |---|---|---|
-| `bajadoc.go` | `parse_bajadoc_html` and its `extract_*` / `parse_*_summary` helpers, `strip_tags`, `normalize_ws` | the regexes are Python's, run by `internal/pyre` on code points (Unicode `\s` `\S` `\w` `\b`, lazy quantifiers, backtracking); `_find_summary_section` searches the end markers from 10 code points past the marker; `strip_tags` is `pyhtml.Feed` (one `feed()`, never `close()`) |
-| `bajadocrun.go` | `bajadoc_parser.main`, `bajadoc_xml.write_clean_class`, `doc_types.clean_class_name` (`format_output` is `bajadocxml.FormatCleanInfo`, see S7b) | the walk skips the index pages and the files of a folder whose path holds `/class-use/` (so `class-use/` itself is read, its pages skipped as no class); pages are read with `errors="replace"` and universal newlines; `bajadoc-clean/` is written in place with atomic writes (it also holds what S7b writes), a page left under its escaped name (`Cursor&lt;E&gt;.txt`) is removed |
+| `indexes/bajadoc.go` | `parse_bajadoc_html` and its `extract_*` / `parse_*_summary` helpers, `strip_tags`, `normalize_ws` | the regexes are Python's, run by `internal/pyre` on code points (Unicode `\s` `\S` `\w` `\b`, lazy quantifiers, backtracking); `_find_summary_section` searches the end markers from 10 code points past the marker; `strip_tags` is `pyhtml.Feed` (one `feed()`, never `close()`) |
+| `indexes/bajadocrun.go` | `bajadoc_parser.main`, `bajadoc_xml.write_clean_class`, `doc_types.clean_class_name` (`format_output` is `bajadocxml.FormatCleanInfo`, see S7b) | the walk skips the index pages and the files of a folder whose path holds `/class-use/` (so `class-use/` itself is read, its pages skipped as no class); pages are read with `errors="replace"` and universal newlines; `bajadoc-clean/` is written in place with atomic writes (it also holds what S7b writes), a page left under its escaped name (`Cursor&lt;E&gt;.txt`) is removed |
 
 API for S10 (`maintenance.BUILDERS` runs `bajadoc_parser.py <data root>`):
 
@@ -419,7 +438,7 @@ S7a tests:
 
 | Test | Checks |
 |---|---|
-| `TestParseBajadocFixture` | `ParseBajadoc` on `testdata/bajadoc/root/` (classes, an interface with subinterfaces, an enum, an annotation type, a generic class name, the `<title>` fallback, skipped pages, `class-use/` folders, no package, CRLF and bytes that are not UTF-8, a 78-code-point wrap, member rows whose fragments `feed()` holds back) against the golden `testdata/bajadoc/clean/` and `stdout.txt` (Python's output, frozen) |
+| `TestParseBajadocFixture` | `ParseBajadoc` on `indexes/testdata/bajadoc/root/` (classes, an interface with subinterfaces, an enum, an annotation type, a generic class name, the `<title>` fallback, skipped pages, `class-use/` folders, no package, CRLF and bytes that are not UTF-8, a 78-code-point wrap, member rows whose fragments `feed()` holds back) against the golden `indexes/testdata/bajadoc/clean/` and `stdout.txt` (Python's output, frozen) |
 | `TestBajadocCornersFrozen` | stdout lines, exit status and the whole tree after an unreadable page, a dangling link, links to a page and to a folder, a page under its escaped name, an unrelated S7b page, a second run, and a root without `bajadoc/javax/baja` (exit 1) |
 
 Measured 2026-10-17 by the parity run (whole trees identical, Python 3.15 vs Go, wall time of
@@ -450,7 +469,7 @@ moved there unchanged from `internal/help/bajadocxml.go`; its `doc.go` holds the
 | File | Ports | Notes |
 |---|---|---|
 | `internal/bajadocxml/bajadocxml.go` | `bajadoc_xml.render_type`, `parse_class`, `_sanitize`, `parse_file` (`ParseFile`; `Parse` on bytes already read), `_simple`, `to_clean_info`, `format_output` | `encoding/xml` builds an ElementTree-like tree (an element's text is the character data before its first child; comments and processing instructions dropped); the declared encoding is decoded as expat does for UTF-8, ISO-8859-1 and US-ASCII (a `CharsetReader`); a document that does not parse is parsed again with the character references XML forbids replaced by `?`; `CleanInfo.Subclasses` is the caller's to fill, `FormatCleanInfo` prints `SUBCLASSES:` when it is not empty |
-| `bajadocxmlrun.go` | `bajadoc_xml_parser.build`, `main`, `has_html_page`, `bajadoc_xml.iter_classes` | walks `devguide/` then `guides/` (os.walk order, links to folders not entered, links to files read), skips `module-index.bajadoc`, a class already seen (the first walked wins) and a class whose `bajadoc/<package path>/<Name>.html` is a file; `SUBCLASSES` lists the classes whose simplified `extends` is the class name, so a `com.vendor.BBase` superclass (kept qualified by `_simple`) or a parameterized one never matches; every page is written after the whole walk with S7a's `writeCleanClass` |
+| `indexes/bajadocxmlrun.go` | `bajadoc_xml_parser.build`, `main`, `has_html_page`, `bajadoc_xml.iter_classes` | walks `devguide/` then `guides/` (os.walk order, links to folders not entered, links to files read), skips `module-index.bajadoc`, a class already seen (the first walked wins) and a class whose `bajadoc/<package path>/<Name>.html` is a file; `SUBCLASSES` lists the classes whose simplified `extends` is the class name, so a `com.vendor.BBase` superclass (kept qualified by `_simple`) or a parameterized one never matches; every page is written after the whole walk with S7a's `writeCleanClass` |
 
 API for S10 (`maintenance.BUILDERS` runs `bajadoc_xml_parser.py <data root>` after
 `bajadoc_parser.py`):
@@ -465,7 +484,7 @@ S7b tests:
 
 | Test | Checks |
 |---|---|
-| `TestParseBajadocXMLFixture` | `ParseBajadocXML` on `testdata/bajadocxml/root/` (a class with every member kind, varargs, parameterized, wildcard and type-variable types, markup, a comment and CDATA in a description, two `@since` tags, two `<implements>` elements of which only the first is read; an enum, an annotation type, an interface, a generic name, no package; a class with a javadoc page; a class in both trees and in two devguide modules; an index file; an empty and an unclosed file; a forbidden character reference; CRLF; files that are not `.bajadoc`) against the golden `testdata/bajadocxml/clean/` and `stdout.txt` (Python's output, frozen) |
+| `TestParseBajadocXMLFixture` | `ParseBajadocXML` on `indexes/testdata/bajadocxml/root/` (a class with every member kind, varargs, parameterized, wildcard and type-variable types, markup, a comment and CDATA in a description, two `@since` tags, two `<implements>` elements of which only the first is read; an enum, an annotation type, an interface, a generic name, no package; a class with a javadoc page; a class in both trees and in two devguide modules; an index file; an empty and an unclosed file; a forbidden character reference; CRLF; files that are not `.bajadoc`) against the golden `indexes/testdata/bajadocxml/clean/` and `stdout.txt` (Python's output, frozen) |
 | `TestBajadocXMLCornersFrozen` | stdout lines, exit status and the whole tree after a page under its escaped name, S7a's page of the class with a javadoc page, links to a file and to a folder, a second run, a dangling link and an unreadable file (both raise), and a root without `devguide/` or `guides/` |
 
 Measured 2026-10-17 by the parity run (S7a then S7b; whole `bajadoc-clean/` trees identical,
@@ -492,11 +511,11 @@ Python 3.15 vs Go, wall time of one run of each step):
 
 | File | Ports | Notes |
 |---|---|---|
-| `classindex.go` | `build_class_index` (`html_entries`, `xml_entries`, `_rank`, `merge`, `build`, `build_jdk`, `count_classes`, `_write`, `main`) | the `_LI` regex runs through `internal/pyre`; `allclasses-noframe.html` is read with `errors="replace"` and universal newlines; `IndexResult` is the result type of the three builders |
-| `classindexxml.go` | `bajadoc_xml.iter_classes`; `parse_file` is `bajadocxml.Parse` (S7b's shared reader) | the file is read here, so one that cannot be read is the error `ET.parse` raises; one that stays unparseable after sanitizing is a `ParseFailures` entry (`PARSE_FAILURES`); the files are parsed on half the CPUs and taken in walk order |
-| `inheritance.go` | `inheritance_builder.parse_txt_file`, `main`, `verify_samples` | the header ends at the first empty line; `sort_keys=True` is done by building the object in sorted order (same bytes) |
-| `inheritread.go` | `for line in open(p, encoding="utf-8")` | `pyTextLines`: strict UTF-8 decoded 8,192 bytes at a time as TextIOWrapper does, universal newlines (a `\r` that ends a chunk waits for the next one), stopping when the caller breaks; a decode error is raised when its chunk is read and names the position inside that chunk, so `inheritance.json`'s error lines match (an invalid byte after the header in the same chunk is an error, one in a later chunk is not) |
-| `methodindex.go` | `method_indexer.parse_members`, `build_method_index` | `_METHOD_NAME` (`[^(]*?(\w+)\s*\(`) is hand-ported: the name is the whole `\w` run before the first `(` (whitespace allowed in between); `\w`, `\s`, `strip()` and `split()` are Python's Unicode classes (`pycompat.IsWordRune`, `IsSpace`) |
+| `indexes/classindex.go` | `build_class_index` (`html_entries`, `xml_entries`, `_rank`, `merge`, `build`, `build_jdk`, `count_classes`, `_write`, `main`) | the `_LI` regex runs through `internal/pyre`; `allclasses-noframe.html` is read with `errors="replace"` and universal newlines; `IndexResult` is the result type of the three builders |
+| `indexes/classindexxml.go` | `bajadoc_xml.iter_classes`; `parse_file` is `bajadocxml.Parse` (S7b's shared reader) | the file is read here, so one that cannot be read is the error `ET.parse` raises; one that stays unparseable after sanitizing is a `ParseFailures` entry (`PARSE_FAILURES`); the files are parsed on half the CPUs and taken in walk order |
+| `indexes/inheritance.go` | `inheritance_builder.parse_txt_file`, `main`, `verify_samples` | the header ends at the first empty line; `sort_keys=True` is done by building the object in sorted order (same bytes) |
+| `indexes/inheritread.go` | `for line in open(p, encoding="utf-8")` | `pyTextLines`: strict UTF-8 decoded 8,192 bytes at a time as TextIOWrapper does, universal newlines (a `\r` that ends a chunk waits for the next one), stopping when the caller breaks; a decode error is raised when its chunk is read and names the position inside that chunk, so `inheritance.json`'s error lines match (an invalid byte after the header in the same chunk is an error, one in a later chunk is not) |
+| `indexes/methodindex.go` | `method_indexer.parse_members`, `build_method_index` | `_METHOD_NAME` (`[^(]*?(\w+)\s*\(`) is hand-ported: the name is the whole `\w` run before the first `(` (whitespace allowed in between); `\w`, `\s`, `strip()` and `split()` are Python's Unicode classes (`pycompat.IsWordRune`, `IsSpace`) |
 
 API for S10 (`maintenance.BUILDERS` runs the three scripts with the data root as argument):
 
@@ -516,7 +535,7 @@ S8 tests:
 
 | Test | Checks |
 |---|---|
-| `TestBuildClassIndexFixture`, `TestBuildInheritanceFixture`, `TestBuildMethodIndexFixture` | each Go builder on `testdata/s8/root/` (a javadoc list with spans, CRLF, a byte that is not UTF-8, a duplicate and a non-class title; `.bajadoc` classes of every kind, modules with and without a runtime profile, a class without a qualified name, nested and namespaced classes, a file fixed by sanitizing, one that stays broken, Latin-1, shared simple names; bajadoc-clean pages with every header line, CRLF and lone CR, a BOM, Unicode whitespace, duplicate names, member sections) against `testdata/s8/golden/` (stdout lines and indexes, Python's output; `-update-s8` rewrites them from Go) |
+| `TestBuildClassIndexFixture`, `TestBuildInheritanceFixture`, `TestBuildMethodIndexFixture` | each Go builder on `indexes/testdata/s8/root/` (a javadoc list with spans, CRLF, a byte that is not UTF-8, a duplicate and a non-class title; `.bajadoc` classes of every kind, modules with and without a runtime profile, a class without a qualified name, nested and namespaced classes, a file fixed by sanitizing, one that stays broken, Latin-1, shared simple names; bajadoc-clean pages with every header line, CRLF and lone CR, a BOM, Unicode whitespace, duplicate names, member sections) against `indexes/testdata/s8/golden/` (stdout lines and indexes, Python's output; `-update-s8` rewrites them from Go) |
 | `TestS8CornersFrozen` | stdout lines, exit status and `indexes/` after each builder, then the whole tree, on the corners (decode errors in, after and past the header, across a chunk end, a `\r` at a chunk end, a truncated end, a line longer than a chunk, symlinked folders and files) and on roots without the folders each builder reads |
 | `TestS8UnreadableFrozen` | stdout lines and exit status with an unreadable `.bajadoc`, an unreadable page and a dangling `.bajadoc` link (class and method index raise, inheritance lists the page under `Errors`) |
 | `TestS8UnreadableInputKeepsThePreviousIndexes` | an unreadable `.bajadoc` (class-index) or `bajadoc-clean/` page (method-index) is an error and the previous index files stay as they were, no temp file left |
@@ -552,12 +571,12 @@ path in `pyjson.EncodeString` is the place to win it back.
 
 | File | Ports | Notes |
 |---|---|---|
-| `javasrc.go` | `source_indexer.java_package`, `java_declaration`, `iter_java_roots`, `RC_DIR` | `_PACKAGE` and `_DECLARATION` run through `internal/pyre` (Unicode `\s` `\w`, the lookahead and its backtracking); `.java` files are read with `errors="replace"` (`pycompat.DecodeReplace`) and universal newlines; a root without `source/` gets the warning line on stderr (`IndexResult.Stderr`) |
+| `indexes/javasrc.go` | `source_indexer.java_package`, `java_declaration`, `iter_java_roots`, `RC_DIR` | `_PACKAGE` and `_DECLARATION` run through `internal/pyre` (Unicode `\s` `\w`, the lookahead and its backtracking); `.java` files are read with `errors="replace"` (`pycompat.DecodeReplace`) and universal newlines; a root without `source/` gets the warning line on stderr (`IndexResult.Stderr`) |
 | `pyfs.go` | `os.walk` | `pyWalkDirOrder` lists each folder in the file system's order (`os.scandir`), for the scripts that do not sort what `os.walk` yields |
-| `sourceindex.go` | `source_indexer.index_source` | folders sorted, files in directory order (the script sorts only `dirs`): that order fixes the key order and which same-name file gets the plain key; a later same-name file is `Name (module)`, overwriting an earlier one of that key in place; the package is matched on the raw line (an indented `package` does not count); `path` is `os.path.relpath` from `source/` with `\` turned into `/` |
-| `slotsparse.go` | `slots_indexer.annotation_bodies`, `_skip_literal_or_comment`, `_scan`, `_strip_comments`, `_split_top_level`, `_parse_annotation_body` | code points, with Python's slice clamping (an unclosed literal or group runs past the end; a closer that does not match ends the group one code point early, as `content[start:end - 1]` does); `@Name\s*\(` matches anywhere, comments included, as in Python |
-| `slotsindex.go` | `slots_indexer.parse_annotations`, `collision_key`, `build_slots_index`, `merge_bajadoc_slots`, `_xml_slot` | the module folders sorted, everything under them in directory order (the script sorts nothing there); the class line search uses `str.splitlines` boundaries and stripped lines (an indented `package` counts here); a source class without a package has no `package` key and never matches a `.bajadoc` class (Python's `None` against `""`); the `.bajadoc` classes come from S8's `bajadocWalk` and `parseBajadocFiles` (devguide/ then guides/), the types from `bajadocxml.Simple` |
-| `xrefindex.go` | `xref_builder.extract_imports`, `build_xref` | sorted walk; every file read before the imports are filtered, so the graph does not depend on the walk order; the package is the last `package` line before the declaration (`None` when it does not match); `str.isupper()` of the first code point is `pycompat.IsUpper` |
+| `indexes/sourceindex.go` | `source_indexer.index_source` | folders sorted, files in directory order (the script sorts only `dirs`): that order fixes the key order and which same-name file gets the plain key; a later same-name file is `Name (module)`, overwriting an earlier one of that key in place; the package is matched on the raw line (an indented `package` does not count); `path` is `os.path.relpath` from `source/` with `\` turned into `/` |
+| `indexes/slotsparse.go` | `slots_indexer.annotation_bodies`, `_skip_literal_or_comment`, `_scan`, `_strip_comments`, `_split_top_level`, `_parse_annotation_body` | code points, with Python's slice clamping (an unclosed literal or group runs past the end; a closer that does not match ends the group one code point early, as `content[start:end - 1]` does); `@Name\s*\(` matches anywhere, comments included, as in Python |
+| `indexes/slotsindex.go` | `slots_indexer.parse_annotations`, `collision_key`, `build_slots_index`, `merge_bajadoc_slots`, `_xml_slot` | the module folders sorted, everything under them in directory order (the script sorts nothing there); the class line search uses `str.splitlines` boundaries and stripped lines (an indented `package` counts here); a source class without a package has no `package` key and never matches a `.bajadoc` class (Python's `None` against `""`); the `.bajadoc` classes come from S8's `bajadocWalk` and `parseBajadocFiles` (devguide/ then guides/), the types from `bajadocxml.Simple` |
+| `indexes/xrefindex.go` | `xref_builder.extract_imports`, `build_xref` | sorted walk; every file read before the imports are filtered, so the graph does not depend on the walk order; the package is the last `package` line before the declaration (`None` when it does not match); `str.isupper()` of the first code point is `pycompat.IsUpper` |
 
 API for S10 (`maintenance.BUILDERS` runs the three scripts with the data root as argument):
 
@@ -576,7 +595,7 @@ S9 tests:
 
 | Test | Checks |
 |---|---|
-| `TestBuildSourceIndexFixture`, `TestBuildSlotsIndexFixture`, `TestBuildXrefIndexFixture` | each Go builder on `testdata/s9/root/` (multi-line annotations, nested parentheses, literals holding commas, quotes and `=`, comments in and around annotations, unnamed, empty and repeated keys, a closer that does not match, an annotation inside a comment, a package split over two lines, an indented package, a default package, `X.java.java`, non-ASCII names, static, wildcard and self imports, `.bajadoc` slots with and without a source entry, module or package) against `testdata/s9/golden/`, byte for byte: the fixture holds at most one `.java` per folder and one annotated file per module, so its output does not depend on the file system's directory order (`checkS9Fixture` fails otherwise); `-update-s9` rewrites them from Go |
+| `TestBuildSourceIndexFixture`, `TestBuildSlotsIndexFixture`, `TestBuildXrefIndexFixture` | each Go builder on `indexes/testdata/s9/root/` (multi-line annotations, nested parentheses, literals holding commas, quotes and `=`, comments in and around annotations, unnamed, empty and repeated keys, a closer that does not match, an annotation inside a comment, a package split over two lines, an indented package, a default package, `X.java.java`, non-ASCII names, static, wildcard and self imports, `.bajadoc` slots with and without a source entry, module or package) against `indexes/testdata/s9/golden/`, byte for byte: the fixture holds at most one `.java` per folder and one annotated file per module, so its output does not depend on the file system's directory order (`checkS9Fixture` fails otherwise); `-update-s9` rewrites them from Go |
 | `TestS9CornersFrozen` | lines, exit status and `indexes/` after each builder, then the whole tree, on the corners written at test time (CRLF, a lone CR, a form feed, U+2028, bytes that are not UTF-8, a literal left open by a final backslash, a `\` in a file name, a linked module, a linked folder inside a module, linked and dangling `.java` files), then on roots without `source/`, without `devguide-rc/`, a `source` that is a file, and an import ending with `.` (xref raises). The parity's order-dependent corners (one class in three folders of a module, five copies with the `#n` warning) cannot be frozen and are gone |
 | `TestS9UnreadableFrozen` | lines and index with an unreadable `.java` (source and slots skip it, xref names it after its file) and an unreadable `.bajadoc` (slots raises) |
 
@@ -631,7 +650,7 @@ res, err := helpbuild.Coverage(os.Stdout, baseDir, module) // module "" = overvi
 status, err := helpbuild.DocJarCoverage(os.Stdout, repoRoot, baseDir, versionID, docs)
 // docs is a helpbuild.FulltextDocs: open_index(root).docs() -- the up-to-date
 // fulltext.sqlite (rebuilt first when stale, as scope.OpenFulltext does) read
-// with helpbuild.FulltextDocsAt(path). It is only called when an example entry
+// with the package-internal fulltextDocsAt(path). It is only called when an example entry
 // (devguide-examples/) is checked; nil then is an error, never a silent gap.
 
 // coverage --sweep --doc-jars: DocJarCoverage, a blank line, exit 2 when it

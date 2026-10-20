@@ -6,10 +6,11 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/angeles725/niagara-go/internal/helpbuild/internal/testkit"
 	"github.com/angeles725/niagara-go/internal/index"
 )
 
-// GateCourse on a bound course (test_course_source's fixture): every
+// gateCourse on a bound course (test_course_source's fixture): every
 // copied text and code file is looked up in the full-text index under its
 // destination with the course-text/ or devguide-examples/ prefix cut off
 // and put back as "/"-separated, PDFs pair with text/<stem>.txt, the rest
@@ -28,9 +29,9 @@ func TestGateCourseBoundCourse(t *testing.T) {
 	docs := func(string) (map[string]bool, error) { return indexed, nil }
 	rules := mustDefault(t)
 
-	rep, err := GateCourse(filepath.Join(repo, "versions", "A"), rules, docs)
+	rep, err := gateCourse(filepath.Join(repo, "versions", "A"), rules, docs)
 	if err != nil || rep == nil {
-		t.Fatalf("GateCourse(A) = %+v, %v", rep, err)
+		t.Fatalf("gateCourse(A) = %+v, %v", rep, err)
 	}
 	if rep.CourseDir != filepath.Join(dir, "course-src") || rep.Text != 3 || rep.TextIndexed != 3 ||
 		rep.Code != 3 || rep.CodeIndexed != 2 || rep.PDFs != 2 || rep.Paired != 2 {
@@ -49,13 +50,13 @@ func TestGateCourseBoundCourse(t *testing.T) {
 		t.Errorf("unclassified %q\nwant %q", rep.Unclassified, want)
 	}
 
-	if rep, err := GateCourse(filepath.Join(repo, "versions", "B"), rules, docs); rep != nil || err != nil {
-		t.Errorf("GateCourse(B), no course bound = %+v, %v; want nil, nil", rep, err)
+	if rep, err := gateCourse(filepath.Join(repo, "versions", "B"), rules, docs); rep != nil || err != nil {
+		t.Errorf("gateCourse(B), no course bound = %+v, %v; want nil, nil", rep, err)
 	}
-	rep, err = GateCourse(filepath.Join(repo, "versions", "C"), rules, docs)
+	rep, err = gateCourse(filepath.Join(repo, "versions", "C"), rules, docs)
 	missing := filepath.Join(dir, "no-course")
 	if err != nil || rep == nil || !reflect.DeepEqual(rep.Unclassified, [][2]string{{missing, "course_dir not found"}}) {
-		t.Errorf("GateCourse(C), missing course_dir = %+v, %v", rep, err)
+		t.Errorf("gateCourse(C), missing course_dir = %+v, %v", rep, err)
 	}
 }
 
@@ -64,7 +65,7 @@ func TestGateCourseBoundCourse(t *testing.T) {
 func TestRunSweepRegistryErrorExitsOne(t *testing.T) {
 	repo := t.TempDir()
 	root := filepath.Join(repo, "versions", "1.0")
-	writeFile(t, filepath.Join(repo, index.RegistryRel), []byte(`{"default": "1.0", "versions": []}`))
+	testkit.WriteFile(t, filepath.Join(repo, index.RegistryRel), []byte(`{"default": "1.0", "versions": []}`))
 	var buf bytes.Buffer
 	status, err := RunSweep(repo, root, "1.0", &buf, SweepOptions{})
 	if status != 1 || err == nil || buf.Len() != 0 {

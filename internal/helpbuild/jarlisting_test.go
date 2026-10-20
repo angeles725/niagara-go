@@ -11,6 +11,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/angeles725/niagara-go/internal/helpbuild/internal/testkit"
 )
 
 // test_install_sweep.HELP_JAR.
@@ -23,16 +25,16 @@ func TestCachePathHashesTheAbsoluteInstallPath(t *testing.T) {
 	install := t.TempDir()
 	sum := sha1.Sum([]byte(install))
 	want := filepath.Join("/repo", ".cache", "jar-listings", hex.EncodeToString(sum[:])[:16]+".json")
-	got, err := CachePath("/repo", install)
+	got, err := cachePath("/repo", install)
 	if err != nil || got != want {
-		t.Fatalf("CachePath = %q, %v; want %q", got, err, want)
+		t.Fatalf("cachePath = %q, %v; want %q", got, err, want)
 	}
 }
 
 // test_class_entries_are_counted_not_listed.
 func TestClassEntriesAreCountedNotListed(t *testing.T) {
 	jar := filepath.Join(t.TempDir(), "helpMod-rt.jar")
-	writeJar(t, jar, helpJar...)
+	testkit.WriteJar(t, jar, helpJar...)
 	l := ReadListing(jar)
 	if l == nil {
 		t.Fatal("listing is nil")
@@ -49,7 +51,7 @@ func TestClassEntriesAreCountedNotListed(t *testing.T) {
 // directory order, ".CLASS" is not a class (Python's endswith is exact).
 func TestListingKeepsCentralDirectoryOrder(t *testing.T) {
 	jar := filepath.Join(t.TempDir(), "a.jar")
-	writeJar(t, jar, [2]string{"doc/", ""}, [2]string{"doc/b.html", "b"},
+	testkit.WriteJar(t, jar, [2]string{"doc/", ""}, [2]string{"doc/b.html", "b"},
 		[2]string{"doc/a.html", "a"}, [2]string{"doc/b.html", "bb"},
 		[2]string{"doc/empty.txt", ""}, [2]string{"X.CLASS", "x"})
 	l := ReadListing(jar)
@@ -68,9 +70,9 @@ func listingFixture(t *testing.T) (dir string, jars []string) {
 	dir = t.TempDir()
 	jars = []string{filepath.Join(dir, "modules", "helpMod-rt.jar"),
 		filepath.Join(dir, "modules", "lib-rt.jar"), filepath.Join(dir, "modules", "thing-ux.jar")}
-	writeJar(t, jars[0], helpJar...)
-	writeJar(t, jars[1], [2]string{"org/apache/words.txt", "a\nb\n"}, [2]string{"com/acme/BLib.class", "\xca\xfe"})
-	writeJar(t, jars[2], [2]string{"rc/notes.md", "# Notes\n"}, [2]string{"rc/thing.js", "var x;"})
+	testkit.WriteJar(t, jars[0], helpJar...)
+	testkit.WriteJar(t, jars[1], [2]string{"org/apache/words.txt", "a\nb\n"}, [2]string{"com/acme/BLib.class", "\xca\xfe"})
+	testkit.WriteJar(t, jars[2], [2]string{"rc/notes.md", "# Notes\n"}, [2]string{"rc/thing.js", "var x;"})
 	return dir, jars
 }
 
@@ -78,7 +80,7 @@ func listingFixture(t *testing.T) (dir string, jars []string) {
 func TestSecondReadOpensNoJarAndChangedJarIsRelisted(t *testing.T) {
 	dir, jars := listingFixture(t)
 	path := filepath.Join(dir, "cache", "listings.json")
-	first := NewListings(path)
+	first := newListings(path)
 	for _, j := range jars {
 		first.Listing(j)
 	}
@@ -88,7 +90,7 @@ func TestSecondReadOpensNoJarAndChangedJarIsRelisted(t *testing.T) {
 	if err := first.Save(); err != nil {
 		t.Fatal(err)
 	}
-	second := NewListings(path)
+	second := newListings(path)
 	for _, j := range jars {
 		if second.Listing(j) == nil {
 			t.Fatalf("%s: nil from the cache", j)
@@ -97,12 +99,12 @@ func TestSecondReadOpensNoJarAndChangedJarIsRelisted(t *testing.T) {
 	if second.Reads != 0 {
 		t.Fatalf("second reads %d, want 0", second.Reads)
 	}
-	writeJar(t, jars[1], [2]string{"org/apache/words.txt", "a\nb\nc\n"})
+	testkit.WriteJar(t, jars[1], [2]string{"org/apache/words.txt", "a\nb\nc\n"})
 	later := time.Now().Add(2 * time.Second)
 	if err := os.Chtimes(jars[1], later, later); err != nil {
 		t.Fatal(err)
 	}
-	third := NewListings(path)
+	third := newListings(path)
 	for _, j := range jars {
 		third.Listing(j)
 	}
@@ -123,12 +125,12 @@ func TestSecondReadOpensNoJarAndChangedJarIsRelisted(t *testing.T) {
 func TestDamagedCacheIsRebuilt(t *testing.T) {
 	dir, jars := listingFixture(t)
 	good := filepath.Join(dir, "good.json")
-	ls := NewListings(good)
+	ls := newListings(good)
 	ls.Listing(jars[0])
 	if err := ls.Save(); err != nil {
 		t.Fatal(err)
 	}
-	text := readText(t, good)
+	text := testkit.ReadText(t, good)
 	const listing = `"listing":{"entries":[["doc/About-Help.html",33,`
 	if !strings.Contains(text, listing) || !strings.Contains(text, `"classes":1}`) {
 		t.Fatalf("unexpected cache text %s", text)
@@ -150,8 +152,8 @@ func TestDamagedCacheIsRebuilt(t *testing.T) {
 	}
 	for _, c := range cases {
 		path := filepath.Join(dir, "bad.json")
-		writeFile(t, path, []byte(c.data))
-		ls := NewListings(path)
+		testkit.WriteFile(t, path, []byte(c.data))
+		ls := newListings(path)
 		if ls.Len() != c.len {
 			t.Fatalf("%s: %d cached jars, want %d", c.name, ls.Len(), c.len)
 		}
@@ -179,7 +181,7 @@ func crcTooBig(text string) string {
 func TestCacheFileBytes(t *testing.T) {
 	dir, jars := listingFixture(t)
 	path := filepath.Join(dir, "c.json")
-	ls := NewListings(path)
+	ls := newListings(path)
 	ls.Listing(jars[0])
 	ls.Listing(filepath.Join(dir, "modules", "missing.jar")) // stat fails: not cached
 	if err := ls.Save(); err != nil {
@@ -188,7 +190,7 @@ func TestCacheFileBytes(t *testing.T) {
 	st, _ := os.Stat(jars[0])
 	want := fmt.Sprintf(`{"version":1,"jars":{%q:{"stamp":[%d,%d],"listing":{"entries":[["doc/About-Help.html",%d,%d]],"classes":1}}}}`,
 		jars[0], st.Size(), st.ModTime().UnixNano(), len(helpJar[0][1]), crc32.ChecksumIEEE([]byte(helpJar[0][1])))
-	if got := readText(t, path); got != want {
+	if got := testkit.ReadText(t, path); got != want {
 		t.Fatalf("cache\n got %s\nwant %s", got, want)
 	}
 }
@@ -197,19 +199,19 @@ func TestCacheFileBytes(t *testing.T) {
 func TestUnreadableJarIsCachedAsNull(t *testing.T) {
 	dir := t.TempDir()
 	jar := filepath.Join(dir, "corrupt.jar")
-	writeFile(t, jar, []byte("not a zip"))
+	testkit.WriteFile(t, jar, []byte("not a zip"))
 	path := filepath.Join(dir, "c.json")
-	ls := NewListings(path)
+	ls := newListings(path)
 	if ls.Listing(jar) != nil || ls.Reads != 1 {
 		t.Fatalf("reads %d", ls.Reads)
 	}
 	if err := ls.Save(); err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(readText(t, path), `"listing":null`) {
-		t.Fatalf("cache %s", readText(t, path))
+	if !strings.Contains(testkit.ReadText(t, path), `"listing":null`) {
+		t.Fatalf("cache %s", testkit.ReadText(t, path))
 	}
-	again := NewListings(path)
+	again := newListings(path)
 	if again.Listing(jar) != nil || again.Reads != 0 {
 		t.Fatalf("reads %d, want 0", again.Reads)
 	}
@@ -220,13 +222,13 @@ func TestUnreadableJarIsCachedAsNull(t *testing.T) {
 
 func TestSaveWritesOnlyWhenSomethingWasListed(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "c.json")
-	if err := NewListings(path).Save(); err != nil {
+	if err := newListings(path).Save(); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := os.Stat(path); !os.IsNotExist(err) {
 		t.Fatalf("cache written without a listing: %v", err)
 	}
-	mem := NewListings("")
+	mem := newListings("")
 	_, jars := listingFixture(t)
 	mem.Listing(jars[0])
 	if err := mem.Save(); err != nil {

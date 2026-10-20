@@ -16,7 +16,7 @@
 //
 // Fixtures: the expected events of parser_test.go and the values of unescape_test.go
 // were taken from CPython 3.15 by hand (python3 -c with html.parser / html.unescape).
-// The frozen parity checks live in internal/helpbuild (htmlfrozen_test.go), replaying the
+// The frozen parity checks live in internal/helpbuild/htmltext (htmlfrozen_test.go), replaying the
 // output of the retired Python driver: TestHTMLCornersFrozen (callbacks over hand-written
 // pages), TestHTMLFeedCornersFrozen (the same for Feed) and TestHTML5EntitiesFrozen (every
 // html5 name, its near misses and html.unescape around each). See docs/helpbuild.md, "The

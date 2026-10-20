@@ -10,6 +10,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/angeles725/niagara-go/internal/helpbuild/internal/testkit"
 	"github.com/angeles725/niagara-go/internal/index"
 )
 
@@ -26,7 +27,7 @@ func sweepLines(report string, status int) []string {
 	var out []string
 	if report != "" {
 		for _, line := range strings.Split(strings.TrimSuffix(report, "\n"), "\n") {
-			out = append(out, dumpLine(str("out"), str(line)))
+			out = append(out, testkit.DumpLine(testkit.Str("out"), testkit.Str(line)))
 		}
 	}
 	return append(out, fmt.Sprintf(`["exit", %d]`, status))
@@ -59,7 +60,7 @@ func sweepRepo(t *testing.T, src string) string {
 		t.Fatal(err)
 	}
 	repo := t.TempDir()
-	writeFile(t, filepath.Join(repo, index.RegistryRel), reg)
+	testkit.WriteFile(t, filepath.Join(repo, index.RegistryRel), reg)
 	return repo
 }
 
@@ -77,7 +78,9 @@ func lockDir(t *testing.T, dir string) bool {
 
 const sweepFixturePage = "<html><head><title>%s</title></head><body><p>%s</p></body></html>"
 
-func sweepFixtureJar(t *testing.T, path string, entries ...[2]string) { writeJar(t, path, entries...) }
+func sweepFixtureJar(t *testing.T, path string, entries ...[2]string) {
+	testkit.WriteJar(t, path, entries...)
+}
 
 func fpage(title, body string) string { return fmt.Sprintf(sweepFixturePage, title, body) }
 
@@ -139,8 +142,8 @@ func sweepFixtureInstall(t *testing.T, root string) {
 	sweepFixtureJar(t, filepath.Join(mods, "ffmpeg-wb.jar"),
 		[2]string{"doc/index.html", fpage("ffmpeg", "licence offer")}, [2]string{"doc/ffmpeg-6.0.tar.xz", "xz"})
 	sweepFixtureJar(t, filepath.Join(mods, "Upper.JAR"), [2]string{"doc/a.html", "<p>a"})
-	writeFile(t, filepath.Join(mods, "broken-rt.jar"), []byte("PK\x03\x04 not a zip"))
-	writeFile(t, filepath.Join(mods, "empty-rt.jar"), nil)
+	testkit.WriteFile(t, filepath.Join(mods, "broken-rt.jar"), []byte("PK\x03\x04 not a zip"))
+	testkit.WriteFile(t, filepath.Join(mods, "empty-rt.jar"), nil)
 	sweepFixtureJar(t, filepath.Join(mods, "ünï-rt.jar"), [2]string{"doc/été.html", fpage("Ete", "été")})
 	sweepFixtureJar(t, filepath.Join(root, "loose.jar"), [2]string{"doc/a.html", "<p>root"})
 	sweepFixtureJar(t, filepath.Join(root, "a-very-long-top-level-folder-name-indeed", "x.jar"), [2]string{"doc/a.html", "<p>long"})
@@ -159,7 +162,7 @@ func sweepFixtureInstall(t *testing.T, root string) {
 		"docs/menu/tree.html": fpage("Docs", "menu"), "docs/Manual.pdf": "%PDF-1.4 not really", "docs/sub/Manual2.PDF": "%PDF-1.4",
 		"docs/Missing.pdf": "%PDF-1.4", "docs/notes.txt": "loose notes\n", "docs/image.png": "png", "docs/locked/Manual3.pdf": "%PDF-1.4",
 	} {
-		writeFile(t, filepath.Join(root, filepath.FromSlash(rel)), []byte(data))
+		testkit.WriteFile(t, filepath.Join(root, filepath.FromSlash(rel)), []byte(data))
 	}
 }
 
@@ -190,7 +193,7 @@ func sweepFrozenFixture(t *testing.T, dir string) (install, repo, rules string) 
 	sweepFixtureInstall(t, install)
 	src := filepath.Join(dir, "course-src")
 	for rel, text := range sweepFixtureCourse {
-		writeFile(t, filepath.Join(src, filepath.FromSlash(rel)), []byte(text))
+		testkit.WriteFile(t, filepath.Join(src, filepath.FromSlash(rel)), []byte(text))
 	}
 	repo = filepath.Join(dir, "repo")
 	for _, vid := range []string{"1.0", "2.0", "3.0"} {
@@ -205,7 +208,7 @@ func sweepFrozenFixture(t *testing.T, dir string) (install, repo, rules string) 
 	if err != nil {
 		t.Fatal(err)
 	}
-	writeFile(t, filepath.Join(repo, "versions", "registry.json"), reg)
+	testkit.WriteFile(t, filepath.Join(repo, "versions", "registry.json"), reg)
 	var shipped map[string]any
 	if err := json.Unmarshal(embeddedRules, &shipped); err != nil {
 		t.Fatal(err)
@@ -225,16 +228,16 @@ func sweepFrozenFixture(t *testing.T, dir string) (install, repo, rules string) 
 		t.Fatal(err)
 	}
 	rules = filepath.Join(dir, "rules.json")
-	writeFile(t, rules, ruleData)
+	testkit.WriteFile(t, rules, ruleData)
 	data := filepath.Join(repo, "versions", "1.0")
-	if _, err := Extract(install, data, nil); err != nil {
+	if _, err := extract(install, data, nil); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := RebuildAll(data, RebuildOptions{Stdout: io.Discard, Stderr: io.Discard}); err != nil {
 		t.Fatal(err)
 	}
-	writeFile(t, filepath.Join(data, "docs-text", "Manual.txt"), []byte("manual text\n"))
-	writeFile(t, filepath.Join(data, "indexes", "pdf-index.json"), []byte(`{"Manual": {"source_pdf": "Manual.pdf"}, `+
+	testkit.WriteFile(t, filepath.Join(data, "docs-text", "Manual.txt"), []byte("manual text\n"))
+	testkit.WriteFile(t, filepath.Join(data, "indexes", "pdf-index.json"), []byte(`{"Manual": {"source_pdf": "Manual.pdf"}, `+
 		`"Manual2": {"source_pdf": "sub/manual2.pdf"}, "Manual3": {"source_pdf": "locked/Manual3.pdf"}, "NoSource": {}}`))
 	if _, err := buildingDocs(data); err != nil {
 		t.Fatal(err)
@@ -249,7 +252,7 @@ func sweepFrozenFixture(t *testing.T, dir string) (install, repo, rules string) 
 // cold, then again over its warm listing cache (recorded as the lineDelta
 // from the cold report).
 func TestSweepFrozen(t *testing.T) {
-	frozenOnly(t)
+	testkit.FrozenOnly(t)
 	dir := t.TempDir()
 	install, repo, rules := sweepFrozenFixture(t, dir)
 	if !lockDir(t, filepath.Join(install, "sw", "locked")) || !lockDir(t, filepath.Join(install, "docs", "locked")) {
@@ -272,8 +275,8 @@ func TestSweepFrozen(t *testing.T) {
 			if err != nil {
 				t.Fatalf("%s: %v", c.name, err)
 			}
-			runs[i] = relabeled(lines, dir, "<dir>")
+			runs[i] = testkit.Relabeled(lines, dir, "<dir>")
 		}
-		checkFrozen(t, "sweep/"+c.name, append(append(runs[0], "warm:"), lineDelta(runs[0], runs[1])...))
+		testkit.CheckFrozen(t, "sweep/"+c.name, append(append(runs[0], "warm:"), testkit.LineDelta(runs[0], runs[1])...))
 	}
 }

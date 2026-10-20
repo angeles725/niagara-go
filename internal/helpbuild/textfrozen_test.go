@@ -9,6 +9,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/angeles725/niagara-go/internal/helpbuild/internal/testkit"
+	"github.com/angeles725/niagara-go/internal/helpbuild/pdftext"
+	"github.com/angeles725/niagara-go/internal/helpbuild/pyfs"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 )
 
@@ -42,26 +45,26 @@ func toolLines(root string, streams map[string]string, names []string, outcome s
 func syntheticDocs(t *testing.T, docs string) {
 	long := "Alarm classes route every alarm to its recipients and consoles."
 	pdfs := map[string][]byte{
-		"docAlarms/Alarms Guide.pdf":   makePDF([]string{long, "72 \xb0F is the limit"}, []string{"Steps:", "\x80 Disconnect the LAN.", " \x80x stays"}),
-		"docAlarms/A&B: notes.pdf":     makePDF([]string{long}),
-		"docX/Same Name.pdf":           makePDF([]string{long, "first"}),
-		"docY/Same_Name.PDF":           makePDF([]string{long, "second"}),
-		"docJ9Install/J9 Mounting.pdf": makePDF([]string{"Mount the J9 on a DIN rail; wire the 24 V supply first."}),
-		"Top Level.pdf":                makePDF([]string{long, "top"}),
-		"docNested/sub/deep.pdf":       makePDF([]string{long, "deep"}),
-		"docGuía/Guía ñ.pdf":           makePDF([]string{"Gu\xeda del m\xf3dulo: se\xf1ales y alarmas del sistema completo."}),
-		"docShort/short.pdf":           makePDF([]string{"tiny"}),
-		"docShort/blank.pdf":           makePDF(nil),
+		"docAlarms/Alarms Guide.pdf":   testkit.MakePDF([]string{long, "72 \xb0F is the limit"}, []string{"Steps:", "\x80 Disconnect the LAN.", " \x80x stays"}),
+		"docAlarms/A&B: notes.pdf":     testkit.MakePDF([]string{long}),
+		"docX/Same Name.pdf":           testkit.MakePDF([]string{long, "first"}),
+		"docY/Same_Name.PDF":           testkit.MakePDF([]string{long, "second"}),
+		"docJ9Install/J9 Mounting.pdf": testkit.MakePDF([]string{"Mount the J9 on a DIN rail; wire the 24 V supply first."}),
+		"Top Level.pdf":                testkit.MakePDF([]string{long, "top"}),
+		"docNested/sub/deep.pdf":       testkit.MakePDF([]string{long, "deep"}),
+		"docGuía/Guía ñ.pdf":           testkit.MakePDF([]string{"Gu\xeda del m\xf3dulo: se\xf1ales y alarmas del sistema completo."}),
+		"docShort/short.pdf":           testkit.MakePDF([]string{"tiny"}),
+		"docShort/blank.pdf":           testkit.MakePDF(nil),
 		"docBad/corrupt.pdf":           []byte("%PDF-1.4\nnot really a PDF\n"),
-		"docBad/latin1.pdf":            makePDF([]string{"never read"}),
-		"docBad/slow.pdf":              makePDF([]string{"never read"}),
+		"docBad/latin1.pdf":            testkit.MakePDF([]string{"never read"}),
+		"docBad/slow.pdf":              testkit.MakePDF([]string{"never read"}),
 	}
 	for rel, data := range pdfs {
-		writeFile(t, filepath.Join(docs, rel), data)
+		testkit.WriteFile(t, filepath.Join(docs, rel), data)
 	}
-	writeFile(t, filepath.Join(docs, "docBad", "latin1.pdf.out"), []byte("72 \xb0F"))
-	writeFile(t, filepath.Join(docs, "docBad", "slow.pdf.sleep"), nil)
-	writeFile(t, filepath.Join(docs, "docAlarms", "readme.txt"), []byte("not a PDF"))
+	testkit.WriteFile(t, filepath.Join(docs, "docBad", "latin1.pdf.out"), []byte("72 \xb0F"))
+	testkit.WriteFile(t, filepath.Join(docs, "docBad", "slow.pdf.sleep"), nil)
+	testkit.WriteFile(t, filepath.Join(docs, "docAlarms", "readme.txt"), []byte("not a PDF"))
 	if err := os.Symlink(filepath.Join(docs, "docAlarms"), filepath.Join(docs, "linked")); err != nil {
 		t.Fatal(err)
 	}
@@ -76,16 +79,16 @@ func syntheticDocs(t *testing.T, docs string) {
 // repository. The conversions themselves are pdfindex_test.go's (fake
 // pdftotext).
 func TestPDFIndexStatesFrozen(t *testing.T) {
-	frozenOnly(t)
-	real := needPdftotext(t)
+	testkit.FrozenOnly(t)
+	real := testkit.NeedPdftotext(t)
 	dir := t.TempDir()
 	// pdftotext on PATH, as the parity run had it; no step here converts a
 	// PDF, so the build of the binary does not matter.
-	t.Setenv("PATH", fakeBin(t, dir, real)+string(os.PathListSeparator)+os.Getenv("PATH"))
+	t.Setenv("PATH", testkit.FakeBin(t, dir, real)+string(os.PathListSeparator)+os.Getenv("PATH"))
 	install := filepath.Join(dir, "install")
 	syntheticDocs(t, filepath.Join(install, "docs"))
 	emptyDocs := filepath.Join(dir, "empty-docs")
-	writeFile(t, filepath.Join(emptyDocs, "notes.txt"), []byte("no PDF here"))
+	testkit.WriteFile(t, filepath.Join(emptyDocs, "notes.txt"), []byte("no PDF here"))
 	repo := filepath.Join(dir, "go")
 	writeRegistry(t, repo, map[string][3]string{
 		"1.0": {"synthetic", install, "versions/1.0"},
@@ -96,24 +99,24 @@ func TestPDFIndexStatesFrozen(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	tree := treeLines(t, repo)
+	tree := testkit.TreeLines(t, repo)
 	n := 0
 	step := func(what, base, docs string) {
 		t.Helper()
-		res, err := ExtractPDFs(filepath.Join(repo, base), PDFOptions{DocsDir: docs})
+		res, err := pdftext.ExtractPDFs(filepath.Join(repo, base), pdftext.PDFOptions{DocsDir: docs})
 		outcome := fmt.Sprintf("exit %d", res.Status)
 		if err != nil {
 			outcome = "raise"
 		}
-		lines := append(toolLines(repo, map[string]string{"stdout": res.Stdout()}, []string{"stdout"}, outcome), "tree:")
-		cur := treeLines(t, repo)
+		lines := append(toolLines(repo, map[string]string{"stdout": testkit.PDFStdout(res.Log)}, []string{"stdout"}, outcome), "tree:")
+		cur := testkit.TreeLines(t, repo)
 		n++
-		checkFrozen(t, fmt.Sprintf("pdf/%d-%s", n, frozenName(what)), append(lines, treeDelta(tree, cur)...))
+		testkit.CheckFrozen(t, fmt.Sprintf("pdf/%d-%s", n, testkit.FrozenName(what)), append(lines, testkit.TreeDelta(tree, cur)...))
 		tree = cur
 	}
 	index := func(base, text string) {
-		writeFile(t, filepath.Join(repo, base, "indexes", "pdf-index.json"), []byte(text))
-		tree = treeLines(t, repo)
+		testkit.WriteFile(t, filepath.Join(repo, base, "indexes", "pdf-index.json"), []byte(text))
+		tree = testkit.TreeLines(t, repo)
 	}
 	step("unregistered root", "fresh", "")
 	index("fresh", `{"x": {"pages": 1}}`)
@@ -159,24 +162,24 @@ var courseExtras = map[string]string{
 }
 
 func syntheticCourse(t *testing.T, src string) {
-	writeTree(t, src, courseFixture)
-	writeTree(t, src, courseExtras)
+	testkit.WriteTree(t, src, courseFixture)
+	testkit.WriteTree(t, src, courseExtras)
 	if err := os.Symlink(filepath.Join(src, "solutions"), filepath.Join(src, "course", "linked-solutions")); err != nil {
 		t.Fatal(err)
 	}
 }
 
-// goPlanLines is CoursePlan as lines: per file its path, kind, destination
+// goPlanLines is coursePlan as lines: per file its path, kind, destination
 // and "(course)" exclude rule.
 func goPlanLines(t *testing.T, src string) []string {
 	rules := mustDefault(t)
 	var out []string
-	for _, r := range CoursePlan(src, rules) {
+	for _, r := range coursePlan(src, rules) {
 		rule := ""
-		if x := rules.ExcludeRule(CoursePseudoJar, r.Rel); x != nil {
+		if x := rules.ExcludeRule(coursePseudoJar, r.Rel); x != nil {
 			rule = x.ID
 		}
-		out = append(out, dumpLine(str(r.Rel), optStr(r.Kind), optStr(r.Dest), optStr(rule)))
+		out = append(out, testkit.DumpLine(testkit.Str(r.Rel), testkit.OptStr(r.Kind), testkit.OptStr(r.Dest), testkit.OptStr(rule)))
 	}
 	return out
 }
@@ -184,10 +187,10 @@ func goPlanLines(t *testing.T, src string) []string {
 // TestCoursePlanFrozen: every file of the synthetic course with its plan
 // row and "(course)" exclude rule.
 func TestCoursePlanFrozen(t *testing.T) {
-	frozenOnly(t)
+	testkit.FrozenOnly(t)
 	src := filepath.Join(t.TempDir(), "course-src")
 	syntheticCourse(t, src)
-	checkFrozen(t, "course/plan", goPlanLines(t, src))
+	testkit.CheckFrozen(t, "course/plan", goPlanLines(t, src))
 }
 
 // TestCourseExtractorFrozen: course_extractor on a course bound by a
@@ -197,7 +200,7 @@ func TestCoursePlanFrozen(t *testing.T) {
 // named pipe in the course, and with a registry that is not JSON. Per step:
 // stdout, stderr and the outcome, then the tree delta of the repository.
 func TestCourseExtractorFrozen(t *testing.T) {
-	frozenOnly(t)
+	testkit.FrozenOnly(t)
 	dir := t.TempDir()
 	src := filepath.Join(dir, "course-src")
 	syntheticCourse(t, src)
@@ -205,11 +208,11 @@ func TestCourseExtractorFrozen(t *testing.T) {
 	writeCourseRegistry(t, repo, map[string]string{
 		"A": "../course-src", "B": "", "C": "../no-course", "D": src,
 	})
-	tree := treeLines(t, repo)
+	tree := testkit.TreeLines(t, repo)
 	n := 0
 	courseStep := func(what, rel string) {
 		t.Helper()
-		out, err := CourseExtractor(filepath.Join(repo, rel), mustDefault(t))
+		out, err := courseExtractor(filepath.Join(repo, rel), mustDefault(t))
 		outcome := fmt.Sprintf("exit %d", out.Status)
 		if err != nil {
 			outcome = "raise"
@@ -222,30 +225,30 @@ func TestCourseExtractorFrozen(t *testing.T) {
 		}
 		lines := append(toolLines(repo, map[string]string{"stdout": join(out.Stdout), "stderr": join(out.Stderr)},
 			[]string{"stdout", "stderr"}, outcome), "tree:")
-		cur := treeLines(t, repo)
+		cur := testkit.TreeLines(t, repo)
 		n++
-		checkFrozen(t, fmt.Sprintf("course/%d-%s", n, frozenName(what)), append(lines, treeDelta(tree, cur)...))
+		testkit.CheckFrozen(t, fmt.Sprintf("course/%d-%s", n, testkit.FrozenName(what)), append(lines, testkit.TreeDelta(tree, cur)...))
 		tree = cur
 	}
 	courseStep("bound by a relative course_dir", "versions/A")
-	writeFile(t, filepath.Join(repo, "versions", "B", "course-text", "stale.txt"), []byte("earlier binding"))
-	writeFile(t, filepath.Join(repo, "versions", "B", "devguide-examples", "course", "x", "Stale.java"), []byte("x"))
-	writeFile(t, filepath.Join(repo, "versions", "B", "devguide-examples", "other.txt"), []byte("not ours"))
-	tree = treeLines(t, repo)
+	testkit.WriteFile(t, filepath.Join(repo, "versions", "B", "course-text", "stale.txt"), []byte("earlier binding"))
+	testkit.WriteFile(t, filepath.Join(repo, "versions", "B", "devguide-examples", "course", "x", "Stale.java"), []byte("x"))
+	testkit.WriteFile(t, filepath.Join(repo, "versions", "B", "devguide-examples", "other.txt"), []byte("not ours"))
+	tree = testkit.TreeLines(t, repo)
 	courseStep("unbound: earlier copies removed", "versions/B")
 	b := filepath.Join(repo, "versions", "B")
-	writeFile(t, filepath.Join(b, "elsewhere", "x.txt"), []byte("behind a symlink"))
+	testkit.WriteFile(t, filepath.Join(b, "elsewhere", "x.txt"), []byte("behind a symlink"))
 	if err := os.Symlink(filepath.Join(b, "elsewhere"), filepath.Join(b, "course-text")); err != nil {
 		t.Fatal(err)
 	}
-	tree = treeLines(t, repo)
+	tree = testkit.TreeLines(t, repo)
 	courseStep("unbound: rmtree refuses a symlink", "versions/B")
 	courseStep("bound course_dir missing", "versions/C")
 	courseStep("bound by an absolute course_dir", "versions/D")
 	if err := os.Remove(filepath.Join(src, "text", "8 ORDs.txt")); err != nil {
 		t.Fatal(err)
 	}
-	writeFile(t, filepath.Join(src, "text", "9 New.txt"), []byte("new page\n"))
+	testkit.WriteFile(t, filepath.Join(src, "text", "9 New.txt"), []byte("new page\n"))
 	courseStep("rebuilt after the course changed", "versions/A")
 	courseStep("unregistered root", "versions")
 	if os.Geteuid() != 0 {
@@ -268,8 +271,8 @@ func TestCourseExtractorFrozen(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	writeFile(t, filepath.Join(repo, "versions", "registry.json"), []byte("{"))
-	tree = treeLines(t, repo)
+	testkit.WriteFile(t, filepath.Join(repo, "versions", "registry.json"), []byte("{"))
+	tree = testkit.TreeLines(t, repo)
 	courseStep("registry not JSON", "versions/A")
 }
 
@@ -293,5 +296,5 @@ func writeCourseRegistry(t *testing.T, repo string, courseDirs map[string]string
 	reg := pyjson.NewObject()
 	reg.Set("default", pyjson.String("A"))
 	reg.Set("versions", vers)
-	writeFile(t, filepath.Join(repo, "versions", "registry.json"), []byte(pyjson.Dumps(reg, DumpDefault)))
+	testkit.WriteFile(t, filepath.Join(repo, "versions", "registry.json"), []byte(pyjson.Dumps(reg, pyfs.DumpDefault)))
 }

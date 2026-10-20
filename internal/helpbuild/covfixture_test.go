@@ -4,6 +4,8 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/angeles725/niagara-go/internal/helpbuild/internal/testkit"
 )
 
 // The synthetic data root of the coverage report tests.
@@ -42,7 +44,7 @@ func covReportBase(t *testing.T, dir string) string {
 		"guides-clean/Ünï/a.htm.txt":     "a",
 	}
 	for rel, text := range files {
-		writeFile(t, filepath.Join(base, rel), []byte(text))
+		testkit.WriteFile(t, filepath.Join(base, rel), []byte(text))
 	}
 	if err := os.MkdirAll(filepath.Join(base, "guides", "Empty"), 0o755); err != nil {
 		t.Fatal(err)

@@ -6,24 +6,14 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/angeles725/niagara-go/internal/helpbuild/internal/testkit"
+	"github.com/angeles725/niagara-go/internal/helpbuild/pyfs"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 )
 
 // The jar listing and the install rules (S1) on synthetic jars, against
 // their frozen Python output (frozen_test.go): every entry's classification,
 // the listing-cache path of odd install names, and the glob rules.
-
-func str(s string) pyjson.Value { return pyjson.String(s) }
-func boolean(b bool) pyjson.Value {
-	return pyjson.Value{Kind: pyjson.Bool, B: b}
-}
-func optStr(s string) pyjson.Value {
-	if s == "" {
-		return pyjson.Value{}
-	}
-	return str(s)
-}
-func array(vs ...pyjson.Value) pyjson.Value { return pyjson.Value{Kind: pyjson.Array, A: vs} }
 
 // goClassify is the classification of every entry of jars: the listing,
 // then per entry its doc-like, extract, exclude and course rules, the guide,
@@ -35,14 +25,14 @@ func goClassify(t *testing.T, srcDir string, jars []string) []string {
 	for _, jar := range jars {
 		name := filepath.Base(jar)
 		l := ReadListing(jar)
-		out = append(out, pyjson.Dumps(array(str("jar"), str(name), l.value()), DumpCompact))
+		out = append(out, pyjson.Dumps(testkit.Array(testkit.Str("jar"), testkit.Str(name), l.value()), pyfs.DumpCompact))
 		if l == nil {
 			continue
 		}
 		for _, e := range l.Entries {
 			exclude := pyjson.Value{}
 			if r := rules.ExcludeRule(name, e.Name); r != nil {
-				exclude = array(str(r.ID), str(r.Reason))
+				exclude = testkit.Array(testkit.Str(r.ID), testkit.Str(r.Reason))
 			}
 			course := ""
 			if r := rules.ExcludeRule("(course)", e.Name); r != nil {
@@ -52,11 +42,11 @@ func goClassify(t *testing.T, srcDir string, jars []string) []string {
 			if r := rules.ExtractRule(name, e.Name); r != nil {
 				extract = r.ID
 			}
-			out = append(out, pyjson.Dumps(array(str("entry"), str(e.Name),
-				boolean(rules.IsDocLike(e.Name)), optStr(extract), exclude, optStr(course),
-				optStr(rules.CourseKind(e.Name)), boolean(IsGuidePage(e.Name)),
-				boolean(IsLicence(e.Name)), boolean(IsSourceArchive("guides/"+e.Name)),
-				str(CleanTextName(e.Name, srcDir))), DumpDefault))
+			out = append(out, pyjson.Dumps(testkit.Array(testkit.Str("entry"), testkit.Str(e.Name),
+				testkit.Boolean(rules.IsDocLike(e.Name)), testkit.OptStr(extract), exclude, testkit.OptStr(course),
+				testkit.OptStr(rules.CourseKind(e.Name)), testkit.Boolean(isGuidePage(e.Name)),
+				testkit.Boolean(isLicence(e.Name)), testkit.Boolean(isSourceArchive("guides/"+e.Name)),
+				testkit.Str(cleanTextName(e.Name, srcDir))), pyfs.DumpDefault))
 		}
 	}
 	return out
@@ -103,43 +93,43 @@ func syntheticJars(t *testing.T, dir string) []string {
 	for _, name := range []string{"docClHVACTest-doc.jar", "docDeveloper-ux.jar", "ascHelp.jar", "thing-ux.jar",
 		"workbench-wb.jar", "galileoSupervisor-wb.jar", "course-files.jar", "odd-names.jar"} {
 		p := filepath.Join(dir, name)
-		writeJar(t, p, jars[name]...)
+		testkit.WriteJar(t, p, jars[name]...)
 		paths = append(paths, p)
 	}
 	var high strings.Builder
 	for b := 0x80; b <= 0xff; b++ {
 		high.WriteByte(byte(b))
 	}
-	ok := rawEntry{name: "doc/a.html", data: "a"}
+	ok := testkit.RawEntry{Name: "doc/a.html", Data: "a"}
 	raw := []struct {
 		name string
 		data []byte
 	}{
-		{"cp437.jar", rawZip("", []rawEntry{{name: "cp437/" + high.String() + ".txt", data: "x"}, ok}, "")},
-		{"nul.jar", rawZip("", []rawEntry{{name: "doc/a.html\x00.exe", data: "x"}}, "")},
-		{"badutf8flag.jar", rawZip("", []rawEntry{{name: "doc/\xff.html", flags: 0x800}}, "")},
-		{"unicodepath.jar", rawZip("", []rawEntry{{name: "doc/x.html", extra: unicodePath("doc/x.html", "doc/ñ.html")},
-			{name: "doc/y.html", extra: unicodePath("other", "doc/ñ.html")}, {name: "doc/z.html", extra: unicodePath("doc/z.html", "")}}, "")},
-		{"badunicodepath.jar", rawZip("", []rawEntry{{name: "doc/x.html", extra: unicodePath("doc/x.html", "\xff")}}, "")},
-		{"zip64.jar", rawZip("", []rawEntry{{name: "big.txt", data: "12345", size64: true, extra: zip64Size(5)}}, "")},
-		{"shortzip64.jar", rawZip("", []rawEntry{{name: "big.txt", size64: true, extra: extraField(1, []byte{1, 2})}}, "")},
-		{"badextra.jar", rawZip("", []rawEntry{{name: "a.txt", extra: []byte{0x99, 0x99, 0x10, 0}}}, "")},
-		{"prepended.jar", rawZip(strings.Repeat("#", 100), []rawEntry{ok}, "")},
-		{"comment.jar", rawZip("", []rawEntry{ok}, "a comment")},
-		{"zip64eocd.jar", zip64Zip("", []rawEntry{ok, {name: "doc/b.html", data: "b"}}, 1, 0)},
-		{"zip64prepended.jar", zip64Zip(strings.Repeat("#", 50), []rawEntry{ok}, 1, 0)},
-		{"zip64disks.jar", zip64Zip("", []rawEntry{ok}, 2, 0)},
-		{"zip64reloffpast.jar", zip64Zip("", []rawEntry{ok}, 1, 1000)},
-		{"zip64reloffshort.jar", zip64Zip("", []rawEntry{ok}, 1, -1)},
-		{"countone.jar", withEntryCount(rawZip("", []rawEntry{ok, {name: "doc/b.txt", data: "b"}, {name: "doc/c/", data: ""},
-			{name: "doc/d.txt", data: "d"}}, ""), 1)},
+		{"cp437.jar", testkit.RawZip("", []testkit.RawEntry{{Name: "cp437/" + high.String() + ".txt", Data: "x"}, ok}, "")},
+		{"nul.jar", testkit.RawZip("", []testkit.RawEntry{{Name: "doc/a.html\x00.exe", Data: "x"}}, "")},
+		{"badutf8flag.jar", testkit.RawZip("", []testkit.RawEntry{{Name: "doc/\xff.html", Flags: 0x800}}, "")},
+		{"unicodepath.jar", testkit.RawZip("", []testkit.RawEntry{{Name: "doc/x.html", Extra: testkit.UnicodePath("doc/x.html", "doc/ñ.html")},
+			{Name: "doc/y.html", Extra: testkit.UnicodePath("other", "doc/ñ.html")}, {Name: "doc/z.html", Extra: testkit.UnicodePath("doc/z.html", "")}}, "")},
+		{"badunicodepath.jar", testkit.RawZip("", []testkit.RawEntry{{Name: "doc/x.html", Extra: testkit.UnicodePath("doc/x.html", "\xff")}}, "")},
+		{"zip64.jar", testkit.RawZip("", []testkit.RawEntry{{Name: "big.txt", Data: "12345", Size64: true, Extra: testkit.Zip64Size(5)}}, "")},
+		{"shortzip64.jar", testkit.RawZip("", []testkit.RawEntry{{Name: "big.txt", Size64: true, Extra: testkit.ExtraField(1, []byte{1, 2})}}, "")},
+		{"badextra.jar", testkit.RawZip("", []testkit.RawEntry{{Name: "a.txt", Extra: []byte{0x99, 0x99, 0x10, 0}}}, "")},
+		{"prepended.jar", testkit.RawZip(strings.Repeat("#", 100), []testkit.RawEntry{ok}, "")},
+		{"comment.jar", testkit.RawZip("", []testkit.RawEntry{ok}, "a comment")},
+		{"zip64eocd.jar", testkit.Zip64Zip("", []testkit.RawEntry{ok, {Name: "doc/b.html", Data: "b"}}, 1, 0)},
+		{"zip64prepended.jar", testkit.Zip64Zip(strings.Repeat("#", 50), []testkit.RawEntry{ok}, 1, 0)},
+		{"zip64disks.jar", testkit.Zip64Zip("", []testkit.RawEntry{ok}, 2, 0)},
+		{"zip64reloffpast.jar", testkit.Zip64Zip("", []testkit.RawEntry{ok}, 1, 1000)},
+		{"zip64reloffshort.jar", testkit.Zip64Zip("", []testkit.RawEntry{ok}, 1, -1)},
+		{"countone.jar", testkit.WithEntryCount(testkit.RawZip("", []testkit.RawEntry{ok, {Name: "doc/b.txt", Data: "b"}, {Name: "doc/c/", Data: ""},
+			{Name: "doc/d.txt", Data: "d"}}, ""), 1)},
 		{"notazip.jar", []byte("plain text, no zip at all")},
 		{"empty.jar", nil},
-		{"truncated.jar", rawZip("", []rawEntry{ok}, "")[:40]},
+		{"truncated.jar", testkit.RawZip("", []testkit.RawEntry{ok}, "")[:40]},
 	}
 	for _, r := range raw {
 		p := filepath.Join(dir, r.name)
-		writeFile(t, p, r.data)
+		testkit.WriteFile(t, p, r.data)
 		paths = append(paths, p)
 	}
 	d := filepath.Join(dir, "dir.jar")
@@ -154,7 +144,7 @@ func siblingSrc(t *testing.T) string {
 	t.Helper()
 	src := filepath.Join(t.TempDir(), "src")
 	for _, rel := range []string{"doc/Page.HTML", "doc/changes.html", "rc/readme.html"} {
-		writeFile(t, filepath.Join(src, filepath.FromSlash(rel)), []byte("<p/>"))
+		testkit.WriteFile(t, filepath.Join(src, filepath.FromSlash(rel)), []byte("<p/>"))
 	}
 	return src
 }
@@ -162,9 +152,9 @@ func siblingSrc(t *testing.T) string {
 // TestClassifyFrozen: the classification of every entry of the synthetic
 // jars, with a source tree for clean_text_name's X.html sibling check.
 func TestClassifyFrozen(t *testing.T) {
-	frozenOnly(t)
+	testkit.FrozenOnly(t)
 	jars := syntheticJars(t, t.TempDir())
-	checkFrozen(t, "jars/classify", goClassify(t, siblingSrc(t), jars))
+	testkit.CheckFrozen(t, "jars/classify", goClassify(t, siblingSrc(t), jars))
 }
 
 // TestCachePathFrozen: the listing-cache path of installs named in odd
@@ -172,21 +162,21 @@ func TestClassifyFrozen(t *testing.T) {
 // ".", UNC). The path names a hash of the absolute install path, so the
 // test runs in "/" for the relative installs to resolve the same anywhere.
 func TestCachePathFrozen(t *testing.T) {
-	frozenOnly(t)
+	testkit.FrozenOnly(t)
 	repo := t.TempDir()
 	t.Chdir("/")
 	var got []string
 	for _, in := range []string{"/srv/niagara/install", "rel/../install", "/a//b/", "/opt/niagara ñ/4.15", ".", "//net/share"} {
-		p, err := CachePath(repo, in)
+		p, err := cachePath(repo, in)
 		if err != nil {
 			t.Fatal(err)
 		}
-		got = append(got, pyjson.Dumps(str(p), DumpDefault))
+		got = append(got, pyjson.Dumps(testkit.Str(p), pyfs.DumpDefault))
 	}
-	checkFrozen(t, "jars/cache-path", relabeled(got, repo, "<repo>"))
+	testkit.CheckFrozen(t, "jars/cache-path", testkit.Relabeled(got, repo, "<repo>"))
 }
 
-// TestGlobFrozen: the glob rules (GlobRe) on every pattern/path pair.
+// TestGlobFrozen: the glob rules (globRe) on every pattern/path pair.
 func TestGlobFrozen(t *testing.T) {
 	pairs := [][2]string{}
 	patterns := []string{"**/node_modules/**", "rc/**.md", "rc/*.md", "res/*Home.html", "*.jar", "doc/x.html",
@@ -203,7 +193,7 @@ func TestGlobFrozen(t *testing.T) {
 	}
 	var got []pyjson.Value
 	for _, pr := range pairs {
-		got = append(got, boolean(GlobRe(pr[0]).MatchString(pr[1])))
+		got = append(got, testkit.Boolean(globRe(pr[0]).MatchString(pr[1])))
 	}
-	checkFrozen(t, "jars/glob", []string{pyjson.Dumps(array(got...), DumpDefault)})
+	testkit.CheckFrozen(t, "jars/glob", []string{pyjson.Dumps(testkit.Array(got...), pyfs.DumpDefault)})
 }

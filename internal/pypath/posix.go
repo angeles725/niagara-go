@@ -1,9 +1,12 @@
 package pypath
 
-import "strings"
+import (
+	"path"
+	"strings"
+)
 
-// The posixpath and ntpath string functions (moved from pycompat): nothing is normalised,
-// unlike the pathlib forms in pypath.go.
+// The posixpath and ntpath string functions (moved from pycompat): nothing is normalised
+// except by PosixNormpath, unlike the pathlib forms in pypath.go.
 
 // PosixBasename is posixpath.basename.
 func PosixBasename(p string) string { return p[strings.LastIndex(p, "/")+1:] }
@@ -19,6 +22,17 @@ func PosixSplitext(p string) (string, string) {
 		}
 	}
 	return p, ""
+}
+
+// PosixNormpath is posixpath.normpath on every OS: path.Clean, except that only "/"
+// separates (a backslash or a drive letter is part of a name) and two leading slashes are
+// kept (three or more become one).
+func PosixNormpath(p string) string {
+	clean := path.Clean(p)
+	if strings.HasPrefix(p, "//") && !strings.HasPrefix(p, "///") {
+		return "/" + clean
+	}
+	return clean
 }
 
 // PosixJoin is posixpath.join: an absolute part restarts the path; nothing is normalised.

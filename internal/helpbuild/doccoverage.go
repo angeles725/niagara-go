@@ -2,9 +2,9 @@ package helpbuild
 
 import (
 	"database/sql"
-	"path"
 	"strings"
 
+	"github.com/angeles725/niagara-go/internal/helpbuild/indexes"
 	"github.com/angeles725/niagara-go/internal/index"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pypath"
@@ -16,11 +16,11 @@ import (
 // FulltextDocs returns the "<source>/<path>" key of every document of the
 // up-to-date full-text index of root (fulltext_index.open_index(root).docs()).
 // The CLI passes an opener that rebuilds a stale index, as open_index does;
-// FulltextDocsAt reads one database.
+// fulltextDocsAt reads one database.
 type FulltextDocs func(root string) (map[string]bool, error)
 
-// FulltextDocsAt is FtsIndex.docs() of the full-text database at path.
-func FulltextDocsAt(path string) (map[string]bool, error) {
+// fulltextDocsAt is FtsIndex.docs() of the full-text database at path.
+func fulltextDocsAt(path string) (map[string]bool, error) {
 	db, err := index.OpenSQLite(path)
 	if err != nil {
 		return nil, err
@@ -61,7 +61,7 @@ func newIndexedViews(root string, docs FulltextDocs) *indexedViews {
 func recordOf(name, key string, v any) (*index.Object, error) {
 	o, ok := v.(*index.Object)
 	if !ok {
-		return nil, &IndexShapeError{name, "the record of " + key + " is not an object"}
+		return nil, &indexShapeError{name, "the record of " + key + " is not an object"}
 	}
 	return o, nil
 }
@@ -90,7 +90,7 @@ func (x *indexedViews) classSet(jdk bool) (map[string]bool, error) {
 		if others, ok := entry.Get("others"); ok {
 			list, ok := others.([]any)
 			if !ok {
-				return nil, &IndexShapeError{name, "the others of " + key + " are not a list"}
+				return nil, &indexShapeError{name, "the others of " + key + " are not a list"}
 			}
 			for _, o := range list {
 				e, err := recordOf(name, key, o)
@@ -103,27 +103,13 @@ func (x *indexedViews) classSet(jdk bool) (map[string]bool, error) {
 		for _, e := range all {
 			pkg, ok := e.Get("package")
 			if !ok {
-				return nil, &IndexShapeError{name, "a record of " + key + " has no package"}
+				return nil, &indexShapeError{name, "a record of " + key + " has no package"}
 			}
 			out[pycompat.Str(pkg)+"."+key] = true
 		}
 	}
 	x.classes[jdk] = out
 	return out, nil
-}
-
-// pyNormpath is posixpath.normpath on every OS: only "/" separates (a
-// backslash or a drive letter is part of a name), two leading slashes are
-// kept, three or more become one.
-func pyNormpath(p string) string {
-	if p == "" {
-		return "."
-	}
-	clean := path.Clean(p)
-	if strings.HasPrefix(p, "//") && !strings.HasPrefix(p, "///") {
-		return "/" + clean
-	}
-	return clean
 }
 
 // sourceSet is Indexed.sources(): normpath("source/" + path) of every
@@ -145,13 +131,13 @@ func (x *indexedViews) sourceSet() (map[string]bool, error) {
 		}
 		p, ok := data.Get("path")
 		if !ok {
-			return nil, &IndexShapeError{name, "the record of " + key + " has no path"}
+			return nil, &indexShapeError{name, "the record of " + key + " has no path"}
 		}
 		s, ok := p.(string)
 		if !ok {
-			return nil, &IndexShapeError{name, "the path of " + key + " is not a string"}
+			return nil, &indexShapeError{name, "the path of " + key + " is not a string"}
 		}
-		out[pyNormpath(pypath.PosixJoin("source", s))] = true
+		out[pypath.PosixNormpath(pypath.PosixJoin("source", s))] = true
 	}
 	x.sources = out
 	return out, nil
@@ -245,7 +231,7 @@ func (x *indexedViews) check(kind, rel string) (bool, error) {
 		if err != nil {
 			return false, err
 		}
-		parsed, _, err := readBajadocClasses(path)
+		parsed, _, err := indexes.ReadBajadocClasses(path)
 		if err != nil || len(parsed) == 0 {
 			return false, err
 		}
@@ -262,7 +248,7 @@ func (x *indexedViews) check(kind, rel string) (bool, error) {
 		}
 		page := dropPrefixRunes(rel, len(folder)+1)
 		return pycompat.IsFile(pycompat.Join(x.root, folder+"-clean",
-			CleanTextName(page, pycompat.Join(x.root, folder)))), nil
+			cleanTextName(page, pycompat.Join(x.root, folder)))), nil
 	case "guide-toc":
 		tocs, err := x.guideTocs()
 		return tocs[strings.Split(rel, "/")[1]], err

@@ -9,6 +9,8 @@ import (
 	"unicode/utf8"
 
 	"github.com/angeles725/niagara-go/internal/atomicfile"
+	"github.com/angeles725/niagara-go/internal/helpbuild/htmltext"
+	"github.com/angeles725/niagara-go/internal/helpbuild/pyfs"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/textfold"
 )
@@ -20,8 +22,8 @@ import (
 // at the end (atomicfile.RebuiltDir). Nothing is printed: Log holds the lines Python
 // prints on stdout, Warnings the ones it prints on stderr.
 
-// TextResult is what a text builder reports.
-type TextResult struct {
+// textResult is what a text builder reports.
+type textResult struct {
 	Files    int      // the builder's return value: pages written
 	Log      []string // stdout lines
 	Warnings []string // stderr lines
@@ -76,9 +78,9 @@ func markdownTitle(text string) string {
 	return ""
 }
 
-// ParseGuides is guides_parser.parse_guides(baseDir).
-func ParseGuides(baseDir string) (*TextResult, error) {
-	res := &TextResult{}
+// parseGuides is guides_parser.parse_guides(baseDir).
+func parseGuides(baseDir string) (*textResult, error) {
+	res := &textResult{}
 	guidesDir := pycompat.Join(baseDir, "guides")
 	err := atomicfile.RebuiltDir(pycompat.Join(baseDir, "guides-clean"), func(out string) error {
 		return parseGuidesInto(res, guidesDir, out)
@@ -89,7 +91,7 @@ func ParseGuides(baseDir string) (*TextResult, error) {
 	return res, nil
 }
 
-func parseGuidesInto(res *TextResult, guidesDir, outDir string) error {
+func parseGuidesInto(res *textResult, guidesDir, outDir string) error {
 	folders, err := sortedNames(guidesDir)
 	if err != nil {
 		return err
@@ -102,15 +104,15 @@ func parseGuidesInto(res *TextResult, guidesDir, outDir string) error {
 			continue
 		}
 		toc := &Toc{}
-		if tocPath := FindToc(folderPath); tocPath != "" {
+		if tocPath := findToc(folderPath); tocPath != "" {
 			var warning string
-			if toc, warning = ParseToc(tocPath); warning != "" {
+			if toc, warning = parseToc(tocPath); warning != "" {
 				res.Warnings = append(res.Warnings, warning)
 			}
 		}
-		pyWalk(folderPath, func(dir string, dirs, files []string) []string {
+		pyfs.Walk(folderPath, func(dir string, dirs, files []string) []string {
 			for _, fname := range files {
-				if werr != nil || !IsGuidePage(fname) {
+				if werr != nil || !isGuidePage(fname) {
 					continue
 				}
 				pagePath := pycompat.Join(dir, fname)
@@ -143,7 +145,7 @@ func parseGuidesInto(res *TextResult, guidesDir, outDir string) error {
 					header = "TITLE: " + title + "\n"
 				}
 				header += "SOURCE: guides/" + rel + "\n\n"
-				if werr = writeClean(pycompat.Join(outDir, CleanTextName(rel, guidesDir)), cleanFileText(header, text)); werr != nil {
+				if werr = writeClean(pycompat.Join(outDir, cleanTextName(rel, guidesDir)), cleanFileText(header, text)); werr != nil {
 					continue
 				}
 				res.Files++
@@ -166,7 +168,7 @@ func parseGuidesInto(res *TextResult, guidesDir, outDir string) error {
 func guidePageText(fname, raw string) (title, text string) {
 	low := textfold.Lower(fname)
 	if strings.HasSuffix(low, ".html") || strings.HasSuffix(low, ".htm") {
-		return HTMLToText(raw)
+		return htmltext.HTMLToText(raw)
 	}
 	text = pycompat.Strip(strings.ReplaceAll(raw, "\r\n", "\n"))
 	if strings.HasSuffix(low, ".md") {
@@ -178,11 +180,11 @@ func guidePageText(fname, raw string) (title, text string) {
 	return title, text
 }
 
-// ParseDevguide is devguide_parser.parse_devguide(baseDir): every .html
+// parseDevguide is devguide_parser.parse_devguide(baseDir): every .html
 // page and every .txt page that is not a licence text; the licence texts
 // are listed as excluded.
-func ParseDevguide(baseDir string) (*TextResult, error) {
-	res := &TextResult{}
+func parseDevguide(baseDir string) (*textResult, error) {
+	res := &textResult{}
 	devguideDir := pycompat.Join(baseDir, "devguide")
 	err := atomicfile.RebuiltDir(pycompat.Join(baseDir, "devguide-clean"), func(out string) error {
 		return parseDevguideInto(res, baseDir, devguideDir, out)
@@ -193,11 +195,11 @@ func ParseDevguide(baseDir string) (*TextResult, error) {
 	return res, nil
 }
 
-func parseDevguideInto(res *TextResult, baseDir, devguideDir, outDir string) error {
+func parseDevguideInto(res *textResult, baseDir, devguideDir, outDir string) error {
 	chars := 0
 	var excluded []string
 	var werr error
-	pyWalk(devguideDir, func(dir string, dirs, files []string) []string {
+	pyfs.Walk(devguideDir, func(dir string, dirs, files []string) []string {
 		for _, fname := range files {
 			if werr != nil {
 				break
@@ -206,14 +208,14 @@ func parseDevguideInto(res *TextResult, baseDir, devguideDir, outDir string) err
 			isHTML := strings.HasSuffix(low, ".html")
 			if !isHTML {
 				isTxt := strings.HasSuffix(low, ".txt")
-				if isTxt && IsLicence(fname) {
+				if isTxt && isLicence(fname) {
 					rel, err := filepath.Rel(baseDir, pycompat.Join(dir, fname))
 					if werr = err; err != nil {
 						break
 					}
 					excluded = append(excluded, rel)
 				}
-				if !isTxt || IsLicence(fname) {
+				if !isTxt || isLicence(fname) {
 					continue
 				}
 			}
@@ -231,7 +233,7 @@ func parseDevguideInto(res *TextResult, baseDir, devguideDir, outDir string) err
 	return nil
 }
 
-func devguidePage(res *TextResult, chars *int, baseDir, devguideDir, outDir, dir, fname string, isHTML bool) error {
+func devguidePage(res *textResult, chars *int, baseDir, devguideDir, outDir, dir, fname string, isHTML bool) error {
 	pagePath := pycompat.Join(dir, fname)
 	relDir, err := filepath.Rel(devguideDir, dir)
 	if err != nil {
@@ -243,7 +245,7 @@ func devguidePage(res *TextResult, chars *int, baseDir, devguideDir, outDir, dir
 	}
 	var title, text string
 	if isHTML {
-		title, text = HTMLToText(raw)
+		title, text = htmltext.HTMLToText(raw)
 	} else {
 		title, text = fname, pycompat.Strip(strings.ReplaceAll(raw, "\r\n", "\n"))
 	}
@@ -259,7 +261,7 @@ func devguidePage(res *TextResult, chars *int, baseDir, devguideDir, outDir, dir
 		return errNotUTF8Name(pagePath)
 	}
 	header := "TITLE: " + title + "\nSOURCE: " + strings.ReplaceAll(relSource, `\`, "/") + "\n\n"
-	if err := writeClean(pycompat.Join(outSub, CleanTextName(fname, dir)), cleanFileText(header, text)); err != nil {
+	if err := writeClean(pycompat.Join(outSub, cleanTextName(fname, dir)), cleanFileText(header, text)); err != nil {
 		return err
 	}
 	res.Files++

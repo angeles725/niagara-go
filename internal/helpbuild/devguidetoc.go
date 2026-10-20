@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/angeles725/niagara-go/internal/helpbuild/pyfs"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyhtml"
 	"github.com/angeles725/niagara-go/internal/pyjson"
@@ -59,8 +60,8 @@ func dgEntry(file, title, desc string) pyjson.Value {
 	return e
 }
 
-// DevguideTOC is build_devguide_toc.build(baseDir): {"sections": [...]}.
-func DevguideTOC(baseDir string) (pyjson.Value, error) {
+// devguideTOC is build_devguide_toc.build(baseDir): {"sections": [...]}.
+func devguideTOC(baseDir string) (pyjson.Value, error) {
 	raw, err := readPage(pycompat.Join(baseDir, "devguide", "index.html"))
 	if err != nil {
 		return pyjson.Value{}, err
@@ -108,10 +109,10 @@ func DevguideTOC(baseDir string) (pyjson.Value, error) {
 	return toc, nil
 }
 
-// BuildDevguideTOC is build_devguide_toc.main(): baseDir/indexes/
+// buildDevguideTOC is build_devguide_toc.main(): baseDir/indexes/
 // devguide-toc.json written with indent=2.
-func BuildDevguideTOC(baseDir string) (*TextResult, error) {
-	toc, err := DevguideTOC(baseDir)
+func buildDevguideTOC(baseDir string) (*textResult, error) {
+	toc, err := devguideTOC(baseDir)
 	if err != nil {
 		return nil, err
 	}
@@ -119,9 +120,9 @@ func BuildDevguideTOC(baseDir string) (*TextResult, error) {
 	if err := os.MkdirAll(filepath.Dir(out), 0o777); err != nil {
 		return nil, err
 	}
-	if err := WriteJSON(out, toc, DumpIndent2); err != nil {
+	if err := pyfs.WriteJSON(out, toc, pyfs.DumpIndent2); err != nil {
 		return nil, err
 	}
 	n := len(toc.M["sections"].A)
-	return &TextResult{Files: n, Log: []string{fmt.Sprintf("devguide-toc.json: %d sections -> %s", n, out)}}, nil
+	return &textResult{Files: n, Log: []string{fmt.Sprintf("devguide-toc.json: %d sections -> %s", n, out)}}, nil
 }

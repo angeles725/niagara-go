@@ -21,7 +21,7 @@ func classPackage(classIndex *index.Object, cls string) (string, error) {
 	}
 	o, ok := v.(*index.Object)
 	if !ok {
-		return "", &IndexShapeError{"class-index.json", "the record of " + cls + " is not an object"}
+		return "", &indexShapeError{"class-index.json", "the record of " + cls + " is not an object"}
 	}
 	pkg, ok := o.Get("package")
 	if !ok {
@@ -47,19 +47,19 @@ func moduleMethods(methods *index.Object, classes []string) (int, error) {
 			entries = v
 		case string:
 			if v != "" {
-				return 0, &IndexShapeError{"method-index.json", "the entries of " + name + " are a string"}
+				return 0, &indexShapeError{"method-index.json", "the entries of " + name + " are a string"}
 			}
 		case *index.Object:
 			if v.Len() != 0 {
-				return 0, &IndexShapeError{"method-index.json", "the entries of " + name + " are an object"}
+				return 0, &indexShapeError{"method-index.json", "the entries of " + name + " are an object"}
 			}
 		default:
-			return 0, &IndexShapeError{"method-index.json", "the entries of " + name + " are not a list"}
+			return 0, &indexShapeError{"method-index.json", "the entries of " + name + " are not a list"}
 		}
 		for _, e := range entries {
 			o, ok := e.(*index.Object)
 			if !ok {
-				return 0, &IndexShapeError{"method-index.json", "an entry of " + name + " is not an object"}
+				return 0, &indexShapeError{"method-index.json", "an entry of " + name + " is not an object"}
 			}
 			cls, _ := o.Get("class")
 			section, _ := o.Get("section")
@@ -72,7 +72,7 @@ func moduleMethods(methods *index.Object, classes []string) (int, error) {
 }
 
 func moduleCoverage(w io.Writer, x *coverageIndexes, hasDoc map[string]bool, module string) (CoverageResult, error) {
-	classes, err := ModuleClasses(x.source, module)
+	classes, err := moduleClasses(x.source, module)
 	if err != nil {
 		return CoverageResult{}, err
 	}
@@ -88,7 +88,7 @@ func moduleCoverage(w io.Writer, x *coverageIndexes, hasDoc map[string]bool, mod
 		}
 	}
 	// Every value is computed before printing: an index of an unexpected
-	// shape is an *IndexShapeError before any output, where Python raises
+	// shape is an *indexShapeError before any output, where Python raises
 	// after printing the lines before the failing lookup (an intended
 	// difference, pinned by TestCoverageMalformedIndexes).
 	pkgs := make([]string, len(undocumented))
@@ -141,7 +141,7 @@ type moduleGroups struct {
 }
 
 // groupByModule is the by_module loop; a record of an unexpected shape is
-// an *IndexShapeError, returned before the report prints anything.
+// an *indexShapeError, returned before the report prints anything.
 func groupByModule(source *index.Object) (*moduleGroups, error) {
 	g := &moduleGroups{byModule: map[string][]string{}}
 	for i, cls := range source.Keys() {

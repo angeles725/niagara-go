@@ -6,6 +6,8 @@ import (
 	"runtime"
 	"slices"
 	"testing"
+
+	"github.com/angeles725/niagara-go/internal/helpbuild/internal/testkit"
 )
 
 // Two runs that differ only in the run times build.log records must give
@@ -17,7 +19,7 @@ func TestRebuildTreeLinesNormalizesBuildLogTimes(t *testing.T) {
 	observe := func(log string) []string {
 		root := t.TempDir()
 		path := filepath.Join(root, "build.log")
-		writeFile(t, path, []byte(log))
+		testkit.WriteFile(t, path, []byte(log))
 		if err := os.Chmod(path, 0o666); err != nil {
 			t.Fatal(err)
 		}

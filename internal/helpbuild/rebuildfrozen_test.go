@@ -12,6 +12,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/angeles725/niagara-go/internal/helpbuild/internal/testkit"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
@@ -123,7 +124,7 @@ func rebuildTreeLines(t *testing.T, root string) []string {
 			normalizeRebuild(string(data), false)...)
 		defer restore()
 	}
-	return append(append(treeLines(t, root), manifest...), buildLog...)
+	return append(append(testkit.TreeLines(t, root), manifest...), buildLog...)
 }
 
 // takeAside reads the file at path and removes it until restore puts it
@@ -178,11 +179,11 @@ func rebuildFrozen(t *testing.T, name, root string, setup func(root string), ste
 		obs = append(obs, "# stderr")
 		obs = append(obs, normalizeRebuild(errs, true)...)
 		cur, texts := splitRebuildTree(rebuildTreeLines(t, root))
-		obs = append(append(obs, "# tree"), treeDelta(prev, cur)...)
+		obs = append(append(obs, "# tree"), testkit.TreeDelta(prev, cur)...)
 		obs = append(append(obs, "# texts"), texts...)
 		prev = cur
 	}
-	checkFrozen(t, "rebuild/"+name, relabeled(obs, root, "<root>"))
+	testkit.CheckFrozen(t, "rebuild/"+name, testkit.Relabeled(obs, root, "<root>"))
 }
 
 // splitRebuildTree splits rebuildTreeLines output into the tree entries and
@@ -217,15 +218,15 @@ func TestRebuildPlanFrozen(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	checkFrozen(t, "rebuild/plan", []string{string(g), fmt.Sprint(OptionalArtifacts)})
+	testkit.CheckFrozen(t, "rebuild/plan", []string{string(g), fmt.Sprint(optionalArtifacts)})
 }
 
 // rebuildFixture is a data root every builder has input for: the S7a, S7b,
-// S8 and S9 fixtures merged, plus the S5 guide pages.
+// S8 and S9 fixtures (indexes/testdata) merged, plus the S5 guide pages.
 func rebuildFixture(t *testing.T, root string) {
 	t.Helper()
 	for _, d := range []string{"s8", "s9", "bajadoc", "bajadocxml"} {
-		copyTree(t, filepath.Join("testdata", d, "root"), root)
+		testkit.CopyTree(t, filepath.Join("indexes", "testdata", d, "root"), root)
 	}
 	guidesFixture(t, root)
 }
@@ -235,18 +236,18 @@ func rebuildFixture(t *testing.T, root string) {
 // folder; a run with a builder that exits 1 and one that raises after a
 // stamp (the manifest is kept); --only matching nothing.
 func TestRebuildFrozen(t *testing.T) {
-	frozenOnly(t)
+	testkit.FrozenOnly(t)
 	root := filepath.Join(t.TempDir(), "root")
 	rebuildFrozen(t, "fixture", root, func(r string) { rebuildFixture(t, r) },
 		[]string{"run", "--dry-run"}, []string{"run", "--dry-run", "--only", "build_"},
 		[]string{"run"}, []string{"run", "--stamp-only"}, []string{"run"}, []string{"log"})
-	rebuildFrozen(t, "empty-root", root, func(r string) { writeFile(t, filepath.Join(r, "readme.txt"), nil) },
+	rebuildFrozen(t, "empty-root", root, func(r string) { testkit.WriteFile(t, filepath.Join(r, "readme.txt"), nil) },
 		[]string{"run", "--dry-run"}, []string{"run"}, []string{"log"})
 	rebuildFrozen(t, "failing-builders", root, func(r string) {
-		writeFile(t, filepath.Join(r, "bajadoc", "x.html"), nil) // no bajadoc/javax/baja: exit 1
-		writeFile(t, filepath.Join(r, "source", "m-rt", "a", "A.java"), []byte("package a;\nimport b.B;\npublic class A {}\n"))
-		writeFile(t, filepath.Join(r, "source", "m-rt", "b", "B.java"), []byte("package b;\nimport c.;\npublic class B {}\n"))
-		writeFile(t, filepath.Join(r, "docs", "notes.md"), []byte("not a manual"))
+		testkit.WriteFile(t, filepath.Join(r, "bajadoc", "x.html"), nil) // no bajadoc/javax/baja: exit 1
+		testkit.WriteFile(t, filepath.Join(r, "source", "m-rt", "a", "A.java"), []byte("package a;\nimport b.B;\npublic class A {}\n"))
+		testkit.WriteFile(t, filepath.Join(r, "source", "m-rt", "b", "B.java"), []byte("package b;\nimport c.;\npublic class B {}\n"))
+		testkit.WriteFile(t, filepath.Join(r, "docs", "notes.md"), []byte("not a manual"))
 	}, []string{"run", "--stamp-only"}, []string{"run"}, []string{"log"})
 	rebuildFrozen(t, "only-nothing", root, func(r string) { rebuildFixture(t, r) }, []string{"run", "--only", "zzz"})
 }

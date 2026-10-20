@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/angeles725/niagara-go/internal/helpbuild/internal/testkit"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
@@ -26,7 +27,7 @@ func rebuildRun(t *testing.T, root string, opt RebuildOptions) (res *RebuildResu
 func sourceOnlyRoot(t *testing.T) string {
 	t.Helper()
 	root := filepath.Join(t.TempDir(), "root")
-	writeFile(t, filepath.Join(root, "source", "m-rt", "a", "A.java"), []byte("package a;\npublic class A {}\n"))
+	testkit.WriteFile(t, filepath.Join(root, "source", "m-rt", "a", "A.java"), []byte("package a;\npublic class A {}\n"))
 	return root
 }
 
@@ -101,8 +102,8 @@ func TestRebuildAllOnly(t *testing.T) {
 // in SOURCE_DIRS order, null for an absent folder) and runs nothing.
 func TestRebuildAllStampOnly(t *testing.T) {
 	root := sourceOnlyRoot(t)
-	writeFile(t, filepath.Join(root, "source", "B.java"), []byte("0123456789"))
-	writeFile(t, filepath.Join(root, "docs", "report.md"), []byte("not a manual"))
+	testkit.WriteFile(t, filepath.Join(root, "source", "B.java"), []byte("0123456789"))
+	testkit.WriteFile(t, filepath.Join(root, "docs", "report.md"), []byte("not a manual"))
 	now := func() time.Time { return time.Date(2026, 1, 2, 3, 4, 5, 0, time.UTC) }
 	res, out, _, err := rebuildRun(t, root, RebuildOptions{StampOnly: true, Now: now})
 	if err != nil {
@@ -124,7 +125,7 @@ func TestRebuildAllStampOnly(t *testing.T) {
     "docs": null
   }
 }`
-	if got := readText(t, filepath.Join(root, "indexes", ".manifest.json")); got != want {
+	if got := testkit.ReadText(t, filepath.Join(root, "indexes", ".manifest.json")); got != want {
 		t.Fatalf("manifest\n%s\nwant\n%s", got, want)
 	}
 	if _, err := os.Stat(filepath.Join(root, "indexes", "source-index.json")); !os.IsNotExist(err) {
@@ -157,20 +158,20 @@ func TestCorpusFingerprint(t *testing.T) {
 		t.Skip("symlinks")
 	}
 	root := t.TempDir()
-	writeFile(t, filepath.Join(root, "guides", "a.html"), []byte("12345"))
-	writeFile(t, filepath.Join(root, "guides", "sub", "b.txt"), []byte("123"))
-	writeFile(t, filepath.Join(root, "elsewhere", "big.bin"), make([]byte, 100))
+	testkit.WriteFile(t, filepath.Join(root, "guides", "a.html"), []byte("12345"))
+	testkit.WriteFile(t, filepath.Join(root, "guides", "sub", "b.txt"), []byte("123"))
+	testkit.WriteFile(t, filepath.Join(root, "elsewhere", "big.bin"), make([]byte, 100))
 	mustSymlink(t, filepath.Join(root, "elsewhere", "big.bin"), filepath.Join(root, "guides", "link.bin"))
 	mustSymlink(t, filepath.Join(root, "elsewhere"), filepath.Join(root, "guides", "linkdir"))
 	mustSymlink(t, filepath.Join(root, "nothing"), filepath.Join(root, "guides", "dangling"))
-	writeFile(t, filepath.Join(root, "docs", "Manual.PDF"), []byte("1234567"))
-	writeFile(t, filepath.Join(root, "docs", "notes.md"), []byte("x"))
-	writeFile(t, filepath.Join(root, "devguide", "notes.md"), nil)
-	fp := CorpusFingerprint(root)
+	testkit.WriteFile(t, filepath.Join(root, "docs", "Manual.PDF"), []byte("1234567"))
+	testkit.WriteFile(t, filepath.Join(root, "docs", "notes.md"), []byte("x"))
+	testkit.WriteFile(t, filepath.Join(root, "devguide", "notes.md"), nil)
+	fp := corpusFingerprint(root)
 	got := map[string]string{}
-	for _, d := range SourceDirs {
+	for _, d := range sourceDirs {
 		v, _ := fp.Get(d)
-		got[d] = dumpLine(v)
+		got[d] = testkit.DumpLine(v)
 	}
 	want := map[string]string{
 		"bajadoc": "[null]", "source": "[null]",
@@ -186,8 +187,8 @@ func TestCorpusFingerprint(t *testing.T) {
 	if err := os.Remove(filepath.Join(root, "docs", "Manual.PDF")); err != nil {
 		t.Fatal(err)
 	}
-	if v, _ := CorpusFingerprint(root).Get("docs"); dumpLine(v) != "[null]" {
-		t.Errorf("docs without a PDF: %s", dumpLine(v))
+	if v, _ := corpusFingerprint(root).Get("docs"); testkit.DumpLine(v) != "[null]" {
+		t.Errorf("docs without a PDF: %s", testkit.DumpLine(v))
 	}
 }
 
@@ -235,12 +236,12 @@ func TestRebuildAllRunsAndStamps(t *testing.T) {
 // printed before, an ERROR line on stderr, exits 1, and the run goes on.
 func TestRebuildAllFailingBuilders(t *testing.T) {
 	root := sourceOnlyRoot(t)
-	writeFile(t, filepath.Join(root, "bajadoc", "x.html"), nil) // no bajadoc/javax/baja: exit 1
-	writeFile(t, filepath.Join(root, "source", "m-rt", "b", "B.java"), []byte("package b;\nimport c.;\npublic class B {}\n"))
+	testkit.WriteFile(t, filepath.Join(root, "bajadoc", "x.html"), nil) // no bajadoc/javax/baja: exit 1
+	testkit.WriteFile(t, filepath.Join(root, "source", "m-rt", "b", "B.java"), []byte("package b;\nimport c.;\npublic class B {}\n"))
 	if _, _, _, err := rebuildRun(t, root, RebuildOptions{StampOnly: true, Now: fixedNow}); err != nil {
 		t.Fatal(err)
 	}
-	before := readText(t, filepath.Join(root, "indexes", ".manifest.json"))
+	before := testkit.ReadText(t, filepath.Join(root, "indexes", ".manifest.json"))
 	res, out, errs, err := rebuildRun(t, root, RebuildOptions{})
 	if err != nil {
 		t.Fatal(err)
@@ -262,7 +263,7 @@ func TestRebuildAllFailingBuilders(t *testing.T) {
 	if res.Failed != 2 || res.Stamped != "" {
 		t.Errorf("result %+v", res)
 	}
-	if got := readText(t, filepath.Join(root, "indexes", ".manifest.json")); got != before {
+	if got := testkit.ReadText(t, filepath.Join(root, "indexes", ".manifest.json")); got != before {
 		t.Errorf("a failed build re-stamped the manifest")
 	}
 }
@@ -273,7 +274,7 @@ func TestRebuildAllRecoversAPanic(t *testing.T) {
 	root := sourceOnlyRoot(t)
 	saved := rebuildBuilders
 	t.Cleanup(func() { rebuildBuilders = saved })
-	rebuildBuilders = append([]Builder(nil), saved...)
+	rebuildBuilders = append([]builder(nil), saved...)
 	for i, b := range rebuildBuilders {
 		if b.Script == "slots_indexer.py" {
 			rebuildBuilders[i].run = func(string, *rebuildIO, *RebuildOptions) (int, error) { panic("boom") }
@@ -319,7 +320,7 @@ func TestRebuildToLog(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	log := readText(t, filepath.Join(root, "build.log"))
+	log := testkit.ReadText(t, filepath.Join(root, "build.log"))
 	if !strings.HasPrefix(log, "REBUILD-ALL \n") || !strings.HasSuffix(log, "Run 'freshness' to confirm FRESH.\n") {
 		t.Fatalf("build.log\n%s", log)
 	}
@@ -337,7 +338,7 @@ func TestRebuildToLog(t *testing.T) {
 	if strings.Join(tail, "\n") != strings.Join(want, "\n") || len(tail) != 15 {
 		t.Fatalf("tail\n%s\nwant\n%s", strings.Join(tail, "\n"), strings.Join(want, "\n"))
 	}
-	if got := readText(t, filepath.Join(root, "indexes", "pdf-index.json")); got != "{}\n" {
+	if got := testkit.ReadText(t, filepath.Join(root, "indexes", "pdf-index.json")); got != "{}\n" {
 		t.Errorf("pdf-index.json stub %q", got)
 	}
 }

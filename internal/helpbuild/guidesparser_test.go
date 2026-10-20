@@ -7,6 +7,8 @@ import (
 	"runtime"
 	"strings"
 	"testing"
+
+	"github.com/angeles725/niagara-go/internal/helpbuild/internal/testkit"
 )
 
 // Ported from niagara-help tests: test_extraction.py
@@ -25,16 +27,16 @@ func spyRoot(t *testing.T) string {
 	t.Helper()
 	root := t.TempDir()
 	g := filepath.Join(root, "guides", "Spy")
-	writeFile(t, filepath.Join(g, "top.html"), guidePage("Top Page", "top body"))
-	writeFile(t, filepath.Join(g, "A", "Compile.html"), guidePage("Compile A", "alpha body"))
-	writeFile(t, filepath.Join(g, "B", "Compile.html"), guidePage("Compile B", "beta body"))
-	writeFile(t, filepath.Join(g, "B", "Deep", "legacy.htm"), guidePage("Legacy Htm", "gamma body"))
+	testkit.WriteFile(t, filepath.Join(g, "top.html"), guidePage("Top Page", "top body"))
+	testkit.WriteFile(t, filepath.Join(g, "A", "Compile.html"), guidePage("Compile A", "alpha body"))
+	testkit.WriteFile(t, filepath.Join(g, "B", "Compile.html"), guidePage("Compile B", "beta body"))
+	testkit.WriteFile(t, filepath.Join(g, "B", "Deep", "legacy.htm"), guidePage("Legacy Htm", "gamma body"))
 	return root
 }
 
-func mustParseGuides(t *testing.T, root string) *TextResult {
+func mustParseGuides(t *testing.T, root string) *textResult {
 	t.Helper()
-	res, err := ParseGuides(root)
+	res, err := parseGuides(root)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -43,7 +45,7 @@ func mustParseGuides(t *testing.T, root string) *TextResult {
 
 func cleanText(t *testing.T, root string, parts ...string) string {
 	t.Helper()
-	return readText(t, filepath.Join(append([]string{root, "guides-clean", "Spy"}, parts...)...))
+	return testkit.ReadText(t, filepath.Join(append([]string{root, "guides-clean", "Spy"}, parts...)...))
 }
 
 func TestParseGuidesNestedPages(t *testing.T) {
@@ -68,7 +70,7 @@ func TestParseGuidesNestedPages(t *testing.T) {
 // test_htm_and_html_with_same_stem_do_not_collide
 func TestParseGuidesHtmTwin(t *testing.T) {
 	root := spyRoot(t)
-	writeFile(t, filepath.Join(root, "guides", "Spy", "top.htm"), guidePage("Top Htm", "htm twin body"))
+	testkit.WriteFile(t, filepath.Join(root, "guides", "Spy", "top.htm"), guidePage("Top Htm", "htm twin body"))
 	if res := mustParseGuides(t, root); res.Files != 5 {
 		t.Fatalf("Files = %d, want 5", res.Files)
 	}
@@ -84,9 +86,9 @@ func TestParseGuidesHtmTwin(t *testing.T) {
 // test_rebuild_drops_stale_outputs
 func TestParseGuidesHeaderOnlyAndStale(t *testing.T) {
 	root := spyRoot(t)
-	writeFile(t, filepath.Join(root, "guides", "Spy", "stub.html"),
+	testkit.WriteFile(t, filepath.Join(root, "guides", "Spy", "stub.html"),
 		[]byte("<html><head><title></title></head><body></body></html>"))
-	writeFile(t, filepath.Join(root, "guides-clean", "Spy", "gone.txt"), []byte("stale"))
+	testkit.WriteFile(t, filepath.Join(root, "guides-clean", "Spy", "gone.txt"), []byte("stale"))
 	res := mustParseGuides(t, root)
 	if got := cleanText(t, root, "stub.txt"); got != "TITLE: \nSOURCE: guides/Spy/stub.html\n\n" {
 		t.Errorf("stub.txt = %q", got)
@@ -102,14 +104,14 @@ func TestParseGuidesHeaderOnlyAndStale(t *testing.T) {
 // test_upper_case_html_sibling_is_seen
 func TestParseGuidesUpperCaseSibling(t *testing.T) {
 	root := t.TempDir()
-	writeFile(t, filepath.Join(root, "guides", "F", "Page.HTML"), []byte("<html><title>Page</title><p>html words</p></html>"))
-	writeFile(t, filepath.Join(root, "guides", "F", "Page.txt"), []byte("plain text words\n"))
+	testkit.WriteFile(t, filepath.Join(root, "guides", "F", "Page.HTML"), []byte("<html><title>Page</title><p>html words</p></html>"))
+	testkit.WriteFile(t, filepath.Join(root, "guides", "F", "Page.txt"), []byte("plain text words\n"))
 	mustParseGuides(t, root)
 	clean := filepath.Join(root, "guides-clean", "F")
-	if s := readText(t, filepath.Join(clean, "Page.txt")); !strings.Contains(s, "html words") {
+	if s := testkit.ReadText(t, filepath.Join(clean, "Page.txt")); !strings.Contains(s, "html words") {
 		t.Errorf("Page.txt = %q", s)
 	}
-	if s := readText(t, filepath.Join(clean, "Page.txt.txt")); !strings.Contains(s, "plain text words") {
+	if s := testkit.ReadText(t, filepath.Join(clean, "Page.txt.txt")); !strings.Contains(s, "plain text words") {
 		t.Errorf("Page.txt.txt = %q", s)
 	}
 }
@@ -117,18 +119,18 @@ func TestParseGuidesUpperCaseSibling(t *testing.T) {
 func TestParseGuidesTocHeader(t *testing.T) {
 	root := t.TempDir()
 	g := filepath.Join(root, "guides", "W")
-	writeFile(t, filepath.Join(g, "toc.xml"), []byte(`<toc><tocitem target="index.html" text="Web  Charts">`+
+	testkit.WriteFile(t, filepath.Join(g, "toc.xml"), []byte(`<toc><tocitem target="index.html" text="Web  Charts">`+
 		`<tocitem target="sub\Over.html#x" text="Overview"/></tocitem></toc>`))
-	writeFile(t, filepath.Join(g, "index.html"), guidePage("Web Charts", "i"))
-	writeFile(t, filepath.Join(g, "sub", "Over.html"), guidePage("Other title", "o"))
-	writeFile(t, filepath.Join(root, "guides", "Bad", "TOC.xml"), []byte("<toc><tocitem></toc>"))
-	writeFile(t, filepath.Join(root, "guides", "Bad", "a.md"), []byte("# A title ##\nbody"))
+	testkit.WriteFile(t, filepath.Join(g, "index.html"), guidePage("Web Charts", "i"))
+	testkit.WriteFile(t, filepath.Join(g, "sub", "Over.html"), guidePage("Other title", "o"))
+	testkit.WriteFile(t, filepath.Join(root, "guides", "Bad", "TOC.xml"), []byte("<toc><tocitem></toc>"))
+	testkit.WriteFile(t, filepath.Join(root, "guides", "Bad", "a.md"), []byte("# A title ##\nbody"))
 	res := mustParseGuides(t, root)
 	want := "TITLE: Overview\nTOC: Web Charts > Overview\nPAGE TITLE: Other title\nSOURCE: guides/W/sub/Over.html\n\no\n"
-	if got := readText(t, filepath.Join(root, "guides-clean", "W", "sub", "Over.txt")); got != want {
+	if got := testkit.ReadText(t, filepath.Join(root, "guides-clean", "W", "sub", "Over.txt")); got != want {
 		t.Errorf("Over.txt = %q", got)
 	}
-	if got := readText(t, filepath.Join(root, "guides-clean", "Bad", "a.md.txt")); got != "TITLE: A title\nSOURCE: guides/Bad/a.md\n\n# A title ##\nbody\n" {
+	if got := testkit.ReadText(t, filepath.Join(root, "guides-clean", "Bad", "a.md.txt")); got != "TITLE: A title\nSOURCE: guides/Bad/a.md\n\n# A title ##\nbody\n" {
 		t.Errorf("a.md.txt = %q", got)
 	}
 	if len(res.Warnings) != 1 || !strings.Contains(res.Warnings[0], "toc not read") {
@@ -143,18 +145,18 @@ func TestParseGuidesTocHeader(t *testing.T) {
 func TestParseDevguideSiblings(t *testing.T) {
 	root := t.TempDir()
 	d := filepath.Join(root, "devguide")
-	writeFile(t, filepath.Join(d, "changes.html"), []byte("<html><title>Changes</title><p>html page words</p>"))
-	writeFile(t, filepath.Join(d, "changes.txt"), []byte("plain text page words\n"))
-	writeFile(t, filepath.Join(d, "sub", "lgpl-2.1.txt"), []byte("GNU"))
-	res, err := ParseDevguide(root)
+	testkit.WriteFile(t, filepath.Join(d, "changes.html"), []byte("<html><title>Changes</title><p>html page words</p>"))
+	testkit.WriteFile(t, filepath.Join(d, "changes.txt"), []byte("plain text page words\n"))
+	testkit.WriteFile(t, filepath.Join(d, "sub", "lgpl-2.1.txt"), []byte("GNU"))
+	res, err := parseDevguide(root)
 	if err != nil {
 		t.Fatal(err)
 	}
 	clean := filepath.Join(root, "devguide-clean")
-	if s := readText(t, filepath.Join(clean, "changes.txt")); !strings.Contains(s, "html page words") {
+	if s := testkit.ReadText(t, filepath.Join(clean, "changes.txt")); !strings.Contains(s, "html page words") {
 		t.Errorf("changes.txt = %q", s)
 	}
-	if s := readText(t, filepath.Join(clean, "changes.txt.txt")); s != "TITLE: changes.txt\nSOURCE: devguide/changes.txt\n\nplain text page words\n" {
+	if s := testkit.ReadText(t, filepath.Join(clean, "changes.txt.txt")); s != "TITLE: changes.txt\nSOURCE: devguide/changes.txt\n\nplain text page words\n" {
 		t.Errorf("changes.txt.txt = %q", s)
 	}
 	// The excluded line is os.path.relpath unchanged: it keeps the host separator
@@ -178,12 +180,12 @@ func nonUTF8PageName() string {
 
 func TestParseGuidesRefusesNonUTF8Names(t *testing.T) {
 	root := t.TempDir()
-	writeFile(t, filepath.Join(root, "guides", "F", nonUTF8PageName()), guidePage("A", "a"))
-	writeFile(t, filepath.Join(root, "guides-clean", "kept.txt"), []byte("old"))
-	if _, err := ParseGuides(root); err == nil {
-		t.Fatal("ParseGuides accepted a page name that is not UTF-8")
+	testkit.WriteFile(t, filepath.Join(root, "guides", "F", nonUTF8PageName()), guidePage("A", "a"))
+	testkit.WriteFile(t, filepath.Join(root, "guides-clean", "kept.txt"), []byte("old"))
+	if _, err := parseGuides(root); err == nil {
+		t.Fatal("parseGuides accepted a page name that is not UTF-8")
 	}
-	if s := readText(t, filepath.Join(root, "guides-clean", "kept.txt")); s != "old" {
+	if s := testkit.ReadText(t, filepath.Join(root, "guides-clean", "kept.txt")); s != "old" {
 		t.Errorf("old clean tree not kept: %q", s)
 	}
 }
@@ -206,15 +208,15 @@ func TestParseToc(t *testing.T) {
 	dir := t.TempDir()
 	// test_backslash_duplicate_keeps_the_first_title
 	p := filepath.Join(dir, "toc.xml")
-	writeFile(t, p, []byte(`<toc><tocitem target="a\b.html" text="First"/><tocitem target="a/b.html" text="Second"/></toc>`))
-	toc, warning := ParseToc(p)
-	if warning != "" || toc.Pages["a/b.html"].Title != "First" || CountItems(p) != 2 {
-		t.Errorf("toc = %+v, warning %q, items %d", toc, warning, CountItems(p))
+	testkit.WriteFile(t, p, []byte(`<toc><tocitem target="a\b.html" text="First"/><tocitem target="a/b.html" text="Second"/></toc>`))
+	toc, warning := parseToc(p)
+	if warning != "" || toc.Pages["a/b.html"].Title != "First" || countItems(p) != 2 {
+		t.Errorf("toc = %+v, warning %q, items %d", toc, warning, countItems(p))
 	}
 	// test_broken_toc_warns
-	writeFile(t, p, []byte("<toc><tocitem></toc>"))
-	toc, warning = ParseToc(p)
-	if len(toc.Pages) != 0 || !strings.Contains(warning, "toc not read") || CountItems(p) != 0 {
+	testkit.WriteFile(t, p, []byte("<toc><tocitem></toc>"))
+	toc, warning = parseToc(p)
+	if len(toc.Pages) != 0 || !strings.Contains(warning, "toc not read") || countItems(p) != 0 {
 		t.Errorf("broken toc: %+v, %q", toc, warning)
 	}
 	want := "WARNING: toc not read, page titles fall back to <title>: " + p + ": mismatched tag: line 1, column 16"
@@ -222,15 +224,15 @@ func TestParseToc(t *testing.T) {
 		t.Errorf("warning = %q, want %q", warning, want)
 	}
 	// Trails, anchors and a BOM before an ISO-8859-1 declaration.
-	writeFile(t, p, []byte("\xef\xbb\xbf<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?><toc>"+
+	testkit.WriteFile(t, p, []byte("\xef\xbb\xbf<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?><toc>"+
 		"<tocitem target=\"i.html\" text=\" G  \xe9 \"><tocitem text=\"\"><tocitem target=\"s.html#a\" text=\"S\"/></tocitem></tocitem></toc>"))
-	toc, warning = ParseToc(p)
+	toc, warning = parseToc(p)
 	if warning != "" || !reflect.DeepEqual(toc.Order, []string{"i.html", "s.html"}) ||
-		!reflect.DeepEqual(toc.Pages["s.html"], TocEntry{Title: "S", Trail: []string{"G é"}}) {
+		!reflect.DeepEqual(toc.Pages["s.html"], tocEntry{Title: "S", Trail: []string{"G é"}}) {
 		t.Errorf("toc = %+v, warning %q", toc, warning)
 	}
-	if FindToc(filepath.Join(dir, "missing")) != "" || FindToc(dir) != p {
-		t.Errorf("FindToc(%s) = %q", dir, FindToc(dir))
+	if findToc(filepath.Join(dir, "missing")) != "" || findToc(dir) != p {
+		t.Errorf("findToc(%s) = %q", dir, findToc(dir))
 	}
 }
 

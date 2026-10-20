@@ -7,6 +7,8 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/angeles725/niagara-go/internal/helpbuild/registry"
+	"github.com/angeles725/niagara-go/internal/helpbuild/zipfile"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 	"github.com/angeles725/niagara-go/internal/pypath"
@@ -15,62 +17,62 @@ import (
 // `coverage --doc-jars` (niagara_help_lib/doc_coverage.py): the mechanical
 // completeness gate over the doc jars. Every entry of every doc jar of a
 // version is read from its install (zip listing; installs are read-only),
-// mapped with DestPath, classified (Classify) and counted, per jar and
+// mapped with destPath, classified (classify) and counted, per jar and
 // content type, as extracted (the corpus file exists under the data root),
 // indexed (the derived index or text holds it) or excluded (an explicit
 // reason); anything else is a gap. Exit status: 0 when every entry is
 // indexed or excluded and the guide-folder check is clean, 1 otherwise, 2
 // when the install is unavailable.
 
-// FirstGaps is FIRST_GAPS: the gaps the report lists.
-const FirstGaps = 25
+// firstGaps is FIRST_GAPS: the gaps the report lists.
+const firstGaps = 25
 
 var errNoFulltext = errors.New("coverage --doc-jars: no full-text index reader (FulltextDocs) for an example entry")
 
-// DocJarKey is a report row: a jar (base name) and a content type.
-type DocJarKey struct{ Jar, ContentType string }
+// docJarKey is a report row: a jar (base name) and a content type.
+type docJarKey struct{ Jar, ContentType string }
 
-// DocJarRow are the counts of one row.
-type DocJarRow struct{ InJar, Extracted, Indexed, Excluded, Gap int }
+// docJarRow are the counts of one row.
+type docJarRow struct{ InJar, Extracted, Indexed, Excluded, Gap int }
 
-// DocJarGap is one unexplained entry: the jar, the corpus path (the entry
+// docJarGap is one unexplained entry: the jar, the corpus path (the entry
 // name when it maps to none) and why.
-type DocJarGap struct{ Jar, Rel, Why string }
+type docJarGap struct{ Jar, Rel, Why string }
 
-// ReasonCount is an exclusion reason and its entry count.
-type ReasonCount struct {
+// reasonCount is an exclusion reason and its entry count.
+type reasonCount struct {
 	Reason string
 	Count  int
 }
 
-// DocJarScan is scan's (rows, reasons, gaps); Reasons keep the order in
+// docJarScan is scan's (rows, reasons, gaps); Reasons keep the order in
 // which each reason was first met.
-type DocJarScan struct {
-	Rows    map[DocJarKey]*DocJarRow
-	Reasons []ReasonCount
-	Gaps    []DocJarGap
+type docJarScan struct {
+	Rows    map[docJarKey]*docJarRow
+	Reasons []reasonCount
+	Gaps    []docJarGap
 }
 
-func (s *DocJarScan) addReason(reason string) {
+func (s *docJarScan) addReason(reason string) {
 	for i := range s.Reasons {
 		if s.Reasons[i].Reason == reason {
 			s.Reasons[i].Count++
 			return
 		}
 	}
-	s.Reasons = append(s.Reasons, ReasonCount{reason, 1})
+	s.Reasons = append(s.Reasons, reasonCount{reason, 1})
 }
 
 // jarEntries is _entries: the names of a jar's file entries (directories
 // dropped, .class files kept), ok false when the jar cannot be read.
 func jarEntries(jar string) (names []string, ok bool) {
-	infos, err := readCentralDir(jar)
+	infos, err := zipfile.ReadCentralDir(jar)
 	if err != nil {
 		return nil, false
 	}
 	for _, i := range infos {
-		if !strings.HasSuffix(i.name, "/") {
-			names = append(names, i.name)
+		if !strings.HasSuffix(i.Name, "/") {
+			names = append(names, i.Name)
 		}
 	}
 	return names, true
@@ -79,45 +81,45 @@ func jarEntries(jar string) (names []string, ok bool) {
 // entryVerdict is _verdict: the corpus path (mapped false when none), the
 // verdict, the index kind or exclusion reason, and the content type.
 func entryVerdict(jarName, entry string, rules *Rules) (rel string, mapped bool, verdict, detail, ctype string) {
-	rel, mapped = DestPath(jarName, entry, rules)
+	rel, mapped = destPath(jarName, entry, rules)
 	switch {
-	case !mapped && IsModuleJar(jarName):
-		return "", false, VerdictExclude, Reasons["module-content"], "(module, not doc/)"
+	case !mapped && isModuleJar(jarName):
+		return "", false, verdictExclude, reasons["module-content"], "(module, not doc/)"
 	case !mapped:
-		verdict, detail = ClassifyUnmapped(entry)
+		verdict, detail = classifyUnmapped(entry)
 		_, ext := pypath.PosixSplitext(entry)
 		if ext == "" {
 			ext = entry
 		}
 		return "", false, verdict, detail, "(unmapped) " + ext
 	}
-	verdict, detail = Classify(rel)
-	return rel, true, verdict, detail, ContentType(rel)
+	verdict, detail = classify(rel)
+	return rel, true, verdict, detail, contentType(rel)
 }
 
-// ScanDocJars is scan(installDir, root, jars): it classifies every entry of
-// every jar (nil jars: ListDocJars(installDir, true, nil)) against the data
+// scanDocJars is scan(installDir, root, jars): it classifies every entry of
+// every jar (nil jars: listDocJars(installDir, true, nil)) against the data
 // root. An unreadable jar is one gap row, never an error; an error is what
 // Python raises (an index of an unexpected shape, an unreadable .bajadoc,
 // a failing full-text reader).
-func ScanDocJars(installDir, root string, jars []string, docs FulltextDocs) (*DocJarScan, error) {
+func scanDocJars(installDir, root string, jars []string, docs FulltextDocs) (*docJarScan, error) {
 	rules, err := Default()
 	if err != nil {
 		return nil, err
 	}
 	if jars == nil {
-		if jars, err = ListDocJars(installDir, true, nil); err != nil {
+		if jars, err = listDocJars(installDir, true, nil); err != nil {
 			return nil, err
 		}
 	}
 	indexed := newIndexedViews(root, docs)
-	s := &DocJarScan{Rows: map[DocJarKey]*DocJarRow{}}
+	s := &docJarScan{Rows: map[docJarKey]*docJarRow{}}
 	for _, jar := range jars {
 		name := pypath.PosixBasename(jar)
 		entries, ok := jarEntries(jar)
 		if !ok {
-			s.Rows[DocJarKey{name, "(unreadable jar)"}] = &DocJarRow{Gap: 1}
-			s.Gaps = append(s.Gaps, DocJarGap{name, name, "jar unreadable (corrupt zip or I/O error)"})
+			s.Rows[docJarKey{name, "(unreadable jar)"}] = &docJarRow{Gap: 1}
+			s.Gaps = append(s.Gaps, docJarGap{name, name, "jar unreadable (corrupt zip or I/O error)"})
 			continue
 		}
 		for _, entry := range entries {
@@ -129,12 +131,12 @@ func ScanDocJars(installDir, root string, jars []string, docs FulltextDocs) (*Do
 	return s, nil
 }
 
-func (s *DocJarScan) scanEntry(indexed *indexedViews, name, entry string, rules *Rules) error {
+func (s *docJarScan) scanEntry(indexed *indexedViews, name, entry string, rules *Rules) error {
 	rel, mapped, verdict, detail, ctype := entryVerdict(name, entry, rules)
-	key := DocJarKey{name, ctype}
+	key := docJarKey{name, ctype}
 	row := s.Rows[key]
 	if row == nil {
-		row = &DocJarRow{}
+		row = &docJarRow{}
 		s.Rows[key] = row
 	}
 	row.InJar++
@@ -145,16 +147,16 @@ func (s *DocJarScan) scanEntry(indexed *indexedViews, name, entry string, rules 
 	if path != "" && pycompat.IsFile(path) {
 		row.Extracted++
 	}
-	if verdict == VerdictExclude {
+	if verdict == verdictExclude {
 		row.Excluded++
 		s.addReason(detail)
 		return nil
 	}
 	var why string
 	switch {
-	case verdict == VerdictIndex && !mapped:
+	case verdict == verdictIndex && !mapped:
 		why = "index rule for an unmapped entry (" + detail + ")"
-	case verdict == VerdictIndex:
+	case verdict == verdictIndex:
 		if pycompat.IsFile(path) {
 			ok, err := indexed.check(detail, rel)
 			if err != nil {
@@ -177,7 +179,7 @@ func (s *DocJarScan) scanEntry(indexed *indexedViews, name, entry string, rules 
 	if shown == "" {
 		shown = entry
 	}
-	s.Gaps = append(s.Gaps, DocJarGap{name, shown, why})
+	s.Gaps = append(s.Gaps, docJarGap{name, shown, why})
 	return nil
 }
 
@@ -186,7 +188,7 @@ func (s *DocJarScan) scanEntry(indexed *indexedViews, name, entry string, rules 
 // reg["versions"].get(vid, {}).get("install_dir", ""); known is false for
 // a vid of None.
 func registeredInstall(repoRoot, vid string, known bool) (string, error) {
-	reg, ok, err := loadRegistry(repoRoot)
+	reg, ok, err := registry.Load(repoRoot)
 	if err != nil {
 		return "", err
 	}
@@ -195,10 +197,10 @@ func registeredInstall(repoRoot, vid string, known bool) (string, error) {
 	}
 	vers, has := reg.Get("versions")
 	if reg.Kind != pyjson.Object || !has {
-		return "", registryError(repoRoot, `no "versions" in the registry`)
+		return "", registry.NewShapeError(repoRoot, `no "versions" in the registry`)
 	}
 	if vers.Kind != pyjson.Object {
-		return "", registryError(repoRoot, `"versions" is not an object`)
+		return "", registry.NewShapeError(repoRoot, `"versions" is not an object`)
 	}
 	if !known {
 		return "", nil
@@ -208,14 +210,14 @@ func registeredInstall(repoRoot, vid string, known bool) (string, error) {
 		return "", nil
 	}
 	if entry.Kind != pyjson.Object {
-		return "", registryError(repoRoot, "the entry of "+vid+" is not an object")
+		return "", registry.NewShapeError(repoRoot, "the entry of "+vid+" is not an object")
 	}
 	inst, has := entry.Get("install_dir")
 	if !has || !inst.Truthy() {
 		return "", nil
 	}
 	if inst.Kind != pyjson.Str {
-		return "", registryError(repoRoot, "the install_dir of "+vid+" is not a string")
+		return "", registry.NewShapeError(repoRoot, "the install_dir of "+vid+" is not a string")
 	}
 	return inst.S, nil
 }
@@ -228,11 +230,11 @@ func registeredInstall(repoRoot, vid string, known bool) (string, error) {
 func DocJarCoverage(w io.Writer, repoRoot, baseDir, versionID string, docs FulltextDocs) (int, error) {
 	vid, known := versionID, versionID != ""
 	if !known {
-		target, err := absTarget(baseDir)
+		target, err := registry.AbsTarget(baseDir)
 		if err != nil {
 			return 0, err
 		}
-		if vid, err = identify(target); err != nil {
+		if vid, err = registry.Identify(target); err != nil {
 			return 0, err
 		}
 		known = vid != ""
@@ -254,12 +256,12 @@ func DocJarCoverage(w io.Writer, repoRoot, baseDir, versionID string, docs Fullt
 			shown, install))
 		return 2, out.err
 	}
-	cache, err := CachePath(repoRoot, install)
+	cache, err := cachePath(repoRoot, install)
 	if err != nil {
 		return 0, err
 	}
-	ls := NewListings(cache)
-	jars, err := ListDocJars(install, true, ls)
+	ls := newListings(cache)
+	jars, err := listDocJars(install, true, ls)
 	if err != nil {
 		return 0, err
 	}
@@ -267,14 +269,14 @@ func DocJarCoverage(w io.Writer, repoRoot, baseDir, versionID string, docs Fullt
 		return 0, err
 	}
 	if jars == nil {
-		jars = []string{} // no jar: ScanDocJars must not list them again
+		jars = []string{} // no jar: scanDocJars must not list them again
 	}
-	scan, err := ScanDocJars(install, baseDir, jars, docs)
+	scan, err := scanDocJars(install, baseDir, jars, docs)
 	if err != nil {
 		return 0, err
 	}
 	printDocJarReport(out, shown, install, len(jars), scan)
-	guideGaps, err := PrintGuideCoverage(io.Discard, baseDir)
+	guideGaps, err := printGuideCoverage(io.Discard, baseDir)
 	if err != nil {
 		return 0, err
 	}
@@ -297,19 +299,19 @@ func DocJarCoverage(w io.Writer, repoRoot, baseDir, versionID string, docs Fullt
 }
 
 // docJarLine is one table line of _print_report.
-func docJarLine(jar, ctype string, r DocJarRow) string {
+func docJarLine(jar, ctype string, r docJarRow) string {
 	return "  " + pyFmt(jar, "34s") + " " + pyFmt(ctype, "20s") + " " + pyFmt(r.InJar, ">7,") + " " +
 		pyFmt(r.Extracted, ">9,") + " " + pyFmt(r.Indexed, ">7,") + " " + pyFmt(r.Excluded, ">8,") + " " +
 		pyFmt(r.Gap, ">5,")
 }
 
 // printDocJarReport is _print_report.
-func printDocJarReport(out *reportWriter, vid, install string, nJars int, s *DocJarScan) {
+func printDocJarReport(out *reportWriter, vid, install string, nJars int, s *docJarScan) {
 	out.line(fmt.Sprintf("DOC-JAR COVERAGE %s (%d jars from %s)", vid, nJars, install))
 	out.line("  " + pyFmt("jar", "34s") + " " + pyFmt("content type", "20s") + " " + pyFmt("in-jar", ">7s") + " " +
 		pyFmt("extracted", ">9s") + " " + pyFmt("indexed", ">7s") + " " + pyFmt("excluded", ">8s") + " " +
 		pyFmt("gaps", ">5s"))
-	keys := make([]DocJarKey, 0, len(s.Rows))
+	keys := make([]docJarKey, 0, len(s.Rows))
 	for k := range s.Rows {
 		keys = append(keys, k)
 	}
@@ -319,7 +321,7 @@ func printDocJarReport(out *reportWriter, vid, install string, nJars int, s *Doc
 		}
 		return keys[i].ContentType < keys[j].ContentType
 	})
-	var total DocJarRow
+	var total docJarRow
 	for _, k := range keys {
 		r := *s.Rows[k]
 		total.InJar += r.InJar
@@ -331,19 +333,19 @@ func printDocJarReport(out *reportWriter, vid, install string, nJars int, s *Doc
 		if r.Gap != 0 {
 			mark = "  <- GAP"
 		}
-		out.line(docJarLine(firstRunes(k.Jar, 34), firstRunes(k.ContentType, 20), r) + mark)
+		out.line(docJarLine(pycompat.Cut(k.Jar, 34), pycompat.Cut(k.ContentType, 20), r) + mark)
 	}
 	out.line(docJarLine("TOTAL", "", total))
 	out.line("")
 	out.line("EXCLUDED WITH REASON:")
-	reasons := append([]ReasonCount(nil), s.Reasons...)
+	reasons := append([]reasonCount(nil), s.Reasons...)
 	sort.SliceStable(reasons, func(i, j int) bool { return reasons[i].Count > reasons[j].Count })
 	for _, r := range reasons {
 		out.line("  " + pyFmt(r.Count, ">7,") + "  " + r.Reason)
 	}
 	if len(s.Gaps) > 0 {
 		out.line("")
-		n := min(FirstGaps, len(s.Gaps))
+		n := min(firstGaps, len(s.Gaps))
 		out.line(fmt.Sprintf("GAPS (first %d of %d):", n, len(s.Gaps)))
 		for _, g := range s.Gaps[:n] {
 			out.line(fmt.Sprintf("  %s  %s  -- %s", g.Jar, g.Rel, g.Why))

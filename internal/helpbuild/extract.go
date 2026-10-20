@@ -11,21 +11,22 @@ import (
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/atomicfile"
+	"github.com/angeles725/niagara-go/internal/helpbuild/zipfile"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // Extraction, fill-missing and the sha256 fidelity check of an install's
 // doc jars (doc_jars.extract, fill_missing, fidelity_jar, fidelity). Every
-// jar of ListDocJars(install, true, ls) is opened like zipfile.ZipFile, its
+// jar of listDocJars(install, true, ls) is opened like zipfile.ZipFile, its
 // entries mapped by MappedEntries with the default rules; an unreadable
 // doc jar or entry is an error, as Python raises.
 
-// ErrUnsafeEntry is a mapped entry whose corpus path could leave the
+// errUnsafeEntry is a mapped entry whose corpus path could leave the
 // data root on some OS: a ".." segment (split on "/" and on "\"), a
 // leading "/" or "\", or a drive letter ("C:"). Python joins it to the
-// root and writes wherever it points; Extract and FillMissing refuse it
+// root and writes wherever it points; extract and fillMissing refuse it
 // instead, on every OS (vendor jars never hold one).
-var ErrUnsafeEntry = errors.New("jar entry path could leave the data root")
+var errUnsafeEntry = errors.New("jar entry path could leave the data root")
 
 // Collision is one corpus path two entries map to: Owner's entry was
 // written first, By's replaced it (extract), or By's was skipped in favour
@@ -54,11 +55,11 @@ func newReport() *FidelityReport {
 }
 
 // mappedJar is _iter_mapped: jar opened, its extracted entries (with the
-// zipInfo each one reads) and its same-jar collisions in jar order.
+// zipfile.Info each one reads) and its same-jar collisions in jar order.
 type mappedJar struct {
-	z    *zipFile
+	z    *zipfile.File
 	name string
-	rows []Mapped
+	rows []mapped
 }
 
 func openMapped(jar string) (*mappedJar, error) {
@@ -66,22 +67,22 @@ func openMapped(jar string) (*mappedJar, error) {
 	if err != nil {
 		return nil, err
 	}
-	z, err := openZip(jar)
+	z, err := zipfile.Open(jar)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", jar, err)
 	}
-	names := make([]string, len(z.infos))
-	for i, x := range z.infos {
-		names[i] = x.name
+	names := make([]string, len(z.Infos))
+	for i, x := range z.Infos {
+		names[i] = x.Name
 	}
 	name := pyBasename(jar)
-	return &mappedJar{z: z, name: name, rows: MappedEntries(name, names, rules)}, nil
+	return &mappedJar{z: z, name: name, rows: mappedEntries(name, names, rules)}, nil
 }
 
 // each calls f for every extracted entry; a skipped colliding entry is
 // passed to skip (when non-nil) as Collision{rel, jar, jar} first, in order.
-func (m *mappedJar) each(skip func(Collision), f func(x *zipInfo, rel string) error) error {
-	defer m.z.f.Close()
+func (m *mappedJar) each(skip func(Collision), f func(x *zipfile.Info, rel string) error) error {
+	defer m.z.Close()
 	for _, r := range m.rows {
 		if r.Collides {
 			if skip != nil {
@@ -89,7 +90,7 @@ func (m *mappedJar) each(skip func(Collision), f func(x *zipInfo, rel string) er
 			}
 			continue
 		}
-		if err := f(&m.z.infos[r.Pos], r.Rel); err != nil {
+		if err := f(&m.z.Infos[r.Pos], r.Rel); err != nil {
 			return err
 		}
 	}
@@ -97,7 +98,7 @@ func (m *mappedJar) each(skip func(Collision), f func(x *zipInfo, rel string) er
 }
 
 func eachDocJar(installDir string, ls *Listings, f func(jar string) error) error {
-	jars, err := ListDocJars(installDir, true, ls)
+	jars, err := listDocJars(installDir, true, ls)
 	if err != nil {
 		return err
 	}
@@ -116,7 +117,7 @@ func eachDocJar(installDir string, ls *Listings, f func(jar string) error) error
 // named with it, as Python writes it). The joined path is checked to stay
 // under root as well.
 func outPath(root, rel string) (string, error) {
-	unsafe := fmt.Errorf("%w: %q", ErrUnsafeEntry, rel)
+	unsafe := fmt.Errorf("%w: %q", errUnsafeEntry, rel)
 	if strings.HasPrefix(rel, "/") || strings.HasPrefix(rel, `\`) || hasDriveLetter(rel) ||
 		filepath.IsAbs(rel) || filepath.VolumeName(rel) != "" {
 		return "", unsafe
@@ -144,12 +145,12 @@ func hasDriveLetter(rel string) bool {
 	return c >= 'a' && c <= 'z'
 }
 
-// Extract writes every mapped entry of every doc jar of installDir under
+// extract writes every mapped entry of every doc jar of installDir under
 // root (doc_jars.extract): parent folders 0777 and files 0666 less the
 // umask, an existing file overwritten; a path two jars map to is written
 // by each in turn and recorded as a collision. ls (nil = in memory)
-// supplies the module-jar listings for HelpJars.
-func Extract(installDir, root string, ls *Listings) (*ExtractStats, error) {
+// supplies the module-jar listings for helpJars.
+func extract(installDir, root string, ls *Listings) (*ExtractStats, error) {
 	st := &ExtractStats{Collisions: []Collision{}}
 	owners := map[string]string{}
 	err := eachDocJar(installDir, ls, func(jar string) error {
@@ -158,7 +159,7 @@ func Extract(installDir, root string, ls *Listings) (*ExtractStats, error) {
 			return err
 		}
 		skip := func(c Collision) { st.Collisions = append(st.Collisions, c) }
-		return m.each(skip, func(x *zipInfo, rel string) error {
+		return m.each(skip, func(x *zipfile.Info, rel string) error {
 			if prev, ok := owners[rel]; ok {
 				st.Collisions = append(st.Collisions, Collision{rel, prev, m.name})
 			}
@@ -171,7 +172,7 @@ func Extract(installDir, root string, ls *Listings) (*ExtractStats, error) {
 				return err
 			}
 			st.Files++
-			st.Bytes += x.size
+			st.Bytes += x.Size
 			return nil
 		})
 	})
@@ -185,21 +186,21 @@ func Extract(installDir, root string, ls *Listings) (*ExtractStats, error) {
 // open(out, "wb") as dst: copyfileobj(src, dst). The folder is made before
 // the entry is opened and the file created before it is read, so a failed
 // read leaves the empty file Python's single-chunk copy leaves. The read is
-// copyfileobj's bounded one (readEntry whole=false), which is verified like
+// copyfileobj's bounded one (zipfile ReadEntry whole=false), which is verified like
 // read(): a bad CRC-32 or a truncated entry is an error and nothing is
 // written to the file.
-func writeEntry(z *zipFile, x *zipInfo, out string) error {
+func writeEntry(z *zipfile.File, x *zipfile.Info, out string) error {
 	if err := os.MkdirAll(filepath.Dir(out), 0o777); err != nil {
 		return err
 	}
-	if _, err := z.dataStart(x); err != nil {
+	if _, err := z.DataStart(x); err != nil {
 		return err
 	}
 	f, err := os.OpenFile(out, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o666)
 	if err != nil {
 		return err
 	}
-	data, err := z.readEntry(x, false) // bounded, CRC-checked
+	data, err := z.ReadEntry(x, false) // bounded, CRC-checked
 	if err == nil {
 		_, err = f.Write(data)
 	}
@@ -209,18 +210,18 @@ func writeEntry(z *zipFile, x *zipInfo, out string) error {
 	return err
 }
 
-// FillMissing writes only the mapped entries whose destination is absent
+// fillMissing writes only the mapped entries whose destination is absent
 // (doc_jars.fill_missing): an existing path, even a dangling symlink, is
 // never touched; each file is written atomically (atomicfile.WriteBytes, 0644).
 // It returns the corpus paths written, in jar order.
-func FillMissing(installDir, root string, ls *Listings) ([]string, error) {
+func fillMissing(installDir, root string, ls *Listings) ([]string, error) {
 	written := []string{}
 	err := eachDocJar(installDir, ls, func(jar string) error {
 		m, err := openMapped(jar)
 		if err != nil {
 			return err
 		}
-		return m.each(nil, func(x *zipInfo, rel string) error {
+		return m.each(nil, func(x *zipfile.Info, rel string) error {
 			out, err := outPath(root, rel)
 			if err != nil {
 				return err
@@ -228,7 +229,7 @@ func FillMissing(installDir, root string, ls *Listings) ([]string, error) {
 			if _, err := os.Lstat(out); err == nil { // os.path.lexists
 				return nil
 			}
-			data, err := m.z.readEntry(x, true)
+			data, err := m.z.ReadEntry(x, true)
 			if err != nil {
 				return err
 			}
@@ -245,22 +246,22 @@ func FillMissing(installDir, root string, ls *Listings) ([]string, error) {
 	return written, nil
 }
 
-// FidelityJar compares one jar's mapped entries with the files under root
+// fidelityJar compares one jar's mapped entries with the files under root
 // (doc_jars.fidelity_jar), adding to rep.
-func FidelityJar(jarPath, root string, rep *FidelityReport) error {
+func fidelityJar(jarPath, root string, rep *FidelityReport) error {
 	m, err := openMapped(jarPath)
 	if err != nil {
 		return err
 	}
 	skip := func(c Collision) { rep.Collisions = append(rep.Collisions, c) }
-	return m.each(skip, func(x *zipInfo, rel string) error {
+	return m.each(skip, func(x *zipfile.Info, rel string) error {
 		rep.Checked++
 		path := pycompat.Join(root, rel)
 		if !pycompat.IsFile(path) {
 			rep.Missing = append(rep.Missing, rel)
 			return nil
 		}
-		data, err := m.z.readEntry(x, true)
+		data, err := m.z.ReadEntry(x, true)
 		if err != nil {
 			return err
 		}
@@ -284,12 +285,12 @@ func FidelityJar(jarPath, root string, rep *FidelityReport) error {
 
 func eolLF(b []byte) []byte { return bytes.ReplaceAll(b, []byte("\r\n"), []byte("\n")) }
 
-// Fidelity sha256-compares every mapped entry of every doc jar of
+// fidelity sha256-compares every mapped entry of every doc jar of
 // installDir with root (doc_jars.fidelity).
-func Fidelity(installDir, root string, ls *Listings) (*FidelityReport, error) {
+func fidelity(installDir, root string, ls *Listings) (*FidelityReport, error) {
 	rep := newReport()
 	err := eachDocJar(installDir, ls, func(jar string) error {
-		if err := FidelityJar(jar, root, rep); err != nil {
+		if err := fidelityJar(jar, root, rep); err != nil {
 			return err
 		}
 		rep.Jars++

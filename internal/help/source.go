@@ -6,7 +6,6 @@ package help
 
 import (
 	"fmt"
-	"path"
 	"sort"
 	"strings"
 
@@ -38,17 +37,7 @@ func sourceMatches(idx *index.Object, name string) []sourceMatch {
 // corpusPath is source_search.corpus_path: the corpus-relative path of a
 // source-index entry, os.path.normpath("source/" + path).
 func corpusPath(data *index.Object) string {
-	return pyNormpath(pypath.PosixJoin("source", getStr(data, "path", "")))
-}
-
-// pyNormpath is posixpath.normpath: path.Clean, except that a path starting
-// with exactly two slashes keeps them.
-func pyNormpath(p string) string {
-	c := path.Clean(p)
-	if strings.HasPrefix(p, "//") && !strings.HasPrefix(p, "///") {
-		return "/" + c
-	}
-	return c
+	return pypath.PosixNormpath(pypath.PosixJoin("source", getStr(data, "path", "")))
 }
 
 // sourceLines reads a source file the way `for line in open(path, "r",

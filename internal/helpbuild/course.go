@@ -9,6 +9,9 @@ import (
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/atomicfile"
+	"github.com/angeles725/niagara-go/internal/helpbuild/pdftext"
+	"github.com/angeles725/niagara-go/internal/helpbuild/pyfs"
+	"github.com/angeles725/niagara-go/internal/helpbuild/registry"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 )
@@ -22,19 +25,19 @@ import (
 
 // Course destinations and the pseudo-jar of the course exclude rules.
 const (
-	CoursePseudoJar = "(course)"
-	CourseTextDir   = "course-text"
+	coursePseudoJar = "(course)"
+	courseTextDir   = "course-text"
 )
 
-// CourseCodeDir is devguide-examples/course.
-var CourseCodeDir = filepath.Join("devguide-examples", "course")
+// courseCodeDir is devguide-examples/course.
+var courseCodeDir = filepath.Join("devguide-examples", "course")
 
-// CourseDirMissingError is CourseDirMissing: the registry binds a
+// courseDirMissingError is CourseDirMissing: the registry binds a
 // course_dir that does not exist (a checkout without ../sources). The
 // course is optional, so course_extractor skips it.
-type CourseDirMissingError struct{ Dir string }
+type courseDirMissingError struct{ Dir string }
 
-func (e *CourseDirMissingError) Error() string { return "course_dir not found: " + e.Dir }
+func (e *courseDirMissingError) Error() string { return "course_dir not found: " + e.Dir }
 
 // courseFile is one file of the course tree: its path relative to the
 // tree ("/"-separated) and on disk.
@@ -45,7 +48,7 @@ type courseFile struct{ rel, path string }
 func courseFiles(src string) []courseFile {
 	var out []courseFile
 	prefix := map[string]string{src: ""}
-	pyWalk(src, func(dir string, dirs, files []string) []string {
+	pyfs.Walk(src, func(dir string, dirs, files []string) []string {
 		sort.Strings(dirs)
 		sort.Strings(files)
 		for _, f := range files {
@@ -63,42 +66,42 @@ func courseFiles(src string) []courseFile {
 // readmes keep their path (+ .txt when they are not .txt).
 func courseTextDest(rel string) string {
 	rel = strings.TrimPrefix(rel, "text/")
-	if hasSuffixFold(rel, ".txt") {
+	if pdftext.HasSuffixFold(rel, ".txt") {
 		return rel
 	}
 	return rel + ".txt"
 }
 
-// CourseRow is one row of course.plan: Kind is "text", "code", "pdf" or ""
+// courseRow is one row of course.plan: Kind is "text", "code", "pdf" or ""
 // (None); Dest is relative to the data root, "" when the file is not
 // copied.
-type CourseRow struct{ Rel, Kind, Dest string }
+type courseRow struct{ Rel, Kind, Dest string }
 
-// CoursePlan is course.plan(src, rules): every file of the course tree with
+// coursePlan is course.plan(src, rules): every file of the course tree with
 // its kind and destination. rules must be non-nil (Default() is Python's
 // rules=None).
-func CoursePlan(src string, rules *Rules) []CourseRow {
-	var out []CourseRow
+func coursePlan(src string, rules *Rules) []courseRow {
+	var out []courseRow
 	for _, f := range courseFiles(src) {
-		row := CourseRow{Rel: f.rel, Kind: rules.CourseKind(f.rel)}
+		row := courseRow{Rel: f.rel, Kind: rules.CourseKind(f.rel)}
 		switch row.Kind {
 		case "text":
-			row.Dest = filepath.Join(CourseTextDir, courseTextDest(f.rel))
+			row.Dest = filepath.Join(courseTextDir, courseTextDest(f.rel))
 		case "code":
-			row.Dest = filepath.Join(CourseCodeDir, f.rel)
+			row.Dest = filepath.Join(courseCodeDir, f.rel)
 		}
 		out = append(out, row)
 	}
 	return out
 }
 
-// RemoveCourseCopies is course.remove_copies: delete course-text/ and
+// removeCourseCopies is course.remove_copies: delete course-text/ and
 // devguide-examples/course/ of baseDir (only those two trees) and return
 // the ones that existed. Like shutil.rmtree, a symlink in their place is
 // an error.
-func RemoveCourseCopies(baseDir string) ([]string, error) {
+func removeCourseCopies(baseDir string) ([]string, error) {
 	var removed []string
-	for _, d := range []string{CourseTextDir, CourseCodeDir} {
+	for _, d := range []string{courseTextDir, courseCodeDir} {
 		p := filepath.Join(baseDir, d)
 		if !pycompat.IsDir(p) {
 			continue
@@ -120,42 +123,42 @@ type errRmtreeSymlink struct{ path string }
 
 func (e errRmtreeSymlink) Error() string { return "[Errno None] None: " + pycompat.FSRepr(e.path) }
 
-// CourseCounts is build()'s {"text": n, "code": n, "course_dir": path}.
-type CourseCounts struct {
+// courseCounts is build()'s {"text": n, "code": n, "course_dir": path}.
+type courseCounts struct {
 	Text, Code int
 	CourseDir  string
 }
 
-// BuildCourse is course.build: copy the bound course into baseDir,
+// buildCourse is course.build: copy the bound course into baseDir,
 // replacing earlier copies. Both trees are built in staging directories
 // and swapped in at the end (atomicfile.RebuiltDir, devguide-examples/course/ first
 // as Python's nested with-statement exits it first): a failed copy keeps
 // the previous copies. It returns nil when no course is bound (copies
-// left from an earlier binding are removed), a *CourseDirMissingError when
+// left from an earlier binding are removed), a *courseDirMissingError when
 // the bound tree does not exist (nothing is touched), another error when a
 // copy fails.
-func BuildCourse(baseDir string, rules *Rules) (*CourseCounts, error) {
-	src, err := courseDir(baseDir)
+func buildCourse(baseDir string, rules *Rules) (*courseCounts, error) {
+	src, err := registry.CourseDir(baseDir)
 	if err != nil {
 		return nil, err
 	}
 	if src == "" {
-		_, err := RemoveCourseCopies(baseDir)
+		_, err := removeCourseCopies(baseDir)
 		return nil, err
 	}
 	if !pycompat.IsDir(src) {
-		return nil, &CourseDirMissingError{src}
+		return nil, &courseDirMissingError{src}
 	}
-	counts := &CourseCounts{CourseDir: src}
-	err = atomicfile.RebuiltDir(filepath.Join(baseDir, CourseTextDir), func(textTmp string) error {
-		return atomicfile.RebuiltDir(filepath.Join(baseDir, CourseCodeDir), func(codeTmp string) error {
-			for _, row := range CoursePlan(src, rules) {
+	counts := &courseCounts{CourseDir: src}
+	err = atomicfile.RebuiltDir(filepath.Join(baseDir, courseTextDir), func(textTmp string) error {
+		return atomicfile.RebuiltDir(filepath.Join(baseDir, courseCodeDir), func(codeTmp string) error {
+			for _, row := range coursePlan(src, rules) {
 				var top, tmp string
 				switch row.Kind {
 				case "text":
-					top, tmp = CourseTextDir, textTmp
+					top, tmp = courseTextDir, textTmp
 				case "code":
-					top, tmp = CourseCodeDir, codeTmp
+					top, tmp = courseCodeDir, codeTmp
 				default:
 					continue
 				}
@@ -163,7 +166,7 @@ func BuildCourse(baseDir string, rules *Rules) (*CourseCounts, error) {
 				if err := os.MkdirAll(filepath.Dir(out), 0o777); err != nil {
 					return err
 				}
-				if err := pyCopyfile(pycompat.Join(src, row.Rel), out); err != nil {
+				if err := pyfs.Copyfile(pycompat.Join(src, row.Rel), out); err != nil {
 					return err
 				}
 				if row.Kind == "text" {
@@ -181,24 +184,24 @@ func BuildCourse(baseDir string, rules *Rules) (*CourseCounts, error) {
 	return counts, nil
 }
 
-// ToolOutput is what a builder tool prints: stdout and stderr lines and the
+// toolOutput is what a builder tool prints: stdout and stderr lines and the
 // exit status.
-type ToolOutput struct {
+type toolOutput struct {
 	Stdout, Stderr []string
 	Status         int
 }
 
-// CourseExtractor is tools/course_extractor.py main() for data root
+// courseExtractor is tools/course_extractor.py main() for data root
 // baseDir. err is what Python does not catch (a malformed registry: a
 // traceback, exit 1); out holds no line then.
-func CourseExtractor(baseDir string, rules *Rules) (*ToolOutput, error) {
-	out := &ToolOutput{}
+func courseExtractor(baseDir string, rules *Rules) (*toolOutput, error) {
+	out := &toolOutput{}
 	base, err := filepath.Abs(baseDir)
 	if err != nil {
 		return out, err
 	}
-	counts, err := BuildCourse(base, rules)
-	var missing *CourseDirMissingError
+	counts, err := buildCourse(base, rules)
+	var missing *courseDirMissingError
 	switch {
 	case errors.As(err, &missing):
 		out.Stdout = append(out.Stdout, fmt.Sprintf("course: %s; skipped (the course is optional: course-text/ "+
@@ -221,15 +224,15 @@ func CourseExtractor(baseDir string, rules *Rules) (*ToolOutput, error) {
 // pythonCrash reports an error course_extractor does not catch (it is not
 // an OSError): a registry that is not JSON or not of the expected shape.
 func pythonCrash(err error) bool {
-	var le *JSONLoadError
-	var shape *registryShapeError
+	var le *pyfs.JSONLoadError
+	var shape *registry.ShapeError
 	var rec *pyjson.RecursionError
 	return errors.As(err, &le) && !le.OS || errors.As(err, &shape) || errors.As(err, &rec)
 }
 
 // osErrorText is str(OSError) of a failure of build().
 func osErrorText(err error) string {
-	var le *JSONLoadError
+	var le *pyfs.JSONLoadError
 	if errors.As(err, &le) {
 		return le.Msg
 	}

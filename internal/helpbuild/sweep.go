@@ -5,6 +5,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/angeles725/niagara-go/internal/helpbuild/pyfs"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/textfold"
 )
@@ -18,28 +19,28 @@ import (
 
 // Entry statuses of the sweep.
 const (
-	StatusIndexed      = "indexed"
-	StatusExcluded     = "excluded"
-	StatusUnclassified = "UNCLASSIFIED"
+	statusIndexed      = "indexed"
+	statusExcluded     = "excluded"
+	statusUnclassified = "UNCLASSIFIED"
 )
 
 // docsPseudoJar is the jar name the exclude rules see for a loose file
 // under the install's docs/.
 const docsPseudoJar = "(docs)"
 
-// JarPath is one jar the sweep found: its install-relative path
+// jarPath is one jar the sweep found: its install-relative path
 // ("/"-separated) and its path on disk.
-type JarPath struct{ Rel, Path string }
+type jarPath struct{ Rel, Path string }
 
-// DirError is a directory the walk could not list and the strerror.
-type DirError struct{ Dir, Err string }
+// dirError is a directory the walk could not list and the strerror.
+type dirError struct{ Dir, Err string }
 
-// pyWalkErr is os.walk(top, onerror=...) as pyWalk walks it; onerror
+// pyWalkErr is os.walk(top, onerror=...) as pyfs.Walk walks it; onerror
 // receives the path of each directory that cannot be listed, relative to
 // top ("." for top itself), and the strerror (str(err) without one).
 func pyWalkErr(top string, onerror func(rel, why string), visit func(dir, rel string, dirs, files []string) []string) {
 	rels := map[string]string{top: ""}
-	pyWalkFn(top, func(dir string, err error) {
+	pyfs.WalkFn(top, func(dir string, err error) {
 		if onerror != nil {
 			rel := strings.TrimSuffix(rels[dir], "/")
 			if rel == "" {
@@ -56,12 +57,12 @@ func pyWalkErr(top string, onerror func(rel, why string), visit func(dir, rel st
 	})
 }
 
-// FindJars is install_sweep.find_jars: every .jar (any letter case) of the
+// findJars is install_sweep.find_jars: every .jar (any letter case) of the
 // install in sorted walk order, the top-level directories the rules skip
 // (with their reason) and the directories that could not be listed.
-func FindJars(installDir string, rules *Rules) (jars []JarPath, skipped []SkipDir, unreadable []DirError) {
+func findJars(installDir string, rules *Rules) (jars []jarPath, skipped []SkipDir, unreadable []dirError) {
 	pyWalkErr(installDir, func(rel, why string) {
-		unreadable = append(unreadable, DirError{rel, why})
+		unreadable = append(unreadable, dirError{rel, why})
 	}, func(dir, rel string, dirs, files []string) []string {
 		if dir == installDir {
 			sort.Strings(dirs)
@@ -79,7 +80,7 @@ func FindJars(installDir string, rules *Rules) (jars []JarPath, skipped []SkipDi
 		sort.Strings(files)
 		for _, name := range files {
 			if strings.HasSuffix(textfold.Lower(name), ".jar") {
-				jars = append(jars, JarPath{rel + name, pycompat.Join(dir, name)})
+				jars = append(jars, jarPath{rel + name, pycompat.Join(dir, name)})
 			}
 		}
 		return dirs
@@ -103,12 +104,12 @@ func isInstalledJar(rel string) bool {
 	return len(parts) == 2 && (parts[0] == "modules" || parts[0] == "javadoc")
 }
 
-// SweepOptions tune Scan and RunSweep; the zero value is Python's
+// SweepOptions tune scan and RunSweep; the zero value is Python's
 // defaults (install_rules.default(), an in-memory listing cache, the
 // full-text index read only).
 type SweepOptions struct {
 	Rules    *Rules       // nil: Default()
-	Listings *Listings    // Scan only; nil: in memory (RunSweep uses the repo's cache)
+	Listings *Listings    // scan only; nil: in memory (RunSweep uses the repo's cache)
 	Fulltext FulltextDocs // nil: FreshFulltextDocs
 }
 
@@ -118,7 +119,7 @@ type sweeper struct {
 	rules     *Rules
 	ls        *Listings
 	indexed   *indexedViews
-	installed []JarPath
+	installed []jarPath
 	identical map[Entry]string
 }
 
@@ -146,11 +147,11 @@ type verdict struct{ status, detail, rule string }
 
 // mapped is Sweep._mapped.
 func (s *sweeper) mapped(rel string) (verdict, error) {
-	v, why := Classify(rel)
+	v, why := classify(rel)
 	switch v {
-	case VerdictExclude:
-		return verdict{StatusExcluded, why, "doc_types"}, nil
-	case VerdictIndex:
+	case verdictExclude:
+		return verdict{statusExcluded, why, "doc_types"}, nil
+	case verdictIndex:
 		isFile := pycompat.IsFile(pycompat.Join(s.root, rel))
 		if isFile {
 			ok, err := s.indexed.check(why, rel)
@@ -158,16 +159,16 @@ func (s *sweeper) mapped(rel string) (verdict, error) {
 				return verdict{}, err
 			}
 			if ok {
-				return verdict{StatusIndexed, rel, why}, nil
+				return verdict{statusIndexed, rel, why}, nil
 			}
 		}
 		state := "extracted"
 		if isFile {
 			state = "indexed"
 		}
-		return verdict{StatusUnclassified, "maps to " + rel + " but it is not " + state, ""}, nil
+		return verdict{statusUnclassified, "maps to " + rel + " but it is not " + state, ""}, nil
 	}
-	return verdict{StatusUnclassified, "maps to " + rel + " but no content rule covers it (doc_types)", ""}, nil
+	return verdict{statusUnclassified, "maps to " + rel + " but no content rule covers it (doc_types)", ""}, nil
 }
 
 // classify is Sweep.classify: one documentation-like entry of the jar at
@@ -177,13 +178,13 @@ func (s *sweeper) classify(relJar string, e Entry, shadowedBy *Entry) (verdict, 
 	name := pyBasename(relJar)
 	installed := isInstalledJar(relJar)
 	if !installed && s.installedEntry(e) != "" {
-		return verdict{StatusExcluded, "byte-identical (path, size, CRC-32) to the entry of an " +
+		return verdict{statusExcluded, "byte-identical (path, size, CRC-32) to the entry of an " +
 			"installed jar, classified there", "installed-copy"}, nil
 	}
-	dest, mapped := DestPath(name, e.Name, s.rules)
+	dest, mapped := destPath(name, e.Name, s.rules)
 	if installed && mapped {
-		if IsSourceArchive(dest) {
-			return verdict{StatusExcluded, Reasons["source-archive"], "doc_types"}, nil
+		if isSourceArchive(dest) {
+			return verdict{statusExcluded, reasons["source-archive"], "doc_types"}, nil
 		}
 		if shadowedBy != nil {
 			return shadowed(e, *shadowedBy, dest), nil
@@ -191,23 +192,23 @@ func (s *sweeper) classify(relJar string, e Entry, shadowedBy *Entry) (verdict, 
 		return s.mapped(dest)
 	}
 	if rule := s.rules.ExcludeRule(name, e.Name); rule != nil {
-		return verdict{StatusExcluded, rule.Reason, rule.ID}, nil
+		return verdict{statusExcluded, rule.Reason, rule.ID}, nil
 	}
 	if mapped {
-		return verdict{StatusUnclassified, "documentation in a jar outside modules/ that the installed " +
+		return verdict{statusUnclassified, "documentation in a jar outside modules/ that the installed " +
 			"copy does not have (not extracted)", ""}, nil
 	}
-	return verdict{StatusUnclassified, "no extract or exclude rule matches (add one to install_docs.json)", ""}, nil
+	return verdict{statusUnclassified, "no extract or exclude rule matches (add one to install_docs.json)", ""}, nil
 }
 
 // shadowed is Sweep._shadowed: an entry the extractor skips because an
 // earlier entry of the same jar fills its corpus path.
 func shadowed(e, first Entry, dest string) verdict {
 	if e.Size == first.Size && e.CRC == first.CRC {
-		return verdict{StatusExcluded, "same corpus file as an earlier entry of this jar, byte-identical " +
+		return verdict{statusExcluded, "same corpus file as an earlier entry of this jar, byte-identical " +
 			"(size, CRC-32): that entry is extracted", "in-jar-duplicate"}
 	}
-	return verdict{StatusUnclassified, "maps to " + dest + ", which the earlier entry " + first.Name +
+	return verdict{statusUnclassified, "maps to " + dest + ", which the earlier entry " + first.Name +
 		" of this jar fills: not extracted, and its content differs", ""}
 }
 
@@ -223,7 +224,7 @@ func (s *sweeper) shadowedEntries(relJar string, l *Listing) map[int]Entry {
 	}
 	extracted := map[string]Entry{}
 	out := map[int]Entry{}
-	for _, m := range MappedEntries(pyBasename(relJar), names, s.rules) {
+	for _, m := range mappedEntries(pyBasename(relJar), names, s.rules) {
 		if !m.Collides {
 			extracted[m.Rel] = l.Entries[m.Pos]
 		} else {
@@ -238,14 +239,14 @@ func (s *sweeper) classifyLooseDoc(rel string, pdfSources map[string]bool) verdi
 	low := textfold.Lower(rel)
 	if strings.HasSuffix(low, ".pdf") {
 		if pdfSources[low] {
-			return verdict{StatusIndexed, "docs-text (pdf-index.json)", "pdf"}
+			return verdict{statusIndexed, "docs-text (pdf-index.json)", "pdf"}
 		}
-		return verdict{StatusUnclassified, "PDF manual not in pdf-index.json (run rebuild-all)", ""}
+		return verdict{statusUnclassified, "PDF manual not in pdf-index.json (run rebuild-all)", ""}
 	}
 	if rule := s.rules.ExcludeRule(docsPseudoJar, rel); rule != nil {
-		return verdict{StatusExcluded, rule.Reason, rule.ID}
+		return verdict{statusExcluded, rule.Reason, rule.ID}
 	}
-	return verdict{StatusUnclassified, `no exclude rule matches (add one to install_docs.json, jar "(docs)")`, ""}
+	return verdict{statusUnclassified, `no exclude rule matches (add one to install_docs.json, jar "(docs)")`, ""}
 }
 
 // pdfSources are the lower-cased source_pdf values of pdf-index.json
@@ -272,61 +273,61 @@ func pdfSources(root string) (map[string]bool, error) {
 		case isStr:
 			out[textfold.Lower(str)] = true
 		default:
-			return nil, &IndexShapeError{name, "the source_pdf of " + key + " is not a string"}
+			return nil, &indexShapeError{name, "the source_pdf of " + key + " is not a string"}
 		}
 	}
 	return out, nil
 }
 
-// SweepRow is one location row of the report.
-type SweepRow struct{ Jars, WithDocs, DocLike, Indexed, Excluded, Unclassified int }
+// sweepRow is one location row of the report.
+type sweepRow struct{ Jars, WithDocs, DocLike, Indexed, Excluded, Unclassified int }
 
-func (r *SweepRow) add(status string) {
+func (r *sweepRow) add(status string) {
 	switch status {
-	case StatusIndexed:
+	case statusIndexed:
 		r.Indexed++
-	case StatusExcluded:
+	case statusExcluded:
 		r.Excluded++
 	default:
 		r.Unclassified++
 	}
 }
 
-// ReasonKey is one exclusion reason of the report: the rule id and the
+// reasonKey is one exclusion reason of the report: the rule id and the
 // reason.
-type ReasonKey struct{ Rule, Reason string }
+type reasonKey struct{ Rule, Reason string }
 
-// Gap is one UNCLASSIFIED row: the jar (or "docs/", "(course)", a
+// gap is one UNCLASSIFIED row: the jar (or "docs/", "(course)", a
 // directory), the entry and why.
-type Gap struct{ Jar, Entry, Why string }
+type gap struct{ Jar, Entry, Why string }
 
-// SweepResult is the dict install_sweep.scan returns.
-type SweepResult struct {
-	Rows         map[string]*SweepRow // per location
-	Reasons      map[ReasonKey]int
-	Unclassified []Gap
+// sweepResult is the dict install_sweep.scan returns.
+type sweepResult struct {
+	Rows         map[string]*sweepRow // per location
+	Reasons      map[reasonKey]int
+	Unclassified []gap
 	Skipped      []SkipDir
 	Jars         int // jars found
 	Listed       int // jars listed anew (not from the cache)
 	Unreadable   []string
 }
 
-func (r *SweepResult) row(loc string) *SweepRow {
+func (r *sweepResult) row(loc string) *sweepRow {
 	if r.Rows[loc] == nil {
-		r.Rows[loc] = &SweepRow{}
+		r.Rows[loc] = &sweepRow{}
 	}
 	return r.Rows[loc]
 }
 
 // count is scan's count(): one documentation-like entry.
-func (r *SweepResult) count(row *SweepRow, v verdict, jar, entry string) {
+func (r *sweepResult) count(row *sweepRow, v verdict, jar, entry string) {
 	row.DocLike++
 	row.add(v.status)
 	switch v.status {
-	case StatusExcluded:
-		r.Reasons[ReasonKey{v.rule, v.detail}]++
-	case StatusUnclassified:
-		r.Unclassified = append(r.Unclassified, Gap{jar, entry, v.detail})
+	case statusExcluded:
+		r.Reasons[reasonKey{v.rule, v.detail}]++
+	case statusUnclassified:
+		r.Unclassified = append(r.Unclassified, gap{jar, entry, v.detail})
 	}
 }
 
@@ -337,11 +338,11 @@ func isEmptyFile(p string) bool {
 	return err == nil && st.Size() == 0
 }
 
-// Scan is install_sweep.scan: classify the whole install against the data
+// scan is install_sweep.scan: classify the whole install against the data
 // root. The listing cache is saved at the end (Listings.Save). An error is
 // what Python raises (an index that cannot be read, a cache that cannot be
 // written).
-func Scan(installDir, root string, opts SweepOptions) (*SweepResult, error) {
+func scan(installDir, root string, opts SweepOptions) (*sweepResult, error) {
 	rules := opts.Rules
 	if rules == nil {
 		var err error
@@ -351,16 +352,16 @@ func Scan(installDir, root string, opts SweepOptions) (*SweepResult, error) {
 	}
 	ls := opts.Listings
 	if ls == nil {
-		ls = NewListings("")
+		ls = newListings("")
 	}
 	s := &sweeper{root: root, rules: rules, ls: ls, indexed: newIndexedViews(root, opts.fulltext())}
-	jars, skipped, badDirs := FindJars(installDir, rules)
+	jars, skipped, badDirs := findJars(installDir, rules)
 	for _, j := range jars {
 		if isInstalledJar(j.Rel) {
 			s.installed = append(s.installed, j)
 		}
 	}
-	res := &SweepResult{Rows: map[string]*SweepRow{}, Reasons: map[ReasonKey]int{}, Skipped: skipped, Jars: len(jars)}
+	res := &sweepResult{Rows: map[string]*sweepRow{}, Reasons: map[reasonKey]int{}, Skipped: skipped, Jars: len(jars)}
 	for _, j := range jars {
 		row := res.row(sweepLocation(j.Rel))
 		row.Jars++
@@ -368,13 +369,13 @@ func Scan(installDir, root string, opts SweepOptions) (*SweepResult, error) {
 		if l == nil && isEmptyFile(j.Path) {
 			row.DocLike++
 			row.Excluded++
-			res.Reasons[ReasonKey{"empty-file", "empty file named .jar (0 bytes, nothing to list)"}]++
+			res.Reasons[reasonKey{"empty-file", "empty file named .jar (0 bytes, nothing to list)"}]++
 			continue
 		}
 		if l == nil {
 			res.Unreadable = append(res.Unreadable, j.Rel)
 			row.Unclassified++
-			res.Unclassified = append(res.Unclassified, Gap{j.Rel, "(whole jar)", "unreadable jar (corrupt zip or I/O error)"})
+			res.Unclassified = append(res.Unclassified, gap{j.Rel, "(whole jar)", "unreadable jar (corrupt zip or I/O error)"})
 			continue
 		}
 		var docs []int
@@ -413,7 +414,7 @@ func Scan(installDir, root string, opts SweepOptions) (*SweepResult, error) {
 		}
 		reported[d.Dir] = true
 		res.row(sweepLocation(d.Dir+"/x")).Unclassified++
-		res.Unclassified = append(res.Unclassified, Gap{d.Dir, "(directory)", "unreadable directory, not swept: " + d.Err})
+		res.Unclassified = append(res.Unclassified, gap{d.Dir, "(directory)", "unreadable directory, not swept: " + d.Err})
 	}
 	if err := ls.Save(); err != nil {
 		return nil, err
@@ -425,7 +426,7 @@ func Scan(installDir, root string, opts SweepOptions) (*SweepResult, error) {
 // scanLooseDocs classifies the documentation-like files under the
 // install's docs/ and returns the directories it could not list (as
 // install paths).
-func (s *sweeper) scanLooseDocs(installDir string, res *SweepResult) ([]DirError, error) {
+func (s *sweeper) scanLooseDocs(installDir string, res *sweepResult) ([]dirError, error) {
 	docsDir := pycompat.Join(installDir, "docs")
 	if !pycompat.IsDir(docsDir) {
 		return nil, nil
@@ -435,12 +436,12 @@ func (s *sweeper) scanLooseDocs(installDir string, res *SweepResult) ([]DirError
 		return nil, err
 	}
 	row := res.row("docs/ (loose files)")
-	var bad []DirError
+	var bad []dirError
 	pyWalkErr(docsDir, func(rel, why string) {
 		if rel == "." {
-			bad = append(bad, DirError{"docs", why})
+			bad = append(bad, dirError{"docs", why})
 		} else {
-			bad = append(bad, DirError{"docs/" + rel, why})
+			bad = append(bad, dirError{"docs/" + rel, why})
 		}
 	}, func(_, rel string, dirs, files []string) []string {
 		sort.Strings(dirs)

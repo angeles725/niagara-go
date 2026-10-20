@@ -13,7 +13,9 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/help/fts"
 	ftbuild "github.com/angeles725/niagara-go/internal/helpbuild/fulltext"
+	"github.com/angeles725/niagara-go/internal/helpbuild/internal/testkit"
 	"github.com/angeles725/niagara-go/internal/index"
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // The whole-install sweep on the fixture of niagara-help
@@ -34,7 +36,7 @@ var sweepHelpJar = [][2]string{
 }
 
 // sweepTestRules is the test's RULES plus the shipped extract rules and
-// globs (the extraction used them through DestPath).
+// globs (the extraction used them through destPath).
 func sweepTestRules(t *testing.T) *Rules {
 	t.Helper()
 	var shipped map[string]any
@@ -71,50 +73,50 @@ func sweepInstallFixture(t *testing.T) (repo, root, install string) {
 	tmp := t.TempDir()
 	install = filepath.Join(tmp, "install")
 	mods := filepath.Join(install, "modules")
-	writeJar(t, filepath.Join(mods, "docGuide-doc.jar"),
+	testkit.WriteJar(t, filepath.Join(mods, "docGuide-doc.jar"),
 		[2]string{"doc/index.html", page("Guide", "guide home")},
 		[2]string{"doc/Intro.html", page("Intro", "intro text")},
 		[2]string{"doc/LICENSE.txt", "licence text\n"})
-	writeJar(t, filepath.Join(mods, "helpMod-rt.jar"), sweepHelpJar...)
-	writeJar(t, filepath.Join(mods, "thing-ux.jar"),
+	testkit.WriteJar(t, filepath.Join(mods, "helpMod-rt.jar"), sweepHelpJar...)
+	testkit.WriteJar(t, filepath.Join(mods, "thing-ux.jar"),
 		[2]string{"rc/notes.md", "# Notes\n\nquibbleNotes of the thing module\n"},
 		[2]string{"rc/node_modules/pkg/README.md", "npm readme\n"},
 		[2]string{"rc/thing.js", "var x;"})
-	writeJar(t, filepath.Join(mods, "lib-rt.jar"),
+	testkit.WriteJar(t, filepath.Join(mods, "lib-rt.jar"),
 		[2]string{"org/apache/words.txt", "a\nb\n"},
 		[2]string{"com/acme/BLib.class", "\xca\xfe"})
-	writeJar(t, filepath.Join(install, "sw", "1.0", "helpMod-rt.jar"), sweepHelpJar...)
-	writeJar(t, filepath.Join(install, "sw", "2.0", "helpMod-rt.jar"),
+	testkit.WriteJar(t, filepath.Join(install, "sw", "1.0", "helpMod-rt.jar"), sweepHelpJar...)
+	testkit.WriteJar(t, filepath.Join(install, "sw", "2.0", "helpMod-rt.jar"),
 		[2]string{"doc/About-Help.html", page("About Help", "newer text")})
-	writeJar(t, filepath.Join(install, "jre", "lib", "rt.jar"), [2]string{"about.html", "x"})
+	testkit.WriteJar(t, filepath.Join(install, "jre", "lib", "rt.jar"), [2]string{"about.html", "x"})
 
 	repo = filepath.Join(tmp, "repo")
 	root = filepath.Join(repo, "versions", "1.0")
 	reg, _ := json.Marshal(map[string]any{"default": "1.0", "versions": map[string]any{"1.0": map[string]string{
 		"label": "fixture", "install_dir": install, "data_root": "versions/1.0"}}})
-	writeFile(t, filepath.Join(repo, index.RegistryRel), reg)
-	if _, err := Extract(install, root, NewListings("")); err != nil {
+	testkit.WriteFile(t, filepath.Join(repo, index.RegistryRel), reg)
+	if _, err := extract(install, root, newListings("")); err != nil {
 		t.Fatal(err)
 	}
 	for _, clean := range []string{"Guide/index.txt", "Guide/Intro.txt", "helpMod-rt/About-Help.txt", "thing-ux/rc/notes.md.txt"} {
-		writeFile(t, filepath.Join(root, "guides-clean", filepath.FromSlash(clean)), []byte("TITLE: x\n"))
+		testkit.WriteFile(t, filepath.Join(root, "guides-clean", filepath.FromSlash(clean)), []byte("TITLE: x\n"))
 	}
-	writeFile(t, filepath.Join(install, "docs", "menu", "tree.html"), []byte(page("Docs", "menu")))
-	writeFile(t, filepath.Join(install, "docs", "Manual.pdf"), []byte("%PDF-1.4 not really"))
-	writeFile(t, filepath.Join(root, "indexes", "pdf-index.json"), []byte(`{"Manual": {"source_pdf": "Manual.pdf"}}`))
+	testkit.WriteFile(t, filepath.Join(install, "docs", "menu", "tree.html"), []byte(page("Docs", "menu")))
+	testkit.WriteFile(t, filepath.Join(install, "docs", "Manual.pdf"), []byte("%PDF-1.4 not really"))
+	testkit.WriteFile(t, filepath.Join(root, "indexes", "pdf-index.json"), []byte(`{"Manual": {"source_pdf": "Manual.pdf"}}`))
 	return repo, root, install
 }
 
-func scanOK(t *testing.T, install, root string, opts SweepOptions) *SweepResult {
+func scanOK(t *testing.T, install, root string, opts SweepOptions) *sweepResult {
 	t.Helper()
-	res, err := Scan(install, root, opts)
+	res, err := scan(install, root, opts)
 	if err != nil {
 		t.Fatal(err)
 	}
 	return res
 }
 
-func ruleCounts(res *SweepResult) map[string]int {
+func ruleCounts(res *sweepResult) map[string]int {
 	out := map[string]int{}
 	for k, n := range res.Reasons {
 		out[k.Rule] += n
@@ -122,7 +124,7 @@ func ruleCounts(res *SweepResult) map[string]int {
 	return out
 }
 
-func gapKeys(res *SweepResult) []string {
+func gapKeys(res *sweepResult) []string {
 	var out []string
 	for _, g := range res.Unclassified {
 		out = append(out, g.Jar+" "+g.Entry)
@@ -177,7 +179,7 @@ func TestRunSweepReport(t *testing.T) {
 	repo, root, install := sweepInstallFixture(t)
 	var buf bytes.Buffer
 	status, err := RunSweep(repo, root, "1.0", &buf, SweepOptions{Rules: sweepTestRules(t)})
-	if err != nil || status != SweepFail {
+	if err != nil || status != sweepFail {
 		t.Fatalf("status %d, err %v", status, err)
 	}
 	want := `INSTALL SWEEP 1.0 (6 jars under <install>; 6 listed anew, the rest from the jar-listing cache)
@@ -209,7 +211,7 @@ RESULT: FAIL - 1 unclassified entry
 	if got := strings.ReplaceAll(buf.String(), install, "<install>"); got != want {
 		t.Errorf("report:\n%s\nwant:\n%s", got, want)
 	}
-	cache, _ := CachePath(repo, install)
+	cache, _ := cachePath(repo, install)
 	if _, err := os.Stat(cache); err != nil {
 		t.Errorf("the gate keeps the listings in the repository cache: %v", err)
 	}
@@ -228,19 +230,19 @@ func TestSweepListingCache(t *testing.T) {
 	_, root, install := sweepInstallFixture(t)
 	rules := sweepTestRules(t)
 	path := filepath.Join(t.TempDir(), "cache", "listings.json")
-	if first := scanOK(t, install, root, SweepOptions{Rules: rules, Listings: NewListings(path)}); first.Listed == 0 {
+	if first := scanOK(t, install, root, SweepOptions{Rules: rules, Listings: newListings(path)}); first.Listed == 0 {
 		t.Fatal("first sweep listed nothing")
 	}
-	if second := scanOK(t, install, root, SweepOptions{Rules: rules, Listings: NewListings(path)}); second.Listed != 0 {
+	if second := scanOK(t, install, root, SweepOptions{Rules: rules, Listings: newListings(path)}); second.Listed != 0 {
 		t.Errorf("second sweep listed %d jars, want 0", second.Listed)
 	}
 	jar := filepath.Join(install, "modules", "lib-rt.jar")
-	writeJar(t, jar, [2]string{"org/apache/words.txt", "a\nb\nc\n"})
+	testkit.WriteJar(t, jar, [2]string{"org/apache/words.txt", "a\nb\nc\n"})
 	later := time.Now().Add(time.Second)
 	if err := os.Chtimes(jar, later, later); err != nil {
 		t.Fatal(err)
 	}
-	if third := scanOK(t, install, root, SweepOptions{Rules: rules, Listings: NewListings(path)}); third.Listed != 1 {
+	if third := scanOK(t, install, root, SweepOptions{Rules: rules, Listings: newListings(path)}); third.Listed != 1 {
 		t.Errorf("after rewriting one jar: listed %d, want 1", third.Listed)
 	}
 }
@@ -260,22 +262,22 @@ func t3aRules(t *testing.T, extract ...map[string]string) *Rules {
 
 // An unreadable directory fails the gate (once, even when both walks meet
 // it under docs/); .jar and loose PDF names match in any letter case; the
-// sweep's rules reach DestPath; a corrupt jar is reported unreadable.
+// sweep's rules reach destPath; a corrupt jar is reported unreadable.
 func TestSweepCorners(t *testing.T) {
 	tmp := t.TempDir()
 	install, root := filepath.Join(tmp, "install"), filepath.Join(tmp, "data")
-	writeJar(t, filepath.Join(install, "sw", "locked", "x.jar"), [2]string{"doc/a.html", "<p>a"})
-	writeJar(t, filepath.Join(install, "modules", "Upper.JAR"), [2]string{"doc/a.html", "<p>a"})
-	writeJar(t, filepath.Join(install, "modules", "mod-rt.jar"), [2]string{"notes/a.txt", "notes"})
-	writeFile(t, filepath.Join(install, "modules", "broken-rt.jar"), []byte("PK\x03\x04 not a zip"))
-	writeFile(t, filepath.Join(install, "modules", "empty-rt.jar"), nil)
-	writeFile(t, filepath.Join(install, "docs", "sub", "Manual.PDF"), []byte("%PDF-1.4"))
-	writeFile(t, filepath.Join(install, "docs", "locked", "Other.pdf"), []byte("%PDF-1.4"))
-	writeFile(t, filepath.Join(root, "indexes", "pdf-index.json"), []byte(`{"Manual": {"source_pdf": "sub/manual.pdf"}}`))
+	testkit.WriteJar(t, filepath.Join(install, "sw", "locked", "x.jar"), [2]string{"doc/a.html", "<p>a"})
+	testkit.WriteJar(t, filepath.Join(install, "modules", "Upper.JAR"), [2]string{"doc/a.html", "<p>a"})
+	testkit.WriteJar(t, filepath.Join(install, "modules", "mod-rt.jar"), [2]string{"notes/a.txt", "notes"})
+	testkit.WriteFile(t, filepath.Join(install, "modules", "broken-rt.jar"), []byte("PK\x03\x04 not a zip"))
+	testkit.WriteFile(t, filepath.Join(install, "modules", "empty-rt.jar"), nil)
+	testkit.WriteFile(t, filepath.Join(install, "docs", "sub", "Manual.PDF"), []byte("%PDF-1.4"))
+	testkit.WriteFile(t, filepath.Join(install, "docs", "locked", "Other.pdf"), []byte("%PDF-1.4"))
+	testkit.WriteFile(t, filepath.Join(root, "indexes", "pdf-index.json"), []byte(`{"Manual": {"source_pdf": "sub/manual.pdf"}}`))
 	locked := lockDir(t, filepath.Join(install, "sw", "locked"))
 	locked = lockDir(t, filepath.Join(install, "docs", "locked")) && locked
 
-	jars, _, _ := FindJars(install, t3aRules(t))
+	jars, _, _ := findJars(install, t3aRules(t))
 	var rels []string
 	for _, j := range jars {
 		rels = append(rels, j.Rel)
@@ -292,7 +294,7 @@ func TestSweepCorners(t *testing.T) {
 	if !slices.Equal(res.Unreadable, []string{"modules/broken-rt.jar"}) {
 		t.Errorf("unreadable = %q", res.Unreadable)
 	}
-	if res.Reasons[ReasonKey{"empty-file", "empty file named .jar (0 bytes, nothing to list)"}] != 1 {
+	if res.Reasons[reasonKey{"empty-file", "empty file named .jar (0 bytes, nothing to list)"}] != 1 {
 		t.Errorf("empty jar not excluded: %v", res.Reasons)
 	}
 	whys := map[string]string{}
@@ -300,7 +302,7 @@ func TestSweepCorners(t *testing.T) {
 		whys[g.Jar+" "+g.Entry] = g.Why
 	}
 	if w := whys["modules/mod-rt.jar notes/a.txt"]; !strings.HasPrefix(w, "maps to guides/mod-rt/notes/") {
-		t.Errorf("the sweep's extract rule did not reach DestPath: %q", w)
+		t.Errorf("the sweep's extract rule did not reach destPath: %q", w)
 	}
 	if !locked {
 		t.Skip("running with permissions that read mode-0 folders")
@@ -331,10 +333,10 @@ func TestSweepShadowedEntries(t *testing.T) {
 	}{{"# first\n", 1, 1, 0}, {"# frist\n", 1, 0, 1}} { // same size: the CRC decides
 		tmp := t.TempDir()
 		install, root := filepath.Join(tmp, "install"), filepath.Join(tmp, "data")
-		writeJar(t, filepath.Join(install, "modules", "mmm-ux.jar"),
+		testkit.WriteJar(t, filepath.Join(install, "modules", "mmm-ux.jar"),
 			[2]string{"doc/rc/x.md", "# first\n"}, [2]string{"rc/x.md", c.second})
-		writeFile(t, filepath.Join(root, "guides", "mmm-ux", "rc", "x.md"), []byte("# first\n"))
-		writeFile(t, filepath.Join(root, "guides-clean", "mmm-ux", "rc", "x.md.txt"), []byte("TITLE: first\n"))
+		testkit.WriteFile(t, filepath.Join(root, "guides", "mmm-ux", "rc", "x.md"), []byte("# first\n"))
+		testkit.WriteFile(t, filepath.Join(root, "guides-clean", "mmm-ux", "rc", "x.md.txt"), []byte("TITLE: first\n"))
 		res := scanOK(t, install, root, SweepOptions{})
 		row := res.Rows["modules/"]
 		if row.Indexed != c.indexed || row.Excluded != c.excluded || row.Unclassified != c.unclassed {
@@ -363,12 +365,12 @@ func TestSweepLocation(t *testing.T) {
 
 func TestReportFormatting(t *testing.T) {
 	long := strings.Repeat("é", 30)
-	got := sweepRowLine((&SweepRow{Jars: 1234}).cells(firstRunes(long, 28))...)
+	got := sweepRowLine((&sweepRow{Jars: 1234}).cells(pycompat.Cut(long, 28))...)
 	if want := "  " + strings.Repeat("é", 28) + "  1,234         0         0        0        0            0"; got != want {
 		t.Errorf("row:\n%q\nwant\n%q", got, want)
 	}
-	m := map[ReasonKey]int{{"b", "x"}: 2, {"a", "y"}: 2, {"a", "x"}: 2, {"z", "z"}: 5}
-	if got := sortedReasons(m); !slices.Equal(got, []ReasonKey{{"z", "z"}, {"a", "x"}, {"a", "y"}, {"b", "x"}}) {
+	m := map[reasonKey]int{{"b", "x"}: 2, {"a", "y"}: 2, {"a", "x"}: 2, {"z", "z"}: 5}
+	if got := sortedReasons(m); !slices.Equal(got, []reasonKey{{"z", "z"}, {"a", "x"}, {"a", "y"}, {"b", "x"}}) {
 		t.Errorf("reason order %v", got)
 	}
 }
@@ -378,7 +380,7 @@ func TestReportFormatting(t *testing.T) {
 // rebuild (open_index's building is the caller's FulltextDocs).
 func TestFreshFulltextDocs(t *testing.T) {
 	root := t.TempDir()
-	writeFile(t, filepath.Join(root, "devguide-examples", "x", "demo.js"), []byte("function demo() {}\n"))
+	testkit.WriteFile(t, filepath.Join(root, "devguide-examples", "x", "demo.js"), []byte("function demo() {}\n"))
 	var stale *fts.StaleIndexError
 	if _, err := FreshFulltextDocs(root); !errors.As(err, &stale) || !stale.Missing {
 		t.Errorf("no index: %v", err)
@@ -390,7 +392,7 @@ func TestFreshFulltextDocs(t *testing.T) {
 	if err != nil || !docs["devguide-examples/x/demo.js"] {
 		t.Errorf("fresh index: %v %v", docs, err)
 	}
-	writeFile(t, filepath.Join(root, "devguide-examples", "x", "late.js"), []byte("function late() {}\n"))
+	testkit.WriteFile(t, filepath.Join(root, "devguide-examples", "x", "late.js"), []byte("function late() {}\n"))
 	if _, err := FreshFulltextDocs(root); !errors.As(err, &stale) || stale.Missing {
 		t.Errorf("stale index: %v", err)
 	}

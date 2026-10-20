@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/angeles725/niagara-go/internal/helpbuild/internal/testkit"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 )
 
@@ -19,8 +20,8 @@ import (
 func keptFixture(t *testing.T) string {
 	t.Helper()
 	root := t.TempDir()
-	writeFile(t, filepath.Join(root, "guides", "ascCommon", "index.html"), []byte("<p>x"))
-	writeFile(t, filepath.Join(root, "indexes", "guides-index.json"), []byte(`{"ascCommon": {"source_jar": "ascCommon.jar"}}`))
+	testkit.WriteFile(t, filepath.Join(root, "guides", "ascCommon", "index.html"), []byte("<p>x"))
+	testkit.WriteFile(t, filepath.Join(root, "indexes", "guides-index.json"), []byte(`{"ascCommon": {"source_jar": "ascCommon.jar"}}`))
 	return root
 }
 
@@ -37,7 +38,7 @@ func sourceJar(t *testing.T, index pyjson.Value, folder string) pyjson.Value {
 func TestGuidesIndexKeepsUnverifiableJar(t *testing.T) {
 	root := keptFixture(t)
 	// test_unmounted_install_keeps_the_recorded_jar
-	index, kept, _, err := GuidesIndex(root, JarSources{Names: []string{}})
+	index, kept, _, err := guidesIndex(root, jarSources{Names: []string{}})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -49,7 +50,7 @@ func TestGuidesIndexKeepsUnverifiableJar(t *testing.T) {
 	if err := os.MkdirAll(modules, 0o755); err != nil {
 		t.Fatal(err)
 	}
-	index, kept, _, err = GuidesIndex(root, JarSources{Names: []string{}, ModulesDir: modules})
+	index, kept, _, err = guidesIndex(root, jarSources{Names: []string{}, ModulesDir: modules})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -57,8 +58,8 @@ func TestGuidesIndexKeepsUnverifiableJar(t *testing.T) {
 		t.Errorf("source_jar = %+v, kept %q", v, kept)
 	}
 	// The module jar itself when modules/ holds it.
-	writeFile(t, filepath.Join(modules, "ascCommon.jar"), []byte("x"))
-	index, _, _, err = GuidesIndex(root, JarSources{Names: []string{}, ModulesDir: modules})
+	testkit.WriteFile(t, filepath.Join(modules, "ascCommon.jar"), []byte("x"))
+	index, _, _, err = guidesIndex(root, jarSources{Names: []string{}, ModulesDir: modules})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -71,7 +72,7 @@ func TestGuidesIndexKeepsUnverifiableJar(t *testing.T) {
 // so the earlier value is kept and reported.
 func TestBuildGuidesIndexReportsKept(t *testing.T) {
 	root := keptFixture(t)
-	res, err := BuildGuidesIndex(root)
+	res, err := buildGuidesIndex(root)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -83,7 +84,7 @@ func TestBuildGuidesIndexReportsKept(t *testing.T) {
 	}
 	wantJSON := "{\n  \"ascCommon\": {\n    \"html_count\": 1,\n    \"source_jar\": \"ascCommon.jar\",\n" +
 		"    \"topics\": [\n      \"index\"\n    ],\n    \"total_topics\": 1\n  }\n}"
-	if got := readText(t, out); got != wantJSON {
+	if got := testkit.ReadText(t, out); got != wantJSON {
 		t.Errorf("guides-index.json = %q", got)
 	}
 }
@@ -91,12 +92,12 @@ func TestBuildGuidesIndexReportsKept(t *testing.T) {
 func TestGuidesIndexEntry(t *testing.T) {
 	root := t.TempDir()
 	g := filepath.Join(root, "guides", "Foo")
-	writeFile(t, filepath.Join(g, "TOC.xml"), []byte(`<toc><tocitem target="a.html" text="A page">`+
+	testkit.WriteFile(t, filepath.Join(g, "TOC.xml"), []byte(`<toc><tocitem target="a.html" text="A page">`+
 		`<tocitem target="sub/b.htm" text="B"/></tocitem><tocitem target="gone.html" text="G"/></toc>`))
 	for _, rel := range []string{"a.html", "a.htm", "sub/b.htm", "notes.md", "LICENSE.txt", "style.css", "x.HTML"} {
-		writeFile(t, filepath.Join(g, filepath.FromSlash(rel)), []byte("<p>x"))
+		testkit.WriteFile(t, filepath.Join(g, filepath.FromSlash(rel)), []byte("<p>x"))
 	}
-	index, kept, warnings, err := GuidesIndex(root, JarSources{Names: []string{"docFoo-doc.jar"}})
+	index, kept, warnings, err := guidesIndex(root, jarSources{Names: []string{"docFoo-doc.jar"}})
 	if err != nil || kept != nil || warnings != nil {
 		t.Fatalf("err %v, kept %q, warnings %q", err, kept, warnings)
 	}
@@ -106,8 +107,8 @@ func TestGuidesIndexEntry(t *testing.T) {
 	if got != want {
 		t.Errorf("index =\n %s\nwant\n %s", got, want)
 	}
-	if TopicName("sub/P.HTM") != "sub/P" || TopicName("r.txt") != "r.txt" {
-		t.Error("TopicName")
+	if topicName("sub/P.HTM") != "sub/P" || topicName("r.txt") != "r.txt" {
+		t.Error("topicName")
 	}
 }
 
@@ -132,8 +133,8 @@ const devguideIndex = `<html><body>
 
 func TestDevguideTOC(t *testing.T) {
 	root := t.TempDir()
-	writeFile(t, filepath.Join(root, "devguide", "index.html"), []byte(devguideIndex))
-	toc, err := DevguideTOC(root)
+	testkit.WriteFile(t, filepath.Join(root, "devguide", "index.html"), []byte(devguideIndex))
+	toc, err := devguideTOC(root)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -151,7 +152,7 @@ func TestDevguideTOC(t *testing.T) {
 	if strings.Contains(got, "hidden") || strings.Contains(got, "example.com") || strings.Contains(got, `"empty"`) {
 		t.Errorf("comment, external link or empty section kept:\n%s", got)
 	}
-	if _, err := DevguideTOC(t.TempDir()); err == nil {
+	if _, err := devguideTOC(t.TempDir()); err == nil {
 		t.Error("a missing devguide/index.html is an error (Python raises)")
 	}
 }
@@ -186,8 +187,8 @@ func TestKnownJarNamesManifestShapes(t *testing.T) {
 		if err := os.MkdirAll(base, 0o755); err != nil {
 			t.Fatal(err)
 		}
-		writeFile(t, filepath.Join(repo, "versions", "9.9.manifest.json"), []byte(c.manifest))
-		names, ok, err := KnownJarNames(base)
+		testkit.WriteFile(t, filepath.Join(repo, "versions", "9.9.manifest.json"), []byte(c.manifest))
+		names, ok, err := knownJarNames(base)
 		got := strings.Join(names, " ")
 		if err != nil {
 			got = "raise"
@@ -201,7 +202,7 @@ func TestKnownJarNamesManifestShapes(t *testing.T) {
 	// No manifest at all is Python's None.
 	repo := t.TempDir()
 	writeRegistry(t, repo, map[string][3]string{"9.9": {"L", "/nonexistent", "versions/9.9"}})
-	if names, ok, err := KnownJarNames(filepath.Join(repo, "versions", "9.9")); ok || names != nil || err != nil {
+	if names, ok, err := knownJarNames(filepath.Join(repo, "versions", "9.9")); ok || names != nil || err != nil {
 		t.Errorf("no manifest: %q %v %v", names, ok, err)
 	}
 }

@@ -27,17 +27,17 @@ import (
 //go:embed install_docs.json
 var embeddedRules []byte
 
-// RulesFile names the embedded data file in error messages.
-const RulesFile = "install_docs.json"
+// rulesFile names the embedded data file in error messages.
+const rulesFile = "install_docs.json"
 
-// GlobRe compiles a "/"-path glob (install_rules.glob_re): "*" and "?" stay
+// globRe compiles a "/"-path glob (install_rules.glob_re): "*" and "?" stay
 // inside one path segment, "**" crosses segments and "**/" also matches no
 // directory; the match is anchored and case-insensitive like Python's
 // re.IGNORECASE. Go's case folding misses one pair Python's sre has: "i"
 // also matches "İ" (its simple lower case) and "ı" (sre's case fix), so an
 // i literal becomes that explicit class. Non-ASCII pattern literals fold by
 // Go's rules (the shipped patterns are ASCII).
-func GlobRe(pattern string) *regexp.Regexp {
+func globRe(pattern string) *regexp.Regexp {
 	var b strings.Builder
 	b.WriteString(`(?i)\A`)
 	for i := 0; i < len(pattern); {
@@ -141,7 +141,7 @@ func strList(v pyjson.Value, one bool) ([]string, error) {
 func compileAll(globs []string) []*regexp.Regexp {
 	out := make([]*regexp.Regexp, len(globs))
 	for i, g := range globs {
-		out[i] = GlobRe(g)
+		out[i] = globRe(g)
 	}
 	return out
 }
@@ -335,7 +335,7 @@ func rules(doc pyjson.Value, key string, globs map[string][]string) ([]*Rule, er
 	return out, nil
 }
 
-var defaultRules = sync.OnceValues(func() (*Rules, error) { return Parse(embeddedRules, RulesFile) })
+var defaultRules = sync.OnceValues(func() (*Rules, error) { return Parse(embeddedRules, rulesFile) })
 
 // Default is the embedded install_docs.json, parsed once per process.
 func Default() (*Rules, error) { return defaultRules() }

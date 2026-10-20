@@ -10,6 +10,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/angeles725/niagara-go/internal/helpbuild/internal/testkit"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 )
 
@@ -21,33 +22,33 @@ import (
 // goRun runs one builder as lines: ["out", line] and ["err", warning] per
 // line, then ["result", files] (null for the indexes) or ["raise"].
 func goRun(builder, base string) []string {
-	var res *TextResult
+	var res *textResult
 	var err error
 	result := pyjson.Value{}
 	switch builder {
 	case "guides":
-		res, err = ParseGuides(base)
+		res, err = parseGuides(base)
 	case "devguide":
-		res, err = ParseDevguide(base)
+		res, err = parseDevguide(base)
 	case "guidesindex":
-		res, err = BuildGuidesIndex(base)
+		res, err = buildGuidesIndex(base)
 	case "devguidetoc":
-		res, err = BuildDevguideTOC(base)
+		res, err = buildDevguideTOC(base)
 	}
 	if err != nil {
-		return []string{dumpLine(str("raise"))}
+		return []string{testkit.DumpLine(testkit.Str("raise"))}
 	}
 	var out []string
 	for _, l := range res.Log {
-		out = append(out, dumpLine(str("out"), str(l)))
+		out = append(out, testkit.DumpLine(testkit.Str("out"), testkit.Str(l)))
 	}
 	for _, l := range res.Warnings {
-		out = append(out, dumpLine(str("err"), str(l)))
+		out = append(out, testkit.DumpLine(testkit.Str("err"), testkit.Str(l)))
 	}
 	if builder == "guides" || builder == "devguide" {
-		result = intV(res.Files)
+		result = testkit.IntV(res.Files)
 	}
-	return append(out, dumpLine(str("result"), result))
+	return append(out, testkit.DumpLine(testkit.Str("result"), result))
 }
 
 // relabelRun replaces base in the lines by <base> and keeps only the
@@ -68,11 +69,11 @@ func relabelRun(lines []string, base string) []string {
 // testdata/frozen/guides/<name>/<n>-<builder>.txt.
 func guidesFrozen(t *testing.T, name, base string, builders ...string) {
 	t.Helper()
-	prev := treeLines(t, base)
+	prev := testkit.TreeLines(t, base)
 	for i, builder := range builders {
 		lines := append(relabelRun(goRun(builder, base), base), "tree:")
-		cur := treeLines(t, base)
-		checkFrozen(t, fmt.Sprintf("guides/%s/%d-%s", name, i+1, builder), append(lines, treeDelta(prev, cur)...))
+		cur := testkit.TreeLines(t, base)
+		testkit.CheckFrozen(t, fmt.Sprintf("guides/%s/%d-%s", name, i+1, builder), append(lines, testkit.TreeDelta(prev, cur)...))
 		prev = cur
 	}
 }
@@ -138,7 +139,7 @@ func guidesFixture(t *testing.T, base string) {
 		"devguide/sub/deeper/empty.html":       "",
 	}
 	for rel, text := range files {
-		writeFile(t, filepath.Join(base, filepath.FromSlash(rel)), []byte(text))
+		testkit.WriteFile(t, filepath.Join(base, filepath.FromSlash(rel)), []byte(text))
 	}
 	for _, d := range []string{"guides/Empty", "guides/Upper/toc.xml.d"} {
 		if err := os.MkdirAll(filepath.Join(base, d), 0o755); err != nil {
@@ -150,7 +151,7 @@ func guidesFixture(t *testing.T, base string) {
 // TestGuidesFrozen: every builder on the synthetic corpus, then a second
 // run that replaces the clean trees and re-reads the index it wrote.
 func TestGuidesFrozen(t *testing.T) {
-	frozenOnly(t)
+	testkit.FrozenOnly(t)
 	base := filepath.Join(t.TempDir(), "go")
 	guidesFixture(t, base)
 	guidesFrozen(t, "synthetic", base, "guides", "devguide", "guidesindex", "devguidetoc", "guides", "guidesindex")
@@ -160,12 +161,12 @@ func TestGuidesFrozen(t *testing.T) {
 // make both parsers raise (the old clean tree is kept); guides-index.json
 // spells them as Python's surrogate escapes, sorted as decoded names.
 func TestGuidesNonUTF8NamesFrozen(t *testing.T) {
-	frozenOnly(t)
+	testkit.FrozenOnly(t)
 	base := filepath.Join(t.TempDir(), "go")
 	for _, rel := range []string{"guides/Odd\xff/a\xfe.html", "guides/Odd\xff/b.html", "guides/Odd\xff/\xee\x80\x80.html",
 		"guides/Plain/c.html", "guides/\xee\x80\x80/d.html", "devguide/x\xff.html", "devguide-clean/old.txt",
 		"guides-clean/old.txt"} {
-		writeFile(t, filepath.Join(base, filepath.FromSlash(rel)), []byte("<title>T</title><p>x</p>"))
+		testkit.WriteFile(t, filepath.Join(base, filepath.FromSlash(rel)), []byte("<title>T</title><p>x</p>"))
 	}
 	guidesFrozen(t, "non-utf8", base, "guides", "devguide", "guidesindex")
 }
@@ -179,8 +180,8 @@ func registeredFixture(t *testing.T, repo string, mounted, manifest bool) string
 	guidesFixture(t, base)
 	install := filepath.Join(repo, "install")
 	if mounted {
-		writeFile(t, filepath.Join(install, "modules", "Upper.jar"), []byte("x"))
-		writeFile(t, filepath.Join(install, "modules", "docToc-doc.jar"), []byte("x"))
+		testkit.WriteFile(t, filepath.Join(install, "modules", "Upper.jar"), []byte("x"))
+		testkit.WriteFile(t, filepath.Join(install, "modules", "docToc-doc.jar"), []byte("x"))
 	}
 	reg := map[string]any{"versions": map[string]any{"9.9.9": map[string]any{
 		"label": "test", "install_dir": install, "data_root": "versions/9.9.9"}}}
@@ -188,13 +189,13 @@ func registeredFixture(t *testing.T, repo string, mounted, manifest bool) string
 	if err != nil {
 		t.Fatal(err)
 	}
-	writeFile(t, filepath.Join(repo, "versions", "registry.json"), data)
+	testkit.WriteFile(t, filepath.Join(repo, "versions", "registry.json"), data)
 	if manifest {
-		writeFile(t, filepath.Join(repo, "versions", "9.9.9.manifest.json"),
+		testkit.WriteFile(t, filepath.Join(repo, "versions", "9.9.9.manifest.json"),
 			[]byte(`{"jars": [{"jar": "modules/docToc-doc.jar"}, {"jar": "modules/docSpy-doc.jar"}, {"jar": "x/docNone-doc.jar"}]}`))
 	}
 	// An earlier index whose values are kept when they cannot be checked.
-	writeFile(t, filepath.Join(base, "indexes", "guides-index.json"),
+	testkit.WriteFile(t, filepath.Join(base, "indexes", "guides-index.json"),
 		[]byte(`{"Spy": {"source_jar": "old-spy.jar"}, "Bad": {"source_jar": 0}, "Upper": "not a dict", "Empty": {}}`))
 	return base
 }
@@ -203,7 +204,7 @@ func registeredFixture(t *testing.T, repo string, mounted, manifest bool) string
 // mounted install, an unmounted one and a version without a manifest, over
 // an earlier index whose unchecked values are kept.
 func TestGuidesIndexSourcesFrozen(t *testing.T) {
-	frozenOnly(t)
+	testkit.FrozenOnly(t)
 	for _, c := range []struct {
 		name              string
 		mounted, manifest bool
@@ -216,7 +217,7 @@ func TestGuidesIndexSourcesFrozen(t *testing.T) {
 // TestTocFilesFrozen: parse_toc and count_items on every toc.xml of the
 // synthetic corpus plus the toc corners.
 func TestTocFilesFrozen(t *testing.T) {
-	frozenOnly(t)
+	testkit.FrozenOnly(t)
 	dir := t.TempDir()
 	guidesFixture(t, dir)
 	corners := map[string]string{
@@ -238,26 +239,26 @@ func TestTocFilesFrozen(t *testing.T) {
 	}
 	for _, name := range slices.Sorted(maps.Keys(corners)) {
 		p := filepath.Join(dir, name)
-		writeFile(t, p, []byte(corners[name]))
+		testkit.WriteFile(t, p, []byte(corners[name]))
 		paths = append(paths, p)
 	}
 	var gol []string
 	for _, p := range paths {
-		toc, warning := ParseToc(p)
-		rows := array()
+		toc, warning := parseToc(p)
+		rows := testkit.Array()
 		for _, k := range toc.Order {
 			e := toc.Pages[k]
-			trail := array()
+			trail := testkit.Array()
 			for _, s := range e.Trail {
-				trail.A = append(trail.A, str(s))
+				trail.A = append(trail.A, testkit.Str(s))
 			}
-			rows.A = append(rows.A, array(str(k), str(e.Title), trail))
+			rows.A = append(rows.A, testkit.Array(testkit.Str(k), testkit.Str(e.Title), trail))
 		}
-		warnings := array()
+		warnings := testkit.Array()
 		if warning != "" {
-			warnings.A = append(warnings.A, str(warning))
+			warnings.A = append(warnings.A, testkit.Str(warning))
 		}
-		gol = append(gol, dumpLine(str("toc"), rows, intV(CountItems(p)), warnings))
+		gol = append(gol, testkit.DumpLine(testkit.Str("toc"), rows, testkit.IntV(countItems(p)), warnings))
 	}
-	checkFrozen(t, "guides/toc", relabeled(gol, dir, "<dir>"))
+	testkit.CheckFrozen(t, "guides/toc", testkit.Relabeled(gol, dir, "<dir>"))
 }

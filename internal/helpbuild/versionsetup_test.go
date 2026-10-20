@@ -9,6 +9,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/angeles725/niagara-go/internal/helpbuild/internal/testkit"
+	"github.com/angeles725/niagara-go/internal/helpbuild/pyfs"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 )
 
@@ -37,17 +39,17 @@ func TestExtractAndIndexWritesTheManifest(t *testing.T) {
 	if strings.Join(res.Log, "|") != wantLog {
 		t.Fatalf("log %q", res.Log)
 	}
-	text := readText(t, filepath.Join(repo, "versions", "1.0.0.0.manifest.json"))
+	text := testkit.ReadText(t, filepath.Join(repo, "versions", "1.0.0.0.manifest.json"))
 	sum, err := fileSHA256(filepath.Join(install, "modules", "docFoo-doc.jar"))
 	if err != nil {
 		t.Fatal(err)
 	}
 	st, _ := os.Stat(filepath.Join(install, "modules", "docFoo-doc.jar"))
 	want := "{\n \"version\": \"1.0.0.0\",\n \"label\": \"fixture\",\n \"install_dir\": " +
-		pyjson.Dumps(pyjson.String(install), DumpDefault) + ",\n \"data_root\": \"versions/1.0.0.0\",\n" +
+		pyjson.Dumps(pyjson.String(install), pyfs.DumpDefault) + ",\n \"data_root\": \"versions/1.0.0.0\",\n" +
 		" \"generated_utc\": \"2026-10-17T15:08:07+00:00\",\n \"fidelity\": {\n  \"jars\": 1,\n  \"checked\": 3,\n" +
 		"  \"matched\": 3\n },\n \"eol_only_count\": 0,\n \"mismatched\": [],\n \"missing\": [],\n \"jars\": [\n  {\n" +
-		"   \"jar\": \"modules/docFoo-doc.jar\",\n   \"bytes\": " + pyjson.Dumps(pyjson.IntValue(st.Size()), DumpDefault) +
+		"   \"jar\": \"modules/docFoo-doc.jar\",\n   \"bytes\": " + pyjson.Dumps(pyjson.IntValue(st.Size()), pyfs.DumpDefault) +
 		",\n   \"sha256\": \"" + sum + "\",\n   \"mapped_entries\": 3\n  }\n ]\n}"
 	if text != want {
 		t.Fatalf("manifest\n%s\nwant\n%s", text, want)
@@ -110,7 +112,7 @@ func TestExtractAndIndexRefusesEverySpellingOfTheRepoRoot(t *testing.T) {
 	}
 	keep := []string{"guides/keep.txt", "source/keep.txt", "indexes/keep.json", "bajadoc-clean/keep.txt"}
 	for _, k := range keep {
-		writeFile(t, filepath.Join(repo, filepath.FromSlash(k)), []byte("repository file"))
+		testkit.WriteFile(t, filepath.Join(repo, filepath.FromSlash(k)), []byte("repository file"))
 	}
 	for _, spelling := range spellings {
 		writeRegistry(t, repo, map[string][3]string{"1.0.0.0": {"fixture", install, spelling}})
@@ -136,15 +138,15 @@ func TestExtractAndIndexStatusOne(t *testing.T) {
 	}
 	root := filepath.Join(repo, "versions", "1.0.0.0")
 	manifest := filepath.Join(repo, "versions", "1.0.0.0.manifest.json")
-	writeFile(t, filepath.Join(root, "guides", "Foo", "a.html"), []byte("tampered"))
+	testkit.WriteFile(t, filepath.Join(root, "guides", "Foo", "a.html"), []byte("tampered"))
 	res, err := ExtractAndIndex(repo, "1.0.0.0", SetupOptions{VerifyOnly: true})
 	if err != nil || res.Status != 1 || strings.Join(res.Fidelity.Mismatched, ",") != "guides/Foo/a.html" ||
-		!strings.Contains(readText(t, manifest), `"mismatched": [
+		!strings.Contains(testkit.ReadText(t, manifest), `"mismatched": [
   "guides/Foo/a.html"
  ]`) {
 		t.Fatalf("mismatched: %+v %v", res, err)
 	}
-	writeFile(t, filepath.Join(root, "guides", "Foo", "a.html"), []byte("<html>a</html>"))
+	testkit.WriteFile(t, filepath.Join(root, "guides", "Foo", "a.html"), []byte("<html>a</html>"))
 	gone := filepath.Join(root, "guides", "Foo", "sub", "b.html")
 	if err := os.Remove(gone); err != nil {
 		t.Fatal(err)
@@ -170,10 +172,10 @@ func TestExtractAndIndexForceReextracts(t *testing.T) {
 		t.Fatal(err)
 	}
 	root := filepath.Join(repo, "versions", "1.0.0.0")
-	writeFile(t, filepath.Join(root, "guides", "Foo", "a.html"), []byte("tampered"))
-	writeFile(t, filepath.Join(root, "guides", "stray.txt"), []byte("x"))
-	writeFile(t, filepath.Join(root, "indexes", "old.json"), []byte("{}"))
-	writeFile(t, filepath.Join(root, "keep.txt"), []byte("kept"))
+	testkit.WriteFile(t, filepath.Join(root, "guides", "Foo", "a.html"), []byte("tampered"))
+	testkit.WriteFile(t, filepath.Join(root, "guides", "stray.txt"), []byte("x"))
+	testkit.WriteFile(t, filepath.Join(root, "indexes", "old.json"), []byte("{}"))
+	testkit.WriteFile(t, filepath.Join(root, "keep.txt"), []byte("kept"))
 	res, err := ExtractAndIndex(repo, "1.0.0.0", SetupOptions{Force: true})
 	if err != nil || res.Status != 0 || res.Error != "" || res.Extracted.Files != 3 || res.Fidelity.Matched != 3 {
 		t.Fatalf("%+v %v", res, err)
@@ -183,7 +185,7 @@ func TestExtractAndIndexForceReextracts(t *testing.T) {
 			t.Errorf("%s survived --force: %v", gone, err)
 		}
 	}
-	if readText(t, filepath.Join(root, "guides", "Foo", "a.html")) != "<html>a</html>" || readText(t, filepath.Join(root, "keep.txt")) != "kept" {
+	if testkit.ReadText(t, filepath.Join(root, "guides", "Foo", "a.html")) != "<html>a</html>" || testkit.ReadText(t, filepath.Join(root, "keep.txt")) != "kept" {
 		t.Fatal("force did not re-extract, or removed a file outside the raw and derived folders")
 	}
 }
@@ -200,8 +202,8 @@ func TestExtractAndIndexCollisions(t *testing.T) {
 		second = append(second, [2]string{fmt.Sprintf("doc/f%02d.html", i), "second"})
 	}
 	first = append(first, [2]string{"doc/f00.html", "same-jar duplicate"})
-	writeJar(t, filepath.Join(install, "modules", "docFoo-doc.jar"), first...)
-	writeJar(t, filepath.Join(install, "modules", "docFoo.jar"), second...)
+	testkit.WriteJar(t, filepath.Join(install, "modules", "docFoo-doc.jar"), first...)
+	testkit.WriteJar(t, filepath.Join(install, "modules", "docFoo.jar"), second...)
 	repo := filepath.Join(dir, "repo")
 	writeRegistry(t, repo, map[string][3]string{"1.0.0.0": {"collide", install, "v"}})
 	res, err := ExtractAndIndex(repo, "1.0.0.0", SetupOptions{})
@@ -227,7 +229,7 @@ func TestExtractAndIndexCollisions(t *testing.T) {
 		logged[19] != "  COLLISION guides/Foo/f18.html (docFoo-doc.jar overwritten by docFoo.jar)" {
 		t.Fatalf("logged %d: %q", len(logged), logged)
 	}
-	if got := readText(t, filepath.Join(repo, "v", "guides", "Foo", "f24.html")); got != "second" {
+	if got := testkit.ReadText(t, filepath.Join(repo, "v", "guides", "Foo", "f24.html")); got != "second" {
 		t.Fatalf("the later jar did not overwrite: %q", got)
 	}
 }
@@ -239,8 +241,8 @@ func TestExtractAndIndexRebuildHook(t *testing.T) {
 	repo, _ := setupFixture(t)
 	var sawStub bool
 	hook := func(root string) ([]string, error) {
-		sawStub = readText(t, filepath.Join(root, "indexes", "pdf-index.json")) == "{}\n"
-		writeFile(t, filepath.Join(root, "indexes", "class-index.json"), []byte(`{"a": 1}`))
+		sawStub = testkit.ReadText(t, filepath.Join(root, "indexes", "pdf-index.json")) == "{}\n"
+		testkit.WriteFile(t, filepath.Join(root, "indexes", "class-index.json"), []byte(`{"a": 1}`))
 		return []string{"  SKIP  bajadoc_parser.py", "Ran 1 builders"}, nil
 	}
 	res, err := ExtractAndIndex(repo, "1.0.0.0", SetupOptions{Rebuild: hook})
@@ -248,7 +250,7 @@ func TestExtractAndIndexRebuildHook(t *testing.T) {
 		t.Fatalf("%v, stub seen %v", err, sawStub)
 	}
 	want := []string{"  SKIP  bajadoc_parser.py", "Ran 1 builders"}
-	for _, n := range BuilderIndexes[1:] {
+	for _, n := range builderIndexes[1:] {
 		if n != "pdf-index.json" {
 			want = append(want, "  EMPTY "+n+" (its source is not in this install)")
 		}
@@ -269,15 +271,15 @@ func writeRegistry(t *testing.T, repo string, versions map[string][3]string) {
 	vs := pyjson.NewObject()
 	for _, id := range pyjson.SortedKeys(keysOf(versions)) {
 		e := pyjson.NewObject()
-		e.Set("label", str(versions[id][0]))
-		e.Set("install_dir", str(versions[id][1]))
-		e.Set("data_root", str(versions[id][2]))
+		e.Set("label", testkit.Str(versions[id][0]))
+		e.Set("install_dir", testkit.Str(versions[id][1]))
+		e.Set("data_root", testkit.Str(versions[id][2]))
 		vs.Set(id, e)
 	}
 	reg := pyjson.NewObject()
-	reg.Set("default", str(pyjson.SortedKeys(keysOf(versions))[0]))
+	reg.Set("default", testkit.Str(pyjson.SortedKeys(keysOf(versions))[0]))
 	reg.Set("versions", vs)
-	writeFile(t, filepath.Join(repo, "versions", "registry.json"), []byte(pyjson.Dumps(reg, DumpDefault)))
+	testkit.WriteFile(t, filepath.Join(repo, "versions", "registry.json"), []byte(pyjson.Dumps(reg, pyfs.DumpDefault)))
 }
 
 func keysOf(m map[string][3]string) []string {
@@ -299,7 +301,7 @@ func TestExtractAndIndexRefusesAFolderAboveTheRepo(t *testing.T) {
 	}
 	parent := filepath.Dir(abs)
 	keep := filepath.Join(parent, "source", "keep.txt")
-	writeFile(t, keep, []byte("outside file"))
+	testkit.WriteFile(t, keep, []byte("outside file"))
 	for _, spelling := range []string{"..", "../", "versions/../..", parent, filepath.Dir(parent)} {
 		writeRegistry(t, repo, map[string][3]string{"1.0.0.0": {"fixture", install, spelling}})
 		res, err := ExtractAndIndex(repo, "1.0.0.0", SetupOptions{Force: true})

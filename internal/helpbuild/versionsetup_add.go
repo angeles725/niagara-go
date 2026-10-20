@@ -10,6 +10,8 @@ import (
 	"time"
 
 	"github.com/angeles725/niagara-go/internal/atomicfile"
+	"github.com/angeles725/niagara-go/internal/helpbuild/pyfs"
+	"github.com/angeles725/niagara-go/internal/helpbuild/zipfile"
 	"github.com/angeles725/niagara-go/internal/index"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyjson"
@@ -29,18 +31,18 @@ var (
 	vendorPattern  = regexp.MustCompile(pycompat.RE2Space(`vendorVersion\s*=\s*["']([^"']+)["']`))
 )
 
-// ValidVersionID is valid_version_id: an a.b.c.d id (decimal digits only),
+// validVersionID is valid_version_id: an a.b.c.d id (decimal digits only),
 // the name of the data root versions/<id>/ that extraction may delete and
 // rebuild.
-func ValidVersionID(vid string) bool { return versionFull.MatchString(vid) }
+func validVersionID(vid string) bool { return versionFull.MatchString(vid) }
 
-// DetectVersion is detect_version: the vendorVersion of
+// detectVersion is detect_version: the vendorVersion of
 // modules/baja.jar's META-INF/module.xml (stripped), else the first a.b.c.d
 // in the install folder's name, else "" (None). A jar Python cannot open
 // (OSError, BadZipFile) or without the entry (KeyError) falls back to the
 // folder name; an entry it cannot read for another reason (encrypted, an
 // unsupported method) is an error, as Python raises there.
-func DetectVersion(installDir string) (string, error) {
+func detectVersion(installDir string) (string, error) {
 	xml, err := readJarEntry(pycompat.Join(installDir, "modules", "baja.jar"), "META-INF/module.xml")
 	if err != nil && !fallsBack(err) {
 		return "", err
@@ -63,21 +65,21 @@ var errNoEntry = errors.New("there is no item named in the archive")
 // fallsBack reports whether detect_version's except clause catches err.
 func fallsBack(err error) bool {
 	var pe *fs.PathError
-	return errors.Is(err, errBadZip) || errors.Is(err, errNoEntry) || errors.Is(err, errTruncatedEntry) ||
+	return errors.Is(err, zipfile.ErrBadZip) || errors.Is(err, errNoEntry) || errors.Is(err, zipfile.ErrTruncatedEntry) ||
 		errors.As(err, &pe)
 }
 
 // readJarEntry is ZipFile(jar).read(name): the last central-directory entry
 // of that name (ZipFile.NameToInfo keeps the last one).
 func readJarEntry(jar, name string) ([]byte, error) {
-	z, err := openZip(jar)
+	z, err := zipfile.Open(jar)
 	if err != nil {
 		return nil, err
 	}
-	defer z.f.Close()
-	for i := len(z.infos) - 1; i >= 0; i-- {
-		if z.infos[i].name == name {
-			return z.readEntry(&z.infos[i], true)
+	defer z.Close()
+	for i := len(z.Infos) - 1; i >= 0; i-- {
+		if z.Infos[i].Name == name {
+			return z.ReadEntry(&z.Infos[i], true)
 		}
 	}
 	return nil, errNoEntry
@@ -90,7 +92,7 @@ func registryFile(repo string) (*pyjson.Value, error) {
 	if !pycompat.IsFile(path) {
 		return nil, nil
 	}
-	v, err := loadJSON(path)
+	v, err := pyfs.LoadJSON(path)
 	if err != nil {
 		return nil, err
 	}
@@ -126,13 +128,13 @@ func entryString(e pyjson.Value, vid, key string) (string, error) {
 	return v.S, nil
 }
 
-// Register is register: vid added (or replaced, in place) in
+// register is register: vid added (or replaced, in place) in
 // versions/registry.json with its label, install and data root
 // versions/<vid>, created as {"default": null, "versions": {}} when absent
 // or empty; it becomes the default with makeDefault or when there is none.
 // The file is json.dumps(indent=2) and a newline, written atomically
 // (Python appends the newline in a second write).
-func Register(repo, vid, install, label string, makeDefault bool) error {
+func register(repo, vid, install, label string, makeDefault bool) error {
 	reg, err := registryFile(repo)
 	if err != nil {
 		return err
@@ -167,7 +169,7 @@ func Register(repo, vid, install, label string, makeDefault bool) error {
 type AddOptions struct {
 	Label          string  // --label; "" (falsy): the registered label, else the folder name
 	Default, Force bool    // --default, --force
-	ID             *string // --id; nil: DetectVersion (an explicit "" is validated, never detected)
+	ID             *string // --id; nil: detectVersion (an explicit "" is validated, never detected)
 	Rebuild        func(root string) ([]string, error)
 	Extract        func(repo, vid string, opt SetupOptions) (*SetupResult, error) // nil: ExtractAndIndex
 	Fulltext       FulltextDocs                                                   // the gates and the summary; nil: FreshFulltextDocs
@@ -193,7 +195,7 @@ func AddVersion(repo, install string, w io.Writer, opt AddOptions) (int, error) 
 	var vid string
 	if opt.ID != nil {
 		vid = *opt.ID
-	} else if vid, err = DetectVersion(install); err != nil {
+	} else if vid, err = detectVersion(install); err != nil {
 		return 2, err
 	}
 	if vid == "" {
@@ -201,7 +203,7 @@ func AddVersion(repo, install string, w io.Writer, opt AddOptions) (int, error) 
 			"the folder name); pass --id", install)
 		return 2, nil
 	}
-	if !ValidVersionID(vid) {
+	if !validVersionID(vid) {
 		out("ERROR: version id %s is not of the form a.b.c.d (digits); it names the data root versions/<id>/. "+
 			"Pass --id a.b.c.d", pycompat.Repr(vid))
 		return 2, nil
@@ -223,7 +225,7 @@ func AddVersion(repo, install string, w io.Writer, opt AddOptions) (int, error) 
 	root := pycompat.Join(repo, "versions", vid)
 	_, lerr := os.Lstat(root)
 	rootExisted := lerr == nil
-	if err := Register(repo, vid, install, label, opt.Default); err != nil {
+	if err := register(repo, vid, install, label, opt.Default); err != nil {
 		return 2, err
 	}
 	out("registered %s (%s) -> versions/%s/", vid, label, vid)
@@ -252,11 +254,11 @@ func AddVersion(repo, install string, w io.Writer, opt AddOptions) (int, error) 
 		out("ERROR: %s (%s)", res.Error, how)
 		return 2, nil
 	}
-	gates, err := RunGates(repo, res.Root, vid, opt.Fulltext)
+	gates, err := runGates(repo, res.Root, vid, opt.Fulltext)
 	if err != nil {
 		return 1, err
 	}
-	if err := PrintSummary(w, repo, vid, res.Root, res, gates, opt.Fulltext); err != nil {
+	if err := printSummary(w, repo, vid, res.Root, res, gates, opt.Fulltext); err != nil {
 		return 1, err
 	}
 	return max(res.Status, gates.DocJars.Status, gates.Sweep.Status), nil
