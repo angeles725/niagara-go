@@ -37,6 +37,9 @@ func examQuestion(it *key.Item) (prompt, answer string) {
 	return it.Step + "\n" + strings.TrimSpace(strings.TrimPrefix(para, requirementLead)), strings.TrimSpace(rest)
 }
 
+// maxMinutes is the longest --minutes: a day.
+const maxMinutes = 24 * 60
+
 type examOpts struct {
 	count, minutes       int
 	hasCount, hasMinutes bool
@@ -51,7 +54,7 @@ type examOpts struct {
 // of the seed and asks them as quiz --interactive does, until the input ends or --minutes have
 // passed, then prints the score; each graded answer is recorded with kind exam. Exam problems
 // point at no course text, so none is read. Exit: 0 asked; 1
-// no exam question (the honest zero); 2 --count or --minutes below 1, no history path, or an
+// no exam question (the honest zero); 2 --count below 1, --minutes outside 1..1440, no history path, or an
 // answer that cannot be recorded.
 func cmdExam(c *key.Corpus, s cli.Stdio, o examOpts) int {
 	switch {
@@ -59,6 +62,8 @@ func cmdExam(c *key.Corpus, s cli.Stdio, o examOpts) int {
 		return o.usage(fmt.Sprintf("--count %d asks no question (want 1 or more)", o.count))
 	case o.hasMinutes && o.minutes < 1:
 		return o.usage(fmt.Sprintf("--minutes %d leaves no time (want 1 or more)", o.minutes))
+	case o.hasMinutes && o.minutes > maxMinutes: // also keeps the deadline from overflowing
+		return o.usage(fmt.Sprintf("--minutes %d is over a day (want at most %d)", o.minutes, maxMinutes))
 	}
 	history, msg := historyPath(s, o.history, o.hasHistory)
 	if history == "" {

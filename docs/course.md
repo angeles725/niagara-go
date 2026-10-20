@@ -722,8 +722,10 @@ graded), in one write to a file opened for appending; a skip records nothing:
 the answer-key group, `result` `right` or `wrong`. The history is user state, not repository data:
 `--history PATH`, else `$XDG_STATE_HOME/niagara-course/history.jsonl`, else (XDG_STATE_HOME unset
 or relative, as the XDG spec says) `~/.local/state/niagara-course/history.jsonl`; the directory is
-created on the first record. An empty `--history` is a usage error (exit 2); a record that cannot
-be written stops the quiz (exit 2, `course: history <error>`).
+created on the first record. `--history` applies only to `--interactive`, `--missed` and `--due`:
+given without them, or empty, it is a usage error (exit 2), as is the default path when neither
+`XDG_STATE_HOME` nor `HOME` names one (`no history path: set --history, XDG_STATE_HOME or HOME`);
+a record that cannot be written stops the quiz (exit 2, `course: history <error>`).
 
 `--missed` and `--due` draw from the history instead of the whole pool (`--lab` and `--kind` still
 narrow it; `-n` and `--seed` still draw); the history is folded per item in time order (file order
@@ -739,10 +741,12 @@ between equal times), and a record of an ID the keys no longer hold is ignored:
 The header names the selection (`quiz: 3 of 3 questions (...; every group; due
 2026-10-19T00:00:00Z), seed 1`) and the replay line names the drawn IDs with `--ids`, since the
 history moves on. Combine either with `--interactive` to grade the review. `--missed`, `--due` and
-`--ids` exclude each other, and a `--now` that is not RFC 3339 is a usage error (exit 2). A history
+`--ids` exclude each other, and a `--now` without `--due` or not in RFC 3339 is a usage error
+(exit 2). A history
 that selects nothing is the honest zero (exit 1, `course: no missed why, decision, trap, recall,
 predict question in every group (history <path>: 0 records)`); a missing history file is an empty
-one; a line that is not a record (a write cut short) is skipped with `course: history
+one; a line that is not a record (a write cut short, or any line over 64 KiB, which is dropped
+unread) is skipped with `course: history
 <path>:<line>: not a record, skipped` on stderr, so one bad line never locks the history.
 
 Exit: 0 at least one question drawn; 1 an unknown group, an `--ids` item that is no question of the
@@ -751,7 +755,8 @@ groups (`course: no why, decision, trap, recall, predict, requirement, exam ques
 or a text file cannot be read, a drawn item's range lies outside its text file (the message of
 `course text`, before any question is printed; checked without `--answers` too, so the replay line
 works, but not under `--no-context`), `-n` below 1 without `--ids`, or an empty or unknown `--ids` ID (a usage
-error), an empty `--history`, or (`--interactive`) a record that cannot be written. The replay line shell-quotes a
+error), `--history` empty or without `--interactive`, `--missed` or `--due`, `--now` without `--due`,
+no history path, or (`--interactive`) a record that cannot be written. The replay line shell-quotes a
 `--lab` value the shell would split or expand.
 
 ## course history
@@ -791,8 +796,9 @@ answer (kind `exam`, group `EXAM`), and the score. The header names the draw and
 of 3 questions`); the problem being answered when the time runs out is still graded. The clock is
 read before each problem, so the limit is checked between problems, not inside one. Exit: 0 asked
 (whatever the score); 1 no exam question (`course: no exam question in EXAM (searched 3 items)`);
-2 the answer keys cannot be read, `--count` or `--minutes` below 1 (usage errors), or a record that
-cannot be written.
+2 the answer keys cannot be read, `--count` below 1, `--minutes` outside 1..1440 (a day; a larger
+value would overflow the deadline), no history path (usage errors), or a record that cannot be
+written.
 
 ## Live run
 
@@ -1008,8 +1014,12 @@ FAILs, no CONTRADICTED prediction, the item and status counts), not this table.
   boxes and the cap of 5, at fixed `--now` times), their usage errors, and `course history` (the
   table, natural group order, a skipped malformed line, `--json`, the honest zero).
   `exam_test.go`: the `exam` and `requirement` kinds on the `root` fixture, `course exam`
-  (`--count`, the records with kind exam), `--minutes` with a clock that moves 10 minutes per
-  read, and its refusals. `offline_test.go`: `progress --offline` per group and in JSON, and its
+  (`--count`, the records with kind exam) and its refusals. `followup_test.go`: where `--history`
+  and `--now` apply, the default-path fallbacks, the end of input at the grade prompt, a history
+  line over any buffer, natural-order ties, the `--due` replay and `--due --interactive`, the
+  `--minutes` bound, `--minutes` with an input that moves the clock 10 minutes per answered line
+  (so the count of clock reads does not matter), the clock seed of `exam`, every `--offline`
+  refusal and the offline total. `offline_test.go`: `progress --offline` per group and in JSON, and its
   usage errors. Every test writes its history under `t.TempDir()`.
 - `check/verify_test.go` `TestSuggestionEvidence` and `TestEvidenceOfEveryKind`: the live/offline
   rule; `key/labs_test.go` `TestVerifiedEvidence`: both markers, the counts and labels (the `root`

@@ -2,9 +2,11 @@ package course
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -86,9 +88,35 @@ func appendRecord(path string, r record) error {
 	return f.Close()
 }
 
+// maxRecordLine is the longest history line read as a record; a record is about 100 bytes, so a
+// longer line is a bad one and is skipped without being held in memory.
+const maxRecordLine = 64 * 1024
+
+// readRecordLine is the next line of br without its line end; long reports a line over
+// maxRecordLine (its bytes are dropped). io.EOF once nothing is left.
+func readRecordLine(br *bufio.Reader) (line []byte, long bool, err error) {
+	for {
+		chunk, err := br.ReadSlice('\n')
+		if !long {
+			if len(line)+len(chunk) > maxRecordLine+1 {
+				long, line = true, nil
+			} else {
+				line = append(line, chunk...)
+			}
+		}
+		if err == bufio.ErrBufferFull {
+			continue
+		}
+		if err == io.EOF && (len(line) > 0 || long) {
+			err = nil
+		}
+		return bytes.TrimRight(line, "\r\n"), long, err
+	}
+}
+
 // loadHistory reads the records of the history at path, in file order; a missing file is an empty
-// history. A line that is not a record (a write cut short) is skipped with a warning on stderr,
-// so one bad line never locks the history; an unreadable file is an error.
+// history. A line that is not a record (a write cut short, a line of any length) is skipped with a
+// warning on stderr, so one bad line never locks the history; an unreadable file is an error.
 func loadHistory(s cli.Stdio, path string) ([]record, error) {
 	f, err := os.Open(path)
 	if errors.Is(err, fs.ErrNotExist) {
@@ -99,19 +127,24 @@ func loadHistory(s cli.Stdio, path string) ([]record, error) {
 	}
 	defer f.Close()
 	var out []record
-	sc := bufio.NewScanner(f)
-	sc.Buffer(make([]byte, 0, 64*1024), 1<<20)
-	for n := 1; sc.Scan(); n++ {
+	br := bufio.NewReader(f)
+	for n := 1; ; n++ {
+		line, long, err := readRecordLine(br)
+		if err == io.EOF {
+			return out, nil
+		}
+		if err != nil {
+			return nil, err
+		}
 		var r record
-		if len(sc.Bytes()) == 0 {
+		if len(line) == 0 && !long {
 			continue
 		}
-		if err := json.Unmarshal(sc.Bytes(), &r); err != nil || r.ID == "" || r.at().IsZero() ||
+		if long || json.Unmarshal(line, &r) != nil || r.ID == "" || r.at().IsZero() ||
 			(r.Result != resultRight && r.Result != resultWrong) {
 			fmt.Fprintf(s.Err, "course: history %s:%d: not a record, skipped\n", path, n)
 			continue
 		}
 		out = append(out, r)
 	}
-	return out, sc.Err()
 }

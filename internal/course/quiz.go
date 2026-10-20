@@ -224,8 +224,9 @@ func shellQuote(s string) string {
 // order of the seed, or asks the --ids items in their order, prints each prompt, then, with
 // --answers, every answer, its status and its course text. Exit: 0 drawn; 1 an unknown group, no
 // question in the selection (the honest zero) or an --ids item that is no question of it; 2 -n
-// below 1 without --ids (where -n does not apply), an --ids ID the keys do not hold (a usage error), or a text file that cannot be read or
-// does not hold a drawn item's range (the errors of course text).
+// below 1 without --ids (where -n does not apply), an --ids ID the keys do not hold, --history or
+// --now where they do not apply (usage errors), or a text file that cannot be read or does not
+// hold a drawn item's range (the errors of course text).
 func cmdQuiz(c *key.Corpus, s cli.Stdio, root string, o quizOpts) int {
 	if !o.hasIDs && o.count < 1 { // -n does not apply under --ids
 		fmt.Fprintf(s.Err, "course: -n %d asks no question (want 1 or more)\n", o.count)
@@ -236,6 +237,14 @@ func cmdQuiz(c *key.Corpus, s cli.Stdio, root string, o quizOpts) int {
 	}
 	if (o.missed && o.due) || ((o.missed || o.due) && o.hasIDs) {
 		return o.usage("--missed, --due and --ids exclude each other")
+	}
+	switch {
+	case o.hasHistory && o.history == "":
+		return o.usage("--history: an empty path")
+	case o.hasHistory && !o.interactive && !o.missed && !o.due:
+		return o.usage("--history applies to --interactive, --missed and --due")
+	case o.hasNow && !o.due:
+		return o.usage("--now applies to --due")
 	}
 	at := now()
 	if o.hasNow {

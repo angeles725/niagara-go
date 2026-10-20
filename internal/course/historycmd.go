@@ -76,7 +76,12 @@ func rows(m map[string]*accuracyRow) []accuracyRow {
 	for n := range m {
 		names = append(names, n)
 	}
-	slices.SortFunc(names, naturalLess)
+	slices.SortFunc(names, func(a, b string) int { // equal in natural order (L01, L1): byte order decides
+		if c := naturalLess(a, b); c != 0 {
+			return c
+		}
+		return strings.Compare(a, b)
+	})
 	out := make([]accuracyRow, len(names))
 	for i, n := range names {
 		out[i] = *m[n]

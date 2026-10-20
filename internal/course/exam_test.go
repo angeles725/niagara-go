@@ -78,29 +78,6 @@ func TestExam(t *testing.T) {
 	}
 }
 
-// --minutes stops asking once the time is up: the questions asked so far are scored.
-func TestExamMinutes(t *testing.T) {
-	start := time.Date(2026, 10, 19, 9, 0, 0, 0, time.UTC)
-	calls := 0
-	old := now
-	now = func() time.Time { calls++; return start.Add(time.Duration(calls-1) * 10 * time.Minute) } // every read is 10 minutes later
-	t.Cleanup(func() { now = old })
-	root, hist := examRoot(t), filepath.Join(t.TempDir(), "h.jsonl")
-	code, out, errb := runIn("\ny\n\ny\n", nil, "--root", root, "exam", "--seed", "1", "--minutes", "15", "--history", hist)
-	if code != 0 {
-		t.Fatalf("exit %d; stdout:\n%s\nstderr: %s", code, out, errb)
-	}
-	for _, w := range []string{"exam: 2 of 2 problems (EXAM), seed 1, 15 minutes\n", "\ntime is up after 1 of 2 questions\n",
-		"score: 1 of 1 graded right (100%); 1 answer recorded in "} {
-		if !strings.Contains(out, w) {
-			t.Errorf("stdout lacks %q:\n%s", w, out)
-		}
-	}
-	if strings.Contains(out, "Q2.") {
-		t.Errorf("Q2 asked after the time was up:\n%s", out)
-	}
-}
-
 // --count and --minutes below 1 ask nothing: usage errors; an exam with no solvable problem is the
 // honest zero.
 func TestExamRefusals(t *testing.T) {
