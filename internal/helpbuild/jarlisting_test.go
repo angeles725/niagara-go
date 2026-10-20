@@ -34,7 +34,7 @@ func TestCachePathHashesTheAbsoluteInstallPath(t *testing.T) {
 // test_class_entries_are_counted_not_listed.
 func TestClassEntriesAreCountedNotListed(t *testing.T) {
 	jar := filepath.Join(t.TempDir(), "helpMod-rt.jar")
-	writeJar(t, jar, helpJar...)
+	testkit.WriteJar(t, jar, helpJar...)
 	l := ReadListing(jar)
 	if l == nil {
 		t.Fatal("listing is nil")
@@ -51,7 +51,7 @@ func TestClassEntriesAreCountedNotListed(t *testing.T) {
 // directory order, ".CLASS" is not a class (Python's endswith is exact).
 func TestListingKeepsCentralDirectoryOrder(t *testing.T) {
 	jar := filepath.Join(t.TempDir(), "a.jar")
-	writeJar(t, jar, [2]string{"doc/", ""}, [2]string{"doc/b.html", "b"},
+	testkit.WriteJar(t, jar, [2]string{"doc/", ""}, [2]string{"doc/b.html", "b"},
 		[2]string{"doc/a.html", "a"}, [2]string{"doc/b.html", "bb"},
 		[2]string{"doc/empty.txt", ""}, [2]string{"X.CLASS", "x"})
 	l := ReadListing(jar)
@@ -70,9 +70,9 @@ func listingFixture(t *testing.T) (dir string, jars []string) {
 	dir = t.TempDir()
 	jars = []string{filepath.Join(dir, "modules", "helpMod-rt.jar"),
 		filepath.Join(dir, "modules", "lib-rt.jar"), filepath.Join(dir, "modules", "thing-ux.jar")}
-	writeJar(t, jars[0], helpJar...)
-	writeJar(t, jars[1], [2]string{"org/apache/words.txt", "a\nb\n"}, [2]string{"com/acme/BLib.class", "\xca\xfe"})
-	writeJar(t, jars[2], [2]string{"rc/notes.md", "# Notes\n"}, [2]string{"rc/thing.js", "var x;"})
+	testkit.WriteJar(t, jars[0], helpJar...)
+	testkit.WriteJar(t, jars[1], [2]string{"org/apache/words.txt", "a\nb\n"}, [2]string{"com/acme/BLib.class", "\xca\xfe"})
+	testkit.WriteJar(t, jars[2], [2]string{"rc/notes.md", "# Notes\n"}, [2]string{"rc/thing.js", "var x;"})
 	return dir, jars
 }
 
@@ -99,7 +99,7 @@ func TestSecondReadOpensNoJarAndChangedJarIsRelisted(t *testing.T) {
 	if second.Reads != 0 {
 		t.Fatalf("second reads %d, want 0", second.Reads)
 	}
-	writeJar(t, jars[1], [2]string{"org/apache/words.txt", "a\nb\nc\n"})
+	testkit.WriteJar(t, jars[1], [2]string{"org/apache/words.txt", "a\nb\nc\n"})
 	later := time.Now().Add(2 * time.Second)
 	if err := os.Chtimes(jars[1], later, later); err != nil {
 		t.Fatal(err)

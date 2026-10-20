@@ -201,8 +201,8 @@ func TestExtractAndIndexCollisions(t *testing.T) {
 		second = append(second, [2]string{fmt.Sprintf("doc/f%02d.html", i), "second"})
 	}
 	first = append(first, [2]string{"doc/f00.html", "same-jar duplicate"})
-	writeJar(t, filepath.Join(install, "modules", "docFoo-doc.jar"), first...)
-	writeJar(t, filepath.Join(install, "modules", "docFoo.jar"), second...)
+	testkit.WriteJar(t, filepath.Join(install, "modules", "docFoo-doc.jar"), first...)
+	testkit.WriteJar(t, filepath.Join(install, "modules", "docFoo.jar"), second...)
 	repo := filepath.Join(dir, "repo")
 	writeRegistry(t, repo, map[string][3]string{"1.0.0.0": {"collide", install, "v"}})
 	res, err := ExtractAndIndex(repo, "1.0.0.0", SetupOptions{})

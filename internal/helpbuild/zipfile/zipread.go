@@ -1,4 +1,4 @@
-package helpbuild
+package zipfile
 
 import (
 	"bytes"
@@ -35,22 +35,22 @@ var (
 	// deflated. Python also inflates bzip2 (12), lzma (14) and zstd (93);
 	// Niagara jars use none of them, so they are not ported.
 	ErrUnsupportedMethod = errors.New("zip compression method not supported")
-	errTruncatedEntry    = errors.New("zip entry data truncated") // EOFError
+	ErrTruncatedEntry    = errors.New("zip entry data truncated") // EOFError
 )
 
-// dataStart is ZipFile.open(info) for reading: the offset of the entry's
+// DataStart is ZipFile.open(info) for reading: the offset of the entry's
 // compressed bytes, after the checks Python makes in its order.
-func (z *zipFile) dataStart(x *zipInfo) (int64, error) {
+func (z *File) DataStart(x *Info) (int64, error) {
 	le := binary.LittleEndian
 	if x.headerOffset < 0 {
-		return 0, errBadZip // seek to a negative offset
+		return 0, ErrBadZip // seek to a negative offset
 	}
 	hdr, err := readAt(z.f, z.size, x.headerOffset, sizeFileHeader)
 	if err != nil || len(hdr) != sizeFileHeader {
-		return 0, fmt.Errorf("%w: truncated file header of %q", errBadZip, x.origName)
+		return 0, fmt.Errorf("%w: truncated file header of %q", ErrBadZip, x.origName)
 	}
 	if !bytes.HasPrefix(hdr, []byte("PK\x03\x04")) {
-		return 0, fmt.Errorf("%w: bad magic number for the file header of %q", errBadZip, x.origName)
+		return 0, fmt.Errorf("%w: bad magic number for the file header of %q", ErrBadZip, x.origName)
 	}
 	fname, err := readAt(z.f, z.size, x.headerOffset+sizeFileHeader, uint64(le.Uint16(hdr[26:])))
 	if err != nil {
@@ -62,19 +62,19 @@ func (z *zipFile) dataStart(x *zipInfo) (int64, error) {
 	var local string
 	if le.Uint16(hdr[6:])&maskUTFFilename != 0 {
 		if !utf8.Valid(fname) {
-			return 0, fmt.Errorf("%w: local name of %q is not UTF-8", errBadZip, x.origName)
+			return 0, fmt.Errorf("%w: local name of %q is not UTF-8", ErrBadZip, x.origName)
 		}
 		local = string(fname)
 	} else {
 		local = decodeCP437(fname)
 	}
 	if local != x.origName {
-		return 0, fmt.Errorf("%w: file name in directory %q and header %q differ", errBadZip, x.origName, local)
+		return 0, fmt.Errorf("%w: file name in directory %q and header %q differ", ErrBadZip, x.origName, local)
 	}
 	pos := x.headerOffset + sizeFileHeader + int64(len(fname)) + int64(le.Uint16(hdr[28:]))
 	if pos > x.endOffset || x.compressSize > uint64(x.endOffset-pos) {
 		if x.endOffset != x.headerOffset { // equal: Python only warns
-			return 0, fmt.Errorf("%w: overlapped entries: %q (possible zip bomb)", errBadZip, x.origName)
+			return 0, fmt.Errorf("%w: overlapped entries: %q (possible zip bomb)", ErrBadZip, x.origName)
 		}
 	}
 	if x.flags&maskEncrypted != 0 {
@@ -86,13 +86,13 @@ func (z *zipFile) dataStart(x *zipInfo) (int64, error) {
 	return pos, nil
 }
 
-// readEntry returns the bytes Python reads from the entry. whole is
+// ReadEntry returns the bytes Python reads from the entry. whole is
 // read() (fidelity, fill_missing: every compressed byte is inflated, then
 // the output is cut at file_size); otherwise it is shutil.copyfileobj's
 // bounded reads (extract), which stop once file_size bytes came out. The
 // CRC-32 of the result must be the central directory's.
-func (z *zipFile) readEntry(x *zipInfo, whole bool) ([]byte, error) {
-	pos, err := z.dataStart(x)
+func (z *File) ReadEntry(x *Info, whole bool) ([]byte, error) {
+	pos, err := z.DataStart(x)
 	if err != nil {
 		return nil, err
 	}
@@ -102,40 +102,40 @@ func (z *zipFile) readEntry(x *zipInfo, whole bool) ([]byte, error) {
 	}
 	got := uint64(len(comp))
 	if x.compressSize > 0 && got == 0 {
-		return nil, fmt.Errorf("%w: %q", errTruncatedEntry, x.origName)
+		return nil, fmt.Errorf("%w: %q", ErrTruncatedEntry, x.origName)
 	}
 	var out []byte
 	switch x.method {
 	case zipStored:
-		if got < x.compressSize && got < x.size {
-			return nil, fmt.Errorf("%w: %q", errTruncatedEntry, x.origName)
+		if got < x.compressSize && got < x.Size {
+			return nil, fmt.Errorf("%w: %q", ErrTruncatedEntry, x.origName)
 		}
-		out = comp[:min(got, x.size)]
+		out = comp[:min(got, x.Size)]
 	case zipDeflated:
 		r := flate.NewReader(bytes.NewReader(comp))
 		if whole {
 			out, err = io.ReadAll(r)
 		} else {
-			out, err = io.ReadAll(io.LimitReader(r, int64(min(x.size, math.MaxInt64))))
+			out, err = io.ReadAll(io.LimitReader(r, int64(min(x.Size, math.MaxInt64))))
 		}
 		// Input used up mid-stream: zlib's flush ends the read when every
 		// compressed byte was there; a short file is EOFError, as for a
 		// stored entry.
 		if errors.Is(err, io.ErrUnexpectedEOF) {
 			if got < x.compressSize {
-				return nil, fmt.Errorf("%w: %q", errTruncatedEntry, x.origName)
+				return nil, fmt.Errorf("%w: %q", ErrTruncatedEntry, x.origName)
 			}
 			err = nil
 		}
 		if err != nil {
-			return nil, fmt.Errorf("%w: inflating %q: %v", errBadZip, x.origName, err)
+			return nil, fmt.Errorf("%w: inflating %q: %v", ErrBadZip, x.origName, err)
 		}
-		if uint64(len(out)) > x.size {
-			out = out[:x.size]
+		if uint64(len(out)) > x.Size {
+			out = out[:x.Size]
 		}
 	}
-	if crc32.ChecksumIEEE(out) != x.crc {
-		return nil, fmt.Errorf("%w: bad CRC-32 for file %q", errBadZip, x.name)
+	if crc32.ChecksumIEEE(out) != x.CRC {
+		return nil, fmt.Errorf("%w: bad CRC-32 for file %q", ErrBadZip, x.Name)
 	}
 	return out, nil
 }

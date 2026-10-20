@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/angeles725/niagara-go/internal/helpbuild/internal/testkit"
+	"github.com/angeles725/niagara-go/internal/helpbuild/zipfile"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 )
 
@@ -148,18 +149,18 @@ func TestExtractFrozen(t *testing.T) {
 // left (or <absent>), then fidelity over what extract left.
 func TestDocJarCornersFrozen(t *testing.T) {
 	testkit.FrozenOnly(t)
-	ok := rawEntry{name: "doc/ok.html", data: "ok"}
+	ok := testkit.RawEntry{Name: "doc/ok.html", Data: "ok"}
 	cases := map[string][]byte{
-		"badcrc":    rawZip("", []rawEntry{ok, {name: "doc/a.txt", data: "abc", crcXor: 1}}, ""),
-		"localname": rawZip("", []rawEntry{{name: "doc/a.txt", data: "abc", localName: "doc/b.txt"}}, ""),
-		"encrypted": rawZip("", []rawEntry{{name: "doc/a.txt", data: "abc", flags: 1}}, ""),
-		"method99":  rawZip("", []rawEntry{{name: "doc/a.txt", data: "abc", method: 99}}, ""),
-		"overlap":   rawZip("", []rawEntry{{name: "doc/a.txt", data: "abc", compPlus: 4}, ok}, ""),
-		"shared":    rawZip("", []rawEntry{{name: "doc/a.txt", data: "abc"}, {name: "doc/a.txt", data: "abc", sharedHeader: 1}}, ""),
-		"short":     rawZip("", []rawEntry{{name: "doc/a.txt", data: "hello", shortSize: 3}}, ""),
-		"cp437":     rawZip("", []rawEntry{{name: "doc/\x81ber.html", data: "u"}, {name: "doc/n.html\x00.exe", data: "n"}}, ""),
-		"prepended": rawZip(strings.Repeat("#", 33), []rawEntry{ok, {name: "doc/b.txt", data: "b"}}, ""),
-		"zip64":     zip64Zip("", []rawEntry{ok}, 1, 0),
+		"badcrc":    testkit.RawZip("", []testkit.RawEntry{ok, {Name: "doc/a.txt", Data: "abc", CRCXor: 1}}, ""),
+		"localname": testkit.RawZip("", []testkit.RawEntry{{Name: "doc/a.txt", Data: "abc", LocalName: "doc/b.txt"}}, ""),
+		"encrypted": testkit.RawZip("", []testkit.RawEntry{{Name: "doc/a.txt", Data: "abc", Flags: 1}}, ""),
+		"method99":  testkit.RawZip("", []testkit.RawEntry{{Name: "doc/a.txt", Data: "abc", Method: 99}}, ""),
+		"overlap":   testkit.RawZip("", []testkit.RawEntry{{Name: "doc/a.txt", Data: "abc", CompPlus: 4}, ok}, ""),
+		"shared":    testkit.RawZip("", []testkit.RawEntry{{Name: "doc/a.txt", Data: "abc"}, {Name: "doc/a.txt", Data: "abc", SharedHeader: 1}}, ""),
+		"short":     testkit.RawZip("", []testkit.RawEntry{{Name: "doc/a.txt", Data: "hello", ShortSize: 3}}, ""),
+		"cp437":     testkit.RawZip("", []testkit.RawEntry{{Name: "doc/\x81ber.html", Data: "u"}, {Name: "doc/n.html\x00.exe", Data: "n"}}, ""),
+		"prepended": testkit.RawZip(strings.Repeat("#", 33), []testkit.RawEntry{ok, {Name: "doc/b.txt", Data: "b"}}, ""),
+		"zip64":     testkit.Zip64Zip("", []testkit.RawEntry{ok}, 1, 0),
 		"notazip":   []byte("plain text"),
 		"folder":    nil,
 	}
@@ -236,13 +237,13 @@ func mapPairs(t *testing.T, jars []string) [][2]any {
 	t.Helper()
 	var pairs [][2]any
 	for _, j := range jars {
-		infos, err := readCentralDir(j)
+		infos, err := zipfile.ReadCentralDir(j)
 		if err != nil {
 			continue
 		}
 		names := []string{}
 		for _, i := range infos {
-			names = append(names, i.name)
+			names = append(names, i.Name)
 		}
 		pairs = append(pairs, [2]any{filepath.Base(j), names})
 	}

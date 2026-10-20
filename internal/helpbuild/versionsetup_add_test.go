@@ -24,10 +24,10 @@ func addFixture(t *testing.T, folder, v string) (repo, install string) {
 	t.Helper()
 	dir := t.TempDir()
 	install = filepath.Join(dir, folder)
-	writeJar(t, filepath.Join(install, "modules", "docFoo-doc.jar"), [2]string{"META-INF/MANIFEST.MF", "m"},
+	testkit.WriteJar(t, filepath.Join(install, "modules", "docFoo-doc.jar"), [2]string{"META-INF/MANIFEST.MF", "m"},
 		[2]string{"doc/", ""}, [2]string{"doc/a.html", "<html>a</html>"}, [2]string{"doc/sub/b.html", "<html>b</html>"})
 	if v != "" {
-		writeJar(t, filepath.Join(install, "modules", "baja.jar"), [2]string{"META-INF/module.xml", moduleXML(v)})
+		testkit.WriteJar(t, filepath.Join(install, "modules", "baja.jar"), [2]string{"META-INF/module.xml", moduleXML(v)})
 	}
 	return filepath.Join(dir, "repo"), install
 }
@@ -76,7 +76,7 @@ func TestDetectVersion(t *testing.T) {
 				t.Fatal(err)
 			}
 			if c.jar {
-				writeJar(t, filepath.Join(install, "modules", "baja.jar"), [2]string{"META-INF/module.xml", c.xml})
+				testkit.WriteJar(t, filepath.Join(install, "modules", "baja.jar"), [2]string{"META-INF/module.xml", c.xml})
 			}
 			if got, err := DetectVersion(install); err != nil || got != c.want {
 				t.Errorf("DetectVersion = %q, %v; want %q", got, err, c.want)
@@ -89,7 +89,7 @@ func TestDetectVersion(t *testing.T) {
 	if got, err := DetectVersion(install); err != nil || got != "2.2.2.2" {
 		t.Errorf("not a zip: %q %v", got, err)
 	}
-	writeJar(t, filepath.Join(install, "modules", "baja.jar"), [2]string{"META-INF/MANIFEST.MF", "x"})
+	testkit.WriteJar(t, filepath.Join(install, "modules", "baja.jar"), [2]string{"META-INF/MANIFEST.MF", "x"})
 	if got, err := DetectVersion(install); err != nil || got != "2.2.2.2" {
 		t.Errorf("no module.xml: %q %v", got, err)
 	}

@@ -78,7 +78,9 @@ func lockDir(t *testing.T, dir string) bool {
 
 const sweepFixturePage = "<html><head><title>%s</title></head><body><p>%s</p></body></html>"
 
-func sweepFixtureJar(t *testing.T, path string, entries ...[2]string) { writeJar(t, path, entries...) }
+func sweepFixtureJar(t *testing.T, path string, entries ...[2]string) {
+	testkit.WriteJar(t, path, entries...)
+}
 
 func fpage(title, body string) string { return fmt.Sprintf(sweepFixturePage, title, body) }
 

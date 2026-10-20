@@ -186,12 +186,12 @@ func TestDocJarCoverageFrozen(t *testing.T) {
 	for i := 0; i < 30; i++ {
 		files = append(files, [2]string{"doc/p" + string(rune('a'+i%26)) + strings.Repeat("x", i) + ".html", "p"})
 	}
-	writeJar(t, filepath.Join(d, "inst", "modules", "docMany-doc.jar"), files...)
+	testkit.WriteJar(t, filepath.Join(d, "inst", "modules", "docMany-doc.jar"), files...)
 	many := covCopy(t, covBase(t, d))
 	gate("many-gaps", []string{covRepo(t, filepath.Join(d, "g"), "1.2", filepath.Join(d, "inst"), many), many, "1.2"}, many)
 
 	d = t.TempDir()
-	writeJar(t, filepath.Join(d, "inst", "modules", "docOne-doc.jar"),
+	testkit.WriteJar(t, filepath.Join(d, "inst", "modules", "docOne-doc.jar"),
 		[2]string{"doc/one.html", "o"}, [2]string{"doc/one.png", "p"}, [2]string{"META-INF/MANIFEST.MF", "m"})
 	src := filepath.Join(d, "base")
 	testkit.WriteFile(t, filepath.Join(src, "guides", "One", "one.html"), []byte("o"))

@@ -69,13 +69,13 @@ func syntheticInstall(t *testing.T, dir string) string {
 		"workbench-wb.jar":   {{"com/tridium/workbench/media/about.html", page}, {"res/x/home.html", page}},
 	}
 	for name, files := range jars {
-		writeJar(t, filepath.Join(mods, name), files...)
+		testkit.WriteJar(t, filepath.Join(mods, name), files...)
 	}
 	writeStoredJar(t, filepath.Join(mods, "docStored-doc.jar"), [2]string{"doc/s.txt", "stored\r\nline\r\n"},
 		[2]string{"doc/z.html", page})
 	testkit.WriteFile(t, filepath.Join(mods, "broken-rt.jar"), []byte("not a zip"))
 	testkit.WriteFile(t, filepath.Join(mods, "notes.txt"), []byte("not a jar"))
-	writeJar(t, filepath.Join(install, "javadoc", JavadocJar), [2]string{"doc/index.html", page},
+	testkit.WriteJar(t, filepath.Join(install, "javadoc", JavadocJar), [2]string{"doc/index.html", page},
 		[2]string{"doc/javax/baja/sys/BObject.html", page}, [2]string{"other.txt", "x"})
 	return install
 }

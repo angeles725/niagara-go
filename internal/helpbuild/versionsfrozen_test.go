@@ -228,7 +228,7 @@ func TestVersionsAddFrozen(t *testing.T) {
 	testkit.FrozenOnly(t)
 	dir := homeTemp(t)
 	install := syntheticInstall(t, dir)
-	writeJar(t, filepath.Join(install, "modules", "baja.jar"), [2]string{"META-INF/module.xml", moduleXML("1.0.0.0")})
+	testkit.WriteJar(t, filepath.Join(install, "modules", "baja.jar"), [2]string{"META-INF/module.xml", moduleXML("1.0.0.0")})
 	repo := filepath.Join(dir, "repo")
 	noop := func(r string) {
 		if err := os.MkdirAll(r, 0o755); err != nil {

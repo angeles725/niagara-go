@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/angeles725/niagara-go/internal/helpbuild/internal/testkit"
+	"github.com/angeles725/niagara-go/internal/helpbuild/zipfile"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
@@ -17,10 +18,10 @@ func extractFixture(t *testing.T) (install, root string) {
 	t.Helper()
 	dir := t.TempDir()
 	install = filepath.Join(dir, "install")
-	writeJar(t, filepath.Join(install, "modules", "docFoo-doc.jar"), [2]string{"META-INF/MANIFEST.MF", "m"},
+	testkit.WriteJar(t, filepath.Join(install, "modules", "docFoo-doc.jar"), [2]string{"META-INF/MANIFEST.MF", "m"},
 		[2]string{"doc/", ""}, [2]string{"doc/a.html", "<html>a</html>"}, [2]string{"doc/sub/b.html", "<html>b</html>"},
 		[2]string{"doc/crlf.txt", "a\r\nb\r\n"})
-	writeJar(t, filepath.Join(install, "modules", "alarm-rt.jar"), [2]string{"x.class", "x"})
+	testkit.WriteJar(t, filepath.Join(install, "modules", "alarm-rt.jar"), [2]string{"x.class", "x"})
 	return install, filepath.Join(dir, "root")
 }
 
@@ -92,9 +93,9 @@ func TestFillMissingWritesOnlyAbsentFiles(t *testing.T) {
 func TestHelpJarsAndSourceArchive(t *testing.T) {
 	dir := t.TempDir()
 	install := filepath.Join(dir, "install")
-	writeJar(t, filepath.Join(install, "modules", "ascHelp.jar"), [2]string{"doc/About-Asc.html", "<p/>"},
+	testkit.WriteJar(t, filepath.Join(install, "modules", "ascHelp.jar"), [2]string{"doc/About-Asc.html", "<p/>"},
 		[2]string{"doc/libfoo-1.0.tar.xz", "\xfd7zXZ"}, [2]string{"com/acme/BAsc.class", "\xca\xfe"})
-	writeJar(t, filepath.Join(install, "modules", "plainModule-rt.jar"), [2]string{"com/acme/BPlain.class", "\xca\xfe"},
+	testkit.WriteJar(t, filepath.Join(install, "modules", "plainModule-rt.jar"), [2]string{"com/acme/BPlain.class", "\xca\xfe"},
 		[2]string{"doc/style.css", "p {}"})
 	help, err := HelpJars(install, nil, mustDefault(t))
 	if err != nil || len(help) != 1 || filepath.Base(help[0]) != "ascHelp.jar" {
@@ -118,7 +119,7 @@ func TestHelpJarsAndSourceArchive(t *testing.T) {
 func TestExtractRefusesDotDotEntries(t *testing.T) {
 	dir := t.TempDir()
 	install := filepath.Join(dir, "install")
-	writeJar(t, filepath.Join(install, "modules", "docEvil-doc.jar"), [2]string{"doc/../../../escaped.txt", "x"})
+	testkit.WriteJar(t, filepath.Join(install, "modules", "docEvil-doc.jar"), [2]string{"doc/../../../escaped.txt", "x"})
 	root := filepath.Join(dir, "a", "root")
 	if _, err := Extract(install, root, nil); !errors.Is(err, ErrUnsafeEntry) {
 		t.Fatalf("extract: %v", err)
@@ -132,7 +133,7 @@ func TestExtractRefusesDotDotEntries(t *testing.T) {
 	// The Windows spelling is refused on Linux too, where Python would
 	// write a file named "..\..\..\escaped.txt" inside the guide folder.
 	install = filepath.Join(dir, "install-bs")
-	writeJar(t, filepath.Join(install, "modules", "docEvil-doc.jar"), [2]string{`doc/..\..\..\escaped.txt`, "x"})
+	testkit.WriteJar(t, filepath.Join(install, "modules", "docEvil-doc.jar"), [2]string{`doc/..\..\..\escaped.txt`, "x"})
 	if _, err := Extract(install, root, nil); !errors.Is(err, ErrUnsafeEntry) {
 		t.Fatalf("extract backslash: %v", err)
 	}
@@ -180,7 +181,7 @@ func TestUnreadableJars(t *testing.T) {
 		t.Fatalf("a broken module jar: %v", err)
 	}
 	testkit.WriteFile(t, filepath.Join(install, "modules", "docBroken-doc.jar"), []byte("not a zip"))
-	if _, err := Extract(install, filepath.Join(dir, "r2"), nil); !errors.Is(err, errBadZip) {
+	if _, err := Extract(install, filepath.Join(dir, "r2"), nil); !errors.Is(err, zipfile.ErrBadZip) {
 		t.Fatalf("a broken doc jar: %v", err)
 	}
 }

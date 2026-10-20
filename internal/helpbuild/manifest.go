@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/angeles725/niagara-go/internal/helpbuild/zipfile"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 )
@@ -41,13 +42,13 @@ func JarManifest(installDir string) ([]JarRow, error) {
 	rows := []JarRow{}
 	for _, jar := range jars {
 		name := pyBasename(jar)
-		infos, err := readCentralDir(jar)
+		infos, err := zipfile.ReadCentralDir(jar)
 		if err != nil {
 			return nil, err
 		}
 		row := JarRow{}
 		for _, x := range infos {
-			if rel, ok := DestPath(name, x.name, rules); ok && rel != "" {
+			if rel, ok := DestPath(name, x.Name, rules); ok && rel != "" {
 				row.MappedEntries++
 			}
 		}

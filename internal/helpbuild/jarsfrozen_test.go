@@ -92,39 +92,39 @@ func syntheticJars(t *testing.T, dir string) []string {
 	for _, name := range []string{"docClHVACTest-doc.jar", "docDeveloper-ux.jar", "ascHelp.jar", "thing-ux.jar",
 		"workbench-wb.jar", "galileoSupervisor-wb.jar", "course-files.jar", "odd-names.jar"} {
 		p := filepath.Join(dir, name)
-		writeJar(t, p, jars[name]...)
+		testkit.WriteJar(t, p, jars[name]...)
 		paths = append(paths, p)
 	}
 	var high strings.Builder
 	for b := 0x80; b <= 0xff; b++ {
 		high.WriteByte(byte(b))
 	}
-	ok := rawEntry{name: "doc/a.html", data: "a"}
+	ok := testkit.RawEntry{Name: "doc/a.html", Data: "a"}
 	raw := []struct {
 		name string
 		data []byte
 	}{
-		{"cp437.jar", rawZip("", []rawEntry{{name: "cp437/" + high.String() + ".txt", data: "x"}, ok}, "")},
-		{"nul.jar", rawZip("", []rawEntry{{name: "doc/a.html\x00.exe", data: "x"}}, "")},
-		{"badutf8flag.jar", rawZip("", []rawEntry{{name: "doc/\xff.html", flags: 0x800}}, "")},
-		{"unicodepath.jar", rawZip("", []rawEntry{{name: "doc/x.html", extra: unicodePath("doc/x.html", "doc/ñ.html")},
-			{name: "doc/y.html", extra: unicodePath("other", "doc/ñ.html")}, {name: "doc/z.html", extra: unicodePath("doc/z.html", "")}}, "")},
-		{"badunicodepath.jar", rawZip("", []rawEntry{{name: "doc/x.html", extra: unicodePath("doc/x.html", "\xff")}}, "")},
-		{"zip64.jar", rawZip("", []rawEntry{{name: "big.txt", data: "12345", size64: true, extra: zip64Size(5)}}, "")},
-		{"shortzip64.jar", rawZip("", []rawEntry{{name: "big.txt", size64: true, extra: extraField(1, []byte{1, 2})}}, "")},
-		{"badextra.jar", rawZip("", []rawEntry{{name: "a.txt", extra: []byte{0x99, 0x99, 0x10, 0}}}, "")},
-		{"prepended.jar", rawZip(strings.Repeat("#", 100), []rawEntry{ok}, "")},
-		{"comment.jar", rawZip("", []rawEntry{ok}, "a comment")},
-		{"zip64eocd.jar", zip64Zip("", []rawEntry{ok, {name: "doc/b.html", data: "b"}}, 1, 0)},
-		{"zip64prepended.jar", zip64Zip(strings.Repeat("#", 50), []rawEntry{ok}, 1, 0)},
-		{"zip64disks.jar", zip64Zip("", []rawEntry{ok}, 2, 0)},
-		{"zip64reloffpast.jar", zip64Zip("", []rawEntry{ok}, 1, 1000)},
-		{"zip64reloffshort.jar", zip64Zip("", []rawEntry{ok}, 1, -1)},
-		{"countone.jar", withEntryCount(rawZip("", []rawEntry{ok, {name: "doc/b.txt", data: "b"}, {name: "doc/c/", data: ""},
-			{name: "doc/d.txt", data: "d"}}, ""), 1)},
+		{"cp437.jar", testkit.RawZip("", []testkit.RawEntry{{Name: "cp437/" + high.String() + ".txt", Data: "x"}, ok}, "")},
+		{"nul.jar", testkit.RawZip("", []testkit.RawEntry{{Name: "doc/a.html\x00.exe", Data: "x"}}, "")},
+		{"badutf8flag.jar", testkit.RawZip("", []testkit.RawEntry{{Name: "doc/\xff.html", Flags: 0x800}}, "")},
+		{"unicodepath.jar", testkit.RawZip("", []testkit.RawEntry{{Name: "doc/x.html", Extra: testkit.UnicodePath("doc/x.html", "doc/ñ.html")},
+			{Name: "doc/y.html", Extra: testkit.UnicodePath("other", "doc/ñ.html")}, {Name: "doc/z.html", Extra: testkit.UnicodePath("doc/z.html", "")}}, "")},
+		{"badunicodepath.jar", testkit.RawZip("", []testkit.RawEntry{{Name: "doc/x.html", Extra: testkit.UnicodePath("doc/x.html", "\xff")}}, "")},
+		{"zip64.jar", testkit.RawZip("", []testkit.RawEntry{{Name: "big.txt", Data: "12345", Size64: true, Extra: testkit.Zip64Size(5)}}, "")},
+		{"shortzip64.jar", testkit.RawZip("", []testkit.RawEntry{{Name: "big.txt", Size64: true, Extra: testkit.ExtraField(1, []byte{1, 2})}}, "")},
+		{"badextra.jar", testkit.RawZip("", []testkit.RawEntry{{Name: "a.txt", Extra: []byte{0x99, 0x99, 0x10, 0}}}, "")},
+		{"prepended.jar", testkit.RawZip(strings.Repeat("#", 100), []testkit.RawEntry{ok}, "")},
+		{"comment.jar", testkit.RawZip("", []testkit.RawEntry{ok}, "a comment")},
+		{"zip64eocd.jar", testkit.Zip64Zip("", []testkit.RawEntry{ok, {Name: "doc/b.html", Data: "b"}}, 1, 0)},
+		{"zip64prepended.jar", testkit.Zip64Zip(strings.Repeat("#", 50), []testkit.RawEntry{ok}, 1, 0)},
+		{"zip64disks.jar", testkit.Zip64Zip("", []testkit.RawEntry{ok}, 2, 0)},
+		{"zip64reloffpast.jar", testkit.Zip64Zip("", []testkit.RawEntry{ok}, 1, 1000)},
+		{"zip64reloffshort.jar", testkit.Zip64Zip("", []testkit.RawEntry{ok}, 1, -1)},
+		{"countone.jar", testkit.WithEntryCount(testkit.RawZip("", []testkit.RawEntry{ok, {Name: "doc/b.txt", Data: "b"}, {Name: "doc/c/", Data: ""},
+			{Name: "doc/d.txt", Data: "d"}}, ""), 1)},
 		{"notazip.jar", []byte("plain text, no zip at all")},
 		{"empty.jar", nil},
-		{"truncated.jar", rawZip("", []rawEntry{ok}, "")[:40]},
+		{"truncated.jar", testkit.RawZip("", []testkit.RawEntry{ok}, "")[:40]},
 	}
 	for _, r := range raw {
 		p := filepath.Join(dir, r.name)

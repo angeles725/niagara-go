@@ -72,22 +72,22 @@ func sweepInstallFixture(t *testing.T) (repo, root, install string) {
 	tmp := t.TempDir()
 	install = filepath.Join(tmp, "install")
 	mods := filepath.Join(install, "modules")
-	writeJar(t, filepath.Join(mods, "docGuide-doc.jar"),
+	testkit.WriteJar(t, filepath.Join(mods, "docGuide-doc.jar"),
 		[2]string{"doc/index.html", page("Guide", "guide home")},
 		[2]string{"doc/Intro.html", page("Intro", "intro text")},
 		[2]string{"doc/LICENSE.txt", "licence text\n"})
-	writeJar(t, filepath.Join(mods, "helpMod-rt.jar"), sweepHelpJar...)
-	writeJar(t, filepath.Join(mods, "thing-ux.jar"),
+	testkit.WriteJar(t, filepath.Join(mods, "helpMod-rt.jar"), sweepHelpJar...)
+	testkit.WriteJar(t, filepath.Join(mods, "thing-ux.jar"),
 		[2]string{"rc/notes.md", "# Notes\n\nquibbleNotes of the thing module\n"},
 		[2]string{"rc/node_modules/pkg/README.md", "npm readme\n"},
 		[2]string{"rc/thing.js", "var x;"})
-	writeJar(t, filepath.Join(mods, "lib-rt.jar"),
+	testkit.WriteJar(t, filepath.Join(mods, "lib-rt.jar"),
 		[2]string{"org/apache/words.txt", "a\nb\n"},
 		[2]string{"com/acme/BLib.class", "\xca\xfe"})
-	writeJar(t, filepath.Join(install, "sw", "1.0", "helpMod-rt.jar"), sweepHelpJar...)
-	writeJar(t, filepath.Join(install, "sw", "2.0", "helpMod-rt.jar"),
+	testkit.WriteJar(t, filepath.Join(install, "sw", "1.0", "helpMod-rt.jar"), sweepHelpJar...)
+	testkit.WriteJar(t, filepath.Join(install, "sw", "2.0", "helpMod-rt.jar"),
 		[2]string{"doc/About-Help.html", page("About Help", "newer text")})
-	writeJar(t, filepath.Join(install, "jre", "lib", "rt.jar"), [2]string{"about.html", "x"})
+	testkit.WriteJar(t, filepath.Join(install, "jre", "lib", "rt.jar"), [2]string{"about.html", "x"})
 
 	repo = filepath.Join(tmp, "repo")
 	root = filepath.Join(repo, "versions", "1.0")
@@ -236,7 +236,7 @@ func TestSweepListingCache(t *testing.T) {
 		t.Errorf("second sweep listed %d jars, want 0", second.Listed)
 	}
 	jar := filepath.Join(install, "modules", "lib-rt.jar")
-	writeJar(t, jar, [2]string{"org/apache/words.txt", "a\nb\nc\n"})
+	testkit.WriteJar(t, jar, [2]string{"org/apache/words.txt", "a\nb\nc\n"})
 	later := time.Now().Add(time.Second)
 	if err := os.Chtimes(jar, later, later); err != nil {
 		t.Fatal(err)
@@ -265,9 +265,9 @@ func t3aRules(t *testing.T, extract ...map[string]string) *Rules {
 func TestSweepCorners(t *testing.T) {
 	tmp := t.TempDir()
 	install, root := filepath.Join(tmp, "install"), filepath.Join(tmp, "data")
-	writeJar(t, filepath.Join(install, "sw", "locked", "x.jar"), [2]string{"doc/a.html", "<p>a"})
-	writeJar(t, filepath.Join(install, "modules", "Upper.JAR"), [2]string{"doc/a.html", "<p>a"})
-	writeJar(t, filepath.Join(install, "modules", "mod-rt.jar"), [2]string{"notes/a.txt", "notes"})
+	testkit.WriteJar(t, filepath.Join(install, "sw", "locked", "x.jar"), [2]string{"doc/a.html", "<p>a"})
+	testkit.WriteJar(t, filepath.Join(install, "modules", "Upper.JAR"), [2]string{"doc/a.html", "<p>a"})
+	testkit.WriteJar(t, filepath.Join(install, "modules", "mod-rt.jar"), [2]string{"notes/a.txt", "notes"})
 	testkit.WriteFile(t, filepath.Join(install, "modules", "broken-rt.jar"), []byte("PK\x03\x04 not a zip"))
 	testkit.WriteFile(t, filepath.Join(install, "modules", "empty-rt.jar"), nil)
 	testkit.WriteFile(t, filepath.Join(install, "docs", "sub", "Manual.PDF"), []byte("%PDF-1.4"))
@@ -332,7 +332,7 @@ func TestSweepShadowedEntries(t *testing.T) {
 	}{{"# first\n", 1, 1, 0}, {"# frist\n", 1, 0, 1}} { // same size: the CRC decides
 		tmp := t.TempDir()
 		install, root := filepath.Join(tmp, "install"), filepath.Join(tmp, "data")
-		writeJar(t, filepath.Join(install, "modules", "mmm-ux.jar"),
+		testkit.WriteJar(t, filepath.Join(install, "modules", "mmm-ux.jar"),
 			[2]string{"doc/rc/x.md", "# first\n"}, [2]string{"rc/x.md", c.second})
 		testkit.WriteFile(t, filepath.Join(root, "guides", "mmm-ux", "rc", "x.md"), []byte("# first\n"))
 		testkit.WriteFile(t, filepath.Join(root, "guides-clean", "mmm-ux", "rc", "x.md.txt"), []byte("TITLE: first\n"))

@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/angeles725/niagara-go/internal/atomicfile"
+	"github.com/angeles725/niagara-go/internal/helpbuild/zipfile"
 	"github.com/angeles725/niagara-go/internal/index"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyjson"
@@ -63,21 +64,21 @@ var errNoEntry = errors.New("there is no item named in the archive")
 // fallsBack reports whether detect_version's except clause catches err.
 func fallsBack(err error) bool {
 	var pe *fs.PathError
-	return errors.Is(err, errBadZip) || errors.Is(err, errNoEntry) || errors.Is(err, errTruncatedEntry) ||
+	return errors.Is(err, zipfile.ErrBadZip) || errors.Is(err, errNoEntry) || errors.Is(err, zipfile.ErrTruncatedEntry) ||
 		errors.As(err, &pe)
 }
 
 // readJarEntry is ZipFile(jar).read(name): the last central-directory entry
 // of that name (ZipFile.NameToInfo keeps the last one).
 func readJarEntry(jar, name string) ([]byte, error) {
-	z, err := openZip(jar)
+	z, err := zipfile.Open(jar)
 	if err != nil {
 		return nil, err
 	}
-	defer z.f.Close()
-	for i := len(z.infos) - 1; i >= 0; i-- {
-		if z.infos[i].name == name {
-			return z.readEntry(&z.infos[i], true)
+	defer z.Close()
+	for i := len(z.Infos) - 1; i >= 0; i-- {
+		if z.Infos[i].Name == name {
+			return z.ReadEntry(&z.Infos[i], true)
 		}
 	}
 	return nil, errNoEntry

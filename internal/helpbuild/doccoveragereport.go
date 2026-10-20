@@ -7,6 +7,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/angeles725/niagara-go/internal/helpbuild/zipfile"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 	"github.com/angeles725/niagara-go/internal/pypath"
@@ -64,13 +65,13 @@ func (s *DocJarScan) addReason(reason string) {
 // jarEntries is _entries: the names of a jar's file entries (directories
 // dropped, .class files kept), ok false when the jar cannot be read.
 func jarEntries(jar string) (names []string, ok bool) {
-	infos, err := readCentralDir(jar)
+	infos, err := zipfile.ReadCentralDir(jar)
 	if err != nil {
 		return nil, false
 	}
 	for _, i := range infos {
-		if !strings.HasSuffix(i.name, "/") {
-			names = append(names, i.name)
+		if !strings.HasSuffix(i.Name, "/") {
+			names = append(names, i.Name)
 		}
 	}
 	return names, true

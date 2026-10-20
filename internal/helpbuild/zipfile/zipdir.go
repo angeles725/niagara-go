@@ -1,4 +1,4 @@
-package helpbuild
+package zipfile
 
 import (
 	"bytes"
@@ -35,7 +35,7 @@ const (
 )
 
 var (
-	errBadZip = errors.New("bad zip file") // BadZipFile, OSError, ValueError
+	ErrBadZip = errors.New("bad zip file") // BadZipFile, OSError, ValueError
 	// ErrUnsupportedZip is an entry needing a zip version above 6.3: Python
 	// raises NotImplementedError (uncaught by read_listing, so the Python
 	// tool stops); here the jar is unreadable.
@@ -72,15 +72,15 @@ func sanitizeName(name string) string {
 	return name
 }
 
-// zipInfo is the part of a ZipInfo the listing and the entry reader use:
+// Info is the part of a ZipInfo the listing and the entry reader use:
 // name is the normalized filename, origName the decoded central-directory
 // name before _sanitize_filename (ZipFile.open compares the local header
 // against it), headerOffset includes the prepended-data shift ("concat")
 // and endOffset is _end_offset (the next local header, or the directory).
-type zipInfo struct {
-	name, origName string
-	size           uint64
-	crc            uint32
+type Info struct {
+	Name, origName string
+	Size           uint64
+	CRC            uint32
 	flags, method  uint16
 	compressSize   uint64
 	headerOffset   int64
@@ -99,7 +99,7 @@ func readAt(f *os.File, size, off int64, n uint64) ([]byte, error) {
 	buf := make([]byte, n)
 	m, err := f.ReadAt(buf, off)
 	if err != nil && err != io.EOF {
-		return nil, errBadZip
+		return nil, ErrBadZip
 	}
 	return buf[:m], nil
 }
@@ -154,69 +154,72 @@ func endRecData64(f *os.File, size, offset int64, rec *endRec) (*endRec, error) 
 	}
 	data, err := readAt(f, size, offset, sizeEndCentDir64Locator)
 	if err != nil || len(data) != sizeEndCentDir64Locator {
-		return nil, errBadZip
+		return nil, ErrBadZip
 	}
 	if !bytes.HasPrefix(data, []byte("PK\x06\x07")) {
 		return rec, nil
 	}
 	diskno, reloff, disks := le.Uint32(data[4:]), le.Uint64(data[8:]), le.Uint32(data[16:])
 	if diskno != 0 || disks > 1 {
-		return nil, errBadZip // multi-disk zip files are not supported
+		return nil, ErrBadZip // multi-disk zip files are not supported
 	}
 	offset -= sizeEndCentDir64
 	if offset < 0 || reloff > uint64(offset) {
-		return nil, errBadZip
+		return nil, ErrBadZip
 	}
 	extrasz := offset - int64(reloff)
 	data, err = readAt(f, size, int64(reloff), sizeEndCentDir64)
 	if err != nil || len(data) != sizeEndCentDir64 {
-		return nil, errBadZip
+		return nil, ErrBadZip
 	}
 	if !bytes.HasPrefix(data, []byte("PK\x06\x06")) && int64(reloff) != offset {
 		extrasz = 0 // prepended data: assume no zip64 extensible data
 		if data, err = readAt(f, size, offset, sizeEndCentDir64); err != nil || len(data) != sizeEndCentDir64 {
-			return nil, errBadZip
+			return nil, ErrBadZip
 		}
 	}
 	if !bytes.HasPrefix(data, []byte("PK\x06\x06")) {
-		return nil, errBadZip
+		return nil, ErrBadZip
 	}
 	sz, dirsize, diroffset := le.Uint64(data[4:]), le.Uint64(data[40:]), le.Uint64(data[48:])
 	end, carry := bits.Add64(diroffset, dirsize, 0)
 	sz12, carry12 := bits.Add64(sz, 12, 0)
 	if carry != 0 || end != reloff || carry12 != 0 || sz12 != uint64(sizeEndCentDir64+extrasz) {
-		return nil, errBadZip
+		return nil, ErrBadZip
 	}
 	return &endRec{size: dirsize, offset: diroffset, location: offset - extrasz}, nil
 }
 
-// zipFile is an open ZipFile(path, "r"): the file, its size and infolist().
-type zipFile struct {
+// File is an open ZipFile(path, "r"): the file, its size and infolist().
+type File struct {
 	f     *os.File
 	size  int64
-	infos []zipInfo
+	Infos []Info
 }
 
-// readCentralDir is ZipFile(path).infolist(). Any error means Python's
+// Close closes the file.
+func (z *File) Close() error { return z.f.Close() }
+
+// ReadCentralDir is ZipFile(path).infolist(). Any error means Python's
 // read_listing returns None.
-func readCentralDir(path string) ([]zipInfo, error) {
-	z, err := openZip(path)
+func ReadCentralDir(path string) ([]Info, error) {
+	z, err := Open(path)
 	if err != nil {
 		return nil, err
 	}
 	defer z.f.Close()
-	return z.infos, nil
+	return z.Infos, nil
 }
 
-// openZip is ZipFile(path, "r"): _RealGetContents, then the _end_offset of
+// Open is ZipFile(path, "r"): _RealGetContents, then the _end_offset of
 // every entry. The caller closes z.f.
-func openZip(path string) (*zipFile, error) {
+func Open(path string) (*File, error) {
 	st, err := os.Stat(path)
 	if err != nil {
 		return nil, err
 	}
 	if st.IsDir() {
-		return nil, errBadZip // open() raises IsADirectoryError
+		return nil, ErrBadZip // open() raises IsADirectoryError
 	}
 	f, err := os.Open(path)
 	if err != nil {
@@ -230,13 +233,13 @@ func openZip(path string) (*zipFile, error) {
 	return z, nil
 }
 
-func readZip(f *os.File, size int64) (*zipFile, error) {
+func readZip(f *os.File, size int64) (*File, error) {
 	rec, err := endRecData(f, size)
 	if err != nil {
 		return nil, err
 	}
 	if rec == nil || rec.size > uint64(rec.location) {
-		return nil, errBadZip // not a zip file / bad offset for central directory
+		return nil, ErrBadZip // not a zip file / bad offset for central directory
 	}
 	startDir := rec.location - int64(rec.size)
 	data, err := readAt(f, size, startDir, rec.size)
@@ -248,7 +251,7 @@ func readZip(f *os.File, size int64) (*zipFile, error) {
 		return nil, err
 	}
 	setOffsets(infos, rec, startDir)
-	return &zipFile{f: f, size: size, infos: infos}, nil
+	return &File{f: f, size: size, Infos: infos}, nil
 }
 
 // setOffsets adds _handle_prepended_data's concat (location - size_cd -
@@ -256,7 +259,7 @@ func readZip(f *os.File, size int64) (*zipFile, error) {
 // by header offset (stable), walked in reverse from the directory start.
 // Offsets outside int64 (only absurd zip64 values) are clamped: -1 and
 // MaxInt64 both make ZipFile.open fail, as Python's seek/read would.
-func setOffsets(infos []zipInfo, rec *endRec, startDir int64) {
+func setOffsets(infos []Info, rec *endRec, startDir int64) {
 	concat := new(big.Int).Sub(big.NewInt(startDir), new(big.Int).SetUint64(rec.offset))
 	for i := range infos {
 		off := new(big.Int).Add(new(big.Int).SetUint64(infos[i].rawOffset), concat)
@@ -284,7 +287,7 @@ func setOffsets(infos []zipInfo, rec *endRec, startDir int64) {
 
 // parseCentralDir is the record loop of _RealGetContents over the bytes of
 // the directory (fewer than sizeCD when the file is truncated).
-func parseCentralDir(data []byte, sizeCD uint64) ([]zipInfo, error) {
+func parseCentralDir(data []byte, sizeCD uint64) ([]Info, error) {
 	le := binary.LittleEndian
 	pos := 0
 	read := func(n int) []byte { // BytesIO.read(n)
@@ -296,24 +299,24 @@ func parseCentralDir(data []byte, sizeCD uint64) ([]zipInfo, error) {
 		pos = end
 		return b
 	}
-	var out []zipInfo
+	var out []Info
 	for total := uint64(0); total < sizeCD; {
 		cd := read(sizeCentralDir)
 		if len(cd) != sizeCentralDir || !bytes.HasPrefix(cd, []byte("PK\x01\x02")) {
-			return nil, errBadZip // truncated / bad magic number for central directory
+			return nil, ErrBadZip // truncated / bad magic number for central directory
 		}
 		nameLen, extraLen, commentLen := le.Uint16(cd[28:]), le.Uint16(cd[30:]), le.Uint16(cd[32:])
 		raw := read(int(nameLen))
 		var name string
 		if le.Uint16(cd[8:])&maskUTFFilename != 0 {
 			if !utf8.Valid(raw) {
-				return nil, errBadZip // UnicodeDecodeError, a ValueError
+				return nil, ErrBadZip // UnicodeDecodeError, a ValueError
 			}
 			name = string(raw)
 		} else {
 			name = decodeCP437(raw)
 		}
-		x := zipInfo{name: sanitizeName(name), origName: name, crc: le.Uint32(cd[16:]), size: uint64(le.Uint32(cd[24:])),
+		x := Info{Name: sanitizeName(name), origName: name, CRC: le.Uint32(cd[16:]), Size: uint64(le.Uint32(cd[24:])),
 			flags: le.Uint16(cd[8:]), method: le.Uint16(cd[10:]),
 			compressSize: uint64(le.Uint32(cd[20:])), rawOffset: uint64(le.Uint32(cd[42:]))}
 		extra := read(int(extraLen))
@@ -332,37 +335,37 @@ func parseCentralDir(data []byte, sizeCD uint64) ([]zipInfo, error) {
 
 // decodeExtra is ZipInfo._decodeExtra: zip64 sizes (0x0001) and the
 // Info-ZIP Unicode path (0x7075, used when its CRC matches the raw name).
-func decodeExtra(x *zipInfo, extra []byte, nameCRC uint32) error {
+func decodeExtra(x *Info, extra []byte, nameCRC uint32) error {
 	le := binary.LittleEndian
 	for len(extra) >= 4 {
 		tp, ln := le.Uint16(extra), int(le.Uint16(extra[2:]))
 		if ln+4 > len(extra) {
-			return errBadZip // corrupt extra field
+			return ErrBadZip // corrupt extra field
 		}
 		data := extra[4 : ln+4]
 		switch tp {
 		case 0x0001:
-			for _, field := range []*uint64{&x.size, &x.compressSize, &x.rawOffset} {
-				full := field == &x.size && *field == 0xFFFF_FFFF_FFFF_FFFF
+			for _, field := range []*uint64{&x.Size, &x.compressSize, &x.rawOffset} {
+				full := field == &x.Size && *field == 0xFFFF_FFFF_FFFF_FFFF
 				if !full && *field != 0xFFFF_FFFF {
 					continue
 				}
 				if len(data) < 8 {
-					return errBadZip // corrupt zip64 extra field
+					return ErrBadZip // corrupt zip64 extra field
 				}
 				*field = le.Uint64(data)
 				data = data[8:]
 			}
 		case 0x7075:
 			if len(data) < 5 {
-				return errBadZip
+				return ErrBadZip
 			}
 			if data[0] == 1 && le.Uint32(data[1:]) == nameCRC {
 				if !utf8.Valid(data[5:]) {
-					return errBadZip
+					return ErrBadZip
 				}
 				if len(data) > 5 { // an empty one only warns in Python
-					x.name = sanitizeName(string(data[5:]))
+					x.Name = sanitizeName(string(data[5:]))
 				}
 			}
 		}

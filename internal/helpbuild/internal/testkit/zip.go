@@ -1,4 +1,4 @@
-package helpbuild
+package testkit
 
 import (
 	"archive/zip"
@@ -10,10 +10,17 @@ import (
 	"testing"
 )
 
-// writeJar writes a zip with archive/zip, one entry per (name, data) pair in
+// The zip end-record sizes (sizeEndCentDir, sizeEndCentDir64 of the reader),
+// spelled here so the fixtures need not import the reader they test.
+const (
+	endRecordSize   = 22
+	endRecord64Size = 56
+)
+
+// WriteJar writes a zip with archive/zip, one entry per (name, data) pair in
 // order: a name ending in "/" is a directory entry, a repeated name is a
 // duplicate entry (archive/zip does not refuse them, neither does Python).
-func writeJar(t *testing.T, path string, files ...[2]string) {
+func WriteJar(t *testing.T, path string, files ...[2]string) {
 	t.Helper()
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 		t.Fatal(err)
@@ -37,75 +44,75 @@ func writeJar(t *testing.T, path string, files ...[2]string) {
 	}
 }
 
-// rawEntry is one stored entry of a hand-built zip (rawZip): the raw name
+// RawEntry is one stored entry of a hand-built zip (RawZip): the raw name
 // bytes, the general-purpose flags, the extract version, the central
-// directory extra field and, when size64 is set, a file_size field of
+// directory extra field and, when Size64 is set, a file_size field of
 // 0xFFFFFFFF whose real value lives in that extra field.
 //
-// The entry-reader corners: localName replaces the name in the local header
-// only, method is the compression method written to both headers (the data
-// stays raw), crcXor flips CRC bits in both headers, shortSize (> 0) makes
-// the central file_size that many bytes (with their CRC), compPlus is
-// added to the central compress_size, and sharedHeader (> 0) points the
-// entry at the local header of entry sharedHeader-1 instead of a new one.
-type rawEntry struct {
-	name         string
-	data         string
-	flags        uint16
-	extract      uint8
-	extra        []byte
-	size64       bool
-	localName    string
-	method       uint16
-	crcXor       uint32
-	shortSize    int
-	compPlus     uint32
-	sharedHeader int
+// The entry-reader corners: LocalName replaces the name in the local header
+// only, Method is the compression method written to both headers (the data
+// stays raw), CRCXor flips CRC bits in both headers, ShortSize (> 0) makes
+// the central file_size that many bytes (with their CRC), CompPlus is
+// added to the central compress_size, and SharedHeader (> 0) points the
+// entry at the local header of entry SharedHeader-1 instead of a new one.
+type RawEntry struct {
+	Name         string
+	Data         string
+	Flags        uint16
+	Extract      uint8
+	Extra        []byte
+	Size64       bool
+	LocalName    string
+	Method       uint16
+	CRCXor       uint32
+	ShortSize    int
+	CompPlus     uint32
+	SharedHeader int
 }
 
-// rawZip builds a zip by hand, so the tests reach the central-directory
+// RawZip builds a zip by hand, so the tests reach the central-directory
 // corners archive/zip cannot write (raw cp437 names, a UTF-8 flag on bytes
 // that are not UTF-8, extract versions, zip64 and Unicode-path extra
 // fields, prepended data, an archive comment).
-func rawZip(prefix string, entries []rawEntry, comment string) []byte {
+func RawZip(prefix string, entries []RawEntry, comment string) []byte {
 	le16 := func(b *bytes.Buffer, v uint16) { _ = binary.Write(b, binary.LittleEndian, v) }
 	le32 := func(b *bytes.Buffer, v uint32) { _ = binary.Write(b, binary.LittleEndian, v) }
 	var body, cd bytes.Buffer
 	offsets := make([]uint32, len(entries))
 	for i, e := range entries {
-		extract := e.extract
+		extract := e.Extract
 		if extract == 0 {
 			extract = 20
 		}
-		crc := crc32.ChecksumIEEE([]byte(e.data)) ^ e.crcXor
-		size := uint32(len(e.data))
-		if e.shortSize > 0 {
-			size = uint32(e.shortSize)
-			crc = crc32.ChecksumIEEE([]byte(e.data[:e.shortSize])) ^ e.crcXor
+		crc := crc32.ChecksumIEEE([]byte(e.Data)) ^ e.CRCXor
+		size := uint32(len(e.Data))
+		if e.ShortSize > 0 {
+			size = uint32(e.ShortSize)
+			crc = crc32.ChecksumIEEE([]byte(e.Data[:e.ShortSize])) ^ e.CRCXor
 		}
-		if e.size64 {
+		if e.Size64 {
 			size = 0xFFFFFFFF
 		}
-		local := e.name
-		if e.localName != "" {
-			local = e.localName
+		local := e.Name
+		if e.LocalName != "" {
+			local = e.LocalName
 		}
 		offset := uint32(body.Len())
-		if e.sharedHeader > 0 {
-			offset = offsets[e.sharedHeader-1]
+		if e.SharedHeader > 0 {
+			offset = offsets[e.SharedHeader-1]
 		} else {
 			body.WriteString("PK\x03\x04")
 			le16(&body, uint16(extract))
-			le16(&body, e.flags)
-			le16(&body, e.method)
+			le16(&body, e.Flags)
+			le16(&body, e.Method)
 			le32(&body, 0) // time, date
 			le32(&body, crc)
-			le32(&body, uint32(len(e.data)))
-			le32(&body, uint32(len(e.data)))
+			le32(&body, uint32(len(e.Data)))
+			le32(&body, uint32(len(e.Data)))
 			le16(&body, uint16(len(local)))
 			le16(&body, 0)
 			body.WriteString(local)
-			body.WriteString(e.data)
+			body.WriteString(e.Data)
 		}
 		offsets[i] = offset
 
@@ -114,21 +121,21 @@ func rawZip(prefix string, entries []rawEntry, comment string) []byte {
 		cd.WriteByte(3)  // create system
 		cd.WriteByte(extract)
 		cd.WriteByte(0)
-		le16(&cd, e.flags)
-		le16(&cd, e.method)
+		le16(&cd, e.Flags)
+		le16(&cd, e.Method)
 		le32(&cd, 0)
 		le32(&cd, crc)
-		le32(&cd, uint32(len(e.data))+e.compPlus)
+		le32(&cd, uint32(len(e.Data))+e.CompPlus)
 		le32(&cd, size)
-		le16(&cd, uint16(len(e.name)))
-		le16(&cd, uint16(len(e.extra)))
+		le16(&cd, uint16(len(e.Name)))
+		le16(&cd, uint16(len(e.Extra)))
 		le16(&cd, 0)
 		le16(&cd, 0)
 		le16(&cd, 0)
 		le32(&cd, 0)
 		le32(&cd, offset)
-		cd.WriteString(e.name)
-		cd.Write(e.extra)
+		cd.WriteString(e.Name)
+		cd.Write(e.Extra)
 	}
 	var out bytes.Buffer
 	out.WriteString(prefix)
@@ -146,8 +153,8 @@ func rawZip(prefix string, entries []rawEntry, comment string) []byte {
 	return out.Bytes()
 }
 
-// extraField is one (type, data) record of a zip extra field.
-func extraField(tp uint16, data []byte) []byte {
+// ExtraField is one (type, data) record of a zip extra field.
+func ExtraField(tp uint16, data []byte) []byte {
 	var b bytes.Buffer
 	_ = binary.Write(&b, binary.LittleEndian, tp)
 	_ = binary.Write(&b, binary.LittleEndian, uint16(len(data)))
@@ -155,39 +162,39 @@ func extraField(tp uint16, data []byte) []byte {
 	return b.Bytes()
 }
 
-// unicodePath is an Info-ZIP Unicode Path extra field (0x7075) naming
+// UnicodePath is an Info-ZIP Unicode Path extra field (0x7075) naming
 // `name` for an entry whose raw name is `raw`.
-func unicodePath(raw, name string) []byte {
+func UnicodePath(raw, name string) []byte {
 	var d bytes.Buffer
 	d.WriteByte(1)
 	_ = binary.Write(&d, binary.LittleEndian, crc32.ChecksumIEEE([]byte(raw)))
 	d.WriteString(name)
-	return extraField(0x7075, d.Bytes())
+	return ExtraField(0x7075, d.Bytes())
 }
 
-// zip64Size is a zip64 extra field (0x0001) carrying the file size.
-func zip64Size(n uint64) []byte {
+// Zip64Size is a zip64 extra field (0x0001) carrying the file size.
+func Zip64Size(n uint64) []byte {
 	var d bytes.Buffer
 	_ = binary.Write(&d, binary.LittleEndian, n)
-	return extraField(0x0001, d.Bytes())
+	return ExtraField(0x0001, d.Bytes())
 }
 
-// zip64Zip is rawZip(prefix, entries, "") with a zip64 end record and its
+// Zip64Zip is RawZip(prefix, entries, "") with a zip64 end record and its
 // locator before the end record, whose own size and offset fields are
 // 0xFFFFFFFF. disks is the locator's disk count, reloffShift moves the
 // locator's record offset away from the record (0 = where it is, counted
 // without the prefix, as a zip written before the prefix was added says).
-func zip64Zip(prefix string, entries []rawEntry, disks uint32, reloffShift int64) []byte {
-	plain := rawZip("", entries, "")
+func Zip64Zip(prefix string, entries []RawEntry, disks uint32, reloffShift int64) []byte {
+	plain := RawZip("", entries, "")
 	le := binary.LittleEndian
-	eocd := plain[len(plain)-sizeEndCentDir:]
+	eocd := plain[len(plain)-endRecordSize:]
 	cdSize, cdOff, n := uint64(le.Uint32(eocd[12:])), uint64(le.Uint32(eocd[16:])), uint64(le.Uint16(eocd[10:]))
 	var out bytes.Buffer
 	w := func(v any) { _ = binary.Write(&out, binary.LittleEndian, v) }
 	out.WriteString(prefix)
-	out.Write(plain[:len(plain)-sizeEndCentDir])
+	out.Write(plain[:len(plain)-endRecordSize])
 	out.WriteString("PK\x06\x06")
-	w(uint64(sizeEndCentDir64 - 12))
+	w(uint64(endRecord64Size - 12))
 	w(uint16(45))
 	w(uint16(45))
 	w(uint32(0))
@@ -211,11 +218,11 @@ func zip64Zip(prefix string, entries []rawEntry, disks uint32, reloffShift int64
 	return out.Bytes()
 }
 
-// withEntryCount sets both entry counts of a zip's end record to n: the
+// WithEntryCount sets both entry counts of a zip's end record to n: the
 // directory is walked by its byte size, never by these counts.
-func withEntryCount(zip []byte, n uint16) []byte {
+func WithEntryCount(zip []byte, n uint16) []byte {
 	out := append([]byte(nil), zip...)
-	eocd := out[len(out)-sizeEndCentDir:]
+	eocd := out[len(out)-endRecordSize:]
 	binary.LittleEndian.PutUint16(eocd[8:], n)
 	binary.LittleEndian.PutUint16(eocd[10:], n)
 	return out

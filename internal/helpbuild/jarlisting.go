@@ -10,6 +10,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
+	"github.com/angeles725/niagara-go/internal/helpbuild/zipfile"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 )
 
@@ -66,18 +67,18 @@ type Listing struct {
 
 // readListing is jar_listing.read_listing with the reason of a nil listing.
 func readListing(jarPath string) (*Listing, error) {
-	infos, err := readCentralDir(jarPath)
+	infos, err := zipfile.ReadCentralDir(jarPath)
 	if err != nil {
 		return nil, err
 	}
 	l := &Listing{Entries: []Entry{}}
 	for _, i := range infos {
 		switch {
-		case strings.HasSuffix(i.name, "/"):
-		case strings.HasSuffix(i.name, ".class"):
+		case strings.HasSuffix(i.Name, "/"):
+		case strings.HasSuffix(i.Name, ".class"):
 			l.Classes++
 		default:
-			l.Entries = append(l.Entries, Entry{Name: i.name, Size: i.size, CRC: i.crc})
+			l.Entries = append(l.Entries, Entry{Name: i.Name, Size: i.Size, CRC: i.CRC})
 		}
 	}
 	return l, nil

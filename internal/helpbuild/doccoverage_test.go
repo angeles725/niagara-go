@@ -88,7 +88,7 @@ func TestPyNormpath(t *testing.T) {
 func TestScanDocJarsNeedsFulltextForExamples(t *testing.T) {
 	dir := t.TempDir()
 	jar := filepath.Join(dir, "inst", "modules", "docDeveloper-ux.jar")
-	writeJar(t, jar, [2]string{"web/app.js", "a"})
+	testkit.WriteJar(t, jar, [2]string{"web/app.js", "a"})
 	testkit.WriteFile(t, filepath.Join(dir, "base", "devguide-examples", "web", "app.js"), []byte("a"))
 	if _, err := ScanDocJars("", filepath.Join(dir, "base"), []string{jar}, nil); !errors.Is(err, errNoFulltext) {
 		t.Fatalf("no reader: %v", err)

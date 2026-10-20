@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/atomicfile"
+	"github.com/angeles725/niagara-go/internal/helpbuild/zipfile"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
@@ -54,9 +55,9 @@ func newReport() *FidelityReport {
 }
 
 // mappedJar is _iter_mapped: jar opened, its extracted entries (with the
-// zipInfo each one reads) and its same-jar collisions in jar order.
+// zipfile.Info each one reads) and its same-jar collisions in jar order.
 type mappedJar struct {
-	z    *zipFile
+	z    *zipfile.File
 	name string
 	rows []Mapped
 }
@@ -66,13 +67,13 @@ func openMapped(jar string) (*mappedJar, error) {
 	if err != nil {
 		return nil, err
 	}
-	z, err := openZip(jar)
+	z, err := zipfile.Open(jar)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", jar, err)
 	}
-	names := make([]string, len(z.infos))
-	for i, x := range z.infos {
-		names[i] = x.name
+	names := make([]string, len(z.Infos))
+	for i, x := range z.Infos {
+		names[i] = x.Name
 	}
 	name := pyBasename(jar)
 	return &mappedJar{z: z, name: name, rows: MappedEntries(name, names, rules)}, nil
@@ -80,8 +81,8 @@ func openMapped(jar string) (*mappedJar, error) {
 
 // each calls f for every extracted entry; a skipped colliding entry is
 // passed to skip (when non-nil) as Collision{rel, jar, jar} first, in order.
-func (m *mappedJar) each(skip func(Collision), f func(x *zipInfo, rel string) error) error {
-	defer m.z.f.Close()
+func (m *mappedJar) each(skip func(Collision), f func(x *zipfile.Info, rel string) error) error {
+	defer m.z.Close()
 	for _, r := range m.rows {
 		if r.Collides {
 			if skip != nil {
@@ -89,7 +90,7 @@ func (m *mappedJar) each(skip func(Collision), f func(x *zipInfo, rel string) er
 			}
 			continue
 		}
-		if err := f(&m.z.infos[r.Pos], r.Rel); err != nil {
+		if err := f(&m.z.Infos[r.Pos], r.Rel); err != nil {
 			return err
 		}
 	}
@@ -158,7 +159,7 @@ func Extract(installDir, root string, ls *Listings) (*ExtractStats, error) {
 			return err
 		}
 		skip := func(c Collision) { st.Collisions = append(st.Collisions, c) }
-		return m.each(skip, func(x *zipInfo, rel string) error {
+		return m.each(skip, func(x *zipfile.Info, rel string) error {
 			if prev, ok := owners[rel]; ok {
 				st.Collisions = append(st.Collisions, Collision{rel, prev, m.name})
 			}
@@ -171,7 +172,7 @@ func Extract(installDir, root string, ls *Listings) (*ExtractStats, error) {
 				return err
 			}
 			st.Files++
-			st.Bytes += x.size
+			st.Bytes += x.Size
 			return nil
 		})
 	})
@@ -185,21 +186,21 @@ func Extract(installDir, root string, ls *Listings) (*ExtractStats, error) {
 // open(out, "wb") as dst: copyfileobj(src, dst). The folder is made before
 // the entry is opened and the file created before it is read, so a failed
 // read leaves the empty file Python's single-chunk copy leaves. The read is
-// copyfileobj's bounded one (readEntry whole=false), which is verified like
+// copyfileobj's bounded one (zipfile ReadEntry whole=false), which is verified like
 // read(): a bad CRC-32 or a truncated entry is an error and nothing is
 // written to the file.
-func writeEntry(z *zipFile, x *zipInfo, out string) error {
+func writeEntry(z *zipfile.File, x *zipfile.Info, out string) error {
 	if err := os.MkdirAll(filepath.Dir(out), 0o777); err != nil {
 		return err
 	}
-	if _, err := z.dataStart(x); err != nil {
+	if _, err := z.DataStart(x); err != nil {
 		return err
 	}
 	f, err := os.OpenFile(out, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o666)
 	if err != nil {
 		return err
 	}
-	data, err := z.readEntry(x, false) // bounded, CRC-checked
+	data, err := z.ReadEntry(x, false) // bounded, CRC-checked
 	if err == nil {
 		_, err = f.Write(data)
 	}
@@ -220,7 +221,7 @@ func FillMissing(installDir, root string, ls *Listings) ([]string, error) {
 		if err != nil {
 			return err
 		}
-		return m.each(nil, func(x *zipInfo, rel string) error {
+		return m.each(nil, func(x *zipfile.Info, rel string) error {
 			out, err := outPath(root, rel)
 			if err != nil {
 				return err
@@ -228,7 +229,7 @@ func FillMissing(installDir, root string, ls *Listings) ([]string, error) {
 			if _, err := os.Lstat(out); err == nil { // os.path.lexists
 				return nil
 			}
-			data, err := m.z.readEntry(x, true)
+			data, err := m.z.ReadEntry(x, true)
 			if err != nil {
 				return err
 			}
@@ -253,14 +254,14 @@ func FidelityJar(jarPath, root string, rep *FidelityReport) error {
 		return err
 	}
 	skip := func(c Collision) { rep.Collisions = append(rep.Collisions, c) }
-	return m.each(skip, func(x *zipInfo, rel string) error {
+	return m.each(skip, func(x *zipfile.Info, rel string) error {
 		rep.Checked++
 		path := pycompat.Join(root, rel)
 		if !pycompat.IsFile(path) {
 			rep.Missing = append(rep.Missing, rel)
 			return nil
 		}
-		data, err := m.z.readEntry(x, true)
+		data, err := m.z.ReadEntry(x, true)
 		if err != nil {
 			return err
 		}
