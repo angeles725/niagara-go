@@ -1,4 +1,4 @@
-package helpbuild
+package indexes
 
 import (
 	"fmt"
@@ -65,7 +65,7 @@ func classHTMLEntries(baseDir string) ([]namedClass, error) {
 	if !pycompat.IsFile(path) {
 		return nil, nil
 	}
-	page, err := readPage(path)
+	page, err := pycompat.ReadTextReplace(path) // open(path, encoding="utf-8", errors="replace").read()
 	if err != nil {
 		return nil, err
 	}

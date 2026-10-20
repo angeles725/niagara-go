@@ -1,4 +1,4 @@
-package helpbuild
+package indexes
 
 import (
 	"flag"

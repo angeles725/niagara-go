@@ -5,6 +5,7 @@ import (
 	"path"
 	"strings"
 
+	"github.com/angeles725/niagara-go/internal/helpbuild/indexes"
 	"github.com/angeles725/niagara-go/internal/index"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pypath"
@@ -245,7 +246,7 @@ func (x *indexedViews) check(kind, rel string) (bool, error) {
 		if err != nil {
 			return false, err
 		}
-		parsed, _, err := readBajadocClasses(path)
+		parsed, _, err := indexes.ReadBajadocClasses(path)
 		if err != nil || len(parsed) == 0 {
 			return false, err
 		}

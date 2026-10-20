@@ -1,4 +1,4 @@
-package helpbuild
+package indexes
 
 import (
 	"errors"
@@ -45,14 +45,14 @@ func bajadocWalk(root string, visit func(path, rel string)) {
 	})
 }
 
-// parsedBajadoc is readBajadocClasses' result for one file.
+// parsedBajadoc is ReadBajadocClasses' result for one file.
 type parsedBajadoc struct {
 	classes []bajadocxml.Class
 	failed  bool
 	err     error
 }
 
-// parseBajadocFiles runs readBajadocClasses on every path, on half the CPUs
+// parseBajadocFiles runs ReadBajadocClasses on every path, on half the CPUs
 // (the files are independent; a large tree holds 115 MB of XML), and
 // returns the results in the order of paths.
 func parseBajadocFiles(paths []string) []parsedBajadoc {
@@ -66,7 +66,7 @@ func parseBajadocFiles(paths []string) []parsedBajadoc {
 			defer wg.Done()
 			for i := range next {
 				f := &out[i]
-				f.classes, f.failed, f.err = readBajadocClasses(paths[i])
+				f.classes, f.failed, f.err = ReadBajadocClasses(paths[i])
 			}
 		}()
 	}
@@ -78,11 +78,11 @@ func parseBajadocFiles(paths []string) []parsedBajadoc {
 	return out
 }
 
-// readBajadocClasses is bajadoc_xml.parse_file through bajadocxml.Parse
+// ReadBajadocClasses is bajadoc_xml.parse_file through bajadocxml.Parse
 // (failed reports a file that stays unparseable after sanitizing:
 // PARSE_FAILURES, no class). err != nil is what ET.parse raises besides
 // ParseError (the file cannot be read): Python does not catch it.
-func readBajadocClasses(path string) (classes []bajadocxml.Class, failed bool, err error) {
+func ReadBajadocClasses(path string) (classes []bajadocxml.Class, failed bool, err error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		var pe *fs.PathError

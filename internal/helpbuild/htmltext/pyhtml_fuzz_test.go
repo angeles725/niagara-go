@@ -14,7 +14,7 @@ import (
 // pages; the parser assumes valid UTF-8 (pages are read with
 // errors="replace"), so a raw input is converted as is (no panic, no hang)
 // and then as strings.ToValidUTF8 for the output check. Run with
-// go test -fuzz=FuzzHTMLToText -fuzztime=120s ./internal/helpbuild/; a
+// go test -fuzz=FuzzHTMLToText -fuzztime=120s ./internal/helpbuild/htmltext/; a
 // crasher lands in testdata/fuzz/FuzzHTMLToText/.
 
 const fuzzDeadline = 2 * time.Second

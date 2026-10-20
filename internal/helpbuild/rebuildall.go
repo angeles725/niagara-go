@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/angeles725/niagara-go/internal/helpbuild/indexes"
 	"github.com/angeles725/niagara-go/internal/helpbuild/pdftext"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/textfold"
@@ -43,12 +44,12 @@ var OptionalArtifacts = map[string]string{"jdk-class-index.json": "when jdk/ exi
 var rebuildBuilders = []Builder{
 	{"bajadoc_parser.py", []string{"bajadoc-clean/"}, "bajadoc", runBajadoc},
 	{"bajadoc_xml_parser.py", []string{"bajadoc-clean/"}, "devguide", runBajadocXML},
-	{"build_class_index.py", []string{"class-index.json", "jdk-class-index.json"}, "devguide", indexRun(BuildClassIndex)},
-	{"inheritance_builder.py", []string{"inheritance.json"}, "bajadoc-clean", indexRun(BuildInheritance)},
-	{"method_indexer.py", []string{"method-index.json"}, "bajadoc-clean", indexRun(BuildMethodIndex)},
-	{"source_indexer.py", []string{"source-index.json"}, "source", indexRun(BuildSourceIndex)},
-	{"slots_indexer.py", []string{"slots-index.json"}, "source", indexRun(BuildSlotsIndex)},
-	{"xref_builder.py", []string{"xref-index.json"}, "source", indexRun(BuildXrefIndex)},
+	{"build_class_index.py", []string{"class-index.json", "jdk-class-index.json"}, "devguide", indexRun(indexes.BuildClassIndex)},
+	{"inheritance_builder.py", []string{"inheritance.json"}, "bajadoc-clean", indexRun(indexes.BuildInheritance)},
+	{"method_indexer.py", []string{"method-index.json"}, "bajadoc-clean", indexRun(indexes.BuildMethodIndex)},
+	{"source_indexer.py", []string{"source-index.json"}, "source", indexRun(indexes.BuildSourceIndex)},
+	{"slots_indexer.py", []string{"slots-index.json"}, "source", indexRun(indexes.BuildSlotsIndex)},
+	{"xref_builder.py", []string{"xref-index.json"}, "source", indexRun(indexes.BuildXrefIndex)},
 	{"guides_parser.py", []string{"guides-clean/"}, "guides", textRun(ParseGuides)},
 	{"build_guides_index.py", []string{"guides-index.json"}, "guides", textRun(BuildGuidesIndex)},
 	{"devguide_parser.py", []string{"devguide-clean/"}, "devguide", textRun(ParseDevguide)},
@@ -214,7 +215,7 @@ func (b Builder) call(root string, w *rebuildIO, opt *RebuildOptions) (status in
 }
 
 func runBajadoc(root string, w *rebuildIO, _ *RebuildOptions) (int, error) {
-	res, err := ParseBajadoc(root)
+	res, err := indexes.ParseBajadoc(root)
 	if res == nil {
 		return 1, err
 	}
@@ -223,7 +224,7 @@ func runBajadoc(root string, w *rebuildIO, _ *RebuildOptions) (int, error) {
 }
 
 func runBajadocXML(root string, w *rebuildIO, _ *RebuildOptions) (int, error) {
-	res, err := ParseBajadocXML(root)
+	res, err := indexes.ParseBajadocXML(root)
 	if res != nil {
 		w.lines(w.stdout, res.Log)
 	}
@@ -232,7 +233,7 @@ func runBajadocXML(root string, w *rebuildIO, _ *RebuildOptions) (int, error) {
 
 // indexRun adapts the S8/S9 index builders: stdout lines, stderr lines,
 // exit status.
-func indexRun(build func(string) (*IndexResult, error)) func(string, *rebuildIO, *RebuildOptions) (int, error) {
+func indexRun(build func(string) (*indexes.IndexResult, error)) func(string, *rebuildIO, *RebuildOptions) (int, error) {
 	return func(root string, w *rebuildIO, _ *RebuildOptions) (int, error) {
 		res, err := build(root)
 		if res == nil {

@@ -1,4 +1,4 @@
-package helpbuild
+package indexes
 
 import (
 	"errors"
@@ -85,7 +85,7 @@ func ParseBajadoc(baseDir string) (*BajadocResult, error) {
 	res.out("Found %d HTML files to parse", len(files))
 	t0 := time.Now()
 	for _, path := range files {
-		page, err := readPage(path)
+		page, err := pycompat.ReadTextReplace(path) // open(path, encoding="utf-8", errors="replace").read()
 		if err != nil {
 			res.Errors++
 			res.out("  ERROR parsing %s: %s", path, pycompat.OSErrorText(err))

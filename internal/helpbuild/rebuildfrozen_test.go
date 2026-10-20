@@ -222,11 +222,11 @@ func TestRebuildPlanFrozen(t *testing.T) {
 }
 
 // rebuildFixture is a data root every builder has input for: the S7a, S7b,
-// S8 and S9 fixtures merged, plus the S5 guide pages.
+// S8 and S9 fixtures (indexes/testdata) merged, plus the S5 guide pages.
 func rebuildFixture(t *testing.T, root string) {
 	t.Helper()
 	for _, d := range []string{"s8", "s9", "bajadoc", "bajadocxml"} {
-		testkit.CopyTree(t, filepath.Join("testdata", d, "root"), root)
+		testkit.CopyTree(t, filepath.Join("indexes", "testdata", d, "root"), root)
 	}
 	guidesFixture(t, root)
 }

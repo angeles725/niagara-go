@@ -1,4 +1,4 @@
-package helpbuild
+package indexes
 
 import (
 	"github.com/angeles725/niagara-go/internal/helpbuild/htmltext"
