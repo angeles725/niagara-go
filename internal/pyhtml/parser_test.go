@@ -10,9 +10,9 @@ import (
 // imports pycompat, which imports this package.
 
 // eventCases are tokenizer cases whose expected events were taken from
-// CPython 3.15's html.parser (helpbuild's htmldriver.py pages);
-// helpbuild's TestParityHTMLCorners and TestParityHTMLFuzz re-check the
-// parser against the live interpreter.
+// CPython 3.15's html.parser (the pages of helpbuild's retired htmldriver.py);
+// helpbuild's TestHTMLCornersFrozen re-checks the parser against that
+// frozen Python output.
 var eventCases = []struct{ page, want string }{
 	{"<p class=x>a &amp; b</p>", `[["s", "p", [["class", "x"]]], ["d", "a & b"], ["e", "p"]]`},
 	{"<A HREF='X'>", `[["s", "a", [["href", "X"]]]]`},
@@ -119,7 +119,7 @@ func canonical(t *testing.T, v any) string {
 	return string(b)
 }
 
-// eventRecorder is helpbuild htmldriver.py's _Recorder: ["s", tag, attrs],
+// eventRecorder is the retired helpbuild htmldriver.py's _Recorder: ["s", tag, attrs],
 // ["se", tag, attrs], ["e", tag], ["d", data], an attribute [name, value]
 // with nil for Python's None.
 type eventRecorder struct{ events []any }

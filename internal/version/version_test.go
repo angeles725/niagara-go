@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-// fixtures is testdata/fixtures.json (python3 -I internal/version/testdata/gen.py).
+// fixtures is testdata/fixtures.json (frozen output of the retired testdata/gen.py).
 type fixtures struct {
 	ToolsVersion string      `json:"tools_version"`
 	Lines        [][3]string `json:"lines"`

@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-// testdata/build_cases.json is written by testdata/gen_build.py (Python 3.15): per
+// testdata/build_cases.json was written by the retired testdata/gen_build.py (Python 3.15): per
 // case, json.dumps of the Python value under the five layouts in buildLayouts. Each
 // case here builds the same value from Go data.
 

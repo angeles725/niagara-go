@@ -11,7 +11,7 @@ import (
 	"testing"
 )
 
-// searchFixture is testdata/fulltext-search.json (fulltext_gen.py): Python's
+// searchFixture is testdata/fulltext-search.json (the retired fulltext_gen.py): Python's
 // fulltext.search results over the fixture checkout and fulltext.clip cases.
 type searchFixture struct {
 	Searches []struct {

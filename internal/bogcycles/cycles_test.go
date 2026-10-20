@@ -14,7 +14,7 @@ import (
 	"github.com/angeles725/niagara-go/internal/golden"
 )
 
-// TestGolden replays the cases frozen from tools/bog-cycles.py by testdata/capture.py.
+// TestGolden replays the cases frozen from tools/bog-cycles.py by the retired testdata/capture.py.
 func TestGolden(t *testing.T) { golden.Run(t, "testdata", Main) }
 
 // The behaviour tests below port tools/tests/test_bog_cycles.py and the bog-cycles cases of

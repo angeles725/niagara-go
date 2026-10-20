@@ -18,7 +18,8 @@
 // It is a non-printing library: every function returns typed values or
 // errors and writes nothing to stdout or stderr. Behaviour matches the
 // Python code byte for byte where its output is observable (listing JSON,
-// cache files, rule and predicate results); parity_test.go runs the Python
-// twin (testdata/parity/driver.py) and requires empty diffs. See
+// cache files, rule and predicate results); the *frozen_test.go tests replay
+// the output of the retired Python twin, frozen under testdata/frozen, and
+// require empty diffs. See
 // docs/helpbuild.md for the slice plan and the intended differences.
 package helpbuild

@@ -28,7 +28,7 @@ func TestCaseMethods(t *testing.T) {
 }
 
 func TestJustify(t *testing.T) {
-	widths := []int{-1, 0, 1, 2, 3, 4, 5, 6, 7, 10} // gen.py WIDTHS
+	widths := []int{-1, 0, 1, 2, 3, 4, 5, 6, 7, 10} // the retired gen.py's WIDTHS
 	for _, c := range load(t).Just {
 		var s, fill string
 		var want [][2]string
@@ -52,7 +52,7 @@ func TestCut(t *testing.T) {
 		decode(t, c[0], &s)
 		decode(t, c[1], &want)
 		for i, w := range want {
-			n := i - 8 // gen.py range(-8, 9)
+			n := i - 8 // the retired gen.py's range(-8, 9)
 			if got := Cut(s, n); got != w {
 				t.Errorf("Cut(%q, %d) = %q, want %q", s, n, got, w)
 			}

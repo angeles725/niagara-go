@@ -86,7 +86,7 @@ type rebuildCase struct {
 // the search commands build it in process, print Python's lines on stderr
 // and answer (decision D38); a read-only indexes/ builds it in the cache
 // directory. Each case runs on a fresh fixture copy prepared like
-// rebuild_gen.py did; intended.json replaces the cases nh answers otherwise.
+// the retired rebuild_gen.py did; intended.json replaces the cases nh answers otherwise.
 func TestFulltextRebuildMatchesPython(t *testing.T) {
 	var cases, intended []rebuildCase
 	for path, into := range map[string]*[]rebuildCase{
@@ -152,8 +152,8 @@ func TestFulltextRebuildMatchesPython(t *testing.T) {
 	}
 }
 
-// rebuildSetup prepares a fixture copy without indexes as rebuild_gen.py
-// does for setup, returning the directories it made read-only.
+// rebuildSetup prepares a fixture copy without indexes as the retired
+// rebuild_gen.py did for setup, returning the directories it made read-only.
 func rebuildSetup(t *testing.T, testdata, checkout, base, cache, setup string) []string {
 	t.Helper()
 	var locked []string
@@ -187,7 +187,7 @@ func rebuildSetup(t *testing.T, testdata, checkout, base, cache, setup string) [
 }
 
 // builtAt is where an up-to-date index of base exists: "indexes", "cache"
-// or "none" (rebuild_gen.py where).
+// or "none" (the retired rebuild_gen.py's where).
 func builtAt(base string) string {
 	switch path, _ := fts.FreshPath(base, fts.Fingerprint(fts.SourceDirs(base))); path {
 	case "":

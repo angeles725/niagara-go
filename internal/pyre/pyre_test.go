@@ -19,7 +19,7 @@ type matchFixture struct {
 }
 
 // TestMatches compares the search spans and findall of every valid pattern with what
-// CPython's re produced (testdata/gen.py).
+// CPython's re produced (the retired testdata/gen.py).
 func TestMatches(t *testing.T) { checkMatches(t, "testdata/matches.json", nil) }
 
 // TestFlagMatches pins IGNORECASE, re.ASCII, ASCII|IGNORECASE and the \b / \B

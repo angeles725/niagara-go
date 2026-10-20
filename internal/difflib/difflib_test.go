@@ -11,7 +11,7 @@ import (
 	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
-// The fixtures are written by testdata/gen.py from Python 3.15 difflib.
+// The fixtures are frozen output of the retired testdata/gen.py (Python 3.15 difflib).
 
 type fixtures struct {
 	Matcher [][]json.RawMessage `json:"matcher"`

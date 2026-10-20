@@ -12,7 +12,7 @@ import (
 	"testing"
 )
 
-// formatGolden is one testdata/golden/format_*.golden file written by testdata/gen.py: the
+// formatGolden is one testdata/golden/format_*.golden file written by the retired testdata/gen.py: the
 // Python version, the typed values and one [spec, results] row per spec, where a result is
 // the str format(value, spec) returned or [exception class, message], and null marks a pair
 // another golden holds.

@@ -36,7 +36,7 @@ func xmlVerdict(data []byte, mode Mode) string {
 	return ""
 }
 
-// TestPyXMLMatchesExpat replays testdata/xmlerrors.json (gen_xmlerrors.py, from expat).
+// TestPyXMLMatchesExpat replays testdata/xmlerrors.json (the retired gen_xmlerrors.py, from expat).
 func TestPyXMLMatchesExpat(t *testing.T) {
 	raw, err := os.ReadFile("testdata/xmlerrors.json")
 	if err != nil {

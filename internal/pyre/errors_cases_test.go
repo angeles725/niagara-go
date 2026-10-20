@@ -6,7 +6,7 @@ import (
 )
 
 // TestErrors compares every invalid pattern with the re.error text CPython raised
-// (testdata/gen.py), message and position, through the public Compile: the error is
+// (the retired testdata/gen.py), message and position, through the public Compile: the error is
 // an *Error and no pattern of the fixture compiles.
 func TestErrors(t *testing.T) {
 	var f errorFixture

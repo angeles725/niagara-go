@@ -4,7 +4,7 @@
 //
 // Go's standard library has no NFKD and ships a different Unicode version than
 // the Python the tools run on, so the per-character facts come from unicode.txt,
-// generated from that Python by testdata/gen.py. The fold variants and the
+// generated from that Python by the retired testdata/gen.py. The fold variants and the
 // callers that use each are listed in docs/text-variants.md.
 package textfold
 

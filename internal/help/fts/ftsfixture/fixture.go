@@ -16,7 +16,7 @@ import (
 	"github.com/angeles725/niagara-go/internal/help/fts/ftsfixture/rawfixture"
 )
 
-// FixedNS is fulltext_gen.py FIXED_NS, the mtime of every fixture file.
+// FixedNS is the retired fulltext_gen.py's FIXED_NS, the mtime of every fixture file.
 const FixedNS = rawfixture.FixedNS
 
 // Root is the placeholder for the checkout folder in the stored fingerprints

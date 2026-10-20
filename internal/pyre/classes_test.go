@@ -10,7 +10,7 @@ import (
 	"testing"
 )
 
-// classFixture is testdata/classes.json, written by testdata/gen_classes.py from CPython.
+// classFixture is testdata/classes.json, written by the retired testdata/gen_classes.py from CPython.
 type classFixture struct {
 	Unicode  string   `json:"unicode"`
 	Subjects []string `json:"subjects"`

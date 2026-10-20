@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-// The fixtures are written by testdata/gen.py from Python 3.15 fnmatch.
+// The fixtures are frozen output of the retired testdata/gen.py (Python 3.15 fnmatch).
 
 type fixtures struct {
 	Names []string            `json:"names"`

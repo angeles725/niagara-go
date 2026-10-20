@@ -13,7 +13,7 @@ import (
 )
 
 // The cases are niagara-research tools/tests/fixtures/golden-cli/gen-catalog/*.json (the
-// Python output, converted by testdata/convert_golden.py); the repository root is the case's
+// Python output, converted by the retired testdata/convert_golden.py); the repository root is the case's
 // working directory (the fixture corpus).
 
 func useCwdAsRoot(t *testing.T) {

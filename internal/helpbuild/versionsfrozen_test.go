@@ -27,7 +27,7 @@ import (
 //     rows, not its bytes), the newest-mtime and SHA-1 fields of each
 //     source of the meta fingerprint
 //
-// The frozen files were checked against testdata/versions/driver.py, with
+// The frozen files were checked against the retired testdata/versions/driver.py, with
 // Python's PDF page counts adjusted as Go counts them (intended difference
 // of S7a). stderr (the builders' output and open_index's notes) is not
 // recorded.

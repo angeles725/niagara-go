@@ -12,7 +12,7 @@ import (
 	"testing"
 )
 
-// fixtures is testdata/fixtures.json (python3 -I internal/bm25/testdata/gen.py).
+// fixtures is testdata/fixtures.json (frozen output of the retired testdata/gen.py).
 type fixtures struct {
 	Log          map[string]family   `json:"log"`
 	LogSamples   [][2]string         `json:"log_samples"`
@@ -81,7 +81,7 @@ func fl(t *testing.T, s string) float64 {
 
 func hx(x float64) string { return strconv.FormatFloat(x, 'x', -1, 64) }
 
-// lcg, logFamilies and log1pFamilies rebuild gen.py's inputs exactly.
+// lcg, logFamilies and log1pFamilies rebuild the retired gen.py's inputs exactly.
 func lcg(n int, seed uint64) []uint64 {
 	out := make([]uint64, n)
 	x := seed
@@ -205,7 +205,7 @@ func TestPythonSum(t *testing.T) {
 	}
 }
 
-// fixtureDocs mirrors gen.py DOCS.
+// fixtureDocs mirrors the retired gen.py's DOCS.
 var fixtureDocs = []Doc[string]{
 	{"d00", "Alarm service", "The alarm service routes alarms to recipients and consoles."},
 	{"d01", "Alarm console", "Acknowledge alarms in the console; alarm ack and alarm class."},

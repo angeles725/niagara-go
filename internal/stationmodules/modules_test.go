@@ -13,7 +13,7 @@ import (
 	"github.com/angeles725/niagara-go/internal/golden"
 )
 
-// TestGolden replays the cases frozen from tools/station-modules.py by testdata/capture.py.
+// TestGolden replays the cases frozen from tools/station-modules.py by the retired testdata/capture.py.
 func TestGolden(t *testing.T) { golden.Run(t, "testdata", Main) }
 
 func run(args ...string) (int, string, string) {

@@ -56,8 +56,8 @@ func loadAllowlist(t *testing.T, root string) map[string]int {
 
 // gated reports whether the limit applies to the repo-relative path rel: every
 // .go file outside testdata/ (Go files there are fixtures, not source) and
-// every .py file anywhere, testdata/ included, because the Python generator and
-// parity scripts live there.
+// every .py file anywhere, testdata/ included, because the remaining Python test
+// helpers live there.
 func gated(rel string) bool {
 	switch {
 	case strings.HasSuffix(rel, ".py"):

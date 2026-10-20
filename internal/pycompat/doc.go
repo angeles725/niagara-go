@@ -7,8 +7,8 @@
 // mini-language of str.format and f-strings) for str, int and float with Commas for format(n, ","), str(OSError) and
 // os.strerror for Go os errors (Linux and Windows tables), and text-file universal newlines.
 //
-// testdata/gen.py (run with python3 -I) writes unicode.txt, errno_linux.txt,
-// testdata/fixtures.json and the testdata/golden/format_*.golden cases, and
-// testdata/gen_windows.py (a Windows Python) errno_windows.txt; the tests replay every
-// fixture and golden and hash every code point against Python's digests.
+// unicode.txt, errno_linux.txt, testdata/fixtures.json and the testdata/golden/format_*.golden
+// cases are frozen output of the retired testdata/gen.py, and errno_windows.txt of the retired
+// testdata/gen_windows.py (a Windows Python); they change only from reviewed Go output. The
+// tests replay every fixture and golden and hash every code point against Python's digests.
 package pycompat
