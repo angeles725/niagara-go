@@ -8,6 +8,7 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/argparse"
 	"github.com/angeles725/niagara-go/internal/bog"
+	"github.com/angeles725/niagara-go/internal/pycsv"
 )
 
 // kv is one member of a row or JSON object, in output order (a Python dict entry).
@@ -70,13 +71,18 @@ func (e *env) render(rows []row, line func(row) string, empty string, cols []str
 					keys = append(keys, m.K)
 				}
 			}
-			csvRow(e.out, keys)
+			w := pycsv.NewWriter(e.out)
+			header := make([]any, len(keys))
+			for i, k := range keys {
+				header[i] = k
+			}
+			w.WriteRow(header)
 			for _, r := range rows {
-				vals := make([]string, len(keys))
+				vals := make([]any, len(keys))
 				for i, k := range keys {
 					vals[i] = csvStr(r.get(k))
 				}
-				csvRow(e.out, vals)
+				w.WriteRow(vals)
 			}
 		}
 	case len(rows) == 0:
@@ -109,23 +115,6 @@ func (e *env) cap(rows []row) ([]row, string) {
 		note = ""
 	}
 	return rows[:limit], note
-}
-
-// csvRow is csv.writer(sys.stdout).writerow (excel dialect: QUOTE_MINIMAL, "\r\n").
-func csvRow(w io.Writer, fields []string) {
-	var b strings.Builder
-	for i, f := range fields {
-		if i > 0 {
-			b.WriteByte(',')
-		}
-		if strings.ContainsAny(f, ",\"\r\n") || (len(fields) == 1 && f == "") {
-			b.WriteString(`"` + strings.ReplaceAll(f, `"`, `""`) + `"`)
-		} else {
-			b.WriteString(f)
-		}
-	}
-	b.WriteString("\r\n")
-	io.WriteString(w, b.String())
 }
 
 // csvStr is how csv.writer prints a value: None is empty, anything else str().
