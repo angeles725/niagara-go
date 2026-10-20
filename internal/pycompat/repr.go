@@ -1,6 +1,8 @@
 package pycompat
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
 	"math"
 	"math/big"
@@ -16,8 +18,16 @@ type Tuple []any
 // inside []any and Tuple, ahead of every other rule (fmt.Stringer included).
 type Reprer interface{ PyRepr() string }
 
+// OrderedMap is a dict in insertion order (a decoded JSON object): Values()[i] belongs to
+// Keys()[i]. Repr shows it as {'k': v, ...}.
+type OrderedMap interface {
+	Keys() []string
+	Values() []any
+}
+
 // Repr is Python repr(v) for nil (None), a Reprer, bool, the Go integer kinds, *big.Int,
-// float64, float32, string, []string, []any, Tuple, *string (Optional[str]) and fmt.Stringer.
+// float64, float32, string, []string, []any, Tuple, *string (Optional[str]), json.Number (the
+// int or float json.loads gives it), OrderedMap and fmt.Stringer.
 func Repr(v any) string {
 	switch x := v.(type) {
 	case nil:
@@ -60,10 +70,35 @@ func Repr(v any) string {
 			return "(" + Repr(x[0]) + ",)"
 		}
 		return "(" + reprItems(x) + ")"
+	case json.Number:
+		return numberRepr(x)
+	case OrderedMap:
+		keys, vals := x.Keys(), x.Values()
+		parts := make([]string, len(keys))
+		for i, k := range keys {
+			parts[i] = StrRepr(k) + ": " + Repr(vals[i])
+		}
+		return "{" + strings.Join(parts, ", ") + "}"
 	case fmt.Stringer:
 		return x.String()
 	}
 	return fmt.Sprint(v)
+}
+
+// numberRepr is repr() of what json.loads makes of n: an int (any size) for a literal
+// without '.', exponent, NaN or Infinity, otherwise a float (out of range is ±inf).
+func numberRepr(n json.Number) string {
+	s := string(n)
+	if !strings.ContainsAny(s, ".eEIN") {
+		if i, ok := new(big.Int).SetString(s, 10); ok {
+			return i.String()
+		}
+	}
+	f, err := strconv.ParseFloat(s, 64)
+	if err != nil && !errors.Is(err, strconv.ErrRange) {
+		f = 0
+	}
+	return FloatRepr(f)
 }
 
 func reprItems(items []any) string {

@@ -1,66 +1,16 @@
 package core
 
 import (
-	"encoding/json"
 	"strconv"
-	"strings"
 
-	"github.com/angeles725/niagara-go/internal/index"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // Python formatting the commands share. Widths and cuts count code points,
 // like str.format and slicing.
 
-// PyStr is str(v) of a decoded JSON value.
-func PyStr(v any) string {
-	if s, ok := v.(string); ok {
-		return s
-	}
-	return PyRepr(v)
-}
-
-// PyRepr is repr(v) of a decoded JSON value: None, True, ints, float repr,
-// quoted strings, lists and dicts.
-func PyRepr(v any) string {
-	switch t := v.(type) {
-	case nil:
-		return "None"
-	case bool:
-		if t {
-			return "True"
-		}
-		return "False"
-	case string:
-		return pycompat.StrRepr(t)
-	case json.Number:
-		return numberRepr(t)
-	case []any:
-		parts := make([]string, len(t))
-		for i, e := range t {
-			parts[i] = PyRepr(e)
-		}
-		return "[" + strings.Join(parts, ", ") + "]"
-	case *index.Object:
-		parts := make([]string, t.Len())
-		for i, k := range t.Keys() {
-			parts[i] = pycompat.StrRepr(k) + ": " + PyRepr(t.Values()[i])
-		}
-		return "{" + strings.Join(parts, ", ") + "}"
-	}
-	return "<?>"
-}
-
-func numberRepr(n json.Number) string {
-	if index.IsInt(n) {
-		if i, ok := index.Int(n); ok {
-			return strconv.FormatInt(i, 10)
-		}
-		return string(n) // beyond int64: Python prints the literal digits
-	}
-	f, _ := index.Float(n)
-	return pycompat.FloatRepr(f)
-}
+// PyStr is str(v) of a decoded JSON value (pycompat.Str: repr for anything but a string).
+func PyStr(v any) string { return pycompat.Str(v) }
 
 // Commas is "{:,}".format(n) (pycompat.Commas).
 func Commas(n int64) string { return pycompat.Commas(n) }
