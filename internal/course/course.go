@@ -55,6 +55,7 @@ examples:
   course verify-predictions --station ~/Niagara4.15/tridium/stations/TrainingStation
   course verify --status written --lab RA1
   course progress --lab 3
+  course progress --offline
   course quiz --lab 3 --seed 1 --answers
   course quiz --lab 3 --interactive
   course quiz --due --interactive
@@ -158,6 +159,8 @@ func buildParser() (*argparse.Parser, map[string]*argparse.Parser) {
 	pg.Add(labsrcArg, "--labsrc")
 	pg.Add(solutionsArg, "--solutions")
 	pg.Add(argparse.Arg{Metavar: "YYYY-MM-DD", Help: "date written in the suggested *(verified live|offline ...)* lines (default: today)"}, "--date")
+	pg.Add(argparse.Arg{Action: argparse.StoreTrue, Help: "read no station: per group, the items done, needing a run " +
+		"and to do, from the answer-key markers alone"}, "--offline")
 	pg.Add(jsonHelp, "--json")
 	qz := add("quiz", "draw why, decision, trap, recall, predict, requirement and exam questions from the answer keys; --answers prints the answers after them")
 	qz.Add(argparse.Arg{Metavar: "GROUP", Help: "one group: a lab number (3 or L3), B, A, RA1, RA2, RAX, RA (all three), EXAM"}, "--lab")
@@ -209,7 +212,15 @@ func Main(args []string, s cli.Stdio) int {
 	if cmd == "history" { // reads the history, not the answer keys
 		return cmdHistory(s, ns.String("history"), ns.Get("history") != nil, ns.Bool("json"), o.usage)
 	}
-	if (cmd == "verify" || cmd == "verify-predictions" || cmd == "progress") && !o.anyStation() {
+	offline := cmd == "progress" && ns.Bool("offline")
+	if offline {
+		for _, f := range []string{"station", "install", "source", "labsrc", "solutions", "date"} {
+			if ns.Get(f) != nil {
+				return o.usage("--offline reads no station: drop --" + f)
+			}
+		}
+	}
+	if (cmd == "verify" || cmd == "verify-predictions" || cmd == "progress") && !offline && !o.anyStation() {
 		return o.missingStation("", nil) // before the root and --date errors
 	}
 	root, err := findRoot(ns.String("root"), ns.Get("root") != nil)
@@ -238,6 +249,9 @@ func Main(args []string, s cli.Stdio) int {
 				fmt.Fprintf(s.Err, "course: no group %s (groups: %s)\n", ns.String("lab"), c.GroupList())
 				return cli.ExitNoMatch
 			}
+		}
+		if offline {
+			return cmdProgressOffline(c, s, groups, ns.Bool("json"))
 		}
 		if cmd == "progress" {
 			return cmdProgress(c, s, o, groups, ns.String("date"), ns.Bool("json"))

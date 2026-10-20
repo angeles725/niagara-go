@@ -596,7 +596,7 @@ not observed.
 ## course progress
 
 `course progress [--lab GROUP] [--station <dir|config.bog>] [--install DIR] [--source DIR] [--labsrc DIR] [--solutions DIR] [--date YYYY-MM-DD] [--json]`
-answers "how far am I, and what next?". It runs the `verify` loop over every item of the selected
+(or `--offline`, below) answers "how far am I, and what next?". It runs the `verify` loop over every item of the selected
 groups (every group without `--lab`; the spellings of `status --lab`), whatever its status, with
 the stations, flags and variables of `verify`, and prints one row per group and a total:
 
@@ -636,6 +636,21 @@ or every linked check skipped.
 
 Why `progress`, not `next`: the command answers both "how far" (the table) and "what next" (the
 lines); `next` would name only the second half, and `progress` reads naturally with `--lab 3`.
+
+`course progress --offline [--lab GROUP] [--json]` reads no station: it splits every item of the
+selected groups by its answer-key markers alone, one row per group and a total:
+
+| Column | Counts |
+|---|---|
+| `done` | the items carrying a verified marker |
+| `needs-run` | the others whose answer awaits a run: `unverified`, `predicted`, listed under `## Answers that need a live run`, or a needs-a-run check (`RAX`) |
+| `todo` | the rest (written, identical or corrected answers with none of those markers) |
+
+The summary goes to stderr: `progress (offline) 370: done 83, needs a run 59, todo 228; no station
+read` (the answer keys at 2026-10-19). With `--json`, stdout is `{groups: [{group, items, done,
+needs_run, todo, needs_run_ids}], total}`: the IDs that need a run, to plan a station session. The
+station flags and `--date` do not apply: each one is a usage error (exit 2, `--offline reads no
+station: drop --station`). Exit: 0 printed; 1 an unknown group; 2 the answer keys cannot be read.
 
 ## course quiz
 
@@ -982,10 +997,20 @@ FAILs, no CONTRADICTED prediction, the item and status counts), not this table.
   the replay line) and the `[predicted]`/`[unverified]` tags (L1.10, predicted then verified, has
   none); `TestQuizNoContextReadsNoText`: a missing text file stops nothing under `--no-context`.
   `TestQuizIDs`: `--ids` in the given order and once each, the replay line, the usage errors of an
-  empty or unknown ID and the refusal of an item that is no question (L1.5, P1) or is outside
+  empty or unknown ID and the refusal of an item that is no question (L1.5, P2) or is outside
   `--kind`.
   `TestProgressCannotCheck` pins the two exit-2 paths of progress (a bad `--date` with a station;
   every linked check skipped), `TestProgressJSONGroup` the group key of the actions.
+- `interactive_test.go`: `quiz --interactive` over fake stdin (Enter, then y/n/s; a bad grade asks
+  again), the exact JSONL records with a pinned clock, appending, the end of input, the XDG and
+  HOME default paths (an injected `Getenv`), and the exit 2 of an unwritable history or an empty
+  `--history`. `spaced_test.go`: `--missed` (a later right clears a miss), `--due` (the Leitner
+  boxes and the cap of 5, at fixed `--now` times), their usage errors, and `course history` (the
+  table, natural group order, a skipped malformed line, `--json`, the honest zero).
+  `exam_test.go`: the `exam` and `requirement` kinds on the `root` fixture, `course exam`
+  (`--count`, the records with kind exam), `--minutes` with a clock that moves 10 minutes per
+  read, and its refusals. `offline_test.go`: `progress --offline` per group and in JSON, and its
+  usage errors. Every test writes its history under `t.TempDir()`.
 - `check/verify_test.go` `TestSuggestionEvidence` and `TestEvidenceOfEveryKind`: the live/offline
   rule; `key/labs_test.go` `TestVerifiedEvidence`: both markers, the counts and labels (the `root`
   fixture's LA.1 is verified offline, LA.2 live).
