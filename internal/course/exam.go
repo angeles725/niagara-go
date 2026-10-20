@@ -27,14 +27,24 @@ const requirementLead = "**Requirement.**"
 
 // examQuestion splits an exam problem: its step, then its **Requirement.** paragraph (the first
 // paragraph, when it opens with requirementLead, without the lead), is the prompt; the rest of the
-// section is the answer. A section with no such paragraph is answered by all of its body.
+// section is the answer. The paragraph ends at a blank line (spaces allowed) or at the next line
+// that opens with a bold lead (**Design.**). A section with no such paragraph is answered by all of
+// its body. The key loader has already turned CRLF into LF.
 func examQuestion(it *key.Item) (prompt, answer string) {
 	body := strings.TrimSpace(it.Answer)
 	if !strings.HasPrefix(body, requirementLead) {
 		return it.Step, body
 	}
-	para, rest, _ := strings.Cut(body, "\n\n")
-	return it.Step + "\n" + strings.TrimSpace(strings.TrimPrefix(para, requirementLead)), strings.TrimSpace(rest)
+	lines := strings.Split(body, "\n")
+	end := len(lines)
+	for i := 1; i < len(lines); i++ {
+		if l := strings.TrimSpace(lines[i]); l == "" || strings.HasPrefix(l, "**") {
+			end = i
+			break
+		}
+	}
+	para := strings.TrimPrefix(strings.Join(lines[:end], "\n"), requirementLead)
+	return it.Step + "\n" + strings.TrimSpace(para), strings.TrimSpace(strings.Join(lines[end:], "\n"))
 }
 
 // maxMinutes is the longest --minutes: a day.

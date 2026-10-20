@@ -35,15 +35,22 @@ func (ss *session) readLine() (string, bool) {
 	return strings.TrimRight(line, "\r\n"), true
 }
 
-// grade reads a self-grade: y (or yes) right, n (or no) wrong, s (or skip) skip; anything else asks
-// again. "" at the end of input.
+// The grades grade returns besides resultRight and resultWrong: a skip (not recorded) and the end
+// of input (the session stops).
+const (
+	gradeSkip = "skip"
+	gradeEnd  = "end of input"
+)
+
+// grade reads a self-grade: y (or yes) right, n (or no) wrong, s (or skip) gradeSkip; anything else
+// asks again. gradeEnd at the end of input.
 func (ss *session) grade() string {
 	fmt.Fprint(ss.s.Out, "grade: y right, n wrong, s skip? ")
 	for {
 		line, ok := ss.readLine()
 		if !ok {
 			fmt.Fprintln(ss.s.Out)
-			return ""
+			return gradeEnd
 		}
 		switch strings.ToLower(strings.TrimSpace(line)) {
 		case "y", "yes":
@@ -51,7 +58,7 @@ func (ss *session) grade() string {
 		case "n", "no":
 			return resultWrong
 		case "s", "skip":
-			return "skip"
+			return gradeSkip
 		}
 		fmt.Fprint(ss.s.Out, "grade y, n or s? ")
 	}
@@ -79,12 +86,12 @@ func (ss *session) ask(drawn []question) (tally, error) {
 		}
 		printAnswer(ss.s.Out, i+1, q, ss.texts[q.it.TextFile])
 		g := ss.grade()
-		if g == "" {
+		if g == gradeEnd {
 			t.stop = fmt.Sprintf("end of input after %d of %d questions", t.asked, len(drawn))
 			break
 		}
 		switch g {
-		case "skip":
+		case gradeSkip:
 			t.skipped++
 			continue
 		case resultRight:

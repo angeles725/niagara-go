@@ -650,7 +650,8 @@ The summary goes to stderr: `progress (offline) 370: done 83, needs a run 59, to
 read` (the answer keys at 2026-10-19). With `--json`, stdout is `{groups: [{group, items, done,
 needs_run, todo, needs_run_ids}], total}`: the IDs that need a run, to plan a station session. The
 station flags and `--date` do not apply: each one is a usage error (exit 2, `--offline reads no
-station: drop --station`). Exit: 0 printed; 1 an unknown group; 2 the answer keys cannot be read.
+station: drop --station`). Exit: 0 printed; 1 an unknown group; 2 the answer keys cannot be read,
+or the `--json` document cannot be written (`course: --json: <error>`, and no summary).
 
 ## course quiz
 
@@ -665,7 +666,7 @@ questions from the answer keys; it reads no station.
 | `recall` | lab items whose step is ``Name = `value` `` (a plain name; Lab 8's ORDs) | `What is the ORD of <Name>?` in a section naming the word `ORD` or `ORDs` (not `RECORDS`), else `What is <Name>?` | the value (without its `LI:` citation), then the item's own answer |
 | `predict` | lab items whose step asks to `*Observe*` (any case of the O) | `Predict what you observe, and why: <step>` | the answer |
 | `requirement` | the review-assignment requirements (`RA<k>.<id>`) a traceability row satisfies | `How is this requirement satisfied and verified? <requirement>` | the `Satisfied by` and `Verified by` cells of its rows |
-| `exam` | the exam problems (`P<m>`) | the step, then the problem's `**Requirement.**` paragraph (without the lead) | the rest of the section (design, verification, notes); the whole section when it has no such paragraph |
+| `exam` | the exam problems (`P<m>`) | the step, then the problem's `**Requirement.**` paragraph (without the lead; it ends at a blank line or at the next line opening with a bold lead such as `**Design.**`) | the rest of the section (design, verification, notes); the whole section when it has no such paragraph |
 
 A lab item takes the first kind that fits, in the order of the table (so an `*Observe*` step whose
 answer asks `*Why ...?*` is a why question). The pool keeps only questions that can be studied:
@@ -745,8 +746,8 @@ history moves on. Combine either with `--interactive` to grade the review. `--mi
 (exit 2). A history
 that selects nothing is the honest zero (exit 1, `course: no missed why, decision, trap, recall,
 predict question in every group (history <path>: 0 records)`); a missing history file is an empty
-one; a line that is not a record (a write cut short, or any line over 64 KiB, which is dropped
-unread) is skipped with `course: history
+one; a line that is not a record (a write cut short, or any line whose text is over 64 KiB, which
+is dropped as it is read, the last line too) is skipped with `course: history
 <path>:<line>: not a record, skipped` on stderr, so one bad line never locks the history.
 
 Exit: 0 at least one question drawn; 1 an unknown group, an `--ids` item that is no question of the
@@ -1019,7 +1020,9 @@ FAILs, no CONTRADICTED prediction, the item and status counts), not this table.
   line over any buffer, natural-order ties, the `--due` replay and `--due --interactive`, the
   `--minutes` bound, `--minutes` with an input that moves the clock 10 minutes per answered line
   (so the count of clock reads does not matter), the clock seed of `exam`, every `--offline`
-  refusal and the offline total. `offline_test.go`: `progress --offline` per group and in JSON, and its
+  refusal and the offline total. `followup2_test.go`: where the exam requirement paragraph ends
+  (blank line, bold lead, CRLF keys), the 64 KiB history line bound (at it, one over, a last line
+  without a newline), and the offline JSON total and write failure. `offline_test.go`: `progress --offline` per group and in JSON, and its
   usage errors. Every test writes its history under `t.TempDir()`.
 - `check/verify_test.go` `TestSuggestionEvidence` and `TestEvidenceOfEveryKind`: the live/offline
   rule; `key/labs_test.go` `TestVerifiedEvidence`: both markers, the counts and labels (the `root`

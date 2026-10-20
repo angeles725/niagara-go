@@ -60,8 +60,8 @@ func TestQuizKinds(t *testing.T) {
 }
 
 // placeholderAnswers are the answers of the keys that answer nothing: a step with no answer
-// (key/labs.go) and the setup steps.
-var placeholderAnswers = []string{"(step only)", "Setup.", "Setup only."}
+// (key/labs.go), the setup steps and a requirement with no traceability row (key/review.go).
+var placeholderAnswers = []string{"(step only)", "Setup.", "Setup only.", "(no traceability row)"}
 
 // checkPool fails for a pool item that cannot be studied: an empty or placeholder answer, a lab
 // question with no course text range, a predict answer under quizMinAnswer runes, an answer the
