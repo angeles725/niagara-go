@@ -273,10 +273,13 @@ func (w *walker) walk(dir string) {
 	invalid := false
 	for _, e := range entries {
 		name := e.Name()
+		// candidate is the name test of a block file; a symlink passing it is recorded,
+		// because its target kind decides whether the walk reads it as one.
+		candidate := strings.HasSuffix(name, ".md") && mayBeSubBlock(name)
 		if e.Type()&os.ModeSymlink != 0 {
 			target, err := os.Stat(join(dir, name))
 			isDir := err == nil && target.IsDir()
-			if w.record && strings.HasSuffix(name, ".md") && mayBeSubBlock(name) {
+			if w.record && candidate {
 				links = append(links, linkKind{join(dir, name), isDir})
 				invalid = invalid || (err != nil && !stableErr(err))
 			}
@@ -290,7 +293,7 @@ func (w *walker) walk(dir string) {
 			}
 			continue
 		}
-		if strings.HasSuffix(name, ".md") && mayBeSubBlock(name) {
+		if candidate {
 			path := join(dir, name)
 			if corpus, label, ok := subLabel(w.root, path); ok {
 				found = append(found, Block{label, path, corpus})

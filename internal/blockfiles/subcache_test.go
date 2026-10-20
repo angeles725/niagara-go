@@ -276,6 +276,30 @@ func TestSubBlocksCacheRacyStamp(t *testing.T) {
 	}
 }
 
+// TestSubBlocksCacheSkipsInvalidWalk: a walk that hit an error a later walk may not repeat
+// (here a block-named symlink loop, ELOOP, neither missing nor unreadable) writes no cache,
+// so the next call walks again.
+func TestSubBlocksCacheSkipsInvalidWalk(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("needs symlinks")
+	}
+	root := cacheRoot(t, "a/x-block1.md")
+	must(t, os.Symlink("y-block3.md", filepath.Join(root, "a", "w-block2.md")))
+	must(t, os.Symlink("w-block2.md", filepath.Join(root, "a", "y-block3.md")))
+	backdate(t, root)
+	want := uncached(root)
+	if got := SubBlocks(root); !reflect.DeepEqual(got, want) {
+		t.Fatalf("SubBlocks = %q, want %q", got, want)
+	}
+	if _, err := os.Stat(cachePath(root)); !os.IsNotExist(err) {
+		t.Fatalf("an invalid walk was cached (stat: %v)", err)
+	}
+	n := walks.Load()
+	if got := SubBlocks(root); !reflect.DeepEqual(got, want) || walks.Load() != n+1 {
+		t.Fatalf("second call: got %q (walks +%d), want %q from one new walk", got, walks.Load()-n, want)
+	}
+}
+
 func must(t *testing.T, err error) {
 	t.Helper()
 	if err != nil {
