@@ -1,6 +1,6 @@
 //go:build unix
 
-package helpbuild
+package pdftext
 
 import (
 	"errors"

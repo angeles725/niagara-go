@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/atomicfile"
+	"github.com/angeles725/niagara-go/internal/helpbuild/pdftext"
 	"github.com/angeles725/niagara-go/internal/helpbuild/pyfs"
 	"github.com/angeles725/niagara-go/internal/helpbuild/registry"
 	"github.com/angeles725/niagara-go/internal/pycompat"
@@ -65,7 +66,7 @@ func courseFiles(src string) []courseFile {
 // readmes keep their path (+ .txt when they are not .txt).
 func courseTextDest(rel string) string {
 	rel = strings.TrimPrefix(rel, "text/")
-	if hasSuffixFold(rel, ".txt") {
+	if pdftext.HasSuffixFold(rel, ".txt") {
 		return rel
 	}
 	return rel + ".txt"

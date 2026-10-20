@@ -1,4 +1,4 @@
-package helpbuild
+package pdftext
 
 import (
 	"bytes"
@@ -49,11 +49,11 @@ func ClassifyPDF(folder string) string {
 	return "software"
 }
 
-// hasSuffixFold is s.lower().endswith(suffix) for an ASCII lower-case
+// HasSuffixFold is s.lower().endswith(suffix) for an ASCII lower-case
 // suffix: no non-ASCII character lowers to an ASCII letter or dot of the
 // suffixes used here (".pdf", ".txt"), so comparing the last bytes ASCII-
 // folded is exact.
-func hasSuffixFold(s, suffix string) bool {
+func HasSuffixFold(s, suffix string) bool {
 	return len(s) >= len(suffix) && strings.EqualFold(s[len(s)-len(suffix):], suffix)
 }
 
@@ -63,9 +63,9 @@ func SanitizePDFName(name string) string {
 	// trailing newline.
 	const ext = ".pdf"
 	switch {
-	case hasSuffixFold(name, ext):
+	case HasSuffixFold(name, ext):
 		name = name[:len(name)-len(ext)]
-	case strings.HasSuffix(name, "\n") && hasSuffixFold(name[:len(name)-len("\n")], ext):
+	case strings.HasSuffix(name, "\n") && HasSuffixFold(name[:len(name)-len("\n")], ext):
 		name = name[:len(name)-len(ext+"\n")] + "\n"
 	}
 	var b strings.Builder
@@ -128,7 +128,7 @@ func FindPDFs(docsDir string) []string {
 	var out []string
 	pyfs.Walk(docsDir, func(dir string, dirs, files []string) []string {
 		for _, f := range files {
-			if hasSuffixFold(f, ".pdf") {
+			if HasSuffixFold(f, ".pdf") {
 				out = append(out, pycompat.Join(dir, f))
 			}
 		}

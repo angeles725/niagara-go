@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/angeles725/niagara-go/internal/helpbuild/internal/testkit"
+	"github.com/angeles725/niagara-go/internal/helpbuild/pdftext"
 	"github.com/angeles725/niagara-go/internal/helpbuild/pyfs"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 )
@@ -44,19 +45,19 @@ func toolLines(root string, streams map[string]string, names []string, outcome s
 func syntheticDocs(t *testing.T, docs string) {
 	long := "Alarm classes route every alarm to its recipients and consoles."
 	pdfs := map[string][]byte{
-		"docAlarms/Alarms Guide.pdf":   makePDF([]string{long, "72 \xb0F is the limit"}, []string{"Steps:", "\x80 Disconnect the LAN.", " \x80x stays"}),
-		"docAlarms/A&B: notes.pdf":     makePDF([]string{long}),
-		"docX/Same Name.pdf":           makePDF([]string{long, "first"}),
-		"docY/Same_Name.PDF":           makePDF([]string{long, "second"}),
-		"docJ9Install/J9 Mounting.pdf": makePDF([]string{"Mount the J9 on a DIN rail; wire the 24 V supply first."}),
-		"Top Level.pdf":                makePDF([]string{long, "top"}),
-		"docNested/sub/deep.pdf":       makePDF([]string{long, "deep"}),
-		"docGuía/Guía ñ.pdf":           makePDF([]string{"Gu\xeda del m\xf3dulo: se\xf1ales y alarmas del sistema completo."}),
-		"docShort/short.pdf":           makePDF([]string{"tiny"}),
-		"docShort/blank.pdf":           makePDF(nil),
+		"docAlarms/Alarms Guide.pdf":   testkit.MakePDF([]string{long, "72 \xb0F is the limit"}, []string{"Steps:", "\x80 Disconnect the LAN.", " \x80x stays"}),
+		"docAlarms/A&B: notes.pdf":     testkit.MakePDF([]string{long}),
+		"docX/Same Name.pdf":           testkit.MakePDF([]string{long, "first"}),
+		"docY/Same_Name.PDF":           testkit.MakePDF([]string{long, "second"}),
+		"docJ9Install/J9 Mounting.pdf": testkit.MakePDF([]string{"Mount the J9 on a DIN rail; wire the 24 V supply first."}),
+		"Top Level.pdf":                testkit.MakePDF([]string{long, "top"}),
+		"docNested/sub/deep.pdf":       testkit.MakePDF([]string{long, "deep"}),
+		"docGuía/Guía ñ.pdf":           testkit.MakePDF([]string{"Gu\xeda del m\xf3dulo: se\xf1ales y alarmas del sistema completo."}),
+		"docShort/short.pdf":           testkit.MakePDF([]string{"tiny"}),
+		"docShort/blank.pdf":           testkit.MakePDF(nil),
 		"docBad/corrupt.pdf":           []byte("%PDF-1.4\nnot really a PDF\n"),
-		"docBad/latin1.pdf":            makePDF([]string{"never read"}),
-		"docBad/slow.pdf":              makePDF([]string{"never read"}),
+		"docBad/latin1.pdf":            testkit.MakePDF([]string{"never read"}),
+		"docBad/slow.pdf":              testkit.MakePDF([]string{"never read"}),
 	}
 	for rel, data := range pdfs {
 		testkit.WriteFile(t, filepath.Join(docs, rel), data)
@@ -79,11 +80,11 @@ func syntheticDocs(t *testing.T, docs string) {
 // pdftotext).
 func TestPDFIndexStatesFrozen(t *testing.T) {
 	testkit.FrozenOnly(t)
-	real := needPdftotext(t)
+	real := testkit.NeedPdftotext(t)
 	dir := t.TempDir()
 	// pdftotext on PATH, as the parity run had it; no step here converts a
 	// PDF, so the build of the binary does not matter.
-	t.Setenv("PATH", fakeBin(t, dir, real)+string(os.PathListSeparator)+os.Getenv("PATH"))
+	t.Setenv("PATH", testkit.FakeBin(t, dir, real)+string(os.PathListSeparator)+os.Getenv("PATH"))
 	install := filepath.Join(dir, "install")
 	syntheticDocs(t, filepath.Join(install, "docs"))
 	emptyDocs := filepath.Join(dir, "empty-docs")
@@ -102,12 +103,12 @@ func TestPDFIndexStatesFrozen(t *testing.T) {
 	n := 0
 	step := func(what, base, docs string) {
 		t.Helper()
-		res, err := ExtractPDFs(filepath.Join(repo, base), PDFOptions{DocsDir: docs})
+		res, err := pdftext.ExtractPDFs(filepath.Join(repo, base), pdftext.PDFOptions{DocsDir: docs})
 		outcome := fmt.Sprintf("exit %d", res.Status)
 		if err != nil {
 			outcome = "raise"
 		}
-		lines := append(toolLines(repo, map[string]string{"stdout": res.Stdout()}, []string{"stdout"}, outcome), "tree:")
+		lines := append(toolLines(repo, map[string]string{"stdout": pdfStdout(res)}, []string{"stdout"}, outcome), "tree:")
 		cur := testkit.TreeLines(t, repo)
 		n++
 		testkit.CheckFrozen(t, fmt.Sprintf("pdf/%d-%s", n, testkit.FrozenName(what)), append(lines, testkit.TreeDelta(tree, cur)...))

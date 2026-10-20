@@ -1,4 +1,4 @@
-package helpbuild
+package pdftext
 
 import (
 	"errors"
@@ -85,8 +85,8 @@ func pyRound1(x float64) float64 {
 	return f
 }
 
-// firstRunes is s[:n] in code points.
-func firstRunes(s string, n int) string {
+// FirstRunes is s[:n] in code points.
+func FirstRunes(s string, n int) string {
 	i := 0
 	for j := range s {
 		if i == n {
@@ -255,7 +255,7 @@ func extractAll(res *PDFResult, docs string, pdfs []string, outputDir, indexPath
 		name := filepath.Base(pdfPath)
 		category := ClassifyPDF(folder)
 		stem := resolveName(SanitizePDFName(name), seen)
-		res.add(fmt.Sprintf("\r[%3d%%] %d/%d  %s", (i+1)*100/total, i+1, total, firstRunes(name, 60)))
+		res.add(fmt.Sprintf("\r[%3d%%] %d/%d  %s", (i+1)*100/total, i+1, total, FirstRunes(name, 60)))
 		textPath := filepath.Join(outputDir, stem+".txt")
 		rel, err := pyRelSlash(pdfPath, docs)
 		if err != nil {

@@ -7,6 +7,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/angeles725/niagara-go/internal/helpbuild/pdftext"
 	"github.com/angeles725/niagara-go/internal/helpbuild/registry"
 	"github.com/angeles725/niagara-go/internal/helpbuild/zipfile"
 	"github.com/angeles725/niagara-go/internal/pycompat"
@@ -333,7 +334,7 @@ func printDocJarReport(out *reportWriter, vid, install string, nJars int, s *Doc
 		if r.Gap != 0 {
 			mark = "  <- GAP"
 		}
-		out.line(docJarLine(firstRunes(k.Jar, 34), firstRunes(k.ContentType, 20), r) + mark)
+		out.line(docJarLine(pdftext.FirstRunes(k.Jar, 34), pdftext.FirstRunes(k.ContentType, 20), r) + mark)
 	}
 	out.line(docJarLine("TOTAL", "", total))
 	out.line("")

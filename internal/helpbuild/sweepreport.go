@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/help/fts"
+	"github.com/angeles725/niagara-go/internal/helpbuild/pdftext"
 	"github.com/angeles725/niagara-go/internal/helpbuild/registry"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pypath"
@@ -205,7 +206,7 @@ func SweepReport(vid, install string, res *SweepResult, baseDir string, course *
 		total.Indexed += r.Indexed
 		total.Excluded += r.Excluded
 		total.Unclassified += r.Unclassified
-		out = append(out, sweepRowLine(r.cells(firstRunes(loc, 28))...))
+		out = append(out, sweepRowLine(r.cells(pdftext.FirstRunes(loc, 28))...))
 	}
 	out = append(out, sweepRowLine(total.cells("TOTAL")...))
 	if len(res.Skipped) > 0 {

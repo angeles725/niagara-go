@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/angeles725/niagara-go/internal/helpbuild/pdftext"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/textfold"
 )
@@ -259,7 +260,7 @@ func textRun(build func(string) (*TextResult, error)) func(string, *rebuildIO, *
 // runPDF streams pdf_extractor's output as it is produced (its progress
 // entries start with "\r" and end without a newline).
 func runPDF(root string, w *rebuildIO, opt *RebuildOptions) (int, error) {
-	res, err := ExtractPDFs(root, PDFOptions{Pdftotext: opt.Pdftotext, Emit: func(e string) {
+	res, err := pdftext.ExtractPDFs(root, pdftext.PDFOptions{Pdftotext: opt.Pdftotext, Emit: func(e string) {
 		if !strings.HasPrefix(e, "\r") {
 			e += "\n"
 		}

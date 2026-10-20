@@ -1,4 +1,4 @@
-package helpbuild
+package pdftext
 
 import (
 	"context"
@@ -107,7 +107,7 @@ func fakePdftotext(t *testing.T) (script, dir string) {
 		t.Skip("the fake pdftotext is a shell script")
 	}
 	dir = t.TempDir()
-	return filepath.Join(fakeBin(t, dir, ""), "pdftotext"), dir
+	return filepath.Join(testkit.FakeBin(t, dir, ""), "pdftotext"), dir
 }
 
 // test_utf8_output_keeps_the_degree_sign: -enc UTF-8 is passed and the
@@ -194,10 +194,10 @@ func TestExtractPDFTextPages(t *testing.T) {
 // make_pdf case of test_versions_add), the unmapped bullet and the empty
 // page.
 func TestExtractPDFTextRealPdftotext(t *testing.T) {
-	real := needPdftotext(t)
+	real := testkit.NeedPdftotext(t)
 	dir := t.TempDir()
 	pdf := filepath.Join(dir, "m.pdf")
-	testkit.WriteFile(t, pdf, makePDF([]string{"Gizmo manual: snarfblatt wiring", "\x80 Disconnect the LAN."}, nil, []string{"72 \xb0F"}))
+	testkit.WriteFile(t, pdf, testkit.MakePDF([]string{"Gizmo manual: snarfblatt wiring", "\x80 Disconnect the LAN."}, nil, []string{"72 \xb0F"}))
 	text, pages, err := ExtractPDFText(real, pdf, PDFTimeout)
 	if err != nil {
 		t.Fatal(err)

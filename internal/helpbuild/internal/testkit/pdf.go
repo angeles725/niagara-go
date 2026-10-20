@@ -1,4 +1,4 @@
-package helpbuild
+package testkit
 
 import (
 	"bytes"
@@ -8,20 +8,18 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
-
-	"github.com/angeles725/niagara-go/internal/helpbuild/internal/testkit"
 )
 
 // Fixtures of the S3 tests: hand-written PDFs real pdftotext reads, and a
 // fake pdftotext that hands every other PDF to the real one.
 
-// makePDF builds a PDF with one page per element of pages, each line of a
+// MakePDF builds a PDF with one page per element of pages, each line of a
 // page drawn below the previous one in Helvetica with WinAnsiEncoding
 // (byte 0xB0 is the degree sign). Byte 0x80 maps to U+FFFD through the
 // font's ToUnicode CMap: the unmapped bullet glyph pdftotext reports as
 // U+FFFD in real manuals. A page without lines has no text at all. This is
 // test_versions_add.make_pdf grown to several pages and lines.
-func makePDF(pages ...[]string) []byte {
+func MakePDF(pages ...[]string) []byte {
 	cmap := "/CIDInit /ProcSet findresource begin 12 dict begin begincmap /CMapName /X def " +
 		"1 begincodespacerange <00> <FF> endcodespacerange 1 beginbfchar <80> <FFFD> endbfchar " +
 		"endcmap CMapName currentdict /CMap defineresource pop end end"
@@ -90,8 +88,8 @@ func realPdftotext() string {
 	return abs
 }
 
-// needPdftotext skips a test without a real pdftotext.
-func needPdftotext(t *testing.T) string {
+// NeedPdftotext skips a test without a real pdftotext.
+func NeedPdftotext(t *testing.T) string {
 	t.Helper()
 	p := realPdftotext()
 	if p == "" {
@@ -121,15 +119,15 @@ func fakeScript(real string) string {
 		"[ -e \"$4.out\" ] && exec cat \"$4.out\"\n" + tail
 }
 
-// fakeBin writes the fake pdftotext as <dir>/bin/pdftotext and returns its
+// FakeBin writes the fake pdftotext as <dir>/bin/pdftotext and returns its
 // folder.
-func fakeBin(t *testing.T, dir, real string) string {
+func FakeBin(t *testing.T, dir, real string) string {
 	t.Helper()
 	if _, err := exec.LookPath("sh"); err != nil {
 		t.Skip("no sh for the fake pdftotext")
 	}
 	bin := filepath.Join(dir, "bin")
-	testkit.WriteFile(t, filepath.Join(bin, "pdftotext"), []byte(fakeScript(real)))
+	WriteFile(t, filepath.Join(bin, "pdftotext"), []byte(fakeScript(real)))
 	if err := os.Chmod(filepath.Join(bin, "pdftotext"), 0o755); err != nil {
 		t.Fatal(err)
 	}

@@ -1,4 +1,4 @@
-package helpbuild
+package pdftext
 
 import (
 	"errors"

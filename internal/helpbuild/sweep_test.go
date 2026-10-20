@@ -14,6 +14,7 @@ import (
 	"github.com/angeles725/niagara-go/internal/help/fts"
 	ftbuild "github.com/angeles725/niagara-go/internal/helpbuild/fulltext"
 	"github.com/angeles725/niagara-go/internal/helpbuild/internal/testkit"
+	"github.com/angeles725/niagara-go/internal/helpbuild/pdftext"
 	"github.com/angeles725/niagara-go/internal/index"
 )
 
@@ -364,7 +365,7 @@ func TestSweepLocation(t *testing.T) {
 
 func TestReportFormatting(t *testing.T) {
 	long := strings.Repeat("é", 30)
-	got := sweepRowLine((&SweepRow{Jars: 1234}).cells(firstRunes(long, 28))...)
+	got := sweepRowLine((&SweepRow{Jars: 1234}).cells(pdftext.FirstRunes(long, 28))...)
 	if want := "  " + strings.Repeat("é", 28) + "  1,234         0         0        0        0            0"; got != want {
 		t.Errorf("row:\n%q\nwant\n%q", got, want)
 	}

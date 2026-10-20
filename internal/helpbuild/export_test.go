@@ -3,6 +3,8 @@ package helpbuild
 import (
 	"os"
 	"strings"
+
+	"github.com/angeles725/niagara-go/internal/helpbuild/pdftext"
 )
 
 // Helpers only the tests use; production code has no caller for them.
@@ -10,10 +12,11 @@ import (
 // Len is the number of jars in the cache.
 func (ls *Listings) Len() int { return len(ls.jars.Keys) }
 
-// Stdout is the text the run printed: the Log entries in order, each
-// followed by a newline except a progress entry (one starting with "\r",
-// written without a newline).
-func (r *PDFResult) Stdout() string {
+// pdfStdout is the text an ExtractPDFs run printed: the Log entries in
+// order, each followed by a newline except a progress entry (one starting
+// with "\r", written without a newline); pdftext's tests have it as
+// PDFResult.Stdout.
+func pdfStdout(r *pdftext.PDFResult) string {
 	var b strings.Builder
 	for _, e := range r.Log {
 		b.WriteString(e)
