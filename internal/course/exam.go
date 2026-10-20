@@ -2,6 +2,7 @@ package course
 
 import (
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -25,6 +26,9 @@ const requirementPrompt = "How is this requirement satisfied and verified? "
 // requirementLead opens the requirement paragraph of an exam problem.
 const requirementLead = "**Requirement.**"
 
+// boldLead matches a line that opens with a bold lead such as **Design.**; bold emphasis (**must**) is not one.
+var boldLead = regexp.MustCompile(`^\*\*[^*]+\.\*\*`)
+
 // examQuestion splits an exam problem: its step, then its **Requirement.** paragraph (the first
 // paragraph, when it opens with requirementLead, without the lead), is the prompt; the rest of the
 // section is the answer. The paragraph ends at a blank line (spaces allowed) or at the next line
@@ -38,7 +42,7 @@ func examQuestion(it *key.Item) (prompt, answer string) {
 	lines := strings.Split(body, "\n")
 	end := len(lines)
 	for i := 1; i < len(lines); i++ {
-		if l := strings.TrimSpace(lines[i]); l == "" || strings.HasPrefix(l, "**") {
+		if l := strings.TrimSpace(lines[i]); l == "" || boldLead.MatchString(l) {
 			end = i
 			break
 		}

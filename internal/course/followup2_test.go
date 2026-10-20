@@ -18,6 +18,7 @@ func TestExamQuestionParagraphEnd(t *testing.T) {
 		{"blank line of spaces", "**Requirement.** Clamp it.\n  \t\n**Design.** A.", "P\nClamp it.", "**Design.** A."},
 		{"next bold lead", "**Requirement.** Clamp it.\n**Design.** A.\nB.", "P\nClamp it.", "**Design.** A.\nB."},
 		{"no requirement", "**Design.** A.", "P", "**Design.** A."},
+		{"bold emphasis is not a lead", "**Requirement.** Clamp it.\n**must** stay in a band.\n**Design.** A.", "P\nClamp it.\n**must** stay in a band.", "**Design.** A."},
 	} {
 		prompt, answer := examQuestion(&key.Item{Step: "P", Answer: c.body})
 		if prompt != c.prompt || answer != c.answer {
