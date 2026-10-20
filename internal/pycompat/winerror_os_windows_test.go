@@ -15,9 +15,23 @@ import (
 // WinListdirError for os.listdir; OSErrorText and StrerrorOf for open(), which goes through
 // the C runtime). "{dir}" in the frozen texts stands for the repr of the test directory.
 func TestWinOSErrorTextMatchesPython(t *testing.T) {
-	skipOtherUILanguage(t)
-	var want map[string]struct{ Text, Strerror, Class string }
-	readFrozen(t, "pyoserr.json", &want)
+	var want map[string]frozenOSError
+	readFrozenTexts(t, "pyoserr.json", &want)
+	errs, open := realOSErrors(t, want)
+	for name, err := range errs {
+		compareOSError(t, name, err, WinOSErrorText(err), want[name])
+	}
+	compareOSError(t, "open", open, OSErrorText(open), want["open"])
+}
+
+// frozenOSError is one testdata/winerror/pyoserr.json entry.
+type frozenOSError struct{ Text, Strerror, Class string }
+
+// realOSErrors provokes, in a fresh temp directory, the socket and os failures pyoserr.json
+// was frozen from and returns them by name (open, which Python routes through the C runtime,
+// separately). It replaces "{dir}" in want's texts with the repr of that directory.
+func realOSErrors(t *testing.T, want map[string]frozenOSError) (map[string]error, error) {
+	t.Helper()
 	dir := t.TempDir()
 	if strings.ContainsAny(dir, `'"`) {
 		t.Skipf("temp dir %q needs a quoted repr the frozen texts do not cover", dir)
@@ -52,14 +66,11 @@ func TestWinOSErrorTextMatchesPython(t *testing.T) {
 	rename := os.Rename(p("missing.txt"), p("dst.txt"))
 	_, open := os.ReadFile(p("missing.txt"))
 
-	for name, err := range map[string]error{"refused": refused, "addrinuse": addrInUse, "stat": stat,
-		"statfile": statFile, "listdir": listDir, "listfile": listFile, "mkdir": mkdir, "rename": rename} {
-		compareOSError(t, name, err, WinOSErrorText(err), want[name])
-	}
-	compareOSError(t, "open", open, OSErrorText(open), want["open"])
+	return map[string]error{"refused": refused, "addrinuse": addrInUse, "stat": stat,
+		"statfile": statFile, "listdir": listDir, "listfile": listFile, "mkdir": mkdir, "rename": rename}, open
 }
 
-func compareOSError(t *testing.T, name string, err error, got string, want struct{ Text, Strerror, Class string }) {
+func compareOSError(t *testing.T, name string, err error, got string, want frozenOSError) {
 	t.Helper()
 	if err == nil {
 		t.Errorf("%s: Go returned no error, Python %q", name, want.Text)
