@@ -392,6 +392,9 @@ func TestPyReasonSpellsPythonsExceptions(t *testing.T) {
 			fmt.Sprintf("[Errno %d] Permission denied: '/c/niagara-help'", int(syscall.EACCES))},
 		{&fs.PathError{Op: "mkdir", Path: "/it's", Err: syscall.EACCES},
 			fmt.Sprintf(`[Errno %d] Permission denied: "/it's"`, int(syscall.EACCES))},
+		// repr(os.fsdecode(path)): control characters escaped, a non-UTF-8 byte as \udcXX.
+		{&fs.PathError{Op: "mkdir", Path: "/tab\there/\xff", Err: syscall.EACCES},
+			fmt.Sprintf(`[Errno %d] Permission denied: '/tab\there/\udcff'`, int(syscall.EACCES))},
 		{&fs.PathError{Op: "open", Path: "/x/fulltext.sqlite.1.tmp", Err: syscall.EACCES},
 			"unable to open database file"},
 		{errors.New("disk I/O error"), "disk I/O error"},

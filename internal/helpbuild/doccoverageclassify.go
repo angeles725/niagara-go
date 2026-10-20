@@ -3,7 +3,7 @@ package helpbuild
 import (
 	"strings"
 
-	"github.com/angeles725/niagara-go/internal/pycompat"
+	"github.com/angeles725/niagara-go/internal/pypath"
 	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
@@ -80,7 +80,7 @@ var Reasons = map[string]string{
 
 // lowerExt is doc_types._ext: os.path.splitext(name)[1].lower().
 func lowerExt(name string) string {
-	_, ext := pycompat.PosixSplitext(name)
+	_, ext := pypath.PosixSplitext(name)
 	return textfold.Lower(ext)
 }
 

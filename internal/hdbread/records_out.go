@@ -77,15 +77,13 @@ func printVarCSV(w io.Writer, h *History) error {
 	if h.RecordType == "history:LogRecord" {
 		cols = logColumns
 	}
-	if _, err := fmt.Fprintln(w, "timestamp,millis,"+strings.Join(cols, ",")); err != nil {
+	cw := newCSVWriter(w)
+	if err := cw.WriteRow(stringRow(append([]string{"timestamp", "millis"}, cols...)...)); err != nil {
 		return err
 	}
 	for _, r := range h.Records {
 		fields := append([]string{r.Timestamp, strconv.FormatInt(r.Millis, 10)}, recordFields(r)...)
-		for i := range fields {
-			fields[i] = csvField(fields[i])
-		}
-		if _, err := fmt.Fprintln(w, strings.Join(fields, ",")); err != nil {
+		if err := cw.WriteRow(stringRow(fields...)); err != nil {
 			return err
 		}
 	}

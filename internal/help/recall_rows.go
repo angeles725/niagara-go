@@ -12,7 +12,7 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/bajadocxml"
 	"github.com/angeles725/niagara-go/internal/index"
-	"github.com/angeles725/niagara-go/internal/pycompat"
+	"github.com/angeles725/niagara-go/internal/pypath"
 	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
@@ -269,7 +269,7 @@ func (c *recallCheck) memberRows() []recallRow {
 // sourceRows are the source and xref rows of every .java file.
 func (c *recallCheck) sourceRows() []recallRow {
 	source := newRow("source", c.truth.java, func(s string) string { return s }, func(rel string) bool {
-		simple := strings.TrimSuffix(pycompat.PosixBasename(rel), ".java")
+		simple := strings.TrimSuffix(pypath.PosixBasename(rel), ".java")
 		for _, sm := range sourceMatches(c.src, simple) {
 			if corpusPath(sm.data) == rel {
 				return true
@@ -278,7 +278,7 @@ func (c *recallCheck) sourceRows() []recallRow {
 		return false
 	}, "")
 	xref := newRow("xref", c.truth.java, func(s string) string { return s }, func(rel string) bool {
-		simple := strings.TrimSuffix(pycompat.PosixBasename(rel), ".java")
+		simple := strings.TrimSuffix(pypath.PosixBasename(rel), ".java")
 		entry := getObj(c.xref, simple)
 		return entry != nil && entry.Has("package")
 	}, "the file's own entry (package), not only used_by")
@@ -307,7 +307,7 @@ func (c *recallCheck) guideRows() []recallRow {
 	}
 	guide := newRow("guide", c.truth.guides, func(s string) string { return s }, func(rel string) bool {
 		folder, rest, _ := strings.Cut(rel, "/")
-		stem, _ := pycompat.PosixSplitext(rest)
+		stem, _ := pypath.PosixSplitext(rest)
 		return topics[folder][rest] || topics[folder][stem]
 	}, "topic = page path in guides-index.json")
 	dclean, dsrc := filepath.Join(base, "devguide-clean"), filepath.Join(base, "devguide")

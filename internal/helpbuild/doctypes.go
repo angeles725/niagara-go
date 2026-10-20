@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/pycompat"
+	"github.com/angeles725/niagara-go/internal/pypath"
 	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
@@ -36,7 +37,7 @@ func hasAnySuffix(s string, suffixes []string) bool {
 // "\\" and after a drive colon.
 func pyBasename(p string) string {
 	if runtime.GOOS != "windows" {
-		return pycompat.PosixBasename(p)
+		return pypath.PosixBasename(p)
 	}
 	if len(p) >= 2 && p[1] == ':' {
 		p = p[2:]

@@ -13,7 +13,7 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/help/fts"
 	"github.com/angeles725/niagara-go/internal/index"
-	"github.com/angeles725/niagara-go/internal/pycompat"
+	"github.com/angeles725/niagara-go/internal/pypath"
 )
 
 // PDFParams are the arguments of `pdf`.
@@ -77,7 +77,7 @@ func (e *Env) PDF(p PDFParams) error {
 			return err
 		}
 		for _, h := range r.Hits {
-			name, _ := pycompat.PosixSplitext(h.Path)
+			name, _ := pypath.PosixSplitext(h.Path)
 			names = append(names, name)
 			hits[name] = h
 		}

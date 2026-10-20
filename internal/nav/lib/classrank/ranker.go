@@ -8,6 +8,7 @@ import (
 	"github.com/angeles725/niagara-go/internal/bm25"
 	"github.com/angeles725/niagara-go/internal/index"
 	"github.com/angeles725/niagara-go/internal/nav/core"
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // noModule is the module index of a class entry whose module is null.
@@ -127,7 +128,7 @@ func distinct(importedBy *index.Object, name string) int {
 	v, _ := importedBy.Get(name)
 	seen := map[string]bool{}
 	for _, x := range func() []any { l, _ := v.([]any); return l }() {
-		seen[core.PyRepr(x)] = true
+		seen[pycompat.Repr(x)] = true
 	}
 	return len(seen)
 }

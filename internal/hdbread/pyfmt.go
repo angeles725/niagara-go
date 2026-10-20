@@ -7,16 +7,25 @@ import (
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/pycompat"
+	"github.com/angeles725/niagara-go/internal/pycsv"
 )
 
 func formatG(v float64, digits int) string { return strconv.FormatFloat(v, 'g', digits, 64) }
 
-// csvField quotes a field the way Python csv.writer (QUOTE_MINIMAL) does.
-func csvField(s string) string {
-	if strings.ContainsAny(s, ",\"\n\r") {
-		return `"` + strings.ReplaceAll(s, `"`, `""`) + `"`
+// newCSVWriter is csv.writer(sys.stdout, lineterminator="\n"), the writer tools/hdbread.py used.
+func newCSVWriter(w io.Writer) *pycsv.Writer {
+	cw := pycsv.NewWriter(w)
+	cw.LineTerminator = "\n"
+	return cw
+}
+
+// stringRow is fields as the []any row pycsv writes.
+func stringRow(fields ...string) []any {
+	row := make([]any, len(fields))
+	for i, f := range fields {
+		row[i] = f
 	}
-	return s
+	return row
 }
 
 func (v value) csv() string {
@@ -37,13 +46,10 @@ func (v value) json() string {
 }
 
 func printCSV(w io.Writer, recs []record) {
-	fmt.Fprintln(w, "timestamp,millis,status,trendFlags,value")
+	cw := newCSVWriter(w)
+	cw.WriteRow(stringRow("timestamp", "millis", "status", "trendFlags", "value"))
 	for _, r := range recs {
-		fields := []string{r.timestamp, strconv.FormatInt(r.millis, 10), r.status, r.trendFlags, r.value.csv()}
-		for i := range fields {
-			fields[i] = csvField(fields[i])
-		}
-		fmt.Fprintln(w, strings.Join(fields, ","))
+		cw.WriteRow(stringRow(r.timestamp, strconv.FormatInt(r.millis, 10), r.status, r.trendFlags, r.value.csv()))
 	}
 }
 

@@ -5,7 +5,7 @@ import (
 	"strconv"
 
 	"github.com/angeles725/niagara-go/internal/nav/core"
-	"github.com/angeles725/niagara-go/internal/pycompat"
+	"github.com/angeles725/niagara-go/internal/pypath"
 	"github.com/angeles725/niagara-go/internal/pyre"
 )
 
@@ -52,7 +52,7 @@ func Grep(organized string, re *pyre.Regexp, limit int, f GrepFilter) GrepResult
 		if err != nil {
 			return true
 		}
-		cname, _ := pycompat.PosixSplitext(pycompat.PosixBasename(jf.Rel))
+		cname, _ := pypath.PosixSplitext(pypath.PosixBasename(jf.Rel))
 		matched := false
 		for i, line := range lines {
 			buf = buf[:0] // one rune buffer for every line: no allocation per line

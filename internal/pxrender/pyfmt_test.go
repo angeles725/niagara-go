@@ -7,6 +7,7 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyhtml"
+	"github.com/angeles725/niagara-go/internal/pypath"
 	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
@@ -17,7 +18,7 @@ func parseFloat(s string) (float64, bool) {
 }
 
 func splitextRoot(p string) string {
-	root, _ := pycompat.PosixSplitext(p)
+	root, _ := pypath.PosixSplitext(p)
 	return root
 }
 
@@ -79,10 +80,10 @@ func TestPathHelpers(t *testing.T) {
 			t.Errorf("splitextRoot(%q) = %q, want %q", in, got, want)
 		}
 	}
-	if got := pycompat.PosixJoin("shared", "/etc/x"); got != "/etc/x" {
+	if got := pypath.PosixJoin("shared", "/etc/x"); got != "/etc/x" {
 		t.Errorf("pyJoin absolute = %q", got)
 	}
-	if got := pycompat.PosixJoin("shared/", "px", "m", "a/../b"); got != "shared/px/m/a/../b" {
+	if got := pypath.PosixJoin("shared/", "px", "m", "a/../b"); got != "shared/px/m/a/../b" {
 		t.Errorf("pyJoin = %q", got)
 	}
 }

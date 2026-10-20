@@ -33,6 +33,7 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/help/fts"
 	ftbuild "github.com/angeles725/niagara-go/internal/helpbuild/fulltext"
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // Lock timing; tests shorten them.
@@ -305,21 +306,12 @@ func pyReason(err error) string {
 			if msg != "" {
 				msg = strings.ToUpper(msg[:1]) + msg[1:]
 			}
-			return fmt.Sprintf("[Errno %d] %s: %s", int(errno), msg, pyRepr(pe.Path))
+			return fmt.Sprintf("[Errno %d] %s: %s", int(errno), msg, pycompat.FSRepr(pe.Path))
 		case pe.Op == "open":
 			return "unable to open database file"
 		}
 	}
 	return err.Error()
-}
-
-// pyRepr is Python's repr of a str for the printable paths it shows:
-// single quotes, or double quotes when the text has a single quote only.
-func pyRepr(s string) string {
-	if strings.Contains(s, "'") && !strings.Contains(s, `"`) {
-		return `"` + strings.ReplaceAll(s, `\`, `\\`) + `"`
-	}
-	return "'" + strings.NewReplacer(`\`, `\\`, "'", `\'`).Replace(s) + "'"
 }
 
 // absPath is os.path.abspath, the data root's identity in the failure memo.

@@ -6,6 +6,8 @@ import (
 	"reflect"
 	"runtime"
 	"testing"
+
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 func touch(t *testing.T, p string) {
@@ -98,7 +100,7 @@ func TestPyFormatting(t *testing.T) {
 		t.Error("code point widths")
 	}
 	v := NewTestMeta(t, `{"a": [1, 2.50, null, true, "x'"], "b": 1e400, "c": -0}`)
-	if got := PyRepr(v); got != `{'a': [1, 2.5, None, True, "x'"], 'b': inf, 'c': 0}` {
-		t.Errorf("PyRepr %s", got)
+	if got := pycompat.Repr(v); got != `{'a': [1, 2.5, None, True, "x'"], 'b': inf, 'c': 0}` {
+		t.Errorf("Repr %s", got)
 	}
 }

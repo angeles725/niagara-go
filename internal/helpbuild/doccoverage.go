@@ -7,6 +7,7 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/index"
 	"github.com/angeles725/niagara-go/internal/pycompat"
+	"github.com/angeles725/niagara-go/internal/pypath"
 )
 
 // The 'indexed' checks of `coverage --doc-jars` (doc_coverage.Indexed):
@@ -150,7 +151,7 @@ func (x *indexedViews) sourceSet() (map[string]bool, error) {
 		if !ok {
 			return nil, &IndexShapeError{name, "the path of " + key + " is not a string"}
 		}
-		out[pyNormpath(pycompat.PosixJoin("source", s))] = true
+		out[pyNormpath(pypath.PosixJoin("source", s))] = true
 	}
 	x.sources = out
 	return out, nil
