@@ -142,7 +142,7 @@ whose output the new behaviour changes keeps its Python bytes and declares the G
 
 ## Search quality: `make realdata`
 
-`make realdata` (`make parity` is an alias) runs `TestSearchQuality` (internal/searchdoor/quality_test.go), the search quality
+`make realdata` runs `TestSearchQuality` (internal/searchdoor/quality_test.go), the search quality
 gate. It runs the search in process on the real corpus (`NIAGARA_RESEARCH`, default
 `~/niagara-research`) and measures hit@1/hit@5 per source over
 `testdata/quality/golden-queries.jsonl` (99 questions, docs pinned to 4.14.0.162) and the warm
