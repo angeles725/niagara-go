@@ -17,6 +17,7 @@ import (
 	"github.com/angeles725/niagara-go/internal/procgroup"
 
 	"github.com/angeles725/niagara-go/internal/helpbuild/pyfs"
+	"github.com/angeles725/niagara-go/internal/helpbuild/registry"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 )
@@ -101,7 +102,7 @@ func docsDirOf(base, docs string) (string, error) {
 	if docs != "" {
 		return docs, nil
 	}
-	install, err := installDir(base)
+	install, err := registry.InstallDir(base)
 	if err != nil || install == "" {
 		return "", err
 	}

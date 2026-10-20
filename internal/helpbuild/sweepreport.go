@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/help/fts"
+	"github.com/angeles725/niagara-go/internal/helpbuild/registry"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pypath"
 )
@@ -79,7 +80,7 @@ func (o SweepOptions) fulltext() FulltextDocs {
 // to this version. rules must be non-nil; docs reads the full-text index
 // (nil: FreshFulltextDocs).
 func GateCourse(baseDir string, rules *Rules, docs FulltextDocs) (*CourseGate, error) {
-	src, err := courseDir(baseDir)
+	src, err := registry.CourseDir(baseDir)
 	if err != nil || src == "" {
 		return nil, err
 	}
@@ -301,11 +302,11 @@ func courseGateLines(baseDir string, rep *CourseGate) []string {
 func RunSweep(repo, baseDir, versionID string, w io.Writer, opts SweepOptions) (int, error) {
 	vid := versionID
 	if vid == "" {
-		target, err := absTarget(baseDir)
+		target, err := registry.AbsTarget(baseDir)
 		if err != nil {
 			return 1, err
 		}
-		if vid, err = identify(target); err != nil {
+		if vid, err = registry.Identify(target); err != nil {
 			return 1, err
 		}
 	}

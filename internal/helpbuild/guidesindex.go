@@ -10,6 +10,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/angeles725/niagara-go/internal/helpbuild/pyfs"
+	"github.com/angeles725/niagara-go/internal/helpbuild/registry"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 	"github.com/angeles725/niagara-go/internal/textfold"
@@ -83,7 +84,7 @@ func KnownJarNames(baseDir string) (names []string, ok bool, err error) {
 	if err != nil {
 		return nil, false, err
 	}
-	vid, err := identify(abs)
+	vid, err := registry.Identify(abs)
 	if err != nil || vid == "" {
 		return nil, false, err
 	}
@@ -124,7 +125,7 @@ func KnownJarNames(baseDir string) (names []string, ok bool, err error) {
 // the version whose data root is baseDir, "" when unregistered or not a
 // folder.
 func ModulesDirOf(baseDir string) (string, error) {
-	install, err := installDir(baseDir)
+	install, err := registry.InstallDir(baseDir)
 	if err != nil || install == "" {
 		return "", err
 	}

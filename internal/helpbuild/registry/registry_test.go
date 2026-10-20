@@ -1,4 +1,4 @@
-package helpbuild
+package registry
 
 import (
 	"path/filepath"
@@ -7,7 +7,7 @@ import (
 	"github.com/angeles725/niagara-go/internal/helpbuild/internal/testkit"
 )
 
-// identify, installDir and courseDir skip what Python catches and fail on
+// Identify, InstallDir and CourseDir skip what Python catches and fail on
 // what makes it raise.
 func TestRegistryLookups(t *testing.T) {
 	dir := t.TempDir()
@@ -18,13 +18,13 @@ func TestRegistryLookups(t *testing.T) {
 	root := filepath.Join(repo, "versions", "A")
 	reg(`{"versions": {"bad": 5, "nodr": {"install_dir": "/x"}, "num": {"data_root": 3},` +
 		` "A": {"data_root": "versions/./A/", "install_dir": "/inst", "course_dir": "../c"}}}`)
-	if vid, err := identify(root); vid != "A" || err != nil {
+	if vid, err := Identify(root); vid != "A" || err != nil {
 		t.Errorf("identify = %q, %v", vid, err)
 	}
-	if d, err := installDir(root); d != "/inst" || err != nil {
+	if d, err := InstallDir(root); d != "/inst" || err != nil {
 		t.Errorf("installDir = %q, %v", d, err)
 	}
-	if d, err := courseDir(root); d != filepath.Join(dir, "c") || err != nil {
+	if d, err := CourseDir(root); d != filepath.Join(dir, "c") || err != nil {
 		t.Errorf("courseDir = %q, %v", d, err)
 	}
 	for text, wantErr := range map[string]bool{
@@ -39,8 +39,8 @@ func TestRegistryLookups(t *testing.T) {
 		`{"versions": null}`:  true,
 	} {
 		reg(text)
-		_, err1 := installDir(root)
-		_, err2 := courseDir(root)
+		_, err1 := InstallDir(root)
+		_, err2 := CourseDir(root)
 		if got := err1 != nil || err2 != nil; got != wantErr {
 			t.Errorf("%s: installDir %v, courseDir %v; want an error %v", text, err1, err2, wantErr)
 		}

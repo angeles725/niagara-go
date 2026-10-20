@@ -1,4 +1,4 @@
-package helpbuild
+package registry
 
 import (
 	"path/filepath"
@@ -15,9 +15,9 @@ import (
 // Python's json (pyjson) so a malformed entry takes the branch Python
 // takes: what Python catches is skipped, what makes it raise is an error.
 
-// loadRegistry is versions.load_registry: ok is false when the file does
+// Load is versions.load_registry: ok is false when the file does
 // not exist (None).
-func loadRegistry(repo string) (reg pyjson.Value, ok bool, err error) {
+func Load(repo string) (reg pyjson.Value, ok bool, err error) {
 	path := filepath.Join(repo, index.RegistryRel)
 	if !pycompat.IsFile(path) {
 		return pyjson.Value{}, false, nil
@@ -26,14 +26,14 @@ func loadRegistry(repo string) (reg pyjson.Value, ok bool, err error) {
 	return reg, err == nil, err
 }
 
-// registryShapeError is the AttributeError or TypeError Python raises on a
+// ShapeError is the AttributeError or TypeError Python raises on a
 // registry of an unexpected shape.
-type registryShapeError struct{ path, what string }
+type ShapeError struct{ path, what string }
 
-func (e *registryShapeError) Error() string { return e.path + ": " + e.what }
+func (e *ShapeError) Error() string { return e.path + ": " + e.what }
 
-func registryError(repo, what string) error {
-	return &registryShapeError{filepath.Join(repo, index.RegistryRel), what}
+func NewShapeError(repo, what string) error {
+	return &ShapeError{filepath.Join(repo, index.RegistryRel), what}
 }
 
 // pyNormJoin is os.path.normpath(os.path.join(base, rel)) for an absolute
@@ -52,14 +52,14 @@ func candidateRepos(target string) []string {
 	return []string{target, filepath.Dir(filepath.Dir(target))}
 }
 
-// absTarget is os.path.normpath(os.path.abspath(base)).
-func absTarget(base string) (string, error) { return filepath.Abs(base) }
+// AbsTarget is os.path.normpath(os.path.abspath(base)).
+func AbsTarget(base string) (string, error) { return filepath.Abs(base) }
 
-// identify is versions.identify: the registered version id whose
+// Identify is versions.identify: the registered version id whose
 // data_root is target (absolute, clean), "" (None) when none is.
-func identify(target string) (string, error) {
+func Identify(target string) (string, error) {
 	for _, repo := range candidateRepos(target) {
-		reg, ok, err := loadRegistry(repo)
+		reg, ok, err := Load(repo)
 		if err != nil {
 			return "", err
 		}
@@ -67,7 +67,7 @@ func identify(target string) (string, error) {
 			continue
 		}
 		if reg.Kind != pyjson.Object {
-			return "", registryError(repo, "the registry is not a JSON object")
+			return "", NewShapeError(repo, "the registry is not a JSON object")
 		}
 		vers, _ := reg.Get("versions")
 		if !vers.Truthy() {
@@ -78,7 +78,7 @@ func identify(target string) (string, error) {
 			continue
 		case pyjson.Object:
 		default:
-			return "", registryError(repo, `"versions" is not iterable`)
+			return "", NewShapeError(repo, `"versions" is not iterable`)
 		}
 		for _, vid := range vers.Keys {
 			entry := vers.M[vid]
@@ -94,20 +94,20 @@ func identify(target string) (string, error) {
 	return "", nil
 }
 
-// installDir is versions.install_dir: the install directory registered
+// InstallDir is versions.install_dir: the install directory registered
 // for the version whose data root is base, "" when there is none or the
 // value is falsy (pdf_extractor then has no docs dir).
-func installDir(base string) (string, error) {
-	target, err := absTarget(base)
+func InstallDir(base string) (string, error) {
+	target, err := AbsTarget(base)
 	if err != nil {
 		return "", err
 	}
-	vid, err := identify(target)
+	vid, err := Identify(target)
 	if err != nil || vid == "" {
 		return "", err
 	}
 	for _, repo := range candidateRepos(target) {
-		reg, ok, err := loadRegistry(repo)
+		reg, ok, err := Load(repo)
 		if err != nil {
 			return "", err
 		}
@@ -123,33 +123,33 @@ func installDir(base string) (string, error) {
 			continue
 		}
 		if entry.Kind != pyjson.Object {
-			return "", registryError(repo, "version "+vid+" is not an object")
+			return "", NewShapeError(repo, "version "+vid+" is not an object")
 		}
 		dir, _ := entry.Get("install_dir")
 		if !dir.Truthy() {
 			return "", nil
 		}
 		if dir.Kind != pyjson.Str {
-			return "", registryError(repo, "install_dir of version "+vid+" is not a string")
+			return "", NewShapeError(repo, "install_dir of version "+vid+" is not a string")
 		}
 		return dir.S, nil
 	}
 	return "", nil
 }
 
-// courseDir is course.course_dir: the absolute course tree bound to the
+// CourseDir is course.course_dir: the absolute course tree bound to the
 // version whose data root is base, "" (None) when none is.
-func courseDir(base string) (string, error) {
-	target, err := absTarget(base)
+func CourseDir(base string) (string, error) {
+	target, err := AbsTarget(base)
 	if err != nil {
 		return "", err
 	}
-	vid, err := identify(target)
+	vid, err := Identify(target)
 	if err != nil {
 		return "", err
 	}
 	for _, repo := range candidateRepos(target) {
-		reg, ok, err := loadRegistry(repo)
+		reg, ok, err := Load(repo)
 		if err != nil {
 			return "", err
 		}
@@ -161,21 +161,21 @@ func courseDir(base string) (string, error) {
 			continue
 		}
 		if vers.Kind != pyjson.Object {
-			return "", registryError(repo, `"versions" is not an object`)
+			return "", NewShapeError(repo, `"versions" is not an object`)
 		}
 		entry, has := vers.Get(vid)
 		if vid == "" || !has || !entry.Truthy() {
 			continue
 		}
 		if entry.Kind != pyjson.Object {
-			return "", registryError(repo, "version "+vid+" is not an object")
+			return "", NewShapeError(repo, "version "+vid+" is not an object")
 		}
 		dir, _ := entry.Get("course_dir")
 		if !dir.Truthy() {
 			continue
 		}
 		if dir.Kind != pyjson.Str {
-			return "", registryError(repo, "course_dir of version "+vid+" is not a string")
+			return "", NewShapeError(repo, "course_dir of version "+vid+" is not a string")
 		}
 		return pyNormJoin(repo, dir.S), nil
 	}

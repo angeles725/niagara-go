@@ -7,6 +7,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/angeles725/niagara-go/internal/helpbuild/registry"
 	"github.com/angeles725/niagara-go/internal/helpbuild/zipfile"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyjson"
@@ -187,7 +188,7 @@ func (s *DocJarScan) scanEntry(indexed *indexedViews, name, entry string, rules 
 // reg["versions"].get(vid, {}).get("install_dir", ""); known is false for
 // a vid of None.
 func registeredInstall(repoRoot, vid string, known bool) (string, error) {
-	reg, ok, err := loadRegistry(repoRoot)
+	reg, ok, err := registry.Load(repoRoot)
 	if err != nil {
 		return "", err
 	}
@@ -196,10 +197,10 @@ func registeredInstall(repoRoot, vid string, known bool) (string, error) {
 	}
 	vers, has := reg.Get("versions")
 	if reg.Kind != pyjson.Object || !has {
-		return "", registryError(repoRoot, `no "versions" in the registry`)
+		return "", registry.NewShapeError(repoRoot, `no "versions" in the registry`)
 	}
 	if vers.Kind != pyjson.Object {
-		return "", registryError(repoRoot, `"versions" is not an object`)
+		return "", registry.NewShapeError(repoRoot, `"versions" is not an object`)
 	}
 	if !known {
 		return "", nil
@@ -209,14 +210,14 @@ func registeredInstall(repoRoot, vid string, known bool) (string, error) {
 		return "", nil
 	}
 	if entry.Kind != pyjson.Object {
-		return "", registryError(repoRoot, "the entry of "+vid+" is not an object")
+		return "", registry.NewShapeError(repoRoot, "the entry of "+vid+" is not an object")
 	}
 	inst, has := entry.Get("install_dir")
 	if !has || !inst.Truthy() {
 		return "", nil
 	}
 	if inst.Kind != pyjson.Str {
-		return "", registryError(repoRoot, "the install_dir of "+vid+" is not a string")
+		return "", registry.NewShapeError(repoRoot, "the install_dir of "+vid+" is not a string")
 	}
 	return inst.S, nil
 }
@@ -229,11 +230,11 @@ func registeredInstall(repoRoot, vid string, known bool) (string, error) {
 func DocJarCoverage(w io.Writer, repoRoot, baseDir, versionID string, docs FulltextDocs) (int, error) {
 	vid, known := versionID, versionID != ""
 	if !known {
-		target, err := absTarget(baseDir)
+		target, err := registry.AbsTarget(baseDir)
 		if err != nil {
 			return 0, err
 		}
-		if vid, err = identify(target); err != nil {
+		if vid, err = registry.Identify(target); err != nil {
 			return 0, err
 		}
 		known = vid != ""

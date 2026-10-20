@@ -10,6 +10,7 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/atomicfile"
 	"github.com/angeles725/niagara-go/internal/helpbuild/pyfs"
+	"github.com/angeles725/niagara-go/internal/helpbuild/registry"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 )
@@ -136,7 +137,7 @@ type CourseCounts struct {
 // the bound tree does not exist (nothing is touched), another error when a
 // copy fails.
 func BuildCourse(baseDir string, rules *Rules) (*CourseCounts, error) {
-	src, err := courseDir(baseDir)
+	src, err := registry.CourseDir(baseDir)
 	if err != nil {
 		return nil, err
 	}
@@ -223,7 +224,7 @@ func CourseExtractor(baseDir string, rules *Rules) (*ToolOutput, error) {
 // an OSError): a registry that is not JSON or not of the expected shape.
 func pythonCrash(err error) bool {
 	var le *pyfs.JSONLoadError
-	var shape *registryShapeError
+	var shape *registry.ShapeError
 	var rec *pyjson.RecursionError
 	return errors.As(err, &le) && !le.OS || errors.As(err, &shape) || errors.As(err, &rec)
 }

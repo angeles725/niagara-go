@@ -217,7 +217,7 @@ S2 additions (none changes an output Python produces from a well-formed install)
 |---|---|---|
 | `pdftext.go` | `classify`, `sanitize`, `top_folder`, `find_pdfs`, `fix_unmapped_bullets`, `extract_text`, `resolve_name` | one pdftotext run: argv list, no shell, `PDFTimeout` (120 s); a failure is a `*PDFError` whose `Failure` says which of the four cases `extract_text` catches (exit status, timeout, output not UTF-8, could not start); the run goes through `internal/procgroup` (own process group, SIGINT/SIGTERM relay), shared with `internal/secaudit` |
 | `pdfindex.go` | `pdf_extractor.main()` | `ExtractPDFs`; the early exits, the `-v` probe, keep-last-good, the index save, the prune after a clean run, the summary |
-| `registry.go` | `versions.identify`, `versions.install_dir`, `course.course_dir` | read with pyjson so every malformed entry takes Python's branch: skipped where Python catches, an error where it raises |
+| `registry/registry.go` | `versions.identify`, `versions.install_dir`, `course.course_dir` | read with pyjson so every malformed entry takes Python's branch: skipped where Python catches, an error where it raises |
 | `pyfs/pyfs.go` | `os.walk`, `os.remove`, `shutil.copyfile`, `json.load` | `Walk` lists a symlinked folder without entering it and skips unreadable ones; `RemoveFile` refuses a directory; `Copyfile` raises `SameFileError` when source and destination are the same file, refuses a named pipe before opening it and a directory as source (`EISDIR`, Python's `IsADirectoryError`) or destination (the open fails); `LoadJSON` returns a `*JSONLoadError` (Python's `str(e)`) for what the builders catch |
 | `course.go` | `course.course_dir`, `_files`, `_text_dest`, `plan`, `remove_copies`, `build`, `course_extractor.main()` | both trees staged with `RebuiltDir`, nested like Python's `with` (devguide-examples/course/ swaps first) |
 
@@ -318,7 +318,7 @@ take `parseBajadocFiles` (`classindexxml.go`) for the same concurrency.
 | `htmltext.go` | `html_text.convert` as `HTMLToText(page) (title, text)` | Python's Unicode `\s`, `strip` and `\w` (`textfold.IsSpace`, `pycompat.IsWordRune`) |
 | `guidetoc.go` | `guide_toc.find_toc`, `parse_toc`, `count_items` | ElementTree is `internal/pyxml` in ETree mode; the warning is returned, not printed |
 | `guidesparser.go` | `guides_parser.parse_guides`, `_markdown_title`, `devguide_parser.parse_devguide` | `RebuiltDir`; `TextResult.Log` = stdout lines, `.Warnings` = stderr lines |
-| `guidesindex.go` | `build_guides_index` (`topic_name`, `known_jar_names`, `modules_dir_of`, `jar_for_folder`, `previous_jars`, `build`, `main`) | `JarSources` replaces the `_MANIFEST` sentinels; `Unknown` is `jar_names=None`; the walk, `json.load` and registry lookups are S3's (`pyfs/pyfs.go`, `registry.go`) |
+| `guidesindex.go` | `build_guides_index` (`topic_name`, `known_jar_names`, `modules_dir_of`, `jar_for_folder`, `previous_jars`, `build`, `main`) | `JarSources` replaces the `_MANIFEST` sentinels; `Unknown` is `jar_names=None`; the walk, `json.load` and registry lookups are S3's (`pyfs/pyfs.go`, `registry/registry.go`) |
 | `devguidetoc.go` | `build_devguide_toc.build`, `main` | its regexes run through `internal/pyre` (Python semantics, code-point offsets) |
 
 API for S10 (`maintenance.BUILDERS` runs these as subprocesses; the Go orchestration calls
