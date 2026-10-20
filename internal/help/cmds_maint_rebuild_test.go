@@ -93,15 +93,19 @@ func TestRebuildAllTakesOverAStaleLock(t *testing.T) {
 // TestRebuildAllUnwritableIndexes: a lock that cannot be created is an
 // ERROR line and exit 2, and nothing runs.
 func TestRebuildAllUnwritableIndexes(t *testing.T) {
-	if os.Geteuid() == 0 {
-		t.Skip("root writes into a read-only folder")
-	}
 	repo := maintRepo(t, emptyInstall(t), false)
 	indexes := filepath.Join(repo, "indexes")
 	if err := os.Chmod(indexes, 0o555); err != nil {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { os.Chmod(indexes, 0o755) })
+	if probe, err := os.CreateTemp(indexes, "probe"); err == nil {
+		// root, and Windows (where a folder's mode does not deny writes), still
+		// write into it: there is no unwritable folder to test here.
+		probe.Close()
+		os.Remove(probe.Name())
+		t.Skip("this platform writes into a mode-0555 folder")
+	}
 	out, errs, code := run(t, repo, "rebuild-all", "--only", "zzz")
 	if code != 2 || out != "" || !strings.HasPrefix(errs, "ERROR: open "+scope.BuildLockPath(repo)) {
 		t.Errorf("code %d stdout %q stderr %q", code, out, errs)

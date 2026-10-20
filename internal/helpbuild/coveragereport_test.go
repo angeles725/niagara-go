@@ -46,9 +46,18 @@ func covGoldenPath(name string) string {
 }
 
 // covRelabel joins lines and shows each path of pairs (path, label, ...)
-// as its label; the longer paths come first.
+// as its label; the longer paths come first. The lines are JSON, so a
+// Windows path appears with its backslashes escaped: that spelling of each
+// path is relabeled too.
 func covRelabel(lines []string, pairs ...string) string {
-	return strings.NewReplacer(pairs...).Replace(strings.Join(lines, "\n") + "\n")
+	var all []string
+	for i := 0; i+1 < len(pairs); i += 2 {
+		if esc := strings.ReplaceAll(pairs[i], `\`, `\\`); esc != pairs[i] {
+			all = append(all, esc, pairs[i+1])
+		}
+	}
+	all = append(all, pairs...)
+	return strings.NewReplacer(all...).Replace(strings.Join(lines, "\n") + "\n")
 }
 
 // checkCovGoldens runs every case and compares it with its golden file;

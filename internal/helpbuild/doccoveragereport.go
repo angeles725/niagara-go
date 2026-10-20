@@ -115,7 +115,7 @@ func scanDocJars(installDir, root string, jars []string, docs FulltextDocs) (*do
 	indexed := newIndexedViews(root, docs)
 	s := &docJarScan{Rows: map[docJarKey]*docJarRow{}}
 	for _, jar := range jars {
-		name := pypath.PosixBasename(jar)
+		name := pyBasename(jar)
 		entries, ok := jarEntries(jar)
 		if !ok {
 			s.Rows[docJarKey{name, "(unreadable jar)"}] = &docJarRow{Gap: 1}

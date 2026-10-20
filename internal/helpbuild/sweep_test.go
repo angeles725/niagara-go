@@ -282,7 +282,13 @@ func TestSweepCorners(t *testing.T) {
 	for _, j := range jars {
 		rels = append(rels, j.Rel)
 	}
-	if want := []string{"modules/Upper.JAR", "modules/broken-rt.jar", "modules/empty-rt.jar", "modules/mod-rt.jar"}; !slices.Equal(rels, want) {
+	want := []string{"modules/Upper.JAR", "modules/broken-rt.jar", "modules/empty-rt.jar", "modules/mod-rt.jar"}
+	if !locked {
+		// The folder stayed readable (root, or Windows, where mode 0 does not
+		// deny listing), so its jar is found like any other.
+		want = append(want, "sw/locked/x.jar")
+	}
+	if !slices.Equal(rels, want) {
 		t.Errorf("jars = %q, want %q", rels, want)
 	}
 
