@@ -596,7 +596,7 @@ not observed.
 ## course progress
 
 `course progress [--lab GROUP] [--station <dir|config.bog>] [--install DIR] [--source DIR] [--labsrc DIR] [--solutions DIR] [--date YYYY-MM-DD] [--json]`
-answers "how far am I, and what next?". It runs the `verify` loop over every item of the selected
+(or `--offline`, below) answers "how far am I, and what next?". It runs the `verify` loop over every item of the selected
 groups (every group without `--lab`; the spellings of `status --lab`), whatever its status, with
 the stations, flags and variables of `verify`, and prints one row per group and a total:
 
@@ -637,9 +637,24 @@ or every linked check skipped.
 Why `progress`, not `next`: the command answers both "how far" (the table) and "what next" (the
 lines); `next` would name only the second half, and `progress` reads naturally with `--lab 3`.
 
+`course progress --offline [--lab GROUP] [--json]` reads no station: it splits every item of the
+selected groups by its answer-key markers alone, one row per group and a total:
+
+| Column | Counts |
+|---|---|
+| `done` | the items carrying a verified marker |
+| `needs-run` | the others whose answer awaits a run: `unverified`, `predicted`, listed under `## Answers that need a live run`, or a needs-a-run check (`RAX`) |
+| `todo` | the rest (written, identical or corrected answers with none of those markers) |
+
+The summary goes to stderr: `progress (offline) 370: done 83, needs a run 59, todo 228; no station
+read` (the answer keys at 2026-10-19). With `--json`, stdout is `{groups: [{group, items, done,
+needs_run, todo, needs_run_ids}], total}`: the IDs that need a run, to plan a station session. The
+station flags and `--date` do not apply: each one is a usage error (exit 2, `--offline reads no
+station: drop --station`). Exit: 0 printed; 1 an unknown group; 2 the answer keys cannot be read.
+
 ## course quiz
 
-`course quiz [--lab GROUP] [--kind why|decision|trap|recall|predict] [-n N] [--seed S] [--answers] [--no-context] [--ids ID,ID,...]` draws study
+`course quiz [--lab GROUP] [--kind why|decision|trap|recall|predict|requirement|exam] [-n N] [--seed S] [--answers] [--no-context] [--ids ID,ID,...] [--interactive] [--history PATH] [--missed | --due [--now RFC3339]]` draws study
 questions from the answer keys; it reads no station.
 
 | Kind | Items | Prompt | Answer |
@@ -649,16 +664,22 @@ questions from the answer keys; it reads no station.
 | `trap` | the review-assignment traps (`T<k>.<n>`) | `What goes wrong, and what does this solution do? <trap>` | what goes wrong + this solution |
 | `recall` | lab items whose step is ``Name = `value` `` (a plain name; Lab 8's ORDs) | `What is the ORD of <Name>?` in a section naming the word `ORD` or `ORDs` (not `RECORDS`), else `What is <Name>?` | the value (without its `LI:` citation), then the item's own answer |
 | `predict` | lab items whose step asks to `*Observe*` (any case of the O) | `Predict what you observe, and why: <step>` | the answer |
+| `requirement` | the review-assignment requirements (`RA<k>.<id>`) a traceability row satisfies | `How is this requirement satisfied and verified? <requirement>` | the `Satisfied by` and `Verified by` cells of its rows |
+| `exam` | the exam problems (`P<m>`) | the step, then the problem's `**Requirement.**` paragraph (without the lead) | the rest of the section (design, verification, notes); the whole section when it has no such paragraph |
 
 A lab item takes the first kind that fits, in the order of the table (so an `*Observe*` step whose
 answer asks `*Why ...?*` is a why question). The pool keeps only questions that can be studied:
-the answer is neither empty nor a placeholder (`(step only)`, `Setup.`, `Setup only.`); a lab
+the answer is neither empty nor a placeholder (`(step only)`, `Setup.`, `Setup only.`, and a
+requirement's `(no traceability row)`); a lab
 question (why, recall, predict) points at a course text range (`LI:`), the source its answer is
 traced to; a predict answer holds at least 30 runes once its status markers and evidence lines
 are dropped (this leaves out "as stated.", "The wizard wrote it." and "standard JDWP banner.", 10
 to 21 runes; the shortest kept is 40). A recall answer is the value itself, so it has no length
-floor. Decisions and traps are answered by the review-assignment key, which has no course text
-range: they keep the empty/placeholder rule only.
+floor. Decisions, traps, requirements and exam problems are answered by their own key, which
+has no course text range: they keep the empty/placeholder rule only (so an exam problem that states
+only its requirement is left out). Requirements may share an answer: one traceability row can
+satisfy several (`RA1.M1–M2`). `quiz --lab EXAM` draws the exam problems; `course exam` asks them
+as a timed, scored simulation.
 
 `--lab` and `--kind` narrow the pool; `-n` is the number of questions (default 5; fewer when the
 pool holds fewer). The order is a Fisher-Yates shuffle driven by a PCG seeded with `--seed`, so the
@@ -678,20 +699,106 @@ answers for every ID it covers), instead of a seeded draw: `-n` and `--seed` do 
 header ends `ids L4.14,L8.2` instead of `seed S`. It is how you re-ask the questions you missed,
 statelessly: the replay line keeps `--ids`. `--lab` and `--kind` still narrow the pool the IDs
 must belong to. An empty ID or one the keys do not hold is a usage error (exit 2, `course quiz:
-error: --ids: no item Z9 (...)`); an item that is no question of the selection (a requirement,
-an item the pool leaves out, one outside `--kind`) is refused before any question is printed
-(exit 1, `course: L3.1: not a question of why, decision, trap, recall, predict in every group (125
-questions)`). Non-interactive by design (testable, no state files; spaced repetition is out of
-scope).
+error: --ids: no item Z9 (...)`); an item that is no question of the selection (an item the
+pool leaves out, one outside `--kind`) is refused before any question is printed (exit 1, `course:
+L3.1: not a question of why, decision, trap, recall, predict, requirement, exam in every group (157
+questions)`). Without `--interactive` the quiz reads no input and writes no state.
+
+`--interactive` asks the drawn questions one at a time and scores them. Each question prints as
+above, then `(Enter shows the answer) `; after a line of input (what you type is not read: answer
+in your head or on paper) the answer block of that question follows (`A<n>.`, the answer and its
+course text, as with `--answers`), then `grade: y right, n wrong, s skip? `. `y`/`yes` and
+`n`/`no` grade the answer, `s`/`skip` skips it, anything else asks `grade y, n or s? ` again. The
+end of input stops the quiz (`end of input after 2 of 5 questions`). The last line is the score:
+`score: 3 of 4 graded right (75%), 1 skipped; 4 answers recorded in <history>` (`; nothing
+recorded` when nothing was graded); no replay line is printed.
+
+Each `y` or `n` appends one JSON line to the history at once (so an interrupted quiz keeps what it
+graded), in one write to a file opened for appending; a skip records nothing:
+
+    {"time":"2026-10-19T11:00:00Z","id":"D1.1","kind":"decision","group":"RA1","result":"right"}
+
+`time` is RFC 3339 in UTC, `id` the item ID as the keys spell it, `kind` the question kind, `group`
+the answer-key group, `result` `right` or `wrong`. The history is user state, not repository data:
+`--history PATH`, else `$XDG_STATE_HOME/niagara-course/history.jsonl`, else (XDG_STATE_HOME unset
+or relative, as the XDG spec says) `~/.local/state/niagara-course/history.jsonl`; the directory is
+created on the first record. `--history` applies only to `--interactive`, `--missed` and `--due`:
+given without them, or empty, it is a usage error (exit 2), as is the default path when neither
+`XDG_STATE_HOME` nor `HOME` names one (`no history path: set --history, XDG_STATE_HOME or HOME`);
+a record that cannot be written stops the quiz (exit 2, `course: history <error>`).
+
+`--missed` and `--due` draw from the history instead of the whole pool (`--lab` and `--kind` still
+narrow it; `-n` and `--seed` still draw); the history is folded per item in time order (file order
+between equal times), and a record of an ID the keys no longer hold is ignored:
+
+- `--missed`: the questions whose latest record is `wrong` (a later `right` clears the miss).
+- `--due`: spaced review with Leitner boxes. An item starts in box 1; a `right` record moves it up
+  one box (at most 5), a `wrong` one back to box 1; it is due once the clock reaches its last
+  record plus 2^(box-1) days (1, 2, 4, 8, 16). `--now 2026-10-19T08:00:00Z` (RFC 3339) decides at
+  that time instead of the clock (for tests, or to plan ahead). An item never answered is not due:
+  a plain quiz draws it.
+
+The header names the selection (`quiz: 3 of 3 questions (...; every group; due
+2026-10-19T00:00:00Z), seed 1`) and the replay line names the drawn IDs with `--ids`, since the
+history moves on. Combine either with `--interactive` to grade the review. `--missed`, `--due` and
+`--ids` exclude each other, and a `--now` without `--due` or not in RFC 3339 is a usage error
+(exit 2). A history
+that selects nothing is the honest zero (exit 1, `course: no missed why, decision, trap, recall,
+predict question in every group (history <path>: 0 records)`); a missing history file is an empty
+one; a line that is not a record (a write cut short, or any line over 64 KiB, which is dropped
+unread) is skipped with `course: history
+<path>:<line>: not a record, skipped` on stderr, so one bad line never locks the history.
 
 Exit: 0 at least one question drawn; 1 an unknown group, an `--ids` item that is no question of the
 selection, or no question of the kinds in the
-groups (`course: no why, decision, trap, recall, predict question in RAX (searched 10 items)`); 2 the answer keys
+groups (`course: no why, decision, trap, recall, predict, requirement, exam question in RAX (searched 10 items)`); 2 the answer keys
 or a text file cannot be read, a drawn item's range lies outside its text file (the message of
 `course text`, before any question is printed; checked without `--answers` too, so the replay line
 works, but not under `--no-context`), `-n` below 1 without `--ids`, or an empty or unknown `--ids` ID (a usage
-error). The replay line shell-quotes a
+error), `--history` empty or without `--interactive`, `--missed` or `--due`, `--now` without `--due`,
+no history path, or (`--interactive`) a record that cannot be written. The replay line shell-quotes a
 `--lab` value the shell would split or expand.
+
+## course history
+
+`course history [--history PATH] [--json]` prints the accuracy of the graded answers in the
+history (the path rules of `quiz --interactive`), one row per answer-key group and a total, then one
+row per question kind; rows are in natural order (`L2` before `L10`), accuracy is percent right
+rounded half up:
+
+    history: 3 answers in ~/.local/state/niagara-course/history.jsonl
+
+    group  answers  right  wrong  accuracy
+    EXAM         1      0      1        0%
+    L2           2      1      1       50%
+    total        3      1      2       33%
+
+    kind  answers  right  wrong  accuracy
+    exam        1      0      1        0%
+    why         2      1      1       50%
+
+It reads no answer key (no `--root` is needed). With `--json`: `{history, groups: [{group,
+answers, right, wrong, accuracy}], kinds: [{kind, ...}], total}`. Exit: 0 printed; 1 no answer in
+the history (a missing file is empty: `course: no answer in the history <path> (course quiz
+--interactive records them)`); 2 the history cannot be read or no path is known.
+
+## course exam
+
+`course exam [--count N] [--minutes M] [--seed S] [--history PATH]` simulates the certification
+exam: it draws the `exam` questions of `EXAM` (every one, or `--count` of them) in the order of the
+seed (the shuffle of `quiz`; the clock gives one without `--seed`, printed) and asks them as `quiz
+--interactive` does: the problem, Enter, its answer, a self-grade, one history record per graded
+answer (kind `exam`, group `EXAM`), and the score. The header names the draw and the time limit:
+
+    exam: 3 of 3 problems (EXAM), seed 2, 90 minutes
+
+`--minutes M` asks no new problem once M minutes have passed since the start (`time is up after 2
+of 3 questions`); the problem being answered when the time runs out is still graded. The clock is
+read before each problem, so the limit is checked between problems, not inside one. Exit: 0 asked
+(whatever the score); 1 no exam question (`course: no exam question in EXAM (searched 3 items)`);
+2 the answer keys cannot be read, `--count` below 1, `--minutes` outside 1..1440 (a day; a larger
+value would overflow the deadline), no history path (usage errors), or a record that cannot be
+written.
 
 ## Live run
 
@@ -715,7 +822,7 @@ keys at `5abc827e9`.
 | `course verify --status verified` | 83: CONFIRMED 83 (31 live, 52 offline lines); 110 checks run |
 | `course progress` | 370 items: checked 125, CONFIRMED 83, PARTIAL 39, CONTRADICTED 3, UNDECIDED 245; 155 checks run; 3 `redo` (C3.4, CRA1.2, CRA1.10), 0 `mark` |
 | `course status` | verified 83: live 34, offline 49 |
-| `course quiz -n 500` | 125 questions: why 43, decision 29, trap 26, recall 11, predict 16 |
+| `course quiz -n 500` (2026-10-19) | 157 questions: why 43, decision 29, trap 26, recall 11, predict 16, requirement 29, exam 3 |
 
 To regenerate it, set the variables and run the commands of the table (zsh: run loops in `bash -c`):
 
@@ -896,10 +1003,24 @@ FAILs, no CONTRADICTED prediction, the item and status counts), not this table.
   the replay line) and the `[predicted]`/`[unverified]` tags (L1.10, predicted then verified, has
   none); `TestQuizNoContextReadsNoText`: a missing text file stops nothing under `--no-context`.
   `TestQuizIDs`: `--ids` in the given order and once each, the replay line, the usage errors of an
-  empty or unknown ID and the refusal of an item that is no question (L1.5, P1) or is outside
+  empty or unknown ID and the refusal of an item that is no question (L1.5, P2) or is outside
   `--kind`.
   `TestProgressCannotCheck` pins the two exit-2 paths of progress (a bad `--date` with a station;
   every linked check skipped), `TestProgressJSONGroup` the group key of the actions.
+- `interactive_test.go`: `quiz --interactive` over fake stdin (Enter, then y/n/s; a bad grade asks
+  again), the exact JSONL records with a pinned clock, appending, the end of input, the XDG and
+  HOME default paths (an injected `Getenv`), and the exit 2 of an unwritable history or an empty
+  `--history`. `spaced_test.go`: `--missed` (a later right clears a miss), `--due` (the Leitner
+  boxes and the cap of 5, at fixed `--now` times), their usage errors, and `course history` (the
+  table, natural group order, a skipped malformed line, `--json`, the honest zero).
+  `exam_test.go`: the `exam` and `requirement` kinds on the `root` fixture, `course exam`
+  (`--count`, the records with kind exam) and its refusals. `followup_test.go`: where `--history`
+  and `--now` apply, the default-path fallbacks, the end of input at the grade prompt, a history
+  line over any buffer, natural-order ties, the `--due` replay and `--due --interactive`, the
+  `--minutes` bound, `--minutes` with an input that moves the clock 10 minutes per answered line
+  (so the count of clock reads does not matter), the clock seed of `exam`, every `--offline`
+  refusal and the offline total. `offline_test.go`: `progress --offline` per group and in JSON, and its
+  usage errors. Every test writes its history under `t.TempDir()`.
 - `check/verify_test.go` `TestSuggestionEvidence` and `TestEvidenceOfEveryKind`: the live/offline
   rule; `key/labs_test.go` `TestVerifiedEvidence`: both markers, the counts and labels (the `root`
   fixture's LA.1 is verified offline, LA.2 live).

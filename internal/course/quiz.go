@@ -8,6 +8,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 	"unicode/utf8"
 
 	"github.com/angeles725/niagara-go/internal/cli"
@@ -26,7 +27,7 @@ const (
 	quizPredict  = "predict"
 )
 
-var quizKinds = []string{quizWhy, quizDecision, quizTrap, quizRecall, quizPredict}
+var quizKinds = []string{quizWhy, quizDecision, quizTrap, quizRecall, quizPredict, quizRequirement, quizExam}
 
 // quizContext is how many course text lines a question prints; the rest is one line naming the
 // command that prints them all.
@@ -54,8 +55,8 @@ var (
 )
 
 // placeholders are the answers that answer nothing: a step with no answer (key/labs.go writes
-// "(step only)") and the setup steps.
-var placeholders = []string{"(step only)", "Setup.", "Setup only."}
+// "(step only)"), the setup steps and a requirement no traceability row satisfies.
+var placeholders = []string{"(step only)", "Setup.", "Setup only.", "(no traceability row)"}
 
 // question is one quiz entry: the item, its kind, what it asks and its answer.
 type question struct {
@@ -79,6 +80,11 @@ func asQuestion(it *key.Item) (question, bool) {
 		q.kind, q.prompt = quizDecision, "Why this decision? "+it.Step
 	case it.Kind == "trap":
 		q.kind, q.prompt = quizTrap, "What goes wrong, and what does this solution do? "+it.Step
+	case it.Kind == "requirement":
+		q.kind, q.prompt = quizRequirement, requirementPrompt+it.Step
+	case it.Kind == "exam problem":
+		q.kind = quizExam
+		q.prompt, q.answer = examQuestion(it)
 	case it.Kind != "lab item":
 		return q, false
 	case whyAnyRe.MatchString(it.Step):
@@ -166,8 +172,18 @@ type quizOpts struct {
 	noContext bool
 	ids       string // --ids as given; hasIDs when it was
 	hasIDs    bool
-	picked    []string // the IDs --ids asked, as the keys spell them
-	usage     func(message string) int
+	// interactive asks each question, shows its answer and records a self-grade to history
+	// (--history as given; hasHistory when it was).
+	interactive bool
+	history     string
+	hasHistory  bool
+	// missed and due draw from the history's missed or Leitner-due questions (due at nowFlag,
+	// RFC 3339, when hasNow); the replay line then names the drawn IDs.
+	missed, due bool
+	nowFlag     string
+	hasNow      bool
+	picked      []string // the IDs --ids asked, as the keys spell them
+	usage       func(message string) int
 }
 
 // again is the command that draws the same quiz with its answers.
@@ -180,7 +196,7 @@ func (o quizOpts) again() string {
 		parts = append(parts, "--kind "+o.kind)
 	}
 	switch {
-	case o.hasIDs:
+	case o.hasIDs, o.missed, o.due:
 		parts = append(parts, "--ids "+shellQuote(strings.Join(o.picked, ",")))
 	case o.count != 5:
 		parts = append(parts, "-n "+strconv.Itoa(o.count), "--seed "+strconv.Itoa(o.seed))
@@ -208,8 +224,9 @@ func shellQuote(s string) string {
 // order of the seed, or asks the --ids items in their order, prints each prompt, then, with
 // --answers, every answer, its status and its course text. Exit: 0 drawn; 1 an unknown group, no
 // question in the selection (the honest zero) or an --ids item that is no question of it; 2 -n
-// below 1 without --ids (where -n does not apply), an --ids ID the keys do not hold (a usage error), or a text file that cannot be read or
-// does not hold a drawn item's range (the errors of course text).
+// below 1 without --ids (where -n does not apply), an --ids ID the keys do not hold, --history or
+// --now where they do not apply (usage errors), or a text file that cannot be read or does not
+// hold a drawn item's range (the errors of course text).
 func cmdQuiz(c *key.Corpus, s cli.Stdio, root string, o quizOpts) int {
 	if !o.hasIDs && o.count < 1 { // -n does not apply under --ids
 		fmt.Fprintf(s.Err, "course: -n %d asks no question (want 1 or more)\n", o.count)
@@ -217,6 +234,31 @@ func cmdQuiz(c *key.Corpus, s cli.Stdio, root string, o quizOpts) int {
 	}
 	if !o.hasSeed && !o.hasIDs {
 		o.seed = int(now().UnixNano() % 1000000)
+	}
+	if (o.missed && o.due) || ((o.missed || o.due) && o.hasIDs) {
+		return o.usage("--missed, --due and --ids exclude each other")
+	}
+	switch {
+	case o.hasHistory && o.history == "":
+		return o.usage("--history: an empty path")
+	case o.hasHistory && !o.interactive && !o.missed && !o.due:
+		return o.usage("--history applies to --interactive, --missed and --due")
+	case o.hasNow && !o.due:
+		return o.usage("--now applies to --due")
+	}
+	at := now()
+	if o.hasNow {
+		var err error
+		if at, err = time.Parse(time.RFC3339, o.nowFlag); err != nil {
+			return o.usage("--now " + o.nowFlag + " is not an RFC 3339 time (2026-10-19T08:00:00Z)")
+		}
+	}
+	var history string
+	if o.interactive || o.missed || o.due {
+		var msg string
+		if history, msg = historyPath(s, o.history, o.hasHistory); history == "" {
+			return o.usage(msg)
+		}
 	}
 	groups, scopeLabel := []string(nil), "every group"
 	if o.hasLab {
@@ -231,6 +273,12 @@ func cmdQuiz(c *key.Corpus, s cli.Stdio, root string, o quizOpts) int {
 		kinds = []string{o.kind}
 	}
 	pool, searched := buildPool(c, groups, kinds)
+	if o.missed || o.due {
+		var code int
+		if pool, scopeLabel, code = historyPool(c, s, o, pool, kinds, scopeLabel, history, at); pool == nil {
+			return code
+		}
+	}
 	var drawn []question
 	if o.hasIDs {
 		var code int
@@ -245,6 +293,11 @@ func cmdQuiz(c *key.Corpus, s cli.Stdio, root string, o quizOpts) int {
 	if !o.hasIDs {
 		shuffle(pool, uint64(o.seed))
 		drawn = pool[:min(o.count, len(pool))]
+		if o.missed || o.due { // the history moves on: replay these IDs
+			for _, q := range drawn {
+				o.picked = append(o.picked, q.it.ID)
+			}
+		}
 	}
 	texts := map[string][]string{}
 	for _, q := range drawn {
@@ -270,6 +323,9 @@ func cmdQuiz(c *key.Corpus, s cli.Stdio, root string, o quizOpts) int {
 	}
 	fmt.Fprintf(s.Out, "quiz: %d of %s (%s; %s), %s\n", len(drawn), key.Plural(len(pool), "question"),
 		strings.Join(kinds, ", "), scopeLabel, order)
+	if o.interactive {
+		return runSession(s, drawn, texts, history, time.Time{})
+	}
 	for i, q := range drawn {
 		fmt.Fprintln(s.Out)
 		printQuestion(s.Out, i+1, q)
@@ -281,12 +337,7 @@ func cmdQuiz(c *key.Corpus, s cli.Stdio, root string, o quizOpts) int {
 	}
 	fmt.Fprintln(s.Out, "answers")
 	for i, q := range drawn {
-		fmt.Fprintf(s.Out, "\nA%d. %s [%s] %s:%d\n", i+1, q.it.ID, strings.Join(q.it.StatusLabels(), ", "), q.it.File, q.it.Line)
-		if q.before != "" {
-			fmt.Fprintf(s.Out, "    before the why: %s\n", q.before)
-		}
-		printIndented(s.Out, q.answer)
-		printContext(s.Out, q.it, texts[q.it.TextFile])
+		printAnswer(s.Out, i+1, q, texts[q.it.TextFile])
 	}
 	return cli.ExitFound
 }

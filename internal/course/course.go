@@ -29,7 +29,10 @@ exit: 0 found; 1 searched, no match (show: any unknown ID, even when the
 others were printed; find: no item matches); 2 cannot search (no root, a missing or ambiguous answer
 key, a missing text file). check: 0 no FAIL (SKIPs are counted, never passed);
 1 at least one FAIL; 2 the station cannot be read, or every check was skipped.
-quiz: 0 drawn; 1 an unknown group or no question in it; 2 cannot search.
+quiz: 0 drawn; 1 an unknown group or no question in it (none missed or
+due with --missed, --due); 2 cannot search or record. exam: 0 asked; 1 no
+exam question; 2 cannot search or record. history: 0 printed;
+1 no graded answer in the history; 2 the history cannot be read.
 verify, verify-predictions (= verify --status predicted), progress: 0 no item
 contradicted; 1 at least one CONTRADICTED; 2 cannot search, the station
 cannot be read, or every linked check was skipped.
@@ -52,7 +55,12 @@ examples:
   course verify-predictions --station ~/Niagara4.15/tridium/stations/TrainingStation
   course verify --status written --lab RA1
   course progress --lab 3
+  course progress --offline
   course quiz --lab 3 --seed 1 --answers
+  course quiz --lab 3 --interactive
+  course quiz --due --interactive
+  course history
+  course exam --minutes 90
   course find -i 'history:'
   course find --slides -i neql`
 
@@ -96,6 +104,8 @@ func buildParser() (*argparse.Parser, map[string]*argparse.Parser) {
 		"trafficLightDriver/ (default: $COURSE_LAB_SOURCES; lab-source checks SKIP without either)"}
 	solutionsArg := argparse.Arg{Metavar: "DIR", Help: "the participant's module sources as niagara-research keeps them, " +
 		"sources/n4-dev-course/solutions (default: $COURSE_SOLUTIONS; solutions checks SKIP without either)"}
+	historyArg := argparse.Arg{Metavar: "PATH", Help: "the history file, one JSON line per graded answer " +
+		"(default: $XDG_STATE_HOME/niagara-course/history.jsonl, else ~/.local/state/niagara-course/history.jsonl)"}
 	s := add("show", "print items by ID (any case; L2.3 also finds the range item L2.2–L2.4)")
 	s.Add(argparse.Arg{Nargs: argparse.OneOrMore, Metavar: "ID", Help: "item ID: L1.9, LB.3, RA1.R6, D2.4, T1.1, X3, P2"}, "ids")
 	s.Add(jsonHelp, "--json")
@@ -149,17 +159,36 @@ func buildParser() (*argparse.Parser, map[string]*argparse.Parser) {
 	pg.Add(labsrcArg, "--labsrc")
 	pg.Add(solutionsArg, "--solutions")
 	pg.Add(argparse.Arg{Metavar: "YYYY-MM-DD", Help: "date written in the suggested *(verified live|offline ...)* lines (default: today)"}, "--date")
+	pg.Add(argparse.Arg{Action: argparse.StoreTrue, Help: "read no station: per group, the items done, needing a run " +
+		"and to do, from the answer-key markers alone"}, "--offline")
 	pg.Add(jsonHelp, "--json")
-	qz := add("quiz", "draw why, decision, trap, recall and predict questions from the answer keys; --answers prints the answers after them")
+	qz := add("quiz", "draw why, decision, trap, recall, predict, requirement and exam questions from the answer keys; --answers prints the answers after them")
 	qz.Add(argparse.Arg{Metavar: "GROUP", Help: "one group: a lab number (3 or L3), B, A, RA1, RA2, RAX, RA (all three), EXAM"}, "--lab")
-	qz.Add(argparse.Arg{Choices: []any{quizWhy, quizDecision, quizTrap, quizRecall, quizPredict}, Help: "one kind: why (a lab *Why ...?* question), " +
-		"decision (a review-assignment design decision), trap (a review-assignment trap), " +
-		"recall (a lab Name = `value` step), predict (a lab *Observe* step)"}, "--kind")
+	qz.Add(argparse.Arg{Choices: []any{quizWhy, quizDecision, quizTrap, quizRecall, quizPredict, quizRequirement, quizExam},
+		Help: "one kind: why (a lab *Why ...?* question), decision (a review-assignment design decision), " +
+			"trap (a review-assignment trap), recall (a lab Name = `value` step), predict (a lab *Observe* step), " +
+			"requirement (a review requirement: how it is satisfied and verified), exam (an exam problem: solve it)"}, "--kind")
 	qz.Add(argparse.Arg{Type: argparse.Int, Default: 5, Metavar: "N", Help: "questions to draw (default: 5; fewer when the selection holds fewer)"}, "-n")
 	qz.Add(argparse.Arg{Type: argparse.Int, Metavar: "S", Help: "the draw's seed: the same seed draws the same quiz (default: from the clock, printed)"}, "--seed")
 	qz.Add(argparse.Arg{Action: argparse.StoreTrue, Help: "print every answer, its status and its course text after the questions"}, "--answers")
 	qz.Add(argparse.Arg{Action: argparse.StoreTrue, Help: "print no course text after the answers (and read none)"}, "--no-context")
 	qz.Add(argparse.Arg{Metavar: "ID,ID,...", Help: "ask exactly these items, in this order (-n and --seed do not apply): re-ask the ones you missed"}, "--ids")
+	qz.Add(argparse.Arg{Action: argparse.StoreTrue, Help: "ask one question at a time: Enter shows its answer, then grade " +
+		"yourself (y right, n wrong, s skip); prints a score and records each graded answer in the history"}, "--interactive")
+	qz.Add(historyArg, "--history")
+	qz.Add(argparse.Arg{Action: argparse.StoreTrue, Help: "draw only the questions whose latest graded answer in the history is wrong"}, "--missed")
+	qz.Add(argparse.Arg{Action: argparse.StoreTrue, Help: "draw only the questions due for review: Leitner boxes from the history " +
+		"(right: up one box, at most 5; wrong: box 1; due 2^(box-1) days after the last answer)"}, "--due")
+	qz.Add(argparse.Arg{Metavar: "RFC3339", Help: "the time --due is decided at (default: now)"}, "--now")
+	ex := add("exam", "simulate the certification exam: every EXAM problem (or --count) in seeded order, "+
+		"graded like quiz --interactive, optionally timed")
+	ex.Add(argparse.Arg{Type: argparse.Int, Metavar: "N", Help: "problems to ask (default: every one)"}, "--count")
+	ex.Add(argparse.Arg{Type: argparse.Int, Metavar: "M", Help: "time limit: no new problem once M minutes have passed (default: none)"}, "--minutes")
+	ex.Add(argparse.Arg{Type: argparse.Int, Metavar: "S", Help: "the draw's seed (default: from the clock, printed)"}, "--seed")
+	ex.Add(historyArg, "--history")
+	hs := add("history", "the accuracy of your graded answers (quiz --interactive, exam) per group and per kind")
+	hs.Add(historyArg, "--history")
+	hs.Add(jsonHelp, "--json")
 	return p, subs
 }
 
@@ -180,7 +209,18 @@ func Main(args []string, s cli.Stdio) int {
 	if cmd == "check" { // reads a station, not the answer keys
 		return cmdCheck(s, o, ns.Strings("lab"), ns.Bool("json"))
 	}
-	if (cmd == "verify" || cmd == "verify-predictions" || cmd == "progress") && !o.anyStation() {
+	if cmd == "history" { // reads the history, not the answer keys
+		return cmdHistory(s, ns.String("history"), ns.Get("history") != nil, ns.Bool("json"), o.usage)
+	}
+	offline := cmd == "progress" && ns.Bool("offline")
+	if offline {
+		for _, f := range []string{"station", "install", "source", "labsrc", "solutions", "date"} {
+			if ns.Get(f) != nil {
+				return o.usage("--offline reads no station: drop --" + f)
+			}
+		}
+	}
+	if (cmd == "verify" || cmd == "verify-predictions" || cmd == "progress") && !offline && !o.anyStation() {
 		return o.missingStation("", nil) // before the root and --date errors
 	}
 	root, err := findRoot(ns.String("root"), ns.Get("root") != nil)
@@ -210,6 +250,9 @@ func Main(args []string, s cli.Stdio) int {
 				return cli.ExitNoMatch
 			}
 		}
+		if offline {
+			return cmdProgressOffline(c, s, groups, ns.Bool("json"))
+		}
 		if cmd == "progress" {
 			return cmdProgress(c, s, o, groups, ns.String("date"), ns.Bool("json"))
 		}
@@ -217,7 +260,13 @@ func Main(args []string, s cli.Stdio) int {
 	case "quiz":
 		return cmdQuiz(c, s, root, quizOpts{lab: ns.String("lab"), hasLab: ns.Get("lab") != nil, kind: ns.String("kind"),
 			count: ns.Int("n"), seed: ns.Int("seed"), hasSeed: ns.Get("seed") != nil, answers: ns.Bool("answers"), noContext: ns.Bool("no_context"),
-			ids: ns.String("ids"), hasIDs: ns.Get("ids") != nil, usage: o.usage})
+			ids: ns.String("ids"), hasIDs: ns.Get("ids") != nil, interactive: ns.Bool("interactive"),
+			history: ns.String("history"), hasHistory: ns.Get("history") != nil, missed: ns.Bool("missed"), due: ns.Bool("due"),
+			nowFlag: ns.String("now"), hasNow: ns.Get("now") != nil, usage: o.usage})
+	case "exam":
+		return cmdExam(c, s, examOpts{count: ns.Int("count"), hasCount: ns.Get("count") != nil, minutes: ns.Int("minutes"),
+			hasMinutes: ns.Get("minutes") != nil, seed: ns.Int("seed"), hasSeed: ns.Get("seed") != nil,
+			history: ns.String("history"), hasHistory: ns.Get("history") != nil, usage: o.usage})
 	case "status":
 		return cmdStatus(c, s, ns.Get("lab") != nil, ns.String("lab"), ns.String("status"), ns.Bool("json"))
 	default:
