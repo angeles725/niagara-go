@@ -53,6 +53,7 @@ examples:
   course verify --status written --lab RA1
   course progress --lab 3
   course quiz --lab 3 --seed 1 --answers
+  course quiz --lab 3 --interactive
   course find -i 'history:'
   course find --slides -i neql`
 
@@ -96,6 +97,8 @@ func buildParser() (*argparse.Parser, map[string]*argparse.Parser) {
 		"trafficLightDriver/ (default: $COURSE_LAB_SOURCES; lab-source checks SKIP without either)"}
 	solutionsArg := argparse.Arg{Metavar: "DIR", Help: "the participant's module sources as niagara-research keeps them, " +
 		"sources/n4-dev-course/solutions (default: $COURSE_SOLUTIONS; solutions checks SKIP without either)"}
+	historyArg := argparse.Arg{Metavar: "PATH", Help: "the history file, one JSON line per graded answer " +
+		"(default: $XDG_STATE_HOME/niagara-course/history.jsonl, else ~/.local/state/niagara-course/history.jsonl)"}
 	s := add("show", "print items by ID (any case; L2.3 also finds the range item L2.2–L2.4)")
 	s.Add(argparse.Arg{Nargs: argparse.OneOrMore, Metavar: "ID", Help: "item ID: L1.9, LB.3, RA1.R6, D2.4, T1.1, X3, P2"}, "ids")
 	s.Add(jsonHelp, "--json")
@@ -160,6 +163,9 @@ func buildParser() (*argparse.Parser, map[string]*argparse.Parser) {
 	qz.Add(argparse.Arg{Action: argparse.StoreTrue, Help: "print every answer, its status and its course text after the questions"}, "--answers")
 	qz.Add(argparse.Arg{Action: argparse.StoreTrue, Help: "print no course text after the answers (and read none)"}, "--no-context")
 	qz.Add(argparse.Arg{Metavar: "ID,ID,...", Help: "ask exactly these items, in this order (-n and --seed do not apply): re-ask the ones you missed"}, "--ids")
+	qz.Add(argparse.Arg{Action: argparse.StoreTrue, Help: "ask one question at a time: Enter shows its answer, then grade " +
+		"yourself (y right, n wrong, s skip); prints a score and records each graded answer in the history"}, "--interactive")
+	qz.Add(historyArg, "--history")
 	return p, subs
 }
 
@@ -217,7 +223,8 @@ func Main(args []string, s cli.Stdio) int {
 	case "quiz":
 		return cmdQuiz(c, s, root, quizOpts{lab: ns.String("lab"), hasLab: ns.Get("lab") != nil, kind: ns.String("kind"),
 			count: ns.Int("n"), seed: ns.Int("seed"), hasSeed: ns.Get("seed") != nil, answers: ns.Bool("answers"), noContext: ns.Bool("no_context"),
-			ids: ns.String("ids"), hasIDs: ns.Get("ids") != nil, usage: o.usage})
+			ids: ns.String("ids"), hasIDs: ns.Get("ids") != nil, interactive: ns.Bool("interactive"),
+			history: ns.String("history"), hasHistory: ns.Get("history") != nil, usage: o.usage})
 	case "status":
 		return cmdStatus(c, s, ns.Get("lab") != nil, ns.String("lab"), ns.String("status"), ns.Bool("json"))
 	default:

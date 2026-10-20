@@ -8,6 +8,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 	"unicode/utf8"
 
 	"github.com/angeles725/niagara-go/internal/cli"
@@ -166,8 +167,13 @@ type quizOpts struct {
 	noContext bool
 	ids       string // --ids as given; hasIDs when it was
 	hasIDs    bool
-	picked    []string // the IDs --ids asked, as the keys spell them
-	usage     func(message string) int
+	// interactive asks each question, shows its answer and records a self-grade to history
+	// (--history as given; hasHistory when it was).
+	interactive bool
+	history     string
+	hasHistory  bool
+	picked      []string // the IDs --ids asked, as the keys spell them
+	usage       func(message string) int
 }
 
 // again is the command that draws the same quiz with its answers.
@@ -217,6 +223,13 @@ func cmdQuiz(c *key.Corpus, s cli.Stdio, root string, o quizOpts) int {
 	}
 	if !o.hasSeed && !o.hasIDs {
 		o.seed = int(now().UnixNano() % 1000000)
+	}
+	var history string
+	if o.interactive {
+		var msg string
+		if history, msg = historyPath(s, o.history, o.hasHistory); history == "" {
+			return o.usage(msg)
+		}
 	}
 	groups, scopeLabel := []string(nil), "every group"
 	if o.hasLab {
@@ -270,6 +283,9 @@ func cmdQuiz(c *key.Corpus, s cli.Stdio, root string, o quizOpts) int {
 	}
 	fmt.Fprintf(s.Out, "quiz: %d of %s (%s; %s), %s\n", len(drawn), key.Plural(len(pool), "question"),
 		strings.Join(kinds, ", "), scopeLabel, order)
+	if o.interactive {
+		return runSession(s, drawn, texts, history, time.Time{})
+	}
 	for i, q := range drawn {
 		fmt.Fprintln(s.Out)
 		printQuestion(s.Out, i+1, q)
@@ -281,12 +297,7 @@ func cmdQuiz(c *key.Corpus, s cli.Stdio, root string, o quizOpts) int {
 	}
 	fmt.Fprintln(s.Out, "answers")
 	for i, q := range drawn {
-		fmt.Fprintf(s.Out, "\nA%d. %s [%s] %s:%d\n", i+1, q.it.ID, strings.Join(q.it.StatusLabels(), ", "), q.it.File, q.it.Line)
-		if q.before != "" {
-			fmt.Fprintf(s.Out, "    before the why: %s\n", q.before)
-		}
-		printIndented(s.Out, q.answer)
-		printContext(s.Out, q.it, texts[q.it.TextFile])
+		printAnswer(s.Out, i+1, q, texts[q.it.TextFile])
 	}
 	return cli.ExitFound
 }

@@ -639,7 +639,7 @@ lines); `next` would name only the second half, and `progress` reads naturally w
 
 ## course quiz
 
-`course quiz [--lab GROUP] [--kind why|decision|trap|recall|predict] [-n N] [--seed S] [--answers] [--no-context] [--ids ID,ID,...]` draws study
+`course quiz [--lab GROUP] [--kind why|decision|trap|recall|predict] [-n N] [--seed S] [--answers] [--no-context] [--ids ID,ID,...] [--interactive] [--history PATH]` draws study
 questions from the answer keys; it reads no station.
 
 | Kind | Items | Prompt | Answer |
@@ -681,8 +681,28 @@ must belong to. An empty ID or one the keys do not hold is a usage error (exit 2
 error: --ids: no item Z9 (...)`); an item that is no question of the selection (a requirement,
 an item the pool leaves out, one outside `--kind`) is refused before any question is printed
 (exit 1, `course: L3.1: not a question of why, decision, trap, recall, predict in every group (125
-questions)`). Non-interactive by design (testable, no state files; spaced repetition is out of
-scope).
+questions)`). Without `--interactive` the quiz reads no input and writes no state.
+
+`--interactive` asks the drawn questions one at a time and scores them. Each question prints as
+above, then `(Enter shows the answer) `; after a line of input (what you type is not read: answer
+in your head or on paper) the answer block of that question follows (`A<n>.`, the answer and its
+course text, as with `--answers`), then `grade: y right, n wrong, s skip? `. `y`/`yes` and
+`n`/`no` grade the answer, `s`/`skip` skips it, anything else asks `grade y, n or s? ` again. The
+end of input stops the quiz (`end of input after 2 of 5 questions`). The last line is the score:
+`score: 3 of 4 graded right (75%), 1 skipped; 4 answers recorded in <history>` (`; nothing
+recorded` when nothing was graded); no replay line is printed.
+
+Each `y` or `n` appends one JSON line to the history at once (so an interrupted quiz keeps what it
+graded), in one write to a file opened for appending; a skip records nothing:
+
+    {"time":"2026-10-19T11:00:00Z","id":"D1.1","kind":"decision","group":"RA1","result":"right"}
+
+`time` is RFC 3339 in UTC, `id` the item ID as the keys spell it, `kind` the question kind, `group`
+the answer-key group, `result` `right` or `wrong`. The history is user state, not repository data:
+`--history PATH`, else `$XDG_STATE_HOME/niagara-course/history.jsonl`, else (XDG_STATE_HOME unset
+or relative, as the XDG spec says) `~/.local/state/niagara-course/history.jsonl`; the directory is
+created on the first record. An empty `--history` is a usage error (exit 2); a record that cannot
+be written stops the quiz (exit 2, `course: history <error>`).
 
 Exit: 0 at least one question drawn; 1 an unknown group, an `--ids` item that is no question of the
 selection, or no question of the kinds in the
@@ -690,7 +710,7 @@ groups (`course: no why, decision, trap, recall, predict question in RAX (search
 or a text file cannot be read, a drawn item's range lies outside its text file (the message of
 `course text`, before any question is printed; checked without `--answers` too, so the replay line
 works, but not under `--no-context`), `-n` below 1 without `--ids`, or an empty or unknown `--ids` ID (a usage
-error). The replay line shell-quotes a
+error), an empty `--history`, or (`--interactive`) a record that cannot be written. The replay line shell-quotes a
 `--lab` value the shell would split or expand.
 
 ## Live run
