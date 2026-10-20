@@ -58,6 +58,8 @@ func historyPath(s cli.Stdio, flag string, hasFlag bool) (string, string) {
 		return filepath.Join(dir, historyDir, historyName), ""
 	}
 	home := s.Env("HOME")
+	// Only the process environment falls back to the OS lookup: an injected Getenv (a hermetic
+	// test) stands alone, so its missing HOME is the no-path error, not the developer's home.
 	if home == "" && s.Getenv == nil {
 		home, _ = os.UserHomeDir()
 	}
@@ -92,13 +94,14 @@ func appendRecord(path string, r record) error {
 // longer line is a bad one and is skipped without being held in memory.
 const maxRecordLine = 64 * 1024
 
-// readRecordLine is the next line of br without its line end; long reports a line over
-// maxRecordLine (its bytes are dropped). io.EOF once nothing is left.
+// readRecordLine is the next line of br without its line end; long reports a line whose text
+// (without the line end) is over maxRecordLine bytes, dropped as it is read. io.EOF once nothing
+// is left; a last line without a newline is still a line.
 func readRecordLine(br *bufio.Reader) (line []byte, long bool, err error) {
 	for {
 		chunk, err := br.ReadSlice('\n')
 		if !long {
-			if len(line)+len(chunk) > maxRecordLine+1 {
+			if len(line)+len(chunk) > maxRecordLine+len("\r\n") { // over the bound whatever the line end
 				long, line = true, nil
 			} else {
 				line = append(line, chunk...)
@@ -110,7 +113,11 @@ func readRecordLine(br *bufio.Reader) (line []byte, long bool, err error) {
 		if err == io.EOF && (len(line) > 0 || long) {
 			err = nil
 		}
-		return bytes.TrimRight(line, "\r\n"), long, err
+		line = bytes.TrimRight(line, "\r\n")
+		if len(line) > maxRecordLine {
+			long, line = true, nil
+		}
+		return line, long, err
 	}
 }
 
