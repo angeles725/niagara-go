@@ -1,19 +1,18 @@
-quiz: 5 of 6 questions (why, decision, trap, recall, predict; every group), seed 1
+quiz: 5 of 11 questions (why, decision, trap, recall, predict, requirement, exam; every group), seed 1
 
-Q1. D1.1 (decision · 1. Review Assignment 1 — BWithId)
-    Why this decision? Runtime only
+Q1. L1.4 (predict · Lab 1 — First component (`LI:1-12`)) [predicted]
+    Predict what you observe, and why: *Observe* the jar (`LI:7`)
 
-Q2. T1.1 (trap · 1. Review Assignment 1 — BWithId)
-    What goes wrong, and what does this solution do? TRANSIENT on `id`
-
-Q3. L1.1 (why · Lab 1 — First component (`LI:1-12`))
-    Start the console (`LI:2-3`)
-    *Why the console?*
-
-Q4. L1.5 (why · Lab 1 — First component (`LI:1-12`))
+Q2. L1.5 (why · Lab 1 — First component (`LI:1-12`))
     *Why restart?*
 
-Q5. L1.4 (predict · Lab 1 — First component (`LI:1-12`)) [predicted]
-    Predict what you observe, and why: *Observe* the jar (`LI:7`)
+Q3. RA1.M1 (requirement · 1. Review Assignment 1 — BWithId)
+    How is this requirement satisfied and verified? Folder `Review`
+
+Q4. T1.1 (trap · 1. Review Assignment 1 — BWithId)
+    What goes wrong, and what does this solution do? TRANSIENT on `id`
+
+Q5. L2.1 (why · Lab 2 — Executors (`LI:13-20`))
+    `gradlew jar`, restart · *Why reuse it?* (`LI:13-14`)
 
 answers: course quiz --seed 1 --answers

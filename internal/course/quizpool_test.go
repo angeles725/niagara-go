@@ -36,7 +36,7 @@ func TestQuizKinds(t *testing.T) {
 				"    *(predicted)* `a-rt.jar` and `a-wb.jar`, one per module part.\n"},
 			[]string{"L1.5 (", "L1.6 (", "L1.7 ("}},
 		{"every kind", nil,
-			[]string{"quiz: 8 of 8 questions (why, decision, trap, recall, predict; every group)"}, nil},
+			[]string{"quiz: 9 of 9 questions (why, decision, trap, recall, predict, requirement, exam; every group)"}, nil},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
@@ -65,7 +65,8 @@ var placeholderAnswers = []string{"(step only)", "Setup.", "Setup only."}
 
 // checkPool fails for a pool item that cannot be studied: an empty or placeholder answer, a lab
 // question with no course text range, a predict answer under quizMinAnswer runes, an answer the
-// prompt already states, or two items with the same prompt or the same answer. It returns the
+// prompt already states, or two items with the same prompt or the same answer (requirements
+// excepted). It returns the
 // pool size per kind.
 func checkPool(t *testing.T, c *key.Corpus) map[string]int {
 	t.Helper()
@@ -95,7 +96,8 @@ func checkPool(t *testing.T, c *key.Corpus) map[string]int {
 		if other, dup := prompts[q.prompt]; dup {
 			t.Errorf("%s and %s ask the same prompt %q", other, id, q.prompt)
 		}
-		if other, dup := answers[a]; dup {
+		// One traceability row may satisfy several requirements (RA1.M1–M2): they share its answer.
+		if other, dup := answers[a]; dup && q.kind != quizRequirement {
 			t.Errorf("%s and %s share the answer %q", other, id, a)
 		}
 		prompts[q.prompt], answers[a] = id, id
@@ -106,8 +108,8 @@ func checkPool(t *testing.T, c *key.Corpus) map[string]int {
 // Every question of the fixtures can be studied, and the new kinds are drawn.
 func TestQuizPoolSolid(t *testing.T) {
 	for root, want := range map[string]map[string]int{
-		"testdata/root":      {quizWhy: 3, quizDecision: 1, quizTrap: 1, quizPredict: 1},
-		"testdata/quiz-root": {quizWhy: 2, quizDecision: 1, quizTrap: 1, quizRecall: 2, quizPredict: 2},
+		"testdata/root":      {quizWhy: 3, quizDecision: 1, quizTrap: 1, quizPredict: 1, quizRequirement: 4, quizExam: 1},
+		"testdata/quiz-root": {quizWhy: 2, quizDecision: 1, quizTrap: 1, quizRecall: 2, quizPredict: 2, quizExam: 1},
 	} {
 		c, problems := key.Load(root)
 		if c == nil {
@@ -209,14 +211,14 @@ func TestQuizIDs(t *testing.T) {
 		stderr []string
 	}{
 		{"in the given order", []string{"--ids", "L1.4,l1.2", "--answers"}, 0,
-			[]string{"quiz: 2 of 8 questions (why, decision, trap, recall, predict; every group), ids L1.4,L1.2\n\nQ1. L1.4 (predict",
+			[]string{"quiz: 2 of 9 questions (why, decision, trap, recall, predict, requirement, exam; every group), ids L1.4,L1.2\n\nQ1. L1.4 (predict",
 				"\nQ2. L1.2 (recall", "\nA1. L1.4 ", "\nA2. L1.2 "}, nil},
 		{"once each", []string{"--ids", "L1.2,L1.2"}, 0,
-			[]string{"quiz: 1 of 8 questions", "answers: course quiz --ids L1.2 --answers\n"}, nil},
+			[]string{"quiz: 1 of 9 questions", "answers: course quiz --ids L1.2 --answers\n"}, nil},
 		{"unknown ID", []string{"--ids", "L1.4,Z9"}, 2, nil, []string{"usage: ", "error: --ids: no item Z9"}},
 		{"empty ID", []string{"--ids", "L1.4,"}, 2, nil, []string{"error: --ids: an empty ID in L1.4,"}},
-		{"not a question", []string{"--ids", "L1.4,L1.5,P1"}, 1, nil,
-			[]string{"course: L1.5, P1: not a question of why, decision, trap, recall, predict in every group (8 questions)\n"}},
+		{"not a question", []string{"--ids", "L1.4,L1.5,P2"}, 1, nil,
+			[]string{"course: L1.5, P2: not a question of why, decision, trap, recall, predict, requirement, exam in every group (9 questions)\n"}},
 		{"outside --kind", []string{"--ids", "L1.4", "--kind", "recall"}, 1, nil,
 			[]string{"course: L1.4: not a question of recall in every group (2 questions)\n"}},
 	}

@@ -639,7 +639,7 @@ lines); `next` would name only the second half, and `progress` reads naturally w
 
 ## course quiz
 
-`course quiz [--lab GROUP] [--kind why|decision|trap|recall|predict] [-n N] [--seed S] [--answers] [--no-context] [--ids ID,ID,...] [--interactive] [--history PATH] [--missed | --due [--now RFC3339]]` draws study
+`course quiz [--lab GROUP] [--kind why|decision|trap|recall|predict|requirement|exam] [-n N] [--seed S] [--answers] [--no-context] [--ids ID,ID,...] [--interactive] [--history PATH] [--missed | --due [--now RFC3339]]` draws study
 questions from the answer keys; it reads no station.
 
 | Kind | Items | Prompt | Answer |
@@ -649,16 +649,22 @@ questions from the answer keys; it reads no station.
 | `trap` | the review-assignment traps (`T<k>.<n>`) | `What goes wrong, and what does this solution do? <trap>` | what goes wrong + this solution |
 | `recall` | lab items whose step is ``Name = `value` `` (a plain name; Lab 8's ORDs) | `What is the ORD of <Name>?` in a section naming the word `ORD` or `ORDs` (not `RECORDS`), else `What is <Name>?` | the value (without its `LI:` citation), then the item's own answer |
 | `predict` | lab items whose step asks to `*Observe*` (any case of the O) | `Predict what you observe, and why: <step>` | the answer |
+| `requirement` | the review-assignment requirements (`RA<k>.<id>`) a traceability row satisfies | `How is this requirement satisfied and verified? <requirement>` | the `Satisfied by` and `Verified by` cells of its rows |
+| `exam` | the exam problems (`P<m>`) | the step, then the problem's `**Requirement.**` paragraph (without the lead) | the rest of the section (design, verification, notes); the whole section when it has no such paragraph |
 
 A lab item takes the first kind that fits, in the order of the table (so an `*Observe*` step whose
 answer asks `*Why ...?*` is a why question). The pool keeps only questions that can be studied:
-the answer is neither empty nor a placeholder (`(step only)`, `Setup.`, `Setup only.`); a lab
+the answer is neither empty nor a placeholder (`(step only)`, `Setup.`, `Setup only.`, and a
+requirement's `(no traceability row)`); a lab
 question (why, recall, predict) points at a course text range (`LI:`), the source its answer is
 traced to; a predict answer holds at least 30 runes once its status markers and evidence lines
 are dropped (this leaves out "as stated.", "The wizard wrote it." and "standard JDWP banner.", 10
 to 21 runes; the shortest kept is 40). A recall answer is the value itself, so it has no length
-floor. Decisions and traps are answered by the review-assignment key, which has no course text
-range: they keep the empty/placeholder rule only.
+floor. Decisions, traps, requirements and exam problems are answered by their own key, which
+has no course text range: they keep the empty/placeholder rule only (so an exam problem that states
+only its requirement is left out). Requirements may share an answer: one traceability row can
+satisfy several (`RA1.M1–M2`). `quiz --lab EXAM` draws the exam problems; `course exam` asks them
+as a timed, scored simulation.
 
 `--lab` and `--kind` narrow the pool; `-n` is the number of questions (default 5; fewer when the
 pool holds fewer). The order is a Fisher-Yates shuffle driven by a PCG seeded with `--seed`, so the
@@ -678,9 +684,9 @@ answers for every ID it covers), instead of a seeded draw: `-n` and `--seed` do 
 header ends `ids L4.14,L8.2` instead of `seed S`. It is how you re-ask the questions you missed,
 statelessly: the replay line keeps `--ids`. `--lab` and `--kind` still narrow the pool the IDs
 must belong to. An empty ID or one the keys do not hold is a usage error (exit 2, `course quiz:
-error: --ids: no item Z9 (...)`); an item that is no question of the selection (a requirement,
-an item the pool leaves out, one outside `--kind`) is refused before any question is printed
-(exit 1, `course: L3.1: not a question of why, decision, trap, recall, predict in every group (125
+error: --ids: no item Z9 (...)`); an item that is no question of the selection (an item the
+pool leaves out, one outside `--kind`) is refused before any question is printed (exit 1, `course:
+L3.1: not a question of why, decision, trap, recall, predict, requirement, exam in every group (157
 questions)`). Without `--interactive` the quiz reads no input and writes no state.
 
 `--interactive` asks the drawn questions one at a time and scores them. Each question prints as
@@ -724,6 +730,15 @@ predict question in every group (history <path>: 0 records)`); a missing history
 one; a line that is not a record (a write cut short) is skipped with `course: history
 <path>:<line>: not a record, skipped` on stderr, so one bad line never locks the history.
 
+Exit: 0 at least one question drawn; 1 an unknown group, an `--ids` item that is no question of the
+selection, or no question of the kinds in the
+groups (`course: no why, decision, trap, recall, predict, requirement, exam question in RAX (searched 10 items)`); 2 the answer keys
+or a text file cannot be read, a drawn item's range lies outside its text file (the message of
+`course text`, before any question is printed; checked without `--answers` too, so the replay line
+works, but not under `--no-context`), `-n` below 1 without `--ids`, or an empty or unknown `--ids` ID (a usage
+error), an empty `--history`, or (`--interactive`) a record that cannot be written. The replay line shell-quotes a
+`--lab` value the shell would split or expand.
+
 ## course history
 
 `course history [--history PATH] [--json]` prints the accuracy of the graded answers in the
@@ -747,14 +762,22 @@ answers, right, wrong, accuracy}], kinds: [{kind, ...}], total}`. Exit: 0 printe
 the history (a missing file is empty: `course: no answer in the history <path> (course quiz
 --interactive records them)`); 2 the history cannot be read or no path is known.
 
-Exit: 0 at least one question drawn; 1 an unknown group, an `--ids` item that is no question of the
-selection, or no question of the kinds in the
-groups (`course: no why, decision, trap, recall, predict question in RAX (searched 10 items)`); 2 the answer keys
-or a text file cannot be read, a drawn item's range lies outside its text file (the message of
-`course text`, before any question is printed; checked without `--answers` too, so the replay line
-works, but not under `--no-context`), `-n` below 1 without `--ids`, or an empty or unknown `--ids` ID (a usage
-error), an empty `--history`, or (`--interactive`) a record that cannot be written. The replay line shell-quotes a
-`--lab` value the shell would split or expand.
+## course exam
+
+`course exam [--count N] [--minutes M] [--seed S] [--history PATH]` simulates the certification
+exam: it draws the `exam` questions of `EXAM` (every one, or `--count` of them) in the order of the
+seed (the shuffle of `quiz`; the clock gives one without `--seed`, printed) and asks them as `quiz
+--interactive` does: the problem, Enter, its answer, a self-grade, one history record per graded
+answer (kind `exam`, group `EXAM`), and the score. The header names the draw and the time limit:
+
+    exam: 3 of 3 problems (EXAM), seed 2, 90 minutes
+
+`--minutes M` asks no new problem once M minutes have passed since the start (`time is up after 2
+of 3 questions`); the problem being answered when the time runs out is still graded. The clock is
+read before each problem, so the limit is checked between problems, not inside one. Exit: 0 asked
+(whatever the score); 1 no exam question (`course: no exam question in EXAM (searched 3 items)`);
+2 the answer keys cannot be read, `--count` or `--minutes` below 1 (usage errors), or a record that
+cannot be written.
 
 ## Live run
 
@@ -778,7 +801,7 @@ keys at `5abc827e9`.
 | `course verify --status verified` | 83: CONFIRMED 83 (31 live, 52 offline lines); 110 checks run |
 | `course progress` | 370 items: checked 125, CONFIRMED 83, PARTIAL 39, CONTRADICTED 3, UNDECIDED 245; 155 checks run; 3 `redo` (C3.4, CRA1.2, CRA1.10), 0 `mark` |
 | `course status` | verified 83: live 34, offline 49 |
-| `course quiz -n 500` | 125 questions: why 43, decision 29, trap 26, recall 11, predict 16 |
+| `course quiz -n 500` (2026-10-19) | 157 questions: why 43, decision 29, trap 26, recall 11, predict 16, requirement 29, exam 3 |
 
 To regenerate it, set the variables and run the commands of the table (zsh: run loops in `bash -c`):
 

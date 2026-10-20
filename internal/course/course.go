@@ -30,7 +30,8 @@ others were printed; find: no item matches); 2 cannot search (no root, a missing
 key, a missing text file). check: 0 no FAIL (SKIPs are counted, never passed);
 1 at least one FAIL; 2 the station cannot be read, or every check was skipped.
 quiz: 0 drawn; 1 an unknown group or no question in it (none missed or
-due with --missed, --due); 2 cannot search or record. history: 0 printed;
+due with --missed, --due); 2 cannot search or record. exam: 0 asked; 1 no
+exam question; 2 cannot search or record. history: 0 printed;
 1 no graded answer in the history; 2 the history cannot be read.
 verify, verify-predictions (= verify --status predicted), progress: 0 no item
 contradicted; 1 at least one CONTRADICTED; 2 cannot search, the station
@@ -58,6 +59,7 @@ examples:
   course quiz --lab 3 --interactive
   course quiz --due --interactive
   course history
+  course exam --minutes 90
   course find -i 'history:'
   course find --slides -i neql`
 
@@ -157,11 +159,12 @@ func buildParser() (*argparse.Parser, map[string]*argparse.Parser) {
 	pg.Add(solutionsArg, "--solutions")
 	pg.Add(argparse.Arg{Metavar: "YYYY-MM-DD", Help: "date written in the suggested *(verified live|offline ...)* lines (default: today)"}, "--date")
 	pg.Add(jsonHelp, "--json")
-	qz := add("quiz", "draw why, decision, trap, recall and predict questions from the answer keys; --answers prints the answers after them")
+	qz := add("quiz", "draw why, decision, trap, recall, predict, requirement and exam questions from the answer keys; --answers prints the answers after them")
 	qz.Add(argparse.Arg{Metavar: "GROUP", Help: "one group: a lab number (3 or L3), B, A, RA1, RA2, RAX, RA (all three), EXAM"}, "--lab")
-	qz.Add(argparse.Arg{Choices: []any{quizWhy, quizDecision, quizTrap, quizRecall, quizPredict}, Help: "one kind: why (a lab *Why ...?* question), " +
-		"decision (a review-assignment design decision), trap (a review-assignment trap), " +
-		"recall (a lab Name = `value` step), predict (a lab *Observe* step)"}, "--kind")
+	qz.Add(argparse.Arg{Choices: []any{quizWhy, quizDecision, quizTrap, quizRecall, quizPredict, quizRequirement, quizExam},
+		Help: "one kind: why (a lab *Why ...?* question), decision (a review-assignment design decision), " +
+			"trap (a review-assignment trap), recall (a lab Name = `value` step), predict (a lab *Observe* step), " +
+			"requirement (a review requirement: how it is satisfied and verified), exam (an exam problem: solve it)"}, "--kind")
 	qz.Add(argparse.Arg{Type: argparse.Int, Default: 5, Metavar: "N", Help: "questions to draw (default: 5; fewer when the selection holds fewer)"}, "-n")
 	qz.Add(argparse.Arg{Type: argparse.Int, Metavar: "S", Help: "the draw's seed: the same seed draws the same quiz (default: from the clock, printed)"}, "--seed")
 	qz.Add(argparse.Arg{Action: argparse.StoreTrue, Help: "print every answer, its status and its course text after the questions"}, "--answers")
@@ -174,6 +177,12 @@ func buildParser() (*argparse.Parser, map[string]*argparse.Parser) {
 	qz.Add(argparse.Arg{Action: argparse.StoreTrue, Help: "draw only the questions due for review: Leitner boxes from the history " +
 		"(right: up one box, at most 5; wrong: box 1; due 2^(box-1) days after the last answer)"}, "--due")
 	qz.Add(argparse.Arg{Metavar: "RFC3339", Help: "the time --due is decided at (default: now)"}, "--now")
+	ex := add("exam", "simulate the certification exam: every EXAM problem (or --count) in seeded order, "+
+		"graded like quiz --interactive, optionally timed")
+	ex.Add(argparse.Arg{Type: argparse.Int, Metavar: "N", Help: "problems to ask (default: every one)"}, "--count")
+	ex.Add(argparse.Arg{Type: argparse.Int, Metavar: "M", Help: "time limit: no new problem once M minutes have passed (default: none)"}, "--minutes")
+	ex.Add(argparse.Arg{Type: argparse.Int, Metavar: "S", Help: "the draw's seed (default: from the clock, printed)"}, "--seed")
+	ex.Add(historyArg, "--history")
 	hs := add("history", "the accuracy of your graded answers (quiz --interactive, exam) per group and per kind")
 	hs.Add(historyArg, "--history")
 	hs.Add(jsonHelp, "--json")
@@ -240,6 +249,10 @@ func Main(args []string, s cli.Stdio) int {
 			ids: ns.String("ids"), hasIDs: ns.Get("ids") != nil, interactive: ns.Bool("interactive"),
 			history: ns.String("history"), hasHistory: ns.Get("history") != nil, missed: ns.Bool("missed"), due: ns.Bool("due"),
 			nowFlag: ns.String("now"), hasNow: ns.Get("now") != nil, usage: o.usage})
+	case "exam":
+		return cmdExam(c, s, examOpts{count: ns.Int("count"), hasCount: ns.Get("count") != nil, minutes: ns.Int("minutes"),
+			hasMinutes: ns.Get("minutes") != nil, seed: ns.Int("seed"), hasSeed: ns.Get("seed") != nil,
+			history: ns.String("history"), hasHistory: ns.Get("history") != nil, usage: o.usage})
 	case "status":
 		return cmdStatus(c, s, ns.Get("lab") != nil, ns.String("lab"), ns.String("status"), ns.Bool("json"))
 	default:

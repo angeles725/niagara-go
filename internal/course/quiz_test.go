@@ -12,7 +12,8 @@ import (
 )
 
 // The quiz pool of the root fixture: the why questions L1.1 (leading its answer), L1.5 and L2.1
-// (in the step), the decision D1.1, the trap T1.1 and the predict L1.4 (L2.6 answers too briefly).
+// (in the step), the decision D1.1, the trap T1.1, the predict L1.4 (L2.6 answers too briefly),
+// the four requirements with a traceability row and the exam problem P1.
 func TestQuizPool(t *testing.T) {
 	cases := []struct {
 		name string
@@ -21,9 +22,9 @@ func TestQuizPool(t *testing.T) {
 		want []string
 		not  []string
 	}{
-		{"every kind", []string{"-n", "9", "--seed", "1"}, 0,
-			[]string{"quiz: 6 of 6 questions (why, decision, trap, recall, predict; every group), seed 1\n", "L1.1 ", "L1.5 ", "L2.1 ", "D1.1 ", "T1.1 ", "L1.4 (predict",
-				"answers: course quiz -n 9 --seed 1 --answers\n"},
+		{"every kind", []string{"-n", "20", "--seed", "1"}, 0,
+			[]string{"quiz: 11 of 11 questions (why, decision, trap, recall, predict, requirement, exam; every group), seed 1\n", "L1.1 ", "L1.5 ", "L2.1 ", "D1.1 ", "T1.1 ", "L1.4 (predict",
+				"RA1.R1 (requirement", "P1 (exam", "answers: course quiz -n 20 --seed 1 --answers\n"},
 			[]string{"L1.2 ", "\nanswers\n"}},
 		{"a why question leading the answer", []string{"--kind", "why", "--lab", "1", "--seed", "3", "--answers"}, 0,
 			[]string{"quiz: 2 of 2 questions (why; L1), seed 3\n", "    Start the console (`LI:2-3`)\n    *Why the console?*\n",
@@ -38,7 +39,7 @@ func TestQuizPool(t *testing.T) {
 		{"unknown group", []string{"--lab", "9"}, 1, nil, nil},
 		{"no question asked", []string{"-n", "0"}, 2, nil, nil},
 		{"-n does not apply under --ids", []string{"--ids", "L1.1", "-n", "0", "--answers"}, 0,
-			[]string{"quiz: 1 of 6 questions (why, decision, trap, recall, predict; every group), ids L1.1\n", "A1. L1.1 "}, nil},
+			[]string{"quiz: 1 of 11 questions (why, decision, trap, recall, predict, requirement, exam; every group), ids L1.1\n", "A1. L1.1 "}, nil},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {

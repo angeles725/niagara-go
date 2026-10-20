@@ -27,7 +27,7 @@ const (
 	quizPredict  = "predict"
 )
 
-var quizKinds = []string{quizWhy, quizDecision, quizTrap, quizRecall, quizPredict}
+var quizKinds = []string{quizWhy, quizDecision, quizTrap, quizRecall, quizPredict, quizRequirement, quizExam}
 
 // quizContext is how many course text lines a question prints; the rest is one line naming the
 // command that prints them all.
@@ -55,8 +55,8 @@ var (
 )
 
 // placeholders are the answers that answer nothing: a step with no answer (key/labs.go writes
-// "(step only)") and the setup steps.
-var placeholders = []string{"(step only)", "Setup.", "Setup only."}
+// "(step only)"), the setup steps and a requirement no traceability row satisfies.
+var placeholders = []string{"(step only)", "Setup.", "Setup only.", "(no traceability row)"}
 
 // question is one quiz entry: the item, its kind, what it asks and its answer.
 type question struct {
@@ -80,6 +80,11 @@ func asQuestion(it *key.Item) (question, bool) {
 		q.kind, q.prompt = quizDecision, "Why this decision? "+it.Step
 	case it.Kind == "trap":
 		q.kind, q.prompt = quizTrap, "What goes wrong, and what does this solution do? "+it.Step
+	case it.Kind == "requirement":
+		q.kind, q.prompt = quizRequirement, requirementPrompt+it.Step
+	case it.Kind == "exam problem":
+		q.kind = quizExam
+		q.prompt, q.answer = examQuestion(it)
 	case it.Kind != "lab item":
 		return q, false
 	case whyAnyRe.MatchString(it.Step):

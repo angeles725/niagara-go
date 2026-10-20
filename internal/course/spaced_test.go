@@ -46,7 +46,7 @@ func TestQuizMissed(t *testing.T) {
 	}
 	// --lab narrows the missed questions too.
 	if code, _, errb := run("--root", "testdata/root", "quiz", "--missed", "--history", hist, "--lab", "1"); code != 1 ||
-		!strings.Contains(errb, "course: no missed why, decision, trap, recall, predict question in L1 (history "+hist+": 6 records)\n") {
+		!strings.Contains(errb, "course: no missed why, decision, trap, recall, predict, requirement, exam question in L1 (history "+hist+": 6 records)\n") {
 		t.Errorf("exit %d, stderr %q", code, errb)
 	}
 	// An empty (or missing) history is the honest zero.
