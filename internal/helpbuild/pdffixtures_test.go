@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/angeles725/niagara-go/internal/helpbuild/internal/testkit"
 )
 
 // Fixtures of the S3 tests: hand-written PDFs real pdftotext reads, and a
@@ -127,7 +129,7 @@ func fakeBin(t *testing.T, dir, real string) string {
 		t.Skip("no sh for the fake pdftotext")
 	}
 	bin := filepath.Join(dir, "bin")
-	writeFile(t, filepath.Join(bin, "pdftotext"), []byte(fakeScript(real)))
+	testkit.WriteFile(t, filepath.Join(bin, "pdftotext"), []byte(fakeScript(real)))
 	if err := os.Chmod(filepath.Join(bin, "pdftotext"), 0o755); err != nil {
 		t.Fatal(err)
 	}

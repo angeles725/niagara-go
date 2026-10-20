@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/angeles725/niagara-go/internal/helpbuild/internal/testkit"
 	"github.com/angeles725/niagara-go/internal/index"
 )
 
@@ -64,7 +65,7 @@ func TestGateCourseBoundCourse(t *testing.T) {
 func TestRunSweepRegistryErrorExitsOne(t *testing.T) {
 	repo := t.TempDir()
 	root := filepath.Join(repo, "versions", "1.0")
-	writeFile(t, filepath.Join(repo, index.RegistryRel), []byte(`{"default": "1.0", "versions": []}`))
+	testkit.WriteFile(t, filepath.Join(repo, index.RegistryRel), []byte(`{"default": "1.0", "versions": []}`))
 	var buf bytes.Buffer
 	status, err := RunSweep(repo, root, "1.0", &buf, SweepOptions{})
 	if status != 1 || err == nil || buf.Len() != 0 {

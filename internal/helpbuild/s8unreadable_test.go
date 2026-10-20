@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"runtime"
 	"testing"
+
+	"github.com/angeles725/niagara-go/internal/helpbuild/internal/testkit"
 )
 
 // With TestS8UnreadableFrozen (the frozen Python output): an input that
@@ -30,9 +32,9 @@ func TestS8UnreadableInputKeepsThePreviousIndexes(t *testing.T) {
 		mode, names := c.mode, c.names
 		t.Run(mode, func(t *testing.T) {
 			base := t.TempDir()
-			copyTree(t, filepath.Join("testdata", "s8", "root"), base)
+			testkit.CopyTree(t, filepath.Join("testdata", "s8", "root"), base)
 			for _, n := range names {
-				writeFile(t, filepath.Join(base, "indexes", n), []byte("previous "+n))
+				testkit.WriteFile(t, filepath.Join(base, "indexes", n), []byte("previous "+n))
 			}
 			p := filepath.Join(base, c.unreadable)
 			if err := os.Chmod(p, 0); err != nil {
@@ -43,11 +45,11 @@ func TestS8UnreadableInputKeepsThePreviousIndexes(t *testing.T) {
 				t.Fatalf("%s built over an unreadable input: %+v", mode, res)
 			}
 			for _, n := range names {
-				if got := readText(t, filepath.Join(base, "indexes", n)); got != "previous "+n {
+				if got := testkit.ReadText(t, filepath.Join(base, "indexes", n)); got != "previous "+n {
 					t.Errorf("%s replaced by %.60q", n, got)
 				}
 			}
-			noDotEntries(t, filepath.Join(base, "indexes"))
+			testkit.NoDotEntries(t, filepath.Join(base, "indexes"))
 		})
 	}
 }

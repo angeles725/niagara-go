@@ -13,6 +13,7 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/help/fts"
 	ftbuild "github.com/angeles725/niagara-go/internal/helpbuild/fulltext"
+	"github.com/angeles725/niagara-go/internal/helpbuild/internal/testkit"
 	"github.com/angeles725/niagara-go/internal/index"
 )
 
@@ -92,16 +93,16 @@ func sweepInstallFixture(t *testing.T) (repo, root, install string) {
 	root = filepath.Join(repo, "versions", "1.0")
 	reg, _ := json.Marshal(map[string]any{"default": "1.0", "versions": map[string]any{"1.0": map[string]string{
 		"label": "fixture", "install_dir": install, "data_root": "versions/1.0"}}})
-	writeFile(t, filepath.Join(repo, index.RegistryRel), reg)
+	testkit.WriteFile(t, filepath.Join(repo, index.RegistryRel), reg)
 	if _, err := Extract(install, root, NewListings("")); err != nil {
 		t.Fatal(err)
 	}
 	for _, clean := range []string{"Guide/index.txt", "Guide/Intro.txt", "helpMod-rt/About-Help.txt", "thing-ux/rc/notes.md.txt"} {
-		writeFile(t, filepath.Join(root, "guides-clean", filepath.FromSlash(clean)), []byte("TITLE: x\n"))
+		testkit.WriteFile(t, filepath.Join(root, "guides-clean", filepath.FromSlash(clean)), []byte("TITLE: x\n"))
 	}
-	writeFile(t, filepath.Join(install, "docs", "menu", "tree.html"), []byte(page("Docs", "menu")))
-	writeFile(t, filepath.Join(install, "docs", "Manual.pdf"), []byte("%PDF-1.4 not really"))
-	writeFile(t, filepath.Join(root, "indexes", "pdf-index.json"), []byte(`{"Manual": {"source_pdf": "Manual.pdf"}}`))
+	testkit.WriteFile(t, filepath.Join(install, "docs", "menu", "tree.html"), []byte(page("Docs", "menu")))
+	testkit.WriteFile(t, filepath.Join(install, "docs", "Manual.pdf"), []byte("%PDF-1.4 not really"))
+	testkit.WriteFile(t, filepath.Join(root, "indexes", "pdf-index.json"), []byte(`{"Manual": {"source_pdf": "Manual.pdf"}}`))
 	return repo, root, install
 }
 
@@ -267,11 +268,11 @@ func TestSweepCorners(t *testing.T) {
 	writeJar(t, filepath.Join(install, "sw", "locked", "x.jar"), [2]string{"doc/a.html", "<p>a"})
 	writeJar(t, filepath.Join(install, "modules", "Upper.JAR"), [2]string{"doc/a.html", "<p>a"})
 	writeJar(t, filepath.Join(install, "modules", "mod-rt.jar"), [2]string{"notes/a.txt", "notes"})
-	writeFile(t, filepath.Join(install, "modules", "broken-rt.jar"), []byte("PK\x03\x04 not a zip"))
-	writeFile(t, filepath.Join(install, "modules", "empty-rt.jar"), nil)
-	writeFile(t, filepath.Join(install, "docs", "sub", "Manual.PDF"), []byte("%PDF-1.4"))
-	writeFile(t, filepath.Join(install, "docs", "locked", "Other.pdf"), []byte("%PDF-1.4"))
-	writeFile(t, filepath.Join(root, "indexes", "pdf-index.json"), []byte(`{"Manual": {"source_pdf": "sub/manual.pdf"}}`))
+	testkit.WriteFile(t, filepath.Join(install, "modules", "broken-rt.jar"), []byte("PK\x03\x04 not a zip"))
+	testkit.WriteFile(t, filepath.Join(install, "modules", "empty-rt.jar"), nil)
+	testkit.WriteFile(t, filepath.Join(install, "docs", "sub", "Manual.PDF"), []byte("%PDF-1.4"))
+	testkit.WriteFile(t, filepath.Join(install, "docs", "locked", "Other.pdf"), []byte("%PDF-1.4"))
+	testkit.WriteFile(t, filepath.Join(root, "indexes", "pdf-index.json"), []byte(`{"Manual": {"source_pdf": "sub/manual.pdf"}}`))
 	locked := lockDir(t, filepath.Join(install, "sw", "locked"))
 	locked = lockDir(t, filepath.Join(install, "docs", "locked")) && locked
 
@@ -333,8 +334,8 @@ func TestSweepShadowedEntries(t *testing.T) {
 		install, root := filepath.Join(tmp, "install"), filepath.Join(tmp, "data")
 		writeJar(t, filepath.Join(install, "modules", "mmm-ux.jar"),
 			[2]string{"doc/rc/x.md", "# first\n"}, [2]string{"rc/x.md", c.second})
-		writeFile(t, filepath.Join(root, "guides", "mmm-ux", "rc", "x.md"), []byte("# first\n"))
-		writeFile(t, filepath.Join(root, "guides-clean", "mmm-ux", "rc", "x.md.txt"), []byte("TITLE: first\n"))
+		testkit.WriteFile(t, filepath.Join(root, "guides", "mmm-ux", "rc", "x.md"), []byte("# first\n"))
+		testkit.WriteFile(t, filepath.Join(root, "guides-clean", "mmm-ux", "rc", "x.md.txt"), []byte("TITLE: first\n"))
 		res := scanOK(t, install, root, SweepOptions{})
 		row := res.Rows["modules/"]
 		if row.Indexed != c.indexed || row.Excluded != c.excluded || row.Unclassified != c.unclassed {
@@ -378,7 +379,7 @@ func TestReportFormatting(t *testing.T) {
 // rebuild (open_index's building is the caller's FulltextDocs).
 func TestFreshFulltextDocs(t *testing.T) {
 	root := t.TempDir()
-	writeFile(t, filepath.Join(root, "devguide-examples", "x", "demo.js"), []byte("function demo() {}\n"))
+	testkit.WriteFile(t, filepath.Join(root, "devguide-examples", "x", "demo.js"), []byte("function demo() {}\n"))
 	var stale *fts.StaleIndexError
 	if _, err := FreshFulltextDocs(root); !errors.As(err, &stale) || !stale.Missing {
 		t.Errorf("no index: %v", err)
@@ -390,7 +391,7 @@ func TestFreshFulltextDocs(t *testing.T) {
 	if err != nil || !docs["devguide-examples/x/demo.js"] {
 		t.Errorf("fresh index: %v %v", docs, err)
 	}
-	writeFile(t, filepath.Join(root, "devguide-examples", "x", "late.js"), []byte("function late() {}\n"))
+	testkit.WriteFile(t, filepath.Join(root, "devguide-examples", "x", "late.js"), []byte("function late() {}\n"))
 	if _, err := FreshFulltextDocs(root); !errors.As(err, &stale) || stale.Missing {
 		t.Errorf("stale index: %v", err)
 	}

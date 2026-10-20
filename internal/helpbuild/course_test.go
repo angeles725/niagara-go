@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/angeles725/niagara-go/internal/helpbuild/internal/testkit"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 )
@@ -42,7 +43,7 @@ var courseFixture = map[string]string{
 func courseRepo(t *testing.T, dir string, extra map[string]string) (repo string) {
 	t.Helper()
 	repo = filepath.Join(dir, "repo")
-	writeTree(t, filepath.Join(dir, "course-src"), courseFixture)
+	testkit.WriteTree(t, filepath.Join(dir, "course-src"), courseFixture)
 	vers := pyjson.NewObject()
 	add := func(id, courseDir string) {
 		e := pyjson.NewObject()
@@ -65,7 +66,7 @@ func courseRepo(t *testing.T, dir string, extra map[string]string) (repo string)
 	reg := pyjson.NewObject()
 	reg.Set("default", pyjson.String("A"))
 	reg.Set("versions", vers)
-	writeFile(t, filepath.Join(repo, "versions", "registry.json"), []byte(pyjson.Dumps(reg, DumpDefault)))
+	testkit.WriteFile(t, filepath.Join(repo, "versions", "registry.json"), []byte(pyjson.Dumps(reg, DumpDefault)))
 	return repo
 }
 
@@ -115,7 +116,7 @@ func TestCourseBuildCopiesTextAndCode(t *testing.T) { // test_text_and_code_are_
 
 func TestCourseUnboundBuildsNothing(t *testing.T) { // test_unbound_version_builds_nothing
 	b := filepath.Join(courseRepo(t, t.TempDir(), nil), "versions", "B")
-	writeFile(t, filepath.Join(b, "course-text", "old.txt"), []byte("left from an earlier binding"))
+	testkit.WriteFile(t, filepath.Join(b, "course-text", "old.txt"), []byte("left from an earlier binding"))
 	counts, err := BuildCourse(b, mustDefault(t))
 	if err != nil || counts != nil {
 		t.Fatalf("BuildCourse(B) = %+v, %v", counts, err)
@@ -131,7 +132,7 @@ func TestCourseMissingAndFailedCopy(t *testing.T) {
 	dir := t.TempDir()
 	repo := courseRepo(t, dir, map[string]string{"C": "../no-course"})
 	c := filepath.Join(repo, "versions", "C")
-	writeFile(t, filepath.Join(c, "course-text", "kept.txt"), []byte("kept"))
+	testkit.WriteFile(t, filepath.Join(c, "course-text", "kept.txt"), []byte("kept"))
 	_, err := BuildCourse(c, mustDefault(t))
 	var missing *CourseDirMissingError
 	if !errors.As(err, &missing) || missing.Error() != "course_dir not found: "+filepath.Join(dir, "no-course") {
@@ -147,7 +148,7 @@ func TestCourseMissingAndFailedCopy(t *testing.T) {
 		t.Skip("root reads a 000 file: the failed copy is not checked")
 	}
 	a := filepath.Join(repo, "versions", "A")
-	writeFile(t, filepath.Join(a, "course-text", "previous.txt"), []byte("previous copy"))
+	testkit.WriteFile(t, filepath.Join(a, "course-text", "previous.txt"), []byte("previous copy"))
 	locked := filepath.Join(dir, "course-src", "text", "8 ORDs.txt")
 	if err := os.Chmod(locked, 0); err != nil {
 		t.Fatal(err)
@@ -180,7 +181,7 @@ func TestCourseFilesOrder(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		upper = "D" // a case-insensitive file system cannot hold both B and b/
 	}
-	writeTree(t, src, map[string]string{"b/x": "", "a/z/y": "", "a/b": "", "c": "", upper: "", "outside/o": ""})
+	testkit.WriteTree(t, src, map[string]string{"b/x": "", "a/z/y": "", "a/b": "", "c": "", upper: "", "outside/o": ""})
 	if err := os.Symlink(filepath.Join(src, "outside"), filepath.Join(src, "linked")); err != nil {
 		if runtime.GOOS != "windows" {
 			t.Fatal(err)
@@ -222,9 +223,9 @@ func TestRemoveCourseCopiesRefusesASymlink(t *testing.T) {
 	dir := t.TempDir()
 	b := filepath.Join(courseRepo(t, dir, nil), "versions", "B")
 	target := filepath.Join(dir, "elsewhere")
-	writeFile(t, filepath.Join(target, "keep.txt"), []byte("not ours"))
+	testkit.WriteFile(t, filepath.Join(target, "keep.txt"), []byte("not ours"))
 	link := filepath.Join(b, CourseTextDir)
-	symlinkOrSkip(t, target, link)
+	testkit.SymlinkOrSkip(t, target, link)
 	removed, err := RemoveCourseCopies(b)
 	want := "[Errno None] None: " + pycompat.FSRepr(link)
 	if err == nil || err.Error() != want || len(removed) != 0 {

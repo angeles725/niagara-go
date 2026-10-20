@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/angeles725/niagara-go/internal/helpbuild/internal/testkit"
 )
 
 var updateCov = flag.Bool("update-cov", false, "rewrite testdata/cov/golden/ from the Go reports (review the diff)")
@@ -56,7 +58,7 @@ func checkCovGoldens(t *testing.T, cases []covGoldenCase, pairs ...string) {
 	for _, c := range cases {
 		got := covRelabel(goCov(c.mode, c.args...), pairs...)
 		if *updateCov {
-			writeFile(t, covGoldenPath(c.name), []byte(got))
+			testkit.WriteFile(t, covGoldenPath(c.name), []byte(got))
 			continue
 		}
 		want, err := os.ReadFile(covGoldenPath(c.name))
@@ -130,8 +132,8 @@ func TestCoverageMalformedIndexes(t *testing.T) {
 	for _, c := range covMalformed {
 		t.Run(c.name, func(t *testing.T) {
 			base := filepath.Join(t.TempDir(), "b")
-			copyTree(t, src, base)
-			writeFile(t, filepath.Join(base, "indexes", c.file), []byte(c.text))
+			testkit.CopyTree(t, src, base)
+			testkit.WriteFile(t, filepath.Join(base, "indexes", c.file), []byte(c.text))
 			var b strings.Builder
 			_, err := Coverage(&b, base, c.module)
 			var shape *IndexShapeError

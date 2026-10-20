@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/angeles725/niagara-go/internal/helpbuild/internal/testkit"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 )
 
@@ -20,7 +21,7 @@ var updateS8 = flag.Bool("update-s8", false, "rewrite testdata/s8/golden/ from t
 func checkS8Golden(t *testing.T, mode string, indexes ...string) {
 	t.Helper()
 	base := t.TempDir()
-	copyTree(t, filepath.Join("testdata", "s8", "root"), base)
+	testkit.CopyTree(t, filepath.Join("testdata", "s8", "root"), base)
 	res, err := goIndexBuild(mode, base)
 	if err != nil {
 		t.Fatal(err)
@@ -29,21 +30,21 @@ func checkS8Golden(t *testing.T, mode string, indexes ...string) {
 	var lines []string
 	for _, l := range res.Log {
 		l = strings.ReplaceAll(strings.ReplaceAll(l, base, "<base>"), string(filepath.Separator), "/")
-		lines = append(lines, dumpLine(str("out"), str(l)))
+		lines = append(lines, testkit.DumpLine(testkit.Str("out"), testkit.Str(l)))
 	}
-	lines = append(lines, dumpLine(str("exit"), intV(res.Status)))
-	got := fileTexts(t, filepath.Join(base, "indexes"))
+	lines = append(lines, testkit.DumpLine(testkit.Str("exit"), testkit.IntV(res.Status)))
+	got := testkit.FileTexts(t, filepath.Join(base, "indexes"))
 	if *updateS8 {
-		writeFile(t, filepath.Join("testdata", "s8", "golden", mode+".stdout"), []byte(strings.Join(lines, "\n")+"\n"))
+		testkit.WriteFile(t, filepath.Join("testdata", "s8", "golden", mode+".stdout"), []byte(strings.Join(lines, "\n")+"\n"))
 		for _, name := range indexes {
-			writeFile(t, filepath.Join("testdata", "s8", "golden", "indexes", name), []byte(got[name]))
+			testkit.WriteFile(t, filepath.Join("testdata", "s8", "golden", "indexes", name), []byte(got[name]))
 		}
 	}
 	want, err := os.ReadFile(filepath.Join("testdata", "s8", "golden", mode+".stdout"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	diffLines(t, mode+" stdout", strings.Split(strings.TrimSuffix(string(want), "\n"), "\n"), lines)
+	testkit.DiffLines(t, mode+" stdout", strings.Split(strings.TrimSuffix(string(want), "\n"), "\n"), lines)
 	if len(got) != len(indexes) {
 		t.Errorf("indexes/ holds %d files, want %d (%q)", len(got), len(indexes), indexes)
 	}
@@ -53,7 +54,7 @@ func checkS8Golden(t *testing.T, mode string, indexes ...string) {
 			t.Fatal(err)
 		}
 		if got[name] != string(golden) {
-			t.Errorf("%s differs:\n go     %s\n golden %s", name, around(got[name], string(golden)), around(string(golden), got[name]))
+			t.Errorf("%s differs:\n go     %s\n golden %s", name, testkit.Around(got[name], string(golden)), testkit.Around(string(golden), got[name]))
 		}
 	}
 }
@@ -69,7 +70,7 @@ func TestBuildClassIndexFixture(t *testing.T) {
 
 func TestBuildClassIndexParseFailures(t *testing.T) {
 	base := t.TempDir()
-	copyTree(t, filepath.Join("testdata", "s8", "root"), base)
+	testkit.CopyTree(t, filepath.Join("testdata", "s8", "root"), base)
 	res, err := BuildClassIndex(base)
 	if err != nil {
 		t.Fatal(err)

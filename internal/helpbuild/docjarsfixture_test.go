@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/angeles725/niagara-go/internal/helpbuild/internal/testkit"
 )
 
 // The synthetic install and data root of the doc-jar gate tests: one entry
@@ -111,7 +113,7 @@ func covInstall(t *testing.T, dir string) string {
 		[2]string{"doc/java/lang/String.bajadoc", covBajadoc("java.lang.String")},
 		[2]string{"notdoc.txt", "n"},
 	)
-	writeFile(t, filepath.Join(mod, "docBroken-doc.jar"), []byte("not a zip"))
+	testkit.WriteFile(t, filepath.Join(mod, "docBroken-doc.jar"), []byte("not a zip"))
 	writeJar(t, filepath.Join(mod, "alarm-rt.jar"),
 		[2]string{"META-INF/MANIFEST.MF", "m"},
 		[2]string{"com/acme/BAlarm.class", "\xca\xfe"},
@@ -158,7 +160,7 @@ func covBase(t *testing.T, dir string) string {
 	t.Helper()
 	base := filepath.Join(dir, "base")
 	for _, rel := range covExtracted {
-		writeFile(t, filepath.Join(base, rel), []byte("text "+rel+"\n"))
+		testkit.WriteFile(t, filepath.Join(base, rel), []byte("text "+rel+"\n"))
 	}
 	files := map[string]string{
 		"guides/Alpha/x.bajadoc":       covBajadoc("cl.alpha.BX"),
@@ -185,7 +187,7 @@ func covBase(t *testing.T, dir string) string {
 		"indexes/jdk-class-index.json":     `{"Object": {"package": "java.lang"}}`,
 	}
 	for rel, text := range files {
-		writeFile(t, filepath.Join(base, rel), []byte(text))
+		testkit.WriteFile(t, filepath.Join(base, rel), []byte(text))
 	}
 	return base
 }
@@ -197,6 +199,6 @@ func covRepo(t *testing.T, dir, vid, install, base string) string {
 	repo := filepath.Join(dir, "repo")
 	reg := fmt.Sprintf(`{"versions": {%q: {"label": "x", "install_dir": %q, "data_root": %q}, "9.9.9.9": {"label": "y"}}}`,
 		vid, install, base)
-	writeFile(t, filepath.Join(repo, "versions", "registry.json"), []byte(reg))
+	testkit.WriteFile(t, filepath.Join(repo, "versions", "registry.json"), []byte(reg))
 	return repo
 }

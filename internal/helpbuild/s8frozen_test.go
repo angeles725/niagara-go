@@ -7,6 +7,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/angeles725/niagara-go/internal/helpbuild/internal/testkit"
 )
 
 // The S8 index builders (class-index.json + jdk-class-index.json,
@@ -43,30 +45,30 @@ func goIndexRun(mode, base string) ([]string, time.Duration) {
 	var out []string
 	if res != nil {
 		for _, l := range res.Log {
-			out = append(out, dumpLine(str("out"), str(l)))
+			out = append(out, testkit.DumpLine(testkit.Str("out"), testkit.Str(l)))
 		}
 		for _, l := range res.Stderr {
-			out = append(out, dumpLine(str("err"), str(l)))
+			out = append(out, testkit.DumpLine(testkit.Str("err"), testkit.Str(l)))
 		}
 	}
 	if err != nil {
-		return append(out, dumpLine(str("raise"))), took
+		return append(out, testkit.DumpLine(testkit.Str("raise"))), took
 	}
-	return append(out, dumpLine(str("exit"), intV(res.Status))), took
+	return append(out, testkit.DumpLine(testkit.Str("exit"), testkit.IntV(res.Status))), took
 }
 
 // relabelIndex shows base as <base>.
 func relabelIndex(lines []string, base string) []string {
-	return relabeled(lines, base, "<base>")
+	return testkit.Relabeled(lines, base, "<base>")
 }
 
 // TestS8CornersFrozen: every builder on the checked-in fixture, then on the
 // corners a fixture cannot hold (s8Corners, s8CleanCorners), and on roots
 // without the folders each builder reads.
 func TestS8CornersFrozen(t *testing.T) {
-	frozenOnly(t)
+	testkit.FrozenOnly(t)
 	base := filepath.Join(t.TempDir(), "go")
-	copyTree(t, filepath.Join("testdata", "s8", "root"), base)
+	testkit.CopyTree(t, filepath.Join("testdata", "s8", "root"), base)
 	for _, mode := range s8Modes { // the fixture's own output is the golden of checkS8Golden
 		goIndexRun(mode, base)
 	}
@@ -84,9 +86,9 @@ func TestS8CornersFrozen(t *testing.T) {
 	} {
 		b := filepath.Join(t.TempDir(), "go")
 		if c.keep == "" {
-			writeFile(t, filepath.Join(b, "readme.txt"), nil)
+			testkit.WriteFile(t, filepath.Join(b, "readme.txt"), nil)
 		} else {
-			copyTree(t, filepath.Join("testdata", "s8", "root", c.keep), filepath.Join(b, c.keep))
+			testkit.CopyTree(t, filepath.Join("testdata", "s8", "root", c.keep), filepath.Join(b, c.keep))
 		}
 		for _, mode := range s8Modes {
 			indexFrozen(t, "s8/"+c.name, mode, b)
@@ -101,7 +103,7 @@ func TestS8CornersFrozen(t *testing.T) {
 func s8Corners(t *testing.T, base string) {
 	t.Helper()
 	dev := filepath.Join(base, "devguide", "zz")
-	writeFile(t, filepath.Join(dev, "real", "BLinked.bajadoc"), []byte(`<bajadoc><class qualifiedName="zz.BLinked" name="BLinked" packageName="zz"/></bajadoc>`))
+	testkit.WriteFile(t, filepath.Join(dev, "real", "BLinked.bajadoc"), []byte(`<bajadoc><class qualifiedName="zz.BLinked" name="BLinked" packageName="zz"/></bajadoc>`))
 	for link, target := range map[string]string{"alias": "real", "Alias.bajadoc": "real/BLinked.bajadoc"} {
 		if err := os.Symlink(target, filepath.Join(dev, link)); err != nil {
 			t.Fatal(err)
@@ -139,7 +141,7 @@ func s8CleanCorners(t *testing.T, base string) {
 		"Truncated.txt":   "CLASS: BTrunc\nPACKAGE: zz\nEXTENDS: BObject\n\xe2\x82",
 		"LongLine.txt":    "CLASS: BLong\nPACKAGE: zz\nIMPLEMENTS: " + strings.Repeat("BIa, ", 4000) + "BIz\n\n\xff",
 	} {
-		writeFile(t, filepath.Join(clean, name), []byte(data))
+		testkit.WriteFile(t, filepath.Join(clean, name), []byte(data))
 	}
 	if err := os.Symlink("../javax", filepath.Join(clean, "linked")); err != nil {
 		t.Fatal(err)
@@ -149,9 +151,9 @@ func s8CleanCorners(t *testing.T, base string) {
 // A .bajadoc or a bajadoc-clean/ page that cannot be read: class-index and
 // method-index stop (Python raised), inheritance lists it under Errors.
 func TestS8UnreadableFrozen(t *testing.T) {
-	frozenOnly(t)
+	testkit.FrozenOnly(t)
 	base := filepath.Join(t.TempDir(), "go")
-	copyTree(t, filepath.Join("testdata", "s8", "root"), base)
+	testkit.CopyTree(t, filepath.Join("testdata", "s8", "root"), base)
 	lockFiles(t, filepath.Join(base, "devguide", "baja", "javax", "baja", "sys", "BIObject.bajadoc"),
 		filepath.Join(base, "bajadoc-clean", "javax", "baja", "sys", "BMode.txt"))
 	if err := os.Symlink("missing.bajadoc", filepath.Join(base, "jdk", "java", "Dangling.bajadoc")); err != nil {
@@ -159,6 +161,6 @@ func TestS8UnreadableFrozen(t *testing.T) {
 	}
 	for _, mode := range s8Modes {
 		lines, _ := goIndexRun(mode, base)
-		checkFrozen(t, "s8/unreadable/"+mode, relabelIndex(lines, base))
+		testkit.CheckFrozen(t, "s8/unreadable/"+mode, relabelIndex(lines, base))
 	}
 }

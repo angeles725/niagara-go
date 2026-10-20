@@ -7,6 +7,8 @@ import (
 	"runtime"
 	"strings"
 	"testing"
+
+	"github.com/angeles725/niagara-go/internal/helpbuild/internal/testkit"
 )
 
 // The bajadoc_xml_parser.py port on the synthetic tree of
@@ -22,7 +24,7 @@ import (
 
 func TestParseBajadocXMLFixture(t *testing.T) {
 	base := t.TempDir()
-	copyTree(t, filepath.Join("testdata", "bajadocxml", "root"), base)
+	testkit.CopyTree(t, filepath.Join("testdata", "bajadocxml", "root"), base)
 	res, err := ParseBajadocXML(base)
 	if err != nil {
 		t.Fatal(err)
@@ -34,7 +36,7 @@ func TestParseBajadocXMLFixture(t *testing.T) {
 	if got := strings.Join(res.Log, "\n") + "\n"; got != string(want) || res.Classes != 12 {
 		t.Errorf("log %q, %d classes; want %q, 12", got, res.Classes, want)
 	}
-	got, golden := fileTexts(t, filepath.Join(base, "bajadoc-clean")), fileTexts(t, filepath.Join("testdata", "bajadocxml", "clean"))
+	got, golden := testkit.FileTexts(t, filepath.Join(base, "bajadoc-clean")), testkit.FileTexts(t, filepath.Join("testdata", "bajadocxml", "clean"))
 	for rel, text := range golden {
 		if got[rel] != text {
 			t.Errorf("%s:\n got %q\nwant %q", rel, got[rel], text)
@@ -55,11 +57,11 @@ func TestParseBajadocXMLKeepsOtherPages(t *testing.T) {
 		t.Skip("a file name with < and > cannot exist on Windows")
 	}
 	base := t.TempDir()
-	copyTree(t, filepath.Join("testdata", "bajadocxml", "root"), base)
+	testkit.CopyTree(t, filepath.Join("testdata", "bajadocxml", "root"), base)
 	demo := filepath.Join(base, "bajadoc-clean", "javax", "baja", "demo")
 	html, legacy := filepath.Join(demo, "BHasHtml.txt"), filepath.Join(demo, "Box<T>.txt")
-	writeFile(t, html, []byte("CLASS: BHasHtml\nfrom the javadoc page\n"))
-	writeFile(t, legacy, []byte("old"))
+	testkit.WriteFile(t, html, []byte("CLASS: BHasHtml\nfrom the javadoc page\n"))
+	testkit.WriteFile(t, legacy, []byte("old"))
 	if _, err := ParseBajadocXML(base); err != nil {
 		t.Fatal(err)
 	}
@@ -84,7 +86,7 @@ func TestParseBajadocXMLKeepsOtherPages(t *testing.T) {
 // ET.parse raises the OSError (only a ParseError is caught).
 func TestParseBajadocXMLReadError(t *testing.T) {
 	base := t.TempDir()
-	copyTree(t, filepath.Join("testdata", "bajadocxml", "root"), base)
+	testkit.CopyTree(t, filepath.Join("testdata", "bajadocxml", "root"), base)
 	if err := os.Symlink("missing.bajadoc", filepath.Join(base, "guides", "Dangling.bajadoc")); err != nil {
 		t.Skipf("no symlinks here: %v", err)
 	}
@@ -102,7 +104,7 @@ func TestParseBajadocXMLReadError(t *testing.T) {
 func TestParseBajadocXMLUnsafeClassName(t *testing.T) {
 	base := t.TempDir()
 	doc := `<bajadoc><class qualifiedName="x.Evil" name="../../../../Evil" packageName="x"/></bajadoc>`
-	writeFile(t, filepath.Join(base, "devguide", "Evil.bajadoc"), []byte(doc))
+	testkit.WriteFile(t, filepath.Join(base, "devguide", "Evil.bajadoc"), []byte(doc))
 	if _, err := ParseBajadocXML(base); !errors.Is(err, ErrUnsafeClassName) {
 		t.Errorf("ParseBajadocXML: %v; want ErrUnsafeClassName", err)
 	}

@@ -11,6 +11,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/angeles725/niagara-go/internal/helpbuild/internal/testkit"
 )
 
 // readAll opens jar and reads every entry, whole or bounded; an entry that
@@ -67,7 +69,7 @@ func TestReadEntryStoredAndDeflated(t *testing.T) {
 	if err := w.Close(); err != nil {
 		t.Fatal(err)
 	}
-	writeFile(t, jar, buf.Bytes())
+	testkit.WriteFile(t, jar, buf.Bytes())
 	for _, whole := range []bool{true, false} {
 		got := readAllEntries(t, jar, whole)
 		want := []string{"a.txt=stored", "b.txt=" + big, "e.txt=", "s.txt="}
@@ -103,7 +105,7 @@ func TestReadEntryFollowsPythonZipfile(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			jar := filepath.Join(dir, strings.ReplaceAll(c.name, " ", "_")+".jar")
-			writeFile(t, jar, rawZip("", c.entries, ""))
+			testkit.WriteFile(t, jar, rawZip("", c.entries, ""))
 			for _, whole := range []bool{true, false} {
 				if got := readAllEntries(t, jar, whole); strings.Join(got, "|") != strings.Join(c.want, "|") {
 					t.Fatalf("whole=%v: %q, want %q", whole, got, c.want)
@@ -116,7 +118,7 @@ func TestReadEntryFollowsPythonZipfile(t *testing.T) {
 // Prepended data shifts every local header (concat), the reader follows.
 func TestReadEntryAfterPrependedData(t *testing.T) {
 	jar := filepath.Join(t.TempDir(), "p.jar")
-	writeFile(t, jar, rawZip(strings.Repeat("#", 77), []rawEntry{{name: "a.txt", data: "abc"}, {name: "b.txt", data: "de"}}, ""))
+	testkit.WriteFile(t, jar, rawZip(strings.Repeat("#", 77), []rawEntry{{name: "a.txt", data: "abc"}, {name: "b.txt", data: "de"}}, ""))
 	if got := readAllEntries(t, jar, true); strings.Join(got, "|") != "a.txt=abc|b.txt=de" {
 		t.Fatalf("%q", got)
 	}
@@ -148,7 +150,7 @@ func TestReadEntryTruncatedDeflate(t *testing.T) {
 	}
 	for _, cut := range []int{0, 1, comp.Len() / 2} {
 		path := filepath.Join(t.TempDir(), "t.bin")
-		writeFile(t, path, append(append([]byte{}, hdr.Bytes()...), comp.Bytes()[:cut]...))
+		testkit.WriteFile(t, path, append(append([]byte{}, hdr.Bytes()...), comp.Bytes()[:cut]...))
 		f, err := os.Open(path)
 		if err != nil {
 			t.Fatal(err)

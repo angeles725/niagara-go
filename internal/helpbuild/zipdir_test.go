@@ -7,6 +7,8 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/angeles725/niagara-go/internal/helpbuild/internal/testkit"
 )
 
 // The central-directory corners Python's zipfile decides (see zipdir.go).
@@ -47,7 +49,7 @@ func TestCentralDirFollowsPythonZipfile(t *testing.T) {
 	for i, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			jar := filepath.Join(dir, fmt.Sprintf("%d.jar", i))
-			writeFile(t, jar, c.data)
+			testkit.WriteFile(t, jar, c.data)
 			infos, err := readCentralDir(jar)
 			if c.want == nil {
 				if err == nil {
@@ -80,7 +82,7 @@ func TestCentralDirFollowsPythonZipfile(t *testing.T) {
 
 func TestZip64SizeIsReported(t *testing.T) {
 	jar := filepath.Join(t.TempDir(), "big.jar")
-	writeFile(t, jar, rawZip("", []rawEntry{{name: "big.txt", data: "12345", size64: true, extra: zip64Size(5)}}, ""))
+	testkit.WriteFile(t, jar, rawZip("", []rawEntry{{name: "big.txt", data: "12345", size64: true, extra: zip64Size(5)}}, ""))
 	if infos, err := readCentralDir(jar); err != nil || infos[0].size != 5 {
 		t.Fatalf("entries %+v, %v", infos, err)
 	}

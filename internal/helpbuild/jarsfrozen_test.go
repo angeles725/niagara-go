@@ -6,24 +6,13 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/angeles725/niagara-go/internal/helpbuild/internal/testkit"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 )
 
 // The jar listing and the install rules (S1) on synthetic jars, against
 // their frozen Python output (frozen_test.go): every entry's classification,
 // the listing-cache path of odd install names, and the glob rules.
-
-func str(s string) pyjson.Value { return pyjson.String(s) }
-func boolean(b bool) pyjson.Value {
-	return pyjson.Value{Kind: pyjson.Bool, B: b}
-}
-func optStr(s string) pyjson.Value {
-	if s == "" {
-		return pyjson.Value{}
-	}
-	return str(s)
-}
-func array(vs ...pyjson.Value) pyjson.Value { return pyjson.Value{Kind: pyjson.Array, A: vs} }
 
 // goClassify is the classification of every entry of jars: the listing,
 // then per entry its doc-like, extract, exclude and course rules, the guide,
@@ -35,14 +24,14 @@ func goClassify(t *testing.T, srcDir string, jars []string) []string {
 	for _, jar := range jars {
 		name := filepath.Base(jar)
 		l := ReadListing(jar)
-		out = append(out, pyjson.Dumps(array(str("jar"), str(name), l.value()), DumpCompact))
+		out = append(out, pyjson.Dumps(testkit.Array(testkit.Str("jar"), testkit.Str(name), l.value()), DumpCompact))
 		if l == nil {
 			continue
 		}
 		for _, e := range l.Entries {
 			exclude := pyjson.Value{}
 			if r := rules.ExcludeRule(name, e.Name); r != nil {
-				exclude = array(str(r.ID), str(r.Reason))
+				exclude = testkit.Array(testkit.Str(r.ID), testkit.Str(r.Reason))
 			}
 			course := ""
 			if r := rules.ExcludeRule("(course)", e.Name); r != nil {
@@ -52,11 +41,11 @@ func goClassify(t *testing.T, srcDir string, jars []string) []string {
 			if r := rules.ExtractRule(name, e.Name); r != nil {
 				extract = r.ID
 			}
-			out = append(out, pyjson.Dumps(array(str("entry"), str(e.Name),
-				boolean(rules.IsDocLike(e.Name)), optStr(extract), exclude, optStr(course),
-				optStr(rules.CourseKind(e.Name)), boolean(IsGuidePage(e.Name)),
-				boolean(IsLicence(e.Name)), boolean(IsSourceArchive("guides/"+e.Name)),
-				str(CleanTextName(e.Name, srcDir))), DumpDefault))
+			out = append(out, pyjson.Dumps(testkit.Array(testkit.Str("entry"), testkit.Str(e.Name),
+				testkit.Boolean(rules.IsDocLike(e.Name)), testkit.OptStr(extract), exclude, testkit.OptStr(course),
+				testkit.OptStr(rules.CourseKind(e.Name)), testkit.Boolean(IsGuidePage(e.Name)),
+				testkit.Boolean(IsLicence(e.Name)), testkit.Boolean(IsSourceArchive("guides/"+e.Name)),
+				testkit.Str(CleanTextName(e.Name, srcDir))), DumpDefault))
 		}
 	}
 	return out
@@ -139,7 +128,7 @@ func syntheticJars(t *testing.T, dir string) []string {
 	}
 	for _, r := range raw {
 		p := filepath.Join(dir, r.name)
-		writeFile(t, p, r.data)
+		testkit.WriteFile(t, p, r.data)
 		paths = append(paths, p)
 	}
 	d := filepath.Join(dir, "dir.jar")
@@ -154,7 +143,7 @@ func siblingSrc(t *testing.T) string {
 	t.Helper()
 	src := filepath.Join(t.TempDir(), "src")
 	for _, rel := range []string{"doc/Page.HTML", "doc/changes.html", "rc/readme.html"} {
-		writeFile(t, filepath.Join(src, filepath.FromSlash(rel)), []byte("<p/>"))
+		testkit.WriteFile(t, filepath.Join(src, filepath.FromSlash(rel)), []byte("<p/>"))
 	}
 	return src
 }
@@ -162,9 +151,9 @@ func siblingSrc(t *testing.T) string {
 // TestClassifyFrozen: the classification of every entry of the synthetic
 // jars, with a source tree for clean_text_name's X.html sibling check.
 func TestClassifyFrozen(t *testing.T) {
-	frozenOnly(t)
+	testkit.FrozenOnly(t)
 	jars := syntheticJars(t, t.TempDir())
-	checkFrozen(t, "jars/classify", goClassify(t, siblingSrc(t), jars))
+	testkit.CheckFrozen(t, "jars/classify", goClassify(t, siblingSrc(t), jars))
 }
 
 // TestCachePathFrozen: the listing-cache path of installs named in odd
@@ -172,7 +161,7 @@ func TestClassifyFrozen(t *testing.T) {
 // ".", UNC). The path names a hash of the absolute install path, so the
 // test runs in "/" for the relative installs to resolve the same anywhere.
 func TestCachePathFrozen(t *testing.T) {
-	frozenOnly(t)
+	testkit.FrozenOnly(t)
 	repo := t.TempDir()
 	t.Chdir("/")
 	var got []string
@@ -181,9 +170,9 @@ func TestCachePathFrozen(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		got = append(got, pyjson.Dumps(str(p), DumpDefault))
+		got = append(got, pyjson.Dumps(testkit.Str(p), DumpDefault))
 	}
-	checkFrozen(t, "jars/cache-path", relabeled(got, repo, "<repo>"))
+	testkit.CheckFrozen(t, "jars/cache-path", testkit.Relabeled(got, repo, "<repo>"))
 }
 
 // TestGlobFrozen: the glob rules (GlobRe) on every pattern/path pair.
@@ -203,7 +192,7 @@ func TestGlobFrozen(t *testing.T) {
 	}
 	var got []pyjson.Value
 	for _, pr := range pairs {
-		got = append(got, boolean(GlobRe(pr[0]).MatchString(pr[1])))
+		got = append(got, testkit.Boolean(GlobRe(pr[0]).MatchString(pr[1])))
 	}
-	checkFrozen(t, "jars/glob", []string{pyjson.Dumps(array(got...), DumpDefault)})
+	testkit.CheckFrozen(t, "jars/glob", []string{pyjson.Dumps(testkit.Array(got...), DumpDefault)})
 }

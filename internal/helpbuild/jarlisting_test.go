@@ -11,6 +11,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/angeles725/niagara-go/internal/helpbuild/internal/testkit"
 )
 
 // test_install_sweep.HELP_JAR.
@@ -128,7 +130,7 @@ func TestDamagedCacheIsRebuilt(t *testing.T) {
 	if err := ls.Save(); err != nil {
 		t.Fatal(err)
 	}
-	text := readText(t, good)
+	text := testkit.ReadText(t, good)
 	const listing = `"listing":{"entries":[["doc/About-Help.html",33,`
 	if !strings.Contains(text, listing) || !strings.Contains(text, `"classes":1}`) {
 		t.Fatalf("unexpected cache text %s", text)
@@ -150,7 +152,7 @@ func TestDamagedCacheIsRebuilt(t *testing.T) {
 	}
 	for _, c := range cases {
 		path := filepath.Join(dir, "bad.json")
-		writeFile(t, path, []byte(c.data))
+		testkit.WriteFile(t, path, []byte(c.data))
 		ls := NewListings(path)
 		if ls.Len() != c.len {
 			t.Fatalf("%s: %d cached jars, want %d", c.name, ls.Len(), c.len)
@@ -188,7 +190,7 @@ func TestCacheFileBytes(t *testing.T) {
 	st, _ := os.Stat(jars[0])
 	want := fmt.Sprintf(`{"version":1,"jars":{%q:{"stamp":[%d,%d],"listing":{"entries":[["doc/About-Help.html",%d,%d]],"classes":1}}}}`,
 		jars[0], st.Size(), st.ModTime().UnixNano(), len(helpJar[0][1]), crc32.ChecksumIEEE([]byte(helpJar[0][1])))
-	if got := readText(t, path); got != want {
+	if got := testkit.ReadText(t, path); got != want {
 		t.Fatalf("cache\n got %s\nwant %s", got, want)
 	}
 }
@@ -197,7 +199,7 @@ func TestCacheFileBytes(t *testing.T) {
 func TestUnreadableJarIsCachedAsNull(t *testing.T) {
 	dir := t.TempDir()
 	jar := filepath.Join(dir, "corrupt.jar")
-	writeFile(t, jar, []byte("not a zip"))
+	testkit.WriteFile(t, jar, []byte("not a zip"))
 	path := filepath.Join(dir, "c.json")
 	ls := NewListings(path)
 	if ls.Listing(jar) != nil || ls.Reads != 1 {
@@ -206,8 +208,8 @@ func TestUnreadableJarIsCachedAsNull(t *testing.T) {
 	if err := ls.Save(); err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(readText(t, path), `"listing":null`) {
-		t.Fatalf("cache %s", readText(t, path))
+	if !strings.Contains(testkit.ReadText(t, path), `"listing":null`) {
+		t.Fatalf("cache %s", testkit.ReadText(t, path))
 	}
 	again := NewListings(path)
 	if again.Listing(jar) != nil || again.Reads != 0 {

@@ -3,6 +3,8 @@ package helpbuild
 import (
 	"path/filepath"
 	"testing"
+
+	"github.com/angeles725/niagara-go/internal/helpbuild/internal/testkit"
 )
 
 // test_text_extraction.TestCleanNames.test_text_pages_keep_their_name.
@@ -24,8 +26,8 @@ func TestTextPagesKeepTheirName(t *testing.T) {
 // (the clean_text_name half; the parser half belongs to slice S5).
 func TestBothPagesKeepTheirOwnCleanFile(t *testing.T) {
 	d := filepath.Join(t.TempDir(), "devguide")
-	writeFile(t, filepath.Join(d, "changes.html"), []byte("<p>html page words</p>"))
-	writeFile(t, filepath.Join(d, "changes.txt"), []byte("plain text page words\n"))
+	testkit.WriteFile(t, filepath.Join(d, "changes.html"), []byte("<p>html page words</p>"))
+	testkit.WriteFile(t, filepath.Join(d, "changes.txt"), []byte("plain text page words\n"))
 	for rel, want := range map[string]string{
 		"changes.txt":  "changes.txt.txt",
 		"changes.html": "changes.txt",
@@ -44,8 +46,8 @@ func TestUpperCaseHTMLSiblingIsSeen(t *testing.T) {
 		t.Errorf("no src dir: %q", got)
 	}
 	guides := filepath.Join(t.TempDir(), "guides")
-	writeFile(t, filepath.Join(guides, "F", "Page.HTML"), []byte("<p>html words</p>"))
-	writeFile(t, filepath.Join(guides, "F", "Page.txt"), []byte("plain text words\n"))
+	testkit.WriteFile(t, filepath.Join(guides, "F", "Page.HTML"), []byte("<p>html words</p>"))
+	testkit.WriteFile(t, filepath.Join(guides, "F", "Page.txt"), []byte("plain text words\n"))
 	if got := CleanTextName("F/Page.txt", guides); got != "F/Page.txt.txt" {
 		t.Errorf("upper-case sibling: %q", got)
 	}

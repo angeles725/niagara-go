@@ -7,6 +7,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/angeles725/niagara-go/internal/helpbuild/internal/testkit"
 )
 
 // The S7a bajadoc parser (bajadoc/javax/baja/**.html -> bajadoc-clean/)
@@ -24,13 +26,13 @@ func goBajadocRun(base string) ([]string, time.Duration) {
 	var out []string
 	if res != nil {
 		for _, l := range res.Log {
-			out = append(out, dumpLine(str("out"), str(l)))
+			out = append(out, testkit.DumpLine(testkit.Str("out"), testkit.Str(l)))
 		}
 	}
 	if err != nil {
-		return append(out, dumpLine(str("raise"))), took
+		return append(out, testkit.DumpLine(testkit.Str("raise"))), took
 	}
-	return append(out, dumpLine(str("exit"), intV(res.Status))), took
+	return append(out, testkit.DumpLine(testkit.Str("exit"), testkit.IntV(res.Status))), took
 }
 
 // goBajadocXMLRun is ParseBajadocXML as lines, like goBajadocRun.
@@ -40,12 +42,12 @@ func goBajadocXMLRun(base string) ([]string, time.Duration) {
 	took := time.Since(start)
 	var out []string
 	for _, l := range res.Log {
-		out = append(out, dumpLine(str("out"), str(l)))
+		out = append(out, testkit.DumpLine(testkit.Str("out"), testkit.Str(l)))
 	}
 	if err != nil {
-		return append(out, dumpLine(str("raise"))), took
+		return append(out, testkit.DumpLine(testkit.Str("raise"))), took
 	}
-	return append(out, dumpLine(str("exit"), intV(0))), took
+	return append(out, testkit.DumpLine(testkit.Str("exit"), testkit.IntV(0))), took
 }
 
 // relabelBajadoc shows base as <base> and the elapsed seconds as <t>.
@@ -53,7 +55,7 @@ func relabelBajadoc(lines []string, base string) []string {
 	out := make([]string, len(lines))
 	for i, l := range lines {
 		if strings.HasPrefix(l, `["out", "Done in `) {
-			l = dumpLine(str("out"), str("Done in <t>s"))
+			l = testkit.DumpLine(testkit.Str("out"), testkit.Str("Done in <t>s"))
 		}
 		out[i] = strings.ReplaceAll(l, base, "<base>")
 	}
@@ -70,7 +72,7 @@ func bajadocFrozen(t *testing.T, name, base string, run func(string) ([]string, 
 		f()
 	}
 	got := append(relabelBajadoc(lines, base), "tree:")
-	checkFrozen(t, name, append(got, treeLines(t, base)...))
+	testkit.CheckFrozen(t, name, append(got, testkit.TreeLines(t, base)...))
 }
 
 // bajadocCorners adds what a checked-in fixture cannot hold: an unreadable
@@ -81,7 +83,7 @@ func bajadocCorners(t *testing.T, base string) (unlock func()) {
 	t.Helper()
 	util := filepath.Join(base, "bajadoc", "javax", "baja", "util")
 	locked := filepath.Join(util, "Locked.html")
-	writeFile(t, locked, []byte(`<h2 class="title">Class Locked</h2>`))
+	testkit.WriteFile(t, locked, []byte(`<h2 class="title">Class Locked</h2>`))
 	if err := os.Chmod(locked, 0); err != nil {
 		t.Fatal(err)
 	}
@@ -94,8 +96,8 @@ func bajadocCorners(t *testing.T, base string) (unlock func()) {
 		}
 	}
 	clean := filepath.Join(base, "bajadoc-clean", "javax", "baja")
-	writeFile(t, filepath.Join(clean, "util", "Cursor&lt;E&gt;.txt"), []byte("old escaped name"))
-	writeFile(t, filepath.Join(clean, "xml", "BFromXml.txt"), []byte("CLASS: BFromXml\n"))
+	testkit.WriteFile(t, filepath.Join(clean, "util", "Cursor&lt;E&gt;.txt"), []byte("old escaped name"))
+	testkit.WriteFile(t, filepath.Join(clean, "xml", "BFromXml.txt"), []byte("CLASS: BFromXml\n"))
 	return unlock
 }
 
@@ -103,18 +105,18 @@ func bajadocCorners(t *testing.T, base string) (unlock func()) {
 // (the second run overwrites in place), and a data root without bajadoc/
 // (exit 1). The fixture's own output is checked by TestParseBajadocFixture.
 func TestBajadocCornersFrozen(t *testing.T) {
-	frozenOnly(t)
+	testkit.FrozenOnly(t)
 	if os.Geteuid() == 0 {
 		t.Skip("root reads a mode-000 page")
 	}
 	base := filepath.Join(t.TempDir(), "go")
-	copyTree(t, filepath.Join("testdata", "bajadoc", "root"), base)
+	testkit.CopyTree(t, filepath.Join("testdata", "bajadoc", "root"), base)
 	goBajadocRun(base)
 	unlock := bajadocCorners(t, base)
 	bajadocFrozen(t, "bajadoc/corners", base, goBajadocRun, unlock)
 	bajadocFrozen(t, "bajadoc/second-run", base, goBajadocRun)
 	empty := filepath.Join(t.TempDir(), "go")
-	writeFile(t, filepath.Join(empty, "bajadoc", "javax", "readme.txt"), nil)
+	testkit.WriteFile(t, filepath.Join(empty, "bajadoc", "javax", "readme.txt"), nil)
 	bajadocFrozen(t, "bajadoc/no-javax-baja", empty, goBajadocRun)
 }
 
@@ -125,12 +127,12 @@ func bajadocXMLCorners(t *testing.T, base string) {
 	t.Helper()
 	demo := filepath.Join(base, "bajadoc-clean", "javax", "baja", "demo")
 	if runtime.GOOS != "windows" {
-		writeFile(t, filepath.Join(demo, "Box<T>.txt"), []byte("old escaped name"))
+		testkit.WriteFile(t, filepath.Join(demo, "Box<T>.txt"), []byte("old escaped name"))
 	}
-	writeFile(t, filepath.Join(demo, "BHasHtml.txt"), []byte("CLASS: BHasHtml\nfrom the javadoc page\n"))
-	writeFile(t, filepath.Join(base, "extra", "BLinked.bajadoc"),
+	testkit.WriteFile(t, filepath.Join(demo, "BHasHtml.txt"), []byte("CLASS: BHasHtml\nfrom the javadoc page\n"))
+	testkit.WriteFile(t, filepath.Join(base, "extra", "BLinked.bajadoc"),
 		[]byte(`<bajadoc><class qualifiedName="a.BLinked" name="BLinked" packageName="a"/></bajadoc>`))
-	writeFile(t, filepath.Join(base, "extra", "dir", "BNotEntered.bajadoc"),
+	testkit.WriteFile(t, filepath.Join(base, "extra", "dir", "BNotEntered.bajadoc"),
 		[]byte(`<bajadoc><class qualifiedName="a.BNotEntered" name="BNotEntered" packageName="a"/></bajadoc>`))
 	guides := filepath.Join(base, "guides")
 	for link, target := range map[string]string{"Linked.bajadoc": "../extra/BLinked.bajadoc", "linked-dir": "../extra/dir"} {
@@ -146,9 +148,9 @@ func bajadocXMLCorners(t *testing.T, base string) {
 // devguide/ or guides/. The fixture's own output is checked by
 // TestParseBajadocXMLFixture.
 func TestBajadocXMLCornersFrozen(t *testing.T) {
-	frozenOnly(t)
+	testkit.FrozenOnly(t)
 	base := filepath.Join(t.TempDir(), "go")
-	copyTree(t, filepath.Join("testdata", "bajadocxml", "root"), base)
+	testkit.CopyTree(t, filepath.Join("testdata", "bajadocxml", "root"), base)
 	goBajadocXMLRun(base)
 	bajadocXMLCorners(t, base)
 	bajadocFrozen(t, "bajadocxml/corners", base, goBajadocXMLRun)
@@ -168,6 +170,6 @@ func TestBajadocXMLCornersFrozen(t *testing.T) {
 		bajadocFrozen(t, "bajadocxml/unreadable", base, goBajadocXMLRun, restore)
 	}
 	empty := filepath.Join(t.TempDir(), "go")
-	writeFile(t, filepath.Join(empty, "devguide-not", "x.bajadoc"), []byte(`<bajadoc/>`))
+	testkit.WriteFile(t, filepath.Join(empty, "devguide-not", "x.bajadoc"), []byte(`<bajadoc/>`))
 	bajadocFrozen(t, "bajadocxml/no-devguide-or-guides", empty, goBajadocXMLRun)
 }

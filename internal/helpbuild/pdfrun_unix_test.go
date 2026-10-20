@@ -16,6 +16,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/angeles725/niagara-go/internal/helpbuild/internal/testkit"
 	"github.com/angeles725/niagara-go/internal/procgroup"
 )
 
@@ -27,7 +28,7 @@ func TestPDFTimeoutKillsForkedChildren(t *testing.T) {
 	needProc(t)
 	script, dir := fakePdftotext(t)
 	pdf := filepath.Join(dir, "x.pdf")
-	writeFile(t, pdf+".fork", nil)
+	testkit.WriteFile(t, pdf+".fork", nil)
 	_, _, err := ExtractPDFText(script, pdf, time.Second)
 	var pe *PDFError
 	if !errors.As(err, &pe) || pe.Failure != PDFTimedOut {
@@ -80,8 +81,8 @@ func startInterruptHelper(t *testing.T) (*exec.Cmd, int) {
 	needProc(t)
 	script, dir := fakePdftotext(t)
 	pdf := filepath.Join(dir, "docs", "x.pdf")
-	writeFile(t, pdf, []byte("%PDF"))
-	writeFile(t, pdf+".fork", nil)
+	testkit.WriteFile(t, pdf, []byte("%PDF"))
+	testkit.WriteFile(t, pdf+".fork", nil)
 	self, err := os.Executable()
 	if err != nil {
 		t.Fatal(err)

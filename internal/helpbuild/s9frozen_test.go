@@ -4,6 +4,8 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/angeles725/niagara-go/internal/helpbuild/internal/testkit"
 )
 
 // The S9 index builders (source-index.json, slots-index.json,
@@ -18,14 +20,14 @@ func indexFrozen(t *testing.T, name, mode, base string) {
 	t.Helper()
 	lines, _ := goIndexRun(mode, base)
 	got := append(relabelIndex(lines, base), "indexes:")
-	checkFrozen(t, name+"/"+mode, append(got, treeLines(t, filepath.Join(base, "indexes"))...))
+	testkit.CheckFrozen(t, name+"/"+mode, append(got, testkit.TreeLines(t, filepath.Join(base, "indexes"))...))
 }
 
 // treeFrozen checks the whole tree of base, once every builder ran, against
 // testdata/frozen/<name>/tree.txt.
 func treeFrozen(t *testing.T, name, base string) {
 	t.Helper()
-	checkFrozen(t, name+"/tree", treeLines(t, base))
+	testkit.CheckFrozen(t, name+"/tree", testkit.TreeLines(t, base))
 }
 
 // lockFiles makes paths unreadable until the test ends; it skips t when the
@@ -47,9 +49,9 @@ func lockFiles(t *testing.T, paths ...string) {
 // the order-independent corners (s9Corners), then on roots without the
 // folders the builders read.
 func TestS9CornersFrozen(t *testing.T) {
-	frozenOnly(t)
+	testkit.FrozenOnly(t)
 	base := filepath.Join(t.TempDir(), "go")
-	copyTree(t, filepath.Join("testdata", "s9", "root"), base)
+	testkit.CopyTree(t, filepath.Join("testdata", "s9", "root"), base)
 	for _, mode := range s9Modes { // the fixture's own output is the golden of checkS9Golden
 		goIndexRun(mode, base)
 	}
@@ -74,12 +76,12 @@ func TestS9CornersFrozen(t *testing.T) {
 		{"source-is-a-file", nil, map[string]string{"source": "", "devguide-rc/R.java": "class R {}\n"}},
 	} {
 		b := filepath.Join(t.TempDir(), "go")
-		writeFile(t, filepath.Join(b, "readme.txt"), nil)
+		testkit.WriteFile(t, filepath.Join(b, "readme.txt"), nil)
 		for _, d := range c.keep {
-			copyTree(t, filepath.Join("testdata", "s9", "root", d), filepath.Join(b, d))
+			testkit.CopyTree(t, filepath.Join("testdata", "s9", "root", d), filepath.Join(b, d))
 		}
 		for rel, data := range c.files {
-			writeFile(t, filepath.Join(b, filepath.FromSlash(rel)), []byte(data))
+			testkit.WriteFile(t, filepath.Join(b, filepath.FromSlash(rel)), []byte(data))
 		}
 		for _, mode := range s9Modes {
 			indexFrozen(t, "s9/"+c.name, mode, b)
@@ -109,9 +111,9 @@ func s9Corners(t *testing.T, base string) {
 		"Open.java":    "package open;\npublic class Open {}\n@NiagaraProperty(name = \"o\", type = \"String\", defaultValue = \"x\\",
 		"Back\\S.java": "package back;\nclass BackS {}\n",
 	} {
-		writeFile(t, filepath.Join(src, "corner-rt", "c", name), []byte(data))
+		testkit.WriteFile(t, filepath.Join(src, "corner-rt", "c", name), []byte(data))
 	}
-	writeFile(t, filepath.Join(base, "elsewhere", "linked", "BLinked.java"),
+	testkit.WriteFile(t, filepath.Join(base, "elsewhere", "linked", "BLinked.java"),
 		[]byte("package linked;\n@NiagaraProperty(name = \"l\", type = \"int\")\npublic class BLinked {}\n"))
 	for link, target := range map[string]string{
 		filepath.Join(src, "linked-rt"):                           filepath.Join(base, "elsewhere"),
@@ -130,11 +132,11 @@ func s9Corners(t *testing.T, base string) {
 // after its file by xref) and a .bajadoc that cannot be read (slots
 // raised, nothing written): the lines and the index of each builder.
 func TestS9UnreadableFrozen(t *testing.T) {
-	frozenOnly(t)
+	testkit.FrozenOnly(t)
 	base := filepath.Join(t.TempDir(), "go")
-	copyTree(t, filepath.Join("testdata", "s9", "root"), base)
+	testkit.CopyTree(t, filepath.Join("testdata", "s9", "root"), base)
 	locked := filepath.Join(base, "source", "corner-rt", "BLocked.java")
-	writeFile(t, locked, []byte("package locked;\n@NiagaraProperty(name = \"k\", type = \"int\")\npublic class BLocked {}\n"))
+	testkit.WriteFile(t, locked, []byte("package locked;\n@NiagaraProperty(name = \"k\", type = \"int\")\npublic class BLocked {}\n"))
 	lockFiles(t, locked, filepath.Join(base, "guides", "clX", "Sample.bajadoc"))
 	for _, mode := range s9Modes {
 		lines, _ := goIndexRun(mode, base)
@@ -142,6 +144,6 @@ func TestS9UnreadableFrozen(t *testing.T) {
 		if err != nil {
 			index = []byte("<none>")
 		}
-		checkFrozen(t, "s9/unreadable/"+mode, append(relabelIndex(lines, base), "index:", string(index)))
+		testkit.CheckFrozen(t, "s9/unreadable/"+mode, append(relabelIndex(lines, base), "index:", string(index)))
 	}
 }

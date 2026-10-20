@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/angeles725/niagara-go/internal/helpbuild/internal/testkit"
 )
 
 // An import whose name ends with "." is where xref_builder raises
@@ -20,9 +22,9 @@ func TestBuildXrefIndexImportEndingWithDot(t *testing.T) {
 	} {
 		t.Run(c.what, func(t *testing.T) {
 			base := t.TempDir()
-			writeFile(t, filepath.Join(base, "source", "m-rt", "a", "A.java"), []byte("package a;\nimport b.B;\npublic class A {}\n"))
-			writeFile(t, filepath.Join(base, "source", "m-rt", "b", "B.java"), []byte("package b;\n"+c.line+"\npublic class B {}\n"))
-			writeFile(t, filepath.Join(base, "source", "m-rt", "c", "C.java"), []byte("package c;\npublic class C {}\n"))
+			testkit.WriteFile(t, filepath.Join(base, "source", "m-rt", "a", "A.java"), []byte("package a;\nimport b.B;\npublic class A {}\n"))
+			testkit.WriteFile(t, filepath.Join(base, "source", "m-rt", "b", "B.java"), []byte("package b;\n"+c.line+"\npublic class B {}\n"))
+			testkit.WriteFile(t, filepath.Join(base, "source", "m-rt", "c", "C.java"), []byte("package c;\npublic class C {}\n"))
 			res, err := BuildXrefIndex(base)
 			if !errors.Is(err, errEmptyImportName) {
 				t.Fatalf("err %v, want %v", err, errEmptyImportName)

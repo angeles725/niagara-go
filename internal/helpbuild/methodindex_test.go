@@ -4,6 +4,8 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/angeles725/niagara-go/internal/helpbuild/internal/testkit"
 )
 
 // The fixture's bajadoc-clean/ member sections: modifiers and generic
@@ -55,8 +57,8 @@ func TestMemberNames(t *testing.T) {
 // UnicodeDecodeError) and the old index stays.
 func TestBuildMethodIndexNotUTF8(t *testing.T) {
 	base := t.TempDir()
-	writeFile(t, filepath.Join(base, "bajadoc-clean", "a", "Bad.txt"), []byte("CLASS: Bad\n\nMETHODS:\n  void f()\n\xff"))
-	writeFile(t, filepath.Join(base, "indexes", "method-index.json"), []byte("old"))
+	testkit.WriteFile(t, filepath.Join(base, "bajadoc-clean", "a", "Bad.txt"), []byte("CLASS: Bad\n\nMETHODS:\n  void f()\n\xff"))
+	testkit.WriteFile(t, filepath.Join(base, "indexes", "method-index.json"), []byte("old"))
 	if _, err := BuildMethodIndex(base); err == nil {
 		t.Fatal("no error for a page that is not UTF-8")
 	}

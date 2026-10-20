@@ -6,43 +6,23 @@ import (
 	"os/exec"
 	"path/filepath"
 	"reflect"
-	"runtime"
 	"strings"
 	"testing"
 
+	"github.com/angeles725/niagara-go/internal/helpbuild/internal/testkit"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // Unit tests of pyfs.go and registry.go: the Python semantics the S3/S4
 // builders rely on (the parity tests cover them end to end).
 
-// writeTree writes files (relative "/"-separated path -> content) under root.
-func writeTree(t *testing.T, root string, files map[string]string) {
-	t.Helper()
-	for rel, text := range files {
-		writeFile(t, filepath.Join(root, filepath.FromSlash(rel)), []byte(text))
-	}
-}
-
-// symlinkOrSkip makes newname a symlink to oldname; on Windows without the
-// symlink privilege the test is skipped.
-func symlinkOrSkip(t *testing.T, oldname, newname string) {
-	t.Helper()
-	if err := os.Symlink(oldname, newname); err != nil {
-		if runtime.GOOS == "windows" {
-			t.Skipf("no symlink privilege: %v", err)
-		}
-		t.Fatal(err)
-	}
-}
-
 // pyWalk lists a symlinked folder among the folders without entering it,
 // a broken symlink among the files, and descends only what visit returns.
 func TestPyWalk(t *testing.T) {
 	top := t.TempDir()
-	writeTree(t, top, map[string]string{"a/x": "", "a/skip/y": "", "f": "", "real/z": ""})
-	symlinkOrSkip(t, filepath.Join(top, "real"), filepath.Join(top, "a", "link"))
-	symlinkOrSkip(t, filepath.Join(top, "missing"), filepath.Join(top, "broken"))
+	testkit.WriteTree(t, top, map[string]string{"a/x": "", "a/skip/y": "", "f": "", "real/z": ""})
+	testkit.SymlinkOrSkip(t, filepath.Join(top, "real"), filepath.Join(top, "a", "link"))
+	testkit.SymlinkOrSkip(t, filepath.Join(top, "missing"), filepath.Join(top, "broken"))
 	var got []string
 	pyWalk(top, func(dir string, dirs, files []string) []string {
 		rel, _ := filepath.Rel(top, dir)
@@ -71,7 +51,7 @@ func TestRemoveFileRefusesADirectory(t *testing.T) {
 		t.Errorf("removeFile(dir) = %v, dir kept %v", err, pycompat.IsDir(d))
 	}
 	f := filepath.Join(dir, "f.txt")
-	writeFile(t, f, nil)
+	testkit.WriteFile(t, f, nil)
 	if err := removeFile(f); err != nil || pycompat.IsFile(f) {
 		t.Errorf("removeFile(file) = %v", err)
 	}
@@ -80,9 +60,9 @@ func TestRemoveFileRefusesADirectory(t *testing.T) {
 func TestPyCopyfile(t *testing.T) {
 	dir := t.TempDir()
 	src, dst := filepath.Join(dir, "src"), filepath.Join(dir, "dst")
-	writeFile(t, src, []byte("data"))
-	writeFile(t, dst, []byte("longer old content"))
-	if err := pyCopyfile(src, dst); err != nil || string(readBytes(t, dst)) != "data" {
+	testkit.WriteFile(t, src, []byte("data"))
+	testkit.WriteFile(t, dst, []byte("longer old content"))
+	if err := pyCopyfile(src, dst); err != nil || string(testkit.ReadBytes(t, dst)) != "data" {
 		t.Fatalf("pyCopyfile: %v", err)
 	}
 	mkfifo, err := exec.LookPath("mkfifo")
@@ -105,9 +85,9 @@ func TestPyCopyfile(t *testing.T) {
 func TestPyCopyfileRefusesSameFileAndDirectory(t *testing.T) {
 	dir := t.TempDir()
 	a := filepath.Join(dir, "a")
-	writeFile(t, a, []byte("data"))
+	testkit.WriteFile(t, a, []byte("data"))
 	link, hard := filepath.Join(dir, "link"), filepath.Join(dir, "hard")
-	symlinkOrSkip(t, a, link)
+	testkit.SymlinkOrSkip(t, a, link)
 	if err := os.Link(a, hard); err != nil {
 		t.Fatal(err)
 	}
@@ -117,7 +97,7 @@ func TestPyCopyfileRefusesSameFileAndDirectory(t *testing.T) {
 		if err == nil || pycompat.OSErrorText(err) != want {
 			t.Errorf("pyCopyfile(%s, %s) = %v, want %q", p[0], p[1], err, want)
 		}
-		if got := string(readBytes(t, a)); got != "data" {
+		if got := string(testkit.ReadBytes(t, a)); got != "data" {
 			t.Fatalf("pyCopyfile(%s, %s) left %q", p[0], p[1], got)
 		}
 	}
@@ -125,12 +105,12 @@ func TestPyCopyfileRefusesSameFileAndDirectory(t *testing.T) {
 	if err := os.Mkdir(src, 0o755); err != nil {
 		t.Fatal(err)
 	}
-	writeFile(t, dst, []byte("keep"))
+	testkit.WriteFile(t, dst, []byte("keep"))
 	err := pyCopyfile(src, dst)
 	if want := "[Errno 21] Is a directory: " + pycompat.FSRepr(src); err == nil || pycompat.OSErrorText(err) != want {
 		t.Errorf("pyCopyfile(dir, dst) = %v, want %q", err, want)
 	}
-	if got := string(readBytes(t, dst)); got != "keep" {
+	if got := string(testkit.ReadBytes(t, dst)); got != "keep" {
 		t.Errorf("pyCopyfile(dir, dst) truncated dst to %q", got)
 	}
 	err = pyCopyfile(a, src) // a directory as destination: open(dst, "wb") fails
@@ -151,7 +131,7 @@ func TestLoadJSONErrors(t *testing.T) {
 		"\ufeff{}":    "Unexpected UTF-8 BOM (decode using utf-8-sig): line 1 column 1 (char 0)",
 		`{"a": 1} {}`: "Extra data: line 1 column 10 (char 9)",
 	} {
-		writeFile(t, p, []byte(data))
+		testkit.WriteFile(t, p, []byte(data))
 		_, err := loadJSON(p)
 		var le *JSONLoadError
 		if !errors.As(err, &le) || le.OS || le.Msg != want {
@@ -171,7 +151,7 @@ func TestRegistryLookups(t *testing.T) {
 	dir := t.TempDir()
 	repo := filepath.Join(dir, "repo")
 	reg := func(text string) {
-		writeFile(t, filepath.Join(repo, "versions", "registry.json"), []byte(text))
+		testkit.WriteFile(t, filepath.Join(repo, "versions", "registry.json"), []byte(text))
 	}
 	root := filepath.Join(repo, "versions", "A")
 	reg(`{"versions": {"bad": 5, "nodr": {"install_dir": "/x"}, "num": {"data_root": 3},` +

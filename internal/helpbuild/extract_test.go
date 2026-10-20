@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/angeles725/niagara-go/internal/helpbuild/internal/testkit"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
@@ -46,8 +47,8 @@ func TestFidelityClassifiesChangedEOLOnlyAndMissing(t *testing.T) {
 	if _, err := Extract(install, root, nil); err != nil {
 		t.Fatal(err)
 	}
-	writeFile(t, filepath.Join(root, "guides", "Foo", "a.html"), []byte("tampered"))
-	writeFile(t, filepath.Join(root, "guides", "Foo", "crlf.txt"), []byte("a\nb\n"))
+	testkit.WriteFile(t, filepath.Join(root, "guides", "Foo", "a.html"), []byte("tampered"))
+	testkit.WriteFile(t, filepath.Join(root, "guides", "Foo", "crlf.txt"), []byte("a\nb\n"))
 	if err := os.Remove(filepath.Join(root, "guides", "Foo", "sub", "b.html")); err != nil {
 		t.Fatal(err)
 	}
@@ -69,7 +70,7 @@ func TestFillMissingWritesOnlyAbsentFiles(t *testing.T) {
 		t.Fatal(err)
 	}
 	kept := filepath.Join(root, "guides", "Foo", "a.html")
-	writeFile(t, kept, []byte("locally edited"))
+	testkit.WriteFile(t, kept, []byte("locally edited"))
 	gone := filepath.Join(root, "guides", "Foo", "sub", "b.html")
 	if err := os.Remove(gone); err != nil {
 		t.Fatal(err)
@@ -78,8 +79,8 @@ func TestFillMissingWritesOnlyAbsentFiles(t *testing.T) {
 	if err != nil || strings.Join(written, ",") != "guides/Foo/sub/b.html" {
 		t.Fatalf("written %q %v", written, err)
 	}
-	noDotEntries(t, filepath.Dir(gone))
-	if readText(t, kept) != "locally edited" || readText(t, gone) != "<html>b</html>" {
+	testkit.NoDotEntries(t, filepath.Dir(gone))
+	if testkit.ReadText(t, kept) != "locally edited" || testkit.ReadText(t, gone) != "<html>b</html>" {
 		t.Fatal("fill-missing overwrote or did not write")
 	}
 }
@@ -174,11 +175,11 @@ func TestOutPathRefusesUnsafeEntries(t *testing.T) {
 func TestUnreadableJars(t *testing.T) {
 	dir := t.TempDir()
 	install := filepath.Join(dir, "install")
-	writeFile(t, filepath.Join(install, "modules", "broken-rt.jar"), []byte("not a zip"))
+	testkit.WriteFile(t, filepath.Join(install, "modules", "broken-rt.jar"), []byte("not a zip"))
 	if _, err := Extract(install, filepath.Join(dir, "r1"), nil); err != nil {
 		t.Fatalf("a broken module jar: %v", err)
 	}
-	writeFile(t, filepath.Join(install, "modules", "docBroken-doc.jar"), []byte("not a zip"))
+	testkit.WriteFile(t, filepath.Join(install, "modules", "docBroken-doc.jar"), []byte("not a zip"))
 	if _, err := Extract(install, filepath.Join(dir, "r2"), nil); !errors.Is(err, errBadZip) {
 		t.Fatalf("a broken doc jar: %v", err)
 	}

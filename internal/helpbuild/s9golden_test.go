@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/angeles725/niagara-go/internal/helpbuild/internal/testkit"
 )
 
 // The S9 index builders (source-index.json, slots-index.json,
@@ -76,7 +78,7 @@ func checkS9Golden(t *testing.T, mode string) {
 	t.Helper()
 	checkS9Fixture(t)
 	base := t.TempDir()
-	copyTree(t, filepath.Join("testdata", "s9", "root"), base)
+	testkit.CopyTree(t, filepath.Join("testdata", "s9", "root"), base)
 	lines, _ := goIndexRun(mode, base)
 	// The golden lines are a POSIX run's: the host separator prints as "/".
 	for i, l := range lines {
@@ -84,16 +86,16 @@ func checkS9Golden(t *testing.T, mode string) {
 	}
 	golden := filepath.Join("testdata", "s9", "golden")
 	name := s9Indexes[mode]
-	got := fileTexts(t, filepath.Join(base, "indexes"))
+	got := testkit.FileTexts(t, filepath.Join(base, "indexes"))
 	if *updateS9 {
-		writeFile(t, filepath.Join(golden, mode+".stdout"), []byte(strings.Join(lines, "\n")+"\n"))
-		writeFile(t, filepath.Join(golden, "indexes", name), []byte(got[name]))
+		testkit.WriteFile(t, filepath.Join(golden, mode+".stdout"), []byte(strings.Join(lines, "\n")+"\n"))
+		testkit.WriteFile(t, filepath.Join(golden, "indexes", name), []byte(got[name]))
 	}
 	want, err := os.ReadFile(filepath.Join(golden, mode+".stdout"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	diffLines(t, mode+" stdout", strings.Split(strings.TrimSuffix(string(want), "\n"), "\n"), lines)
+	testkit.DiffLines(t, mode+" stdout", strings.Split(strings.TrimSuffix(string(want), "\n"), "\n"), lines)
 	if len(got) != 1 {
 		t.Errorf("indexes/ holds %d files, want %s only", len(got), name)
 	}
@@ -102,7 +104,7 @@ func checkS9Golden(t *testing.T, mode string) {
 		t.Fatal(err)
 	}
 	if g, w := got[name], string(data); g != w {
-		t.Errorf("%s differs:\n go     %s\n golden %s", name, around(g, w), around(w, g))
+		t.Errorf("%s differs:\n go     %s\n golden %s", name, testkit.Around(g, w), testkit.Around(w, g))
 	}
 }
 

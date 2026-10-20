@@ -2,12 +2,13 @@ package helpbuild
 
 import (
 	"errors"
-	"io/fs"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
 	"testing"
+
+	"github.com/angeles725/niagara-go/internal/helpbuild/internal/testkit"
 )
 
 // The bajadoc_parser.py port on the synthetic javadoc tree of
@@ -36,44 +37,9 @@ func bajadocLog(log []string, base string) []string {
 	return out
 }
 
-// copyTree copies the regular files under from into to.
-func copyTree(t *testing.T, from, to string) {
-	t.Helper()
-	err := filepath.WalkDir(from, func(p string, d fs.DirEntry, err error) error {
-		if err != nil || !d.Type().IsRegular() {
-			return err
-		}
-		rel, _ := filepath.Rel(from, p)
-		copyFile(t, p, filepath.Join(to, rel))
-		return nil
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-}
-
-// fileTexts maps every regular file under root to its content.
-func fileTexts(t *testing.T, root string) map[string]string {
-	t.Helper()
-	out := map[string]string{}
-	err := filepath.WalkDir(root, func(p string, d fs.DirEntry, err error) error {
-		if err != nil || !d.Type().IsRegular() {
-			return err
-		}
-		data, err := os.ReadFile(p)
-		rel, _ := filepath.Rel(root, p)
-		out[filepath.ToSlash(rel)] = string(data)
-		return err
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	return out
-}
-
 func TestParseBajadocFixture(t *testing.T) {
 	base := t.TempDir()
-	copyTree(t, filepath.Join("testdata", "bajadoc", "root"), base)
+	testkit.CopyTree(t, filepath.Join("testdata", "bajadoc", "root"), base)
 	res, err := ParseBajadoc(base)
 	if err != nil {
 		t.Fatal(err)
@@ -88,7 +54,7 @@ func TestParseBajadocFixture(t *testing.T) {
 	if res.Status != 0 || res.Parsed != 12 || res.Skipped != 3 || res.Errors != 0 {
 		t.Errorf("status %d, parsed %d, skipped %d, errors %d; want 0, 12, 3, 0", res.Status, res.Parsed, res.Skipped, res.Errors)
 	}
-	got, golden := fileTexts(t, filepath.Join(base, "bajadoc-clean")), fileTexts(t, filepath.Join("testdata", "bajadoc", "clean"))
+	got, golden := testkit.FileTexts(t, filepath.Join(base, "bajadoc-clean")), testkit.FileTexts(t, filepath.Join("testdata", "bajadoc", "clean"))
 	for rel, text := range golden {
 		if got[rel] != text {
 			t.Errorf("%s:\n got %q\nwant %q", rel, got[rel], text)
@@ -106,12 +72,12 @@ func TestParseBajadocFixture(t *testing.T) {
 // leaves the other files of bajadoc-clean/ (bajadoc_xml_parser.py's) alone.
 func TestParseBajadocRemovesLegacyName(t *testing.T) {
 	base := t.TempDir()
-	copyTree(t, filepath.Join("testdata", "bajadoc", "root"), base)
+	testkit.CopyTree(t, filepath.Join("testdata", "bajadoc", "root"), base)
 	util := filepath.Join(base, "bajadoc-clean", "javax", "baja", "util")
 	legacy := filepath.Join(util, "Cursor&lt;E&gt;.txt")
 	other := filepath.Join(util, "BXmlOnly.txt")
-	writeFile(t, legacy, []byte("CLASS: Cursor&lt;E&gt;\n"))
-	writeFile(t, other, []byte("CLASS: BXmlOnly\n"))
+	testkit.WriteFile(t, legacy, []byte("CLASS: Cursor&lt;E&gt;\n"))
+	testkit.WriteFile(t, other, []byte("CLASS: BXmlOnly\n"))
 	res, err := ParseBajadoc(base)
 	if err != nil || res.Status != 0 || res.Parsed != 12 {
 		t.Fatalf("ParseBajadoc: %v, %+v", err, res)
@@ -149,7 +115,7 @@ func TestParseBajadocUnsafeClassName(t *testing.T) {
 	for _, name := range []string{"../../../../Evil", "/abs/Evil", "x/../../../../../Evil"} {
 		base := t.TempDir()
 		page := `<div class="subTitle">javax.baja.x</div><h2 class="title">Class ` + name + `</h2>`
-		writeFile(t, filepath.Join(base, "bajadoc", "javax", "baja", "x", "Evil.html"), []byte(page))
+		testkit.WriteFile(t, filepath.Join(base, "bajadoc", "javax", "baja", "x", "Evil.html"), []byte(page))
 		res, err := ParseBajadoc(base)
 		if !errors.Is(err, ErrUnsafeClassName) || res == nil || res.Parsed != 0 {
 			t.Errorf("%q: %v, %+v; want ErrUnsafeClassName", name, err, res)

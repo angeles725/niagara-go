@@ -9,6 +9,7 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/help/fts"
 	"github.com/angeles725/niagara-go/internal/helpbuild/fulltext"
+	"github.com/angeles725/niagara-go/internal/helpbuild/internal/testkit"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 )
 
@@ -22,15 +23,15 @@ import (
 // covResult renders a Go run as two lines: ["out", text] and the status,
 // ["missing", message] for a *MissingIndexError or ["raise"].
 func covResult(out string, status pyjson.Value, err error) []string {
-	last := dumpLine(str("status"), status)
+	last := testkit.DumpLine(testkit.Str("status"), status)
 	var missing *MissingIndexError
 	switch {
 	case errors.As(err, &missing):
-		last = dumpLine(str("missing"), str(err.Error()))
+		last = testkit.DumpLine(testkit.Str("missing"), testkit.Str(err.Error()))
 	case err != nil:
-		last = dumpLine(str("raise"))
+		last = testkit.DumpLine(testkit.Str("raise"))
 	}
-	return []string{dumpLine(str("out"), str(out)), last}
+	return []string{testkit.DumpLine(testkit.Str("out"), testkit.Str(out)), last}
 }
 
 // goCov runs one mode: coverage <base> [module], guides <base>, or docjars
@@ -47,14 +48,14 @@ func goCov(mode string, args ...string) []string {
 		status := pyjson.Value{}
 		switch {
 		case res.Miss:
-			b.WriteString(dumpLine(str("miss"), str("coverage"), str(module), str("modules")) + "\n")
+			b.WriteString(testkit.DumpLine(testkit.Str("miss"), testkit.Str("coverage"), testkit.Str(module), testkit.Str("modules")) + "\n")
 		case module == "":
-			status = intV(res.GuideGaps)
+			status = testkit.IntV(res.GuideGaps)
 		}
 		return covResult(b.String(), status, err)
 	case "guides":
 		n, err := PrintGuideCoverage(&b, args[0])
-		return covResult(b.String(), intV(n), err)
+		return covResult(b.String(), testkit.IntV(n), err)
 	case "docjars":
 		return goCovDocJars(buildingDocs, args...)
 	}
@@ -83,21 +84,21 @@ func goCovDocJars(docs FulltextDocs, args ...string) []string {
 		vid = args[2]
 	}
 	st, err := DocJarCoverage(&b, args[0], args[1], vid, docs)
-	return covResult(b.String(), intV(st), err)
+	return covResult(b.String(), testkit.IntV(st), err)
 }
 
 // covFrozen runs mode with args and checks its lines, base shown as
 // <base>, against testdata/frozen/cov/<name>.txt.
 func covFrozen(t *testing.T, name, mode string, args []string, base string) {
 	t.Helper()
-	checkFrozen(t, "cov/"+name, relabeled(goCov(mode, args...), base, "<base>"))
+	testkit.CheckFrozen(t, "cov/"+name, testkit.Relabeled(goCov(mode, args...), base, "<base>"))
 }
 
 // covCopy copies the data root src to a new temporary folder.
 func covCopy(t *testing.T, src string) string {
 	t.Helper()
 	dst := filepath.Join(t.TempDir(), "go")
-	copyTree(t, src, dst)
+	testkit.CopyTree(t, src, dst)
 	return dst
 }
 
@@ -106,17 +107,17 @@ func covCopy(t *testing.T, src string) string {
 // that matches nothing), the guide coverage alone, an empty and a missing
 // index.
 func TestCoverageReportFrozen(t *testing.T) {
-	frozenOnly(t)
+	testkit.FrozenOnly(t)
 	base := covCopy(t, covReportBase(t, t.TempDir()))
 	for _, c := range [][]string{
 		{"coverage"}, {"coverage", "alarm-rt"}, {"coverage", "ALARM"}, {"coverage", "alarm-ux"}, {"coverage", "zeta-rt"},
 		{"coverage", "école"}, {"coverage", "rt"}, {"coverage", "nothing"}, {"guides"},
 	} {
 		what := strings.Join(c, " ")
-		covFrozen(t, "report/"+frozenName(what), c[0], append([]string{base}, c[1:]...), base)
+		covFrozen(t, "report/"+testkit.FrozenName(what), c[0], append([]string{base}, c[1:]...), base)
 	}
 	empty := covCopy(t, base)
-	writeFile(t, filepath.Join(empty, "indexes", "source-index.json"), []byte(`{}`))
+	testkit.WriteFile(t, filepath.Join(empty, "indexes", "source-index.json"), []byte(`{}`))
 	if err := os.RemoveAll(filepath.Join(empty, "guides")); err != nil {
 		t.Fatal(err)
 	}
@@ -134,19 +135,19 @@ func TestCoverageReportFrozen(t *testing.T) {
 // without error and Go accepts too (covMalformed, python "ok", shape
 // false), the Go report is Python's byte for byte.
 func TestCoverageMalformedFrozen(t *testing.T) {
-	frozenOnly(t)
+	testkit.FrozenOnly(t)
 	src := covReportBase(t, t.TempDir())
 	for _, c := range covMalformed {
 		if c.python != "ok" || c.shape {
 			continue
 		}
 		b := covCopy(t, src)
-		writeFile(t, filepath.Join(b, "indexes", c.file), []byte(c.text))
+		testkit.WriteFile(t, filepath.Join(b, "indexes", c.file), []byte(c.text))
 		args := []string{b}
 		if c.module != "" {
 			args = append(args, c.module)
 		}
-		covFrozen(t, "malformed/"+frozenName(c.name), "coverage", args, b)
+		covFrozen(t, "malformed/"+testkit.FrozenName(c.name), "coverage", args, b)
 	}
 }
 
@@ -156,7 +157,7 @@ func TestCoverageMalformedFrozen(t *testing.T) {
 // install that is not there, an unregistered version, a data root without
 // indexes or with a malformed one.
 func TestDocJarCoverageFrozen(t *testing.T) {
-	frozenOnly(t)
+	testkit.FrozenOnly(t)
 	dir := t.TempDir()
 	inst := covInstall(t, dir)
 	base := covCopy(t, covBase(t, dir))
@@ -174,8 +175,8 @@ func TestDocJarCoverageFrozen(t *testing.T) {
 	// under the repository that registers it
 	idRepo := filepath.Join(t.TempDir(), "go")
 	root := filepath.Join(idRepo, "versions", "4.99.1.2")
-	copyTree(t, base, root)
-	writeFile(t, filepath.Join(idRepo, "versions", "registry.json"), []byte(
+	testkit.CopyTree(t, base, root)
+	testkit.WriteFile(t, filepath.Join(idRepo, "versions", "registry.json"), []byte(
 		`{"versions": {"4.99.1.2": {"install_dir": "`+inst+`", "data_root": "versions/4.99.1.2"}}}`))
 	gate("identified", []string{idRepo, root}, root)
 	gate("not-identified", []string{dir, base}, base)
@@ -193,12 +194,12 @@ func TestDocJarCoverageFrozen(t *testing.T) {
 	writeJar(t, filepath.Join(d, "inst", "modules", "docOne-doc.jar"),
 		[2]string{"doc/one.html", "o"}, [2]string{"doc/one.png", "p"}, [2]string{"META-INF/MANIFEST.MF", "m"})
 	src := filepath.Join(d, "base")
-	writeFile(t, filepath.Join(src, "guides", "One", "one.html"), []byte("o"))
-	writeFile(t, filepath.Join(src, "guides-clean", "One", "one.txt"), []byte("o"))
+	testkit.WriteFile(t, filepath.Join(src, "guides", "One", "one.html"), []byte("o"))
+	testkit.WriteFile(t, filepath.Join(src, "guides-clean", "One", "one.txt"), []byte("o"))
 	one := covCopy(t, src)
 	args := []string{covRepo(t, filepath.Join(d, "g"), "1.2", filepath.Join(d, "inst"), one), one, "1.2"}
 	gate("pass", args, one)
-	writeFile(t, filepath.Join(one, "guides", "Two", "two.html"), []byte("t"))
+	testkit.WriteFile(t, filepath.Join(one, "guides", "Two", "two.html"), []byte("t"))
 	gate("guide-gap", args, one)
 
 	noIndexes := covCopy(t, covBase(t, t.TempDir()))
@@ -207,6 +208,6 @@ func TestDocJarCoverageFrozen(t *testing.T) {
 	}
 	gate("no-indexes", []string{repo, noIndexes, "4.99.1.2"}, noIndexes)
 	malformed := covCopy(t, covBase(t, t.TempDir()))
-	writeFile(t, filepath.Join(malformed, "indexes", "source-index.json"), []byte(`{"X": {"module": "m"}}`))
+	testkit.WriteFile(t, filepath.Join(malformed, "indexes", "source-index.json"), []byte(`{"X": {"module": "m"}}`))
 	gate("malformed-index", []string{repo, malformed, "4.99.1.2"}, malformed)
 }

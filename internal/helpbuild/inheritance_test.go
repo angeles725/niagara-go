@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/angeles725/niagara-go/internal/helpbuild/internal/testkit"
 )
 
 // The fixture's bajadoc-clean/: every kind of header line, padded and
@@ -49,7 +51,7 @@ func TestPyTextLinesChunks(t *testing.T) {
 		{"valid", "CLASS: A\r\nPACKAGE: p\r\n\r\nDESCRIPTION:\r\n", ""},
 	} {
 		path := filepath.Join(t.TempDir(), "x.txt")
-		writeFile(t, path, []byte(c.data))
+		testkit.WriteFile(t, path, []byte(c.data))
 		var lines []string
 		err := pyTextLines(path, func(line string) bool {
 			lines = append(lines, line)
@@ -84,7 +86,7 @@ func TestPyTextLinesNewlines(t *testing.T) {
 		{"", ""},
 	} {
 		path := filepath.Join(t.TempDir(), "x.txt")
-		writeFile(t, path, []byte(c.data))
+		testkit.WriteFile(t, path, []byte(c.data))
 		var lines []string
 		if err := pyTextLines(path, func(line string) bool { lines = append(lines, line); return true }); err != nil {
 			t.Fatal(err)

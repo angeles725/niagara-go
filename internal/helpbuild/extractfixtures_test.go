@@ -3,68 +3,15 @@ package helpbuild
 import (
 	"archive/zip"
 	"bytes"
-	"crypto/sha256"
-	"encoding/hex"
-	"fmt"
-	"io"
-	"io/fs"
-	"os"
 	"path/filepath"
-	"regexp"
-	"strings"
 	"testing"
+
+	"github.com/angeles725/niagara-go/internal/helpbuild/internal/testkit"
 )
 
 // Fixtures of the S2 parity tests (parity_extract_test.go): the synthetic
 // install, the registry, and the full-tree listing both sides are compared
 // by.
-
-var generatedUTC = regexp.MustCompile(`"generated_utc": "([^"]*)"`)
-var isoSeconds = regexp.MustCompile(`^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\+00:00$`)
-
-// treeLines lists every path under root (sorted, root itself excluded):
-// kind, permission bits, then a file's size and sha256, or a manifest's
-// text with generated_utc normalized.
-func treeLines(t *testing.T, root string) []string {
-	t.Helper()
-	var out []string
-	err := filepath.WalkDir(root, func(p string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-		if p == root {
-			return nil
-		}
-		rel, _ := filepath.Rel(root, p)
-		info, err := os.Lstat(p)
-		if err != nil {
-			return err
-		}
-		line := fmt.Sprintf("%s %s %o", filepath.ToSlash(rel), info.Mode().Type(), info.Mode().Perm())
-		if info.Mode().IsRegular() {
-			data, err := os.ReadFile(p)
-			if err != nil {
-				return err
-			}
-			if strings.HasSuffix(p, ".manifest.json") {
-				m := generatedUTC.FindSubmatch(data)
-				if m == nil || !isoSeconds.Match(m[1]) {
-					t.Errorf("%s: generated_utc missing or not isoformat(timespec=seconds)", rel)
-				}
-				line += " " + string(generatedUTC.ReplaceAll(data, []byte(`"generated_utc": "<utc>"`)))
-			} else {
-				sum := sha256.Sum256(data)
-				line += fmt.Sprintf(" %d %s", len(data), hex.EncodeToString(sum[:]))
-			}
-		}
-		out = append(out, line)
-		return nil
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	return out
-}
 
 // writeStoredJar writes a jar whose entries are stored, not deflated.
 func writeStoredJar(t *testing.T, path string, files ...[2]string) {
@@ -81,7 +28,7 @@ func writeStoredJar(t *testing.T, path string, files ...[2]string) {
 	if err := w.Close(); err != nil {
 		t.Fatal(err)
 	}
-	writeFile(t, path, buf.Bytes())
+	testkit.WriteFile(t, path, buf.Bytes())
 }
 
 // syntheticInstall is a fake install covering every mapping of doc_jars:
@@ -126,31 +73,9 @@ func syntheticInstall(t *testing.T, dir string) string {
 	}
 	writeStoredJar(t, filepath.Join(mods, "docStored-doc.jar"), [2]string{"doc/s.txt", "stored\r\nline\r\n"},
 		[2]string{"doc/z.html", page})
-	writeFile(t, filepath.Join(mods, "broken-rt.jar"), []byte("not a zip"))
-	writeFile(t, filepath.Join(mods, "notes.txt"), []byte("not a jar"))
+	testkit.WriteFile(t, filepath.Join(mods, "broken-rt.jar"), []byte("not a zip"))
+	testkit.WriteFile(t, filepath.Join(mods, "notes.txt"), []byte("not a jar"))
 	writeJar(t, filepath.Join(install, "javadoc", JavadocJar), [2]string{"doc/index.html", page},
 		[2]string{"doc/javax/baja/sys/BObject.html", page}, [2]string{"other.txt", "x"})
 	return install
-}
-
-func copyFile(t *testing.T, from, to string) {
-	t.Helper()
-	src, err := os.Open(from)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer src.Close()
-	if err := os.MkdirAll(filepath.Dir(to), 0o755); err != nil {
-		t.Fatal(err)
-	}
-	dst, err := os.Create(to)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if _, err := io.Copy(dst, src); err != nil {
-		t.Fatal(err)
-	}
-	if err := dst.Close(); err != nil {
-		t.Fatal(err)
-	}
 }

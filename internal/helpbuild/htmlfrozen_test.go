@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/angeles725/niagara-go/internal/helpbuild/internal/testkit"
 	"github.com/angeles725/niagara-go/internal/pyhtml"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 )
@@ -20,43 +21,47 @@ import (
 type eventRecorder struct{ events []pyjson.Value }
 
 func attrsValue(attrs []pyhtml.Attr) pyjson.Value {
-	out := array()
+	out := testkit.Array()
 	for _, a := range attrs {
-		v := str(a.Value)
+		v := testkit.Str(a.Value)
 		if a.Null {
 			v = pyjson.Value{}
 		}
-		out.A = append(out.A, array(str(a.Name), v))
+		out.A = append(out.A, testkit.Array(testkit.Str(a.Name), v))
 	}
 	return out
 }
 
 func (r *eventRecorder) StartTag(tag string, attrs []pyhtml.Attr) {
-	r.events = append(r.events, array(str("s"), str(tag), attrsValue(attrs)))
+	r.events = append(r.events, testkit.Array(testkit.Str("s"), testkit.Str(tag), attrsValue(attrs)))
 }
 func (r *eventRecorder) StartEndTag(tag string, attrs []pyhtml.Attr) {
-	r.events = append(r.events, array(str("se"), str(tag), attrsValue(attrs)))
+	r.events = append(r.events, testkit.Array(testkit.Str("se"), testkit.Str(tag), attrsValue(attrs)))
 }
-func (r *eventRecorder) EndTag(tag string) { r.events = append(r.events, array(str("e"), str(tag))) }
-func (r *eventRecorder) Data(text string)  { r.events = append(r.events, array(str("d"), str(text))) }
+func (r *eventRecorder) EndTag(tag string) {
+	r.events = append(r.events, testkit.Array(testkit.Str("e"), testkit.Str(tag)))
+}
+func (r *eventRecorder) Data(text string) {
+	r.events = append(r.events, testkit.Array(testkit.Str("d"), testkit.Str(text)))
+}
 
 func goEvents(page string) pyjson.Value {
 	r := &eventRecorder{}
 	pyhtml.Parse(page, r)
-	return array(r.events...)
+	return testkit.Array(r.events...)
 }
 
 // goFeedEvents are the callbacks of pyhtml.Feed (feed() without close()).
 func goFeedEvents(page string) pyjson.Value {
 	r := &eventRecorder{}
 	pyhtml.Feed(page, r)
-	return array(r.events...)
+	return testkit.Array(r.events...)
 }
 
 // goPageLine is one page as [events, title, text].
 func goPageLine(page string) string {
 	title, text := HTMLToText(page)
-	return pyjson.Dumps(array(goEvents(page), str(title), str(text)), DumpDefault)
+	return pyjson.Dumps(testkit.Array(goEvents(page), testkit.Str(title), testkit.Str(text)), DumpDefault)
 }
 
 // htmlCorners are hand-written pages: the Python tests' fixtures and the
@@ -90,7 +95,7 @@ func TestHTMLCornersFrozen(t *testing.T) {
 	for _, page := range htmlCorners {
 		got = append(got, goPageLine(page))
 	}
-	checkFrozen(t, "html/corners", got)
+	testkit.CheckFrozen(t, "html/corners", got)
 }
 
 // feedCorners are pages whose end feed() holds back, on top of htmlCorners:
@@ -111,7 +116,7 @@ func TestHTMLFeedCornersFrozen(t *testing.T) {
 	for _, page := range append(append([]string{}, htmlCorners...), feedCorners...) {
 		got = append(got, pyjson.Dumps(goFeedEvents(page), DumpDefault))
 	}
-	checkFrozen(t, "html/feed-corners", got)
+	testkit.CheckFrozen(t, "html/feed-corners", got)
 }
 
 // TestHTML5EntitiesFrozen: testdata/frozen/html/entities.txt holds, per
@@ -155,10 +160,10 @@ func TestHTML5EntitiesFrozen(t *testing.T) {
 	}
 	var got []string
 	for _, k := range keys {
-		got = append(got, dumpLine(str(k), str(pyhtml.Unescape("a&"+k+" b")), str(pyhtml.Unescape("&"+k+"=")),
-			str(pyhtml.Unescape("&"+k+"&"+k))))
+		got = append(got, testkit.DumpLine(testkit.Str(k), testkit.Str(pyhtml.Unescape("a&"+k+" b")), testkit.Str(pyhtml.Unescape("&"+k+"=")),
+			testkit.Str(pyhtml.Unescape("&"+k+"&"+k))))
 	}
-	checkFrozen(t, "html/entities", got)
+	testkit.CheckFrozen(t, "html/entities", got)
 }
 
 // isAlnumName: the attr_charref name shape, [a-zA-Z][a-zA-Z0-9]*;?.

@@ -9,6 +9,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/angeles725/niagara-go/internal/helpbuild/internal/testkit"
 )
 
 // Unit tests of pdftext.go, ported from niagara-help
@@ -77,11 +79,11 @@ func TestResolveName(t *testing.T) {
 func TestFindPDFs(t *testing.T) {
 	dir := t.TempDir()
 	for _, rel := range []string{"b/z.pdf", "a/y.PDF", "x.pdf", "a/notes.txt", "c/d/e.Pdf", "outside/o.pdf"} {
-		writeFile(t, filepath.Join(dir, "docs", rel), []byte("%PDF"))
+		testkit.WriteFile(t, filepath.Join(dir, "docs", rel), []byte("%PDF"))
 	}
 	docs := filepath.Join(dir, "docs")
-	symlinkOrSkip(t, filepath.Join(docs, "outside"), filepath.Join(docs, "linked"))
-	symlinkOrSkip(t, filepath.Join(docs, "x.pdf"), filepath.Join(docs, "b", "alias.pdf"))
+	testkit.SymlinkOrSkip(t, filepath.Join(docs, "outside"), filepath.Join(docs, "linked"))
+	testkit.SymlinkOrSkip(t, filepath.Join(docs, "x.pdf"), filepath.Join(docs, "b", "alias.pdf"))
 	var rels []string
 	for _, p := range FindPDFs(docs) {
 		rel, err := filepath.Rel(docs, p)
@@ -113,12 +115,12 @@ func fakePdftotext(t *testing.T) (script, dir string) {
 func TestExtractPDFTextUTF8KeepsDegreeSign(t *testing.T) {
 	script, dir := fakePdftotext(t)
 	pdf := filepath.Join(dir, "x.pdf")
-	writeFile(t, pdf+".out", []byte("72 °F\fpage 2"))
+	testkit.WriteFile(t, pdf+".out", []byte("72 °F\fpage 2"))
 	text, pages, err := ExtractPDFText(script, pdf, PDFTimeout)
 	if err != nil || text != "72 °F\fpage 2" || pages != 2 {
 		t.Fatalf("ExtractPDFText = %q, %d, %v", text, pages, err)
 	}
-	argv := string(readBytes(t, script+".argv"))
+	argv := string(testkit.ReadBytes(t, script+".argv"))
 	if want := "-layout -enc UTF-8 " + pdf + " -\n"; argv != want {
 		t.Errorf("argv %q, want %q", argv, want)
 	}
@@ -137,12 +139,12 @@ func TestExtractPDFTextFailures(t *testing.T) {
 			t.Errorf("%s: ExtractPDFText = %q, %d, %v; want failure %d", what, text, pages, err, want)
 		}
 	}
-	writeFile(t, pdf+".out", []byte("72 \xb0F"))
+	testkit.WriteFile(t, pdf+".out", []byte("72 \xb0F"))
 	check("latin-1 output", script, PDFTimeout, PDFNotUTF8)
-	writeFile(t, pdf+".fail", nil)
+	testkit.WriteFile(t, pdf+".fail", nil)
 	check("exit 1", script, PDFTimeout, PDFExitStatus)
 	check("missing program", filepath.Join(dir, "no-such-pdftotext"), PDFTimeout, PDFOSError)
-	writeFile(t, pdf+".sleep", nil)
+	testkit.WriteFile(t, pdf+".sleep", nil)
 	start := time.Now()
 	check("timeout", script, 300*time.Millisecond, PDFTimedOut)
 	if d := time.Since(start); d > 5*time.Second {
@@ -181,7 +183,7 @@ func TestExtractPDFTextPages(t *testing.T) {
 	pdf := filepath.Join(dir, "x.pdf")
 	for out, want := range map[string]int{"\f": 0, " \n\f\u00a0": 0, "a": 1, "a\f": 1, "a\fb": 2, "a\fb\f": 2,
 		"a\f\f": 2, "a\f\fb": 3, "a\f \n": 2} {
-		writeFile(t, pdf+".out", []byte(out))
+		testkit.WriteFile(t, pdf+".out", []byte(out))
 		if _, pages, err := ExtractPDFText(script, pdf, PDFTimeout); err != nil || pages != want {
 			t.Errorf("pages of %q = %d, %v; want %d", out, pages, err, want)
 		}
@@ -195,7 +197,7 @@ func TestExtractPDFTextRealPdftotext(t *testing.T) {
 	real := needPdftotext(t)
 	dir := t.TempDir()
 	pdf := filepath.Join(dir, "m.pdf")
-	writeFile(t, pdf, makePDF([]string{"Gizmo manual: snarfblatt wiring", "\x80 Disconnect the LAN."}, nil, []string{"72 \xb0F"}))
+	testkit.WriteFile(t, pdf, makePDF([]string{"Gizmo manual: snarfblatt wiring", "\x80 Disconnect the LAN."}, nil, []string{"72 \xb0F"}))
 	text, pages, err := ExtractPDFText(real, pdf, PDFTimeout)
 	if err != nil {
 		t.Fatal(err)

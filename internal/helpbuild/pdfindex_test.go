@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/angeles725/niagara-go/internal/helpbuild/internal/testkit"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 )
 
@@ -30,18 +31,18 @@ func newPDFRun(t *testing.T) *pdfRun {
 	r.docs = filepath.Join(r.root, "install-docs")
 	r.textDir = filepath.Join(r.root, "docs-text")
 	for _, rel := range []string{"docA/A.pdf", "docB/B.pdf"} {
-		writeFile(t, filepath.Join(r.docs, rel), []byte("%PDF"))
+		testkit.WriteFile(t, filepath.Join(r.docs, rel), []byte("%PDF"))
 	}
 	r.oldIndex = pyjson.NewObject()
 	for _, s := range []string{"A", "B", "Gone"} {
-		writeFile(t, filepath.Join(r.textDir, s+".txt"), []byte("old text of "+s))
+		testkit.WriteFile(t, filepath.Join(r.textDir, s+".txt"), []byte("old text of "+s))
 		e := pyjson.NewObject()
 		e.Set("source_pdf", pyjson.String("doc"+s+"/"+s+".pdf"))
 		e.Set("pages", pyjson.IntValue(1))
 		e.Set("category", pyjson.String("software"))
 		r.oldIndex.Set(s, e)
 	}
-	writeFile(t, filepath.Join(r.root, "indexes", "pdf-index.json"), []byte(pyjson.Dumps(r.oldIndex, DumpDefault)))
+	testkit.WriteFile(t, filepath.Join(r.root, "indexes", "pdf-index.json"), []byte(pyjson.Dumps(r.oldIndex, DumpDefault)))
 	return r
 }
 
@@ -51,9 +52,9 @@ func (r *pdfRun) texts(t *testing.T, m map[string]string) {
 		pdf := filepath.Join(r.docs, rel)
 		_ = os.Remove(pdf + ".fail")
 		if text == "" {
-			writeFile(t, pdf+".fail", nil)
+			testkit.WriteFile(t, pdf+".fail", nil)
 		}
-		writeFile(t, pdf+".out", []byte(text))
+		testkit.WriteFile(t, pdf+".out", []byte(text))
 	}
 }
 
@@ -75,7 +76,7 @@ func (r *pdfRun) index(t *testing.T) pyjson.Value {
 }
 
 func (r *pdfRun) text(t *testing.T, stem string) string {
-	return string(readBytes(t, filepath.Join(r.textDir, stem+".txt")))
+	return string(testkit.ReadBytes(t, filepath.Join(r.textDir, stem+".txt")))
 }
 
 func TestPDFFailedKeepsTextAndIndexEntry(t *testing.T) { // test_a_failed_pdf_keeps_its_text_and_index_entry
@@ -109,13 +110,13 @@ func TestPDFFailedInheritsOnlyFromTheSamePDF(t *testing.T) {
 	r := newPDFRun(t)
 	r.texts(t, map[string]string{"docA/A.pdf": strings.Repeat("new text A ", 10), "docB/B.pdf": strings.Repeat("new text B ", 10)})
 	for stem, src := range map[string]string{"a_b": "docA/a b.pdf", "a_b_2": "docA/a_b.pdf"} {
-		writeFile(t, filepath.Join(r.textDir, stem+".txt"), []byte("old text of "+src))
+		testkit.WriteFile(t, filepath.Join(r.textDir, stem+".txt"), []byte("old text of "+src))
 		e := pyjson.NewObject()
 		e.Set("source_pdf", pyjson.String(src))
 		r.oldIndex.Set(stem, e)
 	}
-	writeFile(t, filepath.Join(r.root, "indexes", "pdf-index.json"), []byte(pyjson.Dumps(r.oldIndex, DumpDefault)))
-	writeFile(t, filepath.Join(r.docs, "docA", "a_b.pdf"), []byte("%PDF"))
+	testkit.WriteFile(t, filepath.Join(r.root, "indexes", "pdf-index.json"), []byte(pyjson.Dumps(r.oldIndex, DumpDefault)))
+	testkit.WriteFile(t, filepath.Join(r.docs, "docA", "a_b.pdf"), []byte("%PDF"))
 	r.texts(t, map[string]string{"docA/a_b.pdf": ""})
 	res := r.main(t, r.root, r.docs)
 	if res.Status != 1 || !reflect.DeepEqual(res.Failed, []string{"a_b.pdf"}) {

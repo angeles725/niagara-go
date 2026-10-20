@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/angeles725/niagara-go/internal/helpbuild/internal/testkit"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
@@ -84,7 +85,7 @@ func TestDetectVersion(t *testing.T) {
 	}
 	// A baja.jar that is not a zip, or has no module.xml: the folder name.
 	install := filepath.Join(dir, "bad", "N-2.2.2.2")
-	writeFile(t, filepath.Join(install, "modules", "baja.jar"), []byte("not a zip"))
+	testkit.WriteFile(t, filepath.Join(install, "modules", "baja.jar"), []byte("not a zip"))
 	if got, err := DetectVersion(install); err != nil || got != "2.2.2.2" {
 		t.Errorf("not a zip: %q %v", got, err)
 	}
@@ -124,22 +125,22 @@ func TestAddVersionRefusals(t *testing.T) {
 	}
 	registry := filepath.Join(repo, "versions", "registry.json")
 	writeRegistry(t, repo, map[string][3]string{"1.2.3.4": {"Other", "/elsewhere", "versions/1.2.3.4"}})
-	before := readText(t, registry)
+	before := testkit.ReadText(t, registry)
 	id := "1.2.3.4"
 	if out, status := addRun(t, repo, install, AddOptions{ID: &id}); status != 2 ||
 		out != "ERROR: version 1.2.3.4 is already registered for /elsewhere\n" {
 		t.Errorf("other install: %d %q", status, out)
 	}
-	if got := readText(t, registry); got != before {
+	if got := testkit.ReadText(t, registry); got != before {
 		t.Errorf("refused add (other install) rewrote the registry:\n%s", got)
 	}
 	writeRegistry(t, repo, map[string][3]string{"1.2.3.4": {"Same", install, "versions/1.2.3.4"}})
-	before = readText(t, registry)
+	before = testkit.ReadText(t, registry)
 	if out, status := addRun(t, repo, install+"/.", AddOptions{ID: &id}); status != 2 ||
 		out != "ERROR: version 1.2.3.4 is already registered; pass --force to extract and index it again\n" {
 		t.Errorf("same install without --force: %d %q", status, out)
 	}
-	if got := readText(t, registry); got != before {
+	if got := testkit.ReadText(t, registry); got != before {
 		t.Errorf("refused add (same install) rewrote the registry:\n%s", got)
 	}
 }
@@ -155,10 +156,10 @@ func TestRegister(t *testing.T) {
 	}
 	want := "{\n  \"default\": \"2.0.0.0\",\n  \"versions\": {\n    \"2.0.0.0\": {\n      \"label\": \"Two\",\n" +
 		"      \"install_dir\": \"/i2\",\n      \"data_root\": \"versions/2.0.0.0\"\n    }\n  }\n}\n"
-	if got := readText(t, reg); got != want {
+	if got := testkit.ReadText(t, reg); got != want {
 		t.Fatalf("new registry:\n%s", got)
 	}
-	writeFile(t, reg, []byte(`{"versions": {"9.0.0.0": {"label": "N", "install_dir": "/n", "data_root": "x", "course_dir": "c"},`+
+	testkit.WriteFile(t, reg, []byte(`{"versions": {"9.0.0.0": {"label": "N", "install_dir": "/n", "data_root": "x", "course_dir": "c"},`+
 		` "1.0.0.0": {"label": "Ü"}}, "default": "1.0.0.0"}`))
 	if err := Register(repo, "9.0.0.0", "/n2", "N2", false); err != nil {
 		t.Fatal(err)
@@ -170,7 +171,7 @@ func TestRegister(t *testing.T) {
 		"      \"data_root\": \"versions/9.0.0.0\"\n    },\n    \"1.0.0.0\": {\n      \"label\": \"\\u00dc\"\n    },\n" +
 		"    \"3.0.0.0\": {\n      \"label\": \"Three\",\n      \"install_dir\": \"/i3\",\n      \"data_root\": \"versions/3.0.0.0\"\n" +
 		"    }\n  },\n  \"default\": \"3.0.0.0\"\n}\n"
-	if got := readText(t, reg); got != want {
+	if got := testkit.ReadText(t, reg); got != want {
 		t.Fatalf("updated registry:\n%s", got)
 	}
 }
@@ -204,7 +205,7 @@ func TestAddVersionHappyPath(t *testing.T) {
 	if status != 0 {
 		t.Errorf("status %d\n%s", status, out)
 	}
-	gates := readText(t, filepath.Join(root, GatesLog))
+	gates := testkit.ReadText(t, filepath.Join(root, GatesLog))
 	if !strings.Contains(gates, "\nRESULT: PASS") || strings.Count(gates, "RESULT: ") != 2 {
 		t.Errorf("gates.log:\n%s", gates)
 	}
@@ -231,7 +232,7 @@ func TestAddVersionHappyPath(t *testing.T) {
 func TestAddVersionRollsBackARefusal(t *testing.T) {
 	repo, install := addFixture(t, "Niagara-1.2.3.4", "")
 	root := filepath.Join(repo, "versions", "1.2.3.4")
-	writeFile(t, filepath.Join(root, "bajadoc", "keep.html"), nil)
+	testkit.WriteFile(t, filepath.Join(root, "bajadoc", "keep.html"), nil)
 	out, status := addRun(t, repo, install, addOpts())
 	want := "registered 1.2.3.4 (Niagara-1.2.3.4) -> versions/1.2.3.4/\nERROR: " + root +
 		" already holds bajadoc; pass --force to re-extract (registry entry rolled back)\n"
@@ -241,11 +242,11 @@ func TestAddVersionRollsBackARefusal(t *testing.T) {
 	if pycompat.IsFile(filepath.Join(repo, "versions", "registry.json")) || !pycompat.IsFile(filepath.Join(root, "bajadoc", "keep.html")) {
 		t.Error("registry not removed, or the existing data root removed")
 	}
-	writeFile(t, filepath.Join(repo, "versions", "registry.json"), []byte("{\"default\": \"x\", \"versions\": {}}"))
+	testkit.WriteFile(t, filepath.Join(repo, "versions", "registry.json"), []byte("{\"default\": \"x\", \"versions\": {}}"))
 	if _, status := addRun(t, repo, install, addOpts()); status != 2 {
 		t.Fatalf("status %d", status)
 	}
-	if got := readText(t, filepath.Join(repo, "versions", "registry.json")); got != "{\"default\": \"x\", \"versions\": {}}" {
+	if got := testkit.ReadText(t, filepath.Join(repo, "versions", "registry.json")); got != "{\"default\": \"x\", \"versions\": {}}" {
 		t.Errorf("registry not restored: %q", got)
 	}
 }
@@ -286,7 +287,7 @@ func TestAddVersionRollsBackANilResult(t *testing.T) {
 		if r != repo || vid != "1.2.3.4" || !so.Force || so.Rebuild == nil || so.Now == nil {
 			t.Errorf("Extract(%q, %q, %+v)", r, vid, so)
 		}
-		writeFile(t, filepath.Join(root, "bajadoc", "partial.html"), nil)
+		testkit.WriteFile(t, filepath.Join(root, "bajadoc", "partial.html"), nil)
 		return nil, nil
 	}
 	var out bytes.Buffer

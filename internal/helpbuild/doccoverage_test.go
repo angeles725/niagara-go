@@ -7,6 +7,7 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/help/fts"
 	ftbuild "github.com/angeles725/niagara-go/internal/helpbuild/fulltext"
+	"github.com/angeles725/niagara-go/internal/helpbuild/internal/testkit"
 )
 
 // Classification of corpus paths and unmapped entries (doc_types.classify,
@@ -88,7 +89,7 @@ func TestScanDocJarsNeedsFulltextForExamples(t *testing.T) {
 	dir := t.TempDir()
 	jar := filepath.Join(dir, "inst", "modules", "docDeveloper-ux.jar")
 	writeJar(t, jar, [2]string{"web/app.js", "a"})
-	writeFile(t, filepath.Join(dir, "base", "devguide-examples", "web", "app.js"), []byte("a"))
+	testkit.WriteFile(t, filepath.Join(dir, "base", "devguide-examples", "web", "app.js"), []byte("a"))
 	if _, err := ScanDocJars("", filepath.Join(dir, "base"), []string{jar}, nil); !errors.Is(err, errNoFulltext) {
 		t.Fatalf("no reader: %v", err)
 	}
@@ -125,7 +126,9 @@ const bajadocXML = `<?xml version="1.0"?><bajadoc><class qualifiedName="p.q.B" n
 // Indexed.check: each kind is searchable only where its index says so.
 func TestIndexedViewsCheck(t *testing.T) {
 	root := t.TempDir()
-	w := func(rel, data string) { writeFile(t, filepath.Join(root, filepath.FromSlash(rel)), []byte(data)) }
+	w := func(rel, data string) {
+		testkit.WriteFile(t, filepath.Join(root, filepath.FromSlash(rel)), []byte(data))
+	}
 	w("indexes/class-index.json", `{"A": {"package": "p.q", "others": [{"package": "r"}]}, "B": {"package": "p.q"}}`)
 	w("indexes/jdk-class-index.json", `{"Object": {"package": "java.lang"}}`)
 	w("indexes/source-index.json", `{"x": {"path": "a/./B.java"}}`)
