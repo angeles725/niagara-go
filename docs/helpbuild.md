@@ -252,7 +252,7 @@ res, err := helpbuild.ExtractPDFs(root, helpbuild.PDFOptions{
 // os.Stdout.WriteString(res.Stdout()) is pdf_extractor's stdout; exit res.Status;
 // err != nil is a Python traceback (exit 1), res.Log holds what was printed before it.
 
-out, err := helpbuild.CourseExtractor(root, rules) // rules from helpbuild.Default()
+out, err := courseExtractor(root, rules) // package-internal; rules from helpbuild.Default()
 // print out.Stdout to stdout and out.Stderr to stderr, exit out.Status; err != nil is a traceback.
 ```
 
@@ -340,14 +340,14 @@ take `parseBajadocFiles` (`indexes/classindexxml.go`) for the same concurrency.
 | `guidesindex.go` | `build_guides_index` (`topic_name`, `known_jar_names`, `modules_dir_of`, `jar_for_folder`, `previous_jars`, `build`, `main`) | `JarSources` replaces the `_MANIFEST` sentinels; `Unknown` is `jar_names=None`; the walk, `json.load` and registry lookups are S3's (`pyfs/pyfs.go`, `registry/registry.go`) |
 | `devguidetoc.go` | `build_devguide_toc.build`, `main` | its regexes run through `internal/pyre` (Python semantics, code-point offsets) |
 
-API for S10 (`maintenance.BUILDERS` runs these as subprocesses; the Go orchestration calls
-them in process and prints `Log`, then `Warnings` on stderr):
+Guide builders (package-internal; `RebuildAll` runs them in process from its builder table in
+rebuildall.go and prints `Log`, then `Warnings` on stderr):
 
 ```go
-res, err := helpbuild.ParseGuides(root)        // guides-clean/
-res, err := helpbuild.ParseDevguide(root)      // devguide-clean/
-res, err := helpbuild.BuildGuidesIndex(root)   // indexes/guides-index.json
-res, err := helpbuild.BuildDevguideTOC(root)   // indexes/devguide-toc.json
+res, err := parseGuides(root)        // guides-clean/
+res, err := parseDevguide(root)      // devguide-clean/
+res, err := buildGuidesIndex(root)   // indexes/guides-index.json
+res, err := buildDevguideTOC(root)   // indexes/devguide-toc.json
 // err != nil is where Python raises (traceback, non-zero exit).
 ```
 
@@ -650,7 +650,7 @@ res, err := helpbuild.Coverage(os.Stdout, baseDir, module) // module "" = overvi
 status, err := helpbuild.DocJarCoverage(os.Stdout, repoRoot, baseDir, versionID, docs)
 // docs is a helpbuild.FulltextDocs: open_index(root).docs() -- the up-to-date
 // fulltext.sqlite (rebuilt first when stale, as scope.OpenFulltext does) read
-// with helpbuild.FulltextDocsAt(path). It is only called when an example entry
+// with the package-internal fulltextDocsAt(path). It is only called when an example entry
 // (devguide-examples/) is checked; nil then is an error, never a silent gap.
 
 // coverage --sweep --doc-jars: DocJarCoverage, a blank line, exit 2 when it
