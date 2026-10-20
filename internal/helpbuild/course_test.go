@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/angeles725/niagara-go/internal/helpbuild/internal/testkit"
+	"github.com/angeles725/niagara-go/internal/helpbuild/pyfs"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 )
@@ -66,7 +67,7 @@ func courseRepo(t *testing.T, dir string, extra map[string]string) (repo string)
 	reg := pyjson.NewObject()
 	reg.Set("default", pyjson.String("A"))
 	reg.Set("versions", vers)
-	testkit.WriteFile(t, filepath.Join(repo, "versions", "registry.json"), []byte(pyjson.Dumps(reg, DumpDefault)))
+	testkit.WriteFile(t, filepath.Join(repo, "versions", "registry.json"), []byte(pyjson.Dumps(reg, pyfs.DumpDefault)))
 	return repo
 }
 

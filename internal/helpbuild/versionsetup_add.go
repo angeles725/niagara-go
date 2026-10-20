@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/angeles725/niagara-go/internal/atomicfile"
+	"github.com/angeles725/niagara-go/internal/helpbuild/pyfs"
 	"github.com/angeles725/niagara-go/internal/helpbuild/zipfile"
 	"github.com/angeles725/niagara-go/internal/index"
 	"github.com/angeles725/niagara-go/internal/pycompat"
@@ -91,7 +92,7 @@ func registryFile(repo string) (*pyjson.Value, error) {
 	if !pycompat.IsFile(path) {
 		return nil, nil
 	}
-	v, err := loadJSON(path)
+	v, err := pyfs.LoadJSON(path)
 	if err != nil {
 		return nil, err
 	}

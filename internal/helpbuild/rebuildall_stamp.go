@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/angeles725/niagara-go/internal/helpbuild/pyfs"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 	"github.com/angeles725/niagara-go/internal/textfold"
@@ -35,7 +36,7 @@ func fingerprintDir(path, ext string) pyjson.Value {
 		return pyjson.Value{}
 	}
 	var files, total int64
-	pyWalk(path, func(dir string, dirs, names []string) []string {
+	pyfs.Walk(path, func(dir string, dirs, names []string) []string {
 		for _, name := range names {
 			if ext != "" && !strings.HasSuffix(textfold.Lower(name), ext) {
 				continue
@@ -80,7 +81,7 @@ func StampManifest(root string, now time.Time) (string, error) {
 	m := pyjson.NewObject()
 	m.Set("stamped_utc", pyjson.String(stamped))
 	m.Set("sources", CorpusFingerprint(root))
-	if err := WriteJSON(pycompat.Join(root, "indexes", ".manifest.json"), m, DumpIndent2); err != nil {
+	if err := pyfs.WriteJSON(pycompat.Join(root, "indexes", ".manifest.json"), m, pyfs.DumpIndent2); err != nil {
 		return "", err
 	}
 	return stamped, nil

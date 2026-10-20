@@ -6,6 +6,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/angeles725/niagara-go/internal/helpbuild/pyfs"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 	"github.com/angeles725/niagara-go/internal/pyre"
@@ -97,7 +98,7 @@ func BuildXrefIndex(baseDir string) (*IndexResult, error) {
 	}
 	var parsed []xrefFile
 	for _, root := range roots {
-		pyWalk(root.dir, func(dir string, dirs, files []string) []string {
+		pyfs.Walk(root.dir, func(dir string, dirs, files []string) []string {
 			sort.Strings(dirs)
 			sort.Strings(files)
 			for _, name := range files {
@@ -170,7 +171,7 @@ func BuildXrefIndex(baseDir string) (*IndexResult, error) {
 			out.Set(cls, entry)
 		}
 	}
-	if err := WriteJSON(pycompat.Join(baseDir, "indexes", "xref-index.json"), out, DumpIndent2Unicode); err != nil {
+	if err := pyfs.WriteJSON(pycompat.Join(baseDir, "indexes", "xref-index.json"), out, pyfs.DumpIndent2Unicode); err != nil {
 		return res, err
 	}
 	res.out("Built xref-index.json: %d classes, %d dependency edges from %d source files", len(out.Keys), edges, len(parsed))

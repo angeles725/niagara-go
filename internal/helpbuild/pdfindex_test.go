@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/angeles725/niagara-go/internal/helpbuild/internal/testkit"
+	"github.com/angeles725/niagara-go/internal/helpbuild/pyfs"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 )
 
@@ -42,7 +43,7 @@ func newPDFRun(t *testing.T) *pdfRun {
 		e.Set("category", pyjson.String("software"))
 		r.oldIndex.Set(s, e)
 	}
-	testkit.WriteFile(t, filepath.Join(r.root, "indexes", "pdf-index.json"), []byte(pyjson.Dumps(r.oldIndex, DumpDefault)))
+	testkit.WriteFile(t, filepath.Join(r.root, "indexes", "pdf-index.json"), []byte(pyjson.Dumps(r.oldIndex, pyfs.DumpDefault)))
 	return r
 }
 
@@ -68,7 +69,7 @@ func (r *pdfRun) main(t *testing.T, base, docs string) *PDFResult {
 }
 
 func (r *pdfRun) index(t *testing.T) pyjson.Value {
-	v, err := loadJSON(filepath.Join(r.root, "indexes", "pdf-index.json"))
+	v, err := pyfs.LoadJSON(filepath.Join(r.root, "indexes", "pdf-index.json"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -91,7 +92,7 @@ func TestPDFFailedKeepsTextAndIndexEntry(t *testing.T) { // test_a_failed_pdf_ke
 	}
 	old, _ := r.oldIndex.Get("B")
 	if got, _ := r.index(t).Get("B"); !pyjson.Equal(got, old) {
-		t.Errorf("index B = %s", pyjson.Dumps(got, DumpDefault))
+		t.Errorf("index B = %s", pyjson.Dumps(got, pyfs.DumpDefault))
 	}
 	if !strings.Contains(r.text(t, "A"), "new text A") {
 		t.Errorf("A.txt = %q", r.text(t, "A"))
@@ -115,7 +116,7 @@ func TestPDFFailedInheritsOnlyFromTheSamePDF(t *testing.T) {
 		e.Set("source_pdf", pyjson.String(src))
 		r.oldIndex.Set(stem, e)
 	}
-	testkit.WriteFile(t, filepath.Join(r.root, "indexes", "pdf-index.json"), []byte(pyjson.Dumps(r.oldIndex, DumpDefault)))
+	testkit.WriteFile(t, filepath.Join(r.root, "indexes", "pdf-index.json"), []byte(pyjson.Dumps(r.oldIndex, pyfs.DumpDefault)))
 	testkit.WriteFile(t, filepath.Join(r.docs, "docA", "a_b.pdf"), []byte("%PDF"))
 	r.texts(t, map[string]string{"docA/a_b.pdf": ""})
 	res := r.main(t, r.root, r.docs)
@@ -124,7 +125,7 @@ func TestPDFFailedInheritsOnlyFromTheSamePDF(t *testing.T) {
 	}
 	idx := r.index(t)
 	if got, ok := idx.Get("a_b"); ok {
-		t.Errorf("a_b.pdf inherited the entry of the removed a b.pdf: %s", pyjson.Dumps(got, DumpDefault))
+		t.Errorf("a_b.pdf inherited the entry of the removed a b.pdf: %s", pyjson.Dumps(got, pyfs.DumpDefault))
 	}
 	if got := idx.Keys; !reflect.DeepEqual(got, []string{"A", "B"}) {
 		t.Errorf("index keys %q, want A and B", got)

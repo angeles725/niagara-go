@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/angeles725/niagara-go/internal/atomicfile"
+	"github.com/angeles725/niagara-go/internal/helpbuild/pyfs"
 	"github.com/angeles725/niagara-go/internal/index"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyjson"
@@ -316,7 +317,7 @@ func EmptyIndexes(root string) ([]string, error) {
 		if pycompat.IsFile(path) {
 			continue
 		}
-		if err := WriteJSON(path, pyjson.NewObject(), DumpDefault); err != nil {
+		if err := pyfs.WriteJSON(path, pyjson.NewObject(), pyfs.DumpDefault); err != nil {
 			return lines, err
 		}
 		lines = append(lines, fmt.Sprintf("  EMPTY %s (its source is not in this install)", name))

@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/angeles725/niagara-go/internal/helpbuild/internal/testkit"
+	"github.com/angeles725/niagara-go/internal/helpbuild/pyfs"
 	"github.com/angeles725/niagara-go/internal/helpbuild/zipfile"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 )
@@ -344,6 +345,6 @@ func TestEmptyIndexesFrozen(t *testing.T) {
 	if _, err := os.Stat(filepath.Join(root, "indexes", "call-index.json")); !os.IsNotExist(err) {
 		t.Errorf("EmptyIndexes wrote call-index.json (retired, I3-5): %v", err)
 	}
-	testkit.CheckFrozen(t, "extract/empty-indexes", append([]string{pyjson.Dumps(stringsValue(lines), DumpDefault), "tree:"},
+	testkit.CheckFrozen(t, "extract/empty-indexes", append([]string{pyjson.Dumps(stringsValue(lines), pyfs.DumpDefault), "tree:"},
 		testkit.TreeLines(t, root)...))
 }

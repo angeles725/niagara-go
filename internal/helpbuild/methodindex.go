@@ -5,6 +5,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
+	"github.com/angeles725/niagara-go/internal/helpbuild/pyfs"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 	"github.com/angeles725/niagara-go/internal/textfold"
@@ -181,7 +182,7 @@ func BuildMethodIndex(baseDir string) (*IndexResult, error) {
 		}
 		out.Set(name, pyjson.Value{Kind: pyjson.Array, A: vals})
 	}
-	if err := WriteJSON(pycompat.Join(baseDir, "indexes", "method-index.json"), out, DumpIndent2Unicode); err != nil {
+	if err := pyfs.WriteJSON(pycompat.Join(baseDir, "indexes", "method-index.json"), out, pyfs.DumpIndent2Unicode); err != nil {
 		return res, err
 	}
 	res.out("Built method-index.json: %d unique names, %d total members from %d files", len(order), total, len(files))

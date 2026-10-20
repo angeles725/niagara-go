@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/angeles725/niagara-go/internal/helpbuild/internal/testkit"
+	"github.com/angeles725/niagara-go/internal/helpbuild/pyfs"
 	"github.com/angeles725/niagara-go/internal/pyhtml"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 )
@@ -61,7 +62,7 @@ func goFeedEvents(page string) pyjson.Value {
 // goPageLine is one page as [events, title, text].
 func goPageLine(page string) string {
 	title, text := HTMLToText(page)
-	return pyjson.Dumps(testkit.Array(goEvents(page), testkit.Str(title), testkit.Str(text)), DumpDefault)
+	return pyjson.Dumps(testkit.Array(goEvents(page), testkit.Str(title), testkit.Str(text)), pyfs.DumpDefault)
 }
 
 // htmlCorners are hand-written pages: the Python tests' fixtures and the
@@ -114,7 +115,7 @@ var feedCorners = []string{
 func TestHTMLFeedCornersFrozen(t *testing.T) {
 	var got []string
 	for _, page := range append(append([]string{}, htmlCorners...), feedCorners...) {
-		got = append(got, pyjson.Dumps(goFeedEvents(page), DumpDefault))
+		got = append(got, pyjson.Dumps(goFeedEvents(page), pyfs.DumpDefault))
 	}
 	testkit.CheckFrozen(t, "html/feed-corners", got)
 }

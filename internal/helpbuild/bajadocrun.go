@@ -12,6 +12,7 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/atomicfile"
 	"github.com/angeles725/niagara-go/internal/bajadocxml"
+	"github.com/angeles725/niagara-go/internal/helpbuild/pyfs"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyhtml"
 )
@@ -49,7 +50,7 @@ var bdIndexPages = map[string]bool{"package-summary.html": true, "package-tree.h
 func bajadocPages(dir string) []string {
 	sep := string(filepath.Separator)
 	var files []string
-	pyWalk(dir, func(root string, dirs, names []string) []string {
+	pyfs.Walk(dir, func(root string, dirs, names []string) []string {
 		for _, f := range names {
 			if !strings.HasSuffix(f, ".html") || bdIndexPages[f] {
 				continue
@@ -135,7 +136,7 @@ func writeCleanClass(outDir, pkg, className, text string) error {
 		return err
 	}
 	if _, err := os.Stat(legacy); legacy != path && err == nil {
-		return removeFile(legacy)
+		return pyfs.RemoveFile(legacy)
 	}
 	return nil
 }

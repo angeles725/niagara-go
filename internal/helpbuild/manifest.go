@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/angeles725/niagara-go/internal/helpbuild/pyfs"
 	"github.com/angeles725/niagara-go/internal/helpbuild/zipfile"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyjson"
@@ -123,7 +124,7 @@ func writeManifest(res *SetupResult, repo, vid, label, dataRoot string, now func
 	}
 	path := pycompat.Join(repo, "versions", vid+".manifest.json")
 	v := manifestValue(vid, label, res.Install, dataRoot, now(), res.Fidelity, rows)
-	if err := WriteJSON(path, v, DumpManifest); err != nil {
+	if err := pyfs.WriteJSON(path, v, DumpManifest); err != nil {
 		return err
 	}
 	res.ManifestPath = path

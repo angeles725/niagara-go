@@ -12,6 +12,7 @@ import (
 	"time"
 	"unicode/utf8"
 
+	"github.com/angeles725/niagara-go/internal/helpbuild/pyfs"
 	"github.com/angeles725/niagara-go/internal/procgroup"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/textfold"
@@ -125,7 +126,7 @@ func topFolder(pdfPath, docsDir string) (string, error) {
 // sorted by full path.
 func FindPDFs(docsDir string) []string {
 	var out []string
-	pyWalk(docsDir, func(dir string, dirs, files []string) []string {
+	pyfs.Walk(docsDir, func(dir string, dirs, files []string) []string {
 		for _, f := range files {
 			if hasSuffixFold(f, ".pdf") {
 				out = append(out, pycompat.Join(dir, f))

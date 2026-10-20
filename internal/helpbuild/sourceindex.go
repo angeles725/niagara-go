@@ -5,6 +5,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/angeles725/niagara-go/internal/helpbuild/pyfs"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 )
@@ -40,7 +41,7 @@ func BuildSourceIndex(baseDir string) (*IndexResult, error) {
 	var order []string
 	totalLines := 0
 	for _, root := range roots {
-		pyWalkDirOrder(root.dir, func(dir string, dirs, files []string) []string {
+		pyfs.WalkDirOrder(root.dir, func(dir string, dirs, files []string) []string {
 			sort.Strings(dirs)
 			for _, name := range files {
 				if !strings.HasSuffix(name, ".java") {
@@ -80,7 +81,7 @@ func BuildSourceIndex(baseDir string) (*IndexResult, error) {
 			pyjson.Field{Key: "package", Value: pyjson.String(e.pkg)},
 			pyjson.Field{Key: "lines", Value: pyjson.IntValue(int64(e.lines))}))
 	}
-	if err := WriteJSON(pycompat.Join(baseDir, "indexes", "source-index.json"), out, DumpIndent2Unicode); err != nil {
+	if err := pyfs.WriteJSON(pycompat.Join(baseDir, "indexes", "source-index.json"), out, pyfs.DumpIndent2Unicode); err != nil {
 		return res, err
 	}
 	res.out("Built source-index.json: %d classes, %d total lines from source/", len(order), totalLines)

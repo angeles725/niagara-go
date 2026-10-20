@@ -1,4 +1,4 @@
-package helpbuild
+package pyfs
 
 import (
 	"path/filepath"

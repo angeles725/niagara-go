@@ -1,4 +1,4 @@
-package helpbuild
+package pyfs
 
 import (
 	"errors"
@@ -15,29 +15,29 @@ import (
 // File-system helpers with the semantics of the Python calls the S3/S4
 // builders make: os.walk, os.remove, shutil.copyfile and json.load.
 
-// pyWalk is os.walk(top) top-down without followlinks. visit receives each
+// Walk is os.walk(top) top-down without followlinks. visit receives each
 // directory (joined like os.path.join, from top), the names of its
 // subdirectories (a symlink to a directory counts as one, as
 // DirEntry.is_dir() follows links) and of everything else, and returns the
 // subdirectories to descend, like a caller editing dirnames in place. A
 // symlinked subdirectory is listed but not descended. A directory that
 // cannot be read is skipped silently (onerror=None).
-func pyWalk(top string, visit func(dir string, dirs, files []string) []string) {
+func Walk(top string, visit func(dir string, dirs, files []string) []string) {
 	walkPy(top, os.ReadDir, nil, visit)
 }
 
-// pyWalkFn is pyWalk with os.walk's onerror: it receives each directory
+// WalkFn is Walk with os.walk's onerror: it receives each directory
 // that cannot be read (as joined from top) and the error, then the walk
 // goes on without it.
-func pyWalkFn(top string, onerror func(dir string, err error), visit func(dir string, dirs, files []string) []string) {
+func WalkFn(top string, onerror func(dir string, err error), visit func(dir string, dirs, files []string) []string) {
 	walkPy(top, os.ReadDir, onerror, visit)
 }
 
-// pyWalkDirOrder is pyWalk with each directory listed in the order the
+// WalkDirOrder is Walk with each directory listed in the order the
 // file system returns it (os.scandir's order, not sorted), for the
 // builders that do not sort what os.walk yields (source_indexer's files,
 // slots_indexer's folders and files): their output order follows it.
-func pyWalkDirOrder(top string, visit func(dir string, dirs, files []string) []string) {
+func WalkDirOrder(top string, visit func(dir string, dirs, files []string) []string) {
 	walkPy(top, readDirUnsorted, nil, visit)
 }
 
@@ -82,23 +82,23 @@ func walkPy(top string, list func(string) ([]fs.DirEntry, error), onerror func(d
 	}
 }
 
-// removeFile is os.remove: it unlinks a file or a symlink and refuses a
+// RemoveFile is os.remove: it unlinks a file or a symlink and refuses a
 // directory (IsADirectoryError), where os.Remove would delete an empty one.
-func removeFile(path string) error {
+func RemoveFile(path string) error {
 	if st, err := os.Lstat(path); err == nil && st.IsDir() {
 		return &fs.PathError{Op: "remove", Path: path, Err: syscall.EISDIR}
 	}
 	return os.Remove(path)
 }
 
-// pyCopyfile is shutil.copyfile(src, dst): the content only, following
+// Copyfile is shutil.copyfile(src, dst): the content only, following
 // symlinks, dst created or truncated with the default mode (0666 less the
 // umask). The error names the file that failed, as Python's OSError does.
 // Before dst is opened (and truncated) it refuses, like Python, two names
 // of one file (SameFileError, os.path.samefile: links followed), a named
 // pipe (SpecialFileError) and a directory source (IsADirectoryError, which
 // Python's open(src, 'rb') raises).
-func pyCopyfile(src, dst string) error {
+func Copyfile(src, dst string) error {
 	if s, err := os.Stat(src); err == nil {
 		if d, err := os.Stat(dst); err == nil && os.SameFile(s, d) {
 			return &sameFileError{src, dst}
@@ -153,9 +153,9 @@ type JSONLoadError struct {
 
 func (e *JSONLoadError) Error() string { return e.Msg }
 
-// loadJSON is json.load(open(path, encoding="utf-8")): strict UTF-8 over
+// LoadJSON is json.load(open(path, encoding="utf-8")): strict UTF-8 over
 // the whole file, universal newlines, then Python's decoder.
-func loadJSON(path string) (pyjson.Value, error) {
+func LoadJSON(path string) (pyjson.Value, error) {
 	raw, err := os.ReadFile(path)
 	if err != nil {
 		var pe *fs.PathError

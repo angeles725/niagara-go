@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/angeles725/niagara-go/internal/helpbuild/pyfs"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyhtml"
 	"github.com/angeles725/niagara-go/internal/pyjson"
@@ -119,7 +120,7 @@ func BuildDevguideTOC(baseDir string) (*TextResult, error) {
 	if err := os.MkdirAll(filepath.Dir(out), 0o777); err != nil {
 		return nil, err
 	}
-	if err := WriteJSON(out, toc, DumpIndent2); err != nil {
+	if err := pyfs.WriteJSON(out, toc, pyfs.DumpIndent2); err != nil {
 		return nil, err
 	}
 	n := len(toc.M["sections"].A)

@@ -5,6 +5,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/angeles725/niagara-go/internal/helpbuild/pyfs"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 )
@@ -15,9 +16,6 @@ import (
 // simple name shared by several classes keeps the preferred one (javax.baja.*
 // first, then by package) and the others are keyed by qualified name. The
 // file is json.dumps(indent=2, sort_keys=True, ensure_ascii=False).
-
-// DumpIndent2Unicode is json.dumps(indent=2, ensure_ascii=False).
-var DumpIndent2Unicode = pyjson.DumpOpts{Indent: 2, ItemSep: ",", KeySep: ": "}
 
 // inheritInfo is inheritance_builder.parse_txt_file's dict; a nil pointer
 // is Python's None.
@@ -83,7 +81,7 @@ func parseInheritTxt(path string) (*inheritInfo, error) {
 // folders and files of each folder in sorted order.
 func cleanTxtFiles(cleanDir string) []string {
 	var files []string
-	pyWalk(cleanDir, func(dir string, dirs, names []string) []string {
+	pyfs.Walk(cleanDir, func(dir string, dirs, names []string) []string {
 		sort.Strings(dirs)
 		sort.Strings(names)
 		for _, name := range names {
@@ -204,7 +202,7 @@ func BuildInheritance(baseDir string) (*IndexResult, error) {
 		}
 	}
 	outPath := pycompat.Join(outDir, "inheritance.json")
-	if err := WriteJSON(outPath, inheritance, DumpIndent2Unicode); err != nil {
+	if err := pyfs.WriteJSON(outPath, inheritance, pyfs.DumpIndent2Unicode); err != nil {
 		return res, err
 	}
 	st, err := os.Stat(outPath)

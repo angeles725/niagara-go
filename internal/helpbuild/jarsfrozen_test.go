@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/angeles725/niagara-go/internal/helpbuild/internal/testkit"
+	"github.com/angeles725/niagara-go/internal/helpbuild/pyfs"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 )
 
@@ -24,7 +25,7 @@ func goClassify(t *testing.T, srcDir string, jars []string) []string {
 	for _, jar := range jars {
 		name := filepath.Base(jar)
 		l := ReadListing(jar)
-		out = append(out, pyjson.Dumps(testkit.Array(testkit.Str("jar"), testkit.Str(name), l.value()), DumpCompact))
+		out = append(out, pyjson.Dumps(testkit.Array(testkit.Str("jar"), testkit.Str(name), l.value()), pyfs.DumpCompact))
 		if l == nil {
 			continue
 		}
@@ -45,7 +46,7 @@ func goClassify(t *testing.T, srcDir string, jars []string) []string {
 				testkit.Boolean(rules.IsDocLike(e.Name)), testkit.OptStr(extract), exclude, testkit.OptStr(course),
 				testkit.OptStr(rules.CourseKind(e.Name)), testkit.Boolean(IsGuidePage(e.Name)),
 				testkit.Boolean(IsLicence(e.Name)), testkit.Boolean(IsSourceArchive("guides/"+e.Name)),
-				testkit.Str(CleanTextName(e.Name, srcDir))), DumpDefault))
+				testkit.Str(CleanTextName(e.Name, srcDir))), pyfs.DumpDefault))
 		}
 	}
 	return out
@@ -170,7 +171,7 @@ func TestCachePathFrozen(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		got = append(got, pyjson.Dumps(testkit.Str(p), DumpDefault))
+		got = append(got, pyjson.Dumps(testkit.Str(p), pyfs.DumpDefault))
 	}
 	testkit.CheckFrozen(t, "jars/cache-path", testkit.Relabeled(got, repo, "<repo>"))
 }
@@ -194,5 +195,5 @@ func TestGlobFrozen(t *testing.T) {
 	for _, pr := range pairs {
 		got = append(got, testkit.Boolean(GlobRe(pr[0]).MatchString(pr[1])))
 	}
-	testkit.CheckFrozen(t, "jars/glob", []string{pyjson.Dumps(testkit.Array(got...), DumpDefault)})
+	testkit.CheckFrozen(t, "jars/glob", []string{pyjson.Dumps(testkit.Array(got...), pyfs.DumpDefault)})
 }

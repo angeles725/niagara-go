@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/angeles725/niagara-go/internal/helpbuild/internal/testkit"
+	"github.com/angeles725/niagara-go/internal/helpbuild/pyfs"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 )
 
@@ -45,10 +46,10 @@ func TestExtractAndIndexWritesTheManifest(t *testing.T) {
 	}
 	st, _ := os.Stat(filepath.Join(install, "modules", "docFoo-doc.jar"))
 	want := "{\n \"version\": \"1.0.0.0\",\n \"label\": \"fixture\",\n \"install_dir\": " +
-		pyjson.Dumps(pyjson.String(install), DumpDefault) + ",\n \"data_root\": \"versions/1.0.0.0\",\n" +
+		pyjson.Dumps(pyjson.String(install), pyfs.DumpDefault) + ",\n \"data_root\": \"versions/1.0.0.0\",\n" +
 		" \"generated_utc\": \"2026-10-17T15:08:07+00:00\",\n \"fidelity\": {\n  \"jars\": 1,\n  \"checked\": 3,\n" +
 		"  \"matched\": 3\n },\n \"eol_only_count\": 0,\n \"mismatched\": [],\n \"missing\": [],\n \"jars\": [\n  {\n" +
-		"   \"jar\": \"modules/docFoo-doc.jar\",\n   \"bytes\": " + pyjson.Dumps(pyjson.IntValue(st.Size()), DumpDefault) +
+		"   \"jar\": \"modules/docFoo-doc.jar\",\n   \"bytes\": " + pyjson.Dumps(pyjson.IntValue(st.Size()), pyfs.DumpDefault) +
 		",\n   \"sha256\": \"" + sum + "\",\n   \"mapped_entries\": 3\n  }\n ]\n}"
 	if text != want {
 		t.Fatalf("manifest\n%s\nwant\n%s", text, want)
@@ -278,7 +279,7 @@ func writeRegistry(t *testing.T, repo string, versions map[string][3]string) {
 	reg := pyjson.NewObject()
 	reg.Set("default", testkit.Str(pyjson.SortedKeys(keysOf(versions))[0]))
 	reg.Set("versions", vs)
-	testkit.WriteFile(t, filepath.Join(repo, "versions", "registry.json"), []byte(pyjson.Dumps(reg, DumpDefault)))
+	testkit.WriteFile(t, filepath.Join(repo, "versions", "registry.json"), []byte(pyjson.Dumps(reg, pyfs.DumpDefault)))
 }
 
 func keysOf(m map[string][3]string) []string {

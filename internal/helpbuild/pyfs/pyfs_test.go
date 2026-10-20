@@ -1,4 +1,4 @@
-package helpbuild
+package pyfs
 
 import (
 	"errors"
@@ -13,10 +13,10 @@ import (
 	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
-// Unit tests of pyfs.go and registry.go: the Python semantics the S3/S4
+// Unit tests of pyfs.go: the Python semantics the S3/S4
 // builders rely on (the parity tests cover them end to end).
 
-// pyWalk lists a symlinked folder among the folders without entering it,
+// Walk lists a symlinked folder among the folders without entering it,
 // a broken symlink among the files, and descends only what visit returns.
 func TestPyWalk(t *testing.T) {
 	top := t.TempDir()
@@ -24,7 +24,7 @@ func TestPyWalk(t *testing.T) {
 	testkit.SymlinkOrSkip(t, filepath.Join(top, "real"), filepath.Join(top, "a", "link"))
 	testkit.SymlinkOrSkip(t, filepath.Join(top, "missing"), filepath.Join(top, "broken"))
 	var got []string
-	pyWalk(top, func(dir string, dirs, files []string) []string {
+	Walk(top, func(dir string, dirs, files []string) []string {
 		rel, _ := filepath.Rel(top, dir)
 		got = append(got, rel+" "+strings.Join(dirs, ",")+" | "+strings.Join(files, ","))
 		var keep []string
@@ -37,7 +37,7 @@ func TestPyWalk(t *testing.T) {
 	})
 	want := []string{". a,real | broken,f", "a link,skip | x", "real  | z"}
 	if !reflect.DeepEqual(got, want) {
-		t.Errorf("pyWalk:\n got %q\nwant %q", got, want)
+		t.Errorf("Walk:\n got %q\nwant %q", got, want)
 	}
 }
 
@@ -47,13 +47,13 @@ func TestRemoveFileRefusesADirectory(t *testing.T) {
 	if err := os.Mkdir(d, 0o755); err != nil {
 		t.Fatal(err)
 	}
-	if err := removeFile(d); err == nil || !pycompat.IsDir(d) {
-		t.Errorf("removeFile(dir) = %v, dir kept %v", err, pycompat.IsDir(d))
+	if err := RemoveFile(d); err == nil || !pycompat.IsDir(d) {
+		t.Errorf("RemoveFile(dir) = %v, dir kept %v", err, pycompat.IsDir(d))
 	}
 	f := filepath.Join(dir, "f.txt")
 	testkit.WriteFile(t, f, nil)
-	if err := removeFile(f); err != nil || pycompat.IsFile(f) {
-		t.Errorf("removeFile(file) = %v", err)
+	if err := RemoveFile(f); err != nil || pycompat.IsFile(f) {
+		t.Errorf("RemoveFile(file) = %v", err)
 	}
 }
 
@@ -62,8 +62,8 @@ func TestPyCopyfile(t *testing.T) {
 	src, dst := filepath.Join(dir, "src"), filepath.Join(dir, "dst")
 	testkit.WriteFile(t, src, []byte("data"))
 	testkit.WriteFile(t, dst, []byte("longer old content"))
-	if err := pyCopyfile(src, dst); err != nil || string(testkit.ReadBytes(t, dst)) != "data" {
-		t.Fatalf("pyCopyfile: %v", err)
+	if err := Copyfile(src, dst); err != nil || string(testkit.ReadBytes(t, dst)) != "data" {
+		t.Fatalf("Copyfile: %v", err)
 	}
 	mkfifo, err := exec.LookPath("mkfifo")
 	if err != nil {
@@ -73,8 +73,8 @@ func TestPyCopyfile(t *testing.T) {
 	if out, err := exec.Command(mkfifo, fifo).CombinedOutput(); err != nil {
 		t.Fatalf("mkfifo: %v %s", err, out)
 	}
-	if err := pyCopyfile(fifo, dst); err == nil || err.Error() != "`"+fifo+"` is a named pipe" {
-		t.Errorf("pyCopyfile(fifo) = %v", err)
+	if err := Copyfile(fifo, dst); err == nil || err.Error() != "`"+fifo+"` is a named pipe" {
+		t.Errorf("Copyfile(fifo) = %v", err)
 	}
 }
 
@@ -92,13 +92,13 @@ func TestPyCopyfileRefusesSameFileAndDirectory(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, p := range [][2]string{{a, a}, {a, link}, {link, a}, {hard, a}} {
-		err := pyCopyfile(p[0], p[1])
+		err := Copyfile(p[0], p[1])
 		want := pycompat.FSRepr(p[0]) + " and " + pycompat.FSRepr(p[1]) + " are the same file"
 		if err == nil || pycompat.OSErrorText(err) != want {
-			t.Errorf("pyCopyfile(%s, %s) = %v, want %q", p[0], p[1], err, want)
+			t.Errorf("Copyfile(%s, %s) = %v, want %q", p[0], p[1], err, want)
 		}
 		if got := string(testkit.ReadBytes(t, a)); got != "data" {
-			t.Fatalf("pyCopyfile(%s, %s) left %q", p[0], p[1], got)
+			t.Fatalf("Copyfile(%s, %s) left %q", p[0], p[1], got)
 		}
 	}
 	src, dst := filepath.Join(dir, "d"), filepath.Join(dir, "dst")
@@ -106,20 +106,20 @@ func TestPyCopyfileRefusesSameFileAndDirectory(t *testing.T) {
 		t.Fatal(err)
 	}
 	testkit.WriteFile(t, dst, []byte("keep"))
-	err := pyCopyfile(src, dst)
+	err := Copyfile(src, dst)
 	if want := "[Errno 21] Is a directory: " + pycompat.FSRepr(src); err == nil || pycompat.OSErrorText(err) != want {
-		t.Errorf("pyCopyfile(dir, dst) = %v, want %q", err, want)
+		t.Errorf("Copyfile(dir, dst) = %v, want %q", err, want)
 	}
 	if got := string(testkit.ReadBytes(t, dst)); got != "keep" {
-		t.Errorf("pyCopyfile(dir, dst) truncated dst to %q", got)
+		t.Errorf("Copyfile(dir, dst) truncated dst to %q", got)
 	}
-	err = pyCopyfile(a, src) // a directory as destination: open(dst, "wb") fails
+	err = Copyfile(a, src) // a directory as destination: open(dst, "wb") fails
 	if want := "[Errno 21] Is a directory: " + pycompat.FSRepr(src); err == nil || pycompat.OSErrorText(err) != want {
-		t.Errorf("pyCopyfile(a, dir) = %v, want %q", err, want)
+		t.Errorf("Copyfile(a, dir) = %v, want %q", err, want)
 	}
 }
 
-// loadJSON errors carry Python's str(exception); what Python catches is a
+// LoadJSON errors carry Python's str(exception); what Python catches is a
 // *JSONLoadError.
 func TestLoadJSONErrors(t *testing.T) {
 	dir := t.TempDir()
@@ -132,55 +132,15 @@ func TestLoadJSONErrors(t *testing.T) {
 		`{"a": 1} {}`: "Extra data: line 1 column 10 (char 9)",
 	} {
 		testkit.WriteFile(t, p, []byte(data))
-		_, err := loadJSON(p)
+		_, err := LoadJSON(p)
 		var le *JSONLoadError
 		if !errors.As(err, &le) || le.OS || le.Msg != want {
-			t.Errorf("loadJSON(%q) = %v, want %q", data, err, want)
+			t.Errorf("LoadJSON(%q) = %v, want %q", data, err, want)
 		}
 	}
-	_, err := loadJSON(filepath.Join(dir, "missing.json"))
+	_, err := LoadJSON(filepath.Join(dir, "missing.json"))
 	var le *JSONLoadError
 	if !errors.As(err, &le) || !le.OS || !strings.HasPrefix(le.Msg, "[Errno 2] No such file or directory: '") {
 		t.Errorf("missing file: %v", err)
-	}
-}
-
-// identify, installDir and courseDir skip what Python catches and fail on
-// what makes it raise.
-func TestRegistryLookups(t *testing.T) {
-	dir := t.TempDir()
-	repo := filepath.Join(dir, "repo")
-	reg := func(text string) {
-		testkit.WriteFile(t, filepath.Join(repo, "versions", "registry.json"), []byte(text))
-	}
-	root := filepath.Join(repo, "versions", "A")
-	reg(`{"versions": {"bad": 5, "nodr": {"install_dir": "/x"}, "num": {"data_root": 3},` +
-		` "A": {"data_root": "versions/./A/", "install_dir": "/inst", "course_dir": "../c"}}}`)
-	if vid, err := identify(root); vid != "A" || err != nil {
-		t.Errorf("identify = %q, %v", vid, err)
-	}
-	if d, err := installDir(root); d != "/inst" || err != nil {
-		t.Errorf("installDir = %q, %v", d, err)
-	}
-	if d, err := courseDir(root); d != filepath.Join(dir, "c") || err != nil {
-		t.Errorf("courseDir = %q, %v", d, err)
-	}
-	for text, wantErr := range map[string]bool{
-		`{"versions": {"A": {"data_root": "versions/A", "install_dir": ""}}}`: false,
-		`{"versions": {"A": {"data_root": "versions/A", "install_dir": 0}}}`:  false,
-		`{"versions": {"A": {"data_root": "versions/A", "install_dir": 5}}}`:  true,
-		`{"versions": {"A": {"data_root": "versions/A", "course_dir": [1]}}}`: true,
-		`{"versions": ["A"]}`: true, // identify skips it; course_dir's .get raises
-		`{"versions": 5}`:     true,
-		`[1]`:                 true,
-		`{}`:                  false,
-		`{"versions": null}`:  true,
-	} {
-		reg(text)
-		_, err1 := installDir(root)
-		_, err2 := courseDir(root)
-		if got := err1 != nil || err2 != nil; got != wantErr {
-			t.Errorf("%s: installDir %v, courseDir %v; want an error %v", text, err1, err2, wantErr)
-		}
 	}
 }

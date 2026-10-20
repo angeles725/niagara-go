@@ -5,6 +5,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/angeles725/niagara-go/internal/helpbuild/pyfs"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/textfold"
 )
@@ -34,12 +35,12 @@ type JarPath struct{ Rel, Path string }
 // DirError is a directory the walk could not list and the strerror.
 type DirError struct{ Dir, Err string }
 
-// pyWalkErr is os.walk(top, onerror=...) as pyWalk walks it; onerror
+// pyWalkErr is os.walk(top, onerror=...) as pyfs.Walk walks it; onerror
 // receives the path of each directory that cannot be listed, relative to
 // top ("." for top itself), and the strerror (str(err) without one).
 func pyWalkErr(top string, onerror func(rel, why string), visit func(dir, rel string, dirs, files []string) []string) {
 	rels := map[string]string{top: ""}
-	pyWalkFn(top, func(dir string, err error) {
+	pyfs.WalkFn(top, func(dir string, err error) {
 		if onerror != nil {
 			rel := strings.TrimSuffix(rels[dir], "/")
 			if rel == "" {

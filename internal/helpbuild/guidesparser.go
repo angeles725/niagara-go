@@ -9,6 +9,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/angeles725/niagara-go/internal/atomicfile"
+	"github.com/angeles725/niagara-go/internal/helpbuild/pyfs"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/textfold"
 )
@@ -108,7 +109,7 @@ func parseGuidesInto(res *TextResult, guidesDir, outDir string) error {
 				res.Warnings = append(res.Warnings, warning)
 			}
 		}
-		pyWalk(folderPath, func(dir string, dirs, files []string) []string {
+		pyfs.Walk(folderPath, func(dir string, dirs, files []string) []string {
 			for _, fname := range files {
 				if werr != nil || !IsGuidePage(fname) {
 					continue
@@ -197,7 +198,7 @@ func parseDevguideInto(res *TextResult, baseDir, devguideDir, outDir string) err
 	chars := 0
 	var excluded []string
 	var werr error
-	pyWalk(devguideDir, func(dir string, dirs, files []string) []string {
+	pyfs.Walk(devguideDir, func(dir string, dirs, files []string) []string {
 		for _, fname := range files {
 			if werr != nil {
 				break

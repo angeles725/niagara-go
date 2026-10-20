@@ -9,6 +9,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
+	"github.com/angeles725/niagara-go/internal/helpbuild/pyfs"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 	"github.com/angeles725/niagara-go/internal/textfold"
@@ -18,9 +19,6 @@ import (
 // guides/<Folder>/ its html_count, source_jar, topics (every page, the
 // .html/.htm extension dropped), total_topics and, with a toc.xml, toc
 // {file, items, titled} and titles {topic: TOC title}.
-
-// DumpIndent2 is json.dumps(indent=2): ensure_ascii on, "," and ": ".
-var DumpIndent2 = pyjson.DumpOpts{EnsureASCII: true, Indent: 2, ItemSep: ",", KeySep: ": "}
 
 // TopicName is build_guides_index.topic_name: "sub/Page.html" -> "sub/Page".
 func TopicName(rel string) string {
@@ -94,7 +92,7 @@ func KnownJarNames(baseDir string) (names []string, ok bool, err error) {
 		if !pycompat.IsFile(manifest) {
 			continue
 		}
-		data, err := loadJSON(manifest)
+		data, err := pyfs.LoadJSON(manifest)
 		if err != nil {
 			return nil, false, err
 		}
@@ -176,8 +174,8 @@ func jarForFolder(folder, rawFolder string, src JarSources, rules *Rules) (jar p
 // under baseDir; empty when it is absent or unreadable (what Python
 // catches: an OSError, a ValueError, a top level that is not a dict).
 func previousJars(baseDir string) (map[string]pyjson.Value, error) {
-	data, err := loadJSON(pycompat.Join(baseDir, "indexes", "guides-index.json"))
-	var le *JSONLoadError
+	data, err := pyfs.LoadJSON(pycompat.Join(baseDir, "indexes", "guides-index.json"))
+	var le *pyfs.JSONLoadError
 	if errors.As(err, &le) {
 		return nil, nil
 	}
@@ -222,7 +220,7 @@ func GuidesIndex(baseDir string, src JarSources) (index pyjson.Value, kept, warn
 		var pages []string
 		htmlCount := 0
 		var werr error
-		pyWalk(path, func(dir string, dirs, files []string) []string {
+		pyfs.Walk(path, func(dir string, dirs, files []string) []string {
 			for _, f := range files {
 				if low := textfold.Lower(f); strings.HasSuffix(low, ".html") || strings.HasSuffix(low, ".htm") {
 					htmlCount++
@@ -295,7 +293,7 @@ func BuildGuidesIndex(baseDir string) (*TextResult, error) {
 	if err := os.MkdirAll(filepath.Dir(out), 0o777); err != nil {
 		return nil, err
 	}
-	if err := WriteJSON(out, index, DumpIndent2); err != nil {
+	if err := pyfs.WriteJSON(out, index, pyfs.DumpIndent2); err != nil {
 		return nil, err
 	}
 	res := &TextResult{Files: len(index.Keys), Warnings: warnings}

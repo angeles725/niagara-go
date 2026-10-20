@@ -10,6 +10,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
+	"github.com/angeles725/niagara-go/internal/helpbuild/pyfs"
 	"github.com/angeles725/niagara-go/internal/helpbuild/zipfile"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 )
@@ -226,7 +227,7 @@ func (ls *Listings) Save() error {
 	data := pyjson.NewObject()
 	data.Set("version", pyjson.IntValue(CacheVersion))
 	data.Set("jars", ls.jars)
-	if err := WriteJSON(ls.Path, data, DumpCompact); err != nil {
+	if err := pyfs.WriteJSON(ls.Path, data, pyfs.DumpCompact); err != nil {
 		return err
 	}
 	ls.dirty = false

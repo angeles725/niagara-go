@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/atomicfile"
+	"github.com/angeles725/niagara-go/internal/helpbuild/pyfs"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 )
@@ -45,7 +46,7 @@ type courseFile struct{ rel, path string }
 func courseFiles(src string) []courseFile {
 	var out []courseFile
 	prefix := map[string]string{src: ""}
-	pyWalk(src, func(dir string, dirs, files []string) []string {
+	pyfs.Walk(src, func(dir string, dirs, files []string) []string {
 		sort.Strings(dirs)
 		sort.Strings(files)
 		for _, f := range files {
@@ -163,7 +164,7 @@ func BuildCourse(baseDir string, rules *Rules) (*CourseCounts, error) {
 				if err := os.MkdirAll(filepath.Dir(out), 0o777); err != nil {
 					return err
 				}
-				if err := pyCopyfile(pycompat.Join(src, row.Rel), out); err != nil {
+				if err := pyfs.Copyfile(pycompat.Join(src, row.Rel), out); err != nil {
 					return err
 				}
 				if row.Kind == "text" {
@@ -221,7 +222,7 @@ func CourseExtractor(baseDir string, rules *Rules) (*ToolOutput, error) {
 // pythonCrash reports an error course_extractor does not catch (it is not
 // an OSError): a registry that is not JSON or not of the expected shape.
 func pythonCrash(err error) bool {
-	var le *JSONLoadError
+	var le *pyfs.JSONLoadError
 	var shape *registryShapeError
 	var rec *pyjson.RecursionError
 	return errors.As(err, &le) && !le.OS || errors.As(err, &shape) || errors.As(err, &rec)
@@ -229,7 +230,7 @@ func pythonCrash(err error) bool {
 
 // osErrorText is str(OSError) of a failure of build().
 func osErrorText(err error) string {
-	var le *JSONLoadError
+	var le *pyfs.JSONLoadError
 	if errors.As(err, &le) {
 		return le.Msg
 	}

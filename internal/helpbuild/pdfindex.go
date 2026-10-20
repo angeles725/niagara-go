@@ -16,6 +16,7 @@ import (
 	"github.com/angeles725/niagara-go/internal/atomicfile"
 	"github.com/angeles725/niagara-go/internal/procgroup"
 
+	"github.com/angeles725/niagara-go/internal/helpbuild/pyfs"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 )
@@ -115,8 +116,8 @@ func loadPDFIndex(path string) (prev pyjson.Value, corrupt string, isCorrupt boo
 	if !pycompat.IsFile(path) {
 		return prev, "", false, nil
 	}
-	v, err := loadJSON(path)
-	var le *JSONLoadError
+	v, err := pyfs.LoadJSON(path)
+	var le *pyfs.JSONLoadError
 	switch {
 	case errors.As(err, &le):
 		return prev, le.Msg, true, nil
@@ -337,7 +338,7 @@ func pruneText(outputDir string, written map[string]bool) error {
 	}
 	for _, e := range ents {
 		if n := e.Name(); strings.HasSuffix(n, ".txt") && !written[strings.TrimSuffix(n, ".txt")] {
-			if err := removeFile(filepath.Join(outputDir, n)); err != nil {
+			if err := pyfs.RemoveFile(filepath.Join(outputDir, n)); err != nil {
 				return err
 			}
 		}

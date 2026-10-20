@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/bajadocxml"
+	"github.com/angeles725/niagara-go/internal/helpbuild/pyfs"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 )
@@ -143,7 +144,7 @@ func BuildSlotsIndex(baseDir string) (*IndexResult, error) {
 		if !pycompat.IsDir(modulePath) {
 			continue
 		}
-		pyWalkDirOrder(modulePath, func(dir string, dirs, names []string) []string {
+		pyfs.WalkDirOrder(modulePath, func(dir string, dirs, names []string) []string {
 			for _, name := range names {
 				if !strings.HasSuffix(name, ".java") {
 					continue
@@ -170,7 +171,7 @@ func BuildSlotsIndex(baseDir string) (*IndexResult, error) {
 		return res, err
 	}
 	res.out("Merged %d slots from .bajadoc XML", added)
-	if err := WriteJSON(pycompat.Join(baseDir, "indexes", "slots-index.json"), x.value(), DumpIndent2Unicode); err != nil {
+	if err := pyfs.WriteJSON(pycompat.Join(baseDir, "indexes", "slots-index.json"), x.value(), pyfs.DumpIndent2Unicode); err != nil {
 		return res, err
 	}
 	res.out("Built slots-index.json: %d classes (%d properties, %d actions, %d topics) from %d files",

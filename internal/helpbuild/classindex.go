@@ -6,6 +6,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/angeles725/niagara-go/internal/helpbuild/pyfs"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 	"github.com/angeles725/niagara-go/internal/pyre"
@@ -233,7 +234,7 @@ func writeClassIndex(res *IndexResult, baseDir, name string, index pyjson.Value)
 	if err := os.MkdirAll(pycompat.Join(baseDir, "indexes"), 0o777); err != nil {
 		return err
 	}
-	if err := WriteJSON(out, index, DumpIndent2); err != nil {
+	if err := pyfs.WriteJSON(out, index, pyfs.DumpIndent2); err != nil {
 		return err
 	}
 	res.out("%s: %d names, %d classes -> %s", name, len(index.Keys), countClasses(index), out)
