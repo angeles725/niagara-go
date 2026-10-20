@@ -19,7 +19,7 @@ import (
 const courseKeys = "testdata/course-keys"
 
 // The course-item goldens are Go only (Python nsearch has no course lead), so they live
-// apart from testdata/golden, which convert_goldens.py rewrites from the Python goldens.
+// apart from testdata/golden, which was converted once from the Python goldens.
 func TestGoldenCourseItem(t *testing.T) {
 	useFakes(t)
 	golden.Run(t, "testdata/courseitem", Main)

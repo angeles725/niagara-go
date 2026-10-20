@@ -107,13 +107,11 @@ WINTEST_RUN='^TestWinError' make wintest  # -test.run regex
 WINTEST_SHORT=0 make wintest              # full suites (default passes -test.short)
 WINTEST_TIMEOUT=20m make wintest          # per-package -test.timeout (default 10m)
 WINTEST_MIRROR=0 make wintest             # run in place from the UNC path
-PYCOMPAT_WINPY=/mnt/c/.../python.exe make wintest  # or WINTEST_PYTHON
 ```
 
-The Windows CPython that pycompat's two winerror tests run (`testdata/winerror/*.py`) is
-auto-detected under
-`/mnt/c/Users/*/AppData/Local/Programs/Python/Python3*/python.exe` and passed as
-`PYCOMPAT_WINPY` through `WSLENV`; without one the script says so and those tests skip.
+No Windows Python is needed: pycompat's two winerror tests compare with CPython texts frozen in
+`internal/pycompat/testdata/winerror/*.json` (Windows UI language 0x080A, es-MX) and skip on
+any other UI language.
 
 ## 6. Commits and review
 

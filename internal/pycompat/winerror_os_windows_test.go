@@ -1,39 +1,31 @@
 package pycompat
 
 import (
-	"encoding/json"
 	"net"
 	"os"
-	"os/exec"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 )
 
-// TestWinOSErrorTextMatchesPython runs the Windows Python named by PYCOMPAT_WINPY
-// (testdata/winerror/pyoserr.py) and compares str(e), e.strerror and type(e).__name__ of real
-// socket and os failures with WinOSErrorText, WinStrerrorOf and OSErrorName of the error Go
-// returns for the same call (through WinListdirError for os.listdir; OSErrorText and
-// StrerrorOf for open(), which goes through the C runtime). From WSL:
-// WSLENV=PYCOMPAT_WINPY/p PYCOMPAT_WINPY=<python.exe>.
+// TestWinOSErrorTextMatchesPython compares WinOSErrorText, WinStrerrorOf and OSErrorName of
+// the errors Go returns for real socket and os failures with the frozen str(e), e.strerror and
+// type(e).__name__ CPython gave for the same calls in testdata/winerror/pyoserr.json (through
+// WinListdirError for os.listdir; OSErrorText and StrerrorOf for open(), which goes through
+// the C runtime). "{dir}" in the frozen texts stands for the repr of the test directory.
 func TestWinOSErrorTextMatchesPython(t *testing.T) {
-	py := os.Getenv("PYCOMPAT_WINPY")
-	if py == "" {
-		t.Skip("PYCOMPAT_WINPY is not set to a Windows python.exe; WinOSErrorText not compared with CPython")
-	}
-	dir := t.TempDir()
-	out := filepath.Join(t.TempDir(), "pyoserr.json")
-	script := filepath.Join("testdata", "winerror", "pyoserr.py")
-	if b, err := exec.Command(py, "-I", script, out, dir).CombinedOutput(); err != nil {
-		t.Fatalf("%s pyoserr.py: %v\n%s", py, err, b)
-	}
-	b, err := os.ReadFile(out)
-	if err != nil {
-		t.Fatal(err)
-	}
+	skipOtherUILanguage(t)
 	var want map[string]struct{ Text, Strerror, Class string }
-	if err := json.Unmarshal(b, &want); err != nil {
-		t.Fatal(err)
+	readFrozen(t, "pyoserr.json", &want)
+	dir := t.TempDir()
+	if strings.ContainsAny(dir, `'"`) {
+		t.Skipf("temp dir %q needs a quoted repr the frozen texts do not cover", dir)
+	}
+	reprDir := strings.ReplaceAll(dir, `\`, `\\`)
+	for k, w := range want {
+		w.Text = strings.ReplaceAll(w.Text, "{dir}", reprDir)
+		want[k] = w
 	}
 	p := func(parts ...string) string { return filepath.Join(append([]string{dir}, parts...)...) }
 	if err := os.WriteFile(p("file.txt"), []byte("x"), 0o644); err != nil {

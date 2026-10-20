@@ -12,7 +12,7 @@ COVERPROFILE ?= $(BIN)/cover.out
 TOOLBIN := $(abspath $(BIN))/tools
 export CGO_ENABLED=0
 
-.PHONY: all build cross test vet fmt-check check lint deadcode cover ci wintest parity realdata hooks clean
+.PHONY: all build cross test vet fmt-check check lint deadcode cover ci wintest realdata hooks clean
 
 all: check build
 
@@ -47,7 +47,9 @@ lint:
 # on findings; only a load error fails). The test-only packages internal/golden and
 # internal/help/fts/ftsfixture (with rawfixture) are filtered out: no command imports
 # them by design, so every function in them would be listed.
-DEADCODE_TESTONLY := ^internal/(golden|help/fts/ftsfixture)/
+# procgroup Cmd.Output and Cmd.CombinedOutput are filtered too: they intentionally shadow the
+# embedded exec.Cmd methods so c.Output() cannot bypass the process-group kill.
+DEADCODE_TESTONLY := ^internal/(golden|help/fts/ftsfixture)/|^internal/procgroup/procgroup\.go:[0-9]+:[0-9]+: unreachable func: Cmd\.(Output|CombinedOutput)$$
 deadcode:
 	@out=$$($(GO) run $(DEADCODE) ./...) || exit $$?; \
 		[ -z "$$out" ] || printf '%s\n' "$$out" | grep -vE '$(DEADCODE_TESTONLY)' || true
@@ -71,8 +73,8 @@ wintest:
 # `make realdata` runs the permanent real-data gates, which need no Python: the search-quality gate
 # TestSearchQuality (internal/searchdoor/quality_test.go; hit@1/hit@5 per source must not fall below
 # its floor), the mnav and nh real-corpus goldens, helpbuild's real coverage goldens, course, bog
-# recall and hdbread. `make parity` is an alias: the suites that compared Go with the frozen Python
-# reference retired with D47, and the committed goldens are the oracle. See docs/goldens.md.
+# recall and hdbread. The suites that compared Go with the frozen Python reference retired with D47;
+# the committed goldens are the oracle. See docs/goldens.md.
 NIAGARA_RESEARCH ?= $(HOME)/niagara-research
 RESEARCH := $(abspath $(NIAGARA_RESEARCH))
 # Live/station suites (course, bog) read host-specific data that never enters the repo, so they are
@@ -83,7 +85,6 @@ RESEARCH := $(abspath $(NIAGARA_RESEARCH))
 # (682 records); an empty value skips it, a missing file fails. Write a `$` of an overriding path
 # as `$$`, on the command line or in the environment (docs/goldens.md).
 HDBREAD_REAL_HDB ?= $(RESEARCH)/clients/distech-merida-harbor/HM_BMS_backup_08_09_2026/HM_BMS/history/station/seg1/UMA14$$20Ret.hdb
-parity: realdata
 
 realdata:
 	NSEARCH_QUALITY_ROOT=$(RESEARCH) $(GO) test -count=1 -v -timeout 30m \
