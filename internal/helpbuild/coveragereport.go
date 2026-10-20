@@ -28,12 +28,12 @@ func (e *MissingIndexError) Error() string {
 		"with: nh rebuild-all", e.Name, e.BaseDir)
 }
 
-// IndexShapeError is the AttributeError, TypeError or KeyError Python
+// indexShapeError is the AttributeError, TypeError or KeyError Python
 // raises on an index of an unexpected shape (a list where a dict is
 // expected, a record without its key).
-type IndexShapeError struct{ Name, What string }
+type indexShapeError struct{ Name, What string }
 
-func (e *IndexShapeError) Error() string { return "indexes/" + e.Name + ": " + e.What }
+func (e *indexShapeError) Error() string { return "indexes/" + e.Name + ": " + e.What }
 
 // loadReportIndex is index_cache.load_index(baseDir, name, required): a
 // missing file is an empty object, or a *MissingIndexError when required;
@@ -52,13 +52,13 @@ func loadReportIndex(baseDir, name string, required bool) (*index.Object, error)
 	}
 	o, ok := v.(*index.Object)
 	if !ok {
-		return nil, &IndexShapeError{name, "the top level is not an object"}
+		return nil, &indexShapeError{name, "the top level is not an object"}
 	}
 	return o, nil
 }
 
-// GuidePageExtensions are coverage_report.GUIDE_PAGE_EXTENSIONS.
-var GuidePageExtensions = []string{".html", ".htm"}
+// guidePageExtensions are coverage_report.GUIDE_PAGE_EXTENSIONS.
+var guidePageExtensions = []string{".html", ".htm"}
 
 // countTree is _count_tree: the files under path (os.walk, no symlinked
 // folder entered) whose lower-cased name ends with one of extensions.
@@ -77,14 +77,14 @@ func countTree(path string, extensions []string) int {
 
 // GuideFolder is one guide_coverage row: the HTML pages of guides/<Folder>
 // and the text files of guides-clean/<Folder>, both counted recursively.
-type GuideFolderCoverage struct {
+type guideFolderCoverage struct {
 	Folder          string
 	OnDisk, Indexed int
 }
 
-// GuideCoverage is guide_coverage: one row per folder of guides/ (sorted
+// guideCoverage is guide_coverage: one row per folder of guides/ (sorted
 // by name), none when there is no guides/.
-func GuideCoverage(baseDir string) ([]GuideFolderCoverage, error) {
+func guideCoverage(baseDir string) ([]guideFolderCoverage, error) {
 	guides := pycompat.Join(baseDir, "guides")
 	clean := pycompat.Join(baseDir, "guides-clean")
 	if !pycompat.IsDir(guides) {
@@ -94,14 +94,14 @@ func GuideCoverage(baseDir string) ([]GuideFolderCoverage, error) {
 	if err != nil {
 		return nil, err
 	}
-	var rows []GuideFolderCoverage
+	var rows []guideFolderCoverage
 	for _, folder := range names {
 		path := pycompat.Join(guides, folder)
 		if !pycompat.IsDir(path) {
 			continue
 		}
-		rows = append(rows, GuideFolderCoverage{Folder: folder,
-			OnDisk:  countTree(path, GuidePageExtensions),
+		rows = append(rows, guideFolderCoverage{Folder: folder,
+			OnDisk:  countTree(path, guidePageExtensions),
 			Indexed: countTree(pycompat.Join(clean, folder), []string{".txt"})})
 	}
 	return rows, nil
@@ -128,15 +128,15 @@ func pyFmt(v any, spec string) string {
 	return s
 }
 
-// PrintGuideCoverage is cmd_guide_coverage: it prints the guide extraction
+// printGuideCoverage is cmd_guide_coverage: it prints the guide extraction
 // coverage and returns the number of GAP folders (fewer pages indexed in
 // guides-clean/ than HTML pages under guides/).
-func PrintGuideCoverage(w io.Writer, baseDir string) (int, error) {
-	rows, err := GuideCoverage(baseDir)
+func printGuideCoverage(w io.Writer, baseDir string) (int, error) {
+	rows, err := guideCoverage(baseDir)
 	if err != nil {
 		return 0, err
 	}
-	var gaps []GuideFolderCoverage
+	var gaps []guideFolderCoverage
 	onDisk, indexed := 0, 0
 	for _, r := range rows {
 		if r.Indexed < r.OnDisk {
@@ -214,7 +214,7 @@ func moduleNorm(name string) string { return strings.ReplaceAll(textfold.Lower(n
 func sourceModule(cls string, data any, def string) (string, error) {
 	o, ok := data.(*index.Object)
 	if !ok {
-		return "", &IndexShapeError{"source-index.json", "the record of " + cls + " is not an object"}
+		return "", &indexShapeError{"source-index.json", "the record of " + cls + " is not an object"}
 	}
 	v, has := o.Get("module")
 	if !has {
@@ -222,16 +222,16 @@ func sourceModule(cls string, data any, def string) (string, error) {
 	}
 	s, ok := v.(string)
 	if !ok {
-		return "", &IndexShapeError{"source-index.json", "the module of " + cls + " is not a string"}
+		return "", &indexShapeError{"source-index.json", "the module of " + cls + " is not a string"}
 	}
 	return s, nil
 }
 
-// ModuleClasses is module_export.module_classes: the sorted classes of
+// moduleClasses is module_export.module_classes: the sorted classes of
 // source-index.json whose module, without case and dashes, starts with
 // module (a trailing rt/ux dropped): "alarm-rt" matches alarm-rt, alarm-ux
 // and alarm-wb.
-func ModuleClasses(source *index.Object, module string) ([]string, error) {
+func moduleClasses(source *index.Object, module string) ([]string, error) {
 	norm := moduleNorm(module)
 	if strings.HasSuffix(norm, "rt") || strings.HasSuffix(norm, "ux") {
 		norm = norm[:len(norm)-2]
@@ -270,7 +270,7 @@ func Coverage(w io.Writer, baseDir, module string) (CoverageResult, error) {
 	if err != nil {
 		return CoverageResult{}, err
 	}
-	gaps, err := PrintGuideCoverage(w, baseDir)
+	gaps, err := printGuideCoverage(w, baseDir)
 	if err != nil {
 		return CoverageResult{}, err
 	}

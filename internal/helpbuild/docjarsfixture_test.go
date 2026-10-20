@@ -121,7 +121,7 @@ func covInstall(t *testing.T, dir string) string {
 		[2]string{"doc/alarm.css", "c"},
 	)
 	testkit.WriteJar(t, filepath.Join(mod, "plain-rt.jar"), [2]string{"com/acme/BPlain.class", "\xca\xfe"})
-	testkit.WriteJar(t, filepath.Join(inst, "javadoc", JavadocJar),
+	testkit.WriteJar(t, filepath.Join(inst, "javadoc", javadocJar),
 		[2]string{"doc/index.html", "i"},
 		[2]string{"doc/package-list", "javax.baja.sys"},
 		[2]string{"doc/top.html", "t"},

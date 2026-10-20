@@ -140,7 +140,7 @@ func freshDocs(root string) (map[string]bool, error) {
 	if path == "" {
 		return nil, errors.New("the full-text index of " + root + " is missing or stale")
 	}
-	return FulltextDocsAt(path)
+	return fulltextDocsAt(path)
 }
 
 // TestCoverageRealGoldens checks the Go reports of covGoldenVersion

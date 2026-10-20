@@ -28,7 +28,7 @@ func pdfStdout(r *pdftext.PDFResult) string {
 }
 
 // Builders returns the rebuild-all plan in run order (a copy).
-func Builders() []Builder { return append([]Builder(nil), rebuildBuilders...) }
+func Builders() []builder { return append([]builder(nil), rebuildBuilders...) }
 
 // Load reads the rules data file at path.
 func Load(path string) (*Rules, error) {

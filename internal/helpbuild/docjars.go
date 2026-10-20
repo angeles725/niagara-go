@@ -27,24 +27,24 @@ import (
 // function taking *Rules needs non-nil rules (Python's None default is
 // Default(); the extraction entry points load it themselves).
 
-// JavadocJar is the install's javadoc/niagaraJavadoc.jar.
-const JavadocJar = "niagaraJavadoc.jar"
+// javadocJar is the install's javadoc/niagaraJavadoc.jar.
+const javadocJar = "niagaraJavadoc.jar"
 
 var (
 	specialDocs       = map[string]string{"docDeveloper": "devguide", "docSource": "source", "docJdk": "jdk"}
 	developerCodeJars = []string{"docDeveloper-ux.jar", "docDeveloper-rt.jar"}
 )
 
-// IsDocJar: *-doc.jar, an OEM doc<Name>.jar (docHoneywell.jar) without a
+// isDocJar: *-doc.jar, an OEM doc<Name>.jar (docHoneywell.jar) without a
 // runtime-profile suffix, or a docDeveloper example-code jar.
-func IsDocJar(name string) bool {
+func isDocJar(name string) bool {
 	return strings.HasSuffix(name, "-doc.jar") || name == developerCodeJars[0] || name == developerCodeJars[1] ||
 		(strings.HasPrefix(name, "doc") && strings.HasSuffix(name, ".jar") && !strings.Contains(name, "-"))
 }
 
-// IsModuleJar: neither a doc jar nor the javadoc jar; only its doc/ pages
+// isModuleJar: neither a doc jar nor the javadoc jar; only its doc/ pages
 // and extract-rule entries are documentation.
-func IsModuleJar(name string) bool { return !IsDocJar(name) && name != JavadocJar }
+func isModuleJar(name string) bool { return !isDocJar(name) && name != javadocJar }
 
 // dropRunes is s[:-n] in code points (Python slicing; "" when shorter).
 func dropRunes(s string, n int) string {
@@ -55,16 +55,16 @@ func dropRunes(s string, n int) string {
 	return string(r[:len(r)-n])
 }
 
-// JarStem is the jar name without ".jar" and a "-doc" suffix.
-func JarStem(name string) string {
+// jarStem is the jar name without ".jar" and a "-doc" suffix.
+func jarStem(name string) string {
 	stem := dropRunes(name, len(".jar"))
 	return strings.TrimSuffix(stem, "-doc")
 }
 
-// GuideFolder is the guides/ folder of a jar: the stem without a leading
+// guideFolder is the guides/ folder of a jar: the stem without a leading
 // "doc" (docAlarms-doc.jar -> Alarms), the stem itself otherwise.
-func GuideFolder(name string) string {
-	stem := JarStem(name)
+func guideFolder(name string) string {
+	stem := jarStem(name)
 	if strings.HasPrefix(stem, "doc") && len(stem) > 3 {
 		return stem[3:]
 	}
@@ -78,17 +78,17 @@ func moduleDest(jarName, entry string, rules *Rules) (string, bool) {
 		return "", false
 	}
 	if strings.HasPrefix(entry, "doc/") {
-		return "guides/" + GuideFolder(jarName) + "/" + entry[4:], true
+		return "guides/" + guideFolder(jarName) + "/" + entry[4:], true
 	}
 	if rules.ExtractRule(jarName, entry) != nil {
-		return "guides/" + GuideFolder(jarName) + "/" + entry, true
+		return "guides/" + guideFolder(jarName) + "/" + entry, true
 	}
 	return "", false
 }
 
-// IsHelpEntry: a module-jar entry that makes it a help jar (any entry
+// isHelpEntry: a module-jar entry that makes it a help jar (any entry
 // moduleDest maps, stylesheets aside).
-func IsHelpEntry(jarName, entry string, rules *Rules) bool {
+func isHelpEntry(jarName, entry string, rules *Rules) bool {
 	if strings.HasSuffix(textfold.Lower(entry), ".css") {
 		return false
 	}
@@ -96,14 +96,14 @@ func IsHelpEntry(jarName, entry string, rules *Rules) bool {
 	return ok
 }
 
-// DestPath is the corpus-relative destination of one jar entry; ok is
+// destPath is the corpus-relative destination of one jar entry; ok is
 // false when the entry is not extracted (dest_path returning None).
-func DestPath(jarName, entry string, rules *Rules) (rel string, ok bool) {
+func destPath(jarName, entry string, rules *Rules) (rel string, ok bool) {
 	if strings.HasSuffix(entry, "/") || strings.HasPrefix(entry, "META-INF/") {
 		return "", false
 	}
 	switch {
-	case jarName == JavadocJar:
+	case jarName == javadocJar:
 		if strings.HasPrefix(entry, "doc/") {
 			return "bajadoc/" + entry[4:], true
 		}
@@ -118,10 +118,10 @@ func DestPath(jarName, entry string, rules *Rules) (rel string, ok bool) {
 			return "devguide-rc/" + entry[3:], true
 		}
 		return "", false
-	case IsModuleJar(jarName):
+	case isModuleJar(jarName):
 		return moduleDest(jarName, entry, rules)
 	}
-	stem := JarStem(jarName)
+	stem := jarStem(jarName)
 	if stem == "docSource" {
 		return "source/" + entry, true
 	}
@@ -134,7 +134,7 @@ func DestPath(jarName, entry string, rules *Rules) (rel string, ok bool) {
 		}
 		return dir + "/" + entry[4:], true
 	}
-	return "guides/" + GuideFolder(jarName) + "/" + strings.TrimPrefix(entry, "doc/"), true
+	return "guides/" + guideFolder(jarName) + "/" + strings.TrimPrefix(entry, "doc/"), true
 }
 
 // sortedNames is sorted(os.listdir(dir)) (os.ReadDir sorts by name; byte
@@ -151,17 +151,17 @@ func sortedNames(dir string) ([]string, error) {
 	return names, nil
 }
 
-// HelpJars lists the module jars under modules/ that carry documentation
+// helpJars lists the module jars under modules/ that carry documentation
 // (help_jars): a top-level doc/ page or an extract-rule entry. Every
 // module jar is listed (through ls, nil = in memory); an unreadable jar
 // has no entries.
-func HelpJars(installDir string, ls *Listings, rules *Rules) ([]string, error) {
+func helpJars(installDir string, ls *Listings, rules *Rules) ([]string, error) {
 	modules := pycompat.Join(installDir, "modules")
 	if !pycompat.IsDir(modules) {
 		return nil, nil
 	}
 	if ls == nil {
-		ls = NewListings("")
+		ls = newListings("")
 	}
 	names, err := sortedNames(modules)
 	if err != nil {
@@ -169,13 +169,13 @@ func HelpJars(installDir string, ls *Listings, rules *Rules) ([]string, error) {
 	}
 	var out []string
 	for _, n := range names {
-		if !strings.HasSuffix(n, ".jar") || IsDocJar(n) {
+		if !strings.HasSuffix(n, ".jar") || isDocJar(n) {
 			continue
 		}
 		path := pycompat.Join(modules, n)
 		entries, _ := ls.Names(path)
 		for _, e := range entries {
-			if IsHelpEntry(n, e, rules) {
+			if isHelpEntry(n, e, rules) {
 				out = append(out, path)
 				break
 			}
@@ -184,9 +184,9 @@ func HelpJars(installDir string, ls *Listings, rules *Rules) ([]string, error) {
 	return out, nil
 }
 
-// ListDocJars is list_doc_jars: the modules/ doc jars, the javadoc jar,
+// listDocJars is list_doc_jars: the modules/ doc jars, the javadoc jar,
 // then (withHelpJars) the module jars with help pages, default rules.
-func ListDocJars(installDir string, withHelpJars bool, ls *Listings) ([]string, error) {
+func listDocJars(installDir string, withHelpJars bool, ls *Listings) ([]string, error) {
 	var jars []string
 	modules := pycompat.Join(installDir, "modules")
 	if pycompat.IsDir(modules) {
@@ -195,12 +195,12 @@ func ListDocJars(installDir string, withHelpJars bool, ls *Listings) ([]string, 
 			return nil, err
 		}
 		for _, n := range names {
-			if IsDocJar(n) {
+			if isDocJar(n) {
 				jars = append(jars, pycompat.Join(modules, n))
 			}
 		}
 	}
-	if javadoc := pycompat.Join(installDir, "javadoc", JavadocJar); pycompat.IsFile(javadoc) {
+	if javadoc := pycompat.Join(installDir, "javadoc", javadocJar); pycompat.IsFile(javadoc) {
 		jars = append(jars, javadoc)
 	}
 	if withHelpJars {
@@ -208,7 +208,7 @@ func ListDocJars(installDir string, withHelpJars bool, ls *Listings) ([]string, 
 		if err != nil {
 			return nil, err
 		}
-		help, err := HelpJars(installDir, ls, rules)
+		help, err := helpJars(installDir, ls, rules)
 		if err != nil {
 			return nil, err
 		}
@@ -217,34 +217,34 @@ func ListDocJars(installDir string, withHelpJars bool, ls *Listings) ([]string, 
 	return jars, nil
 }
 
-// Mapped is one mapped_entries row: the entry at Pos of the jar maps to
+// mapped is one mapped_entries row: the entry at Pos of the jar maps to
 // Rel; Collides is set when an earlier entry (First) already owns Rel, so
 // this one is skipped.
-type Mapped struct {
+type mapped struct {
 	Pos        int
 	Entry, Rel string
 	First      string
 	Collides   bool
 }
 
-// MappedEntries is mapped_entries: in jar order, every entry DestPath
+// mappedEntries is mapped_entries: in jar order, every entry DestPath
 // maps, third-party source archives (IsSourceArchive) left out; when two
 // entries map to one path the first is extracted, each later one collides.
-func MappedEntries(jarName string, names []string, rules *Rules) []Mapped {
+func mappedEntries(jarName string, names []string, rules *Rules) []mapped {
 	owner := map[string]int{}
-	var out []Mapped
+	var out []mapped
 	for pos, entry := range names {
-		rel, ok := DestPath(jarName, entry, rules)
-		if !ok || IsSourceArchive(rel) {
+		rel, ok := destPath(jarName, entry, rules)
+		if !ok || isSourceArchive(rel) {
 			continue
 		}
 		first, seen := owner[rel]
 		if !seen {
 			owner[rel] = pos
-			out = append(out, Mapped{Pos: pos, Entry: entry, Rel: rel})
+			out = append(out, mapped{Pos: pos, Entry: entry, Rel: rel})
 			continue
 		}
-		out = append(out, Mapped{Pos: pos, Entry: entry, Rel: rel, First: names[first], Collides: true})
+		out = append(out, mapped{Pos: pos, Entry: entry, Rel: rel, First: names[first], Collides: true})
 	}
 	return out
 }

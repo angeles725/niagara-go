@@ -44,9 +44,9 @@ func goClassify(t *testing.T, srcDir string, jars []string) []string {
 			}
 			out = append(out, pyjson.Dumps(testkit.Array(testkit.Str("entry"), testkit.Str(e.Name),
 				testkit.Boolean(rules.IsDocLike(e.Name)), testkit.OptStr(extract), exclude, testkit.OptStr(course),
-				testkit.OptStr(rules.CourseKind(e.Name)), testkit.Boolean(IsGuidePage(e.Name)),
-				testkit.Boolean(IsLicence(e.Name)), testkit.Boolean(IsSourceArchive("guides/"+e.Name)),
-				testkit.Str(CleanTextName(e.Name, srcDir))), pyfs.DumpDefault))
+				testkit.OptStr(rules.CourseKind(e.Name)), testkit.Boolean(isGuidePage(e.Name)),
+				testkit.Boolean(isLicence(e.Name)), testkit.Boolean(isSourceArchive("guides/"+e.Name)),
+				testkit.Str(cleanTextName(e.Name, srcDir))), pyfs.DumpDefault))
 		}
 	}
 	return out
@@ -167,7 +167,7 @@ func TestCachePathFrozen(t *testing.T) {
 	t.Chdir("/")
 	var got []string
 	for _, in := range []string{"/srv/niagara/install", "rel/../install", "/a//b/", "/opt/niagara ñ/4.15", ".", "//net/share"} {
-		p, err := CachePath(repo, in)
+		p, err := cachePath(repo, in)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -193,7 +193,7 @@ func TestGlobFrozen(t *testing.T) {
 	}
 	var got []pyjson.Value
 	for _, pr := range pairs {
-		got = append(got, testkit.Boolean(GlobRe(pr[0]).MatchString(pr[1])))
+		got = append(got, testkit.Boolean(globRe(pr[0]).MatchString(pr[1])))
 	}
 	testkit.CheckFrozen(t, "jars/glob", []string{pyjson.Dumps(testkit.Array(got...), pyfs.DumpDefault)})
 }

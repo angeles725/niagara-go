@@ -20,18 +20,18 @@ import (
 // per full-text source kind, how many files are searchable and the
 // fallbacks the version uses.
 
-// GatesLog is GATES_LOG, the file of both gate reports in the data root.
-const GatesLog = "gates.log"
+// gatesLog is GATES_LOG, the file of both gate reports in the data root.
+const gatesLog = "gates.log"
 
-// GateRun is one gate: its exit status and the text of its own last
+// gateRun is one gate: its exit status and the text of its own last
 // "RESULT: " line ("(no RESULT line)" when it printed none).
-type GateRun struct {
+type gateRun struct {
 	Status int
 	Result string
 }
 
 // Gates is run_gates' {"doc-jars": ..., "sweep": ...}.
-type Gates struct{ DocJars, Sweep GateRun }
+type Gates struct{ DocJars, Sweep gateRun }
 
 // summaryKinds is KINDS: full-text source label and what it holds.
 var summaryKinds = [][2]string{
@@ -45,13 +45,13 @@ var summaryKinds = [][2]string{
 	{"course-text", "developer course pages"},
 }
 
-// RunGates is run_gates: DocJarCoverage, then RunSweep, each into a buffer
+// runGates is run_gates: DocJarCoverage, then RunSweep, each into a buffer
 // of its own (its RESULT line is read from it alone); the two reports,
 // joined by a newline, are root/gates.log (a plain write, as Python's
 // open("w"); LF on every OS, as build.log). docs reads the full-text index
 // (nil: FreshFulltextDocs). An error is what a gate raises: gates.log is
 // not written.
-func RunGates(repo, root, vid string, docs FulltextDocs) (*Gates, error) {
+func runGates(repo, root, vid string, docs FulltextDocs) (*Gates, error) {
 	if docs == nil {
 		docs = FreshFulltextDocs
 	}
@@ -64,8 +64,8 @@ func RunGates(repo, root, vid string, docs FulltextDocs) (*Gates, error) {
 	if err != nil {
 		return nil, err
 	}
-	g := &Gates{DocJars: GateRun{djStatus, resultLine(dj.String())}, Sweep: GateRun{swStatus, resultLine(sw.String())}}
-	if err := os.WriteFile(pycompat.Join(root, GatesLog), []byte(dj.String()+"\n"+sw.String()), 0o666); err != nil {
+	g := &Gates{DocJars: gateRun{djStatus, resultLine(dj.String())}, Sweep: gateRun{swStatus, resultLine(sw.String())}}
+	if err := os.WriteFile(pycompat.Join(root, gatesLog), []byte(dj.String()+"\n"+sw.String()), 0o666); err != nil {
 		return nil, err
 	}
 	return g, nil
@@ -116,7 +116,7 @@ func summaryClasses(root string) (int, error) {
 	for i, v := range idx.Values() {
 		rec, ok := v.(*index.Object)
 		if !ok {
-			return 0, &IndexShapeError{name, fmt.Sprintf("the record of %s is not an object", idx.Keys()[i])}
+			return 0, &indexShapeError{name, fmt.Sprintf("the record of %s is not an object", idx.Keys()[i])}
 		}
 		n++
 		others, ok := rec.Get("others")
@@ -131,7 +131,7 @@ func summaryClasses(root string) (int, error) {
 		case string:
 			n += len([]rune(o))
 		default:
-			return 0, &IndexShapeError{name, fmt.Sprintf("\"others\" of %s has no length", idx.Keys()[i])}
+			return 0, &indexShapeError{name, fmt.Sprintf("\"others\" of %s has no length", idx.Keys()[i])}
 		}
 	}
 	return n, nil
@@ -164,10 +164,10 @@ func relTo(path, start string) string {
 	return rel
 }
 
-// PrintSummary is print_summary: the SUMMARY block and the RESULT line of
+// printSummary is print_summary: the SUMMARY block and the RESULT line of
 // `versions add` for vid at root, from the extraction result and the
 // gates. docs reads the full-text index (nil: FreshFulltextDocs).
-func PrintSummary(w io.Writer, repo, vid, root string, res *SetupResult, gates *Gates, docs FulltextDocs) error {
+func printSummary(w io.Writer, repo, vid, root string, res *SetupResult, gates *Gates, docs FulltextDocs) error {
 	counts, err := sourceCounts(root, docs)
 	if err != nil {
 		return err
@@ -229,7 +229,7 @@ func PrintSummary(w io.Writer, repo, vid, root string, res *SetupResult, gates *
 	for _, label := range extra {
 		out("    %s %s", pyFmt(label, "18s"), pyFmt(counts[label], ">7,"))
 	}
-	out("  gates (full reports: %s):", relTo(pycompat.Join(root, GatesLog), repo))
+	out("  gates (full reports: %s):", relTo(pycompat.Join(root, gatesLog), repo))
 	out("    coverage --doc-jars  exit %d  %s", gates.DocJars.Status, gates.DocJars.Result)
 	out("    coverage --sweep     exit %d  %s", gates.Sweep.Status, gates.Sweep.Result)
 	ok := gates.DocJars.Status == 0 && gates.Sweep.Status == 0 &&

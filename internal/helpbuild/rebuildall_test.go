@@ -167,9 +167,9 @@ func TestCorpusFingerprint(t *testing.T) {
 	testkit.WriteFile(t, filepath.Join(root, "docs", "Manual.PDF"), []byte("1234567"))
 	testkit.WriteFile(t, filepath.Join(root, "docs", "notes.md"), []byte("x"))
 	testkit.WriteFile(t, filepath.Join(root, "devguide", "notes.md"), nil)
-	fp := CorpusFingerprint(root)
+	fp := corpusFingerprint(root)
 	got := map[string]string{}
-	for _, d := range SourceDirs {
+	for _, d := range sourceDirs {
 		v, _ := fp.Get(d)
 		got[d] = testkit.DumpLine(v)
 	}
@@ -187,7 +187,7 @@ func TestCorpusFingerprint(t *testing.T) {
 	if err := os.Remove(filepath.Join(root, "docs", "Manual.PDF")); err != nil {
 		t.Fatal(err)
 	}
-	if v, _ := CorpusFingerprint(root).Get("docs"); testkit.DumpLine(v) != "[null]" {
+	if v, _ := corpusFingerprint(root).Get("docs"); testkit.DumpLine(v) != "[null]" {
 		t.Errorf("docs without a PDF: %s", testkit.DumpLine(v))
 	}
 }
@@ -274,7 +274,7 @@ func TestRebuildAllRecoversAPanic(t *testing.T) {
 	root := sourceOnlyRoot(t)
 	saved := rebuildBuilders
 	t.Cleanup(func() { rebuildBuilders = saved })
-	rebuildBuilders = append([]Builder(nil), saved...)
+	rebuildBuilders = append([]builder(nil), saved...)
 	for i, b := range rebuildBuilders {
 		if b.Script == "slots_indexer.py" {
 			rebuildBuilders[i].run = func(string, *rebuildIO, *RebuildOptions) (int, error) { panic("boom") }

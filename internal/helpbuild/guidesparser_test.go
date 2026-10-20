@@ -34,9 +34,9 @@ func spyRoot(t *testing.T) string {
 	return root
 }
 
-func mustParseGuides(t *testing.T, root string) *TextResult {
+func mustParseGuides(t *testing.T, root string) *textResult {
 	t.Helper()
-	res, err := ParseGuides(root)
+	res, err := parseGuides(root)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -148,7 +148,7 @@ func TestParseDevguideSiblings(t *testing.T) {
 	testkit.WriteFile(t, filepath.Join(d, "changes.html"), []byte("<html><title>Changes</title><p>html page words</p>"))
 	testkit.WriteFile(t, filepath.Join(d, "changes.txt"), []byte("plain text page words\n"))
 	testkit.WriteFile(t, filepath.Join(d, "sub", "lgpl-2.1.txt"), []byte("GNU"))
-	res, err := ParseDevguide(root)
+	res, err := parseDevguide(root)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -182,7 +182,7 @@ func TestParseGuidesRefusesNonUTF8Names(t *testing.T) {
 	root := t.TempDir()
 	testkit.WriteFile(t, filepath.Join(root, "guides", "F", nonUTF8PageName()), guidePage("A", "a"))
 	testkit.WriteFile(t, filepath.Join(root, "guides-clean", "kept.txt"), []byte("old"))
-	if _, err := ParseGuides(root); err == nil {
+	if _, err := parseGuides(root); err == nil {
 		t.Fatal("ParseGuides accepted a page name that is not UTF-8")
 	}
 	if s := testkit.ReadText(t, filepath.Join(root, "guides-clean", "kept.txt")); s != "old" {
@@ -209,14 +209,14 @@ func TestParseToc(t *testing.T) {
 	// test_backslash_duplicate_keeps_the_first_title
 	p := filepath.Join(dir, "toc.xml")
 	testkit.WriteFile(t, p, []byte(`<toc><tocitem target="a\b.html" text="First"/><tocitem target="a/b.html" text="Second"/></toc>`))
-	toc, warning := ParseToc(p)
-	if warning != "" || toc.Pages["a/b.html"].Title != "First" || CountItems(p) != 2 {
-		t.Errorf("toc = %+v, warning %q, items %d", toc, warning, CountItems(p))
+	toc, warning := parseToc(p)
+	if warning != "" || toc.Pages["a/b.html"].Title != "First" || countItems(p) != 2 {
+		t.Errorf("toc = %+v, warning %q, items %d", toc, warning, countItems(p))
 	}
 	// test_broken_toc_warns
 	testkit.WriteFile(t, p, []byte("<toc><tocitem></toc>"))
-	toc, warning = ParseToc(p)
-	if len(toc.Pages) != 0 || !strings.Contains(warning, "toc not read") || CountItems(p) != 0 {
+	toc, warning = parseToc(p)
+	if len(toc.Pages) != 0 || !strings.Contains(warning, "toc not read") || countItems(p) != 0 {
 		t.Errorf("broken toc: %+v, %q", toc, warning)
 	}
 	want := "WARNING: toc not read, page titles fall back to <title>: " + p + ": mismatched tag: line 1, column 16"
@@ -226,13 +226,13 @@ func TestParseToc(t *testing.T) {
 	// Trails, anchors and a BOM before an ISO-8859-1 declaration.
 	testkit.WriteFile(t, p, []byte("\xef\xbb\xbf<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?><toc>"+
 		"<tocitem target=\"i.html\" text=\" G  \xe9 \"><tocitem text=\"\"><tocitem target=\"s.html#a\" text=\"S\"/></tocitem></tocitem></toc>"))
-	toc, warning = ParseToc(p)
+	toc, warning = parseToc(p)
 	if warning != "" || !reflect.DeepEqual(toc.Order, []string{"i.html", "s.html"}) ||
-		!reflect.DeepEqual(toc.Pages["s.html"], TocEntry{Title: "S", Trail: []string{"G é"}}) {
+		!reflect.DeepEqual(toc.Pages["s.html"], tocEntry{Title: "S", Trail: []string{"G é"}}) {
 		t.Errorf("toc = %+v, warning %q", toc, warning)
 	}
-	if FindToc(filepath.Join(dir, "missing")) != "" || FindToc(dir) != p {
-		t.Errorf("FindToc(%s) = %q", dir, FindToc(dir))
+	if findToc(filepath.Join(dir, "missing")) != "" || findToc(dir) != p {
+		t.Errorf("FindToc(%s) = %q", dir, findToc(dir))
 	}
 }
 

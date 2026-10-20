@@ -28,14 +28,14 @@ func extractFixture(t *testing.T) (install, root string) {
 // test_extract_then_fidelity_is_exact.
 func TestExtractThenFidelityIsExact(t *testing.T) {
 	install, root := extractFixture(t)
-	st, err := Extract(install, root, nil)
+	st, err := extract(install, root, nil)
 	if err != nil || st.Files != 3 {
 		t.Fatalf("extract %+v %v", st, err)
 	}
 	if !pycompat.IsFile(filepath.Join(root, "guides", "Foo", "sub", "b.html")) {
 		t.Fatal("guides/Foo/sub/b.html not extracted")
 	}
-	rep, err := Fidelity(install, root, nil)
+	rep, err := fidelity(install, root, nil)
 	if err != nil || rep.Checked != 3 || rep.Matched != 3 || len(rep.Mismatched)+len(rep.Missing) != 0 || rep.Jars != 1 {
 		t.Fatalf("fidelity %+v %v", rep, err)
 	}
@@ -45,7 +45,7 @@ func TestExtractThenFidelityIsExact(t *testing.T) {
 // test_fidelity_separates_eol_only_differences.
 func TestFidelityClassifiesChangedEOLOnlyAndMissing(t *testing.T) {
 	install, root := extractFixture(t)
-	if _, err := Extract(install, root, nil); err != nil {
+	if _, err := extract(install, root, nil); err != nil {
 		t.Fatal(err)
 	}
 	testkit.WriteFile(t, filepath.Join(root, "guides", "Foo", "a.html"), []byte("tampered"))
@@ -53,7 +53,7 @@ func TestFidelityClassifiesChangedEOLOnlyAndMissing(t *testing.T) {
 	if err := os.Remove(filepath.Join(root, "guides", "Foo", "sub", "b.html")); err != nil {
 		t.Fatal(err)
 	}
-	rep, err := Fidelity(install, root, nil)
+	rep, err := fidelity(install, root, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -67,7 +67,7 @@ func TestFidelityClassifiesChangedEOLOnlyAndMissing(t *testing.T) {
 // written, an edited one is kept, no temp file is left.
 func TestFillMissingWritesOnlyAbsentFiles(t *testing.T) {
 	install, root := extractFixture(t)
-	if _, err := Extract(install, root, nil); err != nil {
+	if _, err := extract(install, root, nil); err != nil {
 		t.Fatal(err)
 	}
 	kept := filepath.Join(root, "guides", "Foo", "a.html")
@@ -76,7 +76,7 @@ func TestFillMissingWritesOnlyAbsentFiles(t *testing.T) {
 	if err := os.Remove(gone); err != nil {
 		t.Fatal(err)
 	}
-	written, err := FillMissing(install, root, nil)
+	written, err := fillMissing(install, root, nil)
 	if err != nil || strings.Join(written, ",") != "guides/Foo/sub/b.html" {
 		t.Fatalf("written %q %v", written, err)
 	}
@@ -97,18 +97,18 @@ func TestHelpJarsAndSourceArchive(t *testing.T) {
 		[2]string{"doc/libfoo-1.0.tar.xz", "\xfd7zXZ"}, [2]string{"com/acme/BAsc.class", "\xca\xfe"})
 	testkit.WriteJar(t, filepath.Join(install, "modules", "plainModule-rt.jar"), [2]string{"com/acme/BPlain.class", "\xca\xfe"},
 		[2]string{"doc/style.css", "p {}"})
-	help, err := HelpJars(install, nil, mustDefault(t))
+	help, err := helpJars(install, nil, mustDefault(t))
 	if err != nil || len(help) != 1 || filepath.Base(help[0]) != "ascHelp.jar" {
 		t.Fatalf("help jars %q %v", help, err)
 	}
 	root := filepath.Join(dir, "root")
-	if _, err := Extract(install, root, nil); err != nil {
+	if _, err := extract(install, root, nil); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := os.Stat(filepath.Join(root, "guides", "ascHelp", "libfoo-1.0.tar.xz")); !os.IsNotExist(err) {
 		t.Fatalf("source archive extracted: %v", err)
 	}
-	rep, err := Fidelity(install, root, nil)
+	rep, err := fidelity(install, root, nil)
 	if err != nil || rep.Checked != 1 || len(rep.Missing) != 0 {
 		t.Fatalf("%+v %v", rep, err)
 	}
@@ -121,10 +121,10 @@ func TestExtractRefusesDotDotEntries(t *testing.T) {
 	install := filepath.Join(dir, "install")
 	testkit.WriteJar(t, filepath.Join(install, "modules", "docEvil-doc.jar"), [2]string{"doc/../../../escaped.txt", "x"})
 	root := filepath.Join(dir, "a", "root")
-	if _, err := Extract(install, root, nil); !errors.Is(err, ErrUnsafeEntry) {
+	if _, err := extract(install, root, nil); !errors.Is(err, errUnsafeEntry) {
 		t.Fatalf("extract: %v", err)
 	}
-	if _, err := FillMissing(install, root, nil); !errors.Is(err, ErrUnsafeEntry) {
+	if _, err := fillMissing(install, root, nil); !errors.Is(err, errUnsafeEntry) {
 		t.Fatalf("fill: %v", err)
 	}
 	if _, err := os.Stat(filepath.Join(dir, "escaped.txt")); !os.IsNotExist(err) {
@@ -134,10 +134,10 @@ func TestExtractRefusesDotDotEntries(t *testing.T) {
 	// write a file named "..\..\..\escaped.txt" inside the guide folder.
 	install = filepath.Join(dir, "install-bs")
 	testkit.WriteJar(t, filepath.Join(install, "modules", "docEvil-doc.jar"), [2]string{`doc/..\..\..\escaped.txt`, "x"})
-	if _, err := Extract(install, root, nil); !errors.Is(err, ErrUnsafeEntry) {
+	if _, err := extract(install, root, nil); !errors.Is(err, errUnsafeEntry) {
 		t.Fatalf("extract backslash: %v", err)
 	}
-	if _, err := FillMissing(install, root, nil); !errors.Is(err, ErrUnsafeEntry) {
+	if _, err := fillMissing(install, root, nil); !errors.Is(err, errUnsafeEntry) {
 		t.Fatalf("fill backslash: %v", err)
 	}
 }
@@ -149,7 +149,7 @@ func TestOutPathRefusesUnsafeEntries(t *testing.T) {
 	root := filepath.Join(t.TempDir(), "root")
 	for _, rel := range []string{"../x", "a/../../x", "a/..", "..", `..\x`, `a\..\..\x`, `a\..`, "/abs", `\abs`,
 		`\\server\share\x`, `C:\x`, "C:x", "c:/x", "Z:"} {
-		if out, err := outPath(root, rel); !errors.Is(err, ErrUnsafeEntry) {
+		if out, err := outPath(root, rel); !errors.Is(err, errUnsafeEntry) {
 			t.Errorf("%q: %q %v, want ErrUnsafeEntry", rel, out, err)
 		}
 	}
@@ -177,11 +177,11 @@ func TestUnreadableJars(t *testing.T) {
 	dir := t.TempDir()
 	install := filepath.Join(dir, "install")
 	testkit.WriteFile(t, filepath.Join(install, "modules", "broken-rt.jar"), []byte("not a zip"))
-	if _, err := Extract(install, filepath.Join(dir, "r1"), nil); err != nil {
+	if _, err := extract(install, filepath.Join(dir, "r1"), nil); err != nil {
 		t.Fatalf("a broken module jar: %v", err)
 	}
 	testkit.WriteFile(t, filepath.Join(install, "modules", "docBroken-doc.jar"), []byte("not a zip"))
-	if _, err := Extract(install, filepath.Join(dir, "r2"), nil); !errors.Is(err, zipfile.ErrBadZip) {
+	if _, err := extract(install, filepath.Join(dir, "r2"), nil); !errors.Is(err, zipfile.ErrBadZip) {
 		t.Fatalf("a broken doc jar: %v", err)
 	}
 }

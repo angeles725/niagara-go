@@ -45,14 +45,14 @@ func pyBasename(p string) string {
 	return p[strings.LastIndexAny(p, `/\`)+1:]
 }
 
-// IsSourceArchive: a third-party source archive under guides/ (an LGPL
+// isSourceArchive: a third-party source archive under guides/ (an LGPL
 // source offer such as ffmpeg-wb.jar doc/ffmpeg-6.0.tar.xz).
-func IsSourceArchive(rel string) bool {
+func isSourceArchive(rel string) bool {
 	return strings.HasPrefix(rel, "guides/") && hasAnySuffix(textfold.Lower(rel), sourceArchiveExts)
 }
 
-// IsLicence: a licence text by file name.
-func IsLicence(name string) bool {
+// isLicence: a licence text by file name.
+func isLicence(name string) bool {
 	low := textfold.Lower(pyBasename(name))
 	for _, p := range licencePrefixes {
 		if strings.HasPrefix(low, p) {
@@ -67,19 +67,19 @@ func IsLicence(name string) bool {
 	return false
 }
 
-// IsGuidePage: an .html / .htm page or a .txt / .md plain-text page, a
+// isGuidePage: an .html / .htm page or a .txt / .md plain-text page, a
 // licence .txt excluded.
-func IsGuidePage(name string) bool {
+func isGuidePage(name string) bool {
 	low := textfold.Lower(name)
-	return hasAnySuffix(low, guidePageExts) && !(strings.HasSuffix(low, ".txt") && IsLicence(name))
+	return hasAnySuffix(low, guidePageExts) && !(strings.HasSuffix(low, ".txt") && isLicence(name))
 }
 
-// CleanTextName is the guides-clean / devguide-clean path of a page path
+// cleanTextName is the guides-clean / devguide-clean path of a page path
 // relative to srcDir: X.html -> X.txt; X.htm and X.md keep their extension
 // (X.htm.txt, X.md.txt); X.txt keeps its name unless srcDir holds an X.html
 // sibling in any letter case, which owns X.txt: then it is X.txt.txt. An
 // empty srcDir (Python's None) skips the sibling check.
-func CleanTextName(rel, srcDir string) string {
+func cleanTextName(rel, srcDir string) string {
 	low := textfold.Lower(rel)
 	switch {
 	case strings.HasSuffix(low, ".html"):

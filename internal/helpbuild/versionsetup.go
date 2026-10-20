@@ -27,21 +27,21 @@ import (
 // RawDirs are the data-root folders extraction writes; DerivedDirs the
 // ones the builders write. A re-extraction (Force) removes both.
 var (
-	RawDirs     = []string{"bajadoc", "devguide", "devguide-rc", "devguide-examples", "guides", "jdk", "source"}
-	DerivedDirs = []string{"bajadoc-clean", "devguide-clean", "guides-clean", "indexes"}
+	rawDirs     = []string{"bajadoc", "devguide", "devguide-rc", "devguide-examples", "guides", "jdk", "source"}
+	derivedDirs = []string{"bajadoc-clean", "devguide-clean", "guides-clean", "indexes"}
 )
 
-// BuilderIndexes are the JSON indexes of maintenance.BUILDERS, in builder
+// builderIndexes are the JSON indexes of maintenance.BUILDERS, in builder
 // order, without the OPTIONAL_ARTIFACTS (jdk-class-index.json): the files
 // _empty_indexes writes as {} when a skipped builder left them absent.
 // call-index.json is retired (decision I3-5): Python's list still holds
 // it, so _empty_indexes writes an empty one; EmptyIndexes does not
 // (intended difference).
-var BuilderIndexes = []string{"class-index.json", "inheritance.json", "method-index.json", "source-index.json",
+var builderIndexes = []string{"class-index.json", "inheritance.json", "method-index.json", "source-index.json",
 	"slots-index.json", "xref-index.json", "guides-index.json", "devguide-toc.json", "pdf-index.json"}
 
-// DumpManifest is the version manifest's json.dumps(indent=1).
-var DumpManifest = pyjson.DumpOpts{EnsureASCII: true, Indent: 1, ItemSep: ",", KeySep: ": "}
+// dumpManifest is the version manifest's json.dumps(indent=1).
+var dumpManifest = pyjson.DumpOpts{EnsureASCII: true, Indent: 1, ItemSep: ",", KeySep: ": "}
 
 // SetupOptions are extract_and_index's switches. FillMissing wins over
 // VerifyOnly, VerifyOnly over a full extraction; Force lets a full
@@ -140,14 +140,14 @@ func ExtractAndIndex(repo, vid string, opt SetupOptions) (*SetupResult, error) {
 	if !pycompat.IsDir(install) {
 		return res.refuse("install dir not found: " + install), nil
 	}
-	cache, err := CachePath(repo, install)
+	cache, err := cachePath(repo, install)
 	if err != nil {
 		return res, err
 	}
-	ls := NewListings(cache)
+	ls := newListings(cache)
 	switch {
 	case opt.FillMissing:
-		if res.Filled, err = FillMissing(install, root, ls); err != nil {
+		if res.Filled, err = fillMissing(install, root, ls); err != nil {
 			return res, err
 		}
 		for _, rel := range res.Filled {
@@ -159,7 +159,7 @@ func ExtractAndIndex(repo, vid string, opt SetupOptions) (*SetupResult, error) {
 			return res, err
 		}
 	}
-	rep, err := Fidelity(install, root, ls)
+	rep, err := fidelity(install, root, ls)
 	if err != nil {
 		return res, err
 	}
@@ -246,7 +246,7 @@ func extractStep(res *SetupResult, repo, root, dataRootRel, install string, ls *
 		return true, nil
 	}
 	var present []string
-	for _, d := range RawDirs {
+	for _, d := range rawDirs {
 		if pycompat.IsDir(pycompat.Join(root, d)) {
 			present = append(present, d)
 		}
@@ -255,13 +255,13 @@ func extractStep(res *SetupResult, repo, root, dataRootRel, install string, ls *
 		res.refuse(fmt.Sprintf("%s already holds %s; pass --force to re-extract", root, strings.Join(present, ", ")))
 		return true, nil
 	}
-	for _, d := range append(append([]string{}, RawDirs...), DerivedDirs...) {
+	for _, d := range append(append([]string{}, rawDirs...), derivedDirs...) {
 		rmtreeIgnore(pycompat.Join(root, d))
 	}
 	if err := os.MkdirAll(root, 0o777); err != nil {
 		return false, err
 	}
-	ext, err := Extract(install, root, ls)
+	ext, err := extract(install, root, ls)
 	if err != nil {
 		return false, err
 	}
@@ -302,17 +302,17 @@ func rebuild(root string, hook func(string) ([]string, error)) ([]string, error)
 	if err != nil {
 		return nil, err
 	}
-	empty, err := EmptyIndexes(root)
+	empty, err := emptyIndexes(root)
 	return append(tail, empty...), err
 }
 
-// EmptyIndexes writes {} for every BuilderIndexes file absent from
+// emptyIndexes writes {} for every BuilderIndexes file absent from
 // root/indexes (_empty_indexes): an install without javadoc, devguide or
 // source still answers lookups with an honest miss. It returns one
 // "  EMPTY <name> ..." line per file written.
-func EmptyIndexes(root string) ([]string, error) {
+func emptyIndexes(root string) ([]string, error) {
 	var lines []string
-	for _, name := range BuilderIndexes {
+	for _, name := range builderIndexes {
 		path := pycompat.Join(root, "indexes", name)
 		if pycompat.IsFile(path) {
 			continue

@@ -25,11 +25,11 @@ import (
 // <repo>/.cache/jar-listings/<sha1(abspath)[:16]>.json, in Python's compact
 // json.dumps: each tool reads the other's cache and writes the same bytes.
 
-// CacheVersion is the cache format version (jar_listing.CACHE_VERSION).
-const CacheVersion = 1
+// cacheVersion is the cache format version (jar_listing.CACHE_VERSION).
+const cacheVersion = 1
 
-// CacheDir is the cache folder under the repository root.
-var CacheDir = filepath.Join(".cache", "jar-listings")
+// cacheDir is the cache folder under the repository root.
+var cacheDir = filepath.Join(".cache", "jar-listings")
 
 // pyAbspath is os.path.abspath. On POSIX it keeps the exactly-two leading
 // slashes posixpath.normpath keeps and filepath.Clean folds (a relative
@@ -42,14 +42,14 @@ func pyAbspath(p string) (string, error) {
 	return abs, err
 }
 
-// CachePath is the cache file of one install (jar_listing.cache_path).
-func CachePath(repoRoot, installDir string) (string, error) {
+// cachePath is the cache file of one install (jar_listing.cache_path).
+func cachePath(repoRoot, installDir string) (string, error) {
 	abs, err := pyAbspath(installDir)
 	if err != nil {
 		return "", err
 	}
 	sum := sha1.Sum([]byte(abs))
-	return filepath.Join(repoRoot, CacheDir, hex.EncodeToString(sum[:])[:16]+".json"), nil
+	return filepath.Join(repoRoot, cacheDir, hex.EncodeToString(sum[:])[:16]+".json"), nil
 }
 
 // Entry is one file entry of a jar listing.
@@ -146,9 +146,9 @@ type Listings struct {
 	dirty bool
 }
 
-// NewListings loads the cache at path; a missing, damaged or other-version
+// newListings loads the cache at path; a missing, damaged or other-version
 // cache starts empty (it is rebuilt, never trusted).
-func NewListings(path string) *Listings {
+func newListings(path string) *Listings {
 	ls := &Listings{Path: path, jars: pyjson.NewObject()}
 	if path == "" {
 		return ls
@@ -164,7 +164,7 @@ func NewListings(path string) *Listings {
 	if err != nil || data.Kind != pyjson.Object {
 		return ls
 	}
-	if version, _ := data.Get("version"); !pyjson.Equal(version, pyjson.IntValue(CacheVersion)) {
+	if version, _ := data.Get("version"); !pyjson.Equal(version, pyjson.IntValue(cacheVersion)) {
 		return ls
 	}
 	if jars, _ := data.Get("jars"); jars.Kind == pyjson.Object {
@@ -225,7 +225,7 @@ func (ls *Listings) Save() error {
 		return nil
 	}
 	data := pyjson.NewObject()
-	data.Set("version", pyjson.IntValue(CacheVersion))
+	data.Set("version", pyjson.IntValue(cacheVersion))
 	data.Set("jars", ls.jars)
 	if err := pyfs.WriteJSON(ls.Path, data, pyfs.DumpCompact); err != nil {
 		return err

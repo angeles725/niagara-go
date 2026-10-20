@@ -49,7 +49,7 @@ func addRun(t *testing.T, repo, install string, opt AddOptions) (string, int) {
 func TestValidVersionID(t *testing.T) {
 	for id, want := range map[string]bool{"4.15.6.20": true, "1.2.3.4": true, "١.٢.٣.٤": true, "": false,
 		"4.15.6": false, "4.15.6.20.1": false, "4.15.6.x": false, " 4.1.2.3": false, "4.1.2.3\n": false, "a4.1.2.3": false} {
-		if got := ValidVersionID(id); got != want {
+		if got := validVersionID(id); got != want {
 			t.Errorf("ValidVersionID(%q) = %v, want %v", id, got, want)
 		}
 	}
@@ -78,7 +78,7 @@ func TestDetectVersion(t *testing.T) {
 			if c.jar {
 				testkit.WriteJar(t, filepath.Join(install, "modules", "baja.jar"), [2]string{"META-INF/module.xml", c.xml})
 			}
-			if got, err := DetectVersion(install); err != nil || got != c.want {
+			if got, err := detectVersion(install); err != nil || got != c.want {
 				t.Errorf("DetectVersion = %q, %v; want %q", got, err, c.want)
 			}
 		})
@@ -86,11 +86,11 @@ func TestDetectVersion(t *testing.T) {
 	// A baja.jar that is not a zip, or has no module.xml: the folder name.
 	install := filepath.Join(dir, "bad", "N-2.2.2.2")
 	testkit.WriteFile(t, filepath.Join(install, "modules", "baja.jar"), []byte("not a zip"))
-	if got, err := DetectVersion(install); err != nil || got != "2.2.2.2" {
+	if got, err := detectVersion(install); err != nil || got != "2.2.2.2" {
 		t.Errorf("not a zip: %q %v", got, err)
 	}
 	testkit.WriteJar(t, filepath.Join(install, "modules", "baja.jar"), [2]string{"META-INF/MANIFEST.MF", "x"})
-	if got, err := DetectVersion(install); err != nil || got != "2.2.2.2" {
+	if got, err := detectVersion(install); err != nil || got != "2.2.2.2" {
 		t.Errorf("no module.xml: %q %v", got, err)
 	}
 }
@@ -151,7 +151,7 @@ func TestAddVersionRefusals(t *testing.T) {
 func TestRegister(t *testing.T) {
 	repo := t.TempDir()
 	reg := filepath.Join(repo, "versions", "registry.json")
-	if err := Register(repo, "2.0.0.0", "/i2", "Two", false); err != nil {
+	if err := register(repo, "2.0.0.0", "/i2", "Two", false); err != nil {
 		t.Fatal(err)
 	}
 	want := "{\n  \"default\": \"2.0.0.0\",\n  \"versions\": {\n    \"2.0.0.0\": {\n      \"label\": \"Two\",\n" +
@@ -161,10 +161,10 @@ func TestRegister(t *testing.T) {
 	}
 	testkit.WriteFile(t, reg, []byte(`{"versions": {"9.0.0.0": {"label": "N", "install_dir": "/n", "data_root": "x", "course_dir": "c"},`+
 		` "1.0.0.0": {"label": "Ü"}}, "default": "1.0.0.0"}`))
-	if err := Register(repo, "9.0.0.0", "/n2", "N2", false); err != nil {
+	if err := register(repo, "9.0.0.0", "/n2", "N2", false); err != nil {
 		t.Fatal(err)
 	}
-	if err := Register(repo, "3.0.0.0", "/i3", "Three", true); err != nil {
+	if err := register(repo, "3.0.0.0", "/i3", "Three", true); err != nil {
 		t.Fatal(err)
 	}
 	want = "{\n  \"versions\": {\n    \"9.0.0.0\": {\n      \"label\": \"N2\",\n      \"install_dir\": \"/n2\",\n" +
@@ -205,7 +205,7 @@ func TestAddVersionHappyPath(t *testing.T) {
 	if status != 0 {
 		t.Errorf("status %d\n%s", status, out)
 	}
-	gates := testkit.ReadText(t, filepath.Join(root, GatesLog))
+	gates := testkit.ReadText(t, filepath.Join(root, gatesLog))
 	if !strings.Contains(gates, "\nRESULT: PASS") || strings.Count(gates, "RESULT: ") != 2 {
 		t.Errorf("gates.log:\n%s", gates)
 	}

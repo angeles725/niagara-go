@@ -22,26 +22,26 @@ import (
 // atomically (see the S10a section of docs/helpbuild.md); RebuildAll takes
 // no lock (nh calls it under the scope lock of the full-text index).
 
-// Builder is one row of maintenance.BUILDERS: the Python script it ports
+// builder is one row of maintenance.BUILDERS: the Python script it ports
 // (printed in the plan and matched by --only), the artifacts it writes,
 // and the data-root folder it needs ("" when it finds its own input: the
 // PDF manuals of the registered install, the course bound in the
 // registry). The skip-if folder is always None in Python and is not
 // ported.
-type Builder struct {
+type builder struct {
 	Script   string
 	Produces []string
 	Source   string
 	run      func(root string, w *rebuildIO, opt *RebuildOptions) (status int, err error)
 }
 
-// OptionalArtifacts are the artifacts a builder writes only under a
+// optionalArtifacts are the artifacts a builder writes only under a
 // condition, shown in the plan (OPTIONAL_ARTIFACTS).
-var OptionalArtifacts = map[string]string{"jdk-class-index.json": "when jdk/ exists"}
+var optionalArtifacts = map[string]string{"jdk-class-index.json": "when jdk/ exists"}
 
 // rebuildBuilders is maintenance.BUILDERS without build_call_index.py
 // (call-index.json is retired, decision I3-5). Tests swap a run function.
-var rebuildBuilders = []Builder{
+var rebuildBuilders = []builder{
 	{"bajadoc_parser.py", []string{"bajadoc-clean/"}, "bajadoc", runBajadoc},
 	{"bajadoc_xml_parser.py", []string{"bajadoc-clean/"}, "devguide", runBajadocXML},
 	{"build_class_index.py", []string{"class-index.json", "jdk-class-index.json"}, "devguide", indexRun(indexes.BuildClassIndex)},
@@ -50,10 +50,10 @@ var rebuildBuilders = []Builder{
 	{"source_indexer.py", []string{"source-index.json"}, "source", indexRun(indexes.BuildSourceIndex)},
 	{"slots_indexer.py", []string{"slots-index.json"}, "source", indexRun(indexes.BuildSlotsIndex)},
 	{"xref_builder.py", []string{"xref-index.json"}, "source", indexRun(indexes.BuildXrefIndex)},
-	{"guides_parser.py", []string{"guides-clean/"}, "guides", textRun(ParseGuides)},
-	{"build_guides_index.py", []string{"guides-index.json"}, "guides", textRun(BuildGuidesIndex)},
-	{"devguide_parser.py", []string{"devguide-clean/"}, "devguide", textRun(ParseDevguide)},
-	{"build_devguide_toc.py", []string{"devguide-toc.json"}, "devguide", textRun(BuildDevguideTOC)},
+	{"guides_parser.py", []string{"guides-clean/"}, "guides", textRun(parseGuides)},
+	{"build_guides_index.py", []string{"guides-index.json"}, "guides", textRun(buildGuidesIndex)},
+	{"devguide_parser.py", []string{"devguide-clean/"}, "devguide", textRun(parseDevguide)},
+	{"build_devguide_toc.py", []string{"devguide-toc.json"}, "devguide", textRun(buildDevguideTOC)},
 	{"pdf_extractor.py", []string{"pdf-index.json", "docs-text/"}, "", runPDF},
 	{"course_extractor.py", []string{"course-text/"}, "", runCourse},
 }
@@ -118,7 +118,7 @@ func RebuildAll(root string, opt RebuildOptions) (*RebuildResult, error) {
 	}
 	res := &RebuildResult{}
 	if opt.StampOnly {
-		stamped, err := StampManifest(root, now())
+		stamped, err := stampManifest(root, now())
 		if err != nil {
 			return res, err
 		}
@@ -174,7 +174,7 @@ func RebuildAll(root string, opt RebuildOptions) (*RebuildResult, error) {
 		w.out("Builders failed — manifest NOT updated (still reflects last good build).")
 		return res, w.err
 	}
-	stamped, err := StampManifest(root, now())
+	stamped, err := stampManifest(root, now())
 	if err != nil {
 		return res, err
 	}
@@ -185,11 +185,11 @@ func RebuildAll(root string, opt RebuildOptions) (*RebuildResult, error) {
 
 // label is "{:26s} -> {}" of the script and its artifacts, the optional
 // ones with their condition.
-func (b Builder) label() string {
+func (b builder) label() string {
 	parts := make([]string, len(b.Produces))
 	for i, a := range b.Produces {
 		parts[i] = a
-		if cond, ok := OptionalArtifacts[a]; ok {
+		if cond, ok := optionalArtifacts[a]; ok {
 			parts[i] = fmt.Sprintf("%s (%s)", a, cond)
 		}
 	}
@@ -199,7 +199,7 @@ func (b Builder) label() string {
 // call runs the builder as the child process would: its exit status, or
 // 1 with an ERROR line on stderr where the script raises (an error or a
 // panic of the Go builder; Python prints a traceback there).
-func (b Builder) call(root string, w *rebuildIO, opt *RebuildOptions) (status int) {
+func (b builder) call(root string, w *rebuildIO, opt *RebuildOptions) (status int) {
 	defer func() {
 		if p := recover(); p != nil {
 			w.write(w.stderr, fmt.Sprintf("ERROR: %s raised: panic: %v\n", b.Script, p))
@@ -247,7 +247,7 @@ func indexRun(build func(string) (*indexes.IndexResult, error)) func(string, *re
 
 // textRun adapts the S5/S6 builders: stdout lines, then the warnings on
 // stderr; their scripts always exit 0.
-func textRun(build func(string) (*TextResult, error)) func(string, *rebuildIO, *RebuildOptions) (int, error) {
+func textRun(build func(string) (*textResult, error)) func(string, *rebuildIO, *RebuildOptions) (int, error) {
 	return func(root string, w *rebuildIO, _ *RebuildOptions) (int, error) {
 		res, err := build(root)
 		if res != nil {
@@ -278,7 +278,7 @@ func runCourse(root string, w *rebuildIO, _ *RebuildOptions) (int, error) {
 	if err != nil {
 		return 1, err
 	}
-	res, err := CourseExtractor(root, rules)
+	res, err := courseExtractor(root, rules)
 	if res == nil {
 		return 1, err
 	}

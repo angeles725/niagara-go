@@ -174,9 +174,9 @@ func syntheticCourse(t *testing.T, src string) {
 func goPlanLines(t *testing.T, src string) []string {
 	rules := mustDefault(t)
 	var out []string
-	for _, r := range CoursePlan(src, rules) {
+	for _, r := range coursePlan(src, rules) {
 		rule := ""
-		if x := rules.ExcludeRule(CoursePseudoJar, r.Rel); x != nil {
+		if x := rules.ExcludeRule(coursePseudoJar, r.Rel); x != nil {
 			rule = x.ID
 		}
 		out = append(out, testkit.DumpLine(testkit.Str(r.Rel), testkit.OptStr(r.Kind), testkit.OptStr(r.Dest), testkit.OptStr(rule)))
@@ -212,7 +212,7 @@ func TestCourseExtractorFrozen(t *testing.T) {
 	n := 0
 	courseStep := func(what, rel string) {
 		t.Helper()
-		out, err := CourseExtractor(filepath.Join(repo, rel), mustDefault(t))
+		out, err := courseExtractor(filepath.Join(repo, rel), mustDefault(t))
 		outcome := fmt.Sprintf("exit %d", out.Status)
 		if err != nil {
 			outcome = "raise"

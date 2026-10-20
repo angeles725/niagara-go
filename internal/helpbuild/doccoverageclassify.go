@@ -27,9 +27,9 @@ import (
 
 // Verdicts of Classify.
 const (
-	VerdictIndex   = "index"
-	VerdictExclude = "exclude"
-	VerdictUnknown = "unknown"
+	verdictIndex   = "index"
+	verdictExclude = "exclude"
+	verdictUnknown = "unknown"
 )
 
 var (
@@ -60,8 +60,8 @@ var guideJunk = map[string]string{
 	".log":     "debug log shipped in the jar by mistake (not documentation)",
 }
 
-// Reasons is doc_types.REASONS: the exclusion reasons by key.
-var Reasons = map[string]string{
+// reasons is doc_types.REASONS: the exclusion reasons by key.
+var reasons = map[string]string{
 	"image":              "image (no text to index)",
 	"style":              "stylesheet / web font",
 	"script":             "page script (viewer UI code; rendered pages are indexed)",
@@ -93,21 +93,21 @@ func isOneOf(s string, set []string) bool {
 	return false
 }
 
-// ExampleSkipReason is example_skip_reason: why a devguide-examples/ file
+// exampleSkipReason is example_skip_reason: why a devguide-examples/ file
 // (path relative to that folder) is not indexed, "" when it is.
-func ExampleSkipReason(rel string) string {
+func exampleSkipReason(rel string) string {
 	if top, _, _ := strings.Cut(rel, "/"); top == "ext" {
-		return Reasons["third-party-bundle"]
+		return reasons["third-party-bundle"]
 	}
 	if strings.HasSuffix(textfold.Lower(rel), ".min.js") {
-		return Reasons["minified"]
+		return reasons["minified"]
 	}
 	return ""
 }
 
-// Classify is doc_types.classify: the verdict of a corpus-relative path
+// classify is doc_types.classify: the verdict of a corpus-relative path
 // and its index kind (VerdictIndex) or exclusion reason (VerdictExclude).
-func Classify(rel string) (verdict, detail string) {
+func classify(rel string) (verdict, detail string) {
 	parts := strings.Split(rel, "/")
 	top, name := parts[0], parts[len(parts)-1]
 	low, ext := textfold.Lower(name), lowerExt(name)
@@ -116,107 +116,107 @@ func Classify(rel string) (verdict, detail string) {
 	}
 	switch {
 	case isOneOf(ext, imageExt):
-		return VerdictExclude, Reasons["image"]
+		return verdictExclude, reasons["image"]
 	case isOneOf(ext, styleExt):
-		return VerdictExclude, Reasons["style"]
+		return verdictExclude, reasons["style"]
 	case ext == ".js":
-		return VerdictExclude, Reasons["script"]
+		return verdictExclude, reasons["script"]
 	case isOneOf(ext, searchIndexExt):
-		return VerdictExclude, Reasons["search-index"]
-	case ext == ".txt" && IsLicence(name):
-		return VerdictExclude, Reasons["licence"]
+		return verdictExclude, reasons["search-index"]
+	case ext == ".txt" && isLicence(name):
+		return verdictExclude, reasons["licence"]
 	case ext == ".class":
-		return VerdictExclude, Reasons["class-file"]
+		return verdictExclude, reasons["class-file"]
 	}
 	switch {
 	case top == "bajadoc":
 		if javadocNav[low] || isOneOf("class-use", parts) || isOneOf("index-files", parts) || len(parts) == 2 {
-			return VerdictExclude, Reasons["javadoc-nav"]
+			return verdictExclude, reasons["javadoc-nav"]
 		}
 		if ext == ".html" {
-			return VerdictIndex, "javadoc-class"
+			return verdictIndex, "javadoc-class"
 		}
 	case ext == ".bajadoc":
 		if low == "module-index.bajadoc" || low == "package-index.bajadoc" {
-			return VerdictExclude, Reasons["bajadoc-listing"]
+			return verdictExclude, reasons["bajadoc-listing"]
 		}
 		if top == "jdk" {
-			return VerdictIndex, "jdk-xml"
+			return verdictIndex, "jdk-xml"
 		}
 		if top == "devguide" || top == "guides" {
-			return VerdictIndex, "bajadoc-xml"
+			return verdictIndex, "bajadoc-xml"
 		}
 	case top == "source" || top == "devguide-rc":
 		if ext == ".java" {
-			return VerdictIndex, "java"
+			return verdictIndex, "java"
 		}
 		if top == "source" && len(parts) >= 2 && parts[1] == "doc" && (ext == ".html" || low == "toc.xml") {
-			return VerdictExclude, Reasons["source-nav"]
+			return verdictExclude, reasons["source-nav"]
 		}
 	case top == "devguide":
 		if ext == ".html" || ext == ".txt" {
-			return VerdictIndex, "devguide-page"
+			return verdictIndex, "devguide-page"
 		}
 		if low == "toc.xml" && len(parts) == 2 {
-			return VerdictIndex, "devguide-toc"
+			return verdictIndex, "devguide-toc"
 		}
 	case top == "guides":
 		return classifyGuide(rel, parts, low, ext)
 	}
-	return VerdictUnknown, ""
+	return verdictUnknown, ""
 }
 
 func classifyGuide(rel string, parts []string, low, ext string) (string, string) {
 	switch {
-	case IsSourceArchive(rel):
-		return VerdictExclude, Reasons["source-archive"]
+	case isSourceArchive(rel):
+		return verdictExclude, reasons["source-archive"]
 	case isOneOf(ext, guidePageExt):
-		return VerdictIndex, "guide-page"
+		return verdictIndex, "guide-page"
 	case low == "toc.xml" && len(parts) == 3:
-		return VerdictIndex, "guide-toc"
+		return verdictIndex, "guide-toc"
 	}
 	if why, ok := guideJunk[ext]; ok {
-		return VerdictExclude, why
+		return verdictExclude, why
 	}
-	return VerdictUnknown, ""
+	return verdictUnknown, ""
 }
 
 // classifyExample is _classify_example: a docDeveloper-ux.jar example
 // source (rel is the path under devguide-examples/).
 func classifyExample(rel, ext string) (string, string) {
-	if skip := ExampleSkipReason(rel); skip != "" {
-		return VerdictExclude, skip
+	if skip := exampleSkipReason(rel); skip != "" {
+		return verdictExclude, skip
 	}
 	switch {
 	case isOneOf(ext, exampleExt):
-		return VerdictIndex, "example"
+		return verdictIndex, "example"
 	case isOneOf(ext, styleExt):
-		return VerdictExclude, Reasons["style"]
+		return verdictExclude, reasons["style"]
 	}
 	if why, ok := guideJunk[ext]; ok {
-		return VerdictExclude, why
+		return verdictExclude, why
 	}
-	return VerdictUnknown, ""
+	return verdictUnknown, ""
 }
 
-// ClassifyUnmapped is classify_unmapped: the verdict of a jar entry the
+// classifyUnmapped is classify_unmapped: the verdict of a jar entry the
 // extractor maps to no corpus path.
-func ClassifyUnmapped(entry string) (verdict, detail string) {
+func classifyUnmapped(entry string) (verdict, detail string) {
 	switch {
 	case strings.HasPrefix(entry, "META-INF/"):
-		return VerdictExclude, Reasons["meta-inf"]
+		return verdictExclude, reasons["meta-inf"]
 	case strings.HasSuffix(entry, ".class"):
-		return VerdictExclude, Reasons["class-file"]
+		return verdictExclude, reasons["class-file"]
 	}
 	if why, ok := guideJunk[lowerExt(entry)]; ok {
-		return VerdictExclude, why
+		return verdictExclude, why
 	}
-	return VerdictUnknown, ""
+	return verdictUnknown, ""
 }
 
-// ContentType is content_type: the report label, the corpus top folder and
+// contentType is content_type: the report label, the corpus top folder and
 // the lower-cased extension (or the name when it has none): "guides .html".
-func ContentType(rel string) string {
+func contentType(rel string) string {
 	parts := strings.Split(rel, "/")
 	name := parts[len(parts)-1]
 	ext := lowerExt(name)

@@ -6,6 +6,25 @@ errors and writes nothing to stdout or stderr; the CLI layer (`internal/help`, `
 decides what to print. Each source file holds one responsibility and stays under 500
 lines (the size gate enforces it).
 
+## Package layout
+
+| Package | Holds | Imports (helpbuild) |
+|---|---|---|
+| `helpbuild` | doc-jar layer (rules, doctypes, jar listings, docjars, extract), guides/devguide, course, rebuild-all, coverage, sweep, versions | all below |
+| `helpbuild/indexes` | bajadoc-clean (S7a/S7b), class/inheritance/method (S8), source/slots/xref (S9) | `pyfs`, `htmltext` |
+| `helpbuild/pdftext` | PDF text and `pdf-index.json` (S3) | `pyfs`, `registry` |
+| `helpbuild/registry` | `versions/registry.json` lookups | `pyfs` |
+| `helpbuild/htmltext` | `html_text.convert` | none |
+| `helpbuild/pyfs` | `os.walk`, `os.remove`, `shutil.copyfile`, `json.load`, the atomic JSON write and its dump options | none |
+| `helpbuild/zipfile` | Python's `zipfile` central directory and entry reader | none |
+| `helpbuild/fulltext` | `fulltext.sqlite` | none |
+| `helpbuild/internal/testkit` | the shared test harness (frozen checks, tree listings, zip and PDF fixtures) | none |
+
+The coverage reports and the sweep stay in the root with the course (the sweep reports the
+course pseudo-jar) and versions setup stays with them (its gates run the coverage and the
+sweep); the doc-jar layer stays because the extract and versions frozen tests share its
+fixtures. Each package's frozen trees are under its own `testdata/frozen`.
+
 Source of truth: niagara-help `tools/` (Python 3.15). Where the Python code and this
 document disagree, the code wins and this document is corrected.
 

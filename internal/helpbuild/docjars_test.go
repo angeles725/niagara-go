@@ -8,7 +8,7 @@ import (
 
 func dest(t *testing.T, jar, entry string) string {
 	t.Helper()
-	rel, ok := DestPath(jar, entry, mustDefault(t))
+	rel, ok := destPath(jar, entry, mustDefault(t))
 	if !ok {
 		return "<none>"
 	}
@@ -66,15 +66,15 @@ func TestDestPathMapsEveryJarKind(t *testing.T) {
 func TestIsDocJar(t *testing.T) {
 	for name, want := range map[string]bool{"docAlarms-doc.jar": true, "docHoneywell.jar": true, "clHVAC-doc.jar": true,
 		"alarm-rt.jar": false, "docDeveloper-rt.jar": true, "docDeveloper-ux.jar": true, "ascCommon.jar": false,
-		"docX-rt.jar": false, JavadocJar: false} {
-		if IsDocJar(name) != want {
+		"docX-rt.jar": false, javadocJar: false} {
+		if isDocJar(name) != want {
 			t.Errorf("IsDocJar(%s) = %v", name, !want)
 		}
 	}
-	if IsModuleJar(JavadocJar) || IsModuleJar("docAlarms-doc.jar") || !IsModuleJar("alarm-rt.jar") {
+	if isModuleJar(javadocJar) || isModuleJar("docAlarms-doc.jar") || !isModuleJar("alarm-rt.jar") {
 		t.Error("IsModuleJar")
 	}
-	if JarStem("x") != "" || GuideFolder("doc.jar") != "doc" || GuideFolder("docñ-doc.jar") != "ñ" {
+	if jarStem("x") != "" || guideFolder("doc.jar") != "doc" || guideFolder("docñ-doc.jar") != "ñ" {
 		t.Error("JarStem / GuideFolder slice code points like Python")
 	}
 }
@@ -82,9 +82,9 @@ func TestIsDocJar(t *testing.T) {
 // An entry repeated in the zip, or two entries mapping to one path: the
 // first wins, the later one collides with it.
 func TestMappedEntriesFirstWins(t *testing.T) {
-	got := MappedEntries("thing-ux.jar", []string{"rc/notes.md", "doc/rc/notes.md", "rc/", "doc/x.tar.gz", "rc/notes.md"},
+	got := mappedEntries("thing-ux.jar", []string{"rc/notes.md", "doc/rc/notes.md", "rc/", "doc/x.tar.gz", "rc/notes.md"},
 		mustDefault(t))
-	want := []Mapped{{Pos: 0, Entry: "rc/notes.md", Rel: "guides/thing-ux/rc/notes.md"},
+	want := []mapped{{Pos: 0, Entry: "rc/notes.md", Rel: "guides/thing-ux/rc/notes.md"},
 		{Pos: 1, Entry: "doc/rc/notes.md", Rel: "guides/thing-ux/rc/notes.md", First: "rc/notes.md", Collides: true},
 		{Pos: 4, Entry: "rc/notes.md", Rel: "guides/thing-ux/rc/notes.md", First: "rc/notes.md", Collides: true}}
 	if !reflect.DeepEqual(got, want) {

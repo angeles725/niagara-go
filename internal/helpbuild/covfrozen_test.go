@@ -54,7 +54,7 @@ func goCov(mode string, args ...string) []string {
 		}
 		return covResult(b.String(), status, err)
 	case "guides":
-		n, err := PrintGuideCoverage(&b, args[0])
+		n, err := printGuideCoverage(&b, args[0])
 		return covResult(b.String(), testkit.IntV(n), err)
 	case "docjars":
 		return goCovDocJars(buildingDocs, args...)
@@ -73,7 +73,7 @@ func buildingDocs(root string) (map[string]bool, error) {
 		}
 		path = res.Path
 	}
-	return FulltextDocsAt(path)
+	return fulltextDocsAt(path)
 }
 
 // goCovDocJars is the docjars mode: repo, base, optional version.

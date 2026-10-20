@@ -25,7 +25,7 @@ func TestModuleClasses(t *testing.T) {
 		"alarm-rt": "BAlarm BAlarmUx BAlarmWb", "ALARM-UX": "BAlarm BAlarmUx BAlarmWb", "alarm-wb": "BAlarmWb",
 		"zeta": "BZeta Bx.txt", "École": "BÉcole", "nothing": "",
 	} {
-		got, err := ModuleClasses(src, module)
+		got, err := moduleClasses(src, module)
 		if err != nil || strings.Join(got, " ") != want {
 			t.Errorf("%s: %q %v; want %q", module, got, err, want)
 		}
@@ -136,7 +136,7 @@ func TestCoverageMalformedIndexes(t *testing.T) {
 			testkit.WriteFile(t, filepath.Join(base, "indexes", c.file), []byte(c.text))
 			var b strings.Builder
 			_, err := Coverage(&b, base, c.module)
-			var shape *IndexShapeError
+			var shape *indexShapeError
 			switch {
 			case c.shape && (!errors.As(err, &shape) || b.Len() != 0):
 				t.Errorf("err %v after %q; want an *IndexShapeError before any output", err, b.String())

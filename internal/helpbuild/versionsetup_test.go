@@ -250,7 +250,7 @@ func TestExtractAndIndexRebuildHook(t *testing.T) {
 		t.Fatalf("%v, stub seen %v", err, sawStub)
 	}
 	want := []string{"  SKIP  bajadoc_parser.py", "Ran 1 builders"}
-	for _, n := range BuilderIndexes[1:] {
+	for _, n := range builderIndexes[1:] {
 		if n != "pdf-index.json" {
 			want = append(want, "  EMPTY "+n+" (its source is not in this install)")
 		}

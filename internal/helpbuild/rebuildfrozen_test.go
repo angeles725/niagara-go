@@ -218,7 +218,7 @@ func TestRebuildPlanFrozen(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	testkit.CheckFrozen(t, "rebuild/plan", []string{string(g), fmt.Sprint(OptionalArtifacts)})
+	testkit.CheckFrozen(t, "rebuild/plan", []string{string(g), fmt.Sprint(optionalArtifacts)})
 }
 
 // rebuildFixture is a data root every builder has input for: the S7a, S7b,

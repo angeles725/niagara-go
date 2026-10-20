@@ -29,7 +29,7 @@ func TestGateCourseBoundCourse(t *testing.T) {
 	docs := func(string) (map[string]bool, error) { return indexed, nil }
 	rules := mustDefault(t)
 
-	rep, err := GateCourse(filepath.Join(repo, "versions", "A"), rules, docs)
+	rep, err := gateCourse(filepath.Join(repo, "versions", "A"), rules, docs)
 	if err != nil || rep == nil {
 		t.Fatalf("GateCourse(A) = %+v, %v", rep, err)
 	}
@@ -50,10 +50,10 @@ func TestGateCourseBoundCourse(t *testing.T) {
 		t.Errorf("unclassified %q\nwant %q", rep.Unclassified, want)
 	}
 
-	if rep, err := GateCourse(filepath.Join(repo, "versions", "B"), rules, docs); rep != nil || err != nil {
+	if rep, err := gateCourse(filepath.Join(repo, "versions", "B"), rules, docs); rep != nil || err != nil {
 		t.Errorf("GateCourse(B), no course bound = %+v, %v; want nil, nil", rep, err)
 	}
-	rep, err = GateCourse(filepath.Join(repo, "versions", "C"), rules, docs)
+	rep, err = gateCourse(filepath.Join(repo, "versions", "C"), rules, docs)
 	missing := filepath.Join(dir, "no-course")
 	if err != nil || rep == nil || !reflect.DeepEqual(rep.Unclassified, [][2]string{{missing, "course_dir not found"}}) {
 		t.Errorf("GateCourse(C), missing course_dir = %+v, %v", rep, err)

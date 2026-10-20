@@ -14,25 +14,25 @@ import (
 // The tracked version manifest versions/<id>.manifest.json
 // (version_setup.jar_manifest and the manifest dict of extract_and_index).
 
-// JarRow is one jar_manifest row: the jar relative to the install, its
+// jarRow is one jar_manifest row: the jar relative to the install, its
 // size and sha256, and how many of its central-directory entries DestPath
 // maps (duplicates, directories and source archives counted as DestPath
 // counts them).
-type JarRow struct {
+type jarRow struct {
 	Jar           string
 	Bytes         int64
 	SHA256        string
 	MappedEntries int
 }
 
-// JarManifest lists the doc jars of installDir (ListDocJars without help
+// jarManifest lists the doc jars of installDir (ListDocJars without help
 // jars) with their size, sha256 and mapped-entry count.
-func JarManifest(installDir string) ([]JarRow, error) {
+func jarManifest(installDir string) ([]jarRow, error) {
 	rules, err := Default()
 	if err != nil {
 		return nil, err
 	}
-	jars, err := ListDocJars(installDir, false, nil)
+	jars, err := listDocJars(installDir, false, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -40,16 +40,16 @@ func JarManifest(installDir string) ([]JarRow, error) {
 	if err != nil {
 		return nil, err
 	}
-	rows := []JarRow{}
+	rows := []jarRow{}
 	for _, jar := range jars {
 		name := pyBasename(jar)
 		infos, err := zipfile.ReadCentralDir(jar)
 		if err != nil {
 			return nil, err
 		}
-		row := JarRow{}
+		row := jarRow{}
 		for _, x := range infos {
-			if rel, ok := DestPath(name, x.Name, rules); ok && rel != "" {
+			if rel, ok := destPath(name, x.Name, rules); ok && rel != "" {
 				row.MappedEntries++
 			}
 		}
@@ -75,7 +75,7 @@ func JarManifest(installDir string) ([]JarRow, error) {
 }
 
 // manifestValue is the manifest dict in Python's key order.
-func manifestValue(vid, label, install, dataRoot string, now time.Time, rep *FidelityReport, rows []JarRow) pyjson.Value {
+func manifestValue(vid, label, install, dataRoot string, now time.Time, rep *FidelityReport, rows []jarRow) pyjson.Value {
 	m := pyjson.NewObject()
 	m.Set("version", pyjson.String(vid))
 	m.Set("label", pyjson.String(label))
@@ -115,7 +115,7 @@ func stringsValue(ss []string) pyjson.Value {
 // writeManifest writes versions/<vid>.manifest.json under repo and logs
 // "manifest -> <path relative to repo>".
 func writeManifest(res *SetupResult, repo, vid, label, dataRoot string, now func() time.Time) error {
-	rows, err := JarManifest(res.Install)
+	rows, err := jarManifest(res.Install)
 	if err != nil {
 		return err
 	}
@@ -124,7 +124,7 @@ func writeManifest(res *SetupResult, repo, vid, label, dataRoot string, now func
 	}
 	path := pycompat.Join(repo, "versions", vid+".manifest.json")
 	v := manifestValue(vid, label, res.Install, dataRoot, now(), res.Fidelity, rows)
-	if err := pyfs.WriteJSON(path, v, DumpManifest); err != nil {
+	if err := pyfs.WriteJSON(path, v, dumpManifest); err != nil {
 		return err
 	}
 	res.ManifestPath = path

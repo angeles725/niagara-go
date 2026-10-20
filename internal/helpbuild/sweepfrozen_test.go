@@ -230,7 +230,7 @@ func sweepFrozenFixture(t *testing.T, dir string) (install, repo, rules string) 
 	rules = filepath.Join(dir, "rules.json")
 	testkit.WriteFile(t, rules, ruleData)
 	data := filepath.Join(repo, "versions", "1.0")
-	if _, err := Extract(install, data, nil); err != nil {
+	if _, err := extract(install, data, nil); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := RebuildAll(data, RebuildOptions{Stdout: io.Discard, Stderr: io.Discard}); err != nil {

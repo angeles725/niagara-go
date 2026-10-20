@@ -95,7 +95,7 @@ func sweepInstallFixture(t *testing.T) (repo, root, install string) {
 	reg, _ := json.Marshal(map[string]any{"default": "1.0", "versions": map[string]any{"1.0": map[string]string{
 		"label": "fixture", "install_dir": install, "data_root": "versions/1.0"}}})
 	testkit.WriteFile(t, filepath.Join(repo, index.RegistryRel), reg)
-	if _, err := Extract(install, root, NewListings("")); err != nil {
+	if _, err := extract(install, root, newListings("")); err != nil {
 		t.Fatal(err)
 	}
 	for _, clean := range []string{"Guide/index.txt", "Guide/Intro.txt", "helpMod-rt/About-Help.txt", "thing-ux/rc/notes.md.txt"} {
@@ -107,16 +107,16 @@ func sweepInstallFixture(t *testing.T) (repo, root, install string) {
 	return repo, root, install
 }
 
-func scanOK(t *testing.T, install, root string, opts SweepOptions) *SweepResult {
+func scanOK(t *testing.T, install, root string, opts SweepOptions) *sweepResult {
 	t.Helper()
-	res, err := Scan(install, root, opts)
+	res, err := scan(install, root, opts)
 	if err != nil {
 		t.Fatal(err)
 	}
 	return res
 }
 
-func ruleCounts(res *SweepResult) map[string]int {
+func ruleCounts(res *sweepResult) map[string]int {
 	out := map[string]int{}
 	for k, n := range res.Reasons {
 		out[k.Rule] += n
@@ -124,7 +124,7 @@ func ruleCounts(res *SweepResult) map[string]int {
 	return out
 }
 
-func gapKeys(res *SweepResult) []string {
+func gapKeys(res *sweepResult) []string {
 	var out []string
 	for _, g := range res.Unclassified {
 		out = append(out, g.Jar+" "+g.Entry)
@@ -179,7 +179,7 @@ func TestRunSweepReport(t *testing.T) {
 	repo, root, install := sweepInstallFixture(t)
 	var buf bytes.Buffer
 	status, err := RunSweep(repo, root, "1.0", &buf, SweepOptions{Rules: sweepTestRules(t)})
-	if err != nil || status != SweepFail {
+	if err != nil || status != sweepFail {
 		t.Fatalf("status %d, err %v", status, err)
 	}
 	want := `INSTALL SWEEP 1.0 (6 jars under <install>; 6 listed anew, the rest from the jar-listing cache)
@@ -211,7 +211,7 @@ RESULT: FAIL - 1 unclassified entry
 	if got := strings.ReplaceAll(buf.String(), install, "<install>"); got != want {
 		t.Errorf("report:\n%s\nwant:\n%s", got, want)
 	}
-	cache, _ := CachePath(repo, install)
+	cache, _ := cachePath(repo, install)
 	if _, err := os.Stat(cache); err != nil {
 		t.Errorf("the gate keeps the listings in the repository cache: %v", err)
 	}
@@ -230,10 +230,10 @@ func TestSweepListingCache(t *testing.T) {
 	_, root, install := sweepInstallFixture(t)
 	rules := sweepTestRules(t)
 	path := filepath.Join(t.TempDir(), "cache", "listings.json")
-	if first := scanOK(t, install, root, SweepOptions{Rules: rules, Listings: NewListings(path)}); first.Listed == 0 {
+	if first := scanOK(t, install, root, SweepOptions{Rules: rules, Listings: newListings(path)}); first.Listed == 0 {
 		t.Fatal("first sweep listed nothing")
 	}
-	if second := scanOK(t, install, root, SweepOptions{Rules: rules, Listings: NewListings(path)}); second.Listed != 0 {
+	if second := scanOK(t, install, root, SweepOptions{Rules: rules, Listings: newListings(path)}); second.Listed != 0 {
 		t.Errorf("second sweep listed %d jars, want 0", second.Listed)
 	}
 	jar := filepath.Join(install, "modules", "lib-rt.jar")
@@ -242,7 +242,7 @@ func TestSweepListingCache(t *testing.T) {
 	if err := os.Chtimes(jar, later, later); err != nil {
 		t.Fatal(err)
 	}
-	if third := scanOK(t, install, root, SweepOptions{Rules: rules, Listings: NewListings(path)}); third.Listed != 1 {
+	if third := scanOK(t, install, root, SweepOptions{Rules: rules, Listings: newListings(path)}); third.Listed != 1 {
 		t.Errorf("after rewriting one jar: listed %d, want 1", third.Listed)
 	}
 }
@@ -277,7 +277,7 @@ func TestSweepCorners(t *testing.T) {
 	locked := lockDir(t, filepath.Join(install, "sw", "locked"))
 	locked = lockDir(t, filepath.Join(install, "docs", "locked")) && locked
 
-	jars, _, _ := FindJars(install, t3aRules(t))
+	jars, _, _ := findJars(install, t3aRules(t))
 	var rels []string
 	for _, j := range jars {
 		rels = append(rels, j.Rel)
@@ -294,7 +294,7 @@ func TestSweepCorners(t *testing.T) {
 	if !slices.Equal(res.Unreadable, []string{"modules/broken-rt.jar"}) {
 		t.Errorf("unreadable = %q", res.Unreadable)
 	}
-	if res.Reasons[ReasonKey{"empty-file", "empty file named .jar (0 bytes, nothing to list)"}] != 1 {
+	if res.Reasons[reasonKey{"empty-file", "empty file named .jar (0 bytes, nothing to list)"}] != 1 {
 		t.Errorf("empty jar not excluded: %v", res.Reasons)
 	}
 	whys := map[string]string{}
@@ -365,12 +365,12 @@ func TestSweepLocation(t *testing.T) {
 
 func TestReportFormatting(t *testing.T) {
 	long := strings.Repeat("é", 30)
-	got := sweepRowLine((&SweepRow{Jars: 1234}).cells(pdftext.FirstRunes(long, 28))...)
+	got := sweepRowLine((&sweepRow{Jars: 1234}).cells(pdftext.FirstRunes(long, 28))...)
 	if want := "  " + strings.Repeat("é", 28) + "  1,234         0         0        0        0            0"; got != want {
 		t.Errorf("row:\n%q\nwant\n%q", got, want)
 	}
-	m := map[ReasonKey]int{{"b", "x"}: 2, {"a", "y"}: 2, {"a", "x"}: 2, {"z", "z"}: 5}
-	if got := sortedReasons(m); !slices.Equal(got, []ReasonKey{{"z", "z"}, {"a", "x"}, {"a", "y"}, {"b", "x"}}) {
+	m := map[reasonKey]int{{"b", "x"}: 2, {"a", "y"}: 2, {"a", "x"}: 2, {"z", "z"}: 5}
+	if got := sortedReasons(m); !slices.Equal(got, []reasonKey{{"z", "z"}, {"a", "x"}, {"a", "y"}, {"b", "x"}}) {
 		t.Errorf("reason order %v", got)
 	}
 }

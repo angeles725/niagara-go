@@ -95,7 +95,7 @@ func copiedFiles(t *testing.T, root string) []string {
 func TestCourseBuildCopiesTextAndCode(t *testing.T) { // test_text_and_code_are_copied_secrets_and_solutions_are_not
 	dir := t.TempDir()
 	a := filepath.Join(courseRepo(t, dir, nil), "versions", "A")
-	counts, err := BuildCourse(a, mustDefault(t))
+	counts, err := buildCourse(a, mustDefault(t))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -118,7 +118,7 @@ func TestCourseBuildCopiesTextAndCode(t *testing.T) { // test_text_and_code_are_
 func TestCourseUnboundBuildsNothing(t *testing.T) { // test_unbound_version_builds_nothing
 	b := filepath.Join(courseRepo(t, t.TempDir(), nil), "versions", "B")
 	testkit.WriteFile(t, filepath.Join(b, "course-text", "old.txt"), []byte("left from an earlier binding"))
-	counts, err := BuildCourse(b, mustDefault(t))
+	counts, err := buildCourse(b, mustDefault(t))
 	if err != nil || counts != nil {
 		t.Fatalf("BuildCourse(B) = %+v, %v", counts, err)
 	}
@@ -134,8 +134,8 @@ func TestCourseMissingAndFailedCopy(t *testing.T) {
 	repo := courseRepo(t, dir, map[string]string{"C": "../no-course"})
 	c := filepath.Join(repo, "versions", "C")
 	testkit.WriteFile(t, filepath.Join(c, "course-text", "kept.txt"), []byte("kept"))
-	_, err := BuildCourse(c, mustDefault(t))
-	var missing *CourseDirMissingError
+	_, err := buildCourse(c, mustDefault(t))
+	var missing *courseDirMissingError
 	if !errors.As(err, &missing) || missing.Error() != "course_dir not found: "+filepath.Join(dir, "no-course") {
 		t.Fatalf("missing course: %v", err)
 	}
@@ -155,7 +155,7 @@ func TestCourseMissingAndFailedCopy(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer os.Chmod(locked, 0o644)
-	out, err := CourseExtractor(a, mustDefault(t))
+	out, err := courseExtractor(a, mustDefault(t))
 	if err != nil || out.Status != 2 || len(out.Stderr) != 1 ||
 		!strings.Contains(out.Stderr[0], "[Errno 13] Permission denied: '"+locked+"'") {
 		t.Fatalf("failed copy: %+v, %v", out, err)
@@ -210,7 +210,7 @@ func TestCourseExtractorLines(t *testing.T) {
 		{"C", "course: course_dir not found: " + filepath.Join(dir, "no-course") + "; skipped (the course is " +
 			"optional: course-text/ and devguide-examples/course/ keep their last copy)"},
 	} {
-		out, err := CourseExtractor(filepath.Join(repo, "versions", c.id), mustDefault(t))
+		out, err := courseExtractor(filepath.Join(repo, "versions", c.id), mustDefault(t))
 		if err != nil || out.Status != 0 || len(out.Stderr) != 0 || !reflect.DeepEqual(out.Stdout, []string{c.line}) {
 			t.Errorf("%s: CourseExtractor = %+v, %v\nwant stdout %q", c.id, out, err, c.line)
 		}
@@ -225,14 +225,14 @@ func TestRemoveCourseCopiesRefusesASymlink(t *testing.T) {
 	b := filepath.Join(courseRepo(t, dir, nil), "versions", "B")
 	target := filepath.Join(dir, "elsewhere")
 	testkit.WriteFile(t, filepath.Join(target, "keep.txt"), []byte("not ours"))
-	link := filepath.Join(b, CourseTextDir)
+	link := filepath.Join(b, courseTextDir)
 	testkit.SymlinkOrSkip(t, target, link)
-	removed, err := RemoveCourseCopies(b)
+	removed, err := removeCourseCopies(b)
 	want := "[Errno None] None: " + pycompat.FSRepr(link)
 	if err == nil || err.Error() != want || len(removed) != 0 {
 		t.Errorf("RemoveCourseCopies = %q, %v; want the error %q", removed, err, want)
 	}
-	out, err := CourseExtractor(b, mustDefault(t))
+	out, err := courseExtractor(b, mustDefault(t))
 	line := "ERROR: course: cannot copy the course into " + b + ": " + want +
 		" (course-text/ and devguide-examples/course/ keep their last copy)"
 	if err != nil || out.Status != 2 || len(out.Stdout) != 0 || !reflect.DeepEqual(out.Stderr, []string{line}) {

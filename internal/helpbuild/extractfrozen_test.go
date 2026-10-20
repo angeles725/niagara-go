@@ -214,16 +214,16 @@ func goDocJars(op, install, root string) string {
 	switch op {
 	case "extract":
 		var s *ExtractStats
-		s, err = Extract(install, root, nil)
+		s, err = extract(install, root, nil)
 		v = extractValue(s)
 	case "fill":
 		var w []string
-		w, err = FillMissing(install, root, nil)
+		w, err = fillMissing(install, root, nil)
 		v = pyjson.NewObject()
 		v.Set("written", stringsValue(w))
 	case "fidelity":
 		var r *FidelityReport
-		r, err = Fidelity(install, root, nil)
+		r, err = fidelity(install, root, nil)
 		v = fidelityValue(r)
 	}
 	if err != nil {
@@ -248,7 +248,7 @@ func mapPairs(t *testing.T, jars []string) [][2]any {
 		}
 		pairs = append(pairs, [2]any{filepath.Base(j), names})
 	}
-	kinds := []string{JavadocJar, "docDeveloper-doc.jar", "docDeveloper-ux.jar", "docDeveloper-rt.jar",
+	kinds := []string{javadocJar, "docDeveloper-doc.jar", "docDeveloper-ux.jar", "docDeveloper-rt.jar",
 		"docSource-doc.jar", "docJdk-doc.jar", "docHoneywell.jar", "clHVAC-doc.jar", "doc.jar", "doc-doc.jar",
 		"docX-rt.jar", "docdoc.jar", "Doc-doc.jar", "docDeveloperAnalytics-doc.jar", "x-DOC.jar", "docDeveloper.jar",
 		"docSource.jar", "docJdk.jar", "bajaScript-ux.jar", "workbench-wb.jar", "galileoSupervisor-wb.jar",
@@ -272,17 +272,17 @@ func goMap(t *testing.T, pairs [][2]any) []string {
 	var out []string
 	for _, p := range pairs {
 		jar, names := p[0].(string), p[1].([]string)
-		out = append(out, testkit.DumpLine(testkit.Str("jar"), testkit.Str(jar), testkit.Boolean(IsDocJar(jar)), testkit.Boolean(IsModuleJar(jar)),
-			testkit.Str(JarStem(jar)), testkit.Str(GuideFolder(jar))))
+		out = append(out, testkit.DumpLine(testkit.Str("jar"), testkit.Str(jar), testkit.Boolean(isDocJar(jar)), testkit.Boolean(isModuleJar(jar)),
+			testkit.Str(jarStem(jar)), testkit.Str(guideFolder(jar))))
 		for _, e := range names {
-			rel, ok := DestPath(jar, e, rules)
+			rel, ok := destPath(jar, e, rules)
 			d := pyjson.Value{}
 			if ok {
 				d = testkit.Str(rel)
 			}
-			out = append(out, testkit.DumpLine(testkit.Str("entry"), testkit.Str(e), d, testkit.Boolean(IsHelpEntry(jar, e, rules))))
+			out = append(out, testkit.DumpLine(testkit.Str("entry"), testkit.Str(e), d, testkit.Boolean(isHelpEntry(jar, e, rules))))
 		}
-		for _, m := range MappedEntries(jar, names, rules) {
+		for _, m := range mappedEntries(jar, names, rules) {
 			first := pyjson.Value{}
 			if m.Collides {
 				first = testkit.Str(m.First)
@@ -321,8 +321,8 @@ func perJar(lines []string) []string {
 
 func goHelpJars(t *testing.T, install string) []string {
 	t.Helper()
-	help, err1 := HelpJars(install, nil, mustDefault(t))
-	docs, err2 := ListDocJars(install, true, nil)
+	help, err1 := helpJars(install, nil, mustDefault(t))
+	docs, err2 := listDocJars(install, true, nil)
 	if err1 != nil || err2 != nil {
 		t.Fatalf("help jars: %v %v", err1, err2)
 	}
@@ -338,7 +338,7 @@ func TestEmptyIndexesFrozen(t *testing.T) {
 	root := filepath.Join(t.TempDir(), "go")
 	testkit.WriteFile(t, filepath.Join(root, "indexes", "class-index.json"), []byte(`{"x": 1}`))
 	testkit.WriteFile(t, filepath.Join(root, "indexes", "pdf-index.json"), []byte("{}\n"))
-	lines, err := EmptyIndexes(root)
+	lines, err := emptyIndexes(root)
 	if err != nil {
 		t.Fatal(err)
 	}

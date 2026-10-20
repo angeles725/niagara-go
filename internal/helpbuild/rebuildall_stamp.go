@@ -18,13 +18,13 @@ import (
 // {"stamped_utc": isoformat, "sources": {<dir>: {"files", "bytes"} | null}}
 // as json.dumps(indent=2), written atomically.
 
-// SourceDirs are SOURCE_DIRS: the raw corpus folders whose change makes
+// sourceDirs are SOURCE_DIRS: the raw corpus folders whose change makes
 // the indexes stale, in manifest order.
-var SourceDirs = []string{"bajadoc", "source", "guides", "devguide", "docs"}
+var sourceDirs = []string{"bajadoc", "source", "guides", "devguide", "docs"}
 
-// SourceExt is SOURCE_EXT: the only extension a folder counts (docs/ holds
+// sourceExt is SOURCE_EXT: the only extension a folder counts (docs/ holds
 // the PDF manuals and the version-diff reports).
-var SourceExt = map[string]string{"docs": ".pdf"}
+var sourceExt = map[string]string{"docs": ".pdf"}
 
 // fingerprintDir is _fingerprint_dir: the file count and total size of the
 // tree at path (os.walk: links to folders listed, not entered; a file
@@ -57,30 +57,30 @@ func fingerprintDir(path, ext string) pyjson.Value {
 	return fp
 }
 
-// CorpusFingerprint is compute_fingerprint: every SourceDirs folder of the
+// corpusFingerprint is compute_fingerprint: every SourceDirs folder of the
 // data root, in order (walked concurrently; the counts do not depend on
 // the order).
-func CorpusFingerprint(root string) pyjson.Value {
-	prints := make([]pyjson.Value, len(SourceDirs))
+func corpusFingerprint(root string) pyjson.Value {
+	prints := make([]pyjson.Value, len(sourceDirs))
 	var wg sync.WaitGroup
-	for i, d := range SourceDirs {
-		wg.Go(func() { prints[i] = fingerprintDir(pycompat.Join(root, d), SourceExt[d]) })
+	for i, d := range sourceDirs {
+		wg.Go(func() { prints[i] = fingerprintDir(pycompat.Join(root, d), sourceExt[d]) })
 	}
 	wg.Wait()
 	out := pyjson.NewObject()
-	for i, d := range SourceDirs {
+	for i, d := range sourceDirs {
 		out.Set(d, prints[i])
 	}
 	return out
 }
 
-// StampManifest is _write_manifest: the time first, then the fingerprint,
+// stampManifest is _write_manifest: the time first, then the fingerprint,
 // saved atomically; it returns stamped_utc.
-func StampManifest(root string, now time.Time) (string, error) {
+func stampManifest(root string, now time.Time) (string, error) {
 	stamped := pyISOFormatUTC(now)
 	m := pyjson.NewObject()
 	m.Set("stamped_utc", pyjson.String(stamped))
-	m.Set("sources", CorpusFingerprint(root))
+	m.Set("sources", corpusFingerprint(root))
 	if err := pyfs.WriteJSON(pycompat.Join(root, "indexes", ".manifest.json"), m, pyfs.DumpIndent2); err != nil {
 		return "", err
 	}

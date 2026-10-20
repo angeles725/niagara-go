@@ -19,8 +19,8 @@ import (
 // FulltextDocsAt reads one database.
 type FulltextDocs func(root string) (map[string]bool, error)
 
-// FulltextDocsAt is FtsIndex.docs() of the full-text database at path.
-func FulltextDocsAt(path string) (map[string]bool, error) {
+// fulltextDocsAt is FtsIndex.docs() of the full-text database at path.
+func fulltextDocsAt(path string) (map[string]bool, error) {
 	db, err := index.OpenSQLite(path)
 	if err != nil {
 		return nil, err
@@ -61,7 +61,7 @@ func newIndexedViews(root string, docs FulltextDocs) *indexedViews {
 func recordOf(name, key string, v any) (*index.Object, error) {
 	o, ok := v.(*index.Object)
 	if !ok {
-		return nil, &IndexShapeError{name, "the record of " + key + " is not an object"}
+		return nil, &indexShapeError{name, "the record of " + key + " is not an object"}
 	}
 	return o, nil
 }
@@ -90,7 +90,7 @@ func (x *indexedViews) classSet(jdk bool) (map[string]bool, error) {
 		if others, ok := entry.Get("others"); ok {
 			list, ok := others.([]any)
 			if !ok {
-				return nil, &IndexShapeError{name, "the others of " + key + " are not a list"}
+				return nil, &indexShapeError{name, "the others of " + key + " are not a list"}
 			}
 			for _, o := range list {
 				e, err := recordOf(name, key, o)
@@ -103,7 +103,7 @@ func (x *indexedViews) classSet(jdk bool) (map[string]bool, error) {
 		for _, e := range all {
 			pkg, ok := e.Get("package")
 			if !ok {
-				return nil, &IndexShapeError{name, "a record of " + key + " has no package"}
+				return nil, &indexShapeError{name, "a record of " + key + " has no package"}
 			}
 			out[pycompat.Str(pkg)+"."+key] = true
 		}
@@ -131,11 +131,11 @@ func (x *indexedViews) sourceSet() (map[string]bool, error) {
 		}
 		p, ok := data.Get("path")
 		if !ok {
-			return nil, &IndexShapeError{name, "the record of " + key + " has no path"}
+			return nil, &indexShapeError{name, "the record of " + key + " has no path"}
 		}
 		s, ok := p.(string)
 		if !ok {
-			return nil, &IndexShapeError{name, "the path of " + key + " is not a string"}
+			return nil, &indexShapeError{name, "the path of " + key + " is not a string"}
 		}
 		out[pypath.PosixNormpath(pypath.PosixJoin("source", s))] = true
 	}
@@ -248,7 +248,7 @@ func (x *indexedViews) check(kind, rel string) (bool, error) {
 		}
 		page := dropPrefixRunes(rel, len(folder)+1)
 		return pycompat.IsFile(pycompat.Join(x.root, folder+"-clean",
-			CleanTextName(page, pycompat.Join(x.root, folder)))), nil
+			cleanTextName(page, pycompat.Join(x.root, folder)))), nil
 	case "guide-toc":
 		tocs, err := x.guideTocs()
 		return tocs[strings.Split(rel, "/")[1]], err

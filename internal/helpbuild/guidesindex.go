@@ -21,8 +21,8 @@ import (
 // .html/.htm extension dropped), total_topics and, with a toc.xml, toc
 // {file, items, titled} and titles {topic: TOC title}.
 
-// TopicName is build_guides_index.topic_name: "sub/Page.html" -> "sub/Page".
-func TopicName(rel string) string {
+// topicName is build_guides_index.topic_name: "sub/Page.html" -> "sub/Page".
+func topicName(rel string) string {
 	low := textfold.Lower(rel)
 	for _, ext := range []string{".html", ".htm"} {
 		if strings.HasSuffix(low, ext) {
@@ -66,20 +66,20 @@ func sortedDecoded(raw []string) (names, decoded []string) {
 	return names, decoded
 }
 
-// JarSources are the facts source_jar is decided from: the doc jar names
+// jarSources are the facts source_jar is decided from: the doc jar names
 // of the version manifest (Unknown: there is no manifest, Python's None)
 // and the install's modules/ folder ("" when unregistered or not mounted).
-type JarSources struct {
+type jarSources struct {
 	Names      []string
 	Unknown    bool
 	ModulesDir string
 }
 
-// KnownJarNames is build_guides_index.known_jar_names: the sorted doc jar
+// knownJarNames is build_guides_index.known_jar_names: the sorted doc jar
 // base names of versions/<id>.manifest.json; ok is false when baseDir is
 // no registered data root or has no manifest. A manifest of another shape
 // is an error, as Python raises.
-func KnownJarNames(baseDir string) (names []string, ok bool, err error) {
+func knownJarNames(baseDir string) (names []string, ok bool, err error) {
 	abs, err := filepath.Abs(baseDir)
 	if err != nil {
 		return nil, false, err
@@ -121,10 +121,10 @@ func KnownJarNames(baseDir string) (names []string, ok bool, err error) {
 	return nil, false, nil
 }
 
-// ModulesDirOf is build_guides_index.modules_dir_of: <install>/modules of
+// modulesDirOf is build_guides_index.modules_dir_of: <install>/modules of
 // the version whose data root is baseDir, "" when unregistered or not a
 // folder.
-func ModulesDirOf(baseDir string) (string, error) {
+func modulesDirOf(baseDir string) (string, error) {
 	install, err := registry.InstallDir(baseDir)
 	if err != nil || install == "" {
 		return "", err
@@ -135,30 +135,30 @@ func ModulesDirOf(baseDir string) (string, error) {
 	return "", nil
 }
 
-// DefaultJarSources are the sources build() reads when it is given none.
-func DefaultJarSources(baseDir string) (JarSources, error) {
-	names, ok, err := KnownJarNames(baseDir)
+// defaultJarSources are the sources build() reads when it is given none.
+func defaultJarSources(baseDir string) (jarSources, error) {
+	names, ok, err := knownJarNames(baseDir)
 	if err != nil {
-		return JarSources{}, err
+		return jarSources{}, err
 	}
-	modules, err := ModulesDirOf(baseDir)
+	modules, err := modulesDirOf(baseDir)
 	if err != nil {
-		return JarSources{}, err
+		return jarSources{}, err
 	}
-	return JarSources{Names: names, Unknown: !ok, ModulesDir: modules}, nil
+	return jarSources{Names: names, Unknown: !ok, ModulesDir: modules}, nil
 }
 
 // jarForFolder is jar_for_folder: the doc jar whose pages land in
 // guides/<folder>/, else the module jar <folder>.jar when modules/ holds
 // it; null when the mounted install has none; verified false when it
 // cannot be checked.
-func jarForFolder(folder, rawFolder string, src JarSources, rules *Rules) (jar pyjson.Value, verified bool) {
+func jarForFolder(folder, rawFolder string, src jarSources, rules *Rules) (jar pyjson.Value, verified bool) {
 	if src.Unknown {
 		return pyjson.Value{}, false
 	}
 	want := "guides/" + folder + "/x.html"
 	for _, name := range src.Names {
-		if rel, ok := DestPath(name, "doc/x.html", rules); ok && rel == want {
+		if rel, ok := destPath(name, "doc/x.html", rules); ok && rel == want {
 			return pyjson.String(name), true
 		}
 	}
@@ -192,11 +192,11 @@ func previousJars(baseDir string) (map[string]pyjson.Value, error) {
 	return out, nil
 }
 
-// GuidesIndex is build_guides_index.build(baseDir, jar_names, modules_dir,
+// guidesIndex is build_guides_index.build(baseDir, jar_names, modules_dir,
 // kept): the index and the folders whose source_jar was kept from the
 // previous index because it could not be checked (a truthy value only).
 // The toc.xml warnings are what parse_toc prints on stderr.
-func GuidesIndex(baseDir string, src JarSources) (index pyjson.Value, kept, warnings []string, err error) {
+func guidesIndex(baseDir string, src jarSources) (index pyjson.Value, kept, warnings []string, err error) {
 	rules, err := Default()
 	if err != nil {
 		return index, nil, nil, err
@@ -226,7 +226,7 @@ func GuidesIndex(baseDir string, src JarSources) (index pyjson.Value, kept, warn
 				if low := textfold.Lower(f); strings.HasSuffix(low, ".html") || strings.HasSuffix(low, ".htm") {
 					htmlCount++
 				}
-				if IsGuidePage(f) {
+				if isGuidePage(f) {
 					rel, err := filepath.Rel(path, pycompat.Join(dir, f))
 					if err != nil {
 						werr = err
@@ -242,7 +242,7 @@ func GuidesIndex(baseDir string, src JarSources) (index pyjson.Value, kept, warn
 		_, pages = sortedDecoded(pages)
 		topics := make([]pyjson.Value, len(pages))
 		for i, p := range pages {
-			topics[i] = pyjson.String(TopicName(p))
+			topics[i] = pyjson.String(topicName(p))
 		}
 		jar, verified := jarForFolder(folder, rawFolder, src, rules)
 		if !verified {
@@ -256,20 +256,20 @@ func GuidesIndex(baseDir string, src JarSources) (index pyjson.Value, kept, warn
 		entry.Set("source_jar", jar)
 		entry.Set("topics", pyjson.Value{Kind: pyjson.Array, A: topics})
 		entry.Set("total_topics", pyjson.IntValue(int64(len(topics))))
-		if tocPath := FindToc(path); tocPath != "" {
-			toc, warning := ParseToc(tocPath)
+		if tocPath := findToc(path); tocPath != "" {
+			toc, warning := parseToc(tocPath)
 			if warning != "" {
 				warnings = append(warnings, warning)
 			}
 			titles := pyjson.NewObject()
 			for _, p := range pages {
 				if e, ok := toc.Pages[p]; ok {
-					titles.Set(TopicName(p), pyjson.String(e.Title))
+					titles.Set(topicName(p), pyjson.String(e.Title))
 				}
 			}
 			info := pyjson.NewObject()
 			info.Set("file", pyjson.String(fsdecode(pyBasename(tocPath))))
-			info.Set("items", pyjson.IntValue(int64(CountItems(tocPath))))
+			info.Set("items", pyjson.IntValue(int64(countItems(tocPath))))
 			info.Set("titled", pyjson.IntValue(int64(len(titles.Keys))))
 			entry.Set("toc", info)
 			entry.Set("titles", titles)
@@ -279,14 +279,14 @@ func GuidesIndex(baseDir string, src JarSources) (index pyjson.Value, kept, warn
 	return index, kept, warnings, nil
 }
 
-// BuildGuidesIndex is build_guides_index.main(): baseDir/indexes/
+// buildGuidesIndex is build_guides_index.main(): baseDir/indexes/
 // guides-index.json written with indent=2 from the default jar sources.
-func BuildGuidesIndex(baseDir string) (*TextResult, error) {
-	src, err := DefaultJarSources(baseDir)
+func buildGuidesIndex(baseDir string) (*textResult, error) {
+	src, err := defaultJarSources(baseDir)
 	if err != nil {
 		return nil, err
 	}
-	index, kept, warnings, err := GuidesIndex(baseDir, src)
+	index, kept, warnings, err := guidesIndex(baseDir, src)
 	if err != nil {
 		return nil, err
 	}
@@ -297,7 +297,7 @@ func BuildGuidesIndex(baseDir string) (*TextResult, error) {
 	if err := pyfs.WriteJSON(out, index, pyfs.DumpIndent2); err != nil {
 		return nil, err
 	}
-	res := &TextResult{Files: len(index.Keys), Warnings: warnings}
+	res := &textResult{Files: len(index.Keys), Warnings: warnings}
 	res.Log = append(res.Log, fmt.Sprintf("guides-index.json: %d folders -> %s", len(index.Keys), out))
 	if len(kept) > 0 {
 		shown := strings.Join(kept[:min(len(kept), 10)], ", ")

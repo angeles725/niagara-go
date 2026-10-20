@@ -22,18 +22,18 @@ import (
 // goRun runs one builder as lines: ["out", line] and ["err", warning] per
 // line, then ["result", files] (null for the indexes) or ["raise"].
 func goRun(builder, base string) []string {
-	var res *TextResult
+	var res *textResult
 	var err error
 	result := pyjson.Value{}
 	switch builder {
 	case "guides":
-		res, err = ParseGuides(base)
+		res, err = parseGuides(base)
 	case "devguide":
-		res, err = ParseDevguide(base)
+		res, err = parseDevguide(base)
 	case "guidesindex":
-		res, err = BuildGuidesIndex(base)
+		res, err = buildGuidesIndex(base)
 	case "devguidetoc":
-		res, err = BuildDevguideTOC(base)
+		res, err = buildDevguideTOC(base)
 	}
 	if err != nil {
 		return []string{testkit.DumpLine(testkit.Str("raise"))}
@@ -244,7 +244,7 @@ func TestTocFilesFrozen(t *testing.T) {
 	}
 	var gol []string
 	for _, p := range paths {
-		toc, warning := ParseToc(p)
+		toc, warning := parseToc(p)
 		rows := testkit.Array()
 		for _, k := range toc.Order {
 			e := toc.Pages[k]
@@ -258,7 +258,7 @@ func TestTocFilesFrozen(t *testing.T) {
 		if warning != "" {
 			warnings.A = append(warnings.A, testkit.Str(warning))
 		}
-		gol = append(gol, testkit.DumpLine(testkit.Str("toc"), rows, testkit.IntV(CountItems(p)), warnings))
+		gol = append(gol, testkit.DumpLine(testkit.Str("toc"), rows, testkit.IntV(countItems(p)), warnings))
 	}
 	testkit.CheckFrozen(t, "guides/toc", testkit.Relabeled(gol, dir, "<dir>"))
 }

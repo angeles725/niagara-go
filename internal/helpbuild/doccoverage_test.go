@@ -14,56 +14,56 @@ import (
 // classify_unmapped, content_type), one row per branch.
 func TestClassify(t *testing.T) {
 	for _, c := range []struct{ rel, verdict, detail, ctype string }{
-		{"devguide-examples/web/App.JS", VerdictIndex, "example", "devguide-examples .js"},
-		{"devguide-examples/ext/babel.js", VerdictExclude, Reasons["third-party-bundle"], "devguide-examples .js"},
-		{"devguide-examples/a/b.MIN.JS", VerdictExclude, Reasons["minified"], "devguide-examples .js"},
-		{"devguide-examples/s.css", VerdictExclude, Reasons["style"], "devguide-examples .css"},
-		{"devguide-examples/x.lexicon", VerdictExclude, guideJunk[".lexicon"], "devguide-examples .lexicon"},
-		{"devguide-examples/data.bin", VerdictUnknown, "", "devguide-examples .bin"},
-		{"guides/A/IMG.PNG", VerdictExclude, Reasons["image"], "guides .png"},
-		{"guides/A/f.WOFF2", VerdictExclude, Reasons["style"], "guides .woff2"},
-		{"guides/A/app.js", VerdictExclude, Reasons["script"], "guides .js"},
-		{"guides/A/s.dat", VerdictExclude, Reasons["search-index"], "guides .dat"},
-		{"guides/A/LICENSE.txt", VerdictExclude, Reasons["licence"], "guides .txt"},
-		{"guides/A/notes.txt", VerdictIndex, "guide-page", "guides .txt"},
-		{"guides/A/X.class", VerdictExclude, Reasons["class-file"], "guides .class"},
-		{"bajadoc/index.html", VerdictExclude, Reasons["javadoc-nav"], "bajadoc .html"},
-		{"bajadoc/p/class-use/B.html", VerdictExclude, Reasons["javadoc-nav"], "bajadoc .html"},
-		{"bajadoc/p/B.html", VerdictIndex, "javadoc-class", "bajadoc .html"},
-		{"bajadoc/p/B.bajadoc", VerdictUnknown, "", "bajadoc .bajadoc"},
-		{"guides/A/module-index.bajadoc", VerdictExclude, Reasons["bajadoc-listing"], "guides .bajadoc"},
-		{"jdk/java/lang/Object.bajadoc", VerdictIndex, "jdk-xml", "jdk .bajadoc"},
-		{"devguide/c.bajadoc", VerdictIndex, "bajadoc-xml", "devguide .bajadoc"},
-		{"source/c.bajadoc", VerdictUnknown, "", "source .bajadoc"},
-		{"devguide-rc/X.java", VerdictIndex, "java", "devguide-rc .java"},
-		{"source/doc/index.html", VerdictExclude, Reasons["source-nav"], "source .html"},
-		{"source/doc/TOC.XML", VerdictExclude, Reasons["source-nav"], "source .xml"},
-		{"source/x.txt", VerdictUnknown, "", "source .txt"},
-		{"devguide/toc.xml", VerdictIndex, "devguide-toc", "devguide .xml"},
-		{"devguide/sub/toc.xml", VerdictUnknown, "", "devguide .xml"},
-		{"guides/A/toc.xml", VerdictIndex, "guide-toc", "guides .xml"},
-		{"guides/A/sub/toc.xml", VerdictUnknown, "", "guides .xml"},
-		{"guides/A/src.TAR.XZ", VerdictExclude, Reasons["source-archive"], "guides .xz"},
-		{"guides/A/Thumbs.db", VerdictExclude, guideJunk[".db"], "guides .db"},
-		{"guides/A/weird", VerdictUnknown, "", "guides weird"},
-		{"guides/A/.hidden", VerdictUnknown, "", "guides .hidden"},
-		{"other/x.html", VerdictUnknown, "", "other .html"},
-		{"bajadoc/p/Package-Summary.HTML", VerdictExclude, Reasons["javadoc-nav"], "bajadoc .html"},
-		{"devguide/sub/x.txt", VerdictIndex, "devguide-page", "devguide .txt"},
-		{"devguide-examples/a/b.png", VerdictUnknown, "", "devguide-examples .png"},
+		{"devguide-examples/web/App.JS", verdictIndex, "example", "devguide-examples .js"},
+		{"devguide-examples/ext/babel.js", verdictExclude, reasons["third-party-bundle"], "devguide-examples .js"},
+		{"devguide-examples/a/b.MIN.JS", verdictExclude, reasons["minified"], "devguide-examples .js"},
+		{"devguide-examples/s.css", verdictExclude, reasons["style"], "devguide-examples .css"},
+		{"devguide-examples/x.lexicon", verdictExclude, guideJunk[".lexicon"], "devguide-examples .lexicon"},
+		{"devguide-examples/data.bin", verdictUnknown, "", "devguide-examples .bin"},
+		{"guides/A/IMG.PNG", verdictExclude, reasons["image"], "guides .png"},
+		{"guides/A/f.WOFF2", verdictExclude, reasons["style"], "guides .woff2"},
+		{"guides/A/app.js", verdictExclude, reasons["script"], "guides .js"},
+		{"guides/A/s.dat", verdictExclude, reasons["search-index"], "guides .dat"},
+		{"guides/A/LICENSE.txt", verdictExclude, reasons["licence"], "guides .txt"},
+		{"guides/A/notes.txt", verdictIndex, "guide-page", "guides .txt"},
+		{"guides/A/X.class", verdictExclude, reasons["class-file"], "guides .class"},
+		{"bajadoc/index.html", verdictExclude, reasons["javadoc-nav"], "bajadoc .html"},
+		{"bajadoc/p/class-use/B.html", verdictExclude, reasons["javadoc-nav"], "bajadoc .html"},
+		{"bajadoc/p/B.html", verdictIndex, "javadoc-class", "bajadoc .html"},
+		{"bajadoc/p/B.bajadoc", verdictUnknown, "", "bajadoc .bajadoc"},
+		{"guides/A/module-index.bajadoc", verdictExclude, reasons["bajadoc-listing"], "guides .bajadoc"},
+		{"jdk/java/lang/Object.bajadoc", verdictIndex, "jdk-xml", "jdk .bajadoc"},
+		{"devguide/c.bajadoc", verdictIndex, "bajadoc-xml", "devguide .bajadoc"},
+		{"source/c.bajadoc", verdictUnknown, "", "source .bajadoc"},
+		{"devguide-rc/X.java", verdictIndex, "java", "devguide-rc .java"},
+		{"source/doc/index.html", verdictExclude, reasons["source-nav"], "source .html"},
+		{"source/doc/TOC.XML", verdictExclude, reasons["source-nav"], "source .xml"},
+		{"source/x.txt", verdictUnknown, "", "source .txt"},
+		{"devguide/toc.xml", verdictIndex, "devguide-toc", "devguide .xml"},
+		{"devguide/sub/toc.xml", verdictUnknown, "", "devguide .xml"},
+		{"guides/A/toc.xml", verdictIndex, "guide-toc", "guides .xml"},
+		{"guides/A/sub/toc.xml", verdictUnknown, "", "guides .xml"},
+		{"guides/A/src.TAR.XZ", verdictExclude, reasons["source-archive"], "guides .xz"},
+		{"guides/A/Thumbs.db", verdictExclude, guideJunk[".db"], "guides .db"},
+		{"guides/A/weird", verdictUnknown, "", "guides weird"},
+		{"guides/A/.hidden", verdictUnknown, "", "guides .hidden"},
+		{"other/x.html", verdictUnknown, "", "other .html"},
+		{"bajadoc/p/Package-Summary.HTML", verdictExclude, reasons["javadoc-nav"], "bajadoc .html"},
+		{"devguide/sub/x.txt", verdictIndex, "devguide-page", "devguide .txt"},
+		{"devguide-examples/a/b.png", verdictUnknown, "", "devguide-examples .png"},
 	} {
-		v, d := Classify(c.rel)
-		if v != c.verdict || d != c.detail || ContentType(c.rel) != c.ctype {
-			t.Errorf("%s: %s %q %q; want %s %q %q", c.rel, v, d, ContentType(c.rel), c.verdict, c.detail, c.ctype)
+		v, d := classify(c.rel)
+		if v != c.verdict || d != c.detail || contentType(c.rel) != c.ctype {
+			t.Errorf("%s: %s %q %q; want %s %q %q", c.rel, v, d, contentType(c.rel), c.verdict, c.detail, c.ctype)
 		}
 	}
 	for _, c := range []struct{ entry, verdict, detail string }{
-		{"META-INF/MANIFEST.MF", VerdictExclude, Reasons["meta-inf"]},
-		{"web/Foo.class", VerdictExclude, Reasons["class-file"]},
-		{"lex/x.LEXICON", VerdictExclude, guideJunk[".lexicon"]},
-		{"README", VerdictUnknown, ""},
+		{"META-INF/MANIFEST.MF", verdictExclude, reasons["meta-inf"]},
+		{"web/Foo.class", verdictExclude, reasons["class-file"]},
+		{"lex/x.LEXICON", verdictExclude, guideJunk[".lexicon"]},
+		{"README", verdictUnknown, ""},
 	} {
-		if v, d := ClassifyUnmapped(c.entry); v != c.verdict || d != c.detail {
+		if v, d := classifyUnmapped(c.entry); v != c.verdict || d != c.detail {
 			t.Errorf("unmapped %s: %s %q; want %s %q", c.entry, v, d, c.verdict, c.detail)
 		}
 	}
@@ -76,14 +76,14 @@ func TestScanDocJarsNeedsFulltextForExamples(t *testing.T) {
 	jar := filepath.Join(dir, "inst", "modules", "docDeveloper-ux.jar")
 	testkit.WriteJar(t, jar, [2]string{"web/app.js", "a"})
 	testkit.WriteFile(t, filepath.Join(dir, "base", "devguide-examples", "web", "app.js"), []byte("a"))
-	if _, err := ScanDocJars("", filepath.Join(dir, "base"), []string{jar}, nil); !errors.Is(err, errNoFulltext) {
+	if _, err := scanDocJars("", filepath.Join(dir, "base"), []string{jar}, nil); !errors.Is(err, errNoFulltext) {
 		t.Fatalf("no reader: %v", err)
 	}
 	docs := func(string) (map[string]bool, error) {
 		return map[string]bool{"devguide-examples/web/app.js": true}, nil
 	}
-	s, err := ScanDocJars("", filepath.Join(dir, "base"), []string{jar}, docs)
-	if err != nil || len(s.Gaps) != 0 || s.Rows[DocJarKey{"docDeveloper-ux.jar", "devguide-examples .js"}].Indexed != 1 {
+	s, err := scanDocJars("", filepath.Join(dir, "base"), []string{jar}, docs)
+	if err != nil || len(s.Gaps) != 0 || s.Rows[docJarKey{"docDeveloper-ux.jar", "devguide-examples .js"}].Indexed != 1 {
 		t.Fatalf("with a reader: %+v %v", s, err)
 	}
 }
@@ -135,7 +135,7 @@ func TestIndexedViewsCheck(t *testing.T) {
 	}
 	w("devguide-examples/x/late.js", "function late() {}\n") // after the build: the index is stale
 
-	x := newIndexedViews(root, func(string) (map[string]bool, error) { return FulltextDocsAt(fts.DBPath(root)) })
+	x := newIndexedViews(root, func(string) (map[string]bool, error) { return fulltextDocsAt(fts.DBPath(root)) })
 	for _, c := range []struct {
 		kind, rel string
 		want      bool
