@@ -8,8 +8,6 @@
 #   WINTEST_RUN     regex passed as -test.run
 #   WINTEST_SHORT   1 (default) passes -test.short; 0 runs the full suites
 #   WINTEST_TIMEOUT per-package -test.timeout (default 10m)
-#   PYCOMPAT_WINPY / WINTEST_PYTHON  Windows python.exe as a WSL path (default: auto-detected
-#                   under /mnt/c/Users/*/AppData/Local/Programs/Python/Python3*/python.exe)
 #   WINTEST_MIRROR  1 (default) runs each binary inside a copy of the tree on the Windows
 #                   disk; 0 runs it in place, from the \\wsl.localhost\... UNC path
 #   GO              go command (default: go)
@@ -29,20 +27,6 @@ cd "$root"
 if [[ ! -e /proc/sys/fs/binfmt_misc/WSLInterop ]] && ! uname -r | grep -qi microsoft; then
 	echo "wintest: skipped (not running under WSL)"
 	exit 0
-fi
-
-py=${PYCOMPAT_WINPY:-${WINTEST_PYTHON:-}}
-if [[ -z $py ]]; then
-	for cand in /mnt/c/Users/*/AppData/Local/Programs/Python/Python3*/python.exe; do
-		if [[ -f $cand ]]; then py=$cand; fi
-	done
-fi
-if [[ -n $py ]]; then
-	echo "wintest: Windows python: $py"
-	export PYCOMPAT_WINPY=$py
-	export WSLENV="${WSLENV:+$WSLENV:}PYCOMPAT_WINPY/p"
-else
-	echo "wintest: no Windows python.exe found; Python-comparison tests will skip"
 fi
 
 read -r -a patterns <<<"${WINTEST_PKGS:-./...}"

@@ -1,0 +1,28 @@
+{
+ "uilang": 2058,
+ "codes": {
+  "1": "[WinError 1] Función incorrecta",
+  "2": "[WinError 2] El sistema no puede encontrar el archivo especificado",
+  "3": "[WinError 3] El sistema no puede encontrar la ruta especificada",
+  "5": "[WinError 5] Acceso denegado",
+  "32": "[WinError 32] El proceso no tiene acceso al archivo porque está siendo utilizado por otro proceso",
+  "87": "[WinError 87] El parámetro no es correcto",
+  "10013": "[WinError 10013] Intento de acceso a un socket no permitido por sus permisos de acceso",
+  "10048": "[WinError 10048] Solo se permite un uso de cada dirección de socket (protocolo/dirección de red/puerto)",
+  "10049": "[WinError 10049] La dirección solicitada no es válida en este contexto",
+  "10050": "[WinError 10050] Una operación socket encontró una red inactiva",
+  "10051": "[WinError 10051] Se ha intentado una operación de socket en una red no accesible",
+  "10054": "[WinError 10054] Se ha forzado la interrupción de una conexión existente por el host remoto",
+  "10060": "[WinError 10060] Se produjo un error durante el intento de conexión ya que la parte conectada no respondió adecuadamente tras un periodo de tiempo, o bien se produjo un error en la conexión establecida ya que el host conectado no ha podido responder",
+  "10061": "[WinError 10061] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión",
+  "10065": "[WinError 10065] Se ha intentado una operación de socket en un host no accesible",
+  "11001": "[WinError 11001] Host desconocido",
+  "11004": "[WinError 11004] El nombre solicitado es válido pero no se encontraron datos del tipo solicitado",
+  "12287": "[WinError 12287] Windows Error 0x2fff",
+  "65535": "[WinError 65535] Windows Error 0xffff",
+  "2147483647": "[WinError 2147483647] Windows Error 0x7fffffff",
+  "4294967295": "[WinError -1] Windows Error 0xffffffff"
+ },
+ "refused": "[WinError 10061] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión",
+ "addrinuse": "[WinError 10048] Solo se permite un uso de cada dirección de socket (protocolo/dirección de red/puerto)"
+}

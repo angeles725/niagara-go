@@ -56,7 +56,6 @@ make lint         # staticcheck
 make cover        # coverage across ./internal/... and the total
 make deadcode     # report-only list of unreachable functions (test-only packages filtered)
 make realdata     # real-data gates on the niagara-research checkout (not in ci)
-make parity       # alias of realdata
 make ci           # check + lint + cross (CI runs each as its own job)
 make build        # static binaries in bin/
 make cross        # bin/linux-amd64/ and bin/windows-amd64/

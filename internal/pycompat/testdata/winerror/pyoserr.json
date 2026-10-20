@@ -1,0 +1,47 @@
+{
+ "refused": {
+  "text": "[WinError 10061] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión",
+  "strerror": "No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión",
+  "class": "ConnectionRefusedError"
+ },
+ "stat": {
+  "text": "[WinError 3] El sistema no puede encontrar la ruta especificada: '{dir}\\\\no\\\\such'",
+  "strerror": "El sistema no puede encontrar la ruta especificada",
+  "class": "FileNotFoundError"
+ },
+ "statfile": {
+  "text": "[WinError 2] El sistema no puede encontrar el archivo especificado: '{dir}\\\\missing.txt'",
+  "strerror": "El sistema no puede encontrar el archivo especificado",
+  "class": "FileNotFoundError"
+ },
+ "listdir": {
+  "text": "[WinError 3] El sistema no puede encontrar la ruta especificada: '{dir}\\\\no'",
+  "strerror": "El sistema no puede encontrar la ruta especificada",
+  "class": "FileNotFoundError"
+ },
+ "listfile": {
+  "text": "[WinError 267] El nombre del directorio no es válido: '{dir}\\\\file.txt'",
+  "strerror": "El nombre del directorio no es válido",
+  "class": "NotADirectoryError"
+ },
+ "mkdir": {
+  "text": "[WinError 3] El sistema no puede encontrar la ruta especificada: '{dir}\\\\no\\\\sub'",
+  "strerror": "El sistema no puede encontrar la ruta especificada",
+  "class": "FileNotFoundError"
+ },
+ "rename": {
+  "text": "[WinError 2] El sistema no puede encontrar el archivo especificado: '{dir}\\\\missing.txt' -> '{dir}\\\\dst.txt'",
+  "strerror": "El sistema no puede encontrar el archivo especificado",
+  "class": "FileNotFoundError"
+ },
+ "open": {
+  "text": "[Errno 2] No such file or directory: '{dir}\\\\missing.txt'",
+  "strerror": "No such file or directory",
+  "class": "FileNotFoundError"
+ },
+ "addrinuse": {
+  "text": "[WinError 10048] Solo se permite un uso de cada dirección de socket (protocolo/dirección de red/puerto)",
+  "strerror": "Solo se permite un uso de cada dirección de socket (protocolo/dirección de red/puerto)",
+  "class": "OSError"
+ }
+}

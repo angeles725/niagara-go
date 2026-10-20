@@ -7,12 +7,11 @@ import (
 	"github.com/angeles725/niagara-go/internal/golden"
 )
 
-// The frozen nsearch/find3 CLI goldens of niagara-research (convert_goldens.py),
-// recorded against fake backend scripts (testdata/fake) and a four-file course
-// tree. The backends are scriptFakes, the Go port of those scripts (the scripts
-// stay as its reference and as the files the NSEARCH_* paths name). They run in
-// process only: a binary has no fake backends, so GOLDEN_BIN skips them (the
-// binary is checked on the real corpus by make parity).
+// The frozen nsearch/find3 CLI goldens of niagara-research, converted once from the
+// Python goldens, recorded against fake backend scripts and a four-file course tree.
+// The backends are scriptFakes, the Go port of those scripts; testdata/fake keeps only
+// one-line marker files under the names the NSEARCH_* paths give. They run in process
+// only: a binary has no fake backends, so GOLDEN_BIN skips them.
 
 // useFakes answers every backend call of the test with scriptFakes.
 func useFakes(t *testing.T) {

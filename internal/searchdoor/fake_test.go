@@ -15,10 +15,12 @@ import (
 )
 
 // scriptFakes is the Go port of the fake backend scripts the frozen nsearch goldens were
-// recorded with (niagara-research tests/searchdoor fakes, copied once to testdata/fake): the
-// goldens test the front door (fan-out, parsing, rendering, budgets) against canned backend
-// answers, so they need no Python and no corpus. Each call is answered by the fake of its
-// source (the scripts corpus-nav.py, niagara_help.py, module_nav.py). A script path that
+// recorded with (niagara-research tests/searchdoor fakes): the goldens test the front door
+// (fan-out, parsing, rendering, budgets) against canned backend answers, so they need no
+// Python and no corpus. Each call is answered by the fake of its source (corpus-nav.py,
+// niagara_help.py, module_nav.py). testdata/fake keeps those three names only as one-line
+// marker files: the goldens' NSEARCH_* variables name them and Run checks them with os.Stat,
+// so the .py names stay while the scripts' logic lives here. A script path that
 // does not exist is the backends' "tool not found"; a word that made a fake sleep 10 s sleeps
 // until the call's budget and is then timed out, like the killed process.
 type scriptFakes struct{}
