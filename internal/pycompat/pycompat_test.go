@@ -29,8 +29,6 @@ type fixtures struct {
 	Lines    [][]json.RawMessage `json:"lines"`
 	Spaces   [][]json.RawMessage `json:"spaces"`
 	HTML     [][]json.RawMessage `json:"html"`
-	Paths    [][]json.RawMessage `json:"paths"`
-	Joins    [][]json.RawMessage `json:"joins"`
 	Case     [][]json.RawMessage `json:"case"`
 	Just     [][]json.RawMessage `json:"just"`
 	Cut      [][]json.RawMessage `json:"cut"`
@@ -269,25 +267,6 @@ func TestTextFunctions(t *testing.T) {
 		decode(t, c[1], &esc)
 		if got := HTMLEscape(s); got != esc {
 			t.Errorf("HTMLEscape(%q) = %q, want %q", s, got, esc)
-		}
-	}
-	for _, c := range f.Paths {
-		var p, base, root string
-		decode(t, c[0], &p)
-		decode(t, c[1], &base)
-		decode(t, c[2], &root)
-		gotRoot, ext := PosixSplitext(p)
-		if PosixBasename(p) != base || gotRoot != root || gotRoot+ext != p {
-			t.Errorf("path %q: basename %q root %q ext %q; want %q %q", p, PosixBasename(p), gotRoot, ext, base, root)
-		}
-	}
-	for _, c := range f.Joins {
-		var parts []string
-		var want string
-		decode(t, c[0], &parts)
-		decode(t, c[1], &want)
-		if got := PosixJoin(parts[0], parts[1:]...); got != want {
-			t.Errorf("PosixJoin(%q) = %q, want %q", parts, got, want)
 		}
 	}
 }

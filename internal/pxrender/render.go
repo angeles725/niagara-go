@@ -9,6 +9,7 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyhtml"
+	"github.com/angeles725/niagara-go/internal/pypath"
 	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
@@ -238,7 +239,7 @@ func render(o Options) (string, *result, error) {
 	shared := findShared(o.Px, o.Shared)
 	r := &renderer{a: newAssets(shared, o.Organized), seed: o.Seed, onRatio: o.OnRatio}
 	if r.seed == "" {
-		r.seed, _ = pycompat.PosixSplitext(pycompat.PosixBasename(o.Px))
+		r.seed, _ = pypath.PosixSplitext(pypath.PosixBasename(o.Px))
 	}
 	data, err := os.ReadFile(o.Px)
 	if err != nil {
@@ -269,7 +270,7 @@ func render(o Options) (string, *result, error) {
 			return "", nil, err
 		}
 	}
-	title, _ := pycompat.PosixSplitext(pycompat.PosixBasename(o.Px))
+	title, _ := pypath.PosixSplitext(pypath.PosixBasename(o.Px))
 	page := pageHTML(o, title, cw, ch, strings.Join(r.parts, "\n"))
 	return page, &result{canvasW: cw, canvasH: ch, widgets: len(r.parts), shared: shared,
 		missing: r.a.missingSorted(), notImages: r.a.notImages, assets: len(r.a.cache), dropped: dropped}, nil

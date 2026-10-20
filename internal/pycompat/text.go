@@ -137,35 +137,3 @@ func seqShape(c byte) (need int, lo, hi byte) {
 	}
 	return 0, 0, 0
 }
-
-// PosixBasename is posixpath.basename.
-func PosixBasename(p string) string { return p[strings.LastIndex(p, "/")+1:] }
-
-// PosixSplitext is posixpath.splitext: (root, ext), leading dots of the name are not an ext.
-func PosixSplitext(p string) (string, string) {
-	sep, dot := strings.LastIndex(p, "/"), strings.LastIndex(p, ".")
-	if dot > sep {
-		for i := sep + 1; i < dot; i++ {
-			if p[i] != '.' {
-				return p[:dot], p[dot:]
-			}
-		}
-	}
-	return p, ""
-}
-
-// PosixJoin is posixpath.join: an absolute part restarts the path; nothing is normalised.
-func PosixJoin(first string, rest ...string) string {
-	out := first
-	for _, p := range rest {
-		switch {
-		case strings.HasPrefix(p, "/"):
-			out = p
-		case out == "" || strings.HasSuffix(out, "/"):
-			out += p
-		default:
-			out += "/" + p
-		}
-	}
-	return out
-}

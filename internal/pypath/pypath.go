@@ -1,4 +1,5 @@
-// Package pypath is Python's pathlib string forms: str(PurePosixPath(p)) on every host,
+// Package pypath is Python's path string forms: posixpath.join/basename/splitext and
+// ntpath.join (posix.go), and pathlib's str(PurePosixPath(p)) on every host,
 // and str(pathlib.Path(p)) with Path(a) / b, relative_to and ordering spelled the host's
 // way (PurePosixPath off Windows; WindowsPath on Windows, where every "/" becomes "\",
 // with drives and UNC shares). It is a non-printing library.
@@ -6,14 +7,13 @@
 // Owner: Integrante2 (session 5, WU8). It is one package for what corpusnav/blocksearch,
 // blockfiles and searchdoor each emulated: blocksearch imports blockfiles, so the shared
 // code cannot live in blocksearch, and pycompat (Python 3.15 behaviour in general) has
-// another owner.
+// another owner. pycompat.Join (os.path.join for the host) dispatches to PosixJoin and NtJoin
+// here, so pypath imports nothing of this module.
 package pypath
 
 import (
 	"runtime"
 	"strings"
-
-	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 const hostWindows = runtime.GOOS == "windows"
@@ -109,12 +109,12 @@ func winDrive(p string) string {
 
 func join(a, b string, windows bool) string {
 	if windows {
-		return str(pycompat.NtJoin(a, b), true)
+		return str(NtJoin(a, b), true)
 	}
 	if a == "." { // Path(".") / b is b
 		return b
 	}
-	return pycompat.PosixJoin(a, b)
+	return PosixJoin(a, b)
 }
 
 func relTo(path, root string, windows bool) string {

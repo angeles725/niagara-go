@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/pycompat"
+	"github.com/angeles725/niagara-go/internal/pypath"
 )
 
 // paged are fulltext_index.PAGED_SOURCES: indexed page by page, pages
@@ -67,7 +68,7 @@ func splitHeader(lines []string) (map[string]string, int) {
 
 // stemName is os.path.splitext(os.path.basename(rel))[0].
 func stemName(rel string) string {
-	stem, _ := pycompat.PosixSplitext(pycompat.PosixBasename(rel))
+	stem, _ := pypath.PosixSplitext(pypath.PosixBasename(rel))
 	return stem
 }
 
@@ -86,7 +87,7 @@ func docTitle(source, rel string, header map[string]string) string {
 	case "docs-text":
 		return strings.ReplaceAll(stemName(rel), "_", " ")
 	case "course-text":
-		root, _ := pycompat.PosixSplitext(rel)
+		root, _ := pypath.PosixSplitext(rel)
 		return "Course: " + root
 	}
 	return stemName(rel)

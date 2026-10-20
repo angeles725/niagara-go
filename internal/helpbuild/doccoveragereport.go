@@ -9,6 +9,7 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyjson"
+	"github.com/angeles725/niagara-go/internal/pypath"
 )
 
 // `coverage --doc-jars` (niagara_help_lib/doc_coverage.py): the mechanical
@@ -84,7 +85,7 @@ func entryVerdict(jarName, entry string, rules *Rules) (rel string, mapped bool,
 		return "", false, VerdictExclude, Reasons["module-content"], "(module, not doc/)"
 	case !mapped:
 		verdict, detail = ClassifyUnmapped(entry)
-		_, ext := pycompat.PosixSplitext(entry)
+		_, ext := pypath.PosixSplitext(entry)
 		if ext == "" {
 			ext = entry
 		}
@@ -112,7 +113,7 @@ func ScanDocJars(installDir, root string, jars []string, docs FulltextDocs) (*Do
 	indexed := newIndexedViews(root, docs)
 	s := &DocJarScan{Rows: map[DocJarKey]*DocJarRow{}}
 	for _, jar := range jars {
-		name := pycompat.PosixBasename(jar)
+		name := pypath.PosixBasename(jar)
 		entries, ok := jarEntries(jar)
 		if !ok {
 			s.Rows[DocJarKey{name, "(unreadable jar)"}] = &DocJarRow{Gap: 1}

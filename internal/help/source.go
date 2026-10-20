@@ -13,6 +13,7 @@ import (
 	"github.com/angeles725/niagara-go/internal/fnmatch"
 	"github.com/angeles725/niagara-go/internal/index"
 	"github.com/angeles725/niagara-go/internal/pycompat"
+	"github.com/angeles725/niagara-go/internal/pypath"
 	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
@@ -37,7 +38,7 @@ func sourceMatches(idx *index.Object, name string) []sourceMatch {
 // corpusPath is source_search.corpus_path: the corpus-relative path of a
 // source-index entry, os.path.normpath("source/" + path).
 func corpusPath(data *index.Object) string {
-	return pyNormpath(pycompat.PosixJoin("source", getStr(data, "path", "")))
+	return pyNormpath(pypath.PosixJoin("source", getStr(data, "path", "")))
 }
 
 // pyNormpath is posixpath.normpath: path.Clean, except that a path starting

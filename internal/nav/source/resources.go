@@ -14,7 +14,7 @@ import (
 	"github.com/angeles725/niagara-go/internal/index"
 	"github.com/angeles725/niagara-go/internal/nav/core"
 	"github.com/angeles725/niagara-go/internal/nav/registry"
-	"github.com/angeles725/niagara-go/internal/pycompat"
+	"github.com/angeles725/niagara-go/internal/pypath"
 	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
@@ -67,7 +67,7 @@ func runResources(env *registry.Env, ns *argparse.Namespace) int {
 	for _, r := range resources {
 		ext := "(none)"
 		if strings.Contains(r, ".") {
-			_, e := pycompat.PosixSplitext(r)
+			_, e := pypath.PosixSplitext(r)
 			ext = textfold.Lower(e)
 		}
 		if _, seen := byExt[ext]; !seen {

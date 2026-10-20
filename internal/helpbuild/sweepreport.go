@@ -10,6 +10,7 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/help/fts"
 	"github.com/angeles725/niagara-go/internal/pycompat"
+	"github.com/angeles725/niagara-go/internal/pypath"
 )
 
 // The sweep report and gate (install_sweep.cmd_sweep / print_report) and
@@ -39,7 +40,7 @@ type CourseGate struct {
 
 // courseStem is course._stem: the file name without its extension.
 func courseStem(rel string) string {
-	root, _ := pycompat.PosixSplitext(pyBasename(rel))
+	root, _ := pypath.PosixSplitext(pyBasename(rel))
 	return root
 }
 
