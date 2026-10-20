@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"runtime"
 	"testing"
+	"time"
 )
 
 // writeTree creates every repo-relative file under root with a one-line body.
@@ -114,6 +115,7 @@ func BenchmarkSubBlocks(b *testing.B) {
 	})
 	if root := os.Getenv("BLOCKFILES_BENCH_ROOT"); root != "" {
 		b.Run("real", func(b *testing.B) { benchWalk(b, root) })
+		b.Run("real-warm-cache", func(b *testing.B) { benchWarmCache(b, root) })
 	}
 }
 
@@ -122,6 +124,33 @@ func benchWalk(b *testing.B, root string) {
 	for b.Loop() {
 		if len(SubBlocks(root)) == 0 {
 			b.Fatal("no sub-blocks")
+		}
+	}
+}
+
+// benchWarmCache is the warm path of SubBlocks on root: a trusted cache that holds,
+// written to a temp file so the corpus is left untouched.
+func benchWarmCache(b *testing.B, root string) {
+	key, ok := cacheKey(root)
+	if !ok {
+		b.Skip("no executable stamp")
+	}
+	bs, rec := walkSubBlocks(root, true)
+	if rec.invalid {
+		b.Skip("the walk hit an unstable error")
+	}
+	path := filepath.Join(b.TempDir(), "subblocks.cache")
+	if err := writeSubCache(path, key, bs, rec); err != nil {
+		b.Fatal(err)
+	}
+	future := time.Now().Add(time.Hour)
+	if err := os.Chtimes(path, future, future); err != nil {
+		b.Fatal(err)
+	}
+	b.ReportAllocs()
+	for b.Loop() {
+		if got, ok := readSubCache(path, key); !ok || len(got) != len(bs) {
+			b.Fatal("warm cache missed")
 		}
 	}
 }

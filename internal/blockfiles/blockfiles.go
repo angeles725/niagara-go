@@ -215,39 +215,72 @@ func walkWorkers() int { return min(runtime.GOMAXPROCS(0), 8) }
 // SubBlocks is sub_blocks: every sub-corpus block below root (os.walk: skipped and dot
 // directories pruned, symlinked directories not entered, unreadable directories
 // skipped), sorted by label, then path. Directories are read in parallel; the full
-// sort makes the result independent of walk order.
+// sort makes the result independent of walk order. A warm call is answered from the
+// walk cache (subcache.go) when every walked directory is unchanged.
 func SubBlocks(root string) []Block {
-	w := &walker{root: root, sem: make(chan struct{}, walkWorkers()-1)}
+	if path := cachePath(root); path != "" {
+		return cachedSubBlocks(root, path)
+	}
+	bs, _ := walkSubBlocks(root, false)
+	return bs
+}
+
+// walkSubBlocks is the SubBlocks walk; with record it also returns what the walk cache
+// checks (every directory stamp, taken before the directory is read).
+func walkSubBlocks(root string, record bool) ([]Block, *walkRecord) {
+	walks.Add(1)
+	w := &walker{root: root, sem: make(chan struct{}, walkWorkers()-1), record: record}
 	w.wg.Add(1)
 	w.walk(root)
 	w.wg.Wait()
 	sortBlocks(w.out, func(a, b Block) bool { return a.Path < b.Path })
-	return w.out
+	return w.out, &w.rec
 }
 
 // walker is one SubBlocks walk: sem holds a token per extra goroutine, so at most
 // walkWorkers directories are read at once; a directory with no free token is walked
 // by the goroutine that found it.
 type walker struct {
-	root string
-	sem  chan struct{}
-	wg   sync.WaitGroup
-	mu   sync.Mutex
-	out  []Block
+	root   string
+	sem    chan struct{}
+	wg     sync.WaitGroup
+	mu     sync.Mutex
+	out    []Block
+	record bool
+	rec    walkRecord
 }
 
 func (w *walker) walk(dir string) {
 	defer w.wg.Done()
+	var st stamp
+	if w.record {
+		var err error
+		if st, err = statStamp(dir); err != nil {
+			w.note(nil, nil, true)
+			return
+		}
+	}
 	entries, err := os.ReadDir(dir)
 	if err != nil {
+		if w.record {
+			w.note([]dirEntryStamp{{dir, st}}, nil, !stableErr(err))
+		}
 		return
 	}
 	var found []Block
 	var dirs []string
+	var links []linkKind
+	invalid := false
 	for _, e := range entries {
 		name := e.Name()
 		if e.Type()&os.ModeSymlink != 0 {
-			if st, err := os.Stat(join(dir, name)); err == nil && st.IsDir() {
+			target, err := os.Stat(join(dir, name))
+			isDir := err == nil && target.IsDir()
+			if w.record && strings.HasSuffix(name, ".md") && mayBeSubBlock(name) {
+				links = append(links, linkKind{join(dir, name), isDir})
+				invalid = invalid || (err != nil && !stableErr(err))
+			}
+			if isDir {
 				continue // os.walk lists it as a directory but does not enter it
 			}
 		}
@@ -269,6 +302,9 @@ func (w *walker) walk(dir string) {
 		w.out = append(w.out, found...)
 		w.mu.Unlock()
 	}
+	if w.record {
+		w.note([]dirEntryStamp{{dir, st}}, links, invalid)
+	}
 	for _, d := range dirs {
 		w.wg.Add(1)
 		select {
@@ -281,6 +317,15 @@ func (w *walker) walk(dir string) {
 			w.walk(d)
 		}
 	}
+}
+
+// note adds one directory's share to the walk record.
+func (w *walker) note(dirs []dirEntryStamp, links []linkKind, invalid bool) {
+	w.mu.Lock()
+	defer w.mu.Unlock()
+	w.rec.dirs = append(w.rec.dirs, dirs...)
+	w.rec.links = append(w.rec.links, links...)
+	w.rec.invalid = w.rec.invalid || invalid
 }
 
 // AllBlocks is all_blocks: the main corpus, then every sub-corpus block.
