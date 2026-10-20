@@ -33,7 +33,7 @@ func TestCentralDirFollowsPythonZipfile(t *testing.T) {
 		{"extra field longer than the record", testkit.RawZip("", []testkit.RawEntry{{Name: "a.txt", Extra: []byte{0x99, 0x99, 0x10, 0}}}, ""), nil, nil},
 		{"prepended data", testkit.RawZip(strings.Repeat("#", 100), []testkit.RawEntry{ok}, ""), []string{"doc/a.html"}, nil},
 		{"archive comment", testkit.RawZip("", []testkit.RawEntry{ok}, "a comment"), []string{"doc/a.html"}, nil},
-		{"extract version above 6.3", testkit.RawZip("", []testkit.RawEntry{{Name: "a.txt", Extract: 64}}, ""), nil, ErrUnsupportedZip},
+		{"extract version above 6.3", testkit.RawZip("", []testkit.RawEntry{{Name: "a.txt", Extract: 64}}, ""), nil, errUnsupportedZip},
 		{"zip64 end record", testkit.Zip64Zip("", []testkit.RawEntry{ok, {Name: "b.txt", Data: "b"}}, 1, 0), []string{"doc/a.html", "b.txt"}, nil},
 		{"zip64 end record after prepended data", testkit.Zip64Zip(strings.Repeat("#", 50), []testkit.RawEntry{ok}, 1, 0), []string{"doc/a.html"}, nil},
 		{"zip64 on several disks", testkit.Zip64Zip("", []testkit.RawEntry{ok}, 2, 0), nil, nil},

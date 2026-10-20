@@ -117,7 +117,7 @@ func TestParseBajadocUnsafeClassName(t *testing.T) {
 		page := `<div class="subTitle">javax.baja.x</div><h2 class="title">Class ` + name + `</h2>`
 		testkit.WriteFile(t, filepath.Join(base, "bajadoc", "javax", "baja", "x", "Evil.html"), []byte(page))
 		res, err := ParseBajadoc(base)
-		if !errors.Is(err, ErrUnsafeClassName) || res == nil || res.Parsed != 0 {
+		if !errors.Is(err, errUnsafeClassName) || res == nil || res.Parsed != 0 {
 			t.Errorf("%q: %v, %+v; want ErrUnsafeClassName", name, err, res)
 		}
 		if _, err := os.Stat(filepath.Join(base, "Evil.txt")); !os.IsNotExist(err) {
@@ -129,7 +129,7 @@ func TestParseBajadocUnsafeClassName(t *testing.T) {
 // format_output wraps the description at 78 code points: a word that would
 // pass column 78 starts a line, a longer word stands alone.
 func TestFormatBajadocWrap(t *testing.T) {
-	c := &BajadocClass{Name: "BX", Kind: "annotation_type", Package: "javax.baja.x",
+	c := &bajadocClass{Name: "BX", Kind: "annotation_type", Package: "javax.baja.x",
 		Description: strings.Repeat("é", 70) + " abcdefg " + strings.Repeat("y", 80) + " z"}
 	want := "ANNOTATION TYPE: BX\nPACKAGE: javax.baja.x\n\nDESCRIPTION:\n" + strings.Repeat("é", 70) +
 		" abcdefg\n" + strings.Repeat("y", 80) + "\nz\n"

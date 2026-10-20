@@ -35,9 +35,9 @@ func (r *BajadocResult) out(format string, args ...any) {
 	r.Log = append(r.Log, fmt.Sprintf(format, args...))
 }
 
-// ErrUnsafeClassName is returned when a class name would put its page
+// errUnsafeClassName is returned when a class name would put its page
 // outside bajadoc-clean/ (an absolute name or ".." segments).
-var ErrUnsafeClassName = errors.New("class name could leave bajadoc-clean")
+var errUnsafeClassName = errors.New("class name could leave bajadoc-clean")
 
 // bdIndexPages are the javadoc index pages main() never reads.
 var bdIndexPages = map[string]bool{"package-summary.html": true, "package-tree.html": true,
@@ -129,7 +129,7 @@ func writeCleanClass(outDir, pkg, className, text string) error {
 	for _, p := range []string{path, legacy} {
 		if rel, err := filepath.Rel(filepath.Clean(outDir), filepath.Clean(p)); err != nil ||
 			rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) || filepath.IsAbs(rel) {
-			return fmt.Errorf("%w: %q", ErrUnsafeClassName, className)
+			return fmt.Errorf("%w: %q", errUnsafeClassName, className)
 		}
 	}
 	if err := atomicfile.WriteText(path, text); err != nil {
@@ -143,7 +143,7 @@ func writeCleanClass(outDir, pkg, className, text string) error {
 
 // formatBajadoc is bajadoc_xml.format_output on the class of a javadoc
 // page (bajadocxml.FormatCleanInfo, the port S7b and nh's class --jdk use).
-func formatBajadoc(c *BajadocClass) string {
+func formatBajadoc(c *bajadocClass) string {
 	return bajadocxml.FormatCleanInfo(bajadocxml.CleanInfo{ClassName: c.Name, Kind: c.Kind, Pkg: c.Package,
 		Since: c.Since, Extends: c.Extends, Desc: c.Description, Implements: c.Implements,
 		Subclasses: c.Subclasses, Fields: c.Fields, Ctors: c.Constructors, Methods: c.Methods})

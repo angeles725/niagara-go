@@ -16,8 +16,8 @@ import (
 // lazy quantifiers and backtracking as sre has them); strip_tags is one
 // html.parser feed() without close() (pyhtml.Feed).
 
-// BajadocClass is the dict parse_bajadoc_html returns for a class page.
-type BajadocClass struct {
+// bajadocClass is the dict parse_bajadoc_html returns for a class page.
+type bajadocClass struct {
 	Name, Kind, Package, Since, Extends, Description      string
 	Implements, Subclasses, Fields, Constructors, Methods []string
 }
@@ -192,13 +192,13 @@ func methodSummary(html string) []string {
 
 // parseBajadocPage is parse_bajadoc_html on the page text; nil is None (no
 // class name, or a package/class-use page).
-func parseBajadocPage(html string) *BajadocClass {
+func parseBajadocPage(html string) *bajadocClass {
 	page := []rune(html)
 	name, kind := classNameAndKind(page)
 	if name == "" || bdNotClasses[name] {
 		return nil
 	}
-	c := &BajadocClass{Name: name, Kind: kind}
+	c := &bajadocClass{Name: name, Kind: kind}
 	if m := bdPackage.SearchRunes(page, 0); m != nil {
 		c.Package = m.Group(1)
 	}

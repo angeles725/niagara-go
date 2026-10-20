@@ -38,9 +38,9 @@ func readAllEntries(t *testing.T, jar string, whole bool) []string {
 
 func errClass(err error) string {
 	switch {
-	case errors.Is(err, ErrEncryptedEntry):
+	case errors.Is(err, errEncryptedEntry):
 		return "encrypted"
-	case errors.Is(err, ErrUnsupportedMethod), errors.Is(err, ErrUnsupportedZip):
+	case errors.Is(err, errUnsupportedMethod), errors.Is(err, errUnsupportedZip):
 		return "unsupported"
 	case errors.Is(err, ErrTruncatedEntry):
 		return "truncated"

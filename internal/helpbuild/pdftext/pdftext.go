@@ -26,22 +26,22 @@ import (
 // version probe ("pdftotext -v") gets PDFProbeTimeout.
 const (
 	PDFTimeout      = 120 * time.Second
-	PDFProbeTimeout = 10 * time.Second
+	pdfProbeTimeout = 10 * time.Second
 )
 
-// Pdftotext is the program name pdf_extractor runs: resolved on PATH when
+// pdftotext is the program name pdf_extractor runs: resolved on PATH when
 // the run starts, as subprocess does without a shell.
-const Pdftotext = "pdftotext"
+const pdftotext = "pdftotext"
 
-// HardwarePrefixes are the docs/ folder prefixes of the hardware manuals
+// hardwarePrefixes are the docs/ folder prefixes of the hardware manuals
 // (HARDWARE_PREFIXES). SOFTWARE_HIGH is defined in pdf_extractor.py but
 // never read, so it is not ported.
-var HardwarePrefixes = []string{"docCIPerModel", "docJ8", "docJ9", "docTR50", "docTR100", "MtgWiring"}
+var hardwarePrefixes = []string{"docCIPerModel", "docJ8", "docJ9", "docTR50", "docTR100", "MtgWiring"}
 
-// ClassifyPDF is classify: "hardware" or "software" from the top-level
+// classifyPDF is classify: "hardware" or "software" from the top-level
 // docs/ folder name.
-func ClassifyPDF(folder string) string {
-	for _, p := range HardwarePrefixes {
+func classifyPDF(folder string) string {
+	for _, p := range hardwarePrefixes {
 		if strings.HasPrefix(folder, p) {
 			return "hardware"
 		}
@@ -57,8 +57,8 @@ func HasSuffixFold(s, suffix string) bool {
 	return len(s) >= len(suffix) && strings.EqualFold(s[len(s)-len(suffix):], suffix)
 }
 
-// SanitizePDFName is sanitize: the flat docs-text/ stem of a PDF file name.
-func SanitizePDFName(name string) string {
+// sanitizePDFName is sanitize: the flat docs-text/ stem of a PDF file name.
+func sanitizePDFName(name string) string {
 	// re.sub(r'\.pdf$', '', name, flags=re.I): $ also matches before a
 	// trailing newline.
 	const ext = ".pdf"
@@ -121,10 +121,10 @@ func topFolder(pdfPath, docsDir string) (string, error) {
 	return first, nil
 }
 
-// FindPDFs is find_pdfs: every *.pdf (any case) under docsDir, walked like
+// findPDFs is find_pdfs: every *.pdf (any case) under docsDir, walked like
 // os.walk (symlinked folders are not entered, unreadable ones skipped),
 // sorted by full path.
-func FindPDFs(docsDir string) []string {
+func findPDFs(docsDir string) []string {
 	var out []string
 	pyfs.Walk(docsDir, func(dir string, dirs, files []string) []string {
 		for _, f := range files {
@@ -138,10 +138,10 @@ func FindPDFs(docsDir string) []string {
 	return out
 }
 
-// FixUnmappedBullets is fix_unmapped_bullets: U+FFFD (a bullet glyph
+// fixUnmappedBullets is fix_unmapped_bullets: U+FFFD (a bullet glyph
 // without a Unicode mapping) after the indent of a line and before a space
 // becomes U+2022, re.sub(r"(?m)^([ \t\f]*)\ufffd(?= )", "\\1\u2022").
-func FixUnmappedBullets(text string) string {
+func fixUnmappedBullets(text string) string {
 	const fffd, bullet = "\ufffd", "\u2022"
 	var b strings.Builder
 	done := 0
@@ -165,35 +165,35 @@ func FixUnmappedBullets(text string) string {
 	return b.String()
 }
 
-// PDFFailure says why a pdftotext run gave no text; extract_text returns
+// pdfFailure says why a pdftotext run gave no text; extract_text returns
 // (None, 0) for all of them.
-type PDFFailure int
+type pdfFailure int
 
 // The failures extract_text catches.
 const (
-	PDFExitStatus PDFFailure = iota // returncode != 0 (a signal included)
-	PDFTimedOut                     // subprocess.TimeoutExpired
-	PDFNotUTF8                      // UnicodeDecodeError: the output is not UTF-8
-	PDFOSError                      // OSError: the program could not be started
+	pdfExitStatus pdfFailure = iota // returncode != 0 (a signal included)
+	pdfTimedOut                     // subprocess.TimeoutExpired
+	pdfNotUTF8                      // UnicodeDecodeError: the output is not UTF-8
+	pdfOSError                      // OSError: the program could not be started
 )
 
-// PDFError is a failed text extraction of one PDF.
-type PDFError struct {
+// pdfError is a failed text extraction of one PDF.
+type pdfError struct {
 	Path    string
-	Failure PDFFailure
+	Failure pdfFailure
 	Err     error
 }
 
-func (e *PDFError) Error() string {
-	what := map[PDFFailure]string{PDFExitStatus: "pdftotext failed", PDFTimedOut: "pdftotext timed out",
-		PDFNotUTF8: "pdftotext output is not valid UTF-8", PDFOSError: "pdftotext could not run"}[e.Failure]
+func (e *pdfError) Error() string {
+	what := map[pdfFailure]string{pdfExitStatus: "pdftotext failed", pdfTimedOut: "pdftotext timed out",
+		pdfNotUTF8: "pdftotext output is not valid UTF-8", pdfOSError: "pdftotext could not run"}[e.Failure]
 	if e.Err != nil {
 		return fmt.Sprintf("%s: %s: %v", e.Path, what, e.Err)
 	}
 	return e.Path + ": " + what
 }
 
-func (e *PDFError) Unwrap() error { return e.Err }
+func (e *pdfError) Unwrap() error { return e.Err }
 
 // errTimedOut marks a run stopped by its timeout.
 var errTimedOut = errors.New("timed out")
@@ -248,11 +248,11 @@ func pageCount(text string) int {
 	return n
 }
 
-// ExtractPDFText is extract_text: `<pdftotext> -layout -enc UTF-8 <pdf> -`
+// extractPDFText is extract_text: `<pdftotext> -layout -enc UTF-8 <pdf> -`
 // with the timeout, the output decoded strictly as UTF-8, the bullet fix
 // applied, and the page count (pageCount, 0 for text that is only
 // whitespace). A failure is a *PDFError.
-func ExtractPDFText(pdftotext, pdfPath string, timeout time.Duration) (text string, pages int, err error) {
+func extractPDFText(pdftotext, pdfPath string, timeout time.Duration) (text string, pages int, err error) {
 	out, err := runCapture([]string{pdftotext, "-layout", "-enc", "UTF-8", pdfPath, "-"}, timeout)
 	if err != nil {
 		var exit *exec.ExitError
@@ -260,16 +260,16 @@ func ExtractPDFText(pdftotext, pdfPath string, timeout time.Duration) (text stri
 		case procgroup.IsInterrupt(err):
 			return "", 0, err // not a failed PDF: the run stops
 		case errors.Is(err, errTimedOut):
-			return "", 0, &PDFError{Path: pdfPath, Failure: PDFTimedOut}
+			return "", 0, &pdfError{Path: pdfPath, Failure: pdfTimedOut}
 		case errors.As(err, &exit):
-			return "", 0, &PDFError{Path: pdfPath, Failure: PDFExitStatus, Err: err}
+			return "", 0, &pdfError{Path: pdfPath, Failure: pdfExitStatus, Err: err}
 		}
-		return "", 0, &PDFError{Path: pdfPath, Failure: PDFOSError, Err: err}
+		return "", 0, &pdfError{Path: pdfPath, Failure: pdfOSError, Err: err}
 	}
 	if !utf8.Valid(out) {
-		return "", 0, &PDFError{Path: pdfPath, Failure: PDFNotUTF8}
+		return "", 0, &pdfError{Path: pdfPath, Failure: pdfNotUTF8}
 	}
-	text = FixUnmappedBullets(string(out))
+	text = fixUnmappedBullets(string(out))
 	if pycompat.Strip(text) != "" {
 		pages = pageCount(text)
 	}

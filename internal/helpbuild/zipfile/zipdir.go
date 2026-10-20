@@ -36,10 +36,10 @@ const (
 
 var (
 	ErrBadZip = errors.New("bad zip file") // BadZipFile, OSError, ValueError
-	// ErrUnsupportedZip is an entry needing a zip version above 6.3: Python
+	// errUnsupportedZip is an entry needing a zip version above 6.3: Python
 	// raises NotImplementedError (uncaught by read_listing, so the Python
 	// tool stops); here the jar is unreadable.
-	ErrUnsupportedZip = errors.New("zip file version above 6.3")
+	errUnsupportedZip = errors.New("zip file version above 6.3")
 )
 
 // cp437High decodes bytes 0x80-0xFF ("cp437" codec; 0x00-0x7F is ASCII).
@@ -322,7 +322,7 @@ func parseCentralDir(data []byte, sizeCD uint64) ([]Info, error) {
 		extra := read(int(extraLen))
 		read(int(commentLen))
 		if cd[6] > maxExtractVersion {
-			return nil, ErrUnsupportedZip
+			return nil, errUnsupportedZip
 		}
 		if err := decodeExtra(&x, extra, crc32.ChecksumIEEE(raw)); err != nil {
 			return nil, err

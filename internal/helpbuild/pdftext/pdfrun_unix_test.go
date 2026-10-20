@@ -29,9 +29,9 @@ func TestPDFTimeoutKillsForkedChildren(t *testing.T) {
 	script, dir := fakePdftotext(t)
 	pdf := filepath.Join(dir, "x.pdf")
 	testkit.WriteFile(t, pdf+".fork", nil)
-	_, _, err := ExtractPDFText(script, pdf, time.Second)
-	var pe *PDFError
-	if !errors.As(err, &pe) || pe.Failure != PDFTimedOut {
+	_, _, err := extractPDFText(script, pdf, time.Second)
+	var pe *pdfError
+	if !errors.As(err, &pe) || pe.Failure != pdfTimedOut {
 		t.Fatalf("ExtractPDFText = %v, want a timeout", err)
 	}
 	pid, ok := readPid(pdf + ".pid")

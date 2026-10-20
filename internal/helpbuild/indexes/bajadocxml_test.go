@@ -105,7 +105,7 @@ func TestParseBajadocXMLUnsafeClassName(t *testing.T) {
 	base := t.TempDir()
 	doc := `<bajadoc><class qualifiedName="x.Evil" name="../../../../Evil" packageName="x"/></bajadoc>`
 	testkit.WriteFile(t, filepath.Join(base, "devguide", "Evil.bajadoc"), []byte(doc))
-	if _, err := ParseBajadocXML(base); !errors.Is(err, ErrUnsafeClassName) {
+	if _, err := ParseBajadocXML(base); !errors.Is(err, errUnsafeClassName) {
 		t.Errorf("ParseBajadocXML: %v; want ErrUnsafeClassName", err)
 	}
 	if _, err := os.Stat(filepath.Join(base, "Evil.txt")); !os.IsNotExist(err) {

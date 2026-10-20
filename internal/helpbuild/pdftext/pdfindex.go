@@ -25,9 +25,9 @@ import (
 // pdf_extractor.main() as a library call: docs-text/<stem>.txt per PDF and
 // indexes/pdf-index.json under a data root.
 
-// DumpPDFIndex is json.dumps(indent=2, ensure_ascii=False), the
+// dumpPDFIndex is json.dumps(indent=2, ensure_ascii=False), the
 // pdf-index.json format (indent implies the (",", ": ") separators).
-var DumpPDFIndex = pyjson.DumpOpts{EnsureASCII: false, Indent: 2, ItemSep: ",", KeySep: ": "}
+var dumpPDFIndex = pyjson.DumpOpts{EnsureASCII: false, Indent: 2, ItemSep: ",", KeySep: ": "}
 
 // PDFOptions are the inputs of ExtractPDFs.
 type PDFOptions struct {
@@ -71,7 +71,7 @@ func (r *PDFResult) out(format string, a ...any) { r.add(fmt.Sprintf(format, a..
 // save. Text that is not UTF-8 (a lone surrogate kept from the previous
 // index) is refused as Python's encode refuses it.
 var writePDFIndex = func(path string, v pyjson.Value) error {
-	text := pyjson.Dumps(v, DumpPDFIndex)
+	text := pyjson.Dumps(v, dumpPDFIndex)
 	if !utf8.ValidString(text) {
 		return fmt.Errorf("%s: 'utf-8' codec can't encode a surrogate of the index", path)
 	}
@@ -134,7 +134,7 @@ func loadPDFIndex(path string) (prev pyjson.Value, corrupt string, isCorrupt boo
 // cannot be found (FileNotFoundError); any other start failure or the
 // probe's timeout is an error, as Python does not catch it.
 func probePdftotext(prog string) (notFound bool, err error) {
-	_, err = runCapture([]string{prog, "-v"}, PDFProbeTimeout)
+	_, err = runCapture([]string{prog, "-v"}, pdfProbeTimeout)
 	var exit *exec.ExitError
 	switch {
 	case err == nil || errors.As(err, &exit):
@@ -142,7 +142,7 @@ func probePdftotext(prog string) (notFound bool, err error) {
 	case errors.Is(err, exec.ErrNotFound) || errors.Is(err, fs.ErrNotExist):
 		return true, nil
 	case errors.Is(err, errTimedOut):
-		return false, fmt.Errorf("%s -v timed out after %v", prog, PDFProbeTimeout)
+		return false, fmt.Errorf("%s -v timed out after %v", prog, pdfProbeTimeout)
 	}
 	return false, err
 }
@@ -179,7 +179,7 @@ func ExtractPDFs(baseDir string, opt PDFOptions) (res *PDFResult, err error) {
 	// One walk for the check and the run (Python walks twice).
 	var pdfs []string
 	if docs != "" && pycompat.IsDir(docs) {
-		pdfs = FindPDFs(docs)
+		pdfs = findPDFs(docs)
 	}
 	hasPDFs := len(pdfs) > 0
 	nPrev := len(previous.Keys)
@@ -213,7 +213,7 @@ func ExtractPDFs(baseDir string, opt PDFOptions) (res *PDFResult, err error) {
 	}
 	prog := opt.Pdftotext
 	if prog == "" {
-		prog = Pdftotext
+		prog = pdftotext
 	}
 	if notFound, err := probePdftotext(prog); err != nil {
 		return res, err
@@ -253,15 +253,15 @@ func extractAll(res *PDFResult, docs string, pdfs []string, outputDir, indexPath
 			return err
 		}
 		name := filepath.Base(pdfPath)
-		category := ClassifyPDF(folder)
-		stem := resolveName(SanitizePDFName(name), seen)
+		category := classifyPDF(folder)
+		stem := resolveName(sanitizePDFName(name), seen)
 		res.add(fmt.Sprintf("\r[%3d%%] %d/%d  %s", (i+1)*100/total, i+1, total, FirstRunes(name, 60)))
 		textPath := filepath.Join(outputDir, stem+".txt")
 		rel, err := pyRelSlash(pdfPath, docs)
 		if err != nil {
 			return err
 		}
-		text, pages, err := ExtractPDFText(prog, pdfPath, pdfTimeout(pdfPath, timeout))
+		text, pages, err := extractPDFText(prog, pdfPath, pdfTimeout(pdfPath, timeout))
 		if procgroup.IsInterrupt(err) {
 			return err // KeyboardInterrupt: nothing is saved or pruned
 		}

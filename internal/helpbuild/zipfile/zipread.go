@@ -28,13 +28,13 @@ const (
 )
 
 var (
-	// ErrEncryptedEntry is an entry with the encryption flag: Python raises
+	// errEncryptedEntry is an entry with the encryption flag: Python raises
 	// RuntimeError (no password is ever given).
-	ErrEncryptedEntry = errors.New("encrypted zip entry, password required for extraction")
-	// ErrUnsupportedMethod is a compression method other than stored or
+	errEncryptedEntry = errors.New("encrypted zip entry, password required for extraction")
+	// errUnsupportedMethod is a compression method other than stored or
 	// deflated. Python also inflates bzip2 (12), lzma (14) and zstd (93);
 	// Niagara jars use none of them, so they are not ported.
-	ErrUnsupportedMethod = errors.New("zip compression method not supported")
+	errUnsupportedMethod = errors.New("zip compression method not supported")
 	ErrTruncatedEntry    = errors.New("zip entry data truncated") // EOFError
 )
 
@@ -57,7 +57,7 @@ func (z *File) DataStart(x *Info) (int64, error) {
 		return 0, err
 	}
 	if x.flags&maskCompressedPatch != 0 || x.flags&maskStrongEncrypt != 0 {
-		return 0, fmt.Errorf("%w: %q uses compressed patched data or strong encryption", ErrUnsupportedZip, x.origName)
+		return 0, fmt.Errorf("%w: %q uses compressed patched data or strong encryption", errUnsupportedZip, x.origName)
 	}
 	var local string
 	if le.Uint16(hdr[6:])&maskUTFFilename != 0 {
@@ -78,10 +78,10 @@ func (z *File) DataStart(x *Info) (int64, error) {
 		}
 	}
 	if x.flags&maskEncrypted != 0 {
-		return 0, fmt.Errorf("%w: %q", ErrEncryptedEntry, x.origName)
+		return 0, fmt.Errorf("%w: %q", errEncryptedEntry, x.origName)
 	}
 	if x.method != zipStored && x.method != zipDeflated {
-		return 0, fmt.Errorf("%w: %q uses method %d", ErrUnsupportedMethod, x.origName, x.method)
+		return 0, fmt.Errorf("%w: %q uses method %d", errUnsupportedMethod, x.origName, x.method)
 	}
 	return pos, nil
 }

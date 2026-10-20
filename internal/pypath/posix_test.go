@@ -139,3 +139,18 @@ func TestPosixpathFixtures(t *testing.T) {
 		}
 	}
 }
+
+// posixpath.normpath cases, Python 3.15.
+func TestPosixNormpath(t *testing.T) {
+	for in, want := range map[string]string{
+		"": ".", "source/../devguide-rc/X.java": "devguide-rc/X.java", "source/./a//b": "source/a/b",
+		"//a/b": "//a/b", "///a": "/a", "../../x": "../../x", "/..": "/",
+		// posixpath on every OS: a backslash is a name character, a drive
+		// letter is a name, two leading slashes are kept
+		`a\b/../c`: "c", `\\srv\share/x/..`: `\\srv\share`, "C:/x/../y": "C:/y", "//a/../b": "//b",
+	} {
+		if got := PosixNormpath(in); got != want {
+			t.Errorf("PosixNormpath(%q) = %q, want %q", in, got, want)
+		}
+	}
+}

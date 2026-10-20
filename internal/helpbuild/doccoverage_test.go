@@ -69,20 +69,6 @@ func TestClassify(t *testing.T) {
 	}
 }
 
-func TestPyNormpath(t *testing.T) {
-	for in, want := range map[string]string{
-		"": ".", "source/../devguide-rc/X.java": "devguide-rc/X.java", "source/./a//b": "source/a/b",
-		"//a/b": "//a/b", "///a": "/a", "../../x": "../../x", "/..": "/",
-		// posixpath on every OS: a backslash is a name character, a drive
-		// letter is a name, two leading slashes are kept
-		`a\b/../c`: "c", `\\srv\share/x/..`: `\\srv\share`, "C:/x/../y": "C:/y", "//a/../b": "//b",
-	} {
-		if got := pyNormpath(in); got != want {
-			t.Errorf("pyNormpath(%q) = %q, want %q", in, got, want)
-		}
-	}
-}
-
 // An example entry needs a full-text reader: none is an error, never a
 // silent "not indexed".
 func TestScanDocJarsNeedsFulltextForExamples(t *testing.T) {

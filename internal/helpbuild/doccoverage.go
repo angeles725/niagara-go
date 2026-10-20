@@ -2,7 +2,6 @@ package helpbuild
 
 import (
 	"database/sql"
-	"path"
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/helpbuild/indexes"
@@ -113,20 +112,6 @@ func (x *indexedViews) classSet(jdk bool) (map[string]bool, error) {
 	return out, nil
 }
 
-// pyNormpath is posixpath.normpath on every OS: only "/" separates (a
-// backslash or a drive letter is part of a name), two leading slashes are
-// kept, three or more become one.
-func pyNormpath(p string) string {
-	if p == "" {
-		return "."
-	}
-	clean := path.Clean(p)
-	if strings.HasPrefix(p, "//") && !strings.HasPrefix(p, "///") {
-		return "/" + clean
-	}
-	return clean
-}
-
 // sourceSet is Indexed.sources(): normpath("source/" + path) of every
 // source-index.json record.
 func (x *indexedViews) sourceSet() (map[string]bool, error) {
@@ -152,7 +137,7 @@ func (x *indexedViews) sourceSet() (map[string]bool, error) {
 		if !ok {
 			return nil, &IndexShapeError{name, "the path of " + key + " is not a string"}
 		}
-		out[pyNormpath(pypath.PosixJoin("source", s))] = true
+		out[pypath.PosixNormpath(pypath.PosixJoin("source", s))] = true
 	}
 	x.sources = out
 	return out, nil
