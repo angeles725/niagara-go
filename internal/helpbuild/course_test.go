@@ -120,7 +120,7 @@ func TestCourseUnboundBuildsNothing(t *testing.T) { // test_unbound_version_buil
 	testkit.WriteFile(t, filepath.Join(b, "course-text", "old.txt"), []byte("left from an earlier binding"))
 	counts, err := buildCourse(b, mustDefault(t))
 	if err != nil || counts != nil {
-		t.Fatalf("BuildCourse(B) = %+v, %v", counts, err)
+		t.Fatalf("buildCourse(B) = %+v, %v", counts, err)
 	}
 	if pycompat.IsDir(filepath.Join(b, "course-text")) {
 		t.Error("course-text/ of an unbound version kept")
@@ -212,7 +212,7 @@ func TestCourseExtractorLines(t *testing.T) {
 	} {
 		out, err := courseExtractor(filepath.Join(repo, "versions", c.id), mustDefault(t))
 		if err != nil || out.Status != 0 || len(out.Stderr) != 0 || !reflect.DeepEqual(out.Stdout, []string{c.line}) {
-			t.Errorf("%s: CourseExtractor = %+v, %v\nwant stdout %q", c.id, out, err, c.line)
+			t.Errorf("%s: courseExtractor = %+v, %v\nwant stdout %q", c.id, out, err, c.line)
 		}
 	}
 }
@@ -230,13 +230,13 @@ func TestRemoveCourseCopiesRefusesASymlink(t *testing.T) {
 	removed, err := removeCourseCopies(b)
 	want := "[Errno None] None: " + pycompat.FSRepr(link)
 	if err == nil || err.Error() != want || len(removed) != 0 {
-		t.Errorf("RemoveCourseCopies = %q, %v; want the error %q", removed, err, want)
+		t.Errorf("removeCourseCopies = %q, %v; want the error %q", removed, err, want)
 	}
 	out, err := courseExtractor(b, mustDefault(t))
 	line := "ERROR: course: cannot copy the course into " + b + ": " + want +
 		" (course-text/ and devguide-examples/course/ keep their last copy)"
 	if err != nil || out.Status != 2 || len(out.Stdout) != 0 || !reflect.DeepEqual(out.Stderr, []string{line}) {
-		t.Errorf("CourseExtractor = %+v, %v\nwant stderr %q", out, err, line)
+		t.Errorf("courseExtractor = %+v, %v\nwant stderr %q", out, err, line)
 	}
 	if !pycompat.IsFile(filepath.Join(target, "keep.txt")) {
 		t.Error("the symlink's target was emptied")

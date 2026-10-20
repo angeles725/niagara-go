@@ -50,7 +50,7 @@ func TestValidVersionID(t *testing.T) {
 	for id, want := range map[string]bool{"4.15.6.20": true, "1.2.3.4": true, "١.٢.٣.٤": true, "": false,
 		"4.15.6": false, "4.15.6.20.1": false, "4.15.6.x": false, " 4.1.2.3": false, "4.1.2.3\n": false, "a4.1.2.3": false} {
 		if got := validVersionID(id); got != want {
-			t.Errorf("ValidVersionID(%q) = %v, want %v", id, got, want)
+			t.Errorf("validVersionID(%q) = %v, want %v", id, got, want)
 		}
 	}
 }
@@ -79,7 +79,7 @@ func TestDetectVersion(t *testing.T) {
 				testkit.WriteJar(t, filepath.Join(install, "modules", "baja.jar"), [2]string{"META-INF/module.xml", c.xml})
 			}
 			if got, err := detectVersion(install); err != nil || got != c.want {
-				t.Errorf("DetectVersion = %q, %v; want %q", got, err, c.want)
+				t.Errorf("detectVersion = %q, %v; want %q", got, err, c.want)
 			}
 		})
 	}
@@ -145,7 +145,7 @@ func TestAddVersionRefusals(t *testing.T) {
 	}
 }
 
-// Register keeps the other entries and their order, replaces an entry in
+// register keeps the other entries and their order, replaces an entry in
 // place (dropping its extra keys, as Python does), makes the first version
 // the default and ends the file with a newline.
 func TestRegister(t *testing.T) {

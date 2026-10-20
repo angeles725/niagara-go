@@ -169,7 +169,7 @@ func register(repo, vid, install, label string, makeDefault bool) error {
 type AddOptions struct {
 	Label          string  // --label; "" (falsy): the registered label, else the folder name
 	Default, Force bool    // --default, --force
-	ID             *string // --id; nil: DetectVersion (an explicit "" is validated, never detected)
+	ID             *string // --id; nil: detectVersion (an explicit "" is validated, never detected)
 	Rebuild        func(root string) ([]string, error)
 	Extract        func(repo, vid string, opt SetupOptions) (*SetupResult, error) // nil: ExtractAndIndex
 	Fulltext       FulltextDocs                                                   // the gates and the summary; nil: FreshFulltextDocs

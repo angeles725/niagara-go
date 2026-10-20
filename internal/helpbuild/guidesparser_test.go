@@ -183,7 +183,7 @@ func TestParseGuidesRefusesNonUTF8Names(t *testing.T) {
 	testkit.WriteFile(t, filepath.Join(root, "guides", "F", nonUTF8PageName()), guidePage("A", "a"))
 	testkit.WriteFile(t, filepath.Join(root, "guides-clean", "kept.txt"), []byte("old"))
 	if _, err := parseGuides(root); err == nil {
-		t.Fatal("ParseGuides accepted a page name that is not UTF-8")
+		t.Fatal("parseGuides accepted a page name that is not UTF-8")
 	}
 	if s := testkit.ReadText(t, filepath.Join(root, "guides-clean", "kept.txt")); s != "old" {
 		t.Errorf("old clean tree not kept: %q", s)
@@ -232,7 +232,7 @@ func TestParseToc(t *testing.T) {
 		t.Errorf("toc = %+v, warning %q", toc, warning)
 	}
 	if findToc(filepath.Join(dir, "missing")) != "" || findToc(dir) != p {
-		t.Errorf("FindToc(%s) = %q", dir, findToc(dir))
+		t.Errorf("findToc(%s) = %q", dir, findToc(dir))
 	}
 }
 

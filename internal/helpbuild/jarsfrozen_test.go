@@ -176,7 +176,7 @@ func TestCachePathFrozen(t *testing.T) {
 	testkit.CheckFrozen(t, "jars/cache-path", testkit.Relabeled(got, repo, "<repo>"))
 }
 
-// TestGlobFrozen: the glob rules (GlobRe) on every pattern/path pair.
+// TestGlobFrozen: the glob rules (globRe) on every pattern/path pair.
 func TestGlobFrozen(t *testing.T) {
 	pairs := [][2]string{}
 	patterns := []string{"**/node_modules/**", "rc/**.md", "rc/*.md", "res/*Home.html", "*.jar", "doc/x.html",

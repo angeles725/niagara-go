@@ -100,13 +100,13 @@ func TestParseBajadocXMLReadError(t *testing.T) {
 }
 
 // A class name that would put its page outside bajadoc-clean/ stops the
-// run with ErrUnsafeClassName (Python writes it there).
+// run with errUnsafeClassName (Python writes it there).
 func TestParseBajadocXMLUnsafeClassName(t *testing.T) {
 	base := t.TempDir()
 	doc := `<bajadoc><class qualifiedName="x.Evil" name="../../../../Evil" packageName="x"/></bajadoc>`
 	testkit.WriteFile(t, filepath.Join(base, "devguide", "Evil.bajadoc"), []byte(doc))
 	if _, err := ParseBajadocXML(base); !errors.Is(err, errUnsafeClassName) {
-		t.Errorf("ParseBajadocXML: %v; want ErrUnsafeClassName", err)
+		t.Errorf("ParseBajadocXML: %v; want errUnsafeClassName", err)
 	}
 	if _, err := os.Stat(filepath.Join(base, "Evil.txt")); !os.IsNotExist(err) {
 		t.Errorf("written outside bajadoc-clean: %v", err)

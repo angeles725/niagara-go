@@ -14,8 +14,8 @@ import (
 	"github.com/angeles725/niagara-go/internal/help/fts"
 	ftbuild "github.com/angeles725/niagara-go/internal/helpbuild/fulltext"
 	"github.com/angeles725/niagara-go/internal/helpbuild/internal/testkit"
-	"github.com/angeles725/niagara-go/internal/helpbuild/pdftext"
 	"github.com/angeles725/niagara-go/internal/index"
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // The whole-install sweep on the fixture of niagara-help
@@ -36,7 +36,7 @@ var sweepHelpJar = [][2]string{
 }
 
 // sweepTestRules is the test's RULES plus the shipped extract rules and
-// globs (the extraction used them through DestPath).
+// globs (the extraction used them through destPath).
 func sweepTestRules(t *testing.T) *Rules {
 	t.Helper()
 	var shipped map[string]any
@@ -262,7 +262,7 @@ func t3aRules(t *testing.T, extract ...map[string]string) *Rules {
 
 // An unreadable directory fails the gate (once, even when both walks meet
 // it under docs/); .jar and loose PDF names match in any letter case; the
-// sweep's rules reach DestPath; a corrupt jar is reported unreadable.
+// sweep's rules reach destPath; a corrupt jar is reported unreadable.
 func TestSweepCorners(t *testing.T) {
 	tmp := t.TempDir()
 	install, root := filepath.Join(tmp, "install"), filepath.Join(tmp, "data")
@@ -302,7 +302,7 @@ func TestSweepCorners(t *testing.T) {
 		whys[g.Jar+" "+g.Entry] = g.Why
 	}
 	if w := whys["modules/mod-rt.jar notes/a.txt"]; !strings.HasPrefix(w, "maps to guides/mod-rt/notes/") {
-		t.Errorf("the sweep's extract rule did not reach DestPath: %q", w)
+		t.Errorf("the sweep's extract rule did not reach destPath: %q", w)
 	}
 	if !locked {
 		t.Skip("running with permissions that read mode-0 folders")
@@ -365,7 +365,7 @@ func TestSweepLocation(t *testing.T) {
 
 func TestReportFormatting(t *testing.T) {
 	long := strings.Repeat("é", 30)
-	got := sweepRowLine((&sweepRow{Jars: 1234}).cells(pdftext.FirstRunes(long, 28))...)
+	got := sweepRowLine((&sweepRow{Jars: 1234}).cells(pycompat.Cut(long, 28))...)
 	if want := "  " + strings.Repeat("é", 28) + "  1,234         0         0        0        0            0"; got != want {
 		t.Errorf("row:\n%q\nwant\n%q", got, want)
 	}

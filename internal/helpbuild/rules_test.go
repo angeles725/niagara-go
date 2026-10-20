@@ -31,7 +31,7 @@ func TestGlobSemantics(t *testing.T) {
 	}
 	for _, c := range cases {
 		if got := globRe(c.pattern).MatchString(c.path); got != c.want {
-			t.Errorf("GlobRe(%q).match(%q) = %v, want %v", c.pattern, c.path, got, c.want)
+			t.Errorf("globRe(%q).match(%q) = %v, want %v", c.pattern, c.path, got, c.want)
 		}
 	}
 }

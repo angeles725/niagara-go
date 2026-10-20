@@ -27,7 +27,7 @@ func TestCachePathHashesTheAbsoluteInstallPath(t *testing.T) {
 	want := filepath.Join("/repo", ".cache", "jar-listings", hex.EncodeToString(sum[:])[:16]+".json")
 	got, err := cachePath("/repo", install)
 	if err != nil || got != want {
-		t.Fatalf("CachePath = %q, %v; want %q", got, err, want)
+		t.Fatalf("cachePath = %q, %v; want %q", got, err, want)
 	}
 }
 

@@ -85,18 +85,6 @@ func pyRound1(x float64) float64 {
 	return f
 }
 
-// FirstRunes is s[:n] in code points.
-func FirstRunes(s string, n int) string {
-	i := 0
-	for j := range s {
-		if i == n {
-			return s[:j]
-		}
-		i++
-	}
-	return s
-}
-
 // docsDirOf is parse_args' docs dir: the option, else <install_dir>/docs.
 func docsDirOf(base, docs string) (string, error) {
 	if docs != "" {
@@ -234,7 +222,7 @@ func ExtractPDFs(baseDir string, opt PDFOptions) (res *PDFResult, err error) {
 // its timeout fixture only, as its Python driver does.
 var pdfTimeout = func(pdfPath string, timeout time.Duration) time.Duration { return timeout }
 
-// extractAll is main()'s loop over pdfs (FindPDFs of docs), the index
+// extractAll is main()'s loop over pdfs (findPDFs of docs), the index
 // save, the prune and the summary.
 func extractAll(res *PDFResult, docs string, pdfs []string, outputDir, indexPath string, previous pyjson.Value,
 	prog string, timeout time.Duration) error {
@@ -255,7 +243,7 @@ func extractAll(res *PDFResult, docs string, pdfs []string, outputDir, indexPath
 		name := filepath.Base(pdfPath)
 		category := classifyPDF(folder)
 		stem := resolveName(sanitizePDFName(name), seen)
-		res.add(fmt.Sprintf("\r[%3d%%] %d/%d  %s", (i+1)*100/total, i+1, total, FirstRunes(name, 60)))
+		res.add(fmt.Sprintf("\r[%3d%%] %d/%d  %s", (i+1)*100/total, i+1, total, pycompat.Cut(name, 60)))
 		textPath := filepath.Join(outputDir, stem+".txt")
 		rel, err := pyRelSlash(pdfPath, docs)
 		if err != nil {

@@ -32,7 +32,7 @@ func TestFixUnmappedBullets(t *testing.T) {
 		"":                                        "",
 	} {
 		if got := fixUnmappedBullets(in); got != want {
-			t.Errorf("FixUnmappedBullets(%q) = %q, want %q", in, got, want)
+			t.Errorf("fixUnmappedBullets(%q) = %q, want %q", in, got, want)
 		}
 	}
 }
@@ -49,7 +49,7 @@ func TestSanitizePDFName(t *testing.T) {
 		"no extension":                         "no_extension",
 	} {
 		if got := sanitizePDFName(in); got != want {
-			t.Errorf("SanitizePDFName(%q) = %q, want %q", in, got, want)
+			t.Errorf("sanitizePDFName(%q) = %q, want %q", in, got, want)
 		}
 	}
 }
@@ -58,7 +58,7 @@ func TestClassifyPDF(t *testing.T) {
 	for in, want := range map[string]string{"docJ9Install": "hardware", "MtgWiring": "hardware", "docTR100x": "hardware",
 		"docJ7": "software", "": "software", "User Guides": "software", "docj9": "software"} {
 		if got := classifyPDF(in); got != want {
-			t.Errorf("ClassifyPDF(%q) = %q, want %q", in, got, want)
+			t.Errorf("classifyPDF(%q) = %q, want %q", in, got, want)
 		}
 	}
 }
@@ -74,7 +74,7 @@ func TestResolveName(t *testing.T) {
 	}
 }
 
-// FindPDFs sorts full paths, matches .pdf in any case and does not enter a
+// findPDFs sorts full paths, matches .pdf in any case and does not enter a
 // symlinked folder (os.walk without followlinks); a symlinked file counts.
 func TestFindPDFs(t *testing.T) {
 	dir := t.TempDir()
@@ -94,10 +94,10 @@ func TestFindPDFs(t *testing.T) {
 	}
 	want := []string{"a/y.PDF", "b/alias.pdf", "b/z.pdf", "c/d/e.Pdf", "outside/o.pdf", "x.pdf"}
 	if !reflect.DeepEqual(rels, want) {
-		t.Errorf("FindPDFs = %q, want %q", rels, want)
+		t.Errorf("findPDFs = %q, want %q", rels, want)
 	}
 	if got := findPDFs(filepath.Join(dir, "missing")); got != nil {
-		t.Errorf("FindPDFs(missing) = %q", got)
+		t.Errorf("findPDFs(missing) = %q", got)
 	}
 }
 
@@ -118,7 +118,7 @@ func TestExtractPDFTextUTF8KeepsDegreeSign(t *testing.T) {
 	testkit.WriteFile(t, pdf+".out", []byte("72 °F\fpage 2"))
 	text, pages, err := extractPDFText(script, pdf, PDFTimeout)
 	if err != nil || text != "72 °F\fpage 2" || pages != 2 {
-		t.Fatalf("ExtractPDFText = %q, %d, %v", text, pages, err)
+		t.Fatalf("extractPDFText = %q, %d, %v", text, pages, err)
 	}
 	argv := string(testkit.ReadBytes(t, script+".argv"))
 	if want := "-layout -enc UTF-8 " + pdf + " -\n"; argv != want {
@@ -136,7 +136,7 @@ func TestExtractPDFTextFailures(t *testing.T) {
 		text, pages, err := extractPDFText(prog, pdf, timeout)
 		var pe *pdfError
 		if !errors.As(err, &pe) || pe.Failure != want || text != "" || pages != 0 {
-			t.Errorf("%s: ExtractPDFText = %q, %d, %v; want failure %d", what, text, pages, err, want)
+			t.Errorf("%s: extractPDFText = %q, %d, %v; want failure %d", what, text, pages, err, want)
 		}
 	}
 	testkit.WriteFile(t, pdf+".out", []byte("72 \xb0F"))

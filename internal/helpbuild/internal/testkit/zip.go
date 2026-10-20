@@ -10,8 +10,10 @@ import (
 	"testing"
 )
 
-// The zip end-record sizes (sizeEndCentDir, sizeEndCentDir64 of the reader),
-// spelled here so the fixtures need not import the reader they test.
+// The zip end-record sizes, sizeEndCentDir and sizeEndCentDir64 of
+// helpbuild/zipfile, spelled again here: those are unexported, and testkit
+// cannot import zipfile anyway, since zipfile's own tests import testkit
+// (an import cycle in the zipfile test build).
 const (
 	endRecordSize   = 22
 	endRecord64Size = 56

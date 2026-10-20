@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/help/fts"
-	"github.com/angeles725/niagara-go/internal/helpbuild/pdftext"
 	"github.com/angeles725/niagara-go/internal/helpbuild/registry"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pypath"
@@ -60,7 +59,7 @@ func freshFulltextPath(baseDir string) (string, error) {
 }
 
 // FreshFulltextDocs is the FulltextDocs of an up-to-date index that
-// already exists (FreshFulltextPath, then FulltextDocsAt): the sweep's
+// already exists (freshFulltextPath, then fulltextDocsAt): the sweep's
 // default.
 func FreshFulltextDocs(baseDir string) (map[string]bool, error) {
 	p, err := freshFulltextPath(baseDir)
@@ -206,7 +205,7 @@ func sweepReport(vid, install string, res *sweepResult, baseDir string, course *
 		total.Indexed += r.Indexed
 		total.Excluded += r.Excluded
 		total.Unclassified += r.Unclassified
-		out = append(out, sweepRowLine(r.cells(pdftext.FirstRunes(loc, 28))...))
+		out = append(out, sweepRowLine(r.cells(pycompat.Cut(loc, 28))...))
 	}
 	out = append(out, sweepRowLine(total.cells("TOTAL")...))
 	if len(res.Skipped) > 0 {
@@ -295,7 +294,7 @@ func courseGateLines(baseDir string, rep *courseGate) []string {
 }
 
 // RunSweep is install_sweep.cmd_sweep(repo, baseDir, versionID): it writes
-// the report to w and returns the exit status (SweepPass, SweepFail or
+// the report to w and returns the exit status (SweepPass, sweepFail or
 // SweepUnavailable). versionID "" is identified from baseDir. The jar
 // listings go through the repository's cache (.cache/jar-listings/).
 // opts.Rules replaces install_rules.default() everywhere cmd_sweep reads

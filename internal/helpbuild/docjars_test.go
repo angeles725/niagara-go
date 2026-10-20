@@ -57,7 +57,7 @@ func TestDestPathMapsEveryJarKind(t *testing.T) {
 	}
 	for _, c := range cases {
 		if got := dest(t, c[0], c[1]); got != c[2] {
-			t.Errorf("DestPath(%s, %s) = %s, want %s", c[0], c[1], got, c[2])
+			t.Errorf("destPath(%s, %s) = %s, want %s", c[0], c[1], got, c[2])
 		}
 	}
 }
@@ -68,14 +68,14 @@ func TestIsDocJar(t *testing.T) {
 		"alarm-rt.jar": false, "docDeveloper-rt.jar": true, "docDeveloper-ux.jar": true, "ascCommon.jar": false,
 		"docX-rt.jar": false, javadocJar: false} {
 		if isDocJar(name) != want {
-			t.Errorf("IsDocJar(%s) = %v", name, !want)
+			t.Errorf("isDocJar(%s) = %v", name, !want)
 		}
 	}
 	if isModuleJar(javadocJar) || isModuleJar("docAlarms-doc.jar") || !isModuleJar("alarm-rt.jar") {
-		t.Error("IsModuleJar")
+		t.Error("isModuleJar")
 	}
 	if jarStem("x") != "" || guideFolder("doc.jar") != "doc" || guideFolder("docñ-doc.jar") != "ñ" {
-		t.Error("JarStem / GuideFolder slice code points like Python")
+		t.Error("jarStem / guideFolder slice code points like Python")
 	}
 }
 

@@ -150,7 +150,7 @@ func TestOutPathRefusesUnsafeEntries(t *testing.T) {
 	for _, rel := range []string{"../x", "a/../../x", "a/..", "..", `..\x`, `a\..\..\x`, `a\..`, "/abs", `\abs`,
 		`\\server\share\x`, `C:\x`, "C:x", "c:/x", "Z:"} {
 		if out, err := outPath(root, rel); !errors.Is(err, errUnsafeEntry) {
-			t.Errorf("%q: %q %v, want ErrUnsafeEntry", rel, out, err)
+			t.Errorf("%q: %q %v, want errUnsafeEntry", rel, out, err)
 		}
 	}
 	// Names that only look odd stay under the root.

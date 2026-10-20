@@ -16,7 +16,7 @@ import (
 // FulltextDocs returns the "<source>/<path>" key of every document of the
 // up-to-date full-text index of root (fulltext_index.open_index(root).docs()).
 // The CLI passes an opener that rebuilds a stale index, as open_index does;
-// FulltextDocsAt reads one database.
+// fulltextDocsAt reads one database.
 type FulltextDocs func(root string) (map[string]bool, error)
 
 // fulltextDocsAt is FtsIndex.docs() of the full-text database at path.

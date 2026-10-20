@@ -227,8 +227,8 @@ type mapped struct {
 	Collides   bool
 }
 
-// mappedEntries is mapped_entries: in jar order, every entry DestPath
-// maps, third-party source archives (IsSourceArchive) left out; when two
+// mappedEntries is mapped_entries: in jar order, every entry destPath
+// maps, third-party source archives (isSourceArchive) left out; when two
 // entries map to one path the first is extracted, each later one collides.
 func mappedEntries(jarName string, names []string, rules *Rules) []mapped {
 	owner := map[string]int{}

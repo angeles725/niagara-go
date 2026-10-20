@@ -25,7 +25,7 @@ import (
 //	java           source|devguide-rc/**.java    -> source-index.json
 //	example        devguide-examples/**          -> the full-text index
 
-// Verdicts of Classify.
+// Verdicts of classify.
 const (
 	verdictIndex   = "index"
 	verdictExclude = "exclude"
@@ -106,7 +106,7 @@ func exampleSkipReason(rel string) string {
 }
 
 // classify is doc_types.classify: the verdict of a corpus-relative path
-// and its index kind (VerdictIndex) or exclusion reason (VerdictExclude).
+// and its index kind (verdictIndex) or exclusion reason (verdictExclude).
 func classify(rel string) (verdict, detail string) {
 	parts := strings.Split(rel, "/")
 	top, name := parts[0], parts[len(parts)-1]

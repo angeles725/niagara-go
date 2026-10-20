@@ -7,7 +7,6 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/angeles725/niagara-go/internal/helpbuild/pdftext"
 	"github.com/angeles725/niagara-go/internal/helpbuild/registry"
 	"github.com/angeles725/niagara-go/internal/helpbuild/zipfile"
 	"github.com/angeles725/niagara-go/internal/pycompat"
@@ -18,7 +17,7 @@ import (
 // `coverage --doc-jars` (niagara_help_lib/doc_coverage.py): the mechanical
 // completeness gate over the doc jars. Every entry of every doc jar of a
 // version is read from its install (zip listing; installs are read-only),
-// mapped with DestPath, classified (Classify) and counted, per jar and
+// mapped with destPath, classified (classify) and counted, per jar and
 // content type, as extracted (the corpus file exists under the data root),
 // indexed (the derived index or text holds it) or excluded (an explicit
 // reason); anything else is a gap. Exit status: 0 when every entry is
@@ -99,7 +98,7 @@ func entryVerdict(jarName, entry string, rules *Rules) (rel string, mapped bool,
 }
 
 // scanDocJars is scan(installDir, root, jars): it classifies every entry of
-// every jar (nil jars: ListDocJars(installDir, true, nil)) against the data
+// every jar (nil jars: listDocJars(installDir, true, nil)) against the data
 // root. An unreadable jar is one gap row, never an error; an error is what
 // Python raises (an index of an unexpected shape, an unreadable .bajadoc,
 // a failing full-text reader).
@@ -270,7 +269,7 @@ func DocJarCoverage(w io.Writer, repoRoot, baseDir, versionID string, docs Fullt
 		return 0, err
 	}
 	if jars == nil {
-		jars = []string{} // no jar: ScanDocJars must not list them again
+		jars = []string{} // no jar: scanDocJars must not list them again
 	}
 	scan, err := scanDocJars(install, baseDir, jars, docs)
 	if err != nil {
@@ -334,7 +333,7 @@ func printDocJarReport(out *reportWriter, vid, install string, nJars int, s *doc
 		if r.Gap != 0 {
 			mark = "  <- GAP"
 		}
-		out.line(docJarLine(pdftext.FirstRunes(k.Jar, 34), pdftext.FirstRunes(k.ContentType, 20), r) + mark)
+		out.line(docJarLine(pycompat.Cut(k.Jar, 34), pycompat.Cut(k.ContentType, 20), r) + mark)
 	}
 	out.line(docJarLine("TOTAL", "", total))
 	out.line("")

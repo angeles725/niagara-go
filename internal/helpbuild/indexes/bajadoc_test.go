@@ -110,7 +110,7 @@ func TestParseBajadocMissingDir(t *testing.T) {
 }
 
 // A class name that would put its page outside bajadoc-clean/ (Python
-// writes it there) stops the run with ErrUnsafeClassName before any write.
+// writes it there) stops the run with errUnsafeClassName before any write.
 func TestParseBajadocUnsafeClassName(t *testing.T) {
 	for _, name := range []string{"../../../../Evil", "/abs/Evil", "x/../../../../../Evil"} {
 		base := t.TempDir()
@@ -118,7 +118,7 @@ func TestParseBajadocUnsafeClassName(t *testing.T) {
 		testkit.WriteFile(t, filepath.Join(base, "bajadoc", "javax", "baja", "x", "Evil.html"), []byte(page))
 		res, err := ParseBajadoc(base)
 		if !errors.Is(err, errUnsafeClassName) || res == nil || res.Parsed != 0 {
-			t.Errorf("%q: %v, %+v; want ErrUnsafeClassName", name, err, res)
+			t.Errorf("%q: %v, %+v; want errUnsafeClassName", name, err, res)
 		}
 		if _, err := os.Stat(filepath.Join(base, "Evil.txt")); !os.IsNotExist(err) {
 			t.Errorf("%q: written outside bajadoc-clean: %v", name, err)

@@ -88,7 +88,7 @@ func moduleCoverage(w io.Writer, x *coverageIndexes, hasDoc map[string]bool, mod
 		}
 	}
 	// Every value is computed before printing: an index of an unexpected
-	// shape is an *IndexShapeError before any output, where Python raises
+	// shape is an *indexShapeError before any output, where Python raises
 	// after printing the lines before the failing lookup (an intended
 	// difference, pinned by TestCoverageMalformedIndexes).
 	pkgs := make([]string, len(undocumented))
@@ -141,7 +141,7 @@ type moduleGroups struct {
 }
 
 // groupByModule is the by_module loop; a record of an unexpected shape is
-// an *IndexShapeError, returned before the report prints anything.
+// an *indexShapeError, returned before the report prints anything.
 func groupByModule(source *index.Object) (*moduleGroups, error) {
 	g := &moduleGroups{byModule: map[string][]string{}}
 	for i, cls := range source.Keys() {

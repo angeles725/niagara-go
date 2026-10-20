@@ -15,8 +15,8 @@ import (
 // (version_setup.jar_manifest and the manifest dict of extract_and_index).
 
 // jarRow is one jar_manifest row: the jar relative to the install, its
-// size and sha256, and how many of its central-directory entries DestPath
-// maps (duplicates, directories and source archives counted as DestPath
+// size and sha256, and how many of its central-directory entries destPath
+// maps (duplicates, directories and source archives counted as destPath
 // counts them).
 type jarRow struct {
 	Jar           string
@@ -25,7 +25,7 @@ type jarRow struct {
 	MappedEntries int
 }
 
-// jarManifest lists the doc jars of installDir (ListDocJars without help
+// jarManifest lists the doc jars of installDir (listDocJars without help
 // jars) with their size, sha256 and mapped-entry count.
 func jarManifest(installDir string) ([]jarRow, error) {
 	rules, err := Default()

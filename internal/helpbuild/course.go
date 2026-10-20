@@ -134,7 +134,7 @@ type courseCounts struct {
 // and swapped in at the end (atomicfile.RebuiltDir, devguide-examples/course/ first
 // as Python's nested with-statement exits it first): a failed copy keeps
 // the previous copies. It returns nil when no course is bound (copies
-// left from an earlier binding are removed), a *CourseDirMissingError when
+// left from an earlier binding are removed), a *courseDirMissingError when
 // the bound tree does not exist (nothing is touched), another error when a
 // copy fails.
 func buildCourse(baseDir string, rules *Rules) (*courseCounts, error) {

@@ -133,3 +133,18 @@ func FakeBin(t *testing.T, dir, real string) string {
 	}
 	return bin
 }
+
+// PDFStdout is the text an ExtractPDFs run printed, from its PDFResult.Log:
+// the entries in order, each followed by a newline except a progress entry
+// (one starting with "\r", written without a newline). It takes the Log, not
+// the PDFResult, because pdftext's own tests import testkit.
+func PDFStdout(log []string) string {
+	var b strings.Builder
+	for _, e := range log {
+		b.WriteString(e)
+		if !strings.HasPrefix(e, "\r") {
+			b.WriteByte('\n')
+		}
+	}
+	return b.String()
+}

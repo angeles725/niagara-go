@@ -75,7 +75,7 @@ func countTree(path string, extensions []string) int {
 	return n
 }
 
-// GuideFolder is one guide_coverage row: the HTML pages of guides/<Folder>
+// guideFolderCoverage is one guide_coverage row: the HTML pages of guides/<Folder>
 // and the text files of guides-clean/<Folder>, both counted recursively.
 type guideFolderCoverage struct {
 	Folder          string
@@ -254,7 +254,7 @@ func moduleClasses(source *index.Object, module string) ([]string, error) {
 // of its classes; without ("" is Python's None), the guide coverage then
 // the overview by module. All four indexes are loaded first, so a missing
 // one (*MissingIndexError) prints nothing; an index of an unexpected shape
-// (*IndexShapeError: a top level that is not an object, in any of the
+// (*indexShapeError: a top level that is not an object, in any of the
 // four, or a record the mode reads) also prints nothing, where Python may
 // print part of the report first or, reading no bad value, all of it.
 func Coverage(w io.Writer, baseDir, module string) (CoverageResult, error) {

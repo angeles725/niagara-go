@@ -17,7 +17,7 @@ func TestTextPagesKeepTheirName(t *testing.T) {
 		"a/Page.HTML":   "a/Page.txt",
 	} {
 		if got := cleanTextName(rel, ""); got != want {
-			t.Errorf("CleanTextName(%q) = %q, want %q", rel, got, want)
+			t.Errorf("cleanTextName(%q) = %q, want %q", rel, got, want)
 		}
 	}
 }
@@ -34,7 +34,7 @@ func TestBothPagesKeepTheirOwnCleanFile(t *testing.T) {
 		"other.txt":    "other.txt",
 	} {
 		if got := cleanTextName(rel, d); got != want {
-			t.Errorf("CleanTextName(%q) = %q, want %q", rel, got, want)
+			t.Errorf("cleanTextName(%q) = %q, want %q", rel, got, want)
 		}
 	}
 }

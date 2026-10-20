@@ -108,7 +108,7 @@ func TestPDFIndexStatesFrozen(t *testing.T) {
 		if err != nil {
 			outcome = "raise"
 		}
-		lines := append(toolLines(repo, map[string]string{"stdout": pdfStdout(res)}, []string{"stdout"}, outcome), "tree:")
+		lines := append(toolLines(repo, map[string]string{"stdout": testkit.PDFStdout(res.Log)}, []string{"stdout"}, outcome), "tree:")
 		cur := testkit.TreeLines(t, repo)
 		n++
 		testkit.CheckFrozen(t, fmt.Sprintf("pdf/%d-%s", n, testkit.FrozenName(what)), append(lines, testkit.TreeDelta(tree, cur)...))
@@ -169,7 +169,7 @@ func syntheticCourse(t *testing.T, src string) {
 	}
 }
 
-// goPlanLines is CoursePlan as lines: per file its path, kind, destination
+// goPlanLines is coursePlan as lines: per file its path, kind, destination
 // and "(course)" exclude rule.
 func goPlanLines(t *testing.T, src string) []string {
 	rules := mustDefault(t)

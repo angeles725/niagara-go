@@ -104,12 +104,12 @@ func isInstalledJar(rel string) bool {
 	return len(parts) == 2 && (parts[0] == "modules" || parts[0] == "javadoc")
 }
 
-// SweepOptions tune Scan and RunSweep; the zero value is Python's
+// SweepOptions tune scan and RunSweep; the zero value is Python's
 // defaults (install_rules.default(), an in-memory listing cache, the
 // full-text index read only).
 type SweepOptions struct {
 	Rules    *Rules       // nil: Default()
-	Listings *Listings    // Scan only; nil: in memory (RunSweep uses the repo's cache)
+	Listings *Listings    // scan only; nil: in memory (RunSweep uses the repo's cache)
 	Fulltext FulltextDocs // nil: FreshFulltextDocs
 }
 

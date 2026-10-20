@@ -13,7 +13,7 @@ import (
 
 var updateCov = flag.Bool("update-cov", false, "rewrite testdata/cov/golden/ from the Go reports (review the diff)")
 
-// ModuleClasses matches without case and dashes, a trailing rt/ux dropped,
+// moduleClasses matches without case and dashes, a trailing rt/ux dropped,
 // as a prefix of the class's module, and sorts the classes.
 func TestModuleClasses(t *testing.T) {
 	base := covReportBase(t, t.TempDir())
@@ -98,7 +98,7 @@ func TestCoverageReportGolden(t *testing.T) {
 // python is what Python did (ok: a report and its status, partial: it
 // raised after printing the lines before the failing lookup, empty: it
 // raised before any line); shape is true when Go returns an
-// *IndexShapeError before any output, false when its report is Python's
+// *indexShapeError before any output, false when its report is Python's
 // (TestCoverageMalformedFrozen).
 var covMalformed = []struct {
 	name, file, text, module, python string
@@ -124,7 +124,7 @@ var covMalformed = []struct {
 }
 
 // TestCoverageMalformedIndexes: an index of an
-// unexpected shape is an *IndexShapeError before any output, and empty
+// unexpected shape is an *indexShapeError before any output, and empty
 // string or object method entries count no method (Python iterates
 // nothing in them).
 func TestCoverageMalformedIndexes(t *testing.T) {
@@ -139,7 +139,7 @@ func TestCoverageMalformedIndexes(t *testing.T) {
 			var shape *indexShapeError
 			switch {
 			case c.shape && (!errors.As(err, &shape) || b.Len() != 0):
-				t.Errorf("err %v after %q; want an *IndexShapeError before any output", err, b.String())
+				t.Errorf("err %v after %q; want an *indexShapeError before any output", err, b.String())
 			case !c.shape && err != nil:
 				t.Errorf("err %v; want a report", err)
 			case c.name == "method entries empty string and object" && !strings.Contains(b.String(), "Total methods: 1\n"):

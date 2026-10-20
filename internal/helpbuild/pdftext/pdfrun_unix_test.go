@@ -32,7 +32,7 @@ func TestPDFTimeoutKillsForkedChildren(t *testing.T) {
 	_, _, err := extractPDFText(script, pdf, time.Second)
 	var pe *pdfError
 	if !errors.As(err, &pe) || pe.Failure != pdfTimedOut {
-		t.Fatalf("ExtractPDFText = %v, want a timeout", err)
+		t.Fatalf("extractPDFText = %v, want a timeout", err)
 	}
 	pid, ok := readPid(pdf + ".pid")
 	if !ok {

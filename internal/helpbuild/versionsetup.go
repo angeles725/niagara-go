@@ -24,7 +24,7 @@ import (
 // nothing is printed: the lines Python passes to out() are returned in
 // SetupResult.Log, in order.
 
-// RawDirs are the data-root folders extraction writes; DerivedDirs the
+// rawDirs are the data-root folders extraction writes; derivedDirs the
 // ones the builders write. A re-extraction (Force) removes both.
 var (
 	rawDirs     = []string{"bajadoc", "devguide", "devguide-rc", "devguide-examples", "guides", "jdk", "source"}
@@ -35,7 +35,7 @@ var (
 // order, without the OPTIONAL_ARTIFACTS (jdk-class-index.json): the files
 // _empty_indexes writes as {} when a skipped builder left them absent.
 // call-index.json is retired (decision I3-5): Python's list still holds
-// it, so _empty_indexes writes an empty one; EmptyIndexes does not
+// it, so _empty_indexes writes an empty one; emptyIndexes does not
 // (intended difference).
 var builderIndexes = []string{"class-index.json", "inheritance.json", "method-index.json", "source-index.json",
 	"slots-index.json", "xref-index.json", "guides-index.json", "devguide-toc.json", "pdf-index.json"}
@@ -306,7 +306,7 @@ func rebuild(root string, hook func(string) ([]string, error)) ([]string, error)
 	return append(tail, empty...), err
 }
 
-// emptyIndexes writes {} for every BuilderIndexes file absent from
+// emptyIndexes writes {} for every builderIndexes file absent from
 // root/indexes (_empty_indexes): an install without javadoc, devguide or
 // source still answers lookups with an honest miss. It returns one
 // "  EMPTY <name> ..." line per file written.

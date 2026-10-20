@@ -17,14 +17,14 @@ import (
 
 // Extraction, fill-missing and the sha256 fidelity check of an install's
 // doc jars (doc_jars.extract, fill_missing, fidelity_jar, fidelity). Every
-// jar of ListDocJars(install, true, ls) is opened like zipfile.ZipFile, its
+// jar of listDocJars(install, true, ls) is opened like zipfile.ZipFile, its
 // entries mapped by MappedEntries with the default rules; an unreadable
 // doc jar or entry is an error, as Python raises.
 
 // errUnsafeEntry is a mapped entry whose corpus path could leave the
 // data root on some OS: a ".." segment (split on "/" and on "\"), a
 // leading "/" or "\", or a drive letter ("C:"). Python joins it to the
-// root and writes wherever it points; Extract and FillMissing refuse it
+// root and writes wherever it points; extract and fillMissing refuse it
 // instead, on every OS (vendor jars never hold one).
 var errUnsafeEntry = errors.New("jar entry path could leave the data root")
 
@@ -149,7 +149,7 @@ func hasDriveLetter(rel string) bool {
 // root (doc_jars.extract): parent folders 0777 and files 0666 less the
 // umask, an existing file overwritten; a path two jars map to is written
 // by each in turn and recorded as a collision. ls (nil = in memory)
-// supplies the module-jar listings for HelpJars.
+// supplies the module-jar listings for helpJars.
 func extract(installDir, root string, ls *Listings) (*ExtractStats, error) {
 	st := &ExtractStats{Collisions: []Collision{}}
 	owners := map[string]string{}

@@ -108,7 +108,7 @@ func TestGuidesIndexEntry(t *testing.T) {
 		t.Errorf("index =\n %s\nwant\n %s", got, want)
 	}
 	if topicName("sub/P.HTM") != "sub/P" || topicName("r.txt") != "r.txt" {
-		t.Error("TopicName")
+		t.Error("topicName")
 	}
 }
 

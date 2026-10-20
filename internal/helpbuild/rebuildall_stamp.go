@@ -57,7 +57,7 @@ func fingerprintDir(path, ext string) pyjson.Value {
 	return fp
 }
 
-// corpusFingerprint is compute_fingerprint: every SourceDirs folder of the
+// corpusFingerprint is compute_fingerprint: every sourceDirs folder of the
 // data root, in order (walked concurrently; the counts do not depend on
 // the order).
 func corpusFingerprint(root string) pyjson.Value {

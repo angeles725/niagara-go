@@ -13,7 +13,7 @@ import (
 	"github.com/angeles725/niagara-go/internal/pyjson"
 )
 
-// The coverage reports (Coverage, PrintGuideCoverage) and the doc-jar gate
+// The coverage reports (Coverage, printGuideCoverage) and the doc-jar gate
 // (DocJarCoverage) as two lines per run, the printed bytes and the outcome,
 // checked against their frozen Python output (frozen_test.go) on the cases
 // a golden file does not hold: every report mode, empty and missing
@@ -152,7 +152,7 @@ func TestCoverageMalformedFrozen(t *testing.T) {
 }
 
 // TestDocJarCoverageFrozen: the gate on the synthetic install, by version
-// id and identified from the data root; with more than FirstGaps gaps; a
+// id and identified from the data root; with more than firstGaps gaps; a
 // clean install (PASS) and one whose only failure is a guide folder; an
 // install that is not there, an unregistered version, a data root without
 // indexes or with a malformed one.

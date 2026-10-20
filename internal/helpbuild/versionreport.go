@@ -15,8 +15,8 @@ import (
 )
 
 // The gates and the summary `versions add` prints (version_report.py):
-// RunGates runs `coverage --doc-jars` and `coverage --sweep` on the new
-// version, both full reports in <data root>/gates.log; PrintSummary lists,
+// runGates runs `coverage --doc-jars` and `coverage --sweep` on the new
+// version, both full reports in <data root>/gates.log; printSummary lists,
 // per full-text source kind, how many files are searchable and the
 // fallbacks the version uses.
 

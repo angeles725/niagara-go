@@ -23,7 +23,7 @@ import (
 // pdftotext run. ExtractPDFs (pdfindex.go) is the tool's main().
 
 // PDFTimeout is the limit of one pdftotext run, as in extract_text; the
-// version probe ("pdftotext -v") gets PDFProbeTimeout.
+// version probe ("pdftotext -v") gets pdfProbeTimeout.
 const (
 	PDFTimeout      = 120 * time.Second
 	pdfProbeTimeout = 10 * time.Second
@@ -251,7 +251,7 @@ func pageCount(text string) int {
 // extractPDFText is extract_text: `<pdftotext> -layout -enc UTF-8 <pdf> -`
 // with the timeout, the output decoded strictly as UTF-8, the bullet fix
 // applied, and the page count (pageCount, 0 for text that is only
-// whitespace). A failure is a *PDFError.
+// whitespace). A failure is a *pdfError.
 func extractPDFText(pdftotext, pdfPath string, timeout time.Duration) (text string, pages int, err error) {
 	out, err := runCapture([]string{pdftotext, "-layout", "-enc", "UTF-8", pdfPath, "-"}, timeout)
 	if err != nil {
