@@ -666,7 +666,7 @@ questions from the answer keys; it reads no station.
 | `recall` | lab items whose step is ``Name = `value` `` (a plain name; Lab 8's ORDs) | `What is the ORD of <Name>?` in a section naming the word `ORD` or `ORDs` (not `RECORDS`), else `What is <Name>?` | the value (without its `LI:` citation), then the item's own answer |
 | `predict` | lab items whose step asks to `*Observe*` (any case of the O) | `Predict what you observe, and why: <step>` | the answer |
 | `requirement` | the review-assignment requirements (`RA<k>.<id>`) a traceability row satisfies | `How is this requirement satisfied and verified? <requirement>` | the `Satisfied by` and `Verified by` cells of its rows |
-| `exam` | the exam problems (`P<m>`) | the step, then the problem's `**Requirement.**` paragraph (without the lead; it ends at a blank line or at the next line opening with a bold lead such as `**Design.**`) | the rest of the section (design, verification, notes); the whole section when it has no such paragraph |
+| `exam` | the exam problems (`P<m>`) | the step, then the problem's `**Requirement.**` paragraph (without the lead; it ends at a blank line or at the next line opening with a bold lead: bold text ending in a period, such as `**Design.**`; the answer keys write every lead that way, so `**must**` or `**Design:**` stay in the prompt) | the rest of the section (design, verification, notes); the whole section when it has no such paragraph |
 
 A lab item takes the first kind that fits, in the order of the table (so an `*Observe*` step whose
 answer asks `*Why ...?*` is a why question). The pool keeps only questions that can be studied:

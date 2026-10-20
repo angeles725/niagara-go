@@ -26,7 +26,8 @@ const requirementPrompt = "How is this requirement satisfied and verified? "
 // requirementLead opens the requirement paragraph of an exam problem.
 const requirementLead = "**Requirement.**"
 
-// boldLead matches a line that opens with a bold lead such as **Design.**; bold emphasis (**must**) is not one.
+// boldLead matches a line that opens with a bold lead: bold text ending in a period (**Design.**),
+// the only form the answer keys use. Bold emphasis (**must**, **Design:**) is not a lead.
 var boldLead = regexp.MustCompile(`^\*\*[^*]+\.\*\*`)
 
 // examQuestion splits an exam problem: its step, then its **Requirement.** paragraph (the first
