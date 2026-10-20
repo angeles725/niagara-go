@@ -315,7 +315,7 @@ take `parseBajadocFiles` (`classindexxml.go`) for the same concurrency.
 | File | Ports | Notes |
 |---|---|---|
 | `internal/pyhtml` (shared package, D37) | `html.parser.HTMLParser` (CPython 3.15), `convert_charrefs=True`; `html.unescape`; `name in html.entities.html5` | the tokenizer below (`pyhtml.Parse`, a `pyhtml.Handler`); reports only the callbacks the tools override |
-| `htmltext.go` | `html_text.convert` as `HTMLToText(page) (title, text)` | Python's Unicode `\s`, `strip` and `\w` (`textfold.IsSpace`, `pycompat.IsWordRune`) |
+| `htmltext/htmltext.go` | `html_text.convert` as `HTMLToText(page) (title, text)` | Python's Unicode `\s`, `strip` and `\w` (`textfold.IsSpace`, `pycompat.IsWordRune`) |
 | `guidetoc.go` | `guide_toc.find_toc`, `parse_toc`, `count_items` | ElementTree is `internal/pyxml` in ETree mode; the warning is returned, not printed |
 | `guidesparser.go` | `guides_parser.parse_guides`, `_markdown_title`, `devguide_parser.parse_devguide` | `RebuiltDir`; `TextResult.Log` = stdout lines, `.Warnings` = stderr lines |
 | `guidesindex.go` | `build_guides_index` (`topic_name`, `known_jar_names`, `modules_dir_of`, `jar_for_folder`, `previous_jars`, `build`, `main`) | `JarSources` replaces the `_MANIFEST` sentinels; `Unknown` is `jar_names=None`; the walk, `json.load` and registry lookups are S3's (`pyfs/pyfs.go`, `registry/registry.go`) |
@@ -338,8 +338,8 @@ Both indexes are `json.dumps(indent=2)` with `ensure_ascii` on (`DumpIndent2`).
 
 The port lives in the shared `internal/pyhtml` package (decision D37, owner Integrante3;
 its `doc.go` holds the contract), which depends on `textfold` only so that
-`pycompat.HTMLUnescape` can forward to it. Its frozen tests stay here
-(`htmlfrozen_test.go`).
+`pycompat.HTMLUnescape` can forward to it. Its frozen tests stay in helpbuild
+(`htmltext/htmlfrozen_test.go`).
 
 One `feed()` of the whole page and `close()` parse exactly like one `goahead(end=1)`: each
 early stop of the feed pass leaves the state unchanged and `close()` resumes there, and

@@ -1,4 +1,4 @@
-package helpbuild
+package htmltext
 
 import (
 	"fmt"

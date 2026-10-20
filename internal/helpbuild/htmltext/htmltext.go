@@ -1,4 +1,4 @@
-package helpbuild
+package htmltext
 
 import (
 	"strings"
@@ -171,7 +171,7 @@ func (c *htmlConverter) closeCell() {
 	if t.cell == nil {
 		return
 	}
-	text := pycompat.Strip(collapseSpace(t.cell.String()))
+	text := pycompat.Strip(CollapseSpace(t.cell.String()))
 	if len(c.tables) == 1 {
 		text = strings.ReplaceAll(text, "|", `\|`)
 	}
@@ -224,12 +224,12 @@ func (c *htmlConverter) Data(data string) {
 	if c.pre > 0 {
 		c.emit(strings.ReplaceAll(data, "\r\n", "\n"))
 	} else {
-		c.emit(collapseSpace(data))
+		c.emit(CollapseSpace(data))
 	}
 }
 
-// collapseSpace is re.sub(r"\s+", " ", s).
-func collapseSpace(s string) string {
+// CollapseSpace is re.sub(r"\s+", " ", s).
+func CollapseSpace(s string) string {
 	var b strings.Builder
 	space := false
 	for _, r := range s {
@@ -253,9 +253,9 @@ func HTMLToText(page string) (title, text string) {
 	for len(c.tables) > 0 { // a table left open at the end of the page
 		c.closeTable()
 	}
-	title = pycompat.Strip(collapseSpace(c.title.String()))
+	title = pycompat.Strip(CollapseSpace(c.title.String()))
 	if title == "" {
-		title = pycompat.Strip(collapseSpace(c.h1.String()))
+		title = pycompat.Strip(CollapseSpace(c.h1.String()))
 	}
 	return title, tidyText(c.out.String())
 }

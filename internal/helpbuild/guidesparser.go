@@ -9,6 +9,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/angeles725/niagara-go/internal/atomicfile"
+	"github.com/angeles725/niagara-go/internal/helpbuild/htmltext"
 	"github.com/angeles725/niagara-go/internal/helpbuild/pyfs"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/textfold"
@@ -167,7 +168,7 @@ func parseGuidesInto(res *TextResult, guidesDir, outDir string) error {
 func guidePageText(fname, raw string) (title, text string) {
 	low := textfold.Lower(fname)
 	if strings.HasSuffix(low, ".html") || strings.HasSuffix(low, ".htm") {
-		return HTMLToText(raw)
+		return htmltext.HTMLToText(raw)
 	}
 	text = pycompat.Strip(strings.ReplaceAll(raw, "\r\n", "\n"))
 	if strings.HasSuffix(low, ".md") {
@@ -244,7 +245,7 @@ func devguidePage(res *TextResult, chars *int, baseDir, devguideDir, outDir, dir
 	}
 	var title, text string
 	if isHTML {
-		title, text = HTMLToText(raw)
+		title, text = htmltext.HTMLToText(raw)
 	} else {
 		title, text = fname, pycompat.Strip(strings.ReplaceAll(raw, "\r\n", "\n"))
 	}

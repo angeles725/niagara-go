@@ -1,6 +1,7 @@
 package helpbuild
 
 import (
+	"github.com/angeles725/niagara-go/internal/helpbuild/htmltext"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyre"
 )
@@ -211,7 +212,7 @@ func parseAnnotationBody(body []rune) strDict {
 		if eq < 0 || !isAnnotationKey(part[:eq]) {
 			continue
 		}
-		value := []rune(collapseSpace(pycompat.Strip(string(part[eq+1:]))))
+		value := []rune(htmltext.CollapseSpace(pycompat.Strip(string(part[eq+1:]))))
 		if n := len(value); n >= 2 && value[0] == '"' && value[n-1] == '"' && skipLiteralOrComment(value, 0) == n {
 			value = value[1 : n-1]
 		}
