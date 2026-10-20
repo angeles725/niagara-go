@@ -16,9 +16,9 @@
 //
 // Fixtures: the expected events of parser_test.go and the values of unescape_test.go
 // were taken from CPython 3.15 by hand (python3 -c with html.parser / html.unescape).
-// The live parity checks run the interpreter and live in internal/helpbuild, next to
-// their driver (testdata/parity/htmldriver.py): TestParityHTMLCorners and
-// TestParityHTMLFuzz (callbacks over hand-written pages and 5,000 seeded random
-// snippets), TestParityHTMLFeed (the same for Feed) and TestParityHTML5Entities (every html5 name, its near misses and
-// html.unescape over 46,851 texts). See docs/helpbuild.md, "The html.parser port".
+// The frozen parity checks live in internal/helpbuild (htmlfrozen_test.go), replaying the
+// output of the retired Python driver: TestHTMLCornersFrozen (callbacks over hand-written
+// pages), TestHTMLFeedCornersFrozen (the same for Feed) and TestHTML5EntitiesFrozen (every
+// html5 name, its near misses and html.unescape around each). See docs/helpbuild.md, "The
+// html.parser port".
 package pyhtml

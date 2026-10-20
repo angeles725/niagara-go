@@ -20,7 +20,7 @@ import (
 // tests/test_install_sweep.py (plus the test_t3a / test_n3 corners),
 // without Python: the data root is extracted by Extract and its clean
 // pages are written by hand, so each case states what makes an entry
-// indexed. testdata/parity/sweepdriver.py compares the full reports.
+// indexed. TestSweepFrozen (sweepfrozen_test.go) compares the full reports.
 
 const sweepPage = "<html><head><title>%s</title></head><body><p>%s</p></body></html>"
 

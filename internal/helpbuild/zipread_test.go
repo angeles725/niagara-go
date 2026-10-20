@@ -77,8 +77,8 @@ func TestReadEntryStoredAndDeflated(t *testing.T) {
 	}
 }
 
-// The ZipFile.open / ZipExtFile corners (each one checked against Python by
-// TestParityDocJarCorners).
+// The ZipFile.open / ZipExtFile corners (each one checked against Python
+// while it was the oracle; TestDocJarCornersFrozen replays the library calls).
 func TestReadEntryFollowsPythonZipfile(t *testing.T) {
 	cases := []struct {
 		name    string

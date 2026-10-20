@@ -13,7 +13,7 @@ import (
 )
 
 // The cases are niagara-research tools/tests/fixtures/golden-cli/check-coverage.json and
-// check-coverage-empty.json (the Python output, converted by testdata/convert_golden.py); the
+// check-coverage-empty.json (the Python output, converted by the retired testdata/convert_golden.py); the
 // repository root is the case's working directory (testdata/corpus).
 
 func useRoot(t *testing.T, root func() (string, error)) {

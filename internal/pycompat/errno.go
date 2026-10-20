@@ -13,8 +13,8 @@ import (
 	"syscall"
 )
 
-// The errno tables are generated from Python: errno_linux.txt by testdata/gen.py (glibc's
-// strerror) and errno_windows.txt by testdata/gen_windows.py run with a Windows Python
+// The errno tables were generated from Python: errno_linux.txt by the retired testdata/gen.py (glibc's
+// strerror) and errno_windows.txt by the retired testdata/gen_windows.py run with a Windows Python
 // (the C runtime's strerror and CPython's winerror_to_errno).
 var (
 	//go:embed errno_linux.txt

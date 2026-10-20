@@ -10,8 +10,8 @@ import (
 	"testing"
 )
 
-// fixtures is testdata/fixtures.json, written by testdata/gen.py from the
-// real Python functions (python3 -I internal/textfold/testdata/gen.py).
+// fixtures is testdata/fixtures.json, frozen output of the retired
+// testdata/gen.py over the real Python functions.
 type fixtures struct {
 	Python    string              `json:"python"`
 	Unicode   string              `json:"unicode"`
@@ -99,7 +99,7 @@ func TestFoldCorpus(t *testing.T) {
 	}
 }
 
-// digest hashes each(r) for every non-surrogate code point, like gen.py digest(chars()).
+// digest hashes each(r) for every non-surrogate code point, like the retired gen.py's digest(chars()).
 func digest(each func(r rune) string) string {
 	h := sha256.New()
 	for r := rune(0); r < 0x110000; r++ {

@@ -16,8 +16,8 @@ import (
 // (cli/cmd_export.py run_coverage). These tests drive nh end to end on a
 // synthetic checkout and check that it prints exactly what the helpbuild
 // entry points print and exits as run_coverage does; the bytes of the
-// reports themselves are pinned against Python by helpbuild's parity tests
-// and, through nh, by TestParityMaintReal.
+// reports themselves are pinned against frozen Python output by helpbuild's
+// covfrozen_test.go.
 
 // maintRepo writes a checkout whose version 1.0 has its data root at the
 // repository root and its install at install: four report indexes with

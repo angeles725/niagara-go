@@ -14,8 +14,8 @@ import (
 
 // rebuild-all runs helpbuild.RebuildAll in process under the build lock
 // (cli/cmd_admin.py run_rebuild_all). The bytes of the plan and the run are
-// pinned against Python by helpbuild's rebuild parity and, through nh, by
-// TestParityRebuildReal; these tests pin the wiring: the flags, the exit
+// pinned against frozen Python output by helpbuild's TestRebuildPlanFrozen
+// and TestRebuildFrozen; these tests pin the wiring: the flags, the exit
 // statuses and the lock.
 
 const manifestRel = "indexes/.manifest.json"

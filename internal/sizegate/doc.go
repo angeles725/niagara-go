@@ -1,7 +1,7 @@
 // Package sizegate holds only a test: the 500-line source limit
 // (TOOLING-GUIDELINES principle 6). It counts every .go file outside testdata/
 // (Go files there are fixtures) and every .py file anywhere, testdata/
-// included, where the Python generator and parity scripts live.
+// included, so the remaining Python test helpers stay within the limit too.
 //
 // allowlist.txt lists the exceptions as "<repo-relative path> <max lines>",
 // each preceded by a "#" line giving its reason. Entries may only be lowered or

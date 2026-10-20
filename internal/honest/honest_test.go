@@ -9,7 +9,7 @@ import (
 	"github.com/angeles725/niagara-go/internal/cli"
 )
 
-// fixtures is testdata/fixtures.json (python3 -I internal/honest/testdata/gen.py).
+// fixtures is testdata/fixtures.json (frozen output of the retired testdata/gen.py).
 type fixtures struct {
 	ExitInput int                 `json:"exit_input"`
 	Scope     [][]json.RawMessage `json:"scope"`

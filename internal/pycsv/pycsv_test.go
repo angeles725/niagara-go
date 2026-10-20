@@ -11,7 +11,7 @@ import (
 	"unicode/utf8"
 )
 
-// The fixtures are written by testdata/gen.py from Python 3.15's csv module.
+// The fixtures are frozen output of the retired testdata/gen.py (Python 3.15's csv module).
 
 func value(t *testing.T, pair []json.RawMessage) any {
 	t.Helper()

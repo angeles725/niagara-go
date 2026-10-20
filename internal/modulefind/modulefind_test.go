@@ -10,7 +10,7 @@ import (
 )
 
 // The cases are niagara-research tools/tests/fixtures/golden-cli/module-find.json (the Python
-// output, converted by testdata/convert_golden.py) plus Go-only --limit cases, run in testdata
+// output, converted by the retired testdata/convert_golden.py) plus Go-only --limit cases, run in testdata
 // with the roots srcA, srcB and nojava relative to it.
 func TestGolden(t *testing.T) { golden.Run(t, "testdata", Main) }
 

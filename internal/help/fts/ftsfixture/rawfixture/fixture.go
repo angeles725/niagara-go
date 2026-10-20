@@ -19,7 +19,7 @@ import (
 	_ "modernc.org/sqlite" // read-write access to the copied fixture databases
 )
 
-// FixedNS is fulltext_gen.py FIXED_NS, the mtime of every fixture file.
+// FixedNS is the retired fulltext_gen.py's FIXED_NS, the mtime of every fixture file.
 const FixedNS = 1_700_000_000_123_456_789
 
 // Root is the placeholder for the checkout folder in the stored fingerprints

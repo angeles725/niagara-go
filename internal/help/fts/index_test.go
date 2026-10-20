@@ -13,7 +13,7 @@ import (
 )
 
 // TestFingerprintMatchesPython compares Fingerprint with the one Python
-// stored in each fixture index (fulltext_gen.py), including 2.0's docs-text
+// stored in each fixture index (the retired fulltext_gen.py), including 2.0's docs-text
 // borrowed from 1.0 and the devguide-examples files that are skipped. Those
 // were computed on Linux from the checkout's paths and mtimes, so they hold
 // only there; the Windows Python that recomputed them on the Windows host

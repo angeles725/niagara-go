@@ -15,7 +15,7 @@ import (
 )
 
 // TestPythonErrorTexts compares every error with the text Python printed for
-// the same input (testdata/pyerrors.json, from gen_pyerrors.py).
+// the same input (testdata/pyerrors.json, frozen output of the retired gen_pyerrors.py).
 func TestPythonErrorTexts(t *testing.T) {
 	raw, err := os.ReadFile(filepath.Join("testdata", "pyerrors.json"))
 	if err != nil {

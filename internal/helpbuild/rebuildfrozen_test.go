@@ -19,7 +19,7 @@ import (
 // per scenario and step, stdout and stderr after normalizeRebuild (run
 // times, the stamp time, a builder's traceback), the tree delta and the
 // manifest and build.log texts after rebuildTreeLines (stamped_utc and run
-// times normalized). The frozen files were checked against
+// times normalized). The frozen files were checked against the retired
 // testdata/rebuild/driver.py, which ran Python's builders as child
 // processes on the same data-root path.
 

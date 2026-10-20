@@ -15,7 +15,7 @@ import (
 	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
-// The fixtures and digests are written by testdata/gen.py from Python 3.15.
+// The fixtures and digests are frozen output of the retired testdata/gen.py (Python 3.15).
 
 type fixtures struct {
 	Python   string              `json:"python"`
@@ -69,7 +69,7 @@ func fromBits(t *testing.T, h string) float64 {
 	return math.Float64frombits(u)
 }
 
-// typed decodes gen.py's [kind, value] pairs into the Go values Repr accepts.
+// typed decodes the retired gen.py's [kind, value] pairs into the Go values Repr accepts.
 func typed(t *testing.T, raw json.RawMessage) any {
 	t.Helper()
 	var pair []json.RawMessage
@@ -315,7 +315,7 @@ func TestSpaceClassMatchesIsSpace(t *testing.T) {
 	}
 }
 
-// digest hashes each code point accepted by pred, like gen.py digest(chars()).
+// digest hashes each code point accepted by pred, like the retired gen.py's digest(chars()).
 func digest(each func(r rune) (string, bool)) string {
 	h := sha256.New()
 	for r := rune(0); r < 0x110000; r++ {

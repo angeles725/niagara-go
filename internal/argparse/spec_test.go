@@ -10,8 +10,8 @@ import (
 	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
-// This file builds a Parser from the declarative spec that gen_fixtures.py also builds a
-// Python ArgumentParser from (the format is documented at the top of gen_fixtures.py).
+// This file builds a Parser from the declarative spec of each fixture case, the spec the
+// retired gen_fixtures.py also built a Python ArgumentParser from (specParser reads it).
 
 type spec = map[string]any
 

@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-// fixtures is testdata/fixtures.json (python3 -I internal/glossary/testdata/gen.py).
+// fixtures is testdata/fixtures.json (frozen output of the retired testdata/gen.py).
 type fixtures struct {
 	Canonical struct {
 		Lookup        [][]json.RawMessage `json:"lookup"`

@@ -6,7 +6,7 @@
 // document fails with the same words as the Python tool. encoding/xml cannot do this: its
 // messages, its positions (after the token, line only) and its leniency (a second root, a
 // misplaced XML declaration, duplicate attributes) all differ. testdata/xmlerrors.json, made
-// by gen_xmlerrors.py from expat itself, is the parity suite.
+// by the retired gen_xmlerrors.py from expat itself, is the parity suite.
 package pyxml
 
 import (
