@@ -20,7 +20,7 @@ var winErrorCodes = []uint32{1, 2, 3, 5, 32, 87, 10013, 10048, 10049, 10050, 100
 // readFrozen reads a testdata/winerror JSON file into v. The files hold what CPython 3.13
 // (python.org build, Windows UI language 0x080A, es-MX) printed for the same failures; they
 // were captured once with the retired pyerr.py/pyoserr.py scripts and are now the oracle.
-// System messages follow the Windows UI language, so the test skips on any other language.
+// System messages follow the Windows UI language: see readFrozenTexts.
 func readFrozen(t *testing.T, name string, v any) {
 	t.Helper()
 	b, err := os.ReadFile(filepath.Join("testdata", "winerror", name))
@@ -35,26 +35,30 @@ func readFrozen(t *testing.T, name string, v any) {
 // frozenUILang is the Windows UI language the frozen texts were captured under.
 const frozenUILang = 0x080A
 
-func skipOtherUILanguage(t *testing.T) {
+// readFrozenTexts is readFrozen behind the UI-language guard: the tests that compare system
+// message texts byte for byte read the frozen files through it and skip on any Windows UI
+// language other than frozenUILang. TestWinErrorShapeAnyUILanguage and
+// TestWinOSErrorShapeAnyUILanguage keep the language-independent checks running there.
+func readFrozenTexts(t *testing.T, name string, v any) {
 	t.Helper()
 	lang, _, _ := syscall.NewLazyDLL("kernel32.dll").NewProc("GetUserDefaultUILanguage").Call()
 	if uint16(lang) != frozenUILang {
 		t.Skipf("Windows UI language %#04x; the frozen CPython texts are for %#04x", uint16(lang), frozenUILang)
 	}
+	readFrozen(t, name, v)
 }
 
 // TestWinErrorStringMatchesPython compares WinErrorString of every code, and of the Win32 code
 // in real refused-connection and address-in-use socket errors Go returns, with the frozen
 // str(OSError) CPython raised (PyErr_SetFromWindowsErr) in testdata/winerror/pyerr.json.
 func TestWinErrorStringMatchesPython(t *testing.T) {
-	skipOtherUILanguage(t)
 	var want struct {
 		UILang    int
 		Codes     map[string]string
 		Refused   string
 		AddrInUse string
 	}
-	readFrozen(t, "pyerr.json", &want)
+	readFrozenTexts(t, "pyerr.json", &want)
 	if want.UILang != frozenUILang {
 		t.Fatalf("pyerr.json uilang %#04x, want %#04x", want.UILang, frozenUILang)
 	}

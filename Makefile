@@ -44,16 +44,16 @@ lint:
 	GOOS=windows GOARCH=amd64 $(TOOLBIN)/staticcheck ./...
 
 # Report-only: lists functions unreachable from any cmd/ main (deadcode exits 0
-# on findings; only a load error fails). The test-only packages internal/golden,
-# internal/help/fts/ftsfixture (with rawfixture) and internal/helpbuild/internal/testkit
-# are filtered out: no command imports them by design, so every function in them would
-# be listed.
-# procgroup Cmd.Output and Cmd.CombinedOutput are filtered too: they intentionally shadow the
-# embedded exec.Cmd methods so c.Output() cannot bypass the process-group kill.
-DEADCODE_TESTONLY := ^internal/(golden|help/fts/ftsfixture|helpbuild/internal/testkit)/|^internal/procgroup/procgroup\.go:[0-9]+:[0-9]+: unreachable func: Cmd\.(Output|CombinedOutput)$$
+# on findings; only a load error fails). DEADCODE_FILTER drops the expected findings: the
+# test-only packages internal/golden, internal/help/fts/ftsfixture (with rawfixture) and
+# internal/helpbuild/internal/testkit, which no command imports by design, so every function
+# in them would be listed; and procgroup Cmd.Output and Cmd.CombinedOutput, which
+# intentionally shadow the embedded exec.Cmd methods so c.Output() cannot bypass the
+# process-group kill.
+DEADCODE_FILTER := ^internal/(golden|help/fts/ftsfixture|helpbuild/internal/testkit)/|^internal/procgroup/procgroup\.go:[0-9]+:[0-9]+: unreachable func: Cmd\.(Output|CombinedOutput)$$
 deadcode:
 	@out=$$($(GO) run $(DEADCODE) ./...) || exit $$?; \
-		[ -z "$$out" ] || printf '%s\n' "$$out" | grep -vE '$(DEADCODE_TESTONLY)' || true
+		[ -z "$$out" ] || printf '%s\n' "$$out" | grep -vE '$(DEADCODE_FILTER)' || true
 
 # Packages are mostly exercised from other packages' tests, so coverage is
 # measured across ./internal/... rather than per package.
