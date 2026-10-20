@@ -172,6 +172,11 @@ type quizOpts struct {
 	interactive bool
 	history     string
 	hasHistory  bool
+	// missed and due draw from the history's missed or Leitner-due questions (due at nowFlag,
+	// RFC 3339, when hasNow); the replay line then names the drawn IDs.
+	missed, due bool
+	nowFlag     string
+	hasNow      bool
 	picked      []string // the IDs --ids asked, as the keys spell them
 	usage       func(message string) int
 }
@@ -186,7 +191,7 @@ func (o quizOpts) again() string {
 		parts = append(parts, "--kind "+o.kind)
 	}
 	switch {
-	case o.hasIDs:
+	case o.hasIDs, o.missed, o.due:
 		parts = append(parts, "--ids "+shellQuote(strings.Join(o.picked, ",")))
 	case o.count != 5:
 		parts = append(parts, "-n "+strconv.Itoa(o.count), "--seed "+strconv.Itoa(o.seed))
@@ -224,8 +229,18 @@ func cmdQuiz(c *key.Corpus, s cli.Stdio, root string, o quizOpts) int {
 	if !o.hasSeed && !o.hasIDs {
 		o.seed = int(now().UnixNano() % 1000000)
 	}
+	if (o.missed && o.due) || ((o.missed || o.due) && o.hasIDs) {
+		return o.usage("--missed, --due and --ids exclude each other")
+	}
+	at := now()
+	if o.hasNow {
+		var err error
+		if at, err = time.Parse(time.RFC3339, o.nowFlag); err != nil {
+			return o.usage("--now " + o.nowFlag + " is not an RFC 3339 time (2026-10-19T08:00:00Z)")
+		}
+	}
 	var history string
-	if o.interactive {
+	if o.interactive || o.missed || o.due {
 		var msg string
 		if history, msg = historyPath(s, o.history, o.hasHistory); history == "" {
 			return o.usage(msg)
@@ -244,6 +259,12 @@ func cmdQuiz(c *key.Corpus, s cli.Stdio, root string, o quizOpts) int {
 		kinds = []string{o.kind}
 	}
 	pool, searched := buildPool(c, groups, kinds)
+	if o.missed || o.due {
+		var code int
+		if pool, scopeLabel, code = historyPool(c, s, o, pool, kinds, scopeLabel, history, at); pool == nil {
+			return code
+		}
+	}
 	var drawn []question
 	if o.hasIDs {
 		var code int
@@ -258,6 +279,11 @@ func cmdQuiz(c *key.Corpus, s cli.Stdio, root string, o quizOpts) int {
 	if !o.hasIDs {
 		shuffle(pool, uint64(o.seed))
 		drawn = pool[:min(o.count, len(pool))]
+		if o.missed || o.due { // the history moves on: replay these IDs
+			for _, q := range drawn {
+				o.picked = append(o.picked, q.it.ID)
+			}
+		}
 	}
 	texts := map[string][]string{}
 	for _, q := range drawn {

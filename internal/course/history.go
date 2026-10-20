@@ -1,7 +1,11 @@
 package course
 
 import (
+	"bufio"
 	"encoding/json"
+	"errors"
+	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"time"
@@ -80,4 +84,34 @@ func appendRecord(path string, r record) error {
 		return err
 	}
 	return f.Close()
+}
+
+// loadHistory reads the records of the history at path, in file order; a missing file is an empty
+// history. A line that is not a record (a write cut short) is skipped with a warning on stderr,
+// so one bad line never locks the history; an unreadable file is an error.
+func loadHistory(s cli.Stdio, path string) ([]record, error) {
+	f, err := os.Open(path)
+	if errors.Is(err, fs.ErrNotExist) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+	var out []record
+	sc := bufio.NewScanner(f)
+	sc.Buffer(make([]byte, 0, 64*1024), 1<<20)
+	for n := 1; sc.Scan(); n++ {
+		var r record
+		if len(sc.Bytes()) == 0 {
+			continue
+		}
+		if err := json.Unmarshal(sc.Bytes(), &r); err != nil || r.ID == "" || r.at().IsZero() ||
+			(r.Result != resultRight && r.Result != resultWrong) {
+			fmt.Fprintf(s.Err, "course: history %s:%d: not a record, skipped\n", path, n)
+			continue
+		}
+		out = append(out, r)
+	}
+	return out, sc.Err()
 }

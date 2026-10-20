@@ -1,5 +1,5 @@
 usage: course [-h] [--root DIR] [--version]
-              {show,status,text,check,verify-predictions,find,verify,progress,quiz} ...
+              {show,status,text,check,verify-predictions,find,verify,progress,quiz,history} ...
 
 Look up the N4 developer-course answer keys of a niagara-research checkout
 (labs, review assignments, certification exam) by item ID, count them by
@@ -14,7 +14,9 @@ exit: 0 found; 1 searched, no match (show: any unknown ID, even when the
 others were printed; find: no item matches); 2 cannot search (no root, a missing or ambiguous answer
 key, a missing text file). check: 0 no FAIL (SKIPs are counted, never passed);
 1 at least one FAIL; 2 the station cannot be read, or every check was skipped.
-quiz: 0 drawn; 1 an unknown group or no question in it; 2 cannot search.
+quiz: 0 drawn; 1 an unknown group or no question in it (none missed or
+due with --missed, --due); 2 cannot search or record. history: 0 printed;
+1 no graded answer in the history; 2 the history cannot be read.
 verify, verify-predictions (= verify --status predicted), progress: 0 no item
 contradicted; 1 at least one CONTRADICTED; 2 cannot search, the station
 cannot be read, or every linked check was skipped.
@@ -39,11 +41,13 @@ examples:
   course progress --lab 3
   course quiz --lab 3 --seed 1 --answers
   course quiz --lab 3 --interactive
+  course quiz --due --interactive
+  course history
   course find -i 'history:'
   course find --slides -i neql
 
 positional arguments:
-  {show,status,text,check,verify-predictions,find,verify,progress,quiz}
+  {show,status,text,check,verify-predictions,find,verify,progress,quiz,history}
     show                print items by ID (any case; L2.3 also finds the range item L2.2–L2.4)
     status              items per group and status; --status lists the matching items
     text                print the course text lines an item (or a lab) points at, or lines of a
@@ -60,6 +64,8 @@ positional arguments:
                         to redo and the markers to add
     quiz                draw why, decision, trap, recall and predict questions from the answer
                         keys; --answers prints the answers after them
+    history             the accuracy of your graded answers (quiz --interactive, exam) per group
+                        and per kind
 
 options:
   -h, --help            show this help message and exit

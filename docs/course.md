@@ -639,7 +639,7 @@ lines); `next` would name only the second half, and `progress` reads naturally w
 
 ## course quiz
 
-`course quiz [--lab GROUP] [--kind why|decision|trap|recall|predict] [-n N] [--seed S] [--answers] [--no-context] [--ids ID,ID,...] [--interactive] [--history PATH]` draws study
+`course quiz [--lab GROUP] [--kind why|decision|trap|recall|predict] [-n N] [--seed S] [--answers] [--no-context] [--ids ID,ID,...] [--interactive] [--history PATH] [--missed | --due [--now RFC3339]]` draws study
 questions from the answer keys; it reads no station.
 
 | Kind | Items | Prompt | Answer |
@@ -703,6 +703,49 @@ the answer-key group, `result` `right` or `wrong`. The history is user state, no
 or relative, as the XDG spec says) `~/.local/state/niagara-course/history.jsonl`; the directory is
 created on the first record. An empty `--history` is a usage error (exit 2); a record that cannot
 be written stops the quiz (exit 2, `course: history <error>`).
+
+`--missed` and `--due` draw from the history instead of the whole pool (`--lab` and `--kind` still
+narrow it; `-n` and `--seed` still draw); the history is folded per item in time order (file order
+between equal times), and a record of an ID the keys no longer hold is ignored:
+
+- `--missed`: the questions whose latest record is `wrong` (a later `right` clears the miss).
+- `--due`: spaced review with Leitner boxes. An item starts in box 1; a `right` record moves it up
+  one box (at most 5), a `wrong` one back to box 1; it is due once the clock reaches its last
+  record plus 2^(box-1) days (1, 2, 4, 8, 16). `--now 2026-10-19T08:00:00Z` (RFC 3339) decides at
+  that time instead of the clock (for tests, or to plan ahead). An item never answered is not due:
+  a plain quiz draws it.
+
+The header names the selection (`quiz: 3 of 3 questions (...; every group; due
+2026-10-19T00:00:00Z), seed 1`) and the replay line names the drawn IDs with `--ids`, since the
+history moves on. Combine either with `--interactive` to grade the review. `--missed`, `--due` and
+`--ids` exclude each other, and a `--now` that is not RFC 3339 is a usage error (exit 2). A history
+that selects nothing is the honest zero (exit 1, `course: no missed why, decision, trap, recall,
+predict question in every group (history <path>: 0 records)`); a missing history file is an empty
+one; a line that is not a record (a write cut short) is skipped with `course: history
+<path>:<line>: not a record, skipped` on stderr, so one bad line never locks the history.
+
+## course history
+
+`course history [--history PATH] [--json]` prints the accuracy of the graded answers in the
+history (the path rules of `quiz --interactive`), one row per answer-key group and a total, then one
+row per question kind; rows are in natural order (`L2` before `L10`), accuracy is percent right
+rounded half up:
+
+    history: 3 answers in ~/.local/state/niagara-course/history.jsonl
+
+    group  answers  right  wrong  accuracy
+    EXAM         1      0      1        0%
+    L2           2      1      1       50%
+    total        3      1      2       33%
+
+    kind  answers  right  wrong  accuracy
+    exam        1      0      1        0%
+    why         2      1      1       50%
+
+It reads no answer key (no `--root` is needed). With `--json`: `{history, groups: [{group,
+answers, right, wrong, accuracy}], kinds: [{kind, ...}], total}`. Exit: 0 printed; 1 no answer in
+the history (a missing file is empty: `course: no answer in the history <path> (course quiz
+--interactive records them)`); 2 the history cannot be read or no path is known.
 
 Exit: 0 at least one question drawn; 1 an unknown group, an `--ids` item that is no question of the
 selection, or no question of the kinds in the

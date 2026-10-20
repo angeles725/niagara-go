@@ -29,7 +29,9 @@ exit: 0 found; 1 searched, no match (show: any unknown ID, even when the
 others were printed; find: no item matches); 2 cannot search (no root, a missing or ambiguous answer
 key, a missing text file). check: 0 no FAIL (SKIPs are counted, never passed);
 1 at least one FAIL; 2 the station cannot be read, or every check was skipped.
-quiz: 0 drawn; 1 an unknown group or no question in it; 2 cannot search.
+quiz: 0 drawn; 1 an unknown group or no question in it (none missed or
+due with --missed, --due); 2 cannot search or record. history: 0 printed;
+1 no graded answer in the history; 2 the history cannot be read.
 verify, verify-predictions (= verify --status predicted), progress: 0 no item
 contradicted; 1 at least one CONTRADICTED; 2 cannot search, the station
 cannot be read, or every linked check was skipped.
@@ -54,6 +56,8 @@ examples:
   course progress --lab 3
   course quiz --lab 3 --seed 1 --answers
   course quiz --lab 3 --interactive
+  course quiz --due --interactive
+  course history
   course find -i 'history:'
   course find --slides -i neql`
 
@@ -166,6 +170,13 @@ func buildParser() (*argparse.Parser, map[string]*argparse.Parser) {
 	qz.Add(argparse.Arg{Action: argparse.StoreTrue, Help: "ask one question at a time: Enter shows its answer, then grade " +
 		"yourself (y right, n wrong, s skip); prints a score and records each graded answer in the history"}, "--interactive")
 	qz.Add(historyArg, "--history")
+	qz.Add(argparse.Arg{Action: argparse.StoreTrue, Help: "draw only the questions whose latest graded answer in the history is wrong"}, "--missed")
+	qz.Add(argparse.Arg{Action: argparse.StoreTrue, Help: "draw only the questions due for review: Leitner boxes from the history " +
+		"(right: up one box, at most 5; wrong: box 1; due 2^(box-1) days after the last answer)"}, "--due")
+	qz.Add(argparse.Arg{Metavar: "RFC3339", Help: "the time --due is decided at (default: now)"}, "--now")
+	hs := add("history", "the accuracy of your graded answers (quiz --interactive, exam) per group and per kind")
+	hs.Add(historyArg, "--history")
+	hs.Add(jsonHelp, "--json")
 	return p, subs
 }
 
@@ -185,6 +196,9 @@ func Main(args []string, s cli.Stdio) int {
 		usage: func(message string) int { return subs[cmd].Error(s.Err, message) }}
 	if cmd == "check" { // reads a station, not the answer keys
 		return cmdCheck(s, o, ns.Strings("lab"), ns.Bool("json"))
+	}
+	if cmd == "history" { // reads the history, not the answer keys
+		return cmdHistory(s, ns.String("history"), ns.Get("history") != nil, ns.Bool("json"), o.usage)
 	}
 	if (cmd == "verify" || cmd == "verify-predictions" || cmd == "progress") && !o.anyStation() {
 		return o.missingStation("", nil) // before the root and --date errors
@@ -224,7 +238,8 @@ func Main(args []string, s cli.Stdio) int {
 		return cmdQuiz(c, s, root, quizOpts{lab: ns.String("lab"), hasLab: ns.Get("lab") != nil, kind: ns.String("kind"),
 			count: ns.Int("n"), seed: ns.Int("seed"), hasSeed: ns.Get("seed") != nil, answers: ns.Bool("answers"), noContext: ns.Bool("no_context"),
 			ids: ns.String("ids"), hasIDs: ns.Get("ids") != nil, interactive: ns.Bool("interactive"),
-			history: ns.String("history"), hasHistory: ns.Get("history") != nil, usage: o.usage})
+			history: ns.String("history"), hasHistory: ns.Get("history") != nil, missed: ns.Bool("missed"), due: ns.Bool("due"),
+			nowFlag: ns.String("now"), hasNow: ns.Get("now") != nil, usage: o.usage})
 	case "status":
 		return cmdStatus(c, s, ns.Get("lab") != nil, ns.String("lab"), ns.String("status"), ns.Bool("json"))
 	default:
