@@ -105,7 +105,15 @@ func openInstall(explicit string) (*install, error) {
 	if err != nil {
 		return nil, err
 	}
-	parts, dir, ok := indexInstall(root)
+	return indexedInstall(root)
+}
+
+// indexedInstall indexes the install at root (autodetect's answer).
+func indexedInstall(root string) (*install, error) {
+	parts, dir, ok, err := indexInstall(root)
+	if err != nil {
+		return nil, err
+	}
 	if !ok {
 		return nil, fail(1, "error: no modules/ under install root %s", pycompat.StrRepr(root))
 	}
@@ -133,13 +141,17 @@ type moduleRow struct {
 }
 
 func check(o options, w io.Writer) (int, error) {
-	in, err := openInstall(o.install)
+	root, err := autodetect(o.install) // the station is read before the install is scanned
 	if err != nil {
 		return 0, err
 	}
 	text, err := bog.ReadText(o.target)
 	if err != nil {
 		return 0, fail(2, "error: cannot read station file: %s", err)
+	}
+	in, err := indexedInstall(root)
+	if err != nil {
+		return 0, err
 	}
 	_, refs := stationRefs(text)
 	missing := newMissing()
