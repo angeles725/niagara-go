@@ -145,6 +145,7 @@ func Main(args []string, s cli.Stdio) int {
 		return 2
 	}
 	c := newCorpus(root, os.Getenv("CORPUS_NAV_INDEX_DIR"), s.Out, s.Err)
+	c.termCache = true
 	str := ns.String
 	switch cmd {
 	case "find":

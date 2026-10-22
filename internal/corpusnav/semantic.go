@@ -3,10 +3,12 @@ package corpusnav
 import (
 	"fmt"
 	"math"
+	"slices"
 	"sort"
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/bm25"
+	"github.com/angeles725/niagara-go/internal/corpusnav/blocksearch"
 	"github.com/angeles725/niagara-go/internal/glossary"
 	"github.com/angeles725/niagara-go/internal/honest"
 	"github.com/angeles725/niagara-go/internal/pycompat"
@@ -41,74 +43,127 @@ func tfidfTokens(text string) []string {
 	return out
 }
 
-// tfidfVector is _tfidf_vector: term weights in first-occurrence order (a Counter) and
-// the L2 norm (Python's compensated sum()).
-func tfidfVector(tokens []string, idf map[string]float64) ([]string, map[string]float64, float64) {
-	var order []string
-	counts := map[string]int{}
-	for _, t := range tokens {
-		if counts[t] == 0 {
-			order = append(order, t)
-		}
-		counts[t]++
-	}
-	vec := map[string]float64{}
-	squares := make([]float64, len(order))
-	for i, t := range order {
-		vec[t] = float64(counts[t]) * idf[t]
-		squares[i] = vec[t] * vec[t]
-	}
-	return order, vec, math.Sqrt(bm25.PythonSum(squares))
-}
-
 type semanticHit struct {
 	score float64
 	b     blockFile
 }
 
-// semanticRanked is _semantic_ranked: cosine similarity of TF-IDF vectors, idf =
-// log(N / (1 + df)) + 1; zero scores dropped; the display id of every unreadable block
-// is appended to unreadable.
+// semanticRanked is _semantic_ranked over blocks counted now (no cache).
 func semanticRanked(query string, blocks []blockFile, unreadable *[]string) []semanticHit {
+	if len(tfidfTokens(query)) == 0 {
+		return nil // read nothing, as _semantic_ranked
+	}
+	return rankTFIDF(query, blocksearch.CountTerms(blockPaths(blocks), tfidfTokens), blocks, unreadable)
+}
+
+func blockPaths(blocks []blockFile) []string {
+	out := make([]string, len(blocks))
+	for i, b := range blocks {
+		out[i] = b.path
+	}
+	return out
+}
+
+// termCounts is the TF-IDF term counts of blocks: through the cache beside the find
+// cache when c.termCache (set by Main, so a test pointed at a corpus writes nothing unless
+// it asks), else counted now; and the cache state (blocksearch.CachedTermCounts).
+func (c *corpus) termCounts(blocks []blockFile) (*blocksearch.TermCounts, string) {
+	if !c.termCache {
+		return blocksearch.CountTerms(blockPaths(blocks), tfidfTokens), "off"
+	}
+	targets := make([]blocksearch.Target, len(blocks))
+	for i, b := range blocks {
+		targets[i] = blocksearch.Target{Display: displayID(b.label), Path: b.path}
+	}
+	return c.search().CachedTermCounts("tfidf-blocks", targets, tfidfTokens)
+}
+
+// rankTFIDF is _semantic_ranked over the term counts of blocks (tc.Docs[i] is blocks[i]):
+// cosine similarity of TF-IDF vectors, idf = log(N / (1 + df)) + 1; zero scores dropped;
+// the display id of every unreadable block is appended to unreadable. A document's weight
+// is count x idf and its norm the L2 norm of its weights in first-occurrence order
+// (Python's compensated sum()), computed from the counts without a weight map, and only
+// for the documents that share a term with the query (any other one scores 0).
+func rankTFIDF(query string, tc *blocksearch.TermCounts, blocks []blockFile, unreadable *[]string) []semanticHit {
 	queryTokens := tfidfTokens(query)
 	if len(queryTokens) == 0 {
 		return nil
 	}
-	docs := make([][]string, len(blocks))
-	df := map[string]int{}
-	for i, b := range blocks {
-		text, ok := readText(b.path)
-		if !ok && unreadable != nil {
-			*unreadable = append(*unreadable, displayID(b.label))
-		}
-		docs[i] = tfidfTokens(text)
-		seen := map[string]bool{}
-		for _, t := range docs[i] {
-			if !seen[t] {
-				seen[t] = true
-				df[t]++
+	if unreadable != nil {
+		for i, d := range tc.Docs {
+			if !d.Readable {
+				*unreadable = append(*unreadable, displayID(blocks[i].label))
 			}
 		}
 	}
-	idf := map[string]float64{}
-	for t, n := range df {
-		idf[t] = bm25.Log(float64(len(blocks))/float64(1+n)) + 1.0
+	df := make([]int, len(tc.Vocab))
+	for _, d := range tc.Docs {
+		for _, id := range d.IDs {
+			df[id]++
+		}
 	}
-	qOrder, qvec, qnorm := tfidfVector(queryTokens, idf)
+	idf := make([]float64, len(tc.Vocab))
+	for id, n := range df {
+		idf[id] = bm25.Log(float64(len(blocks))/float64(1+n)) + 1.0
+	}
+	// the query vector: its terms in first-occurrence order (a term no block holds weighs 0)
+	var qIDs []int
+	var qCounts []int
+	qPos := map[string]int{}
+	for _, t := range queryTokens {
+		if k, ok := qPos[t]; ok {
+			qCounts[k]++
+			continue
+		}
+		qPos[t] = len(qIDs)
+		qIDs = append(qIDs, tc.ID(t))
+		qCounts = append(qCounts, 1)
+	}
+	qvec := make([]float64, len(qIDs))
+	squares := make([]float64, len(qIDs))
+	inQuery := map[int32]int{}
+	for k, id := range qIDs {
+		if id >= 0 {
+			qvec[k] = float64(qCounts[k]) * idf[id]
+			inQuery[int32(id)] = k
+		}
+		squares[k] = qvec[k] * qvec[k]
+	}
+	qnorm := math.Sqrt(bm25.PythonSum(squares))
 	if qnorm == 0 {
 		return nil
 	}
 	var scored []semanticHit
-	for i, b := range blocks {
-		_, vec, norm := tfidfVector(docs[i], idf)
-		var parts []float64
-		for _, t := range qOrder {
-			if v, ok := vec[t]; ok {
-				parts = append(parts, qvec[t]*v)
+	docCount := make([]int32, len(qIDs))
+	var parts []float64
+	for i, d := range tc.Docs {
+		clear(docCount)
+		shared := false
+		for k, id := range d.IDs {
+			if q, ok := inQuery[id]; ok {
+				docCount[q], shared = d.Counts[k], true
 			}
 		}
-		if dot := bm25.PythonSum(parts); norm != 0 && dot != 0 {
-			scored = append(scored, semanticHit{dot / (qnorm * norm), b})
+		if !shared {
+			continue
+		}
+		parts = parts[:0]
+		for k, id := range qIDs {
+			if docCount[k] > 0 {
+				parts = append(parts, qvec[k]*(float64(docCount[k])*idf[id]))
+			}
+		}
+		dot := bm25.PythonSum(parts)
+		if dot == 0 {
+			continue
+		}
+		squares = slices.Grow(squares[:0], len(d.IDs))
+		for k, id := range d.IDs {
+			v := float64(d.Counts[k]) * idf[id]
+			squares = append(squares, v*v)
+		}
+		if norm := math.Sqrt(bm25.PythonSum(squares)); norm != 0 {
+			scored = append(scored, semanticHit{dot / (qnorm * norm), blocks[i]})
 		}
 	}
 	sort.SliceStable(scored, func(i, j int) bool { return scored[i].score > scored[j].score })
@@ -160,7 +215,11 @@ func (c *corpus) cmdSemantic(query string, hasQuery, buildIndex, forceTFIDF bool
 		terms[t] = true
 	}
 	var unreadable []string
-	scored := semanticRanked(expanded, blocks, &unreadable)
+	var scored []semanticHit
+	if len(tfidfTokens(expanded)) > 0 { // nothing to rank with: read nothing, as _semantic_ranked
+		tc, _ := c.termCounts(blocks)
+		scored = rankTFIDF(expanded, tc, blocks, &unreadable)
+	}
 	c.reportUnreadable(unreadable) // zero false negatives: a block that could not be read is named
 	if len(scored) == 0 {
 		counts := []honest.Count{{Label: "files", N: len(blocks)}}
