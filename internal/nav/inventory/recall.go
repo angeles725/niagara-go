@@ -6,7 +6,6 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
-	"sort"
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/argparse"
@@ -44,12 +43,7 @@ type lostSupertypes struct {
 // sorted), not entering symlinked directories; f gets each directory and
 // its non-directory entries.
 func walkUnsorted(top string, f func(dir string, files []string)) {
-	d, err := os.Open(top)
-	if err != nil {
-		return
-	}
-	names, err := d.Readdirnames(-1)
-	d.Close()
+	names, err := pycompat.Listdir(top)
 	if err != nil {
 		return
 	}
@@ -111,11 +105,10 @@ func javaFiles(organized string) []recallFile {
 
 // sortedDir is sorted(os.listdir(dir)); nil when it cannot be read.
 func sortedDir(dir string) []string {
-	names, err := readDirNames(dir)
+	names, err := pycompat.SortedListdir(dir)
 	if err != nil {
 		return nil
 	}
-	sort.Strings(names)
 	return names
 }
 

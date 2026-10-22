@@ -6,7 +6,6 @@ import (
 	"math/big"
 	"os"
 	"path/filepath"
-	"sort"
 	"strconv"
 	"strings"
 
@@ -174,8 +173,7 @@ func runStats(env *registry.Env, ns *argparse.Namespace) int {
 	dir := filepath.Join(env.BaseDir, "indexes")
 	reader := openStatsCache(dir)
 	var files []indexFile
-	if names, err := readDirNames(dir); err == nil {
-		sort.Strings(names)
+	if names, err := pycompat.SortedListdir(dir); err == nil {
 		for _, n := range names {
 			if strings.HasSuffix(n, ".json") {
 				var size int64
@@ -326,11 +324,4 @@ func runStats(env *registry.Env, ns *argparse.Namespace) int {
 }
 
 // readDirNames is os.listdir(dir).
-func readDirNames(dir string) ([]string, error) {
-	f, err := os.Open(dir)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-	return f.Readdirnames(-1)
-}
+func readDirNames(dir string) ([]string, error) { return pycompat.Listdir(dir) }
