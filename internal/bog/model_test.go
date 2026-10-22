@@ -11,13 +11,17 @@ import (
 	"testing"
 )
 
+// loadFixture parses a model fixture with the tolerant Parse that model.py parity is about: some
+// fixtures (edge.bog: line breaks Python's splitlines() honours inside a tag) are deliberately not
+// well-formed XML, which Load rejects.
 func loadFixture(t *testing.T, name string) *Bog {
 	t.Helper()
-	b, err := Load(filepath.Join("testdata", "model", name))
+	path := filepath.Join("testdata", "model", name)
+	text, err := ReadText(path)
 	if err != nil {
 		t.Fatal(err)
 	}
-	return b
+	return Parse(path, text)
 }
 
 // ParseTest.test_self_closing_component_is_indexed

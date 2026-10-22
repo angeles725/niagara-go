@@ -132,3 +132,26 @@ func TestGrepFormatters(t *testing.T) {
 		}
 	}
 }
+
+// TestGrepLiteralFastPathMatchesRegexp2 pins the whole-file and per-line
+// literal checks of Grep to the engine: a literal and the same text behind a
+// group (which takes no fast path) find the same hits, counts included, on
+// case variants, CRLF, invalid UTF-8 and a non-ASCII file under IGNORECASE.
+func TestGrepLiteralFastPathMatchesRegexp2(t *testing.T) {
+	org := corpus(t, map[string]string{
+		"a/a-rt/vineflower/p/A.java": "class A {\n  void checkFeature() {}\n}\n",
+		"a/a-rt/vineflower/p/B.java": "CHECKFEATURE\r\nx checkfeature\r\n",
+		"a/a-rt/vineflower/p/C.java": "café checkFeature\nK\n",
+		"a/a-rt/vineflower/p/D.java": "\xff\xfe checkFeature\xff\n",
+		"a/a-rt/vineflower/p/E.java": "nothing here\n",
+	})
+	for _, flags := range []pyre.Flags{0, pyre.IGNORECASE} {
+		for _, lit := range []string{"checkFeature", "k", "", "x c"} {
+			fast := Grep(org, pyre.MustCompile(lit, flags), 100, GrepFilter{})
+			slow := Grep(org, pyre.MustCompile("(?:"+lit+")", flags), 100, GrepFilter{})
+			if !reflect.DeepEqual(fast, slow) {
+				t.Errorf("%q flags %d: literal %+v, regexp2 %+v", lit, flags, fast, slow)
+			}
+		}
+	}
+}

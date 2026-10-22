@@ -2,6 +2,6 @@
  "args": [
   "inputs/dup-attr.px",
   "--gm",
-  "GM1"
+  "GM01"
  ]
 }

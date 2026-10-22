@@ -1,6 +1,6 @@
 GM,Tablero,Zona,Relay,DescripcionCircuito,CircuitLabel_Px,Schedule,CmdWritable,SchedLink_in10,JACE_driven,JACE_write_prio,BACnet_device,BACnet_objectId
 GM01,(no Px),,1,,,R1/Schedule1,SchdlGM01 R1,yes,yes,in16,GM01ilum,binaryOutput:1
 GM01,(no Px),,2,,,R2/Schedule2,SchdlGM01 R2,?,yes,in16,GM01ilum,
-GM02,AL5,,1,Pasillo &amp; Lobby é,,R1/Schedule1,HorR1,yes,yes,in10,GM02ilum,binaryOutput:11
+GM02,AL5,,1,Pasillo & Lobby é,,R1/Schedule1,HorR1,yes,yes,in10,GM02ilum,binaryOutput:11
 GM02,(no Px),,3,"Sala ""VIP"", Norte",,R3/Schedule3,HorR3,?,?,,GM02ilum,
 GM02,(no Px),,4,,,,,?,?,,GM02ilum,

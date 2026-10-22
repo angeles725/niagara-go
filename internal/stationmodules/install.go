@@ -1,12 +1,12 @@
 package stationmodules
 
 import (
-	"archive/zip"
 	"io"
 	"os"
 	"sort"
 	"strings"
 
+	"github.com/angeles725/niagara-go/internal/modjar"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyxml"
 )
@@ -42,12 +42,8 @@ func (x *partIndex) each(fn func(*part)) {
 // Python returns None only for a missing member, a bad ZIP or an OSError and crashes on a
 // corrupt deflate stream or an encrypted member; here every failure is None.
 func readZipMember(jar, name string) ([]byte, bool) {
-	z, err := zip.OpenReader(jar)
-	if err != nil {
-		return nil, false
-	}
-	defer z.Close()
-	return pycompat.ReadZipMember(z.File, func(f *zip.File) bool { return f.Name == name })
+	r := modjar.ReadMember(jar, name)
+	return r.Data, r.Err == nil
 }
 
 // parseModuleXML is parse_module_xml: nil when ElementTree would reject the document.
@@ -80,30 +76,37 @@ func parseModuleXML(raw []byte) *part {
 	return p
 }
 
-// indexInstall indexes every module-part jar under <root>/modules; ok is false when there
-// is no modules/ directory.
-func indexInstall(root string) (*partIndex, string, bool) {
+// indexInstall indexes every module-part jar under <root>/modules, reading their
+// module.xml through modjar's pool and cache; ok is false when there is no modules/
+// directory, and a modules/ that cannot be listed is exit 2 (Python's sorted(os.listdir())
+// would raise; an unreadable install must never look empty). A jar that cannot be read
+// is skipped, as _read_zip_member's None is.
+func indexInstall(root string) (*partIndex, string, bool, error) {
 	dir := pycompat.Join(root, "modules")
 	if !pycompat.IsDir(dir) {
-		return nil, dir, false
+		return nil, dir, false, nil
+	}
+	entries, err := os.ReadDir(dir) // sorted by name, as sorted(os.listdir()) is
+	if err != nil {
+		return nil, dir, true, fail(2, "error: cannot list install modules %s: %s", pycompat.StrRepr(dir), pycompat.StrerrorOf(err))
+	}
+	var jars []string
+	for _, e := range entries {
+		if strings.HasSuffix(e.Name(), ".jar") {
+			jars = append(jars, pycompat.Join(dir, e.Name()))
+		}
 	}
 	x := &partIndex{byName: map[string]*part{}}
-	entries, _ := os.ReadDir(dir) // sorted by name, as sorted(os.listdir()) is
-	for _, e := range entries {
-		if !strings.HasSuffix(e.Name(), ".jar") {
+	for _, r := range modjar.ReadAllCached(jars, "META-INF/module.xml", modjar.DefaultWorkers) {
+		if r.Err != nil {
 			continue
 		}
-		jar := pycompat.Join(dir, e.Name())
-		raw, ok := readZipMember(jar, "META-INF/module.xml")
-		if !ok {
-			continue
-		}
-		if p := parseModuleXML(raw); p != nil && p.name != "" {
-			p.jar = jar
+		if p := parseModuleXML(r.Data); p != nil && p.name != "" {
+			p.jar = r.Path
 			x.set(p)
 		}
 	}
-	return x, dir, true
+	return x, dir, true, nil
 }
 
 // indexSw maps partName -> staged jar paths under <root>/sw, walked like os.walk (top-down,

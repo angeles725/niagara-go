@@ -1,4 +1,4 @@
 {
-  "reason": "Python ends in an xml.parsers.expat.ExpatError traceback (duplicate attribute) when the transformed Px is not well-formed; Go, which encoding/xml alone would have let pass, prints one line (exit 1 like the tool's other refusals)",
-  "stderr": "greenmax-tablero-gen: the generated Px is not well-formed XML: XML syntax error on line 9: duplicate attribute text\n"
+ "reason": "Python ends in an xml.parsers.expat.ExpatError traceback (duplicate attribute) when the transformed Px is not well-formed; Go, which encoding/xml alone would have let pass, prints one line (exit 1 like the tool's other refusals); T31 (audit T21): --gm is GM and two digits (the real control folders are GM02..GM16), so the case passes the zero-padded tag",
+ "stderr": "greenmax-tablero-gen: the generated Px is not well-formed XML: XML syntax error on line 9: duplicate attribute text\n"
 }

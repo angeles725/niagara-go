@@ -1,8 +1,6 @@
 package secaudit
 
 import (
-	"archive/zip"
-	"errors"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -10,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/angeles725/niagara-go/internal/modjar"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
@@ -31,19 +30,26 @@ func sec15(home string, rep *report) {
 			"all wildcard holders are signed; risk only if an UNSIGNED module (SEC-01/06) declares name=*"))
 }
 
-// scanKeyringPerms reads modules/*.jar META-INF/module.xml: the KeyRingPermission holders, the
-// wildcard holders and the wildcard holders without a signature file. Unreadable jars are skipped.
+// scanKeyringPerms reads modules/*.jar META-INF/module.xml (through modjar's pool and
+// cache): the KeyRingPermission holders, the wildcard holders and the wildcard holders
+// without a signature file. Unreadable jars are skipped.
 func scanKeyringPerms(moddir string) (all, wild, wildUnsigned []string) {
 	entries, _ := os.ReadDir(moddir)
+	var jars []string
 	for _, ent := range entries {
-		f := ent.Name()
-		if !strings.HasSuffix(f, ".jar") {
+		if strings.HasSuffix(ent.Name(), ".jar") {
+			jars = append(jars, filepath.Join(moddir, ent.Name()))
+		}
+	}
+	for _, r := range modjar.ReadAllCached(jars, "META-INF/module.xml", modjar.DefaultWorkers) {
+		if r.Err != nil {
 			continue
 		}
-		names, xml, ok := readModuleXML(filepath.Join(moddir, f))
-		if !ok || !strings.Contains(xml, "KeyRingPermission") {
+		xml := pycompat.DecodeReplace(r.Data)
+		if !strings.Contains(xml, "KeyRingPermission") {
 			continue
 		}
+		f := filepath.Base(r.Path)
 		all = append(all, f)
 		star := false
 		for _, m := range keyRingRE.FindAllStringSubmatch(xml, -1) {
@@ -53,37 +59,22 @@ func scanKeyringPerms(moddir string) (all, wild, wildUnsigned []string) {
 			continue
 		}
 		wild = append(wild, f)
-		signed := false
-		for _, n := range names {
-			u := strings.ToUpper(n)
-			if strings.HasPrefix(n, "META-INF/") &&
-				(strings.HasSuffix(u, ".RSA") || strings.HasSuffix(u, ".DSA") || strings.HasSuffix(u, ".EC")) {
-				signed = true
-			}
-		}
-		if !signed {
+		if !signed(r.MetaInf) {
 			wildUnsigned = append(wildUnsigned, f)
 		}
 	}
 	return all, wild, wildUnsigned
 }
 
-// readModuleXML returns the member names and META-INF/module.xml of a jar; ok is false when the
-// jar cannot be read or has no module.xml.
-func readModuleXML(path string) (names []string, xml string, ok bool) {
-	zr, err := zip.OpenReader(path)
-	if err != nil && !errors.Is(err, zip.ErrInsecurePath) {
-		return nil, "", false
+// signed reports a signature block among a jar's META-INF/ entry names.
+func signed(metaInf []string) bool {
+	for _, n := range metaInf {
+		u := strings.ToUpper(n)
+		if strings.HasSuffix(u, ".RSA") || strings.HasSuffix(u, ".DSA") || strings.HasSuffix(u, ".EC") {
+			return true
+		}
 	}
-	defer zr.Close()
-	for _, f := range zr.File {
-		names = append(names, f.Name)
-	}
-	data, ok := pycompat.ReadZipMember(zr.File, func(f *zip.File) bool { return f.Name == "META-INF/module.xml" })
-	if !ok {
-		return nil, "", false
-	}
-	return names, pycompat.DecodeReplace(data), true
+	return false
 }
 
 // logIOC is one forensic indicator (B112 / B75).

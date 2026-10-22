@@ -2,6 +2,6 @@
  "args": [
   "inputs/nope.px",
   "--gm",
-  "GM1"
+  "GM01"
  ]
 }

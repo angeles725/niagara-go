@@ -40,11 +40,12 @@ func Main(args []string, s cli.Stdio) int {
 	return run(ns.String("supervisor"), ns.String("jace"), ns.String("px_dir"), ns.String("out"), s)
 }
 
-// loadBog is bog-nav's Bog(path): an unreadable input exits 3 with a "bog-nav:" line.
+// loadBog is bog-nav's Bog(path): an unreadable input exits 3 (bog.ExitBadInput) with a line
+// under this command's own name.
 func loadBog(path string, s cli.Stdio) (*bog.Bog, bool) {
 	b, err := bog.Load(path)
 	if err != nil {
-		fmt.Fprintf(s.Err, "bog-nav: %s\n", err)
+		fmt.Fprintf(s.Err, "%s: %s\n", prog, err)
 		return nil, false
 	}
 	return b, true
@@ -87,6 +88,12 @@ func run(supPath, jacePath, pxDir, out string, s cli.Stdio) int {
 		fmt.Fprintf(s.Err, "greenmax-matrix: 0 GreenMAX panels (no GM<n>ilum NiagaraPointFolder / BacnetDevice); "+
 			"supervisor %s; jace %s; %d panel(s) in Px %s\n", scope(supBog), scope(jaceBog), len(px), pxDir)
 		return 1
+	}
+	if len(px) == 0 {
+		// A wrong px_dir would otherwise pass silently: the matrix is still written, every panel
+		// without a supervisor tablero reading "(no Px)".
+		fmt.Fprintf(s.Err, "%s: warning: 0 GreenMAX Px files in %s: no Tablero, zone or circuit label "+
+			"comes from a Px\n", prog, pxDir)
 	}
 	rows := buildRows(sup, jac, px)
 	if err := writeCSV(out, rows); err != nil {
