@@ -5,6 +5,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/angeles725/niagara-go/internal/index"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/textfold"
 )
@@ -234,10 +235,20 @@ func (s *sweeper) shadowedEntries(relJar string, l *Listing) map[int]Entry {
 	return out
 }
 
-// classifyLooseDoc is Sweep.classify_loose_doc: a file under docs/.
+// pdfNoTextReason is the exclusion of a manual pdf-index.json lists with no
+// text (text_chars 0: its extracted text is only whitespace and form feeds,
+// as image-only or scanned pages give). nh does not OCR.
+const pdfNoTextReason = "PDF without a text layer (image-only or scanned pages; no OCR), nothing to index"
+
+// classifyLooseDoc is Sweep.classify_loose_doc: a file under docs/. Unlike
+// Python a listed manual without text is excluded (no-text-layer), not
+// counted as indexed.
 func (s *sweeper) classifyLooseDoc(rel string, pdfSources map[string]bool) verdict {
 	low := textfold.Lower(rel)
 	if strings.HasSuffix(low, ".pdf") {
+		if text, listed := pdfSources[low]; listed && !text {
+			return verdict{statusExcluded, pdfNoTextReason, "no-text-layer"}
+		}
 		if pdfSources[low] {
 			return verdict{statusIndexed, "docs-text (pdf-index.json)", "pdf"}
 		}
@@ -250,7 +261,9 @@ func (s *sweeper) classifyLooseDoc(rel string, pdfSources map[string]bool) verdi
 }
 
 // pdfSources are the lower-cased source_pdf values of pdf-index.json
-// (none when the file does not exist).
+// (none when the file does not exist), each true unless its entry records
+// text_chars 0 (no text was extracted). A source listed twice has text when
+// either entry has.
 func pdfSources(root string) (map[string]bool, error) {
 	out := map[string]bool{}
 	if !pycompat.IsFile(pycompat.Join(root, "indexes", "pdf-index.json")) {
@@ -267,11 +280,14 @@ func pdfSources(root string) (map[string]bool, error) {
 			return nil, err
 		}
 		src, _ := v.Get("source_pdf")
+		chars, hasChars := v.Get("text_chars")
+		n, isNum := index.Float(chars)
+		text := !hasChars || !isNum || n != 0
 		switch str, isStr := src.(string); {
 		case !pyTruthy(src):
-			out[""] = true
+			out[""] = out[""] || text
 		case isStr:
-			out[textfold.Lower(str)] = true
+			out[textfold.Lower(str)] = out[textfold.Lower(str)] || text
 		default:
 			return nil, &indexShapeError{name, "the source_pdf of " + key + " is not a string"}
 		}

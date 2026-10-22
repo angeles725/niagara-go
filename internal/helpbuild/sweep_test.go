@@ -397,3 +397,27 @@ func TestFreshFulltextDocs(t *testing.T) {
 		t.Errorf("stale index: %v", err)
 	}
 }
+
+// A PDF whose extracted text is only whitespace and form feeds (scanned or
+// image-only pages: "DIN Symbol Examples.pdf" has three JPEG pages) is not
+// indexed: it is excluded with its reason, not counted as indexed. There is
+// no OCR. A manual with text, or an entry without text_chars, stays indexed.
+func TestSweepImageOnlyPDF(t *testing.T) {
+	tmp := t.TempDir()
+	install, root := filepath.Join(tmp, "install"), filepath.Join(tmp, "data")
+	for _, n := range []string{"Scan.pdf", "Manual.pdf", "Old.pdf"} {
+		testkit.WriteFile(t, filepath.Join(install, "docs", n), []byte("%PDF-1.4"))
+	}
+	testkit.WriteFile(t, filepath.Join(root, "indexes", "pdf-index.json"), []byte(`{
+"Scan": {"source_pdf": "Scan.pdf", "pages": 0, "text_chars": 0},
+"Manual": {"source_pdf": "Manual.pdf", "pages": 3, "text_chars": 4100},
+"Old": {"source_pdf": "Old.pdf"}}`))
+	res := scanOK(t, install, root, SweepOptions{Rules: t3aRules(t)})
+	row := res.Rows["docs/ (loose files)"]
+	if row.Indexed != 2 || row.Excluded != 1 || row.Unclassified != 0 {
+		t.Errorf("loose PDFs: indexed %d excluded %d unclassified %d, want 2, 1, 0", row.Indexed, row.Excluded, row.Unclassified)
+	}
+	if n := res.Reasons[reasonKey{"no-text-layer", pdfNoTextReason}]; n != 1 {
+		t.Errorf("image-only PDF reason count %d, want 1: %v", n, res.Reasons)
+	}
+}

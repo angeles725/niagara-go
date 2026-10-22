@@ -801,6 +801,11 @@ real test builds a temporary one.
   `registeredInstall` and `loadReportIndex`), plus a `pdf-index.json` row that is not an
   object or a non-string truthy `source_pdf`, which are an error naming the file.
 - **File names that are not UTF-8** are not modelled (as in S7a and S9).
+- **A manual without a text layer is not indexed** (quality round 8 T33): a loose PDF whose
+  `pdf-index.json` entry records `text_chars` 0 (its text is only whitespace and form
+  feeds: image-only or scanned pages) is excluded as `no-text-layer`, where Python counted
+  it indexed. nh does not OCR. On 4.14.0.162 that is `docDINSymbols/EU/DIN Symbol
+  Examples.pdf` (three JPEG pages); an entry without `text_chars` stays indexed.
 
 ## S11: nh coverage and rebuild-all wiring
 
