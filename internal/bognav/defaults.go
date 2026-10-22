@@ -46,16 +46,10 @@ type defaultRec struct {
 
 // sourceDirs is _source_dirs: one decompiler output dir per module part.
 func sourceDirs(moduleDir string) []string {
-	f, err := os.Open(moduleDir)
+	parts, err := pycompat.SortedListdir(moduleDir)
 	if err != nil {
 		return nil
 	}
-	parts, err := f.Readdirnames(-1)
-	f.Close()
-	if err != nil {
-		return nil
-	}
-	sort.Strings(parts)
 	var out []string
 	for _, part := range parts {
 		for _, dec := range decompilers {
@@ -244,16 +238,10 @@ func (c *typeCatalog) ensure(key string) bool {
 		return true
 	}
 	rel := strings.ReplaceAll(key, ".", string(filepath.Separator)) + ".java"
-	f, err := os.Open(c.root)
+	modules, err := pycompat.SortedListdir(c.root)
 	if err != nil {
 		return false
 	}
-	modules, err := f.Readdirnames(-1)
-	f.Close()
-	if err != nil {
-		return false
-	}
-	sort.Strings(modules)
 	for _, m := range modules {
 		for _, d := range sourceDirs(slotomatic.Join(c.root, m)) {
 			if st, err := os.Stat(slotomatic.Join(d, rel)); err == nil && st.Mode().IsRegular() {

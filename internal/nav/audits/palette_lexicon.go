@@ -99,12 +99,7 @@ func jarLexicons(jar string) []lexiconFile {
 // countDirs is the number of entries of dir that are directories (symlinks
 // followed): the script's "module dirs" scope count.
 func countDirs(dir string) int {
-	f, err := os.Open(dir)
-	if err != nil {
-		return 0
-	}
-	names, _ := f.Readdirnames(-1)
-	f.Close()
+	names, _ := pycompat.Listdir(dir)
 	n := 0
 	for _, name := range names {
 		if pycompat.IsDir(filepath.Join(dir, name)) {
@@ -138,13 +133,7 @@ type censusRow struct {
 // paletteCensus is _census: one summary row per module directory of base
 // holding an artifact, and the duplicate-key roll-up.
 func paletteCensus(env *registry.Env, base string, asJSON bool) int {
-	f, err := os.Open(base)
-	var names []string
-	if err == nil {
-		names, _ = f.Readdirnames(-1)
-		f.Close()
-	}
-	sort.Strings(names)
+	names, _ := pycompat.SortedListdir(base)
 	var rows []censusRow
 	for _, m := range names {
 		dir := pycompat.Join(base, m)

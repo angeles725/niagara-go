@@ -119,35 +119,20 @@ func (d *docIndex) docModule(dir string) (string, bool) {
 	return "", false
 }
 
-// sortedDir is sorted(os.listdir(dir)); ok=false when it cannot be listed.
-func sortedDir(dir string) ([]string, bool) {
-	f, err := os.Open(dir)
-	if err != nil {
-		return nil, false
-	}
-	defer f.Close()
-	names, err := f.Readdirnames(-1)
-	if err != nil {
-		return nil, false
-	}
-	sort.Strings(names)
-	return names, true
-}
-
 // moduleLexicons is _module_lexicons: organized/<dir>/<sub>/extracted/<dir>*.lexicon
 // without a language variant, the network's own submodule first.
 func moduleLexicons(organized, dir, sub string) []string {
 	root := filepath.Join(organized, dir)
-	subs, ok := sortedDir(root)
-	if !ok {
+	subs, err := pycompat.SortedListdir(root)
+	if err != nil {
 		return nil
 	}
 	sort.SliceStable(subs, func(a, b int) bool { return subs[a] == sub && subs[b] != sub })
 	var out []string
 	for _, s := range subs {
 		ext := filepath.Join(root, s, "extracted")
-		names, ok := sortedDir(ext)
-		if !ok {
+		names, err := pycompat.SortedListdir(ext)
+		if err != nil {
 			continue
 		}
 		for _, n := range names {
