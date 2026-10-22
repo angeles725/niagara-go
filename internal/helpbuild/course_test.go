@@ -242,3 +242,27 @@ func TestRemoveCourseCopiesRefusesASymlink(t *testing.T) {
 		t.Error("the symlink's target was emptied")
 	}
 }
+
+// The recordings/ folder of the course (Days 1-4 transcripts, .srt with
+// timestamps and .txt without) is page text indexed under course-text/;
+// its MANIFEST.sha256 is an integrity manifest, excluded with a reason.
+func TestCourseRecordingsAreClassified(t *testing.T) {
+	r := mustDefault(t)
+	for _, rel := range []string{"recordings/Day 1 Transcription.srt", "recordings/Day 3 Transcription.txt"} {
+		if got := r.CourseKind(rel); got != "text" {
+			t.Errorf("CourseKind(%q) = %q, want text", rel, got)
+		}
+	}
+	if got := courseTextDest("recordings/Day 1 Transcription.srt"); got != "recordings/Day 1 Transcription.srt.txt" {
+		t.Errorf("courseTextDest(srt) = %q", got)
+	}
+	if r.CourseKind("recordings/MANIFEST.sha256") != "" {
+		t.Error("the recordings manifest is not page text")
+	}
+	if rule := r.ExcludeRule(coursePseudoJar, "recordings/MANIFEST.sha256"); rule == nil || rule.ID != "course-archive-manifests" {
+		t.Errorf("recordings/MANIFEST.sha256 exclude rule = %+v, want course-archive-manifests", rule)
+	}
+	if r.CourseKind("recordings/notes.md") != "" {
+		t.Error("only transcripts (.srt, .txt) of recordings/ are page text")
+	}
+}

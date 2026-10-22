@@ -157,6 +157,7 @@
       "jar": "(course)",
       "entry": [
         "*.sha256",
+        "recordings/*.sha256",
         "*-zip-listing.txt"
       ],
       "reason": "integrity manifests and zip listing of the course archive"
@@ -316,9 +317,11 @@
     }
   ],
   "course": {
-    "comment": "The developer course bound to a version (registry course_dir): text/*.txt pages -> course-text/ (indexed page by page), example code -> devguide-examples/course/; every other course file needs an exclude rule with jar \"(course)\".",
+    "comment": "The developer course bound to a version (registry course_dir): text/*.txt pages and the recordings/ transcripts (.txt, and .srt with their timestamps) -> course-text/ (indexed page by page), example code -> devguide-examples/course/; every other course file needs an exclude rule with jar \"(course)\".",
     "text": [
       "text/*.txt",
+      "recordings/*.txt",
+      "recordings/*.srt",
       "niagara-*/dev/**readme*.txt",
       "niagara-*/dev/**readme.md"
     ],
