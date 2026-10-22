@@ -10,6 +10,8 @@ import (
 	"io"
 	"math"
 	"unicode/utf8"
+
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // Reading one entry the way Python's ZipFile.open(info).read() does (3.15
@@ -66,7 +68,7 @@ func (z *File) DataStart(x *Info) (int64, error) {
 		}
 		local = string(fname)
 	} else {
-		local = decodeCP437(fname)
+		local = pycompat.DecodeCP437(string(fname))
 	}
 	if local != x.origName {
 		return 0, fmt.Errorf("%w: file name in directory %q and header %q differ", ErrBadZip, x.origName, local)

@@ -67,22 +67,8 @@ func readFromJar(jar, member string) (string, bool) {
 		return "", false
 	}
 	defer zr.Close()
-	var hit *zip.File
-	for _, f := range zr.File {
-		if core.ZipName(f) == member {
-			hit = f // zipfile keeps the last entry of a repeated name
-		}
-	}
-	if hit == nil {
-		return "", false
-	}
-	rc, err := hit.Open()
-	if err != nil {
-		return "", false
-	}
-	defer rc.Close()
-	b, err := io.ReadAll(rc)
-	if err != nil {
+	b, ok := pycompat.ReadZipMember(zr.File, func(f *zip.File) bool { return core.ZipName(f) == member })
+	if !ok {
 		return "", false
 	}
 	return pycompat.DecodeReplace(b), true

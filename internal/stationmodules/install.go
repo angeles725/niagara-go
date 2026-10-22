@@ -49,22 +49,7 @@ func readZipMember(jar, name string) ([]byte, bool) {
 		return nil, false
 	}
 	defer z.Close()
-	var hit *zip.File
-	for _, f := range z.File {
-		if f.Name == name {
-			hit = f // zipfile keeps the last entry of a repeated name
-		}
-	}
-	if hit == nil {
-		return nil, false
-	}
-	r, err := hit.Open()
-	if err != nil {
-		return nil, false
-	}
-	defer r.Close()
-	data, err := io.ReadAll(r)
-	return data, err == nil
+	return pycompat.ReadZipMember(z.File, func(f *zip.File) bool { return f.Name == name })
 }
 
 // parseModuleXML is parse_module_xml: nil when ElementTree would reject the document.

@@ -14,6 +14,8 @@ import (
 	"sort"
 	"strings"
 	"unicode/utf8"
+
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // The central-directory reader of Python's zipfile (3.15 ZipFile(path,
@@ -41,24 +43,6 @@ var (
 	// tool stops); here the jar is unreadable.
 	errUnsupportedZip = errors.New("zip file version above 6.3")
 )
-
-// cp437High decodes bytes 0x80-0xFF ("cp437" codec; 0x00-0x7F is ASCII).
-const cp437High = "ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜ¢£¥₧ƒáíóúñÑªº¿⌐¬½¼¡«»░▒▓│┤╡╢╖╕╣║╗╝╜╛┐" +
-	"└┴┬├─┼╞╟╚╔╩╦╠═╬╧╨╤╥╙╘╒╓╫╪┘┌█▄▌▐▀αßΓπΣσµτΦΘΩδ∞φε∩≡±≥≤⌠⌡÷≈°∙·√ⁿ²■ "
-
-var cp437Table = []rune(cp437High)
-
-func decodeCP437(b []byte) string {
-	var sb strings.Builder
-	for _, c := range b {
-		if c < 0x80 {
-			sb.WriteByte(c)
-		} else {
-			sb.WriteRune(cp437Table[c-0x80])
-		}
-	}
-	return sb.String()
-}
 
 // sanitizeName is zipfile._sanitize_filename: the name ends at the first
 // NUL, and on Windows (os.sep "\\") backslashes become "/".
@@ -314,7 +298,7 @@ func parseCentralDir(data []byte, sizeCD uint64) ([]Info, error) {
 			}
 			name = string(raw)
 		} else {
-			name = decodeCP437(raw)
+			name = pycompat.DecodeCP437(string(raw))
 		}
 		x := Info{Name: sanitizeName(name), origName: name, CRC: le.Uint32(cd[16:]), Size: uint64(le.Uint32(cd[24:])),
 			flags: le.Uint16(cd[8:]), method: le.Uint16(cd[10:]),

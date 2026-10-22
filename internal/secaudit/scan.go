@@ -3,7 +3,6 @@ package secaudit
 import (
 	"archive/zip"
 	"errors"
-	"io"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -77,23 +76,11 @@ func readModuleXML(path string) (names []string, xml string, ok bool) {
 		return nil, "", false
 	}
 	defer zr.Close()
-	var member *zip.File
 	for _, f := range zr.File {
 		names = append(names, f.Name)
-		if f.Name == "META-INF/module.xml" {
-			member = f // Python's getinfo reads the last entry of a name
-		}
 	}
-	if member == nil {
-		return nil, "", false
-	}
-	rc, err := member.Open()
-	if err != nil {
-		return nil, "", false
-	}
-	defer rc.Close()
-	data, err := io.ReadAll(rc)
-	if err != nil {
+	data, ok := pycompat.ReadZipMember(zr.File, func(f *zip.File) bool { return f.Name == "META-INF/module.xml" })
+	if !ok {
 		return nil, "", false
 	}
 	return names, pycompat.DecodeReplace(data), true
