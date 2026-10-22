@@ -72,7 +72,9 @@ func buildParser() *argparse.Parser {
 			Help: "also count bare B<N> mentions (outside code) of existing blocks as citations"}, "--bare")
 	}
 	find := add("find", "full-text case-insensitive tokenized search with ranking")
-	find.Add(argparse.Arg{}, "query")
+	// One or more words, joined with spaces like nsearch's query: `find alarm histories` is
+	// `find "alarm histories"`.
+	find.Add(argparse.Arg{Nargs: argparse.OneOrMore, Help: "search terms; several words are joined with spaces"}, "query")
 	scope(find)
 	mode := find.AddMutuallyExclusiveGroup(false)
 	mode.Add(argparse.Arg{Dest: "mode_and", Action: argparse.StoreTrue, Help: "ALL terms must appear in a block (AND mode)"}, "--and")
@@ -148,7 +150,7 @@ func Main(args []string, s cli.Stdio) int {
 	str := ns.String
 	switch cmd {
 	case "find":
-		return c.cmdFind(str("query"), str("scope"), ns.Int("limit"), ns.Bool("mode_and"))
+		return c.cmdFind(strings.Join(ns.Strings("query"), " "), str("scope"), ns.Int("limit"), ns.Bool("mode_and"))
 	case "grep":
 		return c.cmdGrep(str("regex"), str("scope"), ns.Int("limit"))
 	case "show":
