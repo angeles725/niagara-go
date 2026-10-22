@@ -2,7 +2,7 @@
  "args": [
   "inputs/tablero-crlf.px",
   "--gm",
-  "GM3",
+  "GM03",
   "--stdout"
  ]
 }

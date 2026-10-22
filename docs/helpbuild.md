@@ -1009,6 +1009,34 @@ identical; Python
 - **`gates.log`** is LF on every OS (Python's text mode writes CRLF on Windows), as `build.log`.
 - **A full-text index no location can hold** is `scope.UnwritableIndexError` (exit 2), as in S11a.
 
+## Go-only text sources
+
+Documentation the Python tools never indexed. Each is one builder step of rebuild-all
+(appended after `course_extractor.py`, so the frozen plan and run outputs gained one line
+each on purpose) and one row of `internal/help/fts/sources.go` (appended, so the doc ids of
+the older sources keep their order). Both write through `writeTextSource`
+(`textsource.go`): a staging tree swapped in with `atomicfile.RebuiltDir`, or no folder at
+all when the version has nothing to write.
+
+| Step | Writes | Reads | Coverage |
+|---|---|---|---|
+| `package_text_builder` (`packagetext.go`) | `package-text/<package>.txt`: `TITLE`, `PACKAGE`, `MODULE` header, then the `<description>` of the package as text (`htmltext.HTMLToText` of its escaped HTML); one page per package, a description repeated by another module or by the `guides/` copy written once | every `package-index.bajadoc` under `devguide/` and `guides/` | `doc_types` kind `bajadoc-package` (it was the `bajadoc-listing` exclusion): indexed when the page is in the full-text index; a listing with an empty description counts as indexed (its classes are indexed one by one, as the old reason said). `jdk/` listings and `module-index.bajadoc` stay excluded. |
+
+| `lexicon_extractor` (`lexicon.go`) | `lexicon-text/<jar stem>/<entry>.txt`: `TITLE`, `MODULE`, `LEXICON` header, then one `key = value` line per help entry, entries separated by form feeds | every `*.lexicon` entry of the registered install's `modules/*.jar` (translation jars included) that the doc-jar extraction does not copy; an install that is not mounted keeps the last copy | `.lexicon` is in `doc_like`, so `coverage --sweep` sees every lexicon: indexed when its page is in the full-text index, excluded (`lexicon-labels`) when it holds UI labels only, UNCLASSIFIED otherwise. A lexicon of a jar outside `modules/` (`bin/ext/niagarad.jar`, `sw/` copies) is excluded by the `lexicon-outside-modules` rule; extracted lexicons (doc jars, `doc/`) keep the `doc_types` translation-lexicon exclusion. |
+
+`nh package <name>` prints the description block above the class list, with the page path.
+
+Lexicon granularity and filter: one file per lexicon file, indexed as a paged source (one
+full-text document per entry, entries separated by form feeds, like the course pages). Each
+entry is scored on its own words, and the results still list one hit per lexicon file (its
+best entry plus decayed further ones), so the 9k (4.15) to 22k (4.14) help entries never
+flood a result list. A whole file as one document ranked below every guide (BM25 favours
+short documents): with that and the code factor 0.5, 4 to 7 of 15 sampled descriptions
+stayed out of `find`'s ten results; paged at factor 1.0, all 15 are found. A file keeps the entries whose
+last key segment is `description`, `desc`, `help`, `tooltip` or `summary` (any letter case)
+and any value of five words or more (messages, prompts, warnings); plain labels ("Station
+Name") are left out.
+
 ## Real data
 
 `TestCoverageRealGoldens` (S10b-1) is the package's one real-data test:

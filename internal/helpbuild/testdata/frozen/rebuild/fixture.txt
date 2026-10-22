@@ -16,6 +16,8 @@ REBUILD-ALL (dry run)
   PLAN  build_devguide_toc.py      -> devguide-toc.json
   PLAN  pdf_extractor.py           -> pdf-index.json, docs-text/
   PLAN  course_extractor.py        -> course-text/
+  PLAN  package_text_builder       -> package-text/
+  PLAN  lexicon_extractor          -> lexicon-text/
 
 Dry run — nothing executed. Drop --dry-run to build.
 # stderr
@@ -105,8 +107,12 @@ devguide-toc.json: 2 sections -> <root>/indexes/devguide-toc.json
 SKIP: no PDF manuals for <root> (docs dir: None); search uses the shared manuals.
   RUN   course_extractor.py        -> course-text/
 course: no course bound to this version; skipped
+  RUN   package_text_builder       -> package-text/
+package-text/: 0 package descriptions (from 0 package-index.bajadoc files)
+  RUN   lexicon_extractor          -> lexicon-text/
+lexicon-text/: no install registered; skipped (the last copy is kept)
 
-Ran 14, skipped 0, failed 0.
+Ran 16, skipped 0, failed 0.
 Manifest re-stamped. Run 'freshness' to confirm FRESH.
 # stderr
 WARNING: toc not read, page titles fall back to <title>: <root>/guides/Bad/toc.xml: mismatched tag: line 1, column 16
@@ -346,8 +352,12 @@ devguide-toc.json: 2 sections -> <root>/indexes/devguide-toc.json
 SKIP: no PDF manuals for <root> (docs dir: None); search uses the shared manuals.
   RUN   course_extractor.py        -> course-text/
 course: no course bound to this version; skipped
+  RUN   package_text_builder       -> package-text/
+package-text/: 0 package descriptions (from 0 package-index.bajadoc files)
+  RUN   lexicon_extractor          -> lexicon-text/
+lexicon-text/: no install registered; skipped (the last copy is kept)
 
-Ran 14, skipped 0, failed 0.
+Ran 16, skipped 0, failed 0.
 Manifest re-stamped. Run 'freshness' to confirm FRESH.
 # stderr
 WARNING: toc not read, page titles fall back to <title>: <root>/guides/Bad/toc.xml: mismatched tag: line 1, column 16
@@ -379,7 +389,7 @@ indexes/.manifest.json 644
 }
 ## log
 # stdout
-Ran 14, skipped 0, failed 0.
+Ran 16, skipped 0, failed 0.
 # stderr
 WARNING: toc not read, page titles fall back to <title>: <root>/guides/Bad/toc.xml: mismatched tag: line 1, column 16
 WARNING: toc not read, page titles fall back to <title>: <root>/guides/Bad/toc.xml: mismatched tag: line 1, column 16
@@ -478,6 +488,10 @@ devguide-toc.json: 2 sections -> <root>/indexes/devguide-toc.json
 SKIP: no PDF manuals for <root> (docs dir: None); search uses the shared manuals.
   RUN   course_extractor.py        -> course-text/
 course: no course bound to this version; skipped
+  RUN   package_text_builder       -> package-text/
+package-text/: 0 package descriptions (from 0 package-index.bajadoc files)
+  RUN   lexicon_extractor          -> lexicon-text/
+lexicon-text/: no install registered; skipped (the last copy is kept)
 
-Ran 14, skipped 0, failed 0.
+Ran 16, skipped 0, failed 0.
 Manifest re-stamped. Run 'freshness' to confirm FRESH.

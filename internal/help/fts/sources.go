@@ -30,6 +30,10 @@ var sources = []source{
 	{"source", []string{".java"}},
 	{"devguide-rc", []string{".java", ".txt"}},
 	{"devguide-examples", []string{".js", ".hbs", ".px", ".html", ".java"}}, // doc_types.EXAMPLE_EXT
+	// Go-only sources (no text_sources.py row), appended so the doc ids of
+	// the sources above keep their order: helpbuild writes them.
+	{"package-text", []string{".txt"}}, // package-index.bajadoc descriptions
+	{"lexicon-text", []string{".txt"}}, // lexicon help text of the module jars
 }
 
 // Labels are text_sources.LABELS.

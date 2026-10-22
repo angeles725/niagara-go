@@ -2,7 +2,7 @@
  "args": [
   "inputs/tablero.px",
   "--gm",
-  "GM1",
+  "GM01",
   "--out",
   "inputs/nodir/x.md"
  ]
