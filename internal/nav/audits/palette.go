@@ -49,11 +49,8 @@ func readExtracted(path string) (string, bool) {
 	if err != nil || !st.Mode().IsRegular() {
 		return "", false
 	}
-	b, err := os.ReadFile(path)
-	if err != nil {
-		return "", false
-	}
-	return pycompat.UniversalNewlines(pycompat.DecodeReplace(b)), true
+	text, err := pycompat.ReadTextReplace(path)
+	return text, err == nil
 }
 
 // readFromJar is _read_from_jar: the member's bytes decoded as UTF-8 with
