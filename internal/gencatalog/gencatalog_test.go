@@ -169,3 +169,26 @@ func TestUnreadableIsCannotCheck(t *testing.T) {
 		t.Errorf("catalog: exit %d, stdout %q, stderr %q", code, out.String(), errb.String())
 	}
 }
+
+// TestRefusesOutsideACheckout: a root that holds no main-corpus block (the binary run
+// from its install folder, whose grandparent is not niagara-research) is not a catalog
+// of zero blocks. Every mode refuses with exit 3 (environment: no checkout), names the
+// root on stderr, prints nothing on stdout and writes no CATALOG.md.
+func TestRefusesOutsideACheckout(t *testing.T) {
+	root := t.TempDir()
+	saved := repoRoot
+	repoRoot = func() (string, error) { return root, nil }
+	t.Cleanup(func() { repoRoot = saved })
+	for _, args := range [][]string{{}, {"--check"}, {"--stdout"}} {
+		var out, errb bytes.Buffer
+		code := Main(args, cli.Stdio{In: strings.NewReader(""), Out: &out, Err: &errb})
+		want := "gen-catalog: no niagara-mental-model-bloque*.md block file under " + root +
+			" -- not a niagara-research checkout; nothing written\n"
+		if code != 3 || out.Len() != 0 || errb.String() != want {
+			t.Errorf("%v: exit %d, stdout %q, stderr %q", args, code, out.String(), errb.String())
+		}
+		if _, err := os.Stat(filepath.Join(root, catalogName)); !os.IsNotExist(err) {
+			t.Fatalf("%v: %s written outside a checkout (stat: %v)", args, catalogName, err)
+		}
+	}
+}

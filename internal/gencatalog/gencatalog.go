@@ -5,9 +5,15 @@
 // resolved (Python: Path(__file__).resolve().parent.parent), so the binary installed
 // as <repo>/tools/gen-catalog finds <repo> from any working directory.
 //
+// A root that holds no main-corpus block file is not a checkout (the binary run from
+// its install folder, whose grandparent is not the repository): every mode refuses
+// there and writes nothing, rather than reporting a catalog of zero blocks.
+//
 // Exit: 0 written/printed/fresh, 1 stale under --check or a failed write, 2 a usage
 // error or a block or CATALOG.md that could not be read (intended difference: Python
-// dies with a traceback and exit 1, which --check callers would take for "stale").
+// dies with a traceback and exit 1, which --check callers would take for "stale"),
+// 3 no checkout: the repository could not be located or holds no block file (the
+// check-coverage convention for "no block file found").
 package gencatalog
 
 import (
@@ -65,12 +71,17 @@ func Main(args []string, s cli.Stdio) int {
 	root, err := repoRoot()
 	if err != nil {
 		fmt.Fprintf(s.Err, "gen-catalog: cannot locate the repository: %v\n", err)
-		return 1
+		return 3
 	}
 	entries, err := collect(root)
 	if err != nil {
 		fmt.Fprintf(s.Err, "gen-catalog: %v\n", err)
 		return 2 // could not read a block: neither fresh nor stale (Python: traceback, exit 1)
+	}
+	if len(entries) == 0 { // not a checkout: never write, check or print an empty catalog
+		fmt.Fprintf(s.Err, "gen-catalog: no niagara-mental-model-bloque*.md block file under %s "+
+			"-- not a niagara-research checkout; nothing written\n", root)
+		return 3
 	}
 	content := render(entries)
 	catalog := filepath.Join(root, catalogName)
