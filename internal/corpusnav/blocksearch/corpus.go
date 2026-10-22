@@ -181,7 +181,10 @@ type Target struct{ Display, Path string }
 func (c *Corpus) Targets(scope string) []Target {
 	var out []Target
 	if scope == "blocks" || scope == "all" {
-		for _, b := range append(blockfiles.MainBlocks(c.Root), blockfiles.SubBlocks(c.Root)...) {
+		// corpus-nav's and nsearch's entry gates already listed the root and stopped on an
+		// error, so a listing error here (the root locked mid-run) reads as no main block.
+		main, _ := blockfiles.MainBlocks(c.Root)
+		for _, b := range append(main, blockfiles.SubBlocks(c.Root)...) {
 			out = append(out, Target{DisplayID(b.Label), b.Path})
 		}
 	}

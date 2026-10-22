@@ -13,12 +13,15 @@
 package blockfiles
 
 import (
+	"errors"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"runtime"
 	"sort"
 	"strings"
 	"sync"
+	"syscall"
 
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pypath"
@@ -166,9 +169,18 @@ func sortBlocks(bs []Block, tie func(a, b Block) bool) {
 func join(dir, name string) string { return pypath.Join(dir, name) }
 
 // MainBlocks is main_blocks: the main blocks directly under root, sorted by label, then
-// file name.
-func MainBlocks(root string) []Block {
-	entries, _ := os.ReadDir(root)
+// file name. A root that does not exist (or is not a directory) has no blocks, as
+// Path.glob says; a root that exists but cannot be listed (permission, I/O) is an error,
+// never an empty corpus: Path.glob would hide it, so this is an intended fail-closed
+// difference from Python.
+func MainBlocks(root string) ([]Block, error) {
+	entries, err := os.ReadDir(root)
+	if err != nil {
+		if errors.Is(err, fs.ErrNotExist) || errors.Is(err, syscall.ENOTDIR) {
+			return nil, nil
+		}
+		return nil, err
+	}
 	var out []Block
 	for _, e := range entries {
 		name := e.Name()
@@ -180,7 +192,7 @@ func MainBlocks(root string) []Block {
 		}
 	}
 	sortBlocks(out, func(a, b Block) bool { return filepath.Base(a.Path) < filepath.Base(b.Path) })
-	return out
+	return out, nil
 }
 
 // subLabel is _sub_label: (corpus, label) of a sub-corpus block, ok false otherwise.
@@ -346,5 +358,12 @@ func (w *walker) note(dirs []dirEntryStamp, links []linkKind, invalid bool) {
 	w.rec.invalid = w.rec.invalid || invalid
 }
 
-// AllBlocks is all_blocks: the main corpus, then every sub-corpus block.
-func AllBlocks(root string) []Block { return append(MainBlocks(root), SubBlocks(root)...) }
+// AllBlocks is all_blocks: the main corpus, then every sub-corpus block. A root that
+// cannot be listed is MainBlocks' error (the sub-corpus walk is not run).
+func AllBlocks(root string) ([]Block, error) {
+	main, err := MainBlocks(root)
+	if err != nil {
+		return nil, err
+	}
+	return append(main, SubBlocks(root)...), nil
+}

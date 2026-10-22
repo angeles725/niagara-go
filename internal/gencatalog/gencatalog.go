@@ -73,7 +73,12 @@ func Main(args []string, s cli.Stdio) int {
 		fmt.Fprintf(s.Err, "gen-catalog: cannot locate the repository: %v\n", err)
 		return 3
 	}
-	entries, err := collect(root)
+	blocks, err := blockfiles.MainBlocks(root)
+	if err != nil { // a root that cannot be listed is not a checkout of zero blocks
+		fmt.Fprintf(s.Err, "gen-catalog: cannot list %s: %s\n", root, pycompat.StrerrorOf(err))
+		return 3
+	}
+	entries, err := collect(blocks)
 	if err != nil {
 		fmt.Fprintf(s.Err, "gen-catalog: %v\n", err)
 		return 2 // could not read a block: neither fresh nor stale (Python: traceback, exit 1)
@@ -151,9 +156,9 @@ func readCatalog(path string) (text string, present bool, err error) {
 	return text, err == nil, err
 }
 
-func collect(root string) ([]entry, error) {
+func collect(blocks []blockfiles.Block) ([]entry, error) {
 	var out []entry
-	for _, b := range blockfiles.MainBlocks(root) {
+	for _, b := range blocks {
 		h1, err := extractH1(b.Path)
 		if err != nil {
 			return nil, fmt.Errorf("cannot read %s: %s", b.Path, pycompat.StrerrorOf(err))

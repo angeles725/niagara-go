@@ -20,6 +20,7 @@ import (
 	"github.com/angeles725/niagara-go/internal/blockfiles"
 	"github.com/angeles725/niagara-go/internal/cli"
 	"github.com/angeles725/niagara-go/internal/locate"
+	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/version"
 )
 
@@ -141,10 +142,19 @@ func Main(args []string, s cli.Stdio) int {
 		}
 		root = r
 	}
-	if readsCorpus(cmd, ns) && len(blockfiles.MainBlocks(root)) == 0 {
-		fmt.Fprintf(s.Err, "corpus-nav: cannot search: no block files under %s "+
-			"(set CORPUS_NAV_ROOT to the niagara-research checkout)\n", pyPath(root))
-		return 2
+	if readsCorpus(cmd, ns) {
+		// The entry gate: a root that cannot be listed, or that holds no main block, cannot
+		// be searched (exit 2). Past it the commands list the root again without checking.
+		main, err := blockfiles.MainBlocks(root)
+		if err != nil {
+			fmt.Fprintf(s.Err, "corpus-nav: cannot search: cannot list %s: %s\n", pyPath(root), pycompat.StrerrorOf(err))
+			return 2
+		}
+		if len(main) == 0 {
+			fmt.Fprintf(s.Err, "corpus-nav: cannot search: no block files under %s "+
+				"(set CORPUS_NAV_ROOT to the niagara-research checkout)\n", pyPath(root))
+			return 2
+		}
 	}
 	c := newCorpus(root, os.Getenv("CORPUS_NAV_INDEX_DIR"), s.Out, s.Err)
 	c.termCache = true

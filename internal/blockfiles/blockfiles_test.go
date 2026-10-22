@@ -1,9 +1,12 @@
 package blockfiles
 
 import (
+	"errors"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"reflect"
+	"runtime"
 	"testing"
 )
 
@@ -43,7 +46,7 @@ func TestAllBlocks(t *testing.T) {
 		{"R10", "niagara-reflow-block10.md", "reflow"},
 	}
 	var got [][3]string
-	for _, b := range AllBlocks(root) {
+	for _, b := range listed(t)(AllBlocks(root)) {
 		rel, _ := filepath.Rel(root, b.Path)
 		got = append(got, [3]string{b.Label, filepath.ToSlash(rel), b.Corpus})
 	}
@@ -51,7 +54,7 @@ func TestAllBlocks(t *testing.T) {
 		t.Errorf("AllBlocks =\n%v\nwant\n%v", got, want)
 	}
 	t.Chdir(root)
-	if b := MainBlocks("."); len(b) == 0 || b[0].Path != "niagara-mental-model.md" {
+	if b := listed(t)(MainBlocks(".")); len(b) == 0 || b[0].Path != "niagara-mental-model.md" {
 		t.Errorf("Path(\".\") / name drops the dot: %v", b)
 	}
 }
@@ -92,7 +95,7 @@ func TestPathIsPathlib(t *testing.T) {
 		}
 	}
 	var got []string
-	for _, b := range AllBlocks(root) {
+	for _, b := range listed(t)(AllBlocks(root)) {
 		got = append(got, b.Path)
 	}
 	sep := string(filepath.Separator)
@@ -113,5 +116,63 @@ func TestPyInt(t *testing.T) {
 		if got := PyInt(in); got != want {
 			t.Errorf("PyInt(%q) = %q, want %q", in, got, want)
 		}
+	}
+}
+
+// lockedRoot is a directory this user cannot list (mode 000, restored after the test).
+func lockedRoot(t *testing.T) string {
+	t.Helper()
+	if runtime.GOOS == "windows" {
+		t.Skip("mode 000 does not lock a directory on Windows")
+	}
+	d := filepath.Join(t.TempDir(), "locked")
+	if err := os.Mkdir(d, 0); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = os.Chmod(d, 0o755) })
+	if _, err := os.ReadDir(d); err == nil {
+		t.Skip("mode 000 does not stop this user listing a directory (root?)")
+	}
+	return d
+}
+
+// TestMainBlocksUnlistableRootIsAnError: a root that cannot be listed is not a corpus of
+// zero blocks (Path.glob would say so); MainBlocks and AllBlocks fail closed.
+func TestMainBlocksUnlistableRootIsAnError(t *testing.T) {
+	root := lockedRoot(t)
+	if bs, err := MainBlocks(root); err == nil || !errors.Is(err, fs.ErrPermission) || bs != nil {
+		t.Errorf("MainBlocks = %v, %v; want a permission error", bs, err)
+	}
+	if bs, err := AllBlocks(root); err == nil || !errors.Is(err, fs.ErrPermission) || bs != nil {
+		t.Errorf("AllBlocks = %v, %v; want a permission error", bs, err)
+	}
+}
+
+// TestMainBlocksMissingRootIsEmpty: a root that does not exist (or is a file) still has
+// no blocks and no error, as Path.glob says; the callers' empty-corpus gates handle it.
+func TestMainBlocksMissingRootIsEmpty(t *testing.T) {
+	dir := t.TempDir()
+	file := filepath.Join(dir, "file")
+	if err := os.WriteFile(file, nil, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	for _, root := range []string{filepath.Join(dir, "gone"), file} {
+		if bs, err := MainBlocks(root); err != nil || len(bs) != 0 {
+			t.Errorf("MainBlocks(%s) = %v, %v; want none, nil", root, bs, err)
+		}
+		if bs, err := AllBlocks(root); err != nil || len(bs) != 0 {
+			t.Errorf("AllBlocks(%s) = %v, %v; want none, nil", root, bs, err)
+		}
+	}
+}
+
+// listed returns the blocks of a listing that cannot fail on a test tree.
+func listed(t *testing.T) func([]Block, error) []Block {
+	return func(bs []Block, err error) []Block {
+		t.Helper()
+		if err != nil {
+			t.Fatal(err)
+		}
+		return bs
 	}
 }

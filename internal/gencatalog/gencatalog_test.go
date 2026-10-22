@@ -192,3 +192,31 @@ func TestRefusesOutsideACheckout(t *testing.T) {
 		}
 	}
 }
+
+// TestUnlistableRootIsEnvironment: a repository root this user cannot list is not a
+// checkout of zero blocks. Every mode exits 3 (environment) naming the root and the OS
+// reason, prints nothing on stdout and writes nothing.
+func TestUnlistableRootIsEnvironment(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("mode 000 does not lock a directory on Windows")
+	}
+	root := filepath.Join(t.TempDir(), "locked")
+	if err := os.Mkdir(root, 0); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = os.Chmod(root, 0o755) })
+	if _, err := os.ReadDir(root); err == nil {
+		t.Skip("mode 000 does not stop this user listing a directory (root?)")
+	}
+	saved := repoRoot
+	repoRoot = func() (string, error) { return root, nil }
+	t.Cleanup(func() { repoRoot = saved })
+	for _, args := range [][]string{{}, {"--check"}, {"--stdout"}} {
+		var out, errb bytes.Buffer
+		code := Main(args, cli.Stdio{In: strings.NewReader(""), Out: &out, Err: &errb})
+		want := "gen-catalog: cannot list " + root + ": Permission denied\n"
+		if code != 3 || out.Len() != 0 || errb.String() != want {
+			t.Errorf("%v: exit %d, stdout %q, stderr %q", args, code, out.String(), errb.String())
+		}
+	}
+}
