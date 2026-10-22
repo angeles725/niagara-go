@@ -1,4 +1,5 @@
 {
- "reason": "Python lets lxml's XMLSyntaxError (libxml2's 256-level depth limit) escape (traceback, exit 1); Go prints only its final line, same text, exit 1",
- "stderr": "lxml.etree.XMLSyntaxError: Excessive depth in document: 256, use XML_PARSE_HUGE option, line 2, column 768\n"
+ "reason": "Python lets lxml's XMLSyntaxError (libxml2's 256-level depth limit) escape (traceback, exit 1); Go prints only its final line, same text; unreadable or unparsable input exits 2 (input error), not 1, which verify reserves for an invalid license",
+ "stderr": "lxml.etree.XMLSyntaxError: Excessive depth in document: 256, use XML_PARSE_HUGE option, line 2, column 768\n",
+ "exit": 2
 }

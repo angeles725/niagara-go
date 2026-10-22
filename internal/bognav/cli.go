@@ -132,6 +132,9 @@ func Main(args []string, s cli.Stdio) int {
 		sort.Strings(sorted)
 		return p.Error(s.Err, fmt.Sprintf("--limit does not apply to `%s` (it caps the rows of: %s)", cmd, strings.Join(sorted, ", ")))
 	}
+	if cmd == "tree" && ns.Get("depth") != nil && ns.Int("depth") < 0 {
+		return p.Error(s.Err, fmt.Sprintf("--depth must be >= 0, got %d", ns.Int("depth")))
+	}
 	if cmd == "selftest" {
 		return selftest(s.Out)
 	}
