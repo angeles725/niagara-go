@@ -1,14 +1,12 @@
 package core
 
 import (
-	"bytes"
-	"encoding/gob"
 	"encoding/json"
-	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/index"
+	"github.com/angeles725/niagara-go/internal/statcache"
 )
 
 // The decoded class-index cache, indexes/.mnav-cache/class-index.gob, beside
@@ -73,12 +71,11 @@ func ClassIndexCachePath(baseDir string) string {
 // classCacheKeyOf fingerprints the index at path; ok is false when it is
 // not a regular file of at least classCacheMinBytes.
 func classCacheKeyOf(path string) (classCacheKey, bool) {
-	st, err := os.Stat(path)
-	if err != nil || !st.Mode().IsRegular() || st.Size() < classCacheMinBytes {
+	s, ok := statcache.Regular(path, classCacheMinBytes)
+	if !ok {
 		return classCacheKey{}, false
 	}
-	return classCacheKey{Format: classCacheFormat, Path: ResolvedPath(path), Size: st.Size(),
-		MtimeNs: st.ModTime().UnixNano()}, true
+	return classCacheKey{Format: classCacheFormat, Path: ResolvedPath(path), Size: s.Size, MtimeNs: s.MtimeNs}, true
 }
 
 // loadClassIndex is LoadJSON for the class index at path, through the cache.
@@ -102,12 +99,8 @@ func (r *Runtime) loadClassIndex(path, what string) *index.Object {
 }
 
 func readClassCache(path string, key classCacheKey) *index.Object {
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return nil
-	}
 	var cf classCacheFile
-	if gob.NewDecoder(bytes.NewReader(data)).Decode(&cf) != nil || cf.Key != key {
+	if !statcache.ReadGob(path, &cf) || cf.Key != key {
 		return nil
 	}
 	o, _ := fromClassCache(&cf).(*index.Object)
