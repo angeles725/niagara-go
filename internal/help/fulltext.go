@@ -8,7 +8,6 @@ package help
 import (
 	"fmt"
 	"path/filepath"
-	"sort"
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/help/fts"
@@ -45,42 +44,6 @@ func ftHead(length, n int) int {
 	return max(0, min(n, length))
 }
 
-// printRanked is find_search.print_ranked: the header (how the hits were
-// found), an optional totals line, then per shown hit its tag and title,
-// best line and path.
-func (e *Env) printRanked(query string, r *fts.Result, shown []*fts.Hit, label, totals string,
-	tag func(*fts.Hit) string) {
-	how := "any term, ranked by how many terms match"
-	if r.ModeUsed == "and" && !r.Fallback {
-		how = "all terms"
-	}
-	if r.Fallback {
-		every := "no file has every term"
-		switch {
-		case r.AndHits == 1:
-			every = "only 1 file has every term"
-		case r.AndHits > 1:
-			every = fmt.Sprintf("only %d files have every term", r.AndHits)
-		}
-		how = every + "; showing files with any term, ranked by how many terms match"
-	}
-	fmt.Fprintf(e.Out, "%d %s matching '%s' (%s):\n", len(r.Hits), label, query, how)
-	if totals != "" {
-		fmt.Fprintln(e.Out, totals)
-	}
-	fmt.Fprintln(e.Out)
-	dirs := fts.SourceDirs(e.BaseDir)
-	for _, h := range shown {
-		fmt.Fprintln(e.Out, fts.FormatHit(dirs, h, r.Groups, tag(h)))
-	}
-	if len(r.Hits) > len(shown) {
-		fmt.Fprintf(e.Out, "  ... and %d more files\n", len(r.Hits)-len(shown))
-	}
-}
-
-// findMaxResults is cmd_find's max_results: the list never exceeds ten files.
-const findMaxResults = 10
-
 // Find is find_search.cmd_find: one globally ranked list over every text
 // source, at most Max hits per source and ten in all, with the per-source
 // totals and the notes of borrowed sources.
@@ -92,80 +55,27 @@ func (e *Env) Find(p FulltextParams) error {
 	if len(r.Hits) == 0 {
 		return e.reportMiss("find", p.Query, "fulltext")
 	}
-	type count struct {
-		source string
-		n      int
-	}
-	var counts []count
-	at := map[string]int{}
-	for _, h := range r.Hits {
-		if i, ok := at[h.Source]; ok {
-			counts[i].n++
-		} else {
-			at[h.Source] = len(counts)
-			counts = append(counts, count{h.Source, 1})
-		}
-	}
-	var shown []*fts.Hit
-	used := map[string]int{}
-	for _, h := range r.Hits {
-		if used[h.Source] < p.Max {
-			shown = append(shown, h)
-			used[h.Source]++
-		}
-		if len(shown) >= findMaxResults {
-			break
-		}
-	}
-	sort.SliceStable(counts, func(i, j int) bool { return counts[i].n > counts[j].n })
-	parts := make([]string, len(counts))
-	labels := make([]string, len(counts))
-	for i, c := range counts {
-		parts[i] = fmt.Sprintf("%s %d", c.source, c.n)
-		labels[i] = c.source
-	}
-	totals := "by source: " + strings.Join(parts, ", ")
-	for _, n := range e.sharedNotes(labels) {
-		totals += "\n  (" + n + ")"
-	}
-	e.printRanked(p.Query, r, shown, "files", totals, func(h *fts.Hit) string { return h.Source })
+	fmt.Fprint(e.Out, scope.FindReport(e.BaseDir, p.Query, r, p.Max))
 	return nil
-}
-
-// sharedNotes is find_search.shared_notes: "<label>: <note>" for each label
-// (sorted) this version borrows from another registered version.
-func (e *Env) sharedNotes(labels []string) []string {
-	sorted := append([]string(nil), labels...)
-	sort.Strings(sorted)
-	var out []string
-	for _, l := range sorted {
-		note, ok := fts.Shared[l]
-		if !ok {
-			continue
-		}
-		if _, owner := fts.SharedRoot(e.BaseDir, l); owner != "" {
-			out = append(out, l+": "+fmt.Sprintf(note, owner))
-		}
-	}
-	return out
 }
 
 // rankedSearch is guide_search._ranked_search: the full-text search
 // restricted to srcs, a miss when the first source folder is absent.
-func (e *Env) rankedSearch(p FulltextParams, srcs []string, command, scope string,
+func (e *Env) rankedSearch(p FulltextParams, srcs []string, command, where string,
 	tag func(*fts.Hit) string) error {
 	if !pycompat.IsDir(filepath.Join(e.BaseDir, srcs[0])) {
-		return e.reportMiss(command, p.Query, scope)
+		return e.reportMiss(command, p.Query, where)
 	}
 	r, err := e.search(p.Query, srcs, p.mode())
 	if err != nil {
 		return err
 	}
 	if len(r.Hits) == 0 {
-		return e.reportMiss(command, p.Query, scope)
+		return e.reportMiss(command, p.Query, where)
 	}
 	label, _, _ := strings.Cut(srcs[0], "-")
-	e.printRanked(p.Query, r, r.Hits[:ftHead(len(r.Hits), p.Max)], label+" files", "", tag)
+	shown := r.Hits[:ftHead(len(r.Hits), p.Max)]
+	fmt.Fprint(e.Out, scope.RankedReport(e.BaseDir, p.Query, r, shown, label+" files", "", tag))
 	return nil
 }
 
