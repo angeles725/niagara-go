@@ -51,3 +51,22 @@ func TestGrepRootLockedMidRunCannotSearch(t *testing.T) {
 		}
 	}
 }
+
+// TestFocusesRootLockedMidRunCannotSearch: the focuses are the root's RESEARCH-STATE
+// files; a root that can no longer be listed has unknown focuses (exit 2 naming the root
+// and the OS reason), never "Known focuses: " or "focuses: 0".
+func TestFocusesRootLockedMidRunCannotSearch(t *testing.T) {
+	c, out, errb, root := copyCorpus(t)
+	c.blocks() // the entry gate's listing
+	lockListing(t, root)
+	cannot := "corpus-nav: cannot search: cannot list " + pyPath(root) + ": Permission denied\n"
+	want := "No blocks found for focus 'nope'.\n" + cannot
+	if code := c.cmdByFocus("nope"); code != 2 || out.String() != "" || errb.String() != want {
+		t.Errorf("by-focus nope: exit %d\nstdout %q\nstderr %q", code, out.String(), errb.String())
+	}
+	out.Reset()
+	errb.Reset()
+	if code := c.cmdStats(); code != 2 || out.String() != "" || errb.String() != cannot {
+		t.Errorf("stats: exit %d\nstdout %q\nstderr %q", code, out.String(), errb.String())
+	}
+}

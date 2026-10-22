@@ -111,8 +111,13 @@ func focusExit(unreadable []string, ok int) int {
 	return ok
 }
 
-func (c *corpus) availableFocuses() []string {
-	entries, _ := os.ReadDir(c.root)
+// availableFocuses is the focus of each RESEARCH-STATE-<focus>.md under the root, or the
+// error of a root that cannot be listed (never "no focus").
+func (c *corpus) availableFocuses() ([]string, error) {
+	entries, err := os.ReadDir(c.root)
+	if err != nil {
+		return nil, err
+	}
 	var out []string
 	for _, e := range entries {
 		if n := e.Name(); strings.HasPrefix(n, "RESEARCH-STATE-") && strings.HasSuffix(n, ".md") &&
@@ -120,7 +125,7 @@ func (c *corpus) availableFocuses() []string {
 			out = append(out, n[len("RESEARCH-STATE-"):len(n)-len(".md")])
 		}
 	}
-	return out
+	return out, nil
 }
 
 func (c *corpus) cmdShow(n int) int {
@@ -258,7 +263,11 @@ func (c *corpus) cmdByFocus(focus string) int {
 	c.reportUnreadable(unreadable)
 	if len(labels) == 0 {
 		fmt.Fprintf(c.err, "No blocks found for focus '%s'.\n", focus)
-		fmt.Fprintf(c.err, "Known focuses: %s\n", strings.Join(c.availableFocuses(), ", "))
+		focuses, err := c.availableFocuses()
+		if err != nil {
+			return c.cannotList(err)
+		}
+		fmt.Fprintf(c.err, "Known focuses: %s\n", strings.Join(focuses, ", "))
 		return focusExit(unreadable, 1)
 	}
 	byFile := byFileOf(append(c.blocks(), c.subBlocks()...))
@@ -274,6 +283,10 @@ func (c *corpus) cmdByFocus(focus string) int {
 }
 
 func (c *corpus) cmdStats() int {
+	focuses, err := c.availableFocuses()
+	if err != nil {
+		return c.cannotList(err)
+	}
 	blocks := c.blocks()
 	counts := map[string]int{}
 	var markers, unreadable []string
@@ -296,7 +309,7 @@ func (c *corpus) cmdStats() int {
 	}
 	fmt.Fprintf(c.out, "Corpus totals\n  blocks : %d\n  sub-corpus blocks: %d\n", len(blocks), len(c.subBlocks()))
 	fmt.Fprintf(c.out, "  docs   : %d\n  retros : %d\n", len(dirFiles(c.docs)), len(dirFiles(c.retros)))
-	fmt.Fprintf(c.out, "  focuses: %d\n  blocks with a Connections section: %d\n", len(c.availableFocuses()), withConnections)
+	fmt.Fprintf(c.out, "  focuses: %d\n  blocks with a Connections section: %d\n", len(focuses), withConnections)
 	if len(unreadable) > 0 {
 		fmt.Fprintf(c.out, "  unreadable blocks (left out of every per-block count: Connections and markers): %d\n", len(unreadable))
 	}
