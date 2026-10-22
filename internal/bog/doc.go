@@ -10,10 +10,12 @@
 // callers map to exit 3 (ExitBadInput, D17). Parsing is the same tolerant line-oriented tag
 // reader as model.py, Unicode semantics of Python's re included, so Parse on a truncated text
 // yields a smaller graph. Load fails closed instead (R8-T29): it reads with ReadCheckedText, whose
-// CheckWellFormed pass (one root, closed tags and quotes, matching end tags; about 20 ms on the
-// 7.1 MB HARBOR file.xml) turns a truncated or damaged document into a *ReadError
-// "<path>: not well-formed XML (<expat message>: line L, column C)". bog-cycles and bog-write keep
-// internal/pyxml for expat's full verdict (names, references, namespaces).
+// CheckWellFormed turns a truncated or damaged document into a *ReadError
+// "<path>: not well-formed XML (<expat message>: line L, column C)". Its verdict and message are
+// bog-cycles' (internal/pyxml Mode{}, expat without namespaces; #170): a fast single pass (about
+// 20 ms on the 7.1 MB HARBOR file.xml) accepts a text that is certainly well-formed, and anything
+// else (a fault, a DOCTYPE, a non-ASCII name) is decided and worded by pyxml. bog-write keeps
+// pyxml's ElementTree mode for namespaces.
 //
 // Attribute values are XML-decoded (UnescapeXML: &amp; &lt; &gt; &quot; &apos; &#N; &#xN;), a
 // deliberate divergence from model.py, which kept the raw text ("u:fahrenheit;&#xb0;F"). A
