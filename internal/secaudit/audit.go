@@ -77,20 +77,59 @@ func pick(cond bool, a, b string) string {
 }
 
 // audit runs every check on home. stationXML is the station's BOG XML ("" without --station);
-// rawHead its first sec12Window bytes on disk.
+// rawHead its first sec12Window bytes on disk. The rows are added in check order.
 func (e *env) audit(home, stationXML, host string, rawHead []byte, rep *report) error {
 	props := readProps(home)
+	sec01(props, rep)
+	ts := pycompat.Join(home, "security", "truststore.jks")
+	if err := e.sec02(ts, rep); err != nil {
+		return fmt.Errorf("keytool: %w", err)
+	}
+	if err := e.sec03(home, rep); err != nil {
+		return fmt.Errorf("icacls: %w", err)
+	}
+	if host != "" {
+		if err := e.sec04(host, rep); err != nil {
+			return fmt.Errorf("openssl: %w", err)
+		}
+	}
+	sec05(props, rep)
+	e.sec06(home, rep)
+	sec07(props, rep)
+	sec08sec10(stationXML, rep)
+	if host != "" {
+		e.sec09(host, rep)
+	}
+	if err := e.sec11(home, ts, rep); err != nil {
+		return err
+	}
+	if stationXML != "" {
+		sec12(stationXML, rawHead, rep)
+	}
+	if host != "" {
+		e.sec14(host, rep)
+	}
+	sec15(home, rep)
+	rep.add("SEC-16", "med", "local data record integrity (audit/history/backup/.bog)",
+		"unsigned by design (architectural)", "syslog offload (SEC-10) = resistance, not evidence",
+		"FAIL", "B393/B396", "Niagara signs code, not data; no toggle fixes this - audit via SEC-10")
+	return nil
+}
 
+// sec01 is the module verification mode: unset, commented or "low" fails.
+func sec01(props map[string]prop, rep *report) {
 	v, set, com := getProp(props, "niagara.moduleVerificationMode")
 	bad := !set || com || strings.ToLower(v) == "low"
 	rep.add("SEC-01", "crit", "moduleVerificationMode", pick(v != "", v, "(unset)")+pick(com, " [commented]", ""),
 		"high", verdict(bad), "B75/B397",
 		"low lets an UNSIGNED module requesting NETWORK_COMMUNICATION load (the 443 incident)")
+}
 
-	ts := pycompat.Join(home, "security", "truststore.jks")
+// sec02 is the truststore's default password; no row without security/truststore.jks.
+func (e *env) sec02(ts string, rep *report) error {
 	d, err := e.keytoolDefault(ts)
 	if err != nil {
-		return fmt.Errorf("keytool: %w", err)
+		return err
 	}
 	if d != nil {
 		observed, verd, note := pick(d.opened, "opens with 'changeit'", "custom password"), verdict(d.opened),
@@ -102,43 +141,51 @@ func (e *env) audit(home, stationXML, host string, rawHead []byte, rep *report) 
 		rep.add("SEC-02", "crit", "truststore.jks default password", observed, "non-default store password",
 			verd, "B392/B397", note)
 	}
+	return nil
+}
 
-	if err := e.sec03(home, rep); err != nil {
-		return fmt.Errorf("icacls: %w", err)
-	}
-
-	if host != "" {
-		for _, p := range []struct {
-			port int
-			name string
-		}{{443, "station HTTPS"}, {5011, "platform TLS"}} {
-			s, err := e.tlsSubject(host, p.port)
-			if err != nil {
-				return fmt.Errorf("openssl: %w", err)
-			}
-			if s != "" {
-				def := strings.Contains(s, "ForRecoveryPurposes")
-				rep.add("SEC-04:"+strconv.Itoa(p.port), "crit", p.name+" certificate",
-					pick(def, "default self-signed (ForRecoveryPurposes)", s), "CA-issued cert, replaced",
-					verdict(def), "B397/B156", "default cert = no real TLS trust, MITM-able on mgmt LAN")
-			}
+// sec04 is the default certificate on the station HTTPS and platform TLS ports; no row for a port
+// that gave no subject.
+func (e *env) sec04(host string, rep *report) error {
+	for _, p := range []struct {
+		port int
+		name string
+	}{{443, "station HTTPS"}, {5011, "platform TLS"}} {
+		s, err := e.tlsSubject(host, p.port)
+		if err != nil {
+			return err
+		}
+		if s != "" {
+			def := strings.Contains(s, "ForRecoveryPurposes")
+			rep.add("SEC-04:"+strconv.Itoa(p.port), "crit", p.name+" certificate",
+				pick(def, "default self-signed (ForRecoveryPurposes)", s), "CA-issued cert, replaced",
+				verdict(def), "B397/B156", "default cert = no real TLS trust, MITM-able on mgmt LAN")
 		}
 	}
+	return nil
+}
 
-	v, _, com = getProp(props, "niagara.commandLinePropertyBlacklist")
+// sec05 is the command-line property blacklist: it must name both skip levers.
+func sec05(props map[string]prop, rep *report) {
+	v, _, com := getProp(props, "niagara.commandLinePropertyBlacklist")
 	covered := v != "" && !com && strings.Contains(v, "skipModuleValidation") && strings.Contains(v, "ignoreVerificationMode")
 	rep.add("SEC-05", "high", "commandLinePropertyBlacklist covers skip levers",
 		pick(v == "" || com, "disabled/absent", pick(!covered, "partial", "full")),
 		"includes skipModuleValidation + commissioning.ignoreVerificationMode",
 		verdict(!covered), "B113", "-Dniagara.classLoader.skipModuleValidation can disable chain validation at launch")
+}
 
-	e.sec06(home, rep)
-
-	v, set, com = getProp(props, "program.requireSigning")
-	bad = !set || com || strings.ToLower(v) == "false"
+// sec07 is BProgram signing: unset, commented or "false" fails.
+func sec07(props map[string]prop, rep *report) {
+	v, set, com := getProp(props, "program.requireSigning")
+	bad := !set || com || strings.ToLower(v) == "false"
 	rep.add("SEC-07", "high", "program.requireSigning (BProgram bytecode)", pick(bad, "false/default", v),
 		"true", verdict(bad), "B75", "superuser BProgram runs arbitrary bytecode unsigned")
+}
 
+// sec08sec10 are the station checks, runtime exec and syslog offload; both are MANUAL rows
+// without --station.
+func sec08sec10(stationXML string, rep *report) {
 	if stationXML != "" {
 		execOn := execRE.MatchString(stationXML)
 		rep.add("SEC-08", "high", "allowProgramRuntimeExec", pick(execOn, "true", "false/default"),
@@ -154,37 +201,30 @@ func (e *env) audit(home, stationXML, host string, rawHead []byte, rep *report) 
 		rep.add("SEC-10", "high", "syslog offload to SIEM", "not checked (no --station config.bog)", "-",
 			"MANUAL", "B75/B396", "pass --station <config.bog>")
 	}
+}
 
-	if host != "" && e.dial(host, 3011) {
+// sec09 is the platform daemon's plaintext port 3011: a row only when it answers.
+func (e *env) sec09(host string, rep *report) {
+	if e.dial(host, 3011) {
 		loopback := host == "127.0.0.1" || host == "localhost" || host == "::1"
 		rep.add("SEC-09", pick(loopback, "med", "high"), "platform daemon plaintext port 3011",
 			"3011 open"+pick(loopback, " (loopback only, mitigated)", " on reachable iface"),
 			"sslOnly=true (5011 only)", "FAIL", "B75/B397", "platform creds in cleartext if used")
 	}
+}
 
-	if err := e.sec11(home, ts, rep); err != nil {
-		return err
-	}
-	if stationXML != "" {
-		sec12(stationXML, rawHead, rep)
-	}
-	if host != "" {
-		for _, p := range []struct {
-			port      int
-			name, blk string
-		}{{1911, "Fox plaintext", "B397/B134"}, {80, "HTTP plaintext", "B397"}} {
-			if e.dial(host, p.port) {
-				ps := strconv.Itoa(p.port)
-				rep.add("SEC-14:"+ps, "med", p.name+" port "+ps, ps+" open", "TLS-only (4911/443)", "FAIL",
-					p.blk, "station comms/UI in cleartext")
-			}
+// sec14 is the plaintext Fox and HTTP ports: a row for each that answers.
+func (e *env) sec14(host string, rep *report) {
+	for _, p := range []struct {
+		port      int
+		name, blk string
+	}{{1911, "Fox plaintext", "B397/B134"}, {80, "HTTP plaintext", "B397"}} {
+		if e.dial(host, p.port) {
+			ps := strconv.Itoa(p.port)
+			rep.add("SEC-14:"+ps, "med", p.name+" port "+ps, ps+" open", "TLS-only (4911/443)", "FAIL",
+				p.blk, "station comms/UI in cleartext")
 		}
 	}
-	sec15(home, rep)
-	rep.add("SEC-16", "med", "local data record integrity (audit/history/backup/.bog)",
-		"unsigned by design (architectural)", "syslog offload (SEC-10) = resistance, not evidence",
-		"FAIL", "B393/B396", "Niagara signs code, not data; no toggle fixes this - audit via SEC-10")
-	return nil
 }
 
 func (e *env) sec06(home string, rep *report) {
