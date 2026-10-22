@@ -49,10 +49,11 @@ func TestRtSecs(t *testing.T) {
 	}
 }
 
-func TestMissingPassFileIsExit1(t *testing.T) {
+// A missing pass file is an input error (exit 2), not "searched, no match" (exit 1).
+func TestMissingPassFileIsExit2(t *testing.T) {
 	var out, errb bytes.Buffer
 	code := Run(Options{PassFile: "testdata/inputs/absent", Command: "cond"}, cli.Stdio{Out: &out, Err: &errb})
-	if code != cli.ExitNoMatch || !strings.HasPrefix(errb.String(), "No pass file: ") {
+	if code != cli.ExitCannotSearch || !strings.HasPrefix(errb.String(), "No pass file: ") {
 		t.Fatalf("code %d stderr %q", code, errb.String())
 	}
 }
@@ -77,6 +78,33 @@ func TestParseRoomKey(t *testing.T) {
 		if done || o.Room != c.room || o.DumpRoom != c.dump {
 			t.Errorf("%q: Room %d DumpRoom %q (done %v code %d %s), want %d %q",
 				c.args, o.Room, o.DumpRoom, done, code, errb.String(), c.room, c.dump)
+		}
+	}
+}
+
+// --help describes every subcommand, and each subcommand's --help says what it does; parsing
+// help never connects to a station.
+func TestHelpDescribesEverySubcommand(t *testing.T) {
+	var out, errb bytes.Buffer
+	if code := Main([]string{"--help"}, cli.Stdio{Out: &out, Err: &errb}); code != 0 {
+		t.Fatalf("--help exit %d: %s", code, errb.String())
+	}
+	for _, name := range []string{"map", "cond", "wiring", "config", "read", "dump"} {
+		found := false
+		for _, line := range strings.Split(out.String(), "\n") {
+			if f := strings.Fields(line); len(f) > 1 && f[0] == name {
+				found = true
+			}
+		}
+		if !found {
+			t.Errorf("--help has no description line for %q:\n%s", name, out.String())
+		}
+		var sout, serr bytes.Buffer
+		if code := Main([]string{name, "--help"}, cli.Stdio{Out: &sout, Err: &serr}); code != 0 {
+			t.Fatalf("%s --help exit %d: %s", name, code, serr.String())
+		}
+		if parts := strings.SplitN(sout.String(), "\n\n", 3); len(parts) < 3 || strings.HasPrefix(parts[1], "positional") || strings.HasPrefix(parts[1], "options") {
+			t.Errorf("%s --help has no description paragraph:\n%s", name, sout.String())
 		}
 	}
 }

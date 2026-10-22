@@ -99,7 +99,7 @@ func TestPassFileDefaultsToTheEnvironment(t *testing.T) {
 func TestNoPassFileGivenNamesTheWays(t *testing.T) {
 	var out, errb bytes.Buffer
 	code := Run(Options{Command: "cond"}, cli.Stdio{Out: &out, Err: &errb})
-	if code != cli.ExitNoMatch || !strings.Contains(errb.String(), "--pass-file") || !strings.Contains(errb.String(), PassFileEnv) {
+	if code != cli.ExitCannotSearch || !strings.Contains(errb.String(), "--pass-file") || !strings.Contains(errb.String(), PassFileEnv) {
 		t.Fatalf("code %d stderr %q", code, errb.String())
 	}
 }

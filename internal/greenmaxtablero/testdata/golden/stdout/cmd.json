@@ -2,7 +2,7 @@
  "args": [
   "inputs/tablero.px",
   "--gm",
-  "GM8",
+  "GM08",
   "--stdout"
  ]
 }

@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"regexp"
 	"strings"
 	"unicode/utf8"
 
@@ -22,7 +23,7 @@ const prog = "greenmax-tablero-gen"
 func newParser() *argparse.Parser {
 	p := argparse.New(argparse.Config{Prog: prog, Description: "Generate a redesigned GreenMAX tablero Px."})
 	p.Add(argparse.Arg{Help: "original tablero .px from the station backup"}, "src")
-	p.Add(argparse.Arg{Required: true, Help: "control-folder tag, e.g. GM08 (plain number, no leading zero)"}, "--gm")
+	p.Add(argparse.Arg{Required: true, Type: gmType, Help: "control folder under Iluminacion: GM and two digits, e.g. GM02 or GM10"}, "--gm")
 	p.Add(argparse.Arg{Help: "output .md path (fenced Px). Omit with --stdout."}, "--out")
 	p.Add(argparse.Arg{Default: "", Help: "PxView/tablero display name for the doc header"}, "--tab")
 	p.Add(argparse.Arg{Action: argparse.StoreTrue, Help: "also add the read-only 'Horarios' legend"}, "--legend")
@@ -30,8 +31,31 @@ func newParser() *argparse.Parser {
 	return p
 }
 
-// Main is the greenmax-tablero-gen command line. Exit 0 ok, 1 a Px the transform refuses, 2 an
-// unreadable source or unwritable output.
+// gmRE is a GreenMAX control-folder name (Config/Iluminacion/GM02 ... GM16).
+var gmRE = regexp.MustCompile(`^GM[0-9]{2}$`)
+
+// gmType rejects a --gm that names no control folder (7, GM7, gm08): the ords it would write
+// (Iluminacion/7/...) resolve to nothing on the station.
+var gmType = &argparse.Type{Name: "gm", Convert: func(v string) (any, error) {
+	if !gmRE.MatchString(v) {
+		return nil, argparse.NewTypeError("%s is not a control folder: use GM and two digits, e.g. GM02", pycompat.StrRepr(v))
+	}
+	return v, nil
+}}
+
+// fileGMRE finds the panel a tablero Px file is named after: "GreenMAX07 TabAL7.px" or "...GM07...".
+var fileGMRE = regexp.MustCompile(`(?i)(?:GreenMAX|GM)([0-9]{2})(?:[^0-9]|$)`)
+
+// warnFileMismatch warns when the source file name names another panel than --gm.
+func warnFileMismatch(src, gm string, s cli.Stdio) {
+	m := fileGMRE.FindStringSubmatch(src[strings.LastIndexAny(src, `/\`)+1:])
+	if m != nil && "GM"+m[1] != gm {
+		fmt.Fprintf(s.Err, "%s: warning: --gm %s does not match GM%s in the Px file name %s\n", prog, gm, m[1], src)
+	}
+}
+
+// Main is the greenmax-tablero-gen command line. Exit 0 ok, 1 a Px the transform refuses, 2 a
+// usage error (a --gm that is not GM and two digits), an unreadable source or unwritable output.
 func Main(args []string, s cli.Stdio) int {
 	ns, code, done := newParser().Parse(args, s)
 	if done {
@@ -42,6 +66,7 @@ func Main(args []string, s cli.Stdio) int {
 }
 
 func run(src, gm, out, tab string, legend, toStdout bool, s cli.Stdio) int {
+	warnFileMismatch(src, gm, s)
 	text, err := readSource(src)
 	if err != nil {
 		// Python ends in a traceback (FileNotFoundError, UnicodeDecodeError).
