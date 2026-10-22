@@ -243,15 +243,3 @@ func buildPackageText(baseDir string) (*textResult, error) {
 		packageTextDir, len(pages), len(descs), packageIndexName))
 	return res, nil
 }
-
-// PackageDescription is the description block of package-text/<pkg>.txt
-// under baseDir, the lines after its header; nil when the package has no
-// description page.
-func PackageDescription(baseDir, pkg string) []string {
-	text, err := pycompat.ReadTextReplace(pycompat.Join(baseDir, packageTextDir, pkg+".txt"))
-	if err != nil {
-		return nil
-	}
-	_, body, _ := strings.Cut(text, "\n\n")
-	return strings.Split(strings.TrimRight(body, "\n"), "\n")
-}

@@ -2,24 +2,23 @@ package help
 
 // coverage (cli/cmd_export.py run_coverage) and rebuild-all
 // (cli/cmd_admin.py run_rebuild_all), run in process through
-// internal/helpbuild: the class and guide coverage report (overview or one
-// module), the doc-jar gate (--doc-jars), the whole-install sweep (--sweep,
-// after the doc-jar gate when both are given) and the index rebuild with
-// its manifest stamp. helpbuild prints byte for byte what Python prints;
-// this file maps the results to Python's exit statuses and takes the build
-// lock around a rebuild. The dependency goes one way: help imports
-// helpbuild, never the reverse.
+// the plugged-in Builders (internal/helpbuild): the class and guide coverage
+// report (overview or one module), the doc-jar gate (--doc-jars), the
+// whole-install sweep (--sweep, after the doc-jar gate when both are given)
+// and the index rebuild with its manifest stamp. helpbuild prints byte for
+// byte what Python prints; this file maps the results to Python's exit
+// statuses and takes the build lock around a rebuild. Neither package
+// imports the other: cmd/nh joins them (builders.go).
 
 import (
 	"fmt"
 
 	"github.com/angeles725/niagara-go/internal/argparse"
 	"github.com/angeles725/niagara-go/internal/help/scope"
-	"github.com/angeles725/niagara-go/internal/helpbuild"
 )
 
 // maintCommands are the maintenance commands that run the index builders
-// and gates of internal/helpbuild.
+// and gates (Builders).
 var maintCommands = []command{
 	{name: "coverage", help: "Documentation coverage report (overview exits 1 on guide " +
 		"folders with unindexed HTML pages)",
@@ -43,7 +42,7 @@ var maintCommands = []command{
 			flag(p, "Record current corpus as the baseline without rebuilding", "--stamp-only")
 		},
 		run: func(e *Env, ns *argparse.Namespace) error {
-			return e.RebuildAll(helpbuild.RebuildOptions{Only: ns.String("only"),
+			return e.RebuildAll(RebuildParams{Only: ns.String("only"),
 				DryRun: ns.Bool("dry_run"), StampOnly: ns.Bool("stamp_only")})
 		}},
 }
@@ -63,46 +62,49 @@ type CoverageParams struct {
 // a module that matches no class is a miss (exit 1). A missing report index
 // is "ERROR: ..." and exit 2, as Python's MissingIndexError.
 func (e *Env) Coverage(p CoverageParams) error {
+	b, err := theBuilders()
+	if err != nil {
+		return err
+	}
 	if p.Sweep {
-		status := helpbuild.SweepPass
+		status := SweepPass
 		if p.DocJars {
-			st, err := helpbuild.DocJarCoverage(e.Out, e.RepoRoot, e.BaseDir, e.VersionID, e.fulltextDocs)
+			st, err := b.DocJarCoverage(e.Out, e.RepoRoot, e.BaseDir, e.VersionID, e.fulltextDocs)
 			if err != nil {
 				return err
 			}
 			fmt.Fprintln(e.Out)
-			if st == helpbuild.SweepUnavailable {
+			if st == SweepUnavailable {
 				return ExitCode(st)
 			}
 			status = st
 		}
-		st, err := helpbuild.RunSweep(e.RepoRoot, e.BaseDir, e.VersionID, e.Out,
-			helpbuild.SweepOptions{Fulltext: e.fulltextDocs})
+		st, err := b.Sweep(e.Out, e.RepoRoot, e.BaseDir, e.VersionID, e.fulltextDocs)
 		if err != nil {
 			return err
 		}
 		return ExitCode(max(status, st))
 	}
 	if p.DocJars {
-		st, err := helpbuild.DocJarCoverage(e.Out, e.RepoRoot, e.BaseDir, e.VersionID, e.fulltextDocs)
+		st, err := b.DocJarCoverage(e.Out, e.RepoRoot, e.BaseDir, e.VersionID, e.fulltextDocs)
 		if err != nil {
 			return err
 		}
 		return ExitCode(st)
 	}
-	res, err := helpbuild.Coverage(e.Out, e.BaseDir, p.Module)
+	miss, guideGaps, err := b.Coverage(e.Out, e.BaseDir, p.Module)
 	switch {
 	case err != nil:
 		return err
-	case res.Miss:
+	case miss:
 		return e.reportMiss("coverage", p.Module, "modules")
-	case res.GuideGaps > 0:
+	case guideGaps > 0:
 		return ExitCode(1)
 	}
 	return nil
 }
 
-// fulltextDocs is the helpbuild.FulltextDocs of the gates: the documents of
+// fulltextDocs is the full-text documents of the gates: the documents of
 // the up-to-date full-text index of root. A missing or stale index is built
 // first by nh's search opener (open_index's notice on stderr, the build
 // lock next to the database), then the fresh database is read. The handle
@@ -118,10 +120,14 @@ func (e *Env) fulltextDocs(root string) (map[string]bool, error) {
 	if err := x.Close(); err != nil {
 		return nil, err
 	}
-	return helpbuild.FreshFulltextDocs(root)
+	b, err := theBuilders()
+	if err != nil {
+		return nil, err
+	}
+	return b.FreshFulltextDocs(root)
 }
 
-// RebuildAll is run_rebuild_all: helpbuild.RebuildAll on the data root,
+// RebuildAll is run_rebuild_all: the builders' RebuildAll on the data root,
 // printing on nh's streams. Anything that writes (a build, --stamp-only)
 // runs under the build lock of the full-text index, so a search waits
 // instead of indexing a half-rewritten corpus; a dry run writes nothing and
@@ -129,12 +135,13 @@ func (e *Env) fulltextDocs(root string) (map[string]bool, error) {
 // builders still exit 0 (they are counted and the manifest is kept);
 // an error (a stream or the manifest that cannot be written, the lock held
 // by a live process) is "ERROR: ..." and exit 2.
-func (e *Env) RebuildAll(opt helpbuild.RebuildOptions) error {
-	opt.Stdout, opt.Stderr = e.Out, e.Err
-	rebuild := func() error {
-		_, err := helpbuild.RebuildAll(e.BaseDir, opt)
+func (e *Env) RebuildAll(opt RebuildParams) error {
+	b, err := theBuilders()
+	if err != nil {
 		return err
 	}
+	opt.Stdout, opt.Stderr = e.Out, e.Err
+	rebuild := func() error { return b.RebuildAll(e.BaseDir, opt) }
 	if opt.DryRun && !opt.StampOnly {
 		return rebuild()
 	}

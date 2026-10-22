@@ -3,18 +3,18 @@ package help
 import (
 	"errors"
 	"fmt"
+	"io"
 
 	"github.com/angeles725/niagara-go/internal/argparse"
 	"github.com/angeles725/niagara-go/internal/cli"
-	"github.com/angeles725/niagara-go/internal/helpbuild"
 	"github.com/angeles725/niagara-go/internal/index"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // The writers of `versions`: add (cli/cmd_versions.py over
 // version_setup.add_version) and extract (tools/extract_version.py, a Go-only
-// subcommand: the script had no nh entry). Both run in process through
-// internal/helpbuild; the full-text index the gates and the summary read is
+// subcommand: the script had no nh entry). Both run in process through the
+// plugged-in Builders (internal/helpbuild); the full-text index the gates and the summary read is
 // built through scope.OpenFulltext, so under its build lock.
 
 // versionsExtractArgs is extract_version.py's argument parser as the
@@ -37,18 +37,21 @@ func versionsExtractArgs(sub *argparse.Subparsers) {
 // repository, its lines on stdout, the builders' stderr on stderr; the exit
 // status is add_version's return value.
 func (e *Env) addVersion(ns *argparse.Namespace) error {
-	opt := helpbuild.AddOptions{
+	b, err := theBuilders()
+	if err != nil {
+		return err
+	}
+	opt := AddVersionParams{
 		Label:    ns.String("label"),
 		Default:  ns.Bool("default"),
 		Force:    ns.Bool("force"),
-		Rebuild:  helpbuild.RebuildToLog(e.Err),
 		Fulltext: e.fulltextDocs,
 	}
 	if ns.Get("version_id") != nil { // an explicit --id, even "", is validated, never detected
 		id := ns.String("version_id")
 		opt.ID = &id
 	}
-	status, err := helpbuild.AddVersion(e.RepoRoot, ns.String("install"), e.Out, opt)
+	status, err := b.AddVersion(e.RepoRoot, ns.String("install"), e.Out, e.Err, opt)
 	if err != nil {
 		return err
 	}
@@ -60,6 +63,10 @@ func (e *Env) addVersion(ns *argparse.Namespace) error {
 // extract_and_index; its lines on stdout, an error on stderr. Exit 0
 // extracted and verified, 1 the fidelity check failed, 2 cannot run.
 func (e *Env) extractVersion(ns *argparse.Namespace) error {
+	b, err := theBuilders()
+	if err != nil {
+		return err
+	}
 	requested := ns.String("version")
 	if pycompat.Strip(requested) == "" { // resolve_version would fall back to the default
 		fmt.Fprintln(e.Err, "ERROR: empty version id; pass a registered version")
@@ -73,21 +80,22 @@ func (e *Env) extractVersion(ns *argparse.Namespace) error {
 	} else if err != nil {
 		return err
 	}
-	opt := helpbuild.SetupOptions{Force: ns.Bool("force"), VerifyOnly: ns.Bool("verify_only"),
+	opt := ExtractParams{Force: ns.Bool("force"), VerifyOnly: ns.Bool("verify_only"),
 		FillMissing: ns.Bool("fill_missing")}
+	var rebuildLog io.Writer
 	if !ns.Bool("no_index") {
-		opt.Rebuild = helpbuild.RebuildToLog(e.Err)
+		rebuildLog = e.Err
 	}
-	res, err := helpbuild.ExtractAndIndex(e.RepoRoot, vid, opt)
-	for _, line := range res.Log {
+	lines, status, errMsg, err := b.ExtractVersion(e.RepoRoot, vid, rebuildLog, opt)
+	for _, line := range lines {
 		fmt.Fprintln(e.Out, line)
 	}
 	if err != nil {
 		return err
 	}
-	if res.Error != "" { // an error is never a success, whatever status came with it
-		fmt.Fprintf(e.Err, "ERROR: %s\n", res.Error)
-		return ExitCode(max(res.Status, cli.ExitCannotSearch))
+	if errMsg != "" { // an error is never a success, whatever status came with it
+		fmt.Fprintf(e.Err, "ERROR: %s\n", errMsg)
+		return ExitCode(max(status, cli.ExitCannotSearch))
 	}
-	return ExitCode(res.Status)
+	return ExitCode(status)
 }

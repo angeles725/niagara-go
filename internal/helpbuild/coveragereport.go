@@ -7,6 +7,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/angeles725/niagara-go/internal/help/indexerr"
 	"github.com/angeles725/niagara-go/internal/index"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/textfold"
@@ -19,13 +20,9 @@ import (
 // decides the exit status (Coverage's GuideGaps, Miss).
 
 // MissingIndexError is index_cache.MissingIndexError: a required index of
-// the report is absent (the CLI exits 2 with "Cannot search:").
-type MissingIndexError struct{ Name, BaseDir string }
-
-func (e *MissingIndexError) Error() string {
-	return fmt.Sprintf("index indexes/%s is missing under %s; rebuild the indexes "+
-		"with: nh rebuild-all", e.Name, e.BaseDir)
-}
+// the report is absent (the CLI exits 2 with "Cannot search:"). It is
+// indexerr's type, which nh's lookups return too, so the two spell one message.
+type MissingIndexError = indexerr.Missing
 
 // indexShapeError is the AttributeError, TypeError or KeyError Python
 // raises on an index of an unexpected shape (a list where a dict is
