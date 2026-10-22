@@ -103,3 +103,17 @@ func TestAutodetectUsesTheFirstCandidateWithModules(t *testing.T) {
 		t.Errorf("exit %d %q", code, errText)
 	}
 }
+
+// A truncated station file fails closed (exit 2) instead of reporting 0 modules referenced.
+func TestCheckRejectsTruncatedStation(t *testing.T) {
+	dir := t.TempDir()
+	station := filepath.Join(dir, "t.xml")
+	full := readFile(t, filepath.Join("testdata", "fixtures", "station.xml"))
+	if err := os.WriteFile(station, []byte(full[:len(full)/2]), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	code, out, errOut := run("check", station, "--install", filepath.Join("testdata", "fixtures", "install"))
+	if code != 2 || out != "" || !strings.Contains(errOut, "not well-formed XML") {
+		t.Fatalf("code %d stdout %q stderr %q", code, out, errOut)
+	}
+}

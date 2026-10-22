@@ -102,9 +102,12 @@ func childScope(n *node, scope map[string]string) map[string]string {
 }
 
 // canonicalEncode mirrors the tool's canonical_encode (LicenseUtil.encode):
-// "<tag a="v">\n", element children recursively, "</tag>\n"; text dropped,
-// attribute values raw, namespaced names in Clark notation.
-func canonicalEncode(n *node, scope map[string]string, b *strings.Builder) error {
+// "<tag a="v">\n", element children recursively, "</tag>\n"; text dropped
+// unless keepText, attribute values raw, namespaced names in Clark notation.
+// With keepText, a text node that is not whitespace only is written raw followed
+// by "\n", as LicenseUtil.encode writes the XText that XParser keeps
+// (organized/baja/baja/decompiled/com/tridium/sys/license/LicenseUtil.java:141-143).
+func canonicalEncode(n *node, scope map[string]string, b *strings.Builder, keepText bool) error {
 	scope = childScope(n, scope)
 	tag := clark(n.name, scope, false)
 	b.WriteString("<" + tag)
@@ -118,8 +121,12 @@ func canonicalEncode(n *node, scope map[string]string, b *strings.Builder) error
 	for _, c := range n.children {
 		switch c.kind {
 		case elemNode:
-			if err := canonicalEncode(c, scope, b); err != nil {
+			if err := canonicalEncode(c, scope, b, keepText); err != nil {
 				return err
+			}
+		case textNode:
+			if keepText && strings.Trim(c.text, " \t\r\n") != "" {
+				b.WriteString(c.text + "\n")
 			}
 		case commentNode, piNode:
 			return errCythonTag
@@ -130,8 +137,14 @@ func canonicalEncode(n *node, scope map[string]string, b *strings.Builder) error
 }
 
 // canonicalBytes mirrors canonical_bytes_for_verify: the root without its
-// <signature> children.
-func canonicalBytes(root *node) ([]byte, error) {
+// <signature> children, text dropped (a license holds none that is signed).
+func canonicalBytes(root *node) ([]byte, error) { return signedBytes(root, false) }
+
+// certCanonicalBytes is what a certificate's signature covers: the root without
+// its <signature>, the <publicKey> text kept (CertificateFile.java:85-86).
+func certCanonicalBytes(root *node) ([]byte, error) { return signedBytes(root, true) }
+
+func signedBytes(root *node, keepText bool) ([]byte, error) {
 	var b strings.Builder
 	clone := *root
 	clone.children = nil
@@ -140,7 +153,7 @@ func canonicalBytes(root *node) ([]byte, error) {
 			clone.children = append(clone.children, c)
 		}
 	}
-	if err := canonicalEncode(&clone, map[string]string{}, &b); err != nil {
+	if err := canonicalEncode(&clone, map[string]string{}, &b, keepText); err != nil {
 		return nil, err
 	}
 	return []byte(b.String()), nil

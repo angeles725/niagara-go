@@ -229,3 +229,37 @@ func TestJSONEncoderErrorExits2WithEmptyStdout(t *testing.T) {
 		t.Errorf("code %d out %q err %q", code, out, errOut)
 	}
 }
+
+// A truncated or unterminated bog fails closed with the bad-input code, never a partial result.
+func TestMalformedBogExitsBadInput(t *testing.T) {
+	cases := map[string]string{
+		"truncated.xml":    testXML[:strings.Index(testXML, "<p n='A'")],
+		"unterminated.xml": "<bajaObjectGraph version='4.0'>\n<p",
+	}
+	for name, text := range cases {
+		for _, cmd := range [][]string{{"types"}, {"tree"}, {"writable"}} {
+			path := writeFile(t, name, []byte(text))
+			out, errOut, code := runMain(t, append([]string{path}, cmd...)...)
+			if code != bog.ExitBadInput || out != "" || !strings.Contains(errOut, "not well-formed XML") {
+				t.Errorf("%s %v: code %d stdout %q stderr %q", name, cmd, code, out, errOut)
+			}
+		}
+	}
+}
+
+// Attribute character references are decoded in slot values (B-T21: &#xb0; printed raw).
+func TestSlotDecodesCharRefs(t *testing.T) {
+	xml := strings.Replace(testXML, `<p n='A' h='4' t='c:NumericWritable'/>`,
+		`<p n='A' h='4' t='c:NumericWritable'><p n='facets' t='b:Facets' v='units=u:fahrenheit;&#xb0;F'/></p>`, 1)
+	out, _, code := runMain(t, writeFile(t, "c.xml", []byte(xml)), "slot", "h:4")
+	if code != cli.ExitFound || !strings.Contains(out, "units=u:fahrenheit;°F") || strings.Contains(out, "&#x") {
+		t.Fatalf("code %d out %q", code, out)
+	}
+}
+
+func TestTreeNegativeDepthIsAUsageError(t *testing.T) {
+	out, errOut, code := runMain(t, writeFile(t, "c.xml", []byte(testXML)), "tree", "--depth", "-1")
+	if code != cli.ExitCannotSearch || out != "" || !strings.Contains(errOut, "--depth") {
+		t.Fatalf("code %d stdout %q stderr %q", code, out, errOut)
+	}
+}

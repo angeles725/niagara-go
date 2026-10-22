@@ -137,7 +137,7 @@ func check(o options, w io.Writer) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	text, err := bog.ReadText(o.target)
+	text, err := bog.ReadCheckedText(o.target)
 	if err != nil {
 		return 0, fail(2, "error: cannot read station file: %s", err)
 	}

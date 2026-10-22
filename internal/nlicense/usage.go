@@ -1,6 +1,8 @@
 package nlicense
 
-// usage is the tool's module docstring, printed verbatim by -h and on bad usage.
+// usage is the tool's module docstring, printed by -h and on bad usage. Intended
+// differences: the docstring's ">\n" and "</root>\n" were unescaped Python string
+// escapes and printed as line breaks; they are shown literally here.
 const usage = "\n" +
 	"nlicense — OEM license tooling for Niagara N4 `.license` files.\n" +
 	"\n" +
@@ -8,9 +10,7 @@ const usage = "\n" +
 	"signed license, pentest B316-L12/B322):\n" +
 	"  * signature = DSA-1024 (q=160) / SHA-1 over the canonical XML re-encoding\n" +
 	"    WITHOUT the <signature> element (LicenseUtil.encode semantics: attributes in\n" +
-	"    document order, \">\n" +
-	"\", children, \"</root>\n" +
-	"\")\n" +
+	"    document order, \">\\n\", children, \"</root>\\n\")\n" +
 	"  * signature element = base64 DER SEQUENCE { INTEGER r(20B), INTEGER s(20B) }\n" +
 	"  * certificate chain: license sig verified against {vendor}.certificate public\n" +
 	"    key; the certificate's OWN sig verifies against the EMBEDDED root key in\n" +

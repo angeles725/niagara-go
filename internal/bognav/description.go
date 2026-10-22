@@ -34,6 +34,6 @@ keyed by a bacref ORD) with the value as a handle-LESS ` + "`" + `bac:*` + "`" +
 
 Read-only. Prints rows; pass --json for machine output. stdlib only.
 Exit codes: 0 found, 1 searched and no match (find/links/grep/writable print the searched bog
-+ counts) or a named component/handle not found, 2 usage error, 3 unreadable input (missing, empty, non-BOG, corrupt/unsupported ZIP,
++ counts) or a named component/handle not found, 2 usage error, 3 unreadable input (missing, empty, non-BOG, not well-formed XML, corrupt/unsupported ZIP,
 nesting or size over the bogio limits) or python2.
 `
