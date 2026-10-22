@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/fnmatch"
+	"github.com/angeles725/niagara-go/internal/helpbuild"
 	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
@@ -138,6 +139,12 @@ func (e *Env) Package(p PackageParams) error {
 		classes := append([]pkgClass(nil), packages[pkg]...)
 		sort.SliceStable(classes, func(i, j int) bool { return classes[i].name < classes[j].name })
 		fmt.Fprintf(e.Out, "%s (%d classes):\n\n", pkg, len(classes))
+		if desc := helpbuild.PackageDescription(e.BaseDir, pkg); desc != nil {
+			for _, l := range desc {
+				fmt.Fprintln(e.Out, strings.TrimRight("  "+l, " "))
+			}
+			fmt.Fprintf(e.Out, "  (package-text/%s.txt)\n\n", pkg)
+		}
 		for _, c := range classes {
 			fmt.Fprintf(e.Out, "  %s (%s)\n", c.name, c.typ)
 		}

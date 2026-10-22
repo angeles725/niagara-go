@@ -1,5 +1,5 @@
 ["out", "INSTALL SWEEP 1.0 (21 jars under <dir>/install; 21 listed anew, the rest from the jar-listing cache)"]
-["out", "  documentation-like: .html .htm .xhtml .md .markdown .txt .text .pdf .rtf .doc .docx .odt .rst .adoc .bajadoc + toc.xml"]
+["out", "  documentation-like: .html .htm .xhtml .md .markdown .txt .text .pdf .rtf .doc .docx .odt .rst .adoc .bajadoc .lexicon + toc.xml"]
 ["out", "  location                       jars with-docs  doc-like  indexed excluded UNCLASSIFIED"]
 ["out", "  (root)                            1         1         1        0        0            1"]
 ["out", "  a-very-long-top-level-folder      1         1         1        0        0            1"]
