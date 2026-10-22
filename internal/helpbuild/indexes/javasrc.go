@@ -1,7 +1,6 @@
 package indexes
 
 import (
-	"os"
 	"sort"
 	"strings"
 
@@ -102,11 +101,8 @@ func pyListdir(dir string) ([]string, error) {
 // ok false where Python's open or read raises the OSError the builders
 // catch.
 func readJavaText(path string) (string, bool) {
-	raw, err := os.ReadFile(path)
-	if err != nil {
-		return "", false
-	}
-	return pycompat.UniversalNewlines(pycompat.DecodeReplace(raw)), true
+	text, err := pycompat.ReadTextReplace(path)
+	return text, err == nil
 }
 
 // javaFileLines is iterating such a file: lines cut after each "\n"

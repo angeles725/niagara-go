@@ -125,3 +125,21 @@ func TestPaletteLexiconAgentsDefaultBase(t *testing.T) {
 		t.Errorf("nope: exit %d, stderr %q, want 1 and %q", exit, stderr, wantErr)
 	}
 }
+
+// readExtracted is _read_extracted_file: a regular file read with errors="replace" and
+// universal newlines; ok false when absent or not a regular file.
+func TestReadExtracted(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "module.xml")
+	if err := os.WriteFile(path, []byte("<m>\xff\r\n</m>\r"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if got, ok := readExtracted(path); !ok || got != "<m>�\n</m>\n" {
+		t.Errorf("readExtracted = %q, %v; want %q, true", got, ok, "<m>�\n</m>\n")
+	}
+	for _, p := range []string{filepath.Join(dir, "missing.xml"), dir} {
+		if _, ok := readExtracted(p); ok {
+			t.Errorf("readExtracted(%q) succeeded", p)
+		}
+	}
+}
