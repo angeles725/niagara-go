@@ -13,7 +13,8 @@ import (
 
 // corpusnav/graph.py: the one block-reference extractor and the citation graph.
 
-// refRe is _REF_RE: [Block N] / [Bloque N] / [Bloque #N], [BN] / [BN §x], bloqueN.
+// refRe is _REF_RE: [Block N] / [Bloque N] / [Bloque #N], [BN] / [BN §x], bloqueN. Only
+// lint-refs runs it; the graph commands use scanRefs (refscan.go), held to it by tests.
 // The patterns of this package compile on first use: at package init they cost every
 // corpus-nav run (find included) ~15 ms.
 var refRe = lazyRe(`
@@ -24,12 +25,6 @@ var refRe = lazyRe(`
       | (?<!\w.)(?<=[Bb]) [Ll][Oo][Qq][Uu][Ee](\d+)\b                 # bloque106 (at a word start, like \b)
     )
     `, pyre.VERBOSE)
-
-var (
-	// bareRefRe is _BARE_REF_RE (--bare), codeRe is _CODE_RE (code spans and fences).
-	bareRefRe = lazyRe(`(?<![\w/.\[-])B(\d{1,4})(?![\w-])`, 0)
-	codeRe    = lazyRe("```.*?```|`[^`\\n]*`", pyre.DOTALL)
-)
 
 // lazyRe is pyre.MustCompile deferred to the first call.
 func lazyRe(pattern string, flags pyre.Flags) func() *pyre.Regexp {
@@ -62,33 +57,15 @@ func resolveLabel(label string, labels map[string]bool) string {
 // refsInText is graph.refs_in_text: every block number cited (bare B<N> too with bare).
 func refsInText(text string, bare bool) map[string]bool {
 	nums := map[string]bool{}
-	for _, m := range refRe().FindIter([]rune(text)) {
-		for g := 1; g <= 3; g++ {
-			if s := m.Group(g); s != "" {
-				nums[blockfiles.PyInt(s)] = true
-			}
-		}
+	for m := range scanRefs(text) {
+		nums[blockfiles.PyInt(m.digits)] = true
 	}
 	if bare {
-		for _, n := range bareRefRe().FindAll(subSpans(text, codeRe(), " ")) {
+		for n := range bareRefs(stripCode(text)) {
 			nums[blockfiles.PyInt(n)] = true
 		}
 	}
 	return nums
-}
-
-// subSpans is rx.sub(repl, text) for a fixed replacement.
-func subSpans(text string, rx *pyre.Regexp, repl string) string {
-	rs := []rune(text)
-	var b strings.Builder
-	last := 0
-	for _, m := range rx.FindIter(rs) {
-		b.WriteString(string(rs[last:m.Start()]))
-		b.WriteString(repl)
-		last = m.End()
-	}
-	b.WriteString(string(rs[last:]))
-	return b.String()
 }
 
 // graph is build_graph's result: labels sorted, reverse and dangling included.
@@ -139,9 +116,9 @@ func buildGraph(blocks []blockFile, bare bool) *graph {
 			for n := range refsInText(text, false) {
 				cited[resolveLabel(n, known)] = true
 			}
-			if bare {
-				for n := range refsInText(text, true) {
-					if t := resolveLabel(n, known); known[t] {
+			if bare { // the refRe citations are all in already: only the bare mentions remain
+				for n := range bareRefs(stripCode(text)) {
+					if t := resolveLabel(blockfiles.PyInt(n), known); known[t] {
 						cited[t] = true
 					}
 				}
