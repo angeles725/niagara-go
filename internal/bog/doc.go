@@ -8,9 +8,12 @@
 // Reading detects the input by content (a config.bog ZIP, a .dist backup with a nested
 // config.bog, or plain BOG XML) and fails with a *ReadError carrying bogio's message, which
 // callers map to exit 3 (ExitBadInput, D17). Parsing is the same tolerant line-oriented tag
-// reader as model.py, Unicode semantics of Python's re included, so a truncated document yields a
-// smaller graph, never an error. A caller that needs well-formedness (bog-cycles, bog-write)
-// checks it separately.
+// reader as model.py, Unicode semantics of Python's re included, so Parse on a truncated text
+// yields a smaller graph. Load fails closed instead (R8-T29): it reads with ReadCheckedText, whose
+// CheckWellFormed pass (one root, closed tags and quotes, matching end tags; about 20 ms on the
+// 7.1 MB HARBOR file.xml) turns a truncated or damaged document into a *ReadError
+// "<path>: not well-formed XML (<expat message>: line L, column C)". bog-cycles and bog-write keep
+// internal/pyxml for expat's full verdict (names, references, namespaces).
 //
 // Nested composite values (opt-in, Go-only). Like model.py, Parse keeps a composite property (a
 // non-self-closing <p> without a handle, such as a setpoint StatusNumeric) as a Slot, with only

@@ -229,3 +229,27 @@ func TestJSONEncoderErrorExits2WithEmptyStdout(t *testing.T) {
 		t.Errorf("code %d out %q err %q", code, out, errOut)
 	}
 }
+
+// A truncated or unterminated bog fails closed with the bad-input code, never a partial result.
+func TestMalformedBogExitsBadInput(t *testing.T) {
+	cases := map[string]string{
+		"truncated.xml":    testXML[:strings.Index(testXML, "<p n='A'")],
+		"unterminated.xml": "<bajaObjectGraph version='4.0'>\n<p",
+	}
+	for name, text := range cases {
+		for _, cmd := range [][]string{{"types"}, {"tree"}, {"writable"}} {
+			path := writeFile(t, name, []byte(text))
+			out, errOut, code := runMain(t, append([]string{path}, cmd...)...)
+			if code != bog.ExitBadInput || out != "" || !strings.Contains(errOut, "not well-formed XML") {
+				t.Errorf("%s %v: code %d stdout %q stderr %q", name, cmd, code, out, errOut)
+			}
+		}
+	}
+}
+
+func TestTreeNegativeDepthIsAUsageError(t *testing.T) {
+	out, errOut, code := runMain(t, writeFile(t, "c.xml", []byte(testXML)), "tree", "--depth", "-1")
+	if code != cli.ExitCannotSearch || out != "" || !strings.Contains(errOut, "--depth") {
+		t.Fatalf("code %d stdout %q stderr %q", code, out, errOut)
+	}
+}
