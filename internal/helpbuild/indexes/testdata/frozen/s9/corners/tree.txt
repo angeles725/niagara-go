@@ -16,7 +16,8 @@ devguide-rc d--------- 755
 devguide-rc/Sample.java ---------- 644 147 784709d6739096744d79bfb183451e7d26139e130ca934a779c9696985b05d88
 devguide-rc/examples d--------- 755
 devguide-rc/examples/BMyPoint.java ---------- 644 208 4f8cd8a11dda35cd00c631ee544b68bb76d7ee8ae46c71e4dc58daf8341a4742
-devguide-rc/examples/Rc.java L--------- 777
+devguide-rc/examples/link d--------- 755
+devguide-rc/examples/link/Rc.java L--------- 777
 elsewhere d--------- 755
 elsewhere/linked d--------- 755
 elsewhere/linked/BLinked.java ---------- 644 83 5f1484237b7468beab234c4b5cacf451a616b40e3b3d54c06210b3734a20f337
@@ -31,8 +32,8 @@ guides/clX/broken d--------- 755
 guides/clX/broken/BBroken.bajadoc ---------- 644 163 964b96caefc5888905c5948f23cace16f3c3d4fea526d57c14f510f0150c1002
 guides/clX/readme.txt ---------- 644 14 0f5db895f00b423ffbf9b7ac4ef748f8d86cc5c2766e24836531f144dfa05d72
 indexes d--------- 755
-indexes/slots-index.json ---------- 644 5195 7cb64c2e2636256c7d9a0a94276c509f408f2c795c1df7ad63a48ff12d38c92a
-indexes/source-index.json ---------- 644 3242 c28dd0e8b5c0e0218b369589725bcc87f1423e5eb93b2efe96173068585b8760
+indexes/slots-index.json ---------- 644 5231 66a813f87eda931df728ae0d07b2b139eb637ee4638e7dd9c5c84a773a8320c9
+indexes/source-index.json ---------- 644 3339 b1a01203754ffdec50965364d18b16c7ad1487c9bdd046205b74893a84ebba67
 indexes/xref-index.json ---------- 644 2296 bad4d32fb9b0653418feeb01f387845718c97f542e87eb0032ed1a5c0ff10446
 source d--------- 755
 source/baja-rt d--------- 755
@@ -57,18 +58,36 @@ source/control-rt/javax d--------- 755
 source/control-rt/javax/baja d--------- 755
 source/control-rt/javax/baja/control d--------- 755
 source/control-rt/javax/baja/control/BNumericPoint.java ---------- 644 322 f291b92f1ecdf4e807296511aea7995d5341b76c31bbc365ed918d66ca319df2
-source/corner-rt d--------- 755
-source/corner-rt/c d--------- 755
-source/corner-rt/c/BDangling.java L--------- 777
-source/corner-rt/c/BFileLink.java L--------- 777
-source/corner-rt/c/Back\S.java ---------- 644 29 2640635d2c086d5a58bf2756d4d4a91367a36a2953c5e150b3f83ca49f349a4e
-source/corner-rt/c/Bad.java ---------- 644 119 13f109ceb02e18cd185294ba1d08a8e568c33bb7af4be08f402e0e4e327ed588
-source/corner-rt/c/Crlf.java ---------- 644 122 d32d66bba57cd303f3318e89c9a12c68d109425eb08006b8c7aa2b7faec43364
-source/corner-rt/c/Feed.java ---------- 644 78 707ba3039e2a70c38413bf90ceeff8e50540ef08ebdb587cd223336ee8d413ee
-source/corner-rt/c/LoneCr.java ---------- 644 88 5a8e72dcd87d0f2b7f59f6da2188b322f48fc1bda9bc7b49822d4deee92cd199
-source/corner-rt/c/Open.java ---------- 644 99 fad85580202d09a35cca1f7bb0751fba51dc5e6da2b325f38aaa212dfdf49b36
-source/corner-rt/c/Sep.java ---------- 644 35 417e4235adaf6a4f482eb0d196a7e76d90f88ba5c2d8d83281f24a4c786c0b95
-source/corner-rt/c/folder L--------- 777
+source/corner-backs-rt d--------- 755
+source/corner-backs-rt/c d--------- 755
+source/corner-backs-rt/c/Back\S.java ---------- 644 29 2640635d2c086d5a58bf2756d4d4a91367a36a2953c5e150b3f83ca49f349a4e
+source/corner-bad-rt d--------- 755
+source/corner-bad-rt/c d--------- 755
+source/corner-bad-rt/c/Bad.java ---------- 644 119 13f109ceb02e18cd185294ba1d08a8e568c33bb7af4be08f402e0e4e327ed588
+source/corner-bdangling-rt d--------- 755
+source/corner-bdangling-rt/c d--------- 755
+source/corner-bdangling-rt/c/BDangling.java L--------- 777
+source/corner-bfilelink-rt d--------- 755
+source/corner-bfilelink-rt/c d--------- 755
+source/corner-bfilelink-rt/c/BFileLink.java L--------- 777
+source/corner-crlf-rt d--------- 755
+source/corner-crlf-rt/c d--------- 755
+source/corner-crlf-rt/c/Crlf.java ---------- 644 122 d32d66bba57cd303f3318e89c9a12c68d109425eb08006b8c7aa2b7faec43364
+source/corner-feed-rt d--------- 755
+source/corner-feed-rt/c d--------- 755
+source/corner-feed-rt/c/Feed.java ---------- 644 78 707ba3039e2a70c38413bf90ceeff8e50540ef08ebdb587cd223336ee8d413ee
+source/corner-folderlink-rt d--------- 755
+source/corner-folderlink-rt/c d--------- 755
+source/corner-folderlink-rt/c/folder L--------- 777
+source/corner-lonecr-rt d--------- 755
+source/corner-lonecr-rt/c d--------- 755
+source/corner-lonecr-rt/c/LoneCr.java ---------- 644 88 5a8e72dcd87d0f2b7f59f6da2188b322f48fc1bda9bc7b49822d4deee92cd199
+source/corner-open-rt d--------- 755
+source/corner-open-rt/c d--------- 755
+source/corner-open-rt/c/Open.java ---------- 644 99 fad85580202d09a35cca1f7bb0751fba51dc5e6da2b325f38aaa212dfdf49b36
+source/corner-sep-rt d--------- 755
+source/corner-sep-rt/c d--------- 755
+source/corner-sep-rt/c/Sep.java ---------- 644 35 417e4235adaf6a4f482eb0d196a7e76d90f88ba5c2d8d83281f24a4c786c0b95
 source/linked-rt L--------- 777
 source/nopkg-rt d--------- 755
 source/nopkg-rt/enum d--------- 755
