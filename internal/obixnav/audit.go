@@ -46,7 +46,7 @@ var expectSlots = []string{"evapSetpoint", "evapDifferentialUp", "evapDifferenti
 
 func (r *runner) cmdWiring() error {
 	w := r.s.Out
-	for _, ri := range r.roomList([]int{1, 2, 3, 4}) {
+	for _, ri := range r.roomList(siteRooms(true)) {
 		cr, err := r.coldRoom(ri)
 		if err != nil {
 			return err

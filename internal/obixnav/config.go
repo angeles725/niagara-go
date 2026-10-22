@@ -7,9 +7,6 @@ import (
 	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
-// roomAir: true for air defrost rooms; Cuarto3 is resistance (-20 C).
-var roomAir = map[int]bool{1: true, 2: true, 3: false, 4: true}
-
 // rtSecs converts PT8H0S / PT30M0S / PT5S to seconds; ok is false when v is not a PT duration.
 func rtSecs(v *string) (float64, bool, error) {
 	if v == nil || !strings.HasPrefix(*v, "PT") {
@@ -43,23 +40,23 @@ var (
 
 func (r *runner) cmdConfig() error {
 	w := r.s.Out
-	for _, ri := range r.roomList([]int{1, 2, 3, 4}) {
-		cr, err := r.coldRoom(ri)
-		air, known := roomAir[ri]
-		if err != nil || !known {
-			return valueError(fmt.Sprintf("no room %d (rooms 1-4)", ri))
+	defrostRooms := siteRooms(true)
+	for _, ri := range r.roomList(defrostRooms) {
+		rm, ok := findRoom(ri)
+		if !ok || rm.defrost == noDefrost {
+			return valueError(fmt.Sprintf("no room %d (%s)", ri, roomsText(defrostRooms)))
 		}
-		units, err := r.listUnits(cr)
+		units, err := r.listUnits(rm.coldRoom)
 		if err != nil {
 			return err
 		}
 		kind := "RESISTENCIA (−20)"
-		if air {
+		if rm.defrost == airDefrost {
 			kind = "AIRE"
 		}
-		fmt.Fprintf(w, "\n=== Cuarto%d (%s) — %s ===\n", ri, cr, kind)
+		fmt.Fprintf(w, "\n=== Cuarto%d (%s) — %s ===\n", ri, rm.coldRoom, kind)
 		for _, u := range units {
-			if err := r.unitConfig(cr, u, air); err != nil {
+			if err := r.unitConfig(rm, u); err != nil {
 				return err
 			}
 		}
@@ -67,8 +64,9 @@ func (r *runner) cmdConfig() error {
 	return nil
 }
 
-func (r *runner) unitConfig(cr, u string, air bool) error {
+func (r *runner) unitConfig(rm room, u string) error {
 	w := r.s.Out
+	cr, air := rm.coldRoom, rm.defrost == airDefrost
 	baseU := fmt.Sprintf("/Programacion/%s/%s/", cr, u)
 	hasCtrl, err := r.hasChild(cr+"/"+u, "DefrostController")
 	if err != nil {
@@ -104,7 +102,7 @@ func (r *runner) unitConfig(cr, u string, air bool) error {
 		flags = append(flags, "evapDifferentialDown=0 (sin histéresis)")
 	}
 	if hasCtrl {
-		f, err := defrostFlags(gd, num(v.get(baseU+"DefrostController/resistanceTempThreshold")), air)
+		f, err := defrostFlags(gd, num(v.get(baseU+"DefrostController/resistanceTempThreshold")), rm)
 		if err != nil {
 			return err
 		}
@@ -127,8 +125,9 @@ func (r *runner) unitConfig(cr, u string, air bool) error {
 	return nil
 }
 
-func defrostFlags(gd func(string) *string, thr value, air bool) ([]string, error) {
+func defrostFlags(gd func(string) *string, thr value, rm room) ([]string, error) {
 	var flags []string
+	air := rm.defrost == airDefrost
 	iv, ivOK, err := rtSecs(gd("interval"))
 	if err != nil {
 		return nil, err
@@ -152,13 +151,13 @@ func defrostFlags(gd func(string) *string, thr value, air bool) ([]string, error
 			pycompat.OptStr(gd("interval"))))
 	}
 	if !air && term != "true" {
-		flags = append(flags, fmt.Sprintf("terminateOnResistanceTemp=%s (Cuarto3 debe true)", term))
+		flags = append(flags, fmt.Sprintf("terminateOnResistanceTemp=%s (Cuarto%d debe true)", term, rm.num))
 	}
 	if air && term == "true" {
 		flags = append(flags, "terminateOnResistanceTemp=true (aire no lleva)")
 	}
 	if !air && thr.kind == 'f' && thr.f <= 0 {
-		flags = append(flags, "resistanceTempThreshold=0 (Cuarto3 lo necesita)")
+		flags = append(flags, fmt.Sprintf("resistanceTempThreshold=0 (Cuarto%d lo necesita)", rm.num))
 	}
 	return flags, nil
 }

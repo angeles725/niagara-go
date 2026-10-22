@@ -11,9 +11,6 @@ import (
 	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
-// rooms maps a room number to its ColdRoom container (Cuarto5 is comfort, no per-evap defrost).
-var rooms = map[int]string{1: "ColdRoom_1", 2: "ColdRoom_2", 3: "ColdRoom_3", 4: "ColdRoom_4", 5: "ColdRoom_5"}
-
 type slotPair struct{ facade, rt string }
 
 // control and defrost map per-evap facade slots ({M} = dashboard evap index) to rt slots on the
@@ -155,16 +152,16 @@ func (r *runner) roomList(defaults []int) []int {
 }
 
 func (r *runner) coldRoom(ri int) (string, error) {
-	cr, ok := rooms[ri]
+	rm, ok := findRoom(ri)
 	if !ok {
-		return "", valueError(fmt.Sprintf("no room %d (rooms 1-5)", ri))
+		return "", valueError(fmt.Sprintf("no room %d (%s)", ri, roomsText(siteRooms(false))))
 	}
-	return cr, nil
+	return rm.coldRoom, nil
 }
 
 func (r *runner) cmdMap() error {
 	w := r.s.Out
-	for _, ri := range r.roomList([]int{1, 2, 3, 4, 5}) {
+	for _, ri := range r.roomList(siteRooms(false)) {
 		cr, err := r.coldRoom(ri)
 		if err != nil {
 			return err
