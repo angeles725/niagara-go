@@ -63,7 +63,7 @@ func ParseBajadocXML(baseDir string) (*BajadocXMLResult, error) {
 		}
 	}
 	for _, info := range infos {
-		info.Subclasses = sortedSet(subs[info.ClassName])
+		info.Subclasses = pycompat.SortedSet(subs[info.ClassName])
 		if err := writeCleanClass(outDir, info.Pkg, info.ClassName, bajadocxml.FormatCleanInfo(info)); err != nil {
 			return res, err
 		}
@@ -114,19 +114,4 @@ func bajadocXMLClasses(root string) ([]bajadocxml.Class, error) {
 func hasHTMLPage(baseDir, pkg, name string) bool {
 	return pycompat.IsFile(pycompat.Join(baseDir, "bajadoc",
 		strings.ReplaceAll(pkg, ".", string(filepath.Separator)), name+".html"))
-}
-
-// sortedSet is sorted(set(names)); byte order is code-point order for the
-// UTF-8 names encoding/xml yields.
-func sortedSet(names []string) []string {
-	set := map[string]bool{}
-	var out []string
-	for _, n := range names {
-		if !set[n] {
-			set[n] = true
-			out = append(out, n)
-		}
-	}
-	sort.Strings(out)
-	return out
 }
