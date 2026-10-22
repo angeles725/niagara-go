@@ -2,6 +2,7 @@ package helpbuild
 
 import (
 	"database/sql"
+	"os"
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/helpbuild/indexes"
@@ -260,6 +261,8 @@ func (x *indexedViews) check(kind, rel string) (bool, error) {
 	case "example":
 		docs, err := x.fulltextDocs()
 		return docs[rel], err
+	case "bajadoc-package":
+		return x.packageIndexed(path)
 	}
 	return false, nil
 }
@@ -271,4 +274,25 @@ func dropPrefixRunes(s string, n int) string {
 		return ""
 	}
 	return string(r[n:])
+}
+
+// packageIndexed is the bajadoc-package check: the listing's description
+// is in the full-text index as package-text/<package>.txt. A listing with
+// an empty description holds nothing but its classes, each indexed from
+// its own .bajadoc (bajadoc-xml), so it counts as indexed; one that does
+// not parse does not.
+func (x *indexedViews) packageIndexed(path string) (bool, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return false, nil
+	}
+	d, ok := readPackageDesc(data)
+	if !ok {
+		return false, nil
+	}
+	if d.Text == "" {
+		return true, nil
+	}
+	docs, err := x.fulltextDocs()
+	return docs[packageTextDir+"/"+d.Pkg+".txt"], err
 }

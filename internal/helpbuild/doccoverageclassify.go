@@ -17,6 +17,7 @@ import (
 //
 //	javadoc-class  bajadoc/<pkg>/<Name>.html     -> class-index.json
 //	bajadoc-xml    devguide|guides/**.bajadoc    -> class-index.json
+//	bajadoc-package devguide|guides/**/package-index.bajadoc -> package-text/<package>.txt
 //	jdk-xml        jdk/**.bajadoc                -> jdk-class-index.json
 //	devguide-page  devguide/**.html|.txt         -> devguide-clean/
 //	devguide-toc   devguide/toc.xml              -> devguide-toc.json
@@ -137,6 +138,9 @@ func classify(rel string) (verdict, detail string) {
 			return verdictIndex, "javadoc-class"
 		}
 	case ext == ".bajadoc":
+		if low == "package-index.bajadoc" && (top == "devguide" || top == "guides") {
+			return verdictIndex, "bajadoc-package"
+		}
 		if low == "module-index.bajadoc" || low == "package-index.bajadoc" {
 			return verdictExclude, reasons["bajadoc-listing"]
 		}

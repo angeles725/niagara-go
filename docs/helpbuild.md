@@ -1009,6 +1009,21 @@ identical; Python
 - **`gates.log`** is LF on every OS (Python's text mode writes CRLF on Windows), as `build.log`.
 - **A full-text index no location can hold** is `scope.UnwritableIndexError` (exit 2), as in S11a.
 
+## Go-only text sources
+
+Documentation the Python tools never indexed. Each is one builder step of rebuild-all
+(appended after `course_extractor.py`, so the frozen plan and run outputs gained one line
+each on purpose) and one row of `internal/help/fts/sources.go` (appended, so the doc ids of
+the older sources keep their order). Both write through `writeTextSource`
+(`textsource.go`): a staging tree swapped in with `atomicfile.RebuiltDir`, or no folder at
+all when the version has nothing to write.
+
+| Step | Writes | Reads | Coverage |
+|---|---|---|---|
+| `package_text_builder` (`packagetext.go`) | `package-text/<package>.txt`: `TITLE`, `PACKAGE`, `MODULE` header, then the `<description>` of the package as text (`htmltext.HTMLToText` of its escaped HTML); one page per package, a description repeated by another module or by the `guides/` copy written once | every `package-index.bajadoc` under `devguide/` and `guides/` | `doc_types` kind `bajadoc-package` (it was the `bajadoc-listing` exclusion): indexed when the page is in the full-text index; a listing with an empty description counts as indexed (its classes are indexed one by one, as the old reason said). `jdk/` listings and `module-index.bajadoc` stay excluded. |
+
+`nh package <name>` prints the description block above the class list, with the page path.
+
 ## Real data
 
 `TestCoverageRealGoldens` (S10b-1) is the package's one real-data test:

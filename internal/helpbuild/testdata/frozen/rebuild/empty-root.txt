@@ -16,6 +16,7 @@ REBUILD-ALL (dry run)
   SKIP  build_devguide_toc.py      -> devguide-toc.json  (source 'devguide/' absent)
   PLAN  pdf_extractor.py           -> pdf-index.json, docs-text/
   PLAN  course_extractor.py        -> course-text/
+  SKIP  package_text_builder       -> package-text/  (source 'devguide/' absent)
 
 Dry run — nothing executed. Drop --dry-run to build.
 # stderr
@@ -42,8 +43,9 @@ REBUILD-ALL
 SKIP: no PDF manuals for <root> (docs dir: None); search uses the shared manuals.
   RUN   course_extractor.py        -> course-text/
 course: no course bound to this version; skipped
+  SKIP  package_text_builder       -> package-text/  (source 'devguide/' absent)
 
-Ran 2, skipped 12, failed 0.
+Ran 2, skipped 13, failed 0.
 Manifest re-stamped. Run 'freshness' to confirm FRESH.
 # stderr
 
@@ -75,7 +77,8 @@ indexes/.manifest.json 644
   SKIP  build_guides_index.py      -> guides-index.json  (source 'guides/' absent)
   SKIP  devguide_parser.py         -> devguide-clean/  (source 'devguide/' absent)
   SKIP  build_devguide_toc.py      -> devguide-toc.json  (source 'devguide/' absent)
-Ran 2, skipped 12, failed 0.
+  SKIP  package_text_builder       -> package-text/  (source 'devguide/' absent)
+Ran 2, skipped 13, failed 0.
   EMPTY class-index.json (its source is not in this install)
   EMPTY inheritance.json (its source is not in this install)
   EMPTY method-index.json (its source is not in this install)
@@ -127,6 +130,7 @@ REBUILD-ALL
 SKIP: no PDF manuals for <root> (docs dir: None); search uses the shared manuals.
   RUN   course_extractor.py        -> course-text/
 course: no course bound to this version; skipped
+  SKIP  package_text_builder       -> package-text/  (source 'devguide/' absent)
 
-Ran 2, skipped 12, failed 0.
+Ran 2, skipped 13, failed 0.
 Manifest re-stamped. Run 'freshness' to confirm FRESH.

@@ -40,7 +40,8 @@ type builder struct {
 var optionalArtifacts = map[string]string{"jdk-class-index.json": "when jdk/ exists"}
 
 // rebuildBuilders is maintenance.BUILDERS without build_call_index.py
-// (call-index.json is retired, decision I3-5). Tests swap a run function.
+// (call-index.json is retired, decision I3-5), plus the Go-only text
+// sources (package-text/, lexicon-text/). Tests swap a run function.
 var rebuildBuilders = []builder{
 	{"bajadoc_parser.py", []string{"bajadoc-clean/"}, "bajadoc", runBajadoc},
 	{"bajadoc_xml_parser.py", []string{"bajadoc-clean/"}, "devguide", runBajadocXML},
@@ -56,6 +57,7 @@ var rebuildBuilders = []builder{
 	{"build_devguide_toc.py", []string{"devguide-toc.json"}, "devguide", textRun(buildDevguideTOC)},
 	{"pdf_extractor.py", []string{"pdf-index.json", "docs-text/"}, "", runPDF},
 	{"course_extractor.py", []string{"course-text/"}, "", runCourse},
+	{packageTextScript, []string{packageTextDir + "/"}, "devguide", textRun(buildPackageText)},
 }
 
 // RebuildOptions are rebuild-all's switches. Only keeps the builders whose

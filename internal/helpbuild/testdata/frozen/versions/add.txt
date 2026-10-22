@@ -7,7 +7,7 @@ extracted 39 files (1,084 bytes)
   COLLISION guides/thing-ux/rc/notes.md (thing-ux.jar overwritten by thing-ux.jar)
   SKIP  inheritance_builder.py     -> inheritance.json  (source 'bajadoc-clean/' absent)
   SKIP  method_indexer.py          -> method-index.json  (source 'bajadoc-clean/' absent)
-Ran 12, skipped 2, failed 0.
+Ran 13, skipped 2, failed 0.
   EMPTY inheritance.json (its source is not in this install)
   EMPTY method-index.json (its source is not in this install)
 fidelity 1.0.0.0: jars 13 checked 39 sha256-exact 38 eol-only 0 mismatched 1 missing 0
@@ -35,7 +35,7 @@ RESULT: NOT READY - see the gate reports above
 
 # exit 1
 # tree
-@@ 0,0 0,326
+@@ 0,0 0,328
 + fulltext.sqlite:
 + [meta fingerprint engine=3|devguide-clean=<dir>/repo/versions/1.0.0.0/devguide-clean:3:135:<mtime>:<sha1>|guides-clean=<dir>/repo/versions/1.0.0.0/guides-clean:19:1068:<mtime>:<sha1>|source=<dir>/repo/versions/1.0.0.0/source:1:24:<mtime>:<sha1>|devguide-rc=<dir>/repo/versions/1.0.0.0/devguide-rc:2:26:<mtime>:<sha1>|devguide-examples=<dir>/repo/versions/1.0.0.0/devguide-examples:1:9:<mtime>:<sha1>   ]
 + [docs 1 devguide-clean changes37.txt changes37.txt 4 0]
@@ -102,8 +102,10 @@ RESULT: NOT READY - see the gate reports above
 + SKIP: no PDF manuals for <dir>/repo/versions/1.0.0.0 (docs dir: <dir>/install/docs); search uses the shared manuals.
 +   RUN   course_extractor.py        -> course-text/
 + course: no course bound to this version; skipped
++   RUN   package_text_builder       -> package-text/
++ package-text/: 0 package descriptions (from 0 package-index.bajadoc files)
 + 
-+ Ran 12, skipped 2, failed 0.
++ Ran 13, skipped 2, failed 0.
 + Manifest re-stamped. Run 'freshness' to confirm FRESH.
 + data root:
 + bajadoc d--------- 755
@@ -362,7 +364,7 @@ RESULT: NOT READY - see the gate reports above
 +     "docs": null
 +   }
 + }
-@@ 1,1 327,344
+@@ 1,1 329,346
 + .cache d--------- 755
 + .cache/jar-listings d--------- 755
 + .cache/jar-listings/<install hash>.json ---------- 644 <size> <sha256>
@@ -473,7 +475,7 @@ extracted 39 files (1,084 bytes)
   COLLISION guides/thing-ux/rc/notes.md (thing-ux.jar overwritten by thing-ux.jar)
   SKIP  inheritance_builder.py     -> inheritance.json  (source 'bajadoc-clean/' absent)
   SKIP  method_indexer.py          -> method-index.json  (source 'bajadoc-clean/' absent)
-Ran 12, skipped 2, failed 0.
+Ran 13, skipped 2, failed 0.
   EMPTY inheritance.json (its source is not in this install)
   EMPTY method-index.json (its source is not in this install)
 fidelity 1.0.0.0: jars 13 checked 39 sha256-exact 38 eol-only 0 mismatched 1 missing 0
@@ -501,13 +503,13 @@ RESULT: NOT READY - see the gate reports above
 
 # exit 1
 # tree
-@@ 168,169 168,169
+@@ 170,171 170,171
 - | INSTALL SWEEP 1.0.0.0 (16 jars under <dir>/install; 10 listed anew, the rest from the jar-listing cache)
 + | INSTALL SWEEP 1.0.0.0 (16 jars under <dir>/install; 0 listed anew, the rest from the jar-listing cache)
-@@ 282,283 282,283
+@@ 284,285 284,285
 - indexes/guides-index.json ---------- 644 1157 6004758efb57e1bc870c3a083112194ddf70e6e721d832a443037320a59daacc
 + indexes/guides-index.json ---------- 644 1236 155614e109f7600dd3ba1d6a6f76698d20fef8baab9d11664d70c1782bd24e43
-@@ 331,332 331,332
+@@ 333,334 333,334
 - versions/1.0.0.0.manifest.json ---------- 644 {
  "version": "1.0.0.0",
  "label": "install",
@@ -666,7 +668,7 @@ RESULT: NOT READY - see the gate reports above
   }
  ]
 }
-@@ 337,338 337,338
+@@ 339,340 339,340
 - |       "label": "install",
 + |       "label": "Synthetic \u00f1",
 ## <dir>/install/. --id 1.0.0.0
