@@ -199,7 +199,11 @@ first character of a string) or a chain whose first element is not a string is a
 `mnav reindex [--check] [--no-backup] [--only NAME] [--organized DIR] [--base-dir DIR]`.
 `cmd/mnav` routes `reindex` (first, or after a leading `--base-dir DIR`/`-d DIR`) to it
 before the command registry: `reindex.sh` is not a `module_nav.py` command, so it is not in
-the registry, the `--help` list or `nav.Order`.
+the registry, the `--help` list or `nav.Order`. The reader never imports the builders:
+`internal/nav` routes the line to the function `cmd/mnav` plugs in with
+`nav.UseReindex(reindex.Main)` before `cli.Run(nav.Main)`, so no package under
+`internal/nav` depends on `internal/navbuild` (pinned by `TestReaderDoesNotLinkTheBuilders`
+in `internal/nav/wiring_test.go`); `mnav` still links the builders through its main.
 
 | Step | Behaviour |
 |---|---|

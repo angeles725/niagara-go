@@ -7,6 +7,15 @@ import (
 	"github.com/angeles725/niagara-go/internal/cli"
 )
 
+// reindexMain is `mnav reindex` (internal/navbuild/reindex.Main), plugged in
+// by the composition root (cmd/mnav) so the reader never imports the index
+// builders (internal/navbuild); nil when no builder is linked.
+var reindexMain func(args []string, s cli.Stdio) int
+
+// UseReindex plugs the index rebuild into Main's reindex line; cmd/mnav calls
+// it once before Main.
+func UseReindex(fn func(args []string, s cli.Stdio) int) { reindexMain = fn }
+
 // reindexArgs recognises an mnav reindex line, module-navigator's reindex.sh
 // (not a module_nav.py command, so not in the registry, the --help list or
 // Order): "reindex" as commandWord. The global options before it (and before

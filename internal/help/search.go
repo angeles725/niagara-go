@@ -9,7 +9,7 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/fnmatch"
 	"github.com/angeles725/niagara-go/internal/help/fts"
-	"github.com/angeles725/niagara-go/internal/helpbuild"
+	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
@@ -140,7 +140,7 @@ func (e *Env) Package(p PackageParams) error {
 		classes := append([]pkgClass(nil), packages[pkg]...)
 		sort.SliceStable(classes, func(i, j int) bool { return classes[i].name < classes[j].name })
 		fmt.Fprintf(e.Out, "%s (%d classes):\n\n", pkg, len(classes))
-		if desc := helpbuild.PackageDescription(e.BaseDir, pkg); desc != nil {
+		if desc := packageDescription(e.BaseDir, pkg); desc != nil {
 			for _, l := range desc {
 				fmt.Fprintln(e.Out, strings.TrimRight("  "+l, " "))
 			}
@@ -152,4 +152,16 @@ func (e *Env) Package(p PackageParams) error {
 		fmt.Fprintln(e.Out)
 	}
 	return nil
+}
+
+// packageDescription is the description block of package-text/<pkg>.txt
+// under baseDir (the page helpbuild's package-text builder writes), the
+// lines after its header; nil when the package has no description page.
+func packageDescription(baseDir, pkg string) []string {
+	text, err := pycompat.ReadTextReplace(pycompat.Join(baseDir, "package-text", pkg+".txt"))
+	if err != nil {
+		return nil
+	}
+	_, body, _ := strings.Cut(text, "\n\n")
+	return strings.Split(strings.TrimRight(body, "\n"), "\n")
 }

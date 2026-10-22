@@ -25,6 +25,22 @@ course pseudo-jar) and versions setup stays with them (its gates run the coverag
 sweep); the doc-jar layer stays because the extract and versions frozen tests share its
 fixtures. Each package's frozen trees are under its own `testdata/frozen`.
 
+## Reader and builders: joined only in `cmd/nh`
+
+`internal/help` (the reader) never imports `internal/helpbuild`, and `helpbuild` never
+imports `internal/help`. The maintenance commands (`coverage`, `rebuild-all`,
+`versions add`, `versions extract`) keep their parsers and exit-status logic in `help`
+and call the builders through the `buildapi.Builders` interface
+(`internal/help/buildapi`, standard-library types only); `helpbuild.NH` implements it
+and `cmd/nh` plugs it in with `help.UseBuilders` before `cli.Run(help.Main)`. Shared
+leaves both sides import: `help/buildapi`, `help/indexerr` (the missing-index error),
+`help/fts`. The one remaining reader-to-builder edge is `help/scope` →
+`helpbuild/fulltext`: a search that finds the full-text index missing or stale builds it
+in process, also from `nsearch` and `find3`, which search through `help/scope` without
+nh's main. `TestReaderDoesNotLinkTheBuilders` (`internal/help/readerdeps_test.go`) pins
+the rule; nh still links the builders because `cmd/nh` does, so `nh rebuild-all` works
+unchanged.
+
 Source of truth: niagara-help `tools/` (Python 3.15). Where the Python code and this
 document disagree, the code wins and this document is corrected.
 

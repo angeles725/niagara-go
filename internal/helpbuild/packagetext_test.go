@@ -56,12 +56,6 @@ func TestBuildPackageText(t *testing.T) {
 		!reflect.DeepEqual(res.Log, []string{"package-text/: 1 package descriptions (from 4 package-index.bajadoc files)"}) {
 		t.Errorf("result %+v", res)
 	}
-	if got := PackageDescription(base, "javax.baja.alarm"); len(got) < 2 || got[0] != "DESCRIPTION:" {
-		t.Errorf("PackageDescription = %q", got)
-	}
-	if got := PackageDescription(base, "p.empty"); got != nil {
-		t.Errorf("no page, no description: %q", got)
-	}
 	// Without any description the folder goes away: no stale pages.
 	for _, rel := range []string{"devguide", "guides"} {
 		if err := os.RemoveAll(filepath.Join(base, rel)); err != nil {

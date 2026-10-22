@@ -5,7 +5,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/angeles725/niagara-go/internal/helpbuild"
+	"github.com/angeles725/niagara-go/internal/help/indexerr"
 	"github.com/angeles725/niagara-go/internal/index"
 )
 
@@ -36,9 +36,9 @@ func (c ExitCode) Error() string { return fmt.Sprintf("exit status %d", int(c)) 
 
 // MissingIndexError is index_cache.MissingIndexError: a required index file
 // is absent, so the lookup cannot search (exit 2 with "ERROR: ..."). It is
-// helpbuild's type, which the coverage reports return too, so the two
-// spell one message.
-type MissingIndexError = helpbuild.MissingIndexError
+// indexerr's type, which the coverage reports of the builders return too, so
+// the two spell one message.
+type MissingIndexError = indexerr.Missing
 
 // loadIndex returns indexes/<name> of the selected data root, parsed once per
 // Env (index_cache.load_index). A missing file is an empty object, or a
