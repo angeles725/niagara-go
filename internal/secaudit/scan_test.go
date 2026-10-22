@@ -1,11 +1,14 @@
 package secaudit
 
 import (
+	"archive/zip"
 	"bytes"
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/angeles725/niagara-go/internal/cli"
 	"github.com/angeles725/niagara-go/internal/pycompat"
@@ -128,5 +131,114 @@ func TestSec15UnlistableModulesDirSkips(t *testing.T) {
 		"run: ls -l <home>/modules (the audit user must be able to list it)"}
 	if len(rep.rows) != 1 || rep.rows[0] != want {
 		t.Errorf("rows %+v\nwant [%+v]", rep.rows, want)
+	}
+	// The whole audit prints the SKIP with its observed text and its note, and still exits 0:
+	// a check it could not run is reported, not an audit failure.
+	code, out := runAudit(t, home)
+	for _, line := range []string{"[SKIP  ]\x1b[0m SEC-15 (med) KeyRingPermission wildcard in unsigned module  [B114]\n",
+		"           observed: not checked (cannot list " + moddir + ": Permission denied)\n",
+		"           note    : run: ls -l <home>/modules (the audit user must be able to list it)\n"} {
+		if !strings.Contains(out, line) {
+			t.Errorf("audit stdout lacks %q:\n%s", line, out)
+		}
+	}
+	if code != cli.ExitFound {
+		t.Errorf("audit exit %d, want %d", code, cli.ExitFound)
+	}
+}
+
+// runAudit runs the audit of home with no keytool, no network and no Windows tools.
+func runAudit(t *testing.T, home string) (int, string) {
+	t.Helper()
+	e := &env{
+		run: func([]string, []byte, time.Duration, ...string) (result, error) {
+			t.Fatal("the audit ran a program")
+			return result{}, nil
+		},
+		dial:     func(string, int) bool { return false },
+		lookPath: func(string) string { return "" },
+		winpath:  func(string) string { return "" },
+	}
+	var out, errb bytes.Buffer
+	code := run(e, home, "", "", "", false, cli.Stdio{In: strings.NewReader(""), Out: &out, Err: &errb})
+	if errb.Len() != 0 {
+		t.Errorf("audit stderr %q", errb.String())
+	}
+	return code, out.String()
+}
+
+// writeJar writes a jar holding META-INF/module.xml (xml) and, when signed, a signature block.
+func writeJar(t *testing.T, path, xml string, signed bool) {
+	t.Helper()
+	f, err := os.Create(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	zw := zip.NewWriter(f)
+	members := map[string]string{"META-INF/module.xml": xml}
+	if signed {
+		members["META-INF/SIGNER.RSA"] = "sig"
+	}
+	for name, body := range members {
+		w, err := zw.Create(name)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, err := w.Write([]byte(body)); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := zw.Close(); err != nil {
+		t.Fatal(err)
+	}
+	if err := f.Close(); err != nil {
+		t.Fatal(err)
+	}
+}
+
+const wildXML = `<module><permissions><permission class="KeyRingPermission" name="*"/></permissions></module>`
+
+// SEC-15 cannot vouch for a jar it could not open (not a zip, unreadable): with no unsigned
+// wildcard holder among the jars it read, the row is a SKIP naming those jars, never the PASS
+// of a scan that skipped them; an unsigned wildcard holder it did read is still the FAIL, with
+// the jars not read named in the observed text.
+func TestSec15UnreadableJarIsNotChecked(t *testing.T) {
+	home := t.TempDir()
+	moddir := filepath.Join(home, "modules")
+	if err := os.Mkdir(moddir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(moddir, "broken-rt.jar"), []byte("not a zip"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	writeJar(t, filepath.Join(moddir, "plain-rt.jar"), "<module/>", false)
+	writeJar(t, filepath.Join(moddir, "signedWild-rt.jar"), wildXML, true)
+	var rep report
+	sec15(home, &rep)
+	want := row{"SEC-15", "med", "KeyRingPermission wildcard in unsigned module",
+		"not checked (cannot read 1 jar(s): broken-rt.jar); 1 modules declare it, 1 wildcard(name=*), 0 of those UNSIGNED",
+		"no wildcard KeyRingPermission in an unsigned/attacker module", "SKIP", "B114",
+		"run: unzip -t <home>/modules/<jar> on each jar not read (the audit user must be able to read it)"}
+	if len(rep.rows) != 1 || rep.rows[0] != want {
+		t.Errorf("rows %+v\nwant [%+v]", rep.rows, want)
+	}
+	code, out := runAudit(t, home)
+	for _, line := range []string{"[SKIP  ]\x1b[0m SEC-15 (med) KeyRingPermission wildcard in unsigned module  [B114]\n",
+		"           observed: " + want.observed + "\n", "           note    : " + want.note + "\n"} {
+		if !strings.Contains(out, line) {
+			t.Errorf("audit stdout lacks %q:\n%s", line, out)
+		}
+	}
+	if code != cli.ExitFound {
+		t.Errorf("audit exit %d, want %d", code, cli.ExitFound)
+	}
+
+	writeJar(t, filepath.Join(moddir, "wildOpen-rt.jar"), wildXML, false)
+	rep = report{}
+	sec15(home, &rep)
+	want.observed = "2 modules declare it, 2 wildcard(name=*), 1 of those UNSIGNED; 1 jar(s) not checked (cannot read: broken-rt.jar)"
+	want.verdict, want.note = "FAIL", "unsigned wildcard holders: wildOpen-rt.jar"
+	if len(rep.rows) != 1 || rep.rows[0] != want {
+		t.Errorf("with an unsigned wildcard holder: rows %+v\nwant [%+v]", rep.rows, want)
 	}
 }
