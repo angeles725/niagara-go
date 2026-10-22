@@ -86,12 +86,7 @@ func fuzzyRanked(hits []fuzzyHit) {
 // fuzzy is cmd_fuzzy: class, method, slot and guide names scored against
 // the query words, each section showing its top topN.
 func (e *Env) fuzzy(query string, topN int) error {
-	var words []string
-	for _, w := range textfold.Fields(query) {
-		if runeLen(w) >= 2 {
-			words = append(words, textfold.Lower(w))
-		}
-	}
+	words := fuzzyWords(query)
 	if len(words) == 0 {
 		return usageError(fmt.Sprintf("fuzzy needs a word of 2+ characters (got '%s')", query))
 	}
@@ -104,9 +99,43 @@ func (e *Env) fuzzy(query string, topN int) error {
 		}
 		idx[i] = o
 	}
-	classes, methods, slots, guides := idx[0], idx[1], idx[2], idx[3]
+	sections := []fuzzySection{
+		{"CLASSES", fuzzyClassHits(idx[0], words)},
+		{"METHODS", fuzzyMethodHits(idx[1], words)},
+		{"SLOTS", fuzzySlotHits(idx[2], words)},
+		{"GUIDES", fuzzyGuideHits(idx[3], words)},
+	}
+	total := 0
+	for _, sec := range sections {
+		total += len(sec.hits)
+	}
+	if total == 0 {
+		return e.reportMiss("fuzzy", query, "classes")
+	}
+	e.printFuzzy(query, total, sections, topN)
+	return nil
+}
 
-	var classHits []fuzzyHit
+// fuzzyWords is the query's words of 2+ characters, lowercased.
+func fuzzyWords(query string) []string {
+	var words []string
+	for _, w := range textfold.Fields(query) {
+		if runeLen(w) >= 2 {
+			words = append(words, textfold.Lower(w))
+		}
+	}
+	return words
+}
+
+// fuzzySection is one section of the output: its title and its ranked hits.
+type fuzzySection struct {
+	title string
+	hits  []fuzzyHit
+}
+
+// fuzzyClassHits scores each class by "name package" (plus half its name-only score).
+func fuzzyClassHits(classes *index.Object, words []string) []fuzzyHit {
+	var hits []fuzzyHit
 	for _, cls := range classes.Keys() {
 		data := classes.Object(cls)
 		pkg := getStr(data, "package", "")
@@ -116,13 +145,17 @@ func (e *Env) fuzzy(query string, topN int) error {
 			if nameScore, _ := fuzzyScore(nameLow, words); nameScore > 0 {
 				score += nameScore * 0.5
 			}
-			classHits = append(classHits, fuzzyHit{score, pos, cls,
+			hits = append(hits, fuzzyHit{score, pos, cls,
 				fmt.Sprintf("%s (%s, %s)", cls, pkg, getStr(data, "type", ""))})
 		}
 	}
-	fuzzyRanked(classHits)
+	fuzzyRanked(hits)
+	return hits
+}
 
-	var methodHits []fuzzyHit
+// fuzzyMethodHits scores each method name; the line names one class that has it.
+func fuzzyMethodHits(methods *index.Object, words []string) []fuzzyHit {
+	var hits []fuzzyHit
 	for _, m := range methods.Keys() {
 		score, pos := fuzzyScore(textfold.Lower(m), words)
 		if score > 0 {
@@ -131,13 +164,17 @@ func (e *Env) fuzzy(query string, topN int) error {
 			if len(entries) > 0 {
 				sample = getStr(entries[0], "class", "?")
 			}
-			methodHits = append(methodHits, fuzzyHit{score, pos, m,
+			hits = append(hits, fuzzyHit{score, pos, m,
 				fmt.Sprintf("%s (%d classes, e.g. %s)", m, len(entries), sample)})
 		}
 	}
-	fuzzyRanked(methodHits)
+	fuzzyRanked(hits)
+	return hits
+}
 
-	var slotHits []fuzzyHit
+// fuzzySlotHits scores each property, action and topic name of every class.
+func fuzzySlotHits(slots *index.Object, words []string) []fuzzyHit {
+	var hits []fuzzyHit
 	for _, cls := range slots.Keys() {
 		data := slots.Object(cls)
 		for _, section := range []string{"properties", "actions", "topics"} {
@@ -146,15 +183,19 @@ func (e *Env) fuzzy(query string, topN int) error {
 				score, pos := fuzzyScore(textfold.Lower(name), words)
 				if score > 0 {
 					stype := get(slot, "type", get(slot, "parameterType", get(slot, "eventType", "")))
-					slotHits = append(slotHits, fuzzyHit{score, pos, name,
+					hits = append(hits, fuzzyHit{score, pos, name,
 						fmt.Sprintf("[%s] %s.%s: %s", section[:len(section)-1], cls, name, pyStr(stype))})
 				}
 			}
 		}
 	}
-	fuzzyRanked(slotHits)
+	fuzzyRanked(hits)
+	return hits
+}
 
-	var guideHits []fuzzyHit
+// fuzzyGuideHits scores each guide folder, then each of its topics as folder/topic.
+func fuzzyGuideHits(guides *index.Object, words []string) []fuzzyHit {
+	var hits []fuzzyHit
 	for _, folder := range guides.Keys() {
 		data := guides.Object(folder)
 		if score, pos := fuzzyScore(textfold.Lower(folder), words); score > 0 {
@@ -163,26 +204,23 @@ func (e *Env) fuzzy(query string, topN int) error {
 			if index.Truthy(count) {
 				extra = fmt.Sprintf(" (%s topics, %s)", pyStr(count), orStr(data, "source_jar", "", ""))
 			}
-			guideHits = append(guideHits, fuzzyHit{score, pos, folder, folder + extra})
+			hits = append(hits, fuzzyHit{score, pos, folder, folder + extra})
 		}
 		for _, topic := range strList(data, "topics") {
 			if score, pos := fuzzyScore(textfold.Lower(topic), words); score > 0 {
 				name := folder + "/" + topic
-				guideHits = append(guideHits, fuzzyHit{score, pos, name, name})
+				hits = append(hits, fuzzyHit{score, pos, name, name})
 			}
 		}
 	}
-	fuzzyRanked(guideHits)
+	fuzzyRanked(hits)
+	return hits
+}
 
-	total := len(classHits) + len(methodHits) + len(slotHits) + len(guideHits)
-	if total == 0 {
-		return e.reportMiss("fuzzy", query, "classes")
-	}
+// printFuzzy prints the header and each section that has hits, its top topN.
+func (e *Env) printFuzzy(query string, total int, sections []fuzzySection, topN int) {
 	fmt.Fprintf(e.Out, "FUZZY SEARCH: '%s' (%d total matches)\n%s\n", query, total, strings.Repeat("=", 60))
-	for _, sec := range []struct {
-		title string
-		hits  []fuzzyHit
-	}{{"CLASSES", classHits}, {"METHODS", methodHits}, {"SLOTS", slotHits}, {"GUIDES", guideHits}} {
+	for _, sec := range sections {
 		if len(sec.hits) == 0 {
 			continue
 		}
@@ -194,5 +232,4 @@ func (e *Env) fuzzy(query string, topN int) error {
 			fmt.Fprintf(e.Out, "  ... +%d more\n", len(sec.hits)-topN)
 		}
 	}
-	return nil
 }
