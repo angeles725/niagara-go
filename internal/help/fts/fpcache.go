@@ -17,22 +17,17 @@ package fts
 // whenever a stat differs. The value is therefore Fingerprint's exactly; the
 // memo only saves the walk.
 //
-// The file follows the gob caches of module-nav (internal/nav/core
-// cachefile.go): gob, written atomically with mode 0600 after a change,
+// The file follows the gob caches of module-nav (internal/statcache): gob, written atomically with mode 0600 after a change,
 // ignored when malformed or of another format, never an error.
 
 import (
-	"bytes"
-	"encoding/gob"
-	"io"
 	"os"
 	"path/filepath"
 	"strings"
-	"sync"
 	"sync/atomic"
 	"time"
 
-	"github.com/angeles725/niagara-go/internal/atomicfile"
+	"github.com/angeles725/niagara-go/internal/statcache"
 )
 
 // fpFormat is the memo's format; a memo of another format is ignored.
@@ -94,7 +89,7 @@ func CachedFingerprint(baseDir string, dirs []SourceDir) string {
 		for i, f := range s.Files {
 			abs[i] = joinUnder(d.Dir, f)
 		}
-		stats := statFiles(abs)
+		stats := statFiles(abs, fpStatWorkers)
 		if !equalStats(stats, s.Stats) || s.Part == "" {
 			s.Stats, s.Part, changed = stats, sourcePart(d, abs, stats), true
 		}
@@ -165,22 +160,15 @@ func joinUnder(dir, name string) string {
 	return filepath.Join(dir, name)
 }
 
-// statFiles stats the files with fpStatWorkers goroutines.
-func statFiles(files []string) []fileStat {
+// statFiles stats the files with that many goroutines (statcache.Files); a
+// file that cannot be stat'ed is the zero fileStat.
+func statFiles(files []string, workers int) []fileStat {
 	out := make([]fileStat, len(files))
-	var wg sync.WaitGroup
-	chunk := (len(files) + fpStatWorkers - 1) / fpStatWorkers
-	for lo := 0; lo < len(files); lo += chunk {
-		hi := min(lo+chunk, len(files))
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			for i := lo; i < hi; i++ {
-				out[i] = statFile(files[i])
-			}
-		}()
+	for i, s := range statcache.Files(files, workers) {
+		if s.Exists() {
+			out[i] = fileStat{s.Size, s.MtimeNs, true}
+		}
 	}
-	wg.Wait()
 	return out
 }
 
@@ -199,12 +187,8 @@ func equalStats(a, b []fileStat) bool {
 // loadFpMemo reads the memo; nil when it is missing, malformed or of
 // another format or engine.
 func loadFpMemo(path string) *fpMemo {
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return nil
-	}
 	var m fpMemo
-	if gob.NewDecoder(bytes.NewReader(data)).Decode(&m) != nil || m.Format != fpFormat || m.Engine != EngineVersion {
+	if !statcache.ReadGob(path, &m) || m.Format != fpFormat || m.Engine != EngineVersion {
 		return nil
 	}
 	for _, s := range m.Sources {
@@ -216,13 +200,4 @@ func loadFpMemo(path string) *fpMemo {
 }
 
 // writeFpMemo writes the memo atomically (mode 0600); a failure is ignored.
-func writeFpMemo(path string, m *fpMemo) {
-	var buf bytes.Buffer
-	if gob.NewEncoder(&buf).Encode(m) != nil || os.MkdirAll(filepath.Dir(path), 0o700) != nil {
-		return
-	}
-	_ = atomicfile.WriteStream(path, 0o600, func(w io.Writer) error {
-		_, err := w.Write(buf.Bytes())
-		return err
-	})
-}
+func writeFpMemo(path string, m *fpMemo) { statcache.WriteGob(path, m) }

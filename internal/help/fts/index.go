@@ -38,11 +38,7 @@ func Fingerprint(dirs []SourceDir) string {
 	parts := []string{"engine=" + EngineVersion}
 	for _, d := range dirs {
 		files := IterFiles(d.Label, d.Dir)
-		stats := make([]fileStat, len(files))
-		for i, path := range files {
-			stats[i] = statFile(path)
-		}
-		parts = append(parts, sourcePart(d, files, stats))
+		parts = append(parts, sourcePart(d, files, statFiles(files, 1)))
 	}
 	return strings.Join(parts, "|")
 }
@@ -52,14 +48,6 @@ func Fingerprint(dirs []SourceDir) string {
 type fileStat struct {
 	Size, Mtime int64
 	OK          bool
-}
-
-func statFile(path string) fileStat {
-	st, err := os.Stat(path)
-	if err != nil {
-		return fileStat{}
-	}
-	return fileStat{st.Size(), st.ModTime().UnixNano(), true}
 }
 
 // sourcePart is the fingerprint of one source from its files (IterFiles
