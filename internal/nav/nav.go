@@ -18,14 +18,18 @@ import (
 	_ "github.com/angeles725/niagara-go/internal/nav/security"
 	_ "github.com/angeles725/niagara-go/internal/nav/source"
 	_ "github.com/angeles725/niagara-go/internal/nav/structure"
-	"github.com/angeles725/niagara-go/internal/navbuild/reindex"
 )
 
 // Main runs one mnav command line and returns the process exit code: a
-// reindex line goes to the index rebuild (reindex.go), any other to run.
+// reindex line goes to the index rebuild plugged in with UseReindex
+// (reindex.go), any other to run.
 func Main(args []string, s cli.Stdio) int {
 	if rest, ok := reindexArgs(args); ok {
-		return reindex.Main(rest, s)
+		if reindexMain == nil {
+			fmt.Fprintln(s.Err, "mnav: the index builder is not linked into this binary")
+			return cli.ExitCannotSearch
+		}
+		return reindexMain(rest, s)
 	}
 	return run("", args, s)
 }
