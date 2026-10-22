@@ -37,30 +37,7 @@ const headerLines = 200
 // ComputeXref is build_xref over the class-index entries, reading sources
 // under organized.
 func ComputeXref(entries []classIndexEntry, organized string) *Xref {
-	packageClasses := newOrderedLists()
-	type info struct{ name, module string }
-	fqcnInfo := map[string]info{}
-	classModules := map[string]map[string]bool{}
-	var top []classIndexEntry
-	for _, e := range entries {
-		if e.Outer {
-			continue
-		}
-		if e.Package != "" {
-			packageClasses.add(e.Package, e.Name)
-		}
-		fqcn := e.Name
-		if e.Package != "" {
-			fqcn = e.Package + "." + e.Name
-		}
-		fqcnInfo[fqcn] = info{e.Name, e.Module}
-		if classModules[e.Name] == nil {
-			classModules[e.Name] = map[string]bool{}
-		}
-		classModules[e.Name][e.Module] = true
-		top = append(top, e)
-	}
-
+	c, top := indexTopLevel(entries)
 	x := &Xref{ClassImports: newOrderedLists(), ExternalImportedBy: newOrderedLists()}
 	scans := scanImports(top, organized)
 	for n, e := range top {
@@ -72,71 +49,128 @@ func ComputeXref(entries []classIndexEntry, organized string) *Xref {
 			continue
 		}
 		x.FilesParsed++
-		imported := map[string]bool{}
-		var importedOrder []string
-		add := func(c string) {
-			if !imported[c] {
-				imported[c] = true
-				importedOrder = append(importedOrder, c)
-			}
-		}
-		for _, m := range scans[n].imports {
-			x.ImportStatements++
-			importedFQCN := m.path
-			if m.static {
-				if i := strings.LastIndexByte(m.path, '.'); i >= 0 {
-					importedFQCN = m.path[:i]
-				}
-			}
-			external := !strings.HasSuffix(m.path, ".*")
-			if (strings.HasPrefix(m.path, "java.") || strings.HasPrefix(m.path, "javax.")) &&
-				!strings.HasPrefix(m.path, "javax.baja.") {
-				x.SkippedStdlib++
-				if external {
-					x.ExternalImportedBy.add(importedFQCN, e.Name)
-				}
-				continue
-			}
-			if !external {
-				x.WildcardImports++
-				pkg := strings.TrimSuffix(m.path, ".*")
-				for _, c := range packageClasses.vals[pkg] {
-					add(c)
-					x.WildcardResolved++
-				}
-				continue
-			}
-			parts := strings.Split(m.path, ".")
-			resolve := func(fqcn, fallback string) {
-				if inf, ok := fqcnInfo[fqcn]; ok {
-					add(inf.name)
-				} else if classModules[fallback] != nil {
-					add(fallback)
-				} else {
-					return
-				}
-				x.ResolvedImports++
-				external = false
-			}
-			if m.static && len(parts) >= 2 {
-				resolve(strings.Join(parts[:len(parts)-1], "."), parts[len(parts)-2])
-			} else {
-				resolve(m.path, parts[len(parts)-1])
-			}
-			if external {
-				x.ExternalImportedBy.add(importedFQCN, e.Name)
-			}
-		}
-		delete(imported, e.Name)
-		for _, c := range importedOrder {
-			if imported[c] {
-				x.ClassImports.add(e.Name, c)
-			}
-		}
+		x.addClassImports(e, scans[n].imports, c)
 	}
 	x.ClassImports.sortValues()
 	x.ExternalImportedBy.sortValues()
+	x.reverseMaps(c.classModules)
+	return x
+}
 
+// xrefCorpus is what build_xref knows of the top-level classes before it reads
+// any source: the classes of each package, each FQCN's class and module, and
+// the modules each class name is defined in.
+type xrefCorpus struct {
+	packageClasses *orderedLists
+	fqcnInfo       map[string]classRef
+	classModules   map[string]map[string]bool
+}
+
+// classRef is a fqcn_info value: the class name and its module.
+type classRef struct{ name, module string }
+
+// indexTopLevel fills the corpus maps from the entries that are not inner
+// types and returns those entries in order.
+func indexTopLevel(entries []classIndexEntry) (*xrefCorpus, []classIndexEntry) {
+	c := &xrefCorpus{packageClasses: newOrderedLists(), fqcnInfo: map[string]classRef{}, classModules: map[string]map[string]bool{}}
+	var top []classIndexEntry
+	for _, e := range entries {
+		if e.Outer {
+			continue
+		}
+		if e.Package != "" {
+			c.packageClasses.add(e.Package, e.Name)
+		}
+		fqcn := e.Name
+		if e.Package != "" {
+			fqcn = e.Package + "." + e.Name
+		}
+		c.fqcnInfo[fqcn] = classRef{e.Name, e.Module}
+		if c.classModules[e.Name] == nil {
+			c.classModules[e.Name] = map[string]bool{}
+		}
+		c.classModules[e.Name][e.Module] = true
+		top = append(top, e)
+	}
+	return c, top
+}
+
+// addClassImports records one parsed source's imports: the corpus classes it
+// imports (itself excluded, in first-import order) under class_imports.
+func (x *Xref) addClassImports(e classIndexEntry, imports []importMatch, c *xrefCorpus) {
+	imported := map[string]bool{}
+	var importedOrder []string
+	add := func(name string) {
+		if !imported[name] {
+			imported[name] = true
+			importedOrder = append(importedOrder, name)
+		}
+	}
+	for _, m := range imports {
+		x.resolveImport(m, e.Name, c, add)
+	}
+	delete(imported, e.Name)
+	for _, name := range importedOrder {
+		if imported[name] {
+			x.ClassImports.add(e.Name, name)
+		}
+	}
+}
+
+// resolveImport counts one import statement of importer and adds the corpus
+// classes it names; a stdlib or unresolved non-wildcard import is recorded
+// under external_imported_by instead.
+func (x *Xref) resolveImport(m importMatch, importer string, c *xrefCorpus, add func(string)) {
+	x.ImportStatements++
+	importedFQCN := m.path
+	if m.static {
+		if i := strings.LastIndexByte(m.path, '.'); i >= 0 {
+			importedFQCN = m.path[:i]
+		}
+	}
+	external := !strings.HasSuffix(m.path, ".*")
+	if (strings.HasPrefix(m.path, "java.") || strings.HasPrefix(m.path, "javax.")) &&
+		!strings.HasPrefix(m.path, "javax.baja.") {
+		x.SkippedStdlib++
+		if external {
+			x.ExternalImportedBy.add(importedFQCN, importer)
+		}
+		return
+	}
+	if !external {
+		x.WildcardImports++
+		pkg := strings.TrimSuffix(m.path, ".*")
+		for _, name := range c.packageClasses.vals[pkg] {
+			add(name)
+			x.WildcardResolved++
+		}
+		return
+	}
+	parts := strings.Split(m.path, ".")
+	resolve := func(fqcn, fallback string) {
+		if inf, ok := c.fqcnInfo[fqcn]; ok {
+			add(inf.name)
+		} else if c.classModules[fallback] != nil {
+			add(fallback)
+		} else {
+			return
+		}
+		x.ResolvedImports++
+		external = false
+	}
+	if m.static && len(parts) >= 2 {
+		resolve(strings.Join(parts[:len(parts)-1], "."), parts[len(parts)-2])
+	} else {
+		resolve(m.path, parts[len(parts)-1])
+	}
+	if external {
+		x.ExternalImportedBy.add(importedFQCN, importer)
+	}
+}
+
+// reverseMaps derives class_imported_by and the module maps from
+// class_imports.
+func (x *Xref) reverseMaps(classModules map[string]map[string]bool) {
 	// The reverse and module maps were filled from sets in Python: their keys
 	// are sorted since module-navigator fix/deterministic-xref-base-dir.
 	x.ClassImportedBy, x.ModuleDeps, x.ModuleDependedBy = newOrderedLists(), newOrderedLists(), newOrderedLists()
@@ -157,7 +191,6 @@ func ComputeXref(entries []classIndexEntry, organized string) *Xref {
 		sort.Strings(o.keys)
 		o.sortValues()
 	}
-	return x
 }
 
 // fileImports is the import statements of one source, or failed when it is
