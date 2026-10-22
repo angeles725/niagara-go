@@ -8,7 +8,8 @@
 // os.strerror for Go os errors (Linux and Windows tables), text-file universal newlines, cp437 decoding
 // of zip member names, zipfile's last-entry-wins member lookup, base64.b64decode's lenient decoding,
 // os.listdir and sorted(os.listdir) (Listdir, SortedListdir), sorted(set(xs)) (SortedSet), and
-// os.walk (Walk, WalkWith: top-down, sorted or os.scandir order, optional onerror).
+// os.walk (Walk, WalkWith: top-down, sorted or os.scandir order, optional onerror), and
+// hashlib.sha256 of a file's bytes (FileSHA256).
 //
 // unicode.txt, errno_linux.txt, testdata/fixtures.json and the testdata/golden/format_*.golden
 // cases are frozen output of the retired testdata/gen.py, and errno_windows.txt of the retired

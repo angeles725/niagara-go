@@ -11,6 +11,7 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/helpbuild/internal/testkit"
 	"github.com/angeles725/niagara-go/internal/helpbuild/pyfs"
+	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 )
 
@@ -40,7 +41,7 @@ func TestExtractAndIndexWritesTheManifest(t *testing.T) {
 		t.Fatalf("log %q", res.Log)
 	}
 	text := testkit.ReadText(t, filepath.Join(repo, "versions", "1.0.0.0.manifest.json"))
-	sum, err := fileSHA256(filepath.Join(install, "modules", "docFoo-doc.jar"))
+	sum, err := pycompat.FileSHA256(filepath.Join(install, "modules", "docFoo-doc.jar"))
 	if err != nil {
 		t.Fatal(err)
 	}
