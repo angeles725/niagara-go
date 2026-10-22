@@ -53,20 +53,37 @@ func TestGrepRootLockedMidRunCannotSearch(t *testing.T) {
 }
 
 // TestFocusesRootLockedMidRunCannotSearch: the focuses are the root's RESEARCH-STATE
-// files; a root that can no longer be listed has unknown focuses (exit 2 naming the root
-// and the OS reason), never "Known focuses: " or "focuses: 0".
+// files and the focus blocks include the sub-corpus walked from the root; a root that can
+// no longer be listed has unknown focuses (exit 2 naming the root and the OS reason),
+// never "No blocks found", "Known focuses: " or "focuses: 0".
 func TestFocusesRootLockedMidRunCannotSearch(t *testing.T) {
 	c, out, errb, root := copyCorpus(t)
 	c.blocks() // the entry gate's listing
 	lockListing(t, root)
 	cannot := "corpus-nav: cannot search: cannot list " + pyPath(root) + ": Permission denied\n"
-	want := "No blocks found for focus 'nope'.\n" + cannot
-	if code := c.cmdByFocus("nope"); code != 2 || out.String() != "" || errb.String() != want {
+	if code := c.cmdByFocus("nope"); code != 2 || out.String() != "" || errb.String() != cannot {
 		t.Errorf("by-focus nope: exit %d\nstdout %q\nstderr %q", code, out.String(), errb.String())
 	}
 	out.Reset()
 	errb.Reset()
 	if code := c.cmdStats(); code != 2 || out.String() != "" || errb.String() != cannot {
 		t.Errorf("stats: exit %d\nstdout %q\nstderr %q", code, out.String(), errb.String())
+	}
+}
+
+// TestSubCorpusRootLockedMidRunCannotSearch: the sub-corpus is walked from the root after
+// the gate; a root that can no longer be listed is "cannot search" (exit 2 naming the root
+// and the OS reason) with nothing on stdout, never "+ 0 sub-corpus block(s)".
+func TestSubCorpusRootLockedMidRunCannotSearch(t *testing.T) {
+	c, out, errb, root := copyCorpus(t)
+	c.blocks() // the entry gate's listing
+	lockListing(t, root)
+	want := "corpus-nav: cannot search: cannot list " + pyPath(root) + ": Permission denied\n"
+	for _, focus := range []string{"", "alarms"} {
+		out.Reset()
+		errb.Reset()
+		if code := c.cmdList(focus); code != 2 || out.String() != "" || errb.String() != want {
+			t.Errorf("list %q: exit %d\nstdout %q\nstderr %q", focus, code, out.String(), errb.String())
+		}
 	}
 }

@@ -110,23 +110,24 @@ func cacheKey(root string) (string, bool) {
 	return fmt.Sprintf("%s\x00%d\x00%s\x00%s", subSchema, os.Getuid(), exe, root), exe != ""
 }
 
-// cachedSubBlocks is SubBlocks through the cache at path.
-func cachedSubBlocks(root, path string) []Block {
+// cachedSubBlocks is SubBlocks through the cache at path. A root that cannot be listed
+// is never cached (its record is invalid): every call walks and reports it.
+func cachedSubBlocks(root, path string) ([]Block, error) {
 	key, ok := cacheKey(root)
 	if !ok {
-		bs, _ := walkSubBlocks(root, false)
-		return bs
+		bs, _, err := walkSubBlocks(root, false)
+		return bs, err
 	}
 	if bs, ok := readSubCache(path, key); ok {
-		return bs
+		return bs, nil
 	}
 	start := time.Now()
-	bs, rec := walkSubBlocks(root, true)
+	bs, rec, err := walkSubBlocks(root, true)
 	rec.dur = time.Since(start)
 	if !rec.invalid {
 		_ = writeSubCache(path, key, bs, rec) // the walk is the answer either way
 	}
-	return bs
+	return bs, err
 }
 
 // readSubCache is the cached result when the cache at path is intact, made for key, not

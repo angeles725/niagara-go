@@ -148,6 +148,39 @@ func TestMainBlocksUnlistableRootIsAnError(t *testing.T) {
 	}
 }
 
+// TestSubBlocksUnlistableRootIsAnError: a root that cannot be listed is not a sub-corpus
+// of zero blocks (os.walk would say so); SubBlocks fails closed, with or without the walk
+// cache, and caches nothing. An unlistable directory below the root is still skipped.
+func TestSubBlocksUnlistableRootIsAnError(t *testing.T) {
+	root := lockedRoot(t)
+	if bs, err := SubBlocks(root); err == nil || !errors.Is(err, fs.ErrPermission) || bs != nil {
+		t.Errorf("SubBlocks = %v, %v; want a permission error", bs, err)
+	}
+	cached := cacheRoot(t, "a/x-block1.md")
+	if err := os.Chmod(cached, 0o311); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = os.Chmod(cached, 0o755) })
+	for range 2 {
+		if bs, err := SubBlocks(cached); err == nil || !errors.Is(err, fs.ErrPermission) || bs != nil {
+			t.Errorf("cached SubBlocks = %v, %v; want a permission error", bs, err)
+		}
+	}
+	if _, err := os.Stat(cachePath(cached)); !errors.Is(err, fs.ErrNotExist) {
+		t.Errorf("an unlistable root left a walk cache (stat: %v)", err)
+	}
+	if err := os.Chmod(cached, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chmod(filepath.Join(cached, "a"), 0); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = os.Chmod(filepath.Join(cached, "a"), 0o755) })
+	if bs, err := SubBlocks(cached); err != nil || len(bs) != 0 {
+		t.Errorf("SubBlocks with an unlistable subdirectory = %v, %v; want none, nil", bs, err)
+	}
+}
+
 // TestMainBlocksMissingRootIsEmpty: a root that does not exist (or is a file) still has
 // no blocks and no error, as Path.glob says; the callers' empty-corpus gates handle it.
 func TestMainBlocksMissingRootIsEmpty(t *testing.T) {
@@ -162,6 +195,9 @@ func TestMainBlocksMissingRootIsEmpty(t *testing.T) {
 		}
 		if bs, err := AllBlocks(root); err != nil || len(bs) != 0 {
 			t.Errorf("AllBlocks(%s) = %v, %v; want none, nil", root, bs, err)
+		}
+		if bs, err := SubBlocks(root); err != nil || len(bs) != 0 {
+			t.Errorf("SubBlocks(%s) = %v, %v; want none, nil", root, bs, err)
 		}
 	}
 }

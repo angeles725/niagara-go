@@ -189,11 +189,11 @@ func CannotListLine(root string, err error) string {
 func (c *Corpus) Targets(scope string) ([]Target, error) {
 	var out []Target
 	if scope == "blocks" || scope == "all" {
-		main, err := blockfiles.MainBlocks(c.Root)
+		bs, err := blockfiles.AllBlocks(c.Root)
 		if err != nil {
 			return nil, err
 		}
-		for _, b := range append(main, blockfiles.SubBlocks(c.Root)...) {
+		for _, b := range bs {
 			out = append(out, Target{DisplayID(b.Label), b.Path})
 		}
 	}

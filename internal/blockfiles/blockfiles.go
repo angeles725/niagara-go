@@ -176,10 +176,7 @@ func join(dir, name string) string { return pypath.Join(dir, name) }
 func MainBlocks(root string) ([]Block, error) {
 	entries, err := os.ReadDir(root)
 	if err != nil {
-		if errors.Is(err, fs.ErrNotExist) || errors.Is(err, syscall.ENOTDIR) {
-			return nil, nil
-		}
-		return nil, err
+		return nil, listErr(err)
 	}
 	var out []Block
 	for _, e := range entries {
@@ -193,6 +190,15 @@ func MainBlocks(root string) ([]Block, error) {
 	}
 	sortBlocks(out, func(a, b Block) bool { return filepath.Base(a.Path) < filepath.Base(b.Path) })
 	return out, nil
+}
+
+// listErr is the error of a root that cannot be listed: nil when it does not exist or is
+// not a directory (no blocks, as Path.glob and os.walk say), err otherwise.
+func listErr(err error) error {
+	if errors.Is(err, fs.ErrNotExist) || errors.Is(err, syscall.ENOTDIR) {
+		return nil
+	}
+	return err
 }
 
 // subLabel is _sub_label: (corpus, label) of a sub-corpus block, ok false otherwise.
@@ -243,25 +249,33 @@ func walkWorkers() int { return min(runtime.GOMAXPROCS(0), 8) }
 // directories pruned, symlinked directories not entered, unreadable directories
 // skipped), sorted by label, then path. Directories are read in parallel; the full
 // sort makes the result independent of walk order. A warm call is answered from the
-// walk cache (subcache.go) when every walked directory is unchanged.
-func SubBlocks(root string) []Block {
+// walk cache (subcache.go) when every walked directory is unchanged. A root that does
+// not exist (or is not a directory) has no blocks; a root that exists but cannot be
+// listed is an error, never an empty sub-corpus (os.walk would hide it: an intended
+// fail-closed difference from Python, as in MainBlocks).
+func SubBlocks(root string) ([]Block, error) {
 	if path := cachePath(root); path != "" {
 		return cachedSubBlocks(root, path)
 	}
-	bs, _ := walkSubBlocks(root, false)
-	return bs
+	bs, _, err := walkSubBlocks(root, false)
+	return bs, err
 }
 
 // walkSubBlocks is the SubBlocks walk; with record it also returns what the walk cache
-// checks (every directory stamp, taken before the directory is read).
-func walkSubBlocks(root string, record bool) ([]Block, *walkRecord) {
+// checks (every directory stamp, taken before the directory is read). The error is the
+// root's own listing error (listErr); the record of such a walk is invalid.
+func walkSubBlocks(root string, record bool) ([]Block, *walkRecord, error) {
 	walks.Add(1)
 	w := &walker{root: root, sem: make(chan struct{}, walkWorkers()-1), record: record}
 	w.wg.Add(1)
 	w.walk(root)
 	w.wg.Wait()
+	if w.rootErr != nil {
+		w.rec.invalid = true
+		return nil, &w.rec, w.rootErr
+	}
 	sortBlocks(w.out, func(a, b Block) bool { return a.Path < b.Path })
-	return w.out, &w.rec
+	return w.out, &w.rec, nil
 }
 
 // walker is one SubBlocks walk: sem holds a token per extra goroutine, so at most
@@ -275,6 +289,9 @@ type walker struct {
 	out    []Block
 	record bool
 	rec    walkRecord
+	// rootErr is the root's listing error; only the first walk (the root's, before any
+	// goroutine starts) sets it.
+	rootErr error
 }
 
 func (w *walker) walk(dir string) {
@@ -283,12 +300,18 @@ func (w *walker) walk(dir string) {
 	if w.record {
 		var err error
 		if st, err = statStamp(dir); err != nil {
+			if dir == w.root {
+				w.rootErr = listErr(err)
+			}
 			w.note(nil, nil, true)
 			return
 		}
 	}
 	entries, err := os.ReadDir(dir)
 	if err != nil {
+		if dir == w.root {
+			w.rootErr = listErr(err)
+		}
 		if w.record {
 			w.note([]dirEntryStamp{{dir, st}}, nil, !stableErr(err))
 		}
@@ -359,11 +382,16 @@ func (w *walker) note(dirs []dirEntryStamp, links []linkKind, invalid bool) {
 }
 
 // AllBlocks is all_blocks: the main corpus, then every sub-corpus block. A root that
-// cannot be listed is MainBlocks' error (the sub-corpus walk is not run).
+// cannot be listed is MainBlocks' error (the sub-corpus walk is not run), or SubBlocks'
+// when it is locked between the two listings.
 func AllBlocks(root string) ([]Block, error) {
 	main, err := MainBlocks(root)
 	if err != nil {
 		return nil, err
 	}
-	return append(main, SubBlocks(root)...), nil
+	sub, err := SubBlocks(root)
+	if err != nil {
+		return nil, err
+	}
+	return append(main, sub...), nil
 }

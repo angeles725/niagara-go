@@ -55,10 +55,10 @@ func trust(t *testing.T, root string) {
 func warm(t *testing.T, root string) []Block {
 	t.Helper()
 	backdate(t, root)
-	first := SubBlocks(root)
+	first := mustSub(root)
 	trust(t, root)
 	before := walks.Load()
-	again := SubBlocks(root)
+	again := mustSub(root)
 	if n := walks.Load() - before; n != 0 {
 		t.Fatalf("warm call walked %d times, want 0 (served from the cache)", n)
 	}
@@ -69,7 +69,7 @@ func warm(t *testing.T, root string) []Block {
 }
 
 // uncached is SubBlocks without any cache.
-func uncached(root string) []Block { bs, _ := walkSubBlocks(root, false); return bs }
+func uncached(root string) []Block { bs, _, _ := walkSubBlocks(root, false); return bs }
 
 func TestSubBlocksCacheServesWarmCalls(t *testing.T) {
 	root := cacheRoot(t, "a/x-block1.md", "a/b/c-bloque2.md", "os413-block3.md", "a/plain.md")
@@ -153,7 +153,7 @@ func TestSubBlocksCacheNeverStale(t *testing.T) {
 			}
 			before := warm(t, root)
 			tc.mutate(t, root)
-			got, want := SubBlocks(root), uncached(root)
+			got, want := mustSub(root), uncached(root)
 			if !reflect.DeepEqual(got, want) {
 				t.Fatalf("after the change SubBlocks = %q, want %q", got, want)
 			}
@@ -171,7 +171,7 @@ func TestSubBlocksCacheContentEditKeepsResult(t *testing.T) {
 	before := warm(t, root)
 	must(t, os.WriteFile(filepath.Join(root, "a/x-block1.md"), []byte("# other\n"), 0o644))
 	n := walks.Load()
-	if got := SubBlocks(root); !reflect.DeepEqual(got, before) || walks.Load() != n {
+	if got := mustSub(root); !reflect.DeepEqual(got, before) || walks.Load() != n {
 		t.Fatalf("content edit: got %q (walks +%d), want %q from the cache", got, walks.Load()-n, before)
 	}
 }
@@ -207,7 +207,7 @@ func TestSubBlocksCacheFallsBack(t *testing.T) {
 			warm(t, root)
 			hurt(t, root)
 			n := walks.Load()
-			if got, want := SubBlocks(root), uncached(root); !reflect.DeepEqual(got, want) {
+			if got, want := mustSub(root), uncached(root); !reflect.DeepEqual(got, want) {
 				t.Fatalf("SubBlocks = %q, want %q", got, want)
 			}
 			if walks.Load() == n {
@@ -225,7 +225,7 @@ func TestSubBlocksCacheUnwritable(t *testing.T) {
 	dir := filepath.Dir(cachePath(root))
 	must(t, os.Chmod(dir, 0o555))
 	t.Cleanup(func() { os.Chmod(dir, 0o755) })
-	if got, want := SubBlocks(root), uncached(root); !reflect.DeepEqual(got, want) || len(got) != 1 {
+	if got, want := mustSub(root), uncached(root); !reflect.DeepEqual(got, want) || len(got) != 1 {
 		t.Fatalf("SubBlocks = %q, want %q", got, want)
 	}
 	if _, err := os.Stat(cachePath(root)); !os.IsNotExist(err) {
@@ -239,7 +239,7 @@ func TestSubBlocksCacheOnlyWhereEnabled(t *testing.T) {
 	t.Run("no index directory", func(t *testing.T) {
 		root := cacheRoot(t, "a/x-block1.md")
 		must(t, os.RemoveAll(filepath.Join(root, "tools")))
-		SubBlocks(root)
+		mustSub(root)
 		if _, err := os.Stat(filepath.Join(root, "tools")); !os.IsNotExist(err) {
 			t.Fatalf("SubBlocks created the index directory: %v", err)
 		}
@@ -251,7 +251,7 @@ func TestSubBlocksCacheOnlyWhereEnabled(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			root := cacheRoot(t, "a/x-block1.md")
 			prep(t)
-			if len(SubBlocks(root)) != 1 {
+			if len(mustSub(root)) != 1 {
 				t.Fatal("SubBlocks lost the block")
 			}
 			if _, err := os.Stat(cachePath(root)); !os.IsNotExist(err) {
@@ -265,12 +265,12 @@ func TestSubBlocksCacheOnlyWhereEnabled(t *testing.T) {
 // may hide a change made in the same clock tick, so that cache is not trusted.
 func TestSubBlocksCacheRacyStamp(t *testing.T) {
 	root := cacheRoot(t, "a/x-block1.md")
-	SubBlocks(root) // the tree was just written: its stamps are racy
+	mustSub(root) // the tree was just written: its stamps are racy
 	if _, err := os.Stat(cachePath(root)); err != nil {
 		t.Fatalf("no cache written: %v", err)
 	}
 	n := walks.Load()
-	SubBlocks(root)
+	mustSub(root)
 	if walks.Load() == n {
 		t.Fatal("a cache with racy stamps was trusted")
 	}
@@ -288,14 +288,14 @@ func TestSubBlocksCacheSkipsInvalidWalk(t *testing.T) {
 	must(t, os.Symlink("w-block2.md", filepath.Join(root, "a", "y-block3.md")))
 	backdate(t, root)
 	want := uncached(root)
-	if got := SubBlocks(root); !reflect.DeepEqual(got, want) {
+	if got := mustSub(root); !reflect.DeepEqual(got, want) {
 		t.Fatalf("SubBlocks = %q, want %q", got, want)
 	}
 	if _, err := os.Stat(cachePath(root)); !os.IsNotExist(err) {
 		t.Fatalf("an invalid walk was cached (stat: %v)", err)
 	}
 	n := walks.Load()
-	if got := SubBlocks(root); !reflect.DeepEqual(got, want) || walks.Load() != n+1 {
+	if got := mustSub(root); !reflect.DeepEqual(got, want) || walks.Load() != n+1 {
 		t.Fatalf("second call: got %q (walks +%d), want %q from one new walk", got, walks.Load()-n, want)
 	}
 }
@@ -318,4 +318,13 @@ func edit(t *testing.T, root string, f func([]byte) []byte) {
 	data, err := os.ReadFile(cachePath(root))
 	must(t, err)
 	overwrite(t, root, f(data))
+}
+
+// mustSub is SubBlocks on a test tree whose root can be listed.
+func mustSub(root string) []Block {
+	bs, err := SubBlocks(root)
+	if err != nil {
+		panic(err)
+	}
+	return bs
 }
