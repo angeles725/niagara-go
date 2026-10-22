@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -39,32 +38,6 @@ type lostSupertypes struct {
 	keywords  []string
 }
 
-// walkUnsorted is os.walk(top) top-down in directory order (scandir, not
-// sorted), not entering symlinked directories; f gets each directory and
-// its non-directory entries.
-func walkUnsorted(top string, f func(dir string, files []string)) {
-	names, err := pycompat.Listdir(top)
-	if err != nil {
-		return
-	}
-	var dirs, files []string
-	for _, n := range names {
-		if st, err := os.Stat(filepath.Join(top, n)); err == nil && st.IsDir() {
-			dirs = append(dirs, n)
-		} else {
-			files = append(files, n)
-		}
-	}
-	f(top, files)
-	for _, n := range dirs {
-		p := filepath.Join(top, n)
-		if st, err := os.Lstat(p); err == nil && st.Mode()&os.ModeSymlink != 0 {
-			continue
-		}
-		walkUnsorted(p, f)
-	}
-}
-
 // javaFiles is _java_files: the ground-truth files in Python's order.
 func javaFiles(organized string) []recallFile {
 	var out []recallFile
@@ -79,7 +52,7 @@ func javaFiles(organized string) []recallFile {
 				trees = append(trees, "extracted")
 			}
 			for _, tree := range trees {
-				walkUnsorted(filepath.Join(mpath, sub, tree), func(dir string, files []string) {
+				pycompat.WalkWith(filepath.Join(mpath, sub, tree), pycompat.WalkOptions{Unsorted: true}, func(dir string, dirs, files []string) []string {
 					for _, name := range files {
 						if !strings.HasSuffix(name, ".java") {
 							continue
@@ -96,6 +69,7 @@ func javaFiles(organized string) []recallFile {
 						}
 						out = append(out, recallFile{rel, expected})
 					}
+					return dirs
 				})
 			}
 		}

@@ -5,7 +5,6 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/angeles725/niagara-go/internal/helpbuild/pyfs"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/textfold"
 )
@@ -35,12 +34,12 @@ type jarPath struct{ Rel, Path string }
 // dirError is a directory the walk could not list and the strerror.
 type dirError struct{ Dir, Err string }
 
-// pyWalkErr is os.walk(top, onerror=...) as pyfs.Walk walks it; onerror
+// pyWalkErr is os.walk(top, onerror=...) as pycompat.Walk walks it; onerror
 // receives the path of each directory that cannot be listed, relative to
 // top ("." for top itself), and the strerror (str(err) without one).
 func pyWalkErr(top string, onerror func(rel, why string), visit func(dir, rel string, dirs, files []string) []string) {
 	rels := map[string]string{top: ""}
-	pyfs.WalkFn(top, func(dir string, err error) {
+	pycompat.WalkWith(top, pycompat.WalkOptions{OnError: func(dir string, err error) {
 		if onerror != nil {
 			rel := strings.TrimSuffix(rels[dir], "/")
 			if rel == "" {
@@ -48,7 +47,7 @@ func pyWalkErr(top string, onerror func(rel, why string), visit func(dir, rel st
 			}
 			onerror(rel, pycompat.StrerrorOf(err))
 		}
-	}, func(dir string, dirs, files []string) []string {
+	}}, func(dir string, dirs, files []string) []string {
 		descend := visit(dir, rels[dir], dirs, files)
 		for _, d := range descend {
 			rels[pycompat.Join(dir, d)] = rels[dir] + d + "/"

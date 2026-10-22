@@ -50,7 +50,7 @@ var bdIndexPages = map[string]bool{"package-summary.html": true, "package-tree.h
 func bajadocPages(dir string) []string {
 	sep := string(filepath.Separator)
 	var files []string
-	pyfs.Walk(dir, func(root string, dirs, names []string) []string {
+	pycompat.Walk(dir, func(root string, dirs, names []string) []string {
 		for _, f := range names {
 			if !strings.HasSuffix(f, ".html") || bdIndexPages[f] {
 				continue

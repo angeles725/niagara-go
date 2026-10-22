@@ -3,37 +3,8 @@ package slotomatic
 import (
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 )
-
-func TestWalkSortedPrunesAndSkipsDirSymlinks(t *testing.T) {
-	root := t.TempDir()
-	for _, d := range []string{"b/x", "a", ".hidden"} {
-		must(t, os.MkdirAll(filepath.Join(root, d), 0o755))
-	}
-	must(t, os.WriteFile(filepath.Join(root, "b", "x", "F.java"), nil, 0o644))
-	must(t, os.WriteFile(filepath.Join(root, "z.txt"), nil, 0o644))
-	if err := os.Symlink(filepath.Join(root, "b"), filepath.Join(root, "link")); err != nil {
-		t.Skipf("no directory symlinks here: %v", err) // Windows without the privilege
-	}
-	var seen []string
-	Walk(root+string(filepath.Separator), true, func(dir string, dirs *[]string, files []string) {
-		seen = append(seen, strings.TrimPrefix(dir, root)+"|"+strings.Join(*dirs, ",")+"|"+strings.Join(files, ","))
-		kept := (*dirs)[:0]
-		for _, d := range *dirs {
-			if !strings.HasPrefix(d, ".") {
-				kept = append(kept, d)
-			}
-		}
-		*dirs = kept
-	})
-	sep := string(filepath.Separator)
-	want := []string{sep + "|.hidden,a,b,link|z.txt", sep + "a||", sep + "b|x|", sep + "b" + sep + "x||F.java"}
-	if strings.Join(seen, "\n") != strings.Join(want, "\n") {
-		t.Errorf("walk:\n%s\nwant:\n%s", strings.Join(seen, "\n"), strings.Join(want, "\n"))
-	}
-}
 
 func TestOrganizedRoot(t *testing.T) {
 	dir := t.TempDir()

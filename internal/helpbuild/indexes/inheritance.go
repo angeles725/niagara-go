@@ -81,7 +81,7 @@ func parseInheritTxt(path string) (*inheritInfo, error) {
 // folders and files of each folder in sorted order.
 func cleanTxtFiles(cleanDir string) []string {
 	var files []string
-	pyfs.Walk(cleanDir, func(dir string, dirs, names []string) []string {
+	pycompat.Walk(cleanDir, func(dir string, dirs, names []string) []string {
 		sort.Strings(dirs)
 		sort.Strings(names)
 		for _, name := range names {

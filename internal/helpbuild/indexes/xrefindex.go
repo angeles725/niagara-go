@@ -100,7 +100,7 @@ func BuildXrefIndex(baseDir string) (*IndexResult, error) {
 	}
 	var parsed []xrefFile
 	for _, root := range roots {
-		pyfs.Walk(root.dir, func(dir string, dirs, files []string) []string {
+		pycompat.Walk(root.dir, func(dir string, dirs, files []string) []string {
 			sort.Strings(dirs)
 			sort.Strings(files)
 			for _, name := range files {
