@@ -384,3 +384,21 @@ func TestWithBuildLockFailsWhenTheHeartbeatFails(t *testing.T) {
 	}
 	gone(t, lock)
 }
+
+// TestWithBuildLockReportsATakeover: another process that took the lock over during the
+// build (its content replaced ours) is reported as an error naming the lock, and its lock
+// is left in place.
+func TestWithBuildLockReportsATakeover(t *testing.T) {
+	root, lock := lockRoot(t)
+	other := []byte("4242 linux elsewhere 2026-10-22T00:00:00\n")
+	err := WithBuildLock(root, func() error {
+		return os.WriteFile(lock, other, 0o644)
+	})
+	if err == nil || !strings.Contains(err.Error(), "taken over") || !strings.Contains(err.Error(), lock) ||
+		!strings.Contains(err.Error(), "4242 linux elsewhere") {
+		t.Errorf("err %v, want a takeover error naming %s and its holder", err, lock)
+	}
+	if got, rerr := os.ReadFile(lock); rerr != nil || !bytes.Equal(got, other) {
+		t.Errorf("the other holder's lock was not kept: %q %v", got, rerr)
+	}
+}

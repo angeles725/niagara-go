@@ -22,6 +22,11 @@ package scope
 // lock looks fresh a little longer; the next check sees the other content
 // and the heartbeat stops.
 //
+// The build cannot tell a waiter to back off, so when fn returns the lock
+// is read once more: content that is no longer this process's (taken over,
+// or removed) is reported as an error, since another build may have run
+// alongside this one; release then leaves the other holder's lock alone.
+//
 // A touch that fails (os.Chtimes refused) is retried on the next tick; when
 // heartbeatMaxFailures touches fail in a row the lock has gone unrefreshed
 // for most of lockStale, so a waiter may have taken it over mid-build.
@@ -54,8 +59,8 @@ func (e *LockBusyError) Error() string {
 func BuildLockPath(baseDir string) string { return ftbuild.DefaultOutput(baseDir) + ".lock" }
 
 // WithBuildLock runs fn holding the build lock of baseDir and returns fn's
-// error unchanged; when fn succeeded but its heartbeat failed (see the
-// header comment), the error names the lock and wraps the touch error. The lock is released when fn returns or panics. When a
+// error unchanged; when fn succeeded but the lock was taken over, or its
+// heartbeat failed (see the header comment), the error names the lock. The lock is released when fn returns or panics. When a
 // live process still holds the lock after lockWait, fn does not run and
 // the error is *LockBusyError; an error creating the lock (indexes/ not
 // writable) is returned as is.
@@ -80,11 +85,34 @@ func WithBuildLock(baseDir string, fn func() error) error {
 		release(lock, mine)
 	}()
 	err = fn()
-	if touchErr := stop(); err == nil && touchErr != nil {
+	touchErr := stop()
+	if err != nil {
+		return err
+	}
+	if lost := takenOver(lock, mine); lost != nil {
+		return lost
+	}
+	if touchErr != nil {
 		err = fmt.Errorf("the build lock %s could not be refreshed during the build (%w); "+
 			"another process may have taken it over, so run again", lock, touchErr)
 	}
 	return err
+}
+
+// takenOver is the error of a lock that no longer holds mine when the build ends: another
+// process took it over (it saw the lock as stale) or removed it, so the build may have run
+// alongside another one. nil while the lock is still this process's.
+func takenOver(lock string, mine []byte) error {
+	got, err := os.ReadFile(lock)
+	switch {
+	case err != nil:
+		return fmt.Errorf("the build lock %s was removed by another process during the build (%w); run again",
+			lock, err)
+	case !bytes.Equal(got, mine):
+		return fmt.Errorf("the build lock %s was taken over during the build by another process (%s); run again",
+			lock, bytes.TrimSpace(got))
+	}
+	return nil
 }
 
 // heartbeatEvery is the heartbeat interval: a quarter of lockWait, or of

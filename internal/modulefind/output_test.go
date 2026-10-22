@@ -3,6 +3,7 @@ package modulefind
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"io"
 	"testing"
 )
@@ -63,14 +64,34 @@ func (f *failAfter) Write(p []byte) (int, error) {
 	return len(p), nil
 }
 
-// TestRenderCSVStopsAtAWriteError: a CSV row that cannot be written stops the output (no
-// further row is tried); the error is kept for Main to report.
+// failOnNth fails only its nth write and accepts every other one, so a writer that went on
+// after the failure would show up as more calls and bytes written after it.
+type failOnNth struct {
+	n, calls, bytesAfter int
+}
+
+func (f *failOnNth) Write(p []byte) (int, error) {
+	f.calls++
+	switch {
+	case f.calls == f.n:
+		return 0, errWrite
+	case f.calls > f.n:
+		f.bytesAfter += len(p)
+	}
+	return len(p), nil
+}
+
+// TestRenderCSVStopsAtAWriteError: the CSV write that fails is the last one tried, whichever
+// it is (the header or a row), even when the writer would accept the next ones.
 func TestRenderCSVStopsAtAWriteError(t *testing.T) {
-	out := &failAfter{n: 1} // the header is written, the first row fails
-	stdout := &stickyWriter{w: out}
-	cmdSlots(newModule("testdata/srcA"), &opts{csv: true, out: stdout, err: io.Discard}, slotFilter{})
-	if out.writes != 2 || !errors.Is(stdout.err, errWrite) {
-		t.Errorf("%d writes, error %v; want 2 (the header, then the failed row stops the output) and %v",
-			out.writes, stdout.err, errWrite)
+	for _, n := range []int{1, 2, 4} {
+		t.Run(fmt.Sprint(n), func(t *testing.T) {
+			out := &failOnNth{n: n}
+			cmdSlots(newModule("testdata/srcA"), &opts{csv: true, out: out, err: io.Discard}, slotFilter{})
+			if out.calls != n || out.bytesAfter != 0 {
+				t.Errorf("%d writes, %d bytes after the failed write %d; want %d writes, 0 bytes",
+					out.calls, out.bytesAfter, n, n)
+			}
+		})
 	}
 }
