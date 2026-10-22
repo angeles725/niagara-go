@@ -6,13 +6,6 @@ import (
 	"strings"
 )
 
-// Record kinds, as Record.Kind returns them.
-const (
-	KindTrend = "trend" // history:NumericTrendRecord, BooleanTrendRecord, EnumTrendRecord
-	KindLog   = "log"   // history:LogRecord
-	KindAudit = "audit" // history:AuditRecord
-)
-
 // History is a decoded .hdb file: its config identity and its records in storage order (oldest
 // first, the order the N4 history cursor returns them).
 type History struct {
@@ -25,24 +18,13 @@ type History struct {
 	Declared int
 }
 
-// Record is one history record. Exactly one of Trend, Log and Audit is set, matching Kind.
+// Record is one history record. Exactly one of Trend, Log and Audit is set.
 type Record struct {
 	Timestamp string // UTC, ISO 8601 with milliseconds: 2026-10-16T18:33:00.000Z
 	Millis    int64  // the BAbsTime epoch milliseconds
 	Trend     *TrendRecord
 	Log       *LogRecord
 	Audit     *AuditRecord
-}
-
-// Kind is KindTrend, KindLog or KindAudit.
-func (r Record) Kind() string {
-	switch {
-	case r.Log != nil:
-		return KindLog
-	case r.Audit != nil:
-		return KindAudit
-	}
-	return KindTrend
 }
 
 // TrendRecord is a fixed-length trend sample (layout in main.go doc).

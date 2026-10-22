@@ -160,7 +160,7 @@ func TestResolveAndVersionLines(t *testing.T) {
 func TestErrorLineForMissingFulltextIndex(t *testing.T) {
 	t.Setenv("XDG_CACHE_HOME", t.TempDir())
 	checkout := ftsfixture.Checkout(t, abs(t, helpTestdata), true)
-	_, err := fts.Search(checkout, "1.0", "alarm", nil, "and")
+	_, err := ftsfixture.Search(checkout, "1.0", "alarm", nil, "and")
 	var stale *fts.StaleIndexError
 	want := "ERROR: full-text index indexes/fulltext.sqlite under " + checkout + " is missing; this reader " +
 		"never builds it, rebuild it with: nh --niagara-version 1.0 find index"

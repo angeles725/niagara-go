@@ -99,20 +99,10 @@ func (e *StaleIndexError) Error() string {
 // Index is an open, up-to-date full-text database (fulltext_index.FtsIndex).
 type Index struct{ db *sql.DB }
 
-// Opener opens the up-to-date index of a data root for a search: Open, or a
-// caller's opener that rebuilds a missing or stale index first.
+// Opener opens the up-to-date index of a data root for a search: nh's opener
+// (scope.OpenFulltext) rebuilds a missing or stale index first; the tests'
+// read-only one (Open) reports it as a *StaleIndexError.
 type Opener func(baseDir, versionID string) (*Index, error)
-
-// Open is fulltext_index.open_index restricted to reading: the first of
-// indexes/fulltext.sqlite and the cache copy whose stored fingerprint equals
-// the current one, else a *StaleIndexError.
-func Open(baseDir, versionID string) (*Index, error) {
-	path, missing := FreshPath(baseDir, Fingerprint(SourceDirs(baseDir)))
-	if path == "" {
-		return nil, &StaleIndexError{BaseDir: baseDir, VersionID: versionID, Missing: missing}
-	}
-	return OpenPath(path)
-}
 
 // FreshPath is open_index's lookup: the first of indexes/fulltext.sqlite and
 // the cache copy whose stored fingerprint equals fingerprint, "" when none

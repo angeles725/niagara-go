@@ -91,7 +91,7 @@ func TestBuildDefaultPathAndFailure(t *testing.T) {
 		t.Errorf("Log = %q (%d documents), want [%q]", res.Log, res.Documents, wantLog)
 	}
 	// The reader accepts the database as current and finds paged text in it.
-	found, err := fts.Search(root, "", "modbus", []string{"docs-text"}, "and")
+	found, err := ftsfixture.Search(root, "", "modbus", []string{"docs-text"}, "and")
 	if err != nil {
 		t.Fatalf("reader rejects the Go-built index: %v", err)
 	}
