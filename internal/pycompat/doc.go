@@ -6,7 +6,9 @@
 // str.isupper() and str.lower(), ljust/rjust and s[:n] by code points, and format(value, spec) (the format-spec
 // mini-language of str.format and f-strings) for str, int and float with Commas for format(n, ","), str(OSError) and
 // os.strerror for Go os errors (Linux and Windows tables), text-file universal newlines, cp437 decoding
-// of zip member names, and zipfile's last-entry-wins member lookup.
+// of zip member names, zipfile's last-entry-wins member lookup, base64.b64decode's lenient decoding,
+// os.listdir and sorted(os.listdir) (Listdir, SortedListdir), sorted(set(xs)) (SortedSet), and
+// os.walk (Walk, WalkWith: top-down, sorted or os.scandir order, optional onerror).
 //
 // unicode.txt, errno_linux.txt, testdata/fixtures.json and the testdata/golden/format_*.golden
 // cases are frozen output of the retired testdata/gen.py, and errno_windows.txt of the retired
