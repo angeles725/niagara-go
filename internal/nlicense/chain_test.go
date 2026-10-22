@@ -1,6 +1,7 @@
 package nlicense
 
 import (
+	"encoding/base64"
 	//lint:ignore SA1019 DSA is the Niagara license format
 	"crypto/dsa"
 	"crypto/rand"
@@ -116,9 +117,16 @@ func newChainFixture(t *testing.T, vendor, certVendor string) chainFixture {
 	if err != nil {
 		t.Fatal(err)
 	}
-	sig, err := signDSA(root, data)
-	if err != nil {
-		t.Fatal(err)
+	// signDSA mirrors the tool's fixed-width INTEGERs, so a short r or s is padded and
+	// fails strict DER about 1 in 128 times; re-sign until the root verifies it.
+	var sig string
+	for i := 0; i < 16; i++ {
+		if sig, err = signDSA(root, data); err != nil {
+			t.Fatal(err)
+		}
+		if der, derr := base64.StdEncoding.DecodeString(sig); derr == nil && verifyDSA(&root.PublicKey, der, data) {
+			break
+		}
 	}
 	setSignature(doc.root, sig)
 	f := chainFixture{dir: dir, cert: filepath.Join(dir, certVendor+".certificate"), root: &root.PublicKey}

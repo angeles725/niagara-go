@@ -63,9 +63,9 @@ func run(navDir string, args []string, s cli.Stdio) int {
 		}
 	}
 	if baseDir == "" {
-		fmt.Fprintln(s.Out, "ERROR: Cannot detect base directory.")
-		fmt.Fprintln(s.Out, "Use --base-dir or run from module-navigator/tools/")
-		return cli.ExitNoMatch
+		fmt.Fprintln(s.Err, "ERROR: Cannot detect base directory.")
+		fmt.Fprintln(s.Err, "Use --base-dir or run from module-navigator/tools/")
+		return cli.ExitCannotSearch
 	}
 	c, _ := registry.Lookup(name)
 	if c.Run == nil {

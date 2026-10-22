@@ -120,6 +120,7 @@ type sweeper struct {
 	indexed   *indexedViews
 	installed []jarPath
 	identical map[Entry]string
+	lexJar    *openLexiconJar // the module jar whose lexicons are being read
 }
 
 // installedEntry is Sweep.installed_entry: the install path of an
@@ -354,6 +355,7 @@ func scan(installDir, root string, opts SweepOptions) (*sweepResult, error) {
 		ls = newListings("")
 	}
 	s := &sweeper{root: root, rules: rules, ls: ls, indexed: newIndexedViews(root, opts.fulltext())}
+	defer s.closeLexiconJar()
 	jars, skipped, badDirs := findJars(installDir, rules)
 	for _, j := range jars {
 		if isInstalledJar(j.Rel) {
@@ -393,7 +395,13 @@ func scan(installDir, root string, opts SweepOptions) (*sweepResult, error) {
 			if first, ok := shadow[pos]; ok {
 				by = &first
 			}
-			v, err := s.classify(j.Rel, l.Entries[pos], by)
+			var v verdict
+			var err error
+			if isInstalledJar(j.Rel) && isLexiconEntry(pyBasename(j.Rel), l.Entries[pos].Name, rules) {
+				v, err = s.lexicon(j.Path, l.Entries[pos])
+			} else {
+				v, err = s.classify(j.Rel, l.Entries[pos], by)
+			}
 			if err != nil {
 				return nil, err
 			}

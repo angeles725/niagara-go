@@ -12,8 +12,9 @@ import (
 )
 
 // paged are fulltext_index.PAGED_SOURCES: indexed page by page, pages
-// separated by form feeds (PDF text and the developer course text).
-var paged = map[string]bool{"docs-text": true, "course-text": true}
+// separated by form feeds (PDF text and the developer course text), plus
+// the Go-only lexicon-text (one page per lexicon entry).
+var paged = map[string]bool{"docs-text": true, "course-text": true, "lexicon-text": true}
 
 // document is one row of docs plus the text its fts row tokenizes.
 type document struct {

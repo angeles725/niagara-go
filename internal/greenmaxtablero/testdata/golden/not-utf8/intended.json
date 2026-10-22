@@ -1,5 +1,5 @@
 {
-  "reason": "Python ends in a UnicodeDecodeError traceback on a source that is not UTF-8; Go prints one line and exits 2 (unreadable input)",
-  "stderr": "greenmax-tablero-gen: 'utf-8' codec can't decode byte 0xe9 in position 225 of inputs/latin1.px\n",
-  "exit": 2
+ "reason": "Python ends in a UnicodeDecodeError traceback on a source that is not UTF-8; Go prints one line and exits 2 (unreadable input); T31 (audit T21): --gm is GM and two digits (the real control folders are GM02..GM16), so the case passes the zero-padded tag",
+ "stderr": "greenmax-tablero-gen: 'utf-8' codec can't decode byte 0xe9 in position 225 of inputs/latin1.px\n",
+ "exit": 2
 }
