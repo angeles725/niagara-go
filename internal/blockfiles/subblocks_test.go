@@ -81,7 +81,7 @@ func TestSubBlocksBranches(t *testing.T) {
 	for _, procs := range []int{1, 2, 16} {
 		runtime.GOMAXPROCS(procs)
 		var got [][3]string
-		for _, b := range SubBlocks(root) {
+		for _, b := range mustSub(root) {
 			rel, err := filepath.Rel(root, b.Path)
 			if err != nil {
 				t.Fatal(err)
@@ -122,7 +122,7 @@ func BenchmarkSubBlocks(b *testing.B) {
 func benchWalk(b *testing.B, root string) {
 	b.ReportAllocs()
 	for b.Loop() {
-		if len(SubBlocks(root)) == 0 {
+		if len(mustSub(root)) == 0 {
 			b.Fatal("no sub-blocks")
 		}
 	}
@@ -135,7 +135,7 @@ func benchWarmCache(b *testing.B, root string) {
 	if !ok {
 		b.Skip("no executable stamp")
 	}
-	bs, rec := walkSubBlocks(root, true)
+	bs, rec, _ := walkSubBlocks(root, true)
 	if rec.invalid {
 		b.Skip("the walk hit an unstable error")
 	}

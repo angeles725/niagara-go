@@ -160,7 +160,11 @@ func TestScannersMatchRealCorpus(t *testing.T) {
 		t.Skipf("no research corpus at %s", root)
 	}
 	files := 0
-	for _, b := range append(main, blockfiles.SubBlocks(root)...) {
+	sub, err := blockfiles.SubBlocks(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, b := range append(main, sub...) {
 		text, ok := readText(b.Path)
 		if !ok {
 			continue

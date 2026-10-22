@@ -82,7 +82,22 @@ func (c *corpus) cannotList(err error) int {
 	fmt.Fprintln(c.err, blocksearch.CannotListLine(c.root, err))
 	return cli.ExitCannotSearch
 }
-func (c *corpus) subBlocks() []blockFile { return fromShared(blockfiles.SubBlocks(c.root)) }
+
+// subBlocks is the sub-corpus walked from the root, or the error of a root that can no
+// longer be listed (locked after the entry gate): never an empty sub-corpus.
+func (c *corpus) subBlocks() ([]blockFile, error) {
+	bs, err := blockfiles.SubBlocks(c.root)
+	return fromShared(bs), err
+}
+
+// allBlocks is the main corpus, then the sub-corpus (subBlocks' error).
+func (c *corpus) allBlocks() ([]blockFile, error) {
+	sub, err := c.subBlocks()
+	if err != nil {
+		return nil, err
+	}
+	return append(c.blocks(), sub...), nil
+}
 
 // findBlockPath is corpus.find_block_path: the numeric main block numbered n.
 func (c *corpus) findBlockPath(n int) (blockFile, bool) {

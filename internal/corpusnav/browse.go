@@ -71,11 +71,16 @@ func escape(s string) string {
 // of a block, united with the blocks RESEARCH-STATE-<focus>.md cites; in label order.
 // unreadable names the blocks (display id) and state file (path) that could not be
 // read: Python skips such a block and crashes on such a state file (intended
-// difference: zero false negatives, the callers report them and exit 2).
-func (c *corpus) blocksForFocus(focus string) (labels, unreadable []string) {
+// difference: zero false negatives, the callers report them and exit 2). err is a root
+// that can no longer be listed (the callers report it with exit 2).
+func (c *corpus) blocksForFocus(focus string) (labels, unreadable []string, err error) {
+	all, err := c.allBlocks()
+	if err != nil {
+		return nil, nil, err
+	}
 	re := focusHeaderRe(focus)
 	found := map[string]bool{}
-	for _, b := range append(c.blocks(), c.subBlocks()...) {
+	for _, b := range all {
 		text, ok := readText(b.path)
 		if !ok {
 			unreadable = append(unreadable, displayID(b.label))
@@ -100,7 +105,7 @@ func (c *corpus) blocksForFocus(focus string) (labels, unreadable []string) {
 	}
 	labels = setKeys(found)
 	blockfiles.SortLabels(labels)
-	return labels, unreadable
+	return labels, unreadable, nil
 }
 
 // focusExit is 2 when a block or state file of a focus lookup could not be read, else ok.
@@ -170,7 +175,10 @@ func (c *corpus) cmdList(focus string) int {
 	var inFocus map[string]bool
 	if focus != "" {
 		inFocus = map[string]bool{}
-		labels, unreadable := c.blocksForFocus(focus)
+		labels, unreadable, err := c.blocksForFocus(focus)
+		if err != nil {
+			return c.cannotList(err)
+		}
 		c.reportUnreadable(unreadable)
 		code = focusExit(unreadable, 0)
 		for _, l := range labels {
@@ -181,8 +189,12 @@ func (c *corpus) cmdList(focus string) int {
 			return focusExit(unreadable, 1)
 		}
 	}
+	sub, err := c.subBlocks()
+	if err != nil {
+		return c.cannotList(err)
+	}
 	var counts []int
-	for i, blocks := range [][]blockFile{c.blocks(), c.subBlocks()} {
+	for i, blocks := range [][]blockFile{c.blocks(), sub} {
 		var rows []blockFile
 		for _, b := range blocks {
 			if inFocus == nil || inFocus[b.label] {
@@ -259,7 +271,10 @@ func (c *corpus) cmdByMarker(marker string) int {
 
 func (c *corpus) cmdByFocus(focus string) int {
 	catalog := c.loadCatalog()
-	labels, unreadable := c.blocksForFocus(focus)
+	labels, unreadable, err := c.blocksForFocus(focus)
+	if err != nil {
+		return c.cannotList(err)
+	}
 	c.reportUnreadable(unreadable)
 	if len(labels) == 0 {
 		fmt.Fprintf(c.err, "No blocks found for focus '%s'.\n", focus)
@@ -270,7 +285,11 @@ func (c *corpus) cmdByFocus(focus string) int {
 		fmt.Fprintf(c.err, "Known focuses: %s\n", strings.Join(focuses, ", "))
 		return focusExit(unreadable, 1)
 	}
-	byFile := byFileOf(append(c.blocks(), c.subBlocks()...))
+	all, err := c.allBlocks()
+	if err != nil {
+		return c.cannotList(err)
+	}
+	byFile := byFileOf(all)
 	for _, label := range labels {
 		title := "(block file not present)"
 		if p, ok := byFile[label]; ok {
@@ -288,6 +307,10 @@ func (c *corpus) cmdStats() int {
 		return c.cannotList(err)
 	}
 	blocks := c.blocks()
+	sub, err := c.subBlocks()
+	if err != nil {
+		return c.cannotList(err)
+	}
 	counts := map[string]int{}
 	var markers, unreadable []string
 	withConnections := 0
@@ -307,7 +330,7 @@ func (c *corpus) cmdStats() int {
 			withConnections++
 		}
 	}
-	fmt.Fprintf(c.out, "Corpus totals\n  blocks : %d\n  sub-corpus blocks: %d\n", len(blocks), len(c.subBlocks()))
+	fmt.Fprintf(c.out, "Corpus totals\n  blocks : %d\n  sub-corpus blocks: %d\n", len(blocks), len(sub))
 	fmt.Fprintf(c.out, "  docs   : %d\n  retros : %d\n", len(dirFiles(c.docs)), len(dirFiles(c.retros)))
 	fmt.Fprintf(c.out, "  focuses: %d\n  blocks with a Connections section: %d\n", len(focuses), withConnections)
 	if len(unreadable) > 0 {
