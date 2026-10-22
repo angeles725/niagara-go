@@ -62,7 +62,12 @@ func (r *Runtime) Load(name string, opts LoadOpts) *index.Object {
 		return nil
 	}
 	progress := !opts.Quiet && r.progress(key, name)
-	data := r.LoadJSON(key, what(name))
+	var data *index.Object
+	if name == "class-index.json" {
+		data = r.loadClassIndex(key, what(name))
+	} else {
+		data = r.LoadJSON(key, what(name))
+	}
 	if progress {
 		if data != nil {
 			fmt.Fprint(r.Err, " OK\n")
