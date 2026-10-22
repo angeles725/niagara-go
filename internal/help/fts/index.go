@@ -99,9 +99,10 @@ func (e *StaleIndexError) Error() string {
 // Index is an open, up-to-date full-text database (fulltext_index.FtsIndex).
 type Index struct{ db *sql.DB }
 
-// Opener opens the up-to-date index of a data root for a search: Open, or a
-// caller's opener that rebuilds a missing or stale index first.
-type Opener func(baseDir, versionID string) (*Index, error)
+// Opener opens the up-to-date index of a data root for the search of query:
+// Open, or a caller's opener that rebuilds a missing or stale index first
+// (and may note how query is searched, as nh's does: Rewrites).
+type Opener func(baseDir, versionID, query string) (*Index, error)
 
 // Open is fulltext_index.open_index restricted to reading: the first of
 // indexes/fulltext.sqlite and the cache copy whose stored fingerprint equals

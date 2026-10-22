@@ -95,6 +95,7 @@ func Miss(baseDir, command, query, scope string, load Loader) ([]string, error) 
 	if err != nil {
 		return nil, err
 	}
+	query = fts.Echo(query)
 	alts := make([]string, len(d.alternatives))
 	for i, a := range d.alternatives {
 		alts[i] = fmt.Sprintf("%s '%s'", a, query)

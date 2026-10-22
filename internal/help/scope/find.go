@@ -101,7 +101,7 @@ func RankedReport(root, query string, r *fts.Result, shown []*fts.Hit, label, to
 		how = every + "; showing files with any term, ranked by how many terms match"
 	}
 	var b strings.Builder
-	fmt.Fprintf(&b, "%d %s matching '%s' (%s):\n", len(r.Hits), label, query, how)
+	fmt.Fprintf(&b, "%d %s matching '%s' (%s):\n", len(r.Hits), label, fts.Echo(query), how)
 	if totals != "" {
 		b.WriteString(totals + "\n")
 	}

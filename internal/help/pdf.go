@@ -98,7 +98,7 @@ func (e *Env) PDF(p PDFParams) error {
 	if r != nil && r.Fallback {
 		how = fmt.Sprintf(" (fewer than %d manuals have every word; ranked by how many match)", fts.MinAndHits)
 	}
-	fmt.Fprintf(e.Out, "%d PDF manuals matching '%s'%s:\n", len(names), p.Query, how)
+	fmt.Fprintf(e.Out, "%d PDF manuals matching '%s'%s:\n", len(names), fts.Echo(p.Query), how)
 	if sharedFrom != "" {
 		fmt.Fprintf(e.Out, "  (this version ships no PDF manuals; searching the shared manuals of Niagara %s)\n",
 			sharedFrom)

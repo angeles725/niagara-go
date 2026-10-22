@@ -1,6 +1,8 @@
 package help
 
 import (
+	"math"
+	"math/big"
 	"sort"
 	"strings"
 
@@ -167,10 +169,32 @@ func flag(p *argparse.Parser, help string, names ...string) {
 	p.Add(argparse.Arg{Action: argparse.StoreTrue, Help: help}, names...)
 }
 
-// intOpt is add_argument(*names, type=int, default=def, help=help).
+// intOpt is add_argument(*names, type=int, default=def, help=help) for a
+// count: a negative one is a usage error (nonNegativeInt; Python's type=int
+// let -n -5 count from the end).
 func intOpt(p *argparse.Parser, def any, help string, names ...string) {
-	p.Add(argparse.Arg{Type: argparse.Int, Default: def, Help: help}, names...)
+	p.Add(argparse.Arg{Type: nonNegativeInt, Default: def, Help: help}, names...)
 }
+
+// nonNegativeInt is type=int that refuses a value below 0, named "int" in
+// argparse's messages as Python's int is.
+var nonNegativeInt = &argparse.Type{Name: "int", Convert: func(s string) (any, error) {
+	v, err := argparse.Int.Convert(s)
+	if err != nil {
+		return nil, err
+	}
+	n, ok := v.(int)
+	if !ok { // a *big.Int beyond int's range
+		if b, isBig := v.(*big.Int); isBig && b.Sign() < 0 {
+			return nil, argparse.NewTypeError("must be 0 or more, not %s", b)
+		}
+		return math.MaxInt, nil
+	}
+	if n < 0 {
+		return nil, argparse.NewTypeError("must be 0 or more, not %d", n)
+	}
+	return n, nil
+}}
 
 // choices converts option values to argparse choices.
 func choices(vals ...string) []any {

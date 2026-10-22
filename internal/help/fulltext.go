@@ -34,6 +34,8 @@ func (p FulltextParams) mode() string {
 
 // search runs fts.Search on the selected data root, rebuilding a missing or
 // stale index first (scope.OpenFulltext).
+// A query word searched as its English glossary terms is noted on stderr
+// (scope.OpenFulltext).
 func (e *Env) search(query string, srcs []string, mode string) (*fts.Result, error) {
 	return fts.SearchUsing(scope.OpenFulltext(e.Err), e.BaseDir, e.VersionID, query, srcs, mode)
 }

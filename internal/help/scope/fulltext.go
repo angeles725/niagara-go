@@ -71,12 +71,18 @@ func (e *UnwritableIndexError) Error() string {
 var failed sync.Map
 
 // OpenFulltext is the fts.Opener of nh's searches: ensure, then the
-// up-to-date database, opened at the point fulltext.search opens it.
+// up-to-date database, opened at the point fulltext.search opens it. After
+// any rebuild notice it notes on stderr the query words searched as their
+// English glossary terms (fts.Rewrites), so a Spanish query is never
+// rewritten silently; nh and the in-process searchdoor share this line.
 func OpenFulltext(stderr io.Writer) fts.Opener {
-	return func(baseDir, _ string) (*fts.Index, error) {
+	return func(baseDir, _, query string) (*fts.Index, error) {
 		path, _, err := ensure(baseDir, stderr)
 		if err != nil {
 			return nil, err
+		}
+		if rw := fts.Rewrites(query); len(rw) > 0 {
+			fmt.Fprintf(stderr, "note: searched as English (glossary): %s\n", strings.Join(rw, "; "))
 		}
 		return fts.OpenPath(path)
 	}

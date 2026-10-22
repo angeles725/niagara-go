@@ -5,6 +5,7 @@ package fts
 // stemmed; a query word matches whole tokens only.
 
 import (
+	"fmt"
 	"slices"
 	"sort"
 	"strings"
@@ -228,18 +229,8 @@ func (g Group) equal(o Group) bool {
 // more left) made a prefix term and, with relax, the camelCase parts added
 // as a phrase.
 func ParseQuery(query string, relax bool) []Group {
-	words := Words(Fold(query))
-	var keep []string
-	for _, w := range words {
-		if !stopWords[textfold.Lower(w)] {
-			keep = append(keep, w)
-		}
-	}
-	if len(keep) == 0 {
-		keep = words
-	}
 	var groups []Group
-	for _, w := range keep {
+	for _, w := range queryWords(query) {
 		low := textfold.Lower(w)
 		english := helpGlossary.LookupKey(low)
 		if len(english) == 0 {
@@ -270,6 +261,54 @@ func ParseQuery(query string, relax bool) []Group {
 		}
 	}
 	return groups
+}
+
+// queryWords are the words of query ParseQuery makes groups of: stop-words
+// dropped unless nothing else is left.
+func queryWords(query string) []string {
+	words := Words(Fold(query))
+	var keep []string
+	for _, w := range words {
+		if !stopWords[textfold.Lower(w)] {
+			keep = append(keep, w)
+		}
+	}
+	if len(keep) == 0 {
+		keep = words
+	}
+	return keep
+}
+
+// Rewrites are the query words ParseQuery searches as their English
+// glossary terms, each "word -> term[, term]" in query order, once per word
+// ("alarmas -> alarm"). nh notes them on stderr; the ranking is ParseQuery's.
+func Rewrites(query string) []string {
+	var out []string
+	seen := map[string]bool{}
+	for _, w := range queryWords(query) {
+		low := textfold.Lower(w)
+		english := helpGlossary.LookupKey(low)
+		if len(english) == 0 || seen[low] || len(english) == 1 && english[0] == low {
+			continue
+		}
+		seen[low] = true
+		out = append(out, low+" -> "+strings.Join(english, ", "))
+	}
+	return out
+}
+
+// echoLimit is how many characters of a query nh repeats in a header, an
+// error or a miss block; the query itself is searched whole.
+const echoLimit = 200
+
+// Echo is query as nh repeats it: whole up to echoLimit characters, else
+// cut there with the count of the characters left out.
+func Echo(query string) string {
+	r := []rune(query)
+	if len(r) <= echoLimit {
+		return query
+	}
+	return fmt.Sprintf("%s... (%d more characters)", string(r[:echoLimit]), len(r)-echoLimit)
 }
 
 // Matches is fulltext_terms.group_matches: a phrase needs every part, a
