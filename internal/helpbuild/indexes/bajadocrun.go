@@ -121,12 +121,16 @@ func cleanClassName(name string) string {
 
 // writeCleanClass is bajadoc_xml.write_clean_class: the page goes to
 // <package path>/<clean name>.txt and a page left under the escaped name
-// ("Cursor&lt;E&gt;.txt") is removed.
+// ("Cursor&lt;E&gt;.txt") is removed. The javadoc pages now give the name
+// unescaped ("Cursor<E>"), so the escaped spelling is derived from it too.
 func writeCleanClass(outDir, pkg, className, text string) error {
 	pkgDir := pycompat.Join(outDir, strings.ReplaceAll(pkg, ".", string(filepath.Separator)))
 	path := pycompat.Join(pkgDir, cleanClassName(className)+".txt")
-	legacy := pycompat.Join(pkgDir, className+".txt")
-	for _, p := range []string{path, legacy} {
+	legacies := []string{pycompat.Join(pkgDir, className+".txt")}
+	if esc := strings.NewReplacer("<", "&lt;", ">", "&gt;").Replace(className); esc != className {
+		legacies = append(legacies, pycompat.Join(pkgDir, esc+".txt"))
+	}
+	for _, p := range append([]string{path}, legacies...) {
 		if rel, err := filepath.Rel(filepath.Clean(outDir), filepath.Clean(p)); err != nil ||
 			rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) || filepath.IsAbs(rel) {
 			return fmt.Errorf("%w: %q", errUnsafeClassName, className)
@@ -135,8 +139,12 @@ func writeCleanClass(outDir, pkg, className, text string) error {
 	if err := atomicfile.WriteText(path, text); err != nil {
 		return err
 	}
-	if _, err := os.Stat(legacy); legacy != path && err == nil {
-		return pyfs.RemoveFile(legacy)
+	for _, legacy := range legacies {
+		if _, err := os.Stat(legacy); legacy != path && err == nil {
+			if err := pyfs.RemoveFile(legacy); err != nil {
+				return err
+			}
+		}
 	}
 	return nil
 }

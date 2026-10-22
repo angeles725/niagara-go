@@ -1,6 +1,7 @@
 package indexes
 
 import (
+	"regexp"
 	"strings"
 	"unicode/utf8"
 
@@ -28,7 +29,8 @@ var (
 	bdTitleTag   = pyre.MustCompile(`<title>\s*(\S+)\s*\(`, 0)
 	bdSince      = pyre.MustCompile(`<span class="simpleTagLabel">Since:</span>\s*</dt>\s*<dd>([^<]+)</dd>`, 0)
 	bdPre        = pyre.MustCompile(`<pre>.*?</pre>`, pyre.DOTALL)
-	bdExtends    = pyre.MustCompile(`\bextends\s+(?:<a[^>]*>)?([^<\s]+)`, 0)
+	bdTypeName   = pyre.MustCompile(`<span class="typeNameLabel">.*?</span>`, 0)
+	bdExtends    = pyre.MustCompile(`\bextends\s+`, 0)
 	bdImplements = pyre.MustCompile(`\bimplements\s+(.*)`, pyre.DOTALL)
 	bdImplName   = pyre.MustCompile(`(?:<a[^>]*>)?([A-Z]\w+(?:\.[A-Z]\w+)*)(?:</a>)?`, 0)
 	bdSubLists   = []*pyre.Regexp{
@@ -44,6 +46,10 @@ var (
 	bdMethodRow = pyre.MustCompile(`<td class="colFirst"><code>(.*?)</code></td>\s*`+
 		`<td class="colLast"><code>.*?<a[^>]*>([\w.]+)</a>.*?\((.*?)\)</code>(.*?)</td>`, pyre.DOTALL)
 )
+
+// bdTag is one HTML tag of a declaration (its text holds "<" only as
+// "&lt;").
+var bdTag = regexp.MustCompile(`<[^>]*>`)
 
 // bdNotClasses are the names parse_bajadoc_html refuses as class names.
 var bdNotClasses = map[string]bool{"package-summary": true, "package-tree": true, "package-use": true,
@@ -82,19 +88,54 @@ func stripTags(fragment string) string {
 // same str.isspace() code points as str.split().
 func normalizeWS(text string) string { return strings.Join(textfold.Fields(text), " ") }
 
-// classNameAndKind is extract_class_name_and_kind; "" is None.
+// classNameAndKind is extract_class_name_and_kind; "" is None. Unlike
+// Python the name is HTML-unescaped: "IterableCursor<E>", not
+// "IterableCursor&lt;E&gt;".
 func classNameAndKind(page []rune) (name, kind string) {
 	if m := bdTitleH2.SearchRunes(page, 0); m != nil {
-		return m.Group(2), strings.ReplaceAll(strings.ToLower(m.Group(1)), " ", "_")
+		return pyhtml.Unescape(m.Group(2)), strings.ReplaceAll(strings.ToLower(m.Group(1)), " ", "_")
 	}
 	if m := bdTitleTag.SearchRunes(page, 0); m != nil {
-		name = m.Group(1)
+		name = pyhtml.Unescape(m.Group(1))
 		if strings.HasPrefix(name, "BI") {
 			return name, "interface"
 		}
 		return name, "class"
 	}
 	return "", ""
+}
+
+// extendsFromDecl is extract_extends_from_decl with the type arguments
+// kept: the first type after "extends", tags stripped and entities decoded,
+// through its closing ">" ("java.lang.Enum<BMode>", "Cursor<E>"). Python's
+// `extends\s+(?:<a[^>]*>)?([^<\s]+)` stopped at the first "<", leaving
+// "java.lang.Enum&lt;". The search starts after the type name, so a bound
+// of its type parameters (Runner<E extends Exception>) is not taken for the
+// superclass. "" is no extends.
+func extendsFromDecl(decl []rune) string {
+	from := 0
+	if m := bdTypeName.SearchRunes(decl, 0); m != nil {
+		from = m.End()
+	}
+	m := bdExtends.SearchRunes(decl, from)
+	if m == nil {
+		return ""
+	}
+	rest := pyhtml.Unescape(bdTag.ReplaceAllString(string(decl[m.End():]), ""))
+	depth := 0
+	for i, r := range rest {
+		switch {
+		case r == '<':
+			depth++
+		case r == '>' && depth > 0:
+			if depth--; depth == 0 {
+				return rest[:i+1]
+			}
+		case depth == 0 && (r == ',' || r == '>' || textfold.IsSpace(r)):
+			return rest[:i]
+		}
+	}
+	return rest
 }
 
 // implementsFromDecl is extract_implements_from_decl on the declaration.
@@ -207,9 +248,7 @@ func parseBajadocPage(html string) *bajadocClass {
 	}
 	if pre := bdPre.SearchRunes(page, 0); pre != nil {
 		decl := page[pre.Start():pre.End()]
-		if em := bdExtends.SearchRunes(decl, 0); em != nil {
-			c.Extends = em.Group(1)
-		}
+		c.Extends = extendsFromDecl(decl)
 		c.Implements = implementsFromDecl(decl)
 		if m := bdBlock.SearchRunes(page[pre.End():], 0); m != nil {
 			c.Description = normalizeWS(stripTags(m.Group(1)))

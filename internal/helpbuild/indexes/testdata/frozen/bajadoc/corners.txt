@@ -48,13 +48,13 @@ bajadoc-clean/javax/baja d--------- 755
 bajadoc-clean/javax/baja/sys d--------- 755
 bajadoc-clean/javax/baja/sys/BIParent.txt ---------- 644 97 02676e0835fb73e7a7dc99c0e9c89fb0125ebf24615dd33c35e711039784c265
 bajadoc-clean/javax/baja/sys/BIThing.txt ---------- 644 144 ce94f0bf25c5c52f9e0e4ad937001197cac1e7d349b2316c168cc815b8eb7f3f
-bajadoc-clean/javax/baja/sys/BMode.txt ---------- 644 127 a153e97afc41cb798ed5c2c98310cd5da932afc2b03ed6c82bfbf9cd60498322
+bajadoc-clean/javax/baja/sys/BMode.txt ---------- 644 130 c0fbb06043fd1be3502bb6c7bb7da4059796fe38e7d4b8bf3dfe0c30b92d32a6
 bajadoc-clean/javax/baja/sys/BSample.txt ---------- 644 961 e0677bf9b42c80d32c66a57e0236b5449b0f3197273bf9c48e083485ad0f9f04
 bajadoc-clean/javax/baja/sys/Marker.txt ---------- 644 72 6225bd448dd6053ca73b439ef53945e88cf05592cc1971b3692c9dd8070c2772
 bajadoc-clean/javax/baja/util d--------- 755
 bajadoc-clean/javax/baja/util/BIFallback.txt ---------- 644 77 a84d51e7c1779a6fa0192ed89ae8e2a0e16cb5ed75be3b6fe7fc5ed4663b585a
 bajadoc-clean/javax/baja/util/CrLf.txt ---------- 644 118 a31fcddea1ca05f08f30769958f4874be4121d82576d2c6d5210f4a644f3db33
-bajadoc-clean/javax/baja/util/Cursor.txt ---------- 644 105 f7813d4286de0f925a1c98b37e86f277722bb6d8cff00183ac560fc781dee6ed
+bajadoc-clean/javax/baja/util/Cursor.txt ---------- 644 99 4427268255b609ca5ead8dbacf59c209776bfd7595e7b7fa19de4d8cdf9d6e3f
 bajadoc-clean/javax/baja/util/Fallback.txt ---------- 644 41 d87def406b4b61a7b6f8d3101629a3069ddafada9301b7c9457616a4f36b5fad
 bajadoc-clean/javax/baja/util/Ünicode.txt ---------- 644 90 34d3a3319a60f8289205277983ffe5779f56e134d17f3aeafcfe67916fe353dd
 bajadoc-clean/javax/baja/xml d--------- 755

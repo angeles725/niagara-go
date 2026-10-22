@@ -458,6 +458,14 @@ one run):
   S2's `ErrUnsafeEntry`). Javadoc class names hold no `/`.
 - **Page names that are not UTF-8** (Python's surrogateescape, sorted as decoded names) are
   not modelled; the tests run on Linux with UTF-8 names.
+- **Generic names are whole and unescaped** (quality round 8 T33): the class name of a
+  page is HTML-unescaped (`INTERFACE: IterableCursor<E>`, Python wrote
+  `IterableCursor&lt;E&gt;`), and `EXTENDS` is the first type after `extends`, tags
+  stripped, entities decoded, through its closing `>` (`java.lang.Enum<BMode>`, Python's
+  `[^<\s]+` stopped at `java.lang.Enum&lt;`). The search starts after the type name, so a
+  bound of the type parameters (`RunnableCanThrowException<E extends java.lang.Exception>`)
+  is no longer taken for the superclass. The escaped-name leftover page is still removed.
+  About 50 pages per version change on 4.13/4.14/4.15 (none on 4.3).
 
 ## S7b files
 
@@ -566,6 +574,11 @@ path in `pyjson.EncodeString` is the place to win it back.
 - **Encoding declarations** other than UTF-8, ISO-8859-1 and US-ASCII follow
   `bajadocxml` (see the S7b intended differences): such a file is a parse failure. Every
   one of the 27,804 `.bajadoc` declarations in the corpus is UTF-8.
+- **`inheritance.json` keys and `extends` are erasures** (T33): a generic class is keyed
+  `IterableCursor`, not `IterableCursor&lt;E&gt;` or `IterableCursor<E>`, and its superclass
+  is stored without type arguments (`Cursor`, `java.lang.Enum`), so the chain commands
+  walk through a generic superclass. A non-generic name is unchanged, so its lookups are
+  the same.
 
 ## S9 files
 
