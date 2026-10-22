@@ -309,7 +309,7 @@ func RunRevoke(key, serial, out string, s cli.Stdio) int {
 
 // RunGenkeys mirrors cmd_genkeys (unencrypted PKCS#8 + SubjectPublicKeyInfo).
 func RunGenkeys(outDir string, bits int, s cli.Stdio) int {
-	if err := os.MkdirAll(outDir, 0o777); err != nil {
+	if err := pycompat.Makedirs(outDir, 0o777, true); err != nil {
 		return finish(s, 0, errors.New(pycompat.OSErrorText(err)))
 	}
 	key, err := generateKey(bits)

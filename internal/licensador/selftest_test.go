@@ -14,10 +14,8 @@ import (
 // TestSelftestErrorExits pins how cmd_selftest fails before printing its
 // matrix: each error surfaces as "error: <text>" on stderr with exit 2 and no
 // table on stdout, whether it is returned (tmp, key size, blacklist write) or
-// raised out of a verify (the state file cannot be written). The tmp-is-a-file
-// text is the Go port's current one: Python's os.makedirs(exist_ok=True)
-// raises "[Errno 17] File exists" there instead (a known divergence this test
-// does not fix; it only keeps the routing stable).
+// raised out of a verify (the state file cannot be written). A tmp that is a
+// file fails as Python's os.makedirs(exist_ok=True) does: FileExistsError.
 func TestSelftestErrorExits(t *testing.T) {
 	if testing.Short() {
 		t.Skip("generates RSA keys")
@@ -37,7 +35,7 @@ func TestSelftestErrorExits(t *testing.T) {
 				t.Fatal(err)
 			}
 			return f
-		}, "error: [Errno 20] Not a directory: '%s'\n"},
+		}, "error: [Errno 17] File exists: '%s'\n"},
 		{"key too small", 512, func(t *testing.T, tmp string) string { return tmp },
 			"error: key_size must be at least 1024-bits.\n%.0s"},
 		{"blacklist unwritable", 1024, func(t *testing.T, tmp string) string {
