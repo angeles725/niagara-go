@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"maps"
-	"os"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -138,9 +137,9 @@ func readRecon(path string) (pyjson.Value, error) {
 // .java files, and those of them that are third-party.
 func scanPackages(vineflower string) (count int, packages, thirdParty []string) {
 	pkgs, third := map[string]bool{}, map[string]bool{}
-	var walk func(dir, rel string)
-	walk = func(dir, rel string) {
-		dirs, files := listDir(dir)
+	// os.walk ignores an unreadable directory and does not enter a symlinked one.
+	pycompat.Walk(vineflower, func(dir string, dirs, files []string) []string {
+		rel := strings.TrimPrefix(filepath.ToSlash(dir[len(vineflower):]), "/")
 		java := 0
 		for _, f := range files {
 			if strings.HasSuffix(f, ".java") {
@@ -157,39 +156,9 @@ func scanPackages(vineflower string) (count int, packages, thirdParty []string) 
 				third[top] = true
 			}
 		}
-		for _, d := range dirs {
-			sub := d
-			if rel != "" {
-				sub = rel + "/" + d
-			}
-			walk(filepath.Join(dir, d), sub)
-		}
-	}
-	walk(vineflower, "")
+		return dirs
+	})
 	return count, slices.Sorted(maps.Keys(pkgs)), slices.Sorted(maps.Keys(third))
-}
-
-// listDir splits dir's entries as os.walk does: directories (or links to
-// one) and everything else; a symlinked directory is listed but, with
-// followlinks=False, not entered, so it is left out of dirs. An unreadable
-// dir has no entries (os.walk ignores the error).
-func listDir(dir string) (dirs, files []string) {
-	entries, err := os.ReadDir(dir)
-	if err != nil {
-		return nil, nil
-	}
-	for _, e := range entries {
-		name := e.Name()
-		switch {
-		case e.IsDir():
-			dirs = append(dirs, name)
-		case e.Type()&os.ModeSymlink != 0 && pycompat.IsDir(filepath.Join(dir, name)):
-			// a link to a directory: a dir name, never walked into
-		default:
-			files = append(files, name)
-		}
-	}
-	return dirs, files
 }
 
 func hasAnyPrefix(s string, prefixes []string) bool {

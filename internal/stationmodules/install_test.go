@@ -137,3 +137,36 @@ func TestInstallPathsJoinLikeOsPathJoin(t *testing.T) {
 		t.Errorf("indexInstall(%q) dir %q ok %v, want %q false", "Q:", dir, ok, want)
 	}
 }
+
+// indexSw walks <root>/sw like os.walk: a directory's jars before its subdirectories', a
+// directory named *.jar walked into rather than indexed, a jar symlink indexed, and a
+// symlinked directory not entered. A root without sw indexes nothing.
+func TestIndexSwWalksLikeOsWalk(t *testing.T) {
+	root := t.TempDir()
+	for _, rel := range []string{"sw/b.jar", "sw/a/b.jar", "sw/a/c.jar", "sw/dir.jar/e.jar",
+		"sw/z/d.jar", "sw/notes.txt", "outside/f.jar"} {
+		p := filepath.Join(root, filepath.FromSlash(rel))
+		if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(p, nil, 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	sw := filepath.Join(root, "sw")
+	if err := os.Symlink(filepath.Join(root, "outside"), filepath.Join(sw, "link")); err != nil {
+		t.Skipf("no symlinks here: %v", err)
+	}
+	if err := os.Symlink(filepath.Join(sw, "b.jar"), filepath.Join(sw, "l.jar")); err != nil {
+		t.Fatal(err)
+	}
+	j := func(rel string) string { return filepath.Join(sw, filepath.FromSlash(rel)) }
+	want := map[string][]string{"b": {j("b.jar"), j("a/b.jar")}, "c": {j("a/c.jar")},
+		"e": {j("dir.jar/e.jar")}, "d": {j("z/d.jar")}, "l": {j("l.jar")}}
+	if got := indexSw(root); !reflect.DeepEqual(got, want) {
+		t.Errorf("indexSw:\n got %q\nwant %q", got, want)
+	}
+	if got := indexSw(filepath.Join(root, "outside")); len(got) != 0 {
+		t.Errorf("indexSw without sw = %q", got)
+	}
+}

@@ -113,33 +113,14 @@ func indexInstall(root string) (*partIndex, string, bool) {
 // Directory entries are visited in sorted order; Python uses the file system's order.
 func indexSw(root string) map[string][]string {
 	staged := map[string][]string{}
-	sw := pycompat.Join(root, "sw")
-	if !pycompat.IsDir(sw) {
-		return staged
-	}
-	var walk func(string)
-	walk = func(dir string) {
-		entries, err := os.ReadDir(dir)
-		if err != nil {
-			return
-		}
-		var dirs []string
-		for _, e := range entries {
-			p := pycompat.Join(dir, e.Name())
-			if pycompat.IsDir(p) {
-				dirs = append(dirs, p)
-			} else if strings.HasSuffix(e.Name(), ".jar") {
-				n := strings.TrimSuffix(e.Name(), ".jar")
-				staged[n] = append(staged[n], p)
+	pycompat.Walk(pycompat.Join(root, "sw"), func(dir string, dirs, files []string) []string {
+		for _, f := range files {
+			if n, ok := strings.CutSuffix(f, ".jar"); ok {
+				staged[n] = append(staged[n], pycompat.Join(dir, f))
 			}
 		}
-		for _, d := range dirs {
-			if st, err := os.Lstat(d); err == nil && st.Mode()&os.ModeSymlink == 0 {
-				walk(d)
-			}
-		}
-	}
-	walk(sw)
+		return dirs
+	})
 	return staged
 }
 

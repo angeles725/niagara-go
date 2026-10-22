@@ -3,14 +3,13 @@ package dashpreview
 import (
 	"errors"
 	"math/big"
-	"os"
 	"path/filepath"
 	"regexp"
-	"sort"
 	"strconv"
 	"strings"
 	"unicode"
 
+	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 )
 
@@ -158,28 +157,19 @@ func generateAutoMock(entities, numeric, labels []string) pyjson.Value {
 
 // findReaderJava mirrors find_reader_java: the first *Reader.java under the
 // parent of rcDir, walking top-down (files of a directory before its
-// subdirectories; names sorted, where os.walk uses directory order).
+// subdirectories, a symlinked directory listed but not entered; names sorted,
+// where os.walk uses directory order).
 func findReaderJava(rcDir string) string {
-	var walk func(dir string) string
-	walk = func(dir string) string {
-		entries, err := os.ReadDir(dir)
-		if err != nil {
-			return ""
-		}
-		sort.Slice(entries, func(i, j int) bool { return entries[i].Name() < entries[j].Name() })
-		for _, e := range entries {
-			if !e.IsDir() && strings.HasSuffix(e.Name(), "Reader.java") {
-				return filepath.Join(dir, e.Name())
-			}
-		}
-		for _, e := range entries {
-			if e.IsDir() {
-				if p := walk(filepath.Join(dir, e.Name())); p != "" {
-					return p
+	found := ""
+	pycompat.WalkWith(filepath.Dir(rcDir), pycompat.WalkOptions{Stop: func() bool { return found != "" }},
+		func(dir string, dirs, files []string) []string {
+			for _, f := range files {
+				if strings.HasSuffix(f, "Reader.java") {
+					found = filepath.Join(dir, f)
+					return nil
 				}
 			}
-		}
-		return ""
-	}
-	return walk(filepath.Dir(rcDir))
+			return dirs
+		})
+	return found
 }

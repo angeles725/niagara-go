@@ -3,7 +3,6 @@ package core
 import (
 	"os"
 	"path/filepath"
-	"sort"
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/index"
@@ -148,65 +147,36 @@ func IterJava(organized string) []JavaFile {
 // submodule as a whole yields the same files, in the same order, as walking it
 // and filtering each file by its submodule.
 func WalkJava(organized string, keep func(Submodule) bool, fn func(JavaFile) bool) {
-	var walk func(sub, dir string) bool
-	walk = func(sub, dir string) bool {
-		// os.walk over scandir: an entry is a directory when it is one or links
-		// to one (the entry type saves a stat for everything but symlinks); a
-		// symlinked directory is listed but not entered.
-		var dirs, files []string
-		links := map[string]bool{}
-		for _, e := range sortedEntries(dir) {
-			name := e.Name()
-			switch {
-			case e.IsDir():
-				dirs = append(dirs, name)
-			case e.Type()&os.ModeSymlink != 0 && pycompat.IsDir(filepath.Join(dir, name)):
-				dirs = append(dirs, name)
-				links[name] = true
-			default:
-				files = append(files, name)
-			}
-		}
-		for _, name := range files {
-			if strings.HasSuffix(name, ".java") {
+	stopped := false
+	// os.walk over scandir: an entry is a directory when it is one or links to one; a
+	// symlinked directory is listed but not entered.
+	visit := func(sub string) func(dir string, dirs, files []string) []string {
+		return func(dir string, dirs, files []string) []string {
+			for _, name := range files {
+				if !strings.HasSuffix(name, ".java") {
+					continue
+				}
 				p := filepath.Join(dir, name)
 				rel, err := filepath.Rel(organized, p)
 				if err != nil {
 					rel = p
 				}
 				if !fn(JavaFile{sub, p, strings.ReplaceAll(filepath.ToSlash(rel), "\\", "/")}) {
-					return false
+					stopped = true
+					return nil
 				}
 			}
+			return dirs
 		}
-		for _, name := range dirs {
-			if links[name] {
-				continue
-			}
-			if !walk(sub, filepath.Join(dir, name)) {
-				return false
-			}
-		}
-		return true
 	}
 	for _, s := range IterSubmodules(organized, nil) {
 		if keep != nil && !keep(s) {
 			continue
 		}
-		if !walk(s.Name, filepath.Join(s.Path, "vineflower")) {
+		pycompat.WalkWith(filepath.Join(s.Path, "vineflower"),
+			pycompat.WalkOptions{Stop: func() bool { return stopped }}, visit(s.Name))
+		if stopped {
 			return
 		}
 	}
-}
-
-// sortedEntries is sorted(os.scandir(dir)) by name; nil when dir cannot be read.
-func sortedEntries(dir string) []os.DirEntry {
-	f, err := os.Open(dir)
-	if err != nil {
-		return nil
-	}
-	defer f.Close()
-	entries, _ := f.ReadDir(-1)
-	sort.Slice(entries, func(a, b int) bool { return entries[a].Name() < entries[b].Name() })
-	return entries
 }

@@ -137,3 +137,19 @@ func TestWalkWithOnError(t *testing.T) {
 		t.Errorf("Walk of a missing top visited %q", visited)
 	}
 }
+
+// Stop is a caller breaking out of its os.walk loop: asked after each visit, true ends the whole
+// walk there, so no later directory (nested or a sibling further up) is visited.
+func TestWalkWithStopEndsTheWalk(t *testing.T) {
+	top := walkTree(t, "a/b/x", "a/c/y", "d/z")
+	var visited []string
+	WalkWith(top, WalkOptions{Stop: func() bool { return len(visited) == 3 }},
+		func(dir string, dirs, _ []string) []string {
+			rel, _ := filepath.Rel(top, dir)
+			visited = append(visited, filepath.ToSlash(rel))
+			return dirs
+		})
+	if want := []string{".", "a", "a/b"}; !reflect.DeepEqual(visited, want) {
+		t.Errorf("visited %q, want %q", visited, want)
+	}
+}

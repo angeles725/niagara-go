@@ -7,10 +7,12 @@ import (
 
 // WalkOptions are the os.walk arguments a caller can change: Unsorted lists each directory in
 // the order the file system returns it (os.scandir's order) for the callers that do not sort
-// what os.walk yields, and OnError is os.walk's onerror.
+// what os.walk yields, OnError is os.walk's onerror, and Stop, asked after each visit, ends
+// the whole walk when it returns true, like a caller breaking out of its os.walk loop.
 type WalkOptions struct {
 	Unsorted bool
 	OnError  func(dir string, err error)
+	Stop     func() bool
 }
 
 // Walk is sorted os.walk(top) top-down without followlinks. visit receives each directory
@@ -30,7 +32,44 @@ func WalkWith(top string, o WalkOptions, visit func(dir string, dirs, files []st
 	if o.Unsorted {
 		list = readDirUnsorted
 	}
-	walk(top, list, o.OnError, visit)
+	var walk func(top string) bool
+	walk = func(top string) bool {
+		ents, err := list(top)
+		if err != nil {
+			if o.OnError != nil {
+				o.OnError(top, err)
+			}
+			return true
+		}
+		var dirs, files []string
+		for _, e := range ents {
+			isDirEntry := e.IsDir()
+			if e.Type()&fs.ModeSymlink != 0 {
+				st, err := os.Stat(Join(top, e.Name()))
+				isDirEntry = err == nil && st.IsDir()
+			}
+			if isDirEntry {
+				dirs = append(dirs, e.Name())
+			} else {
+				files = append(files, e.Name())
+			}
+		}
+		descend := visit(top, dirs, files)
+		if o.Stop != nil && o.Stop() {
+			return false
+		}
+		for _, d := range descend {
+			sub := Join(top, d)
+			if st, err := os.Lstat(sub); err == nil && st.Mode()&fs.ModeSymlink != 0 {
+				continue
+			}
+			if !walk(sub) {
+				return false
+			}
+		}
+		return true
+	}
+	walk(top)
 }
 
 // readDirUnsorted is os.ReadDir without the sort.
@@ -41,35 +80,4 @@ func readDirUnsorted(dir string) ([]fs.DirEntry, error) {
 	}
 	defer f.Close()
 	return f.ReadDir(-1)
-}
-
-func walk(top string, list func(string) ([]fs.DirEntry, error), onerror func(dir string, err error),
-	visit func(dir string, dirs, files []string) []string) {
-	ents, err := list(top)
-	if err != nil {
-		if onerror != nil {
-			onerror(top, err)
-		}
-		return
-	}
-	var dirs, files []string
-	for _, e := range ents {
-		isDirEntry := e.IsDir()
-		if e.Type()&fs.ModeSymlink != 0 {
-			st, err := os.Stat(Join(top, e.Name()))
-			isDirEntry = err == nil && st.IsDir()
-		}
-		if isDirEntry {
-			dirs = append(dirs, e.Name())
-		} else {
-			files = append(files, e.Name())
-		}
-	}
-	for _, d := range visit(top, dirs, files) {
-		sub := Join(top, d)
-		if st, err := os.Lstat(sub); err == nil && st.Mode()&fs.ModeSymlink != 0 {
-			continue
-		}
-		walk(sub, list, onerror, visit)
-	}
 }

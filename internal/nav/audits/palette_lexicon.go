@@ -25,41 +25,24 @@ type lexiconFile struct{ rel, text string }
 func artifactLexicons(extracted, jar string) []lexiconFile {
 	var found []lexiconFile
 	names := 0
-	walkLexicons(extracted, "", func(rel, path string) {
-		names++
-		if text, ok := readExtracted(path); ok {
-			found = append(found, lexiconFile{rel, text})
+	pycompat.Walk(extracted, func(dir string, dirs, files []string) []string {
+		rel := strings.TrimPrefix(filepath.ToSlash(dir[len(extracted):]), "/")
+		for _, f := range files {
+			if !strings.HasSuffix(f, ".lexicon") {
+				continue
+			}
+			names++
+			if text, ok := readExtracted(pycompat.Join(dir, f)); ok {
+				found = append(found, lexiconFile{strings.TrimPrefix(rel+"/"+f, "/"), text})
+			}
 		}
+		return dirs
 	})
 	if names == 0 {
 		found = jarLexicons(jar)
 	}
 	sort.Slice(found, func(i, j int) bool { return found[i].rel < found[j].rel })
 	return found
-}
-
-// walkLexicons calls fn for every non-directory entry named *.lexicon under
-// dir, recursing into real directories only (os.walk with followlinks off,
-// errors ignored).
-func walkLexicons(dir, rel string, fn func(rel, path string)) {
-	entries, err := os.ReadDir(dir)
-	if err != nil {
-		return
-	}
-	for _, e := range entries {
-		path, name := filepath.Join(dir, e.Name()), e.Name()
-		if rel != "" {
-			name = rel + "/" + name
-		}
-		switch {
-		case e.IsDir():
-			walkLexicons(path, name, fn)
-		case e.Type()&os.ModeSymlink != 0 && pycompat.IsDir(path):
-			// os.walk lists a symlinked directory as a directory and does not enter it
-		case strings.HasSuffix(e.Name(), ".lexicon"):
-			fn(name, path)
-		}
-	}
 }
 
 // jarLexicons is the JAR half of _lexicons: each *.lexicon member name once,
