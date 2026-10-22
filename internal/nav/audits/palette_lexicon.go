@@ -3,7 +3,6 @@ package audits
 import (
 	"archive/zip"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"sort"
@@ -88,27 +87,13 @@ func jarLexicons(jar string) []lexiconFile {
 	}
 	var out []lexiconFile
 	for _, n := range order {
-		text, ok := readZipFile(last[n])
+		b, ok := pycompat.ReadZipFile(last[n])
 		if !ok {
 			break
 		}
-		out = append(out, lexiconFile{n, text})
+		out = append(out, lexiconFile{n, pycompat.DecodeReplace(b)})
 	}
 	return out
-}
-
-// readZipFile is a member's bytes decoded as UTF-8 with replacement.
-func readZipFile(f *zip.File) (string, bool) {
-	rc, err := f.Open()
-	if err != nil {
-		return "", false
-	}
-	defer rc.Close()
-	b, err := io.ReadAll(rc)
-	if err != nil {
-		return "", false
-	}
-	return pycompat.DecodeReplace(b), true
 }
 
 // countDirs is the number of entries of dir that are directories (symlinks

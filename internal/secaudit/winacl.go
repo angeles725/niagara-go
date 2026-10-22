@@ -107,21 +107,9 @@ var codepages = []struct {
 	upper []rune
 }{
 	{"cp850", []rune("ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜø£Ø×ƒáíóúñÑªº¿®¬½¼¡«»░▒▓│┤ÁÂÀ©╣║╗╝¢¥┐└┴┬├─┼ãÃ╚╔╩╦╠═╬¤ðÐÊËÈıÍÎÏ┘┌█▄¦Ì▀ÓßÔÒõÕµþÞÚÛÙýÝ¯´\u00ad±‗¾¶§÷¸°¨·¹³²■ ")},
-	{"cp437", []rune("ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜ¢£¥₧ƒáíóúñÑªº¿⌐¬½¼¡«»░▒▓│┤╡╢╖╕╣║╗╝╜╛┐└┴┬├─┼╞╟╚╔╩╦╠═╬╧╨╤╥╙╘╒╓╫╪┘┌█▄▌▐▀αßΓπΣσµτΦΘΩδ∞φε∩≡±≥≤⌠⌡÷≈°∙·√ⁿ²■ ")},
+	{"cp437", pycompat.CP437Upper},
 	{"cp1252", []rune("€\u0081‚ƒ„…†‡ˆ‰Š‹Œ\u008dŽ\u008f\u0090‘’“”•–—˜™š›œ\u009džŸ" +
 		" ¡¢£¤¥¦§¨©ª«¬\u00ad®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿ")},
-}
-
-func decodeCodepage(data []byte, upper []rune) string {
-	var b strings.Builder
-	for _, c := range data {
-		if c < 0x80 {
-			b.WriteByte(c)
-		} else {
-			b.WriteRune(upper[c-0x80])
-		}
-	}
-	return b.String()
 }
 
 // frequent are the letters a Western-European Windows listing commonly holds.
@@ -179,7 +167,7 @@ func decodeConsole(data []byte) string {
 	}
 	best, bestScore := "", 0
 	for i, cp := range codepages {
-		text := decodeCodepage(data, cp.upper)
+		text := pycompat.DecodeCodepage(string(data), cp.upper)
 		if s := plausibility(text); i == 0 || s > bestScore {
 			best, bestScore = text, s
 		}

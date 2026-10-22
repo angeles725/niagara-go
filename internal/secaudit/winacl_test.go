@@ -4,6 +4,8 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 const testWinpath = `C:\N\security`
@@ -169,7 +171,7 @@ func TestCodepageTablesCoverTheUpperHalf(t *testing.T) {
 				t.Errorf("%s 0x%02x = %U, want %U", cp.name, b, got, want)
 			}
 		}
-		if got := []rune(decodeCodepage(all, cp.upper)); len(got) != 256 || got[0x7f] != 0x7f || got[0x80] != cp.upper[0] {
+		if got := []rune(pycompat.DecodeCodepage(string(all), cp.upper)); len(got) != 256 || got[0x7f] != 0x7f || got[0x80] != cp.upper[0] {
 			t.Errorf("%s decodes 256 bytes to %d runes", cp.name, len(got))
 		}
 	}
