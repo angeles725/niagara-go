@@ -3,6 +3,7 @@ package searchdoor
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -98,5 +99,28 @@ func TestCodeSourceAnswersOnACheckoutDirectory(t *testing.T) {
 			checkRaw(t, realRun(t, b, codeSource, append([]string{base}, args...)),
 				readOracle(t, filepath.Join("..", "nav", "testdata", "golden", golden)), state)
 		})
+	}
+}
+
+// TestBlocksFindUnlistableRootCannotSearch: a CORPUS_NAV_ROOT this user cannot list is
+// corpus-nav's cannot-search (exit 2) naming the root and the OS reason, not the
+// "no block files" line of a root that was read.
+func TestBlocksFindUnlistableRootCannotSearch(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("mode 000 does not lock a directory on Windows")
+	}
+	root := filepath.Join(t.TempDir(), "locked")
+	if err := os.Mkdir(root, 0); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = os.Chmod(root, 0o755) })
+	if _, err := os.ReadDir(root); err == nil {
+		t.Skip("mode 000 does not stop this user listing a directory (root?)")
+	}
+	got := blocksFind(envOf(map[string]string{"CORPUS_NAV_ROOT": root}),
+		[]string{"corpus-nav.py", "find", "alarm", "--limit", "5", "--or"})
+	want := exact(2, "", "corpus-nav: cannot search: cannot list "+root+": Permission denied\n")
+	if got != want {
+		t.Errorf("got %+v\nwant %+v", got, want)
 	}
 }

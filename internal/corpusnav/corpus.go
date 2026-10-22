@@ -53,7 +53,12 @@ func fromShared(bs []blockfiles.Block) []blockFile {
 	return out
 }
 
-func (c *corpus) blocks() []blockFile    { return fromShared(blockfiles.MainBlocks(c.root)) }
+// blocks is the main corpus. Main's entry gate already listed the root and stopped on an
+// error, so a listing error here (the root locked mid-run) reads as no main block.
+func (c *corpus) blocks() []blockFile {
+	bs, _ := blockfiles.MainBlocks(c.root)
+	return fromShared(bs)
+}
 func (c *corpus) subBlocks() []blockFile { return fromShared(blockfiles.SubBlocks(c.root)) }
 
 // findBlockPath is corpus.find_block_path: the numeric main block numbered n.

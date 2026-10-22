@@ -14,27 +14,40 @@ import (
 
 var keyRingRE = regexp.MustCompile(`KeyRingPermission"[^>]*?(?:name|target)="([^"]*)"`)
 
-// sec15 flags a wildcard KeyRingPermission declared by an unsigned module.
+const sec15Title, sec15Secure = "KeyRingPermission wildcard in unsigned module",
+	"no wildcard KeyRingPermission in an unsigned/attacker module"
+
+// sec15 flags a wildcard KeyRingPermission declared by an unsigned module. A modules/
+// directory that cannot be listed checked no module: SKIP, never the PASS of zero holders.
 func sec15(home string, rep *report) {
 	moddir := filepath.Join(home, "modules")
 	if !pycompat.IsDir(moddir) {
 		return
 	}
-	total, wild, wildUnsigned := scanKeyringPerms(moddir)
+	total, wild, wildUnsigned, err := scanKeyringPerms(moddir)
+	if err != nil {
+		rep.add("SEC-15", "med", sec15Title, "not checked (cannot list "+moddir+": "+pycompat.StrerrorOf(err)+")",
+			sec15Secure, "SKIP", "B114", "run: ls -l <home>/modules (the audit user must be able to list it)")
+		return
+	}
 	risk := len(wildUnsigned) > 0
-	rep.add("SEC-15", "med", "KeyRingPermission wildcard in unsigned module",
+	rep.add("SEC-15", "med", sec15Title,
 		strconv.Itoa(len(total))+" modules declare it, "+strconv.Itoa(len(wild))+" wildcard(name=*), "+
 			strconv.Itoa(len(wildUnsigned))+" of those UNSIGNED",
-		"no wildcard KeyRingPermission in an unsigned/attacker module", verdict(risk), "B114",
+		sec15Secure, verdict(risk), "B114",
 		pick(risk, "unsigned wildcard holders: "+strings.Join(wildUnsigned, ", "),
 			"all wildcard holders are signed; risk only if an UNSIGNED module (SEC-01/06) declares name=*"))
 }
 
 // scanKeyringPerms reads modules/*.jar META-INF/module.xml (through modjar's pool and
 // cache): the KeyRingPermission holders, the wildcard holders and the wildcard holders
-// without a signature file. Unreadable jars are skipped.
-func scanKeyringPerms(moddir string) (all, wild, wildUnsigned []string) {
-	entries, _ := os.ReadDir(moddir)
+// without a signature file. Unreadable jars are skipped; a directory that cannot be listed
+// is err (nothing scanned).
+func scanKeyringPerms(moddir string) (all, wild, wildUnsigned []string, err error) {
+	entries, err := os.ReadDir(moddir)
+	if err != nil {
+		return nil, nil, nil, err
+	}
 	var jars []string
 	for _, ent := range entries {
 		if strings.HasSuffix(ent.Name(), ".jar") {
@@ -63,7 +76,7 @@ func scanKeyringPerms(moddir string) (all, wild, wildUnsigned []string) {
 			wildUnsigned = append(wildUnsigned, f)
 		}
 	}
-	return all, wild, wildUnsigned
+	return all, wild, wildUnsigned, nil
 }
 
 // signed reports a signature block among a jar's META-INF/ entry names.

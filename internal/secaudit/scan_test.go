@@ -114,3 +114,19 @@ func TestScanLogsNamesFilesWithTheHostSeparator(t *testing.T) {
 		t.Fatalf("hits %+v, want files %q", hits, want)
 	}
 }
+
+// SEC-15 on a modules/ directory this user cannot list checked no module: a SKIP naming the
+// reason ("could not verify"), never the PASS of "0 modules declare it".
+func TestSec15UnlistableModulesDirSkips(t *testing.T) {
+	home := t.TempDir()
+	moddir := lockedDir(t, home, "modules")
+	var rep report
+	sec15(home, &rep)
+	want := row{"SEC-15", "med", "KeyRingPermission wildcard in unsigned module",
+		"not checked (cannot list " + moddir + ": Permission denied)",
+		"no wildcard KeyRingPermission in an unsigned/attacker module", "SKIP", "B114",
+		"run: ls -l <home>/modules (the audit user must be able to list it)"}
+	if len(rep.rows) != 1 || rep.rows[0] != want {
+		t.Errorf("rows %+v\nwant [%+v]", rep.rows, want)
+	}
+}

@@ -152,7 +152,10 @@ func TestScannersMatchRealCorpus(t *testing.T) {
 		home, _ := os.UserHomeDir()
 		root = filepath.Join(home, "niagara-research")
 	}
-	main := blockfiles.MainBlocks(root)
+	main, err := blockfiles.MainBlocks(root)
+	if err != nil {
+		t.Fatal(err)
+	}
 	if len(main) == 0 {
 		t.Skipf("no research corpus at %s", root)
 	}
