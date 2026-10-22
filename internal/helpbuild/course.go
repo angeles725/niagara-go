@@ -48,7 +48,7 @@ type courseFile struct{ rel, path string }
 func courseFiles(src string) []courseFile {
 	var out []courseFile
 	prefix := map[string]string{src: ""}
-	pyfs.Walk(src, func(dir string, dirs, files []string) []string {
+	pycompat.Walk(src, func(dir string, dirs, files []string) []string {
 		sort.Strings(dirs)
 		sort.Strings(files)
 		for _, f := range files {

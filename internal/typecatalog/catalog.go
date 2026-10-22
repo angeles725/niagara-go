@@ -9,6 +9,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 	"github.com/angeles725/niagara-go/internal/slotomatic"
 )
@@ -49,7 +50,7 @@ func Build(roots []string) (*Catalog, int) {
 	cat := &Catalog{}
 	nfiles := 0
 	for _, root := range roots {
-		slotomatic.Walk(root, false, func(dir string, _ *[]string, files []string) {
+		pycompat.WalkWith(root, pycompat.WalkOptions{Unsorted: true}, func(dir string, dirs, files []string) []string {
 			for _, fn := range files {
 				if !strings.HasSuffix(fn, ".java") {
 					continue
@@ -66,6 +67,7 @@ func Build(roots []string) (*Catalog, int) {
 				}
 				cat.setDefault(Key(t), &Record{Type: t, Source: path})
 			}
+			return dirs
 		})
 	}
 	return cat, nfiles

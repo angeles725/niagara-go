@@ -32,14 +32,13 @@ func sourceTypes(root string) map[string]string {
 	if root == "" || !pycompat.IsDir(root) {
 		return m
 	}
-	slotomatic.Walk(root, false, func(dir string, dirs *[]string, files []string) {
-		kept := (*dirs)[:0]
-		for _, d := range *dirs {
+	pycompat.WalkWith(root, pycompat.WalkOptions{Unsorted: true}, func(dir string, dirs, files []string) []string {
+		var kept []string
+		for _, d := range dirs {
 			if !strings.HasPrefix(d, ".") {
 				kept = append(kept, d)
 			}
 		}
-		*dirs = kept
 		for _, fn := range files {
 			if !strings.HasSuffix(fn, ".java") {
 				continue
@@ -71,6 +70,7 @@ func sourceTypes(root string) map[string]string {
 				}
 			}
 		}
+		return kept
 	})
 	return m
 }

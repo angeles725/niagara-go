@@ -13,74 +13,7 @@ import (
 )
 
 // File-system helpers with the semantics of the Python calls the S3/S4
-// builders make: os.walk, os.remove, shutil.copyfile and json.load.
-
-// Walk is os.walk(top) top-down without followlinks. visit receives each
-// directory (joined like os.path.join, from top), the names of its
-// subdirectories (a symlink to a directory counts as one, as
-// DirEntry.is_dir() follows links) and of everything else, and returns the
-// subdirectories to descend, like a caller editing dirnames in place. A
-// symlinked subdirectory is listed but not descended. A directory that
-// cannot be read is skipped silently (onerror=None).
-func Walk(top string, visit func(dir string, dirs, files []string) []string) {
-	walkPy(top, os.ReadDir, nil, visit)
-}
-
-// WalkFn is Walk with os.walk's onerror: it receives each directory
-// that cannot be read (as joined from top) and the error, then the walk
-// goes on without it.
-func WalkFn(top string, onerror func(dir string, err error), visit func(dir string, dirs, files []string) []string) {
-	walkPy(top, os.ReadDir, onerror, visit)
-}
-
-// WalkDirOrder is Walk with each directory listed in the order the
-// file system returns it (os.scandir's order, not sorted), for the
-// builders that do not sort what os.walk yields (source_indexer's files,
-// slots_indexer's folders and files): their output order follows it.
-func WalkDirOrder(top string, visit func(dir string, dirs, files []string) []string) {
-	walkPy(top, readDirUnsorted, nil, visit)
-}
-
-// readDirUnsorted is os.ReadDir without the sort.
-func readDirUnsorted(dir string) ([]fs.DirEntry, error) {
-	f, err := os.Open(dir)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-	return f.ReadDir(-1)
-}
-
-func walkPy(top string, list func(string) ([]fs.DirEntry, error), onerror func(dir string, err error),
-	visit func(dir string, dirs, files []string) []string) {
-	ents, err := list(top)
-	if err != nil {
-		if onerror != nil {
-			onerror(top, err)
-		}
-		return
-	}
-	var dirs, files []string
-	for _, e := range ents {
-		isDirEntry := e.IsDir()
-		if e.Type()&fs.ModeSymlink != 0 {
-			st, err := os.Stat(pycompat.Join(top, e.Name()))
-			isDirEntry = err == nil && st.IsDir()
-		}
-		if isDirEntry {
-			dirs = append(dirs, e.Name())
-		} else {
-			files = append(files, e.Name())
-		}
-	}
-	for _, d := range visit(top, dirs, files) {
-		sub := pycompat.Join(top, d)
-		if st, err := os.Lstat(sub); err == nil && st.Mode()&fs.ModeSymlink != 0 {
-			continue
-		}
-		walkPy(sub, list, onerror, visit)
-	}
-}
+// builders make: os.remove, shutil.copyfile and json.load.
 
 // RemoveFile is os.remove: it unlinks a file or a symlink and refuses a
 // directory (IsADirectoryError), where os.Remove would delete an empty one.

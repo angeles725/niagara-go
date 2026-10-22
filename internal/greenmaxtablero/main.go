@@ -51,9 +51,8 @@ func run(src, gm, out, tab string, legend, toStdout bool, s cli.Stdio) int {
 	px, n, st, err := transform(text, gm, legend)
 	if err != nil {
 		fmt.Fprintln(s.Err, err)
-		var ee *exitError
-		if errors.As(err, &ee) {
-			return 1
+		if code, ok := cli.ExitCode(err); ok {
+			return code
 		}
 		return cli.ExitCannotSearch
 	}

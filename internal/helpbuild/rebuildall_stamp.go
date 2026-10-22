@@ -36,7 +36,7 @@ func fingerprintDir(path, ext string) pyjson.Value {
 		return pyjson.Value{}
 	}
 	var files, total int64
-	pyfs.Walk(path, func(dir string, dirs, names []string) []string {
+	pycompat.Walk(path, func(dir string, dirs, names []string) []string {
 		for _, name := range names {
 			if ext != "" && !strings.HasSuffix(textfold.Lower(name), ext) {
 				continue

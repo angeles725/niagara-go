@@ -221,7 +221,7 @@ func guidesIndex(baseDir string, src jarSources) (index pyjson.Value, kept, warn
 		var pages []string
 		htmlCount := 0
 		var werr error
-		pyfs.Walk(path, func(dir string, dirs, files []string) []string {
+		pycompat.Walk(path, func(dir string, dirs, files []string) []string {
 			for _, f := range files {
 				if low := textfold.Lower(f); strings.HasSuffix(low, ".html") || strings.HasSuffix(low, ".htm") {
 					htmlCount++

@@ -5,7 +5,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"reflect"
 	"strings"
 	"testing"
 
@@ -15,31 +14,6 @@ import (
 
 // Unit tests of pyfs.go: the Python semantics the S3/S4
 // builders rely on (the parity tests cover them end to end).
-
-// Walk lists a symlinked folder among the folders without entering it,
-// a broken symlink among the files, and descends only what visit returns.
-func TestPyWalk(t *testing.T) {
-	top := t.TempDir()
-	testkit.WriteTree(t, top, map[string]string{"a/x": "", "a/skip/y": "", "f": "", "real/z": ""})
-	testkit.SymlinkOrSkip(t, filepath.Join(top, "real"), filepath.Join(top, "a", "link"))
-	testkit.SymlinkOrSkip(t, filepath.Join(top, "missing"), filepath.Join(top, "broken"))
-	var got []string
-	Walk(top, func(dir string, dirs, files []string) []string {
-		rel, _ := filepath.Rel(top, dir)
-		got = append(got, rel+" "+strings.Join(dirs, ",")+" | "+strings.Join(files, ","))
-		var keep []string
-		for _, d := range dirs {
-			if d != "skip" {
-				keep = append(keep, d)
-			}
-		}
-		return keep
-	})
-	want := []string{". a,real | broken,f", "a link,skip | x", "real  | z"}
-	if !reflect.DeepEqual(got, want) {
-		t.Errorf("Walk:\n got %q\nwant %q", got, want)
-	}
-}
 
 func TestRemoveFileRefusesADirectory(t *testing.T) {
 	dir := t.TempDir()
