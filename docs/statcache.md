@@ -25,7 +25,13 @@ Every function below is in `internal/statcache/statcache.go`, except `Sys`
 | `Sys(fi)` | ctime (Unix ns), inode and device on Linux; zeros and `ok` false elsewhere | the Linux-only ctime/inode/device read (build-tagged files) |
 
 Gob-serialized key and entry types stay in their packages: gob writes the
-type names, so moving a type would change the cache bytes.
+type and field names, so a type moved (and renamed) or a field renamed would
+change the cache bytes. Each migrated caller has a `statcache_equiv_test.go`
+(`statscache_equiv_test.go` in `nav/inventory`) that keeps its pre-statcache
+code verbatim and checks that the current code makes the same hit, miss and
+store decisions and writes the same bytes. It compares against that copy, not
+a hex golden: gob numbers types per process, so fixed bytes would depend on
+which tests ran first.
 
 ## The mechanisms
 
@@ -33,8 +39,8 @@ type names, so moving a type would change the cache bytes.
 | --- | --- | --- | --- |
 | `nav/core` class-index.gob | resolved path, size, mtime of the class index; only from `classCacheMinBytes` (1 MiB) | `classCacheFormat` | `Regular`, `ReadGob`, `WriteGob` (through `core.WriteGob`) |
 | `nav/lib/callgraph` callgraph.gob | resolved path, size, mtime of the xref index; only from `cacheMinBytes` (1 MiB) | `cacheFormat` | `Regular`, `ReadGob`, `WriteGob` |
-| `nav/lib/classrank` class-rank.gob | ranker parameters + size, mtime of class-index.json and xref-index.json (`Present` false when absent) | `cacheFormat`; cached only when class-index.json is `cacheMinBytes` (1 MiB) or more | not migrated yet: stats and gob-decodes by hand; writes through `core.WriteGob` |
-| `nav/inventory` stats.gob | per index file of `statsCacheMinBytes` (1 MiB) or more: resolved path, size, mtime | `statsCacheFormat` | not migrated yet: stats and gob-decodes by hand; writes through `core.WriteGob` |
+| `nav/lib/classrank` class-rank.gob | ranker parameters + size, mtime of class-index.json and xref-index.json (`Present` false when absent) | `cacheFormat`; cached only when class-index.json is `cacheMinBytes` (1 MiB) or more | `Stat`, `ReadGob`, `WriteGob` |
+| `nav/inventory` stats.gob | per index file of `statsCacheMinBytes` (1 MiB) or more: resolved path, size, mtime | `statsCacheFormat` | `Of`, `Same`, `Stat` (dropping removed files), `ReadGob`, `WriteGob` |
 | `modjar` `<member hash>.gob` | absolute path, size, mtime per jar | `cacheFormat`, `NIAGARA_GO_MODJAR_CACHE` (`Off`) | `Of`, `Same`, `ReadGob`, `WriteGob`, `Off`, `UserDir`, `TestBinary` |
 | `bognav` type catalog | dir + every .java path, size, mtime (-1 missing) | `catalogCacheFormat`, `NIAGARA_CACHE_DIR=off` only | `Files(…, 1)`, `ReadGob`, `WriteGob`, `UserDir` |
 | `help/fts` fingerprint.gob | per source: label, dir, link target, every walked folder's mtime (a folder modified less than `fpRecent`, 2 s, before the walk is not trusted) and every file's size/mtime, stat'ed in parallel on purpose | `fpFormat` + `EngineVersion` | `Files(…, fpStatWorkers)` (4), `ReadGob`, `WriteGob` |
