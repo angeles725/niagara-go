@@ -9,6 +9,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/angeles725/niagara-go/internal/help/fts"
 	"github.com/angeles725/niagara-go/internal/index"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/textfold"
@@ -77,7 +78,7 @@ func (e *Env) Guide(query string) error {
 	if len(hits) == 0 {
 		return e.reportMiss("guide", query, "guides")
 	}
-	fmt.Fprintf(e.Out, "%d guide folders matching '%s':\n\n", len(hits), query)
+	fmt.Fprintf(e.Out, "%d guide folders matching '%s':\n\n", len(hits), fts.Echo(query))
 	for _, h := range hits[:min(len(hits), 15)] {
 		fmt.Fprintf(e.Out, "  %s (%s topics, %s)\n", h.folder, topicCount(h.data, 0),
 			orStr(h.data, "source_jar", "", "?"))
@@ -144,7 +145,7 @@ func (e *Env) Devguide(query string) error {
 	if len(hits) == 0 {
 		return e.reportMiss("devguide", query, "devguide")
 	}
-	fmt.Fprintf(e.Out, "%d devguide entries matching '%s':\n\n", len(hits), query)
+	fmt.Fprintf(e.Out, "%d devguide entries matching '%s':\n\n", len(hits), fts.Echo(query))
 	for _, h := range hits[:min(len(hits), 10)] {
 		fmt.Fprintf(e.Out, "  [%s] %s\n", h.section, getStr(h.item, "title", "?"))
 		desc := pycompat.Strip(strings.ReplaceAll(getStr(h.item, "description", ""), "\n", " "))

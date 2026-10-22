@@ -57,7 +57,7 @@ func TestEnsureFulltextBuildsOnceThenReuses(t *testing.T) {
 	if _, err := os.Stat(fts.DBPath(root) + ".lock"); !errors.Is(err, fs.ErrNotExist) {
 		t.Errorf("lock left behind: %v", err)
 	}
-	x, err := OpenFulltext(&errb)(root, "1.0")
+	x, err := OpenFulltext(&errb)(root, "1.0", "")
 	if err != nil {
 		t.Fatal(err)
 	}

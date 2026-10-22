@@ -142,6 +142,9 @@ type ClassParams struct {
 // Class looks up a class by simple, nested or qualified name (cmd_class):
 // every class sharing the name is listed and the first is shown in detail.
 func (e *Env) Class(p ClassParams) error {
+	if pycompat.Strip(p.Name) == "" { // invalid input like find "" (exit 2), not a miss
+		return usageError("class needs a class name (got '" + p.Name + "')")
+	}
 	idx, err := e.loadIndex(classIndexName(p.JDK), false)
 	if err != nil {
 		return err

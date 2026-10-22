@@ -1,4 +1,4 @@
-CLASS: Cursor&lt;E&gt;
+CLASS: Cursor<E>
 PACKAGE: javax.baja.util
 EXTENDS: java.lang.Object
 

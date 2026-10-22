@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/fnmatch"
+	"github.com/angeles725/niagara-go/internal/help/fts"
 	"github.com/angeles725/niagara-go/internal/helpbuild"
 	"github.com/angeles725/niagara-go/internal/textfold"
 )
@@ -75,7 +76,7 @@ func (e *Env) Search(p SearchParams) error {
 			rows = append(rows, fmt.Sprintf("  %s (%s) - %s\n", name, c.Type, c.Package))
 		}
 	}
-	fmt.Fprintf(e.Out, "%d classes matching '%s':\n\n%s", len(matches), p.Pattern, strings.Join(rows, ""))
+	fmt.Fprintf(e.Out, "%d classes matching '%s':\n\n%s", len(matches), fts.Echo(p.Pattern), strings.Join(rows, ""))
 	return nil
 }
 

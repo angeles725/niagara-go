@@ -207,7 +207,8 @@ func enough(hits []*Hit, srcs []string) bool {
 // "or", it is the ranked OR fallback. The index is opened (Open) only when
 // the query has a word and some requested source exists.
 func Search(baseDir, versionID, query string, srcs []string, mode string) (*Result, error) {
-	return SearchUsing(Open, baseDir, versionID, query, srcs, mode)
+	return SearchUsing(func(baseDir, versionID, _ string) (*Index, error) { return Open(baseDir, versionID) },
+		baseDir, versionID, query, srcs, mode)
 }
 
 // SearchUsing is Search with the index opened by open, at the point where
@@ -216,7 +217,7 @@ func Search(baseDir, versionID, query string, srcs []string, mode string) (*Resu
 func SearchUsing(open Opener, baseDir, versionID, query string, srcs []string, mode string) (*Result, error) {
 	strict := ParseQuery(query, false)
 	if len(strict) == 0 {
-		return nil, &UsageError{"query '" + query + "' has no searchable word"}
+		return nil, &UsageError{"query '" + Echo(query) + "' has no searchable word"}
 	}
 	var available []string
 	for _, d := range SourceDirs(baseDir) {
@@ -235,7 +236,7 @@ func SearchUsing(open Opener, baseDir, versionID, query string, srcs []string, m
 		return &Result{Groups: strict, ModeUsed: mode}, nil
 	}
 	relaxed := ParseQuery(query, true)
-	x, err := open(baseDir, versionID)
+	x, err := open(baseDir, versionID, query)
 	if err != nil {
 		return nil, err
 	}

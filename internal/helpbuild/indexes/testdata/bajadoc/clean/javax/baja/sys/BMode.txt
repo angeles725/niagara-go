@@ -1,6 +1,6 @@
 ENUM: BMode
 PACKAGE: javax.baja.sys
-EXTENDS: java.lang.Enum&lt;
+EXTENDS: java.lang.Enum<BMode>
 
 DESCRIPTION:
 Modes.

@@ -111,7 +111,7 @@ func (e *Env) Coverage(p CoverageParams) error {
 // (helpbuild/fulltext build.go), so a reader never sees a half-written index.
 // Shared by coverage --sweep and versions add.
 func (e *Env) fulltextDocs(root string) (map[string]bool, error) {
-	x, err := scope.OpenFulltext(e.Err)(root, e.VersionID)
+	x, err := scope.OpenFulltext(e.Err)(root, e.VersionID, "")
 	if err != nil {
 		return nil, err
 	}

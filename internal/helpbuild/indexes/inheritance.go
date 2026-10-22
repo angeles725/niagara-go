@@ -7,6 +7,7 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/helpbuild/pyfs"
 	"github.com/angeles725/niagara-go/internal/pycompat"
+	"github.com/angeles725/niagara-go/internal/pyhtml"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 )
 
@@ -35,11 +36,26 @@ func splitHeaderList(raw string) []string {
 	return out
 }
 
+// erasure is a type name without its type arguments, entities decoded:
+// "IterableCursor<E>", "IterableCursor&lt;E&gt;" and a cut "java.lang.Enum&lt;"
+// are "IterableCursor" and "java.lang.Enum". A name without "<" is unchanged.
+func erasure(name string) string {
+	name = pyhtml.Unescape(name)
+	if i := strings.IndexByte(name, '<'); i >= 0 {
+		return pycompat.Strip(name[:i])
+	}
+	return name
+}
+
 // parseInheritTxt is inheritance_builder.parse_txt_file; err is the text of
-// the exception main() catches (an OSError or a UnicodeDecodeError).
+// the exception main() catches (an OSError or a UnicodeDecodeError). Unlike
+// Python the class name and its extends are erasures (erasure): a generic
+// class is keyed "IterableCursor", as the chain commands look it up, not
+// "IterableCursor&lt;E&gt;".
 func parseInheritTxt(path string) (*inheritInfo, error) {
 	info := &inheritInfo{Implements: []string{}, Subclasses: []string{}}
 	set := func(p **string, s string) { *p = &s }
+	setName := func(p **string, s string) { s = erasure(s); *p = &s }
 	err := pyTextLines(path, func(line string) bool {
 		line = strings.TrimRight(line, "\n")
 		if line == "" {
@@ -48,18 +64,18 @@ func parseInheritTxt(path string) (*inheritInfo, error) {
 		// The prefixes are ASCII, so Python's code-point slices are byte slices.
 		switch {
 		case strings.HasPrefix(line, "CLASS: "):
-			set(&info.Name, pycompat.Strip(line[7:]))
+			setName(&info.Name, pycompat.Strip(line[7:]))
 		case strings.HasPrefix(line, "INTERFACE: "):
-			set(&info.Name, pycompat.Strip(line[11:]))
+			setName(&info.Name, pycompat.Strip(line[11:]))
 		case strings.HasPrefix(line, "ENUM: "):
-			set(&info.Name, pycompat.Strip(line[6:]))
+			setName(&info.Name, pycompat.Strip(line[6:]))
 		case strings.HasPrefix(line, "ANNOTATION TYPE: "):
-			set(&info.Name, pycompat.Strip(line[17:]))
+			setName(&info.Name, pycompat.Strip(line[17:]))
 		case strings.HasPrefix(line, "PACKAGE: "):
 			set(&info.Package, pycompat.Strip(line[9:]))
 		case strings.HasPrefix(line, "EXTENDS: "):
 			if s := pycompat.Strip(line[9:]); s != "" {
-				set(&info.Extends, s)
+				setName(&info.Extends, s)
 			} else {
 				info.Extends = nil
 			}

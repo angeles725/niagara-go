@@ -56,11 +56,17 @@ var docCommands = []command{
 	{name: "find", help: "Unified full-text search across ALL sources with relevance ranking",
 		args: func(p *argparse.Parser) {
 			positional(p, "query", "Search text")
-			intOpt(p, 5, "", "-n", "--max-per-source")
+			// No argparse default: an absent -n keeps cmd_find's five per
+			// source and ten in all, a given one raises the total (FindReport).
+			intOpt(p, nil, "", "-n", "--max-per-source")
 			andOr(p, "find_mode")
 		},
 		run: func(e *Env, ns *argparse.Namespace) error {
-			return e.Find(FulltextParams{Query: ns.String("query"), Max: ns.Int("max_per_source"), Or: ns.Bool("find_mode_or")})
+			p := FulltextParams{Query: ns.String("query"), Max: 5, Or: ns.Bool("find_mode_or")}
+			if ns.Get("max_per_source") != nil {
+				p.Max, p.Raised = ns.Int("max_per_source"), true
+			}
+			return e.Find(p)
 		}},
 }
 

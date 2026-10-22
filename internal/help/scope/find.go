@@ -11,10 +11,27 @@ import (
 // findMaxResults is find_search.cmd_find's max_results: ten files in all.
 const findMaxResults = 10
 
-// FindReport is find_search.cmd_find's output for a result with hits: one
+// FindReport is nh find with an explicit -n perSource, as nh and the
+// in-process searchdoor (which always passes -n) print it: findReport raised.
+func FindReport(root, query string, r *fts.Result, perSource int) string {
+	return findReport(root, query, r, perSource, true)
+}
+
+// FindCappedReport is find_search.cmd_find's own cap: at most perSource hits
+// per source and ten in all. nh prints it when -n is absent (perSource 5).
+func FindCappedReport(root, query string, r *fts.Result, perSource int) string {
+	return findReport(root, query, r, perSource, false)
+}
+
+// findReport is find_search.cmd_find's output for a result with hits: one
 // globally ranked list, at most perSource hits per source and ten in all,
 // under the per-source totals and the notes of borrowed sources.
-func FindReport(root, query string, r *fts.Result, perSource int) string {
+//
+// raised is an explicit -n: the total becomes max(ten, perSource) and every
+// source with hits keeps its best hit, so a source the totals line counts is
+// never left without a row (the others fill the remaining slots in rank
+// order). Without it the output is cmd_find's.
+func findReport(root, query string, r *fts.Result, perSource int, raised bool) string {
 	type count struct {
 		source string
 		n      int
@@ -30,14 +47,18 @@ func FindReport(root, query string, r *fts.Result, perSource int) string {
 		}
 	}
 	var shown []*fts.Hit
-	used := map[string]int{}
-	for _, h := range r.Hits {
-		if used[h.Source] < perSource {
-			shown = append(shown, h)
-			used[h.Source]++
-		}
-		if len(shown) >= findMaxResults {
-			break
+	if raised {
+		shown = everySourceShown(r.Hits, perSource, max(findMaxResults, perSource))
+	} else {
+		used := map[string]int{}
+		for _, h := range r.Hits {
+			if used[h.Source] < perSource {
+				shown = append(shown, h)
+				used[h.Source]++
+			}
+			if len(shown) >= findMaxResults {
+				break
+			}
 		}
 	}
 	sort.SliceStable(counts, func(i, j int) bool { return counts[i].n > counts[j].n })
@@ -80,7 +101,7 @@ func RankedReport(root, query string, r *fts.Result, shown []*fts.Hit, label, to
 		how = every + "; showing files with any term, ranked by how many terms match"
 	}
 	var b strings.Builder
-	fmt.Fprintf(&b, "%d %s matching '%s' (%s):\n", len(r.Hits), label, query, how)
+	fmt.Fprintf(&b, "%d %s matching '%s' (%s):\n", len(r.Hits), label, fts.Echo(query), how)
 	if totals != "" {
 		b.WriteString(totals + "\n")
 	}
@@ -93,4 +114,36 @@ func RankedReport(root, query string, r *fts.Result, shown []*fts.Hit, label, to
 		fmt.Fprintf(&b, "  ... and %d more files\n", len(r.Hits)-len(shown))
 	}
 	return b.String()
+}
+
+// everySourceShown picks, in rank order, at most perSource hits per source
+// and total in all, reserving the best hit of every source first (when
+// perSource allows one), so no source with hits is invisible. More sources
+// than total each still get their one row.
+func everySourceShown(ranked []*fts.Hit, perSource, total int) []*fts.Hit {
+	best := map[*fts.Hit]bool{}
+	seen := map[string]bool{}
+	if perSource > 0 {
+		for _, h := range ranked {
+			if !seen[h.Source] {
+				seen[h.Source] = true
+				best[h] = true
+			}
+		}
+	}
+	reserved := len(best)
+	var shown []*fts.Hit
+	used := map[string]int{}
+	for _, h := range ranked {
+		switch {
+		case best[h]:
+			reserved--
+		case used[h.Source] < perSource && len(shown)+reserved < total:
+		default:
+			continue
+		}
+		shown = append(shown, h)
+		used[h.Source]++
+	}
+	return shown
 }

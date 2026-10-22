@@ -124,7 +124,7 @@ func (e *Env) docFrequency(words []string) map[string]int {
 }
 
 func (e *Env) docCounts(terms []string) (map[string]int, error) {
-	x, err := scope.OpenFulltext(e.Err)(e.BaseDir, e.VersionID)
+	x, err := scope.OpenFulltext(e.Err)(e.BaseDir, e.VersionID, "")
 	if err != nil {
 		return nil, err
 	}
