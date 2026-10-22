@@ -72,3 +72,29 @@ func TestLoadRejectsTruncatedBog(t *testing.T) {
 		t.Fatalf("ReadCheckedText = %v, want %v", err, re)
 	}
 }
+
+// Attribute values decode XML references; a malformed or unknown reference stays as written.
+func TestParseDecodesCharRefs(t *testing.T) {
+	doc := `<bajaObjectGraph version='4.0'>
+ <p h='1' t='b:Station'>
+  <p n='Pt' h='2' t='c:NumericWritable'>
+   <p n='facets' t='b:Facets' v='units=u:fahrenheit;&#xb0;F;(K)'/>
+   <p n='q' v="say &#x22;hi&#x22;&#xa;&#65;&amp;&lt;&gt;&quot;&apos;"/>
+   <p n='raw' v='&bogus; &#xZZ; &#0; &amp'/>
+  </p>
+ </p>
+</bajaObjectGraph>`
+	b := Parse("<doc>", doc)
+	c, _ := b.Comps.Get("2")
+	want := map[string]string{
+		"facets": "units=u:fahrenheit;°F;(K)",
+		"q":      "say \"hi\"\nA&<>\"'",
+		"raw":    "&bogus; &#xZZ; &#0; &amp",
+	}
+	for n, v := range want {
+		s, ok := c.Slots.Get(n)
+		if !ok || s.Value == nil || *s.Value != v {
+			t.Errorf("slot %s = %+v, want %q", n, s, v)
+		}
+	}
+}

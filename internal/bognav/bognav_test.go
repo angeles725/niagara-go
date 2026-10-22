@@ -247,6 +247,16 @@ func TestMalformedBogExitsBadInput(t *testing.T) {
 	}
 }
 
+// Attribute character references are decoded in slot values (B-T21: &#xb0; printed raw).
+func TestSlotDecodesCharRefs(t *testing.T) {
+	xml := strings.Replace(testXML, `<p n='A' h='4' t='c:NumericWritable'/>`,
+		`<p n='A' h='4' t='c:NumericWritable'><p n='facets' t='b:Facets' v='units=u:fahrenheit;&#xb0;F'/></p>`, 1)
+	out, _, code := runMain(t, writeFile(t, "c.xml", []byte(xml)), "slot", "h:4")
+	if code != cli.ExitFound || !strings.Contains(out, "units=u:fahrenheit;°F") || strings.Contains(out, "&#x") {
+		t.Fatalf("code %d out %q", code, out)
+	}
+}
+
 func TestTreeNegativeDepthIsAUsageError(t *testing.T) {
 	out, errOut, code := runMain(t, writeFile(t, "c.xml", []byte(testXML)), "tree", "--depth", "-1")
 	if code != cli.ExitCannotSearch || out != "" || !strings.Contains(errOut, "--depth") {

@@ -1,5 +1,5 @@
 GM,Tablero,Zona,Relay,DescripcionCircuito,CircuitLabel_Px,Schedule,CmdWritable,SchedLink_in10,JACE_driven,JACE_write_prio,BACnet_device,BACnet_objectId
 GM01,AL3/AL4,Zona  Norte / Lobby & Bar / Terraza Oriente Planta Alta,1,AL3-1,AL3-1,R1/Schedule1,SchdlGM01 R1,yes,?,,,
 GM01,AL3/AL4,Zona  Norte / Lobby & Bar / Terraza Oriente Planta Alta,2,AL3-2,AL3-2,R2/Schedule2,SchdlGM01 R2,?,?,,,
-GM02,AL5,Estacionamiento é,1,Pasillo &amp; Lobby é,,R1/Schedule1,HorR1,yes,?,,,
+GM02,AL5,Estacionamiento é,1,Pasillo & Lobby é,,R1/Schedule1,HorR1,yes,?,,,
 GM02,AL5,Estacionamiento é,3,"Sala ""VIP"", Norte",,R3/Schedule3,HorR3,?,?,,,

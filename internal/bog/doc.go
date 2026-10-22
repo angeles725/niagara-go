@@ -15,6 +15,11 @@
 // "<path>: not well-formed XML (<expat message>: line L, column C)". bog-cycles and bog-write keep
 // internal/pyxml for expat's full verdict (names, references, namespaces).
 //
+// Attribute values are XML-decoded (UnescapeXML: &amp; &lt; &gt; &quot; &apos; &#N; &#xN;), a
+// deliberate divergence from model.py, which kept the raw text ("u:fahrenheit;&#xb0;F"). A
+// malformed or unknown reference is kept as written. Names are XML-decoded before the SlotPath
+// $-decoding of UnescapeName.
+//
 // Nested composite values (opt-in, Go-only). Like model.py, Parse keeps a composite property (a
 // non-self-closing <p> without a handle, such as a setpoint StatusNumeric) as a Slot, with only
 // its direct value and status children in Slot.Child; anything deeper, and any other direct child,

@@ -105,12 +105,15 @@ var (
 	attrF = newAttrName("f")
 )
 
-// attr is ga(): the value of an attribute in a tag's text, single-quoted form first.
+// attr is ga(): the value of an attribute in a tag's text, single-quoted form first, with its XML
+// references decoded (UnescapeXML). model.py returned the raw text, so a facet printed as
+// "&#xb0;F"; the decoded value is the one Niagara stores.
 func attr(full string, name attrName) (string, bool) {
-	if v, ok := quotedAttr(full, name.single); ok {
-		return v, true
+	v, ok := quotedAttr(full, name.single)
+	if !ok {
+		v, ok = quotedAttr(full, name.double)
 	}
-	return quotedAttr(full, name.double)
+	return UnescapeXML(v), ok
 }
 
 // quotedAttr is \bNEEDLE([^q]*)q where needle ends with the quote q.
@@ -174,6 +177,63 @@ func UnescapeName(name string) string {
 		i++
 	}
 	return sb.String()
+}
+
+// xmlEntities are the five entities XML predefines.
+var xmlEntities = map[string]string{"amp": "&", "lt": "<", "gt": ">", "quot": "\"", "apos": "'"}
+
+// UnescapeXML decodes the references of an XML attribute value: the five predefined entities,
+// &#N; and &#xN;. A reference that is malformed, unknown or names a character XML forbids (0,
+// a surrogate, beyond U+10FFFF) is kept as written, matching the tolerant parse.
+func UnescapeXML(s string) string {
+	i := strings.IndexByte(s, '&')
+	if i < 0 {
+		return s
+	}
+	var sb strings.Builder
+	sb.Grow(len(s))
+	for i >= 0 {
+		sb.WriteString(s[:i])
+		s = s[i:]
+		if repl, n := xmlRef(s); n > 0 {
+			sb.WriteString(repl)
+			s = s[n:]
+		} else {
+			sb.WriteByte('&')
+			s = s[1:]
+		}
+		i = strings.IndexByte(s, '&')
+	}
+	sb.WriteString(s)
+	return sb.String()
+}
+
+// xmlRef decodes the reference at the start of s ("&...;") and returns its text and length, or
+// 0 when s does not start with a decodable reference.
+func xmlRef(s string) (string, int) {
+	semi := strings.IndexByte(s, ';')
+	if semi < 2 {
+		return "", 0
+	}
+	body := s[1:semi]
+	if body[0] != '#' {
+		if repl, ok := xmlEntities[body]; ok {
+			return repl, semi + 1
+		}
+		return "", 0
+	}
+	digits, base := body[1:], 10
+	if strings.HasPrefix(digits, "x") {
+		digits, base = digits[1:], 16
+	}
+	if digits == "" || len(digits) > 8 || (base == 10 && strings.Trim(digits, "0123456789") != "") || (base == 16 && !isHex(digits)) {
+		return "", 0
+	}
+	v, err := strconv.ParseUint(digits, base, 32)
+	if err != nil || v == 0 || v > utf8.MaxRune || (0xD800 <= v && v <= 0xDFFF) {
+		return "", 0
+	}
+	return string(rune(v)), semi + 1
 }
 
 func isHex(s string) bool {
