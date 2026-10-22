@@ -56,15 +56,7 @@ func render(rows []row, o *opts, line func(row) string, empty string) int {
 			for i, f := range rows[0] {
 				keys[i], header[i] = f.key, f.key
 			}
-			w := pycsv.NewWriter(o.out)
-			_ = w.WriteRow(header)
-			for _, r := range rows {
-				vals := make([]any, len(keys))
-				for i, k := range keys {
-					vals[i] = csvValue(r.get(k))
-				}
-				_ = w.WriteRow(vals)
-			}
+			writeCSV(o, keys, header, rows)
 		}
 	case len(rows) == 0:
 		miss(o, empty)
@@ -77,6 +69,38 @@ func render(rows []row, o *opts, line func(row) string, empty string) int {
 		}
 	}
 	return total
+}
+
+// writeCSV writes the header and one line per row; it stops at the first write that fails.
+func writeCSV(o *opts, keys []string, header []any, rows []row) {
+	w := pycsv.NewWriter(o.out)
+	err := w.WriteRow(header)
+	for _, r := range rows {
+		if err != nil {
+			return
+		}
+		vals := make([]any, len(keys))
+		for i, k := range keys {
+			vals[i] = csvValue(r.get(k))
+		}
+		err = w.WriteRow(vals)
+	}
+}
+
+// stickyWriter keeps the first write error of stdout and drops every later write, so Main
+// can report a failed output (a full disk) once, where Python's print raises OSError.
+type stickyWriter struct {
+	w   io.Writer
+	err error
+}
+
+func (s *stickyWriter) Write(p []byte) (int, error) {
+	if s.err != nil {
+		return 0, s.err
+	}
+	n, err := s.w.Write(p)
+	s.err = err
+	return n, err
 }
 
 // miss is module-find._miss: the honest zero names what was searched.

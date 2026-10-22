@@ -43,6 +43,8 @@ func courseFiles(root string) []courseFile {
 			continue
 		}
 		var paths []string
+		// The callback never fails, so WalkDir returns nil: a directory it cannot read is
+		// skipped, as pathlib's rglob skips one whose scandir raises (the original's parity).
 		_ = filepath.WalkDir(base, func(p string, e fs.DirEntry, err error) error {
 			if err == nil && p != base && strings.HasSuffix(e.Name(), ".java") {
 				if st, serr := os.Stat(p); serr == nil && !st.IsDir() {

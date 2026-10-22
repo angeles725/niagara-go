@@ -2,6 +2,9 @@ package modulefind
 
 import (
 	"bytes"
+	"errors"
+	"fmt"
+	"io"
 	"testing"
 )
 
@@ -42,5 +45,53 @@ func TestRenderFormats(t *testing.T) {
 func TestJSONDumpsEnsureASCII(t *testing.T) {
 	if got := jsonDumps("a\"\\\n\x7fñ😀\xffabc"); got != `"a\"\\\n\u007f\u00f1\ud83d\ude00\ufffdabc"` {
 		t.Errorf("jsonDumps = %q", got)
+	}
+}
+
+// failAfter accepts n writes, then refuses every write (a closed pipe, a full disk).
+type failAfter struct {
+	n      int
+	writes int
+}
+
+var errWrite = errors.New("no space left on device")
+
+func (f *failAfter) Write(p []byte) (int, error) {
+	f.writes++
+	if f.writes > f.n {
+		return 0, errWrite
+	}
+	return len(p), nil
+}
+
+// failOnNth fails only its nth write and accepts every other one, so a writer that went on
+// after the failure would show up as more calls and bytes written after it.
+type failOnNth struct {
+	n, calls, bytesAfter int
+}
+
+func (f *failOnNth) Write(p []byte) (int, error) {
+	f.calls++
+	switch {
+	case f.calls == f.n:
+		return 0, errWrite
+	case f.calls > f.n:
+		f.bytesAfter += len(p)
+	}
+	return len(p), nil
+}
+
+// TestRenderCSVStopsAtAWriteError: the CSV write that fails is the last one tried, whichever
+// it is (the header or a row), even when the writer would accept the next ones.
+func TestRenderCSVStopsAtAWriteError(t *testing.T) {
+	for _, n := range []int{1, 2, 4} {
+		t.Run(fmt.Sprint(n), func(t *testing.T) {
+			out := &failOnNth{n: n}
+			cmdSlots(newModule("testdata/srcA"), &opts{csv: true, out: out, err: io.Discard}, slotFilter{})
+			if out.calls != n || out.bytesAfter != 0 {
+				t.Errorf("%d writes, %d bytes after the failed write %d; want %d writes, 0 bytes",
+					out.calls, out.bytesAfter, n, n)
+			}
+		})
 	}
 }

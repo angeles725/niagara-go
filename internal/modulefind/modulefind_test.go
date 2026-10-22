@@ -1,11 +1,14 @@
 package modulefind
 
 import (
+	"bytes"
+	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
 	"testing"
 
+	"github.com/angeles725/niagara-go/internal/cli"
 	"github.com/angeles725/niagara-go/internal/golden"
 )
 
@@ -33,4 +36,20 @@ func TestGoldenUnreadable(t *testing.T) {
 	}
 	t.Cleanup(func() { _ = os.Chmod(locked, 0o644) })
 	golden.Run(t, dir, Main)
+}
+
+// TestMainWriteErrorExitsOne: output that cannot be written (a full disk) is named on stderr
+// and exits 1, as the Python original's uncaught OSError, in every output mode.
+func TestMainWriteErrorExitsOne(t *testing.T) {
+	for _, mode := range [][]string{{"--csv"}, {"--json"}, nil} {
+		t.Run(fmt.Sprint(mode), func(t *testing.T) {
+			var errb bytes.Buffer
+			out := &failAfter{n: 0}
+			code := Main(append([]string{"testdata/srcA", "slots"}, mode...), cli.Stdio{Out: out, Err: &errb})
+			want := "module-find: cannot write the output: " + errWrite.Error() + "\n"
+			if code != 1 || errb.String() != want {
+				t.Errorf("exit %d stderr %q, want exit 1 stderr %q", code, errb.String(), want)
+			}
+		})
+	}
 }

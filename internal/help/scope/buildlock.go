@@ -21,6 +21,17 @@ package scope
 // holder's lock once. That holder is alive, so the only effect is that its
 // lock looks fresh a little longer; the next check sees the other content
 // and the heartbeat stops.
+//
+// The build cannot tell a waiter to back off, so when fn returns the lock
+// is read once more: content that is no longer this process's (taken over,
+// or removed) is reported as an error, since another build may have run
+// alongside this one; release then leaves the other holder's lock alone.
+//
+// A touch that fails (os.Chtimes refused) is retried on the next tick; when
+// heartbeatMaxFailures touches fail in a row the lock has gone unrefreshed
+// for most of lockStale, so a waiter may have taken it over mid-build.
+// fn cannot be interrupted, so the build runs to its end, and then a
+// successful build is reported as an error: its output is not trusted.
 
 import (
 	"bytes"
@@ -48,7 +59,8 @@ func (e *LockBusyError) Error() string {
 func BuildLockPath(baseDir string) string { return ftbuild.DefaultOutput(baseDir) + ".lock" }
 
 // WithBuildLock runs fn holding the build lock of baseDir and returns fn's
-// error unchanged. The lock is released when fn returns or panics. When a
+// error unchanged; when fn succeeded but the lock was taken over, or its
+// heartbeat failed (see the header comment), the error names the lock. The lock is released when fn returns or panics. When a
 // live process still holds the lock after lockWait, fn does not run and
 // the error is *LockBusyError; an error creating the lock (indexes/ not
 // writable) is returned as is.
@@ -69,10 +81,38 @@ func WithBuildLock(baseDir string, fn func() error) error {
 	defer stopTicks()
 	stop, _ := heartbeat(lock, mine, ticks)
 	defer func() {
-		stop() // joined before the release
+		stop() // joined before the release, also on a panic; a second stop is a no-op
 		release(lock, mine)
 	}()
-	return fn()
+	err = fn()
+	touchErr := stop()
+	if err != nil {
+		return err
+	}
+	if lost := takenOver(lock, mine); lost != nil {
+		return lost
+	}
+	if touchErr != nil {
+		err = fmt.Errorf("the build lock %s could not be refreshed during the build (%w); "+
+			"another process may have taken it over, so run again", lock, touchErr)
+	}
+	return err
+}
+
+// takenOver is the error of a lock that no longer holds mine when the build ends: another
+// process took it over (it saw the lock as stale) or removed it, so the build may have run
+// alongside another one. nil while the lock is still this process's.
+func takenOver(lock string, mine []byte) error {
+	got, err := os.ReadFile(lock)
+	switch {
+	case err != nil:
+		return fmt.Errorf("the build lock %s was removed by another process during the build (%w); run again",
+			lock, err)
+	case !bytes.Equal(got, mine):
+		return fmt.Errorf("the build lock %s was taken over during the build by another process (%s); run again",
+			lock, bytes.TrimSpace(got))
+	}
+	return nil
 }
 
 // heartbeatEvery is the heartbeat interval: a quarter of lockWait, or of
@@ -87,14 +127,25 @@ var heartbeatTicks = func(interval time.Duration) (<-chan time.Time, func()) {
 	return t.C, t.Stop
 }
 
+// chtimes is the heartbeat's touch; tests replace it to make touches fail.
+var chtimes = os.Chtimes
+
+// heartbeatMaxFailures is how many touches in a row may fail before the
+// heartbeat reports it: three ticks (3/4 of min(lockWait, lockStale))
+// without a refresh, before a waiter can see the lock as stale.
+const heartbeatMaxFailures = 3
+
 // heartbeat touches lock on each tick while it holds mine (see the race in
-// the header comment). stop ends the goroutine and waits for it; ended is
-// closed when the goroutine has returned (stopped, or the lock no longer
-// holds mine).
-func heartbeat(lock string, mine []byte, ticks <-chan time.Time) (stop func(), ended <-chan struct{}) {
+// the header comment). stop ends the goroutine, waits for it and returns
+// the touch error once heartbeatMaxFailures touches have failed in a row
+// (nil otherwise); ended is closed when the goroutine has returned
+// (stopped, or the lock no longer holds mine).
+func heartbeat(lock string, mine []byte, ticks <-chan time.Time) (stop func() error, ended <-chan struct{}) {
 	done, exited := make(chan struct{}), make(chan struct{})
+	var failed error // written by the goroutine, read after exited
 	go func() {
 		defer close(exited)
+		consecutive := 0
 		for {
 			select {
 			case <-done:
@@ -104,13 +155,20 @@ func heartbeat(lock string, mine []byte, ticks <-chan time.Time) (stop func(), e
 					return // released or taken over
 				}
 				now := time.Now()
-				os.Chtimes(lock, now, now)
+				if err := chtimes(lock, now, now); err != nil {
+					if consecutive++; consecutive >= heartbeatMaxFailures && failed == nil {
+						failed = err
+					}
+					continue
+				}
+				consecutive = 0
 			}
 		}
 	}()
 	var once sync.Once
-	return func() {
+	return func() error {
 		once.Do(func() { close(done) })
 		<-exited
+		return failed
 	}, exited
 }

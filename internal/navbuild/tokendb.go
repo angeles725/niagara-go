@@ -58,7 +58,7 @@ func writeTokenDB(ti *TokenIndex, sources []tokenSource) error {
 
 func removeDB(path string) {
 	for _, suffix := range []string{"", "-journal", "-wal", "-shm"} {
-		os.Remove(path + suffix)
+		os.Remove(path + suffix) //nolint:errcheck // best effort: a leftover file is replaced by the next build
 	}
 }
 

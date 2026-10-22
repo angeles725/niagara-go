@@ -91,7 +91,8 @@ func Main(args []string, s cli.Stdio) int {
 		return p.Error(s.Err, fmt.Sprintf("--limit does not apply to `%s` (it caps the rows of: %s)", cmd,
 			strings.Join(sorted, ", ")))
 	}
-	o := &opts{json: ns.Bool("json"), csv: ns.Bool("csv"), limit: ns.Int("limit"), out: s.Out, err: s.Err}
+	stdout := &stickyWriter{w: s.Out}
+	o := &opts{json: ns.Bool("json"), csv: ns.Bool("csv"), limit: ns.Int("limit"), out: stdout, err: s.Err}
 	if cmd == "selftest" {
 		return selftest(s.Out)
 	}
@@ -112,6 +113,10 @@ func Main(args []string, s cli.Stdio) int {
 	}
 	o.scope = scope(m, root)
 	found := run(m, b, o, cmd, ns)
+	if stdout.err != nil { // Python dies on the uncaught OSError: exit 1, nothing more printed
+		fmt.Fprintf(s.Err, "module-find: cannot write the output: %v\n", stdout.err)
+		return 1
+	}
 	paths := make([]string, 0, len(m.unreadable))
 	for path := range m.unreadable {
 		paths = append(paths, path)
