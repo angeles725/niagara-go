@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -130,6 +131,31 @@ func TestEmptyScopeCannotSearch(t *testing.T) {
 			if code != 2 || out.String() != "" || errb.String() != want {
 				t.Errorf("%s --in %s: exit %d\nstdout %q\nstderr %q", cmd, scope, code, out.String(), errb.String())
 			}
+		}
+	}
+}
+
+// TestUnlistableRootCannotSearch: a root this user cannot list is not an empty corpus.
+// Every lookup exits 2 (cannot search: unreadable source) naming the root and the OS
+// reason, never the "no block files" line of a root that was read.
+func TestUnlistableRootCannotSearch(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("mode 000 does not lock a directory on Windows")
+	}
+	root := filepath.Join(t.TempDir(), "locked")
+	if err := os.Mkdir(root, 0); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = os.Chmod(root, 0o755) })
+	if _, err := os.ReadDir(root); err == nil {
+		t.Skip("mode 000 does not stop this user listing a directory (root?)")
+	}
+	t.Setenv("CORPUS_NAV_ROOT", root)
+	want := "corpus-nav: cannot search: cannot list " + pyPath(root) + ": Permission denied\n"
+	for _, args := range corpusCommands {
+		code, out, errs := runMain(args...)
+		if code != 2 || out != "" || errs != want {
+			t.Errorf("%v: exit %d\nstdout %q\nstderr %q", args, code, out, errs)
 		}
 	}
 }

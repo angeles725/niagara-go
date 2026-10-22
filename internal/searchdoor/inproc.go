@@ -253,7 +253,12 @@ func blocksFind(getenv envFunc, argv []string) answer {
 	if root == "" { // the script's folder cannot be resolved (corpus-nav.py's own _root)
 		return exact(2, "", "corpus-nav: cannot locate the corpus from "+pypath.PurePosixPath(argv[0])+"\n")
 	}
-	if len(blockfiles.MainBlocks(root)) == 0 { // corpus-nav's empty-corpus gate (exit 2)
+	main, err := blockfiles.MainBlocks(root)
+	if err != nil { // corpus-nav's unlistable-root gate (exit 2)
+		return exact(2, "", "corpus-nav: cannot search: cannot list "+pypath.PurePosixPath(root)+": "+
+			pycompat.StrerrorOf(err)+"\n")
+	}
+	if len(main) == 0 { // corpus-nav's empty-corpus gate (exit 2)
 		return exact(2, "", "corpus-nav: cannot search: no block files under "+pypath.PurePosixPath(root)+
 			" (set CORPUS_NAV_ROOT to the niagara-research checkout)\n")
 	}

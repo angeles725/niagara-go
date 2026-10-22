@@ -125,3 +125,28 @@ func TestUnreadableBlockKeepsCoverageVerdict(t *testing.T) {
 		t.Errorf("exit %d\nstdout %q\nstderr %q", code, out.String(), errb.String())
 	}
 }
+
+// TestUnlistableRootExits3: a repository root this user cannot list is not a corpus of
+// zero blocks: the gate did not run (exit 3), and stderr names the root and the reason.
+func TestUnlistableRootExits3(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("mode 000 does not lock a directory on Windows")
+	}
+	root := filepath.Join(t.TempDir(), "locked")
+	if err := os.Mkdir(root, 0); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = os.Chmod(root, 0o755) })
+	if _, err := os.ReadDir(root); err == nil {
+		t.Skip("mode 000 does not stop this user listing a directory (root?)")
+	}
+	useRoot(t, func() (string, error) { return root, nil })
+	for _, args := range [][]string{{"zzqq"}, {"--json", "zzqq"}} {
+		var out, errb bytes.Buffer
+		code := Main(args, cli.Stdio{In: strings.NewReader(""), Out: &out, Err: &errb})
+		want := "check-coverage: cannot list " + root + ": Permission denied -- gate not run\n"
+		if code != 3 || out.Len() != 0 || errb.String() != want {
+			t.Errorf("%v: exit %d, stdout %q, stderr %q", args, code, out.String(), errb.String())
+		}
+	}
+}

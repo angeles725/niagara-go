@@ -60,7 +60,11 @@ func Main(args []string, s cli.Stdio) int {
 		fmt.Fprintf(s.Err, "check-coverage: cannot locate the repository: %v\n", err)
 		return 3
 	}
-	results, order, nfiles, unreadable := scan(root, names)
+	results, order, nfiles, unreadable, err := scan(root, names)
+	if err != nil { // a root that cannot be listed is not a corpus of zero blocks
+		fmt.Fprintf(s.Err, "check-coverage: cannot list %s: %s -- gate not run\n", root, pycompat.StrerrorOf(err))
+		return 3
+	}
 	for _, u := range unreadable {
 		fmt.Fprintf(s.Err, "check-coverage: cannot read %s: %s\n", u.path, u.reason)
 	}
@@ -133,8 +137,9 @@ func report(s cli.Stdio, names []string, results map[string]*coverage, nfiles, u
 // scan is check-coverage.scan: one pass over every block file, each name classified as
 // SUBJECT (in the H1) or body per block. A repeated name shares one result, so its hits
 // are recorded once per repetition, as in Python. order is the distinct names in order;
-// unreadable lists the block files that could not be read, in scan order.
-func scan(root string, names []string) (map[string]*coverage, []string, int, []unreadableFile) {
+// unreadable lists the block files that could not be read, in scan order; err is a root
+// that could not be listed (nothing scanned).
+func scan(root string, names []string) (map[string]*coverage, []string, int, []unreadableFile, error) {
 	results := map[string]*coverage{}
 	var order []string
 	for _, n := range names {
@@ -144,7 +149,10 @@ func scan(root string, names []string) (map[string]*coverage, []string, int, []u
 		}
 	}
 	var unreadable []unreadableFile
-	files := blockfiles.AllBlocks(root)
+	files, err := blockfiles.AllBlocks(root)
+	if err != nil {
+		return nil, nil, 0, nil, err
+	}
 	for _, b := range files {
 		ident := "B" + b.Label
 		if b.Corpus != "main" {
@@ -175,7 +183,7 @@ func scan(root string, names []string) (map[string]*coverage, []string, int, []u
 			}
 		}
 	}
-	return results, order, len(files), unreadable
+	return results, order, len(files), unreadable, nil
 }
 
 // unreadableFile is a block file the scan could not read and the OS error text.
