@@ -161,10 +161,12 @@ func TestSignMatchesPythonSerialisation(t *testing.T) {
 // pads r and s to 20 bytes, so about 1 in 256 signatures carries a
 // non-minimal leading zero that strict DER verification (Python's too)
 // rejects; re-signing is how an operator recovers, so the test does the same.
+// Only the license signature is checked: the test certificate has no vendor and
+// is not signed by the embedded root (see chain_test.go for those checks).
 func verifyWithRetry(t *testing.T, path, cert string, resign func()) {
 	t.Helper()
 	for i := 0; i < 8; i++ {
-		if code, out, _ := run("verify", path, cert); code == 0 && strings.HasPrefix(out, "OK   ") {
+		if licenseSignatureOK(t, path, cert) {
 			return
 		}
 		resign()
@@ -207,7 +209,8 @@ func TestRehostAndGenMatchPython(t *testing.T) {
 }
 
 // TestTracebackPaths covers the paths where Python dies with an uncaught
-// exception (traceback, exit 1): Go prints the final "<Type>: <msg>" line.
+// exception (traceback, exit 1): Go prints the final "<Type>: <msg>" line, with
+// exit 2 where the input could not be read or parsed (verify's 1 means invalid).
 func TestTracebackPaths(t *testing.T) {
 	key, _ := testKey(t)
 	dir := t.TempDir()
@@ -220,18 +223,19 @@ func TestTracebackPaths(t *testing.T) {
 	}
 	for _, tc := range []struct {
 		args []string
+		code int
 		want string
 	}{
-		{[]string{"verify", filepath.Join(dir, "missing.license"), "x"}, "OSError: Error reading file"},
-		{[]string{"verify", write("bad.license", "<license><a></license>"), "x"}, "lxml.etree.XMLSyntaxError: Opening and ending tag mismatch"},
-		{[]string{"verify", "testdata/crlf-signed.license", write("bad.certificate", "<c><publicKey>AAAA</publicKey></c>")}, "ValueError: Could not deserialize key data"},
-		{[]string{"sign", write("c.license", "<license><!-- c --></license>"), key}, "TypeError: string argument expected"},
-		{[]string{"sign", "testdata/crlf.license", filepath.Join(dir, "no.key")}, "cannot read the DSA private key"},
-		{[]string{"gen", filepath.Join(dir, "g.license"), "A", "H", "never", "testdata/features.csv", key}, "ValueError: Invalid attribute name 'b '"},
+		{[]string{"verify", filepath.Join(dir, "missing.license"), "x"}, 2, "OSError: Error reading file"},
+		{[]string{"verify", write("bad.license", "<license><a></license>"), "x"}, 2, "lxml.etree.XMLSyntaxError: Opening and ending tag mismatch"},
+		{[]string{"verify", "testdata/crlf-signed.license", write("bad.certificate", "<c><publicKey>AAAA</publicKey></c>")}, 2, "ValueError: Could not deserialize key data"},
+		{[]string{"sign", write("c.license", "<license><!-- c --></license>"), key}, 1, "TypeError: string argument expected"},
+		{[]string{"sign", "testdata/crlf.license", filepath.Join(dir, "no.key")}, 1, "cannot read the DSA private key"},
+		{[]string{"gen", filepath.Join(dir, "g.license"), "A", "H", "never", "testdata/features.csv", key}, 1, "ValueError: Invalid attribute name 'b '"},
 	} {
 		code, _, errOut := run(tc.args...)
-		if code != 1 || !strings.HasPrefix(errOut, tc.want) {
-			t.Errorf("%v: exit %d stderr %q, want prefix %q", tc.args, code, errOut, tc.want)
+		if code != tc.code || !strings.HasPrefix(errOut, tc.want) {
+			t.Errorf("%v: exit %d stderr %q, want %d and prefix %q", tc.args, code, errOut, tc.code, tc.want)
 		}
 	}
 	if entries, _ := os.ReadDir(dir); len(entries) != 3 {
