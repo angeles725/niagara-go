@@ -27,7 +27,8 @@ func TestCheckWellFormed(t *testing.T) {
 		{"truncated mid-element", wellFormedDoc[:strings.Index(wellFormedDoc, "<p n='A'")], "no element found"},
 		{"unterminated start tag", "<bajaObjectGraph version='4.0'>\n<p", "unclosed token"},
 		{"unterminated root tag", "<bajaObjectGraph version='4.0'", "unclosed token"},
-		{"unclosed quote", "<bajaObjectGraph v='4.0>\n</bajaObjectGraph>", "unclosed token"},
+		{"unclosed quote", "<bajaObjectGraph v='4.0>", "unclosed token"},
+		{"lt in unclosed quote", "<bajaObjectGraph v='4.0>\n</bajaObjectGraph>", "not well-formed (invalid token)"}, // expat
 		{"mismatched end tag", "<bajaObjectGraph><p></a></bajaObjectGraph>", "mismatched tag"},
 		{"junk after root", "<bajaObjectGraph/><p/>", "junk after document element"},
 		{"text after root", "<bajaObjectGraph/>x", "junk after document element"},
