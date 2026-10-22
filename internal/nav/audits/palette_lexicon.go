@@ -1,7 +1,6 @@
 package audits
 
 import (
-	"archive/zip"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -9,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/index"
+	"github.com/angeles725/niagara-go/internal/modjar"
 	"github.com/angeles725/niagara-go/internal/nav/core"
 	"github.com/angeles725/niagara-go/internal/nav/registry"
 	"github.com/angeles725/niagara-go/internal/pycompat"
@@ -51,27 +51,26 @@ func jarLexicons(jar string) []lexiconFile {
 	if st, err := os.Stat(jar); err != nil || !st.Mode().IsRegular() {
 		return nil
 	}
-	zr, err := zip.OpenReader(jar)
+	j, err := modjar.Open(jar, modjar.WithNameFunc(core.ZipName))
 	if err != nil {
 		return nil
 	}
-	defer zr.Close()
-	last := map[string]*zip.File{}
+	defer j.Close()
+	last := map[string]int{}
 	var order []string
-	for _, f := range zr.File {
-		n := core.ZipName(f)
+	for i, n := range j.Names() {
 		if !strings.HasSuffix(n, ".lexicon") {
 			continue
 		}
-		if last[n] == nil {
+		if _, seen := last[n]; !seen {
 			order = append(order, n)
 		}
-		last[n] = f
+		last[n] = i
 	}
 	var out []lexiconFile
 	for _, n := range order {
-		b, ok := pycompat.ReadZipFile(last[n])
-		if !ok {
+		b, err := j.Read(last[n], 0)
+		if err != nil {
 			break
 		}
 		out = append(out, lexiconFile{n, pycompat.DecodeReplace(b)})
