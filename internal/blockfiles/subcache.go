@@ -10,13 +10,12 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
-	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
 
 	"github.com/angeles725/niagara-go/internal/atomicfile"
-	"github.com/angeles725/niagara-go/internal/pycompat"
+	"github.com/angeles725/niagara-go/internal/statcache"
 )
 
 // The SubBlocks walk cache. SubBlocks reads names and entry types only, never file
@@ -87,8 +86,7 @@ type linkKind struct {
 
 // cachePath is the walk cache of root, "" when caching is off for this call.
 func cachePath(root string) string {
-	switch strings.ToLower(pycompat.Strip(os.Getenv("CORPUS_NAV_FIND_INDEX"))) {
-	case "off", "0", "no", "false":
+	if statcache.Off("CORPUS_NAV_FIND_INDEX") {
 		return ""
 	}
 	exe, err := os.Executable()
@@ -96,7 +94,7 @@ func cachePath(root string) string {
 		return ""
 	}
 	name := filepath.Base(exe)
-	if strings.HasSuffix(strings.TrimSuffix(name, ".exe"), ".test") && !cacheTestBinary {
+	if statcache.IsTestName(exe) && !cacheTestBinary {
 		return ""
 	}
 	dir := join(join(root, "tools"), ".corpus-index")
