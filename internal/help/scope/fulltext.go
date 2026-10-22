@@ -185,7 +185,7 @@ func acquireLock(lock string, onWait func(holder []byte)) (mine []byte, err erro
 				werr = cerr
 			}
 			if werr != nil {
-				os.Remove(lock)
+				os.Remove(lock) //nolint:errcheck // best effort: the write error is reported; a lock left behind goes stale
 				return nil, werr
 			}
 			return content, nil
@@ -273,12 +273,12 @@ func takeOver(lock string, seen []byte) bool {
 	f, err := os.OpenFile(guard, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o666)
 	if err != nil {
 		if st, serr := os.Stat(guard); serr == nil && time.Since(st.ModTime()) > guardStale {
-			os.Remove(guard)
+			os.Remove(guard) //nolint:errcheck // best effort: another waiter may have removed the stale guard first
 		}
 		return false
 	}
-	f.Close()
-	defer os.Remove(guard)
+	f.Close()              //nolint:errcheck // best effort: the guard is used by its existence, never written
+	defer os.Remove(guard) //nolint:errcheck // best effort: a guard left behind ages past guardStale and is removed
 	if got, err := os.ReadFile(lock); err != nil || !bytes.Equal(got, seen) {
 		return false
 	}
@@ -289,7 +289,7 @@ func takeOver(lock string, seen []byte) bool {
 // taken over after lockStale belongs to another process).
 func release(lock string, mine []byte) {
 	if got, err := os.ReadFile(lock); err == nil && bytes.Equal(got, mine) {
-		os.Remove(lock)
+		os.Remove(lock) //nolint:errcheck // best effort: a lock left behind is taken over after lockStale
 	}
 }
 

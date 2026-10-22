@@ -137,7 +137,7 @@ func TempPath(final string) (string, error) {
 		return "", err
 	}
 	if err := f.Close(); err != nil {
-		os.Remove(name)
+		os.Remove(name) //nolint:errcheck // best effort: the close error is reported; a stray temp file is harmless
 		return "", err
 	}
 	return name, nil
