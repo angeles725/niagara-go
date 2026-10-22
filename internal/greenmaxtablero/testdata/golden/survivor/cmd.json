@@ -2,6 +2,6 @@
  "args": [
   "inputs/survivor.px",
   "--gm",
-  "GM1"
+  "GM01"
  ]
 }
