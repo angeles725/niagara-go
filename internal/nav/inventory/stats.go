@@ -169,9 +169,66 @@ func (s section) object() *index.Object {
 	return o
 }
 
+// statsReport is what stats gathers: the stats JSON object and what the text
+// view reads beside it.
+type statsReport struct {
+	stats      *index.Object
+	ci         summary // class-index.json, decoded whole
+	files      []indexFile
+	totalBytes int64
+	present    map[string]bool // section name -> its index _meta is non-empty
+}
+
 func runStats(env *registry.Env, ns *argparse.Namespace) int {
+	reader := openStatsCache(filepath.Join(env.BaseDir, "indexes"))
+	r := gatherStats(env, reader)
+	defer reader.save()
+	if ns.Bool("json") {
+		fmt.Fprintln(env.Out, core.Dumps(r.stats, 2))
+		return env.ExitCode()
+	}
+	printStats(env, r, reader)
+	return env.ExitCode()
+}
+
+// gatherStats builds the stats object: corpus counters from the module
+// inventory, then every index's _meta counters, then the index sizes.
+func gatherStats(env *registry.Env, reader *statsCache) statsReport {
 	dir := filepath.Join(env.BaseDir, "indexes")
-	reader := openStatsCache(dir)
+	files := jsonIndexFiles(dir)
+	var inv *index.Object
+	if data := loadInventory(env); data != nil && data.Len() > 0 {
+		inv = data.Object("modules")
+	}
+	corpus := corpusStats(inv)
+
+	ci := reader.summary(filepath.Join(dir, "class-index.json"), true)
+	sections := indexSections(reader, dir)
+	tk := dbMeta(dir, "token-index.db", &files)
+	str := dbMeta(dir, "string-index.db", &files)
+	var totalBytes int64
+	for _, f := range files {
+		totalBytes += f.size
+	}
+
+	stats := index.NewObject()
+	stats.Set("corpus", corpus)
+	stats.Set("class_index", classIndexStats(ci))
+	present := map[string]bool{}
+	for _, s := range sections {
+		stats.Set(s.name, s.object())
+		present[s.name] = s.meta != nil && s.meta.Len() > 0
+	}
+	stats.Set("token_index", dbSection(tk, "total_postings", "unique_tokens", "files_with_tokens", "total_lines"))
+	stats.Set("string_index", dbSection(str, "total_strings", "unique_strings", "files_with_strings"))
+	stats.Set("indexes", indexList(files))
+	stats.Set("total_index_size_mb", roundMB(totalBytes))
+	return statsReport{stats, ci, files, totalBytes, present}
+}
+
+// jsonIndexFiles is the *.json files of indexes/ in sorted order with their
+// sizes (0 when unreadable); a missing directory gives none.
+func jsonIndexFiles(dir string) []indexFile {
 	var files []indexFile
 	if names, err := pycompat.SortedListdir(dir); err == nil {
 		for _, n := range names {
@@ -184,11 +241,12 @@ func runStats(env *registry.Env, ns *argparse.Namespace) int {
 			}
 		}
 	}
+	return files
+}
 
-	var inv *index.Object
-	if data := loadInventory(env); data != nil && data.Len() > 0 {
-		inv = data.Object("modules")
-	}
+// corpusStats is the "corpus" block: module counters over the inventory's
+// modules object (inv may be nil).
+func corpusStats(inv *index.Object) *index.Object {
 	var mods []*index.Object
 	if inv != nil {
 		mods = core.Objects(inv.Values())
@@ -212,24 +270,6 @@ func runStats(env *registry.Env, ns *argparse.Namespace) int {
 		types.Set(t, c+1)
 	}
 	total := int64(len(mods))
-
-	ci := reader.summary(filepath.Join(dir, "class-index.json"), true)
-	ciMeta := ci.meta()
-	si := reader.summary(filepath.Join(dir, "swing-index.json"), false).meta()
-	ih := reader.summary(filepath.Join(dir, "inheritance.json"), false).meta()
-	xr := reader.summary(filepath.Join(dir, "xref-index.json"), false).meta()
-	mi := reader.summary(filepath.Join(dir, "method-index.json"), false).meta()
-	ai := reader.summary(filepath.Join(dir, "annotations-index.json"), false).meta()
-	cg := reader.summary(filepath.Join(dir, "callgraph-index.json"), false).meta()
-	fi := reader.summary(filepath.Join(dir, "field-index.json"), false).meta()
-	ex := reader.summary(filepath.Join(dir, "exceptions-index.json"), false).meta()
-	tk := dbMeta(dir, "token-index.db", &files)
-	str := dbMeta(dir, "string-index.db", &files)
-	var totalBytes int64
-	for _, f := range files {
-		totalBytes += f.size
-	}
-
 	corpus := index.NewObject()
 	for _, kv := range []struct {
 		k string
@@ -239,6 +279,13 @@ func runStats(env *registry.Env, ns *argparse.Namespace) int {
 		{"zkm_obfuscated", zkm}, {"types", types}} {
 		corpus.Set(kv.k, kv.v)
 	}
+	return corpus
+}
+
+// classIndexStats is the "class_index" block: the decoded class counts, then
+// the class-index _meta counters.
+func classIndexStats(ci summary) *index.Object {
+	ciMeta := ci.meta()
 	classIndex := index.NewObject()
 	classIndex.Set("total_entries", ci.Entries)
 	classIndex.Set("unique_names", ci.Classes)
@@ -247,58 +294,64 @@ func runStats(env *registry.Env, ns *argparse.Namespace) int {
 		{"packages", "unique_packages"}} {
 		classIndex.Set(f[0], metaGet(ciMeta, f[1]))
 	}
-	sections := []section{
-		{"swing_index", si, false, [][3]string{{"classes_with_ui", "classes_with_ui"}, {"dialogs", "total_dialogs"},
+	return classIndex
+}
+
+// indexSections is the _meta-backed blocks of the stats JSON, in output
+// order; each index summary is read in that same order.
+func indexSections(reader *statsCache, dir string) []section {
+	meta := func(name string) *index.Object { return reader.summary(filepath.Join(dir, name), false).meta() }
+	return []section{
+		{"swing_index", meta("swing-index.json"), false, [][3]string{{"classes_with_ui", "classes_with_ui"}, {"dialogs", "total_dialogs"},
 			{"dimensions", "total_dimensions"}, {"colors", "total_colors"}, {"fonts", "total_fonts"}, {"icons", "total_icons"}}},
-		{"inheritance_index", ih, false, [][3]string{{"unique_parents", "unique_parents"},
+		{"inheritance_index", meta("inheritance.json"), false, [][3]string{{"unique_parents", "unique_parents"},
 			{"unique_interfaces", "unique_interfaces_implemented"}, {"classes_with_chains", "classes_with_chains"},
 			{"max_chain_depth", "max_chain_depth"}, {"avg_chain_depth", "avg_chain_depth"},
 			{"with_extends", "with_extends"}, {"with_implements", "with_implements"}}},
-		{"xref_index", xr, false, [][3]string{{"classes_with_imports", "classes_with_imports"},
+		{"xref_index", meta("xref-index.json"), false, [][3]string{{"classes_with_imports", "classes_with_imports"},
 			{"classes_imported_by_others", "classes_imported_by_others"},
 			{"total_import_statements", "total_import_statements"}, {"resolved_imports", "resolved_imports"},
 			{"wildcard_imports", "wildcard_imports"}, {"modules_with_deps", "modules_with_deps"},
 			{"modules_depended_on", "modules_depended_on"}, {"total_class_import_edges", "total_class_import_edges"},
 			{"total_module_dep_edges", "total_module_dep_edges"}}},
-		{"method_index", mi, false, [][3]string{{"total_definitions", "total_method_definitions"},
+		{"method_index", meta("method-index.json"), false, [][3]string{{"total_definitions", "total_method_definitions"},
 			{"unique_names", "unique_method_names"}, {"constructors", "total_constructors"},
 			{"classes_with_methods", "classes_with_methods"}, {"avg_methods_per_class", "avg_methods_per_class"},
 			{"max_methods_per_class", "max_methods_per_class"}, {"max_methods_class", "max_methods_class", "s"}}},
-		{"annotations_index", ai, false, [][3]string{{"niagara_types", "total_niagara_types"},
+		{"annotations_index", meta("annotations-index.json"), false, [][3]string{{"niagara_types", "total_niagara_types"},
 			{"with_properties", "with_properties"}, {"with_actions", "with_actions"}, {"with_topics", "with_topics"},
 			{"total_properties", "total_properties"}, {"total_actions", "total_actions"},
 			{"total_topics", "total_topics"}, {"unique_property_types", "unique_property_types"},
 			{"unique_action_names", "unique_action_names"}}},
-		{"callgraph_index", cg, true, [][3]string{{"caller_methods", "total_caller_methods"},
+		{"callgraph_index", meta("callgraph-index.json"), true, [][3]string{{"caller_methods", "total_caller_methods"},
 			{"unique_callees", "total_unique_callees"}, {"total_edges", "total_edges"},
 			{"avg_callees_per_caller", "avg_callees_per_caller"}}},
-		{"field_index", fi, true, [][3]string{{"total_definitions", "total_field_definitions"},
+		{"field_index", meta("field-index.json"), true, [][3]string{{"total_definitions", "total_field_definitions"},
 			{"unique_names", "unique_field_names"}, {"static_fields", "total_static"}, {"final_fields", "total_final"},
 			{"constants", "total_constants"}, {"with_init", "total_with_init"},
 			{"classes_with_fields", "classes_with_fields"}, {"avg_fields_per_class", "avg_fields_per_class"},
 			{"max_fields_per_class", "max_fields_per_class"}, {"max_fields_class", "max_fields_class", "s"}}},
-		{"exceptions_index", ex, true, [][3]string{{"throws_declarations", "total_throws_declarations"},
+		{"exceptions_index", meta("exceptions-index.json"), true, [][3]string{{"throws_declarations", "total_throws_declarations"},
 			{"catch_blocks", "total_catch_blocks"}, {"unique_thrown_types", "unique_thrown_types"},
 			{"unique_caught_types", "unique_caught_types"}, {"classes_with_throws", "classes_with_throws"},
 			{"classes_with_catches", "classes_with_catches"}}},
 	}
-	stats := index.NewObject()
-	stats.Set("corpus", corpus)
-	stats.Set("class_index", classIndex)
-	for _, s := range sections {
-		stats.Set(s.name, s.object())
-	}
-	dbSection := func(meta map[string]any, keys ...string) *index.Object {
-		o := index.NewObject()
-		if len(meta) > 0 {
-			for _, k := range keys {
-				o.Set(k, dbInt(meta, k))
-			}
+}
+
+// dbSection is a SQLite index block: int(meta.get(k, 0)) per key, {} when
+// the index has no meta.
+func dbSection(meta map[string]any, keys ...string) *index.Object {
+	o := index.NewObject()
+	if len(meta) > 0 {
+		for _, k := range keys {
+			o.Set(k, dbInt(meta, k))
 		}
-		return o
 	}
-	stats.Set("token_index", dbSection(tk, "total_postings", "unique_tokens", "files_with_tokens", "total_lines"))
-	stats.Set("string_index", dbSection(str, "total_strings", "unique_strings", "files_with_strings"))
+	return o
+}
+
+// indexList is the "indexes" list: name, size_bytes and size_mb per file.
+func indexList(files []indexFile) []any {
 	list := make([]any, len(files))
 	for i, f := range files {
 		o := index.NewObject()
@@ -307,20 +360,7 @@ func runStats(env *registry.Env, ns *argparse.Namespace) int {
 		o.Set("size_mb", roundMB(f.size))
 		list[i] = o
 	}
-	stats.Set("indexes", list)
-	stats.Set("total_index_size_mb", roundMB(totalBytes))
-
-	defer reader.save()
-	if ns.Bool("json") {
-		fmt.Fprintln(env.Out, core.Dumps(stats, 2))
-		return env.ExitCode()
-	}
-	present := map[string]bool{}
-	for _, s := range sections {
-		present[s.name] = s.meta != nil && s.meta.Len() > 0
-	}
-	printStats(env, stats, ci, files, totalBytes, present, reader)
-	return env.ExitCode()
+	return list
 }
 
 // readDirNames is os.listdir(dir).
