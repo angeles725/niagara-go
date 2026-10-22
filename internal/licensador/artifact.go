@@ -188,26 +188,11 @@ func Verify(pub crypto.PublicKey, artifact string, o VerifyOpts) (string, *pyjso
 	if o.Now.IsZero() {
 		now = awareUTC(time.Now())
 	}
-	parts := strings.Split(pycompat.Strip(artifact), ".")
-	if len(parts) != 3 || parts[0] != Scheme {
+	payload, sig, ok := parseArtifact(artifact)
+	if !ok {
 		return EParse, nil, nil
 	}
-	raw, err := b64uDecode(parts[1])
-	if err != nil {
-		return EParse, nil, nil
-	}
-	text, err := decodeUTF8(raw, false)
-	if err != nil {
-		return EParse, nil, nil
-	}
-	payload, err := pyjson.Loads(text)
-	if err != nil || payload.Kind != pyjson.Object {
-		return EParse, nil, nil
-	}
-	if ver, ok := payload.Get("ver"); !ok || !pyjson.Equal(ver, pyjson.IntValue(SchemeVer)) {
-		return EParse, nil, nil
-	}
-	if !verifySig(pub, []byte(pyjson.Dumps(payload, pyjson.Canonical)), parts[2]) {
+	if !verifySig(pub, []byte(pyjson.Dumps(payload, pyjson.Canonical)), sig) {
 		return ESignature, nil, nil
 	}
 	if o.Product != nil {
@@ -220,63 +205,16 @@ func Verify(pub crypto.PublicKey, artifact string, o VerifyOpts) (string, *pyjso
 			return EHost, &payload, nil
 		}
 	}
-	iv, ok := payload.Get("issued")
-	if !ok || iv.Kind != pyjson.Str {
-		return EParse, &payload, nil
-	}
-	issued, err := parseISO(iv.S)
-	if err != nil {
-		return EParse, &payload, nil
-	}
-	var expires *pyTime
-	if ev, _ := payload.Get("expires"); ev.Truthy() {
-		if ev.Kind != pyjson.Str {
-			return EParse, &payload, nil
-		}
-		e, err := parseISO(ev.S)
-		if err != nil {
-			return EParse, &payload, nil
-		}
-		expires = &e
-	}
-	c, err := issued.cmp(now.add(skew))
-	if err != nil {
+	if code, err := checkTime(payload, now); err != nil {
 		return "", nil, err
-	}
-	if c > 0 {
-		return ETimeNotYet, &payload, nil
-	}
-	if expires != nil {
-		c, err := expires.cmp(now.add(-skew))
-		if err != nil {
-			return "", nil, err
-		}
-		if c < 0 {
-			return ETimeExpired, &payload, nil
-		}
+	} else if code != OK {
+		return code, &payload, nil
 	}
 	if o.Blacklist != nil {
-		code, bl, err := Verify(pub, *o.Blacklist, VerifyOpts{Now: now.T})
-		if err != nil {
+		if code, err := checkRevoked(pub, payload, *o.Blacklist, now); err != nil {
 			return "", nil, err
-		}
-		if code != OK || bl == nil {
-			return ERevoked, &payload, nil
-		}
-		if t, _ := bl.Get("type"); !pyjson.Equal(t, pyjson.String("revocations")) {
-			return ERevoked, &payload, nil
-		}
-		serial, _ := payload.Get("serial")
-		revoked, ok := bl.Get("revoked")
-		if !ok {
-			revoked = pyjson.Value{Kind: pyjson.Array}
-		}
-		in, err := pyContains(revoked, serial)
-		if err != nil {
-			return "", nil, err
-		}
-		if in {
-			return ERevoked, &payload, nil
+		} else if code != OK {
+			return code, &payload, nil
 		}
 	}
 	if o.StatePath != "" {
@@ -285,6 +223,104 @@ func Verify(pub crypto.PublicKey, artifact string, o VerifyOpts) (string, *pyjso
 		}
 	}
 	return OK, &payload, nil
+}
+
+// parseArtifact is the PARSE stage: "REF1.<b64u payload>.<signature>" whose
+// payload is a UTF-8 JSON object with "ver" == SchemeVer. It returns the
+// payload and the signature part; ok is false for E_PARSE.
+func parseArtifact(artifact string) (payload pyjson.Value, sig string, ok bool) {
+	parts := strings.Split(pycompat.Strip(artifact), ".")
+	if len(parts) != 3 || parts[0] != Scheme {
+		return pyjson.Value{}, "", false
+	}
+	raw, err := b64uDecode(parts[1])
+	if err != nil {
+		return pyjson.Value{}, "", false
+	}
+	text, err := decodeUTF8(raw, false)
+	if err != nil {
+		return pyjson.Value{}, "", false
+	}
+	payload, err = pyjson.Loads(text)
+	if err != nil || payload.Kind != pyjson.Object {
+		return pyjson.Value{}, "", false
+	}
+	if ver, found := payload.Get("ver"); !found || !pyjson.Equal(ver, pyjson.IntValue(SchemeVer)) {
+		return pyjson.Value{}, "", false
+	}
+	return payload, parts[2], true
+}
+
+// checkTime is the TIME stage: "issued" must parse and not lie beyond now +
+// skew, and a truthy "expires" must parse and not lie before now - skew. A
+// non-nil error is the TypeError of comparing a naive with an aware datetime.
+func checkTime(payload pyjson.Value, now pyTime) (string, error) {
+	iv, ok := payload.Get("issued")
+	if !ok || iv.Kind != pyjson.Str {
+		return EParse, nil
+	}
+	issued, err := parseISO(iv.S)
+	if err != nil {
+		return EParse, nil
+	}
+	var expires *pyTime
+	if ev, _ := payload.Get("expires"); ev.Truthy() {
+		if ev.Kind != pyjson.Str {
+			return EParse, nil
+		}
+		e, err := parseISO(ev.S)
+		if err != nil {
+			return EParse, nil
+		}
+		expires = &e
+	}
+	c, err := issued.cmp(now.add(skew))
+	if err != nil {
+		return "", err
+	}
+	if c > 0 {
+		return ETimeNotYet, nil
+	}
+	if expires != nil {
+		c, err := expires.cmp(now.add(-skew))
+		if err != nil {
+			return "", err
+		}
+		if c < 0 {
+			return ETimeExpired, nil
+		}
+	}
+	return OK, nil
+}
+
+// checkRevoked is the REVOCATION stage: the blacklist must itself verify (no
+// product, host or state file) as a "revocations" artifact whose "revoked"
+// (default []) does not contain the payload's serial. A non-nil error is one
+// Python raises out of verify().
+func checkRevoked(pub crypto.PublicKey, payload pyjson.Value, blacklist string, now pyTime) (string, error) {
+	code, bl, err := Verify(pub, blacklist, VerifyOpts{Now: now.T})
+	if err != nil {
+		return "", err
+	}
+	if code != OK || bl == nil {
+		return ERevoked, nil
+	}
+	if t, _ := bl.Get("type"); !pyjson.Equal(t, pyjson.String("revocations")) {
+		return ERevoked, nil
+	}
+	serial, _ := payload.Get("serial")
+	revoked, ok := bl.Get("revoked")
+	if !ok {
+		revoked = pyjson.Value{Kind: pyjson.Array}
+	}
+	in, err := pyContains(revoked, serial)
+	if err != nil {
+		return "", err
+	}
+	if in {
+		return ERevoked, nil
+	}
+	return OK, nil
 }
 
 // pyContains mirrors `item in container` for JSON values.
