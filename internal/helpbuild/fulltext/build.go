@@ -11,7 +11,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -170,9 +169,9 @@ type row struct {
 }
 
 func tokenize(f file) ([]row, bool) {
-	text, ok := readText(f.path)
-	if !ok {
-		return nil, false
+	text, err := pycompat.ReadTextReplace(f.path)
+	if err != nil {
+		return nil, false // iter_documents skips a file it cannot read
 	}
 	docs := documentsOf(f, text)
 	rows := make([]row, len(docs))
@@ -222,17 +221,6 @@ func tokenized(fs []file, nWorkers int, emit func([]row) error) error {
 		}
 	}
 	return nil
-}
-
-// readText is open(path, encoding="utf-8", errors="replace").read(); ok is
-// false when the file cannot be read (iter_documents skips it).
-// Duplicates the unexported internal/help/fts readText (dedup candidate).
-func readText(path string) (string, bool) {
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return "", false
-	}
-	return pycompat.UniversalNewlines(pycompat.DecodeReplace(data)), true
 }
 
 // file is one indexed file of iter_documents, in doc id order.
