@@ -42,13 +42,16 @@ type Result struct {
 	Miss       string   // the honest miss line when nothing matched, else ""
 	CacheNote  string   // the stderr line of a cache rebuild, or ""
 	Unreadable []string // files that could not be read (each one stderr line, exit 2)
-	Found      bool
+	// CannotSearch is the line of a root that could not be listed (CannotListLine): the
+	// whole result then, exit 2, nothing on stdout. Else "".
+	CannotSearch string
+	Found        bool
 }
 
 // Exit is search_outcome's status: 2 when a file was unreadable, else 0 found, 1 not.
 func (r *Result) Exit() int {
 	switch {
-	case len(r.Unreadable) > 0:
+	case r.CannotSearch != "", len(r.Unreadable) > 0:
 		return 2
 	case r.Found:
 		return 0
@@ -70,8 +73,11 @@ func (r *Result) Stdout() string {
 }
 
 // Stderr is the exact standard error of corpus-nav find: the cache line, then one
-// line per unreadable file.
+// line per unreadable file; or only the cannot-search line.
 func (r *Result) Stderr() string {
+	if r.CannotSearch != "" {
+		return r.CannotSearch + "\n"
+	}
 	var b strings.Builder
 	b.WriteString(r.CacheNote)
 	for _, p := range r.Unreadable {
@@ -143,6 +149,9 @@ func (c *Corpus) Find(q Query) *Result {
 		r.Note = glossary.Default().Note(q.Text)
 	}
 	found := c.Ranked(q.Scope, q.Text, q.RequireAll, factors)
+	if found.Err != nil {
+		return &Result{CannotSearch: CannotListLine(c.Root, found.Err)}
+	}
 	r.CacheNote = found.Note
 	qTerms := textfold.Terms(q.Text)
 	for _, f := range factors {

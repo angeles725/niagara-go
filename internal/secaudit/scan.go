@@ -1,6 +1,7 @@
 package secaudit
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -24,29 +25,40 @@ func sec15(home string, rep *report) {
 	if !pycompat.IsDir(moddir) {
 		return
 	}
-	total, wild, wildUnsigned, err := scanKeyringPerms(moddir)
+	total, wild, wildUnsigned, unread, err := scanKeyringPerms(moddir)
 	if err != nil {
 		rep.add("SEC-15", "med", sec15Title, "not checked (cannot list "+moddir+": "+pycompat.StrerrorOf(err)+")",
 			sec15Secure, "SKIP", "B114", "run: ls -l <home>/modules (the audit user must be able to list it)")
 		return
 	}
 	risk := len(wildUnsigned) > 0
-	rep.add("SEC-15", "med", sec15Title,
-		strconv.Itoa(len(total))+" modules declare it, "+strconv.Itoa(len(wild))+" wildcard(name=*), "+
-			strconv.Itoa(len(wildUnsigned))+" of those UNSIGNED",
-		sec15Secure, verdict(risk), "B114",
+	observed := strconv.Itoa(len(total)) + " modules declare it, " + strconv.Itoa(len(wild)) + " wildcard(name=*), " +
+		strconv.Itoa(len(wildUnsigned)) + " of those UNSIGNED"
+	if len(unread) > 0 {
+		n, names := strconv.Itoa(len(unread)), strings.Join(unread, ", ")
+		if !risk { // a jar not read may be the unsigned wildcard holder: not verified, never PASS
+			rep.add("SEC-15", "med", sec15Title, "not checked (cannot read "+n+" jar(s): "+names+"); "+observed,
+				sec15Secure, "SKIP", "B114",
+				"run: unzip -t <home>/modules/<jar> on each jar not read (the audit user must be able to read it)")
+			return
+		}
+		observed += "; " + n + " jar(s) not checked (cannot read: " + names + ")"
+	}
+	rep.add("SEC-15", "med", sec15Title, observed, sec15Secure, verdict(risk), "B114",
 		pick(risk, "unsigned wildcard holders: "+strings.Join(wildUnsigned, ", "),
 			"all wildcard holders are signed; risk only if an UNSIGNED module (SEC-01/06) declares name=*"))
 }
 
 // scanKeyringPerms reads modules/*.jar META-INF/module.xml (through modjar's pool and
 // cache): the KeyRingPermission holders, the wildcard holders and the wildcard holders
-// without a signature file. Unreadable jars are skipped; a directory that cannot be listed
-// is err (nothing scanned).
-func scanKeyringPerms(moddir string) (all, wild, wildUnsigned []string, err error) {
+// without a signature file, plus the jars it could not read (not a zip, unreadable,
+// corrupt module.xml): unread, named, never skipped silently. A jar without a module.xml
+// declares no permission and is not unread. A directory that cannot be listed is err
+// (nothing scanned).
+func scanKeyringPerms(moddir string) (all, wild, wildUnsigned, unread []string, err error) {
 	entries, err := os.ReadDir(moddir)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, nil, nil, err
 	}
 	var jars []string
 	for _, ent := range entries {
@@ -56,6 +68,9 @@ func scanKeyringPerms(moddir string) (all, wild, wildUnsigned []string, err erro
 	}
 	for _, r := range modjar.ReadAllCached(jars, "META-INF/module.xml", modjar.DefaultWorkers) {
 		if r.Err != nil {
+			if !errors.Is(r.Err, modjar.ErrNoMember) {
+				unread = append(unread, filepath.Base(r.Path))
+			}
 			continue
 		}
 		xml := pycompat.DecodeReplace(r.Data)
@@ -76,7 +91,7 @@ func scanKeyringPerms(moddir string) (all, wild, wildUnsigned []string, err erro
 			wildUnsigned = append(wildUnsigned, f)
 		}
 	}
-	return all, wild, wildUnsigned, nil
+	return all, wild, wildUnsigned, unread, nil
 }
 
 // signed reports a signature block among a jar's META-INF/ entry names.

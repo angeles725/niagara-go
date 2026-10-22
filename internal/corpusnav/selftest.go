@@ -15,7 +15,11 @@ import (
 func (c *corpus) cmdSelftest() int {
 	var errs []string
 	bs := c.search()
-	index := bs.NewMemIndex(bs.Targets("blocks"))
+	targets, err := bs.Targets("blocks")
+	if err != nil {
+		return c.cannotList(err)
+	}
+	index := bs.NewMemIndex(targets)
 	for _, t := range []struct {
 		label, query string
 		all          bool

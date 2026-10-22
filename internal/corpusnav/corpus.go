@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"io"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/blockfiles"
+	"github.com/angeles725/niagara-go/internal/cli"
 	"github.com/angeles725/niagara-go/internal/corpusnav/blocksearch"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pypath"
@@ -20,6 +22,11 @@ type corpus struct {
 	root, catalog, docs, retros, indexDir string
 	out, err                              io.Writer
 	termCache                             bool // semantic's term counts through their cache (Main sets it)
+	// The main blocks are listed once per run (mainBlocks): Main's entry gate checks the
+	// listing error, and every command past it reads that same listing.
+	mainListed bool
+	main       []blockFile
+	mainErr    error
 }
 
 func newCorpus(root, indexDir string, out, errw io.Writer) *corpus {
@@ -53,11 +60,27 @@ func fromShared(bs []blockfiles.Block) []blockFile {
 	return out
 }
 
-// blocks is the main corpus. Main's entry gate already listed the root and stopped on an
-// error, so a listing error here (the root locked mid-run) reads as no main block.
+// mainBlocks lists the main corpus on its first call and returns that listing from then
+// on, so a root locked after the entry gate cannot turn into a corpus of zero blocks.
+func (c *corpus) mainBlocks() ([]blockFile, error) {
+	if !c.mainListed {
+		bs, err := blockfiles.MainBlocks(c.root)
+		c.main, c.mainErr, c.mainListed = fromShared(bs), err, true
+	}
+	return slices.Clone(c.main), c.mainErr
+}
+
+// blocks is the main corpus: the listing Main's entry gate made and checked (the error it
+// ignores is the gate's own, already reported with exit 2).
 func (c *corpus) blocks() []blockFile {
-	bs, _ := blockfiles.MainBlocks(c.root)
-	return fromShared(bs)
+	bs, _ := c.mainBlocks()
+	return bs
+}
+
+// cannotList reports a root that cannot be listed: "cannot search", exit 2.
+func (c *corpus) cannotList(err error) int {
+	fmt.Fprintln(c.err, blocksearch.CannotListLine(c.root, err))
+	return cli.ExitCannotSearch
 }
 func (c *corpus) subBlocks() []blockFile { return fromShared(blockfiles.SubBlocks(c.root)) }
 
@@ -113,13 +136,18 @@ func (c *corpus) reportUnreadable(paths []string) {
 
 type target struct{ display, path string }
 
-// targets is corpus.corpus_targets: (display, path) of a search scope.
-func (c *corpus) targets(scope string) []target {
+// targets is corpus.corpus_targets: (display, path) of a search scope, or the error of
+// a root that cannot be listed (blocks and all scopes only).
+func (c *corpus) targets(scope string) ([]target, error) {
+	ts, err := c.search().Targets(scope)
+	if err != nil {
+		return nil, err
+	}
 	var out []target
-	for _, t := range c.search().Targets(scope) {
+	for _, t := range ts {
 		out = append(out, target{t.Display, t.Path})
 	}
-	return out
+	return out, nil
 }
 
 func baseName(path string) string { return filepath.Base(path) }

@@ -31,7 +31,10 @@ func (c *corpus) searchOutcome(found bool, scope string, nFiles int, unreadable 
 // it is "cannot search", not "no matches". The blocks of the other scopes are required
 // by Main.
 func (c *corpus) emptyScope(scope string) bool {
-	if (scope != "docs" && scope != "retros") || len(c.targets(scope)) > 0 {
+	if scope != "docs" && scope != "retros" {
+		return false
+	}
+	if ts, _ := c.targets(scope); len(ts) > 0 { // docs and retros never list the root
 		return false
 	}
 	fmt.Fprintf(c.err, "corpus-nav: cannot search: no files in scope %s under %s\n", scope, c.root)
@@ -46,6 +49,10 @@ func (c *corpus) cmdFind(query, scope string, limit int, requireAll bool) int {
 	r := c.search().Find(blocksearch.Query{Text: query, Scope: scope, Limit: limit, RequireAll: requireAll})
 	if r.Note != "" {
 		fmt.Fprintf(c.out, "(%s)\n", r.Note)
+	}
+	if r.CannotSearch != "" {
+		fmt.Fprintln(c.err, r.CannotSearch)
+		return r.Exit()
 	}
 	io.WriteString(c.err, r.CacheNote)
 	io.WriteString(c.out, r.Rows)
@@ -66,7 +73,10 @@ func (c *corpus) cmdGrep(regex, scope string, limit int) int {
 	if c.emptyScope(scope) {
 		return 2
 	}
-	targets := c.targets(scope)
+	targets, err := c.targets(scope)
+	if err != nil {
+		return c.cannotList(err)
+	}
 	var groups []blocksearch.Group
 	var unreadable []string
 	for _, t := range targets {

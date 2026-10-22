@@ -17,7 +17,7 @@ import (
 func fixtureIndex(t *testing.T) (*Corpus, *MemIndex) {
 	t.Helper()
 	c := New(filepath.Join("..", "testdata", "corpus"), t.TempDir())
-	return c, c.NewMemIndex(c.Targets("all"))
+	return c, c.NewMemIndex(targetsOf(c, "all"))
 }
 
 // TestCacheFileRoundTrip: the file read back holds the documents, the unreadable list and,
@@ -119,8 +119,8 @@ func reseal(b []byte) []byte {
 func TestCacheFileCorrupt(t *testing.T) {
 	t.Setenv("CORPUS_NAV_FIND_INDEX", "")
 	c, _ := fixtureIndex(t)
-	mem := c.NewMemIndex(c.Targets("docs"))
-	good := encodeCache(mem, c.fingerprint(c.Targets("docs")))
+	mem := c.NewMemIndex(targetsOf(c, "docs"))
+	good := encodeCache(mem, c.fingerprint(targetsOf(c, "docs")))
 	parsed, err := parseCache(good)
 	if err != nil {
 		t.Fatal(err)

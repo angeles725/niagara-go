@@ -178,6 +178,7 @@ type Ranking struct {
 	Unreadable []string
 	Fallback   string // "", or why the cache was not used: missing, stale, corrupt
 	Note       string // the stderr line corpus-nav prints when it ranked in memory, or ""
+	Err        error  // the scope's root could not be listed: nothing was ranked
 }
 
 // IndexPath is the find cache of a scope: find-<scope><CacheTag>.gob in IndexDir.
@@ -204,7 +205,10 @@ func indexDisabled() bool { return statcache.Off("CORPUS_NAV_FIND_INDEX") }
 // Ranked is findindex.ranked: from the cache when fresh, else in memory (rebuilding the
 // cache; Note is the line corpus-nav prints on stderr then).
 func (c *Corpus) Ranked(scope, query string, requireAll bool, factors []bm25.Factor) Ranking {
-	targets := c.Targets(scope)
+	targets, err := c.Targets(scope)
+	if err != nil {
+		return Ranking{Err: err}
+	}
 	if indexDisabled() {
 		mem := c.NewMemIndex(targets)
 		return Ranking{Results: mem.Rank(query, requireAll, factors), NFiles: len(targets), Unreadable: mem.unreadable}
@@ -229,5 +233,6 @@ func (c *Corpus) Ranked(scope, query string, requireAll bool, factors []bm25.Fac
 		outcome = "index not rebuilt: " + strings.SplitN(err.Error(), "\n", 2)[0]
 	}
 	note := fmt.Sprintf("corpus-nav: find index %s (%s); ranked in memory, %s\n", state, path, outcome)
-	return Ranking{mem.Rank(query, requireAll, factors), len(targets), mem.unreadable, state, note}
+	return Ranking{Results: mem.Rank(query, requireAll, factors), NFiles: len(targets), Unreadable: mem.unreadable,
+		Fallback: state, Note: note}
 }
