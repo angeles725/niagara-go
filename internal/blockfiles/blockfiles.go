@@ -74,11 +74,26 @@ func isSnapshot(name string) bool { return snapshotRe.MatchString(name) }
 
 // PyInt is str(int(digits)) for the Unicode decimal digits re's \d matched ("0" if none parse).
 func PyInt(digits string) string {
+	if ascii := strings.TrimLeft(digits, "0"); len(digits) > 0 && len(ascii) <= 18 && isASCIIDigits(ascii) {
+		if ascii == "" {
+			return "0"
+		}
+		return ascii // the common case, without a big.Int
+	}
 	n, err := pycompat.ParseBigInt(digits)
 	if err != nil {
 		return "0"
 	}
 	return n.String()
+}
+
+func isASCIIDigits(s string) bool {
+	for i := range len(s) {
+		if s[i] < '0' || s[i] > '9' {
+			return false
+		}
+	}
+	return true
 }
 
 // IsDigit is str.isdigit.
