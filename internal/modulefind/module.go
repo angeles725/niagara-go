@@ -2,7 +2,6 @@ package modulefind
 
 import (
 	"errors"
-	"os"
 	"sort"
 	"strconv"
 	"strings"
@@ -91,33 +90,23 @@ func newModule(root string) *module {
 }
 
 // walkJava calls fn for every .java file under root in os.walk order: the sorted files of
-// a directory, then its sorted subdirectories; dot-dirs pruned, symlinked dirs not entered.
+// a directory, then its sorted subdirectories; dot-dirs pruned, symlinked dirs not entered
+// (and, being dirnames, never taken for a file).
 func walkJava(root string, fn func(path, name string)) {
-	entries, err := os.ReadDir(root)
-	if err != nil {
-		return
-	}
-	var dirs []string
-	for _, e := range entries { // os.ReadDir sorts by name
-		name, path := e.Name(), pycompat.Join(root, e.Name())
-		if e.IsDir() {
-			if !strings.HasPrefix(name, ".") {
-				dirs = append(dirs, path)
-			}
-			continue
-		}
-		if e.Type()&os.ModeSymlink != 0 {
-			if st, err := os.Stat(path); err == nil && st.IsDir() {
-				continue
+	pycompat.Walk(root, func(dir string, dirs, files []string) []string {
+		for _, name := range files {
+			if strings.HasSuffix(name, ".java") {
+				fn(pycompat.Join(dir, name), name)
 			}
 		}
-		if strings.HasSuffix(name, ".java") {
-			fn(path, name)
+		var keep []string
+		for _, d := range dirs {
+			if !strings.HasPrefix(d, ".") {
+				keep = append(keep, d)
+			}
 		}
-	}
-	for _, d := range dirs {
-		walkJava(d, fn)
-	}
+		return keep
+	})
 }
 
 func addTo(set map[string]map[string]bool, key, value string) {
