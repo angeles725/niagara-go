@@ -2,6 +2,6 @@
 ["out", "Built slots-index.json: 16 classes (18 properties, 2 actions, 3 topics) from 12 files"]
 ["exit", 0]
 indexes:
-slots-index.json ---------- 644 5195 7cb64c2e2636256c7d9a0a94276c509f408f2c795c1df7ad63a48ff12d38c92a
-source-index.json ---------- 644 3242 c28dd0e8b5c0e0218b369589725bcc87f1423e5eb93b2efe96173068585b8760
+slots-index.json ---------- 644 5231 66a813f87eda931df728ae0d07b2b139eb637ee4638e7dd9c5c84a773a8320c9
+source-index.json ---------- 644 3339 b1a01203754ffdec50965364d18b16c7ad1487c9bdd046205b74893a84ebba67
 xref-index.json ---------- 644 1874 1c3275d1898be4c06a94b320585a8333e5946e511ad56d32c1af29a8ebccf679

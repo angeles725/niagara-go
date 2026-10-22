@@ -3,6 +3,7 @@ package indexes
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/angeles725/niagara-go/internal/helpbuild/internal/testkit"
@@ -99,6 +100,12 @@ func TestS9CornersFrozen(t *testing.T) {
 // parity test also held names whose order follows the directory order of
 // the file system (one class in three folders of a module, five copies of
 // a class); a frozen file cannot hold that order, so they are not here.
+// source-index.json lists the files of a folder, and slots-index.json the
+// files and folders of a module, in the order the file system lists them
+// (os.walk unsorted); only the modules are sorted. So each corner gets a
+// module of its own (cornerModule): with them in one folder the frozen key
+// order held only on the file system it was frozen on (ext4 on one
+// machine; CI's ext4 and tmpfs list them in another order).
 func s9Corners(t *testing.T, base string) {
 	t.Helper()
 	src := filepath.Join(base, "source")
@@ -111,21 +118,37 @@ func s9Corners(t *testing.T, base string) {
 		"Open.java":    "package open;\npublic class Open {}\n@NiagaraProperty(name = \"o\", type = \"String\", defaultValue = \"x\\",
 		"Back\\S.java": "package back;\nclass BackS {}\n",
 	} {
-		testkit.WriteFile(t, filepath.Join(src, "corner-rt", "c", name), []byte(data))
+		testkit.WriteFile(t, filepath.Join(src, cornerModule(name), "c", name), []byte(data))
 	}
 	testkit.WriteFile(t, filepath.Join(base, "elsewhere", "linked", "BLinked.java"),
 		[]byte("package linked;\n@NiagaraProperty(name = \"l\", type = \"int\")\npublic class BLinked {}\n"))
 	for link, target := range map[string]string{
-		filepath.Join(src, "linked-rt"):                           filepath.Join(base, "elsewhere"),
-		filepath.Join(src, "corner-rt", "c", "folder"):            filepath.Join(base, "elsewhere", "linked"),
-		filepath.Join(src, "corner-rt", "c", "BFileLink.java"):    filepath.Join(base, "elsewhere", "linked", "BLinked.java"),
-		filepath.Join(src, "corner-rt", "c", "BDangling.java"):    filepath.Join(base, "missing.java"),
-		filepath.Join(base, "devguide-rc", "examples", "Rc.java"): filepath.Join(base, "elsewhere", "linked", "BLinked.java"),
+		filepath.Join(src, "linked-rt"):                                           filepath.Join(base, "elsewhere"),
+		filepath.Join(src, cornerModule("folderlink"), "c", "folder"):             filepath.Join(base, "elsewhere", "linked"),
+		filepath.Join(src, cornerModule("BFileLink.java"), "c", "BFileLink.java"): filepath.Join(base, "elsewhere", "linked", "BLinked.java"),
+		filepath.Join(src, cornerModule("BDangling.java"), "c", "BDangling.java"): filepath.Join(base, "missing.java"),
+		filepath.Join(base, "devguide-rc", "examples", "link", "Rc.java"):         filepath.Join(base, "elsewhere", "linked", "BLinked.java"),
 	} {
+		if err := os.MkdirAll(filepath.Dir(link), 0o755); err != nil {
+			t.Fatal(err)
+		}
 		if err := os.Symlink(target, link); err != nil {
 			t.Fatal(err)
 		}
 	}
+}
+
+// cornerModule is the module of its own a corner goes in: corner-<n>-rt,
+// <n> its file name without ".java", lower-cased, each byte other than a-z
+// dropped.
+func cornerModule(name string) string {
+	var b []byte
+	for _, c := range []byte(strings.ToLower(strings.TrimSuffix(name, ".java"))) {
+		if c >= 'a' && c <= 'z' {
+			b = append(b, c)
+		}
+	}
+	return "corner-" + string(b) + "-rt"
 }
 
 // A .java file that cannot be read (skipped by source and slots, named

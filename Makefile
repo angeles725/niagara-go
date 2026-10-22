@@ -12,7 +12,7 @@ COVERPROFILE ?= $(BIN)/cover.out
 TOOLBIN := $(abspath $(BIN))/tools
 export CGO_ENABLED=0
 
-.PHONY: all build cross test vet fmt-check check lint deadcode cover ci wintest realdata hooks clean
+.PHONY: all build cross test test-tmpfs vet fmt-check check lint deadcode cover ci wintest realdata hooks clean
 
 all: check build
 
@@ -26,13 +26,21 @@ cross:
 test:
 	$(GO) test ./...
 
+# The frozen tests again with their temporary trees on tmpfs, which lists a
+# folder in another order than ext4: a frozen file that holds the order one
+# file system lists files in fails here (TestS9CornersFrozen did, only on CI).
+TMPFS ?= /dev/shm
+test-tmpfs:
+	@if [ -d "$(TMPFS)" ] && [ -w "$(TMPFS)" ]; then TMPDIR=$(TMPFS) $(GO) test -count=1 -run Frozen ./...; \
+	else echo "test-tmpfs: $(TMPFS) is not a writable folder; skipped"; fi
+
 vet:
 	$(GO) vet ./...
 
 fmt-check:
 	@out=$$(gofmt -l $$(git ls-files '*.go')); if [ -n "$$out" ]; then echo "$$out"; exit 1; fi
 
-check: fmt-check vet test
+check: fmt-check vet test test-tmpfs
 
 # Lints the host build, then the Windows build so *_windows.go files are
 # checked too (they are invisible to a Linux-only pass). The pinned staticcheck is
