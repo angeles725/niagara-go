@@ -89,7 +89,7 @@ func copyFixture(t *testing.T) *Corpus {
 // into one sorted vocabulary; a file that cannot be read is an unreadable empty document.
 func TestCountTerms(t *testing.T) {
 	c := copyFixture(t)
-	paths := append(targetPaths(c.Targets("all")), filepath.Join(c.Root, "no-such-file.md"))
+	paths := append(targetPaths(targetsOf(c, "all")), filepath.Join(c.Root, "no-such-file.md"))
 	tc := CountTerms(paths, fields)
 	checkCounts(t, tc, paths)
 	if len(tc.Vocab) < 50 || tc.Docs[len(paths)-1].Readable || len(tc.Docs[len(paths)-1].IDs) != 0 {
@@ -102,7 +102,7 @@ func TestCountTerms(t *testing.T) {
 func TestTermCountsCache(t *testing.T) {
 	t.Setenv("CORPUS_NAV_FIND_INDEX", "")
 	c := copyFixture(t)
-	targets := c.Targets("blocks")
+	targets := targetsOf(c, "blocks")
 	paths := targetPaths(targets)
 	want := CountTerms(paths, fields)
 	get := func(state string, ts []Target, want *TermCounts) {
@@ -159,7 +159,7 @@ func resealTerms(b []byte) []byte {
 // as corrupt, never as other counts.
 func TestTermCountsCorrupt(t *testing.T) {
 	c := copyFixture(t)
-	paths := targetPaths(c.Targets("blocks"))
+	paths := targetPaths(targetsOf(c, "blocks"))
 	tc := CountTerms(paths, fields)
 	good := encodeTermCounts(tc, "name", "fp")
 	if got, err := parseTermCounts(good, "name", "fp"); err != nil || !reflect.DeepEqual(got, tc) {

@@ -177,13 +177,22 @@ func TitleFor(label string, catalog map[string]string, path string) string {
 // Target is one searchable file: its display id and path.
 type Target struct{ Display, Path string }
 
-// Targets is corpus.corpus_targets: (display, path) of a search scope.
-func (c *Corpus) Targets(scope string) []Target {
+// CannotListLine is the "cannot search" line of a root that cannot be listed (exit 2,
+// cli.ExitCannotSearch), as corpus-nav's entry gate prints it.
+func CannotListLine(root string, err error) string {
+	return "corpus-nav: cannot search: cannot list " + root + ": " + pycompat.StrerrorOf(err)
+}
+
+// Targets is corpus.corpus_targets: (display, path) of a search scope. The blocks and
+// all scopes list the root; a root that cannot be listed (locked after a caller's entry
+// gate) is that error, never a scope without main blocks.
+func (c *Corpus) Targets(scope string) ([]Target, error) {
 	var out []Target
 	if scope == "blocks" || scope == "all" {
-		// corpus-nav's and nsearch's entry gates already listed the root and stopped on an
-		// error, so a listing error here (the root locked mid-run) reads as no main block.
-		main, _ := blockfiles.MainBlocks(c.Root)
+		main, err := blockfiles.MainBlocks(c.Root)
+		if err != nil {
+			return nil, err
+		}
 		for _, b := range append(main, blockfiles.SubBlocks(c.Root)...) {
 			out = append(out, Target{DisplayID(b.Label), b.Path})
 		}
@@ -195,7 +204,7 @@ func (c *Corpus) Targets(scope string) []Target {
 			}
 		}
 	}
-	return out
+	return out, nil
 }
 
 func fold(s string) string { return textfold.Fold(s, textfold.Corpus) }

@@ -48,8 +48,12 @@ func TestCorpusPathsFollowTheHost(t *testing.T) {
 // TestTargets pins corpus_targets("all") and load_catalog (values from the Python tool).
 func TestTargets(t *testing.T) {
 	c, _, _ := testCorpus(t)
+	targets, err := c.targets("all")
+	if err != nil {
+		t.Fatal(err)
+	}
 	var got [][2]string
-	for _, tg := range c.targets("all") {
+	for _, tg := range targets {
 		got = append(got, [2]string{tg.display, filepath.ToSlash(relTo(tg.path, c.root))})
 	}
 	want := [][2]string{{"B1-3", "niagara-mental-model.md"}, {"B4", "niagara-mental-model-bloque4.md"},
