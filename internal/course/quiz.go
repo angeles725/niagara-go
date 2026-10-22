@@ -94,118 +94,164 @@ func shellQuote(s string) string {
 // --now where they do not apply (usage errors), or a text file that cannot be read or does not
 // hold a drawn item's range (the errors of course text).
 func cmdQuiz(c *key.Corpus, s cli.Stdio, root string, o quizOpts) int {
+	at, history, code, ok := o.resolve(s)
+	if !ok {
+		return code
+	}
+	d, code, ok := drawQuiz(c, s, &o, at, history)
+	if !ok {
+		return code
+	}
+	texts, code, ok := quizTexts(s, root, d.drawn, o.noContext)
+	if !ok {
+		return code
+	}
+	order := "seed " + strconv.Itoa(o.seed)
+	if o.hasIDs {
+		order = "ids " + strings.Join(o.picked, ",")
+	}
+	fmt.Fprintf(s.Out, "quiz: %d of %s (%s; %s), %s\n", len(d.drawn), key.Plural(len(d.pool), "question"),
+		strings.Join(d.kinds, ", "), d.scopeLabel, order)
+	if o.interactive {
+		return runSession(s, d.drawn, texts, history, time.Time{})
+	}
+	printQuiz(s.Out, o, d.drawn, texts)
+	return cli.ExitFound
+}
+
+// resolve checks the flag combinations (the usage errors and -n below 1 of cmdQuiz), draws the
+// seed from the clock when none was given, and returns the time --due measures against and the
+// history path (when --interactive, --missed or --due use one); ok false with the exit otherwise.
+func (o *quizOpts) resolve(s cli.Stdio) (at time.Time, history string, code int, ok bool) {
 	if !o.hasIDs && o.count < 1 { // -n does not apply under --ids
 		fmt.Fprintf(s.Err, "course: -n %d asks no question (want 1 or more)\n", o.count)
-		return cli.ExitCannotSearch
+		return at, "", cli.ExitCannotSearch, false
 	}
 	if !o.hasSeed && !o.hasIDs {
 		o.seed = int(now().UnixNano() % 1000000)
 	}
 	if (o.missed && o.due) || ((o.missed || o.due) && o.hasIDs) {
-		return o.usage("--missed, --due and --ids exclude each other")
+		return at, "", o.usage("--missed, --due and --ids exclude each other"), false
 	}
 	switch {
 	case o.hasHistory && o.history == "":
-		return o.usage("--history: an empty path")
+		return at, "", o.usage("--history: an empty path"), false
 	case o.hasHistory && !o.interactive && !o.missed && !o.due:
-		return o.usage("--history applies to --interactive, --missed and --due")
+		return at, "", o.usage("--history applies to --interactive, --missed and --due"), false
 	case o.hasNow && !o.due:
-		return o.usage("--now applies to --due")
+		return at, "", o.usage("--now applies to --due"), false
 	}
-	at := now()
+	at = now()
 	if o.hasNow {
 		var err error
 		if at, err = time.Parse(time.RFC3339, o.nowFlag); err != nil {
-			return o.usage("--now " + o.nowFlag + " is not an RFC 3339 time (2026-10-19T08:00:00Z)")
+			return at, "", o.usage("--now " + o.nowFlag + " is not an RFC 3339 time (2026-10-19T08:00:00Z)"), false
 		}
 	}
-	var history string
 	if o.interactive || o.missed || o.due {
 		var msg string
 		if history, msg = historyPath(s, o.history, o.hasHistory); history == "" {
-			return o.usage(msg)
+			return at, "", o.usage(msg), false
 		}
 	}
-	groups, scopeLabel := []string(nil), "every group"
+	return at, history, cli.ExitFound, true
+}
+
+// quizDraw is what a quiz asks: the drawn questions, the pool they came from (its size is in the
+// header), the kinds and the scope label the header and the refusals name.
+type quizDraw struct {
+	drawn, pool []question
+	kinds       []string
+	scopeLabel  string
+}
+
+// drawQuiz builds the pool of the selected groups and kinds (narrowed to the history's missed or
+// due questions with --missed or --due), then picks the --ids items or draws count questions in
+// the order of the seed; ok false with the exit for an unknown group, an empty pool or a failed
+// --ids pick.
+func drawQuiz(c *key.Corpus, s cli.Stdio, o *quizOpts, at time.Time, history string) (d quizDraw, code int, ok bool) {
+	var groups []string
+	d.scopeLabel = "every group"
 	if o.hasLab {
 		if groups = c.GroupKeys(o.lab); len(groups) == 0 {
 			fmt.Fprintf(s.Err, "course: no group %s (groups: %s)\n", o.lab, c.GroupList())
-			return cli.ExitNoMatch
+			return d, cli.ExitNoMatch, false
 		}
-		scopeLabel = strings.Join(groups, ", ")
+		d.scopeLabel = strings.Join(groups, ", ")
 	}
-	kinds := quizKinds
+	d.kinds = quizKinds
 	if o.kind != "" {
-		kinds = []string{o.kind}
+		d.kinds = []string{o.kind}
 	}
-	pool, searched := buildPool(c, groups, kinds)
+	pool, searched := buildPool(c, groups, d.kinds)
 	if o.missed || o.due {
-		var code int
-		if pool, scopeLabel, code = historyPool(c, s, o, pool, kinds, scopeLabel, history, at); pool == nil {
-			return code
+		if pool, d.scopeLabel, code = historyPool(c, s, *o, pool, d.kinds, d.scopeLabel, history, at); pool == nil {
+			return d, code, false
 		}
 	}
-	var drawn []question
+	d.pool = pool
 	if o.hasIDs {
-		var code int
-		if drawn, code = pickIDs(c, s, &o, pool, kinds, scopeLabel); drawn == nil {
-			return code
+		if d.drawn, code = pickIDs(c, s, o, pool, d.kinds, d.scopeLabel); d.drawn == nil {
+			return d, code, false
 		}
-	} else if len(pool) == 0 {
-		fmt.Fprintf(s.Err, "course: no %s question in %s (searched %s)\n", strings.Join(kinds, ", "), scopeLabel,
+		return d, cli.ExitFound, true
+	}
+	if len(pool) == 0 {
+		fmt.Fprintf(s.Err, "course: no %s question in %s (searched %s)\n", strings.Join(d.kinds, ", "), d.scopeLabel,
 			key.Plural(searched, "item"))
-		return cli.ExitNoMatch
+		return d, cli.ExitNoMatch, false
 	}
-	if !o.hasIDs {
-		shuffle(pool, uint64(o.seed))
-		drawn = pool[:min(o.count, len(pool))]
-		if o.missed || o.due { // the history moves on: replay these IDs
-			for _, q := range drawn {
-				o.picked = append(o.picked, q.it.ID)
-			}
+	shuffle(pool, uint64(o.seed))
+	d.drawn = pool[:min(o.count, len(pool))]
+	if o.missed || o.due { // the history moves on: replay these IDs
+		for _, q := range d.drawn {
+			o.picked = append(o.picked, q.it.ID)
 		}
 	}
+	return d, cli.ExitFound, true
+}
+
+// quizTexts reads the course text file of each drawn question once and checks its ranges against
+// it, in draw order; with noContext none is read (no course text is printed). ok false with exit 2
+// for a file that cannot be read or does not hold a range.
+func quizTexts(s cli.Stdio, root string, drawn []question, noContext bool) (map[string][]string, int, bool) {
 	texts := map[string][]string{}
 	for _, q := range drawn {
-		if o.noContext {
+		if noContext {
 			break // no course text is printed, so none is read
 		}
 		if f := q.it.TextFile; f != "" && texts[f] == nil {
 			lines, msg := readText(root, f)
 			if msg != "" {
 				fmt.Fprintf(s.Err, "course: %s\n", msg)
-				return cli.ExitCannotSearch
+				return nil, cli.ExitCannotSearch, false
 			}
 			texts[f] = lines
 		}
 		if msg := rangeOutside(q.it, texts[q.it.TextFile]); msg != "" {
 			fmt.Fprintf(s.Err, "course: %s\n", msg)
-			return cli.ExitCannotSearch
+			return nil, cli.ExitCannotSearch, false
 		}
 	}
-	order := "seed " + strconv.Itoa(o.seed)
-	if o.hasIDs {
-		order = "ids " + strings.Join(o.picked, ",")
-	}
-	fmt.Fprintf(s.Out, "quiz: %d of %s (%s; %s), %s\n", len(drawn), key.Plural(len(pool), "question"),
-		strings.Join(kinds, ", "), scopeLabel, order)
-	if o.interactive {
-		return runSession(s, drawn, texts, history, time.Time{})
-	}
+	return texts, cli.ExitFound, true
+}
+
+// printQuiz prints every drawn prompt, then, with --answers, every answer with its status and
+// course text, else the command that draws the same quiz with them.
+func printQuiz(w io.Writer, o quizOpts, drawn []question, texts map[string][]string) {
 	for i, q := range drawn {
-		fmt.Fprintln(s.Out)
-		printQuestion(s.Out, i+1, q)
+		fmt.Fprintln(w)
+		printQuestion(w, i+1, q)
 	}
-	fmt.Fprintln(s.Out)
+	fmt.Fprintln(w)
 	if !o.answers {
-		fmt.Fprintf(s.Out, "answers: %s\n", o.again())
-		return cli.ExitFound
+		fmt.Fprintf(w, "answers: %s\n", o.again())
+		return
 	}
-	fmt.Fprintln(s.Out, "answers")
+	fmt.Fprintln(w, "answers")
 	for i, q := range drawn {
-		printAnswer(s.Out, i+1, q, texts[q.it.TextFile])
+		printAnswer(w, i+1, q, texts[q.it.TextFile])
 	}
-	return cli.ExitFound
 }
 
 // pickIDs returns the pool questions of the --ids items, in their order and once each, and
