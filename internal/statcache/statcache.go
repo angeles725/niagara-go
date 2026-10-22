@@ -80,17 +80,19 @@ func Files(paths []string, workers int) []Stamp {
 	return out
 }
 
-// ReadGob decodes the gob file at path into v; false when it is missing or
-// malformed (the caller then checks its own key and format in v).
+// ReadGob decodes the gob file at path into v; false when it cannot be read
+// or does not decode. It checks no key or format: the caller compares its own
+// in v.
 func ReadGob(path string, v any) bool {
 	data, err := os.ReadFile(path)
 	return err == nil && gob.NewDecoder(bytes.NewReader(data)).Decode(v) == nil
 }
 
-// WriteGob writes the gob encoding of v to path atomically
-// (atomicfile.WriteStream: a temp file in its directory, created with mode
-// 0700, and a rename; the file is 0600). It returns false, leaving nothing
-// behind, when v cannot be encoded or the file cannot be written.
+// WriteGob writes the gob encoding of v to path atomically: v is encoded in
+// memory, path's directory is created with mode 0700 when missing, then
+// atomicfile.WriteStream writes a temp file beside path, sets it to 0600 and
+// renames it over path. It returns false, leaving nothing behind, when v
+// cannot be encoded or the file cannot be written.
 func WriteGob(path string, v any) bool {
 	var buf bytes.Buffer
 	if gob.NewEncoder(&buf).Encode(v) != nil {
