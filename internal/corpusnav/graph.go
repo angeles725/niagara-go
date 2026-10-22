@@ -1,7 +1,8 @@
 package corpusnav
 
 import (
-	"sort"
+	"maps"
+	"slices"
 	"strings"
 	"sync"
 
@@ -100,14 +101,8 @@ type graph struct {
 	unreadable []string
 }
 
-func setKeys(set map[string]bool) []string {
-	out := make([]string, 0, len(set))
-	for k := range set {
-		out = append(out, k)
-	}
-	sort.Strings(out)
-	return out
-}
+// setKeys is sorted(set).
+func setKeys(set map[string]bool) []string { return slices.Sorted(maps.Keys(set)) }
 
 // buildGraph is graph.build_graph: block A -> B when A's text cites B; unreadable blocks
 // are left out; citations of B1-B3 land on "1-3"; bare mentions only reach existing blocks.

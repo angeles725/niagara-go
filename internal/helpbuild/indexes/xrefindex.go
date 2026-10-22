@@ -2,7 +2,9 @@ package indexes
 
 import (
 	"errors"
+	"maps"
 	"path/filepath"
+	"slices"
 	"sort"
 	"strings"
 
@@ -155,7 +157,7 @@ func BuildXrefIndex(baseDir string) (*IndexResult, error) {
 	}
 	out := pyjson.NewObject()
 	edges := 0
-	for _, cls := range sortedKeys(all) {
+	for _, cls := range slices.Sorted(maps.Keys(all)) {
 		entry := pyjson.NewObject()
 		if u := sortedOthers(uses[cls], cls); len(u) > 0 {
 			entry.Set("uses", pyjson.StringList(u))
@@ -178,20 +180,10 @@ func BuildXrefIndex(baseDir string) (*IndexResult, error) {
 	return res, nil
 }
 
-// sortedKeys is sorted(set).
-func sortedKeys(set map[string]bool) []string {
-	keys := make([]string, 0, len(set))
-	for k := range set {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-	return keys
-}
-
 // sortedOthers is sorted(set - {self}).
 func sortedOthers(set map[string]bool, self string) []string {
 	var out []string
-	for _, k := range sortedKeys(set) {
+	for _, k := range slices.Sorted(maps.Keys(set)) {
 		if k != self {
 			out = append(out, k)
 		}

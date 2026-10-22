@@ -3,7 +3,6 @@ package domain
 import (
 	"fmt"
 	"io"
-	"sort"
 
 	"github.com/angeles725/niagara-go/internal/argparse"
 	"github.com/angeles725/niagara-go/internal/index"
@@ -11,6 +10,7 @@ import (
 	"github.com/angeles725/niagara-go/internal/nav/lib/drivers"
 	"github.com/angeles725/niagara-go/internal/nav/lib/license"
 	"github.com/angeles725/niagara-go/internal/nav/registry"
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 func runDrivers(env *registry.Env, ns *argparse.Namespace) int {
@@ -127,7 +127,7 @@ func driversMiss(env *registry.Env, module string, rows []*drivers.DriverRow, sc
 	for _, r := range rows {
 		mods = append(mods, r.Module)
 	}
-	env.Report(subject, scope, module, sortedSet(mods), "drivers")
+	env.Report(subject, scope, module, pycompat.SortedSet(mods), "drivers")
 }
 
 func printTable(w io.Writer, rows []*drivers.DriverRow, scope string) {
@@ -144,18 +144,4 @@ func printTable(w io.Writer, rows []*drivers.DriverRow, scope string) {
 	fmt.Fprintln(w, "  * abstract. DOC: the doc module help.guide.base names, else the one named like")
 	fmt.Fprintln(w, "  the module directory (by name). Full anatomy: drivers <module>   (e.g. drivers modbusTcp-rt)")
 	fmt.Fprintln(w)
-}
-
-// sortedSet is sorted(set(xs)).
-func sortedSet(xs []string) []string {
-	seen := map[string]bool{}
-	out := []string{}
-	for _, x := range xs {
-		if !seen[x] {
-			seen[x] = true
-			out = append(out, x)
-		}
-	}
-	sort.Strings(out)
-	return out
 }

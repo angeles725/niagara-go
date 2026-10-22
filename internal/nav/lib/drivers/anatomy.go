@@ -3,7 +3,6 @@ package drivers
 import (
 	"path/filepath"
 	"slices"
-	"sort"
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/index"
@@ -92,20 +91,6 @@ func (cx *corpus) chain(e *index.Object) []string {
 	return out
 }
 
-// sortedSet is sorted(set(xs)).
-func sortedSet(xs []string) []string {
-	seen := map[string]bool{}
-	out := []string{}
-	for _, x := range xs {
-		if !seen[x] {
-			seen[x] = true
-			out = append(out, x)
-		}
-	}
-	sort.Strings(out)
-	return out
-}
-
 // subclasses is _Corpus.subclasses: the sorted names of items whose chain holds base.
 func (cx *corpus) subclasses(items []item, base string) []string {
 	var names []string
@@ -114,7 +99,7 @@ func (cx *corpus) subclasses(items []item, base string) []string {
 			names = append(names, it.name)
 		}
 	}
-	return sortedSet(names)
+	return pycompat.SortedSet(names)
 }
 
 // inherited is _Corpus.inherited: subclasses of base in the network's
@@ -201,7 +186,7 @@ func deviceTypeAt(text string, p int) (string, int, bool) {
 func anatomy(cx *corpus, it item, organized string, features map[string][]string, docs *docIndex) *DriverRow {
 	sub, dir := it.module(), familyDir(it.path())
 	fam := cx.byFamily[dir]
-	declared := sortedSet(deviceTypes(organized, it.path()))
+	declared := pycompat.SortedSet(deviceTypes(organized, it.path()))
 	r := &DriverRow{Network: it.name, Module: sub, Package: core.Str(it.e, "package"), Path: it.path(),
 		Abstract: slices.Contains(core.Strs(it.e, "modifiers"), "abstract"), Extends: simple(extendsOf(it.e)),
 		Family: family(append([]string{it.name}, cx.chain(it.e)...))}
@@ -224,14 +209,14 @@ func anatomy(cx *corpus, it item, organized string, features map[string][]string
 			managers = append(managers, f.name)
 		}
 	}
-	r.Managers = sortedSet(managers)
+	r.Managers = pycompat.SortedSet(managers)
 	r.DiscoveryJobs = []string{}
 	for _, n := range cx.subclasses(fam, "BJob") {
 		if strings.Contains(n, "Discover") || strings.Contains(n, "Learn") {
 			r.DiscoveryJobs = append(r.DiscoveryJobs, n)
 		}
 	}
-	r.License = sortedSet(features[sub])
+	r.License = pycompat.SortedSet(features[sub])
 	r.doc = docs.target(organized, dir, sub)
 	return r
 }
