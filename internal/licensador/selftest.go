@@ -5,7 +5,6 @@ import (
 	"crypto/rsa"
 	"errors"
 	"fmt"
-	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -43,7 +42,7 @@ func RunSelftest(tmp string, bits int, s cli.Stdio) (exit int) {
 			exit = finish(s, 0, err)
 		}
 	}()
-	if err := os.MkdirAll(tmp, 0o777); err != nil {
+	if err := pycompat.Makedirs(tmp, 0o777, true); err != nil {
 		return finish(s, 0, fmt.Errorf("%s", pycompat.OSErrorText(err)))
 	}
 	key, err := generateKey(bits)
