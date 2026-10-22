@@ -20,7 +20,7 @@ import (
 //
 //	bog prefix -> module   the bog's m= declarations (c:BooleanWritable is looked up in "control")
 //	module -> classes      organized/<module>/<part>/{vineflower|decompiled}/**/*.java, parsed once
-//	                       per module part per run (no on-disk cache: Go parses fast enough)
+//	                       per module part, cached on disk between runs (catalogcache.go)
 //	type -> class          B<Type> (the N4 naming rule), else <Type>, inside that module
 //	extends walk           resolved by the class's imports / package, else a unique class of that
 //	                       simple name among the loaded ones, else the one source file
@@ -62,45 +62,53 @@ func sourceDirs(moduleDir string) []string {
 	return out
 }
 
-// parseDir is _parse_dir: every public class of one decompiler dir (classes without slots too:
-// their extends link is needed), keyed pkg.Class, in sorted walk order (first file wins).
-func parseDir(src string) (keys []string, recs map[string]*classRec) {
-	recs = map[string]*classRec{}
-	base := filepath.Dir(filepath.Dir(filepath.Dir(src)))
+// javaFiles is every .java file under src, in sorted walk order.
+func javaFiles(src string) []string {
+	var out []string
 	pycompat.Walk(src, func(dir string, dirs, files []string) []string {
 		for _, fn := range files {
-			if !strings.HasSuffix(fn, ".java") {
-				continue
+			if strings.HasSuffix(fn, ".java") {
+				out = append(out, slotomatic.Join(dir, fn))
 			}
-			path := slotomatic.Join(dir, fn)
-			text, err := slotomatic.ReadSource(path)
-			if err != nil {
-				continue
-			}
-			t := slotomatic.ParseSource(text)
-			if t.Class == "" || t.Class != strings.TrimSuffix(fn, ".java") {
-				continue // inner/secondary declarations: the file's public class only
-			}
-			rel, err := filepath.Rel(base, path)
-			if err != nil {
-				rel = path
-			}
-			key := t.Class
-			if t.Package != "" {
-				key = t.Package + "." + t.Class
-			}
-			if _, ok := recs[key]; ok {
-				continue
-			}
-			var imports []string
-			for _, m := range importRE.FindAllStringSubmatch(text, -1) {
-				imports = append(imports, m[1])
-			}
-			recs[key] = &classRec{Type: t, imports: imports, source: rel}
-			keys = append(keys, key)
 		}
 		return dirs
 	})
+	return out
+}
+
+// parseFiles is _parse_dir over the .java files of decompiler dir src that javaFiles lists: every
+// public class (classes without slots too: their extends link is needed), keyed pkg.Class, in
+// sorted walk order (first file wins).
+func parseFiles(src string, paths []string) (keys []string, recs map[string]*classRec) {
+	recs = map[string]*classRec{}
+	base := filepath.Dir(filepath.Dir(filepath.Dir(src)))
+	for _, path := range paths {
+		text, err := slotomatic.ReadSource(path)
+		if err != nil {
+			continue
+		}
+		t := slotomatic.ParseSource(text)
+		if t.Class == "" || t.Class != strings.TrimSuffix(filepath.Base(path), ".java") {
+			continue // inner/secondary declarations: the file's public class only
+		}
+		rel, err := filepath.Rel(base, path)
+		if err != nil {
+			rel = path
+		}
+		key := t.Class
+		if t.Package != "" {
+			key = t.Package + "." + t.Class
+		}
+		if _, ok := recs[key]; ok {
+			continue
+		}
+		var imports []string
+		for _, m := range importRE.FindAllStringSubmatch(text, -1) {
+			imports = append(imports, m[1])
+		}
+		recs[key] = &classRec{Type: t, imports: imports, source: rel}
+		keys = append(keys, key)
+	}
 	return keys, recs
 }
 
@@ -153,7 +161,7 @@ func (c *typeCatalog) addDir(d string) map[string]bool {
 	if keys, ok := c.dirKeys[d]; ok {
 		return keys
 	}
-	order, recs := parseDir(d)
+	order, recs := cachedParseDir(d)
 	keys := map[string]bool{}
 	for _, k := range order {
 		if _, ok := c.classes[k]; !ok {

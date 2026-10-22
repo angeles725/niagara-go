@@ -2,6 +2,6 @@
  "args": [
   "inputs/latin1.px",
   "--gm",
-  "GM1"
+  "GM01"
  ]
 }

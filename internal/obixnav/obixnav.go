@@ -32,16 +32,16 @@ type runner struct {
 	s cli.Stdio
 }
 
-// Run executes one obix-nav invocation: 0 done, 1 no pass file, 2 the station failed (auth, TLS,
+// Run executes one obix-nav invocation: 0 done, 2 no pass file, the station failed (auth, TLS,
 // refused, HTTP error, wrong --base) or a bad room argument.
 func Run(o Options, s cli.Stdio) int {
 	if o.PassFile == "" {
 		fmt.Fprintf(s.Err, "No pass file: pass --pass-file or set %s\n", PassFileEnv)
-		return cli.ExitNoMatch
+		return cli.ExitCannotSearch
 	}
 	if _, err := os.Stat(o.PassFile); err != nil {
 		fmt.Fprintf(s.Err, "No pass file: %s\n", o.PassFile)
-		return cli.ExitNoMatch
+		return cli.ExitCannotSearch
 	}
 	raw, err := os.ReadFile(o.PassFile)
 	if err != nil {

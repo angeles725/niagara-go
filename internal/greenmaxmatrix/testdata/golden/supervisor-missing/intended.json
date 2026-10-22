@@ -1,0 +1,4 @@
+{
+ "reason": "T31 (audit T21): an unreadable bog is reported under greenmax-matrix's own name, not bog-nav (exit 3 unchanged)",
+ "stderr": "greenmax-matrix: no such file: inputs/nope.bog\n"
+}

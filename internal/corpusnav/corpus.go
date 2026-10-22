@@ -19,6 +19,7 @@ import (
 type corpus struct {
 	root, catalog, docs, retros, indexDir string
 	out, err                              io.Writer
+	termCache                             bool // semantic's term counts through their cache (Main sets it)
 }
 
 func newCorpus(root, indexDir string, out, errw io.Writer) *corpus {
