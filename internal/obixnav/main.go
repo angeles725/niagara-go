@@ -5,12 +5,11 @@ import (
 	"github.com/angeles725/niagara-go/internal/cli"
 )
 
-// Defaults of the Python tool: the SSH tunnel to the PANCCADIA JACE and the pass file of the
-// session that wrote it.
+// DefaultBase is the SSH tunnel to the PANCCADIA JACE. The pass file has no fixed default:
+// --pass-file falls back to the PassFileEnv environment variable.
 const (
-	DefaultBase     = "https://127.0.0.1:18443/obix"
-	DefaultPassFile = "/tmp/claude-1000/-home-cristian-niagara-research/" +
-		"ab9d38a9-7835-4223-82e2-2e733a5e573a/scratchpad/.obix_pass"
+	DefaultBase = "https://127.0.0.1:18443/obix"
+	PassFileEnv = "OBIX_PASS_FILE"
 )
 
 // Main is the obix-nav command line (Python argparse parity).
@@ -27,7 +26,7 @@ func Main(args []string, s cli.Stdio) int {
 func parse(args []string, s cli.Stdio) (o Options, code int, done bool) {
 	p := argparse.New(argparse.Config{Prog: "obix-nav"})
 	p.Add(argparse.Arg{Default: DefaultBase}, "--base")
-	p.Add(argparse.Arg{Default: DefaultPassFile}, "--pass-file")
+	p.Add(argparse.Arg{Default: s.Env(PassFileEnv)}, "--pass-file")
 	sub := p.AddSubparsers(argparse.SubparsersConfig{Dest: "cmd", Required: true})
 	m := sub.AddParser("map", argparse.SubparserConfig{})
 	m.Add(argparse.Arg{Type: argparse.Int}, "--room")
