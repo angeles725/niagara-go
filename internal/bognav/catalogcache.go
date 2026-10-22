@@ -1,9 +1,7 @@
 package bognav
 
 import (
-	"bytes"
 	"crypto/sha1"
-	"encoding/gob"
 	"encoding/hex"
 	"os"
 	"path/filepath"
@@ -11,6 +9,7 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/nav/core"
 	"github.com/angeles725/niagara-go/internal/slotomatic"
+	"github.com/angeles725/niagara-go/internal/statcache"
 	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
@@ -19,7 +18,7 @@ import (
 // dir's parseFiles result under $XDG_CACHE_HOME (or ~/.cache)/niagara-go/bog-nav/<dir hash>.gob,
 // keyed by the dir's path and, for every .java file in walk order, its path, size and mtime (ns):
 // a changed, added or removed file, or a cache that cannot be read or is malformed, is a miss (the
-// dir is parsed and the cache rewritten atomically by core.WriteGob). A parse during which the
+// dir is parsed and the cache rewritten atomically by statcache.WriteGob). A parse during which the
 // files changed is not stored, and a cache that cannot be written is skipped silently, so the
 // output never depends on the cache. NIAGARA_CACHE_DIR=off (the bog-nav goldens set it, as the
 // Python tool read it) turns the cache off.
@@ -55,25 +54,13 @@ func catalogCacheDir() string {
 	if textfold.Lower(os.Getenv("NIAGARA_CACHE_DIR")) == "off" {
 		return ""
 	}
-	home := os.Getenv("XDG_CACHE_HOME")
-	if home == "" {
-		h, err := os.UserHomeDir()
-		if err != nil || h == "" {
-			return ""
-		}
-		home = filepath.Join(h, ".cache")
-	}
-	return filepath.Join(home, "niagara-go", "bog-nav")
+	return statcache.UserDir("niagara-go", "bog-nav")
 }
 
 func catalogKeyOf(src string, paths []string) catalogKey {
 	k := catalogKey{Format: catalogCacheFormat, Dir: src, Files: make([]catalogFile, len(paths))}
-	for i, p := range paths {
-		f := catalogFile{Path: p, Size: -1, MtimeNs: -1}
-		if st, err := os.Stat(p); err == nil {
-			f.Size, f.MtimeNs = st.Size(), st.ModTime().UnixNano()
-		}
-		k.Files[i] = f
+	for i, st := range statcache.Files(paths, 1) {
+		k.Files[i] = catalogFile{Path: paths[i], Size: st.Size, MtimeNs: st.MtimeNs} // Missing is -1, -1
 	}
 	return k
 }
@@ -102,18 +89,14 @@ func cachedParseDir(src string) ([]string, map[string]*classRec) {
 			r := recs[k]
 			cf.Entries[i] = catalogEntry{Key: k, Type: r.Type, Imports: r.imports, Source: r.source}
 		}
-		core.WriteGob(cache, &cf)
+		statcache.WriteGob(cache, &cf)
 	}
 	return keys, recs
 }
 
 func readCatalogCache(path string, key catalogKey) ([]string, map[string]*classRec, bool) {
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return nil, nil, false
-	}
 	var cf catalogCache
-	if gob.NewDecoder(bytes.NewReader(data)).Decode(&cf) != nil || !cf.Key.equal(key) {
+	if !statcache.ReadGob(path, &cf) || !cf.Key.equal(key) {
 		return nil, nil, false
 	}
 	keys := make([]string, 0, len(cf.Entries))
