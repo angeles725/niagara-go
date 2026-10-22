@@ -29,16 +29,9 @@ var installCandidates = []string{
 	"/home/cristian/Honeywell/OptimizerSupervisor-N4.14.0.162",
 }
 
-// exitError is sys.exit(code) after a message on stderr.
-type exitError struct {
-	code int
-	msg  string
-}
-
-func (e *exitError) Error() string { return e.msg }
-
+// fail is sys.exit(code) after a message on stderr.
 func fail(code int, format string, a ...any) error {
-	return &exitError{code, fmt.Sprintf(format, a...)}
+	return &cli.Exit{Msg: fmt.Sprintf(format, a...), Code: code}
 }
 
 func parser() *argparse.Parser {
@@ -74,9 +67,9 @@ func Main(args []string, s cli.Stdio) int {
 	} else {
 		code, err = doctor(o, s.Out)
 	}
-	if e, ok := err.(*exitError); ok {
-		fmt.Fprintln(s.Err, e.msg)
-		return e.code
+	if code, ok := cli.ExitCode(err); ok {
+		fmt.Fprintln(s.Err, err)
+		return code
 	}
 	if err != nil {
 		fmt.Fprintf(s.Err, "station-modules: %s\n", err)

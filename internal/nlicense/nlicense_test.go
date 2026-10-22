@@ -322,3 +322,29 @@ func TestPKCS8Key(t *testing.T) {
 	}
 	verifyWithRetry(t, filepath.Join(dir, "crlf-signed.license"), cert, func() { run("sign", in, pk) })
 }
+
+// TestSystemExitPaths pins the stderr text and exit code of SystemExit(msg)
+// (exit 1) and of the no-features exit 2.
+func TestSystemExitPaths(t *testing.T) {
+	key, _ := testKey(t)
+	dir := t.TempDir()
+	empty, cert := filepath.Join(dir, "empty.csv"), filepath.Join(dir, "no-key.certificate")
+	for p, body := range map[string]string{empty: "\n", cert: "<c/>"} {
+		if err := os.WriteFile(p, []byte(body), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	for _, tc := range []struct {
+		args     []string
+		wantCode int
+		wantErr  string
+	}{
+		{[]string{"gen", filepath.Join(dir, "g.license"), "A", "H", "never", empty, key}, 2, "ERROR: no features in " + empty + "\n"},
+		{[]string{"verify", "testdata/crlf-signed.license", cert}, 1, "ERROR: no <publicKey> in certificate\n"},
+	} {
+		code, _, errOut := run(tc.args...)
+		if code != tc.wantCode || errOut != tc.wantErr {
+			t.Errorf("%v: exit %d stderr %q, want %d %q", tc.args, code, errOut, tc.wantCode, tc.wantErr)
+		}
+	}
+}
