@@ -8,7 +8,11 @@ import (
 	"reflect"
 	"runtime"
 	"sort"
+	"strings"
 	"testing"
+
+	"github.com/angeles725/niagara-go/internal/cli"
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 const station = "<?xml version='1.0'?><bajaObjectGraph version='4.0'>" +
@@ -133,7 +137,7 @@ func TestInstallPathsJoinLikeOsPathJoin(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		want = "Q:modules"
 	}
-	if _, dir, ok := indexInstall("Q:"); ok || dir != want {
+	if _, dir, ok, err := indexInstall("Q:"); ok || err != nil || dir != want {
 		t.Errorf("indexInstall(%q) dir %q ok %v, want %q false", "Q:", dir, ok, want)
 	}
 }
@@ -168,5 +172,53 @@ func TestIndexSwWalksLikeOsWalk(t *testing.T) {
 	}
 	if got := indexSw(filepath.Join(root, "outside")); len(got) != 0 {
 		t.Errorf("indexSw without sw = %q", got)
+	}
+}
+
+// lockedInstall is an install root whose modules/ cannot be listed; it skips where a mode
+// 000 directory still lists (Windows, root).
+func lockedInstall(t *testing.T) string {
+	t.Helper()
+	if runtime.GOOS == "windows" {
+		t.Skip("mode 000 does not lock a directory on Windows")
+	}
+	root := t.TempDir()
+	mods := filepath.Join(root, "modules")
+	if err := os.Mkdir(mods, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chmod(mods, 0); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = os.Chmod(mods, 0o755) })
+	if _, err := os.ReadDir(mods); err == nil {
+		t.Skip("mode 000 does not stop this user listing a directory (root?)")
+	}
+	return root
+}
+
+// TestUnlistableModulesIsABadInstall: a modules/ that cannot be listed is exit 2 with the
+// OS reason, never an empty install that reports every module missing.
+func TestUnlistableModulesIsABadInstall(t *testing.T) {
+	root := lockedInstall(t)
+	_, err := openInstall(root)
+	code, ok := cli.ExitCode(err)
+	if !ok || code != 2 {
+		t.Fatalf("openInstall = %v, want exit 2", err)
+	}
+	if want := "error: cannot list install modules " + pycompat.StrRepr(filepath.Join(root, "modules")) +
+		": Permission denied"; err.Error() != want {
+		t.Errorf("message %q, want %q", err.Error(), want)
+	}
+}
+
+// TestCheckReadsTheStationBeforeIndexingTheInstall: a bad station fails before the install
+// is scanned (the scan of a real install takes seconds), so its error wins over a bad install.
+func TestCheckReadsTheStationBeforeIndexingTheInstall(t *testing.T) {
+	root := lockedInstall(t)
+	_, err := check(options{install: root, target: filepath.Join(t.TempDir(), "gone.bog")}, &bytes.Buffer{})
+	code, ok := cli.ExitCode(err)
+	if !ok || code != 2 || !strings.HasPrefix(err.Error(), "error: cannot read station file: ") {
+		t.Fatalf("check = %v (exit %d), want the station error", err, code)
 	}
 }

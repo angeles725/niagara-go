@@ -99,7 +99,9 @@ func TestCommandWord(t *testing.T) {
 	}
 }
 
-func TestNoBaseDirExitsOne(t *testing.T) {
+// A missing base directory is an input/environment error: the message goes to
+// stderr and the exit is 2 (cli.ExitCannotSearch), never 1 ("searched, no match").
+func TestNoBaseDirExitsTwoOnStderr(t *testing.T) {
 	t.Chdir(t.TempDir())
 	t.Setenv("MODULE_NAVIGATOR_DIR", "") // an exported checkout (make realdata) would be found
 	core.Executable = func() (string, error) { return filepath.Join(t.TempDir(), "mnav"), nil }
@@ -107,7 +109,7 @@ func TestNoBaseDirExitsOne(t *testing.T) {
 	var out, errb bytes.Buffer
 	code := Main([]string{"class", "BFoo"}, cli.Stdio{Out: &out, Err: &errb})
 	want := "ERROR: Cannot detect base directory.\nUse --base-dir or run from module-navigator/tools/\n"
-	if code != cli.ExitNoMatch || out.String() != want || errb.Len() != 0 {
+	if code != cli.ExitCannotSearch || errb.String() != want || out.Len() != 0 {
 		t.Fatalf("code=%d stdout=%q stderr=%q", code, out.String(), errb.String())
 	}
 }

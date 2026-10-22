@@ -1,0 +1,5 @@
+{
+ "reason": "verify also requires the certificate vendor to equal the license vendor (NLicenseManager.java:104) and the certificate's own signature to verify against the embedded baja root (CertificateFile.java:89); every failed check is its own FAIL line and VALID is printed only when all hold. InvalidSignature names what did not verify",
+ "stdout": "OK   attrs-signed.license: license signature matches the public key of Acme.certificate\n     vendor=Ac&me \"q\" hostId=H2 expires=None generated=None\nFAIL attrs-signed.license: vendor mismatch: license vendor 'Ac&me \"q\"', certificate vendor 'Acme' (the station picks {vendor}.certificate by an exact, case-sensitive match)\nFAIL attrs-signed.license: certificate chain NOT verified: Acme.certificate signature does not verify against the embedded baja root key (LicenseUtil.masterPublicKeyData)\n",
+ "exit": 1
+}

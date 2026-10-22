@@ -2,6 +2,6 @@
  "args": [
   "inputs/no-canvas.px",
   "--gm",
-  "GM1"
+  "GM01"
  ]
 }

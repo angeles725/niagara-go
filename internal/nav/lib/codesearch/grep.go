@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/angeles725/niagara-go/internal/nav/core"
+	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pypath"
 	"github.com/angeles725/niagara-go/internal/pyre"
 )
@@ -48,13 +49,22 @@ func Grep(organized string, re *pyre.Regexp, limit int, f GrepFilter) GrepResult
 	core.WalkJava(organized, keep, func(jf core.JavaFile) bool {
 		res.FilesSearched++
 		subs[jf.Sub] = true
-		lines, err := ReadLines(jf.Path)
+		text, err := pycompat.ReadTextReplace(jf.Path)
 		if err != nil {
 			return true
 		}
+		// Every line is a substring of the file: a file the pattern cannot
+		// match (the literal fast path of pyre) has no hit to look for.
+		if !re.MayMatch(text) {
+			return !res.Full(limit)
+		}
+		lines := pycompat.Lines(text)
 		cname, _ := pypath.PosixSplitext(pypath.PosixBasename(jf.Rel))
 		matched := false
 		for i, line := range lines {
+			if !re.MayMatch(line) {
+				continue
+			}
 			buf = buf[:0] // one rune buffer for every line: no allocation per line
 			for _, r := range line {
 				buf = append(buf, r)

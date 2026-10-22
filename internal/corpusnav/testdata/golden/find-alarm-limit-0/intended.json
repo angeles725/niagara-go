@@ -1,4 +1,4 @@
 {
- "reason": "Python's argparse took prog from the invoked script (tools/<tool>.py); the Go binaries are run as their installed command (tools/install.sh), so usage and help name that command, not a retired .py script.",
- "stderr": "usage: cnav find [-h] [--in {blocks,docs,retros,all}] [--limit LIMIT] [--and |\n                 --or]\n                 query\ncnav find: error: argument --limit/-n: must be at least 1, not 0\n"
+ "reason": "Python's argparse took prog from the invoked script (tools/<tool>.py); the Go binaries are run as their installed command (tools/install.sh), so usage and help name that command, not a retired .py script; T31 (audit T21): find takes one or more query words (nargs='+', joined with spaces like nsearch), so its usage reads query [query ...]",
+ "stderr": "usage: cnav find [-h] [--in {blocks,docs,retros,all}] [--limit LIMIT] [--and |\n                 --or]\n                 query [query ...]\ncnav find: error: argument --limit/-n: must be at least 1, not 0\n"
 }

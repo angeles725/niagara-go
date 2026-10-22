@@ -2,7 +2,7 @@
  "args": [
   "inputs/tablero-tall.px",
   "--gm",
-  "GM1",
+  "GM01",
   "--legend"
  ]
 }

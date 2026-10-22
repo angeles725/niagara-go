@@ -103,3 +103,15 @@ func TestPathIsPathlib(t *testing.T) {
 	}
 	// The join spellings themselves are pinned by pypath TestJoin.
 }
+
+// TestPyInt: str(int(digits)) on the ASCII fast path and on the big.Int path (Unicode
+// digits, more than 18 digits, nothing to parse).
+func TestPyInt(t *testing.T) {
+	for in, want := range map[string]string{"7": "7", "007": "7", "0": "0", "000": "0", "1416": "1416",
+		"٣": "3", "0٣": "3", "３２": "32", "": "0", "12345678901234567890": "12345678901234567890",
+		"000000000000000000000001": "1"} {
+		if got := PyInt(in); got != want {
+			t.Errorf("PyInt(%q) = %q, want %q", in, got, want)
+		}
+	}
+}

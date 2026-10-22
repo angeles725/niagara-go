@@ -48,6 +48,9 @@ public class BRoomPanel extends BComponent {
 `},
 }
 
+// selftestDir makes the selftest's temporary fixture directory (a test seam).
+var selftestDir = func() (string, error) { return os.MkdirTemp("", "module-find-selftest-") }
+
 func selftest(out io.Writer) int {
 	var fails []string
 	check := func(cond bool, label string) {
@@ -58,17 +61,38 @@ func selftest(out io.Writer) int {
 			fails = append(fails, label)
 		}
 	}
-	d, err := os.MkdirTemp("", "module-find-selftest-")
+	d, err := selftestDir()
 	if err != nil {
 		fmt.Fprintf(out, "\nSELFTEST FAILED: cannot create a temporary directory: %v\n", err)
 		return 1
 	}
 	defer os.RemoveAll(d)
-	write := func(path, body string) { _ = os.WriteFile(path, []byte(body), 0o644) }
-	_ = os.Mkdir(filepath.Join(d, ".git"), 0o755) // dot-dir must be pruned
+	// The fixture trees: the first part that cannot be written fails the selftest with its cause
+	// (otherwise the checks after it FAIL as if the parser regressed).
+	var werr error
+	mkdir := func(path string) {
+		if werr == nil {
+			werr = os.Mkdir(path, 0o755)
+		}
+	}
+	write := func(path, body string) {
+		if werr == nil {
+			werr = os.WriteFile(path, []byte(body), 0o644)
+		}
+	}
+	unwritable := func() bool {
+		if werr != nil {
+			fmt.Fprintf(out, "\nSELFTEST FAILED: cannot write the fixture %v\n", werr)
+		}
+		return werr != nil
+	}
+	mkdir(filepath.Join(d, ".git")) // dot-dir must be pruned
 	write(filepath.Join(d, ".git", "BNoise.java"), "class BNoise extends BFake {}")
 	for _, f := range selftestFiles {
 		write(filepath.Join(d, f[0]+".java"), f[1])
+	}
+	if unwritable() {
+		return 1
 	}
 	m := newModule(d)
 	slot := func(cls, name string) slotInfo {
@@ -132,11 +156,14 @@ func selftest(out io.Writer) int {
 
 	// compare across two synthetic versions (slot added in B)
 	da, db := filepath.Join(d, "cmpA"), filepath.Join(d, "cmpB")
-	_ = os.Mkdir(da, 0o755)
-	_ = os.Mkdir(db, 0o755)
+	mkdir(da)
+	mkdir(db)
 	write(filepath.Join(da, "BX.java"), "class BX extends BComponent {\n@NiagaraProperty(name=\"a\", type=\"double\")\n}")
 	write(filepath.Join(db, "BX.java"), "class BX extends BComponent {\n@NiagaraProperty(name=\"a\", type=\"int\")\n"+
 		"@NiagaraProperty(name=\"defrostSkipped\", type=\"boolean\")\n}")
+	if unwritable() {
+		return 1
+	}
 	outCmp := call(func(o *opts) { cmdCompare(newModule(da), newModule(db), o) })
 	check(strings.Contains(outCmp, "slot-added") && strings.Contains(outCmp, "defrostSkipped"),
 		"compare: detects an added slot")

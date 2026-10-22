@@ -109,7 +109,14 @@ func (h *Handler) doPOST(rp *reply) {
 	}
 	raw := []byte{}
 	if length > 0 {
-		raw, _ = io.ReadAll(io.LimitReader(r.Body, int64(length)))
+		var err error
+		raw, err = io.ReadAll(io.LimitReader(r.Body, int64(length)))
+		// rfile.read(length) returns a body cut short by the client as is; any other read
+		// failure raises in do_POST.
+		if err != nil && !errors.Is(err, io.ErrUnexpectedEOF) {
+			rp.drop(fmt.Sprintf("OSError: %v", err))
+			return
+		}
 	}
 	body := pycompat.DecodeReplace(raw)
 	h.logf("  [POST %s] %s\n", p, body)

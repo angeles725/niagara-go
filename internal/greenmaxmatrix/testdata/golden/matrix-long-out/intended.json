@@ -1,0 +1,4 @@
+{
+ "reason": "T31 (audit T21): a px_dir with 0 GreenMAX Px files warns on stderr; stdout, exit and CSV unchanged",
+ "stderr": "greenmax-matrix: warning: 0 GreenMAX Px files in inputs/px-empty: no Tablero, zone or circuit label comes from a Px\n"
+}

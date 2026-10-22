@@ -86,14 +86,16 @@ type Bog struct {
 	Roots       []string        // handles of the top-level components
 }
 
-// Load reads and parses the bog file at path. The error is a *ReadError for an unreadable input.
+// Load reads and parses the bog file at path. The error is a *ReadError for an unreadable input
+// or a text that is not well-formed XML (ReadCheckedText): a truncated bog fails closed instead of
+// yielding a smaller graph.
 func Load(path string) (*Bog, error) {
 	return LoadOptions(path, Options{})
 }
 
 // LoadOptions is Load with the opt-in additions of opts (see parseOptions).
 func LoadOptions(path string, opts Options) (*Bog, error) {
-	text, err := ReadText(path)
+	text, err := ReadCheckedText(path)
 	if err != nil {
 		return nil, err
 	}

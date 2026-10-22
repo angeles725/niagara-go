@@ -1,9 +1,6 @@
 package nlicense
 
 import (
-	//lint:ignore SA1019 the Niagara license format is DSA by definition
-	"crypto/dsa"
-	"crypto/rsa"
 	"encoding/csv"
 	"errors"
 	"fmt"
@@ -21,7 +18,6 @@ import (
 	"github.com/angeles725/niagara-go/internal/cli"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyjson"
-	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
 // Main mirrors the tool's hand-rolled positional CLI.
@@ -56,15 +52,18 @@ func Main(args []string, s cli.Stdio) int {
 	return 1
 }
 
-// readXML mirrors etree.parse on a path; failures are uncaught exceptions.
+// readXML mirrors etree.parse on a path: the final line of Python's uncaught
+// exception, but exit 2 (input error) rather than its exit 1, which verify uses
+// for "invalid".
 func readXML(path string) (*document, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return nil, fmt.Errorf("OSError: Error reading file '%s': failed to load \"%s\": %s", path, path, pycompat.StrerrorOf(err))
+		return nil, &cli.Exit{Msg: fmt.Sprintf("OSError: Error reading file '%s': failed to load \"%s\": %s",
+			path, path, pycompat.StrerrorOf(err)), Code: 2}
 	}
 	doc, err := parseXML(data)
 	if err != nil {
-		return nil, fmt.Errorf("lxml.etree.XMLSyntaxError: %v", err)
+		return nil, &cli.Exit{Msg: fmt.Sprintf("lxml.etree.XMLSyntaxError: %v", err), Code: 2}
 	}
 	return doc, nil
 }
@@ -80,22 +79,6 @@ func loadLicense(path string) (*document, error) {
 	return doc, nil
 }
 
-func loadCertPublicKey(path string) (any, error) {
-	doc, err := readXML(path)
-	if err != nil {
-		return nil, err
-	}
-	pk := find(doc.root, "publicKey")
-	if pk == nil || elemText(pk) == nil || *elemText(pk) == "" {
-		return nil, cli.SystemExit("ERROR: no <publicKey> in certificate")
-	}
-	der, err := b64decode(strings.Join(textfold.Fields(*elemText(pk)), ""))
-	if err != nil {
-		return nil, err
-	}
-	return parseSPKI(der)
-}
-
 func attrOrNone(n *node, name string) string {
 	if v, ok := n.get(name); ok {
 		return v
@@ -103,47 +86,69 @@ func attrOrNone(n *node, name string) string {
 	return "None"
 }
 
+// cmdVerify checks what NLicenseManager checks offline: the license signature
+// against the certificate's key, the certificate's vendor against the license's
+// (NLicenseManager.getCertificate, an exact match: NLicenseManager.java:104), and the
+// certificate's own signature against the embedded root (certificate.chainProblem).
+// VALID only when all three hold; every failed check gets its own FAIL line, exit 1.
 func cmdVerify(licensePath, certPath string, s cli.Stdio) (int, error) {
 	doc, err := loadLicense(licensePath)
 	if err != nil {
 		return 0, err
 	}
 	root := doc.root
-	sigEl := find(root, "signature")
-	if sigEl == nil || elemText(sigEl) == nil || *elemText(sigEl) == "" {
+	if sigEl := find(root, "signature"); sigEl == nil || elemText(sigEl) == nil || *elemText(sigEl) == "" {
 		return 0, cli.SystemExit("ERROR: no <signature> element")
 	}
-	sig, err := b64decode(strings.Join(textfold.Fields(*elemText(sigEl)), ""))
+	cert, err := loadCertificate(certPath)
 	if err != nil {
 		return 0, err
 	}
-	pub, err := loadCertPublicKey(certPath)
+	failure, err := licenseSignatureFailure(root, cert)
 	if err != nil {
 		return 0, err
 	}
-	data, err := canonicalBytes(root)
+	trusted, err := embeddedRoot()
 	if err != nil {
 		return 0, err
 	}
-	failure := ""
-	switch k := pub.(type) {
-	case *dsa.PublicKey:
-		if !verifyDSA(k, sig, data) {
-			failure = "InvalidSignature: "
-		}
-	case *rsa.PublicKey:
-		failure = "TypeError: RSAPublicKey.verify() missing 1 required positional argument: 'algorithm'"
-	default:
-		failure = fmt.Sprintf("TypeError: unsupported public key type %T", pub)
-	}
+	var fails []string
 	if failure != "" {
-		fmt.Fprintf(s.Out, "FAIL %s: %s\n", licensePath, failure)
-		return 1, nil
+		fails = append(fails, failure)
 	}
-	fmt.Fprintf(s.Out, "OK   %s: VALID signature (verified offline)\n", licensePath)
-	fmt.Fprintf(s.Out, "     vendor=%s hostId=%s expires=%s generated=%s\n", attrOrNone(root, "vendor"),
+	licVendor, licOK := root.get("vendor")
+	certVendor, certOK := cert.vendor()
+	if !licOK || !certOK || licVendor != certVendor {
+		fails = append(fails, fmt.Sprintf("vendor mismatch: license vendor %s, certificate vendor %s "+
+			"(the station picks {vendor}.certificate by an exact, case-sensitive match)",
+			reprOrNone(licVendor, licOK), reprOrNone(certVendor, certOK)))
+	}
+	if p := cert.chainProblem(trusted); p != "" {
+		fails = append(fails, "certificate chain NOT verified: "+p)
+	}
+	vendorLine := fmt.Sprintf("     vendor=%s hostId=%s expires=%s generated=%s\n", attrOrNone(root, "vendor"),
 		attrOrNone(root, "hostId"), attrOrNone(root, "expiration"), attrOrNone(root, "generated"))
-	return 0, nil
+	if len(fails) == 0 {
+		fmt.Fprintf(s.Out, "OK   %s: VALID signature (verified offline)\n", licensePath)
+		fmt.Fprint(s.Out, vendorLine)
+		return 0, nil
+	}
+	if failure == "" {
+		fmt.Fprintf(s.Out, "OK   %s: license signature matches the public key of %s\n", licensePath, certPath)
+		fmt.Fprint(s.Out, vendorLine)
+	}
+	for _, f := range fails {
+		fmt.Fprintf(s.Out, "FAIL %s: %s\n", licensePath, f)
+	}
+	return 1, nil
+}
+
+// reprOrNone is Python's repr of an attribute value, None when it is absent.
+func reprOrNone(v string, ok bool) string {
+	if !ok {
+		return "None"
+	}
+	return pyjson.StrRepr(v)
 }
 
 // signInto canonicalises, signs and replaces the <signature> of doc.

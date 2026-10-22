@@ -12,6 +12,9 @@ type Regexp struct {
 	groups  int
 	// anchored is the \G-anchored program behind MatchRunes, compiled on first use.
 	anchored func() *regexp2.Regexp
+	// lit is the literal fast path of the string entry points (literal.go), nil
+	// when the pattern is not a literal.
+	lit *literal
 }
 
 // Compile is re.compile(pattern, flags). The error is an *Error.
@@ -42,7 +45,7 @@ func Compile(pattern string, flags Flags) (*Regexp, error) {
 		names[name] = gid
 	}
 	return &Regexp{re: re, pattern: pattern, names: names, groups: st.groups() - 1,
-		anchored: anchoredProgram(body, opts)}, nil
+		anchored: anchoredProgram(body, opts), lit: literalOf(pattern, flags)}, nil
 }
 
 // MustCompile is Compile for patterns known to be valid; it panics otherwise.
@@ -61,7 +64,12 @@ func (r *Regexp) String() string { return r.pattern }
 func (r *Regexp) Groups() int { return r.groups }
 
 // Search is pattern.search(s): the first match, or nil.
-func (r *Regexp) Search(s string) *Match { return r.SearchRunes([]rune(s), 0) }
+func (r *Regexp) Search(s string) *Match {
+	if !r.MayMatch(s) {
+		return nil
+	}
+	return r.SearchRunes([]rune(s), 0)
+}
 
 // MatchString reports whether Search finds a match.
 func (r *Regexp) MatchString(s string) bool { return r.Search(s) != nil }
@@ -94,6 +102,9 @@ func (r *Regexp) FindAll(s string) []string {
 		g = 1
 	}
 	var out []string
+	if !r.MayMatch(s) {
+		return out
+	}
 	for _, m := range r.FindIter([]rune(s)) {
 		out = append(out, m.Group(g))
 	}
