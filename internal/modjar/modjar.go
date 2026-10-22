@@ -1,5 +1,6 @@
 // Package modjar reads one member (META-INF/module.xml, usually) out of many module jars:
-// ReadMember for one jar, ReadAll for a list through a bounded pool of workers, and a
+// ReadMember for one jar, ReadAll for a list through a bounded pool of workers, Open for a
+// caller that reads several entries of one jar, and a
 // Cache that keeps each jar's answer under its size and modification time.
 //
 // An N4 install holds about a thousand jars, often on a slow file system (/mnt/c under
@@ -9,10 +10,8 @@
 package modjar
 
 import (
-	"archive/zip"
 	"errors"
 	"fmt"
-	"io"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -44,45 +43,32 @@ type Result struct {
 var opens atomic.Int64
 
 // ReadMember reads member out of the jar at path.
-func ReadMember(path, member string) Result {
-	opens.Add(1)
+func ReadMember(path, member string, opts ...Option) Result {
 	r := Result{Path: path}
-	z, err := zip.OpenReader(path)
-	if err != nil && !errors.Is(err, zip.ErrInsecurePath) { // an insecure name still gives a reader
+	j, err := Open(path, opts...)
+	if err != nil {
 		r.Err = err
 		return r
 	}
-	defer z.Close()
-	var hit *zip.File
+	defer j.Close()
 	var meta []string
-	for _, f := range z.File {
-		if strings.HasPrefix(f.Name, "META-INF/") {
-			meta = append(meta, f.Name)
-		}
-		if f.Name == member {
-			hit = f
+	for _, n := range j.Names() {
+		if strings.HasPrefix(n, "META-INF/") {
+			meta = append(meta, n)
 		}
 	}
-	if hit == nil {
+	i := j.Last(member)
+	if i < 0 {
 		r.Err = fmt.Errorf("%s: %w: %s", path, ErrNoMember, member)
 		return r
 	}
-	data, err := readFile(hit)
+	data, err := j.Read(i, 0)
 	if err != nil {
 		r.Err = fmt.Errorf("%s: %s: %w", path, member, err)
 		return r
 	}
 	r.Data, r.MetaInf = data, meta
 	return r
-}
-
-func readFile(f *zip.File) ([]byte, error) {
-	rc, err := f.Open()
-	if err != nil {
-		return nil, err
-	}
-	defer rc.Close()
-	return io.ReadAll(rc)
 }
 
 // ReadAll reads member out of every jar in paths with at most workers jars open at once

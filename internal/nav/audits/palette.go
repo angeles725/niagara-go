@@ -1,7 +1,6 @@
 package audits
 
 import (
-	"archive/zip"
 	"fmt"
 	"io"
 	"os"
@@ -10,6 +9,7 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/argparse"
 	"github.com/angeles725/niagara-go/internal/index"
+	"github.com/angeles725/niagara-go/internal/modjar"
 	"github.com/angeles725/niagara-go/internal/nav/core"
 	"github.com/angeles725/niagara-go/internal/nav/registry"
 	"github.com/angeles725/niagara-go/internal/pycompat"
@@ -59,16 +59,11 @@ func readFromJar(jar, member string) (string, bool) {
 	if st, err := os.Stat(jar); err != nil || !st.Mode().IsRegular() {
 		return "", false
 	}
-	zr, err := zip.OpenReader(jar)
-	if err != nil {
+	r := modjar.ReadMember(jar, member, modjar.WithNameFunc(core.ZipName))
+	if r.Err != nil {
 		return "", false
 	}
-	defer zr.Close()
-	b, ok := pycompat.ReadZipMember(zr.File, func(f *zip.File) bool { return core.ZipName(f) == member })
-	if !ok {
-		return "", false
-	}
-	return pycompat.DecodeReplace(b), true
+	return pycompat.DecodeReplace(r.Data), true
 }
 
 // readArtifactFile is the extracted/ copy of name, else the JAR member.

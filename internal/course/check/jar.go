@@ -1,13 +1,13 @@
 package check
 
 import (
-	"archive/zip"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/angeles725/niagara-go/internal/modjar"
 )
 
 // The jar kinds (jar, jar-entry, jar-text, jar-signed): they read <install>/modules/<part>.jar.
@@ -45,13 +45,13 @@ func globRe(glob string) *regexp.Regexp {
 	return regexp.MustCompile(b.String())
 }
 
-func (s *Station) jar(name string) (*zip.ReadCloser, error) {
+func (s *Station) jar(name string) (*modjar.Jar, error) {
 	if j, ok := s.jars[name]; ok {
-		return j.zr, j.err
+		return j.jar, j.err
 	}
-	zr, err := zip.OpenReader(filepath.Join(s.install, "modules", name+".jar"))
-	s.jars[name] = &jarFile{zr, err}
-	return zr, err
+	j, err := modjar.Open(filepath.Join(s.install, "modules", name+".jar"))
+	s.jars[name] = &jarFile{j, err}
+	return j, err
 }
 
 func (s *Station) checkJar(ck *Check) (string, string) {
@@ -59,7 +59,7 @@ func (s *Station) checkJar(ck *Check) (string, string) {
 	if s.install == "" {
 		return Skip, "no --install DIR: " + rel + " not checked"
 	}
-	zr, err := s.jar(ck.Jar)
+	j, err := s.jar(ck.Jar)
 	if os.IsNotExist(err) {
 		return Fail, "missing " + rel + " under " + s.install
 	}
@@ -68,15 +68,15 @@ func (s *Station) checkJar(ck *Check) (string, string) {
 	}
 	switch ck.Kind {
 	case kindJar:
-		return Pass, fmt.Sprintf("%s (%s)", rel, entryCount(len(zr.File)))
+		return Pass, fmt.Sprintf("%s (%s)", rel, entryCount(len(j.Names())))
 	case kindJarSigned:
-		sf, block := entries(zr, globRe("META-INF/*.SF")), entries(zr, regexp.MustCompile(`^META-INF/[^/]+\.(?:RSA|DSA|EC)$`))
+		sf, block := entries(j, globRe("META-INF/*.SF")), entries(j, regexp.MustCompile(`^META-INF/[^/]+\.(?:RSA|DSA|EC)$`))
 		if len(sf) == 0 || len(block) == 0 {
 			return Fail, fmt.Sprintf("%s: %d signature files (.SF), %d signature blocks (.RSA/.DSA/.EC)", rel, len(sf), len(block))
 		}
-		return Pass, fmt.Sprintf("%s: %s, %s", rel, sf[0].Name, block[0].Name)
+		return Pass, fmt.Sprintf("%s: %s, %s", rel, j.Names()[sf[0]], j.Names()[block[0]])
 	case kindJarEntry:
-		found := entries(zr, globRe(ck.Glob))
+		found := entries(j, globRe(ck.Glob))
 		ok := countOK(ck.Op, len(found), ck.N)
 		var ev string
 		if len(found) == 1 {
@@ -85,37 +85,34 @@ func (s *Station) checkJar(ck *Check) (string, string) {
 			ev = fmt.Sprintf("%s: %d entries match %s", rel, len(found), ck.Glob)
 		}
 		if !ok {
-			ev += fmt.Sprintf(", want %s (searched %s)", want(ck.Op, ck.N), entryCount(len(zr.File)))
+			ev += fmt.Sprintf(", want %s (searched %s)", want(ck.Op, ck.N), entryCount(len(j.Names())))
 		}
 		return verdict(ok), ev
 	default: // kindJarText
-		return jarText(zr, rel, ck)
+		return jarText(j, rel, ck)
 	}
 }
 
-func entries(zr *zip.ReadCloser, re *regexp.Regexp) []*zip.File {
-	var out []*zip.File
-	for _, f := range zr.File {
-		if re.MatchString(f.Name) {
-			out = append(out, f)
+// entries is the index of every entry of j whose name re matches, in archive order.
+func entries(j *modjar.Jar, re *regexp.Regexp) []int {
+	var out []int
+	for i, n := range j.Names() {
+		if re.MatchString(n) {
+			out = append(out, i)
 		}
 	}
 	return out
 }
 
-func jarText(zr *zip.ReadCloser, rel string, ck *Check) (string, string) {
-	found := entries(zr, globRe(ck.Glob))
+func jarText(j *modjar.Jar, rel string, ck *Check) (string, string) {
+	found := entries(j, globRe(ck.Glob))
 	if len(found) == 0 {
-		return Fail, fmt.Sprintf("%s: no entry %s (searched %s)", rel, ck.Glob, entryCount(len(zr.File)))
+		return Fail, fmt.Sprintf("%s: no entry %s (searched %s)", rel, ck.Glob, entryCount(len(j.Names())))
 	}
-	rc, err := found[0].Open()
+	name := j.Names()[found[0]]
+	data, err := j.Read(found[0], 16<<20)
 	if err != nil {
-		return Skip, fmt.Sprintf("cannot read %s!%s: %v", rel, found[0].Name, err)
-	}
-	defer rc.Close()
-	data, err := io.ReadAll(io.LimitReader(rc, 16<<20))
-	if err != nil {
-		return Skip, fmt.Sprintf("cannot read %s!%s: %v", rel, found[0].Name, err)
+		return Skip, fmt.Sprintf("cannot read %s!%s: %v", rel, name, err)
 	}
 	var missing []string
 	for _, want := range ck.Contains {
@@ -124,10 +121,10 @@ func jarText(zr *zip.ReadCloser, rel string, ck *Check) (string, string) {
 		}
 	}
 	if len(missing) > 0 {
-		return Fail, fmt.Sprintf("%s!%s lacks %s (%d of %d found)", rel, found[0].Name,
+		return Fail, fmt.Sprintf("%s!%s lacks %s (%d of %d found)", rel, name,
 			strings.Join(missing, ", "), len(ck.Contains)-len(missing), len(ck.Contains))
 	}
-	return Pass, fmt.Sprintf("%s!%s has %s", rel, found[0].Name, strings.Join(ck.Contains, ", "))
+	return Pass, fmt.Sprintf("%s!%s has %s", rel, name, strings.Join(ck.Contains, ", "))
 }
 
 func entryCount(n int) string {

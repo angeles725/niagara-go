@@ -1,14 +1,14 @@
 package check
 
 import (
-	"archive/zip"
 	"bytes"
 	"encoding/pem"
 	"fmt"
-	"io"
 	"os"
 	"regexp"
 	"strings"
+
+	"github.com/angeles725/niagara-go/internal/modjar"
 )
 
 // The jar-cert kind: the signer certificate of a jar's signature block (META-INF/*.RSA, .DSA or
@@ -35,19 +35,19 @@ func (s *Station) jarSigner(part string) (sd *signedData, block, skip, fail stri
 	if s.install == "" {
 		return nil, "", "no --install DIR: " + rel + " not checked", ""
 	}
-	zr, err := s.jar(part)
+	j, err := s.jar(part)
 	if os.IsNotExist(err) {
 		return nil, "", "", "missing " + rel + " under " + s.install
 	}
 	if err != nil {
 		return nil, "", fmt.Sprintf("cannot read %s: %v", rel, err), ""
 	}
-	blocks := entries(zr, signatureBlock)
+	blocks := entries(j, signatureBlock)
 	if len(blocks) == 0 {
 		return nil, "", "", rel + ": no signature block (.RSA/.DSA/.EC)"
 	}
-	block = rel + "!" + blocks[0].Name
-	data, err := readEntry(blocks[0])
+	block = rel + "!" + j.Names()[blocks[0]]
+	data, err := readEntry(j, blocks[0])
 	if err != nil {
 		return nil, block, fmt.Sprintf("cannot read %s: %v", block, err), ""
 	}
@@ -57,13 +57,9 @@ func (s *Station) jarSigner(part string) (sd *signedData, block, skip, fail stri
 	return sd, block, "", ""
 }
 
-func readEntry(f *zip.File) ([]byte, error) {
-	rc, err := f.Open()
-	if err != nil {
-		return nil, err
-	}
-	defer rc.Close()
-	data, err := io.ReadAll(io.LimitReader(rc, maxSignatureBlock+1))
+// readEntry reads entry i of j, failing when it is larger than maxSignatureBlock.
+func readEntry(j *modjar.Jar, i int) ([]byte, error) {
+	data, err := j.Read(i, maxSignatureBlock+1)
 	if err != nil {
 		return nil, err
 	}
