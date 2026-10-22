@@ -58,6 +58,7 @@ var rebuildBuilders = []builder{
 	{"pdf_extractor.py", []string{"pdf-index.json", "docs-text/"}, "", runPDF},
 	{"course_extractor.py", []string{"course-text/"}, "", runCourse},
 	{packageTextScript, []string{packageTextDir + "/"}, "devguide", textRun(buildPackageText)},
+	{lexiconScript, []string{lexiconTextDir + "/"}, "", textRun(buildLexiconText)},
 }
 
 // RebuildOptions are rebuild-all's switches. Only keeps the builders whose

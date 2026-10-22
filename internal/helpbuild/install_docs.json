@@ -16,7 +16,8 @@
       ".odt",
       ".rst",
       ".adoc",
-      ".bajadoc"
+      ".bajadoc",
+      ".lexicon"
     ],
     "names": [
       "toc.xml"
@@ -161,6 +162,11 @@
         "*-zip-listing.txt"
       ],
       "reason": "integrity manifests and zip listing of the course archive"
+    },
+    {
+      "id": "lexicon-outside-modules",
+      "entry": "**.lexicon",
+      "reason": "lexicon of a jar outside modules/ (bin/ext daemon, sw/ software database, module copies at the install root): only the installed modules' lexicons are indexed (lexicon-text/)"
     },
     {
       "id": "meta-inf",

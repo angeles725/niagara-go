@@ -50,8 +50,10 @@ SKIP: no PDF manuals for <root> (docs dir: None); search uses the shared manuals
   RUN   course_extractor.py        -> course-text/
 course: no course bound to this version; skipped
   SKIP  package_text_builder       -> package-text/  (source 'devguide/' absent)
+  RUN   lexicon_extractor          -> lexicon-text/
+lexicon-text/: no install registered; skipped (the last copy is kept)
 
-Ran 4, skipped 9, failed 2.
+Ran 5, skipped 9, failed 2.
 Builders failed — manifest NOT updated (still reflects last good build).
 # stderr
 <raised>
@@ -89,7 +91,7 @@ indexes/.manifest.json 644
   SKIP  devguide_parser.py         -> devguide-clean/  (source 'devguide/' absent)
   SKIP  build_devguide_toc.py      -> devguide-toc.json  (source 'devguide/' absent)
   SKIP  package_text_builder       -> package-text/  (source 'devguide/' absent)
-Ran 4, skipped 9, failed 2.
+Ran 5, skipped 9, failed 2.
   EMPTY class-index.json (its source is not in this install)
   EMPTY inheritance.json (its source is not in this install)
   EMPTY method-index.json (its source is not in this install)
@@ -150,6 +152,8 @@ SKIP: no PDF manuals for <root> (docs dir: None); search uses the shared manuals
   RUN   course_extractor.py        -> course-text/
 course: no course bound to this version; skipped
   SKIP  package_text_builder       -> package-text/  (source 'devguide/' absent)
+  RUN   lexicon_extractor          -> lexicon-text/
+lexicon-text/: no install registered; skipped (the last copy is kept)
 
-Ran 4, skipped 9, failed 2.
+Ran 5, skipped 9, failed 2.
 Builders failed — manifest NOT updated (still reflects last good build).
