@@ -33,30 +33,56 @@ const DBName = "fulltext.sqlite"
 // Fingerprint is fulltext_index._fingerprint: per source its directory, file
 // count, bytes, newest mtime (ns) and a SHA-1 over every file's relative
 // path, size and mtime, so any rename, copy or edit marks the index stale.
+// CachedFingerprint is the same value without walking unchanged sources.
 func Fingerprint(dirs []SourceDir) string {
 	parts := []string{"engine=" + EngineVersion}
 	for _, d := range dirs {
-		files, size, newest := 0, int64(0), int64(0)
-		h := sha1.New()
-		for _, path := range IterFiles(d.Label, d.Dir) {
-			st, err := os.Stat(path)
-			if err != nil {
-				continue
-			}
-			mtime := st.ModTime().UnixNano()
-			files++
-			size += st.Size()
-			newest = max(newest, mtime)
-			r, err := filepath.Rel(d.Dir, path) // os.path.relpath: OS separators
-			if err != nil {
-				r = path
-			}
-			fmt.Fprintf(h, "%s\x00%d\x00%d\n", r, st.Size(), mtime)
+		files := IterFiles(d.Label, d.Dir)
+		stats := make([]fileStat, len(files))
+		for i, path := range files {
+			stats[i] = statFile(path)
 		}
-		parts = append(parts, fmt.Sprintf("%s=%s:%d:%d:%d:%s", d.Label, d.Dir, files, size,
-			newest, hex.EncodeToString(h.Sum(nil))))
+		parts = append(parts, sourcePart(d, files, stats))
 	}
 	return strings.Join(parts, "|")
+}
+
+// fileStat is what the fingerprint reads of one file: its size and mtime
+// (ns), ok false when it cannot be stat'ed (the file is skipped).
+type fileStat struct {
+	Size, Mtime int64
+	OK          bool
+}
+
+func statFile(path string) fileStat {
+	st, err := os.Stat(path)
+	if err != nil {
+		return fileStat{}
+	}
+	return fileStat{st.Size(), st.ModTime().UnixNano(), true}
+}
+
+// sourcePart is the fingerprint of one source from its files (IterFiles
+// order) and their stats.
+func sourcePart(d SourceDir, files []string, stats []fileStat) string {
+	count, size, newest := 0, int64(0), int64(0)
+	h := sha1.New()
+	for i, path := range files {
+		st := stats[i]
+		if !st.OK {
+			continue
+		}
+		count++
+		size += st.Size
+		newest = max(newest, st.Mtime)
+		r, err := filepath.Rel(d.Dir, path) // os.path.relpath: OS separators
+		if err != nil {
+			r = path
+		}
+		fmt.Fprintf(h, "%s\x00%d\x00%d\n", r, st.Size, st.Mtime)
+	}
+	return fmt.Sprintf("%s=%s:%d:%d:%d:%s", d.Label, d.Dir, count, size,
+		newest, hex.EncodeToString(h.Sum(nil)))
 }
 
 // DBPath is fulltext_index.db_path.
@@ -108,7 +134,7 @@ type Opener func(baseDir, versionID, query string) (*Index, error)
 // indexes/fulltext.sqlite and the cache copy whose stored fingerprint equals
 // the current one, else a *StaleIndexError.
 func Open(baseDir, versionID string) (*Index, error) {
-	path, missing := FreshPath(baseDir, Fingerprint(SourceDirs(baseDir)))
+	path, missing := FreshPath(baseDir, CachedFingerprint(baseDir, SourceDirs(baseDir)))
 	if path == "" {
 		return nil, &StaleIndexError{BaseDir: baseDir, VersionID: versionID, Missing: missing}
 	}

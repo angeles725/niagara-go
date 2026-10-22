@@ -157,7 +157,11 @@ func skipExample(rel string) bool {
 // IterFiles is text_sources.iter_files: the indexed files of one source in
 // os.walk order (a folder's files sorted, then its sub-folders sorted, depth
 // first), as absolute paths.
-func IterFiles(label, dir string) []string {
+func IterFiles(label, dir string) []string { return iterFiles(label, dir, nil) }
+
+// iterFiles is IterFiles, calling onDir (when not nil) for every folder it
+// walks, listed false when the folder could not be read.
+func iterFiles(label, dir string, onDir func(dir string, listed bool)) []string {
 	var exts []string
 	for _, s := range sources {
 		if s.label == label {
@@ -165,7 +169,7 @@ func IterFiles(label, dir string) []string {
 		}
 	}
 	var out []string
-	WalkFiles(dir, func(path string) {
+	walkFiles(dir, func(path string) {
 		name := filepath.Base(path)
 		ok := false
 		for _, e := range exts {
@@ -174,7 +178,7 @@ func IterFiles(label, dir string) []string {
 		if ok && !(label == "devguide-examples" && skipExample(rel(dir, path))) {
 			out = append(out, path)
 		}
-	})
+	}, onDir)
 	return out
 }
 
@@ -184,8 +188,13 @@ func IterFiles(label, dir string) []string {
 // listed but not entered, followlinks=False), anything else - a dangling
 // link included - a file. An unreadable folder lists nothing, like os.walk
 // without onerror. It is the one os.walk of nh (help, help/scope, fts).
-func WalkFiles(dir string, fn func(path string)) {
+func WalkFiles(dir string, fn func(path string)) { walkFiles(dir, fn, nil) }
+
+func walkFiles(dir string, fn func(path string), onDir func(dir string, listed bool)) {
 	entries, err := os.ReadDir(dir)
+	if onDir != nil {
+		onDir(dir, err == nil)
+	}
 	if err != nil {
 		return
 	}
@@ -203,7 +212,7 @@ func WalkFiles(dir string, fn func(path string)) {
 		}
 	}
 	for _, d := range dirs {
-		WalkFiles(d, fn)
+		walkFiles(d, fn, onDir)
 	}
 }
 

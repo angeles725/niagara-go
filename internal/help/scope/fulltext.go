@@ -91,7 +91,7 @@ func OpenFulltext(stderr io.Writer) fts.Opener {
 // ensure is open_index up to the open: the path of an up-to-date index,
 // built here when needed (rebuilt).
 func ensure(baseDir string, stderr io.Writer) (path string, rebuilt bool, err error) {
-	current := fts.Fingerprint(fts.SourceDirs(baseDir))
+	current := fts.CachedFingerprint(baseDir, fts.SourceDirs(baseDir))
 	path, missing := fts.FreshPath(baseDir, current)
 	if path != "" {
 		return path, false, nil
