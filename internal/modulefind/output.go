@@ -56,15 +56,7 @@ func render(rows []row, o *opts, line func(row) string, empty string) int {
 			for i, f := range rows[0] {
 				keys[i], header[i] = f.key, f.key
 			}
-			w := pycsv.NewWriter(o.out)
-			_ = w.WriteRow(header)
-			for _, r := range rows {
-				vals := make([]any, len(keys))
-				for i, k := range keys {
-					vals[i] = csvValue(r.get(k))
-				}
-				_ = w.WriteRow(vals)
-			}
+			writeCSV(o, keys, header, rows)
 		}
 	case len(rows) == 0:
 		miss(o, empty)
@@ -77,6 +69,26 @@ func render(rows []row, o *opts, line func(row) string, empty string) int {
 		}
 	}
 	return total
+}
+
+// writeCSV writes the header and one line per row; it stops at the first write that fails
+// (a closed pipe, a full disk) and names it on stderr, where Python's csv.writer raises.
+func writeCSV(o *opts, keys []string, header []any, rows []row) {
+	w := pycsv.NewWriter(o.out)
+	err := w.WriteRow(header)
+	for _, r := range rows {
+		if err != nil {
+			break
+		}
+		vals := make([]any, len(keys))
+		for i, k := range keys {
+			vals[i] = csvValue(r.get(k))
+		}
+		err = w.WriteRow(vals)
+	}
+	if err != nil {
+		fmt.Fprintf(o.err, "module-find: cannot write the CSV output: %v\n", err)
+	}
 }
 
 // miss is module-find._miss: the honest zero names what was searched.

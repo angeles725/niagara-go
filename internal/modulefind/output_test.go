@@ -2,6 +2,7 @@ package modulefind
 
 import (
 	"bytes"
+	"errors"
 	"testing"
 )
 
@@ -42,5 +43,35 @@ func TestRenderFormats(t *testing.T) {
 func TestJSONDumpsEnsureASCII(t *testing.T) {
 	if got := jsonDumps("a\"\\\n\x7fñ😀\xffabc"); got != `"a\"\\\n\u007f\u00f1\ud83d\ude00\ufffdabc"` {
 		t.Errorf("jsonDumps = %q", got)
+	}
+}
+
+// failAfter accepts n writes, then refuses every write (a closed pipe, a full disk).
+type failAfter struct {
+	n      int
+	writes int
+}
+
+var errWrite = errors.New("no space left on device")
+
+func (f *failAfter) Write(p []byte) (int, error) {
+	f.writes++
+	if f.writes > f.n {
+		return 0, errWrite
+	}
+	return len(p), nil
+}
+
+// TestRenderCSVWriteErrorIsReported: a CSV row that cannot be written stops the output
+// (no further row is tried) and is named on stderr instead of being dropped silently.
+func TestRenderCSVWriteErrorIsReported(t *testing.T) {
+	out := &failAfter{n: 1} // the header is written, the first row fails
+	var errb bytes.Buffer
+	cmdSlots(newModule("testdata/srcA"), &opts{csv: true, out: out, err: &errb}, slotFilter{})
+	if out.writes != 2 {
+		t.Errorf("%d writes, want 2 (the header, then the failed row stops the output)", out.writes)
+	}
+	if want := "module-find: cannot write the CSV output: " + errWrite.Error() + "\n"; errb.String() != want {
+		t.Errorf("stderr %q, want %q", errb.String(), want)
 	}
 }

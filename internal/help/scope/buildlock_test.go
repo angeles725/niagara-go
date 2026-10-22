@@ -6,6 +6,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -300,4 +301,86 @@ func TestSearchWaitsForWithBuildLock(t *testing.T) {
 	if err := <-errc; err != nil {
 		t.Fatal(err)
 	}
+}
+
+// scriptedChtimes replaces the heartbeat's touch for one test: each touch
+// takes its result from the returned channel (nil touches the file), so a
+// test decides every touch's outcome and knows it has been made.
+func scriptedChtimes(t *testing.T) chan error {
+	t.Helper()
+	results := make(chan error)
+	saved := chtimes
+	t.Cleanup(func() { chtimes = saved })
+	chtimes = func(name string, atime, mtime time.Time) error {
+		if err := <-results; err != nil {
+			return err
+		}
+		return saved(name, atime, mtime)
+	}
+	return results
+}
+
+// touch drives one heartbeat tick whose touch returns err.
+func touch(ticks chan time.Time, results chan error, err error) {
+	ticks <- time.Now()
+	results <- err
+}
+
+var errTouch = errors.New("touch refused")
+
+// TestHeartbeatReportsConsecutiveTouchFailures: heartbeatMaxFailures touches
+// in a row that fail leave the lock unrefreshed long enough for a waiter to
+// take it over, so stop reports the touch error; fewer, or failures broken
+// by a successful touch, are not reported.
+func TestHeartbeatReportsConsecutiveTouchFailures(t *testing.T) {
+	cases := []struct {
+		name  string
+		fails []bool // one per touch: true = it fails
+		want  bool
+	}{
+		{"no failure", []bool{false, false, false, false}, false},
+		{"broken by a success", []bool{true, true, false, true, true}, false},
+		{"the limit in a row", []bool{false, true, true, true}, true},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			results := scriptedChtimes(t)
+			_, lock := lockRoot(t)
+			if err := os.WriteFile(lock, []byte("mine\n"), 0o644); err != nil {
+				t.Fatal(err)
+			}
+			ticks := make(chan time.Time)
+			stop, _ := heartbeat(lock, []byte("mine\n"), ticks)
+			for _, f := range tc.fails {
+				var err error
+				if f {
+					err = errTouch
+				}
+				touch(ticks, results, err)
+			}
+			err := stop()
+			if got := errors.Is(err, errTouch); got != tc.want {
+				t.Errorf("stop() = %v, want the touch error reported: %v", err, tc.want)
+			}
+		})
+	}
+}
+
+// TestWithBuildLockFailsWhenTheHeartbeatFails: a build whose lock could not
+// be refreshed may have been overtaken by another process, so a successful
+// fn is reported as an error naming the lock; the lock is still released.
+func TestWithBuildLockFailsWhenTheHeartbeatFails(t *testing.T) {
+	ticks := manualTicks(t)
+	results := scriptedChtimes(t)
+	root, lock := lockRoot(t)
+	err := WithBuildLock(root, func() error {
+		for range heartbeatMaxFailures {
+			touch(ticks, results, errTouch)
+		}
+		return nil
+	})
+	if !errors.Is(err, errTouch) || !strings.Contains(err.Error(), lock) {
+		t.Errorf("err %v, want the touch error naming %s", err, lock)
+	}
+	gone(t, lock)
 }
