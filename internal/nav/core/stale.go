@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"sort"
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/index"
@@ -35,16 +34,6 @@ func realpath(p string) string {
 	return filepath.Join(realpath(dir), base)
 }
 
-// listdir is os.listdir: names in directory order (not sorted).
-func listdir(dir string) ([]string, error) {
-	f, err := os.Open(dir)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-	return f.Readdirnames(-1)
-}
-
 // changedDirs is _changed_dirs: the organized/ root ("organized/") and, per
 // module, the first of the module, submodule and vineflower/ directories
 // modified after built. Deeper changes are not seen (that would walk every
@@ -53,7 +42,7 @@ func changedDirs(organized string, built float64) []string {
 	var changed []string
 	modules := sortedNames(organized)
 	if modules == nil {
-		if _, err := listdir(organized); err != nil {
+		if _, err := pycompat.Listdir(organized); err != nil {
 			return changed
 		}
 	}
@@ -69,7 +58,7 @@ func changedDirs(organized string, built float64) []string {
 		}
 		type labelled struct{ label, path string }
 		dirs := []labelled{{module, mpath}}
-		if subs, err := listdir(mpath); err == nil {
+		if subs, err := pycompat.Listdir(mpath); err == nil {
 			for _, sub := range subs {
 				spath := filepath.Join(mpath, sub)
 				if pycompat.IsDir(spath) {
@@ -131,12 +120,6 @@ func metaSource(meta *index.Object) string {
 
 // sortedNames is sorted(os.listdir(dir)); nil when dir cannot be read.
 func sortedNames(dir string) []string {
-	f, err := os.Open(dir)
-	if err != nil {
-		return nil
-	}
-	defer f.Close()
-	names, _ := f.Readdirnames(-1)
-	sort.Strings(names)
+	names, _ := pycompat.SortedListdir(dir)
 	return names
 }

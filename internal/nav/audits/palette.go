@@ -6,7 +6,6 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"sort"
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/argparse"
@@ -199,13 +198,7 @@ func collectArtifact(dir, artifact string) artifactData {
 // findArtifacts is _find_artifacts: the sorted subdirectories holding their
 // own JAR or an extracted/ directory.
 func findArtifacts(moduleDir string) []string {
-	f, err := os.Open(moduleDir)
-	if err != nil {
-		return nil
-	}
-	names, _ := f.Readdirnames(-1)
-	f.Close()
-	sort.Strings(names)
+	names, _ := pycompat.SortedListdir(moduleDir)
 	var out []string
 	for _, n := range names {
 		dir := filepath.Join(moduleDir, n)

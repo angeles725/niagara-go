@@ -91,12 +91,7 @@ func iterJavaRoots(baseDir string, res *IndexResult) ([]javaRoot, error) {
 // pyListdir is os.listdir: the names, an OSError naming the path when the
 // folder cannot be listed.
 func pyListdir(dir string) ([]string, error) {
-	f, err := os.Open(dir)
-	if err != nil {
-		return nil, pyOSError(dir, err)
-	}
-	defer f.Close()
-	names, err := f.Readdirnames(-1)
+	names, err := pycompat.Listdir(dir)
 	if err != nil {
 		return nil, pyOSError(dir, err)
 	}
