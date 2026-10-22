@@ -11,6 +11,7 @@ import (
 	"github.com/angeles725/niagara-go/internal/bm25"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pypath"
+	"github.com/angeles725/niagara-go/internal/statcache"
 	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
@@ -198,13 +199,7 @@ func (c *Corpus) fingerprint(targets []Target) string {
 	return hex.EncodeToString(h.Sum(nil))
 }
 
-func indexDisabled() bool {
-	switch strings.ToLower(pycompat.Strip(os.Getenv("CORPUS_NAV_FIND_INDEX"))) {
-	case "off", "0", "no", "false":
-		return true
-	}
-	return false
-}
+func indexDisabled() bool { return statcache.Off("CORPUS_NAV_FIND_INDEX") }
 
 // Ranked is findindex.ranked: from the cache when fresh, else in memory (rebuilding the
 // cache; Note is the line corpus-nav prints on stderr then).
