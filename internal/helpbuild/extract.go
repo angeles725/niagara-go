@@ -5,7 +5,6 @@ import (
 	"crypto/sha256"
 	"errors"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -300,18 +299,4 @@ func fidelity(installDir, root string, ls *Listings) (*FidelityReport, error) {
 		return nil, err
 	}
 	return rep, nil
-}
-
-// fileSHA256 is _sha256: the hex digest of a file, read in 1 MiB chunks.
-func fileSHA256(path string) (string, error) {
-	f, err := os.Open(path)
-	if err != nil {
-		return "", err
-	}
-	defer f.Close()
-	h := sha256.New()
-	if _, err := io.CopyBuffer(h, f, make([]byte, 1<<20)); err != nil {
-		return "", err
-	}
-	return fmt.Sprintf("%x", h.Sum(nil)), nil
 }

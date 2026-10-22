@@ -66,7 +66,7 @@ func jarManifest(installDir string) ([]jarRow, error) {
 			return nil, err
 		}
 		row.Bytes = st.Size()
-		if row.SHA256, err = fileSHA256(jar); err != nil {
+		if row.SHA256, err = pycompat.FileSHA256(jar); err != nil {
 			return nil, err
 		}
 		rows = append(rows, row)

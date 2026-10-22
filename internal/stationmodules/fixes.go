@@ -45,7 +45,7 @@ func planFixes(missing *missingSet, in *install, doFix bool) (*fixPlan, error) {
 				if err != nil {
 					return nil, err
 				}
-				if f.sha, err = fileSHA256(dst); err != nil {
+				if f.sha, err = pycompat.FileSHA256(dst); err != nil {
 					return nil, err
 				}
 				f.action, f.dst = action, dst
