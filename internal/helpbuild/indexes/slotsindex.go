@@ -144,7 +144,7 @@ func BuildSlotsIndex(baseDir string) (*IndexResult, error) {
 		if !pycompat.IsDir(modulePath) {
 			continue
 		}
-		pyfs.WalkDirOrder(modulePath, func(dir string, dirs, names []string) []string {
+		pycompat.WalkWith(modulePath, pycompat.WalkOptions{Unsorted: true}, func(dir string, dirs, names []string) []string {
 			for _, name := range names {
 				if !strings.HasSuffix(name, ".java") {
 					continue

@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/bajadocxml"
-	"github.com/angeles725/niagara-go/internal/helpbuild/pyfs"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
@@ -82,7 +81,7 @@ func ParseBajadocXML(baseDir string) (*BajadocXMLResult, error) {
 func bajadocXMLClasses(root string) ([]bajadocxml.Class, error) {
 	var out []bajadocxml.Class
 	var firstErr error
-	pyfs.Walk(root, func(dir string, dirs, files []string) []string {
+	pycompat.Walk(root, func(dir string, dirs, files []string) []string {
 		if firstErr != nil {
 			return nil
 		}

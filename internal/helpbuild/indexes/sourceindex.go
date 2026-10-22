@@ -41,7 +41,7 @@ func BuildSourceIndex(baseDir string) (*IndexResult, error) {
 	var order []string
 	totalLines := 0
 	for _, root := range roots {
-		pyfs.WalkDirOrder(root.dir, func(dir string, dirs, files []string) []string {
+		pycompat.WalkWith(root.dir, pycompat.WalkOptions{Unsorted: true}, func(dir string, dirs, files []string) []string {
 			sort.Strings(dirs)
 			for _, name := range files {
 				if !strings.HasSuffix(name, ".java") {

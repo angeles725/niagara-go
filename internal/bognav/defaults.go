@@ -67,7 +67,7 @@ func sourceDirs(moduleDir string) []string {
 func parseDir(src string) (keys []string, recs map[string]*classRec) {
 	recs = map[string]*classRec{}
 	base := filepath.Dir(filepath.Dir(filepath.Dir(src)))
-	slotomatic.Walk(src, true, func(dir string, _ *[]string, files []string) {
+	pycompat.Walk(src, func(dir string, dirs, files []string) []string {
 		for _, fn := range files {
 			if !strings.HasSuffix(fn, ".java") {
 				continue
@@ -99,6 +99,7 @@ func parseDir(src string) (keys []string, recs map[string]*classRec) {
 			recs[key] = &classRec{Type: t, imports: imports, source: rel}
 			keys = append(keys, key)
 		}
+		return dirs
 	})
 	return keys, recs
 }

@@ -7,7 +7,6 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/angeles725/niagara-go/internal/helpbuild/pyfs"
 	"github.com/angeles725/niagara-go/internal/index"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/textfold"
@@ -64,7 +63,7 @@ var guidePageExtensions = []string{".html", ".htm"}
 // folder entered) whose lower-cased name ends with one of extensions.
 func countTree(path string, extensions []string) int {
 	n := 0
-	pyfs.Walk(path, func(_ string, dirs, files []string) []string {
+	pycompat.Walk(path, func(_ string, dirs, files []string) []string {
 		for _, f := range files {
 			if hasAnySuffix(textfold.Lower(f), extensions) {
 				n++
@@ -196,7 +195,7 @@ func documentedClasses(baseDir string) map[string]bool {
 	if !pycompat.IsDir(dir) {
 		return has
 	}
-	pyfs.Walk(dir, func(_ string, dirs, files []string) []string {
+	pycompat.Walk(dir, func(_ string, dirs, files []string) []string {
 		for _, f := range files {
 			if strings.HasSuffix(f, ".txt") {
 				has[strings.ReplaceAll(f, ".txt", "")] = true

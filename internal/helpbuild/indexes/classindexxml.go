@@ -11,7 +11,6 @@ import (
 	"sync"
 
 	"github.com/angeles725/niagara-go/internal/bajadocxml"
-	"github.com/angeles725/niagara-go/internal/helpbuild/pyfs"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
@@ -24,7 +23,7 @@ import (
 // the path (os.path.join from root) and the path relative to root with "/"
 // separators.
 func bajadocWalk(root string, visit func(path, rel string)) {
-	pyfs.Walk(root, func(dir string, dirs, files []string) []string {
+	pycompat.Walk(root, func(dir string, dirs, files []string) []string {
 		sort.Strings(dirs)
 		sort.Strings(files)
 		sub, err := filepath.Rel(root, dir) // dir is root joined with folder names

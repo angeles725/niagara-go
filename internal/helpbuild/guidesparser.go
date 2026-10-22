@@ -10,7 +10,6 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/atomicfile"
 	"github.com/angeles725/niagara-go/internal/helpbuild/htmltext"
-	"github.com/angeles725/niagara-go/internal/helpbuild/pyfs"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/textfold"
 )
@@ -110,7 +109,7 @@ func parseGuidesInto(res *textResult, guidesDir, outDir string) error {
 				res.Warnings = append(res.Warnings, warning)
 			}
 		}
-		pyfs.Walk(folderPath, func(dir string, dirs, files []string) []string {
+		pycompat.Walk(folderPath, func(dir string, dirs, files []string) []string {
 			for _, fname := range files {
 				if werr != nil || !isGuidePage(fname) {
 					continue
@@ -199,7 +198,7 @@ func parseDevguideInto(res *textResult, baseDir, devguideDir, outDir string) err
 	chars := 0
 	var excluded []string
 	var werr error
-	pyfs.Walk(devguideDir, func(dir string, dirs, files []string) []string {
+	pycompat.Walk(devguideDir, func(dir string, dirs, files []string) []string {
 		for _, fname := range files {
 			if werr != nil {
 				break
