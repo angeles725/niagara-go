@@ -19,8 +19,8 @@ const doc = "qnx6read: minimal read-only QNX6 (Power-Safe) reader for the JACE-8
 	"The image comes from --image, else from the QNX6_IMG environment variable: a regular file or a block\n" +
 	"device (`--image /dev/sdb` reads the card directly); a character device (a BSD raw disk /dev/rdiskN)\n" +
 	"only with --char-device, so a terminal or /dev/null is never read as a disk.\n" +
-	"Exit 0 ok, 1 listing incomplete (depth limit hit), 2 usage (no image, an image that is not a file or a\n" +
-	"block device, an unreadable image, bad arguments).\n" +
+	"Exit 0 ok, 1 listing incomplete (depth limit hit) or extract <src> not found in the image, 2 usage (no\n" +
+	"image, an image that is not a file or a block device, an unreadable image, bad arguments).\n" +
 	""
 
 // Main is the qnx6read command line (Python argparse parity). --image defaults to $QNX6_IMG.
