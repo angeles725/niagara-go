@@ -24,14 +24,6 @@ import (
 	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
-// exitError is a Python SystemExit: message to stderr, then the code.
-type exitError struct {
-	msg  string
-	code int
-}
-
-func (e exitError) Error() string { return e.msg }
-
 // Main mirrors the tool's hand-rolled positional CLI.
 func Main(args []string, s cli.Stdio) int {
 	if len(args) == 0 || args[0] == "-h" || args[0] == "--help" {
@@ -58,14 +50,11 @@ func Main(args []string, s cli.Stdio) int {
 		return code
 	}
 	fmt.Fprintln(s.Err, err)
-	var ee exitError
-	if errors.As(err, &ee) {
-		return ee.code
+	if code, ok := cli.ExitCode(err); ok {
+		return code
 	}
 	return 1
 }
-
-func sysExit(msg string) error { return exitError{msg, 1} }
 
 // readXML mirrors etree.parse on a path; failures are uncaught exceptions.
 func readXML(path string) (*document, error) {
@@ -86,7 +75,7 @@ func loadLicense(path string) (*document, error) {
 		return nil, err
 	}
 	if doc.root.name != "license" {
-		return nil, sysExit(fmt.Sprintf("ERROR: root element is <%s>, expected <license>", doc.root.name))
+		return nil, cli.SystemExit(fmt.Sprintf("ERROR: root element is <%s>, expected <license>", doc.root.name))
 	}
 	return doc, nil
 }
@@ -98,7 +87,7 @@ func loadCertPublicKey(path string) (any, error) {
 	}
 	pk := find(doc.root, "publicKey")
 	if pk == nil || elemText(pk) == nil || *elemText(pk) == "" {
-		return nil, sysExit("ERROR: no <publicKey> in certificate")
+		return nil, cli.SystemExit("ERROR: no <publicKey> in certificate")
 	}
 	der, err := b64decode(strings.Join(textfold.Fields(*elemText(pk)), ""))
 	if err != nil {
@@ -122,7 +111,7 @@ func cmdVerify(licensePath, certPath string, s cli.Stdio) (int, error) {
 	root := doc.root
 	sigEl := find(root, "signature")
 	if sigEl == nil || elemText(sigEl) == nil || *elemText(sigEl) == "" {
-		return 0, sysExit("ERROR: no <signature> element")
+		return 0, cli.SystemExit("ERROR: no <signature> element")
 	}
 	sig, err := b64decode(strings.Join(textfold.Fields(*elemText(sigEl)), ""))
 	if err != nil {
@@ -170,7 +159,7 @@ func signInto(doc *document, keyPath string) error {
 	sig, err := signDSA(key, data)
 	if err != nil {
 		if errors.Is(err, errNoBit159) {
-			return sysExit(err.Error())
+			return cli.SystemExit(err.Error())
 		}
 		return err
 	}
@@ -196,7 +185,7 @@ func outPathFor(licensePath, suffix string) (string, error) {
 	a, _ := filepath.Abs(out)
 	b, _ := filepath.Abs(licensePath)
 	if a == b {
-		return "", sysExit("ERROR: refusing to overwrite input " + licensePath)
+		return "", cli.SystemExit("ERROR: refusing to overwrite input " + licensePath)
 	}
 	return out, nil
 }
@@ -295,7 +284,7 @@ func readFeaturesCSV(path string) ([]feature, error) {
 		feats = append(feats, ft)
 	}
 	if len(feats) == 0 {
-		return nil, exitError{"ERROR: no features in " + path, 2}
+		return nil, &cli.Exit{Msg: "ERROR: no features in " + path, Code: 2}
 	}
 	return feats, nil
 }

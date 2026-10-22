@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/angeles725/niagara-go/internal/cli"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
@@ -29,18 +30,13 @@ var (
 	viewSizeRE = regexp.MustCompile(`viewSize="([0-9.]+),([0-9.]+)"`)
 )
 
-// exitError is a sys.exit(message) of the Python tool: the message on stderr, exit 1.
-type exitError struct{ msg string }
-
-func (e *exitError) Error() string { return e.msg }
-
 type point struct{ x, y float64 }
 
 // pyFloat is float() of a "[\d.]+" match: a digit string past float64 is inf, as in Python.
 func pyFloat(s string) (float64, error) {
 	v, err := pycompat.ParseFloat(s)
 	if err != nil {
-		return 0, &exitError{"greenmax-tablero-gen: could not convert string to float: " + pycompat.StrRepr(s)}
+		return 0, cli.SystemExit("greenmax-tablero-gen: could not convert string to float: " + pycompat.StrRepr(s))
 	}
 	return v, nil
 }
@@ -50,9 +46,9 @@ func pyFloat(s string) (float64, error) {
 func pyInt(v float64) (string, error) {
 	switch {
 	case math.IsInf(v, 0):
-		return "", &exitError{"greenmax-tablero-gen: cannot convert float infinity to integer"}
+		return "", cli.SystemExit("greenmax-tablero-gen: cannot convert float infinity to integer")
 	case math.IsNaN(v):
-		return "", &exitError{"greenmax-tablero-gen: cannot convert float NaN to integer"}
+		return "", cli.SystemExit("greenmax-tablero-gen: cannot convert float NaN to integer")
 	}
 	s, _ := pycompat.IntOfFloat(v)
 	return s, nil
@@ -129,7 +125,7 @@ func transform(text, gm string, legend bool) (string, int, stats, error) {
 		return "", 0, st, err
 	}
 	if len(pos) == 0 {
-		return "", 0, st, &exitError{"NO PILLS FOUND (no Relay[k].BO 60x30 Pictures) — inspect the Px manually"}
+		return "", 0, st, cli.SystemExit("NO PILLS FOUND (no Relay[k].BO 60x30 Pictures) — inspect the Px manually")
 	}
 	ks := make([]int, 0, len(pos))
 	for k := range pos {
@@ -149,8 +145,8 @@ func transform(text, gm string, legend bool) (string, int, stats, error) {
 	text = hoaBtnRE.ReplaceAllLiteralString(text, "")
 	text = popPicRE.ReplaceAllLiteralString(text, "")
 	if left := len(hoaRE.FindAllStringIndex(text, -1)) + len(popRE.FindAllStringIndex(text, -1)); left > 0 {
-		return "", 0, st, &exitError{fmt.Sprintf("%d HOA button/calendar popup reference(s) survived the removal "+
-			"-- inspect the Px manually", left)}
+		return "", 0, st, cli.SystemExit(fmt.Sprintf("%d HOA button/calendar popup reference(s) survived the removal "+
+			"-- inspect the Px manually", left))
 	}
 
 	var sel strings.Builder
@@ -195,13 +191,13 @@ func transform(text, gm string, legend bool) (string, int, stats, error) {
 	}
 
 	if c := strings.Count(text, "</CanvasPane>"); c != 1 {
-		return "", 0, st, &exitError{fmt.Sprintf("expected exactly one </CanvasPane>, found %d", c)}
+		return "", 0, st, cli.SystemExit(fmt.Sprintf("expected exactly one </CanvasPane>, found %d", c))
 	}
 	text = strings.Replace(text, "</CanvasPane>", sel.String()+"  </CanvasPane>", 1)
 
 	if err := checkWellFormed(text); err != nil {
 		// Python's minidom raises an ExpatError traceback here.
-		return "", 0, st, &exitError{"greenmax-tablero-gen: the generated Px is not well-formed XML: " + err.Error()}
+		return "", 0, st, cli.SystemExit("greenmax-tablero-gen: the generated Px is not well-formed XML: " + err.Error())
 	}
 	st.pills = strings.Count(text, "GreenMax On.png")
 	st.leds = strings.Count(text, "<IStatusToSimple")
@@ -211,7 +207,7 @@ func transform(text, gm string, legend bool) (string, int, stats, error) {
 	}{{&st.namemux, `/Iluminacion/` + gm + `/NameMux[0-9]+`}, {&st.selrset, `/Iluminacion/` + gm + `/SelR[0-9]+/set`}} {
 		re, err := regexp.Compile(c.pat)
 		if err != nil {
-			return "", 0, st, &exitError{"greenmax-tablero-gen: --gm is not usable in a pattern: " + err.Error()}
+			return "", 0, st, cli.SystemExit("greenmax-tablero-gen: --gm is not usable in a pattern: " + err.Error())
 		}
 		*c.dst = len(re.FindAllStringIndex(text, -1))
 	}
