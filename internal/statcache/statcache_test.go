@@ -77,7 +77,37 @@ func TestCacheFlow(t *testing.T) {
 			writeFile(t, filepath.Join(dir, "a"), "longer", base)
 		}, 1, false},
 		{"stale mtime", func(t *testing.T, dir string, _ *[]string, _ string) {
-			writeFile(t, filepath.Join(dir, "a"), "aa", base.Add(time.Nanosecond))
+			writeFile(t, filepath.Join(dir, "a"), "aa", base.Add(time.Second))
+		}, 1, false},
+		{"stale mtime by 1ns", func(t *testing.T, dir string, _ *[]string, _ string) {
+			p := filepath.Join(dir, "a")
+			writeFile(t, p, "aa", base.Add(time.Nanosecond))
+			if Stat(p).MtimeNs == base.UnixNano() {
+				t.Skip("the file system does not keep nanoseconds")
+			}
+		}, 1, false},
+		{"rewritten with the same size and mtime", func(t *testing.T, dir string, _ *[]string, _ string) {
+			writeFile(t, filepath.Join(dir, "a"), "zz", base) // stat-keyed: the bytes are not compared
+		}, 1, true},
+		{"files reordered", func(_ *testing.T, _ string, paths *[]string, _ string) {
+			(*paths)[0], (*paths)[1] = (*paths)[1], (*paths)[0]
+		}, 1, false},
+		{"file replaced by a directory", func(t *testing.T, dir string, _ *[]string, _ string) {
+			p := filepath.Join(dir, "b")
+			if err := os.Remove(p); err != nil || os.Mkdir(p, 0o755) != nil {
+				t.Fatal(err)
+			}
+		}, 1, false},
+		{"empty cache file", func(t *testing.T, _ string, _ *[]string, cache string) {
+			if err := os.WriteFile(cache, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+		}, 1, false},
+		{"truncated cache file", func(t *testing.T, _ string, _ *[]string, cache string) {
+			data, err := os.ReadFile(cache)
+			if err != nil || os.WriteFile(cache, data[:len(data)-1], 0o600) != nil {
+				t.Fatal(err)
+			}
 		}, 1, false},
 		{"file added", func(t *testing.T, dir string, paths *[]string, _ string) {
 			c := filepath.Join(dir, "c")
@@ -101,7 +131,7 @@ func TestCacheFlow(t *testing.T) {
 			dir := t.TempDir()
 			paths := []string{filepath.Join(dir, "a"), filepath.Join(dir, "b")}
 			writeFile(t, paths[0], "aa", base)
-			writeFile(t, paths[1], "bb", base)
+			writeFile(t, paths[1], "bbb", base) // a and b stamps differ: their order counts
 			cache := filepath.Join(dir, "sub", "cache.gob")
 			store(t, cache, 1, paths, "payload")
 			tc.change(t, dir, &paths, cache)
@@ -228,5 +258,156 @@ func TestSysOnLinux(t *testing.T) {
 	}
 	if runtime.GOOS != "linux" && ok {
 		t.Fatal("Sys reports values off Linux")
+	}
+}
+
+func TestWriteGobReplacesAndReadsBack(t *testing.T) {
+	dir := filepath.Join(t.TempDir(), "new", "dir")
+	path := filepath.Join(dir, "x.gob")
+	type rec struct {
+		Name string
+		N    []int
+	}
+	if !WriteGob(path, rec{"a", []int{1}}) {
+		t.Fatal("WriteGob failed")
+	}
+	if runtime.GOOS != "windows" {
+		if st, err := os.Stat(dir); err != nil || st.Mode().Perm() != 0o700 {
+			t.Fatalf("created directory mode %v, %v; want 0700", st.Mode(), err)
+		}
+	}
+	// A 0644 file already there is replaced by a 0600 one with the new value.
+	if err := os.Chmod(path, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if !WriteGob(path, &rec{"b", []int{2, 3}}) {
+		t.Fatal("WriteGob over an existing file failed")
+	}
+	var got rec
+	if !ReadGob(path, &got) || got.Name != "b" || len(got.N) != 2 || got.N[1] != 3 {
+		t.Fatalf("ReadGob = %+v", got)
+	}
+	if st, err := os.Stat(path); runtime.GOOS != "windows" && (err != nil || st.Mode().Perm() != 0o600) {
+		t.Fatalf("replaced file mode %v, %v; want 0600", st.Mode(), err)
+	}
+	// Under a regular file nothing can be written, and nothing is left beside it.
+	blocker := filepath.Join(dir, "file")
+	if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if WriteGob(filepath.Join(blocker, "y.gob"), rec{}) {
+		t.Fatal("WriteGob under a regular file succeeded")
+	}
+	if ents, _ := os.ReadDir(dir); len(ents) != 2 {
+		t.Fatalf("dir holds %d entries, want x.gob and file", len(ents))
+	}
+}
+
+func TestReadGobRejects(t *testing.T) {
+	dir := t.TempDir()
+	good := filepath.Join(dir, "good.gob")
+	if !WriteGob(good, map[string]int{"a": 1}) {
+		t.Fatal("WriteGob failed")
+	}
+	data, _ := os.ReadFile(good)
+	for name, body := range map[string][]byte{"empty": {}, "garbage": []byte("garbage"), "truncated": data[:len(data)-1]} {
+		p := filepath.Join(dir, name)
+		if err := os.WriteFile(p, body, 0o600); err != nil {
+			t.Fatal(err)
+		}
+		var m map[string]int
+		if ReadGob(p, &m) {
+			t.Errorf("%s decoded as %v", name, m)
+		}
+	}
+	var m map[string]int
+	if ReadGob(filepath.Join(dir, "missing"), &m) || ReadGob(dir, &m) {
+		t.Error("a missing file or a directory decoded")
+	}
+	var wrong struct{ B []string }
+	if ReadGob(good, &wrong) {
+		t.Error("a map decoded into an unrelated struct")
+	}
+	if !ReadGob(good, &m) || m["a"] != 1 {
+		t.Errorf("ReadGob = %v", m)
+	}
+}
+
+func TestFilesWorkerCounts(t *testing.T) {
+	dir := t.TempDir()
+	var paths []string
+	for i := range 7 {
+		p := filepath.Join(dir, string(rune('a'+i)))
+		writeFile(t, p, string(make([]byte, i)), time.Unix(int64(2000+i), 0))
+		paths = append(paths, p)
+	}
+	want := make([]Stamp, len(paths))
+	for i, p := range paths {
+		want[i] = Stat(p)
+	}
+	for _, workers := range []int{-1, 0, 1, 2, 3, 6, 7, 8, 100} {
+		for n := 0; n <= len(paths); n++ {
+			got := Files(paths[:n], workers)
+			if len(got) != n {
+				t.Fatalf("Files(%d paths, %d) has %d stamps", n, workers, len(got))
+			}
+			for i := range got {
+				if got[i] != want[i] {
+					t.Fatalf("Files(%d paths, %d)[%d] = %v, want %v", n, workers, i, got[i], want[i])
+				}
+			}
+		}
+	}
+}
+
+func TestStatFollowsLinksAndMarksMissing(t *testing.T) {
+	dir := t.TempDir()
+	p := filepath.Join(dir, "f")
+	writeFile(t, p, "abc", time.Unix(3000, 7))
+	if s := Stat(p); s != (Stamp{3, 3000e9 + 7}) || !s.Exists() {
+		t.Fatalf("Stat = %v", s)
+	}
+	st, _ := os.Stat(p)
+	if Of(st) != Stat(p) {
+		t.Fatal("Of and Stat differ")
+	}
+	link, broken := filepath.Join(dir, "link"), filepath.Join(dir, "broken")
+	if os.Symlink(p, link) != nil || os.Symlink(filepath.Join(dir, "nowhere"), broken) != nil {
+		t.Skip("no symlinks")
+	}
+	if Stat(link) != Stat(p) {
+		t.Fatal("Stat of a link is not its target's")
+	}
+	if Stat(broken) != Missing || Same(broken, Missing) {
+		t.Fatal("a broken link is not Missing, or Missing is Same")
+	}
+	// Missing is never Same, even for a path that is still missing.
+	if Same(filepath.Join(dir, "gone"), Missing) {
+		t.Fatal("Same(missing, Missing)")
+	}
+}
+
+func TestSwitchAndNamesEdges(t *testing.T) {
+	t.Setenv("STATCACHE_TEST_SWITCH", "\tNo\n")
+	if !Off("STATCACHE_TEST_SWITCH") {
+		t.Error("tab/newline-wrapped No does not turn the cache off")
+	}
+	if Off("STATCACHE_TEST_UNSET_SWITCH") {
+		t.Error("an unset variable turns the cache off")
+	}
+	t.Setenv("XDG_CACHE_HOME", "")
+	t.Setenv("HOME", "")
+	if runtime.GOOS != "windows" && runtime.GOOS != "plan9" {
+		if got := UserDir("niagara-go", "x"); got != "" {
+			t.Errorf("UserDir without a home = %q, want \"\"", got)
+		}
+	}
+	for exe, want := range map[string]bool{
+		"/b/mod.test": true, "mod.test.exe": true, "/b/.test": true,
+		"/b/mod": false, "/b/mod.tests": false, "/b/test": false, "/b/mod.test.bin": false,
+	} {
+		if IsTestName(exe) != want {
+			t.Errorf("IsTestName(%q) = %v, want %v", exe, !want, want)
+		}
 	}
 }

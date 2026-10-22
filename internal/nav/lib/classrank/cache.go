@@ -1,12 +1,9 @@
 package classrank
 
 import (
-	"bytes"
-	"encoding/gob"
-	"os"
-
 	"github.com/angeles725/niagara-go/internal/index"
 	"github.com/angeles725/niagara-go/internal/nav/core"
+	"github.com/angeles725/niagara-go/internal/statcache"
 )
 
 // The prepared-ranker cache (class_rank_cache.py), Go's own file: Python's
@@ -19,8 +16,8 @@ import (
 //	size and mtime (ns) of class-index.json and of xref-index.json.
 //
 // A cache whose key differs, that cannot be read or is malformed is ignored:
-// the ranker is built and the cache rewritten atomically (a temporary file in
-// the same directory, then rename; mode 0600). A cache that cannot be written
+// the ranker is built and the cache rewritten atomically by statcache.WriteGob
+// (a temporary file in the same directory, then rename; mode 0600). A cache that cannot be written
 // is skipped silently. stderr is the same on a hit and on a build (announce).
 //
 // Class indexes under cacheMinBytes are not cached: building their ranker
@@ -56,11 +53,11 @@ type cacheFile struct {
 }
 
 func statOf(path string) fileStat {
-	st, err := os.Stat(path)
-	if err != nil {
+	s := statcache.Stat(path)
+	if !s.Exists() {
 		return fileStat{}
 	}
-	return fileStat{true, st.Size(), st.ModTime().UnixNano()}
+	return fileStat{true, s.Size, s.MtimeNs}
 }
 
 func keyOf(src Source) cacheKey {
@@ -71,12 +68,8 @@ func keyOf(src Source) cacheKey {
 // readCache is class_rank_cache.read plus ClassRanker.from_state: the ranker
 // stored at path under key, else nil.
 func readCache(path string, key cacheKey) *Ranker {
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return nil
-	}
 	var cf cacheFile
-	if gob.NewDecoder(bytes.NewReader(data)).Decode(&cf) != nil || cf.Key != key {
+	if !statcache.ReadGob(path, &cf) || cf.Key != key {
 		return nil
 	}
 	var meta *index.Object
@@ -100,5 +93,5 @@ func writeCache(path string, key cacheKey, st state, meta *index.Object) bool {
 	if meta != nil {
 		cf.Meta = []byte(core.Dumps(meta, -1))
 	}
-	return core.WriteGob(path, &cf)
+	return statcache.WriteGob(path, &cf)
 }

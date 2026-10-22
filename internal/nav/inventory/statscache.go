@@ -1,12 +1,11 @@
 package inventory
 
 import (
-	"bytes"
-	"encoding/gob"
 	"os"
 	"path/filepath"
 
 	"github.com/angeles725/niagara-go/internal/nav/core"
+	"github.com/angeles725/niagara-go/internal/statcache"
 )
 
 // The stats summary cache, indexes/.mnav-cache/stats.gob: Python's stats reads
@@ -45,12 +44,8 @@ type statsCache struct {
 
 func openStatsCache(indexDir string) *statsCache {
 	c := &statsCache{path: filepath.Join(indexDir, ".mnav-cache", statsCacheName), entries: map[string]statsEntry{}}
-	data, err := os.ReadFile(c.path)
-	if err != nil {
-		return c
-	}
 	var f statsCacheFile
-	if gob.NewDecoder(bytes.NewReader(data)).Decode(&f) == nil && f.Format == statsCacheFormat && f.Entries != nil {
+	if statcache.ReadGob(c.path, &f) && f.Format == statsCacheFormat && f.Entries != nil {
 		c.entries = f.Entries
 	}
 	return c
@@ -63,33 +58,32 @@ func (c *statsCache) summary(path string, full bool) summary {
 	if err != nil || !st.Mode().IsRegular() {
 		return summary{}
 	}
+	stamp := statcache.Of(st)
 	key := core.ResolvedPath(path)
-	cacheable := st.Size() >= statsCacheMinBytes
-	if e, ok := c.entries[key]; ok && cacheable && e.Size == st.Size() && e.MtimeNs == st.ModTime().UnixNano() &&
+	cacheable := stamp.Size >= statsCacheMinBytes
+	if e, ok := c.entries[key]; ok && cacheable && e.Size == stamp.Size && e.MtimeNs == stamp.MtimeNs &&
 		(e.Summary.Full || !full) {
 		return e.Summary
 	}
 	s := summarize(path, full)
-	if cacheable {
-		if st2, err := os.Stat(path); err == nil && st2.Size() == st.Size() && st2.ModTime().Equal(st.ModTime()) {
-			c.entries[key] = statsEntry{st.Size(), st.ModTime().UnixNano(), s}
-			c.dirty = true
-		}
+	if cacheable && statcache.Same(path, stamp) { // a file changed while summarized is not stored
+		c.entries[key] = statsEntry{stamp.Size, stamp.MtimeNs, s}
+		c.dirty = true
 	}
 	return s
 }
 
-// save writes the cache back when a summary was added (atomically; mode
-// 0600), dropping the entries of files that no longer exist.
+// save writes the cache back when a summary was added (statcache.WriteGob:
+// atomically, mode 0600), dropping the entries of files that no longer exist.
 func (c *statsCache) save() {
 	if !c.dirty {
 		return
 	}
 	for k := range c.entries {
-		if _, err := os.Stat(k); err != nil {
+		if !statcache.Stat(k).Exists() {
 			delete(c.entries, k)
 		}
 	}
-	core.WriteGob(c.path, statsCacheFile{statsCacheFormat, c.entries})
+	statcache.WriteGob(c.path, statsCacheFile{statsCacheFormat, c.entries})
 	c.dirty = false
 }
