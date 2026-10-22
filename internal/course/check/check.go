@@ -1,7 +1,6 @@
 package check
 
 import (
-	"archive/zip"
 	"fmt"
 	"os"
 	"path"
@@ -11,6 +10,7 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/bog"
 	"github.com/angeles725/niagara-go/internal/course/key"
+	"github.com/angeles725/niagara-go/internal/modjar"
 )
 
 // Verdicts. A check that could not run (no --install, an unreadable jar) is SKIP, never PASS.
@@ -48,7 +48,7 @@ type Station struct {
 }
 
 type jarFile struct {
-	zr  *zip.ReadCloser
+	jar *modjar.Jar
 	err error
 }
 
@@ -104,8 +104,8 @@ func (s *Station) Scope() string {
 // Close releases the jars the checks opened.
 func (s *Station) Close() {
 	for _, j := range s.jars {
-		if j.zr != nil {
-			j.zr.Close()
+		if j.jar != nil {
+			j.jar.Close()
 		}
 	}
 }
