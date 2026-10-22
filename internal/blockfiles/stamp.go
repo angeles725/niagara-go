@@ -4,6 +4,8 @@ import (
 	"encoding/binary"
 	"fmt"
 	"os"
+
+	"github.com/angeles725/niagara-go/internal/statcache"
 )
 
 // stamp is what the walk cache compares of a directory: mtime and mode everywhere,
@@ -23,7 +25,7 @@ func statStamp(path string) (stamp, error) {
 		return stamp{}, err
 	}
 	s := stamp{mtime: st.ModTime().UnixNano(), mode: uint32(st.Mode())}
-	s.ctime, s.ino, s.dev = sysStamp(st)
+	s.ctime, s.ino, s.dev, _ = statcache.Sys(st)
 	return s, nil
 }
 
@@ -59,6 +61,6 @@ func fileStamp(path string, err error) string {
 	if err != nil {
 		return ""
 	}
-	ctime, ino, dev := sysStamp(st)
+	ctime, ino, dev, _ := statcache.Sys(st)
 	return fmt.Sprintf("%s:%d:%d:%d:%d:%d", path, st.Size(), st.ModTime().UnixNano(), ctime, ino, dev)
 }

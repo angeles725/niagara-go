@@ -1,24 +1,20 @@
 package modjar
 
 import (
-	"bytes"
 	"crypto/sha1"
-	"encoding/gob"
 	"encoding/hex"
 	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 	"sync"
 
-	"github.com/angeles725/niagara-go/internal/nav/core"
-	"github.com/angeles725/niagara-go/internal/pycompat"
+	"github.com/angeles725/niagara-go/internal/statcache"
 )
 
 // The cache follows the stats cache of module-nav (internal/nav/inventory/statscache.go):
 // one gob file of {absolute path: entry} kept under each jar's size and mtime (ns), written
-// back atomically with core.WriteGob (mode 0600). A jar whose size or mtime changed is read
+// back atomically with statcache.WriteGob (mode 0600). A jar whose size or mtime changed is read
 // again; a jar that changed while it was read, or failed to open or read, is not cached;
 // "no such member" is (it is a property of the bytes). The key is not resolved through
 // symlinks: on a slow file system that costs an lstat per path component, and a stat of
@@ -68,12 +64,8 @@ func OpenCache(dir, member string) *Cache {
 	}
 	sum := sha1.Sum([]byte(member))
 	c.path = filepath.Join(dir, hex.EncodeToString(sum[:])[:16]+".gob")
-	data, err := os.ReadFile(c.path)
-	if err != nil {
-		return c
-	}
 	var f cacheFile
-	if gob.NewDecoder(bytes.NewReader(data)).Decode(&f) == nil && f.Format == cacheFormat &&
+	if statcache.ReadGob(c.path, &f) && f.Format == cacheFormat &&
 		f.Member == member && f.Entries != nil {
 		c.entries = f.Entries
 	}
@@ -93,6 +85,7 @@ func (c *Cache) read(path string) Result {
 	if err != nil || !st.Mode().IsRegular() {
 		return ReadMember(path, c.member) // reports the error the open meets
 	}
+	stamp := statcache.Of(st)
 	key, err := filepath.Abs(path)
 	if err != nil {
 		return ReadMember(path, c.member)
@@ -101,7 +94,7 @@ func (c *Cache) read(path string) Result {
 	e, ok := c.entries[key]
 	c.seen[key], c.seenDirs[filepath.Dir(key)] = true, true
 	c.mu.Unlock()
-	if ok && e.Size == st.Size() && e.MtimeNs == st.ModTime().UnixNano() {
+	if ok && e.Size == stamp.Size && e.MtimeNs == stamp.MtimeNs {
 		r := Result{Path: path, Data: e.Data, MetaInf: e.MetaInf}
 		if e.NoMember {
 			r.Data, r.MetaInf = nil, nil
@@ -114,9 +107,9 @@ func (c *Cache) read(path string) Result {
 	if r.Err != nil && !noMember {
 		return r
 	}
-	if st2, err := os.Stat(path); err == nil && st2.Size() == st.Size() && st2.ModTime().Equal(st.ModTime()) {
+	if statcache.Same(path, stamp) {
 		c.mu.Lock()
-		c.entries[key] = cacheEntry{st.Size(), st.ModTime().UnixNano(), r.Data, r.MetaInf, noMember}
+		c.entries[key] = cacheEntry{stamp.Size, stamp.MtimeNs, r.Data, r.MetaInf, noMember}
 		c.dirty = true
 		c.mu.Unlock()
 	}
@@ -141,7 +134,7 @@ func (c *Cache) Save() error {
 	if !c.dirty {
 		return nil
 	}
-	if !core.WriteGob(c.path, cacheFile{cacheFormat, c.member, c.entries}) {
+	if !statcache.WriteGob(c.path, cacheFile{cacheFormat, c.member, c.entries}) {
 		return fmt.Errorf("modjar: cannot write cache %s", c.path)
 	}
 	c.dirty = false
@@ -157,27 +150,12 @@ func ReadAllCached(paths []string, member string, workers int) []Result {
 }
 
 // DefaultDir is the cache directory, "" when the cache is off.
-func DefaultDir() string {
-	exe, err := os.Executable()
-	return defaultDir(err != nil || strings.HasSuffix(strings.TrimSuffix(filepath.Base(exe), ".exe"), ".test"))
-}
+func DefaultDir() string { return defaultDir(statcache.TestBinary()) }
 
 // defaultDir is DefaultDir for a run that is (or not) a test binary.
 func defaultDir(testBinary bool) string {
-	switch strings.ToLower(pycompat.Strip(os.Getenv(envCache))) {
-	case "off", "0", "no", "false":
+	if statcache.Off(envCache) || testBinary {
 		return ""
 	}
-	if testBinary {
-		return ""
-	}
-	home := os.Getenv("XDG_CACHE_HOME")
-	if home == "" {
-		h, err := os.UserHomeDir()
-		if err != nil || h == "" {
-			return ""
-		}
-		home = filepath.Join(h, ".cache")
-	}
-	return filepath.Join(home, "niagara-go", "modjar")
+	return statcache.UserDir("niagara-go", "modjar")
 }

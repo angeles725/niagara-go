@@ -1,14 +1,12 @@
 package callgraph
 
 import (
-	"bytes"
-	"encoding/gob"
-	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/index"
 	"github.com/angeles725/niagara-go/internal/nav/core"
+	"github.com/angeles725/niagara-go/internal/statcache"
 )
 
 // The loaded-graph cache, indexes/.mnav-cache/callgraph.gob: decoding the
@@ -64,12 +62,12 @@ func CachePath(baseDir string) string {
 // NewCache fingerprints the index at indexPath; cachePath is the cache file
 // (CachePath). A missing index or one under cacheMinBytes is never cached.
 func NewCache(indexPath, cachePath string) *Cache {
-	st, err := os.Stat(indexPath)
-	if err != nil || !st.Mode().IsRegular() || st.Size() < cacheMinBytes {
+	s, ok := statcache.Regular(indexPath, cacheMinBytes)
+	if !ok {
 		return &Cache{}
 	}
 	return &Cache{path: cachePath,
-		key: cacheKey{Format: cacheFormat, Path: core.ResolvedPath(indexPath), Size: st.Size(), MtimeNs: st.ModTime().UnixNano()}}
+		key: cacheKey{Format: cacheFormat, Path: core.ResolvedPath(indexPath), Size: s.Size, MtimeNs: s.MtimeNs}}
 }
 
 // Load is the cached Graph of the index, else nil.
@@ -77,12 +75,8 @@ func (c *Cache) Load() *Graph {
 	if c.path == "" {
 		return nil
 	}
-	data, err := os.ReadFile(c.path)
-	if err != nil {
-		return nil
-	}
 	var cf cacheFile
-	if gob.NewDecoder(bytes.NewReader(data)).Decode(&cf) != nil || cf.Key != c.key {
+	if !statcache.ReadGob(c.path, &cf) || cf.Key != c.key {
 		return nil
 	}
 	return fromCache(&cf)
@@ -150,5 +144,5 @@ func (c *Cache) Store(g *Graph) bool {
 	if g.meta != nil {
 		cf.Meta = []byte(core.Dumps(g.meta, -1))
 	}
-	return core.WriteGob(c.path, &cf)
+	return statcache.WriteGob(c.path, &cf)
 }
