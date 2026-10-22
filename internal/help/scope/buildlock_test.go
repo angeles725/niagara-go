@@ -402,3 +402,16 @@ func TestWithBuildLockReportsATakeover(t *testing.T) {
 		t.Errorf("the other holder's lock was not kept: %q %v", got, rerr)
 	}
 }
+
+// TestWithBuildLockReportsARemovedLock: a lock another process removed during the build is
+// reported as an error naming the lock and wrapping the read error, and no lock is left
+// behind (release finds nothing of this process's to remove).
+func TestWithBuildLockReportsARemovedLock(t *testing.T) {
+	root, lock := lockRoot(t)
+	err := WithBuildLock(root, func() error { return os.Remove(lock) })
+	if err == nil || !strings.Contains(err.Error(), "removed by another process") ||
+		!strings.Contains(err.Error(), lock) || !errors.Is(err, fs.ErrNotExist) {
+		t.Errorf("err %v, want a removed-lock error naming %s and wrapping fs.ErrNotExist", err, lock)
+	}
+	gone(t, lock)
+}

@@ -53,3 +53,21 @@ func TestMainWriteErrorExitsOne(t *testing.T) {
 		})
 	}
 }
+
+// TestMainKeepsTheFirstCSVWriteError: a CSV write that fails after earlier ones succeeded (a
+// row, not the header) is the error Main reports, with exit 1, even though stdout would accept
+// the next writes: the first error is kept and nothing more is written after it.
+func TestMainKeepsTheFirstCSVWriteError(t *testing.T) {
+	for _, n := range []int{2, 4} {
+		t.Run(fmt.Sprint(n), func(t *testing.T) {
+			var errb bytes.Buffer
+			out := &failOnNth{n: n}
+			code := Main([]string{"testdata/srcA", "slots", "--csv"}, cli.Stdio{Out: out, Err: &errb})
+			want := "module-find: cannot write the output: " + errWrite.Error() + "\n"
+			if code != 1 || errb.String() != want || out.calls != n || out.bytesAfter != 0 {
+				t.Errorf("exit %d stderr %q, %d writes, %d bytes after write %d; want exit 1 stderr %q, %d writes, 0 bytes",
+					code, errb.String(), out.calls, out.bytesAfter, n, want, n)
+			}
+		})
+	}
+}
