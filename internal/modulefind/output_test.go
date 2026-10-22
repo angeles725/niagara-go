@@ -3,6 +3,7 @@ package modulefind
 import (
 	"bytes"
 	"errors"
+	"io"
 	"testing"
 )
 
@@ -62,16 +63,14 @@ func (f *failAfter) Write(p []byte) (int, error) {
 	return len(p), nil
 }
 
-// TestRenderCSVWriteErrorIsReported: a CSV row that cannot be written stops the output
-// (no further row is tried) and is named on stderr instead of being dropped silently.
-func TestRenderCSVWriteErrorIsReported(t *testing.T) {
+// TestRenderCSVStopsAtAWriteError: a CSV row that cannot be written stops the output (no
+// further row is tried); the error is kept for Main to report.
+func TestRenderCSVStopsAtAWriteError(t *testing.T) {
 	out := &failAfter{n: 1} // the header is written, the first row fails
-	var errb bytes.Buffer
-	cmdSlots(newModule("testdata/srcA"), &opts{csv: true, out: out, err: &errb}, slotFilter{})
-	if out.writes != 2 {
-		t.Errorf("%d writes, want 2 (the header, then the failed row stops the output)", out.writes)
-	}
-	if want := "module-find: cannot write the CSV output: " + errWrite.Error() + "\n"; errb.String() != want {
-		t.Errorf("stderr %q, want %q", errb.String(), want)
+	stdout := &stickyWriter{w: out}
+	cmdSlots(newModule("testdata/srcA"), &opts{csv: true, out: stdout, err: io.Discard}, slotFilter{})
+	if out.writes != 2 || !errors.Is(stdout.err, errWrite) {
+		t.Errorf("%d writes, error %v; want 2 (the header, then the failed row stops the output) and %v",
+			out.writes, stdout.err, errWrite)
 	}
 }
