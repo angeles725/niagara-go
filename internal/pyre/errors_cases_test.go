@@ -43,3 +43,37 @@ func TestFlagArgumentErrors(t *testing.T) {
 		t.Errorf("UNICODE|IGNORECASE rejected: %v", err)
 	}
 }
+
+// TestLookaroundEdges pins three lookaround branches of parseGroup with CPython 3.15's
+// results: "(?<" ending the pattern and an unclosed lookahead raise re.error, and an empty
+// negative lookaround compiles to a pattern that never matches, not even the empty string
+// (sre_parse turns "(?!)" into FAILURE).
+func TestLookaroundEdges(t *testing.T) {
+	for pattern, want := range map[string]string{
+		"(?<":  "unexpected end of pattern at position 3",
+		"(?=a": "missing ), unterminated subpattern at position 0",
+	} {
+		if _, err := Compile(pattern, 0); err == nil || err.Error() != want {
+			t.Errorf("Compile(%q) error = %v, want %q", pattern, err, want)
+		}
+	}
+	for _, pattern := range []string{"(?!)", "(?<!)", "a(?!)|b"} {
+		re, err := Compile(pattern, 0)
+		if err != nil {
+			t.Fatalf("Compile(%q): %v", pattern, err)
+		}
+		for _, s := range []string{"", "a", "x"} {
+			if m := re.Search(s); m != nil {
+				t.Errorf("Compile(%q).Search(%q) matched at %d, want no match", pattern, s, m.Start())
+			}
+		}
+	}
+	if m := MustCompile("a(?!)|b", 0).Search("ab"); m == nil || m.Group(0) != "b" {
+		t.Errorf(`"a(?!)|b" on "ab" = %v, want the match "b"`, m)
+	}
+	for pattern, want := range map[string]kind{"(?!)": kFailure, "(?<!)": kFailure, "(?!a)": kAssertNot} {
+		if seq, _, err := parse(pattern, 0); err != nil || len(seq) != 1 || seq[0].kind != want {
+			t.Errorf("parse(%q) = %v, %v; want one node of kind %v", pattern, seq, err, want)
+		}
+	}
+}
