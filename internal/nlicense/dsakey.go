@@ -17,50 +17,15 @@ import (
 	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
-// b64decode mirrors base64.b64decode(s) (non-strict, Python 3.15): bytes
-// outside the standard alphabet are skipped and a trailing 2-3 character
-// group decodes to whole bytes; a lone trailing character is binascii.Error.
+// b64decode mirrors base64.b64decode(s) (non-strict) with Python's
+// binascii.Error prefix; see pycompat.B64Decode for where it is more lenient
+// than CPython 3.15.
 func b64decode(s string) ([]byte, error) {
-	val := func(c byte) int {
-		switch {
-		case c >= 'A' && c <= 'Z':
-			return int(c - 'A')
-		case c >= 'a' && c <= 'z':
-			return int(c-'a') + 26
-		case c >= '0' && c <= '9':
-			return int(c-'0') + 52
-		case c == '+':
-			return 62
-		case c == '/':
-			return 63
-		}
-		return -1
+	b, err := pycompat.B64Decode(s, false)
+	if err != nil {
+		return nil, fmt.Errorf("binascii.Error: %w", err)
 	}
-	var out []byte
-	quad, left := 0, 0
-	for i := 0; i < len(s); i++ {
-		v := val(s[i])
-		if v < 0 {
-			continue
-		}
-		switch quad {
-		case 0:
-			quad, left = 1, v
-		case 1:
-			out = append(out, byte(left<<2|v>>4))
-			quad, left = 2, v&0x0F
-		case 2:
-			out = append(out, byte(left<<4|v>>2))
-			quad, left = 3, v&0x03
-		case 3:
-			out = append(out, byte(left<<6|v))
-			quad = 0
-		}
-	}
-	if quad == 1 {
-		return nil, fmt.Errorf("binascii.Error: Invalid base64-encoded string: number of data characters (%d) cannot be 1 more than a multiple of 4", len(out)/3*4+1)
-	}
-	return out, nil
+	return b, nil
 }
 
 type dsaSig struct{ R, S *big.Int }

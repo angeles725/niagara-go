@@ -185,57 +185,16 @@ func decodeJSONBytes(b []byte) ([]rune, error) {
 }
 
 // b64uDecode mirrors licensador._b64u_decode under Python 3.15: pad to a
-// multiple of 4, then base64.urlsafe_b64decode in non-strict mode, where every
-// non-alphabet byte ('=' included) is skipped and a trailing 2- or 3-character
-// group decodes to its whole bytes; only a lone trailing character is an error.
+// multiple of 4, then base64.urlsafe_b64decode in non-strict mode. A str
+// argument must be ASCII; the padding needs no code, since the lenient
+// decoder skips '=' anyway.
 func b64uDecode(s string) ([]byte, error) {
 	for i := 0; i < len(s); i++ {
 		if s[i] >= 0x80 {
 			return nil, errors.New("string argument should contain only ASCII characters")
 		}
 	}
-	s += strings.Repeat("=", (4-len(s)%4)%4)
-	val := func(c byte) int {
-		switch {
-		case c >= 'A' && c <= 'Z':
-			return int(c - 'A')
-		case c >= 'a' && c <= 'z':
-			return int(c-'a') + 26
-		case c >= '0' && c <= '9':
-			return int(c-'0') + 52
-		case c == '-' || c == '+':
-			return 62
-		case c == '_' || c == '/':
-			return 63
-		}
-		return -1
-	}
-	var out []byte
-	quad, left := 0, 0
-	for i := 0; i < len(s); i++ {
-		v := val(s[i])
-		if v < 0 {
-			continue
-		}
-		switch quad {
-		case 0:
-			quad, left = 1, v
-		case 1:
-			out = append(out, byte(left<<2|v>>4))
-			quad, left = 2, v&0x0F
-		case 2:
-			out = append(out, byte(left<<4|v>>2))
-			quad, left = 3, v&0x03
-		case 3:
-			out = append(out, byte(left<<6|v))
-			quad, left = 0, 0
-		}
-	}
-	if quad == 1 {
-		//lint:ignore ST1005 parity with the Python message
-		return nil, fmt.Errorf("Invalid base64-encoded string: number of data characters (%d) cannot be 1 more than a multiple of 4", len(out)/3*4+1)
-	}
-	return out, nil
+	return pycompat.B64Decode(s, true)
 }
 
 // b64u mirrors licensador._b64u.
