@@ -20,6 +20,9 @@ type FulltextParams struct {
 	Query string
 	Max   int  // find: hits per source (-n); guide/devguide-search: hits shown (-n)
 	Or    bool // --or: any term, ranked
+	// Raised is find's explicit -n: Max is then also the total (at least
+	// ten) and every source with hits keeps a row (scope.FindReport).
+	Raised bool
 }
 
 func (p FulltextParams) mode() string {
@@ -45,8 +48,9 @@ func ftHead(length, n int) int {
 }
 
 // Find is find_search.cmd_find: one globally ranked list over every text
-// source, at most Max hits per source and ten in all, with the per-source
-// totals and the notes of borrowed sources.
+// source, at most Max hits per source and ten in all (Max in all, every
+// source shown, when -n was given), with the per-source totals and the notes
+// of borrowed sources.
 func (e *Env) Find(p FulltextParams) error {
 	r, err := e.search(p.Query, nil, p.mode())
 	if err != nil {
@@ -55,7 +59,11 @@ func (e *Env) Find(p FulltextParams) error {
 	if len(r.Hits) == 0 {
 		return e.reportMiss("find", p.Query, "fulltext")
 	}
-	fmt.Fprint(e.Out, scope.FindReport(e.BaseDir, p.Query, r, p.Max))
+	if p.Raised {
+		fmt.Fprint(e.Out, scope.FindReport(e.BaseDir, p.Query, r, p.Max))
+	} else {
+		fmt.Fprint(e.Out, scope.FindCappedReport(e.BaseDir, p.Query, r, p.Max))
+	}
 	return nil
 }
 
