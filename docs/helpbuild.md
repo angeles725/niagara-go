@@ -1098,6 +1098,14 @@ with no registered install (or an install that is not mounted) keeps its last
 `module-index.json`. The text is not added to the full-text index: `nh module` and `nh type`
 read the structure.
 
+`coverage --sweep` no longer counts `META-INF/module.xml` outside the documentation scope
+(`sweepmodule.go`): the descriptor of a jar in `modules/` is indexed when `module-index.json`
+holds its module and UNCLASSIFIED when it does not (not rebuilt yet) or could not read it (the
+error is quoted); a copy outside `modules/` (`sw/`, `bin/ext`) is excluded by
+`module-descriptor-outside-modules`, since the index reads the installed `modules/` only. Until
+`rebuild-all` builds `module-index.json`, a sweep of a real install therefore fails on every
+descriptor, on purpose.
+
 `TestModuleIndexDryProbe` builds the index from a real install into a temporary data root
 (the install is only read) and prints the element counts: `NH_MODULE_INDEX_PROBE=<install>
 go test ./internal/helpbuild -run TestModuleIndexDryProbe -v`. On 2026-10-23, every count
