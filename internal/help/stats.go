@@ -105,8 +105,38 @@ type corpusStats struct {
 	text                            map[string]textSource
 	props, actions, topics, methods int
 	edges, lines, dgItems, packages int
-	abs, vid                        string // the absolute data root, its version ("" unregistered)
+	abs, vid                        string        // the absolute data root, its version ("" unregistered)
+	mods                            *moduleCounts // nil when module-index.json is absent
 }
+
+// moduleCounts are the module-index.json totals stats reports.
+type moduleCounts struct{ modules, deps, types, agents, perms, unreadable int }
+
+// moduleStats counts module-index.json, nil when it is absent (it is built from
+// the install, so a data root may lack it).
+func (e *Env) moduleStats() (*moduleCounts, error) {
+	if !pycompat.IsFile(index.Path(e.BaseDir, moduleIndexName)) {
+		return nil, nil
+	}
+	idx, err := e.loadIndex(moduleIndexName, false)
+	if err != nil {
+		return nil, err
+	}
+	c := &moduleCounts{unreadable: listLenAny(get(idx, "errors", nil))}
+	if mods := idx.Object("modules"); mods != nil {
+		for _, k := range mods.Keys() {
+			r := mods.Object(k)
+			c.modules++
+			c.deps += listLen(r, "dependencies")
+			c.types += listLen(r, "types")
+			c.agents += listLen(r, "agents")
+			c.perms += listLen(r, "java_permissions")
+		}
+	}
+	return c, nil
+}
+
+func listLenAny(v any) int { l, _ := v.([]any); return len(l) }
 
 // n is len(index): the entries of the index name.
 func (s *corpusStats) n(name string) int { return s.idx[name].Len() }
@@ -166,7 +196,9 @@ func (e *Env) corpusStats() (*corpusStats, error) {
 	s.packages = len(packages)
 	s.abs, _ = filepath.Abs(e.BaseDir)
 	s.vid = scope.Identify(e.BaseDir)
-	return s, nil
+	var err error
+	s.mods, err = e.moduleStats()
+	return s, err
 }
 
 // statsJSON is stats --json: niagara_version is null for an unregistered data root.
@@ -201,6 +233,7 @@ func (e *Env) statsJSON(s *corpusStats) {
 			{"xref-index", pyjson.Obj{{"classes", s.n("xref-index")}, {"edges", s.edges}}},
 			{"slots-index", pyjson.Obj{{"classes", s.n("slots-index")}, {"properties", s.props},
 				{"actions", s.actions}, {"topics", s.topics}}},
+			{"module-index", s.moduleJSON()},
 		}},
 		{"text_dirs", dirs},
 		{"packages", s.packages},
@@ -219,7 +252,7 @@ func (e *Env) statsText(s *corpusStats) {
 	for _, d := range fts.Labels {
 		totalBytes += s.text[d].bytes
 	}
-	indexCount := len(statsIndexNames)
+	indexCount := len(statsIndexNames) + 1 // and module-index.json
 	out := e.Out
 	fmt.Fprintf(out, "Niagara Help Navigator - Corpus Statistics\n%s\n", strings.Repeat("=", 55))
 	fmt.Fprintf(out, "Niagara version: %s  (%s)\n", vid, s.abs)
@@ -234,6 +267,12 @@ func (e *Env) statsText(s *corpusStats) {
 	fmt.Fprintf(out, "  xref-index.json        %s classes (%s edges)\n", w(s.n("xref-index")), pycompat.Commas(s.edges))
 	fmt.Fprintf(out, "  slots-index.json       %s classes (%s props, %d actions, %d topics)\n",
 		w(s.n("slots-index")), pycompat.Commas(s.props), s.actions, s.topics)
+	if m := s.mods; m == nil {
+		fmt.Fprintln(out, "  module-index.json      absent (rebuild-all builds it from the install's modules/)")
+	} else {
+		fmt.Fprintf(out, "  module-index.json      %s modules (%s dependencies, %s types, %s agents, %s permissions; %d unreadable)\n",
+			w(m.modules), pycompat.Commas(m.deps), pycompat.Commas(m.types), pycompat.Commas(m.agents), pycompat.Commas(m.perms), m.unreadable)
+	}
 	fmt.Fprintf(out, "\nTEXT SOURCES (%d sources of the full-text index, %s MB total):\n\n", len(fts.Labels), mb(totalBytes))
 	for _, d := range fts.Labels {
 		ts, name := s.text[d], pycompat.LJust(d+"/", 19, ' ')
@@ -253,4 +292,15 @@ func (e *Env) statsText(s *corpusStats) {
 	// The command table (order lists every registered command, in --help order),
 	// not a fixed number: retired commands and the REPL exit 2 and are not counted.
 	fmt.Fprintf(out, "\nINDEXES: %d\nCLI: %d commands\n", indexCount, len(order))
+}
+
+// moduleJSON is the module-index entry of stats --json: {"absent": true} when
+// the index is not built.
+func (s *corpusStats) moduleJSON() pyjson.Obj {
+	m := s.mods
+	if m == nil {
+		return pyjson.Obj{{"absent", true}}
+	}
+	return pyjson.Obj{{"modules", m.modules}, {"dependencies", m.deps}, {"types", m.types}, {"agents", m.agents},
+		{"java_permissions", m.perms}, {"unreadable", m.unreadable}}
 }
