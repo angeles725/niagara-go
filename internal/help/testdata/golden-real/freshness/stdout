@@ -2,10 +2,24 @@ Niagara version: 4.14.0.162  (<REPO>)
 CORPUS FRESHNESS
 ============================================================
   OK             bajadoc      now: 3,594 files, 138,172,923 bytes
-  OK             source       now: 2,610 files, 28,581,984 bytes
+  OK             source       now: 3,459 files, 37,401,727 bytes
   OK             guides       now: 19,673 files, 471,896,565 bytes
   OK             devguide     now: 7,328 files, 97,186,713 bytes
   OK             docs         now: (absent)
 
-Baseline stamped: 2026-10-17T06:38:46.543346+00:00
+Text sources of the full-text index and the indexes (written before the stamp):
+  OK             bajadoc-clean      now: 6,312 files, 5,630,037 bytes
+  OK             devguide-clean     now: 482 files, 5,175,248 bytes
+  OK             guides-clean       now: 9,053 files, 16,818,728 bytes
+  OK             docs-text          now: 364 files, 47,985,847 bytes
+  OK             course-text        now: (absent)
+  OK             devguide-rc        now: 9 files, 84,911 bytes
+  OK             devguide-examples  now: 50 files, 3,335,759 bytes
+  OK             package-text       now: 62 files, 19,928 bytes
+  OK             lexicon-text       now: 783 files, 4,932,206 bytes
+  OK             indexes            now: 11 files, 32,003,223 bytes
+  fulltext.sqlite: matches its text sources
+  module-index.json: matches /mnt/c/Honeywell/OptimizerSupervisor-N4.14.0.162/modules (995 jars, 814,141,670 bytes)
+
+Baseline stamped: 2026-10-23T08:03:36.674509+00:00
 RESULT: FRESH — corpus matches the recorded baseline.

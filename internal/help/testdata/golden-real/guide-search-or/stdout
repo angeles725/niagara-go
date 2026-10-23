@@ -8,8 +8,8 @@
     L7: The ForwardingWiretap component sends each captured message to a specified IP address. The intent is to provide a way to forward MS/TP packets from a controller...
     path: guides-clean/EngNotes/BACnetProcessingAForwardedWiretap.txt
 
-  [EngNotes] ForwardingWiretap
-    L9: Figure 87. ForwardingWiretap properties
-    path: guides-clean/EngNotes/bacnetUtil-ForwardingWiretap.txt
+  [Bacnet] New BACnet IP network BBMD configuration
+    L7: ...BACnet/IP devices for a new BACnet/IP network, there are probably no existing BBMDs. In this case, follow the instructions for configuring a station as a BBMD.
+    path: guides-clean/Bacnet/NewBACnetIPNetworkBBMDConfiguration-55A1AC0E.txt
 
   ... and 23 more files
