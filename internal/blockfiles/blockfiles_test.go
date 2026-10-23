@@ -150,7 +150,8 @@ func TestMainBlocksUnlistableRootIsAnError(t *testing.T) {
 
 // TestSubBlocksUnlistableRootIsAnError: a root that cannot be listed is not a sub-corpus
 // of zero blocks (os.walk would say so); SubBlocks fails closed, with or without the walk
-// cache, and caches nothing. An unlistable directory below the root is still skipped.
+// cache, and caches nothing. An unlistable directory below the root fails closed too:
+// skipping it would report a sub-corpus without its blocks (check-coverage CLEAR).
 func TestSubBlocksUnlistableRootIsAnError(t *testing.T) {
 	root := lockedRoot(t)
 	if bs, err := SubBlocks(root); err == nil || !errors.Is(err, fs.ErrPermission) || bs != nil {
@@ -176,8 +177,21 @@ func TestSubBlocksUnlistableRootIsAnError(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { _ = os.Chmod(filepath.Join(cached, "a"), 0o755) })
-	if bs, err := SubBlocks(cached); err != nil || len(bs) != 0 {
-		t.Errorf("SubBlocks with an unlistable subdirectory = %v, %v; want none, nil", bs, err)
+	locked := filepath.Join(cached, "a")
+	for range 2 {
+		bs, err := SubBlocks(cached)
+		if err == nil || !errors.Is(err, fs.ErrPermission) || bs != nil {
+			t.Errorf("SubBlocks with an unlistable subdirectory = %v, %v; want a permission error", bs, err)
+		}
+		if got := UnlistedDir(cached, err); got != locked {
+			t.Errorf("UnlistedDir = %q; want the subdirectory %q", got, locked)
+		}
+	}
+	if bs, err := AllBlocks(cached); err == nil || !errors.Is(err, fs.ErrPermission) || bs != nil {
+		t.Errorf("AllBlocks with an unlistable subdirectory = %v, %v; want a permission error", bs, err)
+	}
+	if got := UnlistedDir(root, nil); got != root {
+		t.Errorf("UnlistedDir of a non-path error = %q; want the root", got)
 	}
 }
 

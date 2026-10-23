@@ -16,7 +16,7 @@ import (
 const (
 	maxWorkers   = 3  // one per source; never more processes than sources
 	defaultLimit = 5  // ranked results shown per source
-	rankRows     = 20 // module_nav rank rows per question (its default)
+	rankRows     = 20 // module_nav rank rows per question at least (its default); --limit raises it
 	grepRows     = 30 // degraded path only: module_nav grep stops after this many matching lines
 	scopeLines   = 6
 )
@@ -141,15 +141,19 @@ func reEscape(s string) string {
 
 // ranked is the ranked part of the code source: module_nav rank, degrading to
 // module_nav grep only when rank cannot search (exit 2).
-func (d *door) ranked(path, query string, deadline float64, timeout int, title string, notes *[]string) *Outcome {
+func (d *door) ranked(path, query string, limit int, deadline float64, timeout int, title string, notes *[]string) *Outcome {
 	left := deadline - d.now()
 	if left <= 0 {
 		return unavailable("code", title, "module_nav rank",
 			fmt.Sprintf("unavailable: the %ds budget was spent on token lookups before rank", timeout))
 	}
-	raw := d.backend.Run(codeSource, []string{path, "rank", "-n", strconv.Itoa(rankRows), "--", query}, left)
+	raw := d.backend.Run(codeSource, []string{path, "rank", "-n", strconv.Itoa(max(rankRows, limit)), "--", query}, left)
 	if !(raw.HasRC && raw.RC == 2) {
-		return fromRaw("code", title, "module_nav rank", raw, parseRank)
+		o := fromRaw("code", title, "module_nav rank", raw, parseRank)
+		if o.State == OK {
+			o.RankShown, o.RankTotal = keyedCount(o.Items), rankTotal(o.Scope)
+		}
+		return o
 	}
 	terms := codeTerms(query)
 	rx := codeRegex(terms)
@@ -179,14 +183,14 @@ func sub(title string, make func() *Outcome) (o *Outcome) {
 // list, token hits that only mention an identifier follow. Every call shares
 // ONE deadline of timeout seconds; a structural question adds the structure
 // lead sub-scope, coursePath the course-code sub-scope.
-func (d *door) codeJob(path, query string, timeout int, title, coursePath string) job {
+func (d *door) codeJob(path, query string, limit, timeout int, title, coursePath string) job {
 	return job{"code", title, "module_nav token/rank", func() *Outcome {
 		deadline := d.now() + float64(timeout)
 		var structure *Outcome
 		if s := sub(structureTitle, func() *Outcome { return d.structureJob(path, query, deadline) }); s != nil {
 			structure = s
 		}
-		o := d.rankedCode(path, query, deadline, timeout, title)
+		o := d.rankedCode(path, query, limit, deadline, timeout, title)
 		if coursePath != "" { // same deadline: past it the sub-scope is a named timeout
 			o.Subs = append(o.Subs, sub(courseTitle, func() *Outcome { return d.courseSearch(coursePath, query, deadline) }))
 		}
@@ -199,7 +203,7 @@ func (d *door) codeJob(path, query string, timeout int, title, coursePath string
 }
 
 // rankedCode is the ranked CODE rows: token lookups, then rank (or the degraded grep).
-func (d *door) rankedCode(path, query string, deadline float64, timeout int, title string) *Outcome {
+func (d *door) rankedCode(path, query string, limit int, deadline float64, timeout int, title string) *Outcome {
 	idents := identifiers(query)
 	var notes, outs []string
 	for _, word := range idents {
@@ -219,7 +223,7 @@ func (d *door) rankedCode(path, query string, deadline float64, timeout int, tit
 			notes = append(notes, "token "+word+": "+reason+"; ranking the question")
 		}
 	}
-	rk := d.ranked(path, query, deadline, timeout, title, &notes)
+	rk := d.ranked(path, query, limit, deadline, timeout, title, &notes)
 	if len(outs) == 0 {
 		rk.Notes = append(notes, rk.Notes...)
 		return rk
@@ -235,6 +239,7 @@ func (d *door) rankedCode(path, query string, deadline float64, timeout int, tit
 	o.Scope = scope
 	if rk.State == OK {
 		o.Scope = append(o.Scope, rk.Scope...)
+		o.RankShown, o.RankTotal = rk.RankShown, rk.RankTotal
 	}
 	var exact, mention []Item
 	for _, it := range found {
@@ -288,7 +293,7 @@ func (d *door) search(query string, p Paths, limit int, mode string, timeout int
 	outcomes := runJobs([]job{
 		d.blocksJob(p.Blocks, query, limit, mode, timeout, "SOURCE 1 · OUR BLOCKS"),
 		d.docsJob(p.Docs, query, limit, mode, timeout, "SOURCE 2 · OFFICIAL DOCS", false, docVersion),
-		d.codeJob(p.Code, query, timeout, "SOURCE 3 · CODE", p.Course),
+		d.codeJob(p.Code, query, limit, timeout, "SOURCE 3 · CODE", p.Course),
 	})
 	if lead := d.courseItems(query, p.Keys); lead != nil {
 		outcomes = append([]*Outcome{lead}, outcomes...)

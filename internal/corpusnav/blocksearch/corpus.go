@@ -178,9 +178,10 @@ func TitleFor(label string, catalog map[string]string, path string) string {
 type Target struct{ Display, Path string }
 
 // CannotListLine is the "cannot search" line of a root that cannot be listed (exit 2,
-// cli.ExitCannotSearch), as corpus-nav's entry gate prints it.
+// cli.ExitCannotSearch), as corpus-nav's entry gate prints it; a directory below root
+// that cannot be listed is named instead of root (blockfiles.UnlistedDir).
 func CannotListLine(root string, err error) string {
-	return "corpus-nav: cannot search: cannot list " + root + ": " + pycompat.StrerrorOf(err)
+	return "corpus-nav: cannot search: cannot list " + blockfiles.UnlistedDir(root, err) + ": " + pycompat.StrerrorOf(err)
 }
 
 // Targets is corpus.corpus_targets: (display, path) of a search scope. The blocks and

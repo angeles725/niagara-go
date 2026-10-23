@@ -4,8 +4,11 @@ import (
 	"fmt"
 	"io"
 	"path/filepath"
+	"regexp"
 	"slices"
 	"strings"
+	"unicode"
+	"unicode/utf8"
 
 	"github.com/angeles725/niagara-go/internal/blockfiles"
 	"github.com/angeles725/niagara-go/internal/cli"
@@ -118,8 +121,34 @@ func titleFor(label string, catalog map[string]string, path string) string {
 	return blocksearch.TitleFor(label, catalog, path)
 }
 
-// extractSection is corpus.extract_section: the lines of a "## <name>" section.
+// sectionNumberRe is the optional numbering before a level-2 heading's title: a section
+// sign, a section number ("4.7", "9.x", "5.") and a dash ("—", "–", "-").
+var sectionNumberRe = regexp.MustCompile(`^(?:§\s*)?(?:[0-9]+(?:\.[0-9a-z]+)*\.?(?:\s+|$))?(?:[—–-]\s*)?`)
+
+// sectionTitled reports whether a lowered "## " heading text names a section: after its
+// numbering, the title starts with one of the lowered names as a whole word ("4.7 —
+// Connections", "§12.3 — Connections & open gaps"), never one that only mentions it.
+func sectionTitled(heading string, lowNames []string) bool {
+	title := heading[len(sectionNumberRe.FindString(heading)):]
+	for _, n := range lowNames {
+		rest, ok := strings.CutPrefix(title, n)
+		if !ok {
+			continue
+		}
+		if r, _ := utf8.DecodeRuneInString(rest); rest == "" || !(unicode.IsLetter(r) || unicode.IsDigit(r)) {
+			return true
+		}
+	}
+	return false
+}
+
+// extractSection is corpus.extract_section: the lines of the first "## <name>" section,
+// numbered or not (sectionTitled).
 func extractSection(path string, names ...string) []string {
+	lowNames := make([]string, len(names))
+	for i, n := range names {
+		lowNames[i] = textfold.Lower(n)
+	}
 	text, _ := readText(path)
 	var out []string
 	capturing := false
@@ -128,11 +157,7 @@ func extractSection(path string, names ...string) []string {
 			if capturing {
 				break
 			}
-			heading := textfold.Lower(pycompat.Strip(line[3:]))
-			capturing = false
-			for _, n := range names {
-				capturing = capturing || heading == textfold.Lower(n)
-			}
+			capturing = sectionTitled(textfold.Lower(pycompat.Strip(line[3:])), lowNames)
 			continue
 		}
 		if capturing {

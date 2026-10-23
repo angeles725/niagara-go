@@ -119,7 +119,7 @@ func queryTerms(query string, factors []bm25.Factor) []string {
 }
 
 func rankStats(docs []Doc, post map[string]map[int]int, df map[string]int, total int, q []string,
-	requireAll bool, factors []bm25.Factor) []Scored {
+	requireAll bool, factors []bm25.Factor, forms map[string]string) []Scored {
 	st := bm25.Stats{NDocs: len(docs), DF: df, Post: post, Len: make([]int, len(docs))}
 	for i, d := range docs {
 		st.Len[i] = d.Length
@@ -127,16 +127,27 @@ func rankStats(docs []Doc, post map[string]map[int]int, df map[string]int, total
 	if len(docs) > 0 {
 		st.AvgLen = float64(total) / float64(len(docs))
 	}
+	exactOnly(post, df, forms)
 	var out []Scored
-	for _, s := range bm25.Textsearch.Rank(q, st, requireAll, factors) {
-		out = append(out, Scored{s.Score, &docs[s.Doc]})
+	if len(forms) == 0 {
+		for _, s := range bm25.Textsearch.Rank(q, st, requireAll, factors) {
+			out = append(out, Scored{s.Score, &docs[s.Doc]})
+		}
+		return out
+	}
+	// A word or its class form satisfies AND mode, which bm25's requireAll (every term
+	// of q) cannot say: rank as OR, then keep the documents holding each word or form.
+	for _, s := range bm25.Textsearch.Rank(q, st, false, factors) {
+		if !requireAll || holdsEach(post, q, forms, s.Doc) {
+			out = append(out, Scored{s.Score, &docs[s.Doc]})
+		}
 	}
 	return out
 }
 
 // Rank is SearchIndex.rank: BM25 over the in-memory index.
 func (ix *MemIndex) Rank(query string, requireAll bool, factors []bm25.Factor) []Scored {
-	q := queryTerms(query, factors)
+	q, factors, forms := withClassForms(query, queryTerms(query, factors), factors)
 	df, post, total := map[string]int{}, map[string]map[int]int{}, 0
 	for i, tf := range ix.tfs {
 		total += ix.docs[i].Length
@@ -150,11 +161,11 @@ func (ix *MemIndex) Rank(query string, requireAll bool, factors []bm25.Factor) [
 			}
 		}
 	}
-	return rankStats(ix.docs, post, df, total, q, requireAll, factors)
+	return rankStats(ix.docs, post, df, total, q, requireAll, factors, forms)
 }
 
 func (f *cacheFile) rank(query string, requireAll bool, factors []bm25.Factor) ([]Scored, error) {
-	q := queryTerms(query, factors)
+	q, factors, forms := withClassForms(query, queryTerms(query, factors), factors)
 	df, post := map[string]int{}, map[string]map[int]int{}
 	for _, t := range q {
 		if _, seen := post[t]; seen {
@@ -168,7 +179,7 @@ func (f *cacheFile) rank(query string, requireAll bool, factors []bm25.Factor) (
 			post[t], df[t] = p, len(p)
 		}
 	}
-	return rankStats(f.docs, post, df, f.totalLen, q, requireAll, factors), nil
+	return rankStats(f.docs, post, df, f.totalLen, q, requireAll, factors, forms), nil
 }
 
 // Ranking is findindex.ranked's answer.

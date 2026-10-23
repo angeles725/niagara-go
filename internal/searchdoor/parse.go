@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"slices"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/pycompat"
@@ -206,6 +207,32 @@ var rankRow = re(`^(\d+)\t([\d.]+)\t(\S+)\t(\S+)\t(.*)$`)
 
 // parseRank reads module_nav rank: a 'Rank ...: N matching classes' header,
 // then tab-separated rows 'rank score class module path', best first.
+// rankTotalRe is the class count of module_nav rank's header line
+// ("Rank 'q': 1,302 matching classes (terms: ...)").
+var rankTotalRe = re(`: ([\d,]+) matching classes\b`)
+
+// rankTotal is the class count of the rank header among scope lines, 0 when absent.
+func rankTotal(scope []string) int {
+	for _, ln := range scope {
+		if m := rankTotalRe.Search(ln); m != nil {
+			n, _ := strconv.Atoi(strings.ReplaceAll(m.Group(1), ",", ""))
+			return n
+		}
+	}
+	return 0
+}
+
+// keyedCount is the number of items a parser recognised (rank rows, not its fallback lines).
+func keyedCount(items []Item) int {
+	n := 0
+	for _, it := range items {
+		if it.Keyed {
+			n++
+		}
+	}
+	return n
+}
+
 func parseRank(out string) ([]string, []Item) {
 	var scope []string
 	for _, ln := range nonblank(out) {

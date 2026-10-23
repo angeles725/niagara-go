@@ -159,3 +159,40 @@ func TestUnlistableRootCannotSearch(t *testing.T) {
 		}
 	}
 }
+
+// TestUnlistableSubdirectoryCannotSearch: a sub-corpus directory this user cannot list
+// hides its blocks, so a lookup that walks the sub-corpus exits 2 naming that directory,
+// never an answer without it.
+func TestUnlistableSubdirectoryCannotSearch(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("mode 000 does not lock a directory on Windows")
+	}
+	root := t.TempDir()
+	notes := filepath.Join(root, "notes")
+	for path, text := range map[string]string{
+		filepath.Join(root, "niagara-mental-model-bloque4.md"): "# B4 — bacnet\n",
+		filepath.Join(notes, "x-block1.md"):                    "# x — bacnet\n",
+	} {
+		if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(path, []byte(text), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := os.Chmod(notes, 0); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = os.Chmod(notes, 0o755) })
+	if _, err := os.ReadDir(notes); err == nil {
+		t.Skip("mode 000 does not stop this user listing a directory (root?)")
+	}
+	t.Setenv("CORPUS_NAV_ROOT", root)
+	want := "corpus-nav: cannot search: cannot list " + pyPath(notes) + ": Permission denied\n"
+	for _, args := range [][]string{{"find", "bacnet"}, {"grep", "bacnet"}, {"list"}, {"stats"}} {
+		code, out, errs := runMain(args...)
+		if code != 2 || out != "" || errs != want {
+			t.Errorf("%v: exit %d\nstdout %q\nstderr %q", args, code, out, errs)
+		}
+	}
+}

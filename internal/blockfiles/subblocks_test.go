@@ -27,14 +27,11 @@ func writeTree(tb testing.TB, root string, files []string) {
 // TestSubBlocksBranches pins sub_blocks on every _sub_label branch: known prefixes for
 // -block and -bloque, any other -block stem, loose and nested *bloque* names, main and
 // snapshot names below the root, case-sensitive matching, names with no -block/bloque,
-// symlinked files (entered) and directories (listed, not entered), dangling links and an
-// unreadable directory (skipped silently).
+// symlinked files (entered) and directories (listed, not entered) and dangling links. An
+// unreadable directory fails the walk (TestSubBlocksUnlistableRootIsAnError).
 func TestSubBlocksBranches(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("POSIX tree: symlinks need privilege and a backslash is a separator on Windows")
-	}
-	if os.Geteuid() == 0 {
-		t.Skip("root reads a mode-0 directory, so the unreadable-directory case cannot be built")
 	}
 	root := t.TempDir()
 	writeTree(t, root, []string{
@@ -44,7 +41,7 @@ func TestSubBlocksBranches(t *testing.T) {
 		"a/x-block1.md.txt", "a/x-bloque.txt", "bloque.md", "w/back\\slash-bloque.md",
 		"w/niagara-mental-model-bloque9.md", "w/niagara-mental-model.md", "w/niagara-mental-model.2026-01-02.md",
 		"w/niagara-mental-model-bloqueZ.md", "target/t-block8.md", "_backups/s-block1.md",
-		"module-navigator/m-bloque1.md", ".git/g-block1.md", "locked/l-block1.md", "dir-bloque.md/inner-block2.md",
+		"module-navigator/m-bloque1.md", ".git/g-block1.md", "dir-bloque.md/inner-block2.md",
 	})
 	for link, target := range map[string]string{"linkdir": "target", "a/link-block9.md": "../target/t-block8.md",
 		"a/dangling-block4.md": "missing.md"} {
@@ -52,11 +49,6 @@ func TestSubBlocksBranches(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	locked := filepath.Join(root, "locked")
-	if err := os.Chmod(locked, 0); err != nil {
-		t.Fatal(err)
-	}
-	t.Cleanup(func() { os.Chmod(locked, 0o755) })
 	want := [][3]string{ // label_sort_key order, then path
 		{"a/y-block5-bloque", "a/y-block5-bloque.md", "a"},
 		{"b-block1-B2", "a/b-block1-block2.md", "b-block1"},
