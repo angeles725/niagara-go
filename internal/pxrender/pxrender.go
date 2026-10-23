@@ -29,13 +29,18 @@ type Options struct {
 	Subtitle  string  // note line under the header (raw HTML)
 }
 
-func pageHTML(o Options, name, cw, ch, body string) string {
+func pageHTML(o Options, name, cw, ch, body string, omitted []omit) string {
 	title := o.Title
 	if title == "" {
 		title = "Px · " + name
 	}
 	sub := o.Subtitle
-	if sub == "" {
+	switch {
+	case sub != "":
+	case len(omitted) > 0: // never claim a full reproduction of a partial render
+		sub = fmt.Sprintf("Pantalla Px reproducida PARCIALMENTE desde el config.bog: <b>%s</b>. %d elemento(s) "+
+			"no se reproducen (lista abajo); el resto está en sus posiciones.", pycompat.HTMLEscape(name), len(omitted))
+	default:
 		sub = fmt.Sprintf("Pantalla Px real reproducida desde el config.bog: <b>%s</b>. Plano, botones On/Off, "+
 			"LEDs de estado y etiquetas en las mismas posiciones.", pycompat.HTMLEscape(name))
 	}
@@ -50,14 +55,28 @@ func pageHTML(o Options, name, cw, ch, body string) string {
 		".stage{width:100%%;overflow:auto;background:#f4f2ec;}\n"+
 		".canvas{position:relative;width:%spx;height:%spx;transform-origin:top left;background:#fff;}\n"+
 		".canvas img{-webkit-user-drag:none;user-select:none;}\n"+
+		"%s"+
 		"</style>\n"+
 		"<div class=\"bar\"><b>Px actual</b> (Niagara Workbench Px Editor) <span class=\"tag\">RÉPLICA</span></div>\n"+
 		"<div class=\"note\">%s</div>\n"+
+		"%s"+
 		"<div class=\"stage\"><div class=\"canvas\" id=\"cv\">\n%s\n</div></div>\n"+
 		"<script>function fit(){var cv=document.getElementById(\"cv\");var w=cv.parentElement.clientWidth;"+
 		"var s=Math.min(1,w/%s);cv.style.transform=\"scale(\"+s+\")\";cv.parentElement.style.height=(%s*s)+\"px\";}\n"+
 		"window.addEventListener(\"resize\",fit);fit();</script>\n",
-		pycompat.HTMLEscape(title), cw, ch, sub, body, cw, ch)
+		pycompat.HTMLEscape(title), cw, ch, omittedCSS(omitted), sub, omittedNotice(omitted), body, cw, ch)
+}
+
+// omittedCSS styles the omitted notice and placeholders; "" when nothing was omitted, so a full
+// render keeps its page byte for byte.
+func omittedCSS(omitted []omit) string {
+	if len(omitted) == 0 {
+		return ""
+	}
+	return ".omitted{background:#fff4e5;color:#7a3b00;font-size:12px;padding:8px 18px;border-bottom:1px solid #f0c48a;}\n" +
+		".omitted ul{margin:4px 0 0;padding-left:20px;}\n" +
+		".omit{box-sizing:border-box;border:2px dashed #d9822b;background:rgba(255,244,229,.6);color:#7a3b00;" +
+		"font-size:12px;display:grid;place-items:center;text-align:center;}\n"
 }
 
 // Run executes one px-render invocation: 0 rendered, 1 no CanvasPane (or a selftest failure),

@@ -26,6 +26,15 @@ type result struct {
 	notImages        []string // refs that resolved to a directory, skipped
 	assets           int
 	dropped          map[string]int
+	omitted          []omit
+}
+
+// omit is an element the page does not render: its tag, its "NOT rendered" summary key and, when
+// its layout parses, its canvas position (offsets of the enclosing panes included).
+type omit struct {
+	tag, key string
+	lay      layout
+	hasLay   bool
 }
 
 type layout struct{ x, y, w, h float64 }
@@ -99,8 +108,8 @@ type placed struct {
 }
 
 // flatten lists every known widget under container with its offset, descending into any *Pane
-// and into positioned elements that hold widgets; other positioned elements are counted in dropped.
-func flatten(container *element, ox, oy float64, dropped map[string]int, out []placed) []placed {
+// and into positioned elements that hold widgets; other positioned elements go to omitted.
+func flatten(container *element, ox, oy float64, omitted *[]omit, out []placed) []placed {
 	for _, e := range container.children {
 		switch {
 		case widgets[e.tag]:
@@ -110,11 +119,15 @@ func flatten(container *element, ox, oy float64, dropped map[string]int, out []p
 			if !ok {
 				lay = layout{}
 			}
-			out = flatten(e, ox+lay.x, oy+lay.y, dropped, out)
+			out = flatten(e, ox+lay.x, oy+lay.y, omitted, out)
 		case e.attr("layout") != "":
-			dropped[e.tag]++
+			om := omit{tag: e.tag, key: e.tag} // a malformed layout keeps the bare-tag summary key
+			if lay, ok := parseLayout(e.attr("layout")); ok {
+				om.lay, om.hasLay = layout{lay.x + ox, lay.y + oy, lay.w, lay.h}, true
+			}
+			*omitted = append(*omitted, om)
 		case len(e.children) > 0:
-			out = flatten(e, ox, oy, dropped, out)
+			out = flatten(e, ox, oy, omitted, out)
 		}
 	}
 	return out
@@ -257,11 +270,11 @@ func render(o Options) (string, *result, error) {
 	if err != nil {
 		return "", nil, fmt.Errorf("%s: %v", o.Px, err)
 	}
-	dropped := map[string]int{}
-	for _, p := range flatten(canvas, 0, 0, dropped, nil) {
+	var omitted []omit
+	for _, p := range flatten(canvas, 0, 0, &omitted, nil) {
 		lay, ok := parseLayout(p.e.attr("layout"))
 		if !ok {
-			dropped[p.e.tag+" (no layout)"]++
+			omitted = append(omitted, omit{tag: p.e.tag, key: p.e.tag + " (no layout)"})
 			continue
 		}
 		base := fmt.Sprintf("position:absolute;left:%spx;top:%spx;width:%spx;height:%spx;",
@@ -270,10 +283,16 @@ func render(o Options) (string, *result, error) {
 			return "", nil, err
 		}
 	}
+	dropped := map[string]int{}
+	for _, om := range omitted {
+		dropped[om.key]++
+	}
 	title, _ := pypath.PosixSplitext(pypath.PosixBasename(o.Px))
-	page := pageHTML(o, title, cw, ch, strings.Join(r.parts, "\n"))
+	body := strings.Join(append(append([]string(nil), r.parts...), placeholders(omitted)...), "\n")
+	page := pageHTML(o, title, cw, ch, body, omitted)
 	return page, &result{canvasW: cw, canvasH: ch, widgets: len(r.parts), shared: shared,
-		missing: r.a.missingSorted(), notImages: r.a.notImages, assets: len(r.a.cache), dropped: dropped}, nil
+		missing: r.a.missingSorted(), notImages: r.a.notImages, assets: len(r.a.cache), dropped: dropped,
+		omitted: omitted}, nil
 }
 
 // viewSize is int(float(v)) of each half of viewSize="W,H" (default 1370.0,780.0).
@@ -298,4 +317,37 @@ func viewSize(canvas *element) (string, string, error) {
 		}
 	}
 	return out[0], out[1], nil
+}
+
+// placeholders are dashed boxes at the canvas position of each omitted element, so the page
+// shows where something is missing instead of an empty area.
+func placeholders(omitted []omit) []string {
+	var out []string
+	for _, om := range omitted {
+		if !om.hasLay {
+			continue
+		}
+		out = append(out, fmt.Sprintf(`<div class="omit" style="position:absolute;left:%spx;top:%spx;width:%spx;`+
+			`height:%spx;" title="no reproducido">%s (no reproducido)</div>`, pycompat.FormatG(om.lay.x),
+			pycompat.FormatG(om.lay.y), pycompat.FormatG(om.lay.w), pycompat.FormatG(om.lay.h), pycompat.HTMLEscape(om.tag)))
+	}
+	return out
+}
+
+// omittedNotice is the visible list of the elements the page does not render; "" when none.
+func omittedNotice(omitted []omit) string {
+	if len(omitted) == 0 {
+		return ""
+	}
+	items := make([]string, len(omitted))
+	for i, om := range omitted {
+		where := "sin layout válido: posición desconocida"
+		if om.hasLay {
+			where = fmt.Sprintf("en x=%s, y=%s (%s×%s)", pycompat.FormatG(om.lay.x), pycompat.FormatG(om.lay.y),
+				pycompat.FormatG(om.lay.w), pycompat.FormatG(om.lay.h))
+		}
+		items[i] = "<li>" + pycompat.HTMLEscape(om.tag) + " " + where + "</li>"
+	}
+	return fmt.Sprintf("<div class=\"omitted\"><b>No reproducido (%d):</b> estos elementos del Px no se dibujan "+
+		"en esta réplica.<ul>%s</ul></div>\n", len(omitted), strings.Join(items, ""))
 }
