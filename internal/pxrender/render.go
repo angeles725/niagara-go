@@ -3,8 +3,10 @@ package pxrender
 import (
 	"crypto/md5"
 	"fmt"
+	"math"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/pycompat"
@@ -100,6 +102,28 @@ func cssFamily(family string) string {
 		return "'" + family + "'" + ",Arial,sans-serif"
 	}
 	return family + ",Arial,sans-serif"
+}
+
+var (
+	hexColorRE  = regexp.MustCompile(`^#[0-9A-Fa-f]{6}$`)
+	argbColorRE = regexp.MustCompile(`^#([0-9A-Fa-f]{2})([0-9A-Fa-f]{2})([0-9A-Fa-f]{2})([0-9A-Fa-f]{2})$`)
+	nameColorRE = regexp.MustCompile(`^[a-z]+$`)
+)
+
+// cssColor maps a Niagara BColor value to CSS: "#rrggbb" and a colour name (black, silver, ...)
+// pass through, "#aarrggbb" (alpha first) becomes rgba(); anything else is "" (not rendered).
+func cssColor(v string) string {
+	switch {
+	case hexColorRE.MatchString(v), nameColorRE.MatchString(v):
+		return v
+	}
+	m := argbColorRE.FindStringSubmatch(v)
+	if m == nil {
+		return ""
+	}
+	n := func(h string) int64 { x, _ := strconv.ParseInt(h, 16, 0); return x }
+	return fmt.Sprintf("rgba(%d,%d,%d,%s)", n(m[2]), n(m[3]), n(m[4]),
+		strconv.FormatFloat(math.Round(float64(n(m[1]))/255*1000)/1000, 'f', -1, 64))
 }
 
 // parseFont: 'bold 26.0pt Arial' -> (bold, 26, Arial); '11.0pt Arial' -> (normal, 11, Arial).
