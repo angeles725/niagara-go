@@ -59,7 +59,13 @@ func (e *Env) Find(p FulltextParams) error {
 		return err
 	}
 	if len(r.Hits) == 0 {
-		return e.reportMiss("find", p.Query, "fulltext")
+		if err := e.reportMiss("find", p.Query, "fulltext"); err != nil {
+			return err
+		}
+		if hint := moduleXMLHint(p.Query); hint != "" {
+			fmt.Fprintln(e.Out, hint)
+		}
+		return nil
 	}
 	if p.Raised {
 		fmt.Fprint(e.Out, scope.FindReport(e.BaseDir, p.Query, r, p.Max))
