@@ -8,6 +8,9 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/angeles725/niagara-go/internal/help/fts"
+	"github.com/angeles725/niagara-go/internal/help/fts/ftsfixture"
 )
 
 // statsRoot is a data root outside any registry holding the nine indexes stats reads, each
@@ -52,19 +55,24 @@ INDEXES (9):
   xref-index.json             0 classes (0 edges)
   slots-index.json            0 classes (0 props, 0 actions, 0 topics)
 
-TEXT SOURCES (0.0 MB total):
+TEXT SOURCES (10 sources of the full-text index, 0.0 MB total):
 
-  bajadoc-clean/         0 files  (0.0 MB)
-  devguide-clean/        0 files  (0.0 MB)
-  guides-clean/          0 files  (0.0 MB)
-  docs-text/             0 files  (0.0 MB)
-  source/                0 files  (0.0 MB)
+  bajadoc-clean/      absent
+  devguide-clean/     absent
+  guides-clean/       absent
+  docs-text/          absent
+  course-text/        absent
+  source/             absent
+  devguide-rc/        absent
+  devguide-examples/  absent
+  package-text/       absent
+  lexicon-text/       absent
 
 RAW HTML:
 
-  bajadoc/               0 HTML
-  devguide/              0 HTML
-  guides/                0 HTML
+  bajadoc/                 0 HTML
+  devguide/                0 HTML
+  guides/                  0 HTML
 
 INDEXES: 9
 CLI: 19 commands
@@ -99,5 +107,74 @@ func TestStatsCLICountIsTheCommandTable(t *testing.T) {
 	want := fmt.Sprintf("CLI: %d commands", len(commandNames()))
 	if got := lines[len(lines)-1]; got != want || retired["repl"] == strings.Contains(out.String(), "REPL") {
 		t.Errorf("last line %q, want %q (REPL claimed: %v, retired: %v)", got, want, strings.Contains(out.String(), "REPL"), retired["repl"])
+	}
+}
+
+// TestStatsListsEveryFulltextSource: TEXT SOURCES lists every source of the full-text
+// index (fts.Labels, the one source registry), counts only the files the index reads, says
+// "absent" for a source not built, and names the version a borrowed source comes from.
+func TestStatsListsEveryFulltextSource(t *testing.T) {
+	dir := statsRoot(t, "")
+	for rel, body := range map[string]string{
+		"lexicon-text/kitControl/a.txt": "abc", "package-text/javax.baja.sys.txt": "de",
+		"course-text/day1.txt": "f", "devguide-examples/x/a.js": "g", "devguide-examples/x/notes.md": "skipped",
+		"source/a/B.java": "class B {}",
+	} {
+		p := filepath.Join(dir, filepath.FromSlash(rel))
+		if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(p, []byte(body), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	var out bytes.Buffer
+	if err := (&Env{BaseDir: dir, Out: &out}).Stats(false); err != nil {
+		t.Fatal(err)
+	}
+	got := out.String()
+	for _, label := range fts.Labels {
+		if !strings.Contains(got, "\n  "+label+"/ ") {
+			t.Errorf("source %s not listed:\n%s", label, got)
+		}
+	}
+	for _, want := range []string{
+		"TEXT SOURCES (10 sources of the full-text index, 0.0 MB total):",
+		"  lexicon-text/            1 files  (0.0 MB)",
+		"  devguide-examples/       1 files  (0.0 MB)",
+		"  docs-text/          absent",
+	} {
+		if !strings.Contains(got, want+"\n") {
+			t.Errorf("missing %q in:\n%s", want, got)
+		}
+	}
+}
+
+// TestStatsNamesASharedSource: a version without its own PDF manuals says the docs-text/
+// it reports is the shared one of another version, as find and pdf do.
+func TestStatsNamesASharedSource(t *testing.T) {
+	testdata, err := filepath.Abs("testdata")
+	if err != nil {
+		t.Fatal(err)
+	}
+	root := filepath.Join(ftsfixture.Checkout(t, testdata, true), "versions", "2.0")
+	for _, n := range statsIndexNames {
+		p := filepath.Join(root, "indexes", n+".json")
+		if _, err := os.Stat(p); err == nil {
+			continue
+		}
+		if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(p, []byte("{}"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	var out bytes.Buffer
+	if err := (&Env{BaseDir: root, Out: &out}).Stats(false); err != nil {
+		t.Fatal(err)
+	}
+	if want := "files  (0.0 MB)  shared: the PDF manuals of Niagara 1.0 (this version ships none)\n"; !strings.Contains(out.String(), want) {
+		t.Errorf("no shared docs-text note %q in:\n%s", want, out.String())
 	}
 }

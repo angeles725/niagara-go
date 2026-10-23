@@ -14,19 +14,24 @@ INDEXES (9):
   xref-index.json            41 classes (47 edges)
   slots-index.json            6 classes (13 props, 4 actions, 3 topics)
 
-TEXT SOURCES (0.0 MB total):
+TEXT SOURCES (10 sources of the full-text index, 0.0 MB total):
 
-  bajadoc-clean/         3 files  (0.0 MB)
-  devguide-clean/        1 files  (0.0 MB)
-  guides-clean/          1 files  (0.0 MB)
-  docs-text/             1 files  (0.0 MB)
-  source/                1 files  (0.0 MB)
+  bajadoc-clean/           3 files  (0.0 MB)
+  devguide-clean/          1 files  (0.0 MB)
+  guides-clean/            1 files  (0.0 MB)
+  docs-text/               1 files  (0.0 MB)
+  course-text/        absent
+  source/                  1 files  (0.0 MB)
+  devguide-rc/        absent
+  devguide-examples/  absent
+  package-text/       absent
+  lexicon-text/       absent
 
 RAW HTML:
 
-  bajadoc/               1 HTML
-  devguide/              1 HTML
-  guides/                1 HTML
+  bajadoc/                 1 HTML
+  devguide/                1 HTML
+  guides/                  1 HTML
 
 INDEXES: 9
 CLI: 19 commands
