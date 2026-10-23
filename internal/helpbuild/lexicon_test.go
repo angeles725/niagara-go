@@ -33,18 +33,27 @@ func TestParseLexicon(t *testing.T) {
 	}
 }
 
-// A page keeps the help keys and the sentences, never the plain labels.
+// A page keeps every key = value entry in file order: help keys and
+// sentences as they are, plain UI labels marked "[label]".
 func TestLexiconPage(t *testing.T) {
 	p, ok := lexiconPage("fox-rt.jar", "fox-rt.lexicon", []byte(foxLexicon))
 	want := "TITLE: fox-rt\nMODULE: fox-rt\nLEXICON: fox-rt.lexicon\n\n" +
-		"nav.foxSession.description = Fox session to a Niagara station\n" +
+		"[label] help.guide.base = module://docDrivers/doc\n" +
+		"\f[label] nav.foxSession = Station\n" +
+		"\fnav.foxSession.description = Fox session to a Niagara station\n" +
+		"\f[label] stationName = Station Name\n" +
 		"\fcertExpiring = Your certificate needs to be renewed. An expired certificate may cause a warning when users connect.\n" +
-		"\fnav.spy.toolTip = Spy\n"
+		"\fnav.spy.toolTip = Spy\n" +
+		"\f[label] escaped=key = café   tab\n"
 	if !ok || p.rel != "fox-rt/fox-rt.lexicon.txt" || p.text != want {
 		t.Errorf("page %q %v:\n%s\nwant\n%s", p.rel, ok, p.text, want)
 	}
-	if _, ok := lexiconPage("x-rt.jar", "x.lexicon", []byte("a=Name\nb=Two Words\n")); ok {
-		t.Error("a labels-only lexicon writes a page")
+	p, ok = lexiconPage("x-rt.jar", "x.lexicon", []byte("a=Name\nb=Two Words\nempty=\n"))
+	if want := "TITLE: x-rt x\nMODULE: x-rt\nLEXICON: x.lexicon\n\n[label] a = Name\n\f[label] b = Two Words\n"; !ok || p.text != want {
+		t.Errorf("labels-only page %v:\n%s\nwant\n%s", ok, p.text, want)
+	}
+	if _, ok := lexiconPage("x-rt.jar", "x.lexicon", []byte("# comment only\nempty=\n")); ok {
+		t.Error("a lexicon without a non-empty entry writes a page")
 	}
 }
 
@@ -84,11 +93,11 @@ func TestBuildLexiconText(t *testing.T) {
 	}
 	pages := copiedFiles(t, filepath.Join(root, lexiconTextDir))
 	if want := []string{"docDeveloper-rt/docDeveloper-rt.lexicon.txt", "fox-rt/fox-rt.lexicon.txt",
-		"niagaraLexiconDe-rt/control.lexicon.txt"}; !reflect.DeepEqual(pages, want) {
+		"labels-rt/labels-rt.lexicon.txt", "niagaraLexiconDe-rt/control.lexicon.txt"}; !reflect.DeepEqual(pages, want) {
 		t.Errorf("pages %q, want %q", pages, want)
 	}
-	line := "lexicon-text/: 3 lexicon files with help text of 4 (from " + install + "/modules, 5 jars)"
-	if res.Files != 3 || !reflect.DeepEqual(res.Log, []string{line}) {
+	line := "lexicon-text/: 4 lexicon files with entries of 4, 5 help and 5 label rows (from " + install + "/modules, 5 jars)"
+	if res.Files != 4 || !reflect.DeepEqual(res.Log, []string{line}) {
 		t.Errorf("result %+v\nwant log %q", res, line)
 	}
 	// The pages are a full-text source: find reaches them.
@@ -103,15 +112,16 @@ func TestBuildLexiconText(t *testing.T) {
 	if err := os.RemoveAll(filepath.Join(install, "modules")); err != nil {
 		t.Fatal(err)
 	}
-	if res, err := buildLexiconText(root); err != nil || len(copiedFiles(t, filepath.Join(root, lexiconTextDir))) != 3 ||
+	if res, err := buildLexiconText(root); err != nil || len(copiedFiles(t, filepath.Join(root, lexiconTextDir))) != 4 ||
 		!strings.Contains(res.Log[0], "skipped (the last copy is kept)") {
 		t.Errorf("unmounted install: %+v %v", res, err)
 	}
 }
 
 // coverage --sweep sees the lexicons (doc_like .lexicon): a module jar's
-// lexicon is indexed through its lexicon-text/ page, excluded when it
-// holds labels only, and UNCLASSIFIED when its page is not indexed.
+// lexicon is indexed through its lexicon-text/ page (labels included),
+// excluded when it holds no entry, and UNCLASSIFIED when its page is not
+// indexed.
 func TestSweepClassifiesLexicons(t *testing.T) {
 	root, install := lexiconInstall(t)
 	// A module copy outside modules/ (software database) that differs
@@ -135,8 +145,8 @@ func TestSweepClassifiesLexicons(t *testing.T) {
 	for k, n := range res.Reasons {
 		got[k.Rule] += n
 	}
-	if got["lexicon-labels"] != 1 || got["lexicon-outside-modules"] != 1 {
-		t.Errorf("labels-only or sw/ lexicon not excluded: %v", got)
+	if got["lexicon-labels"] != 0 || got["lexicon-empty"] != 0 || got["lexicon-outside-modules"] != 1 {
+		t.Errorf("labels-only lexicon excluded or sw/ lexicon not excluded: %v", got)
 	}
 	var gaps []string
 	for _, g := range res.Unclassified {
@@ -147,8 +157,8 @@ func TestSweepClassifiesLexicons(t *testing.T) {
 	if !reflect.DeepEqual(gaps, want) {
 		t.Errorf("unclassified %q\nwant %q", gaps, want)
 	}
-	if row := res.Rows["modules/"]; row == nil || row.Indexed < 1 {
-		t.Errorf("modules/ row %+v: fox-rt.lexicon is indexed", row)
+	if row := res.Rows["modules/"]; row == nil || row.Indexed < 2 {
+		t.Errorf("modules/ row %+v: fox-rt.lexicon and labels-rt.lexicon are indexed", row)
 	}
 }
 
