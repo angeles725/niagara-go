@@ -115,6 +115,22 @@ func TestSourceIndexWithoutOrigins(t *testing.T) {
 	}
 }
 
+// The slots index follows the same rule: docSource's BFoo is the plain key.
+func TestSlotsIndexDocSourceFirst(t *testing.T) {
+	base := originFixture(t, true)
+	if _, err := BuildSlotsIndex(base); err != nil {
+		t.Fatal(err)
+	}
+	rows := readIndexRows(t, filepath.Join(base, "indexes", "slots-index.json"))
+	got := map[string]any{}
+	for _, r := range rows {
+		got[r.key] = r.record["module"]
+	}
+	if want := map[string]any{"BFoo": "foo-rt", "BFoo (aaa-rt)": "aaa-rt", "BOnly": "aaa-rt"}; !reflect.DeepEqual(got, want) {
+		t.Errorf("slots modules %v, want %v", got, want)
+	}
+}
+
 // A malformed origins file is an error, never a silent docSource label.
 func TestSourceIndexMalformedOrigins(t *testing.T) {
 	base := originFixture(t, false)

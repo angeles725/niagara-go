@@ -1096,7 +1096,7 @@ uses, so the source, slots and xref indexes read it with no second parser.
   `source/`) to its jar. `extract` and `--fill-missing` write it from the jars' mapping (not
   from what they wrote), so a second fill records the same files. The builders walk only the
   folders of `source/`, so the file is never read as a module.
-- **Indexes**: the source builder indexes every docSource file first and the module-jar
+- **Indexes**: the source and slots builders index every docSource file first and the module-jar
   files after, so a class in both keeps its plain key for docSource and the module-jar copy
   gets the `Name (module)` alternate key a second same-name class already got. A module-jar
   record of `source-index.json` carries `"origin": "module-jar <jar>"`; a docSource record
