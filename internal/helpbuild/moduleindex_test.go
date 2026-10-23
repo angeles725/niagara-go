@@ -119,3 +119,19 @@ func fmtAny(v any) string {
 	}
 	return strconv.FormatInt(n, 10)
 }
+
+// TestModuleIndexNeedsARegisteredInstall: rebuild-all's step says why it built
+// nothing on a data root no registry names, and writes nothing.
+func TestModuleIndexNeedsARegisteredInstall(t *testing.T) {
+	root := t.TempDir()
+	res, err := buildModuleIndex(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want := "module-index.json: no install registered; skipped (the last copy is kept)"; len(res.Log) != 1 || res.Log[0] != want {
+		t.Errorf("log = %q", res.Log)
+	}
+	if _, err := os.Stat(index.Path(root, moduleIndexName)); !os.IsNotExist(err) {
+		t.Errorf("module-index.json written: %v", err)
+	}
+}

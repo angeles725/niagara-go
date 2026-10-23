@@ -6,6 +6,7 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/helpbuild/modulexml"
 	"github.com/angeles725/niagara-go/internal/helpbuild/pyfs"
+	"github.com/angeles725/niagara-go/internal/helpbuild/registry"
 	"github.com/angeles725/niagara-go/internal/helpbuild/zipfile"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyjson"
@@ -14,13 +15,14 @@ import (
 // indexes/module-index.json: the module descriptor (META-INF/module.xml) of
 // every jar of an install's modules/, keyed by module name:
 //
-//	{"install_dir": ..., "jars": N, "jar_bytes": B,
+//	{"jars": N, "jar_bytes": B,
 //	 "modules": {"<name>": modulexml record + "jar"},
 //	 "errors": [{"jar", "error"}], "without_descriptor": ["<jar>"]}
 //
 // A descriptor that cannot be read (corrupt jar, malformed XML, a module name
 // another jar already declared) is an "errors" row and a warning, never a
-// silent skip. jars and jar_bytes are what freshness compares the install with.
+// silent skip. jars and jar_bytes are what freshness compares the registered
+// install with (the install folder itself is the registry's, not kept here).
 const (
 	moduleIndexName   = "module-index.json"
 	moduleIndexScript = "module_index_builder"
@@ -102,7 +104,6 @@ func buildModuleIndexFrom(root, installDir string) (*textResult, error) {
 	}
 	out := pycompat.Join(root, "indexes", moduleIndexName)
 	v := pyjson.ObjectOf(
-		pyjson.Field{Key: "install_dir", Value: pyjson.String(installDir)},
 		pyjson.Field{Key: "jars", Value: pyjson.IntValue(int64(x.jars))},
 		pyjson.Field{Key: "jar_bytes", Value: pyjson.IntValue(int64(x.bytes))},
 		pyjson.Field{Key: "modules", Value: x.modules},
@@ -116,4 +117,22 @@ func buildModuleIndexFrom(root, installDir string) (*textResult, error) {
 	res.Log = append(res.Log, fmt.Sprintf("%s: %d modules from %d jars (%d without module.xml, %d errors) -> %s",
 		moduleIndexName, res.Files, x.jars, len(x.without), len(x.errors), out))
 	return res, nil
+}
+
+// buildModuleIndex is the rebuild-all step: module-index.json from the
+// modules/ of the install registered for root. A data root without one (or
+// whose install has no modules/) keeps whatever module-index.json it has and
+// says why it was not built.
+func buildModuleIndex(root string) (*textResult, error) {
+	install, err := registry.InstallDir(root)
+	if err != nil {
+		return nil, err
+	}
+	switch {
+	case install == "":
+		return &textResult{Log: []string{moduleIndexName + ": no install registered; skipped (the last copy is kept)"}}, nil
+	case !pycompat.IsDir(pycompat.Join(install, "modules")):
+		return &textResult{Log: []string{moduleIndexName + ": " + pycompat.Join(install, "modules") + " is not a folder; skipped (the last copy is kept)"}}, nil
+	}
+	return buildModuleIndexFrom(root, install)
 }

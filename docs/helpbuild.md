@@ -1071,6 +1071,33 @@ last key segment is `description`, `desc`, `help`, `tooltip` or `summary` (any l
 and any value of five words or more (messages, prompts, warnings); plain labels ("Station
 Name") are left out.
 
+## Module descriptors: module-index.json
+
+Every module jar ships `META-INF/module.xml`: its dependencies, the types it registers (name
+and class), the agents (views, editors, type extensions) those types register on other
+types, its java-permissions per profile, its defs and its adapters. The doc-jar extraction
+never copies `META-INF/` (`destPath`); the last rebuild-all step, `module_index_builder`
+(`moduleindex.go`), reads the descriptor of every jar of the registered install's
+`modules/` (the jars `lexiconJars` lists, through the same `zipfile` reader) with
+`modulexml.Parse` and writes one structured index, `indexes/module-index.json`:
+
+    {"jars": N, "jar_bytes": B,
+     "modules": {"<module name>": {"name", "module", "runtime_profile", "vendor", "version",
+                 "description", "dependencies": [{"name", "vendor", "version"}],
+                 "types": [{"name", "class"}], "agents": [{"type", "class", "on": [...],
+                 "app"?, "default"?, "required_permissions"?}],
+                 "java_permissions": [{"profile", "class", "name", "action"}],
+                 "defs": [{"name", "value"}], "adapters": [{"type", "from", "to"}], "jar"}},
+     "errors": [{"jar", "error"}], "without_descriptor": ["<jar>"]}
+
+It fails closed: a corrupt jar, a descriptor that is not well-formed XML, a root that is
+not a named `<module>`, an `<agent>`/`<adapter>` outside a `<type>` or a module name a
+second jar repeats is an `errors` row and a `WARNING: module_index_builder: <jar>: <why>`
+line on stderr, never a silent skip; jars without a descriptor are listed. A data root
+with no registered install (or an install that is not mounted) keeps its last
+`module-index.json`. The text is not added to the full-text index: `nh module` and `nh type`
+read the structure.
+
 ## Real data
 
 `TestCoverageRealGoldens` (S10b-1) is the package's one real-data test:

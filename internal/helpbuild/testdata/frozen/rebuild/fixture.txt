@@ -18,6 +18,7 @@ REBUILD-ALL (dry run)
   PLAN  course_extractor.py        -> course-text/
   PLAN  package_text_builder       -> package-text/
   PLAN  lexicon_extractor          -> lexicon-text/
+  PLAN  module_index_builder       -> module-index.json
 
 Dry run — nothing executed. Drop --dry-run to build.
 # stderr
@@ -111,8 +112,10 @@ course: no course bound to this version; skipped
 package-text/: 0 package descriptions (from 0 package-index.bajadoc files)
   RUN   lexicon_extractor          -> lexicon-text/
 lexicon-text/: no install registered; skipped (the last copy is kept)
+  RUN   module_index_builder       -> module-index.json
+module-index.json: no install registered; skipped (the last copy is kept)
 
-Ran 16, skipped 0, failed 0.
+Ran 17, skipped 0, failed 0.
 Manifest re-stamped. Run 'freshness' to confirm FRESH.
 # stderr
 WARNING: toc not read, page titles fall back to <title>: <root>/guides/Bad/toc.xml: mismatched tag: line 1, column 16
@@ -356,8 +359,10 @@ course: no course bound to this version; skipped
 package-text/: 0 package descriptions (from 0 package-index.bajadoc files)
   RUN   lexicon_extractor          -> lexicon-text/
 lexicon-text/: no install registered; skipped (the last copy is kept)
+  RUN   module_index_builder       -> module-index.json
+module-index.json: no install registered; skipped (the last copy is kept)
 
-Ran 16, skipped 0, failed 0.
+Ran 17, skipped 0, failed 0.
 Manifest re-stamped. Run 'freshness' to confirm FRESH.
 # stderr
 WARNING: toc not read, page titles fall back to <title>: <root>/guides/Bad/toc.xml: mismatched tag: line 1, column 16
@@ -389,7 +394,7 @@ indexes/.manifest.json 644
 }
 ## log
 # stdout
-Ran 16, skipped 0, failed 0.
+Ran 17, skipped 0, failed 0.
 # stderr
 WARNING: toc not read, page titles fall back to <title>: <root>/guides/Bad/toc.xml: mismatched tag: line 1, column 16
 WARNING: toc not read, page titles fall back to <title>: <root>/guides/Bad/toc.xml: mismatched tag: line 1, column 16
@@ -492,6 +497,8 @@ course: no course bound to this version; skipped
 package-text/: 0 package descriptions (from 0 package-index.bajadoc files)
   RUN   lexicon_extractor          -> lexicon-text/
 lexicon-text/: no install registered; skipped (the last copy is kept)
+  RUN   module_index_builder       -> module-index.json
+module-index.json: no install registered; skipped (the last copy is kept)
 
-Ran 16, skipped 0, failed 0.
+Ran 17, skipped 0, failed 0.
 Manifest re-stamped. Run 'freshness' to confirm FRESH.
