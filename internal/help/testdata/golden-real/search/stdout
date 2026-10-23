@@ -1,4 +1,4 @@
-66 classes matching 'BAlarm*':
+67 classes (66 names) matching 'BAlarm*':
 
   BAlarmAcknowledger (class) - com.tridium.alarm.ack
   BAlarmAlgorithm (class) - javax.baja.alarm.ext
