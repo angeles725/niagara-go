@@ -11,10 +11,13 @@ import (
 	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
-// module-index.json is built from the install's modules/, which lies outside
-// the data root the manifest fingerprints: the index records the jar count and
-// bytes it read (module_index_builder), and freshness compares them with the
-// install now.
+// module-index.json and palette-index.json are built from the install's
+// modules/, which lies outside the data root the manifest fingerprints: each
+// records the jar count and bytes it read (module_index_builder,
+// palette_index_builder), and freshness compares them with the install now.
+
+// installIndexes are the indexes built from the install's modules/.
+var installIndexes = []string{moduleIndexName, paletteIndexName}
 
 // installJars counts the jars of dir (*.jar in any letter case, as the builder
 // lists them) and their bytes; ok is false when dir cannot be listed.
@@ -35,22 +38,22 @@ func installJars(dir string) (jars, bytes int64, ok bool) {
 	return jars, bytes, true
 }
 
-// moduleIndexLine prints how module-index.json compares with the modules/ of
+// installIndexLine prints how the index name (one of installIndexes) compares with the modules/ of
 // installDir ("" when none is registered); true when it is stale.
-func (e *Env) moduleIndexLine(installDir string) bool {
-	path := index.Path(e.BaseDir, moduleIndexName)
+func (e *Env) installIndexLine(name, installDir string) bool {
+	path := index.Path(e.BaseDir, name)
 	if !pycompat.IsFile(path) {
-		fmt.Fprintln(e.Out, "  module-index.json: absent (rebuild-all builds it from the install's modules/)")
+		fmt.Fprintf(e.Out, "  %s: absent (rebuild-all builds it from the install's modules/)\n", name)
 		return false
 	}
 	if installDir == "" {
-		fmt.Fprintln(e.Out, "  module-index.json: not compared — no install is registered for this data root")
+		fmt.Fprintf(e.Out, "  %s: not compared — no install is registered for this data root\n", name)
 		return false
 	}
 	dir := filepath.Join(installDir, "modules")
 	jars, size, ok := installJars(dir)
 	if !ok {
-		fmt.Fprintf(e.Out, "  module-index.json: not compared — %s is not reachable\n", dir)
+		fmt.Fprintf(e.Out, "  %s: not compared — %s is not reachable\n", name, dir)
 		return false
 	}
 	idx, err := index.LoadObject(path)
@@ -60,12 +63,24 @@ func (e *Env) moduleIndexLine(installDir string) bool {
 		wasBytes, _ = index.Int(get(idx, "jar_bytes", nil))
 	}
 	if err == nil && was == jars && wasBytes == size {
-		fmt.Fprintf(e.Out, "  module-index.json: matches %s (%s jars, %s bytes)\n", dir, pycompat.Commas(int(jars)), pycompat.Commas(int(size)))
+		fmt.Fprintf(e.Out, "  %s: matches %s (%s jars, %s bytes)\n", name, dir, pycompat.Commas(int(jars)), pycompat.Commas(int(size)))
 		return false
 	}
-	fmt.Fprintf(e.Out, "  module-index.json: STALE — built from %s jars (%s bytes); %s now holds %s jars (%s bytes)\n",
+	fmt.Fprintf(e.Out, "  %s: STALE — built from %s jars (%s bytes); %s now holds %s jars (%s bytes)\n", name,
 		pycompat.Commas(int(was)), pycompat.Commas(int(wasBytes)), dir, pycompat.Commas(int(jars)), pycompat.Commas(int(size)))
 	return true
+}
+
+// installIndexLines prints installIndexLine for each of installIndexes
+// against the registered install and returns the stale ones.
+func (e *Env) installIndexLines() []string {
+	var stale []string
+	for _, name := range installIndexes {
+		if e.installIndexLine(name, e.installDirOf()) {
+			stale = append(stale, name)
+		}
+	}
+	return stale
 }
 
 // installDirOf is the install folder registered for the selected version, ""

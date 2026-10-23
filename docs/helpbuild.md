@@ -1250,7 +1250,9 @@ entries that hold a matching type below them (`(holds module:Type)`), each with 
 palette file and path in the palette; exact first, then any letter case, then a glob, as
 `nh type` resolves. `nh palette --module <module> [--json]` prints the module's palettes as
 trees (folders, entries with their type, properties and held types). A miss names
-`palette-index.json`, its palette count and its unreadable palettes (scope `palettes`).
+`palette-index.json`, its palette count and its unreadable palettes (scope `palettes`). `freshness`
+compares the jar count and bytes it recorded with the registered install's `modules/`, as
+for `module-index.json`.
 
 `TestPaletteIndexDryProbe` (`NH_PALETTE_INDEX_PROBE=<install>`) builds it read-only into a
 temporary root. On 2026-10-23, equal to the 2026-10-22 audit:
