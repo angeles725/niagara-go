@@ -80,3 +80,21 @@ func TestClassFallsBackToModuleJarSource(t *testing.T) {
 		t.Errorf("class com.zzz.BOnly: code %d\n%s", code, out)
 	}
 }
+
+// stats counts the source-index records taken from module jars, only when
+// there are some (a docSource-only corpus prints what it always did).
+func TestStatsCountsModuleJarSource(t *testing.T) {
+	dir := oemRepo(t)
+	for _, name := range []string{"devguide-toc", "guides-index", "inheritance", "pdf-index", "method-index",
+		"xref-index", "slots-index"} {
+		write(t, filepath.Join(dir, "indexes", name+".json"), "{}")
+	}
+	out, errs, code := run(t, dir, "stats")
+	if code != 0 || !strings.Contains(out, " 3 classes (7 lines, 2 from module jars)\n") {
+		t.Errorf("stats: code %d err %q\n%s", code, errs, out)
+	}
+	out, _, code = run(t, dir, "stats", "--json")
+	if code != 0 || !strings.Contains(out, `"module_jar_classes": 2`) {
+		t.Errorf("stats --json: code %d\n%s", code, out)
+	}
+}
