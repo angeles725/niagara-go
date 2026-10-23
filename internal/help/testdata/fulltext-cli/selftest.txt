@@ -10,4 +10,5 @@
   SKIP  slots: indexes/slots-index.json is absent in this version
   PASS  method: method 'ackAlarm' lists javax.baja.alarm.BAlarmRecord.ackAlarm()
   SKIP  module: indexes/module-index.json is absent in this version
-selftest: all assertions passed (6 skipped: their index or text source is absent or empty).
+  SKIP  palette: indexes/palette-index.json is absent in this version
+selftest: all assertions passed (7 skipped: their index or text source is absent or empty).
