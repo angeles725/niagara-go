@@ -63,7 +63,10 @@ var scopes = map[string]def{
 		[]string{"package", "find", "search"}},
 	"module-xml": {[]string{"module-index.json"}, "jars without META-INF/module.xml; module names are matched " +
 		"exactly, in any letter case, by part name or as a glob",
-		[]string{"search", "find"}},
+		[]string{"type", "search", "find"}},
+	"types": {[]string{"module-index.json"}, "types of jars without META-INF/module.xml; a type is matched as " +
+		"module:Type or Type, exactly, in any letter case or as a glob",
+		[]string{"class", "search", "find"}},
 	"pdf": {[]string{"pdf-index.json"}, "manual pages without a text layer (scanned images)",
 		[]string{"find", "guide-search", "pdf --no-fulltext"}},
 	"fulltext": {nil, "JDK API (class --jdk); " + docTypesExcluded,

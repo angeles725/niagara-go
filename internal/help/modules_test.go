@@ -10,10 +10,10 @@ import (
 )
 
 // moduleRoot is a data root outside any registry whose only index is the
-// module-index.json fixture (testdata/module-index/).
+// module-index.json fixture (testdata/indexes/).
 func moduleRoot(t *testing.T) string {
 	t.Helper()
-	data, err := os.ReadFile(filepath.Join("testdata", "module-index", "module-index.json"))
+	data, err := os.ReadFile(filepath.Join("testdata", "indexes", "module-index.json"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -100,7 +100,7 @@ func TestModuleMissSaysWhatWasSearched(t *testing.T) {
 	want := `No match for 'nosuch-rt' (module) in this scope.
   searched: Niagara unregistered (<DIR>) -- module-index.json: 5 modules (1 module.xml unreadable: broken-rt.jar)
   excluded from this scope: jars without META-INF/module.xml; module names are matched exactly, in any letter case, by part name or as a glob
-  not proof of absence; try: search 'nosuch-rt', find 'nosuch-rt'
+  not proof of absence; try: type 'nosuch-rt', search 'nosuch-rt', find 'nosuch-rt'
 `
 	if got != want || misses != 1 {
 		t.Errorf("misses %d, got:\n%s\nwant:\n%s", misses, got, want)

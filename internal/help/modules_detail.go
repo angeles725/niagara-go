@@ -102,13 +102,7 @@ func (e *Env) agentDetail(a *index.Object, indent string) {
 		names[i] = pyStr(o)
 	}
 	fmt.Fprintf(e.Out, "%son: %s\n", indent, strings.Join(names, ", "))
-	var attrs []string
-	for _, kv := range [][2]string{{"app", "app %s"}, {"default", "default %s"}, {"required_permissions", "requires permissions %s"}} {
-		if v := getStr(a, kv[0], ""); v != "" {
-			attrs = append(attrs, fmt.Sprintf(kv[1], v))
-		}
-	}
-	if len(attrs) > 0 {
-		fmt.Fprintf(e.Out, "%s%s\n", indent, strings.Join(attrs, "; "))
+	if attrs := agentAttrs(a); attrs != "" {
+		fmt.Fprintf(e.Out, "%s%s\n", indent, attrs)
 	}
 }

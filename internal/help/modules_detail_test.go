@@ -130,7 +130,7 @@ func TestModuleJSON(t *testing.T) {
 // them, and an ambiguous list request exits 1.
 func TestModuleCLI(t *testing.T) {
 	dir := repo(t, `{"default": "1.0.0.1", "versions": {"1.0.0.1": {"install_dir": ".", "data_root": "."}}}`, ".")
-	data, err := os.ReadFile(filepath.Join("testdata", "module-index", "module-index.json"))
+	data, err := os.ReadFile(filepath.Join("testdata", "indexes", "module-index.json"))
 	if err != nil {
 		t.Fatal(err)
 	}

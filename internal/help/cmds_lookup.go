@@ -68,8 +68,8 @@ var moduleDetails = [][2]string{
 	{"defs", "List the defs (name = value)"},
 }
 
-// Module descriptor commands (Go-only, modules.go): module, over
-// indexes/module-index.json.
+// Module descriptor commands (Go-only, modules.go and types.go): module and
+// type, over indexes/module-index.json.
 var moduleCommands = []command{
 	{name: "module", help: "Module descriptor (module.xml): dependencies both ways, types, permissions",
 		args: func(p *argparse.Parser) {
@@ -88,5 +88,13 @@ var moduleCommands = []command{
 				}
 			}
 			return e.Module(ModuleParams{Name: ns.String("name"), Detail: detail, JSON: ns.Bool("module_json")})
+		}},
+	{name: "type", help: "Niagara type (module:Type): its module, class, docs and the agents (views) on it",
+		args: func(p *argparse.Parser) {
+			positional(p, "name", "module:Type or Type, or a glob (e.g. kitControl:BooleanLatch, BooleanLatch)")
+			p.Add(argparse.Arg{Dest: "type_json", Action: argparse.StoreTrue, Help: "Output as JSON"}, "--json")
+		},
+		run: func(e *Env, ns *argparse.Namespace) error {
+			return e.Type(TypeParams{Name: ns.String("name"), JSON: ns.Bool("type_json")})
 		}},
 }
