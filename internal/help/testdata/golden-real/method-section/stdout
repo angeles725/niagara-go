@@ -16,9 +16,9 @@
     BBoolean ackAlarm(BAlarmRecord parameter)
   [methods] javax.baja.driver.alarm.BAlarmDeviceExt
     BBoolean ackAlarm(BAlarmRecord parameter)
-  [methods] javax.baja.obix.driver.alarm.BObixAlarmImport
-    BBoolean ackAlarm(BAlarmRecord parameter)
   [methods] javax.baja.bacnet.export.BReliabilityAlarmSourceExt
+    BBoolean ackAlarm(BAlarmRecord parameter)
+  [methods] javax.baja.obix.driver.alarm.BObixAlarmImport
     BBoolean ackAlarm(BAlarmRecord parameter)
   [methods] javax.baja.driver.BDevice
     BBoolean ackAlarm(BAlarmRecord parameter)

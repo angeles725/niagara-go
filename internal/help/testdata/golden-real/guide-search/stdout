@@ -28,13 +28,13 @@
     L25: | Response Timeout | hours, minutes, seconds, milliseconds (defaults to <T>) | Configures the length of time before the system times out when interrogatin...
     path: guides-clean/Nsnmp/nSnmp-SnmpDevice.txt
 
-  [Mbus] MbusTcpIPNetwork
-    L25: | Response Timeout | hours, minutes, seconds, milliseconds (defaults to <T>) | Configures the length of time before the system times out when interrogatin...
-    path: guides-clean/Mbus/AboutMbusTcpIPNetworkComponent-33DAFC02.txt
-
   [Bacnet] Network (bacnet-BacnetNetworkLayer)
     L23: | Router Discovery Timeout | milliseconds (defaults to <T>) | Sets how long the system waits to discover the router. When this time passes, the system repor...
     path: guides-clean/Bacnet/bacnet-BacnetNetworkLayer.txt
+
+  [Mbus] MbusTcpIPNetwork
+    L25: | Response Timeout | hours, minutes, seconds, milliseconds (defaults to <T>) | Configures the length of time before the system times out when interrogatin...
+    path: guides-clean/Mbus/AboutMbusTcpIPNetworkComponent-33DAFC02.txt
 
   [Mbus] MbusSerialNetwork
     L25: | Response Timeout | hours, minutes, seconds, milliseconds (defaults to <T>) | Configures the length of time before the system times out when interrogatin...

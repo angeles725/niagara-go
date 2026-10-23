@@ -1,45 +1,45 @@
-116 files matching 'setpoint reference' (all terms):
-by source: guides-clean 55, docs-text 37, source 9, devguide-clean 7, bajadoc-clean 6, course-text 2
+123 files matching 'setpoint reference' (all terms):
+by source: guides-clean 55, docs-text 37, source 11, devguide-clean 7, bajadoc-clean 6, course-text 4, lexicon-text 3
   (course-text: the developer course bound to Niagara 4.15.6.20)
-
-  [docs-text] docAnalyticsReference
-    L1194: Niagara Analytics Framework Reference                                           Chapter 2 Algorithm library reference
-    path: docs-text/docAnalyticsReference.txt
 
   [docs-text] NiagaraAnalyticsFrameworkReference
     L1407: Chapter 2 Algorithm library reference                                         Niagara Analytics Framework Reference
     path: docs-text/NiagaraAnalyticsFrameworkReference.txt
 
+  [docs-text] docAnalyticsReference
+    L1194: Niagara Analytics Framework Reference                                           Chapter 2 Algorithm library reference
+    path: docs-text/docAnalyticsReference.txt
+
+  [lexicon-text] honBACnetUtilities-rt
+    L128: [label] BHonBacnetPointProperties.SETPOINT_REFERENCE_NAME = Object Reference Name
+    path: lexicon-text/honBACnetUtilities-rt/honBACnetUtilities-rt.lexicon.txt
+
+  [lexicon-text] clLexiconFr_V1_3 honBACnetUtilities
+    L12: [label] BHonBacnetPointProperties.SETPOINT_REFERENCE_NAME = Nom de référence d'objet
+    path: lexicon-text/clLexiconFr_V1_3/fr/honBACnetUtilities.lexicon.txt
+
   [docs-text] BACnet FFT Application Quick Reference Guide -31-00099
     L1824: UC       AV-95     85                   45.0 to 99.0                        Unnoccupied Cooling Setpoint                             All
     path: docs-text/BACnet_FFT_Application_Quick_Reference_Guide_-31-00099.txt
 
+  [lexicon-text] clLexiconDe-rt honBACnetUtilities
+    L10: [label] BHonBacnetPointProperties.SETPOINT_REFERENCE_NAME = Objektreferenz Name
+    path: lexicon-text/clLexiconDe-rt/de/honBACnetUtilities.lexicon.txt
+
   [course-text] Course: Lab Instructions
-    L776: 20. Confirm that the Out slot of My Tstat and Reference Tstat are both true. Since the two
+    L773: 19. Repeat this process to link the Out slot of Setpoint to the Sp slots on both My Tstat and
     path: course-text/Lab Instructions.txt
+
+  [docs-text] BACnet FFT Installation and Operations Guide - 31-00098
+    L17588: Installation and Operations Guide | Appendix C: Quick reference
+    path: docs-text/BACnet_FFT_Installation_and_Operations_Guide_-_31-00098.txt
 
   [docs-text] Spyder Tool for WEBs-N4 User Guide - 31-00089
     L18646: For reference, the LonMark Space Comfort                     programmed setpoints will be used. The
     path: docs-text/Spyder_Tool_for_WEBs-N4_User_Guide_-_31-00089.txt
 
-  [docs-text] Spyder PUL-PUB-PVB-PVL Controllers User Guide - 63-2662
-    L17845: available however, all blocks use the same nciSetpoints
-    path: docs-text/Spyder_PUL-PUB-PVB-PVL_Controllers_User_Guide_-_63-2662.txt
-
   [bajadoc-clean] BBacnetSetpointReference (javax.baja.bacnet.datatypes)
     L8: BBacnetSetpointReference represents the BacnetSetpointReference sequence.
     path: bajadoc-clean/javax/baja/bacnet/datatypes/BBacnetSetpointReference.txt
 
-  [bajadoc-clean] BBacnetLoop (javax.baja.bacnet.config)
-    L24: static Property setpointReference - Slot for the setpointReference property.
-    path: bajadoc-clean/javax/baja/bacnet/config/BBacnetLoop.txt
-
-  [guides-clean] Ace Dynamic Comp Index: control::SetPoint Class Reference
-    L22: control::SetPoint Class Reference
-    path: guides-clean/Ace/html/classcontrol_1_1_set_point.txt
-
-  [guides-clean] PumpExceedingSetpoint
-    L7: This algorithm uses three inputs to determine if the pressure in a secondary chilled water pump exceeds the expected setpoint.
-    path: guides-clean/AnalyticsReference/PumpExceedingSetpoint-9DB6F43A.txt
-
-  ... and 106 more files
+  ... and 113 more files

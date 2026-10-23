@@ -20,6 +20,10 @@
     L12: ...is the Filter class that is defined in the web.XML file of the web module. In your web.xml file, configure the servlet(s) specifying the Http methods to be prot...
     path: devguide-clean/security/csrfProtection.txt
 
+  [devguide] Niagara RPC
+    L6: ...from FOX, BOX (and BajaScript) and through a Web Servlet. This provides developers with a secure RPC API without having to understand the underlying transport l...
+    path: devguide-clean/niagaraRpc.txt
+
   [devguide] User Interfaces from AX to Niagara 4
     L22: ...4.0 onwards, we switched from our own home baked Web Server to Jetty. As well as being able to create servlets via BServletView (BHxView) and BWebServlets, you ...
     path: devguide-clean/uiFromAxToN4.txt
@@ -28,13 +32,9 @@
     L84: -  Web Server: Niagara uses Jetty as a web server. This grants native support for Java Servlets.
     path: devguide-clean/index.txt
 
-  [devguide] Niagara RPC
-    L6: ...from FOX, BOX (and BajaScript) and through a Web Servlet. This provides developers with a secure RPC API without having to understand the underlying transport l...
-    path: devguide-clean/niagaraRpc.txt
-
-  [devguide] User Activity Monitoring and Auto Logoff
-    L140: If you have a servlet, and each request made to it should be considered user activity, you can add the UserActivityFilter to your servlet. You should only use t...
-    path: devguide-clean/autoLogoffWeb.txt
+  [devguide] Hx
+    L8: ...consuming a document. The original HxOp wraps the WebOp for the current request. Sub-views should be given a new HxOp from the current op via the HxOp.make() me...
+    path: devguide-clean/hx-hxOp.txt
 
   [devguide] Exporter Servlet
     L10: If the Exporter doesn’t implement BIWbViewExporter, it can be run Station side. Station side exporters can be run through the web server.
