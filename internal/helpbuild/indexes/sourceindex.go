@@ -12,12 +12,19 @@ import (
 
 // source_indexer.py: indexes/source-index.json maps each .java file under
 // source/<module>/ and devguide-rc/ to its module, path (relative to
-// source/), package and line count, keyed by the file name.
+// source/), package and line count, keyed by the file name. A file taken
+// from a module jar (SourceOriginsFile) also has "origin": "module-jar
+// <jar>" and is indexed after every docSource file (sourceorigin.go).
+
+// OriginModuleJar starts the origin of a source-index record extracted
+// from a module jar; a docSource record has no origin.
+const OriginModuleJar = "module-jar "
 
 // sourceEntry is one source-index.json value.
 type sourceEntry struct {
 	module, path, pkg string
 	lines             int
+	jar               string // the module jar it was extracted from, "" for docSource
 }
 
 // BuildSourceIndex is source_indexer.index_source(baseDir) (the script's
@@ -33,13 +40,42 @@ func BuildSourceIndex(baseDir string) (*IndexResult, error) {
 	if err != nil {
 		return res, err
 	}
-	sourceDir, err := filepath.Abs(pycompat.Join(baseDir, "source"))
+	sourceDir, err := absSourceDir(baseDir)
+	if err != nil {
+		return res, err
+	}
+	origins, err := readSourceOrigins(baseDir)
 	if err != nil {
 		return res, err
 	}
 	index := map[string]sourceEntry{}
 	var order []string
 	totalLines := 0
+	add := func(module, name, path, jar string) {
+		text, ok := readJavaText(path)
+		if !ok {
+			return
+		}
+		pkg, count := "", 0
+		javaFileLines(text, func(line string) bool {
+			count++
+			if pkg == "" {
+				pkg, _ = javaPackage(line)
+			}
+			return true
+		})
+		totalLines += count
+		key := strings.TrimSuffix(name, ".java")
+		if _, dup := index[key]; dup {
+			key += " (" + module + ")"
+		}
+		if _, seen := index[key]; !seen {
+			order = append(order, key)
+		}
+		index[key] = sourceEntry{module, relToSource(sourceDir, path), pkg, count, jar}
+	}
+	type later struct{ module, name, path, jar string }
+	var fromJars []later // module-jar sources, indexed after docSource
 	for _, root := range roots {
 		pycompat.WalkWith(root.dir, pycompat.WalkOptions{Unsorted: true}, func(dir string, dirs, files []string) []string {
 			sort.Strings(dirs)
@@ -48,38 +84,29 @@ func BuildSourceIndex(baseDir string) (*IndexResult, error) {
 					continue
 				}
 				path := pycompat.Join(dir, name)
-				text, ok := readJavaText(path)
-				if !ok {
+				if jar := origins.jar(sourceDir, path); jar != "" {
+					fromJars = append(fromJars, later{root.module, name, path, jar})
 					continue
 				}
-				pkg, count := "", 0
-				javaFileLines(text, func(line string) bool {
-					count++
-					if pkg == "" {
-						pkg, _ = javaPackage(line)
-					}
-					return true
-				})
-				totalLines += count
-				key := strings.TrimSuffix(name, ".java")
-				if _, dup := index[key]; dup {
-					key += " (" + root.module + ")"
-				}
-				if _, seen := index[key]; !seen {
-					order = append(order, key)
-				}
-				index[key] = sourceEntry{root.module, relToSource(sourceDir, path), pkg, count}
+				add(root.module, name, path, "")
 			}
 			return dirs
 		})
 	}
+	for _, f := range fromJars {
+		add(f.module, f.name, f.path, f.jar)
+	}
 	out := pyjson.NewObject()
 	for _, key := range order {
 		e := index[key]
-		out.Set(key, pyjson.ObjectOf(pyjson.Field{Key: "module", Value: pyjson.String(e.module)},
+		rec := pyjson.ObjectOf(pyjson.Field{Key: "module", Value: pyjson.String(e.module)},
 			pyjson.Field{Key: "path", Value: pyjson.String(e.path)},
 			pyjson.Field{Key: "package", Value: pyjson.String(e.pkg)},
-			pyjson.Field{Key: "lines", Value: pyjson.IntValue(int64(e.lines))}))
+			pyjson.Field{Key: "lines", Value: pyjson.IntValue(int64(e.lines))})
+		if e.jar != "" {
+			rec.Set("origin", pyjson.String(OriginModuleJar+e.jar))
+		}
+		out.Set(key, rec)
 	}
 	if err := pyfs.WriteJSON(pycompat.Join(baseDir, "indexes", "source-index.json"), out, pyfs.DumpIndent2Unicode); err != nil {
 		return res, err
