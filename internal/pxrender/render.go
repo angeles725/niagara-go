@@ -126,24 +126,18 @@ func cssColor(v string) string {
 		strconv.FormatFloat(math.Round(float64(n(m[1]))/255*1000)/1000, 'f', -1, 64))
 }
 
-// parseFont: 'bold 26.0pt Arial' -> (bold, 26, Arial); '11.0pt Arial' -> (normal, 11, Arial).
-func parseFont(s string) (weight, size, family string) {
-	weight, size, family = "normal", "13", "Arial"
-	if s == "" {
-		return
+// labelStyle is the colour part of a Label's style: its foreground (default #16233a) and, when
+// set, its background.
+func labelStyle(e *element) string {
+	fg := cssColor(e.attr("foreground"))
+	if fg == "" {
+		fg = "#16233a"
 	}
-	toks := textfold.Fields(s)
-	if len(toks) > 0 && (toks[0] == "bold" || toks[0] == "italic") {
-		weight, toks = toks[0], toks[1:]
+	s := "color:" + fg + ";"
+	if bg := cssColor(e.attr("background")); bg != "" {
+		s += "background:" + bg + ";"
 	}
-	for _, tk := range toks {
-		if strings.Contains(tk, "pt") {
-			size, _, _ = strings.Cut(strings.ReplaceAll(tk, "pt", ""), ".")
-		} else {
-			family = tk
-		}
-	}
-	return
+	return s
 }
 
 var relayRE = regexp.MustCompile(`\[([0-9]+)\]`)
@@ -270,10 +264,15 @@ func (r *renderer) binding(vb *element, base string) error {
 func (r *renderer) widget(e *element, base string) error {
 	switch e.tag {
 	case "Label":
-		wt, sz, fam := parseFont(e.attr("font"))
-		r.parts = append(r.parts, fmt.Sprintf(`<div style="%sdisplay:flex;align-items:center;font-family:%s,Arial,`+
-			`sans-serif;font-weight:%s;font-size:%spx;color:#16233a;line-height:1.05;overflow:hidden;`+
-			`white-space:pre-wrap;">%s</div>`, base, fam, wt, sz, pycompat.HTMLEscape(pyhtml.Unescape(e.attr("text")))))
+		f := parseNiagaraFont(e.attr("font"))
+		style := ""
+		if f.style != "normal" {
+			style = "font-style:" + f.style + ";"
+		}
+		r.parts = append(r.parts, fmt.Sprintf(`<div style="%sdisplay:flex;align-items:center;font-family:%s;`+
+			`font-weight:%s;%sfont-size:%spx;%sline-height:1.05;overflow:hidden;`+
+			`white-space:pre-wrap;">%s</div>`, base, cssFamily(f.family), f.weight, style, f.size, labelStyle(e),
+			pycompat.HTMLEscape(pyhtml.Unescape(e.attr("text")))))
 	case "Picture":
 		if img := e.attr("image"); img != "" {
 			uri, err := r.a.dataURI(img)
