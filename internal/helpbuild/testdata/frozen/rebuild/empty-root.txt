@@ -19,6 +19,7 @@ REBUILD-ALL (dry run)
   SKIP  package_text_builder       -> package-text/  (source 'devguide/' absent)
   PLAN  lexicon_extractor          -> lexicon-text/
   PLAN  module_index_builder       -> module-index.json
+  PLAN  palette_index_builder      -> palette-index.json
 
 Dry run — nothing executed. Drop --dry-run to build.
 # stderr
@@ -50,8 +51,10 @@ course: no course bound to this version; skipped
 lexicon-text/: no install registered; skipped (the last copy is kept)
   RUN   module_index_builder       -> module-index.json
 module-index.json: no install registered; skipped (the last copy is kept)
+  RUN   palette_index_builder      -> palette-index.json
+palette-index.json: no install registered; skipped (the last copy is kept)
 
-Ran 4, skipped 13, failed 0.
+Ran 5, skipped 13, failed 0.
 Manifest re-stamped. Run 'freshness' to confirm FRESH.
 # stderr
 
@@ -84,7 +87,7 @@ indexes/.manifest.json 644
   SKIP  devguide_parser.py         -> devguide-clean/  (source 'devguide/' absent)
   SKIP  build_devguide_toc.py      -> devguide-toc.json  (source 'devguide/' absent)
   SKIP  package_text_builder       -> package-text/  (source 'devguide/' absent)
-Ran 4, skipped 13, failed 0.
+Ran 5, skipped 13, failed 0.
   EMPTY class-index.json (its source is not in this install)
   EMPTY inheritance.json (its source is not in this install)
   EMPTY method-index.json (its source is not in this install)
@@ -141,6 +144,8 @@ course: no course bound to this version; skipped
 lexicon-text/: no install registered; skipped (the last copy is kept)
   RUN   module_index_builder       -> module-index.json
 module-index.json: no install registered; skipped (the last copy is kept)
+  RUN   palette_index_builder      -> palette-index.json
+palette-index.json: no install registered; skipped (the last copy is kept)
 
-Ran 4, skipped 13, failed 0.
+Ran 5, skipped 13, failed 0.
 Manifest re-stamped. Run 'freshness' to confirm FRESH.
