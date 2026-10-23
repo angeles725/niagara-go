@@ -17,8 +17,12 @@ import (
 const moduleIndexName = "module-index.json"
 
 // ModuleParams are the arguments of `module`.
+// Detail is "", or the one list to print: "types", "agents", "permissions"
+// or "defs"; JSON prints the record (or that list) as JSON.
 type ModuleParams struct {
-	Name string
+	Name   string
+	Detail string
+	JSON   bool
 }
 
 // modules is the "modules" object of module-index.json (required: a data root
@@ -76,9 +80,9 @@ func (e *Env) Module(p ModuleParams) error {
 	case 0:
 		return e.reportMiss("module", p.Name, "module-xml")
 	case 1:
-		e.moduleSummary(mods, names[0])
+		e.moduleOne(mods, names[0], p)
 	default:
-		e.moduleListing(mods, p.Name, names)
+		e.moduleMany(mods, names, p)
 	}
 	return nil
 }
@@ -156,6 +160,11 @@ func (e *Env) moduleSummary(mods *index.Object, name string) {
 func (e *Env) printPermissions(r *index.Object) {
 	perms := objList(r, "java_permissions")
 	fmt.Fprintf(e.Out, "\nJAVA PERMISSIONS (%d):\n", len(perms))
+	e.permissionLines(perms)
+}
+
+// permissionLines prints one java-permission per line, profiles aligned.
+func (e *Env) permissionLines(perms []*index.Object) {
 	width := 0
 	for _, p := range perms {
 		width = max(width, runeLen(getStr(p, "profile", "")))

@@ -60,14 +60,33 @@ var memberCommands = []command{
 		}},
 }
 
+// moduleDetails are the list flags of `module` and their help.
+var moduleDetails = [][2]string{
+	{"types", "List the types the module registers (module:Type and class)"},
+	{"agents", "List the agents (views, editors) the module's types register and the types they are on"},
+	{"permissions", "List the java-permissions by profile"},
+	{"defs", "List the defs (name = value)"},
+}
+
 // Module descriptor commands (Go-only, modules.go): module, over
 // indexes/module-index.json.
 var moduleCommands = []command{
 	{name: "module", help: "Module descriptor (module.xml): dependencies both ways, types, permissions",
 		args: func(p *argparse.Parser) {
 			positional(p, "name", "Module name, part name or glob (e.g. kitControl-rt, kitControl, 'kit*')")
+			list := p.AddMutuallyExclusiveGroup(false)
+			for _, d := range moduleDetails {
+				list.Add(argparse.Arg{Dest: "module_" + d[0], Action: argparse.StoreTrue, Help: d[1]}, "--"+d[0])
+			}
+			p.Add(argparse.Arg{Dest: "module_json", Action: argparse.StoreTrue, Help: "Output as JSON"}, "--json")
 		},
 		run: func(e *Env, ns *argparse.Namespace) error {
-			return e.Module(ModuleParams{Name: ns.String("name")})
+			detail := ""
+			for _, d := range moduleDetails {
+				if ns.Bool("module_" + d[0]) {
+					detail = d[0]
+				}
+			}
+			return e.Module(ModuleParams{Name: ns.String("name"), Detail: detail, JSON: ns.Bool("module_json")})
 		}},
 }
