@@ -53,3 +53,30 @@ func TestSourceShowsModuleJarOrigin(t *testing.T) {
 		})
 	}
 }
+
+// A class with Java source but no javadoc is not a class miss: nh class
+// shows its source record and origin, and a class with javadoc names its
+// module-jar alternates.
+func TestClassFallsBackToModuleJarSource(t *testing.T) {
+	dir := oemRepo(t)
+	out, errs, code := run(t, dir, "class", "BOnly")
+	want := "CLASS: BOnly\nPACKAGE: com.a\nMODULE: aaa-rt\n" +
+		"No javadoc (.bajadoc) for this class; its Java source is indexed:\n" +
+		"SOURCE: source/aaa-rt/com/a/BOnly.java (2 lines)\nORIGIN: module-jar aaa-rt.jar\n" +
+		"Run: nh source BOnly --code\n"
+	if code != 0 || errs != "" || out != want {
+		t.Errorf("class BOnly: code %d err %q\n%s\nwant\n%s", code, errs, out, want)
+	}
+	out, _, code = run(t, dir, "class", "com.a.BOnly")
+	if code != 0 || !strings.HasPrefix(out, "CLASS: BOnly\nPACKAGE: com.a\n") {
+		t.Errorf("class com.a.BOnly: code %d\n%s", code, out)
+	}
+	out, _, code = run(t, dir, "class", "BFoo")
+	if code != 0 || !strings.Contains(out, "ALSO: Java source BFoo (aaa-rt) [module-jar aaa-rt.jar]\n") {
+		t.Errorf("class BFoo: code %d, no module-jar alternate:\n%s", code, out)
+	}
+	out, _, code = run(t, dir, "class", "com.zzz.BOnly")
+	if code != 1 || !strings.Contains(out, "No match for 'com.zzz.BOnly' (class)") {
+		t.Errorf("class com.zzz.BOnly: code %d\n%s", code, out)
+	}
+}
