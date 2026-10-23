@@ -15,7 +15,7 @@ import (
 // scopeNames are every scope a miss block can name (scope.py SCOPES).
 var scopeNames = []string{
 	"guides", "devguide", "classes", "jdk", "methods", "slots", "source",
-	"inheritance", "xref", "modules", "pdf", "fulltext",
+	"inheritance", "xref", "modules", "module-xml", "pdf", "fulltext",
 }
 
 var hint = regexp.MustCompile(`([a-z][a-z-]*(?: --[a-z-]+)*(?: \([^)]*\))?) 'BZzz'`)

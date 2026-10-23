@@ -17,8 +17,8 @@ func TestOrderNamesEveryCommandOnce(t *testing.T) {
 			t.Errorf("%s in order but not registered", n)
 		}
 	}
-	if len(registry) != len(order) || len(order) != 19 {
-		t.Errorf("registry %d commands, order %d, want 19", len(registry), len(order))
+	if len(registry) != len(order) || len(order) != 20 {
+		t.Errorf("registry %d commands, order %d, want 20", len(registry), len(order))
 	}
 	for n := range retired {
 		if registry[n] != nil {

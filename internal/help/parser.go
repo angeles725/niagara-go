@@ -35,7 +35,7 @@ func (c *command) helpText() string {
 // the commands the Go port keeps.
 var commandGroups = [][]command{
 	classCommands, memberCommands, docCommands, sourceCommands, adminCommands,
-	versionCommands, maintCommands,
+	versionCommands, maintCommands, moduleCommands,
 }
 
 // registry maps a command name to its definition (registry.py COMMANDS).
@@ -59,7 +59,7 @@ func buildRegistry() map[string]*command {
 // retired commands).
 var order = []string{
 	"class", "search", "guide", "guide-search", "devguide", "pdf", "method",
-	"source", "package", "slots", "find", "devguide-search", "stats",
+	"source", "package", "slots", "module", "find", "devguide-search", "stats",
 	"source-grep", "coverage", "freshness", "rebuild-all", "selftest", "versions",
 }
 
@@ -70,7 +70,7 @@ var retired = map[string]bool{}
 
 func init() {
 	for _, n := range []string{
-		"hierarchy", "module", "xref", "implementors", "related", "module-deps",
+		"hierarchy", "xref", "implementors", "related", "module-deps",
 		"compare", "annotations", "profile", "snippet", "callers", "overrides",
 		"contract", "inherited-methods", "compatible", "graph", "api", "hotspots",
 		"chain", "module-summary", "archetypes", "orphans", "checklist",
@@ -103,6 +103,7 @@ const epilog = "Examples:\n" +
 	"  %(prog)s slots BAlarmClass\n" +
 	"  %(prog)s slots faultCause\n" +
 	"  %(prog)s slots BAlarmClass --inherited\n" +
+	"  %(prog)s module kitControl-rt\n" +
 	"  %(prog)s find \"setpoint reference\"\n" +
 	"  %(prog)s devguide-search \"web servlet\"\n" +
 	"  %(prog)s versions add /mnt/c/Niagara/Niagara-4.16.0.1\n"

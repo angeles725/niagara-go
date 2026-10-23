@@ -59,3 +59,15 @@ var memberCommands = []command{
 				ByType: ns.String("by_type"), JSON: ns.Bool("slots_json"), Inherited: ns.Bool("inherited")})
 		}},
 }
+
+// Module descriptor commands (Go-only, modules.go): module, over
+// indexes/module-index.json.
+var moduleCommands = []command{
+	{name: "module", help: "Module descriptor (module.xml): dependencies both ways, types, permissions",
+		args: func(p *argparse.Parser) {
+			positional(p, "name", "Module name, part name or glob (e.g. kitControl-rt, kitControl, 'kit*')")
+		},
+		run: func(e *Env, ns *argparse.Namespace) error {
+			return e.Module(ModuleParams{Name: ns.String("name")})
+		}},
+}

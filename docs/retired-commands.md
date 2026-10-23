@@ -54,7 +54,7 @@ Paths are under `tools/niagara_help_lib/` of the niagara-help repository.
 | `overrides` | `cli/cmd_members.py`, `overrides_search.py` | `pre-go-retire` (8410d7451) | Go port (S3) removed |
 | `contract` | `cli/cmd_members.py`, `contract_search.py` | `pre-go-retire` (8410d7451) | Go port (S3) removed |
 | `compatible` | `cli/cmd_members.py`, `compatible_search.py` | `pre-go-retire` (8410d7451) | Go port (S3) removed |
-| `module` | `cli/cmd_analysis.py`, `module_search.py` | `pre-go-retire` (8410d7451) | Go port (S4) removed; module_class_matches stays for selftest --recall |
+| `module` | `cli/cmd_analysis.py`, `module_search.py` | `pre-go-retire` (8410d7451) | Go port (S4) removed; module_class_matches stays for selftest --recall. The name is live again (NH3) as a different command: `nh module` reads module-index.json (module.xml descriptors), not the source index |
 | `related` | `cli/cmd_analysis.py`, `related_search.py` | `pre-go-retire` (8410d7451) | Go port (S4) removed |
 | `module-deps` | `cli/cmd_analysis.py`, `module_deps.py` | `pre-go-retire` (8410d7451) | Go port (S4) removed |
 | `compare` | `cli/cmd_analysis.py`, `compare_search.py` | `pre-go-retire` (8410d7451) | never ported |
