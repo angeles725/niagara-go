@@ -229,15 +229,80 @@ func sweepReport(vid, install string, res *sweepResult, baseDir string, course *
 			out = append(out, "  "+g.Jar+"  "+g.Entry+"  -- "+g.Why)
 		}
 	}
+	outside := 0
+	for _, n := range res.OutOfScope {
+		outside += n
+	}
+	out = append(out, "", outOfScopeLine(res.OutOfScope, outside))
 	switch len(gaps) {
 	case 0:
-		out = append(out, "RESULT: PASS - every documentation-like entry is indexed or excluded with a reason")
+		out = append(out, fmt.Sprintf("RESULT: PASS - every documentation-like entry is indexed or excluded with a reason "+
+			"(%s entries outside the documentation scope, counted above)", pyFmt(outside, ",")))
 	case 1:
 		out = append(out, "RESULT: FAIL - 1 unclassified entry")
 	default:
 		out = append(out, fmt.Sprintf("RESULT: FAIL - %d unclassified entries", len(gaps)))
 	}
 	return out, nil
+}
+
+// outOfScope counts one entry the gate leaves out because it is not
+// documentation-like; a directory entry holds no content and is not counted.
+func (r *sweepResult) outOfScope(name string) {
+	if strings.HasSuffix(name, "/") {
+		return
+	}
+	r.OutOfScope[entryType(name)]++
+}
+
+// entryType is the lower-cased extension of an entry's file name, or
+// "(no extension)".
+func entryType(name string) string {
+	if ext := lowerExt(pyBasename(name)); ext != "" {
+		return ext
+	}
+	return "(no extension)"
+}
+
+// outOfScopeTypes is how many entry types the out-of-scope line names; the rest
+// are summed as "N other types".
+const outOfScopeTypes = 10
+
+// outOfScopeLine says how many entries the gate did not classify because they
+// are not documentation-like, by type, the most common first (ties by name).
+func outOfScopeLine(byType map[string]int, total int) string {
+	types := make([]string, 0, len(byType))
+	for t := range byType {
+		types = append(types, t)
+	}
+	sort.Slice(types, func(i, j int) bool {
+		if byType[types[i]] != byType[types[j]] {
+			return byType[types[i]] > byType[types[j]]
+		}
+		return types[i] < types[j]
+	})
+	show := outOfScopeTypes
+	if len(types) == show+1 { // "1 other types" would hide a type for no gain
+		show++
+	}
+	parts := make([]string, 0, show+1)
+	rest := 0
+	for i, t := range types {
+		if i < show {
+			parts = append(parts, t+" "+pyFmt(byType[t], ","))
+		} else {
+			rest += byType[t]
+		}
+	}
+	if extra := len(types) - show; extra > 0 {
+		parts = append(parts, fmt.Sprintf("%d other types %s", extra, pyFmt(rest, ",")))
+	}
+	line := fmt.Sprintf("OUTSIDE THE DOCUMENTATION SCOPE: %s entries are not documentation-like and were not classified",
+		pyFmt(total, ","))
+	if len(parts) > 0 {
+		line += " (by type: " + strings.Join(parts, ", ") + ")"
+	}
+	return line
 }
 
 // pyNone is str() of an optional string: "" is None.

@@ -5,9 +5,13 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/angeles725/niagara-go/internal/statcache"
+	"github.com/angeles725/niagara-go/internal/statcache/stattest"
 )
 
 // writeClassIndex writes indexes/class-index.json under base: n classes,
@@ -54,9 +58,10 @@ func useSmallClassCache(t *testing.T) {
 	t.Cleanup(func() { classCacheMinBytes = old })
 }
 
-// TestClassIndexCacheHitMatchesMiss: the second load is a cache hit (the
-// JSON is unreadable, yet it loads) with the same index and the same stderr,
-// progress line included.
+// TestClassIndexCacheHitMatchesMiss: the second load is a cache hit (a marker
+// planted in the cache file shows up) with the same index and the same stderr,
+// progress line included; a JSON edited in place with its size and mtime kept
+// (cp -p, rsync -a, touch -r) is a miss.
 func TestClassIndexCacheHitMatchesMiss(t *testing.T) {
 	useSmallClassCache(t)
 	base := t.TempDir()
@@ -66,25 +71,32 @@ func TestClassIndexCacheHitMatchesMiss(t *testing.T) {
 		t.Fatalf("miss stderr has no progress line: %q", missErr)
 	}
 	cache := ClassIndexCachePath(base)
-	if _, err := os.Stat(cache); err != nil {
-		t.Fatalf("no cache written: %v", err)
+	var cf classCacheFile
+	if !statcache.ReadGob(cache, &cf) || !strings.Contains(cf.Strings, "fixture a") {
+		t.Fatalf("no cache written")
 	}
-	// Corrupt the JSON in place, same size and mtime: only the cache can answer.
-	st, _ := os.Stat(p)
-	data, _ := os.ReadFile(p)
-	data[len(data)/2] = '{'
-	if err := os.WriteFile(p, data, 0o644); err != nil {
-		t.Fatal(err)
-	}
-	if err := os.Chtimes(p, st.ModTime(), st.ModTime()); err != nil {
-		t.Fatal(err)
+	// Plant a marker of the same length in the cache: only a hit can answer it.
+	cf.Strings = strings.Replace(cf.Strings, "fixture a", "fixture z", 1)
+	if !statcache.WriteGob(cache, cf) {
+		t.Fatal("cannot rewrite the cache")
 	}
 	hit, hitErr := loadClassIndex(t, base)
-	if hit != miss {
+	if !strings.Contains(hit, "fixture z") || strings.Replace(hit, "fixture z", "fixture a", 1) != miss {
 		t.Error("cache hit decodes a different index than the JSON")
 	}
 	if hitErr != missErr {
 		t.Errorf("stderr differs: hit %q, miss %q", hitErr, missErr)
+	}
+	if runtime.GOOS != "linux" {
+		return // ctime and inode are read on Linux only (statcache.Sys)
+	}
+	data, err := os.ReadFile(p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	stattest.EditKeepingStamp(t, p, bytes.Replace(data, []byte("fixture a"), []byte("fixture b"), 1))
+	if edited, _ := loadClassIndex(t, base); !strings.Contains(edited, "fixture b") {
+		t.Error("stale cache after an edit keeping size and mtime")
 	}
 }
 

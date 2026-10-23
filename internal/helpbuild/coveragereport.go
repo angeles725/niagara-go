@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 
@@ -53,26 +54,28 @@ func loadReportIndex(baseDir, name string, required bool) (*index.Object, error)
 	return o, nil
 }
 
-// guidePageExtensions are coverage_report.GUIDE_PAGE_EXTENSIONS.
-var guidePageExtensions = []string{".html", ".htm"}
-
-// countTree is _count_tree: the files under path (os.walk, no symlinked
-// folder entered) whose lower-cased name ends with one of extensions.
-func countTree(path string, extensions []string) int {
-	n := 0
-	pycompat.Walk(path, func(_ string, dirs, files []string) []string {
+// guidePages counts, under guides/<folder>, the pages the guides parser
+// converts (isGuidePage) and those whose guides-clean text (cleanTextName) is
+// on disk: both sides count the same pages, so indexed <= onDisk always.
+func guidePages(guides, clean, folder string) (onDisk, indexed int) {
+	pycompat.Walk(pycompat.Join(guides, folder), func(dir string, dirs, files []string) []string {
 		for _, f := range files {
-			if hasAnySuffix(textfold.Lower(f), extensions) {
-				n++
+			if !isGuidePage(f) {
+				continue
+			}
+			onDisk++
+			rel, err := filepath.Rel(guides, pycompat.Join(dir, f))
+			if err == nil && pycompat.IsFile(pycompat.Join(clean, cleanTextName(filepath.ToSlash(rel), guides))) {
+				indexed++
 			}
 		}
 		return dirs
 	})
-	return n
+	return onDisk, indexed
 }
 
-// guideFolderCoverage is one guide_coverage row: the HTML pages of guides/<Folder>
-// and the text files of guides-clean/<Folder>, both counted recursively.
+// guideFolderCoverage is one guide_coverage row: the guide pages of guides/<Folder>
+// and how many of them have their guides-clean text (guidePages).
 type guideFolderCoverage struct {
 	Folder          string
 	OnDisk, Indexed int
@@ -96,9 +99,9 @@ func guideCoverage(baseDir string) ([]guideFolderCoverage, error) {
 		if !pycompat.IsDir(path) {
 			continue
 		}
-		rows = append(rows, guideFolderCoverage{Folder: folder,
-			OnDisk:  countTree(path, guidePageExtensions),
-			Indexed: countTree(pycompat.Join(clean, folder), []string{".txt"})})
+		row := guideFolderCoverage{Folder: folder}
+		row.OnDisk, row.Indexed = guidePages(guides, clean, folder)
+		rows = append(rows, row)
 	}
 	return rows, nil
 }
@@ -142,9 +145,10 @@ func printGuideCoverage(w io.Writer, baseDir string) (int, error) {
 		indexed += r.Indexed
 	}
 	out := &reportWriter{w: w}
-	out.line("GUIDE COVERAGE (guides/ HTML vs guides-clean/ text)")
+	out.line("GUIDE COVERAGE (guides/ pages vs their guides-clean/ text)")
 	out.line(strings.Repeat("=", 60))
-	out.line(fmt.Sprintf("Overall: %d/%d pages indexed across %d folders, %d gap folder(s)",
+	out.line(fmt.Sprintf("Overall: %d/%d guide pages indexed (.html .htm .md .txt, licence texts excluded) "+
+		"across %d folders, %d gap folder(s)",
 		indexed, onDisk, len(rows), len(gaps)))
 	for _, r := range gaps {
 		out.line(fmt.Sprintf("  GAP  %s/%s %s", pyFmt(r.Indexed, ">5d"), pyFmt(r.OnDisk, "<5d"), r.Folder))

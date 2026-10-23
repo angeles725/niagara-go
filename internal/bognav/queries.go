@@ -157,6 +157,17 @@ func cmdSlot(e *env) (int, int) {
 		if hasD {
 			out = append(out, defaultJSON(d)...)
 		}
+		if !ok && !hasD {
+			// Neither a bog slot nor a type default: a miss, exit 1 like an unknown path. Under
+			// --json the miss goes to stderr so stdout never carries a slot-less object.
+			miss := c.Path + ": no direct slot '" + name + "' (children: " + e.childNames(c) + ")"
+			if e.flag("json") {
+				fmt.Fprintln(e.err, miss)
+			} else {
+				e.println(miss)
+			}
+			return 0, cli.ExitNoMatch
+		}
 		switch {
 		case e.flag("json"):
 			e.printJSON(out, 2)
@@ -167,8 +178,6 @@ func cmdSlot(e *env) (int, int) {
 		case hasD:
 			e.println(c.Path, ".", name, "  value=", d.Default, " ", defaultMark(d), "  declared by ", d.Owner,
 				"  flags=", d.Flags, "  [absent from the bog: the type's default]")
-		default:
-			e.println(c.Path, ": no direct slot '", name, "' (children: ", e.childNames(c), ")")
 		}
 		return 0, -1
 	}

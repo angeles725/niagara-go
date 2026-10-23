@@ -323,9 +323,12 @@ type sweepResult struct {
 	Reasons      map[reasonKey]int
 	Unclassified []gap
 	Skipped      []SkipDir
-	Jars         int // jars found
-	Listed       int // jars listed anew (not from the cache)
-	Unreadable   []string
+	// OutOfScope counts the entries that are not documentation-like (rules.IsDocLike),
+	// by entryType: the gate does not classify them, and its report says how many.
+	OutOfScope map[string]int
+	Jars       int // jars found
+	Listed     int // jars listed anew (not from the cache)
+	Unreadable []string
 }
 
 func (r *sweepResult) row(loc string) *sweepRow {
@@ -378,7 +381,8 @@ func scan(installDir, root string, opts SweepOptions) (*sweepResult, error) {
 			s.installed = append(s.installed, j)
 		}
 	}
-	res := &sweepResult{Rows: map[string]*sweepRow{}, Reasons: map[reasonKey]int{}, Skipped: skipped, Jars: len(jars)}
+	res := &sweepResult{Rows: map[string]*sweepRow{}, Reasons: map[reasonKey]int{}, OutOfScope: map[string]int{},
+		Skipped: skipped, Jars: len(jars)}
 	for _, j := range jars {
 		row := res.row(sweepLocation(j.Rel))
 		row.Jars++
@@ -395,10 +399,15 @@ func scan(installDir, root string, opts SweepOptions) (*sweepResult, error) {
 			res.Unclassified = append(res.Unclassified, gap{j.Rel, "(whole jar)", "unreadable jar (corrupt zip or I/O error)"})
 			continue
 		}
+		if l.Classes > 0 { // the listing keeps only their number
+			res.OutOfScope[".class"] += l.Classes
+		}
 		var docs []int
 		for pos, e := range l.Entries {
 			if rules.IsDocLike(e.Name) {
 				docs = append(docs, pos)
+			} else {
+				res.outOfScope(e.Name)
 			}
 		}
 		if len(docs) == 0 {
@@ -472,6 +481,8 @@ func (s *sweeper) scanLooseDocs(installDir string, res *sweepResult) ([]dirError
 		for _, name := range files {
 			if r := rel + name; s.rules.IsDocLike(r) {
 				res.count(row, s.classifyLooseDoc(r, sources), "docs/", r)
+			} else {
+				res.outOfScope(r)
 			}
 		}
 		return dirs

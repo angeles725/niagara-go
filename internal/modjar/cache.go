@@ -13,8 +13,9 @@ import (
 )
 
 // The cache follows the stats cache of module-nav (internal/nav/inventory/statscache.go):
-// one gob file of {absolute path: entry} kept under each jar's size and mtime (ns), written
-// back atomically with statcache.WriteGob (mode 0600). A jar whose size or mtime changed is read
+// one gob file of {absolute path: entry} kept under each jar's statcache.Stamp (size, mtime,
+// ctime, inode), written back atomically with statcache.WriteGob (mode 0600). A jar whose stamp
+// changed (an edit that keeps size and mtime still changes the ctime) is read
 // again; a jar that changed while it was read, or failed to open or read, is not cached;
 // "no such member" is (it is a property of the bytes). The key is not resolved through
 // symlinks: on a slow file system that costs an lstat per path component, and a stat of
@@ -28,15 +29,15 @@ import (
 // a test binary never uses it.
 
 const (
-	cacheFormat = 1
+	cacheFormat = 2 // 2: the key is the whole statcache.Stamp (ctime and inode too)
 	envCache    = "NIAGARA_GO_MODJAR_CACHE"
 )
 
 type cacheEntry struct {
-	Size, MtimeNs int64
-	Data          []byte
-	MetaInf       []string
-	NoMember      bool
+	statcache.Stamp
+	Data     []byte
+	MetaInf  []string
+	NoMember bool
 }
 
 type cacheFile struct {
@@ -94,7 +95,7 @@ func (c *Cache) read(path string) Result {
 	e, ok := c.entries[key]
 	c.seen[key], c.seenDirs[filepath.Dir(key)] = true, true
 	c.mu.Unlock()
-	if ok && e.Size == stamp.Size && e.MtimeNs == stamp.MtimeNs {
+	if ok && e.Stamp == stamp {
 		r := Result{Path: path, Data: e.Data, MetaInf: e.MetaInf}
 		if e.NoMember {
 			r.Data, r.MetaInf = nil, nil
@@ -109,7 +110,7 @@ func (c *Cache) read(path string) Result {
 	}
 	if statcache.Same(path, stamp) {
 		c.mu.Lock()
-		c.entries[key] = cacheEntry{stamp.Size, stamp.MtimeNs, r.Data, r.MetaInf, noMember}
+		c.entries[key] = cacheEntry{stamp, r.Data, r.MetaInf, noMember}
 		c.dirty = true
 		c.mu.Unlock()
 	}

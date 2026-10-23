@@ -8,6 +8,19 @@ CORPUS FRESHNESS
   OK             devguide     now: 6 files, 2,285 bytes
   SOURCE REMOVED docs         now: (absent)
 
+Text sources of the full-text index and the indexes (written before the stamp):
+  OK             bajadoc-clean      now: (absent)
+  CHANGED        devguide-clean     now: 1 files, 5 bytes — modified after the baseline was stamped
+  CHANGED        guides-clean       now: 2 files, 11 bytes — modified after the baseline was stamped
+  OK             docs-text          now: (absent)
+  OK             course-text        now: (absent)
+  CHANGED        devguide-rc        now: 1 files, 17 bytes — modified after the baseline was stamped
+  OK             devguide-examples  now: (absent)
+  OK             package-text       now: (absent)
+  OK             lexicon-text       now: (absent)
+  CHANGED        indexes            now: 8 files, 5,915 bytes — modified after the baseline was stamped
+  fulltext.sqlite: absent (find builds it on the first search)
+
 Baseline stamped: 2026-01-02T03:04:05.000006+00:00
-RESULT: STALE — 3 source(s) changed: source, guides, docs
+RESULT: STALE — 7 source(s) changed: source, guides, docs, devguide-clean, guides-clean, devguide-rc, indexes
 Reindex with 'rebuild-all' (then the manifest re-stamps).

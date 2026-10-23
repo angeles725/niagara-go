@@ -60,14 +60,49 @@ func pyLen(v any) int {
 var statsIndexNames = []string{"class-index", "devguide-toc", "guides-index", "inheritance",
 	"pdf-index", "method-index", "source-index", "xref-index", "slots-index"}
 
-// statsTextDirs are the text directories stats counts, in its order.
-var statsTextDirs = []string{"bajadoc-clean", "devguide-clean", "guides-clean", "docs-text", "source"}
+// textSource is one source of the full-text index as stats reports it: the files the
+// index reads (fts.IterFiles) and their size, absent when the source is not built, and
+// the version it is borrowed from when this one ships none (docs-text, course-text).
+type textSource struct {
+	fileCount
+	absent bool
+	shared string // the fts.Shared note with the owner version, "" when not borrowed
+}
+
+// textSources counts every source of the full-text index, in fts.Labels order: the one
+// source registry find, the fingerprint and the scope report read, so stats can never
+// list fewer sources than the index holds.
+func textSources(baseDir string) map[string]textSource {
+	dirs := fts.SourceDirs(baseDir)
+	out := map[string]textSource{}
+	for _, label := range fts.Labels {
+		dir := fts.DirOf(dirs, label)
+		if dir == "" {
+			out[label] = textSource{absent: true}
+			continue
+		}
+		var ts textSource
+		for _, path := range fts.IterFiles(label, dir) {
+			ts.files++
+			if st, err := os.Stat(path); err == nil {
+				ts.bytes += int(st.Size())
+			}
+		}
+		if note, ok := fts.Shared[label]; ok {
+			if _, owner := fts.SharedRoot(baseDir, label); owner != "" {
+				ts.shared = fmt.Sprintf(note, owner)
+			}
+		}
+		out[label] = ts
+	}
+	return out
+}
 
 // corpusStats is what cmd_stats prints: the loaded indexes, the text directory counts and
 // the totals computed from them.
 type corpusStats struct {
 	idx                             map[string]*index.Object
-	text                            map[string]fileCount
+	text                            map[string]textSource
 	props, actions, topics, methods int
 	edges, lines, dgItems, packages int
 	abs, vid                        string // the absolute data root, its version ("" unregistered)
@@ -93,7 +128,7 @@ func (e *Env) Stats(asJSON bool) error {
 // corpusStats loads the indexes (the first missing one is the error), counts the text
 // directories and sums the index entries stats reports.
 func (e *Env) corpusStats() (*corpusStats, error) {
-	s := &corpusStats{idx: map[string]*index.Object{}, text: map[string]fileCount{}}
+	s := &corpusStats{idx: map[string]*index.Object{}}
 	for _, n := range statsIndexNames {
 		o, err := e.loadIndex(n+".json", true)
 		if err != nil {
@@ -101,13 +136,7 @@ func (e *Env) corpusStats() (*corpusStats, error) {
 		}
 		s.idx[n] = o
 	}
-	for _, d := range statsTextDirs {
-		ext := ".txt"
-		if d == "source" {
-			ext = ".java"
-		}
-		s.text[d] = countFiles(filepath.Join(e.BaseDir, d), ext)
-	}
+	s.text = textSources(e.BaseDir)
 	sum := func(name string, f func(o *index.Object, k string) int) int {
 		n, o := 0, s.idx[name]
 		for _, k := range o.Keys() {
@@ -147,8 +176,16 @@ func (e *Env) statsJSON(s *corpusStats) {
 		version = s.vid
 	}
 	dirs := pyjson.Obj{}
-	for _, d := range statsTextDirs {
-		dirs = append(dirs, pyjson.KV{d, pyjson.Obj{{"files", s.text[d].files}, {"bytes", s.text[d].bytes}}})
+	for _, d := range fts.Labels {
+		ts := s.text[d]
+		row := pyjson.Obj{{"files", ts.files}, {"bytes", ts.bytes}}
+		if ts.absent {
+			row = append(row, pyjson.KV{"absent", true})
+		}
+		if ts.shared != "" {
+			row = append(row, pyjson.KV{"shared", ts.shared})
+		}
+		dirs = append(dirs, pyjson.KV{d, row})
 	}
 	data := pyjson.Obj{
 		{"niagara_version", version},
@@ -179,10 +216,10 @@ func (e *Env) statsText(s *corpusStats) {
 		vid = "unregistered"
 	}
 	totalBytes := 0
-	for _, d := range statsTextDirs {
+	for _, d := range fts.Labels {
 		totalBytes += s.text[d].bytes
 	}
-	indexCount := 9
+	indexCount := len(statsIndexNames)
 	out := e.Out
 	fmt.Fprintf(out, "Niagara Help Navigator - Corpus Statistics\n%s\n", strings.Repeat("=", 55))
 	fmt.Fprintf(out, "Niagara version: %s  (%s)\n", vid, s.abs)
@@ -197,13 +234,23 @@ func (e *Env) statsText(s *corpusStats) {
 	fmt.Fprintf(out, "  xref-index.json        %s classes (%s edges)\n", w(s.n("xref-index")), pycompat.Commas(s.edges))
 	fmt.Fprintf(out, "  slots-index.json       %s classes (%s props, %d actions, %d topics)\n",
 		w(s.n("slots-index")), pycompat.Commas(s.props), s.actions, s.topics)
-	fmt.Fprintf(out, "\nTEXT SOURCES (%s MB total):\n\n", mb(totalBytes))
-	for _, d := range statsTextDirs {
-		fmt.Fprintf(out, "  %s %s files  (%s MB)\n", pycompat.LJust(d+"/", 17, ' '), w(s.text[d].files), mb(s.text[d].bytes))
+	fmt.Fprintf(out, "\nTEXT SOURCES (%d sources of the full-text index, %s MB total):\n\n", len(fts.Labels), mb(totalBytes))
+	for _, d := range fts.Labels {
+		ts, name := s.text[d], pycompat.LJust(d+"/", 19, ' ')
+		switch {
+		case ts.absent:
+			fmt.Fprintf(out, "  %s %s\n", name, pycompat.RJust("absent", 6, ' '))
+		case ts.shared != "":
+			fmt.Fprintf(out, "  %s %s files  (%s MB)  shared: %s\n", name, w(ts.files), mb(ts.bytes), ts.shared)
+		default:
+			fmt.Fprintf(out, "  %s %s files  (%s MB)\n", name, w(ts.files), mb(ts.bytes))
+		}
 	}
 	fmt.Fprint(out, "\nRAW HTML:\n\n")
 	for _, d := range []string{"bajadoc", "devguide", "guides"} {
-		fmt.Fprintf(out, "  %s %s HTML\n", pycompat.LJust(d+"/", 17, ' '), w(countFiles(filepath.Join(e.BaseDir, d), ".html").files))
+		fmt.Fprintf(out, "  %s %s HTML\n", pycompat.LJust(d+"/", 19, ' '), w(countFiles(filepath.Join(e.BaseDir, d), ".html").files))
 	}
-	fmt.Fprintf(out, "\nINDEXES: %d\nCLI: 53 commands + REPL\n", indexCount)
+	// The command table (order lists every registered command, in --help order),
+	// not a fixed number: retired commands and the REPL exit 2 and are not counted.
+	fmt.Fprintf(out, "\nINDEXES: %d\nCLI: %d commands\n", indexCount, len(order))
 }

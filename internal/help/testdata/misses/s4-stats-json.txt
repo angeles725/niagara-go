@@ -43,9 +43,34 @@
       "files": 1,
       "bytes": 760
     },
+    "course-text": {
+      "files": 0,
+      "bytes": 0,
+      "absent": true
+    },
     "source": {
       "files": 1,
       "bytes": 23
+    },
+    "devguide-rc": {
+      "files": 0,
+      "bytes": 0,
+      "absent": true
+    },
+    "devguide-examples": {
+      "files": 0,
+      "bytes": 0,
+      "absent": true
+    },
+    "package-text": {
+      "files": 0,
+      "bytes": 0,
+      "absent": true
+    },
+    "lexicon-text": {
+      "files": 0,
+      "bytes": 0,
+      "absent": true
     }
   },
   "packages": 7

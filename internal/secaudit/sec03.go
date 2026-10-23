@@ -15,6 +15,7 @@ const sec03Run = `run: icacls <home>\security`
 func (e *env) sec03(home string, rep *report) error {
 	secdir := pycompat.Join(home, "security")
 	if !pycompat.IsDir(secdir) {
+		skipRow(rep, "SEC-03", "crit", "security/ filesystem ACLs", "no security/ directory", "Admin/SYSTEM only", "B316/B113", sec03Run)
 		return nil
 	}
 	skip := func(observed string) {

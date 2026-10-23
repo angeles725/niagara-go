@@ -31,7 +31,7 @@ func TestInterruptInSec11StopsTheAudit(t *testing.T) {
 	if !errors.As(err, &in) || !strings.HasPrefix(err.Error(), "keytool: ") {
 		t.Errorf("audit = %v, want the keytool *procgroup.InterruptError", err)
 	}
-	if n := len(rep.rows); n == 0 || rep.rows[n-1].id != "SEC-10" {
-		t.Errorf("audit rows %v, want them to end at SEC-10, the check before SEC-11", rep.rows)
+	if n := len(rep.rows); n == 0 || rep.rows[n-1].id != "SEC-09" {
+		t.Errorf("audit rows %v, want them to end at SEC-09 (its no --host row), the check before SEC-11", rep.rows)
 	}
 }

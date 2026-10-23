@@ -1,4 +1,4 @@
 No match for 'zzqq wwvv' (find) in this scope.
   searched: Niagara 1.0 (<ROOT>) -- bajadoc-clean/: 1 files; devguide-clean/: 3 files; guides-clean/: 6 files; docs-text/: 3 files; course-text/: absent; source/: 1 files; devguide-rc/: 1 files; devguide-examples/: 4 files; package-text/: absent; lexicon-text/: absent
   excluded from this scope: JDK API (class --jdk); images, fonts/css, JavaHelp .dat search indexes, bajadoc.index, raw js next to rendered jsdoc, META-INF, licence texts (see coverage --doc-jars)
-  not proof of absence; try: find --or 'zzqq wwvv', fuzzy 'zzqq wwvv', class --jdk 'zzqq wwvv', source-grep 'zzqq wwvv'
+  not proof of absence; try: find --or 'zzqq wwvv', class --jdk 'zzqq wwvv', source-grep 'zzqq wwvv'

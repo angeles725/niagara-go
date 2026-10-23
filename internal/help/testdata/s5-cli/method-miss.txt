@@ -1,4 +1,4 @@
 No match for 'zzqq' (method) in this scope.
   searched: Niagara 4.14.0.162 (<ROOT>) -- method-index.json: 2 entries
   excluded from this scope: JDK members (class --jdk <Name> renders them)
-  not proof of absence; try: find 'zzqq', fuzzy 'zzqq', source-grep 'zzqq', method-sig 'zzqq'
+  not proof of absence; try: find 'zzqq', source-grep 'zzqq'

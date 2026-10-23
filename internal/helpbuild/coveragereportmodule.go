@@ -174,7 +174,9 @@ func overviewCoverage(w io.Writer, source *index.Object, groups *moduleGroups, h
 	out.line("DOCUMENTATION COVERAGE OVERVIEW")
 	out.line(strings.Repeat("=", 60))
 	out.line("")
-	out.line(fmt.Sprintf("Overall: %d/%d classes documented (%s%%)", documented, total, pyFmt(overall, ".1f")))
+	// The denominator is source-index.json, not every class nh knows: say so.
+	out.line(fmt.Sprintf("Overall: %d/%d classes documented (%s%% of the %d classes with indexed source)",
+		documented, total, pyFmt(overall, ".1f"), total))
 	out.line("")
 	out.line(fmt.Sprintf("%s  %s  %s  %s  %s", pyFmt("cover", ">6s"), pyFmt("total", ">5s"),
 		pyFmt("docs", ">5s"), pyFmt("miss", ">5s"), "module"))

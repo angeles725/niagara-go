@@ -1,4 +1,4 @@
 {
- "reason": "I4-2 (D34): the Python script is retired; help, usage and error lines name the installed Go command niagara-security-audit instead of niagara-security-audit.py",
- "stderr": "usage: niagara-security-audit [-h] [--station STATION] [--host HOST] [--scan-logs DIR] [--json]\n                              niagara_home\nniagara-security-audit: error: argument --station: expected one argument\n"
+ "reason": "I4-2 (D34): the Python script is retired; help, usage and error lines name the installed Go command niagara-security-audit instead of niagara-security-audit.py Truth fix (r9-ng3): the usage names the new --exit-zero flag and the help states the exit codes.",
+ "stderr": "usage: niagara-security-audit [-h] [--station STATION] [--host HOST] [--scan-logs DIR] [--json]\n                              [--exit-zero]\n                              niagara_home\nniagara-security-audit: error: argument --station: expected one argument\n"
 }

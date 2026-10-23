@@ -4,7 +4,8 @@
 //
 // Exit: 0 found, 1 a search command (slots, actions, ords, grep, callers, extends --of)
 // matched nothing or writers found no static and no dynamic writer, 2 usage, 3 unreadable
-// root or srcB, or no .java file.
+// root or srcB, no readable .java file, or a .java file that could not be read: the rows
+// printed are then partial (a miss is not proven either), the files are named on stderr.
 package modulefind
 
 import (
@@ -117,13 +118,12 @@ func Main(args []string, s cli.Stdio) int {
 		fmt.Fprintf(s.Err, "module-find: cannot write the output: %v\n", stdout.err)
 		return 1
 	}
-	paths := make([]string, 0, len(m.unreadable))
-	for path := range m.unreadable {
-		paths = append(paths, path)
+	partial := reportUnreadable(s.Err, m)
+	if b != nil && reportUnreadable(s.Err, b) {
+		partial = true
 	}
-	sort.Strings(paths)
-	for _, path := range paths {
-		fmt.Fprintf(s.Err, "module-find: unreadable, not searched: %s: %s\n", path, m.unreadable[path])
+	if partial { // the same exit as an unreadable root: what was printed is not the whole answer
+		return 3
 	}
 	if found == 0 {
 		return 1
@@ -139,10 +139,28 @@ func openRoot(root string, stderr io.Writer) (*module, int) {
 		return nil, 3
 	}
 	m := newModule(root)
+	if m.files == 0 && reportUnreadable(stderr, m) {
+		return nil, honest.Fail(stderr, "module-find", fmt.Sprintf("no readable .java files under %s (%d unreadable, dot-dirs pruned)",
+			root, len(m.unreadable)), 3)
+	}
 	if m.files == 0 {
 		return nil, honest.Fail(stderr, "module-find", fmt.Sprintf("no .java files under %s (dot-dirs pruned)", root), 3)
 	}
 	return m, 0
+}
+
+// reportUnreadable names on stderr, sorted, every .java file of m that could not be read;
+// it reports whether there was one.
+func reportUnreadable(stderr io.Writer, m *module) bool {
+	paths := make([]string, 0, len(m.unreadable))
+	for path := range m.unreadable {
+		paths = append(paths, path)
+	}
+	sort.Strings(paths)
+	for _, path := range paths {
+		fmt.Fprintf(stderr, "module-find: unreadable, not searched: %s: %s\n", path, m.unreadable[path])
+	}
+	return len(paths) > 0
 }
 
 func regexArg(ns *argparse.Namespace, dest string) *pyre.Regexp {

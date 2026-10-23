@@ -59,6 +59,8 @@
 ["out", "  modules/docSource-doc.jar  javax/baja/sys/readme.txt  -- maps to source/javax/baja/sys/readme.txt but no content rule covers it (doc_types)"]
 ["out", "  modules/ffmpeg-wb.jar  doc/index.html  -- maps to guides/ffmpeg-wb/index.html but it is not extracted"]
 ["out", "  modules/helpMod-rt.jar  doc/About-Help.html  -- maps to guides/helpMod-rt/About-Help.html but it is not extracted"]
+["out", ""]
+["out", "OUTSIDE THE DOCUMENTATION SCOPE: 6 entries are not documentation-like and were not classified (by type: .class 3, .java 1, .js 1, .png 1)"]
 ["out", "RESULT: FAIL - 69 unclassified entries"]
 ["exit", 1]
 warm:

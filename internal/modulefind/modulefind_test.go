@@ -71,3 +71,27 @@ func TestMainKeepsTheFirstCSVWriteError(t *testing.T) {
 		})
 	}
 }
+
+// TestNoReadableJavaIsNotNoJava: a root whose .java files all cannot be read is refused
+// (exit 3) naming them, never reported as a root without .java files.
+func TestNoReadableJavaIsNotNoJava(t *testing.T) {
+	if runtime.GOOS == "windows" || os.Geteuid() == 0 {
+		t.Skip("needs a mode-000 file the test user cannot read")
+	}
+	root := filepath.Join(t.TempDir(), "src")
+	locked := filepath.Join(root, "p", "BA.java")
+	if err := os.MkdirAll(filepath.Dir(locked), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(locked, []byte("class BA {}\n"), 0); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = os.Chmod(locked, 0o644) })
+	var out, errb bytes.Buffer
+	code := Main([]string{root, "slots"}, cli.Stdio{Out: &out, Err: &errb})
+	want := "module-find: unreadable, not searched: " + locked + ": Permission denied\n" +
+		"module-find: no readable .java files under " + root + " (1 unreadable, dot-dirs pruned)\n"
+	if code != 3 || out.String() != "" || errb.String() != want {
+		t.Errorf("exit %d stdout %q stderr %q, want exit 3 stderr %q", code, out.String(), errb.String(), want)
+	}
+}

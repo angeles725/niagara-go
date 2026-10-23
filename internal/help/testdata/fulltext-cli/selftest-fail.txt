@@ -1,2 +1,8 @@
   PASS  single-word coverage: 'alarm'=0 >= 'alarm fault'=0
   PASS  'alarma' does not match inside 'alarmAck'
+  SKIP  lexicon: lexicon-text/ is absent in this version
+  SKIP  course: course-text/ is absent in this version
+  SKIP  package: package-text/ is absent in this version
+  SKIP  class: indexes/class-index.json is empty in this version
+  SKIP  slots: indexes/slots-index.json is absent in this version
+  SKIP  method: indexes/method-index.json is absent in this version
