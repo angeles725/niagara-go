@@ -117,7 +117,8 @@ func derivedPrint(root, name string, stamped int64) *derived {
 			return
 		}
 		rel = filepath.ToSlash(rel)
-		if name == "indexes" && (strings.Contains(rel, "/") || !strings.HasSuffix(rel, ".json") || rel == ".manifest.json") {
+		if name == "indexes" && (strings.Contains(rel, "/") || !strings.HasSuffix(rel, ".json") || rel == ".manifest.json" ||
+			isRetiredIndex(rel)) {
 			return
 		}
 		st := statcache.Stat(path)
@@ -309,6 +310,7 @@ func (e *Env) freshness() error {
 	if e.fulltextLine() {
 		stale = append(stale, "fulltext.sqlite")
 	}
+	e.retiredLines()
 	fmt.Fprintln(e.Out)
 	fmt.Fprintf(e.Out, "Baseline stamped: %s\n", pyStr(get(manifest, "stamped_utc", "?")))
 	switch {
@@ -324,8 +326,8 @@ func (e *Env) freshness() error {
 	return nil
 }
 
-// indexStatus is index_status: FRESH, STALE or UNKNOWN for one data root.
-func indexStatus(root string) (string, error) {
+// indexState is index_status: FRESH, STALE or UNKNOWN for one data root.
+func indexState(root string) (string, error) {
 	manifest, err := loadManifest(root)
 	if err != nil {
 		return "", err
