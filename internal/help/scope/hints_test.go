@@ -2,6 +2,7 @@ package scope_test
 
 import (
 	"bytes"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -24,8 +25,10 @@ var hint = regexp.MustCompile(`([a-z][a-z-]*(?: --[a-z-]+)*(?: \([^)]*\))?) 'BZz
 // line nh accepts. A retired command (fuzzy, method-sig, inherited-slots,
 // module) exits 2, so a hint naming one sends the reader into a dead end.
 func TestMissHintsAreLiveCommands(t *testing.T) {
-	data, err := filepath.Abs("../testdata")
-	if err != nil {
+	// nh rebuilds a stale fulltext index in place: run on a copy so the tracked
+	// testdata/indexes/fulltext.sqlite is never rewritten by a test run.
+	data := filepath.Join(t.TempDir(), "testdata")
+	if err := os.CopyFS(data, os.DirFS("../testdata")); err != nil {
 		t.Fatal(err)
 	}
 	t.Setenv("XDG_CACHE_HOME", t.TempDir())
