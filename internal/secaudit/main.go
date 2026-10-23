@@ -19,14 +19,24 @@ import (
 // prog is the installed command name used in usage and error lines (I4-2).
 const prog = "niagara-security-audit"
 
+// exitFail is the exit of a completed audit with at least one actionable FAIL row.
+const exitFail = 1
+
+const epilog = "exit: 0 no actionable FAIL (SKIP/MANUAL rows are listed, not passed), 1 at least one FAIL " +
+	"(SEC-16, unsigned data by design, FAILs on every home and is not counted), 2 not a directory / not a " +
+	"Niagara home / bad --station / a tool could not run / incomplete --scan-logs. --exit-zero keeps 0 for a " +
+	"completed audit (informational runs)."
+
 func newParser() *argparse.Parser {
-	p := argparse.New(argparse.Config{Prog: prog})
+	p := argparse.New(argparse.Config{Prog: prog, Epilog: epilog})
 	p.Add(argparse.Arg{}, "niagara_home")
 	p.Add(argparse.Arg{}, "--station")
 	p.Add(argparse.Arg{}, "--host")
 	p.Add(argparse.Arg{Metavar: "DIR",
 		Help: "forensic mode: harvest signature/verification IOCs from a log tree (B112)"}, "--scan-logs")
 	p.Add(argparse.Arg{Action: argparse.StoreTrue}, "--json")
+	p.Add(argparse.Arg{Action: argparse.StoreTrue, Dest: "exit_zero",
+		Help: "exit 0 after a completed audit even when a check FAILs (informational mode)"}, "--exit-zero")
 	return p
 }
 
@@ -36,8 +46,12 @@ func Main(args []string, s cli.Stdio) int {
 	if done {
 		return code
 	}
-	return run(defaultEnv(), ns.String("niagara_home"), ns.String("station"), ns.String("host"),
+	code = run(defaultEnv(), ns.String("niagara_home"), ns.String("station"), ns.String("host"),
 		ns.String("scan_logs"), ns.Bool("json"), s)
+	if code == exitFail && ns.Bool("exit_zero") {
+		return cli.ExitFound
+	}
+	return code
 }
 
 func run(e *env, home, station, host, scanDir string, asJSON bool, s cli.Stdio) int {
@@ -46,7 +60,7 @@ func run(e *env, home, station, host, scanDir string, asJSON bool, s cli.Stdio) 
 	}
 	if !pycompat.IsDir(home) {
 		fmt.Fprintf(s.Err, "ERROR: not a directory: %s\n", home)
-		return 1
+		return cli.ExitCannotSearch
 	}
 	stationXML, rawHead := "", []byte(nil)
 	if station != "" {
@@ -67,6 +81,9 @@ func run(e *env, home, station, host, scanDir string, asJSON bool, s cli.Stdio) 
 		return cli.ExitCannotSearch
 	}
 	rep.dump(s.Out, asJSON)
+	if rep.failed() {
+		return exitFail
+	}
 	return cli.ExitFound
 }
 

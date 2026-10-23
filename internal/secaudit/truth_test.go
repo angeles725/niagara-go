@@ -117,3 +117,39 @@ func TestAuditWithoutPropertiesSkipsThePropertyChecks(t *testing.T) {
 		}
 	}
 }
+
+func TestAuditExitSaysWhetherAnythingFailed(t *testing.T) {
+	secure := "niagara.moduleVerificationMode=high\nprogram.requireSigning=true\n" +
+		"niagara.commandLinePropertyBlacklist=skipModuleValidation,commissioning.ignoreVerificationMode\n"
+	insecure := "niagara.moduleVerificationMode=low\n"
+	tests := []struct {
+		name  string
+		props string
+		args  []string
+		code  int
+	}{
+		// SEC-16 FAILs on every home (unsigned data by design): it alone does not fail the run.
+		{"only the architectural SEC-16", secure, nil, cli.ExitFound},
+		{"a critical FAIL", insecure, nil, 1},
+		{"a critical FAIL under --json", insecure, []string{"--json"}, 1},
+		{"a critical FAIL with --exit-zero", insecure, []string{"--exit-zero"}, cli.ExitFound},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			home := mkHome(t, map[string]string{"defaults/system.properties": tt.props}, "security/licenses", "modules")
+			var out, errb bytes.Buffer
+			code := Main(append([]string{home}, tt.args...), cli.Stdio{In: strings.NewReader(""), Out: &out, Err: &errb})
+			if code != tt.code {
+				t.Errorf("exit = %d, want %d\n%s%s", code, tt.code, out.String(), errb.String())
+			}
+		})
+	}
+}
+
+func TestAuditNotADirectoryIsAUsageExit(t *testing.T) {
+	var out, errb bytes.Buffer
+	code := Main([]string{filepath.Join(t.TempDir(), "gone")}, cli.Stdio{In: strings.NewReader(""), Out: &out, Err: &errb})
+	if code != cli.ExitCannotSearch {
+		t.Errorf("exit = %d, want %d (1 now means FAIL findings)", code, cli.ExitCannotSearch)
+	}
+}

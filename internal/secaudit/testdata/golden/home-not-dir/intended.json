@@ -1,0 +1,4 @@
+{
+ "reason": "Truth fix (r9-ng3): a missing home exits 2, so exit 1 means only that a check FAILed.",
+ "exit": 2
+}
