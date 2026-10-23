@@ -47,7 +47,13 @@ type Outcome struct {
 	Lead                bool       // a sub-scope shown BEFORE its parent's ranked rows
 	Limit               int        // rows to show; 0 = the front door's --limit
 	Enumeration         bool       // rows are a complete listing, not a ranking
+	// RankShown and RankTotal are the module_nav rank rows this outcome holds and the
+	// classes rank matched (0 when unknown): fewer shown than matched is said, never hidden.
+	RankShown, RankTotal int
 }
+
+// rankHidden reports whether rank matched more classes than the outcome holds.
+func (o *Outcome) rankHidden() bool { return o.RankTotal > o.RankShown }
 
 func newOutcome(key, title, command, state string) *Outcome {
 	return &Outcome{Key: key, Title: title, Command: command, State: state}

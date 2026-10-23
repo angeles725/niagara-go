@@ -52,6 +52,9 @@ func renderRows(w io.Writer, o *Outcome, limit int, zero, indent string) {
 		}
 		fmt.Fprintf(w, "%s... %d more %s\n", indent, len(o.Items)-shown, more)
 	}
+	if o.rankHidden() {
+		fmt.Fprintf(w, "%s(rank showing %d of %d matching classes; raise --limit for more)\n", indent, o.RankShown, o.RankTotal)
+	}
 }
 
 func renderSub(w io.Writer, s *Outcome, limit int) {
@@ -89,6 +92,9 @@ func count(o *Outcome) string {
 	case OK:
 		if o.Enumeration {
 			return fmt.Sprintf("%d listed", len(o.Items))
+		}
+		if o.rankHidden() {
+			return fmt.Sprintf("%d ranked (rank showing %d of %d classes)", len(o.Items), o.RankShown, o.RankTotal)
 		}
 		return fmt.Sprintf("%d ranked", len(o.Items))
 	case Empty:

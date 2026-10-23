@@ -1,7 +1,10 @@
 package searchdoor
 
 import (
+	"fmt"
 	"reflect"
+	"slices"
+	"strconv"
 	"strings"
 	"sync"
 	"testing"
@@ -43,7 +46,7 @@ func spend(clock *float64) func([]string, float64) Raw {
 
 func codeOutcome(t *testing.T, d *door, query string) *Outcome {
 	t.Helper()
-	return guarded(d.codeJob("module_nav.py", query, 1, "SOURCE 3 · CODE", "testdata/course"))
+	return guarded(d.codeJob("module_nav.py", query, defaultLimit, 1, "SOURCE 3 · CODE", "testdata/course"))
 }
 
 func TestCodeBudgetSpentByTheFirstTokenLookup(t *testing.T) {
@@ -131,7 +134,7 @@ func TestTokenHitsLeadAndRankIsDeduplicated(t *testing.T) {
 		},
 	}
 	d, _, _ := newFakeDoor(handlers)
-	o := guarded(d.codeJob("module_nav.py", "BFoo usage", 1, "SOURCE 3 · CODE", ""))
+	o := guarded(d.codeJob("module_nav.py", "BFoo usage", defaultLimit, 1, "SOURCE 3 · CODE", ""))
 	var keys []string
 	for _, it := range o.Items {
 		keys = append(keys, it.Key)
@@ -141,6 +144,47 @@ func TestTokenHitsLeadAndRankIsDeduplicated(t *testing.T) {
 	}
 	if o.Command != "module_nav token BFoo + module_nav rank" {
 		t.Errorf("command = %q", o.Command)
+	}
+}
+
+// TestRankHonoursLimitAndStatesTotal: the code source asks module_nav rank for --limit
+// rows (never fewer than its default 20), and when rank matched more classes than it
+// listed, the summary and the rows say how many of how many are shown (a fixed 20 rows
+// under "code 41 ranked" hid 282 of 302 matching classes, whatever -n said).
+func TestRankHonoursLimitAndStatesTotal(t *testing.T) {
+	const total = 302
+	rank := func(argv []string, _ float64) Raw {
+		n, _ := strconv.Atoi(argv[3])
+		var b strings.Builder
+		fmt.Fprintf(&b, "\n  Rank 'alarm': %d matching classes (terms: alarm)\n\n", total)
+		for i := range min(n, total) {
+			fmt.Fprintf(&b, "%d\t%.3f\tBC%d\tm-rt\tp/BC%d.java\n", i+1, 1.0, i, i)
+		}
+		return Raw{State: OK, Out: b.String(), RC: 0, HasRC: true}
+	}
+	for _, tc := range []struct {
+		limit, ask, rows int
+		summary          string
+	}{
+		{defaultLimit, 20, 20, "20 ranked (rank showing 20 of 302 classes)"},
+		{50, 50, 50, "50 ranked (rank showing 50 of 302 classes)"},
+		{500, 500, total, "302 ranked"},
+	} {
+		d, fb, _ := newFakeDoor(map[string]func([]string, float64) Raw{"rank": rank})
+		o := guarded(d.codeJob("module_nav.py", "alarm", tc.limit, 1, "SOURCE 3 · CODE", ""))
+		want := "rank -n " + strconv.Itoa(tc.ask) + " -- alarm"
+		if !slices.Contains(fb.calls, want) {
+			t.Errorf("limit %d: calls %q, want %q", tc.limit, fb.calls, want)
+		}
+		if got := count(o); got != tc.summary {
+			t.Errorf("limit %d: count = %q, want %q", tc.limit, got, tc.summary)
+		}
+		var out strings.Builder
+		renderRows(&out, o, tc.limit, "", "  ")
+		note := fmt.Sprintf("rank showing %d of %d matching classes", tc.rows, total)
+		if shows := strings.Contains(out.String(), note); shows != (tc.rows < total) {
+			t.Errorf("limit %d: rows %q; want the note %q only when rank listed fewer than it matched", tc.limit, out.String(), note)
+		}
 	}
 }
 
