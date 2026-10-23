@@ -31,12 +31,12 @@ SUMMARY 1.0.0.0
     lexicon-text             1
   gates (full reports: versions/1.0.0.0/gates.log):
     coverage --doc-jars  exit 1  FAIL - 6 unexplained entries
-    coverage --sweep     exit 1  FAIL - 9 unclassified entries
+    coverage --sweep     exit 1  FAIL - 10 unclassified entries
 RESULT: NOT READY - see the gate reports above
 
 # exit 1
 # tree
-@@ 0,0 0,343
+@@ 0,0 0,344
 + fulltext.sqlite:
 + [meta fingerprint engine=3|devguide-clean=<dir>/repo/versions/1.0.0.0/devguide-clean:3:135:<mtime>:<sha1>|guides-clean=<dir>/repo/versions/1.0.0.0/guides-clean:19:1068:<mtime>:<sha1>|source=<dir>/repo/versions/1.0.0.0/source:1:24:<mtime>:<sha1>|devguide-rc=<dir>/repo/versions/1.0.0.0/devguide-rc:2:26:<mtime>:<sha1>|devguide-examples=<dir>/repo/versions/1.0.0.0/devguide-examples:1:9:<mtime>:<sha1>|lexicon-text=<dir>/repo/versions/1.0.0.0/lexicon-text:1:95:<mtime>:<sha1>   ]
 + [docs 1 devguide-clean changes37.txt changes37.txt 4 0]
@@ -218,8 +218,8 @@ RESULT: NOT READY - see the gate reports above
 + |   documentation-like: .html .htm .xhtml .md .markdown .txt .text .pdf .rtf .doc .docx .odt .rst .adoc .bajadoc .lexicon + toc.xml
 + |   location                       jars with-docs  doc-like  indexed excluded UNCLASSIFIED
 + |   javadoc/                          1         1         3        0        1            2
-+ |   modules/                         15        13        41       27        8            7
-+ |   TOTAL                            16        14        44       27        9            9
++ |   modules/                         15        13        42       27        8            8
++ |   TOTAL                            16        14        45       27        9           10
 + | 
 + | EXCLUDED (rule: reason):
 + |         2  doc_types: licence text
@@ -234,19 +234,20 @@ RESULT: NOT READY - see the gate reports above
 + | 
 + | COURSE: none bound to this version
 + | 
-+ | UNCLASSIFIED (first 9 of 9):
++ | UNCLASSIFIED (first 10 of 10):
 + |   javadoc/niagaraJavadoc.jar  doc/javax/baja/sys/BObject.html  -- maps to bajadoc/javax/baja/sys/BObject.html but it is not indexed
 + |   javadoc/niagaraJavadoc.jar  other.txt  -- no extract or exclude rule matches (add one to install_docs.json)
 + |   modules/broken-rt.jar  (whole jar)  -- unreadable jar (corrupt zip or I/O error)
 + |   modules/docClHVACTest-doc.jar  doc/Tasks.html  -- maps to guides/ClHVACTest/Tasks.html, which the earlier entry doc/Tasks.html of this jar fills: not extracted, and its content differs
 + |   modules/docClHVACTest-doc.jar  doc/cl/hvac/BAbsolute.bajadoc  -- maps to guides/ClHVACTest/cl/hvac/BAbsolute.bajadoc but it is not indexed
 + |   modules/docDeveloper-doc.jar  other/x.txt  -- no extract or exclude rule matches (add one to install_docs.json)
++ |   modules/docDeveloper-rt.jar  module.palette  -- palette palette-index.json could not read: root element is <palette>, not <bajaObjectGraph>
 + |   modules/docJdk-doc.jar  doc/jdk-se/java/util/HashMap.bajadoc  -- maps to jdk/jdk-se/java/util/HashMap.bajadoc but it is not indexed
 + |   modules/docJdk-doc.jar  other.txt  -- no extract or exclude rule matches (add one to install_docs.json)
 + |   modules/thing-ux.jar  doc/rc/notes.md  -- maps to guides/thing-ux/rc/notes.md, which the earlier entry rc/notes.md of this jar fills: not extracted, and its content differs
 + | 
-+ | OUTSIDE THE DOCUMENTATION SCOPE: 15 entries are not documentation-like and were not classified (by type: .class 5, .java 3, .mf 3, .js 2, .palette 1, .png 1)
-+ | RESULT: FAIL - 9 unclassified entries
++ | OUTSIDE THE DOCUMENTATION SCOPE: 14 entries are not documentation-like and were not classified (by type: .class 5, .java 3, .mf 3, .js 2, .png 1)
++ | RESULT: FAIL - 10 unclassified entries
 + | 
 + guides d--------- 755
 + guides/ClHVACTest d--------- 755
@@ -380,7 +381,7 @@ RESULT: NOT READY - see the gate reports above
 +     "docs": null
 +   }
 + }
-@@ 1,1 344,361
+@@ 1,1 345,362
 + .cache d--------- 755
 + .cache/jar-listings d--------- 755
 + .cache/jar-listings/<install hash>.json ---------- 644 <size> <sha256>
@@ -515,7 +516,7 @@ SUMMARY 1.0.0.0
     lexicon-text             1
   gates (full reports: versions/1.0.0.0/gates.log):
     coverage --doc-jars  exit 1  FAIL - 6 unexplained entries
-    coverage --sweep     exit 1  FAIL - 9 unclassified entries
+    coverage --sweep     exit 1  FAIL - 10 unclassified entries
 RESULT: NOT READY - see the gate reports above
 
 # exit 1
@@ -523,10 +524,10 @@ RESULT: NOT READY - see the gate reports above
 @@ 177,178 177,178
 - | INSTALL SWEEP 1.0.0.0 (16 jars under <dir>/install; 10 listed anew, the rest from the jar-listing cache)
 + | INSTALL SWEEP 1.0.0.0 (16 jars under <dir>/install; 0 listed anew, the rest from the jar-listing cache)
-@@ 294,295 294,295
+@@ 295,296 295,296
 - indexes/guides-index.json ---------- 644 1157 6004758efb57e1bc870c3a083112194ddf70e6e721d832a443037320a59daacc
 + indexes/guides-index.json ---------- 644 1236 155614e109f7600dd3ba1d6a6f76698d20fef8baab9d11664d70c1782bd24e43
-@@ 348,349 348,349
+@@ 349,350 349,350
 - versions/1.0.0.0.manifest.json ---------- 644 {
  "version": "1.0.0.0",
  "label": "install",
@@ -685,7 +686,7 @@ RESULT: NOT READY - see the gate reports above
   }
  ]
 }
-@@ 354,355 354,355
+@@ 355,356 355,356
 - |       "label": "install",
 + |       "label": "Synthetic \u00f1",
 ## <dir>/install/. --id 1.0.0.0

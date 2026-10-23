@@ -54,8 +54,8 @@ func TestModuleIndexRecordsTemplatesAndSchemas(t *testing.T) {
 	if strings.Join(got, "|") != want || len(res.Warnings) != 2 {
 		t.Errorf("errors = %s\nwarnings = %q", strings.Join(got, "|"), res.Warnings)
 	}
-	jars, err := moduleIndexJars(root)
-	if err != nil || jars["kitControl-rt.jar"] != "" {
-		t.Errorf("sweep reads kitControl-rt.jar as %q (%v)", jars["kitControl-rt.jar"], err)
+	x, err := loadShipped(root)
+	if why, ok := x.held[[2]string{"kitControl-rt.jar", ""}]; err != nil || !ok || why != "" {
+		t.Errorf("sweep reads kitControl-rt.jar's descriptor as %q %v (%v)", why, ok, err)
 	}
 }

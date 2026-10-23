@@ -1188,7 +1188,7 @@ bytes with the registered install's `modules/`, and `selftest` checks that
 `kitControl-rt` depends on `baja` (true on 4.3, 4.13, 4.14 and 4.15).
 
 `coverage --sweep` no longer counts `META-INF/module.xml` outside the documentation scope
-(`sweepmodule.go`): the descriptor of a jar in `modules/` is indexed when `module-index.json`
+(`sweepshipped.go`): the descriptor of a jar in `modules/` is indexed when `module-index.json`
 holds its module and UNCLASSIFIED when it does not (not rebuilt yet) or could not read it (the
 error is quoted); a copy outside `modules/` (`sw/`, `bin/ext`) is excluded by
 `module-descriptor-outside-modules`, since the index reads the installed `modules/` only. Until
@@ -1256,6 +1256,15 @@ for `module-index.json`, and `stats` counts its palettes, entries and unreadable
 (text and `--json`; `absent` until rebuild-all builds it). `selftest` checks that
 `nh palette BooleanLatch` finds it in kitControl-rt's `module.palette` (`Latches/BooleanLatch`
 on 4.3, 4.13, 4.14 and 4.15).
+
+`coverage --sweep` classifies palettes, `module-permissions.xml` templates and `.xsd`/`.dtd`
+schemas the same way (`sweepshipped.go`; an entry the documentation rules already call
+doc-like stays with them): in a jar of `modules/` each is indexed when `palette-index.json`
+(palettes) or `module-index.json` (templates, schemas) holds that jar and path, UNCLASSIFIED
+when it does not (not rebuilt yet) or could not read it (the error is quoted); a copy outside
+`modules/` is excluded by `shipped-file-outside-modules`. They are no longer counted outside
+the documentation scope; until rebuild-all builds `palette-index.json`, a sweep of a real
+install fails on every palette, on purpose.
 
 `TestPaletteIndexDryProbe` (`NH_PALETTE_INDEX_PROBE=<install>`) builds it read-only into a
 temporary root. On 2026-10-23, equal to the 2026-10-22 audit:
