@@ -32,6 +32,7 @@ func (e *Env) Search(p SearchParams) error {
 		return err
 	}
 	var expandErr error
+	qualifiedMatch := func(c classEntry) bool { return fnmatch.Fnmatch(c.qualified(), p.Pattern) }
 	tries := []func(key string) bool{
 		func(k string) bool { return fnmatch.Fnmatch(k, p.Pattern) },
 		func(k string) bool { return lowerGlob(k, p.Pattern) },
@@ -41,7 +42,7 @@ func (e *Env) Search(p SearchParams) error {
 				expandErr = err
 			}
 			for _, c := range all {
-				if fnmatch.Fnmatch(c.qualified(), p.Pattern) {
+				if qualifiedMatch(c) {
 					return true
 				}
 			}
@@ -49,7 +50,11 @@ func (e *Env) Search(p SearchParams) error {
 		},
 	}
 	var matches []string
-	for _, match := range tries {
+	keep := func(classEntry) bool { return true } // a simple-name match lists every class of the name
+	for i, match := range tries {
+		if i == len(tries)-1 {
+			keep = qualifiedMatch // a package.name match lists only the classes it matched
+		}
 		for _, k := range idx.Keys() {
 			if match(k) {
 				matches = append(matches, k)
@@ -73,7 +78,9 @@ func (e *Env) Search(p SearchParams) error {
 			return err
 		}
 		for _, c := range all {
-			rows = append(rows, fmt.Sprintf("  %s (%s) - %s\n", name, c.Type, c.Package))
+			if keep(c) {
+				rows = append(rows, fmt.Sprintf("  %s (%s) - %s\n", name, c.Type, c.Package))
+			}
 		}
 	}
 	// The header counts the rows printed: a name held by several packages is one

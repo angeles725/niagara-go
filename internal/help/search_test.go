@@ -27,3 +27,18 @@ func TestSearchHeaderCountsThePrintedRows(t *testing.T) {
 		})
 	}
 }
+
+// TestSearchQualifiedPatternListsOnlyMatchingPackages: a package-qualified glob
+// prints only the classes whose package.name matches, never the other packages'
+// classes that share a matching simple name.
+func TestSearchQualifiedPatternListsOnlyMatchingPackages(t *testing.T) {
+	const classIndex = `{"BRecipient": {"package": "javax.baja.alarm", "type": "class", "others": [{"package": "com.tridium.event", "type": "class"}]},` +
+		`"BOther": {"package": "com.tridium.event", "type": "class"}}`
+	dir := repo(t, twoVersions)
+	write(t, filepath.Join(dir, "indexes", "class-index.json"), classIndex)
+	out, errs, code := run(t, dir, "--niagara-version", "1.0", "search", "javax.baja.alarm*.B*")
+	want := "1 classes matching 'javax.baja.alarm*.B*':\n\n  BRecipient (class) - javax.baja.alarm\n"
+	if code != 0 || errs != "" || out != want {
+		t.Errorf("code %d stderr %q stdout:\n%s\nwant:\n%s", code, errs, out, want)
+	}
+}
