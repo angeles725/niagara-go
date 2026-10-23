@@ -3,8 +3,10 @@ package pxrender
 import (
 	"crypto/md5"
 	"fmt"
+	"math"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/pycompat"
@@ -26,6 +28,15 @@ type result struct {
 	notImages        []string // refs that resolved to a directory, skipped
 	assets           int
 	dropped          map[string]int
+	omitted          []omit
+}
+
+// omit is an element the page does not render: its tag, its "NOT rendered" summary key and, when
+// its layout parses, its canvas position (offsets of the enclosing panes included).
+type omit struct {
+	tag, key string
+	lay      layout
+	hasLay   bool
 }
 
 type layout struct{ x, y, w, h float64 }
@@ -47,24 +58,86 @@ func parseLayout(s string) (layout, bool) {
 	return layout{v[0], v[1], v[2], v[3]}, true
 }
 
-// parseFont: 'bold 26.0pt Arial' -> (bold, 26, Arial); '11.0pt Arial' -> (normal, 11, Arial).
-func parseFont(s string) (weight, size, family string) {
-	weight, size, family = "normal", "13", "Arial"
-	if s == "" {
-		return
-	}
+// font is a Niagara BFont string split for CSS.
+type font struct{ weight, style, size, family string }
+
+// parseNiagaraFont reads a Niagara font string, "[bold] [italic] <size>pt <family, spaces allowed>":
+// 'bold 22.0pt Times New Roman' -> (bold, normal, 22, Times New Roman); 'italic 9.5pt' -> (normal,
+// italic, 9, Arial). The size is the last "<n>pt" token (truncated); the family is every other
+// token after the style words, joined with single spaces.
+func parseNiagaraFont(s string) font {
+	f := font{weight: "normal", style: "normal", size: "13", family: "Arial"}
 	toks := textfold.Fields(s)
-	if len(toks) > 0 && (toks[0] == "bold" || toks[0] == "italic") {
-		weight, toks = toks[0], toks[1:]
+	for len(toks) > 0 && (toks[0] == "bold" || toks[0] == "italic") {
+		if toks[0] == "bold" {
+			f.weight = "bold"
+		} else {
+			f.style = "italic"
+		}
+		toks = toks[1:]
 	}
+	var family []string
 	for _, tk := range toks {
 		if strings.Contains(tk, "pt") {
-			size, _, _ = strings.Cut(strings.ReplaceAll(tk, "pt", ""), ".")
+			f.size, _, _ = strings.Cut(strings.ReplaceAll(tk, "pt", ""), ".")
 		} else {
-			family = tk
+			family = append(family, tk)
 		}
 	}
-	return
+	if len(family) > 0 {
+		f.family = strings.Join(family, " ")
+	}
+	return f
+}
+
+var familyRE = regexp.MustCompile(`^[A-Za-z0-9 _-]+$`)
+
+// cssFamily is the font-family list for f: a family with a space is quoted; one with any other
+// character than letters, digits, space, '_' or '-' is dropped (it cannot be quoted safely).
+func cssFamily(family string) string {
+	switch {
+	case !familyRE.MatchString(family):
+		return "Arial,sans-serif"
+	case strings.Contains(family, " "):
+		return "'" + family + "'" + ",Arial,sans-serif"
+	}
+	return family + ",Arial,sans-serif"
+}
+
+var (
+	hexColorRE  = regexp.MustCompile(`^#[0-9A-Fa-f]{6}$`)
+	argbColorRE = regexp.MustCompile(`^#([0-9A-Fa-f]{2})([0-9A-Fa-f]{2})([0-9A-Fa-f]{2})([0-9A-Fa-f]{2})$`)
+	nameColorRE = regexp.MustCompile(`^[a-z]+$`)
+)
+
+// cssColor maps a Niagara BColor value to CSS: "#rrggbb" and a colour name (black, silver, ...)
+// pass through, "#aarrggbb" (alpha first) becomes rgba(); anything else is "" (not rendered).
+func cssColor(v string) string {
+	switch {
+	case hexColorRE.MatchString(v), nameColorRE.MatchString(v):
+		return v
+	}
+	m := argbColorRE.FindStringSubmatch(v)
+	if m == nil {
+		return ""
+	}
+	n := func(h string) int64 { x, _ := strconv.ParseInt(h, 16, 0); return x }
+	return fmt.Sprintf("rgba(%d,%d,%d,%s)", n(m[2]), n(m[3]), n(m[4]),
+		strconv.FormatFloat(math.Round(float64(n(m[1]))/255*1000)/1000, 'f', -1, 64))
+}
+
+// labelStyle is the colour part of a Label's style: its foreground (default #16233a) and, when
+// set, its background.
+func labelStyle(e *element) string {
+	fg := cssColor(e.attr("foreground"))
+	if fg == "" {
+		fg = "#16233a"
+	}
+	s := "color:" + fg + ";"
+	if bg := cssColor(e.attr("background")); bg != "" {
+		s += "background:" + bg + ";"
+	}
+	return s
 }
 
 var relayRE = regexp.MustCompile(`\[([0-9]+)\]`)
@@ -99,8 +172,8 @@ type placed struct {
 }
 
 // flatten lists every known widget under container with its offset, descending into any *Pane
-// and into positioned elements that hold widgets; other positioned elements are counted in dropped.
-func flatten(container *element, ox, oy float64, dropped map[string]int, out []placed) []placed {
+// and into positioned elements that hold widgets; other positioned elements go to omitted.
+func flatten(container *element, ox, oy float64, omitted *[]omit, out []placed) []placed {
 	for _, e := range container.children {
 		switch {
 		case widgets[e.tag]:
@@ -110,11 +183,15 @@ func flatten(container *element, ox, oy float64, dropped map[string]int, out []p
 			if !ok {
 				lay = layout{}
 			}
-			out = flatten(e, ox+lay.x, oy+lay.y, dropped, out)
+			out = flatten(e, ox+lay.x, oy+lay.y, omitted, out)
 		case e.attr("layout") != "":
-			dropped[e.tag]++
+			om := omit{tag: e.tag, key: e.tag} // a malformed layout keeps the bare-tag summary key
+			if lay, ok := parseLayout(e.attr("layout")); ok {
+				om.lay, om.hasLay = layout{lay.x + ox, lay.y + oy, lay.w, lay.h}, true
+			}
+			*omitted = append(*omitted, om)
 		case len(e.children) > 0:
-			out = flatten(e, ox, oy, dropped, out)
+			out = flatten(e, ox, oy, omitted, out)
 		}
 	}
 	return out
@@ -187,10 +264,15 @@ func (r *renderer) binding(vb *element, base string) error {
 func (r *renderer) widget(e *element, base string) error {
 	switch e.tag {
 	case "Label":
-		wt, sz, fam := parseFont(e.attr("font"))
-		r.parts = append(r.parts, fmt.Sprintf(`<div style="%sdisplay:flex;align-items:center;font-family:%s,Arial,`+
-			`sans-serif;font-weight:%s;font-size:%spx;color:#16233a;line-height:1.05;overflow:hidden;`+
-			`white-space:pre-wrap;">%s</div>`, base, fam, wt, sz, pycompat.HTMLEscape(pyhtml.Unescape(e.attr("text")))))
+		f := parseNiagaraFont(e.attr("font"))
+		style := ""
+		if f.style != "normal" {
+			style = "font-style:" + f.style + ";"
+		}
+		r.parts = append(r.parts, fmt.Sprintf(`<div style="%sdisplay:flex;align-items:center;font-family:%s;`+
+			`font-weight:%s;%sfont-size:%spx;%sline-height:1.05;overflow:hidden;`+
+			`white-space:pre-wrap;">%s</div>`, base, cssFamily(f.family), f.weight, style, f.size, labelStyle(e),
+			pycompat.HTMLEscape(pyhtml.Unescape(e.attr("text")))))
 	case "Picture":
 		if img := e.attr("image"); img != "" {
 			uri, err := r.a.dataURI(img)
@@ -257,11 +339,11 @@ func render(o Options) (string, *result, error) {
 	if err != nil {
 		return "", nil, fmt.Errorf("%s: %v", o.Px, err)
 	}
-	dropped := map[string]int{}
-	for _, p := range flatten(canvas, 0, 0, dropped, nil) {
+	var omitted []omit
+	for _, p := range flatten(canvas, 0, 0, &omitted, nil) {
 		lay, ok := parseLayout(p.e.attr("layout"))
 		if !ok {
-			dropped[p.e.tag+" (no layout)"]++
+			omitted = append(omitted, omit{tag: p.e.tag, key: p.e.tag + " (no layout)"})
 			continue
 		}
 		base := fmt.Sprintf("position:absolute;left:%spx;top:%spx;width:%spx;height:%spx;",
@@ -270,10 +352,16 @@ func render(o Options) (string, *result, error) {
 			return "", nil, err
 		}
 	}
+	dropped := map[string]int{}
+	for _, om := range omitted {
+		dropped[om.key]++
+	}
 	title, _ := pypath.PosixSplitext(pypath.PosixBasename(o.Px))
-	page := pageHTML(o, title, cw, ch, strings.Join(r.parts, "\n"))
+	body := strings.Join(append(append([]string(nil), r.parts...), placeholders(omitted)...), "\n")
+	page := pageHTML(o, title, cw, ch, body, omitted)
 	return page, &result{canvasW: cw, canvasH: ch, widgets: len(r.parts), shared: shared,
-		missing: r.a.missingSorted(), notImages: r.a.notImages, assets: len(r.a.cache), dropped: dropped}, nil
+		missing: r.a.missingSorted(), notImages: r.a.notImages, assets: len(r.a.cache), dropped: dropped,
+		omitted: omitted}, nil
 }
 
 // viewSize is int(float(v)) of each half of viewSize="W,H" (default 1370.0,780.0).
@@ -298,4 +386,37 @@ func viewSize(canvas *element) (string, string, error) {
 		}
 	}
 	return out[0], out[1], nil
+}
+
+// placeholders are dashed boxes at the canvas position of each omitted element, so the page
+// shows where something is missing instead of an empty area.
+func placeholders(omitted []omit) []string {
+	var out []string
+	for _, om := range omitted {
+		if !om.hasLay {
+			continue
+		}
+		out = append(out, fmt.Sprintf(`<div class="omit" style="position:absolute;left:%spx;top:%spx;width:%spx;`+
+			`height:%spx;" title="no reproducido">%s (no reproducido)</div>`, pycompat.FormatG(om.lay.x),
+			pycompat.FormatG(om.lay.y), pycompat.FormatG(om.lay.w), pycompat.FormatG(om.lay.h), pycompat.HTMLEscape(om.tag)))
+	}
+	return out
+}
+
+// omittedNotice is the visible list of the elements the page does not render; "" when none.
+func omittedNotice(omitted []omit) string {
+	if len(omitted) == 0 {
+		return ""
+	}
+	items := make([]string, len(omitted))
+	for i, om := range omitted {
+		where := "sin layout válido: posición desconocida"
+		if om.hasLay {
+			where = fmt.Sprintf("en x=%s, y=%s (%s×%s)", pycompat.FormatG(om.lay.x), pycompat.FormatG(om.lay.y),
+				pycompat.FormatG(om.lay.w), pycompat.FormatG(om.lay.h))
+		}
+		items[i] = "<li>" + pycompat.HTMLEscape(om.tag) + " " + where + "</li>"
+	}
+	return fmt.Sprintf("<div class=\"omitted\"><b>No reproducido (%d):</b> estos elementos del Px no se dibujan "+
+		"en esta réplica.<ul>%s</ul></div>\n", len(omitted), strings.Join(items, ""))
 }

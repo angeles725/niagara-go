@@ -57,8 +57,21 @@ func cmdLinks(e *env) (int, int) {
 		if e.flag("dangling") && !isDangling {
 			continue
 		}
+		// JSON "dangling" is CHECK7 (undeclared target slot), not bog-cycles' "dangling" (an
+		// unresolved h: source, which this row reports as src_resolved=false). The key is kept for
+		// its consumers; see the --help text.
 		r = append(r, kv{"dangling", isDangling})
 		rows = append(rows, r)
+	}
+	if len(rows) == 0 {
+		// An empty result must not hide a typo: a --to/--from that names no component of the bog
+		// is reported like `slot` reports an unknown path, not as a clean "(no matching links)".
+		for _, ref := range []string{to, from} {
+			if ref != "" && !refExists(e.bog, ref) {
+				fmt.Fprintf(e.err, "bog-nav: cannot resolve %s\n", ref)
+				return 0, cli.ExitNoMatch
+			}
+		}
 	}
 	return e.render(rows, func(r row) string {
 		line := r.s("source") + "  -->  " + r.s("target")
@@ -123,6 +136,30 @@ func matchRef(compH *string, path string, slot *string, needle string) bool {
 		return compH != nil && *compH == needle[2:]
 	}
 	return matchPath(path, slot, needle)
+}
+
+// refExists reports whether a --to/--from needle names something in the bog: an h:xxxx handle
+// that exists, or a path that equals, ends, or occurs in some component path (optionally followed
+// by ".<slot>", the matchPath form). It is consulted only when no link matched, so a needle that
+// matches by slot name alone still filters as before.
+func refExists(b *bog.Bog, needle string) bool {
+	if strings.HasPrefix(needle, "h:") {
+		_, ok := b.Comps.Get(needle[2:])
+		return ok
+	}
+	n := bog.UnescapeName(strings.Trim(needle, "/"))
+	candidates := []string{n}
+	if i := strings.LastIndex(n, "."); i > 0 {
+		candidates = append(candidates, n[:i])
+	}
+	for _, c := range b.Comps.All() {
+		for _, cand := range candidates {
+			if cand != "" && strings.Contains(c.Path, cand) {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 // compAt is _comp_at: the component at 'h:xxxx' or 'xxxx'; nil after printing the miss.

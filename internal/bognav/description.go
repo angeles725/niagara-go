@@ -32,8 +32,14 @@ Tridium control:ControlPoint model -- it lives in the DisplayService PointCache 
 keyed by a bacref ORD) with the value as a handle-LESS ` + "`" + `bac:*` + "`" + ` wrapper. ` + "`" + `pointcache` + "`" + ` decodes it;
 ` + "`" + `find --slots` + "`" + ` / ` + "`" + `types --slots` + "`" + ` stop those wrappers reading as a silent zero.
 
+links --json fields: src_resolved is false when the link's sourceOrd h:xxxx names no component
+(text: [orphan sourceOrd]); dangling is true only when the link's targetSlotName is declared by
+no @NiagaraProperty under --src (CHECK7, own-module targets; always false without --src).
+This "dangling" is NOT bog-cycles' "dangling", which lists the unresolved h: SOURCES that
+bog-nav reports as src_resolved=false.
+
 Read-only. Prints rows; pass --json for machine output. stdlib only.
 Exit codes: 0 found, 1 searched and no match (find/links/grep/writable print the searched bog
-+ counts) or a named component/handle not found, 2 usage error, 3 unreadable input (missing, empty, non-BOG, not well-formed XML, corrupt/unsupported ZIP,
++ counts) or a named component/handle/slot not found (links: an unknown --to/--from), 2 usage error, 3 unreadable input (missing, empty, non-BOG, not well-formed XML, corrupt/unsupported ZIP,
 nesting or size over the bogio limits) or python2.
 `

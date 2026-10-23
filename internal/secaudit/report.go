@@ -20,11 +20,25 @@ type row struct {
 	id, sev, title, observed, secure, verdict, block, note string
 }
 
+// byDesign are the checks that FAIL on every home (no setting fixes them): they stay in the
+// report but do not make the exit code say "something to fix".
+var byDesign = map[string]bool{"SEC-16": true}
+
 // report collects the check rows in the order the checks ran.
 type report struct{ rows []row }
 
 func (r *report) add(id, sev, title, observed, secure, verdict, block, note string) {
 	r.rows = append(r.rows, row{id, sev, title, observed, secure, verdict, block, note})
+}
+
+// failed reports whether any actionable check FAILed.
+func (r *report) failed() bool {
+	for _, x := range r.rows {
+		if x.verdict == "FAIL" && !byDesign[x.id] {
+			return true
+		}
+	}
+	return false
 }
 
 // dump prints the rows as JSON (in check order) or as the sorted text report.

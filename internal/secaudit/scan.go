@@ -23,6 +23,7 @@ const sec15Title, sec15Secure = "KeyRingPermission wildcard in unsigned module",
 func sec15(home string, rep *report) {
 	moddir := filepath.Join(home, "modules")
 	if !pycompat.IsDir(moddir) {
+		skipRow(rep, "SEC-15", "med", sec15Title, "no modules/ directory", sec15Secure, "B114", "run: ls -l <home>/modules")
 		return
 	}
 	total, wild, wildUnsigned, unread, err := scanKeyringPerms(moddir)

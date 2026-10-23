@@ -1,0 +1,5 @@
+{
+ "reason": "Python printed the empty-search line for a --to that names no component, so a typo read as a clean negative; Go names the unknown reference like `slot` does (bog-nav: cannot resolve <ref>) and keeps exit 1.",
+ "stdout": "",
+ "stderr": "bog-nav: cannot resolve nowhere\n"
+}

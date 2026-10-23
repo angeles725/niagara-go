@@ -36,6 +36,8 @@ const description = "" +
 	"a named root R renders as `/R` and its children as `/R/A`.\n" +
 	"`links` counts the links whose source resolves (or is not a handle); a dangling link is counted in\n" +
 	"`dangling` only. A missing slot name prints as `-` (null in --json).\n" +
+	"`dangling` here is an unresolved `h:` SOURCE handle; bog-nav links' `dangling` is a different check\n" +
+	"(a target slot no @NiagaraProperty declares, CHECK7) and bog-nav shows this case as `src_resolved: false`.\n" +
 	"Exit 1 if cycles found, 0 otherwise, 2 on a missing/unreadable/non-BOG or not well-formed XML input or\n" +
 	"bad usage. Read-only, stdlib.\n"
 
@@ -46,7 +48,8 @@ type Edge struct {
 	Link                   string
 }
 
-// Dangling is a link whose h: source handle resolves to no component.
+// Dangling is a link whose h: source handle resolves to no component. The JSON key "dangling" means
+// this unresolved SOURCE; bog-nav links' "dangling" field is CHECK7 (an undeclared target slot).
 type Dangling struct {
 	Source, Target         string
 	SourceSlot, TargetSlot *string

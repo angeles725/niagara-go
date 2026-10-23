@@ -115,9 +115,8 @@ func TestRelayNumAndFont(t *testing.T) {
 			t.Errorf("relayNum(%q) = %q, want %q", in, got, want)
 		}
 	}
-	w, s, f := parseFont("bold 26.0pt Arial")
-	if w != "bold" || s != "26" || f != "Arial" {
-		t.Errorf("parseFont = %s %s %s", w, s, f)
+	if f := parseNiagaraFont("bold 26.0pt Arial"); f.weight != "bold" || f.size != "26" || f.family != "Arial" {
+		t.Errorf("parseNiagaraFont = %+v", f)
 	}
 	if out := strings.Join(textfold.Fields("a\x1cb"), "|"); out != "a|b" {
 		t.Errorf("pySplit = %q", out)
