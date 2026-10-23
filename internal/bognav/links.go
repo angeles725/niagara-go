@@ -57,6 +57,9 @@ func cmdLinks(e *env) (int, int) {
 		if e.flag("dangling") && !isDangling {
 			continue
 		}
+		// JSON "dangling" is CHECK7 (undeclared target slot), not bog-cycles' "dangling" (an
+		// unresolved h: source, which this row reports as src_resolved=false). The key is kept for
+		// its consumers; see the --help text.
 		r = append(r, kv{"dangling", isDangling})
 		rows = append(rows, r)
 	}

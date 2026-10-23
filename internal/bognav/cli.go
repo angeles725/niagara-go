@@ -72,7 +72,7 @@ func newParser() *argparse.Parser {
 	l.Add(a{Dest: "from_", Help: "source path/component"}, "--from")
 	l.Add(a{Help: "exact slot name on the --from source end / the --to target end (either end when neither is given)"}, "--slot")
 	l.Add(a{Action: argparse.StoreTrue, Dest: "slot_any", Help: "--slot matches either end regardless of --from/--to (pre-2026-09-06 behaviour)"}, "--slot-any")
-	l.Add(flag("only links whose tgt slot is absent from source (needs --src)"), "--dangling")
+	l.Add(flag("only links whose targetSlotName no @NiagaraProperty under --src declares (CHECK7; the JSON \"dangling\" field; not an unresolved source, see src_resolved)"), "--dangling")
 	l.Add(a{Help: "module src root: resolve --dangling (CHECK7)"}, "--src")
 
 	h := add("handle", "component at a handle + its links")
