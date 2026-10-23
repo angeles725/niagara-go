@@ -55,7 +55,7 @@ func ParsePermissions(path string, data []byte) (*Permissions, error) {
 				continue
 			}
 			if !strings.HasPrefix(l, "#") {
-				return nil, fmt.Errorf("Velocity template line %q is neither XML nor a directive", l)
+				return nil, fmt.Errorf("line %q of a Velocity template is neither XML nor a directive", l)
 			}
 			p.Velocity = append(p.Velocity, l)
 		}
