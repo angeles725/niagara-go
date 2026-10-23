@@ -1102,6 +1102,9 @@ uses, so the source, slots and xref indexes read it with no second parser.
   record of `source-index.json` carries `"origin": "module-jar <jar>"`; a docSource record
   has no `origin`, so a docSource-only corpus indexes as before. A malformed
   `module-jar-sources.json` fails the build instead of labelling the files docSource.
+- **nh**: where a module-jar record is involved, `nh source <Name>` prints `ORIGIN:`
+  (`module-jar <jar>` or `docSource`) and tags each `ALSO:` alternate with its origin, and a
+  glob listing names the jar. A docSource-only corpus prints what it always did.
 - A jar with Java source is a help jar (`helpJars`), so `coverage --doc-jars` lists its
   entries: the `.java` ones are indexed through `source-index.json`, the rest is module
   content.
