@@ -58,5 +58,13 @@ which tests ran first.
 - **The find-index fingerprint string** and the walk-cache binary stamp keep
   their own encodings, because the files hash or store them. Only the
   ctime/inode read is shared.
+- **The `help/fts` fingerprint stays on size and mtime by design** (decided
+  2026-10-23, quality round 9). It is stored inside every index database
+  (`meta.fingerprint`, compared by `FreshPath`), and the fixture databases
+  keep it portable with a `<ROOT>` placeholder and a fixed mtime. Adding ctime
+  or inode would make the stored value impossible to reproduce on another
+  checkout or after an rsync/restore/chmod, forcing full rebuilds of unchanged
+  indexes. The memo (`fingerprint.gob`) only caches that value, so keying it on
+  the whole Stamp would change nothing.
 - **The help memo's parallel stat** is the `workers` parameter of `Files`.
   Other callers pass 1.
