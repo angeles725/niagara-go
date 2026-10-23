@@ -7,10 +7,12 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/angeles725/niagara-go/internal/statcache/stattest"
 )
 
 // The parsed type catalog is cached per decompiler dir under $XDG_CACHE_HOME/niagara-go/bog-nav,
-// keyed by the size, mtime and set of the dir's .java files.
+// keyed by the set of the dir's .java files and their statcache.Stamp.
 
 const writableRel = "control/control-rt/vineflower/javax/baja/control/BBooleanWritable.java"
 
@@ -98,24 +100,31 @@ func TestCatalogCacheWrittenUnderXDGCacheHome(t *testing.T) {
 }
 
 func TestCatalogCacheServesUnchangedSources(t *testing.T) {
-	if runtime.GOOS == "windows" || os.Geteuid() == 0 {
-		t.Skip("a mode-000 file stays readable here")
-	}
 	cacheEnv(t)
 	root := miniRoot(t)
+	parses := 0
+	defer func(f func(string, []string) ([]string, map[string]*classRec)) { parseCatalogFiles = f }(parseCatalogFiles)
+	real := parseCatalogFiles
+	parseCatalogFiles = func(src string, paths []string) ([]string, map[string]*classRec) {
+		parses++
+		return real(src, paths)
+	}
 	key, want := fallbackDefault(t, root)
 	if key == "" {
 		t.Fatal("BooleanWritable did not resolve")
 	}
-	// Same size, mtime and file set but unreadable: only the cache can still answer.
-	path := filepath.Join(root, writableRel)
-	if err := os.Chmod(path, 0); err != nil {
-		t.Fatal(err)
+	first := parses
+	if first == 0 {
+		t.Fatal("the first run parsed nothing: the counter does not see the parse")
 	}
-	t.Cleanup(func() { _ = os.Chmod(path, 0o644) })
+	// Unchanged sources (same Stamp for every file): the second run is answered from the cache,
+	// without parsing a source again.
 	gotKey, got := fallbackDefault(t, root)
 	if gotKey != key || got != want {
 		t.Fatalf("second run = %q %q, want the cached %q %q", gotKey, got, key, want)
+	}
+	if parses != first {
+		t.Fatalf("the second run parsed %d source dirs, want 0 (it must be answered from the cache)", parses-first)
 	}
 }
 
@@ -179,5 +188,33 @@ func TestCatalogCacheOff(t *testing.T) {
 	}
 	if files := cacheFiles(t, cache); len(files) != 0 {
 		t.Fatalf("NIAGARA_CACHE_DIR=off still wrote %v", files)
+	}
+}
+
+// TestCatalogCacheMissesAnEditThatKeepsSizeAndMtime: a source rewritten with the same
+// size and modification time (cp -p, rsync -a, tar x, touch -r) changes its
+// statcache.Stamp (ctime, inode), so it is parsed again, never answered from the cache.
+func TestCatalogCacheMissesAnEditThatKeepsSizeAndMtime(t *testing.T) {
+	if runtime.GOOS != "linux" {
+		t.Skip("ctime and inode are read on Linux only (statcache.Sys)")
+	}
+	cacheEnv(t)
+	root := miniRoot(t)
+	path := filepath.Join(root, writableRel)
+	orig, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	old := "fallback = newProperty(0, new BStatusBoolean(false, BStatus.nullStatus), null)"
+	if !strings.Contains(string(orig), old) {
+		t.Fatal("fixture changed: fallback declaration not found")
+	}
+	if _, d := fallbackDefault(t, root); !strings.Contains(d, "false") {
+		t.Fatalf("fallback default %q", d)
+	}
+	edit := strings.Replace(string(orig), old, strings.Replace(old, "false", "FALSE", 1), 1)
+	stattest.EditKeepingStamp(t, path, []byte(edit))
+	if _, d := fallbackDefault(t, root); !strings.Contains(d, "FALSE") {
+		t.Fatalf("after an edit keeping size and mtime fallback default = %q, want the new FALSE", d)
 	}
 }

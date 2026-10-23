@@ -16,18 +16,20 @@ import (
 // The parsed type catalog of one decompiler dir, cached on disk: parsing the decompiled sources is
 // most of a relays or slot run (about 0.3 s of 0.45 s on PANCCADIA, audit T28). The cache keeps a
 // dir's parseFiles result under $XDG_CACHE_HOME (or ~/.cache)/niagara-go/bog-nav/<dir hash>.gob,
-// keyed by the dir's path and, for every .java file in walk order, its path, size and mtime (ns):
-// a changed, added or removed file, or a cache that cannot be read or is malformed, is a miss (the
-// dir is parsed and the cache rewritten atomically by statcache.WriteGob). A parse during which the
-// files changed is not stored, and a cache that cannot be written is skipped silently, so the
-// output never depends on the cache. NIAGARA_CACHE_DIR=off (the bog-nav goldens set it, as the
-// Python tool read it) turns the cache off.
+// keyed by the dir's path and, for every .java file in walk order, its path and statcache.Stamp
+// (size, mtime, ctime, inode; Missing when it cannot be stat'ed): a changed (an edit that keeps
+// size and mtime still changes the ctime), added or removed file, or a cache that cannot be read
+// or is malformed, is a miss (the dir is parsed and the cache rewritten atomically by
+// statcache.WriteGob). A parse during which the files changed is not stored, and a cache that
+// cannot be written is skipped silently, so the output never depends on the cache.
+// NIAGARA_CACHE_DIR=off (the bog-nav goldens set it, as the Python tool read it) turns the cache
+// off.
 
-const catalogCacheFormat = 1
+const catalogCacheFormat = 2 // 2: the key is the whole statcache.Stamp (ctime and inode too)
 
 type catalogFile struct {
-	Path          string
-	Size, MtimeNs int64 // -1 when the file cannot be stat'ed
+	Path            string
+	statcache.Stamp // statcache.Missing when the file cannot be stat'ed
 }
 
 type catalogKey struct {
@@ -60,7 +62,7 @@ func catalogCacheDir() string {
 func catalogKeyOf(src string, paths []string) catalogKey {
 	k := catalogKey{Format: catalogCacheFormat, Dir: src, Files: make([]catalogFile, len(paths))}
 	for i, st := range statcache.Files(paths, 1) {
-		k.Files[i] = catalogFile{Path: paths[i], Size: st.Size, MtimeNs: st.MtimeNs} // Missing is -1, -1
+		k.Files[i] = catalogFile{Path: paths[i], Stamp: st}
 	}
 	return k
 }
@@ -69,12 +71,15 @@ func (k catalogKey) equal(o catalogKey) bool {
 	return k.Format == o.Format && k.Dir == o.Dir && slices.Equal(k.Files, o.Files)
 }
 
+// parseCatalogFiles is the uncached parse; tests count its calls to prove a cache hit.
+var parseCatalogFiles = parseFiles
+
 // cachedParseDir is parseDir through the on-disk cache.
 func cachedParseDir(src string) ([]string, map[string]*classRec) {
 	dir := catalogCacheDir()
 	paths := javaFiles(src)
 	if dir == "" {
-		return parseFiles(src, paths)
+		return parseCatalogFiles(src, paths)
 	}
 	sum := sha1.Sum([]byte(core.ResolvedPath(src)))
 	cache := filepath.Join(dir, hex.EncodeToString(sum[:])[:16]+".gob")
@@ -82,7 +87,7 @@ func cachedParseDir(src string) ([]string, map[string]*classRec) {
 	if keys, recs, ok := readCatalogCache(cache, key); ok {
 		return keys, recs
 	}
-	keys, recs := parseFiles(src, paths)
+	keys, recs := parseCatalogFiles(src, paths)
 	if now := javaFiles(src); slices.Equal(now, paths) && catalogKeyOf(src, now).equal(key) {
 		cf := catalogCache{Key: key, Entries: make([]catalogEntry, len(keys))}
 		for i, k := range keys {

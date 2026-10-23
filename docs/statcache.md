@@ -13,7 +13,7 @@ Every function below is in `internal/statcache/statcache.go`, except `Sys`
 
 | API | What it does | Replaces |
 | --- | --- | --- |
-| `Stamp{Size, MtimeNs}`, `Of(fi)`, `Stat(path)`, `Missing`, `Stamp.Exists` | size and mtime (Unix ns) of a file; `Stat` follows a link (`os.Stat`) and is `Missing` (`-1, -1`) when the path cannot be stat'ed | per-cache size+mtime structs built by hand |
+| `Stamp{Size, MtimeNs, CtimeNs, Ino}`, `Of(fi)`, `Stat(path)`, `Missing`, `Stamp.Exists` | size, mtime and ctime (Unix ns) and inode of a file (ctime and inode 0 where `Sys` reports nothing); `Stat` follows a link (`os.Stat`) and is `Missing` (`-1, -1, -1, 0`) when the path cannot be stat'ed | per-cache size+mtime structs built by hand |
 | `Regular(path, minSize)` | the `Stamp` of a regular file of at least `minSize` bytes; `ok` false otherwise (a directory, a missing path, a smaller file) | "regular file of at least N bytes" checks before keying |
 | `Same(path, stamp)` | `Stat(path) == stamp` and the stamp is not `Missing` | the stat-again check that keeps a result computed while the file changed out of the cache |
 | `Files(paths, workers)` | the `Stat` of every path, in order; `workers > 1` stats contiguous chunks in that many goroutines, `workers < 1` is 1 | file-set stat loops (sequential, or parallel in contiguous chunks) |
@@ -37,12 +37,12 @@ which tests ran first.
 
 | Cache | Keys on | Format / switch | Shares |
 | --- | --- | --- | --- |
-| `nav/core` class-index.gob | resolved path, size, mtime of the class index; only from `classCacheMinBytes` (1 MiB) | `classCacheFormat` | `Regular`, `ReadGob`, `WriteGob` (through `core.WriteGob`) |
-| `nav/lib/callgraph` callgraph.gob | resolved path, size, mtime of the xref index; only from `cacheMinBytes` (1 MiB) | `cacheFormat` | `Regular`, `ReadGob`, `WriteGob` |
-| `nav/lib/classrank` class-rank.gob | ranker parameters + size, mtime of class-index.json and xref-index.json (`Present` false when absent) | `cacheFormat`; cached only when class-index.json is `cacheMinBytes` (1 MiB) or more | `Stat`, `ReadGob`, `WriteGob` |
-| `nav/inventory` stats.gob | per index file of `statsCacheMinBytes` (1 MiB) or more: resolved path, size, mtime | `statsCacheFormat` | `Of`, `Same`, `Stat` (dropping removed files), `ReadGob`, `WriteGob` |
-| `modjar` `<member hash>.gob` | absolute path, size, mtime per jar | `cacheFormat`, `NIAGARA_GO_MODJAR_CACHE` (`Off`) | `Of`, `Same`, `ReadGob`, `WriteGob`, `Off`, `UserDir`, `TestBinary` |
-| `bognav` type catalog | dir + every .java path, size, mtime (-1 missing) | `catalogCacheFormat`, `NIAGARA_CACHE_DIR=off` only | `Files(…, 1)`, `ReadGob`, `WriteGob`, `UserDir` |
+| `nav/core` class-index.gob | resolved path and `Stamp` of the class index; only from `classCacheMinBytes` (1 MiB) | `classCacheFormat` | `Regular`, `ReadGob`, `WriteGob` (through `core.WriteGob`) |
+| `nav/lib/callgraph` callgraph.gob | resolved path and `Stamp` of the xref index; only from `cacheMinBytes` (1 MiB) | `cacheFormat` | `Regular`, `ReadGob`, `WriteGob` |
+| `nav/lib/classrank` class-rank.gob | ranker parameters + `Stamp` of class-index.json and xref-index.json (`Present` false when absent) | `cacheFormat`; cached only when class-index.json is `cacheMinBytes` (1 MiB) or more | `Stat`, `ReadGob`, `WriteGob` |
+| `nav/inventory` stats.gob | per index file of `statsCacheMinBytes` (1 MiB) or more: resolved path and `Stamp` | `statsCacheFormat` | `Of`, `Same`, `Stat` (dropping removed files), `ReadGob`, `WriteGob` |
+| `modjar` `<member hash>.gob` | absolute path and `Stamp` per jar | `cacheFormat`, `NIAGARA_GO_MODJAR_CACHE` (`Off`) | `Of`, `Same`, `ReadGob`, `WriteGob`, `Off`, `UserDir`, `TestBinary` |
+| `bognav` type catalog | dir + every .java path and its whole `Stamp` (`Missing` when it cannot be stat'ed) | `catalogCacheFormat` (2), `NIAGARA_CACHE_DIR=off` only | `Files(…, 1)`, `ReadGob`, `WriteGob`, `UserDir` |
 | `help/fts` fingerprint.gob | per source: label, dir, link target, every walked folder's mtime (a folder modified less than `fpRecent`, 2 s, before the walk is not trusted) and every file's size/mtime, stat'ed in parallel on purpose | `fpFormat` + `EngineVersion` | `Files(…, fpStatWorkers)` (4), `ReadGob`, `WriteGob` |
 | `blockfiles` subblocks walk cache | schema, uid, the executable's stamp and the root; per walked dir its mtime/ctime/ino/dev/mode; custom binary with a CRC | `subSchema`, `CORPUS_NAV_FIND_INDEX` (`Off`) | `Sys`, `Off`, `IsTestName` |
 | `corpusnav/blocksearch` find-index and term-count (tfidf-blocks) caches | sha256 of the schema, the executable's stamp and `size:mtime:ctime:ino` per file (`size:mtime` where `Sys` reports nothing, `-` when missing); custom binary | `indexSchema`, `termSchema`, `CORPUS_NAV_FIND_INDEX` (`Off`) | `Sys`, `Off` |
@@ -58,5 +58,13 @@ which tests ran first.
 - **The find-index fingerprint string** and the walk-cache binary stamp keep
   their own encodings, because the files hash or store them. Only the
   ctime/inode read is shared.
+- **The `help/fts` fingerprint stays on size and mtime by design** (decided
+  2026-10-23, quality round 9). It is stored inside every index database
+  (`meta.fingerprint`, compared by `FreshPath`), and the fixture databases
+  keep it portable with a `<ROOT>` placeholder and a fixed mtime. Adding ctime
+  or inode would make the stored value impossible to reproduce on another
+  checkout or after an rsync/restore/chmod, forcing full rebuilds of unchanged
+  indexes. The memo (`fingerprint.gob`) only caches that value, so keying it on
+  the whole Stamp would change nothing.
 - **The help memo's parallel stat** is the `workers` parameter of `Files`.
   Other callers pass 1.
