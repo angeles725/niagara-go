@@ -1098,6 +1098,18 @@ with no registered install (or an install that is not mounted) keeps its last
 `module-index.json`. The text is not added to the full-text index: `nh module` and `nh type`
 read the structure.
 
+`TestModuleIndexDryProbe` builds the index from a real install into a temporary data root
+(the install is only read) and prints the element counts: `NH_MODULE_INDEX_PROBE=<install>
+go test ./internal/helpbuild -run TestModuleIndexDryProbe -v`. On 2026-10-23, every count
+equal to the grep audit of the same jars:
+
+| Install | jars | modules | errors | dependencies | types | agents (on-types) | java-permissions | defs | adapters |
+|---|---|---|---|---|---|---|---|---|---|
+| 4.15.6.20 | 733 | 733 | 0 | 11,516 | 8,798 | 1,971 (2,460) | 9,683 | 1,418 | 113 |
+| 4.14.0.162 | 995 | 992 (3 jars without a descriptor) | 0 | 14,372 | 14,193 | 2,329 (3,006) | 9,559 | 1,440 | 156 |
+| 4.13.2.18 | 740 | 740 | 0 | 11,362 | 8,749 | 1,883 (2,243) | 9,560 | 1,418 | 116 |
+| 4.3.58.18 | 578 | 578 | 0 | 6,610 | 6,341 | 1,335 (1,576) | 8,395 | 1,412 | 113 |
+
 ## Real data
 
 `TestCoverageRealGoldens` (S10b-1) is the package's one real-data test:
