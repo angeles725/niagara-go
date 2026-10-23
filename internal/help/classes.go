@@ -154,6 +154,11 @@ func (e *Env) Class(p ClassParams) error {
 		return err
 	}
 	if len(hits) == 0 {
+		if !p.JDK {
+			if ok, err := e.classFromSource(p.Name); ok || err != nil {
+				return err
+			}
+		}
 		simple := p.Name[strings.LastIndex(p.Name, ".")+1:]
 		if close := suggest(idx.Keys(), simple, 5); len(close) > 0 {
 			fmt.Fprintf(e.Out, "Did you mean: %s\n", strings.Join(close, ", "))
@@ -181,6 +186,9 @@ func (e *Env) Class(p ClassParams) error {
 	if p.JDK {
 		e.printJDKMembers(h)
 		return nil
+	}
+	if err := e.printModuleJarAlternates(h.Name); err != nil {
+		return err
 	}
 	clean, _, err := e.readCleanClass(h.Package, h.Name)
 	switch {

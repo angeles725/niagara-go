@@ -1,4 +1,4 @@
 No match for 'import' (source-grep) in this scope.
   searched: Niagara 4.14.0.162 (<ROOT>) -- source-index.json: 30 entries
-  excluded from this scope: classes not in nh's source index (only docSource-doc.jar source is indexed; use class/method for their API)
+  excluded from this scope: classes not in nh's source index (docSource-doc.jar and the vendor .java of module jars are indexed, third-party packages excluded; use class/method for their API)
   not proof of absence; try: class 'import', source-grep 'import', find 'import'

@@ -125,7 +125,8 @@ func parseAnnotations(path string) (class, pkg string, hasPkg bool, slots [3][]s
 // BuildSlotsIndex is slots_indexer.build_slots_index(baseDir) (the
 // script's __main__ with baseDir as its argument). Each module of source/
 // is walked in the file system's directory order (os.walk unsorted), which
-// fixes the key order and which same-name class gets which key. err != nil
+// fixes the key order and which same-name class gets which key; module-jar
+// sources come after every docSource file (sourceorigin.go). err != nil
 // is where Python raises (no source/, a .bajadoc that cannot be read, a
 // failed write: traceback, exit 1; nothing is written).
 func BuildSlotsIndex(baseDir string) (*IndexResult, error) {
@@ -136,9 +137,33 @@ func BuildSlotsIndex(baseDir string) (*IndexResult, error) {
 		return res, err
 	}
 	sort.Strings(modules)
+	absSource, err := absSourceDir(baseDir)
+	if err != nil {
+		return res, err
+	}
+	origins, err := readSourceOrigins(baseDir)
+	if err != nil {
+		return res, err
+	}
 	x := &slotsIndex{entries: map[string]*slotsEntry{}, res: res}
 	var totals [3]int
 	files := 0
+	add := func(module, path string) {
+		class, pkg, hasPkg, slots, _ := parseAnnotations(path)
+		if len(slots[0]) == 0 && len(slots[1]) == 0 && len(slots[2]) == 0 {
+			return
+		}
+		files++
+		e := &slotsEntry{module: module, pkg: pkg, hasPkg: hasPkg && pkg != "", slots: map[string][]strDict{}}
+		for i, s := range slotSections {
+			for _, slot := range slots[i] {
+				e.add(s.section, slot)
+			}
+			totals[i] += len(slots[i])
+		}
+		x.put(x.collisionKey(class, module, e.pkg), e)
+	}
+	var fromJars [][2]string // module, path of the module-jar sources, indexed after docSource
 	for _, module := range modules {
 		modulePath := pycompat.Join(sourceDir, module)
 		if !pycompat.IsDir(modulePath) {
@@ -149,22 +174,18 @@ func BuildSlotsIndex(baseDir string) (*IndexResult, error) {
 				if !strings.HasSuffix(name, ".java") {
 					continue
 				}
-				class, pkg, hasPkg, slots, _ := parseAnnotations(pycompat.Join(dir, name))
-				if len(slots[0]) == 0 && len(slots[1]) == 0 && len(slots[2]) == 0 {
+				path := pycompat.Join(dir, name)
+				if origins.jar(absSource, path) != "" {
+					fromJars = append(fromJars, [2]string{module, path})
 					continue
 				}
-				files++
-				e := &slotsEntry{module: module, pkg: pkg, hasPkg: hasPkg && pkg != "", slots: map[string][]strDict{}}
-				for i, s := range slotSections {
-					for _, slot := range slots[i] {
-						e.add(s.section, slot)
-					}
-					totals[i] += len(slots[i])
-				}
-				x.put(x.collisionKey(class, module, e.pkg), e)
+				add(module, path)
 			}
 			return dirs
 		})
+	}
+	for _, f := range fromJars {
+		add(f[0], f[1])
 	}
 	added, err := x.mergeBajadoc(baseDir)
 	if err != nil {
