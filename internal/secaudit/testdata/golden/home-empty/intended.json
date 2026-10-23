@@ -1,0 +1,6 @@
+{
+ "reason": "Truth fix (r9-ng3): a directory with none of defaults/system.properties, system.properties, security/, modules/ is refused as not a Niagara home (exit 2) instead of printing FAILs for settings never read.",
+ "stdout": "",
+ "stderr": "ERROR: not a Niagara home (none of defaults/system.properties, system.properties, security/, modules/): inputs/home-empty\n",
+ "exit": 2
+}

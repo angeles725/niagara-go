@@ -56,6 +56,10 @@ func run(e *env, home, station, host, scanDir string, asJSON bool, s cli.Stdio) 
 			return cli.ExitCannotSearch
 		}
 	}
+	if !isNiagaraHome(home) {
+		fmt.Fprintf(s.Err, "ERROR: not a Niagara home (none of %s): %s\n", homeMarkerList(), home)
+		return cli.ExitCannotSearch
+	}
 	rep := &report{}
 	if err := e.audit(home, stationXML, host, rawHead, rep); err != nil {
 		// keytool could not be started: no keytool is no audit (one line, exit 2, as Python).
