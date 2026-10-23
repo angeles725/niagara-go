@@ -27,15 +27,20 @@ import (
 // its best entry plus decayed further ones). A whole file as one document
 // ranked below every guide (BM25 favours short documents: 7 of 15 sampled
 // descriptions stayed out of find's ten results); one result row per key
-// would flood the list. Plain UI
-// labels ("Station Name") are left out: a page keeps the keys whose last
-// segment names help text (description, desc, help, tooltip, summary) and
-// any value of lexiconMinWords words or more (messages, prompts, warnings).
+// would flood the list. A page holds every key = value entry with a value,
+// in file order. Help rows (the keys whose last segment names help text:
+// description, desc, help, tooltip, summary, and any value of
+// lexiconMinWords words or more: messages, prompts, warnings) are written
+// as they are; every other row is a UI display label ("Station Name",
+// "Boolean Latch") and starts with labelMarker, so a hit tells a label
+// from help text and a label lookup finds the module that names it.
 
 const (
 	lexiconTextDir  = "lexicon-text"
 	lexiconScript   = "lexicon_extractor"
 	lexiconMinWords = 5
+	// labelMarker starts a display-label row of a lexicon-text page.
+	labelMarker = "[label] "
 )
 
 // lexiconHelpKeys are the last key segments (lower-cased) that mark help
@@ -151,9 +156,15 @@ func isLexiconEntry(jarName, entry string, rules *Rules) bool {
 	return !mapped && !strings.HasSuffix(entry, "/")
 }
 
-// lexiconPage is the lexicon-text/ page of one lexicon file; ok is false
-// when the file holds no help text (labels only), which writes no page.
+// lexiconPage is the lexicon-text/ page of one lexicon file, with its
+// help and label row counts; ok is false when the file holds no entry
+// with a value, which writes no page.
 func lexiconPage(jarName, entry string, data []byte) (page textPage, ok bool) {
+	page, _, _, ok = lexiconPageCounts(jarName, entry, data)
+	return page, ok
+}
+
+func lexiconPageCounts(jarName, entry string, data []byte) (page textPage, help, labels int, ok bool) {
 	var b strings.Builder
 	stem := strings.TrimSuffix(jarName, ".jar")
 	title := stem
@@ -161,20 +172,25 @@ func lexiconPage(jarName, entry string, data []byte) (page textPage, ok bool) {
 		title += " " + lex
 	}
 	fmt.Fprintf(&b, "TITLE: %s\nMODULE: %s\nLEXICON: %s\n\n", title, stem, entry)
-	n := 0
 	for _, e := range parseLexicon(data) {
-		if isLexiconHelp(e) {
-			if n > 0 {
-				b.WriteString("\f")
-			}
-			fmt.Fprintf(&b, "%s = %s\n", e.key, e.value)
-			n++
+		if e.value == "" {
+			continue
 		}
+		if help+labels > 0 {
+			b.WriteString("\f")
+		}
+		if isLexiconHelp(e) {
+			help++
+		} else {
+			b.WriteString(labelMarker)
+			labels++
+		}
+		fmt.Fprintf(&b, "%s = %s\n", e.key, e.value)
 	}
-	if n == 0 {
-		return textPage{}, false
+	if help+labels == 0 {
+		return textPage{}, 0, 0, false
 	}
-	return textPage{stem + "/" + entry + ".txt", b.String()}, true
+	return textPage{stem + "/" + entry + ".txt", b.String()}, help, labels, true
 }
 
 // lexiconJars are the jars of modules/, sorted by name.
@@ -192,12 +208,15 @@ func lexiconJars(installDir string) ([]string, error) {
 	return out, nil
 }
 
-// lexiconPagesOf reads one jar's lexicon pages and the number of lexicon
-// files it holds.
-func lexiconPagesOf(jar string, rules *Rules) (pages []textPage, files int, err error) {
+// lexiconCounts are the lexicon files of a build and the rows they gave.
+type lexiconCounts struct{ files, help, labels int }
+
+// lexiconPagesOf reads one jar's lexicon pages and adds its lexicon files
+// and rows to n.
+func lexiconPagesOf(jar string, rules *Rules, n *lexiconCounts) (pages []textPage, err error) {
 	z, err := zipfile.Open(jar)
 	if err != nil {
-		return nil, 0, fmt.Errorf("%s: %w", jar, err)
+		return nil, fmt.Errorf("%s: %w", jar, err)
 	}
 	defer z.Close()
 	name := pyBasename(jar)
@@ -208,14 +227,16 @@ func lexiconPagesOf(jar string, rules *Rules) (pages []textPage, files int, err 
 		}
 		data, err := z.ReadEntry(x, true)
 		if err != nil {
-			return nil, files, fmt.Errorf("%s: %s: %w", jar, x.Name, err)
+			return nil, fmt.Errorf("%s: %s: %w", jar, x.Name, err)
 		}
-		files++
-		if p, ok := lexiconPage(name, x.Name, data); ok {
+		n.files++
+		if p, help, labels, ok := lexiconPageCounts(name, x.Name, data); ok {
 			pages = append(pages, p)
+			n.help += help
+			n.labels += labels
 		}
 	}
-	return pages, files, nil
+	return pages, nil
 }
 
 // buildLexiconText is the lexicon_extractor step of rebuild-all. The
@@ -245,15 +266,15 @@ func buildLexiconText(baseDir string) (*textResult, error) {
 		return res, err
 	}
 	var pages []textPage
-	files, withText := 0, 0
+	var n lexiconCounts
 	for _, jar := range jars {
-		p, n, err := lexiconPagesOf(jar, rules)
+		jarN := lexiconCounts{}
+		p, err := lexiconPagesOf(jar, rules, &jarN)
 		if err != nil {
 			res.Warnings = append(res.Warnings, "WARNING: "+lexiconScript+": "+err.Error())
 			continue
 		}
-		files += n
-		withText += len(p)
+		n.files, n.help, n.labels = n.files+jarN.files, n.help+jarN.help, n.labels+jarN.labels
 		pages = append(pages, p...)
 	}
 	sort.Slice(pages, func(i, j int) bool { return pages[i].rel < pages[j].rel })
@@ -261,8 +282,8 @@ func buildLexiconText(baseDir string) (*textResult, error) {
 		return res, err
 	}
 	res.Files = len(pages)
-	res.Log = append(res.Log, fmt.Sprintf("%s/: %d lexicon files with help text of %d (from %s/modules, %d jars)",
-		lexiconTextDir, withText, files, install, len(jars)))
+	res.Log = append(res.Log, fmt.Sprintf("%s/: %d lexicon files with entries of %d, %d help and %d label rows (from %s/modules, %d jars)",
+		lexiconTextDir, len(pages), n.files, n.help, n.labels, install, len(jars)))
 	return res, nil
 }
 
@@ -282,10 +303,10 @@ func (s *sweeper) closeLexiconJar() {
 
 // lexicon is the sweep verdict of a lexicon entry of an installed module
 // jar (isLexiconEntry): indexed when its lexicon-text/ page is in the
-// full-text index, excluded when it holds UI labels only (no page by
-// design), UNCLASSIFIED otherwise. The sweep reads the entry itself (the
-// listing cache has no contents), with lexiconPage's rule of what counts
-// as help text.
+// full-text index, excluded when it holds no entry with a value (no page
+// by design), UNCLASSIFIED otherwise. The sweep reads the entry itself
+// (the listing cache has no contents), with lexiconPage's rule of what
+// makes a page.
 func (s *sweeper) lexicon(jar string, e Entry) (verdict, error) {
 	if s.lexJar == nil || s.lexJar.path != jar {
 		s.closeLexiconJar()
@@ -307,8 +328,7 @@ func (s *sweeper) lexicon(jar string, e Entry) (verdict, error) {
 		}
 		page, ok := lexiconPage(pyBasename(jar), e.Name, data)
 		if !ok {
-			return verdict{statusExcluded, "translation lexicon with UI labels only (no description, help, " +
-				"tool-tip or sentence to index)", "lexicon-labels"}, nil
+			return verdict{statusExcluded, "lexicon without a key = value entry (nothing to index)", "lexicon-empty"}, nil
 		}
 		key := lexiconTextDir + "/" + page.rel
 		docs, err := s.indexed.fulltextDocs()

@@ -116,9 +116,19 @@ func (e *Env) Source(p SourceParams) error {
 	fmt.Fprintf(e.Out, "PACKAGE: %s\n", pyStr(get(data, "package", nil)))
 	fmt.Fprintf(e.Out, "LINES: %s\n", pyStr(get(data, "lines", nil)))
 	fmt.Fprintf(e.Out, "PATH: %s\n", corpusPath(data))
+	matches := sourceMatches(idx, strings.SplitN(name, " (", 2)[0])
+	mixed := anyFromModuleJar(matches)
+	if mixed {
+		fmt.Fprintf(e.Out, "ORIGIN: %s\n", sourceOrigin(data))
+	}
 	var others []string
-	for _, m := range sourceMatches(idx, strings.SplitN(name, " (", 2)[0]) {
-		if m.key != name {
+	for _, m := range matches {
+		if m.key == name {
+			continue
+		}
+		if mixed {
+			others = append(others, m.key+" ["+sourceOrigin(m.data)+"]")
+		} else {
 			others = append(others, m.key)
 		}
 	}
@@ -154,8 +164,12 @@ func (e *Env) printSourceGlob(idx *index.Object, pattern string) error {
 	fmt.Fprintf(e.Out, "%d source files matching '%s':\n\n", len(matches), pattern)
 	for _, n := range pyHead(matches, 20) {
 		d := idx.Object(n)
-		fmt.Fprintf(e.Out, "  %s (%s, %s lines) - %s\n", n, pyStr(get(d, "module", nil)),
-			pyStr(get(d, "lines", nil)), pyStr(get(d, "package", nil)))
+		jar := ""
+		if fromModuleJar(d) {
+			jar = ", " + sourceOrigin(d)
+		}
+		fmt.Fprintf(e.Out, "  %s (%s, %s lines%s) - %s\n", n, pyStr(get(d, "module", nil)),
+			pyStr(get(d, "lines", nil)), jar, pyStr(get(d, "package", nil)))
 	}
 	if len(matches) > 20 {
 		fmt.Fprintf(e.Out, "  ... and %d more\n", len(matches)-20)

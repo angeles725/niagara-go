@@ -22,6 +22,8 @@ import (
 //	modules/<name>-doc.jar         doc/<p> | <p>      -> guides/<name>/<p>
 //	modules/<module>.jar           doc/<p>, or <p> named by an install_docs.json
 //	                               extract rule       -> guides/<module>/<p>
+//	                               <p>.java (vendor source, see moduleSource)
+//	                                                  -> source/<jar stem>/<p>
 //
 // META-INF/ entries and directory entries are never extracted. Every
 // function taking *Rules needs non-nil rules (Python's None default is
@@ -42,8 +44,8 @@ func isDocJar(name string) bool {
 		(strings.HasPrefix(name, "doc") && strings.HasSuffix(name, ".jar") && !strings.Contains(name, "-"))
 }
 
-// isModuleJar: neither a doc jar nor the javadoc jar; only its doc/ pages
-// and extract-rule entries are documentation.
+// isModuleJar: neither a doc jar nor the javadoc jar; only its doc/ pages,
+// extract-rule entries and vendor Java source are documentation.
 func isModuleJar(name string) bool { return !isDocJar(name) && name != javadocJar }
 
 // dropRunes is s[:-n] in code points (Python slicing; "" when shorter).
@@ -72,7 +74,8 @@ func guideFolder(name string) string {
 }
 
 // moduleDest is _module_dest: the guides/ path of a module-jar entry in
-// its top-level doc/ folder or named by an extract rule.
+// its top-level doc/ folder or named by an extract rule, else the source/
+// path of vendor Java source (moduleSource).
 func moduleDest(jarName, entry string, rules *Rules) (string, bool) {
 	if strings.HasSuffix(entry, "/") || strings.HasPrefix(entry, "META-INF/") {
 		return "", false
@@ -83,11 +86,25 @@ func moduleDest(jarName, entry string, rules *Rules) (string, bool) {
 	if rules.ExtractRule(jarName, entry) != nil {
 		return "guides/" + guideFolder(jarName) + "/" + entry, true
 	}
+	if moduleSource(jarName, entry, rules) {
+		return "source/" + jarStem(jarName) + "/" + entry, true
+	}
 	return "", false
 }
 
+// moduleSource: a .java entry of a module jar is vendor source (OEM
+// modules ship theirs: clHVACHeating-rt.jar, honPlantControllerHMI-rt.jar
+// in 4.14; devkit-wb.jar's templates in 4.3), indexed like docSource under
+// source/<jar stem>/, unless an exclude rule names it. The package prefix
+// decides what is third-party: the third-party-java rule (org/, net/, io/,
+// edu/, javax/ but javax/baja/, com/sun/ ...) keeps out bundled libraries
+// such as test-wb.jar's org/mockito/ sources.
+func moduleSource(jarName, entry string, rules *Rules) bool {
+	return strings.HasSuffix(entry, ".java") && rules.ExcludeRule(jarName, entry) == nil
+}
+
 // isHelpEntry: a module-jar entry that makes it a help jar (any entry
-// moduleDest maps, stylesheets aside).
+// moduleDest maps, its Java source included, stylesheets aside).
 func isHelpEntry(jarName, entry string, rules *Rules) bool {
 	if strings.HasSuffix(textfold.Lower(entry), ".css") {
 		return false
@@ -152,7 +169,8 @@ func sortedNames(dir string) ([]string, error) {
 }
 
 // helpJars lists the module jars under modules/ that carry documentation
-// (help_jars): a top-level doc/ page or an extract-rule entry. Every
+// (help_jars): a top-level doc/ page, an extract-rule entry or vendor Java
+// source. Every
 // module jar is listed (through ls, nil = in memory); an unreadable jar
 // has no entries.
 func helpJars(installDir string, ls *Listings, rules *Rules) ([]string, error) {

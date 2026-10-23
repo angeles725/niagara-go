@@ -273,6 +273,12 @@ func extractStep(res *SetupResult, repo, root, dataRootRel, install string, ls *
 		}
 		res.out("  COLLISION %s (%s overwritten by %s)", c.Rel, c.Owner, c.By)
 	}
+	for i, c := range ext.SourceKept {
+		if i == 20 {
+			break
+		}
+		res.out("  KEPT %s (%s kept, the source in %s not written)", c.Rel, c.Owner, c.By)
+	}
 	if opt.Rebuild == nil {
 		return false, nil
 	}

@@ -28,6 +28,7 @@ SUMMARY 1.0.0.0
     devguide-examples        1  developer example sources
     docs-text                0  PDF manuals  (none: no docs/ PDFs here and no registered version has any)
     course-text              0  developer course pages
+    lexicon-text             1
   gates (full reports: versions/1.0.0.0/gates.log):
     coverage --doc-jars  exit 1  FAIL - 6 unexplained entries
     coverage --sweep     exit 1  FAIL - 9 unclassified entries
@@ -35,9 +36,9 @@ RESULT: NOT READY - see the gate reports above
 
 # exit 1
 # tree
-@@ 0,0 0,334
+@@ 0,0 0,337
 + fulltext.sqlite:
-+ [meta fingerprint engine=3|devguide-clean=<dir>/repo/versions/1.0.0.0/devguide-clean:3:135:<mtime>:<sha1>|guides-clean=<dir>/repo/versions/1.0.0.0/guides-clean:19:1068:<mtime>:<sha1>|source=<dir>/repo/versions/1.0.0.0/source:1:24:<mtime>:<sha1>|devguide-rc=<dir>/repo/versions/1.0.0.0/devguide-rc:2:26:<mtime>:<sha1>|devguide-examples=<dir>/repo/versions/1.0.0.0/devguide-examples:1:9:<mtime>:<sha1>   ]
++ [meta fingerprint engine=3|devguide-clean=<dir>/repo/versions/1.0.0.0/devguide-clean:3:135:<mtime>:<sha1>|guides-clean=<dir>/repo/versions/1.0.0.0/guides-clean:19:1068:<mtime>:<sha1>|source=<dir>/repo/versions/1.0.0.0/source:1:24:<mtime>:<sha1>|devguide-rc=<dir>/repo/versions/1.0.0.0/devguide-rc:2:26:<mtime>:<sha1>|devguide-examples=<dir>/repo/versions/1.0.0.0/devguide-examples:1:9:<mtime>:<sha1>|lexicon-text=<dir>/repo/versions/1.0.0.0/lexicon-text:1:95:<mtime>:<sha1>   ]
 + [docs 1 devguide-clean changes37.txt changes37.txt 4 0]
 + [docs 2 devguide-clean index.txt T 4 0]
 + [docs 3 devguide-clean o.txt T 4 0]
@@ -64,6 +65,7 @@ RESULT: NOT READY - see the gate reports above
 + [docs 24 devguide-rc com/x/A.java A 1 0]
 + [docs 25 devguide-rc com/x/BVal.java BVal 1 0]
 + [docs 26 devguide-examples examples/bajaux/ZorbWidget.js ZorbWidget 1 0]
++ [docs 27 lexicon-text docDeveloper-rt/docDeveloper-rt.lexicon.txt docDeveloper-rt 5 0]
 + build.log:
 + REBUILD-ALL 
 + ============================================================
@@ -105,7 +107,7 @@ RESULT: NOT READY - see the gate reports above
 +   RUN   package_text_builder       -> package-text/
 + package-text/: 0 package descriptions (from 0 package-index.bajadoc files)
 +   RUN   lexicon_extractor          -> lexicon-text/
-+ lexicon-text/: 0 lexicon files with help text of 1 (from <dir>/install/modules, 15 jars)
++ lexicon-text/: 1 lexicon files with entries of 1, 0 help and 1 label rows (from <dir>/install/modules, 15 jars)
 + 
 + Ran 14, skipped 2, failed 0.
 + Manifest re-stamped. Run 'freshness' to confirm FRESH.
@@ -212,8 +214,8 @@ RESULT: NOT READY - see the gate reports above
 + |   documentation-like: .html .htm .xhtml .md .markdown .txt .text .pdf .rtf .doc .docx .odt .rst .adoc .bajadoc .lexicon + toc.xml
 + |   location                       jars with-docs  doc-like  indexed excluded UNCLASSIFIED
 + |   javadoc/                          1         1         3        0        1            2
-+ |   modules/                         15        13        40       25        9            7
-+ |   TOTAL                            16        14        43       25       10            9
++ |   modules/                         15        13        40       26        8            7
++ |   TOTAL                            16        14        43       26        9            9
 + | 
 + | EXCLUDED (rule: reason):
 + |         2  doc_types: licence text
@@ -222,7 +224,6 @@ RESULT: NOT READY - see the gate reports above
 + |         1  doc_types: source browser navigation page (every .java is indexed)
 + |         1  doc_types: third-party source archive (licence source offer, not documentation; not extracted)
 + |         1  doc_types: translation lexicon (UI strings, not documentation)
-+ |         1  lexicon-labels: translation lexicon with UI labels only (no description, help, tool-tip or sentence to index)
 + |         1  node-modules: bundled npm package (READMEs, changelogs and test pages of third-party JavaScript libraries)
 + | 
 + | PDF MANUALS: none (no registered version has docs-text/)
@@ -339,6 +340,9 @@ RESULT: NOT READY - see the gate reports above
 + jdk/jdk-se/java d--------- 755
 + jdk/jdk-se/java/util d--------- 755
 + jdk/jdk-se/java/util/HashMap.bajadoc ---------- 644 4 2a31f44da4bd7decbbd3ddfd1a37ae04d02ec665e2c2688816ccc65631586ed1
++ lexicon-text d--------- 755
++ lexicon-text/docDeveloper-rt d--------- 755
++ lexicon-text/docDeveloper-rt/docDeveloper-rt.lexicon.txt ---------- 644 95 f6d818a8c6e11e32c8ab212fade02f646e15beecdb558f8df5ff33ecb60b51d4
 + source d--------- 755
 + source/baja-rt d--------- 755
 + source/baja-rt/javax d--------- 755
@@ -370,7 +374,7 @@ RESULT: NOT READY - see the gate reports above
 +     "docs": null
 +   }
 + }
-@@ 1,1 335,352
+@@ 1,1 338,355
 + .cache d--------- 755
 + .cache/jar-listings d--------- 755
 + .cache/jar-listings/<install hash>.json ---------- 644 <size> <sha256>
@@ -502,6 +506,7 @@ SUMMARY 1.0.0.0
     devguide-examples        1  developer example sources
     docs-text                0  PDF manuals  (none: no docs/ PDFs here and no registered version has any)
     course-text              0  developer course pages
+    lexicon-text             1
   gates (full reports: versions/1.0.0.0/gates.log):
     coverage --doc-jars  exit 1  FAIL - 6 unexplained entries
     coverage --sweep     exit 1  FAIL - 9 unclassified entries
@@ -509,13 +514,13 @@ RESULT: NOT READY - see the gate reports above
 
 # exit 1
 # tree
-@@ 172,173 172,173
+@@ 173,174 173,174
 - | INSTALL SWEEP 1.0.0.0 (16 jars under <dir>/install; 10 listed anew, the rest from the jar-listing cache)
 + | INSTALL SWEEP 1.0.0.0 (16 jars under <dir>/install; 0 listed anew, the rest from the jar-listing cache)
 @@ 290,291 290,291
 - indexes/guides-index.json ---------- 644 1157 6004758efb57e1bc870c3a083112194ddf70e6e721d832a443037320a59daacc
 + indexes/guides-index.json ---------- 644 1236 155614e109f7600dd3ba1d6a6f76698d20fef8baab9d11664d70c1782bd24e43
-@@ 339,340 339,340
+@@ 342,343 342,343
 - versions/1.0.0.0.manifest.json ---------- 644 {
  "version": "1.0.0.0",
  "label": "install",
@@ -674,7 +679,7 @@ RESULT: NOT READY - see the gate reports above
   }
  ]
 }
-@@ 345,346 345,346
+@@ 348,349 348,349
 - |       "label": "install",
 + |       "label": "Synthetic \u00f1",
 ## <dir>/install/. --id 1.0.0.0

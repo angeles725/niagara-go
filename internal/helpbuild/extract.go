@@ -37,6 +37,9 @@ type ExtractStats struct {
 	Files      int
 	Bytes      uint64 // sum of the central-directory file sizes
 	Collisions []Collision
+	// SourceKept are module-jar Java sources not written because a doc
+	// jar (docSource) already wrote that path: Owner's file is kept.
+	SourceKept []Collision
 }
 
 // FidelityReport is doc_jars.fidelity's result: entries checked, sha256
@@ -147,11 +150,12 @@ func hasDriveLetter(rel string) bool {
 // extract writes every mapped entry of every doc jar of installDir under
 // root (doc_jars.extract): parent folders 0777 and files 0666 less the
 // umask, an existing file overwritten; a path two jars map to is written
-// by each in turn and recorded as a collision. ls (nil = in memory)
-// supplies the module-jar listings for helpJars.
+// by each in turn and recorded as a collision, except a module jar's Java
+// source, which never replaces a doc jar's file (SourceKept). ls (nil = in
+// memory) supplies the module-jar listings for helpJars.
 func extract(installDir, root string, ls *Listings) (*ExtractStats, error) {
-	st := &ExtractStats{Collisions: []Collision{}}
-	owners := map[string]string{}
+	st := &ExtractStats{Collisions: []Collision{}, SourceKept: []Collision{}}
+	owners := newSourceOwners()
 	err := eachDocJar(installDir, ls, func(jar string) error {
 		m, err := openMapped(jar)
 		if err != nil {
@@ -159,10 +163,14 @@ func extract(installDir, root string, ls *Listings) (*ExtractStats, error) {
 		}
 		skip := func(c Collision) { st.Collisions = append(st.Collisions, c) }
 		return m.each(skip, func(x *zipfile.Info, rel string) error {
-			if prev, ok := owners[rel]; ok {
+			prev, take := owners.take(m.name, rel)
+			if !take {
+				st.SourceKept = append(st.SourceKept, Collision{rel, prev, m.name})
+				return nil
+			}
+			if prev != "" {
 				st.Collisions = append(st.Collisions, Collision{rel, prev, m.name})
 			}
-			owners[rel] = m.name
 			out, err := outPath(root, rel)
 			if err != nil {
 				return err
@@ -175,6 +183,9 @@ func extract(installDir, root string, ls *Listings) (*ExtractStats, error) {
 			return nil
 		})
 	})
+	if err == nil {
+		err = owners.write(root)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -212,15 +223,20 @@ func writeEntry(z *zipfile.File, x *zipfile.Info, out string) error {
 // fillMissing writes only the mapped entries whose destination is absent
 // (doc_jars.fill_missing): an existing path, even a dangling symlink, is
 // never touched; each file is written atomically (atomicfile.WriteBytes, 0644).
+// A module jar's Java source a doc jar also maps is left to the doc jar.
 // It returns the corpus paths written, in jar order.
 func fillMissing(installDir, root string, ls *Listings) ([]string, error) {
 	written := []string{}
+	owners := newSourceOwners()
 	err := eachDocJar(installDir, ls, func(jar string) error {
 		m, err := openMapped(jar)
 		if err != nil {
 			return err
 		}
 		return m.each(nil, func(x *zipfile.Info, rel string) error {
+			if _, take := owners.take(m.name, rel); !take {
+				return nil
+			}
 			out, err := outPath(root, rel)
 			if err != nil {
 				return err
@@ -239,6 +255,9 @@ func fillMissing(installDir, root string, ls *Listings) ([]string, error) {
 			return nil
 		})
 	})
+	if err == nil {
+		err = owners.write(root)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -246,14 +265,18 @@ func fillMissing(installDir, root string, ls *Listings) ([]string, error) {
 }
 
 // fidelityJar compares one jar's mapped entries with the files under root
-// (doc_jars.fidelity_jar), adding to rep.
-func fidelityJar(jarPath, root string, rep *FidelityReport) error {
+// (doc_jars.fidelity_jar), adding to rep; a module-jar source left to a
+// doc jar (owners) is not this jar's file and is not checked.
+func fidelityJar(jarPath, root string, rep *FidelityReport, owners *sourceOwners) error {
 	m, err := openMapped(jarPath)
 	if err != nil {
 		return err
 	}
 	skip := func(c Collision) { rep.Collisions = append(rep.Collisions, c) }
 	return m.each(skip, func(x *zipfile.Info, rel string) error {
+		if _, take := owners.take(m.name, rel); !take {
+			return nil
+		}
 		rep.Checked++
 		path := pycompat.Join(root, rel)
 		if !pycompat.IsFile(path) {
@@ -288,8 +311,9 @@ func eolLF(b []byte) []byte { return bytes.ReplaceAll(b, []byte("\r\n"), []byte(
 // installDir with root (doc_jars.fidelity).
 func fidelity(installDir, root string, ls *Listings) (*FidelityReport, error) {
 	rep := newReport()
+	owners := newSourceOwners()
 	err := eachDocJar(installDir, ls, func(jar string) error {
-		if err := fidelityJar(jar, root, rep); err != nil {
+		if err := fidelityJar(jar, root, rep, owners); err != nil {
 			return err
 		}
 		rep.Jars++

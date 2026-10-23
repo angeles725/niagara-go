@@ -105,6 +105,7 @@ type corpusStats struct {
 	text                            map[string]textSource
 	props, actions, topics, methods int
 	edges, lines, dgItems, packages int
+	fromJars                        int    // source-index records extracted from module jars
 	abs, vid                        string // the absolute data root, its version ("" unregistered)
 }
 
@@ -154,6 +155,12 @@ func (e *Env) corpusStats() (*corpusStats, error) {
 		n, _ := index.Int(get(o.Object(k), "lines", nil))
 		return int(n)
 	})
+	s.fromJars = sum("source-index", func(o *index.Object, k string) int { // vendor source of module jars
+		if fromModuleJar(o.Object(k)) {
+			return 1
+		}
+		return 0
+	})
 	for _, sec := range objList(s.idx["devguide-toc"], "sections") {
 		s.dgItems += listLen(sec, "items")
 	}
@@ -197,7 +204,7 @@ func (e *Env) statsJSON(s *corpusStats) {
 			{"inheritance", s.n("inheritance")},
 			{"pdf-index", s.n("pdf-index")},
 			{"method-index", pyjson.Obj{{"names", s.n("method-index")}, {"entries", s.methods}}},
-			{"source-index", pyjson.Obj{{"classes", s.n("source-index")}, {"lines", s.lines}}},
+			{"source-index", sourceStatsJSON(s)},
 			{"xref-index", pyjson.Obj{{"classes", s.n("xref-index")}, {"edges", s.edges}}},
 			{"slots-index", pyjson.Obj{{"classes", s.n("slots-index")}, {"properties", s.props},
 				{"actions", s.actions}, {"topics", s.topics}}},
@@ -230,7 +237,11 @@ func (e *Env) statsText(s *corpusStats) {
 	fmt.Fprintf(out, "  inheritance.json       %s entries\n", w(s.n("inheritance")))
 	fmt.Fprintf(out, "  pdf-index.json         %s PDFs\n", w(s.n("pdf-index")))
 	fmt.Fprintf(out, "  method-index.json      %s names (%s entries)\n", w(s.n("method-index")), pycompat.Commas(s.methods))
-	fmt.Fprintf(out, "  source-index.json      %s classes (%s lines)\n", w(s.n("source-index")), pycompat.Commas(s.lines))
+	jars := ""
+	if s.fromJars > 0 {
+		jars = fmt.Sprintf(", %s from module jars", pycompat.Commas(s.fromJars))
+	}
+	fmt.Fprintf(out, "  source-index.json      %s classes (%s lines%s)\n", w(s.n("source-index")), pycompat.Commas(s.lines), jars)
 	fmt.Fprintf(out, "  xref-index.json        %s classes (%s edges)\n", w(s.n("xref-index")), pycompat.Commas(s.edges))
 	fmt.Fprintf(out, "  slots-index.json       %s classes (%s props, %d actions, %d topics)\n",
 		w(s.n("slots-index")), pycompat.Commas(s.props), s.actions, s.topics)
@@ -253,4 +264,15 @@ func (e *Env) statsText(s *corpusStats) {
 	// The command table (order lists every registered command, in --help order),
 	// not a fixed number: retired commands and the REPL exit 2 and are not counted.
 	fmt.Fprintf(out, "\nINDEXES: %d\nCLI: %d commands\n", indexCount, len(order))
+}
+
+// sourceStatsJSON is the source-index record of stats --json; module_jar_classes
+// (the records extracted from module jars) only when there are some, so a
+// docSource-only corpus reports what it always did.
+func sourceStatsJSON(s *corpusStats) pyjson.Obj {
+	o := pyjson.Obj{{"classes", s.n("source-index")}, {"lines", s.lines}}
+	if s.fromJars > 0 {
+		o = append(o, pyjson.KV{"module_jar_classes", s.fromJars})
+	}
+	return o
 }

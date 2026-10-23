@@ -1056,7 +1056,7 @@ all when the version has nothing to write.
 |---|---|---|---|
 | `package_text_builder` (`packagetext.go`) | `package-text/<package>.txt`: `TITLE`, `PACKAGE`, `MODULE` header, then the `<description>` of the package as text (`htmltext.HTMLToText` of its escaped HTML); one page per package, a description repeated by another module or by the `guides/` copy written once | every `package-index.bajadoc` under `devguide/` and `guides/` | `doc_types` kind `bajadoc-package` (it was the `bajadoc-listing` exclusion): indexed when the page is in the full-text index; a listing with an empty description counts as indexed (its classes are indexed one by one, as the old reason said). `jdk/` listings and `module-index.bajadoc` stay excluded. |
 
-| `lexicon_extractor` (`lexicon.go`) | `lexicon-text/<jar stem>/<entry>.txt`: `TITLE`, `MODULE`, `LEXICON` header, then one `key = value` line per help entry, entries separated by form feeds | every `*.lexicon` entry of the registered install's `modules/*.jar` (translation jars included) that the doc-jar extraction does not copy; an install that is not mounted keeps the last copy | `.lexicon` is in `doc_like`, so `coverage --sweep` sees every lexicon: indexed when its page is in the full-text index, excluded (`lexicon-labels`) when it holds UI labels only, UNCLASSIFIED otherwise. A lexicon of a jar outside `modules/` (`bin/ext/niagarad.jar`, `sw/` copies) is excluded by the `lexicon-outside-modules` rule; extracted lexicons (doc jars, `doc/`) keep the `doc_types` translation-lexicon exclusion. |
+| `lexicon_extractor` (`lexicon.go`) | `lexicon-text/<jar stem>/<entry>.txt`: `TITLE`, `MODULE`, `LEXICON` header, then one `key = value` line per entry with a value, in file order, a UI display label marked `[label] key = value`, entries separated by form feeds | every `*.lexicon` entry of the registered install's `modules/*.jar` (translation jars included) that the doc-jar extraction does not copy; an install that is not mounted keeps the last copy | `.lexicon` is in `doc_like`, so `coverage --sweep` sees every lexicon: indexed when its page is in the full-text index, excluded (`lexicon-empty`) when it holds no entry with a value, UNCLASSIFIED otherwise. A lexicon of a jar outside `modules/` (`bin/ext/niagarad.jar`, `sw/` copies) is excluded by the `lexicon-outside-modules` rule; extracted lexicons (doc jars, `doc/`) keep the `doc_types` translation-lexicon exclusion. |
 
 `nh package <name>` prints the description block above the class list, with the page path.
 
@@ -1066,10 +1066,63 @@ entry is scored on its own words, and the results still list one hit per lexicon
 best entry plus decayed further ones), so the 9k (4.15) to 22k (4.14) help entries never
 flood a result list. A whole file as one document ranked below every guide (BM25 favours
 short documents): with that and the code factor 0.5, 4 to 7 of 15 sampled descriptions
-stayed out of `find`'s ten results; paged at factor 1.0, all 15 are found. A file keeps the entries whose
-last key segment is `description`, `desc`, `help`, `tooltip` or `summary` (any letter case)
-and any value of five words or more (messages, prompts, warnings); plain labels ("Station
-Name") are left out.
+stayed out of `find`'s ten results; paged at factor 1.0, all 15 are found. A file keeps every entry with a value. Help rows (the
+last key segment is `description`, `desc`, `help`, `tooltip` or `summary`, any letter case, or
+the value has five words or more: messages, prompts, warnings) are written as `key = value`;
+every other row is a UI display label, written `[label] key = value`, so a label lookup
+(`nh find "Boolean Latch"`) reaches the module that names it (kitControl's `BooleanLatch`
+row) and a hit shows whether it matched help text or a label. Each label row is its own
+page, so a file of hundreds of labels still scores one hit (its best rows plus decayed
+further ones). The marker adds the word `label` to every label row: a query with the
+word `label` also matches label rows, and that word weighs less in BM25.
+
+## Vendor Java source in module jars
+
+Go-only (the Python extractor read only `docSource-doc.jar`). OEM module jars ship their
+own Java source next to the classes: 4.14.0.162 (Honeywell OptimizerSupervisor) carries
+about 850 `.java` files in 13 jars (`honPlantControllerHMI-rt.jar` 335,
+`clHVACHeating-rt.jar` 171, ...), 4.3 carries `devkit-wb.jar`'s module templates and
+`template-rt.jar`. `moduleDest` maps every `.java` entry of a module jar (outside `doc/`,
+`META-INF/` and the extract rules) to `source/<jar stem>/<entry>`, the layout docSource
+uses, so the source, slots and xref indexes read it with no second parser.
+
+- **Third-party source** is decided by package prefix: an entry an exclude rule of
+  `install_docs.json` names is not mapped. The `third-party-java` rule (`org/`, `net/`,
+  `io/`, `edu/`, `mozilla/`, `jakarta/`, `bsh/`, `com/sun/`, `com/teamdev/`, `javax/` but
+  `javax/baja/`) keeps out 4.3 `test-wb.jar`'s 327 `org/mockito/` files.
+- **docSource wins**: a module-jar source whose path a doc jar already maps is not written
+  (`extract` lists it as `KEPT`), not checked by `fidelity` and not recorded.
+- **Provenance**: `source/module-jar-sources.json` maps each module-jar source (path under
+  `source/`) to its jar. `extract` and `--fill-missing` write it from the jars' mapping (not
+  from what they wrote), so a second fill records the same files. The builders walk only the
+  folders of `source/`, so the file is never read as a module.
+- **Indexes**: the source and slots builders index every docSource file first and the
+  module-jar files after, so a class in both keeps its plain key for docSource and the
+  module-jar copy gets the `Name (module)` alternate key a second same-name class already
+  got. A module-jar record of `source-index.json` carries `"origin": "module-jar <jar>"`;
+  a docSource record has no `origin`, so a docSource-only corpus indexes as before. A
+  malformed `module-jar-sources.json` fails the build instead of labelling the files
+  docSource.
+- **nh**: where a module-jar record is involved, `nh source <Name>` prints `ORIGIN:`
+  (`module-jar <jar>` or `docSource`) and tags each `ALSO:` alternate with its origin, and a
+  glob listing names the jar. `nh class <Name>` for a class with no javadoc (no
+  `class-index.json` entry) shows its source record and origin instead of a miss; a class
+  shown from its javadoc lists the module-jar sources of the same name (`ALSO: Java
+  source ...`). A docSource-only corpus prints what it always did.
+- A jar with Java source is a help jar (`helpJars`), so `coverage --doc-jars` lists its
+  entries: the `.java` ones are indexed through `source-index.json`, the rest is module
+  content.
+
+`TestOEMSourceDryProbe` lists, read-only, what extraction would take per module jar
+(`.java`, taken, left to docSource, excluded): `NH_OEM_SOURCE_PROBE=<install> go test
+./internal/helpbuild -run TestOEMSourceDryProbe -v`. On 2026-10-23: 4.14.0.162 13 jars, 848
+taken; 4.3.58.18 `devkit-wb.jar` 52 and `template-rt.jar` 15 taken, `test-wb.jar` 327
+excluded (`org/mockito/`); 4.15.6.20 and 4.13.2.18 none. `devkit-wb.jar`'s files are the
+module wizard's templates (`package $(package);`), indexed with an empty package.
+
+A data root gets the files from `nh versions extract <id> --force` or, on a repo-root data
+root such as 4.14's, `nh versions extract <id> --fill-missing`; `nh rebuild-all` then indexes
+them.
 
 ## Real data
 

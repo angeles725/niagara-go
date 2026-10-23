@@ -49,8 +49,9 @@ func TestMissHintsAreLiveCommands(t *testing.T) {
 }
 
 // TestSourceScopesClaimOnlyTheIndex: a source, xref or module miss says what
-// nh's source index holds, never what the vendor shipped: some rt jars do
-// carry .java files (4.14 clHVACHeating-rt.jar), they are just not indexed.
+// nh's source index holds, never what the vendor shipped: the index holds
+// docSource-doc.jar and the vendor .java of module jars (4.14
+// clHVACHeating-rt.jar), not third-party packages such as org/mockito.
 func TestSourceScopesClaimOnlyTheIndex(t *testing.T) {
 	for _, name := range []string{"source", "xref", "modules"} {
 		lines, err := scope.Miss(t.TempDir(), "source", "BZzz", name, nil)
@@ -59,7 +60,8 @@ func TestSourceScopesClaimOnlyTheIndex(t *testing.T) {
 		}
 		excluded := lines[2]
 		if strings.Contains(excluded, "shipped") || !strings.Contains(excluded, "not in nh's source index") ||
-			!strings.Contains(excluded, "only docSource-doc.jar source is indexed") {
+			!strings.Contains(excluded, "docSource-doc.jar and the vendor .java of module jars are indexed, "+
+				"third-party packages excluded") {
 			t.Errorf("scope %s: %q", name, excluded)
 		}
 	}
