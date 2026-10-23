@@ -86,6 +86,8 @@ func Read(name string, data []byte) (*File, error) {
 		return readJSON(data)
 	case ".csv":
 		return readCSV(data)
+	case ".bog":
+		return readNiagara(data)
 	}
 	return nil, errors.New("not a tag dictionary file (.json, .csv or .bog)")
 }
