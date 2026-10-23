@@ -8,7 +8,7 @@
     void doGet(WebOp c)
   [methods] javax.baja.velocity.BVelocityView
     void doGet(WebOp op)
-  [methods] javax.baja.collection.AbstractCursor&lt;E&gt;
+  [methods] javax.baja.collection.AbstractCursor<E>
     protected abstract E doGet()
   [methods] javax.baja.history.HistoryCursor
     protected BHistoryRecord doGet()

@@ -12,8 +12,8 @@ RECALL 4.14.0.162 (ground truth from raw sources, parsed in <T>)
   class --jdk            3,936     3,936        0  
   method                42,383    42,383        0  
   slots                  8,805     8,805        0  
-  source                 2,605     2,605        0  
-  xref                   2,605     2,605        0  the file's own entry (package), not only used_by
+  source                 3,453     3,453        0  
+  xref                   3,453     3,453        0  the file's own entry (package), not only used_by
   guide-search           9,053     9,053        0  
   guide                  9,053     9,053        0  topic = page path in guides-index.json
   devguide-search          482       482        0  

@@ -2,5 +2,5 @@
  "exit": 0,
  "reason": "freshness --all also checks the full-text text sources and the JSON indexes against the stamp time, and appends the retired index files left on disk (call-index.json, decision I3-5) to the version status (NH1 honesty fixes)",
  "stderr": "",
- "stdout": "FRESHNESS PER NIAGARA VERSION (default 4.15.6.20)\n============================================================\n  4.13.2.18    versions/4.13.2.18   FRESH; retired index left: call-index.json; install jars match\n  4.14.0.162   .                    FRESH; install jars match\n  4.15.6.20    versions/4.15.6.20   FRESH; retired index left: call-index.json; install jars match\n  4.3.58.18    versions/4.3.58.18   FRESH; retired index left: call-index.json; install jars match\n"
+ "stdout": "FRESHNESS PER NIAGARA VERSION (default 4.15.6.20)\n============================================================\n  4.13.2.18    versions/4.13.2.18   FRESH; install jars match\n  4.14.0.162   .                    FRESH; install jars match\n  4.15.6.20    versions/4.15.6.20   FRESH; install jars match\n  4.3.58.18    versions/4.3.58.18   FRESH; install jars match\n"
 }
