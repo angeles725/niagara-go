@@ -1,4 +1,4 @@
 No match for 'nope.BZzz' (class) in this scope.
   searched: Niagara 4.14.0.162 (<TESTDATA>) -- class-index.json: 16 names / 17 classes
   excluded from this scope: JDK API (opt-in: --jdk); images, fonts/css, JavaHelp .dat search indexes, bajadoc.index, raw js next to rendered jsdoc, META-INF, licence texts (see coverage --doc-jars)
-  not proof of absence; try: find 'nope.BZzz', fuzzy 'nope.BZzz', class --jdk 'nope.BZzz', source-grep 'nope.BZzz'
+  not proof of absence; try: find 'nope.BZzz', class --jdk 'nope.BZzz', source-grep 'nope.BZzz'
