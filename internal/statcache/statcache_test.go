@@ -6,6 +6,8 @@ import (
 	"runtime"
 	"testing"
 	"time"
+
+	"github.com/angeles725/niagara-go/internal/statcache/stattest"
 )
 
 // demoKey and demoFile are a typical caller's cache: a format version plus the
@@ -87,8 +89,8 @@ func TestCacheFlow(t *testing.T) {
 			}
 		}, 1, false},
 		{"rewritten with the same size and mtime", func(t *testing.T, dir string, _ *[]string, _ string) {
-			writeFile(t, filepath.Join(dir, "a"), "zz", base) // stat-keyed: the bytes are not compared
-		}, 1, true},
+			stattest.EditKeepingStamp(t, filepath.Join(dir, "a"), []byte("zz")) // the ctime still changes
+		}, 1, runtime.GOOS != "linux"}, // off Linux a Stamp is size and mtime only
 		{"files reordered", func(_ *testing.T, _ string, paths *[]string, _ string) {
 			(*paths)[0], (*paths)[1] = (*paths)[1], (*paths)[0]
 		}, 1, false},
@@ -178,7 +180,7 @@ func TestFilesMarksMissingAndKeepsOrderInParallel(t *testing.T) {
 		}
 	}
 	for i := range 9 {
-		if want := (Stamp{int64(i), int64(1000+i) * 1e9}); seq[i] != want {
+		if want := (Stamp{Size: int64(i), MtimeNs: int64(1000+i) * 1e9}); seq[i].Size != want.Size || seq[i].MtimeNs != want.MtimeNs {
 			t.Fatalf("stamp %d = %v, want %v", i, seq[i], want)
 		}
 	}
@@ -198,7 +200,7 @@ func TestRegularAndSame(t *testing.T) {
 		t.Fatal("a file under minSize is not cacheable")
 	}
 	s, ok := Regular(p, 5)
-	if !ok || s != (Stamp{5, 5000e9}) {
+	if !ok || s.Size != 5 || s.MtimeNs != 5000e9 {
 		t.Fatalf("Regular = %v, %v", s, ok)
 	}
 	if !Same(p, s) {
@@ -364,7 +366,7 @@ func TestStatFollowsLinksAndMarksMissing(t *testing.T) {
 	dir := t.TempDir()
 	p := filepath.Join(dir, "f")
 	writeFile(t, p, "abc", time.Unix(3000, 7))
-	if s := Stat(p); s != (Stamp{3, 3000e9 + 7}) || !s.Exists() {
+	if s := Stat(p); s.Size != 3 || s.MtimeNs != 3000e9+7 || !s.Exists() {
 		t.Fatalf("Stat = %v", s)
 	}
 	st, _ := os.Stat(p)
@@ -410,4 +412,34 @@ func TestSwitchAndNamesEdges(t *testing.T) {
 			t.Errorf("IsTestName(%q) = %v, want %v", exe, !want, want)
 		}
 	}
+}
+
+// TestStampSeesAnEditThatKeepsSizeAndMtime: cp -p, rsync -a, tar x and touch -r
+// leave size and mtime as they were; the ctime (and, for a replaced file, the
+// inode) still tell the stamps apart where the system reports them.
+func TestStampSeesAnEditThatKeepsSizeAndMtime(t *testing.T) {
+	if runtime.GOOS != "linux" {
+		t.Skip("ctime and inode are read on Linux only (Sys)")
+	}
+	p := filepath.Join(t.TempDir(), "f")
+	if err := os.WriteFile(p, []byte("one"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	before := Stat(p)
+	stattest.EditKeepingStamp(t, p, []byte("two"))
+	if after := Stat(p); after == before || Same(p, before) {
+		t.Fatalf("stamp %+v unchanged by an edit keeping size and mtime", after)
+	}
+	if !Of(mustStat(t, p)).Exists() || Missing.Exists() {
+		t.Fatal("Exists")
+	}
+}
+
+func mustStat(t *testing.T, p string) os.FileInfo {
+	t.Helper()
+	st, err := os.Stat(p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return st
 }

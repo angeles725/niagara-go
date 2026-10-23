@@ -13,7 +13,7 @@ import (
 //
 //	cacheFormat (bump it when state or the term rules change),
 //	the ranker parameters,
-//	size and mtime (ns) of class-index.json and of xref-index.json.
+//	the statcache.Stamp (size, mtime, ctime, inode) of class-index.json and of xref-index.json.
 //
 // A cache whose key differs, that cannot be read or is malformed is ignored:
 // the ranker is built and the cache rewritten atomically by statcache.WriteGob
@@ -27,17 +27,16 @@ import (
 const (
 	cacheDir    = ".mnav-cache"
 	cacheName   = "class-rank.gob"
-	cacheFormat = 1
+	cacheFormat = 2 // 2: the key is the whole statcache.Stamp (ctime and inode too)
 )
 
 // cacheMinBytes is the class index size from which the ranker is cached.
 var cacheMinBytes int64 = 1 << 20
 
-// fileStat is (size, mtime_ns) of one index; Present false when it is absent.
+// fileStat is the statcache.Stamp of one index; Present false when it is absent.
 type fileStat struct {
 	Present bool
-	Size    int64
-	MtimeNs int64
+	statcache.Stamp
 }
 
 type cacheKey struct {
@@ -57,7 +56,7 @@ func statOf(path string) fileStat {
 	if !s.Exists() {
 		return fileStat{}
 	}
-	return fileStat{true, s.Size, s.MtimeNs}
+	return fileStat{true, s}
 }
 
 func keyOf(src Source) cacheKey {

@@ -13,8 +13,8 @@ import (
 // the call-graph cache (lib/callgraph/cache.go) and with its rules: parsing
 // the 34 MB class-index.json costs about 0.4 s on every class, hierarchy and
 // callers run. The cache keeps the decoded tree under the index's
-// symlink-resolved path, size and mtime (ns): an index whose path, size or
-// mtime differs, or a cache that cannot be read or is malformed, is ignored
+// symlink-resolved path and statcache.Stamp (size, mtime, ctime, inode): an
+// index whose path or stamp differs, or a cache that cannot be read or is malformed, is ignored
 // (the JSON is decoded and the cache rewritten atomically by WriteGob). A
 // cache that cannot be written is skipped silently, so the output never
 // depends on it. Load prints the same stderr on a hit and on a miss.
@@ -30,7 +30,7 @@ import (
 
 const (
 	classCacheName   = "class-index.gob"
-	classCacheFormat = 1
+	classCacheFormat = 2 // 2: the key is the whole statcache.Stamp (ctime and inode too)
 )
 
 // classCacheMinBytes is the index size from which the class index is cached.
@@ -51,9 +51,9 @@ const (
 )
 
 type classCacheKey struct {
-	Format        int
-	Path          string // the index path, absolute with symlinks resolved
-	Size, MtimeNs int64
+	Format int
+	Path   string // the index path, absolute with symlinks resolved
+	statcache.Stamp
 }
 
 type classCacheFile struct {
@@ -75,7 +75,7 @@ func classCacheKeyOf(path string) (classCacheKey, bool) {
 	if !ok {
 		return classCacheKey{}, false
 	}
-	return classCacheKey{Format: classCacheFormat, Path: ResolvedPath(path), Size: s.Size, MtimeNs: s.MtimeNs}, true
+	return classCacheKey{Format: classCacheFormat, Path: ResolvedPath(path), Stamp: s}, true
 }
 
 // loadClassIndex is LoadJSON for the class index at path, through the cache.

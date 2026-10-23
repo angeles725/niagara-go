@@ -19,18 +19,27 @@ import (
 	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
-// Stamp is the size and modification time (Unix ns) of a file: what most
-// caches key on.
-type Stamp struct{ Size, MtimeNs int64 }
+// Stamp is the size, modification time (Unix ns), status-change time (Unix ns)
+// and inode of a file: what the caches key on. Size and mtime alone miss an edit
+// that keeps both (cp -p, rsync -a, tar x, touch -r); the ctime changes with any
+// write or metadata change and cannot be set back, and a replaced file has
+// another inode. CtimeNs and Ino are 0 where Sys reports nothing (off Linux).
+type Stamp struct {
+	Size, MtimeNs, CtimeNs int64
+	Ino                    uint64
+}
 
 // Missing is the Stamp of a path that cannot be stat'ed.
-var Missing = Stamp{-1, -1}
+var Missing = Stamp{Size: -1, MtimeNs: -1, CtimeNs: -1}
 
 // Exists reports whether s is the stamp of a file that could be stat'ed.
 func (s Stamp) Exists() bool { return s != Missing }
 
 // Of is the Stamp of fi.
-func Of(fi fs.FileInfo) Stamp { return Stamp{fi.Size(), fi.ModTime().UnixNano()} }
+func Of(fi fs.FileInfo) Stamp {
+	ctime, ino, _, _ := Sys(fi)
+	return Stamp{fi.Size(), fi.ModTime().UnixNano(), ctime, ino}
+}
 
 // Stat is the Stamp of path (os.Stat: a link is its target), Missing when it
 // cannot be stat'ed.

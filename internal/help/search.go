@@ -76,7 +76,17 @@ func (e *Env) Search(p SearchParams) error {
 			rows = append(rows, fmt.Sprintf("  %s (%s) - %s\n", name, c.Type, c.Package))
 		}
 	}
-	fmt.Fprintf(e.Out, "%d classes matching '%s':\n\n%s", len(matches), fts.Echo(p.Pattern), strings.Join(rows, ""))
+	// The header counts the rows printed: a name held by several packages is one
+	// row per class, and then the name count follows.
+	count := fmt.Sprintf("%d classes", len(rows))
+	if len(rows) != len(matches) {
+		names := "names"
+		if len(matches) == 1 {
+			names = "name"
+		}
+		count += fmt.Sprintf(" (%d %s)", len(matches), names)
+	}
+	fmt.Fprintf(e.Out, "%s matching '%s':\n\n%s", count, fts.Echo(p.Pattern), strings.Join(rows, ""))
 	return nil
 }
 

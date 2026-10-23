@@ -13,6 +13,7 @@ import (
 	"github.com/angeles725/niagara-go/internal/atomicfile"
 	"github.com/angeles725/niagara-go/internal/index"
 	"github.com/angeles725/niagara-go/internal/nav/core"
+	"github.com/angeles725/niagara-go/internal/statcache"
 )
 
 // Equivalence with the code before internal/statcache: the legacy* functions
@@ -24,7 +25,8 @@ func legacyStatOf(path string) fileStat {
 	if err != nil {
 		return fileStat{}
 	}
-	return fileStat{true, st.Size(), st.ModTime().UnixNano()}
+	// The key is the one change since: the whole statcache.Stamp, ctime and inode too.
+	return fileStat{true, statcache.Of(st)}
 }
 
 func legacyReadCache(path string, key cacheKey) *Ranker {

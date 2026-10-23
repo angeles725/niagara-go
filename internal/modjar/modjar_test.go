@@ -7,9 +7,12 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"slices"
 	"testing"
 	"time"
+
+	"github.com/angeles725/niagara-go/internal/statcache/stattest"
 )
 
 const member = "META-INF/module.xml"
@@ -274,5 +277,37 @@ func TestDefaultDirFollowsXDG(t *testing.T) {
 		if got := defaultDir(false); got != "" {
 			t.Errorf("%s=%q: defaultDir = %q, want no cache", envCache, off, got)
 		}
+	}
+}
+
+// TestCacheMissesAnEditThatKeepsSizeAndMtime: a jar rewritten with the same size and
+// modification time (cp -p, rsync -a, tar x, touch -r) is read again, never answered
+// from the cache.
+func TestCacheMissesAnEditThatKeepsSizeAndMtime(t *testing.T) {
+	if runtime.GOOS != "linux" {
+		t.Skip("ctime and inode are read on Linux only (statcache.Sys)")
+	}
+	dir, cacheDir := t.TempDir(), t.TempDir()
+	a, b := filepath.Join(dir, "a.jar"), filepath.Join(dir, "b.jar")
+	writeJar(t, a, entry{member, "A1"})
+	writeJar(t, b, entry{member, "A2"}) // same size, other content
+	read := func() string {
+		c := OpenCache(cacheDir, member)
+		res := c.ReadAll([]string{a}, 1)
+		if err := c.Save(); err != nil {
+			t.Fatal(err)
+		}
+		return string(res[0].Data)
+	}
+	if got := read(); got != "A1" {
+		t.Fatalf("cold read %q", got)
+	}
+	edited, err := os.ReadFile(b)
+	if err != nil {
+		t.Fatal(err)
+	}
+	stattest.EditKeepingStamp(t, a, edited)
+	if got := read(); got != "A2" {
+		t.Errorf("stale cache after an edit keeping size and mtime: %q, want A2", got)
 	}
 }

@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -16,6 +17,7 @@ import (
 	"github.com/angeles725/niagara-go/internal/atomicfile"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/statcache"
+	"github.com/angeles725/niagara-go/internal/statcache/stattest"
 )
 
 // Equivalence with the code before internal/statcache (PR #179): the legacy*
@@ -101,33 +103,44 @@ func TestDefaultDirMatchesLegacy(t *testing.T) {
 }
 
 // TestSameMatchesLegacy: the check that keeps an answer read while the jar
-// changed out of the cache decides as before (cache.go: statcache.Same).
+// changed out of the cache decides as before (cache.go: statcache.Same),
+// except for a jar rewritten or replaced with its size and mtime kept: the
+// legacy check took it for the same file, statcache.Same does not where the
+// system reports ctime and inode (Linux), and off Linux both still do.
 func TestSameMatchesLegacy(t *testing.T) {
 	base := time.Unix(1_700_000_000, 500)
+	keptStamp := runtime.GOOS != "linux" // statcache.Sys reports ctime and inode on Linux only
 	cases := []struct {
-		name   string
-		change func(t *testing.T, p string)
-		same   bool
+		name         string
+		change       func(t *testing.T, p string)
+		same, legacy bool
 	}{
-		{"unchanged", func(*testing.T, string) {}, true},
-		{"same size, mtime +1ns", func(t *testing.T, p string) { touch(t, p, base.Add(time.Nanosecond)) }, false},
+		{"unchanged", func(*testing.T, string) {}, true, true},
+		{"same size, mtime +1ns", func(t *testing.T, p string) { touch(t, p, base.Add(time.Nanosecond)) }, false, false},
 		{"resized, same mtime", func(t *testing.T, p string) {
 			if err := os.WriteFile(p, []byte("longer jar"), 0o644); err != nil {
 				t.Fatal(err)
 			}
 			touch(t, p, base)
-		}, false},
-		{"rewritten identically", func(t *testing.T, p string) {
-			if err := os.WriteFile(p, []byte("jar"), 0o644); err != nil {
+		}, false, false},
+		{"rewritten in place, same size and mtime (cp -p, touch -r)", func(t *testing.T, p string) {
+			stattest.EditKeepingStamp(t, p, []byte("JAR"))
+		}, keptStamp, true},
+		{"replaced, same size and mtime (rsync -a, tar x)", func(t *testing.T, p string) {
+			tmp := p + ".tmp" // created while p exists: another inode
+			if err := os.WriteFile(tmp, []byte("JAR"), 0o644); err != nil {
 				t.Fatal(err)
 			}
-			touch(t, p, base)
-		}, true},
+			touch(t, tmp, base)
+			if err := os.Rename(tmp, p); err != nil {
+				t.Fatal(err)
+			}
+		}, keptStamp, true},
 		{"removed", func(t *testing.T, p string) {
 			if err := os.Remove(p); err != nil {
 				t.Fatal(err)
 			}
-		}, false},
+		}, false, false},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -141,9 +154,9 @@ func TestSameMatchesLegacy(t *testing.T) {
 				t.Fatal(err)
 			}
 			tc.change(t, p)
-			got, want := statcache.Same(p, statcache.Of(st)), legacySame(p, st)
-			if got != want || got != tc.same {
-				t.Fatalf("Same = %v, legacy %v; want %v", got, want, tc.same)
+			got, legacy := statcache.Same(p, statcache.Of(st)), legacySame(p, st)
+			if got != tc.same || legacy != tc.legacy {
+				t.Fatalf("Same = %v, legacy %v; want %v, legacy %v", got, legacy, tc.same, tc.legacy)
 			}
 		})
 	}
@@ -157,7 +170,7 @@ func touch(t *testing.T, p string, mt time.Time) {
 }
 
 func TestOpenCacheMatchesLegacy(t *testing.T) {
-	entries := map[string]cacheEntry{"/j/a.jar": {3, 4, []byte("x"), []string{"META-INF/A.RSA"}, false}}
+	entries := map[string]cacheEntry{"/j/a.jar": {statcache.Stamp{Size: 3, MtimeNs: 4}, []byte("x"), []string{"META-INF/A.RSA"}, false}}
 	files := map[string]any{
 		"valid":          cacheFile{cacheFormat, member, entries},
 		"other format":   cacheFile{cacheFormat + 1, member, entries},

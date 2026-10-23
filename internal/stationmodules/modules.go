@@ -7,6 +7,13 @@
 // a module jar that cannot be read for any reason is skipped (Python crashes on a corrupt
 // deflate stream or an encrypted member); a failed --fix copy prints
 // "station-modules: <error>" and exits 1 where Python prints a traceback and exits 1.
+//
+// Corrections of Python's answers: a station type that no installed part provides while
+// the module's rt part is installed is reported under "TYPES NOT IN THE INSTALLED
+// VERSION" (JSON "unprovided_types", present only then), one line per type, not as that
+// rt part missing (Python then planned copying the installed jar's staged twin over it);
+// and a missing part whose modules/ jar is byte-identical to the staged one gets action
+// "identical" and no cp.
 package stationmodules
 
 import (
@@ -154,7 +161,7 @@ func check(o options, w io.Writer) (int, error) {
 		return 0, err
 	}
 	_, refs := stationRefs(text)
-	missing := newMissing()
+	missing, unprovided := newMissing(), newMissing()
 	var rows []moduleRow
 	seed := map[string]bool{}
 	var seedOrder []string
@@ -172,6 +179,10 @@ func check(o options, w io.Writer) (int, error) {
 					seed[prov] = true
 					seedOrder = append(seedOrder, prov)
 				}
+			} else if rt := in.parts.byName[module+"-rt"]; rt != nil {
+				// The part is there: reporting it missing would plan copying the same jar
+				// over itself. The station was saved with another version of the module.
+				unprovided.setDefault(module+":"+tn, versionMismatch(rt))
 			} else {
 				missing.setDefault(module+"-rt", fmt.Sprintf("provides %s:%s (used by station)", module, tn))
 			}
@@ -204,6 +215,9 @@ func check(o options, w io.Writer) (int, error) {
 		out.Set("modules", mods)
 		out.Set("missing", missing.json())
 		out.Set("fixes", fixes.json())
+		if len(unprovided.order) > 0 { // absent otherwise, as in the Python-frozen output
+			out.Set("unprovided_types", unprovided.json())
+		}
 		fmt.Fprintln(w, pyjson.Dumps(out, pyjson.Indent2))
 	} else {
 		fmt.Fprintf(w, "install : %s\nstation : %s\nmodules referenced: %d\n", in.root, o.target, len(rows))
@@ -222,9 +236,18 @@ func check(o options, w io.Writer) (int, error) {
 			}
 			fmt.Fprintf(w, "  %-18s parts:[%s]%s\n", r.module, tag, tsug)
 		}
-		printMissing(w, missing, fixes)
+		printMissing(w, missing, fixes, unprovided)
 	}
-	return exitFor(missing), nil
+	return exitFor(missing, unprovided), nil
+}
+
+// versionMismatch is the reason a type the installed part rt does not provide is reported.
+func versionMismatch(rt *part) string {
+	ver := "(version unknown)"
+	if rt.version != "" {
+		ver = "v" + rt.version
+	}
+	return fmt.Sprintf("installed %s %s does not provide it; the station needs a different %s version", rt.name, ver, rt.module)
 }
 
 func setOfKeys[V any](m map[string]V) map[string]bool {
@@ -297,13 +320,14 @@ func doctor(o options, w io.Writer) (int, error) {
 		fmt.Fprintln(w, pyjson.Dumps(out, pyjson.Indent2))
 	} else {
 		fmt.Fprintf(w, "install : %s\ninstalled module-parts: %d\n", in.root, len(in.parts.order))
-		printMissing(w, missing, fixes)
+		printMissing(w, missing, fixes, nil)
 	}
-	return exitFor(missing), nil
+	return exitFor(missing, nil), nil
 }
 
-func exitFor(m *missingSet) int {
-	if len(m.order) > 0 {
+// exitFor is 1 when a part is missing or a station type is not in the installed version.
+func exitFor(m, unprovided *missingSet) int {
+	if len(m.order) > 0 || (unprovided != nil && len(unprovided.order) > 0) {
 		return 1
 	}
 	return 0

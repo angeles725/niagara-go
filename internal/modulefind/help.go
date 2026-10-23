@@ -30,4 +30,5 @@ const description = "module-find: read-only finder for a Niagara N4 module's Jav
 	"Read-only. Prints rows; --json/--csv for machine output, --limit N (-n) caps the rows.\n" +
 	"Exit: 0 found · 1 slots/actions/ords/grep/callers/extends --of matched nothing, or writers\n" +
 	"found no static and no dynamic writer (the miss line names the root and its .java count) ·\n" +
-	"2 usage · 3 unreadable root or srcB / no .java. Prunes dot-dirs. stdlib only.\n"
+	"2 usage · 3 unreadable root or srcB / no readable .java, or some .java unreadable (output partial,\n" +
+	"named on stderr). Prunes dot-dirs. stdlib only.\n"

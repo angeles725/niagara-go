@@ -12,7 +12,7 @@ import (
 // The loaded-graph cache, indexes/.mnav-cache/callgraph.gob: decoding the
 // 30 MB callgraph-index.json costs about a second on every callers/callees
 // run. The cache keeps the Graph under the index's symlink-resolved path,
-// size and mtime (ns): an index whose path, size or mtime differs, or a
+// statcache.Stamp (size, mtime, ctime, inode): an index whose path or stamp differs, or a
 // cache that cannot be read or is malformed, is ignored (the JSON is decoded
 // and the cache rewritten atomically: a temporary file in the same
 // directory, then rename; mode 0600). A cache that cannot be written is
@@ -27,16 +27,16 @@ import (
 const (
 	cacheDir    = ".mnav-cache"
 	cacheName   = "callgraph.gob"
-	cacheFormat = 1
+	cacheFormat = 2 // 2: the key is the whole statcache.Stamp (ctime and inode too)
 )
 
 // cacheMinBytes is the index size from which the graph is cached.
 var cacheMinBytes int64 = 1 << 20
 
 type cacheKey struct {
-	Format        int
-	Path          string // the index path, absolute with symlinks resolved
-	Size, MtimeNs int64
+	Format int
+	Path   string // the index path, absolute with symlinks resolved
+	statcache.Stamp
 }
 
 type cacheFile struct {
@@ -67,7 +67,7 @@ func NewCache(indexPath, cachePath string) *Cache {
 		return &Cache{}
 	}
 	return &Cache{path: cachePath,
-		key: cacheKey{Format: cacheFormat, Path: core.ResolvedPath(indexPath), Size: s.Size, MtimeNs: s.MtimeNs}}
+		key: cacheKey{Format: cacheFormat, Path: core.ResolvedPath(indexPath), Stamp: s}}
 }
 
 // Load is the cached Graph of the index, else nil.
