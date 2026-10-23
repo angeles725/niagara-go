@@ -2,7 +2,7 @@ Niagara Help Navigator - Corpus Statistics
 =======================================================
 Niagara version: 4.14.0.162  (<TESTDATA>)
 
-INDEXES (10):
+INDEXES (11):
 
   class-index.json           29 classes (7 packages)
   devguide-toc.json           7 guides
@@ -14,6 +14,7 @@ INDEXES (10):
   xref-index.json            41 classes (47 edges)
   slots-index.json            6 classes (13 props, 4 actions, 3 topics)
   module-index.json      absent (rebuild-all builds it from the install's modules/)
+  palette-index.json     absent (rebuild-all builds it from the install's modules/)
 
 TEXT SOURCES (10 sources of the full-text index, 0.0 MB total):
 
@@ -34,5 +35,5 @@ RAW HTML:
   devguide/                1 HTML
   guides/                  1 HTML
 
-INDEXES: 10
+INDEXES: 11
 CLI: 22 commands
