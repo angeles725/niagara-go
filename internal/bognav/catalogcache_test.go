@@ -7,10 +7,12 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/angeles725/niagara-go/internal/statcache/stattest"
 )
 
 // The parsed type catalog is cached per decompiler dir under $XDG_CACHE_HOME/niagara-go/bog-nav,
-// keyed by the size, mtime and set of the dir's .java files.
+// keyed by the set of the dir's .java files and their statcache.Stamp.
 
 const writableRel = "control/control-rt/vineflower/javax/baja/control/BBooleanWritable.java"
 
@@ -179,5 +181,33 @@ func TestCatalogCacheOff(t *testing.T) {
 	}
 	if files := cacheFiles(t, cache); len(files) != 0 {
 		t.Fatalf("NIAGARA_CACHE_DIR=off still wrote %v", files)
+	}
+}
+
+// TestCatalogCacheMissesAnEditThatKeepsSizeAndMtime: a source rewritten with the same
+// size and modification time (cp -p, rsync -a, tar x, touch -r) changes its
+// statcache.Stamp (ctime, inode), so it is parsed again, never answered from the cache.
+func TestCatalogCacheMissesAnEditThatKeepsSizeAndMtime(t *testing.T) {
+	if runtime.GOOS != "linux" {
+		t.Skip("ctime and inode are read on Linux only (statcache.Sys)")
+	}
+	cacheEnv(t)
+	root := miniRoot(t)
+	path := filepath.Join(root, writableRel)
+	orig, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	old := "fallback = newProperty(0, new BStatusBoolean(false, BStatus.nullStatus), null)"
+	if !strings.Contains(string(orig), old) {
+		t.Fatal("fixture changed: fallback declaration not found")
+	}
+	if _, d := fallbackDefault(t, root); !strings.Contains(d, "false") {
+		t.Fatalf("fallback default %q", d)
+	}
+	edit := strings.Replace(string(orig), old, strings.Replace(old, "false", "FALSE", 1), 1)
+	stattest.EditKeepingStamp(t, path, []byte(edit))
+	if _, d := fallbackDefault(t, root); !strings.Contains(d, "FALSE") {
+		t.Fatalf("after an edit keeping size and mtime fallback default = %q, want the new FALSE", d)
 	}
 }

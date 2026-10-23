@@ -10,11 +10,14 @@ import (
 	"testing"
 
 	"github.com/angeles725/niagara-go/internal/atomicfile"
+	"github.com/angeles725/niagara-go/internal/statcache"
 	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
 // Equivalence with the code before internal/statcache (PR #179): the legacy*
-// functions are that code verbatim, and every case must decide as it did.
+// functions are that code verbatim, and every case must decide as it did. The
+// legacy key builds the current key shape: the whole statcache.Stamp per file
+// (format 2), Missing when the file cannot be stat'ed.
 
 func legacyCatalogCacheDir() string {
 	if textfold.Lower(os.Getenv("NIAGARA_CACHE_DIR")) == "off" {
@@ -34,9 +37,9 @@ func legacyCatalogCacheDir() string {
 func legacyCatalogKeyOf(src string, paths []string) catalogKey {
 	k := catalogKey{Format: catalogCacheFormat, Dir: src, Files: make([]catalogFile, len(paths))}
 	for i, p := range paths {
-		f := catalogFile{Path: p, Size: -1, MtimeNs: -1}
+		f := catalogFile{Path: p, Stamp: statcache.Missing}
 		if st, err := os.Stat(p); err == nil {
-			f.Size, f.MtimeNs = st.Size(), st.ModTime().UnixNano()
+			f.Stamp = statcache.Of(st)
 		}
 		k.Files[i] = f
 	}
@@ -113,8 +116,8 @@ func TestCatalogKeyMatchesLegacy(t *testing.T) {
 	if !reflect.DeepEqual(got, want) || !got.equal(want) {
 		t.Fatalf("key %+v\nlegacy %+v", got, want)
 	}
-	if f := got.Files[len(paths)-2]; f.Size != -1 || f.MtimeNs != -1 {
-		t.Fatalf("missing file stamp %+v, want -1, -1", f)
+	if f := got.Files[len(paths)-2]; f.Stamp != statcache.Missing {
+		t.Fatalf("missing file stamp %+v, want statcache.Missing", f)
 	}
 }
 
