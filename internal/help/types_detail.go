@@ -61,6 +61,10 @@ func (e *Env) typeDetail(mods *index.Object, h typeHit, asJSON bool) error {
 		return err
 	}
 	on, self := agentsOn(mods, h.spec()), agentOf(h)
+	pals, err := e.typePalettes(h.spec())
+	if err != nil {
+		return err
+	}
 	if asJSON {
 		agents := []any{}
 		for _, a := range on {
@@ -73,7 +77,8 @@ func (e *Env) typeDetail(mods *index.Object, h typeHit, asJSON bool) error {
 		}
 		fmt.Fprintln(e.Out, pyjson.DumpsAny(pyjson.Obj{{"type", h.spec()}, {"module", h.module},
 			{"jar", getStr(h.rec, "jar", "")}, {"class", h.class()}, {"class_index", javadoc != ""},
-			{"source_index", source != ""}, {"agents_on_type", agents}, {"agent_on", selfs}}, pyjson.Indent2))
+			{"source_index", source != ""}, {"agents_on_type", agents}, {"agent_on", selfs},
+			{"palettes", paletteJSON(pals)}}, pyjson.Indent2))
 		return nil
 	}
 	out := e.Out
@@ -89,6 +94,17 @@ func (e *Env) typeDetail(mods *index.Object, h typeHit, asJSON bool) error {
 	} else {
 		fmt.Fprintln(out, "SOURCE: not in source-index.json")
 	}
+	if len(pals) > 0 {
+		var where []string
+		for _, p := range pals {
+			w := p.where()
+			if p.via != "" {
+				w += " (holds it)"
+			}
+			where = append(where, w)
+		}
+		fmt.Fprintf(out, "PALETTES: %s  (nh palette %s)\n", strings.Join(where, "; "), h.spec())
+	}
 	fmt.Fprintf(out, "\nAGENTS ON THIS TYPE (%d):\n", len(on))
 	for _, a := range on {
 		fmt.Fprintf(out, "  %s  %s  (%s)\n", typeSpec(a.rec, getStr(a.typ, "type", "")), getStr(a.typ, "class", ""), a.module)
@@ -103,4 +119,14 @@ func (e *Env) typeDetail(mods *index.Object, h typeHit, asJSON bool) error {
 		}
 	}
 	return nil
+}
+
+// paletteJSON is the "palettes" list of type --json.
+func paletteJSON(pals []paletteHit) []any {
+	out := []any{}
+	for _, p := range pals {
+		out = append(out, pyjson.Obj{{"module", getStr(p.pal, "module", "")}, {"palette", getStr(p.pal, "path", "")},
+			{"path", strings.Join(p.path, "/")}, {"holds", p.via != ""}})
+	}
+	return out
 }

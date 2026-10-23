@@ -1178,7 +1178,10 @@ templates the jar ships (each group and request, `(commented out)` for the shipp
 Velocity directives); `--schemas` lists the schemas (kind, root, targetNamespace, element
 count); the summary names both counts when the jar ships any. `nh type <module:Type|Type> [--json]` prints the registering module and jar,
 the class, whether `class-index.json` and `source-index.json` hold that class, the agents
-every module registers on the type and, for a view, the types it is an agent on. A `find`
+every module registers on the type and, for a view, the types it is an agent on; with
+`palette-index.json` built, a type that sits in a palette also prints `PALETTES:` (module,
+palette file and path of each entry of that type, then the entries that hold it) and
+`--json` carries a `palettes` list. A `find`
 miss on a module-looking or type-looking query names these two commands. `stats` counts the
 index (optional: built from the install), `freshness` compares its recorded jar count and
 bytes with the registered install's `modules/`, and `selftest` checks that

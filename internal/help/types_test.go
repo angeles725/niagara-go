@@ -93,3 +93,40 @@ func TestTypeJSON(t *testing.T) {
 		}
 	}
 }
+
+// TestTypeNamesItsPalettes: with palette-index.json beside the module index,
+// a type that sits in a palette names where (and the entries holding it); a
+// type in no palette prints no PALETTES line; --json lists them.
+func TestTypeNamesItsPalettes(t *testing.T) {
+	data, err := os.ReadFile(filepath.Join("testdata", "indexes", "palette-index.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	root := moduleRoot(t)
+	write(t, filepath.Join(root, "indexes", "palette-index.json"), string(data))
+	run := func(p TypeParams) string {
+		var out bytes.Buffer
+		if err := (&Env{BaseDir: root, Out: &out}).Type(p); err != nil {
+			t.Fatal(err)
+		}
+		return out.String()
+	}
+	want := "SOURCE: not in source-index.json\nPALETTES: kitControl-rt module.palette Logic/Latches/BooleanLatch; " +
+		"kitControl-rt module.palette Logic/LatchBank (holds it)  (nh palette kitControl:BooleanLatch)\n"
+	if got := run(TypeParams{Name: "kitControl:BooleanLatch"}); !strings.Contains(got, want) {
+		t.Errorf("lacks %q:\n%s", want, got)
+	}
+	if got := run(TypeParams{Name: "LatchView"}); strings.Contains(got, "PALETTES") {
+		t.Errorf("a type in no palette:\n%s", got)
+	}
+	want = `  "palettes": [
+    {
+      "module": "kitControl-rt",
+      "palette": "module.palette",
+      "path": "Logic/Latches/BooleanLatch",
+      "holds": false
+    },`
+	if got := run(TypeParams{Name: "kitControl:BooleanLatch", JSON: true}); !strings.Contains(got, want) {
+		t.Errorf("json lacks %q:\n%s", want, got)
+	}
+}

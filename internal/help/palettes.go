@@ -7,6 +7,7 @@ package help
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/fnmatch"
@@ -164,4 +165,31 @@ func (e *Env) Palette(p PaletteParams) error {
 		fmt.Fprintln(e.Out, line)
 	}
 	return nil
+}
+
+// typePalettes are the palette nodes of spec ("part:Type") for `type`: the
+// entries of that type, then those holding it (an absent palette-index.json
+// holds none).
+func (e *Env) typePalettes(spec string) ([]paletteHit, error) {
+	idx, err := e.loadIndex(paletteIndexName, false)
+	if err != nil {
+		return nil, err
+	}
+	var own, holding []paletteHit
+	for _, n := range paletteNodes(objList(idx, "palettes")) {
+		if n.folder() {
+			continue
+		}
+		if getStr(n.node, "type", "") == spec {
+			own = append(own, paletteHit{n, ""})
+		} else if slices.Contains(strList(n.node, "contains"), spec) {
+			holding = append(holding, paletteHit{n, spec})
+		}
+	}
+	return append(own, holding...), nil
+}
+
+// where is "module palette path" of a hit.
+func (h paletteHit) where() string {
+	return getStr(h.pal, "module", "") + " " + getStr(h.pal, "path", "") + " " + strings.Join(h.path, "/")
 }
