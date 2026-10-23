@@ -1096,12 +1096,13 @@ uses, so the source, slots and xref indexes read it with no second parser.
   `source/`) to its jar. `extract` and `--fill-missing` write it from the jars' mapping (not
   from what they wrote), so a second fill records the same files. The builders walk only the
   folders of `source/`, so the file is never read as a module.
-- **Indexes**: the source and slots builders index every docSource file first and the module-jar
-  files after, so a class in both keeps its plain key for docSource and the module-jar copy
-  gets the `Name (module)` alternate key a second same-name class already got. A module-jar
-  record of `source-index.json` carries `"origin": "module-jar <jar>"`; a docSource record
-  has no `origin`, so a docSource-only corpus indexes as before. A malformed
-  `module-jar-sources.json` fails the build instead of labelling the files docSource.
+- **Indexes**: the source and slots builders index every docSource file first and the
+  module-jar files after, so a class in both keeps its plain key for docSource and the
+  module-jar copy gets the `Name (module)` alternate key a second same-name class already
+  got. A module-jar record of `source-index.json` carries `"origin": "module-jar <jar>"`;
+  a docSource record has no `origin`, so a docSource-only corpus indexes as before. A
+  malformed `module-jar-sources.json` fails the build instead of labelling the files
+  docSource.
 - **nh**: where a module-jar record is involved, `nh source <Name>` prints `ORIGIN:`
   (`module-jar <jar>` or `docSource`) and tags each `ALSO:` alternate with its origin, and a
   glob listing names the jar. `nh class <Name>` for a class with no javadoc (no
@@ -1111,6 +1112,13 @@ uses, so the source, slots and xref indexes read it with no second parser.
 - A jar with Java source is a help jar (`helpJars`), so `coverage --doc-jars` lists its
   entries: the `.java` ones are indexed through `source-index.json`, the rest is module
   content.
+
+`TestOEMSourceDryProbe` lists, read-only, what extraction would take per module jar
+(`.java`, taken, left to docSource, excluded): `NH_OEM_SOURCE_PROBE=<install> go test
+./internal/helpbuild -run TestOEMSourceDryProbe -v`. On 2026-10-23: 4.14.0.162 13 jars, 848
+taken; 4.3.58.18 `devkit-wb.jar` 52 and `template-rt.jar` 15 taken, `test-wb.jar` 327
+excluded (`org/mockito/`); 4.15.6.20 and 4.13.2.18 none. `devkit-wb.jar`'s files are the
+module wizard's templates (`package $(package);`), indexed with an empty package.
 
 A data root gets the files from `nh versions extract <id> --force` or, on a repo-root data
 root such as 4.14's, `nh versions extract <id> --fill-missing`; `nh rebuild-all` then indexes
