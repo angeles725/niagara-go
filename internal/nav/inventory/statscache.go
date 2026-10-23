@@ -11,23 +11,23 @@ import (
 // The stats summary cache, indexes/.mnav-cache/stats.gob: Python's stats reads
 // every JSON index whole (about 300 MB, 7 to 30 s) to print a few _meta
 // counters. The port keeps, per index file of statsCacheMinBytes or more, what
-// stats needs from it (summary) under the file's size and mtime (ns); a file
-// whose size or mtime changed is read again. A cache that cannot be read is
+// stats needs from it (summary) under the file's statcache.Stamp (size, mtime,
+// ctime, inode); a file whose stamp changed is read again. A cache that cannot be read is
 // ignored and one that cannot be written is skipped, so the output never
 // depends on it. Smaller files (and the read-only test fixtures) are read
 // every time.
 
 const (
 	statsCacheName   = "stats.gob"
-	statsCacheFormat = 1
+	statsCacheFormat = 2 // 2: the key is the whole statcache.Stamp (ctime and inode too)
 )
 
 // statsCacheMinBytes is the index size from which a summary is cached.
 var statsCacheMinBytes int64 = 1 << 20
 
 type statsEntry struct {
-	Size, MtimeNs int64
-	Summary       summary
+	statcache.Stamp
+	Summary summary
 }
 
 type statsCacheFile struct {
@@ -61,13 +61,13 @@ func (c *statsCache) summary(path string, full bool) summary {
 	stamp := statcache.Of(st)
 	key := core.ResolvedPath(path)
 	cacheable := stamp.Size >= statsCacheMinBytes
-	if e, ok := c.entries[key]; ok && cacheable && e.Size == stamp.Size && e.MtimeNs == stamp.MtimeNs &&
+	if e, ok := c.entries[key]; ok && cacheable && e.Stamp == stamp &&
 		(e.Summary.Full || !full) {
 		return e.Summary
 	}
 	s := summarize(path, full)
 	if cacheable && statcache.Same(path, stamp) { // a file changed while summarized is not stored
-		c.entries[key] = statsEntry{stamp.Size, stamp.MtimeNs, s}
+		c.entries[key] = statsEntry{stamp, s}
 		c.dirty = true
 	}
 	return s

@@ -157,7 +157,7 @@ func touch(t *testing.T, p string, mt time.Time) {
 }
 
 func TestOpenCacheMatchesLegacy(t *testing.T) {
-	entries := map[string]cacheEntry{"/j/a.jar": {3, 4, []byte("x"), []string{"META-INF/A.RSA"}, false}}
+	entries := map[string]cacheEntry{"/j/a.jar": {statcache.Stamp{Size: 3, MtimeNs: 4}, []byte("x"), []string{"META-INF/A.RSA"}, false}}
 	files := map[string]any{
 		"valid":          cacheFile{cacheFormat, member, entries},
 		"other format":   cacheFile{cacheFormat + 1, member, entries},

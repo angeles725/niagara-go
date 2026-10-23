@@ -11,6 +11,7 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/atomicfile"
 	"github.com/angeles725/niagara-go/internal/index"
+	"github.com/angeles725/niagara-go/internal/statcache"
 )
 
 // Equivalence with the code before internal/statcache (PR #179): the legacy*
@@ -21,8 +22,8 @@ func legacyClassCacheKeyOf(path string) (classCacheKey, bool) {
 	if err != nil || !st.Mode().IsRegular() || st.Size() < classCacheMinBytes {
 		return classCacheKey{}, false
 	}
-	return classCacheKey{Format: classCacheFormat, Path: ResolvedPath(path), Size: st.Size(),
-		MtimeNs: st.ModTime().UnixNano()}, true
+	// The key is the one change since: the whole statcache.Stamp, ctime and inode too.
+	return classCacheKey{Format: classCacheFormat, Path: ResolvedPath(path), Stamp: statcache.Of(st)}, true
 }
 
 func legacyReadClassCache(path string, key classCacheKey) *index.Object {
@@ -87,7 +88,7 @@ func TestClassCacheKeyMatchesLegacy(t *testing.T) {
 
 func TestReadClassCacheMatchesLegacy(t *testing.T) {
 	dir := t.TempDir()
-	key := classCacheKey{Format: classCacheFormat, Path: "/x/class-index.json", Size: 10, MtimeNs: 20}
+	key := classCacheKey{Format: classCacheFormat, Path: "/x/class-index.json", Stamp: statcache.Stamp{Size: 10, MtimeNs: 20}}
 	o, err := index.Decode([]byte(`{"_meta": {"n": 1}, "classes": {"BA": [{"kind": "class"}]}}`))
 	if err != nil {
 		t.Fatal(err)
@@ -126,7 +127,7 @@ func TestReadClassCacheMatchesLegacy(t *testing.T) {
 }
 
 var goldenClassCache = classCacheFile{
-	Key:     classCacheKey{Format: classCacheFormat, Path: "/i/class-index.json", Size: 7, MtimeNs: 9},
+	Key:     classCacheKey{Format: classCacheFormat, Path: "/i/class-index.json", Stamp: statcache.Stamp{Size: 7, MtimeNs: 9}},
 	Strings: "ab", Ends: []int{1, 2}, Ops: []int{opObject | 1<<opBits, 0, opString | 1<<opBits},
 }
 

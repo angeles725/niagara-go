@@ -12,6 +12,7 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/atomicfile"
 	"github.com/angeles725/niagara-go/internal/nav/core"
+	"github.com/angeles725/niagara-go/internal/statcache"
 )
 
 // Equivalence with the code before internal/statcache: the legacy* functions
@@ -38,14 +39,15 @@ func (c *statsCache) legacySummary(path string, full bool) summary {
 	}
 	key := core.ResolvedPath(path)
 	cacheable := st.Size() >= statsCacheMinBytes
-	if e, ok := c.entries[key]; ok && cacheable && e.Size == st.Size() && e.MtimeNs == st.ModTime().UnixNano() &&
+	if e, ok := c.entries[key]; ok && cacheable && e.Stamp == statcache.Of(st) && // The key is the one change since: the whole statcache.Stamp, ctime and inode too.
+
 		(e.Summary.Full || !full) {
 		return e.Summary
 	}
 	s := summarize(path, full)
 	if cacheable {
 		if st2, err := os.Stat(path); err == nil && st2.Size() == st.Size() && st2.ModTime().Equal(st.ModTime()) {
-			c.entries[key] = statsEntry{st.Size(), st.ModTime().UnixNano(), s}
+			c.entries[key] = statsEntry{statcache.Of(st), s}
 			c.dirty = true
 		}
 	}
@@ -86,7 +88,7 @@ func writeStatsCache(t *testing.T, dir string, v any) {
 }
 
 func TestOpenStatsCacheMatchesLegacy(t *testing.T) {
-	entries := map[string]statsEntry{"/i/x.json": {5, 6, summary{Loaded: true, Meta: []byte("{}")}}}
+	entries := map[string]statsEntry{"/i/x.json": {statcache.Stamp{Size: 5, MtimeNs: 6}, summary{Loaded: true, Meta: []byte("{}")}}}
 	cases := map[string]any{
 		"valid":         statsCacheFile{statsCacheFormat, entries},
 		"other format":  statsCacheFile{statsCacheFormat + 1, entries},
@@ -199,7 +201,10 @@ func TestSaveMatchesLegacy(t *testing.T) {
 	moved := map[string]statsEntry{}
 	for k, e := range f.Entries {
 		rel, _ := filepath.Rel(core.ResolvedPath(oldDir), k)
-		moved[filepath.Join(core.ResolvedPath(newDir), rel)] = e
+		k := filepath.Join(core.ResolvedPath(newDir), rel)
+		// Another file of the same size and mtime: its own inode and ctime.
+		e.CtimeNs, e.Ino = c.entries[k].CtimeNs, c.entries[k].Ino
+		moved[k] = e
 	}
 	l.entries, l.dirty, l.path = moved, true, filepath.Join(t.TempDir(), statsCacheName)
 	if want := c.entries; !reflect.DeepEqual(moved, want) {

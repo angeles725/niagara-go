@@ -10,6 +10,7 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/atomicfile"
 	"github.com/angeles725/niagara-go/internal/nav/core"
+	"github.com/angeles725/niagara-go/internal/statcache"
 )
 
 // Equivalence with the code before internal/statcache (PR #179): the legacy*
@@ -20,8 +21,9 @@ func legacyNewCache(indexPath, cachePath string) *Cache {
 	if err != nil || !st.Mode().IsRegular() || st.Size() < cacheMinBytes {
 		return &Cache{}
 	}
+	// The key is the one change since: the whole statcache.Stamp, ctime and inode too.
 	return &Cache{path: cachePath,
-		key: cacheKey{Format: cacheFormat, Path: core.ResolvedPath(indexPath), Size: st.Size(), MtimeNs: st.ModTime().UnixNano()}}
+		key: cacheKey{Format: cacheFormat, Path: core.ResolvedPath(indexPath), Stamp: statcache.Of(st)}}
 }
 
 func (c *Cache) legacyLoad() *Graph {
