@@ -16,6 +16,12 @@ import (
 // module whose paths are relative to source/ ("../devguide-rc/...").
 const rcDir = "devguide-rc"
 
+// SourceOriginsFile is source/<SourceOriginsFile>: the Java sources the
+// extraction took from module jars (not docSource), as a JSON object of
+// path under source/ -> jar name. The builders walk only the folders of
+// source/, so this file is never read as a module.
+const SourceOriginsFile = "module-jar-sources.json"
+
 // javaPackageRe is _PACKAGE: only the name is matched, as the ";" of a
 // package statement may sit on the next line.
 var javaPackageRe = pyre.MustCompile(`package\s+([\w.]+)`, 0)
