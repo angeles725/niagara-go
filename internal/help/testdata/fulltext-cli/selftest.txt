@@ -3,4 +3,10 @@
   PASS  single-word coverage: 'alarm'=3 >= 'alarm fault'=3
   PASS  devguide-search 'servlet override' → 4 file(s)
   PASS  'alarma' does not match inside 'alarmAck'
-selftest: all assertions passed.
+  SKIP  lexicon: lexicon-text/ is absent in this version
+  SKIP  course: course-text/ is absent in this version
+  SKIP  package: package-text/ is absent in this version
+  SKIP  class: indexes/class-index.json is empty in this version
+  SKIP  slots: indexes/slots-index.json is absent in this version
+  PASS  method: method 'ackAlarm' lists javax.baja.alarm.BAlarmRecord.ackAlarm()
+selftest: all assertions passed (5 skipped: their index or text source is absent or empty).

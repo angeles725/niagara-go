@@ -206,6 +206,8 @@ COURSE: none bound to this version
 
 UNCLASSIFIED (first 1 of 1):
   sw/2.0/helpMod-rt.jar  doc/About-Help.html  -- documentation in a jar outside modules/ that the installed copy does not have (not extracted)
+
+OUTSIDE THE DOCUMENTATION SCOPE: 4 entries are not documentation-like and were not classified (by type: .class 3, .js 1)
 RESULT: FAIL - 1 unclassified entry
 `
 	if got := strings.ReplaceAll(buf.String(), install, "<install>"); got != want {
@@ -419,5 +421,28 @@ func TestSweepImageOnlyPDF(t *testing.T) {
 	}
 	if n := res.Reasons[reasonKey{"no-text-layer", pdfNoTextReason}]; n != 1 {
 		t.Errorf("image-only PDF reason count %d, want 1: %v", n, res.Reasons)
+	}
+}
+
+// TestSweepPassStatesItsScope: a PASS covers the documentation-like entries only, so it
+// says how many entries lay outside that scope, by type, instead of reading as "every
+// entry of the install"; the most common types come first, the rest are summed.
+func TestSweepPassStatesItsScope(t *testing.T) {
+	res := &sweepResult{Rows: map[string]*sweepRow{}, Reasons: map[reasonKey]int{}, OutOfScope: map[string]int{}}
+	for i, ext := range []string{".class", ".png", ".js", ".gif", ".properties", ".xml", ".svg", ".css", ".jpg", ".bog", ".px", "(no extension)"} {
+		res.OutOfScope[ext] = 100 - i
+	}
+	lines, err := sweepReport("1.0", "/install", res, t.TempDir(), &courseGate{}, sweepTestRules(t))
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []string{
+		"OUTSIDE THE DOCUMENTATION SCOPE: 1,134 entries are not documentation-like and were not classified " +
+			"(by type: .class 100, .png 99, .js 98, .gif 97, .properties 96, .xml 95, .svg 94, .css 93, .jpg 92, .bog 91, 2 other types 179)",
+		"RESULT: PASS - every documentation-like entry is indexed or excluded with a reason " +
+			"(1,134 entries outside the documentation scope, counted above)",
+	}
+	if got := lines[len(lines)-2:]; !slices.Equal(got, want) {
+		t.Errorf("last lines:\n%s\nwant:\n%s", strings.Join(got, "\n"), strings.Join(want, "\n"))
 	}
 }

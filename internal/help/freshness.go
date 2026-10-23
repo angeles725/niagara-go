@@ -12,10 +12,12 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/angeles725/niagara-go/internal/help/fts"
 	"github.com/angeles725/niagara-go/internal/index"
 	"github.com/angeles725/niagara-go/internal/pycompat"
+	"github.com/angeles725/niagara-go/internal/statcache"
 	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
@@ -67,6 +69,127 @@ func computeFingerprint(baseDir string) map[string]*dirPrint {
 		out[d] = prints[i]
 	}
 	return out
+}
+
+// derivedNames are the folders freshness checks against the stamp time after the raw
+// sources: the text sources of the full-text index (fts.Labels, the one source registry)
+// that are not raw sources themselves (source/ is), and indexes/.
+var derivedNames = func() []string {
+	raw := map[string]bool{}
+	for _, d := range freshnessDirs {
+		raw[d] = true
+	}
+	var out []string
+	for _, l := range fts.Labels {
+		if !raw[l] {
+			out = append(out, l)
+		}
+	}
+	return append(out, "indexes")
+}()
+
+// derived is what freshness reads of one derived folder: its files, their size and how
+// many of its files and folders (an added or removed file touches its folder) were
+// modified after the baseline was stamped. rebuild-all writes them before it stamps,
+// so any later write is a change the baseline does not cover.
+type derived struct {
+	files, bytes, newer int64
+}
+
+// derivedPrint walks one derived folder of root with statcache stamps; nil when absent.
+// indexes/ keeps its top-level JSON indexes but the manifest: fulltext.sqlite is checked
+// against its own fingerprint (fulltextLine), retired indexes are reported apart.
+func derivedPrint(root, name string, stamped int64) *derived {
+	dir := filepath.Join(root, name)
+	if !pycompat.IsDir(dir) {
+		return nil
+	}
+	fp := &derived{}
+	// indexes/ itself also holds fulltext.sqlite and its journal, written by the first
+	// search after the stamp: only its JSON files count, not its folder time.
+	seen := map[string]bool{dir: name == "indexes"}
+	if name != "indexes" && statcache.Stat(dir).MtimeNs > stamped {
+		fp.newer++
+	}
+	fts.WalkFiles(dir, func(path string) {
+		rel, err := filepath.Rel(dir, path)
+		if err != nil {
+			return
+		}
+		rel = filepath.ToSlash(rel)
+		if name == "indexes" && (strings.Contains(rel, "/") || !strings.HasSuffix(rel, ".json") || rel == ".manifest.json" ||
+			isRetiredIndex(rel)) {
+			return
+		}
+		st := statcache.Stat(path)
+		if !st.Exists() {
+			return
+		}
+		fp.files++
+		fp.bytes += st.Size
+		if st.MtimeNs > stamped {
+			fp.newer++
+		}
+		if parent := filepath.Dir(path); !seen[parent] {
+			seen[parent] = true
+			if statcache.Stat(parent).MtimeNs > stamped {
+				fp.newer++
+			}
+		}
+	})
+	return fp
+}
+
+// stampedNs is the manifest's stamped_utc as Unix ns; ok false when it cannot be read.
+func stampedNs(manifest *index.Object) (int64, bool) {
+	s, _ := get(manifest, "stamped_utc", nil).(string)
+	t, err := time.Parse(time.RFC3339Nano, s)
+	if err != nil {
+		return 0, false
+	}
+	return t.UnixNano(), true
+}
+
+// derivedLines prints the derived folders against the baseline time and returns the
+// changed ones; unknown is true when the baseline has no readable stamp time.
+func (e *Env) derivedLines(manifest *index.Object) (stale []string, unknown bool) {
+	fmt.Fprintln(e.Out)
+	fmt.Fprintln(e.Out, "Text sources of the full-text index and the indexes (written before the stamp):")
+	stamped, ok := stampedNs(manifest)
+	if !ok {
+		fmt.Fprintln(e.Out, "  UNKNOWN — the baseline has no readable stamped_utc to compare them with")
+		return nil, true
+	}
+	for _, name := range derivedNames {
+		fp := derivedPrint(e.BaseDir, name, stamped)
+		status, detail := "OK", "(absent)"
+		if fp != nil {
+			detail = fmt.Sprintf("%s files, %s bytes", pycompat.Commas(int(fp.files)), pycompat.Commas(int(fp.bytes)))
+			if fp.newer > 0 {
+				status = "CHANGED"
+				detail += " — modified after the baseline was stamped"
+				stale = append(stale, name)
+			}
+		}
+		fmt.Fprintf(e.Out, "  %s %s now: %s\n", pycompat.LJust(status, 14, ' '), pycompat.LJust(name, 18, ' '), detail)
+	}
+	return stale, false
+}
+
+// fulltextLine prints whether the full-text index matches its text sources (fts's own
+// fingerprint); true when it exists and does not (find rebuilds it on the next search).
+func (e *Env) fulltextLine() bool {
+	path, missing := fts.FreshPath(e.BaseDir, fts.CachedFingerprint(e.BaseDir, fts.SourceDirs(e.BaseDir)))
+	switch {
+	case missing:
+		fmt.Fprintln(e.Out, "  fulltext.sqlite: absent (find builds it on the first search)")
+	case path == "":
+		fmt.Fprintln(e.Out, "  fulltext.sqlite: STALE — it does not match its text sources (find rebuilds it)")
+		return true
+	default:
+		fmt.Fprintln(e.Out, "  fulltext.sqlite: matches its text sources")
+	}
+	return false
 }
 
 // loadManifest is _load_manifest: indexes/.manifest.json, nil when absent.
@@ -182,19 +305,29 @@ func (e *Env) freshness() error {
 			fmt.Fprintf(e.Out, "  %s %s was: %s\n", pycompat.LJust("", 14, ' '), pycompat.LJust("", 12, ' '), fmtRecorded(recorded, d))
 		}
 	}
+	derivedStale, unknown := e.derivedLines(manifest)
+	stale = append(stale, derivedStale...)
+	if e.fulltextLine() {
+		stale = append(stale, "fulltext.sqlite")
+	}
+	e.retiredLines()
 	fmt.Fprintln(e.Out)
 	fmt.Fprintf(e.Out, "Baseline stamped: %s\n", pyStr(get(manifest, "stamped_utc", "?")))
-	if len(stale) > 0 {
+	switch {
+	case len(stale) > 0:
 		fmt.Fprintf(e.Out, "RESULT: STALE — %d source(s) changed: %s\n", len(stale), strings.Join(stale, ", "))
 		fmt.Fprintln(e.Out, "Reindex with 'rebuild-all' (then the manifest re-stamps).")
-	} else {
+	case unknown:
+		fmt.Fprintln(e.Out, "RESULT: UNKNOWN — the raw sources match the baseline; the derived text and indexes")
+		fmt.Fprintln(e.Out, "could not be compared with it (run 'rebuild-all --stamp-only' to re-stamp).")
+	default:
 		fmt.Fprintln(e.Out, "RESULT: FRESH — corpus matches the recorded baseline.")
 	}
 	return nil
 }
 
-// indexStatus is index_status: FRESH, STALE or UNKNOWN for one data root.
-func indexStatus(root string) (string, error) {
+// indexState is index_status: FRESH, STALE or UNKNOWN for one data root.
+func indexState(root string) (string, error) {
 	manifest, err := loadManifest(root)
 	if err != nil {
 		return "", err
@@ -213,6 +346,15 @@ func indexStatus(root string) (string, error) {
 		}
 		was, plain := recordedPrint(recorded, d)
 		if !plain || !samePrint(current[d], was) {
+			return "STALE", nil
+		}
+	}
+	stamped, ok := stampedNs(manifest)
+	if !ok {
+		return "UNKNOWN (no readable baseline time)", nil
+	}
+	for _, name := range derivedNames {
+		if fp := derivedPrint(root, name, stamped); fp != nil && fp.newer > 0 {
 			return "STALE", nil
 		}
 	}

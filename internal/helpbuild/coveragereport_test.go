@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/angeles725/niagara-go/internal/helpbuild/internal/testkit"
+	"github.com/angeles725/niagara-go/internal/index"
 )
 
 var updateCov = flag.Bool("update-cov", false, "rewrite testdata/cov/golden/ from the Go reports (review the diff)")
@@ -146,5 +147,48 @@ func TestCoverageMalformedIndexes(t *testing.T) {
 				t.Errorf("report %q; want Total methods: 1", b.String())
 			}
 		})
+	}
+}
+
+// TestGuideCoverageCountsThePagesItConverts: the guide coverage counts the pages the
+// guides parser converts (.html, .htm, .md, a non-licence .txt) against their own
+// guides-clean text, so the numerator can never exceed the denominator: before, a .md or
+// .txt page's text was counted over an HTML-only denominator (4.15 printed 5940/5936).
+func TestGuideCoverageCountsThePagesItConverts(t *testing.T) {
+	base := t.TempDir()
+	for _, f := range []string{"guides/G/a.html", "guides/G/b.htm", "guides/G/rc/c.md", "guides/G/notes.txt",
+		"guides/G/license.txt", "guides/G/img.png", "guides/H/x.html", "guides/H/y.html",
+		"guides-clean/G/a.txt", "guides-clean/G/b.htm.txt", "guides-clean/G/rc/c.md.txt", "guides-clean/G/notes.txt",
+		"guides-clean/H/x.txt", "guides-clean/H/stale.txt"} {
+		testkit.WriteFile(t, filepath.Join(base, filepath.FromSlash(f)), []byte("t"))
+	}
+	var out strings.Builder
+	gaps, err := printGuideCoverage(&out, base)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := "GUIDE COVERAGE (guides/ pages vs their guides-clean/ text)\n" + strings.Repeat("=", 60) + "\n" +
+		"Overall: 5/6 guide pages indexed (.html .htm .md .txt, licence texts excluded) across 2 folders, 1 gap folder(s)\n" +
+		"  GAP      1/2     H\n\n"
+	if gaps != 1 || out.String() != want {
+		t.Errorf("gaps %d, report:\n%s\nwant:\n%s", gaps, out.String(), want)
+	}
+}
+
+// TestOverviewNamesItsDenominator: the overview percentage is over the classes with
+// indexed source (source-index.json), not over every class nh knows; the line says so.
+func TestOverviewNamesItsDenominator(t *testing.T) {
+	var out strings.Builder
+	path := filepath.Join(t.TempDir(), "source-index.json")
+	testkit.WriteFile(t, path, []byte(`{"BA": {"module": "m-rt"}, "BB": {"module": "m-rt"}}`))
+	source, err := index.LoadObject(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := overviewCoverage(&out, source, &moduleGroups{}, map[string]bool{"BA": true}); err != nil {
+		t.Fatal(err)
+	}
+	if want := "\nOverall: 1/2 classes documented (50.0% of the 2 classes with indexed source)\n"; !strings.Contains(out.String(), want) {
+		t.Errorf("overview:\n%s\nwant line %q", out.String(), want)
 	}
 }

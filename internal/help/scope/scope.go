@@ -35,34 +35,36 @@ type def struct {
 }
 
 // scopes are the scope.py SCOPES: the indexes each one searches, what it
-// excludes on purpose and the nearest alternative commands.
+// excludes on purpose and the nearest alternative commands. An alternative is
+// always a command nh still carries (TestMissHintsAreLiveCommands): the
+// retired fuzzy, method-sig, inherited-slots and module exit 2.
 var scopes = map[string]def{
 	"guides": {[]string{"guides-index.json"}, docTypesExcluded,
 		[]string{"guide-search", "find", "devguide-search"}},
 	"devguide": {[]string{"devguide-toc.json"}, docTypesExcluded,
 		[]string{"devguide-search", "find", "guide-search"}},
 	"classes": {[]string{"class-index.json"}, "JDK API (opt-in: --jdk); " + docTypesExcluded,
-		[]string{"find", "fuzzy", "class --jdk", "source-grep"}},
+		[]string{"find", "class --jdk", "source-grep"}},
 	"jdk": {[]string{"jdk-class-index.json"}, "Niagara classes (drop --jdk)",
 		[]string{"class (without --jdk)", "find"}},
 	"methods": {[]string{"method-index.json"}, "JDK members (class --jdk <Name> renders them)",
-		[]string{"find", "fuzzy", "source-grep", "method-sig"}},
+		[]string{"find", "source-grep"}},
 	"slots": {[]string{"slots-index.json"}, "slots of JDK classes (none exist)",
-		[]string{"inherited-slots", "find", "source-grep"}},
+		[]string{"slots --inherited", "find", "source-grep"}},
 	"source": {[]string{"source-index.json"},
-		"classes shipped without source (use class/method for their API)",
+		"classes not in nh's source index (only docSource-doc.jar source is indexed; use class/method for their API)",
 		[]string{"class", "source-grep", "find"}},
 	"inheritance": {[]string{"inheritance.json"}, "JDK types (class --jdk shows their extends)",
-		[]string{"class", "find", "fuzzy"}},
-	"xref": {[]string{"xref-index.json"}, "classes shipped without source (imports unknown)",
+		[]string{"class", "find"}},
+	"xref": {[]string{"xref-index.json"}, "classes not in nh's source index (only docSource-doc.jar source is indexed; imports unknown)",
 		[]string{"class", "source-grep"}},
 	"modules": {[]string{"source-index.json"},
-		"modules shipped without source (module names come from the source files)",
-		[]string{"module", "find", "search"}},
+		"modules not in nh's source index (only docSource-doc.jar source is indexed; module names come from it)",
+		[]string{"package", "find", "search"}},
 	"pdf": {[]string{"pdf-index.json"}, "manual pages without a text layer (scanned images)",
 		[]string{"find", "guide-search", "pdf --no-fulltext"}},
 	"fulltext": {nil, "JDK API (class --jdk); " + docTypesExcluded,
-		[]string{"find --or", "fuzzy", "class --jdk", "source-grep"}},
+		[]string{"find --or", "class --jdk", "source-grep"}},
 }
 
 // dirs are the text directories a scope counts after its indexes.

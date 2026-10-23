@@ -1,4 +1,4 @@
 No match for 'Zzz' (slots) in this scope.
   searched: Niagara 4.14.0.162 (<TESTDATA>) -- slots-index.json: 8 entries
   excluded from this scope: slots of JDK classes (none exist)
-  not proof of absence; try: inherited-slots 'Zzz', find 'Zzz', source-grep 'Zzz'
+  not proof of absence; try: slots --inherited 'Zzz', find 'Zzz', source-grep 'Zzz'

@@ -105,13 +105,22 @@ func (e *Env) selftest() error {
 	} else {
 		fmt.Fprintln(e.Out, "  PASS  'alarma' does not match inside 'alarmAck'")
 	}
+	fails, skipped, err := e.checkFacts()
+	if err != nil {
+		return err
+	}
+	errs = append(errs, fails...)
 	if len(errs) > 0 {
 		for _, m := range errs {
 			fmt.Fprintf(e.Err, "  FAIL  %s\n", m)
 		}
 		return ExitCode(1)
 	}
-	fmt.Fprintln(e.Out, "selftest: all assertions passed.")
+	if skipped > 0 {
+		fmt.Fprintf(e.Out, "selftest: all assertions passed (%d skipped: their index or text source is absent or empty).\n", skipped)
+	} else {
+		fmt.Fprintln(e.Out, "selftest: all assertions passed.")
+	}
 	return ExitCode(0)
 }
 
