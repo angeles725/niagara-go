@@ -1,0 +1,4 @@
+{
+ "reason": "Python exited 0 after printing \"no direct slot\", so a missing slot read as found while a missing path exits 1; Go exits 1 for a slot that is neither in the bog nor a type default.",
+ "exit": 1
+}

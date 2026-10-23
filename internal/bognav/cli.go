@@ -7,7 +7,7 @@
 // --csv, --limit), selftest. Parsing is internal/bog; the declaration parser internal/slotomatic.
 //
 // Exit codes: 0 found, 1 searched and no match (find/links/grep/writable) or a named
-// component/handle not found, 2 usage error, 3 unreadable input (bog.ExitBadInput, D17).
+// component/handle/slot not found, 2 usage error, 3 unreadable input (bog.ExitBadInput, D17).
 package bognav
 
 import (

@@ -40,3 +40,28 @@ func TestLinksUnknownRefIsNotAnEmptySearch(t *testing.T) {
 		})
 	}
 }
+
+func TestSlotUnknownSlotNameExitsOne(t *testing.T) {
+	p := writeFile(t, "t.xml", []byte(testXML))
+	tests := []struct {
+		name string
+		args []string
+		code int
+		has  string
+	}{
+		{"unknown slot, text", []string{"A", "nosuchslot"}, 1, "A: no direct slot 'nosuchslot' (children: none)"},
+		{"unknown slot, json", []string{"A", "nosuchslot", "--json"}, 1, "A: no direct slot 'nosuchslot'"},
+		{"unknown slot on a handle ref", []string{"h:4", "nosuchslot"}, 1, "no direct slot 'nosuchslot'"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			out, errOut, code := runMain(t, append([]string{p, "slot"}, tt.args...)...)
+			if code != tt.code {
+				t.Errorf("exit = %d, want %d", code, tt.code)
+			}
+			if !strings.Contains(out+errOut, tt.has) {
+				t.Errorf("output %q lacks %q", out+errOut, tt.has)
+			}
+		})
+	}
+}
