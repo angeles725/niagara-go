@@ -56,6 +56,52 @@ func parseLayout(s string) (layout, bool) {
 	return layout{v[0], v[1], v[2], v[3]}, true
 }
 
+// font is a Niagara BFont string split for CSS.
+type font struct{ weight, style, size, family string }
+
+// parseNiagaraFont reads a Niagara font string, "[bold] [italic] <size>pt <family, spaces allowed>":
+// 'bold 22.0pt Times New Roman' -> (bold, normal, 22, Times New Roman); 'italic 9.5pt' -> (normal,
+// italic, 9, Arial). The size is the last "<n>pt" token (truncated); the family is every other
+// token after the style words, joined with single spaces.
+func parseNiagaraFont(s string) font {
+	f := font{weight: "normal", style: "normal", size: "13", family: "Arial"}
+	toks := textfold.Fields(s)
+	for len(toks) > 0 && (toks[0] == "bold" || toks[0] == "italic") {
+		if toks[0] == "bold" {
+			f.weight = "bold"
+		} else {
+			f.style = "italic"
+		}
+		toks = toks[1:]
+	}
+	var family []string
+	for _, tk := range toks {
+		if strings.Contains(tk, "pt") {
+			f.size, _, _ = strings.Cut(strings.ReplaceAll(tk, "pt", ""), ".")
+		} else {
+			family = append(family, tk)
+		}
+	}
+	if len(family) > 0 {
+		f.family = strings.Join(family, " ")
+	}
+	return f
+}
+
+var familyRE = regexp.MustCompile(`^[A-Za-z0-9 _-]+$`)
+
+// cssFamily is the font-family list for f: a family with a space is quoted; one with any other
+// character than letters, digits, space, '_' or '-' is dropped (it cannot be quoted safely).
+func cssFamily(family string) string {
+	switch {
+	case !familyRE.MatchString(family):
+		return "Arial,sans-serif"
+	case strings.Contains(family, " "):
+		return "'" + family + "'" + ",Arial,sans-serif"
+	}
+	return family + ",Arial,sans-serif"
+}
+
 // parseFont: 'bold 26.0pt Arial' -> (bold, 26, Arial); '11.0pt Arial' -> (normal, 11, Arial).
 func parseFont(s string) (weight, size, family string) {
 	weight, size, family = "normal", "13", "Arial"
