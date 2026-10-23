@@ -84,6 +84,8 @@ func Read(name string, data []byte) (*File, error) {
 	switch strings.ToLower(path.Ext(name)) {
 	case ".json":
 		return readJSON(data)
+	case ".csv":
+		return readCSV(data)
 	}
 	return nil, errors.New("not a tag dictionary file (.json, .csv or .bog)")
 }
