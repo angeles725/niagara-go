@@ -58,6 +58,8 @@
 ["out", "  sw/3.0/helpMod-rt.jar  doc/p10.html  -- documentation in a jar outside modules/ that the installed copy does not have (not extracted)"]
 ["out", "  sw/3.0/helpMod-rt.jar  doc/p11.html  -- documentation in a jar outside modules/ that the installed copy does not have (not extracted)"]
 ["out", "  sw/3.0/helpMod-rt.jar  doc/p12.html  -- documentation in a jar outside modules/ that the installed copy does not have (not extracted)"]
+["out", ""]
+["out", "OUTSIDE THE DOCUMENTATION SCOPE: 19 entries are not documentation-like and were not classified (by type: .bajadoc 5, .class 3, .js 3, .bin 1, .css 1, .db 1, .java 1, .png 1, .text 1, .weird 1, .xz 1)"]
 ["out", "RESULT: FAIL - 53 unclassified entries"]
 ["exit", 1]
 warm:

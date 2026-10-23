@@ -35,7 +35,7 @@ RESULT: NOT READY - see the gate reports above
 
 # exit 1
 # tree
-@@ 0,0 0,332
+@@ 0,0 0,334
 + fulltext.sqlite:
 + [meta fingerprint engine=3|devguide-clean=<dir>/repo/versions/1.0.0.0/devguide-clean:3:135:<mtime>:<sha1>|guides-clean=<dir>/repo/versions/1.0.0.0/guides-clean:19:1068:<mtime>:<sha1>|source=<dir>/repo/versions/1.0.0.0/source:1:24:<mtime>:<sha1>|devguide-rc=<dir>/repo/versions/1.0.0.0/devguide-rc:2:26:<mtime>:<sha1>|devguide-examples=<dir>/repo/versions/1.0.0.0/devguide-examples:1:9:<mtime>:<sha1>   ]
 + [docs 1 devguide-clean changes37.txt changes37.txt 4 0]
@@ -239,6 +239,8 @@ RESULT: NOT READY - see the gate reports above
 + |   modules/docJdk-doc.jar  doc/jdk-se/java/util/HashMap.bajadoc  -- maps to jdk/jdk-se/java/util/HashMap.bajadoc but it is not indexed
 + |   modules/docJdk-doc.jar  other.txt  -- no extract or exclude rule matches (add one to install_docs.json)
 + |   modules/thing-ux.jar  doc/rc/notes.md  -- maps to guides/thing-ux/rc/notes.md, which the earlier entry rc/notes.md of this jar fills: not extracted, and its content differs
++ | 
++ | OUTSIDE THE DOCUMENTATION SCOPE: 16 entries are not documentation-like and were not classified (by type: .class 5, .java 3, .mf 3, .js 2, .palette 1, .png 1, .xml 1)
 + | RESULT: FAIL - 9 unclassified entries
 + | 
 + guides d--------- 755
@@ -368,7 +370,7 @@ RESULT: NOT READY - see the gate reports above
 +     "docs": null
 +   }
 + }
-@@ 1,1 333,350
+@@ 1,1 335,352
 + .cache d--------- 755
 + .cache/jar-listings d--------- 755
 + .cache/jar-listings/<install hash>.json ---------- 644 <size> <sha256>
@@ -510,10 +512,10 @@ RESULT: NOT READY - see the gate reports above
 @@ 172,173 172,173
 - | INSTALL SWEEP 1.0.0.0 (16 jars under <dir>/install; 10 listed anew, the rest from the jar-listing cache)
 + | INSTALL SWEEP 1.0.0.0 (16 jars under <dir>/install; 0 listed anew, the rest from the jar-listing cache)
-@@ 288,289 288,289
+@@ 290,291 290,291
 - indexes/guides-index.json ---------- 644 1157 6004758efb57e1bc870c3a083112194ddf70e6e721d832a443037320a59daacc
 + indexes/guides-index.json ---------- 644 1236 155614e109f7600dd3ba1d6a6f76698d20fef8baab9d11664d70c1782bd24e43
-@@ 337,338 337,338
+@@ 339,340 339,340
 - versions/1.0.0.0.manifest.json ---------- 644 {
  "version": "1.0.0.0",
  "label": "install",
@@ -672,7 +674,7 @@ RESULT: NOT READY - see the gate reports above
   }
  ]
 }
-@@ 343,344 343,344
+@@ 345,346 345,346
 - |       "label": "install",
 + |       "label": "Synthetic \u00f1",
 ## <dir>/install/. --id 1.0.0.0

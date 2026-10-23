@@ -222,6 +222,27 @@ func registeredInstall(repoRoot, vid string, known bool) (string, error) {
 	return inst.S, nil
 }
 
+// otherJars counts the jars of the install (as the sweep finds them) that are
+// not among the documentation jars the gate read: its PASS covers those only.
+func otherJars(install string, docJars []string) (int, error) {
+	rules, err := Default()
+	if err != nil {
+		return 0, err
+	}
+	read := map[string]bool{}
+	for _, j := range docJars {
+		read[j] = true
+	}
+	all, _, _ := findJars(install, rules)
+	n := 0
+	for _, j := range all {
+		if !read[j.Path] {
+			n++
+		}
+	}
+	return n, nil
+}
+
 // DocJarCoverage is cmd_doc_jar_coverage(repoRoot, baseDir, versionID): it
 // prints the gate report to w and returns the exit status (0, 1, or 2 when
 // the install is unavailable). versionID "" is identified from baseDir.
@@ -287,7 +308,12 @@ func DocJarCoverage(w io.Writer, repoRoot, baseDir, versionID string, docs Fullt
 		out.line(fmt.Sprintf("GUIDE FOLDERS: %d folder(s) with unindexed pages (run `coverage`)", guideGaps))
 	}
 	if len(scan.Gaps) == 0 && guideGaps == 0 {
-		out.line("RESULT: PASS - every jar entry is indexed or excluded with a reason")
+		others, err := otherJars(install, jars)
+		if err != nil {
+			return 0, err
+		}
+		out.line(fmt.Sprintf("RESULT: PASS - every entry of the %d documentation jars is indexed or excluded with a reason; "+
+			"%d other jars of the install are outside this gate (coverage --sweep reads them)", len(jars), others))
 		return 0, out.err
 	}
 	plural := "ies"

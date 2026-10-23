@@ -193,6 +193,8 @@ func TestDocJarCoverageFrozen(t *testing.T) {
 	d = t.TempDir()
 	testkit.WriteJar(t, filepath.Join(d, "inst", "modules", "docOne-doc.jar"),
 		[2]string{"doc/one.html", "o"}, [2]string{"doc/one.png", "p"}, [2]string{"META-INF/MANIFEST.MF", "m"})
+	// a jar with no documentation: outside the gate, and the PASS line says so
+	testkit.WriteJar(t, filepath.Join(d, "inst", "modules", "plain-rt.jar"), [2]string{"com/acme/BPlain.class", "c"})
 	src := filepath.Join(d, "base")
 	testkit.WriteFile(t, filepath.Join(src, "guides", "One", "one.html"), []byte("o"))
 	testkit.WriteFile(t, filepath.Join(src, "guides-clean", "One", "one.txt"), []byte("o"))
