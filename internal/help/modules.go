@@ -17,8 +17,8 @@ import (
 const moduleIndexName = "module-index.json"
 
 // ModuleParams are the arguments of `module`.
-// Detail is "", or the one list to print: "types", "agents", "permissions"
-// or "defs"; JSON prints the record (or that list) as JSON.
+// Detail is "", or the one list to print: "types", "agents", "permissions",
+// "defs" or "schemas"; JSON prints the record (or that list) as JSON.
 type ModuleParams struct {
 	Name   string
 	Detail string
@@ -148,6 +148,11 @@ func (e *Env) moduleSummary(mods *index.Object, name string) {
 		label := fmt.Sprintf("%s: %d", c.label, listLen(r, c.key))
 		fmt.Fprintf(out, "%s  (nh module %s %s)\n", pycompat.LJust(label, 9, ' '), name, c.flag)
 	}
+	for _, c := range [][3]string{{"SCHEMAS", "schemas", "--schemas"}, {"PERMISSION TEMPLATES", "permission_templates", "--permissions"}} {
+		if n := listLen(r, c[1]); n > 0 { // only a module whose jar ships some
+			fmt.Fprintf(out, "%s: %d  (nh module %s %s)\n", c[0], n, name, c[2])
+		}
+	}
 	adapters := objList(r, "adapters")
 	fmt.Fprintf(out, "ADAPTERS: %d\n", len(adapters))
 	for _, a := range adapters {
@@ -165,18 +170,27 @@ func (e *Env) printPermissions(r *index.Object) {
 
 // permissionLines prints one java-permission per line, profiles aligned.
 func (e *Env) permissionLines(perms []*index.Object) {
+	for _, line := range permissionLineTexts(perms) {
+		fmt.Fprintln(e.Out, line)
+	}
+}
+
+// permissionLineTexts are the lines permissionLines prints.
+func permissionLineTexts(perms []*index.Object) []string {
 	width := 0
 	for _, p := range perms {
 		width = max(width, runeLen(getStr(p, "profile", "")))
 	}
+	var out []string
 	for _, p := range perms {
 		line := fmt.Sprintf("  %s  %s %q", pycompat.LJust(getStr(p, "profile", ""), width, ' '), getStr(p, "class", ""),
 			getStr(p, "name", ""))
 		if a := getStr(p, "action", ""); a != "" {
 			line += " " + a
 		}
-		fmt.Fprintln(e.Out, line)
+		out = append(out, line)
 	}
+	return out
 }
 
 // orNone is s, or "none" when it is empty.

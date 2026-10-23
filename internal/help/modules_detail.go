@@ -13,7 +13,8 @@ import (
 )
 
 // moduleDetailKeys maps a list flag to the record key it prints.
-var moduleDetailKeys = map[string]string{"types": "types", "agents": "agents", "permissions": "java_permissions", "defs": "defs"}
+var moduleDetailKeys = map[string]string{"types": "types", "agents": "agents", "permissions": "java_permissions",
+	"defs": "defs", "schemas": "schemas"}
 
 // moduleMany answers a query that matched several modules: the listing (or
 // the names as JSON); a list flag needs one module, so it is a miss.
@@ -35,7 +36,11 @@ func (e *Env) moduleOne(mods *index.Object, name string, p ModuleParams) {
 	switch {
 	case p.JSON && p.Detail != "":
 		key := moduleDetailKeys[p.Detail]
-		fmt.Fprintln(e.Out, pyjson.DumpsAny(pyjson.Obj{{"module", name}, {key, get(r, key, []any{})}}, pyjson.Indent2))
+		obj := pyjson.Obj{{"module", name}, {key, get(r, key, []any{})}}
+		if p.Detail == "permissions" {
+			obj = append(obj, pyjson.KV{"permission_templates", get(r, "permission_templates", []any{})})
+		}
+		fmt.Fprintln(e.Out, pyjson.DumpsAny(obj, pyjson.Indent2))
 	case p.JSON:
 		var rev []any
 		for _, d := range reverseDependencies(mods, name) {
@@ -50,9 +55,9 @@ func (e *Env) moduleOne(mods *index.Object, name string, p ModuleParams) {
 	case p.Detail == "agents":
 		e.moduleAgents(name, r)
 	case p.Detail == "permissions":
-		perms := objList(r, "java_permissions")
-		fmt.Fprintf(e.Out, "JAVA PERMISSIONS of %s (%d):\n", name, len(perms))
-		e.permissionLines(perms)
+		e.modulePermissions(name, r)
+	case p.Detail == "schemas":
+		e.moduleSchemas(name, r)
 	case p.Detail == "defs":
 		defs := objList(r, "defs")
 		fmt.Fprintf(e.Out, "DEFS of %s (%d):\n", name, len(defs))

@@ -64,8 +64,9 @@ var memberCommands = []command{
 var moduleDetails = [][2]string{
 	{"types", "List the types the module registers (module:Type and class)"},
 	{"agents", "List the agents (views, editors) the module's types register and the types they are on"},
-	{"permissions", "List the java-permissions by profile"},
+	{"permissions", "List the java-permissions by profile and the module-permissions.xml templates the jar ships"},
 	{"defs", "List the defs (name = value)"},
+	{"schemas", "List the .xsd/.dtd schemas the jar ships (root element, targetNamespace)"},
 }
 
 // Module descriptor commands (Go-only, modules.go and types.go): module and

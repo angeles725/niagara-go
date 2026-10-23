@@ -1168,12 +1168,15 @@ with no registered install (or an install that is not mounted) keeps its last
 `module-index.json`. The text is not added to the full-text index: `nh module` and `nh type`
 read the structure.
 
-Readers (`internal/help`): `nh module <name|part|glob> [--types|--agents|--permissions|--defs]
+Readers (`internal/help`): `nh module <name|part|glob> [--types|--agents|--permissions|--defs|--schemas]
 [--json]` resolves an exact module name, then any letter case, then every runtime profile of a
 part name (`kitControl` -> `-rt`, `-ux`, `-wb`), then a glob, and prints the summary (jar,
 part, vendor, dependencies, reverse dependencies, counts, adapters, java-permissions), a
 listing, or a miss naming `module-index.json`, its module count and its unreadable
-descriptors. `nh type <module:Type|Type> [--json]` prints the registering module and jar,
+descriptors. `--permissions` prints the java-permissions, then the `module-permissions.xml`
+templates the jar ships (each group and request, `(commented out)` for the shipped example,
+Velocity directives); `--schemas` lists the schemas (kind, root, targetNamespace, element
+count); the summary names both counts when the jar ships any. `nh type <module:Type|Type> [--json]` prints the registering module and jar,
 the class, whether `class-index.json` and `source-index.json` hold that class, the agents
 every module registers on the type and, for a view, the types it is an agent on. A `find`
 miss on a module-looking or type-looking query names these two commands. `stats` counts the

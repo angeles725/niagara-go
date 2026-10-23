@@ -151,3 +151,49 @@ func TestModuleCLI(t *testing.T) {
 		}
 	}
 }
+
+// TestModuleShippedFiles: --permissions adds the module-permissions templates
+// a module ships (groups, requests, a commented-out example marked, Velocity
+// directives) after its java-permissions; --schemas lists its schemas; a
+// module that ships none prints only its java-permissions, or an empty list.
+func TestModuleShippedFiles(t *testing.T) {
+	for _, tt := range []struct {
+		name string
+		p    ModuleParams
+		want string
+	}{
+		{"templates", ModuleParams{Name: "kitControl-wb", Detail: "permissions"}, `JAVA PERMISSIONS of kitControl-wb (0):
+
+PERMISSION TEMPLATES of kitControl-wb (2):
+  gradle/module/module-permissions.xml.vm
+    velocity: #parse ( "$includePath/module-permissions.xml.vm" )
+  rc/module-permissions.xml
+    all  java.util.logging.LoggingPermission "control"
+    group all: no requests
+    group station:
+      NETWORK_COMMUNICATION  "Outside access for Driver"  hosts=127.0.0.1 ports=*  (commented out)
+`},
+		{"summary", ModuleParams{Name: "kitControl-wb"}, "DEFS: 0    (nh module kitControl-wb --defs)\n" +
+			"SCHEMAS: 2  (nh module kitControl-wb --schemas)\nPERMISSION TEMPLATES: 2  (nh module kitControl-wb --permissions)\n" +
+			"ADAPTERS: 0\n"},
+		{"no templates", ModuleParams{Name: "kitControl-ux", Detail: "permissions"}, "JAVA PERMISSIONS of kitControl-ux (0):\n"},
+		{"schemas", ModuleParams{Name: "kitControl-wb", Detail: "schemas"}, `SCHEMAS of kitControl-wb (2):
+  com/tridium/obix/rsc/obix.xsd  xsd; root schema; targetNamespace http://obix.org/ns/schema/1.0; 14 elements
+  testng-1.0.dtd                 dtd; root suite; 23 elements
+`},
+		{"no schemas", ModuleParams{Name: "baja", Detail: "schemas"}, "SCHEMAS of baja (0):\n"},
+		{"schemas json", ModuleParams{Name: "baja", Detail: "schemas", JSON: true}, "{\n  \"module\": \"baja\",\n  \"schemas\": []\n}\n"},
+		{"permissions json", ModuleParams{Name: "baja", Detail: "permissions", JSON: true},
+			"{\n  \"module\": \"baja\",\n  \"java_permissions\": [],\n  \"permission_templates\": []\n}\n"},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			got, misses := runModule(t, tt.p)
+			if tt.name == "summary" && strings.Contains(got, tt.want) {
+				got = tt.want // the summary is checked for these lines only
+			}
+			if got != tt.want || misses != 0 {
+				t.Errorf("misses %d, got:\n%s\nwant:\n%s", misses, got, tt.want)
+			}
+		})
+	}
+}
