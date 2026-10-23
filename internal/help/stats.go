@@ -182,7 +182,7 @@ func (e *Env) statsText(s *corpusStats) {
 	for _, d := range statsTextDirs {
 		totalBytes += s.text[d].bytes
 	}
-	indexCount := 9
+	indexCount := len(statsIndexNames)
 	out := e.Out
 	fmt.Fprintf(out, "Niagara Help Navigator - Corpus Statistics\n%s\n", strings.Repeat("=", 55))
 	fmt.Fprintf(out, "Niagara version: %s  (%s)\n", vid, s.abs)
@@ -205,5 +205,7 @@ func (e *Env) statsText(s *corpusStats) {
 	for _, d := range []string{"bajadoc", "devguide", "guides"} {
 		fmt.Fprintf(out, "  %s %s HTML\n", pycompat.LJust(d+"/", 17, ' '), w(countFiles(filepath.Join(e.BaseDir, d), ".html").files))
 	}
-	fmt.Fprintf(out, "\nINDEXES: %d\nCLI: 53 commands + REPL\n", indexCount)
+	// The command table (order lists every registered command, in --help order),
+	// not a fixed number: retired commands and the REPL exit 2 and are not counted.
+	fmt.Fprintf(out, "\nINDEXES: %d\nCLI: %d commands\n", indexCount, len(order))
 }

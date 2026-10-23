@@ -3,6 +3,7 @@ package help
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -66,7 +67,7 @@ RAW HTML:
   guides/                0 HTML
 
 INDEXES: 9
-CLI: 53 commands + REPL
+CLI: 19 commands
 `
 	if got := strings.ReplaceAll(out.String(), dir, "<DIR>"); got != want {
 		t.Errorf("stats:\n%s\nwant:\n%s", got, want)
@@ -84,5 +85,19 @@ func TestStatsMissingIndex(t *testing.T) {
 		if !errors.As(err, &miss) || miss.Name != skip+".json" || out.Len() != 0 {
 			t.Errorf("missing %s: err %v, stdout %q; want a MissingIndexError naming it and no output", skip, err, out.String())
 		}
+	}
+}
+
+// TestStatsCLICountIsTheCommandTable: the closing CLI line counts the commands nh
+// registers (the retired ones exit 2 and the REPL is retired), never a fixed number.
+func TestStatsCLICountIsTheCommandTable(t *testing.T) {
+	var out bytes.Buffer
+	if err := (&Env{BaseDir: statsRoot(t, ""), Out: &out}).Stats(false); err != nil {
+		t.Fatal(err)
+	}
+	lines := strings.Split(strings.TrimRight(out.String(), "\n"), "\n")
+	want := fmt.Sprintf("CLI: %d commands", len(commandNames()))
+	if got := lines[len(lines)-1]; got != want || retired["repl"] == strings.Contains(out.String(), "REPL") {
+		t.Errorf("last line %q, want %q (REPL claimed: %v, retired: %v)", got, want, strings.Contains(out.String(), "REPL"), retired["repl"])
 	}
 }

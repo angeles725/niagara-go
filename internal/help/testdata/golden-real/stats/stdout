@@ -32,4 +32,4 @@ CALL INDEX:
   call-index.json       12,517 methods (139,226 call entries)
 
 INDEXES: 10
-CLI: 53 commands + REPL
+CLI: 19 commands
