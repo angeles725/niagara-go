@@ -1,9 +1,11 @@
 package stationmodules
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"maps"
+	"os"
 	"slices"
 
 	"github.com/angeles725/niagara-go/internal/pycompat"
@@ -36,7 +38,16 @@ func planFixes(missing *missingSet, in *install, doFix bool) (*fixPlan, error) {
 		if cands := in.staged[name]; len(cands) > 0 {
 			src, srcVer := locateFix(cands, ver, jarVersion)
 			f.hasStaged, f.staged, f.stagedVersion = true, src, srcVer
-			f.cp = fmt.Sprintf(`cp "%s" "%s"`, src, pycompat.Join(in.modulesDir, name+".jar"))
+			dst := pycompat.Join(in.modulesDir, name+".jar")
+			if sameBytes(src, dst) {
+				// cp would copy the file onto itself: whatever makes the part missing, the
+				// staged jar does not change it.
+				f.action, f.dst = "identical", dst
+				plan.order = append(plan.order, name)
+				plan.byPart[name] = f
+				continue
+			}
+			f.cp = fmt.Sprintf(`cp "%s" "%s"`, src, dst)
 			if ver != "" && srcVer != "" && srcVer != ver {
 				f.warn = fmt.Sprintf("staged version %s != install %s", srcVer, ver)
 			}
@@ -68,7 +79,9 @@ func (p *fixPlan) json() pyjson.Value {
 		if f.hasStaged {
 			e.Set("staged", pyjson.String(f.staged))
 			e.Set("staged_version", pyjson.String(f.stagedVersion))
-			e.Set("cp", pyjson.String(f.cp))
+			if f.cp != "" {
+				e.Set("cp", pyjson.String(f.cp))
+			}
 			if f.warn != "" {
 				e.Set("warn", pyjson.String(f.warn))
 			}
@@ -86,10 +99,16 @@ func (p *fixPlan) json() pyjson.Value {
 	return out
 }
 
-// printMissing is print_missing_and_fixes.
-func printMissing(w io.Writer, missing *missingSet, fixes *fixPlan) {
+// printMissing is print_missing_and_fixes, followed by the station types the installed
+// version does not provide (unprovided, nil for doctor).
+func printMissing(w io.Writer, missing *missingSet, fixes *fixPlan, unprovided *missingSet) {
+	if unprovided != nil && len(unprovided.order) > 0 {
+		defer printUnprovided(w, unprovided)
+	}
 	if len(missing.order) == 0 {
-		fmt.Fprintln(w, "\nOK — all required module-parts are installed. Nothing missing.")
+		if unprovided == nil || len(unprovided.order) == 0 {
+			fmt.Fprintln(w, "\nOK — all required module-parts are installed. Nothing missing.")
+		}
 		return
 	}
 	fmt.Fprintf(w, "\nMISSING module-parts: %d\n", len(missing.order))
@@ -101,6 +120,8 @@ func printMissing(w io.Writer, missing *missingSet, fixes *fixPlan) {
 			switch f.action {
 			case "copied":
 				fmt.Fprintf(w, "      → COPIED%s from %s\n        sha256 %s\n", vtag, f.staged, f.sha)
+			case "identical":
+				fmt.Fprintf(w, "      → identical jar already at %s (copying it changes nothing)\n", f.dst)
 			case "exists":
 				fmt.Fprintf(w, "      → already present at %s\n", f.dst)
 			default:
@@ -114,4 +135,23 @@ func printMissing(w io.Writer, missing *missingSet, fixes *fixPlan) {
 		}
 	}
 	fmt.Fprintln(w, "\nAfter copying jars into modules/, RESTART Workbench, then reopen config.bog.")
+}
+
+// printUnprovided lists the station types that no installed part provides although the
+// module's rt part is installed: a station saved with another version of the module.
+func printUnprovided(w io.Writer, unprovided *missingSet) {
+	fmt.Fprintf(w, "\nTYPES NOT IN THE INSTALLED VERSION: %d\n", len(unprovided.order))
+	for _, t := range unprovided.order {
+		fmt.Fprintf(w, "  ✗ %s  (%s)\n", t, unprovided.reason[t])
+	}
+}
+
+// sameBytes reports whether a and b are both readable and hold the same bytes.
+func sameBytes(a, b string) bool {
+	da, err := os.ReadFile(a)
+	if err != nil {
+		return false
+	}
+	db, err := os.ReadFile(b)
+	return err == nil && bytes.Equal(da, db)
 }
