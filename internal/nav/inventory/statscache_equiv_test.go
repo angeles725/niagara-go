@@ -173,9 +173,16 @@ func TestSaveMatchesLegacy(t *testing.T) {
 	defer func(n int64) { statsCacheMinBytes = n }(statsCacheMinBytes)
 	statsCacheMinBytes = 0
 	newDir, oldDir := t.TempDir(), t.TempDir()
+	// Both trees get the same fixed mtime: the two writes land microseconds apart, so the
+	// entries would otherwise differ in MtimeNs on a fast clock (seen in CI).
+	fixed := time.Unix(1700000000, 123456789)
 	for _, d := range []string{newDir, oldDir} {
-		write(t, filepath.Join(d, "x.json"), `{"_meta": {"a": 1}}`)
-		write(t, filepath.Join(d, "y.json"), `{"_meta": {"b": 2}}`)
+		for name, body := range map[string]string{"x.json": `{"_meta": {"a": 1}}`, "y.json": `{"_meta": {"b": 2}}`} {
+			write(t, filepath.Join(d, name), body)
+			if err := os.Chtimes(filepath.Join(d, name), fixed, fixed); err != nil {
+				t.Fatal(err)
+			}
+		}
 	}
 	c, l := openStatsCache(newDir), legacyOpenStatsCache(oldDir)
 	for _, name := range []string{"x.json", "y.json"} {
