@@ -71,12 +71,15 @@ func (k catalogKey) equal(o catalogKey) bool {
 	return k.Format == o.Format && k.Dir == o.Dir && slices.Equal(k.Files, o.Files)
 }
 
+// parseCatalogFiles is the uncached parse; tests count its calls to prove a cache hit.
+var parseCatalogFiles = parseFiles
+
 // cachedParseDir is parseDir through the on-disk cache.
 func cachedParseDir(src string) ([]string, map[string]*classRec) {
 	dir := catalogCacheDir()
 	paths := javaFiles(src)
 	if dir == "" {
-		return parseFiles(src, paths)
+		return parseCatalogFiles(src, paths)
 	}
 	sum := sha1.Sum([]byte(core.ResolvedPath(src)))
 	cache := filepath.Join(dir, hex.EncodeToString(sum[:])[:16]+".gob")
@@ -84,7 +87,7 @@ func cachedParseDir(src string) ([]string, map[string]*classRec) {
 	if keys, recs, ok := readCatalogCache(cache, key); ok {
 		return keys, recs
 	}
-	keys, recs := parseFiles(src, paths)
+	keys, recs := parseCatalogFiles(src, paths)
 	if now := javaFiles(src); slices.Equal(now, paths) && catalogKeyOf(src, now).equal(key) {
 		cf := catalogCache{Key: key, Entries: make([]catalogEntry, len(keys))}
 		for i, k := range keys {

@@ -100,24 +100,31 @@ func TestCatalogCacheWrittenUnderXDGCacheHome(t *testing.T) {
 }
 
 func TestCatalogCacheServesUnchangedSources(t *testing.T) {
-	if runtime.GOOS == "windows" || os.Geteuid() == 0 {
-		t.Skip("a mode-000 file stays readable here")
-	}
 	cacheEnv(t)
 	root := miniRoot(t)
+	parses := 0
+	defer func(f func(string, []string) ([]string, map[string]*classRec)) { parseCatalogFiles = f }(parseCatalogFiles)
+	real := parseCatalogFiles
+	parseCatalogFiles = func(src string, paths []string) ([]string, map[string]*classRec) {
+		parses++
+		return real(src, paths)
+	}
 	key, want := fallbackDefault(t, root)
 	if key == "" {
 		t.Fatal("BooleanWritable did not resolve")
 	}
-	// Same size, mtime and file set but unreadable: only the cache can still answer.
-	path := filepath.Join(root, writableRel)
-	if err := os.Chmod(path, 0); err != nil {
-		t.Fatal(err)
+	first := parses
+	if first == 0 {
+		t.Fatal("the first run parsed nothing: the counter does not see the parse")
 	}
-	t.Cleanup(func() { _ = os.Chmod(path, 0o644) })
+	// Unchanged sources (same Stamp for every file): the second run is answered from the cache,
+	// without parsing a source again.
 	gotKey, got := fallbackDefault(t, root)
 	if gotKey != key || got != want {
 		t.Fatalf("second run = %q %q, want the cached %q %q", gotKey, got, key, want)
+	}
+	if parses != first {
+		t.Fatalf("the second run parsed %d source dirs, want 0 (it must be answered from the cache)", parses-first)
 	}
 }
 
