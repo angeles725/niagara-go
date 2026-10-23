@@ -58,6 +58,11 @@ var indexFacts = []indexFact{
 	{"method", "method-index.json", "method 'ackAlarm' lists javax.baja.alarm.BAlarmRecord.ackAlarm()",
 		func(sub *Env) error { return sub.Method(MethodParams{Name: "ackAlarm"}) },
 		contains("[methods] javax.baja.alarm.BAlarmRecord\n    void ackAlarm()\n")},
+	{"module", "module-index.json", "module 'kitControl-rt' lists its dependency on baja",
+		func(sub *Env) error { return sub.Module(ModuleParams{Name: "kitControl-rt"}) },
+		func(out string) bool {
+			return strings.HasPrefix(out, "MODULE: kitControl-rt\n") && strings.Contains(out, "\n  baja ")
+		}},
 }
 
 // missingNeed is why fact f cannot be checked in this version ("" when it can):
