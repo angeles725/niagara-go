@@ -6,3 +6,4 @@
   SKIP  class: indexes/class-index.json is empty in this version
   SKIP  slots: indexes/slots-index.json is absent in this version
   SKIP  method: indexes/method-index.json is absent in this version
+  SKIP  module: indexes/module-index.json is absent in this version

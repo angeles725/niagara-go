@@ -310,6 +310,9 @@ func (e *Env) freshness() error {
 	if e.fulltextLine() {
 		stale = append(stale, "fulltext.sqlite")
 	}
+	if e.moduleIndexLine(e.installDirOf()) {
+		stale = append(stale, moduleIndexName)
+	}
 	e.retiredLines()
 	fmt.Fprintln(e.Out)
 	fmt.Fprintf(e.Out, "Baseline stamped: %s\n", pyStr(get(manifest, "stamped_utc", "?")))

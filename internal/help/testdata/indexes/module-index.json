@@ -1,0 +1,32 @@
+{
+  "jars": 6,
+  "jar_bytes": 6000,
+  "modules": {
+    "baja": {"name": "baja", "module": "baja", "runtime_profile": "", "vendor": "Tridium", "version": "4.15.6.20", "description": "Niagara Core",
+      "dependencies": [],
+      "types": [{"name": "Component", "class": "javax.baja.sys.BComponent"}],
+      "agents": [], "java_permissions": [], "defs": [{"name": "baja.home", "value": "module://baja"}], "adapters": [], "jar": "baja.jar"},
+    "control-rt": {"name": "control-rt", "module": "control", "runtime_profile": "rt", "vendor": "Tridium", "version": "4.15.6.20", "description": "Control points",
+      "dependencies": [{"name": "baja", "vendor": "Tridium", "version": "4.15.6"}],
+      "types": [{"name": "BooleanPoint", "class": "javax.baja.control.BBooleanPoint"}],
+      "agents": [], "java_permissions": [], "defs": [], "adapters": [{"type": "BooleanPoint", "from": "baja:RelTime", "to": "control:TriggerMode"}], "jar": "control-rt.jar"},
+    "kitControl-rt": {"name": "kitControl-rt", "module": "kitControl", "runtime_profile": "rt", "vendor": "Tridium", "version": "4.15.6.20", "description": "Library of Control Components",
+      "dependencies": [{"name": "baja", "vendor": "Tridium", "version": "4.15.6"}, {"name": "control-rt", "vendor": "Tridium", "version": "4.15.6"}],
+      "types": [{"name": "BooleanLatch", "class": "com.tridium.kitControl.util.BBooleanLatch"}, {"name": "NumericLatch", "class": "com.tridium.kitControl.util.BNumericLatch"}],
+      "agents": [],
+      "java_permissions": [{"profile": "station", "class": "java.lang.RuntimePermission", "name": "setIO", "action": ""}, {"profile": "all", "class": "java.util.PropertyPermission", "name": "*", "action": "read"}],
+      "defs": [], "adapters": [], "jar": "kitControl-rt.jar"},
+    "kitControl-ux": {"name": "kitControl-ux", "module": "kitControl", "runtime_profile": "ux", "vendor": "Tridium", "version": "4.15.6.20", "description": "Kit Control UX",
+      "dependencies": [{"name": "kitControl-rt", "vendor": "Tridium", "version": "4.15.6"}],
+      "types": [{"name": "LatchTypeExt", "class": "com.tridium.kitControl.ux.BLatchTypeExt"}],
+      "agents": [{"type": "LatchTypeExt", "class": "com.tridium.kitControl.ux.BLatchTypeExt", "on": ["kitControl:BooleanLatch", "kitControl:NumericLatch"]}],
+      "java_permissions": [], "defs": [], "adapters": [], "jar": "kitControl-ux.jar"},
+    "kitControl-wb": {"name": "kitControl-wb", "module": "kitControl", "runtime_profile": "wb", "vendor": "Tridium", "version": "4.15.6.20", "description": "Kit Control Workbench",
+      "dependencies": [{"name": "kitControl-rt", "vendor": "Tridium", "version": "4.15.6"}, {"name": "kitControl-ux", "vendor": "Tridium", "version": "4.15.6"}],
+      "types": [{"name": "LatchView", "class": "com.tridium.kitControl.wb.BLatchView"}],
+      "agents": [{"type": "LatchView", "class": "com.tridium.kitControl.wb.BLatchView", "on": ["kitControl:BooleanLatch"], "app": "webShell", "required_permissions": "r"}],
+      "java_permissions": [], "defs": [], "adapters": [], "jar": "kitControl-wb.jar"}
+  },
+  "errors": [{"jar": "broken-rt.jar", "error": "XML syntax error on line 1: unexpected EOF"}],
+  "without_descriptor": []
+}

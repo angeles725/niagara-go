@@ -7,7 +7,7 @@ extracted 39 files (1,084 bytes)
   COLLISION guides/thing-ux/rc/notes.md (thing-ux.jar overwritten by thing-ux.jar)
   SKIP  inheritance_builder.py     -> inheritance.json  (source 'bajadoc-clean/' absent)
   SKIP  method_indexer.py          -> method-index.json  (source 'bajadoc-clean/' absent)
-Ran 14, skipped 2, failed 0.
+Ran 15, skipped 2, failed 0.
   EMPTY inheritance.json (its source is not in this install)
   EMPTY method-index.json (its source is not in this install)
 fidelity 1.0.0.0: jars 13 checked 39 sha256-exact 38 eol-only 0 mismatched 1 missing 0
@@ -36,7 +36,7 @@ RESULT: NOT READY - see the gate reports above
 
 # exit 1
 # tree
-@@ 0,0 0,337
+@@ 0,0 0,340
 + fulltext.sqlite:
 + [meta fingerprint engine=3|devguide-clean=<dir>/repo/versions/1.0.0.0/devguide-clean:3:135:<mtime>:<sha1>|guides-clean=<dir>/repo/versions/1.0.0.0/guides-clean:19:1068:<mtime>:<sha1>|source=<dir>/repo/versions/1.0.0.0/source:1:24:<mtime>:<sha1>|devguide-rc=<dir>/repo/versions/1.0.0.0/devguide-rc:2:26:<mtime>:<sha1>|devguide-examples=<dir>/repo/versions/1.0.0.0/devguide-examples:1:9:<mtime>:<sha1>|lexicon-text=<dir>/repo/versions/1.0.0.0/lexicon-text:1:95:<mtime>:<sha1>   ]
 + [docs 1 devguide-clean changes37.txt changes37.txt 4 0]
@@ -108,8 +108,10 @@ RESULT: NOT READY - see the gate reports above
 + package-text/: 0 package descriptions (from 0 package-index.bajadoc files)
 +   RUN   lexicon_extractor          -> lexicon-text/
 + lexicon-text/: 1 lexicon files with entries of 1, 0 help and 1 label rows (from <dir>/install/modules, 15 jars)
++   RUN   module_index_builder       -> module-index.json
++ module-index.json: 1 modules from 15 jars (13 without module.xml, 1 errors) -> <dir>/repo/versions/1.0.0.0/indexes/module-index.json
 + 
-+ Ran 14, skipped 2, failed 0.
++ Ran 15, skipped 2, failed 0.
 + Manifest re-stamped. Run 'freshness' to confirm FRESH.
 + data root:
 + bajadoc d--------- 755
@@ -214,8 +216,8 @@ RESULT: NOT READY - see the gate reports above
 + |   documentation-like: .html .htm .xhtml .md .markdown .txt .text .pdf .rtf .doc .docx .odt .rst .adoc .bajadoc .lexicon + toc.xml
 + |   location                       jars with-docs  doc-like  indexed excluded UNCLASSIFIED
 + |   javadoc/                          1         1         3        0        1            2
-+ |   modules/                         15        13        40       26        8            7
-+ |   TOTAL                            16        14        43       26        9            9
++ |   modules/                         15        13        41       27        8            7
++ |   TOTAL                            16        14        44       27        9            9
 + | 
 + | EXCLUDED (rule: reason):
 + |         2  doc_types: licence text
@@ -241,7 +243,7 @@ RESULT: NOT READY - see the gate reports above
 + |   modules/docJdk-doc.jar  other.txt  -- no extract or exclude rule matches (add one to install_docs.json)
 + |   modules/thing-ux.jar  doc/rc/notes.md  -- maps to guides/thing-ux/rc/notes.md, which the earlier entry rc/notes.md of this jar fills: not extracted, and its content differs
 + | 
-+ | OUTSIDE THE DOCUMENTATION SCOPE: 16 entries are not documentation-like and were not classified (by type: .class 5, .java 3, .mf 3, .js 2, .palette 1, .png 1, .xml 1)
++ | OUTSIDE THE DOCUMENTATION SCOPE: 15 entries are not documentation-like and were not classified (by type: .class 5, .java 3, .mf 3, .js 2, .palette 1, .png 1)
 + | RESULT: FAIL - 9 unclassified entries
 + | 
 + guides d--------- 755
@@ -331,6 +333,7 @@ RESULT: NOT READY - see the gate reports above
 + indexes/inheritance.json ---------- 644 2 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a
 + indexes/jdk-class-index.json ---------- 644 2 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a
 + indexes/method-index.json ---------- 644 2 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a
++ indexes/module-index.json ---------- 644 820 16e5de773846cb652bbfc3b1699d472cbc72ee8a502f7648bb9d41e32d82bef5
 + indexes/pdf-index.json ---------- 644 3 ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356
 + indexes/slots-index.json ---------- 644 2 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a
 + indexes/source-index.json ---------- 644 386 f5057687412a7b51d3e123d3a4d5006b45c476e86e7ef267fe2e1c4b47c6841c
@@ -374,7 +377,7 @@ RESULT: NOT READY - see the gate reports above
 +     "docs": null
 +   }
 + }
-@@ 1,1 338,355
+@@ 1,1 341,358
 + .cache d--------- 755
 + .cache/jar-listings d--------- 755
 + .cache/jar-listings/<install hash>.json ---------- 644 <size> <sha256>
@@ -485,7 +488,7 @@ extracted 39 files (1,084 bytes)
   COLLISION guides/thing-ux/rc/notes.md (thing-ux.jar overwritten by thing-ux.jar)
   SKIP  inheritance_builder.py     -> inheritance.json  (source 'bajadoc-clean/' absent)
   SKIP  method_indexer.py          -> method-index.json  (source 'bajadoc-clean/' absent)
-Ran 14, skipped 2, failed 0.
+Ran 15, skipped 2, failed 0.
   EMPTY inheritance.json (its source is not in this install)
   EMPTY method-index.json (its source is not in this install)
 fidelity 1.0.0.0: jars 13 checked 39 sha256-exact 38 eol-only 0 mismatched 1 missing 0
@@ -514,13 +517,13 @@ RESULT: NOT READY - see the gate reports above
 
 # exit 1
 # tree
-@@ 173,174 173,174
+@@ 175,176 175,176
 - | INSTALL SWEEP 1.0.0.0 (16 jars under <dir>/install; 10 listed anew, the rest from the jar-listing cache)
 + | INSTALL SWEEP 1.0.0.0 (16 jars under <dir>/install; 0 listed anew, the rest from the jar-listing cache)
-@@ 290,291 290,291
+@@ 292,293 292,293
 - indexes/guides-index.json ---------- 644 1157 6004758efb57e1bc870c3a083112194ddf70e6e721d832a443037320a59daacc
 + indexes/guides-index.json ---------- 644 1236 155614e109f7600dd3ba1d6a6f76698d20fef8baab9d11664d70c1782bd24e43
-@@ 342,343 342,343
+@@ 345,346 345,346
 - versions/1.0.0.0.manifest.json ---------- 644 {
  "version": "1.0.0.0",
  "label": "install",
@@ -679,7 +682,7 @@ RESULT: NOT READY - see the gate reports above
   }
  ]
 }
-@@ 348,349 348,349
+@@ 351,352 351,352
 - |       "label": "install",
 + |       "label": "Synthetic \u00f1",
 ## <dir>/install/. --id 1.0.0.0

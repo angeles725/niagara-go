@@ -24,6 +24,9 @@
       "properties": 13,
       "actions": 4,
       "topics": 3
+    },
+    "module-index": {
+      "absent": true
     }
   },
   "text_dirs": {

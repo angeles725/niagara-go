@@ -43,7 +43,7 @@ func TestStatsUnregisteredRoot(t *testing.T) {
 =======================================================
 Niagara version: unregistered  (<DIR>)
 
-INDEXES (9):
+INDEXES (10):
 
   class-index.json            0 classes (0 packages)
   devguide-toc.json           0 guides
@@ -54,6 +54,7 @@ INDEXES (9):
   source-index.json           0 classes (0 lines)
   xref-index.json             0 classes (0 edges)
   slots-index.json            0 classes (0 props, 0 actions, 0 topics)
+  module-index.json      absent (rebuild-all builds it from the install's modules/)
 
 TEXT SOURCES (10 sources of the full-text index, 0.0 MB total):
 
@@ -74,8 +75,8 @@ RAW HTML:
   devguide/                0 HTML
   guides/                  0 HTML
 
-INDEXES: 9
-CLI: 19 commands
+INDEXES: 10
+CLI: 21 commands
 `
 	if got := strings.ReplaceAll(out.String(), dir, "<DIR>"); got != want {
 		t.Errorf("stats:\n%s\nwant:\n%s", got, want)
@@ -176,5 +177,42 @@ func TestStatsNamesASharedSource(t *testing.T) {
 	}
 	if want := "files  (0.0 MB)  shared: the PDF manuals of Niagara 1.0 (this version ships none)\n"; !strings.Contains(out.String(), want) {
 		t.Errorf("no shared docs-text note %q in:\n%s", want, out.String())
+	}
+}
+
+// TestStatsCountsModuleIndex: module-index.json is optional (built from the
+// install, not the data root); when present stats counts its modules and
+// elements and the descriptors it could not read, in text and JSON.
+func TestStatsCountsModuleIndex(t *testing.T) {
+	dir := statsRoot(t, "")
+	data, err := os.ReadFile(filepath.Join("testdata", "indexes", "module-index.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "indexes", "module-index.json"), data, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	var out bytes.Buffer
+	if err := (&Env{BaseDir: dir, Out: &out}).Stats(false); err != nil {
+		t.Fatal(err)
+	}
+	want := "  module-index.json           5 modules (6 dependencies, 6 types, 2 agents, 2 permissions; 1 unreadable)\n"
+	if !strings.Contains(out.String(), want) {
+		t.Errorf("stats lacks %q:\n%s", want, out.String())
+	}
+	out.Reset()
+	if err := (&Env{BaseDir: dir, Out: &out}).Stats(true); err != nil {
+		t.Fatal(err)
+	}
+	want = `"module-index": {
+      "modules": 5,
+      "dependencies": 6,
+      "types": 6,
+      "agents": 2,
+      "java_permissions": 2,
+      "unreadable": 1
+    }`
+	if !strings.Contains(out.String(), want) {
+		t.Errorf("stats --json lacks %s:\n%s", want, out.String())
 	}
 }

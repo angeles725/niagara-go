@@ -61,6 +61,12 @@ var scopes = map[string]def{
 	"modules": {[]string{"source-index.json"},
 		"modules not in nh's source index (docSource-doc.jar and the vendor .java of module jars are indexed, third-party packages excluded; module names come from it)",
 		[]string{"package", "find", "search"}},
+	"module-xml": {[]string{"module-index.json"}, "jars without META-INF/module.xml; module names are matched " +
+		"exactly, in any letter case, by part name or as a glob",
+		[]string{"type", "search", "find"}},
+	"types": {[]string{"module-index.json"}, "types of jars without META-INF/module.xml; a type is matched as " +
+		"module:Type or Type, exactly, in any letter case or as a glob",
+		[]string{"class", "search", "find"}},
 	"pdf": {[]string{"pdf-index.json"}, "manual pages without a text layer (scanned images)",
 		[]string{"find", "guide-search", "pdf --no-fulltext"}},
 	"fulltext": {nil, "JDK API (class --jdk); " + docTypesExcluded,
@@ -166,8 +172,36 @@ func indexCount(baseDir, name string, load Loader) (string, error) {
 		}
 		return fmt.Sprintf("%s: %s names / %s classes", name, pycompat.Commas(data.Len()), pycompat.Commas(total)), nil
 	}
+	if name == "module-index.json" {
+		return moduleCount(data), nil
+	}
 	return fmt.Sprintf("%s: %s entries", name, pycompat.Commas(data.Len())), nil
 }
+
+// moduleCount is the module-index.json part of a scope line: its modules and
+// the jars whose module.xml could not be read (the first three named).
+func moduleCount(data *index.Object) string {
+	n := 0
+	if mods, ok := getAny(data, "modules").(*index.Object); ok {
+		n = mods.Len()
+	}
+	line := fmt.Sprintf("module-index.json: %s modules", pycompat.Commas(n))
+	errs, _ := getAny(data, "errors").([]any)
+	if len(errs) == 0 {
+		return line
+	}
+	var jars []string
+	for _, e := range errs[:min(3, len(errs))] {
+		jar, _ := getAny(asObject(e), "jar").(string)
+		jars = append(jars, jar)
+	}
+	if len(errs) > 3 {
+		jars = append(jars, "...")
+	}
+	return fmt.Sprintf("%s (%d module.xml unreadable: %s)", line, len(errs), strings.Join(jars, ", "))
+}
+
+func asObject(v any) *index.Object { o, _ := v.(*index.Object); return o }
 
 // dirCount is scope._dir_count: "<name>/: absent" or "<name>/: N files"
 // (every file os.walk lists) in the folder text_sources resolves, which for

@@ -41,7 +41,7 @@ var optionalArtifacts = map[string]string{"jdk-class-index.json": "when jdk/ exi
 
 // rebuildBuilders is maintenance.BUILDERS without build_call_index.py
 // (call-index.json is retired, decision I3-5), plus the Go-only text
-// sources (package-text/, lexicon-text/). Tests swap a run function.
+// sources (package-text/, lexicon-text/) and module-index.json. Tests swap a run function.
 var rebuildBuilders = []builder{
 	{"bajadoc_parser.py", []string{"bajadoc-clean/"}, "bajadoc", runBajadoc},
 	{"bajadoc_xml_parser.py", []string{"bajadoc-clean/"}, "devguide", runBajadocXML},
@@ -59,6 +59,7 @@ var rebuildBuilders = []builder{
 	{"course_extractor.py", []string{"course-text/"}, "", runCourse},
 	{packageTextScript, []string{packageTextDir + "/"}, "devguide", textRun(buildPackageText)},
 	{lexiconScript, []string{lexiconTextDir + "/"}, "", textRun(buildLexiconText)},
+	{moduleIndexScript, []string{moduleIndexName}, "", textRun(buildModuleIndex)},
 }
 
 // RebuildOptions are rebuild-all's switches. Only keeps the builders whose

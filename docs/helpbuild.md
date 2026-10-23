@@ -1124,6 +1124,66 @@ A data root gets the files from `nh versions extract <id> --force` or, on a repo
 root such as 4.14's, `nh versions extract <id> --fill-missing`; `nh rebuild-all` then indexes
 them.
 
+## Module descriptors: module-index.json
+
+Every module jar ships `META-INF/module.xml`: its dependencies, the types it registers (name
+and class), the agents (views, editors, type extensions) those types register on other
+types, its java-permissions per profile, its defs and its adapters. The doc-jar extraction
+never copies `META-INF/` (`destPath`); the last rebuild-all step, `module_index_builder`
+(`moduleindex.go`), reads the descriptor of every jar of the registered install's
+`modules/` (the jars `lexiconJars` lists, through the same `zipfile` reader) with
+`modulexml.Parse` and writes one structured index, `indexes/module-index.json`:
+
+    {"jars": N, "jar_bytes": B,
+     "modules": {"<module name>": {"name", "module", "runtime_profile", "vendor", "version",
+                 "description", "dependencies": [{"name", "vendor", "version"}],
+                 "types": [{"name", "class"}], "agents": [{"type", "class", "on": [...],
+                 "app"?, "default"?, "required_permissions"?}],
+                 "java_permissions": [{"profile", "class", "name", "action"}],
+                 "defs": [{"name", "value"}], "adapters": [{"type", "from", "to"}], "jar"}},
+     "errors": [{"jar", "error"}], "without_descriptor": ["<jar>"]}
+
+It fails closed: a corrupt jar, a descriptor that is not well-formed XML, a root that is
+not a named `<module>`, an `<agent>`/`<adapter>` outside a `<type>` or a module name a
+second jar repeats is an `errors` row and a `WARNING: module_index_builder: <jar>: <why>`
+line on stderr, never a silent skip; jars without a descriptor are listed. A data root
+with no registered install (or an install that is not mounted) keeps its last
+`module-index.json`. The text is not added to the full-text index: `nh module` and `nh type`
+read the structure.
+
+Readers (`internal/help`): `nh module <name|part|glob> [--types|--agents|--permissions|--defs]
+[--json]` resolves an exact module name, then any letter case, then every runtime profile of a
+part name (`kitControl` -> `-rt`, `-ux`, `-wb`), then a glob, and prints the summary (jar,
+part, vendor, dependencies, reverse dependencies, counts, adapters, java-permissions), a
+listing, or a miss naming `module-index.json`, its module count and its unreadable
+descriptors. `nh type <module:Type|Type> [--json]` prints the registering module and jar,
+the class, whether `class-index.json` and `source-index.json` hold that class, the agents
+every module registers on the type and, for a view, the types it is an agent on. A `find`
+miss on a module-looking or type-looking query names these two commands. `stats` counts the
+index (optional: built from the install), `freshness` compares its recorded jar count and
+bytes with the registered install's `modules/`, and `selftest` checks that
+`kitControl-rt` depends on `baja` (true on 4.3, 4.13, 4.14 and 4.15).
+
+`coverage --sweep` no longer counts `META-INF/module.xml` outside the documentation scope
+(`sweepmodule.go`): the descriptor of a jar in `modules/` is indexed when `module-index.json`
+holds its module and UNCLASSIFIED when it does not (not rebuilt yet) or could not read it (the
+error is quoted); a copy outside `modules/` (`sw/`, `bin/ext`) is excluded by
+`module-descriptor-outside-modules`, since the index reads the installed `modules/` only. Until
+`rebuild-all` builds `module-index.json`, a sweep of a real install therefore fails on every
+descriptor, on purpose.
+
+`TestModuleIndexDryProbe` builds the index from a real install into a temporary data root
+(the install is only read) and prints the element counts: `NH_MODULE_INDEX_PROBE=<install>
+go test ./internal/helpbuild -run TestModuleIndexDryProbe -v`. On 2026-10-23, every count
+equal to the grep audit of the same jars:
+
+| Install | jars | modules | errors | dependencies | types | agents (on-types) | java-permissions | defs | adapters |
+|---|---|---|---|---|---|---|---|---|---|
+| 4.15.6.20 | 733 | 733 | 0 | 11,516 | 8,798 | 1,971 (2,460) | 9,683 | 1,418 | 113 |
+| 4.14.0.162 | 995 | 992 (3 jars without a descriptor) | 0 | 14,372 | 14,193 | 2,329 (3,006) | 9,559 | 1,440 | 156 |
+| 4.13.2.18 | 740 | 740 | 0 | 11,362 | 8,749 | 1,883 (2,243) | 9,560 | 1,418 | 116 |
+| 4.3.58.18 | 578 | 578 | 0 | 6,610 | 6,341 | 1,335 (1,576) | 8,395 | 1,412 | 113 |
+
 ## Real data
 
 `TestCoverageRealGoldens` (S10b-1) is the package's one real-data test:
