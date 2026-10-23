@@ -62,7 +62,8 @@ func Main(args []string, s cli.Stdio) int {
 	}
 	results, order, nfiles, unreadable, err := scan(root, names)
 	if err != nil { // a root that cannot be listed is not a corpus of zero blocks
-		fmt.Fprintf(s.Err, "check-coverage: cannot list %s: %s -- gate not run\n", root, pycompat.StrerrorOf(err))
+		fmt.Fprintf(s.Err, "check-coverage: cannot list %s: %s -- gate not run\n",
+			blockfiles.UnlistedDir(root, err), pycompat.StrerrorOf(err))
 		return 3
 	}
 	for _, u := range unreadable {

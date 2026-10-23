@@ -1,6 +1,8 @@
 package blockfiles
 
 import (
+	"errors"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -118,17 +120,6 @@ func TestSubBlocksCacheNeverStale(t *testing.T) {
 		{"remove a directory", false, nil, func(t *testing.T, root string) {
 			must(t, os.RemoveAll(filepath.Join(root, "a/b")))
 		}},
-		{"make an unreadable directory readable", true, func(t *testing.T, root string) {
-			writeTree(t, root, []string{"locked/l-block6.md"})
-			must(t, os.Chmod(filepath.Join(root, "locked"), 0))
-			t.Cleanup(func() { os.Chmod(filepath.Join(root, "locked"), 0o755) })
-		}, func(t *testing.T, root string) {
-			must(t, os.Chmod(filepath.Join(root, "locked"), 0o755))
-		}},
-		{"make a directory unreadable", true, nil, func(t *testing.T, root string) {
-			must(t, os.Chmod(filepath.Join(root, "a/b"), 0))
-			t.Cleanup(func() { os.Chmod(filepath.Join(root, "a/b"), 0o755) })
-		}},
 		{"a block symlink's target becomes a directory", true, func(t *testing.T, root string) {
 			writeTree(t, outside, []string{"tgt.md"})
 			must(t, os.Symlink(filepath.Join(outside, "tgt.md"), filepath.Join(root, "a/link-block3.md")))
@@ -161,6 +152,29 @@ func TestSubBlocksCacheNeverStale(t *testing.T) {
 				t.Fatalf("the change left the result %q unchanged: the case proves nothing", got)
 			}
 		})
+	}
+}
+
+// TestSubBlocksCacheUnlistableDirectory: a warm cache never hides a directory locked
+// after it was written (the call fails closed and caches nothing), and unlocking it
+// brings its blocks back.
+func TestSubBlocksCacheUnlistableDirectory(t *testing.T) {
+	if runtime.GOOS == "windows" || os.Geteuid() == 0 {
+		t.Skip("needs POSIX modes, as a non-root user")
+	}
+	root := cacheRoot(t, "a/x-block1.md", "a/b/c-bloque2.md")
+	before := warm(t, root)
+	locked := filepath.Join(root, "a/b")
+	must(t, os.Chmod(locked, 0))
+	t.Cleanup(func() { os.Chmod(locked, 0o755) })
+	for range 2 {
+		if bs, err := SubBlocks(root); !errors.Is(err, fs.ErrPermission) || bs != nil || UnlistedDir(root, err) != locked {
+			t.Fatalf("locked a/b: SubBlocks = %q, %v; want a permission error naming %s", bs, err, locked)
+		}
+	}
+	must(t, os.Chmod(locked, 0o755))
+	if got := mustSub(root); !reflect.DeepEqual(got, before) {
+		t.Fatalf("unlocked a/b: SubBlocks = %q, want %q", got, before)
 	}
 }
 

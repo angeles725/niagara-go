@@ -150,3 +150,39 @@ func TestUnlistableRootExits3(t *testing.T) {
 		}
 	}
 }
+
+// TestUnlistableSubdirectoryExits3: a sub-corpus directory this user cannot list hides
+// its blocks, so "clear" would be a lie: the gate did not run (exit 3), and stderr names
+// that directory, not the root.
+func TestUnlistableSubdirectoryExits3(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("mode 000 does not lock a directory on Windows")
+	}
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, "niagara-mental-model-bloque1.md"), []byte("# B1\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	notes := filepath.Join(root, "notes")
+	if err := os.MkdirAll(notes, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(notes, "x-block1.md"), []byte("zzqq\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chmod(notes, 0); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = os.Chmod(notes, 0o755) })
+	if _, err := os.ReadDir(notes); err == nil {
+		t.Skip("mode 000 does not stop this user listing a directory (root?)")
+	}
+	useRoot(t, func() (string, error) { return root, nil })
+	for _, args := range [][]string{{"zzqq"}, {"--json", "zzqq"}} {
+		var out, errb bytes.Buffer
+		code := Main(args, cli.Stdio{In: strings.NewReader(""), Out: &out, Err: &errb})
+		want := "check-coverage: cannot list " + notes + ": Permission denied -- gate not run\n"
+		if code != 3 || out.Len() != 0 || errb.String() != want {
+			t.Errorf("%v: exit %d, stdout %q, stderr %q", args, code, out.String(), errb.String())
+		}
+	}
+}

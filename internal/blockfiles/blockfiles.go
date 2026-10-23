@@ -246,13 +246,15 @@ func mayBeSubBlock(name string) bool {
 func walkWorkers() int { return min(runtime.GOMAXPROCS(0), 8) }
 
 // SubBlocks is sub_blocks: every sub-corpus block below root (os.walk: skipped and dot
-// directories pruned, symlinked directories not entered, unreadable directories
-// skipped), sorted by label, then path. Directories are read in parallel; the full
+// directories pruned, symlinked directories not entered), sorted by label, then path. Directories are read in parallel; the full
 // sort makes the result independent of walk order. A warm call is answered from the
 // walk cache (subcache.go) when every walked directory is unchanged. A root that does
 // not exist (or is not a directory) has no blocks; a root that exists but cannot be
 // listed is an error, never an empty sub-corpus (os.walk would hide it: an intended
-// fail-closed difference from Python, as in MainBlocks).
+// fail-closed difference from Python, as in MainBlocks). So is a directory below the root
+// that exists but cannot be listed: skipping it would answer without its blocks (a false
+// "clear" in check-coverage); UnlistedDir names it. A directory that vanishes mid-walk is
+// still skipped, as os.walk does.
 func SubBlocks(root string) ([]Block, error) {
 	if path := cachePath(root); path != "" {
 		return cachedSubBlocks(root, path)
@@ -263,16 +265,17 @@ func SubBlocks(root string) ([]Block, error) {
 
 // walkSubBlocks is the SubBlocks walk; with record it also returns what the walk cache
 // checks (every directory stamp, taken before the directory is read). The error is the
-// root's own listing error (listErr); the record of such a walk is invalid.
+// listing error (listErr) of the root or, failing that, of the first unlistable directory
+// by path (deterministic whatever the walk order); the record of such a walk is invalid.
 func walkSubBlocks(root string, record bool) ([]Block, *walkRecord, error) {
 	walks.Add(1)
 	w := &walker{root: root, sem: make(chan struct{}, walkWorkers()-1), record: record}
 	w.wg.Add(1)
 	w.walk(root)
 	w.wg.Wait()
-	if w.rootErr != nil {
+	if err := w.firstErr(); err != nil {
 		w.rec.invalid = true
-		return nil, &w.rec, w.rootErr
+		return nil, &w.rec, err
 	}
 	sortBlocks(w.out, func(a, b Block) bool { return a.Path < b.Path })
 	return w.out, &w.rec, nil
@@ -290,8 +293,49 @@ type walker struct {
 	record bool
 	rec    walkRecord
 	// rootErr is the root's listing error; only the first walk (the root's, before any
-	// goroutine starts) sets it.
+	// goroutine starts) sets it. dirErrs are the listing errors of directories below it
+	// (guarded by mu).
 	rootErr error
+	dirErrs []error
+}
+
+// fail records dir's listing error (listErr: a directory that is gone is no error).
+func (w *walker) fail(dir string, err error) {
+	if err = listErr(err); err == nil {
+		return
+	}
+	if dir == w.root {
+		w.rootErr = err
+		return
+	}
+	w.mu.Lock()
+	w.dirErrs = append(w.dirErrs, err)
+	w.mu.Unlock()
+}
+
+// firstErr is the root's listing error, else the error of the unlistable directory
+// whose path sorts first.
+func (w *walker) firstErr() error {
+	if w.rootErr != nil {
+		return w.rootErr
+	}
+	var first error
+	for _, err := range w.dirErrs {
+		if first == nil || UnlistedDir("", err) < UnlistedDir("", first) {
+			first = err
+		}
+	}
+	return first
+}
+
+// UnlistedDir is the directory a SubBlocks or AllBlocks error could not list: the
+// error's path when it carries one (a directory below root), root otherwise.
+func UnlistedDir(root string, err error) string {
+	var pe *fs.PathError
+	if errors.As(err, &pe) && pe.Path != "" {
+		return pe.Path
+	}
+	return root
 }
 
 func (w *walker) walk(dir string) {
@@ -300,18 +344,14 @@ func (w *walker) walk(dir string) {
 	if w.record {
 		var err error
 		if st, err = statStamp(dir); err != nil {
-			if dir == w.root {
-				w.rootErr = listErr(err)
-			}
+			w.fail(dir, err)
 			w.note(nil, nil, true)
 			return
 		}
 	}
 	entries, err := os.ReadDir(dir)
 	if err != nil {
-		if dir == w.root {
-			w.rootErr = listErr(err)
-		}
+		w.fail(dir, err)
 		if w.record {
 			w.note([]dirEntryStamp{{dir, st}}, nil, !stableErr(err))
 		}
