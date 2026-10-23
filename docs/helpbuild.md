@@ -1241,6 +1241,14 @@ palette, a wrong root, no palette `<p>` or an undeclared prefix is an `errors` r
 `WARNING: palette_index_builder: <jar>!<path>: <why>` line. As for `module-index.json`, a
 data root with no registered install keeps its last copy and the install path is not stored.
 
+Reader (`internal/help`, `palettes.go`): `nh palette <query> [--json]` lists every folder and
+entry whose type (`Type` or `module:Type`), entry name or folder name matches, then the
+entries that hold a matching type below them (`(holds module:Type)`), each with its module,
+palette file and path in the palette; exact first, then any letter case, then a glob, as
+`nh type` resolves. `nh palette --module <module> [--json]` prints the module's palettes as
+trees (folders, entries with their type, properties and held types). A miss names
+`palette-index.json`, its palette count and its unreadable palettes (scope `palettes`).
+
 `TestPaletteIndexDryProbe` (`NH_PALETTE_INDEX_PROBE=<install>`) builds it read-only into a
 temporary root. On 2026-10-23, equal to the 2026-10-22 audit:
 

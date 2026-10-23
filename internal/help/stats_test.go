@@ -76,7 +76,7 @@ RAW HTML:
   guides/                  0 HTML
 
 INDEXES: 10
-CLI: 21 commands
+CLI: 22 commands
 `
 	if got := strings.ReplaceAll(out.String(), dir, "<DIR>"); got != want {
 		t.Errorf("stats:\n%s\nwant:\n%s", got, want)

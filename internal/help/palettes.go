@@ -2,7 +2,8 @@ package help
 
 // `palette` over indexes/palette-index.json (built by rebuild-all's
 // palette_index_builder from every *.palette of the install's module jars):
-// where a type, entry name or folder appears in the palettes Tridium ships.
+// where a type, entry name or folder appears in the palettes Tridium ships,
+// or (--module) one module's palette trees.
 
 import (
 	"fmt"
@@ -18,10 +19,11 @@ import (
 const paletteIndexName = "palette-index.json"
 
 // PaletteParams are the arguments of `palette`: Query is a type, name or
-// folder; JSON prints the answer as JSON.
+// folder, or with Module a module name; JSON prints the answer as JSON.
 type PaletteParams struct {
-	Query string
-	JSON  bool
+	Query  string
+	Module bool
+	JSON   bool
 }
 
 // paletteNode is one folder or entry of a palette and its path in it.
@@ -118,6 +120,9 @@ func (e *Env) Palette(p PaletteParams) error {
 	pals, err := e.palettes()
 	if err != nil {
 		return err
+	}
+	if p.Module {
+		return e.paletteModule(pals, p)
 	}
 	hits := resolvePalette(paletteNodes(pals), p.Query)
 	if len(hits) == 0 {
