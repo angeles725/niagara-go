@@ -1,0 +1,19 @@
+{
+  "jars": 6,
+  "jar_bytes": 6000,
+  "palettes": [
+    {"module": "control-rt", "jar": "control-rt.jar", "path": "module.palette", "folders": 1, "entries": 2, "tree": [
+      {"folder": "Points", "type": "baja:UnrestrictedFolder", "children": [
+        {"name": "BooleanPoint", "type": "control:BooleanPoint"},
+        {"name": "Daily Trigger", "type": "control:TimeTrigger",
+         "properties": [{"name": "triggerMode", "type": "control:DailyTriggerMode"}, {"name": "enabled", "value": "true"}],
+         "contains": ["control:DailyTriggerMode"]}]}]},
+    {"module": "kitControl-rt", "jar": "kitControl-rt.jar", "path": "module.palette", "folders": 2, "entries": 3, "tree": [
+      {"folder": "Logic", "type": "baja:UnrestrictedFolder", "children": [
+        {"folder": "Latches", "type": "baja:Folder", "children": [
+          {"name": "BooleanLatch", "type": "kitControl:BooleanLatch"},
+          {"name": "NumericLatch", "type": "kitControl:NumericLatch"}]},
+        {"name": "LatchBank", "type": "kitControl:LatchBank", "contains": ["kitControl:BooleanLatch"]}]}]}
+  ],
+  "errors": [{"jar": "broken-rt.jar", "path": "module.palette", "error": "XML syntax error on line 1: unexpected EOF"}]
+}
