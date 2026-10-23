@@ -1076,6 +1076,34 @@ page, so a file of hundreds of labels still scores one hit (its best rows plus d
 further ones). The marker adds the word `label` to every label row: a query with the
 word `label` also matches label rows, and that word weighs less in BM25.
 
+## Vendor Java source in module jars
+
+Go-only (the Python extractor read only `docSource-doc.jar`). OEM module jars ship their
+own Java source next to the classes: 4.14.0.162 (Honeywell OptimizerSupervisor) carries
+about 850 `.java` files in 13 jars (`honPlantControllerHMI-rt.jar` 335,
+`clHVACHeating-rt.jar` 171, ...), 4.3 carries `devkit-wb.jar`'s module templates and
+`template-rt.jar`. `moduleDest` maps every `.java` entry of a module jar (outside `doc/`,
+`META-INF/` and the extract rules) to `source/<jar stem>/<entry>`, the layout docSource
+uses, so the source, slots and xref indexes read it with no second parser.
+
+- **Third-party source** is decided by package prefix: an entry an exclude rule of
+  `install_docs.json` names is not mapped. The `third-party-java` rule (`org/`, `net/`,
+  `io/`, `edu/`, `mozilla/`, `jakarta/`, `bsh/`, `com/sun/`, `com/teamdev/`, `javax/` but
+  `javax/baja/`) keeps out 4.3 `test-wb.jar`'s 327 `org/mockito/` files.
+- **docSource wins**: a module-jar source whose path a doc jar already maps is not written
+  (`extract` lists it as `KEPT`), not checked by `fidelity` and not recorded.
+- **Provenance**: `source/module-jar-sources.json` maps each module-jar source (path under
+  `source/`) to its jar. `extract` and `--fill-missing` write it from the jars' mapping (not
+  from what they wrote), so a second fill records the same files. The builders walk only the
+  folders of `source/`, so the file is never read as a module.
+- A jar with Java source is a help jar (`helpJars`), so `coverage --doc-jars` lists its
+  entries: the `.java` ones are indexed through `source-index.json`, the rest is module
+  content.
+
+A data root gets the files from `nh versions extract <id> --force` or, on a repo-root data
+root such as 4.14's, `nh versions extract <id> --fill-missing`; `nh rebuild-all` then indexes
+them.
+
 ## Real data
 
 `TestCoverageRealGoldens` (S10b-1) is the package's one real-data test:
