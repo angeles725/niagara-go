@@ -27,6 +27,9 @@
     },
     "module-index": {
       "absent": true
+    },
+    "palette-index": {
+      "absent": true
     }
   },
   "text_dirs": {

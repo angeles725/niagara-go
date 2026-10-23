@@ -3,6 +3,7 @@ package helpbuild
 import (
 	"path/filepath"
 	"slices"
+	"strings"
 	"testing"
 
 	"github.com/angeles725/niagara-go/internal/helpbuild/internal/testkit"
@@ -38,5 +39,49 @@ func TestSweepCountsModuleDescriptors(t *testing.T) {
 	}
 	if n := res.OutOfScope[".xml"]; n != 0 {
 		t.Errorf("%d .xml entries still out of scope", n)
+	}
+}
+
+// TestSweepCountsShippedFiles: palettes, module-permissions templates and
+// schemas are no longer outside the documentation scope. In an installed
+// jar each is indexed when its index holds it, UNCLASSIFIED when it does not
+// or could not read it; a copy outside modules/ is excluded with its reason.
+func TestSweepCountsShippedFiles(t *testing.T) {
+	install, root := t.TempDir(), t.TempDir()
+	testkit.WriteJar(t, filepath.Join(install, "modules", "a-rt.jar"), [2]string{"module.palette", "<x/>"},
+		[2]string{"rc/module-permissions.xml", "<x/>"}, [2]string{"rsc/a.xsd", "<x/>"}, [2]string{"rsc/b.dtd", ""})
+	testkit.WriteJar(t, filepath.Join(install, "modules", "b-rt.jar"), [2]string{"module.palette", "<x/>"},
+		[2]string{"gradle/module-permissions.xml.vm", "#parse"})
+	testkit.WriteJar(t, filepath.Join(install, "sw", "1.0", "a-rt.jar"), [2]string{"module.palette", "<x/>"})
+	testkit.WriteFile(t, filepath.Join(root, "indexes", moduleIndexName), []byte(`{"jars": 2, "jar_bytes": 0,
+	 "modules": {"a-rt": {"name": "a-rt", "jar": "a-rt.jar",
+	   "permission_templates": [{"path": "rc/module-permissions.xml"}], "schemas": [{"path": "rsc/a.xsd"}]}},
+	 "errors": [{"jar": "a-rt.jar", "path": "rsc/b.dtd", "error": "bad"}], "without_descriptor": []}`))
+	testkit.WriteFile(t, filepath.Join(root, "indexes", paletteIndexName), []byte(`{"jars": 2, "jar_bytes": 0,
+	 "palettes": [{"module": "a-rt", "jar": "a-rt.jar", "path": "module.palette"}],
+	 "errors": [{"jar": "b-rt.jar", "path": "module.palette", "error": "worse"}]}`))
+	res := scanOK(t, install, root, SweepOptions{Rules: sweepTestRules(t)})
+	if row := res.Rows["modules/"]; row.DocLike != 6 || row.Indexed != 3 || row.Unclassified != 3 {
+		t.Errorf("modules/ row = %+v, want 6 doc-like, 3 indexed, 3 unclassified", *row)
+	}
+	want := []gap{
+		{"modules/a-rt.jar", "rsc/b.dtd", "schema module-index.json could not read: bad"},
+		{"modules/b-rt.jar", "gradle/module-permissions.xml.vm", "permissions template not in module-index.json (rebuild-all builds it)"},
+		{"modules/b-rt.jar", "module.palette", "palette palette-index.json could not read: worse"},
+	}
+	got := slices.Clone(res.Unclassified)
+	slices.SortFunc(got, func(a, b gap) int {
+		return strings.Compare(a.Jar+a.Entry, b.Jar+b.Entry)
+	})
+	if !slices.Equal(got, want) {
+		t.Errorf("unclassified = %q", got)
+	}
+	if got := ruleCounts(res); !mapsEqual(got, map[string]int{"shipped-file-outside-modules": 1}) {
+		t.Errorf("reasons by rule = %v", got)
+	}
+	for _, ext := range []string{".palette", ".xml", ".xsd", ".dtd", ".vm"} {
+		if n := res.OutOfScope[ext]; n != 0 {
+			t.Errorf("%d %s entries still out of scope", n, ext)
+		}
 	}
 }

@@ -1140,8 +1140,25 @@ never copies `META-INF/` (`destPath`); the last rebuild-all step, `module_index_
                  "types": [{"name", "class"}], "agents": [{"type", "class", "on": [...],
                  "app"?, "default"?, "required_permissions"?}],
                  "java_permissions": [{"profile", "class", "name", "action"}],
-                 "defs": [{"name", "value"}], "adapters": [{"type", "from", "to"}], "jar"}},
-     "errors": [{"jar", "error"}], "without_descriptor": ["<jar>"]}
+                 "defs": [{"name", "value"}], "adapters": [{"type", "from", "to"}], "jar",
+                 "permission_templates"?: [{"path", "java_permissions", "groups": [{"type",
+                   "requests": [{"name", "purpose_key", "parameters", "commented"}]}],
+                   "velocity"}],
+                 "schemas"?: [{"path", "kind", "root", "target_namespace", "elements"}]}},
+     "errors": [{"jar", "path"?, "error"}], "without_descriptor": ["<jar>"]}
+
+The same pass reads the `module-permissions.xml` templates (`module-permissions.xml` and
+`.xml.vm`: devkit-wb's gradle templates and wbutil-wb's `rc/` copy on 4.13-4.15, devkit-wb's
+videoDriver template on 4.3) and the `.xsd`/`.dtd` schemas a jar ships, with
+`shippedxml.ParsePermissions` / `ParseSchema`; the two keys appear only on a module that ships
+any. A template keeps its java-permissions, its permission groups and their requests (the
+request 4.13-4.15 ship commented out, one line per comment, is read and marked
+`"commented": true`) and, for a Velocity template that only `#parse`-s another, its
+directives. A schema keeps what names it, never its text (schemas are not full-text indexed):
+an XML Schema's root, `targetNamespace` and top-level `element` count; a DTD's first declared
+element and `<!ELEMENT` count. A template or schema that cannot be read is an `errors` row
+with its `path` (the module stays indexed), as is one shipped by a jar without a descriptor;
+the coverage sweep reads only path-less rows as unreadable descriptors.
 
 It fails closed: a corrupt jar, a descriptor that is not well-formed XML, a root that is
 not a named `<module>`, an `<agent>`/`<adapter>` outside a `<type>` or a module name a
@@ -1151,21 +1168,27 @@ with no registered install (or an install that is not mounted) keeps its last
 `module-index.json`. The text is not added to the full-text index: `nh module` and `nh type`
 read the structure.
 
-Readers (`internal/help`): `nh module <name|part|glob> [--types|--agents|--permissions|--defs]
+Readers (`internal/help`): `nh module <name|part|glob> [--types|--agents|--permissions|--defs|--schemas]
 [--json]` resolves an exact module name, then any letter case, then every runtime profile of a
 part name (`kitControl` -> `-rt`, `-ux`, `-wb`), then a glob, and prints the summary (jar,
 part, vendor, dependencies, reverse dependencies, counts, adapters, java-permissions), a
 listing, or a miss naming `module-index.json`, its module count and its unreadable
-descriptors. `nh type <module:Type|Type> [--json]` prints the registering module and jar,
+descriptors. `--permissions` prints the java-permissions, then the `module-permissions.xml`
+templates the jar ships (each group and request, `(commented out)` for the shipped example,
+Velocity directives); `--schemas` lists the schemas (kind, root, targetNamespace, element
+count); the summary names both counts when the jar ships any. `nh type <module:Type|Type> [--json]` prints the registering module and jar,
 the class, whether `class-index.json` and `source-index.json` hold that class, the agents
-every module registers on the type and, for a view, the types it is an agent on. A `find`
+every module registers on the type and, for a view, the types it is an agent on; with
+`palette-index.json` built, a type that sits in a palette also prints `PALETTES:` (module,
+palette file and path of each entry of that type, then the entries that hold it) and
+`--json` carries a `palettes` list. A `find`
 miss on a module-looking or type-looking query names these two commands. `stats` counts the
 index (optional: built from the install), `freshness` compares its recorded jar count and
 bytes with the registered install's `modules/`, and `selftest` checks that
 `kitControl-rt` depends on `baja` (true on 4.3, 4.13, 4.14 and 4.15).
 
 `coverage --sweep` no longer counts `META-INF/module.xml` outside the documentation scope
-(`sweepmodule.go`): the descriptor of a jar in `modules/` is indexed when `module-index.json`
+(`sweepshipped.go`): the descriptor of a jar in `modules/` is indexed when `module-index.json`
 holds its module and UNCLASSIFIED when it does not (not rebuilt yet) or could not read it (the
 error is quoted); a copy outside `modules/` (`sw/`, `bin/ext`) is excluded by
 `module-descriptor-outside-modules`, since the index reads the installed `modules/` only. Until
@@ -1183,6 +1206,75 @@ equal to the grep audit of the same jars:
 | 4.14.0.162 | 995 | 992 (3 jars without a descriptor) | 0 | 14,372 | 14,193 | 2,329 (3,006) | 9,559 | 1,440 | 156 |
 | 4.13.2.18 | 740 | 740 | 0 | 11,362 | 8,749 | 1,883 (2,243) | 9,560 | 1,418 | 116 |
 | 4.3.58.18 | 578 | 578 | 0 | 6,610 | 6,341 | 1,335 (1,576) | 8,395 | 1,412 | 113 |
+
+The same probe counts the templates and schemas, equal to the 2026-10-22 audit of the
+same jars (`module-permissions.xml` in a member name; members ending in `.xsd`/`.dtd`):
+
+| Install | permission templates (jars) | schemas (jars) | unreadable |
+|---|---|---|---|
+| 4.15.6.20 | 3 (2) | 48 (6) | 0 |
+| 4.14.0.162 | 3 (2) | 38 (7) | 0 |
+| 4.13.2.18 | 3 (2) | 42 (8) | 0 |
+| 4.3.58.18 | 1 (1) | 11 (3) | 0 |
+
+## Palettes: palette-index.json
+
+A palette (`*.palette` in a module jar, usually `module.palette`) is how Tridium organizes a
+module's components for the Workbench palette side bar. `palette_index_builder`
+(`paletteindex.go`), the step after `module_index_builder`, reads every palette of every jar
+of the registered install's `modules/` (the same `lexiconJars` list and `zipfile` reader)
+with `palettexml.Parse` and writes `indexes/palette-index.json`:
+
+    {"jars": N, "jar_bytes": B,
+     "palettes": [{"module": "<jar stem>", "jar", "path", "folders", "entries",
+                   "tree": [{"folder", "type", "children": [...]}
+                            | {"name", "type", "properties"?: [{"name", "type"?, "value"?}],
+                               "contains"?: ["module:Type", ...]}]}],
+     "errors": [{"jar", "path", "error"}]}
+
+The root `<p>` of the bajaObjectGraph is the palette; a `baja:Folder` or
+`baja:UnrestrictedFolder` below it is a folder, anything else an entry. An entry keeps its
+direct children as properties (a value longer than 120 characters ends with `…`) and the
+sorted types nested anywhere below it (`contains`), so a deep IRM or LON palette stays
+bounded. Types are resolved to `module:Type` through the `m="prefix=module"` declarations,
+which hold from where they appear to the end of the document. A copyright comment before the
+XML declaration (edgeIo-rt, trafficLight*, websiteDriver-rt) and a zipped graph
+(honeywellVenomGraphics' `file.xml`) read. It fails closed: a corrupt jar, a malformed
+palette, a wrong root, no palette `<p>` or an undeclared prefix is an `errors` row and a
+`WARNING: palette_index_builder: <jar>!<path>: <why>` line. As for `module-index.json`, a
+data root with no registered install keeps its last copy and the install path is not stored.
+
+Reader (`internal/help`, `palettes.go`): `nh palette <query> [--json]` lists every folder and
+entry whose type (`Type` or `module:Type`), entry name or folder name matches, then the
+entries that hold a matching type below them (`(holds module:Type)`), each with its module,
+palette file and path in the palette; exact first, then any letter case, then a glob, as
+`nh type` resolves. `nh palette --module <module> [--json]` prints the module's palettes as
+trees (folders, entries with their type, properties and held types). A miss names
+`palette-index.json`, its palette count and its unreadable palettes (scope `palettes`). `freshness`
+compares the jar count and bytes it recorded with the registered install's `modules/`, as
+for `module-index.json`, and `stats` counts its palettes, entries and unreadable palettes
+(text and `--json`; `absent` until rebuild-all builds it). `selftest` checks that
+`nh palette BooleanLatch` finds it in kitControl-rt's `module.palette` (`Latches/BooleanLatch`
+on 4.3, 4.13, 4.14 and 4.15).
+
+`coverage --sweep` classifies palettes, `module-permissions.xml` templates and `.xsd`/`.dtd`
+schemas the same way (`sweepshipped.go`; an entry the documentation rules already call
+doc-like stays with them): in a jar of `modules/` each is indexed when `palette-index.json`
+(palettes) or `module-index.json` (templates, schemas) holds that jar and path, UNCLASSIFIED
+when it does not (not rebuilt yet) or could not read it (the error is quoted); a copy outside
+`modules/` is excluded by `shipped-file-outside-modules`. They are no longer counted outside
+the documentation scope; until rebuild-all builds `palette-index.json`, a sweep of a real
+install fails on every palette, on purpose.
+
+`TestPaletteIndexDryProbe` (`NH_PALETTE_INDEX_PROBE=<install>`) builds it read-only into a
+temporary root. On 2026-10-23, equal to the 2026-10-22 audit:
+
+| Install | palettes (jars) | entries | errors | palette-index.json |
+|---|---|---|---|---|
+| 4.15.6.20 | 342 (342) | 4,783 | 0 | 2.4 MB |
+| 4.14.0.162 | 523 (522; ipcProgrammingTool-rt also ships webs.palette) | 9,460 | 0 | 7.4 MB |
+| 4.13.2.18 | 358 (358) | 9,025 | 0 | 7.3 MB |
+| 4.3.58.18 | 305 (305) | 4,927 | 0 | 2.6 MB |
 
 ## Real data
 

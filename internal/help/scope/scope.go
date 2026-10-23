@@ -67,6 +67,9 @@ var scopes = map[string]def{
 	"types": {[]string{"module-index.json"}, "types of jars without META-INF/module.xml; a type is matched as " +
 		"module:Type or Type, exactly, in any letter case or as a glob",
 		[]string{"class", "search", "find"}},
+	"palettes": {[]string{"palette-index.json"}, "modules whose jars ship no *.palette; a palette entry is " +
+		"matched by Type, module:Type, entry name or folder, exactly, in any letter case or as a glob, and by the types it holds",
+		[]string{"type", "module", "find"}},
 	"pdf": {[]string{"pdf-index.json"}, "manual pages without a text layer (scanned images)",
 		[]string{"find", "guide-search", "pdf --no-fulltext"}},
 	"fulltext": {nil, "JDK API (class --jdk); " + docTypesExcluded,
@@ -175,6 +178,9 @@ func indexCount(baseDir, name string, load Loader) (string, error) {
 	if name == "module-index.json" {
 		return moduleCount(data), nil
 	}
+	if name == "palette-index.json" {
+		return paletteCount(data), nil
+	}
 	return fmt.Sprintf("%s: %s entries", name, pycompat.Commas(data.Len())), nil
 }
 
@@ -199,6 +205,27 @@ func moduleCount(data *index.Object) string {
 		jars = append(jars, "...")
 	}
 	return fmt.Sprintf("%s (%d module.xml unreadable: %s)", line, len(errs), strings.Join(jars, ", "))
+}
+
+// paletteCount is the palette-index.json part of a scope line: its palettes
+// and those it could not read (the first three named jar!path).
+func paletteCount(data *index.Object) string {
+	pals, _ := getAny(data, "palettes").([]any)
+	line := fmt.Sprintf("palette-index.json: %s palettes", pycompat.Commas(len(pals)))
+	errs, _ := getAny(data, "errors").([]any)
+	if len(errs) == 0 {
+		return line
+	}
+	var where []string
+	for _, e := range errs[:min(3, len(errs))] {
+		jar, _ := getAny(asObject(e), "jar").(string)
+		path, _ := getAny(asObject(e), "path").(string)
+		where = append(where, jar+"!"+path)
+	}
+	if len(errs) > 3 {
+		where = append(where, "...")
+	}
+	return fmt.Sprintf("%s (%d unreadable: %s)", line, len(errs), strings.Join(where, ", "))
 }
 
 func asObject(v any) *index.Object { o, _ := v.(*index.Object); return o }

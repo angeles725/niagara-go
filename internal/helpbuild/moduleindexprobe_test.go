@@ -47,6 +47,21 @@ func TestModuleIndexDryProbe(t *testing.T) {
 	}
 	errs, _ := idx.Get("errors")
 	t.Logf("module.xml read: %d modules + %d errors", mods.(*index.Object).Len(), len(errs.([]any)))
+	// Templates and schemas: indexed + unreadable rows (a row with a path), in how many jars.
+	for _, k := range []string{"permission_templates", "schemas"} {
+		n, jars := 0, 0
+		for _, name := range mods.(*index.Object).Keys() {
+			if v, ok := mods.(*index.Object).Object(name).Get(k); ok {
+				n, jars = n+len(v.([]any)), jars+1
+			}
+		}
+		t.Logf("%-20s %4d in %d jars", k, n, jars)
+	}
+	for _, e := range errs.([]any) {
+		if p, ok := e.(*index.Object).String("path"); ok {
+			t.Logf("unreadable member: %s", p)
+		}
+	}
 	for _, k := range keys {
 		t.Logf("%-17s %6d", k, sums[k])
 	}

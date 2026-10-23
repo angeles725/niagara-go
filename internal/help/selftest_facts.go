@@ -63,6 +63,18 @@ var indexFacts = []indexFact{
 		func(out string) bool {
 			return strings.HasPrefix(out, "MODULE: kitControl-rt\n") && strings.Contains(out, "\n  baja ")
 		}},
+	{"palette", "palette-index.json", "palette 'BooleanLatch' finds it in kitControl-rt's module.palette",
+		func(sub *Env) error { return sub.Palette(PaletteParams{Query: "BooleanLatch"}) },
+		func(out string) bool { // any hit line: module, palette file, .../BooleanLatch, its type
+			for _, line := range strings.Split(out, "\n") {
+				f := strings.Fields(line)
+				if len(f) == 4 && f[0] == "kitControl-rt" && f[1] == "module.palette" &&
+					strings.HasSuffix(f[2], "/BooleanLatch") && f[3] == "kitControl:BooleanLatch" {
+					return true
+				}
+			}
+			return false
+		}},
 }
 
 // missingNeed is why fact f cannot be checked in this version ("" when it can):

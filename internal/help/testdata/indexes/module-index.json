@@ -25,7 +25,15 @@
       "dependencies": [{"name": "kitControl-rt", "vendor": "Tridium", "version": "4.15.6"}, {"name": "kitControl-ux", "vendor": "Tridium", "version": "4.15.6"}],
       "types": [{"name": "LatchView", "class": "com.tridium.kitControl.wb.BLatchView"}],
       "agents": [{"type": "LatchView", "class": "com.tridium.kitControl.wb.BLatchView", "on": ["kitControl:BooleanLatch"], "app": "webShell", "required_permissions": "r"}],
-      "java_permissions": [], "defs": [], "adapters": [], "jar": "kitControl-wb.jar"}
+      "java_permissions": [], "defs": [], "adapters": [], "jar": "kitControl-wb.jar",
+      "permission_templates": [
+        {"path": "gradle/module/module-permissions.xml.vm", "java_permissions": [], "groups": [], "velocity": ["#parse ( \"$includePath/module-permissions.xml.vm\" )"]},
+        {"path": "rc/module-permissions.xml", "java_permissions": [{"profile": "all", "class": "java.util.logging.LoggingPermission", "name": "control", "action": ""}],
+         "groups": [{"type": "all", "requests": []}, {"type": "station", "requests": [{"name": "NETWORK_COMMUNICATION", "purpose_key": "Outside access for Driver", "parameters": [{"name": "hosts", "value": "127.0.0.1"}, {"name": "ports", "value": "*"}], "commented": true}]}],
+         "velocity": []}],
+      "schemas": [
+        {"path": "com/tridium/obix/rsc/obix.xsd", "kind": "xsd", "root": "schema", "target_namespace": "http://obix.org/ns/schema/1.0", "elements": 14},
+        {"path": "testng-1.0.dtd", "kind": "dtd", "root": "suite", "target_namespace": "", "elements": 23}]}
   },
   "errors": [{"jar": "broken-rt.jar", "error": "XML syntax error on line 1: unexpected EOF"}],
   "without_descriptor": []

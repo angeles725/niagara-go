@@ -105,9 +105,31 @@ type corpusStats struct {
 	text                            map[string]textSource
 	props, actions, topics, methods int
 	edges, lines, dgItems, packages int
-	fromJars                        int           // source-index records extracted from module jars
-	abs, vid                        string        // the absolute data root, its version ("" unregistered)
-	mods                            *moduleCounts // nil when module-index.json is absent
+	fromJars                        int            // source-index records extracted from module jars
+	abs, vid                        string         // the absolute data root, its version ("" unregistered)
+	mods                            *moduleCounts  // nil when module-index.json is absent
+	pals                            *paletteCounts // nil when palette-index.json is absent
+}
+
+// paletteCounts are the palette-index.json totals stats reports.
+type paletteCounts struct{ palettes, entries, unreadable int }
+
+// paletteStats counts palette-index.json, nil when it is absent (it is built
+// from the install, so a data root may lack it).
+func (e *Env) paletteStats() (*paletteCounts, error) {
+	if !pycompat.IsFile(index.Path(e.BaseDir, paletteIndexName)) {
+		return nil, nil
+	}
+	idx, err := e.loadIndex(paletteIndexName, false)
+	if err != nil {
+		return nil, err
+	}
+	c := &paletteCounts{unreadable: listLenAny(get(idx, "errors", nil))}
+	for _, p := range objList(idx, "palettes") {
+		n, _ := index.Int(get(p, "entries", nil))
+		c.palettes, c.entries = c.palettes+1, c.entries+int(n)
+	}
+	return c, nil
 }
 
 // moduleCounts are the module-index.json totals stats reports.
@@ -204,7 +226,10 @@ func (e *Env) corpusStats() (*corpusStats, error) {
 	s.abs, _ = filepath.Abs(e.BaseDir)
 	s.vid = scope.Identify(e.BaseDir)
 	var err error
-	s.mods, err = e.moduleStats()
+	if s.mods, err = e.moduleStats(); err != nil {
+		return nil, err
+	}
+	s.pals, err = e.paletteStats()
 	return s, err
 }
 
@@ -241,6 +266,7 @@ func (e *Env) statsJSON(s *corpusStats) {
 			{"slots-index", pyjson.Obj{{"classes", s.n("slots-index")}, {"properties", s.props},
 				{"actions", s.actions}, {"topics", s.topics}}},
 			{"module-index", s.moduleJSON()},
+			{"palette-index", s.paletteJSON()},
 		}},
 		{"text_dirs", dirs},
 		{"packages", s.packages},
@@ -259,7 +285,7 @@ func (e *Env) statsText(s *corpusStats) {
 	for _, d := range fts.Labels {
 		totalBytes += s.text[d].bytes
 	}
-	indexCount := len(statsIndexNames) + 1 // and module-index.json
+	indexCount := len(statsIndexNames) + 2 // and module-index.json, palette-index.json
 	out := e.Out
 	fmt.Fprintf(out, "Niagara Help Navigator - Corpus Statistics\n%s\n", strings.Repeat("=", 55))
 	fmt.Fprintf(out, "Niagara version: %s  (%s)\n", vid, s.abs)
@@ -283,6 +309,11 @@ func (e *Env) statsText(s *corpusStats) {
 	} else {
 		fmt.Fprintf(out, "  module-index.json      %s modules (%s dependencies, %s types, %s agents, %s permissions; %d unreadable)\n",
 			w(m.modules), pycompat.Commas(m.deps), pycompat.Commas(m.types), pycompat.Commas(m.agents), pycompat.Commas(m.perms), m.unreadable)
+	}
+	if p := s.pals; p == nil {
+		fmt.Fprintln(out, "  palette-index.json     absent (rebuild-all builds it from the install's modules/)")
+	} else {
+		fmt.Fprintf(out, "  palette-index.json     %s palettes (%s entries; %d unreadable)\n", w(p.palettes), pycompat.Commas(p.entries), p.unreadable)
 	}
 	fmt.Fprintf(out, "\nTEXT SOURCES (%d sources of the full-text index, %s MB total):\n\n", len(fts.Labels), mb(totalBytes))
 	for _, d := range fts.Labels {
@@ -314,6 +345,15 @@ func (s *corpusStats) moduleJSON() pyjson.Obj {
 	}
 	return pyjson.Obj{{"modules", m.modules}, {"dependencies", m.deps}, {"types", m.types}, {"agents", m.agents},
 		{"java_permissions", m.perms}, {"unreadable", m.unreadable}}
+}
+
+// paletteJSON is the palette-index entry of stats --json: {"absent": true}
+// when the index is not built.
+func (s *corpusStats) paletteJSON() pyjson.Obj {
+	if s.pals == nil {
+		return pyjson.Obj{{"absent", true}}
+	}
+	return pyjson.Obj{{"palettes", s.pals.palettes}, {"entries", s.pals.entries}, {"unreadable", s.pals.unreadable}}
 }
 
 // sourceStatsJSON is the source-index record of stats --json; module_jar_classes

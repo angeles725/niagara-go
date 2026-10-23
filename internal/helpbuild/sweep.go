@@ -122,8 +122,8 @@ type sweeper struct {
 	installed []jarPath
 	identical map[Entry]string
 	lexJar    *openLexiconJar // the module jar whose lexicons are being read
-	// moduleJars is module-index.json by jar (sweepmodule.go), loaded on first use.
-	moduleJars map[string]string
+	// shippedIdx is what module-index.json and palette-index.json hold (sweepshipped.go), loaded on first use.
+	shippedIdx *shippedIndexes
 }
 
 // installedEntry is Sweep.installed_entry: the install path of an
@@ -406,8 +406,8 @@ func scan(installDir, root string, opts SweepOptions) (*sweepResult, error) {
 		}
 		var docs []int
 		for pos, e := range l.Entries {
-			if isDescriptor(e.Name) {
-				v, err := s.descriptor(j.Rel)
+			if kind := shippedKind(e.Name, rules); kind != "" {
+				v, err := s.shipped(j.Rel, e.Name, kind)
 				if err != nil {
 					return nil, err
 				}

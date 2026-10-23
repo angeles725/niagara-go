@@ -17,17 +17,17 @@ func TestOrderNamesEveryCommandOnce(t *testing.T) {
 			t.Errorf("%s in order but not registered", n)
 		}
 	}
-	if len(registry) != len(order) || len(order) != 21 {
-		t.Errorf("registry %d commands, order %d, want 21", len(registry), len(order))
+	if len(registry) != len(order) || len(order) != 22 {
+		t.Errorf("registry %d commands, order %d, want 22", len(registry), len(order))
 	}
 	for n := range retired {
 		if registry[n] != nil {
 			t.Errorf("%s is both registered and retired", n)
 		}
 	}
-	// type is the one Go-only command (NH3); every other name is a niagara_help.py command.
-	if len(retired)+len(order) != 58+1 {
-		t.Errorf("%d kept + %d retired, want the 58 niagara_help.py commands and type", len(order), len(retired))
+	// type (NH3) and palette (NH4) are the Go-only commands; every other name is a niagara_help.py command.
+	if len(retired)+len(order) != 58+2 {
+		t.Errorf("%d kept + %d retired, want the 58 niagara_help.py commands, type and palette", len(order), len(retired))
 	}
 	if got := commandNames(); !reflect.DeepEqual(got, order) {
 		t.Errorf("commandNames differs from order")

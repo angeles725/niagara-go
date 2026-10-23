@@ -64,12 +64,14 @@ var memberCommands = []command{
 var moduleDetails = [][2]string{
 	{"types", "List the types the module registers (module:Type and class)"},
 	{"agents", "List the agents (views, editors) the module's types register and the types they are on"},
-	{"permissions", "List the java-permissions by profile"},
+	{"permissions", "List the java-permissions by profile and the module-permissions.xml templates the jar ships"},
 	{"defs", "List the defs (name = value)"},
+	{"schemas", "List the .xsd/.dtd schemas the jar ships (root element, targetNamespace)"},
 }
 
-// Module descriptor commands (Go-only, modules.go and types.go): module and
-// type, over indexes/module-index.json.
+// Module descriptor commands (Go-only, modules.go, palettes.go and types.go):
+// module and type over indexes/module-index.json, palette over
+// indexes/palette-index.json.
 var moduleCommands = []command{
 	{name: "module", help: "Module descriptor (module.xml): dependencies both ways, types, permissions",
 		args: func(p *argparse.Parser) {
@@ -88,6 +90,16 @@ var moduleCommands = []command{
 				}
 			}
 			return e.Module(ModuleParams{Name: ns.String("name"), Detail: detail, JSON: ns.Bool("module_json")})
+		}},
+	{name: "palette", help: "Shipped palettes (*.palette): where a type or folder sits, or a module's palette tree",
+		args: func(p *argparse.Parser) {
+			positional(p, "query", "Type, module:Type, entry name, folder or glob; with --module, a module name")
+			p.Add(argparse.Arg{Dest: "palette_module", Action: argparse.StoreTrue,
+				Help: "Print the palette trees of the module named by query (e.g. kitControl-rt)"}, "--module")
+			p.Add(argparse.Arg{Dest: "palette_json", Action: argparse.StoreTrue, Help: "Output as JSON"}, "--json")
+		},
+		run: func(e *Env, ns *argparse.Namespace) error {
+			return e.Palette(PaletteParams{Query: ns.String("query"), Module: ns.Bool("palette_module"), JSON: ns.Bool("palette_json")})
 		}},
 	{name: "type", help: "Niagara type (module:Type): its module, class, docs and the agents (views) on it",
 		args: func(p *argparse.Parser) {
