@@ -13,7 +13,8 @@ import (
 // full-text index, so it is no longer counted outside the documentation scope.
 
 // moduleIndexJars is what module-index.json says about each installed jar:
-// "" for a jar whose module it holds, the reason for one it could not read.
+// "" for a jar whose module it holds, the reason for one whose descriptor it
+// could not read.
 // An absent index holds nothing.
 func moduleIndexJars(root string) (map[string]string, error) {
 	out := map[string]string{}
@@ -35,7 +36,7 @@ func moduleIndexJars(root string) (map[string]string, error) {
 	errs, _ := idx.Get("errors")
 	list, _ := errs.([]any)
 	for _, e := range list {
-		if o, ok := e.(*index.Object); ok {
+		if o, ok := e.(*index.Object); ok && !o.Has("path") { // a "path" row is a template or schema
 			jar, _ := o.String("jar")
 			why, _ := o.String("error")
 			out[jar] = "module-index.json could not read: " + why
