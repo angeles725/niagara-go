@@ -11,13 +11,14 @@ import (
 	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
-// module-index.json and palette-index.json are built from the install's
-// modules/, which lies outside the data root the manifest fingerprints: each
-// records the jar count and bytes it read (module_index_builder,
-// palette_index_builder), and freshness compares them with the install now.
+// module-index.json, palette-index.json and tag-index.json are built from the
+// install's modules/, which lies outside the data root the manifest
+// fingerprints: each records the jar count and bytes it read
+// (module_index_builder, palette_index_builder, tag_index_builder), and
+// freshness compares them with the install now.
 
 // installIndexes are the indexes built from the install's modules/.
-var installIndexes = []string{moduleIndexName, paletteIndexName}
+var installIndexes = []string{moduleIndexName, paletteIndexName, tagIndexName}
 
 // installJars counts the jars of dir (*.jar in any letter case, as the builder
 // lists them) and their bytes; ok is false when dir cannot be listed.
