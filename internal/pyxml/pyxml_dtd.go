@@ -128,7 +128,7 @@ func (p *xparser) markupDecl(s int) (int, error) {
 	if p.eof(j) {
 		return s, p.fail(s, errUnclosed)
 	}
-	if !p.qStart(p.r[j]) {
+	if !p.keywordChar(p.r[j]) {
 		return s, p.fail(j, errInvalid)
 	}
 	e := p.scanKeyword(j)

@@ -44,3 +44,15 @@ func TestExpat29NonASCIIAfterLt(t *testing.T) {
 		{"<r/><:a", "junk after document element: line 1, column 4", "not well-formed (invalid token): line 1, column 5"},
 	})
 }
+
+// A <!KEYWORD takes ASCII name characters only (a ':' too without namespace processing).
+func TestExpat29ASCIIKeyword(t *testing.T) {
+	checkExpat29(t, []expat29Case{
+		{"<!é- x --><r/>", "not well-formed (invalid token): line 1, column 2", "not well-formed (invalid token): line 1, column 2"},
+		{"<!DOCTYPé r><r/>", "not well-formed (invalid token): line 1, column 8", "not well-formed (invalid token): line 1, column 8"},
+		{"<!:a><r/>", "not well-formed (invalid token): line 1, column 4", "not well-formed (invalid token): line 1, column 2"},
+		{"<!DOCTYPE r [<!é>]><r/>", "not well-formed (invalid token): line 1, column 15", "not well-formed (invalid token): line 1, column 15"},
+		{"<!DOCTYPE r [<!:x>]><r/>", "not well-formed (invalid token): line 1, column 17", "not well-formed (invalid token): line 1, column 15"},
+		{"<r/><!é>", "not well-formed (invalid token): line 1, column 6", "not well-formed (invalid token): line 1, column 6"},
+	})
+}

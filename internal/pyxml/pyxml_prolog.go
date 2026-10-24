@@ -107,7 +107,7 @@ func (p *xparser) bang(s int, doctypeOK bool) (int, bool, error) {
 		return i, false, err
 	case c == '[':
 		return s, false, p.notAllowed(s)
-	case !p.qStart(c):
+	case !p.keywordChar(c):
 		return s, false, p.fail(j, errInvalid)
 	}
 	e := p.scanKeyword(j)
@@ -127,9 +127,13 @@ func (p *xparser) bang(s int, doctypeOK bool) (int, bool, error) {
 // an element: a name start or any non-ASCII character (its name is checked as the tag is read).
 func (p *xparser) instanceStart(c rune) bool { return p.qStart(c) || c >= utf8.RuneSelf }
 
-// scanKeyword scans a declaration keyword: expat takes name start characters only.
+// keywordChar is a character of a declaration keyword: expat's scanDecl takes ASCII name
+// start characters only (a ':' is its own byte type under namespace processing).
+func (p *xparser) keywordChar(c rune) bool { return c < utf8.RuneSelf && p.qStart(c) }
+
+// scanKeyword scans a declaration keyword.
 func (p *xparser) scanKeyword(i int) int {
-	for i < p.n && p.qStart(p.r[i]) {
+	for i < p.n && p.keywordChar(p.r[i]) {
 		i++
 	}
 	return i
