@@ -62,7 +62,7 @@ Examples:
   niagara_help type kitControl:BooleanLatch
   niagara_help palette BooleanLatch
   niagara_help tag ahu
-  niagara_help lexicon BooleanLatch.displayName --lang fr
+  niagara_help lexicon WbHtmlView.displayName --lang fr
   niagara_help find "setpoint reference"
   niagara_help devguide-search "web servlet"
   niagara_help versions add /mnt/c/Niagara/Niagara-4.16.0.1
