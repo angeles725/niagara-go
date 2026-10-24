@@ -70,6 +70,9 @@ var scopes = map[string]def{
 	"palettes": {[]string{"palette-index.json"}, "modules whose jars ship no *.palette; a palette entry is " +
 		"matched by Type, module:Type, entry name or folder, exactly, in any letter case or as a glob, and by the types it holds",
 		[]string{"type", "module", "find"}},
+	"tags": {[]string{"tag-index.json"}, "tag dictionaries outside haystack*.jar and tagdictionary*.jar (a station's own " +
+		"dictionaries are not shipped); a name is matched as dict:name or name, exactly, in any letter case or as a glob",
+		[]string{"find", "source-grep", "type"}},
 	"pdf": {[]string{"pdf-index.json"}, "manual pages without a text layer (scanned images)",
 		[]string{"find", "guide-search", "pdf --no-fulltext"}},
 	"fulltext": {nil, "JDK API (class --jdk); " + docTypesExcluded,
@@ -181,6 +184,9 @@ func indexCount(baseDir, name string, load Loader) (string, error) {
 	if name == "palette-index.json" {
 		return paletteCount(data), nil
 	}
+	if name == "tag-index.json" {
+		return tagCount(data), nil
+	}
 	return fmt.Sprintf("%s: %s entries", name, pycompat.Commas(data.Len())), nil
 }
 
@@ -212,6 +218,22 @@ func moduleCount(data *index.Object) string {
 func paletteCount(data *index.Object) string {
 	pals, _ := getAny(data, "palettes").([]any)
 	return fmt.Sprintf("palette-index.json: %s palettes", pycompat.Commas(len(pals))) + unreadable(data)
+}
+
+// tagCount is the tag-index.json part of a scope line: its distinct names
+// (tags, tag groups, relations), the files read and those it could not read.
+func tagCount(data *index.Object) string {
+	names := map[string]bool{}
+	for _, sec := range []string{"tags", "groups", "relations"} {
+		rows, _ := getAny(data, sec).([]any)
+		for _, r := range rows {
+			d, _ := getAny(asObject(r), "dict").(string)
+			n, _ := getAny(asObject(r), "name").(string)
+			names[sec+"\x00"+d+":"+n] = true
+		}
+	}
+	files, _ := getAny(data, "files").([]any)
+	return fmt.Sprintf("tag-index.json: %s names from %s files", pycompat.Commas(len(names)), pycompat.Commas(len(files))) + unreadable(data)
 }
 
 // unreadable is " (N unreadable: jar!path, ...)" for the errors rows of an
