@@ -65,6 +65,10 @@ func (e *Env) typeDetail(mods *index.Object, h typeHit, asJSON bool) error {
 	if err != nil {
 		return err
 	}
+	tags, err := e.typeTags(h.spec())
+	if err != nil {
+		return err
+	}
 	if asJSON {
 		agents := []any{}
 		for _, a := range on {
@@ -78,7 +82,7 @@ func (e *Env) typeDetail(mods *index.Object, h typeHit, asJSON bool) error {
 		fmt.Fprintln(e.Out, pyjson.DumpsAny(pyjson.Obj{{"type", h.spec()}, {"module", h.module},
 			{"jar", getStr(h.rec, "jar", "")}, {"class", h.class()}, {"class_index", javadoc != ""},
 			{"source_index", source != ""}, {"agents_on_type", agents}, {"agent_on", selfs},
-			{"palettes", paletteJSON(pals)}}, pyjson.Indent2))
+			{"palettes", paletteJSON(pals)}, {"tags", anyList(tags)}}, pyjson.Indent2))
 		return nil
 	}
 	out := e.Out
@@ -105,6 +109,13 @@ func (e *Env) typeDetail(mods *index.Object, h typeHit, asJSON bool) error {
 		}
 		fmt.Fprintf(out, "PALETTES: %s  (nh palette %s)\n", strings.Join(where, "; "), h.spec())
 	}
+	if len(tags) > 0 {
+		shown := strings.Join(tags[:min(typeTagsShown, len(tags))], ", ")
+		if len(tags) > typeTagsShown {
+			shown += fmt.Sprintf(", ... (%d in all; --json lists them)", len(tags))
+		}
+		fmt.Fprintf(out, "TAGS (isType %s): %s  (nh tag <name>)\n", h.spec(), shown)
+	}
 	fmt.Fprintf(out, "\nAGENTS ON THIS TYPE (%d):\n", len(on))
 	for _, a := range on {
 		fmt.Fprintf(out, "  %s  %s  (%s)\n", typeSpec(a.rec, getStr(a.typ, "type", "")), getStr(a.typ, "class", ""), a.module)
@@ -120,6 +131,9 @@ func (e *Env) typeDetail(mods *index.Object, h typeHit, asJSON bool) error {
 	}
 	return nil
 }
+
+// typeTagsShown is how many dictionary names the TAGS line of type prints.
+const typeTagsShown = 10
 
 // paletteJSON is the "palettes" list of type --json.
 func paletteJSON(pals []paletteHit) []any {

@@ -130,3 +130,53 @@ func TestTypeNamesItsPalettes(t *testing.T) {
 		t.Errorf("json lacks %q:\n%s", want, got)
 	}
 }
+
+// TestTypeNamesItsTags: with tag-index.json beside the module index, a type
+// a rule, tag group or tag condition names (isType module:Type, exactly)
+// lists the dictionary names it is given; another type prints no TAGS line;
+// --json lists them.
+func TestTypeNamesItsTags(t *testing.T) {
+	data, err := os.ReadFile(filepath.Join("testdata", "indexes", "tag-index.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	root := moduleRoot(t)
+	write(t, filepath.Join(root, "indexes", "tag-index.json"),
+		strings.Replace(string(data), "isType kitControl:Ahu", "isType kitControl:BooleanLatch", 1))
+	run := func(p TypeParams) string {
+		var out bytes.Buffer
+		if err := (&Env{BaseDir: root, Out: &out}).Type(p); err != nil {
+			t.Fatal(err)
+		}
+		return out.String()
+	}
+	want := "TAGS (isType kitControl:BooleanLatch): hs:ahu, hs:ahuEquip  (nh tag <name>)\n"
+	if got := run(TypeParams{Name: "kitControl:BooleanLatch"}); !strings.Contains(got, want) {
+		t.Errorf("lacks %q:\n%s", want, got)
+	}
+	if got := run(TypeParams{Name: "LatchView"}); strings.Contains(got, "TAGS") {
+		t.Errorf("a type no condition names:\n%s", got)
+	}
+	want = "  \"tags\": [\n    \"hs:ahu\",\n    \"hs:ahuEquip\"\n  ]"
+	if got := run(TypeParams{Name: "kitControl:BooleanLatch", JSON: true}); !strings.Contains(got, want) {
+		t.Errorf("json lacks %q:\n%s", want, got)
+	}
+}
+
+// TestNamesType: isType module:Type is matched as a whole type name.
+func TestNamesType(t *testing.T) {
+	for _, tt := range []struct {
+		cond string
+		want bool
+	}{
+		{"isType control:ControlPoint", true},
+		{"(filter hs:site and isType control:ControlPoint)", true},
+		{"isType control:ControlPointExt", false},
+		{"isType control:ControlPointExt or isType control:ControlPoint", true},
+		{"hasTags point", false},
+	} {
+		if got := namesType(tt.cond, "control:ControlPoint"); got != tt.want {
+			t.Errorf("%q: %v", tt.cond, got)
+		}
+	}
+}

@@ -22,7 +22,7 @@
     {"file": "haystack-rt.jar!data/protos.json", "proto": "discharge air temp sensor point"}
   ],
   "groups": [
-    {"dict": "hs", "name": "ahuEquip", "file": "haystack-rt.jar!data/equip.csv", "tags": ["ahu", "equip"], "validity": {"isType": "baja:Folder"}}
+    {"dict": "hs", "name": "ahuEquip", "file": "haystack-rt.jar!data/equip.csv", "tags": ["ahu", "equip"], "validity": {"isType": "kitControl:BooleanLatch"}}
   ],
   "relations": [
     {"dict": "n", "name": "child", "file": "tagdictionary-rt.jar!bog/Niagara.bog", "type": "tagdictionary:ComponentChildRelation"}

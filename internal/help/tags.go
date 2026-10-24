@@ -240,3 +240,63 @@ func (e *Env) Tag(p TagParams) error {
 	e.printTagUnreadable(idx)
 	return nil
 }
+
+// namesType reports whether condition cond holds "isType spec" with spec
+// whole (isType control:ControlPointExt does not name control:ControlPoint).
+func namesType(cond, spec string) bool {
+	needle := "isType " + spec
+	for rest := cond; ; {
+		i := strings.Index(rest, needle)
+		if i < 0 {
+			return false
+		}
+		rest = rest[i+len(needle):]
+		if rest == "" || !(rest[0] == '_' || rest[0] == ':' || rest[0] >= '0' && rest[0] <= '9' ||
+			rest[0]|0x20 >= 'a' && rest[0]|0x20 <= 'z') {
+			return true
+		}
+	}
+}
+
+// typeTags are the dictionary names (dict:name) given to an object of type
+// spec for `type`: those a rule applies when its condition names isType spec,
+// and the tag groups and tags whose validity does (an absent tag-index.json
+// gives none). Only conditions naming the type itself count, not a supertype.
+func (e *Env) typeTags(spec string) ([]string, error) {
+	idx, err := e.loadIndex(tagIndexName, false)
+	if err != nil {
+		return nil, err
+	}
+	var out []string
+	seen := map[string]bool{}
+	add := func(dict, name string) {
+		if k := dict + ":" + name; !seen[k] {
+			seen[k] = true
+			out = append(out, k)
+		}
+	}
+	for _, r := range objList(idx, "rules") {
+		if namesType(getStr(r, "condition", ""), spec) {
+			for _, t := range append(objList(r, "tags"), objList(r, "relations")...) {
+				add(getStr(r, "dict", ""), getStr(t, "name", ""))
+			}
+			for _, g := range strList(r, "groups") {
+				add(getStr(r, "dict", ""), g)
+			}
+		}
+	}
+	for _, sec := range []string{"groups", "tags"} {
+		for _, r := range objList(idx, sec) {
+			v := getObj(r, "validity")
+			if v == nil {
+				continue
+			}
+			for _, k := range v.Keys() {
+				if c := getStr(v, k, ""); namesType(c, spec) || (k == "isType" && c == spec) {
+					add(getStr(r, "dict", ""), getStr(r, "name", ""))
+				}
+			}
+		}
+	}
+	return out, nil
+}
