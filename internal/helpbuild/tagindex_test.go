@@ -103,3 +103,19 @@ func TestTagIndexReadsTheDictionaries(t *testing.T) {
 		t.Errorf("files %d log %q", res.Files, res.Log)
 	}
 }
+
+// TestTagIndexNeedsARegisteredInstall: rebuild-all's step says why it built
+// nothing on a data root no registry names, and writes nothing.
+func TestTagIndexNeedsARegisteredInstall(t *testing.T) {
+	root := t.TempDir()
+	res, err := buildTagIndex(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want := "tag-index.json: no install registered; skipped (the last copy is kept)"; len(res.Log) != 1 || res.Log[0] != want {
+		t.Errorf("log = %q", res.Log)
+	}
+	if _, err := os.Stat(index.Path(root, tagIndexName)); !os.IsNotExist(err) {
+		t.Errorf("tag-index.json written: %v", err)
+	}
+}

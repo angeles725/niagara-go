@@ -136,3 +136,7 @@ func buildTagIndexFrom(root, installDir string) (*textResult, error) {
 		append(append([]any{tagIndexName}, counts...), res.Files, x.jars, len(x.errors), out)...))
 	return res, nil
 }
+
+// buildTagIndex is the rebuild-all step: tag-index.json from the modules/ of
+// the install registered for root.
+var buildTagIndex = fromInstall(tagIndexName, buildTagIndexFrom)
