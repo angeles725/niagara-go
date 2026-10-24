@@ -69,6 +69,43 @@ func TestLexiconKeyFilters(t *testing.T) {
 	}
 }
 
+// TestLexiconText: --text finds the entries holding every word, in any
+// letter case and accents folded, in the base files unless --lang says
+// otherwise; a matching translation shows the base value it overrides.
+func TestLexiconText(t *testing.T) {
+	for _, tt := range []struct {
+		p    LexiconParams
+		want string
+	}{
+		{LexiconParams{Text: "boolean LATCH"}, `LEXICON entries with 'boolean LATCH' in base (1 keys, 1 matching entries):
+
+kitControl:BooleanLatch.displayName
+  base  Boolean Latch  (kitControl-rt.jar!kitControl-rt.lexicon)
+` + lexiconUnreadable},
+		{LexiconParams{Text: "booleen", Lang: "fr"}, `LEXICON entries with 'booleen' in fr (1 keys, 1 matching entries):
+
+kitControl:BooleanLatch.displayName
+  base  Boolean Latch  (kitControl-rt.jar!kitControl-rt.lexicon)
+  fr    Verrou booléen  (niagaraLexiconFr-rt.jar!kitControl.lexicon)
+` + lexiconUnreadable},
+		{LexiconParams{Text: "clock"}, "in base (2 keys, 2 matching entries):\n\nkitControl:latch.description\n"},
+		{LexiconParams{Text: "horloge", Lang: "all", Module: "baja"}, "in all (1 keys, 1 matching entries):\n\nbaja:clock\n  base  Clock"},
+	} {
+		got, misses := runLexicon(t, tt.p)
+		if misses != 0 || !strings.Contains(got, tt.want) {
+			t.Errorf("%+v: misses %d, got:\n%s", tt.p, misses, got)
+		}
+	}
+	got, misses := runLexicon(t, LexiconParams{Text: "horloge"})
+	if misses != 1 || !strings.Contains(got, "lexicon-index.json: 4 lexicon files") {
+		t.Errorf("a translation word found in base: misses %d\n%s", misses, got)
+	}
+	got, _ = runLexicon(t, LexiconParams{Text: "garde", Lang: "fr", JSON: true})
+	if !strings.Contains(got, `"text": "garde",`) || !strings.Contains(got, `"lang": "fr",`) || !strings.Contains(got, `"matched": false`) {
+		t.Errorf("json:\n%s", got)
+	}
+}
+
 // TestLexiconKeysShownAreCapped: past lexiconKeysShown keys the text answer
 // says how many more there are; --json lists them all.
 func TestLexiconKeysShownAreCapped(t *testing.T) {
@@ -105,8 +142,8 @@ func TestLexiconJSON(t *testing.T) {
 }
 
 // TestLexiconMiss: an unknown key is a miss naming lexicon-index.json, its
-// files and entries and its unreadable files; a call without a key is a
-// usage error.
+// files and entries and its unreadable files; a call without a key or text,
+// or with both, is a usage error.
 func TestLexiconMiss(t *testing.T) {
 	got, misses := runLexicon(t, LexiconParams{Query: "nope"})
 	if misses != 1 || !strings.Contains(got, "lexicon-index.json: 4 lexicon files (2 base, 2 translations), 9 entries (1 unreadable: broken-rt.jar)") {
@@ -114,14 +151,14 @@ func TestLexiconMiss(t *testing.T) {
 	}
 	e := &Env{BaseDir: t.TempDir(), Out: &bytes.Buffer{}}
 	write(t, filepath.Join(e.BaseDir, "indexes", "lexicon-index.json"), `{"files": [], "errors": []}`)
-	for _, p := range []LexiconParams{{}} {
-		if err := e.Lexicon(p); err == nil || !strings.Contains(err.Error(), "lexicon needs a key or glob") {
+	for _, p := range []LexiconParams{{}, {Query: "a", Text: "b"}, {Text: " "}} {
+		if err := e.Lexicon(p); err == nil || !strings.Contains(err.Error(), "lexicon needs a key or glob, or --text (not both)") {
 			t.Errorf("%+v: err = %v", p, err)
 		}
 	}
 }
 
-// TestLexiconCLI: lexicon takes a key, --module, --lang and --json; a miss
+// TestLexiconCLI: lexicon takes a key or --text, --module, --lang and --json; a miss
 // exits 1 and no key is a usage error (exit 2).
 func TestLexiconCLI(t *testing.T) {
 	dir := repo(t, `{"default": "1.0.0.1", "versions": {"1.0.0.1": {"install_dir": ".", "data_root": "."}}}`, ".")
@@ -138,6 +175,7 @@ func TestLexiconCLI(t *testing.T) {
 		{[]string{"lexicon", "clock"}, 0, "LEXICON keys matching 'clock' (1 keys, 2 matching entries):\n"},
 		{[]string{"lexicon", "*Latch.*", "--module", "kit*", "--lang", "fr"}, 0, "LEXICON keys matching '*Latch.*' (1 keys, 1 matching entries):\n"},
 		{[]string{"lexicon", "clock", "--json"}, 0, "{\n  \"query\": \"clock\","},
+		{[]string{"lexicon", "--text", "verrou", "--lang", "fr"}, 0, "LEXICON entries with 'verrou' in fr (1 keys, 1 matching entries):\n"},
 		{[]string{"lexicon", "nope"}, 1, ""},
 		{[]string{"lexicon"}, 2, ""},
 	} {

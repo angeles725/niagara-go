@@ -3,11 +3,12 @@ package help
 // `lexicon` over indexes/lexicon-index.json (built by rebuild-all's
 // lexicon_index_builder from every lexicon file of the install's module jars):
 // what a lexicon key says in each language, the base value a translation
-// overrides next to it.
+// overrides next to it; or, with --text, which keys hold given words.
 
 import (
 	"fmt"
 	"sort"
+	"strings"
 
 	"github.com/angeles725/niagara-go/internal/fnmatch"
 	"github.com/angeles725/niagara-go/internal/index"
@@ -17,13 +18,19 @@ import (
 
 const lexiconIndexName = "lexicon-index.json"
 
-// LexiconParams are the arguments of `lexicon`: Query is a key or glob; Module
-// keeps one module's lexicon (name or glob); Lang one language code, "base"
-// (the module's own files) or "all" ("" is all); JSON prints the answer as JSON.
+// LexiconParams are the arguments of `lexicon`: Query is a key or glob, or
+// Text the words a value must hold (one of the two); Module keeps one module's
+// lexicon (name or glob); Lang one language code, "base" (the module's own
+// files) or "all" ("" is all for a key, base for Text); JSON prints the answer
+// as JSON.
 type LexiconParams struct {
-	Query, Module, Lang string
-	JSON                bool
+	Query, Text, Module, Lang string
+	JSON                      bool
 }
+
+// lexiconFold is how --text compares: lower-cased, accents dropped, other
+// letters kept (so a Chinese or Russian translation is still found).
+var lexiconFold = textfold.Options{Lower: true}
 
 // lexiconFile is one files row of the index.
 type lexiconFile struct {
@@ -146,14 +153,19 @@ var lexiconKeysShown = 25
 
 // Lexicon is `lexicon`.
 func (e *Env) Lexicon(p LexiconParams) error {
-	if p.Query == "" {
-		return usageError("lexicon needs a key or glob")
+	words := textfold.Fields(textfold.Fold(p.Text, lexiconFold))
+	if (p.Query == "") == (len(words) == 0) {
+		return usageError("lexicon needs a key or glob, or --text (not both)")
 	}
 	idx, err := e.loadIndex(lexiconIndexName, true)
 	if err != nil {
 		return err
 	}
-	if p.Lang == "" {
+	switch {
+	case p.Lang != "":
+	case p.Text != "":
+		p.Lang = "base"
+	default:
 		p.Lang = "all"
 	}
 	var files []*lexiconFile
@@ -161,6 +173,12 @@ func (e *Env) Lexicon(p LexiconParams) error {
 		if p.Module == "" || nameMatches(f.lexModule(), p.Module) {
 			files = append(files, f)
 		}
+	}
+	if len(words) > 0 {
+		keys, matches := lexiconKeys(files, func(f *lexiconFile, _, value string) bool {
+			return langSelected(p.Lang, f.language) && holdsWords(value, words)
+		})
+		return e.printLexicon(idx, p, keys, matches, fmt.Sprintf("entries with '%s' in %s", p.Text, p.Lang))
 	}
 	var keys []*lexiconKey
 	var matches int
@@ -172,13 +190,29 @@ func (e *Env) Lexicon(p LexiconParams) error {
 			break
 		}
 	}
+	return e.printLexicon(idx, p, keys, matches, fmt.Sprintf("keys matching '%s'", p.Query))
+}
+
+// holdsWords reports whether value holds every one of the folded words.
+func holdsWords(value string, words []string) bool {
+	folded := textfold.Fold(value, lexiconFold)
+	for _, w := range words {
+		if !strings.Contains(folded, w) {
+			return false
+		}
+	}
+	return true
+}
+
+// printLexicon prints the keys found (what names the search), or the miss.
+func (e *Env) printLexicon(idx *index.Object, p LexiconParams, keys []*lexiconKey, matches int, what string) error {
 	if len(keys) == 0 {
-		return e.reportMiss("lexicon", p.Query, "lexicons")
+		return e.reportMiss("lexicon", p.Query+p.Text, "lexicons")
 	}
 	if p.JSON {
 		return e.lexiconJSON(idx, p, keys)
 	}
-	fmt.Fprintf(e.Out, "LEXICON keys matching '%s' (%d keys, %d matching entries):\n", p.Query, len(keys), matches)
+	fmt.Fprintf(e.Out, "LEXICON %s (%d keys, %d matching entries):\n", what, len(keys), matches)
 	for _, k := range keys[:min(lexiconKeysShown, len(keys))] {
 		fmt.Fprintf(e.Out, "\n%s:%s\n", k.module, k.key)
 		for _, r := range k.rows {
@@ -202,7 +236,7 @@ func (e *Env) lexiconJSON(idx *index.Object, p LexiconParams, keys []*lexiconKey
 		}
 		list[i] = pyjson.Obj{{"module", k.module}, {"key", k.key}, {"rows", rows}}
 	}
-	fmt.Fprintln(e.Out, pyjson.DumpsAny(pyjson.Obj{{"query", p.Query}, {"text", ""}, {"module", p.Module}, {"lang", p.Lang},
+	fmt.Fprintln(e.Out, pyjson.DumpsAny(pyjson.Obj{{"query", p.Query}, {"text", p.Text}, {"module", p.Module}, {"lang", p.Lang},
 		{"keys", list}, {"unreadable", anyList(objList(idx, "errors"))}}, pyjson.Indent2))
 	return nil
 }
