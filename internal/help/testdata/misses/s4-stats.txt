@@ -36,4 +36,4 @@ RAW HTML:
   guides/                  1 HTML
 
 INDEXES: 11
-CLI: 22 commands
+CLI: 23 commands

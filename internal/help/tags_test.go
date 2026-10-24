@@ -77,6 +77,23 @@ func TestTagMatchesLikeType(t *testing.T) {
 	}
 }
 
+// TestTagList: --list names every tag, tag group and relation once, with
+// its kind and the files defining it.
+func TestTagList(t *testing.T) {
+	got, misses := runTag(t, TagParams{List: true})
+	want := `TAGS in tag-index.json (5: 3 tags, 1 tag groups, 1 relations; from 7 files):
+
+  hs:ahu        tag        Marker  defs.json, tags.csv
+  hs:discharge  tag        Marker  defs.json
+  n:point       tag        Marker  Niagara.bog
+  hs:ahuEquip   tag group  equip.csv
+  n:child       relation   tagdictionary:ComponentChildRelation  Niagara.bog
+` + tagUnreadable
+	if got != want || misses != 0 {
+		t.Errorf("misses %d, got:\n%s\nwant:\n%s", misses, got, want)
+	}
+}
+
 func TestTagJSON(t *testing.T) {
 	got, _ := runTag(t, TagParams{Query: "discharge", JSON: true})
 	for _, want := range []string{"{\n  \"query\": \"discharge\",\n  \"hits\": [\n    {\n      \"dict\": \"hs\",\n      \"name\": \"discharge\",\n      \"kind\": \"tag\",",
@@ -97,5 +114,33 @@ func TestTagMiss(t *testing.T) {
 	got, misses := runTag(t, TagParams{Query: "nope"})
 	if misses != 1 || !strings.Contains(got, "tag-index.json: 5 names from 7 files (1 unreadable: haystack-wb.jar)") {
 		t.Errorf("misses %d, got:\n%s", misses, got)
+	}
+}
+
+// TestTagCLI: tag takes a name, --list and --json; a miss exits 1 and no
+// name without --list is a usage error (exit 2).
+func TestTagCLI(t *testing.T) {
+	dir := repo(t, `{"default": "1.0.0.1", "versions": {"1.0.0.1": {"install_dir": ".", "data_root": "."}}}`, ".")
+	data, err := os.ReadFile(filepath.Join("testdata", "indexes", "tag-index.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	write(t, filepath.Join(dir, "indexes", "tag-index.json"), string(data))
+	for _, tt := range []struct {
+		args []string
+		code int
+		out  string
+	}{
+		{[]string{"tag", "ahu"}, 0, "TAGS with 'ahu' (1):\n"},
+		{[]string{"tag", "--list"}, 0, "TAGS in tag-index.json (5: "},
+		{[]string{"tag", "--list", "--json"}, 0, "{\n  \"tags\": ["},
+		{[]string{"tag", "ahu", "--json"}, 0, "{\n  \"query\": \"ahu\","},
+		{[]string{"tag", "nope"}, 1, ""},
+		{[]string{"tag"}, 2, ""},
+	} {
+		out, errs, code := run(t, dir, tt.args...)
+		if code != tt.code || !strings.HasPrefix(out, tt.out) {
+			t.Errorf("%v: code %d stdout %q stderr %q", tt.args, code, out, errs)
+		}
 	}
 }

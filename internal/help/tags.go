@@ -15,10 +15,10 @@ import (
 const tagIndexName = "tag-index.json"
 
 // TagParams are the arguments of `tag`: Query is a name, dict:name or glob;
-// JSON prints the answer as JSON.
+// List lists every name instead; JSON prints the answer as JSON.
 type TagParams struct {
-	Query string
-	JSON  bool
+	Query      string
+	List, JSON bool
 }
 
 // tagEntry is one dictionary name and the rows defining it, in file order.
@@ -201,6 +201,12 @@ func (e *Env) Tag(p TagParams) error {
 		return err
 	}
 	all := tagEntries(idx)
+	switch {
+	case p.List:
+		return e.tagList(idx, all, p.JSON)
+	case p.Query == "":
+		return usageError("tag needs a name, dict:name or glob, or --list")
+	}
 	var hits []*tagEntry
 	for _, match := range matchRounds {
 		for _, t := range all {

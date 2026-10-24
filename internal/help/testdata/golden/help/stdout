@@ -1,10 +1,10 @@
 usage: niagara_help [-h] [--niagara-version VERSION]
-                    {class,search,guide,guide-search,devguide,pdf,method,source,package,slots,module,type,palette,find,devguide-search,stats,source-grep,coverage,freshness,rebuild-all,selftest,versions} ...
+                    {class,search,guide,guide-search,devguide,pdf,method,source,package,slots,module,type,palette,tag,find,devguide-search,stats,source-grep,coverage,freshness,rebuild-all,selftest,versions} ...
 
 Niagara N4 Documentation Navigator
 
 positional arguments:
-  {class,search,guide,guide-search,devguide,pdf,method,source,package,slots,module,type,palette,find,devguide-search,stats,source-grep,coverage,freshness,rebuild-all,selftest,versions}
+  {class,search,guide,guide-search,devguide,pdf,method,source,package,slots,module,type,palette,tag,find,devguide-search,stats,source-grep,coverage,freshness,rebuild-all,selftest,versions}
                         Available commands
     class               Look up a class by name (package, inheritance, methods)
     search              Search classes by glob pattern
@@ -21,6 +21,8 @@ positional arguments:
                         on it
     palette             Shipped palettes (*.palette): where a type or folder sits, or a module's
                         palette tree
+    tag                 Tag dictionaries (Haystack, Niagara): a tag's kind, doc, supertypes,
+                        protos and N4 rules
     find                Unified full-text search across ALL sources with relevance ranking
     devguide-search     Full-text search in devguide-clean/ with relevance ranking
     stats               Corpus overview with counts and sizes
@@ -57,6 +59,7 @@ Examples:
   niagara_help module kitControl-rt
   niagara_help type kitControl:BooleanLatch
   niagara_help palette BooleanLatch
+  niagara_help tag ahu
   niagara_help find "setpoint reference"
   niagara_help devguide-search "web servlet"
   niagara_help versions add /mnt/c/Niagara/Niagara-4.16.0.1
