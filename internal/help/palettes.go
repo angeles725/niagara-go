@@ -10,11 +10,9 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/angeles725/niagara-go/internal/fnmatch"
 	"github.com/angeles725/niagara-go/internal/index"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyjson"
-	"github.com/angeles725/niagara-go/internal/textfold"
 )
 
 const paletteIndexName = "palette-index.json"
@@ -90,12 +88,7 @@ func typeMatches(spec, query string, match func(got, want string) bool) bool {
 // name or folder matches, else one holding a matching type; exactly, then in
 // any letter case, then as a glob (the rounds of resolveTypes).
 func resolvePalette(nodes []paletteNode, query string) []paletteHit {
-	for _, match := range []func(got, want string) bool{
-		func(got, want string) bool { return got == want },
-		func(got, want string) bool { return textfold.Lower(got) == textfold.Lower(want) },
-		fnmatch.Fnmatch,
-		lowerGlob,
-	} {
+	for _, match := range matchRounds {
 		var out []paletteHit
 		for _, n := range nodes {
 			if match(n.name(), query) || (!n.folder() && typeMatches(getStr(n.node, "type", ""), query, match)) {

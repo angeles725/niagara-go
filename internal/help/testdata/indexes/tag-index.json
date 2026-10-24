@@ -1,0 +1,38 @@
+{
+  "jars": 3,
+  "jar_bytes": 3000,
+  "files": [
+    {"jar": "haystack-rt.jar", "path": "data/defs.json", "kind": "defs", "records": 2},
+    {"jar": "haystack-rt.jar", "path": "data/protos.json", "kind": "protos", "records": 2},
+    {"jar": "haystack-rt.jar", "path": "data/tags.csv", "kind": "tags", "records": 1},
+    {"jar": "haystack-rt.jar", "path": "data/equip.csv", "kind": "groups", "records": 1},
+    {"jar": "haystack-rt.jar", "path": "data/HS4toN4.json", "kind": "rules", "records": 1},
+    {"jar": "haystack-rt.jar", "path": "data/haystack3MigrationConfig.csv", "kind": "migrations", "records": 1},
+    {"jar": "tagdictionary-rt.jar", "path": "bog/Niagara.bog", "kind": "niagara", "records": 2}
+  ],
+  "tags": [
+    {"dict": "hs", "name": "ahu", "file": "haystack-rt.jar!data/defs.json", "kind": "Marker", "doc": "Air Handling Unit:\nan enclosure with a fan.",
+     "is": ["airHandlingEquip"], "supertypes": ["airHandlingEquip", "equip", "marker"], "lib": "lib:phIoT"},
+    {"dict": "hs", "name": "discharge", "file": "haystack-rt.jar!data/defs.json", "kind": "Marker", "doc": "Discharge air.", "is": ["marker"]},
+    {"dict": "hs", "name": "ahu", "file": "haystack-rt.jar!data/tags.csv", "kind": "Marker", "validity": {"hasTags": "equip rooftop"}},
+    {"dict": "n", "name": "point", "file": "tagdictionary-rt.jar!bog/Niagara.bog", "kind": "Marker", "validity": {"condition": "always"}}
+  ],
+  "protos": [
+    {"file": "haystack-rt.jar!data/protos.json", "proto": "ahu equip"},
+    {"file": "haystack-rt.jar!data/protos.json", "proto": "discharge air temp sensor point"}
+  ],
+  "groups": [
+    {"dict": "hs", "name": "ahuEquip", "file": "haystack-rt.jar!data/equip.csv", "tags": ["ahu", "equip"], "validity": {"isType": "kitControl:BooleanLatch"}}
+  ],
+  "relations": [
+    {"dict": "n", "name": "child", "file": "tagdictionary-rt.jar!bog/Niagara.bog", "type": "tagdictionary:ComponentChildRelation"}
+  ],
+  "rules": [
+    {"dict": "hs", "name": "ahuRule", "file": "haystack-rt.jar!data/HS4toN4.json", "condition": "isType kitControl:Ahu",
+     "tags": [{"name": "ahu", "type": "baja:Marker"}], "groups": ["ahuEquip"]}
+  ],
+  "migrations": [
+    {"file": "haystack-rt.jar!data/haystack3MigrationConfig.csv", "from": "ahuRef", "fromType": "relation", "to": ["ahu"], "toType": "tag"}
+  ],
+  "errors": [{"jar": "haystack-wb.jar", "path": "", "error": "zip: not a valid zip file"}]
+}

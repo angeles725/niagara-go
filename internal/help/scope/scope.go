@@ -70,6 +70,9 @@ var scopes = map[string]def{
 	"palettes": {[]string{"palette-index.json"}, "modules whose jars ship no *.palette; a palette entry is " +
 		"matched by Type, module:Type, entry name or folder, exactly, in any letter case or as a glob, and by the types it holds",
 		[]string{"type", "module", "find"}},
+	"tags": {[]string{"tag-index.json"}, "tag dictionaries outside haystack*.jar and tagdictionary*.jar (a station's own " +
+		"dictionaries are not shipped); a name is matched as dict:name or name, exactly, in any letter case or as a glob",
+		[]string{"find", "source-grep", "type"}},
 	"pdf": {[]string{"pdf-index.json"}, "manual pages without a text layer (scanned images)",
 		[]string{"find", "guide-search", "pdf --no-fulltext"}},
 	"fulltext": {nil, "JDK API (class --jdk); " + docTypesExcluded,
@@ -181,6 +184,9 @@ func indexCount(baseDir, name string, load Loader) (string, error) {
 	if name == "palette-index.json" {
 		return paletteCount(data), nil
 	}
+	if name == "tag-index.json" {
+		return tagCount(data), nil
+	}
 	return fmt.Sprintf("%s: %s entries", name, pycompat.Commas(data.Len())), nil
 }
 
@@ -208,24 +214,47 @@ func moduleCount(data *index.Object) string {
 }
 
 // paletteCount is the palette-index.json part of a scope line: its palettes
-// and those it could not read (the first three named jar!path).
+// and those it could not read.
 func paletteCount(data *index.Object) string {
 	pals, _ := getAny(data, "palettes").([]any)
-	line := fmt.Sprintf("palette-index.json: %s palettes", pycompat.Commas(len(pals)))
+	return fmt.Sprintf("palette-index.json: %s palettes", pycompat.Commas(len(pals))) + unreadable(data)
+}
+
+// tagCount is the tag-index.json part of a scope line: its distinct names
+// (tags, tag groups, relations), the files read and those it could not read.
+func tagCount(data *index.Object) string {
+	names := map[string]bool{}
+	for _, sec := range []string{"tags", "groups", "relations"} {
+		rows, _ := getAny(data, sec).([]any)
+		for _, r := range rows {
+			d, _ := getAny(asObject(r), "dict").(string)
+			n, _ := getAny(asObject(r), "name").(string)
+			names[sec+"\x00"+d+":"+n] = true
+		}
+	}
+	files, _ := getAny(data, "files").([]any)
+	return fmt.Sprintf("tag-index.json: %s names from %s files", pycompat.Commas(len(names)), pycompat.Commas(len(files))) + unreadable(data)
+}
+
+// unreadable is " (N unreadable: jar!path, ...)" for the errors rows of an
+// index built from the install (the first three named), "" when none.
+func unreadable(data *index.Object) string {
 	errs, _ := getAny(data, "errors").([]any)
 	if len(errs) == 0 {
-		return line
+		return ""
 	}
 	var where []string
 	for _, e := range errs[:min(3, len(errs))] {
 		jar, _ := getAny(asObject(e), "jar").(string)
-		path, _ := getAny(asObject(e), "path").(string)
-		where = append(where, jar+"!"+path)
+		if path, _ := getAny(asObject(e), "path").(string); path != "" {
+			jar += "!" + path
+		}
+		where = append(where, jar)
 	}
 	if len(errs) > 3 {
 		where = append(where, "...")
 	}
-	return fmt.Sprintf("%s (%d unreadable: %s)", line, len(errs), strings.Join(where, ", "))
+	return fmt.Sprintf(" (%d unreadable: %s)", len(errs), strings.Join(where, ", "))
 }
 
 func asObject(v any) *index.Object { o, _ := v.(*index.Object); return o }

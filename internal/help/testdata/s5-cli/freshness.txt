@@ -22,6 +22,7 @@ Text sources of the full-text index and the indexes (written before the stamp):
   fulltext.sqlite: absent (find builds it on the first search)
   module-index.json: absent (rebuild-all builds it from the install's modules/)
   palette-index.json: absent (rebuild-all builds it from the install's modules/)
+  tag-index.json: absent (rebuild-all builds it from the install's modules/)
 
 Baseline stamped: 2026-01-02T03:04:05.000006+00:00
 RESULT: STALE — 7 source(s) changed: source, guides, docs, devguide-clean, guides-clean, devguide-rc, indexes

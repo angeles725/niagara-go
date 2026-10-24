@@ -7,7 +7,6 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/helpbuild/palettexml"
 	"github.com/angeles725/niagara-go/internal/helpbuild/pyfs"
-	"github.com/angeles725/niagara-go/internal/helpbuild/registry"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 )
@@ -114,18 +113,5 @@ func buildPaletteIndexFrom(root, installDir string) (*textResult, error) {
 }
 
 // buildPaletteIndex is the rebuild-all step: palette-index.json from the
-// modules/ of the install registered for root, skipped (the last copy kept)
-// as buildModuleIndex is.
-func buildPaletteIndex(root string) (*textResult, error) {
-	install, err := registry.InstallDir(root)
-	if err != nil {
-		return nil, err
-	}
-	switch {
-	case install == "":
-		return &textResult{Log: []string{paletteIndexName + ": no install registered; skipped (the last copy is kept)"}}, nil
-	case !pycompat.IsDir(pycompat.Join(install, "modules")):
-		return &textResult{Log: []string{paletteIndexName + ": " + pycompat.Join(install, "modules") + " is not a folder; skipped (the last copy is kept)"}}, nil
-	}
-	return buildPaletteIndexFrom(root, install)
-}
+// modules/ of the install registered for root.
+var buildPaletteIndex = fromInstall(paletteIndexName, buildPaletteIndexFrom)

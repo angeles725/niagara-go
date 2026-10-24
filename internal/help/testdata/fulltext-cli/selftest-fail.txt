@@ -8,3 +8,4 @@
   SKIP  method: indexes/method-index.json is absent in this version
   SKIP  module: indexes/module-index.json is absent in this version
   SKIP  palette: indexes/palette-index.json is absent in this version
+  SKIP  tag: indexes/tag-index.json is absent in this version

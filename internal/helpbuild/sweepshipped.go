@@ -12,10 +12,11 @@ import (
 // The coverage sweep classifies what module jars ship besides documentation
 // and nh indexes in a structure, not in the full-text index: the module
 // descriptor and the module-permissions templates and schemas
-// (module-index.json), and palettes (palette-index.json). In an installed jar
+// (module-index.json), palettes (palette-index.json) and the tag dictionaries
+// of the haystack and tagdictionary jars (tag-index.json). In an installed jar
 // each is indexed when its index holds it and UNCLASSIFIED when it does not
 // (not rebuilt yet) or could not read it; a copy outside modules/ is excluded,
-// since both indexes read the installed modules/ only.
+// since these indexes read the installed modules/ only.
 
 // shippedKinds name each kind in sweep reasons, and the index holding it.
 var shippedKinds = map[string][2]string{
@@ -23,14 +24,16 @@ var shippedKinds = map[string][2]string{
 	"template":   {"permissions template", moduleIndexName},
 	"schema":     {"schema", moduleIndexName},
 	"palette":    {"palette", paletteIndexName},
+	"tagdict":    {"tag dictionary", tagIndexName},
 }
 
 // isDescriptor reports whether entry is a module jar's descriptor.
 func isDescriptor(entry string) bool { return entry == modulexml.Member }
 
-// shippedKind is the kind of a jar entry the sweep checks against an index,
-// "" for any other entry. A doc-like entry stays with the documentation rules.
-func shippedKind(entry string, rules *Rules) string {
+// shippedKind is the kind of entry of the jar at install path rel the sweep
+// checks against an index, "" for any other entry. A doc-like entry stays
+// with the documentation rules.
+func shippedKind(rel, entry string, rules *Rules) string {
 	switch {
 	case isDescriptor(entry):
 		return "descriptor"
@@ -38,6 +41,8 @@ func shippedKind(entry string, rules *Rules) string {
 		return ""
 	case isPalette(entry):
 		return "palette"
+	case isTagDictionary(pyBasename(rel), entry):
+		return "tagdict"
 	case shippedxml.IsPermissionsTemplate(entry):
 		return "template"
 	case shippedxml.IsSchema(entry):
@@ -50,11 +55,11 @@ func shippedKind(entry string, rules *Rules) string {
 // when held, the reason when it could not be read. A descriptor's member is "".
 type shippedIndexes struct{ held map[[2]string]string }
 
-// loadShipped reads module-index.json and palette-index.json under root; an
-// absent index holds nothing.
+// loadShipped reads module-index.json, palette-index.json and tag-index.json
+// under root; an absent index holds nothing.
 func loadShipped(root string) (*shippedIndexes, error) {
 	x := &shippedIndexes{held: map[[2]string]string{}}
-	for _, name := range []string{moduleIndexName, paletteIndexName} {
+	for _, name := range []string{moduleIndexName, paletteIndexName, tagIndexName} {
 		path := index.Path(root, name)
 		if _, err := os.Stat(path); err != nil {
 			continue
@@ -84,7 +89,8 @@ func (x *shippedIndexes) read(name string, idx *index.Object) {
 		}
 	}
 	pals, _ := idx.Get("palettes")
-	for _, r := range asList(pals) {
+	files, _ := idx.Get("files") // tag-index.json's dictionary files
+	for _, r := range append(asList(pals), asList(files)...) {
 		jar, _ := r.String("jar")
 		p, _ := r.String("path")
 		x.held[[2]string{jar, p}] = ""
@@ -93,8 +99,8 @@ func (x *shippedIndexes) read(name string, idx *index.Object) {
 	for _, r := range asList(errs) {
 		jar, _ := r.String("jar")
 		p, _ := r.String("path") // a module-index row without a path is the descriptor's
-		if p == "" && name == paletteIndexName {
-			continue // a jar the palette builder could not open: the sweep cannot list it either
+		if p == "" && name != moduleIndexName {
+			continue // a jar the palette or tag builder could not open: the sweep cannot list it either
 		}
 		x.held[[2]string{jar, p}] = name + " could not read: " + getErr(r)
 	}

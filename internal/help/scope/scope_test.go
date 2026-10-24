@@ -168,3 +168,19 @@ func TestErrorLineForMissingFulltextIndex(t *testing.T) {
 		t.Errorf("err %v line %q", err, ErrorLine(err))
 	}
 }
+
+// TestUnreadableSuffix: an errors row names jar!path, a whole-jar error the
+// jar alone, and a fourth row is "...".
+func TestUnreadableSuffix(t *testing.T) {
+	v, err := index.Decode([]byte(`{"errors": [{"jar": "a.jar", "path": "p.palette"}, {"jar": "b.jar", "path": ""},
+		{"jar": "c.jar"}, {"jar": "d.jar"}]}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := unreadable(v.(*index.Object)); got != " (4 unreadable: a.jar!p.palette, b.jar, c.jar, ...)" {
+		t.Errorf("got %q", got)
+	}
+	if got := unreadable(index.NewObject()); got != "" {
+		t.Errorf("no errors: %q", got)
+	}
+}

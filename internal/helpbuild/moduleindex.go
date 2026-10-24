@@ -178,19 +178,25 @@ func buildModuleIndexFrom(root, installDir string) (*textResult, error) {
 }
 
 // buildModuleIndex is the rebuild-all step: module-index.json from the
+// modules/ of the install registered for root.
+var buildModuleIndex = fromInstall(moduleIndexName, buildModuleIndexFrom)
+
+// fromInstall is the rebuild-all step that writes name with build from the
 // modules/ of the install registered for root. A data root without one (or
-// whose install has no modules/) keeps whatever module-index.json it has and
-// says why it was not built.
-func buildModuleIndex(root string) (*textResult, error) {
-	install, err := registry.InstallDir(root)
-	if err != nil {
-		return nil, err
+// whose install has no modules/) keeps whatever copy of name it has and says
+// why it was not built.
+func fromInstall(name string, build func(root, install string) (*textResult, error)) func(string) (*textResult, error) {
+	return func(root string) (*textResult, error) {
+		install, err := registry.InstallDir(root)
+		if err != nil {
+			return nil, err
+		}
+		switch {
+		case install == "":
+			return &textResult{Log: []string{name + ": no install registered; skipped (the last copy is kept)"}}, nil
+		case !pycompat.IsDir(pycompat.Join(install, "modules")):
+			return &textResult{Log: []string{name + ": " + pycompat.Join(install, "modules") + " is not a folder; skipped (the last copy is kept)"}}, nil
+		}
+		return build(root, install)
 	}
-	switch {
-	case install == "":
-		return &textResult{Log: []string{moduleIndexName + ": no install registered; skipped (the last copy is kept)"}}, nil
-	case !pycompat.IsDir(pycompat.Join(install, "modules")):
-		return &textResult{Log: []string{moduleIndexName + ": " + pycompat.Join(install, "modules") + " is not a folder; skipped (the last copy is kept)"}}, nil
-	}
-	return buildModuleIndexFrom(root, install)
 }
