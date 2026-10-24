@@ -1,0 +1,6 @@
+{
+ "exit": 1,
+ "reason": "NH7b: class falls back to bytecode-index.json, so a class miss searched it too and its scope line counts it (scope \"class\") (NH7b bytecode-index.json counts are scratch-build PREDICTIONS for the 4.14 install until the post-merge rebuild re-records them)",
+ "stderr": "",
+ "stdout": "No match for 'BZzqqxxNope' (class) in this scope.\n  searched: Niagara 4.14.0.162 (<REPO>) -- class-index.json: 6,133 names / 6,310 classes; bytecode-index.json: 14,190 classes (3 unreadable: honeywellTCThermostatWizard-rt.jar!com/honeywell/honeywellTCThermostatWizard/jobs/BThermostatDownloadJob.class, honeywellTCThermostatWizard-rt.jar!com/honeywell/honeywellTCThermostatWizard/jobs/BThermostatUploadJob.class, honeywellTCThermostatWizard-rt.jar!com/honeywell/honeywellTCThermostatWizard/firmware/BFirmwareDownloadConfig.class)\n  excluded from this scope: JDK API (opt-in: --jdk); images, fonts/css, JavaHelp .dat search indexes, bajadoc.index, raw js next to rendered jsdoc, META-INF, licence texts (see coverage --doc-jars)\n  not proof of absence; try: find 'BZzqqxxNope', class --jdk 'BZzqqxxNope', source-grep 'BZzqqxxNope'\n"
+}
