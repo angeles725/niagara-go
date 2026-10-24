@@ -3,6 +3,8 @@ package bog
 import (
 	"strconv"
 	"strings"
+	"unicode"
+	"unicode/utf16"
 	"unicode/utf8"
 
 	"github.com/angeles725/niagara-go/internal/pycompat"
@@ -146,7 +148,16 @@ func wordBoundaryBefore(s string, i int) bool {
 	return !pycompat.IsWordRune(r)
 }
 
-// UnescapeName decodes a Niagara SlotPath-escaped name: "$20" -> " ", "$u00e9" -> "é".
+// unicodeEscape reads the "$uXXXX" escape at name[i], if there is one.
+func unicodeEscape(name string, i int) (rune, bool) {
+	if i+6 > len(name) || name[i] != '$' || name[i+1] != 'u' || !isHex(name[i+2:i+6]) {
+		return 0, false
+	}
+	v, _ := strconv.ParseUint(name[i+2:i+6], 16, 32)
+	return rune(v), true
+}
+
+// UnescapeName decodes a Niagara SlotPath-escaped name: "$20" -> " ", "$u00e9" -> "é"; a "$uD83D$uDE00" surrogate pair is one rune, as in Java.
 func UnescapeName(name string) string {
 	i := strings.IndexByte(name, '$')
 	if i < 0 {
@@ -161,10 +172,17 @@ func UnescapeName(name string) string {
 			i++
 			continue
 		}
-		if i+6 <= len(name) && name[i+1] == 'u' && isHex(name[i+2:i+6]) {
-			v, _ := strconv.ParseUint(name[i+2:i+6], 16, 32)
-			sb.WriteRune(rune(v))
+		if r, ok := unicodeEscape(name, i); ok {
 			i += 6
+			if utf16.IsSurrogate(r) {
+				if lo, ok := unicodeEscape(name, i); ok {
+					if pair := utf16.DecodeRune(r, lo); pair != unicode.ReplacementChar {
+						r = pair
+						i += 6
+					}
+				}
+			}
+			sb.WriteRune(r)
 			continue
 		}
 		if i+3 <= len(name) && isHex(name[i+1:i+3]) {
