@@ -103,13 +103,14 @@ func (e *Env) printBytecodeSlots(rows map[string]*index.Object, r *index.Object)
 }
 
 // slotLine is one slot: kind, name, type (an action's parameter and return
-// type), default, flag letters and whether it overrides an inherited slot or
-// is known only by its field.
+// type), default (an action's default argument), flag letters and whether it
+// overrides an inherited slot or is known only by its field (kind and name).
 func slotLine(s *index.Object) string {
 	kind, name, typ := getStr(s, "kind", ""), getStr(s, "name", ""), getStr(s, "type", "")
 	line := pycompat.LJust(kind, 9, ' ') + name
+	field := getStr(s, "via", "") == "field"
 	switch {
-	case kind == "action":
+	case kind == "action" && !field:
 		line += "(" + typ + ")"
 		if rt := getStr(s, "return_type", ""); rt != "" {
 			line += " -> " + rt
@@ -117,7 +118,9 @@ func slotLine(s *index.Object) string {
 	case typ != "":
 		line += ": " + typ
 	}
-	if d := getStr(s, "default", ""); d != "" {
+	if d := getStr(s, "default", ""); d != "" && kind == "action" {
+		line += "  default argument " + d
+	} else if d != "" {
 		line += " = " + d
 	}
 	if f := getStr(s, "flag_letters", ""); f != "" {
@@ -126,7 +129,7 @@ func slotLine(s *index.Object) string {
 	if index.Truthy(get(s, "override", false)) {
 		line += "  (override)"
 	}
-	if getStr(s, "via", "") == "field" {
+	if field {
 		line += "  (field only: no slot annotation)"
 	}
 	return line

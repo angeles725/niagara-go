@@ -54,3 +54,24 @@ func TestBytecodeSlotsWalkSupers(t *testing.T) {
 		t.Errorf("slots:\n%s", out.String())
 	}
 }
+
+// TestBytecodeSlotLine: an action names its parameter, return type and
+// default argument; a slot known only by its field shows its kind and name.
+func TestBytecodeSlotLine(t *testing.T) {
+	var out bytes.Buffer
+	e := &Env{BaseDir: bytecodeRoot(t), Out: &out}
+	write(t, filepath.Join(e.BaseDir, "indexes", "bytecode-index.json"), `{"classes": [{"class": "a.BNet", "slots": [
+	 {"name": "submit", "kind": "action", "type": "BParam", "return_type": "BOrd", "default": "new BParam()", "flag_letters": "h", "via": "annotation"},
+	 {"name": "ping", "kind": "action", "via": "field"}]}]}`)
+	rows, _, err := e.bytecodeRows()
+	if err != nil {
+		t.Fatal(err)
+	}
+	e.printBytecodeSlots(rows, rows["a.BNet"])
+	want := "SLOTS (2 declared, 0 inherited) [bytecode]:\n" +
+		"  action   submit(BParam) -> BOrd  default argument new BParam()  flags h\n" +
+		"  action   ping  (field only: no slot annotation)\n"
+	if out.String() != want {
+		t.Errorf("slots:\n%s", out.String())
+	}
+}
