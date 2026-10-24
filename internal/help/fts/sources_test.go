@@ -1,6 +1,7 @@
 package fts
 
 import (
+	"os"
 	"path/filepath"
 	"reflect"
 	"testing"
@@ -59,5 +60,37 @@ func TestIterFilesSkipsBundledAndMinified(t *testing.T) {
 	}
 	if n := CountFiles(dir); n != 4 {
 		t.Errorf("CountFiles = %d, want every file (4)", n)
+	}
+}
+
+// A module example is a template of a module jar (IsModuleExample); a
+// vendored copy (node_modules, rc/vendor, rc/ext, a top-level ext/) is not,
+// and module-examples/ never lists one: its first folder is the jar stem.
+func TestModuleExamples(t *testing.T) {
+	for entry, want := range map[string]bool{
+		"rc/examples/px/LineView.px": true, "rc/fe/templates/a.hbs": true, "com/x/rc/page.vm": true,
+		"bog/Niagara.bog": true, "rc/app.js": false, "rc/A.PX": false, "rc/": false,
+		"rc/vendor/lib/a.hbs": false, "rc/ext/a.hbs": false, "ext/a.hbs": false, "rc/x/node_modules/y/a.hbs": false,
+	} {
+		if got := IsModuleExample(entry); got != want {
+			t.Errorf("IsModuleExample(%q) = %v, want %v", entry, got, want)
+		}
+	}
+	dir := t.TempDir()
+	for _, rel := range []string{"kit-rt/rc/a.px", "kit-rt/rc/vendor/b.hbs", "ext/c.vm", "kit-rt/notes.txt"} {
+		path := filepath.Join(dir, rel)
+		if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(path, []byte("x"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	var got []string
+	for _, p := range IterFiles("module-examples", dir) {
+		got = append(got, rel(dir, p))
+	}
+	if want := []string{"ext/c.vm", "kit-rt/rc/a.px"}; !reflect.DeepEqual(got, want) {
+		t.Errorf("IterFiles = %q, want %q", got, want)
 	}
 }

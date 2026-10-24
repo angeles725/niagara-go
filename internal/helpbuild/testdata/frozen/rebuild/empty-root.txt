@@ -90,6 +90,7 @@ indexes/.manifest.json 644
     "devguide-examples": null,
     "package-text": null,
     "lexicon-text": null,
+    "module-examples": null,
     "indexes": null
   }
 }
@@ -150,6 +151,7 @@ indexes/.manifest.json 644
     "devguide-examples": null,
     "package-text": null,
     "lexicon-text": null,
+    "module-examples": null,
     "indexes": "9c64d8404c49b9287c4168e46157f8b64cde0b38279b72020c37cc4d291f7498"
   }
 }

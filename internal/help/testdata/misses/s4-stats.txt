@@ -19,7 +19,7 @@ INDEXES (14):
   lexicon-index.json     absent (rebuild-all builds it from the install's modules/)
   bytecode-index.json    absent (rebuild-all builds it from the install's modules/)
 
-TEXT SOURCES (10 sources of the full-text index, 0.0 MB total):
+TEXT SOURCES (11 sources of the full-text index, 0.0 MB total):
 
   bajadoc-clean/           3 files  (0.0 MB)
   devguide-clean/          1 files  (0.0 MB)
@@ -31,6 +31,7 @@ TEXT SOURCES (10 sources of the full-text index, 0.0 MB total):
   devguide-examples/  absent
   package-text/       absent
   lexicon-text/       absent
+  module-examples/    absent
 
 RAW HTML:
 

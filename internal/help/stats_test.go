@@ -60,7 +60,7 @@ INDEXES (14):
   lexicon-index.json     absent (rebuild-all builds it from the install's modules/)
   bytecode-index.json    absent (rebuild-all builds it from the install's modules/)
 
-TEXT SOURCES (10 sources of the full-text index, 0.0 MB total):
+TEXT SOURCES (11 sources of the full-text index, 0.0 MB total):
 
   bajadoc-clean/      absent
   devguide-clean/     absent
@@ -72,6 +72,7 @@ TEXT SOURCES (10 sources of the full-text index, 0.0 MB total):
   devguide-examples/  absent
   package-text/       absent
   lexicon-text/       absent
+  module-examples/    absent
 
 RAW HTML:
 
@@ -121,7 +122,8 @@ func TestStatsCLICountIsTheCommandTable(t *testing.T) {
 func TestStatsListsEveryFulltextSource(t *testing.T) {
 	dir := statsRoot(t, "")
 	for rel, body := range map[string]string{
-		"lexicon-text/kitControl/a.txt": "abc", "package-text/javax.baja.sys.txt": "de",
+		"lexicon-text/kitControl/a.txt": "abc", "module-examples/kitControl-rt/rc/a.px": "<px/>",
+		"module-examples/kitControl-rt/rc/vendor/b.hbs": "vendored", "package-text/javax.baja.sys.txt": "de",
 		"course-text/day1.txt": "f", "devguide-examples/x/a.js": "g", "devguide-examples/x/notes.md": "skipped",
 		"source/a/B.java": "class B {}",
 	} {
@@ -144,8 +146,9 @@ func TestStatsListsEveryFulltextSource(t *testing.T) {
 		}
 	}
 	for _, want := range []string{
-		"TEXT SOURCES (10 sources of the full-text index, 0.0 MB total):",
+		"TEXT SOURCES (11 sources of the full-text index, 0.0 MB total):",
 		"  lexicon-text/            1 files  (0.0 MB)",
+		"  module-examples/         1 files  (0.0 MB)",
 		"  devguide-examples/       1 files  (0.0 MB)",
 		"  docs-text/          absent",
 	} {

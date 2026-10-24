@@ -42,6 +42,7 @@ indexes/.manifest.json 644
     "devguide-examples": null,
     "package-text": null,
     "lexicon-text": null,
+    "module-examples": null,
     "indexes": null
   }
 }

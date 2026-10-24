@@ -7,6 +7,7 @@ package fts
 import (
 	"os"
 	"path/filepath"
+	"slices"
 	"sort"
 	"strings"
 
@@ -32,9 +33,14 @@ var sources = []source{
 	{"devguide-examples", []string{".js", ".hbs", ".px", ".html", ".java"}}, // doc_types.EXAMPLE_EXT
 	// Go-only sources (no text_sources.py row), appended so the doc ids of
 	// the sources above keep their order: helpbuild writes them.
-	{"package-text", []string{".txt"}}, // package-index.bajadoc descriptions
-	{"lexicon-text", []string{".txt"}}, // lexicon help text of the module jars
+	{"package-text", []string{".txt"}},     // package-index.bajadoc descriptions
+	{"lexicon-text", []string{".txt"}},     // lexicon help text of the module jars
+	{"module-examples", moduleExampleExts}, // templates of the module jars
 }
+
+// moduleExampleExts are the template files of a module jar module-examples
+// holds: Px views, Handlebars and Velocity templates, XML station files.
+var moduleExampleExts = []string{".px", ".hbs", ".vm", ".bog"}
 
 // Labels are text_sources.LABELS.
 var Labels = func() []string {
@@ -154,6 +160,39 @@ func skipExample(rel string) bool {
 	return first == "ext" || strings.HasSuffix(strings.ToLower(rel), ".min.js")
 }
 
+// IsModuleExample is whether a module-jar entry is a template the
+// module-examples source holds: a file with one of its extensions (as
+// spelled in the jars, lower case) outside a vendored web library.
+func IsModuleExample(entry string) bool { return HasModuleExampleExt(entry) && !IsVendoredWeb(entry) }
+
+// HasModuleExampleExt is whether a module-jar entry is a file with a
+// module-examples extension, vendored or not.
+func HasModuleExampleExt(entry string) bool {
+	return !strings.HasSuffix(entry, "/") &&
+		slices.ContainsFunc(moduleExampleExts, func(e string) bool { return strings.HasSuffix(entry, e) })
+}
+
+// IsVendoredWeb is whether a module-jar entry belongs to a vendored web
+// library: a node_modules folder, rc/vendor/, rc/ext/ (the vendored-web
+// globs of install_docs.json) or a top-level ext/ (skipExample's).
+func IsVendoredWeb(entry string) bool {
+	return strings.HasPrefix(entry, "ext/") || strings.HasPrefix(entry, "rc/vendor/") ||
+		strings.HasPrefix(entry, "rc/ext/") || slices.Contains(strings.Split(entry, "/"), "node_modules")
+}
+
+// isIndexed is whether iterFiles lists the file at rel (under the source
+// folder) of label.
+func isIndexed(label, rel string) bool {
+	switch label {
+	case "devguide-examples":
+		return !skipExample(rel)
+	case "module-examples": // <jar stem>/<entry>
+		_, entry, _ := strings.Cut(rel, "/")
+		return IsModuleExample(entry)
+	}
+	return true
+}
+
 // IterFiles is text_sources.iter_files: the indexed files of one source in
 // os.walk order (a folder's files sorted, then its sub-folders sorted, depth
 // first), as absolute paths.
@@ -175,7 +214,7 @@ func iterFiles(label, dir string, onDir func(dir string, listed bool)) []string 
 		for _, e := range exts {
 			ok = ok || strings.HasSuffix(name, e)
 		}
-		if ok && !(label == "devguide-examples" && skipExample(rel(dir, path))) {
+		if ok && isIndexed(label, rel(dir, path)) {
 			out = append(out, path)
 		}
 	}, onDir)

@@ -143,6 +143,7 @@ func TestRebuildAllStampOnly(t *testing.T) {
     "devguide-examples": null,
     "package-text": null,
     "lexicon-text": null,
+    "module-examples": null,
     "indexes": null
   }
 }`

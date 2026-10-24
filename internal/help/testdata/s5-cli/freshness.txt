@@ -18,6 +18,7 @@ Text sources of the full-text index and the indexes (written before the stamp):
   OK             devguide-examples  now: (absent)
   OK             package-text       now: (absent)
   OK             lexicon-text       now: (absent)
+  OK             module-examples    now: (absent)
   CHANGED        indexes            now: 8 files, 5,915 bytes — modified after the baseline was stamped
   fulltext.sqlite: absent (find builds it on the first search)
   module-index.json: absent (rebuild-all builds it from the install's modules/)

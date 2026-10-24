@@ -86,6 +86,11 @@
       "files": 0,
       "bytes": 0,
       "absent": true
+    },
+    "module-examples": {
+      "files": 0,
+      "bytes": 0,
+      "absent": true
     }
   },
   "packages": 7
