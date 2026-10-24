@@ -13,7 +13,7 @@ fixtures are frozen and change only from reviewed Go output).
 | `tools/lib/textsearch.py` `fold` | `str.lower()` first | dropped (`encode("ascii", "ignore")`) | kept as is (then dropped) | `textfold.Corpus` | corpus-nav (search, browse, findindex, semantic), searchdoor (door, course), glossary.py |
 | module-navigator `class_rank.fold` | kept | dropped | dropped | `textfold.ClassRank` | module-navigator `rank` |
 | niagara-help `fulltext_terms.fold` | kept | kept, combining marks dropped | `°` -> `" deg"` before NFKD (`℃` still gives `°C`) | `textfold.HelpFulltext` | niagara-help full text (index, scan, query) |
-| module-navigator `corpus.strip_accents` | kept | kept, combining marks dropped | kept | `textfold.StripAccents` | module-navigator string_constants |
+| module-navigator `corpus.strip_accents` | kept | kept, combining marks dropped | kept | `textfold.StripAccents` | module-navigator string_constants (`string-search`, `string-constants`: retired in Go by D32, so no command calls it today) |
 
 All four decompose with NFKD and drop canonical-combining-class != 0 characters; the ASCII
 fast path of each is identical to its general path. Consequences worth knowing:
@@ -28,7 +28,7 @@ digests over every code point, not only samples. `golang.org/x/text` is not used
 Unicode 15 and would still need the Python lower-case and whitespace rules.
 
 Also in `textfold`: `Lower` (= `str.lower()`, final sigma included), `Fields` (= `str.split()`,
-which also splits on `\x1c`-`\x1f`), `ParseQuery`/`Score` (the textsearch substring layer) and the
+which also splits on `\x1c`-`\x1f`), `ParseQuery` (the textsearch query tokens; the substring scorer `Score` was deleted in `8f593b4d`, having no caller) and the
 textsearch ranking terms `Terms`, `QueryTerms`, `Stem`, `Normalize`, `Tokens`.
 
 ## BM25 (`internal/bm25`)
@@ -55,6 +55,9 @@ read from `libm.so.6` by the retired `testdata/gen_logtab.py`). The fixtures pin
 Tokenization is part of each tool, not of `bm25`: class_rank's camel-case `identifier_terms`
 and niagara-help's `word_terms`/`stem`/`parse_query` (prefix terms, phrases) are ported with
 those tools; only the textsearch analyzer lives in `textfold`.
+
+niagara-help's full-text search (`internal/help/fts`) lets SQLite score with its own FTS5
+`bm25()`; `bm25.FTS5` reproduces that score and is pinned by the fixtures, but no command calls it.
 
 ## Glossaries (`internal/glossary`)
 
