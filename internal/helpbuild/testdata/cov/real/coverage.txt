@@ -1,0 +1,77 @@
+GUIDE COVERAGE (guides/ pages vs their guides-clean/ text)
+============================================================
+Overall: 9053/9053 guide pages indexed (.html .htm .md .txt, licence texts excluded) across 115 folders, 0 gap folder(s)
+
+DOCUMENTATION COVERAGE OVERVIEW
+============================================================
+
+Overall: 2834/3453 classes documented (82.1% of the 3453 classes with indexed source)
+
+ cover  total   docs   miss  module
+ -----  -----   ----   ----  ------
+  100%     52     52      0  alarm-rt
+  100%      9      9      0  alarmOrion-rt
+  100%     11     11      0  app-rt
+  100%      4      4      0  axvelocity-rt
+  100%      3      3      0  axvelocity-wb
+  100%      1      1      0  backup-rt
+  100%      2      2      0  bajaScript-ux
+  100%      3      3      0  baseRtsp-rt
+  100%      4      4      0  box-rt
+  100%    135    135      0  clHVACAirConditioning-rt
+  100%     32     32      0  clHVACChiller-rt
+  100%     55     55      0  driver-rt
+  100%     24     24      0  driver-wb
+  100%      4      4      0  entityIo-rt
+  100%     72     72      0  file-rt
+  100%     34     34      0  gx-rt
+  100%     19     19      0  hierarchy-rt
+  100%     65     65      0  history-rt
+  100%      5      5      0  httpClient-rt
+  100%      2      2      0  kitControl-wb
+  100%     55     55      0  kitPx-wb
+  100%    162    162      0  lonworks-rt
+  100%     11     11      0  migration-rt
+  100%     19     19      0  ndriver-wb
+  100%     31     31      0  neql-rt
+  100%      9      9      0  net-rt
+  100%     32     32      0  nre
+  100%      7      7      0  nvideo-wb
+  100%     23     23      0  platform-rt
+  100%      7      7      0  report-rt
+  100%     31     31      0  schedule-rt
+  100%      9      9      0  search-rt
+  100%     13     13      0  serial-rt
+  100%     20     20      0  tagdictionary-rt
+  100%     52     52      0  web-rt
+  100%      2      2      0  webEditors-ux
+  100%      1      1      0  wiresheet-wb
+  100%    504    503      1  baja
+  100%    256    255      1  bacnet-rt
+   99%    152    151      1  kitControl-rt
+   99%    273    269      4  bajaui-wb
+   98%     65     64      1  ndriver-rt
+   97%     38     37      1  rdb-rt
+   97%     31     30      1  control-rt
+   95%    171    163      8  clHVACHeating-rt
+   88%     16     14      2  hx-wb
+   83%     47     39      8  clHVACGeneral-rt
+   82%     11      9      2  clHVACEnergyManagement-rt
+   82%     11      9      2  nrio-wb
+   75%     16     12      4  flexSerial-wb
+   71%      7      5      2  bql-rt
+   71%      7      5      2  clHVACNordicGeneral-rt
+   71%     48     34     14  flexSerial-rt
+   67%      3      2      1  clHVACRoomControl-rt
+   63%    105     66     39  nrio-rt
+   56%    168     94     74  workbench-wb
+   42%     31     13     18  test-wb
+   41%     86     35     51  clHVACNordicAirCondition-rt
+    1%    335      5    330  honPlantControllerHMI-rt
+    0%     22      0     22  analytics-rt
+    0%     11      0     11  clStationUpgradeTool-wb
+    0%      2      0      2  devguide-rc
+    0%      1      0      1  electronicSignatureRemote-rt
+    0%      5      0      5  honeywellTCThermostatWizard-ux
+    0%      7      0      7  kitLon-rt
+    0%      4      0      4  platPanelbus-rt

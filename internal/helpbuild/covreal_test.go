@@ -1,33 +1,99 @@
 package helpbuild
 
 import (
-	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"flag"
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"testing"
 
+	"github.com/angeles725/niagara-go/internal/golden"
 	"github.com/angeles725/niagara-go/internal/help/fts"
 	"github.com/angeles725/niagara-go/internal/helpbuild/internal/testkit"
 	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
-// The coverage reports on the real corpus of the version niagara-help's
-// CLI goldens record: the rc and the SHA-256 of each Go report against
-// those goldens, copied from niagara-help tests/golden/cli.json at
-// pre-go-retire into testdata/cov/cli-goldens.json.
+// The coverage reports on the real corpus of covGoldenVersion are recorded from Go under
+// testdata/cov/real/: one <case>.txt per report and recorded.json with each case's exit status,
+// the corpus stamp they were read from and a digest of the report code. Two checks keep them from
+// going stale silently (the Python-era hashes did after 8bdcc06c changed the report wording):
+// TestCoverageRealRecordingMatchesCode runs in CI and fails when the report code changed since the
+// recording; TestCoverageRealGoldens (make realdata) fails first when the corpus was re-stamped since.
+// Both name the fix: re-record with -update-cov-real and review the diff.
 
-// covGoldenVersion is golden_cli.VERSION, the version cli.json records.
+var updateCovReal = flag.Bool("update-cov-real", false,
+	"rewrite testdata/cov/real/ from the Go reports on the real corpus (needs NIAGARA_HELP_DIR; review the diff)")
+
+// covGoldenVersion is the version whose real corpus the reports are recorded on.
 const covGoldenVersion = "4.14.0.162"
 
-// covGoldensFile holds the coverage cases of niagara-help
-// tests/golden/cli.json as captured at the tag pre-go-retire (8410d7451).
-var covGoldensFile = filepath.Join("testdata", "cov", "cli-goldens.json")
+var covRealDir = filepath.Join("testdata", "cov", "real")
+
+// covCodeFiles are the files that write the coverage reports. Their helpers elsewhere (pycompat
+// formatting, the fts readers) are not digested: a change there that alters a report is caught by
+// TestCoverageRealGoldens under make realdata, not in CI.
+var covCodeFiles = []string{
+	"coveragereport.go", "coveragereportmodule.go", "doccoverage.go", "doccoverageclassify.go", "doccoveragereport.go",
+}
+
+const covReRecord = "re-record coverage goldens: NIAGARA_HELP_DIR=<niagara-help> go test ./internal/helpbuild " +
+	"-run '^TestCoverageRealGoldens$' -update-cov-real, then review the diff of testdata/cov/real/"
+
+// covRecorded is testdata/cov/real/recorded.json.
+type covRecorded struct {
+	Version     string         `json:"version"`
+	CorpusStamp string         `json:"corpus_stamped_utc"`
+	CodeSHA256  string         `json:"code_sha256"`
+	RC          map[string]int `json:"rc"`
+}
+
+// covCodeDigest is the sha256 over "<file>\0<sha256 of its bytes>\n" for each covCodeFiles entry.
+func covCodeDigest(t *testing.T) string {
+	t.Helper()
+	files := append([]string(nil), covCodeFiles...)
+	sort.Strings(files)
+	h := sha256.New()
+	for _, f := range files {
+		b, err := os.ReadFile(f)
+		if err != nil {
+			t.Fatalf("coverage code: %v", err)
+		}
+		sum := sha256.Sum256(b)
+		fmt.Fprintf(h, "%s\x00%x\n", f, sum)
+	}
+	return hex.EncodeToString(h.Sum(nil))
+}
+
+func readCovRecorded(t *testing.T) covRecorded {
+	t.Helper()
+	var r covRecorded
+	data, err := os.ReadFile(filepath.Join(covRealDir, "recorded.json"))
+	if err == nil {
+		err = json.Unmarshal(data, &r)
+	}
+	if err != nil || r.Version == "" || r.CorpusStamp == "" || r.CodeSHA256 == "" || len(r.RC) == 0 {
+		t.Fatalf("testdata/cov/real/recorded.json is missing or incomplete (%v); %s", err, covReRecord)
+	}
+	return r
+}
+
+// TestCoverageRealRecordingMatchesCode needs no corpus: the recording must have been made by the
+// report code in this tree, so a change to that code fails here until the goldens are re-recorded.
+func TestCoverageRealRecordingMatchesCode(t *testing.T) {
+	if *updateCovReal {
+		t.Skip("re-recording")
+	}
+	if got, rec := covCodeDigest(t), readCovRecorded(t); got != rec.CodeSHA256 {
+		t.Fatalf("the coverage report code (%s) changed since the real-corpus goldens were recorded "+
+			"(code_sha256 %s, now %s); %s", strings.Join(covCodeFiles, ", "), rec.CodeSHA256, got, covReRecord)
+	}
+}
 
 // covRegistryEntry is a version's data root (absolute) and install.
 func covRegistryEntry(t *testing.T, help, vid string) (root, install string, registry []byte) {
@@ -52,85 +118,20 @@ func covRegistryEntry(t *testing.T, help, vid string) (root, install string, reg
 	return filepath.Clean(filepath.Join(help, filepath.FromSlash(e.DataRoot))), e.InstallDir, registry
 }
 
-// covGolden is one case of niagara-help tests/golden/cli.json.
-type covGolden struct {
-	RC     int    `json:"rc"`
-	Stdout string `json:"stdout"`
-}
-
-// covGoldens reads the copied cases (covGoldensFile); a case missing from
-// it is an error, never a zero hash.
-func covGoldens(t *testing.T) map[string]covGolden {
+// corpusStamp is the stamped_utc of root's baseline manifest.
+func corpusStamp(t *testing.T, root string) string {
 	t.Helper()
-	data, err := os.ReadFile(covGoldensFile)
-	if err != nil {
-		t.Fatalf("CLI goldens: %v", err)
+	var m struct {
+		Stamped string `json:"stamped_utc"`
 	}
-	out, err := parseCovGoldens(data, covGoldenIDs)
-	if err != nil {
-		t.Fatalf("CLI goldens %s: %v", covGoldensFile, err)
+	data, err := os.ReadFile(filepath.Join(root, "indexes", ".manifest.json"))
+	if err == nil {
+		err = json.Unmarshal(data, &m)
 	}
-	return out
-}
-
-// covGoldenIDs are the cases checkCovGolden compares.
-var covGoldenIDs = []string{"coverage", "coverage-module", "coverage-doc-jars"}
-
-// parseCovGoldens decodes the cases ids of a cli.json; a case that is
-// missing or not a JSON object (null included) is an error.
-func parseCovGoldens(data []byte, ids []string) (map[string]covGolden, error) {
-	var all map[string]json.RawMessage
-	if err := json.Unmarshal(data, &all); err != nil {
-		return nil, err
+	if err != nil || m.Stamped == "" {
+		t.Fatalf("no readable stamped_utc in %s/indexes/.manifest.json: %v", root, err)
 	}
-	out := map[string]covGolden{}
-	for _, id := range ids {
-		var g covGolden
-		raw, has := all[id]
-		if !has {
-			return nil, fmt.Errorf("golden %s: not in the file", id)
-		}
-		// json.Unmarshal of null into a struct is a no-op: the zero case.
-		if raw = bytes.TrimSpace(raw); len(raw) == 0 || raw[0] != '{' {
-			return nil, fmt.Errorf("golden %s: %s, not an object", id, raw)
-		}
-		if err := json.Unmarshal(raw, &g); err != nil {
-			return nil, fmt.Errorf("golden %s: %v", id, err)
-		}
-		out[id] = g
-	}
-	return out, nil
-}
-
-// A case missing, stored as JSON null or not an object is an error: each
-// would otherwise compare as rc 0 with an empty stdout.
-func TestParseCovGoldensRejectsAMissingCase(t *testing.T) {
-	ok := `{"rc": 0, "stdout": "x"}`
-	if got, err := parseCovGoldens([]byte(`{"a": `+ok+`}`), []string{"a"}); err != nil || got["a"].Stdout != "x" {
-		t.Fatalf("a good case: %+v, %v", got, err)
-	}
-	for name, text := range map[string]string{
-		"missing":   `{"b": ` + ok + `}`,
-		"null":      `{"a": null}`,
-		"spaced":    `{"a":  null }`,
-		"string":    `{"a": "x"}`,
-		"no object": `[]`,
-	} {
-		if got, err := parseCovGoldens([]byte(text), []string{"a"}); err == nil {
-			t.Errorf("%s: accepted as %+v", name, got)
-		}
-	}
-}
-
-// checkCovGolden compares a Go report with a CLI golden case.
-func checkCovGolden(t *testing.T, goldens map[string]covGolden, id, out string, rc int) {
-	t.Helper()
-	sum := sha256.Sum256([]byte(out))
-	if g := goldens[id]; hex.EncodeToString(sum[:]) != g.Stdout || rc != g.RC {
-		t.Errorf("golden %s: stdout sha256 %x rc %d; cli.json records %s rc %d", id, sum, rc, g.Stdout, g.RC)
-	} else {
-		t.Logf("golden %s: stdout sha256 and rc %d match cli.json (%d bytes)", id, rc, len(out))
-	}
+	return m.Stamped
 }
 
 // freshDocs is FulltextDocs that never builds: a real corpus must already
@@ -143,13 +144,12 @@ func freshDocs(root string) (map[string]bool, error) {
 	return fulltextDocsAt(path)
 }
 
-// TestCoverageRealGoldens checks the Go reports of covGoldenVersion
-// against covGoldensFile: coverage, coverage alarm-rt and, when the
-// install is mounted, coverage --doc-jars. It reads the niagara-help
-// checkout named by NIAGARA_HELP_DIR (registry, data root) as data only, so
-// the data root's full-text index must be up to date; the listing cache
-// goes to a temporary repository holding a copy of the registry. It skips
-// when the variable is unset or with -short; make realdata sets it.
+// TestCoverageRealGoldens checks the Go reports of covGoldenVersion against testdata/cov/real/:
+// coverage, coverage alarm-rt and, when the install is mounted, coverage --doc-jars. It reads the
+// niagara-help checkout named by NIAGARA_HELP_DIR (registry, data root) as data only, so the data
+// root's full-text index must be up to date; the listing cache goes to a temporary repository
+// holding a copy of the registry. It skips when the variable is unset or with -short; make
+// realdata sets it. -update-cov-real rewrites the recording instead of comparing.
 func TestCoverageRealGoldens(t *testing.T) {
 	help := os.Getenv("NIAGARA_HELP_DIR")
 	if help == "" {
@@ -158,31 +158,69 @@ func TestCoverageRealGoldens(t *testing.T) {
 	if testing.Short() {
 		t.Skip("the real coverage goldens read the real corpus and install")
 	}
-	goldens := covGoldens(t)
 	root, install, registry := covRegistryEntry(t, help, covGoldenVersion)
+	if *updateCovReal && !pycompat.IsDir(install) {
+		t.Fatalf("re-recording needs the install mounted (%s) so all three reports are recorded together", install)
+	}
+	stamp := corpusStamp(t, root)
+	rec := covRecorded{Version: covGoldenVersion, CorpusStamp: stamp, CodeSHA256: covCodeDigest(t), RC: map[string]int{}}
+	if !*updateCovReal {
+		rec = readCovRecorded(t)
+		if stamp != rec.CorpusStamp {
+			t.Fatalf("the %s corpus was re-stamped at %s since the coverage goldens were recorded on %s; %s",
+				covGoldenVersion, stamp, rec.CorpusStamp, covReRecord)
+		}
+	}
 	var b strings.Builder
 	res, err := Coverage(&b, root, "")
 	if err != nil {
 		t.Fatal(err)
 	}
-	checkCovGolden(t, goldens, "coverage", b.String(), min(res.GuideGaps, 1))
+	checkCovReal(t, &rec, "coverage", b.String(), min(res.GuideGaps, 1))
 	b.Reset()
 	if _, err := Coverage(&b, root, "alarm-rt"); err != nil {
 		t.Fatal(err)
 	}
-	checkCovGolden(t, goldens, "coverage-module", b.String(), 0)
-	if !pycompat.IsDir(install) {
-		t.Skipf("install %s not mounted: coverage --doc-jars not checked", install)
+	checkCovReal(t, &rec, "coverage-module", b.String(), 0)
+	if pycompat.IsDir(install) {
+		if _, err := freshDocs(root); err != nil {
+			t.Fatalf("%v; rebuild it first (nh rebuild-all), this test never writes the corpus", err)
+		}
+		repo := t.TempDir()
+		testkit.WriteFile(t, filepath.Join(repo, "versions", "registry.json"), registry)
+		b.Reset()
+		rc, err := DocJarCoverage(&b, repo, root, covGoldenVersion, freshDocs)
+		if err != nil {
+			t.Fatal(err)
+		}
+		checkCovReal(t, &rec, "coverage-doc-jars", b.String(), rc)
+	} else if !*updateCovReal {
+		t.Logf("install %s not mounted: coverage --doc-jars not checked", install)
 	}
-	if _, err := freshDocs(root); err != nil {
-		t.Fatalf("%v; rebuild it first (nh rebuild-all), this test never writes the corpus", err)
+	if *updateCovReal {
+		data, _ := json.MarshalIndent(rec, "", " ")
+		testkit.WriteFile(t, filepath.Join(covRealDir, "recorded.json"), append(data, '\n'))
 	}
-	repo := t.TempDir()
-	testkit.WriteFile(t, filepath.Join(repo, "versions", "registry.json"), registry)
-	b.Reset()
-	rc, err := DocJarCoverage(&b, repo, root, covGoldenVersion, freshDocs)
+}
+
+// checkCovReal compares a Go report with its recording, or records it under -update-cov-real.
+func checkCovReal(t *testing.T, rec *covRecorded, id, out string, rc int) {
+	t.Helper()
+	path := filepath.Join(covRealDir, id+".txt")
+	if *updateCovReal {
+		testkit.WriteFile(t, path, []byte(out))
+		rec.RC[id] = rc
+		return
+	}
+	want, err := os.ReadFile(path)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("%v; %s", err, covReRecord)
 	}
-	checkCovGolden(t, goldens, "coverage-doc-jars", b.String(), rc)
+	wantRC, ok := rec.RC[id]
+	if !ok {
+		t.Fatalf("recorded.json has no exit status for %s; %s", id, covReRecord)
+	}
+	if out != string(want) || rc != wantRC {
+		t.Errorf("%s: rc %d (recorded %d); stdout differs:\n%s", id, rc, wantRC, golden.Diff(want, []byte(out)))
+	}
 }

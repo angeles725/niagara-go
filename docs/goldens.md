@@ -107,8 +107,9 @@ switch commit (`git archive`); a case that needs state git cannot hold (an empty
 mode-000 file, a CATALOG.md state) lives in its own `testdata/<set>/golden/` and a package
 test stages it in a temporary directory before calling `golden.Run` on it. A Go test that only
 checks a value the Python once recorded (a hash, an exit status) keeps a copy of it in its own
-testdata with the tag it came from: helpbuild's `testdata/cov/cli-goldens.json` holds the
-coverage cases of niagara-help `tests/golden/cli.json`.
+testdata with the tag it came from. helpbuild's real coverage reports were such hashes
+(niagara-help `tests/golden/cli.json`) until 2026-10-24; they are now recorded from Go as text
+under `testdata/cov/real/` (`-update-cov-real`), see docs/helpbuild.md "Real data".
 
 In the Python suites of the source repos (niagara-research `tools/tests/goldencli.py`, deleted
 in Phase 5 and kept at the `pre-go-retire` tag), `GOLDEN_UPDATE=1` rewrote the Python goldens,
