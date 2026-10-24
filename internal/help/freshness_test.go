@@ -203,3 +203,20 @@ func TestFreshnessAllExitStatus(t *testing.T) {
 		t.Errorf("stale and unknown: exit %d, want 2 and %q:\n%s%s", code, want, out, errs)
 	}
 }
+
+// TestFreshnessHelpStatesExitStatus: freshness --help and the command list say what the
+// exit status means, so a script author need not read the source.
+func TestFreshnessHelpStatesExitStatus(t *testing.T) {
+	dir := repo(t, `{"default": "1.0.0.1", "versions": {"1.0.0.1": {"install_dir": "", "data_root": "."}}}`, ".")
+	out, _, code := run(t, dir, "freshness", "--help")
+	for _, want := range []string{"exit status: 0 FRESH, 1 STALE, 2 cannot check (UNKNOWN, or an unreadable",
+		"With --all: the worst extracted version; a version not extracted does not count."} {
+		if code != 0 || !strings.Contains(strings.Join(strings.Fields(out), " "), want) {
+			t.Errorf("freshness --help: exit %d, lacks %q:\n%s", code, want, out)
+		}
+	}
+	out, _, _ = run(t, dir, "--help")
+	if want := "freshness           Check whether indexes are in sync with the raw corpus (exit 0"; !strings.Contains(out, want) {
+		t.Errorf("--help lacks %q:\n%s", want, out)
+	}
+}

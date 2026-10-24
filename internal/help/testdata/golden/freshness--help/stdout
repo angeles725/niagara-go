@@ -3,3 +3,6 @@ usage: niagara_help freshness [-h] [--all]
 options:
   -h, --help  show this help message and exit
   --all       One line per registered Niagara version (index + install drift)
+
+exit status: 0 FRESH, 1 STALE, 2 cannot check (UNKNOWN, or an unreadable baseline manifest). With
+--all: the worst extracted version; a version not extracted does not count.

@@ -1,0 +1,4 @@
+{
+ "reason": "freshness --help ends with the exit status it gives (0 FRESH, 1 STALE, 2 cannot check; with --all the worst extracted version), which Python's help did not state: a script can gate on it",
+ "stdout": "usage: niagara_help freshness [-h] [--all]\n\noptions:\n  -h, --help  show this help message and exit\n  --all       One line per registered Niagara version (index + install drift)\n\nexit status: 0 FRESH, 1 STALE, 2 cannot check (UNKNOWN, or an unreadable baseline manifest). With\n--all: the worst extracted version; a version not extracted does not count.\n"
+}
