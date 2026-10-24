@@ -58,6 +58,7 @@ type tagIndex struct {
 	jars, bytes   int
 	files, errors []pyjson.Value
 	sections      map[string][]pyjson.Value
+	distinct      map[string]bool // dict:name of every tag row
 }
 
 func (x *tagIndex) fail(res *textResult, jar, path string, err error) {
@@ -98,6 +99,9 @@ func (x *tagIndex) add(jar string, res *textResult) {
 		x.files = append(x.files, pyjson.ObjectOf(pyjson.Field{Key: "jar", Value: pyjson.String(name)},
 			pyjson.Field{Key: "path", Value: pyjson.String(m.name)}, pyjson.Field{Key: "kind", Value: pyjson.String(f.Kind)},
 			pyjson.Field{Key: "records", Value: pyjson.IntValue(int64(f.Records()))}))
+		for _, t := range f.Tags {
+			x.distinct[t.Dict+":"+t.Name] = true
+		}
 		f.Append(name+"!"+m.name, func(section string, v pyjson.Value) {
 			x.sections[section] = append(x.sections[section], v)
 		})
@@ -112,7 +116,7 @@ func buildTagIndexFrom(root, installDir string) (*textResult, error) {
 		return nil, err
 	}
 	res := &textResult{}
-	x := &tagIndex{sections: map[string][]pyjson.Value{}}
+	x := &tagIndex{sections: map[string][]pyjson.Value{}, distinct: map[string]bool{}}
 	for _, jar := range jars {
 		x.add(jar, res)
 	}
@@ -131,9 +135,10 @@ func buildTagIndexFrom(root, installDir string) (*textResult, error) {
 		return nil, err
 	}
 	res.Files = len(x.files)
-	res.Log = append(res.Log, fmt.Sprintf("%s: %d tags, %d protos, %d groups, %d relations, %d rules, %d migrations"+
+	// A tag defined in several files has one row per file: the log names both counts.
+	res.Log = append(res.Log, fmt.Sprintf("%s: %d tag rows (%d distinct tags), %d protos, %d groups, %d relations, %d rules, %d migrations"+
 		" from %d files in %d jars (%d errors) -> %s",
-		append(append([]any{tagIndexName}, counts...), res.Files, x.jars, len(x.errors), out)...))
+		append(append([]any{tagIndexName, counts[0], len(x.distinct)}, counts[1:]...), res.Files, x.jars, len(x.errors), out)...))
 	return res, nil
 }
 

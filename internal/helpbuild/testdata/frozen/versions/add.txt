@@ -113,7 +113,7 @@ RESULT: NOT READY - see the gate reports above
 +   RUN   palette_index_builder      -> palette-index.json
 + palette-index.json: 0 palettes (0 entries) from 15 jars (2 errors) -> <dir>/repo/versions/1.0.0.0/indexes/palette-index.json
 +   RUN   tag_index_builder          -> tag-index.json
-+ tag-index.json: 0 tags, 0 protos, 0 groups, 0 relations, 0 rules, 0 migrations from 0 files in 15 jars (0 errors) -> <dir>/repo/versions/1.0.0.0/indexes/tag-index.json
++ tag-index.json: 0 tag rows (0 distinct tags), 0 protos, 0 groups, 0 relations, 0 rules, 0 migrations from 0 files in 15 jars (0 errors) -> <dir>/repo/versions/1.0.0.0/indexes/tag-index.json
 + 
 + Ran 17, skipped 2, failed 0.
 + Manifest re-stamped. Run 'freshness' to confirm FRESH.

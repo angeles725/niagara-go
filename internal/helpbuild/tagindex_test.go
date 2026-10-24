@@ -99,7 +99,7 @@ func TestTagIndexReadsTheDictionaries(t *testing.T) {
 		t.Errorf("warnings = %q", res.Warnings)
 	}
 	if res.Files != 3 || len(res.Log) != 1 || !strings.HasPrefix(res.Log[0],
-		"tag-index.json: 4 tags, 0 protos, 0 groups, 0 relations, 0 rules, 0 migrations from 3 files in 4 jars (3 errors) -> ") {
+		"tag-index.json: 4 tag rows (3 distinct tags), 0 protos, 0 groups, 0 relations, 0 rules, 0 migrations from 3 files in 4 jars (3 errors) -> ") {
 		t.Errorf("files %d log %q", res.Files, res.Log)
 	}
 }
