@@ -10,9 +10,11 @@ var classCommands = []command{
 			positional(p, "name", "Class name (e.g. BWebServlet)")
 			flag(p, "", "-v", "--verbose")
 			flag(p, "Look up the JDK API (separate opt-in index) instead of Niagara", "--jdk")
+			flag(p, "Show the class from its class file (bytecode-index.json): super chain, slots declared and inherited", "--bytecode")
 		},
 		run: func(e *Env, ns *argparse.Namespace) error {
-			return e.Class(ClassParams{Name: ns.String("name"), Verbose: ns.Bool("verbose"), JDK: ns.Bool("jdk")})
+			return e.Class(ClassParams{Name: ns.String("name"), Verbose: ns.Bool("verbose"), JDK: ns.Bool("jdk"),
+				Bytecode: ns.Bool("bytecode")})
 		}},
 	{name: "search", help: "Search classes by glob pattern",
 		args: func(p *argparse.Parser) {
