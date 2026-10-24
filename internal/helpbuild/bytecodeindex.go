@@ -19,7 +19,8 @@ import (
 //	{"jars": N, "jar_bytes": B,
 //	 "classes": [{"class", "jar", "types", "access", "super", "interfaces",
 //	              "fields", "methods", "slots": [{"name", "kind", "type",
-//	              "return_type", "default", "flags", "flag_letters", "via"}]}],
+//	              "return_type", "default", "flags", "flag_letters", "override",
+//	              "via"}]}],
 //	 "errors": [{"jar", "path", "error"}]}
 //
 // Only registered classes are read, each from the jar whose descriptor
@@ -29,8 +30,9 @@ import (
 // public ones the class declares (a method as name + JVM descriptor). slots
 // are classfile.NiagaraSlots: inherited slots are not included, flags is
 // the decimal number javac folds the flags element into and flag_letters
-// its Slot Sheet letters; a slot known only by its field (via "field") has
-// its kind and name. A registered class the jar lacks or that cannot be
+// its Slot Sheet letters, override true for a slot that overrides an
+// inherited one (an @NiagaraProperty override); a slot known only by its
+// field (via "field") has its kind and name. A registered class the jar lacks or that cannot be
 // parsed, like an unreadable jar or descriptor, is an "errors" row and a
 // warning, never a silent skip.
 const (

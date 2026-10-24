@@ -83,5 +83,6 @@ func (x *bytecodeIndex) slotRow(s classfile.Slot) pyjson.Value {
 	return pyjson.ObjectOf(pyjson.Field{Key: "name", Value: str(s.Name)}, pyjson.Field{Key: "kind", Value: str(s.Kind)},
 		pyjson.Field{Key: "type", Value: str(s.Type)}, pyjson.Field{Key: "return_type", Value: str(s.ReturnType)},
 		pyjson.Field{Key: "default", Value: str(s.Default)}, pyjson.Field{Key: "flags", Value: str(s.Flags)},
-		pyjson.Field{Key: "flag_letters", Value: str(letters)}, pyjson.Field{Key: "via", Value: str(s.Via)})
+		pyjson.Field{Key: "flag_letters", Value: str(letters)}, pyjson.Field{Key: "override", Value: pyjson.BoolValue(s.Override)},
+		pyjson.Field{Key: "via", Value: str(s.Via)})
 }

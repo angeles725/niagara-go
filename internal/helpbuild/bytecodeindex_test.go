@@ -60,8 +60,8 @@ func TestBytecodeIndexReadsRegisteredClasses(t *testing.T) {
 	want := `{"class": "com.acme.BBooleanLatch", "jar": "kitControl-rt.jar", "types": ["kitControl:BooleanLatch", "kitControl:LatchAlias"],` +
 		` "access": "public", "super": "com.acme.BLatch", "interfaces": [], "fields": ["in", "out"],` +
 		` "methods": ["<init>()V", "getOut()Ljavax/baja/status/BStatusBoolean;"], "slots": [` +
-		`{"name": "out", "kind": "property", "type": "BStatusBoolean", "return_type": "", "default": "new BStatusBoolean()", "flags": "5", "flag_letters": "rh", "via": "annotation"}, ` +
-		`{"name": "in", "kind": "property", "type": "", "return_type": "", "default": "", "flags": "", "flag_letters": "", "via": "field"}]}
+		`{"name": "out", "kind": "property", "type": "BStatusBoolean", "return_type": "", "default": "new BStatusBoolean()", "flags": "5", "flag_letters": "rh", "override": false, "via": "annotation"}, ` +
+		`{"name": "in", "kind": "property", "type": "", "return_type": "", "default": "", "flags": "", "flag_letters": "", "override": false, "via": "field"}]}
 {"class": "com.acme.BLatch", "jar": "kitControl-rt.jar", "types": ["kitControl:Latch"], "access": "public",` +
 		` "super": "javax.baja.sys.BComponent", "interfaces": ["javax.baja.status.BIStatus"], "fields": [], "methods": [], "slots": []}`
 	if classes != want {
