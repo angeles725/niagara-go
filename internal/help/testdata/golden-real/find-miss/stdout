@@ -1,4 +1,4 @@
 No match for 'zzqqxx wwvvyy' (find) in this scope.
-  searched: Niagara 4.14.0.162 (<REPO>) -- bajadoc-clean/: 6,312 files; devguide-clean/: 482 files; guides-clean/: 9,053 files; docs-text/: 364 files; course-text/: 26 files (shared from Niagara 4.15.6.20); source/: 3,459 files; devguide-rc/: 9 files; devguide-examples/: 50 files; package-text/: 62 files; lexicon-text/: 783 files
+  searched: Niagara 4.14.0.162 (<REPO>) -- bajadoc-clean/: 6,312 files; devguide-clean/: 482 files; guides-clean/: 9,053 files; docs-text/: 364 files; course-text/: 26 files (shared from Niagara 4.15.6.20); source/: 3,459 files; devguide-rc/: 9 files; devguide-examples/: 50 files; package-text/: 62 files; lexicon-text/: 783 files; module-examples/: 554 files
   excluded from this scope: JDK API (class --jdk); images, fonts/css, JavaHelp .dat search indexes, bajadoc.index, raw js next to rendered jsdoc, META-INF, licence texts (see coverage --doc-jars)
   not proof of absence; try: find --or 'zzqqxx wwvvyy', class --jdk 'zzqqxx wwvvyy', source-grep 'zzqqxx wwvvyy'

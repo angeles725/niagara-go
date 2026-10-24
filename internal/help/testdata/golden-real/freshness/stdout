@@ -17,6 +17,7 @@ Text sources of the full-text index and the indexes (written before the stamp):
   OK             devguide-examples  now: 50 files, 3,335,759 bytes
   OK             package-text       now: 62 files, 19,928 bytes
   OK             lexicon-text       now: 783 files, 4,932,206 bytes
+  OK             module-examples    now: 554 files, 7,042,574 bytes
   OK             indexes            now: 13 files, 40,103,175 bytes
   fulltext.sqlite: matches its text sources
   module-index.json: matches /mnt/c/Honeywell/OptimizerSupervisor-N4.14.0.162/modules (995 jars, 814,141,670 bytes)
