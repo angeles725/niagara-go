@@ -406,7 +406,7 @@ func scan(installDir, root string, opts SweepOptions) (*sweepResult, error) {
 		}
 		var docs []int
 		for pos, e := range l.Entries {
-			if kind := shippedKind(e.Name, rules); kind != "" {
+			if kind := shippedKind(j.Rel, e.Name, rules); kind != "" {
 				v, err := s.shipped(j.Rel, e.Name, kind)
 				if err != nil {
 					return nil, err

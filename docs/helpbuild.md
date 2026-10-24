@@ -1337,7 +1337,16 @@ root. On 2026-10-24, equal to the 2026-10-22 audit (8 dictionary files in 2 jars
 | 4.3.58.18 | 2 (2) | 218 (218) | 0 | 0 | 0 | 8 | 6 | 0 | 0 | 48 KB |
 
 4.3 ships `tags.csv` and `Niagara.bog` only (no Haystack 4 defs, protos, rules or groups).
-`coverage --sweep` does not classify the dictionary files yet.
+The builder line names both counts, `916 tag rows (734 distinct tags)` on 4.15: a tag defined
+in several files has one row per file.
+
+`coverage --sweep` classifies the dictionary files as it does palettes (`sweepshipped.go`, kind
+`tag dictionary`; an entry the documentation rules call doc-like stays with them): in a jar of
+`modules/` each is indexed when `tag-index.json` lists that jar and path in `files`,
+UNCLASSIFIED when it does not (not rebuilt yet) or could not read it (the error is quoted); a
+copy outside `modules/` is excluded by `shipped-file-outside-modules` (8 on 4.15). The same names in any other jar stay outside the documentation
+scope. On a scratch copy of 4.15 and 4.3 the sweep fails on the 8 (4.15) and 2 (4.3)
+dictionary files before the tag step runs and passes after it.
 
 ## Real data
 

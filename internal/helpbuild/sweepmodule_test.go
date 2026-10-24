@@ -85,3 +85,40 @@ func TestSweepCountsShippedFiles(t *testing.T) {
 		}
 	}
 }
+
+// TestSweepCountsTagDictionaries: the tag dictionary files (the .json and
+// .csv of a haystack jar, the .bog of a tagdictionary jar) are no longer
+// outside the documentation scope. In an installed jar each is indexed when
+// tag-index.json holds it, UNCLASSIFIED when it does not or could not read
+// it; a copy outside modules/ is excluded; the same names in another jar stay
+// out of scope.
+func TestSweepCountsTagDictionaries(t *testing.T) {
+	install, root := t.TempDir(), t.TempDir()
+	testkit.WriteJar(t, filepath.Join(install, "modules", "haystack-rt.jar"), [2]string{"data/defs.json", "{}"},
+		[2]string{"data/tags.csv", "a\n"}, [2]string{"data/broken.json", "{"})
+	testkit.WriteJar(t, filepath.Join(install, "modules", "tagdictionary-rt.jar"), [2]string{"bog/Niagara.bog", "<x/>"})
+	testkit.WriteJar(t, filepath.Join(install, "modules", "webChart-ux.jar"), [2]string{"data/tags.csv", "a\n"})
+	testkit.WriteJar(t, filepath.Join(install, "sw", "1.0", "haystack-rt.jar"), [2]string{"data/tags.csv", "a\n"})
+	testkit.WriteFile(t, filepath.Join(root, "indexes", tagIndexName), []byte(`{"jars": 3, "jar_bytes": 0,
+	 "files": [{"jar": "haystack-rt.jar", "path": "data/defs.json"}, {"jar": "haystack-rt.jar", "path": "data/tags.csv"}],
+	 "errors": [{"jar": "haystack-rt.jar", "path": "data/broken.json", "error": "bad"}]}`))
+	res := scanOK(t, install, root, SweepOptions{Rules: sweepTestRules(t)})
+	if row := res.Rows["modules/"]; row.DocLike != 4 || row.Indexed != 2 || row.Unclassified != 2 {
+		t.Errorf("modules/ row = %+v, want 4 doc-like, 2 indexed, 2 unclassified", *row)
+	}
+	want := []gap{
+		{"modules/haystack-rt.jar", "data/broken.json", "tag dictionary tag-index.json could not read: bad"},
+		{"modules/tagdictionary-rt.jar", "bog/Niagara.bog", "tag dictionary not in tag-index.json (rebuild-all builds it)"},
+	}
+	got := slices.Clone(res.Unclassified)
+	slices.SortFunc(got, func(a, b gap) int { return strings.Compare(a.Jar+a.Entry, b.Jar+b.Entry) })
+	if !slices.Equal(got, want) {
+		t.Errorf("unclassified = %q", got)
+	}
+	if got := ruleCounts(res); !mapsEqual(got, map[string]int{"shipped-file-outside-modules": 1}) {
+		t.Errorf("reasons by rule = %v", got)
+	}
+	if n := res.OutOfScope[".csv"]; n != 1 {
+		t.Errorf("%d .csv entries out of scope, want webChart-ux's only", n)
+	}
+}
