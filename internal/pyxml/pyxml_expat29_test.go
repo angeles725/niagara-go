@@ -29,3 +29,18 @@ func TestExpat29DeclarationAfterRoot(t *testing.T) {
 		{"<r/><?xml-x?>", "", ""},
 	})
 }
+
+// Outside the root any non-ASCII character after '<' starts an element (its name is checked
+// as the tag is read), so after the root it is junk at the '<'.
+func TestExpat29NonASCIIAfterLt(t *testing.T) {
+	checkExpat29(t, []expat29Case{
+		{"<r/><\uFEFF", "junk after document element: line 1, column 4", "junk after document element: line 1, column 4"},
+		{"<r/><é", "junk after document element: line 1, column 4", "junk after document element: line 1, column 4"},
+		{"<r/>\n<·", "junk after document element: line 2, column 0", "junk after document element: line 2, column 0"},
+		{"<r/><é/>", "junk after document element: line 1, column 4", "junk after document element: line 1, column 4"},
+		{"<\uFEFF/>", "not well-formed (invalid token): line 1, column 1", "not well-formed (invalid token): line 1, column 1"},
+		{"<é/>", "", ""},
+		{"<r/><1", "not well-formed (invalid token): line 1, column 5", "not well-formed (invalid token): line 1, column 5"},
+		{"<r/><:a", "junk after document element: line 1, column 4", "not well-formed (invalid token): line 1, column 5"},
+	})
+}

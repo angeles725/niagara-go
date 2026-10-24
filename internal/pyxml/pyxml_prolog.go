@@ -5,7 +5,10 @@
 
 package pyxml
 
-import "strings"
+import (
+	"strings"
+	"unicode/utf8"
+)
 
 // prolog skips everything before the root element and returns the index of its '<'.
 func (p *xparser) prolog() (int, error) {
@@ -42,7 +45,7 @@ func (p *xparser) prolog() (int, error) {
 				doctype = true
 				i, err = p.doctype(i)
 			}
-		case p.qStart(c1):
+		case p.instanceStart(c1):
 			return i, nil
 		default:
 			return i, p.fail(i+1, errInvalid)
@@ -79,7 +82,7 @@ func (p *xparser) epilog(i int) error {
 			}
 		case c1 == '!':
 			i, _, err = p.bang(i, false)
-		case p.qStart(c1):
+		case p.instanceStart(c1):
 			return p.fail(i, errJunk)
 		default:
 			return p.fail(i+1, errInvalid)
@@ -119,6 +122,10 @@ func (p *xparser) bang(s int, doctypeOK bool) (int, bool, error) {
 	}
 	return s, false, p.notAllowed(s)
 }
+
+// instanceStart is a character after '<' that expat's DTD tokenizer reads as the start of
+// an element: a name start or any non-ASCII character (its name is checked as the tag is read).
+func (p *xparser) instanceStart(c rune) bool { return p.qStart(c) || c >= utf8.RuneSelf }
 
 // scanKeyword scans a declaration keyword: expat takes name start characters only.
 func (p *xparser) scanKeyword(i int) int {
