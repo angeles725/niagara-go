@@ -14,6 +14,8 @@ import (
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/index"
+	"github.com/angeles725/niagara-go/internal/pycompat"
+	"github.com/angeles725/niagara-go/internal/pyjson"
 )
 
 // bytecodeMatches are the rows of a qualified class name, or of every class
@@ -103,4 +105,46 @@ func (e *Env) typeBytecode(class string) (line string, ok bool, err error) {
 		}
 	}
 	return "BYTECODE: not in " + bytecodeIndexName + " (rebuild-all builds it from the install's modules/)", false, nil
+}
+
+// bytecodeStats counts bytecode-index.json, nil when it is absent: its
+// classes, the registered types they cover, their slots by how each was
+// found, and its errors rows as registered classes and as jars or
+// descriptors it could not read.
+func (e *Env) bytecodeStats() (pyjson.Obj, error) {
+	if !pycompat.IsFile(index.Path(e.BaseDir, bytecodeIndexName)) {
+		return nil, nil
+	}
+	idx, err := e.loadIndex(bytecodeIndexName, false)
+	if err != nil {
+		return nil, err
+	}
+	classes := objList(idx, "classes")
+	types, byAnnotation, byField, badClasses := 0, 0, 0, 0
+	for _, c := range classes {
+		types += listLen(c, "types")
+		for _, s := range objList(c, "slots") {
+			if getStr(s, "via", "") == "field" {
+				byField++
+			} else {
+				byAnnotation++
+			}
+		}
+	}
+	errs := objList(idx, "errors")
+	for _, x := range errs {
+		if strings.HasSuffix(getStr(x, "path", ""), ".class") {
+			badClasses++
+		}
+	}
+	return pyjson.Obj{{"classes", len(classes)}, {"types", types}, {"slots", byAnnotation + byField},
+		{"by_annotation", byAnnotation}, {"by_field", byField}, {"unreadable_classes", badClasses},
+		{"unreadable_jars", len(errs) - badClasses}}, nil
+}
+
+// bytecodeStatsLine is the stats text line of the bytecodeStats counts c.
+func bytecodeStatsLine(c pyjson.Obj, w func(int) string) string {
+	n := func(i int) string { return pycompat.Commas(c[i].Val.(int)) }
+	return fmt.Sprintf("%s classes (%s registered types; %s slots: %s by annotation, %s by field;"+
+		" %s registered classes unreadable, %s jars or descriptors unreadable)", w(c[0].Val.(int)), n(1), n(2), n(3), n(4), n(5), n(6))
 }
