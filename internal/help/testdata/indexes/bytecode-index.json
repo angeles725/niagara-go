@@ -1,0 +1,25 @@
+{"jars": 4, "jar_bytes": 4096,
+ "classes": [
+  {"class": "com.tridium.kitControl.util.BBooleanLatch", "jar": "kitControl-rt.jar", "types": ["kitControl:BooleanLatch"],
+   "access": "public", "super": "com.tridium.kitControl.util.BLatch", "interfaces": [], "fields": ["facets", "out", "in", "TYPE"],
+   "methods": ["<init>()V", "getOut()Ljavax/baja/status/BStatusBoolean;", "getType()Ljavax/baja/sys/Type;"],
+   "slots": [
+    {"name": "facets", "kind": "property", "type": "BFacets", "return_type": "", "default": "BFacets.makeBoolean()", "flags": "", "flag_letters": "", "override": true, "via": "annotation"},
+    {"name": "out", "kind": "property", "type": "BStatusBoolean", "return_type": "", "default": "new BStatusBoolean()", "flags": "267", "flag_letters": "rtso", "override": false, "via": "annotation"},
+    {"name": "in", "kind": "property", "type": "BStatusBoolean", "return_type": "", "default": "new BStatusBoolean()", "flags": "8", "flag_letters": "s", "override": false, "via": "annotation"}]},
+  {"class": "com.tridium.kitControl.util.BLatch", "jar": "kitControl-rt.jar", "types": ["kitControl:Latch"],
+   "access": "public abstract", "super": "javax.baja.sys.BComponent", "interfaces": [], "fields": ["facets", "clock", "latch", "TYPE"],
+   "methods": ["<init>()V", "doLatch()V"],
+   "slots": [
+    {"name": "facets", "kind": "property", "type": "BFacets", "return_type": "", "default": "BFacets.DEFAULT", "flags": "", "flag_letters": "", "override": false, "via": "annotation"},
+    {"name": "clock", "kind": "property", "type": "BStatusBoolean", "return_type": "", "default": "new BStatusBoolean()", "flags": "266", "flag_letters": "tso", "override": false, "via": "annotation"},
+    {"name": "latch", "kind": "action", "type": "", "return_type": "", "default": "", "flags": "", "flag_letters": "", "override": false, "via": "annotation"}]},
+  {"class": "javax.baja.sys.BComponent", "jar": "baja.jar", "types": ["baja:Component"],
+   "access": "public", "super": "javax.baja.sys.BComplex", "interfaces": [], "fields": ["TYPE"], "methods": [], "slots": []},
+  {"class": "com.tridium.kitControl.wb.BLatchView", "jar": "kitControl-wb.jar", "types": ["kitControl:LatchView"],
+   "access": "public", "super": "javax.baja.workbench.view.BWbComponentView", "interfaces": ["javax.baja.workbench.BIView"],
+   "fields": ["TYPE", "fired"], "methods": ["<init>()V"],
+   "slots": [
+    {"name": "fired", "kind": "topic", "type": "", "return_type": "", "default": "", "flags": "", "flag_letters": "", "override": false, "via": "field"}]}],
+ "errors": [
+  {"jar": "kitControl-ux.jar", "path": "com/tridium/kitControl/ux/BLatchTypeExt.class", "error": "classfile: bad magic 0x00000000, want 0xCAFEBABE"}]}
