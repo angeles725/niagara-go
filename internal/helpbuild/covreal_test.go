@@ -35,7 +35,9 @@ const covGoldenVersion = "4.14.0.162"
 
 var covRealDir = filepath.Join("testdata", "cov", "real")
 
-// covCodeFiles are the files whose code writes the coverage reports.
+// covCodeFiles are the files that write the coverage reports. Their helpers elsewhere (pycompat
+// formatting, the fts readers) are not digested: a change there that alters a report is caught by
+// TestCoverageRealGoldens under make realdata, not in CI.
 var covCodeFiles = []string{
 	"coveragereport.go", "coveragereportmodule.go", "doccoverage.go", "doccoverageclassify.go", "doccoveragereport.go",
 }
@@ -157,6 +159,9 @@ func TestCoverageRealGoldens(t *testing.T) {
 		t.Skip("the real coverage goldens read the real corpus and install")
 	}
 	root, install, registry := covRegistryEntry(t, help, covGoldenVersion)
+	if *updateCovReal && !pycompat.IsDir(install) {
+		t.Fatalf("re-recording needs the install mounted (%s) so all three reports are recorded together", install)
+	}
 	stamp := corpusStamp(t, root)
 	rec := covRecorded{Version: covGoldenVersion, CorpusStamp: stamp, CodeSHA256: covCodeDigest(t), RC: map[string]int{}}
 	if !*updateCovReal {
@@ -193,9 +198,6 @@ func TestCoverageRealGoldens(t *testing.T) {
 		t.Logf("install %s not mounted: coverage --doc-jars not checked", install)
 	}
 	if *updateCovReal {
-		if len(rec.RC) != 3 {
-			t.Fatalf("re-recording needs the install mounted (%s) so all three reports are recorded", install)
-		}
 		data, _ := json.MarshalIndent(rec, "", " ")
 		testkit.WriteFile(t, filepath.Join(covRealDir, "recorded.json"), append(data, '\n'))
 	}
