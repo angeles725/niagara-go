@@ -83,3 +83,24 @@ func (e *Env) classFromBytecode(name string, fallback bool) (ok bool, err error)
 	fmt.Fprintf(out, "METHODS (%d public, declared) [bytecode]: %s\n", len(methods), strings.Join(names, ", "))
 	return true, nil
 }
+
+// typeBytecode is the BYTECODE line of a type whose class has no javadoc,
+// and whether bytecode-index.json has its class file.
+func (e *Env) typeBytecode(class string) (line string, ok bool, err error) {
+	rows, idx, err := e.bytecodeRows()
+	if err != nil {
+		return "", false, err
+	}
+	if r := rows[class]; r != nil {
+		return fmt.Sprintf("BYTECODE: %s has %s: %d slots declared (nh class %s --bytecode)", bytecodeIndexName, class,
+			listLen(r, "slots"), class), true, nil
+	}
+	path := strings.ReplaceAll(class, ".", "/") + ".class"
+	for _, x := range objList(idx, "errors") {
+		if getStr(x, "path", "") == path {
+			return fmt.Sprintf("BYTECODE: %s could not read %s!%s: %s", bytecodeIndexName, getStr(x, "jar", ""), path,
+				getStr(x, "error", "")), false, nil
+		}
+	}
+	return "BYTECODE: not in " + bytecodeIndexName + " (rebuild-all builds it from the install's modules/)", false, nil
+}

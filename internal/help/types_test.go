@@ -8,15 +8,12 @@ import (
 	"testing"
 )
 
-// runType runs `type` on the module fixture root plus a class index holding
-// BBooleanLatch only, so one type has javadoc and the others do not.
+// runType runs `type` on the bytecode fixture root (bytecodeRoot): the module
+// index, a class index holding BBooleanLatch only, so one type has javadoc and
+// the others do not, and the bytecode index.
 func runType(t *testing.T, p TypeParams) (string, int) {
 	t.Helper()
-	root := moduleRoot(t)
-	ci := `{"BBooleanLatch": {"path": "com/tridium/kitControl/util/BBooleanLatch.html", "package": "com.tridium.kitControl.util", "type": "class", "module": "kitControl-rt"}}`
-	if err := os.WriteFile(filepath.Join(root, "indexes", "class-index.json"), []byte(ci), 0o644); err != nil {
-		t.Fatal(err)
-	}
+	root := bytecodeRoot(t)
 	var out bytes.Buffer
 	e := &Env{BaseDir: root, Out: &out}
 	if err := e.Type(p); err != nil {
@@ -80,6 +77,33 @@ func TestTypeResolution(t *testing.T) {
 		got, misses := runType(t, TypeParams{Name: tt.query})
 		if !strings.HasPrefix(got, tt.want) || misses != tt.misses {
 			t.Errorf("%s: misses %d, got:\n%s\nwant prefix:\n%s", tt.query, misses, got, tt.want)
+		}
+	}
+}
+
+// TestTypeWithoutJavadocNamesItsBytecode: a type whose class has no javadoc
+// says whether bytecode-index.json has its class file, could not read it or
+// lacks it; --json says so for every type.
+func TestTypeWithoutJavadocNamesItsBytecode(t *testing.T) {
+	for _, tt := range []struct{ name, want string }{
+		{"LatchView", "BYTECODE: bytecode-index.json has com.tridium.kitControl.wb.BLatchView: 1 slots declared " +
+			"(nh class com.tridium.kitControl.wb.BLatchView --bytecode)\n"},
+		{"LatchTypeExt", "BYTECODE: bytecode-index.json could not read kitControl-ux.jar!com/tridium/kitControl/ux/BLatchTypeExt.class: " +
+			"classfile: bad magic 0x00000000, want 0xCAFEBABE\n"},
+		{"NumericLatch", "BYTECODE: not in bytecode-index.json (rebuild-all builds it from the install's modules/)\n"},
+	} {
+		got, _ := runType(t, TypeParams{Name: tt.name})
+		if !strings.Contains(got, tt.want) {
+			t.Errorf("%s lacks %q:\n%s", tt.name, tt.want, got)
+		}
+	}
+	if got, _ := runType(t, TypeParams{Name: "BooleanLatch"}); strings.Contains(got, "BYTECODE:") {
+		t.Errorf("a type with javadoc prints BYTECODE:\n%s", got)
+	}
+	for name, want := range map[string]string{"LatchView": `"bytecode_index": true`, "NumericLatch": `"bytecode_index": false`,
+		"BooleanLatch": `"bytecode_index": true`} {
+		if got, _ := runType(t, TypeParams{Name: name, JSON: true}); !strings.Contains(got, `"class_index": `) || !strings.Contains(got, want) {
+			t.Errorf("%s --json lacks %s:\n%s", name, want, got)
 		}
 	}
 }

@@ -60,6 +60,10 @@ func (e *Env) typeDetail(mods *index.Object, h typeHit, asJSON bool) error {
 	if err != nil {
 		return err
 	}
+	bytecode, inBytecode, err := e.typeBytecode(h.class())
+	if err != nil {
+		return err
+	}
 	on, self := agentsOn(mods, h.spec()), agentOf(h)
 	pals, err := e.typePalettes(h.spec())
 	if err != nil {
@@ -81,7 +85,7 @@ func (e *Env) typeDetail(mods *index.Object, h typeHit, asJSON bool) error {
 		}
 		fmt.Fprintln(e.Out, pyjson.DumpsAny(pyjson.Obj{{"type", h.spec()}, {"module", h.module},
 			{"jar", getStr(h.rec, "jar", "")}, {"class", h.class()}, {"class_index", javadoc != ""},
-			{"source_index", source != ""}, {"agents_on_type", agents}, {"agent_on", selfs},
+			{"bytecode_index", inBytecode}, {"source_index", source != ""}, {"agents_on_type", agents}, {"agent_on", selfs},
 			{"palettes", paletteJSON(pals)}, {"tags", anyList(tags)}}, pyjson.Indent2))
 		return nil
 	}
@@ -92,6 +96,7 @@ func (e *Env) typeDetail(mods *index.Object, h typeHit, asJSON bool) error {
 		fmt.Fprintf(out, "DOCS: class-index.json has %s (nh class %s)\n", h.class(), javadoc)
 	} else {
 		fmt.Fprintf(out, "DOCS: not in class-index.json (no javadoc page for %s)\n", simple)
+		fmt.Fprintln(out, bytecode)
 	}
 	if source != "" {
 		fmt.Fprintf(out, "SOURCE: source-index.json has %s (nh source %s)\n", h.class(), source)
