@@ -82,3 +82,13 @@ func TestExpat29PrologNames(t *testing.T) {
 		{"<!DOCTYPE r [%a:b;]><r/>", "", "not well-formed (invalid token): line 1, column 15"},
 	})
 }
+
+// A name with an occurrence indicator is one token, and it is no DOCTYPE name.
+func TestExpat29DoctypeNameOccurrence(t *testing.T) {
+	checkExpat29(t, []expat29Case{
+		{"<!DOCTYPE a?><a/>", "syntax error: line 1, column 10", "syntax error: line 1, column 10"},
+		{"<!DOCTYPE a:b?><a/>", "syntax error: line 1, column 10", "syntax error: line 1, column 10"},
+		{"<!DOCTYPE a*><a/>", "syntax error: line 1, column 10", "syntax error: line 1, column 10"},
+		{"<!DOCTYPE a+ ><a/>", "syntax error: line 1, column 10", "syntax error: line 1, column 10"},
+	})
+}

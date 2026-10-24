@@ -26,8 +26,8 @@ func (p *xparser) doctype(i int) (int, error) {
 	if err != nil {
 		return i, err
 	}
-	if kind == tokNmtoken {
-		return i, p.fail(i, errSyntax) // a DOCTYPE name is a name, not an NMTOKEN
+	if kind == tokNmtoken || kind == tokNameOccurrence {
+		return i, p.fail(i, errSyntax) // a DOCTYPE name is a plain name
 	}
 	if i = p.skipS(e); p.eof(i) {
 		return i, p.failEOF()

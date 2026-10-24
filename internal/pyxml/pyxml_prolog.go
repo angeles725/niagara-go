@@ -151,6 +151,7 @@ const (
 	tokOther = iota
 	tokPERef
 	tokNmtoken
+	tokNameOccurrence // a name with its "*?+"
 )
 
 // prologToken scans one DTD token at i (not white space, not '<'): an invalid or cut token is
@@ -223,8 +224,11 @@ func (p *xparser) prologName(i int) (int, int, error) {
 		}
 	}
 	end, _, err := p.afterName(e, ">)[%,|", !nmtoken)
-	if nmtoken {
+	switch {
+	case nmtoken:
 		return end, tokNmtoken, err
+	case end > e:
+		return end, tokNameOccurrence, err
 	}
 	return end, tokOther, err
 }
