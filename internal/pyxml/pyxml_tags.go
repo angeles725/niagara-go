@@ -12,6 +12,9 @@ type rawAttr struct {
 
 // startTag parses "<name attr='v'...>" or "/>" from its '<'.
 func (p *xparser) startTag(s int) (int, error) {
+	if !p.qStart(p.at(s + 1)) {
+		return s, p.fail(s+1, errInvalid) // the prolog passes any non-ASCII character here
+	}
 	i, err := p.scanQName(s + 1)
 	if err != nil {
 		return s, err

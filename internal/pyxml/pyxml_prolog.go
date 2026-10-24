@@ -5,7 +5,10 @@
 
 package pyxml
 
-import "strings"
+import (
+	"strings"
+	"unicode/utf8"
+)
 
 // prolog skips everything before the root element and returns the index of its '<'.
 func (p *xparser) prolog() (int, error) {
@@ -42,7 +45,7 @@ func (p *xparser) prolog() (int, error) {
 				doctype = true
 				i, err = p.doctype(i)
 			}
-		case p.qStart(c1):
+		case p.instanceStart(c1):
 			return i, nil
 		default:
 			return i, p.fail(i+1, errInvalid)
@@ -72,10 +75,14 @@ func (p *xparser) epilog(i int) error {
 		case p.eof(i + 1):
 			return p.fail(i, errUnclosed)
 		case c1 == '?':
+			// expat 2.9 reads a whole XML declaration here as junk, not as a misplaced one
 			i, err = p.pi(i, false)
+			if e, ok := err.(*Error); ok && e.Msg == errMisplaced {
+				return p.fail(i, errJunk)
+			}
 		case c1 == '!':
 			i, _, err = p.bang(i, false)
-		case p.qStart(c1):
+		case p.instanceStart(c1):
 			return p.fail(i, errJunk)
 		default:
 			return p.fail(i+1, errInvalid)
@@ -100,7 +107,7 @@ func (p *xparser) bang(s int, doctypeOK bool) (int, bool, error) {
 		return i, false, err
 	case c == '[':
 		return s, false, p.notAllowed(s)
-	case !p.qStart(c):
+	case !p.keywordChar(c):
 		return s, false, p.fail(j, errInvalid)
 	}
 	e := p.scanKeyword(j)
@@ -116,9 +123,17 @@ func (p *xparser) bang(s int, doctypeOK bool) (int, bool, error) {
 	return s, false, p.notAllowed(s)
 }
 
-// scanKeyword scans a declaration keyword: expat takes name start characters only.
+// instanceStart is a character after '<' that expat's DTD tokenizer reads as the start of
+// an element: a name start or any non-ASCII character (its name is checked as the tag is read).
+func (p *xparser) instanceStart(c rune) bool { return p.qStart(c) || c >= utf8.RuneSelf }
+
+// keywordChar is a character of a declaration keyword: expat's scanDecl takes ASCII name
+// start characters only (a ':' is its own byte type under namespace processing).
+func (p *xparser) keywordChar(c rune) bool { return c < utf8.RuneSelf && p.qStart(c) }
+
+// scanKeyword scans a declaration keyword.
 func (p *xparser) scanKeyword(i int) int {
-	for i < p.n && p.qStart(p.r[i]) {
+	for i < p.n && p.keywordChar(p.r[i]) {
 		i++
 	}
 	return i
@@ -135,6 +150,8 @@ func (p *xparser) notAllowed(s int) error {
 const (
 	tokOther = iota
 	tokPERef
+	tokNmtoken
+	tokNameOccurrence // a name with its "*?+"
 )
 
 // prologToken scans one DTD token at i (not white space, not '<'): an invalid or cut token is
@@ -145,7 +162,7 @@ func (p *xparser) prologToken(i int) (int, int, error) {
 	case c == bad || !isXMLChar(c):
 		return i, 0, p.fail(i, errInvalid)
 	case isNameChar(c):
-		return p.afterName(p.scanName(i), ">)[%,|", true)
+		return p.prologName(i)
 	case c == '"' || c == '\'':
 		e := i + 1
 		for ; !p.eof(e) && p.r[e] != c; e++ {
@@ -164,10 +181,10 @@ func (p *xparser) prologToken(i int) (int, int, error) {
 		if c == '%' && isS(p.r[i+1]) {
 			return i + 1, tokOther, nil
 		}
-		if !isNameStart(p.r[i+1]) {
+		if !p.qStart(p.r[i+1]) {
 			return i, 0, p.fail(i+1, errInvalid)
 		}
-		e := p.scanName(i + 1)
+		e := p.scanNC(i + 1)
 		if c == '#' {
 			return p.afterName(e, ")|>%,", false)
 		}
@@ -184,6 +201,36 @@ func (p *xparser) prologToken(i int) (int, int, error) {
 		return i + 1, tokOther, nil
 	}
 	return i, 0, p.fail(i, errInvalid)
+}
+
+// prologName scans a name token at i: an NMTOKEN when it does not start with a name start
+// character. Under namespace processing a ':' makes a name prefixed; a ':' at the start, a
+// second one or one not followed by a name character makes it an NMTOKEN, and a name cut right
+// after its ':' is unclosed. An NMTOKEN takes no occurrence indicator.
+func (p *xparser) prologName(i int) (int, int, error) {
+	nmtoken, prefixed := !p.qStart(p.r[i]), false
+	e := i + 1
+	for ; e < p.n && isNameChar(p.r[e]); e++ {
+		switch {
+		case !p.mode.ETree || p.r[e] != ':' || nmtoken:
+		case prefixed:
+			nmtoken = true
+		case p.eof(e + 1):
+			return i, 0, p.fail(i, errUnclosed)
+		case p.r[e+1] != ':' && isNameChar(p.r[e+1]):
+			prefixed = true
+		default:
+			nmtoken = true
+		}
+	}
+	end, _, err := p.afterName(e, ">)[%,|", !nmtoken)
+	switch {
+	case nmtoken:
+		return end, tokNmtoken, err
+	case end > e:
+		return end, tokNameOccurrence, err
+	}
+	return end, tokOther, err
 }
 
 // afterName checks the character ending a name-like token at e: white space, the end of
