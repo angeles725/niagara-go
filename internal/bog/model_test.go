@@ -67,6 +67,9 @@ func TestEscapedNameDecodedAndResolvableBothWays(t *testing.T) {
 func TestUnescapeForms(t *testing.T) {
 	for in, want := range map[string]string{
 		"a$20b$3ac": "a b:c", "x$u00e9y": "xéy", "cost$": "cost$", "$u00E9$4": "é$4", "$$41": "$A",
+		// Java's SlotPath.unescape builds a UTF-16 string, so a surrogate pair is one code point;
+		// a lone surrogate stays invalid (U+FFFD in Go's UTF-8).
+		"$ud83d$ude00!": "\U0001F600!", "$ud83dx": "\uFFFDx", "$ude00$ud83d": "\uFFFD\uFFFD",
 	} {
 		if got := UnescapeName(in); got != want {
 			t.Errorf("UnescapeName(%q) = %q, want %q", in, got, want)
