@@ -185,3 +185,23 @@ func TestLexiconCLI(t *testing.T) {
 		}
 	}
 }
+
+// TestLexiconTranslationWithoutBase: a translated key no base file of its
+// module holds says so where the base value would be (4.15's French
+// control:cancelMinTimer has none).
+func TestLexiconTranslationWithoutBase(t *testing.T) {
+	root := t.TempDir()
+	write(t, filepath.Join(root, "indexes", "lexicon-index.json"), `{"files": [
+ {"jar": "control-rt.jar", "path": "control-rt.lexicon", "module": "control", "language": "", "overrides": "", "entries": [["a", "A"]]},
+ {"jar": "niagaraLexiconFr-rt.jar", "path": "control.lexicon", "module": "niagaraLexiconFr", "language": "fr", "overrides": "control",
+  "entries": [["cancelMinTimer", "décommandez le temporisateur min"]]}], "errors": []}`)
+	var out bytes.Buffer
+	if err := (&Env{BaseDir: root, Out: &out}).Lexicon(LexiconParams{Query: "cancelMinTimer"}); err != nil {
+		t.Fatal(err)
+	}
+	want := "\ncontrol:cancelMinTimer\n  base  (none: no base lexicon of control holds this key)\n" +
+		"  fr    décommandez le temporisateur min  (niagaraLexiconFr-rt.jar!control.lexicon)\n"
+	if !strings.Contains(out.String(), want) {
+		t.Errorf("got:\n%s", out.String())
+	}
+}

@@ -216,6 +216,9 @@ func (e *Env) printLexicon(idx *index.Object, p LexiconParams, keys []*lexiconKe
 	fmt.Fprintf(e.Out, "LEXICON %s (%d keys, %d matching entries):\n", what, len(keys), matches)
 	for _, k := range keys[:min(lexiconKeysShown, len(keys))] {
 		fmt.Fprintf(e.Out, "\n%s:%s\n", k.module, k.key)
+		if k.rows[0].f.language != "" { // base rows sort first: there is none
+			fmt.Fprintf(e.Out, "  base  (none: no base lexicon of %s holds this key)\n", k.module)
+		}
 		for _, r := range k.rows {
 			fmt.Fprintf(e.Out, "  %-4s  %s  (%s!%s)\n", r.f.langLabel(), r.value, r.f.jar, r.f.path)
 		}
