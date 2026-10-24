@@ -24,8 +24,8 @@ const (
 var quizKinds = []string{quizWhy, quizDecision, quizTrap, quizRecall, quizPredict, quizRequirement, quizExam}
 
 // quizMinAnswer is the shortest predict answer the pool keeps, in runes of substance (the answer
-// without its status markers and evidence lines). On the real keys it leaves out "as stated.",
-// "The wizard wrote it." and "standard JDWP banner." (10-21 runes); the shortest kept is 40.
+// without its status markers and evidence lines). On the real keys (niagara-research a115bae55) it
+// leaves out "The wizard wrote it." and "standard JDWP banner." (20-21 runes); the shortest kept is 40.
 const quizMinAnswer = 30
 
 var (
