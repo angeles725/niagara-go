@@ -28,7 +28,8 @@ var pageDecay = [8]float64{0x1p+0, 0x1.b333333333333p-1, 0x1.71eb851eb851ep-1,
 	0x1.82337b8d3f183p-2, 0x1.48455c380f3afp-2}
 
 // sourceFactor is fulltext.SOURCE_FACTOR: code ranks below an equal doc page.
-var sourceFactor = map[string]float64{"source": 0.5, "devguide-rc": 0.5}
+// The Go-only module-examples (module-jar templates) rank as code too.
+var sourceFactor = map[string]float64{"source": 0.5, "devguide-rc": 0.5, "module-examples": 0.5}
 
 // changelog is fulltext._CHANGELOG: release notes and change logs.
 var changelog = regexp.MustCompile(`(?i)(^|/)(changes\d*|releasenotes)[^/]*$`)

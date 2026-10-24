@@ -209,3 +209,18 @@ func TestRankingCodeDoesNotHideManuals(t *testing.T) {
 		}
 	})
 }
+
+// TestRankingModuleExampleBelowDocPage: a module-jar template ranks like code,
+// below a doc page with the same words (its markup repeats them in its title).
+func TestRankingModuleExampleBelowDocPage(t *testing.T) {
+	root := rankCorpus(t, map[string]string{
+		"module-examples/web-rt/rc/passwordExpirationFormN4.vm": "TITLE: web-rt passwordExpirationFormN4.vm\n" +
+			"MODULE: web-rt\nENTRY: rc/passwordExpirationFormN4.vm\n\n<form>password expiration form</form>\n",
+		"guides-clean/Security/expiry.txt": page("User password configuration",
+			"The password expiration form asks a user whose password expired for a new one."),
+	})
+	got := keys(search(t, root, "password expiration form"))
+	if want := []string{"guides-clean/Security/expiry.txt", "module-examples/web-rt/rc/passwordExpirationFormN4.vm"}; !reflect.DeepEqual(got, want) {
+		t.Errorf("hits %q, want %q", got, want)
+	}
+}
