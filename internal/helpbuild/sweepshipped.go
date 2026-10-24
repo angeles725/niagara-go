@@ -12,11 +12,12 @@ import (
 // The coverage sweep classifies what module jars ship besides documentation
 // and nh indexes in a structure, not in the full-text index: the module
 // descriptor and the module-permissions templates and schemas
-// (module-index.json), palettes (palette-index.json) and the tag dictionaries
-// of the haystack and tagdictionary jars (tag-index.json). In an installed jar
-// each is indexed when its index holds it and UNCLASSIFIED when it does not
-// (not rebuilt yet) or could not read it; a copy outside modules/ is excluded,
-// since these indexes read the installed modules/ only.
+// (module-index.json), palettes (palette-index.json), the tag dictionaries
+// of the haystack and tagdictionary jars (tag-index.json) and, besides their
+// full-text page (lexicon.go), the lexicons (lexicon-index.json). In an
+// installed jar each is indexed when its index holds it and UNCLASSIFIED when
+// it does not (not rebuilt yet) or could not read it; a copy outside modules/
+// is excluded, since these indexes read the installed modules/ only.
 
 // shippedKinds name each kind in sweep reasons, and the index holding it.
 var shippedKinds = map[string][2]string{
@@ -55,11 +56,11 @@ func shippedKind(rel, entry string, rules *Rules) string {
 // when held, the reason when it could not be read. A descriptor's member is "".
 type shippedIndexes struct{ held map[[2]string]string }
 
-// loadShipped reads module-index.json, palette-index.json and tag-index.json
-// under root; an absent index holds nothing.
+// loadShipped reads module-index.json, palette-index.json, tag-index.json and
+// lexicon-index.json under root; an absent index holds nothing.
 func loadShipped(root string) (*shippedIndexes, error) {
 	x := &shippedIndexes{held: map[[2]string]string{}}
-	for _, name := range []string{moduleIndexName, paletteIndexName, tagIndexName} {
+	for _, name := range []string{moduleIndexName, paletteIndexName, tagIndexName, lexiconIndexName} {
 		path := index.Path(root, name)
 		if _, err := os.Stat(path); err != nil {
 			continue
@@ -89,7 +90,7 @@ func (x *shippedIndexes) read(name string, idx *index.Object) {
 		}
 	}
 	pals, _ := idx.Get("palettes")
-	files, _ := idx.Get("files") // tag-index.json's dictionary files
+	files, _ := idx.Get("files") // tag-index.json's dictionary files, lexicon-index.json's lexicons
 	for _, r := range append(asList(pals), asList(files)...) {
 		jar, _ := r.String("jar")
 		p, _ := r.String("path")
@@ -100,7 +101,7 @@ func (x *shippedIndexes) read(name string, idx *index.Object) {
 		jar, _ := r.String("jar")
 		p, _ := r.String("path") // a module-index row without a path is the descriptor's
 		if p == "" && name != moduleIndexName {
-			continue // a jar the palette or tag builder could not open: the sweep cannot list it either
+			continue // a jar the palette, tag or lexicon builder could not open: the sweep cannot list it either
 		}
 		x.held[[2]string{jar, p}] = name + " could not read: " + getErr(r)
 	}
@@ -131,23 +132,30 @@ func (s *sweeper) shipped(rel, entry, kind string) (verdict, error) {
 		return verdict{statusExcluded, label + " of a jar outside modules/ (" + idxName + " reads the installed " +
 			"modules/ only)", "shipped-file-outside-modules"}, nil
 	}
-	if s.shippedIdx == nil {
-		x, err := loadShipped(s.root)
-		if err != nil {
-			return verdict{}, err
-		}
-		s.shippedIdx = x
-	}
 	member := entry
 	if kind == "descriptor" {
 		member = ""
 	}
-	why, ok := s.shippedIdx.held[[2]string{pyBasename(rel), member}]
-	switch {
-	case !ok:
-		return verdict{statusUnclassified, label + " not in " + idxName + " (rebuild-all builds it)", ""}, nil
-	case why != "":
-		return verdict{statusUnclassified, label + " " + why, ""}, nil
+	if v, gap, err := s.heldGap(pyBasename(rel), member, label, idxName); gap || err != nil {
+		return v, err
 	}
 	return verdict{statusIndexed, idxName, strings.TrimSuffix(idxName, ".json")}, nil
+}
+
+// heldGap is the UNCLASSIFIED verdict of member of the installed jar named
+// jar when idxName does not hold it or could not read it (gap true).
+func (s *sweeper) heldGap(jar, member, label, idxName string) (v verdict, gap bool, err error) {
+	if s.shippedIdx == nil {
+		if s.shippedIdx, err = loadShipped(s.root); err != nil {
+			return verdict{}, false, err
+		}
+	}
+	why, ok := s.shippedIdx.held[[2]string{jar, member}]
+	switch {
+	case !ok:
+		return verdict{statusUnclassified, label + " not in " + idxName + " (rebuild-all builds it)", ""}, true, nil
+	case why != "":
+		return verdict{statusUnclassified, label + " " + why, ""}, true, nil
+	}
+	return verdict{}, false, nil
 }

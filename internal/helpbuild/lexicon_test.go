@@ -119,9 +119,8 @@ func TestBuildLexiconText(t *testing.T) {
 }
 
 // coverage --sweep sees the lexicons (doc_like .lexicon): a module jar's
-// lexicon is indexed through its lexicon-text/ page (labels included),
-// excluded when it holds no entry, and UNCLASSIFIED when its page is not
-// indexed.
+// lexicon held by lexicon-index.json is indexed through its lexicon-text/
+// page (labels included) and UNCLASSIFIED when its page is not indexed.
 func TestSweepClassifiesLexicons(t *testing.T) {
 	root, install := lexiconInstall(t)
 	// A module copy outside modules/ (software database) that differs
@@ -131,6 +130,9 @@ func TestSweepClassifiesLexicons(t *testing.T) {
 		t.Fatal(".lexicon is not documentation-like")
 	}
 	if _, err := buildLexiconText(root); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := buildLexiconIndexFrom(root, install); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.Remove(filepath.Join(root, lexiconTextDir, "niagaraLexiconDe-rt", "control.lexicon.txt")); err != nil {
@@ -170,4 +172,41 @@ func TestRebuildPlanHasLexiconText(t *testing.T) {
 		}
 	}
 	t.Error("rebuild-all has no lexicon_extractor step")
+}
+
+// TestSweepChecksLexiconIndex: an installed lexicon lexicon-index.json does
+// not hold, or could not read, is UNCLASSIFIED whatever its full-text page;
+// one without a non-empty value (no page) is indexed by lexicon-index.json,
+// which keeps its keys.
+func TestSweepChecksLexiconIndex(t *testing.T) {
+	root, install := lexiconInstall(t)
+	testkit.WriteJar(t, filepath.Join(install, "modules", "empty-rt.jar"), [2]string{"empty-rt.lexicon", "a=\n"})
+	if _, err := buildLexiconText(root); err != nil {
+		t.Fatal(err)
+	}
+	testkit.WriteFile(t, filepath.Join(root, "indexes", lexiconIndexName), []byte(`{"jars": 0, "jar_bytes": 0,
+	 "files": [{"jar": "fox-rt.jar", "path": "fox-rt.lexicon"}, {"jar": "empty-rt.jar", "path": "empty-rt.lexicon"},
+	  {"jar": "docDeveloper-rt.jar", "path": "docDeveloper-rt.lexicon"}],
+	 "errors": [{"jar": "labels-rt.jar", "path": "labels-rt.lexicon", "error": "bad"}]}`))
+	if _, err := ftbuild.Build(root, ftbuild.Options{}); err != nil {
+		t.Fatal(err)
+	}
+	docs := func(string) (map[string]bool, error) { return fulltextDocsAt(fts.DBPath(root)) }
+	res := scanOK(t, install, root, SweepOptions{Fulltext: docs})
+	var gaps []string
+	for _, g := range res.Unclassified {
+		gaps = append(gaps, g.Jar+" "+g.Entry+" -- "+g.Why)
+	}
+	want := []string{"modules/labels-rt.jar labels-rt.lexicon -- lexicon lexicon-index.json could not read: bad",
+		"modules/niagaraLexiconDe-rt.jar control.lexicon -- lexicon not in lexicon-index.json (rebuild-all builds it)"}
+	if !reflect.DeepEqual(gaps, want) {
+		t.Errorf("unclassified %q\nwant %q", gaps, want)
+	}
+	got := map[string]int{}
+	for k, n := range res.Reasons {
+		got[k.Rule] += n
+	}
+	if got["lexicon-empty"] != 0 { // and not a gap: empty-rt.lexicon is indexed
+		t.Errorf("empty-rt.lexicon excluded although lexicon-index.json holds its keys: %v", got)
+	}
 }

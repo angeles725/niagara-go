@@ -302,11 +302,12 @@ func (s *sweeper) closeLexiconJar() {
 }
 
 // lexicon is the sweep verdict of a lexicon entry of an installed module
-// jar (isLexiconEntry): indexed when its lexicon-text/ page is in the
-// full-text index, excluded when it holds no entry with a value (no page
-// by design), UNCLASSIFIED otherwise. The sweep reads the entry itself
-// (the listing cache has no contents), with lexiconPage's rule of what
-// makes a page.
+// jar (isLexiconEntry): UNCLASSIFIED when lexicon-index.json does not hold
+// it or could not read it; else indexed when its lexicon-text/ page is in
+// the full-text index, or by lexicon-index.json alone when it holds no entry
+// with a value (no page by design), UNCLASSIFIED otherwise. The sweep reads
+// the entry itself (the listing cache has no contents), with lexiconPage's
+// rule of what makes a page.
 func (s *sweeper) lexicon(jar string, e Entry) (verdict, error) {
 	if s.lexJar == nil || s.lexJar.path != jar {
 		s.closeLexiconJar()
@@ -326,9 +327,12 @@ func (s *sweeper) lexicon(jar string, e Entry) (verdict, error) {
 		if err != nil {
 			return verdict{statusUnclassified, "lexicon not readable: " + err.Error(), ""}, nil
 		}
+		if v, gap, err := s.heldGap(pyBasename(jar), e.Name, "lexicon", lexiconIndexName); gap || err != nil {
+			return v, err
+		}
 		page, ok := lexiconPage(pyBasename(jar), e.Name, data)
-		if !ok {
-			return verdict{statusExcluded, "lexicon without a key = value entry (nothing to index)", "lexicon-empty"}, nil
+		if !ok { // its keys are in lexicon-index.json, there is no text to find
+			return verdict{statusIndexed, lexiconIndexName, "lexicon-index"}, nil
 		}
 		key := lexiconTextDir + "/" + page.rel
 		docs, err := s.indexed.fulltextDocs()

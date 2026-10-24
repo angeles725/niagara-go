@@ -70,8 +70,10 @@ module-index.json: no install registered; skipped (the last copy is kept)
 palette-index.json: no install registered; skipped (the last copy is kept)
   RUN   tag_index_builder          -> tag-index.json
 tag-index.json: no install registered; skipped (the last copy is kept)
+  RUN   lexicon_index_builder      -> lexicon-index.json
+lexicon-index.json: no install registered; skipped (the last copy is kept)
 
-Ran 8, skipped 9, failed 2.
+Ran 9, skipped 9, failed 2.
 Builders failed — manifest NOT updated (still reflects last good build).
 # stderr
 <raised>
@@ -121,7 +123,7 @@ indexes/.manifest.json 644
   SKIP  devguide_parser.py         -> devguide-clean/  (source 'devguide/' absent)
   SKIP  build_devguide_toc.py      -> devguide-toc.json  (source 'devguide/' absent)
   SKIP  package_text_builder       -> package-text/  (source 'devguide/' absent)
-Ran 8, skipped 9, failed 2.
+Ran 9, skipped 9, failed 2.
   EMPTY class-index.json (its source is not in this install)
   EMPTY inheritance.json (its source is not in this install)
   EMPTY method-index.json (its source is not in this install)
@@ -202,6 +204,8 @@ module-index.json: no install registered; skipped (the last copy is kept)
 palette-index.json: no install registered; skipped (the last copy is kept)
   RUN   tag_index_builder          -> tag-index.json
 tag-index.json: no install registered; skipped (the last copy is kept)
+  RUN   lexicon_index_builder      -> lexicon-index.json
+lexicon-index.json: no install registered; skipped (the last copy is kept)
 
-Ran 8, skipped 9, failed 2.
+Ran 9, skipped 9, failed 2.
 Builders failed — manifest NOT updated (still reflects last good build).

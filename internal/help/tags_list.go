@@ -40,6 +40,6 @@ func (e *Env) tagList(idx *index.Object, all []*tagEntry, asJSON bool) error {
 		line := fmt.Sprintf("  %s  %s  %s", pycompat.LJust(t.spec(), width, ' '), pycompat.LJust(t.kind, 9, ' '), kindOf[i])
 		fmt.Fprintf(e.Out, "%s  %s\n", strings.TrimRight(line, " "), filesOf[i])
 	}
-	e.printTagUnreadable(idx)
+	e.printUnreadable(idx)
 	return nil
 }

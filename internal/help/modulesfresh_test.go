@@ -50,43 +50,27 @@ func TestModuleIndexFreshness(t *testing.T) {
 	}
 }
 
-// TestPaletteIndexFreshness: palette-index.json is compared with the install
-// the same way, under its own name.
-func TestPaletteIndexFreshness(t *testing.T) {
-	install, root := t.TempDir(), t.TempDir()
-	write(t, filepath.Join(install, "modules", "a-rt.jar"), "123")
-	write(t, filepath.Join(root, "indexes", "palette-index.json"), `{"jars": 1, "jar_bytes": 3, "palettes": []}`)
-	var out bytes.Buffer
-	if (&Env{BaseDir: root, Out: &out}).installIndexLine(paletteIndexName, install) ||
-		out.String() != "  palette-index.json: matches "+filepath.Join(install, "modules")+" (1 jars, 3 bytes)\n" {
-		t.Errorf("in sync: %q", out.String())
-	}
-	write(t, filepath.Join(install, "modules", "a-rt.jar"), "1234")
-	out.Reset()
-	if !(&Env{BaseDir: root, Out: &out}).installIndexLine(paletteIndexName, install) ||
-		!strings.HasPrefix(out.String(), "  palette-index.json: STALE — built from 1 jars (3 bytes); ") {
-		t.Errorf("stale: %q", out.String())
-	}
-}
-
-// TestTagIndexFreshness: tag-index.json is compared with the install the
-// same way, under its own name, and freshness checks it.
-func TestTagIndexFreshness(t *testing.T) {
-	install, root := t.TempDir(), t.TempDir()
-	write(t, filepath.Join(install, "modules", "haystack-rt.jar"), "123")
-	write(t, filepath.Join(root, "indexes", "tag-index.json"), `{"jars": 1, "jar_bytes": 3, "files": []}`)
-	var out bytes.Buffer
-	if (&Env{BaseDir: root, Out: &out}).installIndexLine(tagIndexName, install) ||
-		out.String() != "  tag-index.json: matches "+filepath.Join(install, "modules")+" (1 jars, 3 bytes)\n" {
-		t.Errorf("in sync: %q", out.String())
-	}
-	write(t, filepath.Join(install, "modules", "haystack-rt.jar"), "1234")
-	out.Reset()
-	if !(&Env{BaseDir: root, Out: &out}).installIndexLine(tagIndexName, install) ||
-		!strings.HasPrefix(out.String(), "  tag-index.json: STALE — built from 1 jars (3 bytes); ") {
-		t.Errorf("stale: %q", out.String())
-	}
-	if !slices.Contains(installIndexes, tagIndexName) {
-		t.Errorf("freshness does not check %s: %q", tagIndexName, installIndexes)
+// TestInstallIndexFreshness: palette-index.json, tag-index.json and
+// lexicon-index.json are compared with the install the same way, each under
+// its own name, and freshness checks every one.
+func TestInstallIndexFreshness(t *testing.T) {
+	for _, name := range []string{paletteIndexName, tagIndexName, lexiconIndexName} {
+		install, root := t.TempDir(), t.TempDir()
+		write(t, filepath.Join(install, "modules", "a-rt.jar"), "123")
+		write(t, filepath.Join(root, "indexes", name), `{"jars": 1, "jar_bytes": 3, "files": []}`)
+		var out bytes.Buffer
+		if (&Env{BaseDir: root, Out: &out}).installIndexLine(name, install) ||
+			out.String() != "  "+name+": matches "+filepath.Join(install, "modules")+" (1 jars, 3 bytes)\n" {
+			t.Errorf("%s in sync: %q", name, out.String())
+		}
+		write(t, filepath.Join(install, "modules", "a-rt.jar"), "1234")
+		out.Reset()
+		if !(&Env{BaseDir: root, Out: &out}).installIndexLine(name, install) ||
+			!strings.HasPrefix(out.String(), "  "+name+": STALE — built from 1 jars (3 bytes); ") {
+			t.Errorf("%s stale: %q", name, out.String())
+		}
+		if !slices.Contains(installIndexes, name) {
+			t.Errorf("freshness does not check %s: %q", name, installIndexes)
+		}
 	}
 }

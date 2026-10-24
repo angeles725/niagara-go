@@ -89,3 +89,26 @@ func TestParseFailsClosed(t *testing.T) {
 		})
 	}
 }
+
+// TestParseReadsTheLexicons: a niagaraLexicon* translation descriptor names,
+// per <lexicon>, the base module it overrides, the resource in its own jar and
+// the language; a descriptor without <lexicons> has none.
+func TestParseReadsTheLexicons(t *testing.T) {
+	doc := `<module name="niagaraLexiconBe-rt" moduleName="niagaraLexiconBe" runtimeProfile="rt">
+ <lexicons>
+  <lexicon module="baja" resource="baja.lexicon" language="be" default="true"/>
+  <lexicon module="pdf" resource="pdf.lexicon" language="be"/>
+ </lexicons>
+</module>`
+	m, err := Parse([]byte(doc))
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []Lexicon{{"baja", "baja.lexicon", "be", "true"}, {"pdf", "pdf.lexicon", "be", ""}}
+	if !reflect.DeepEqual(m.Lexicons, want) {
+		t.Errorf("Lexicons = %+v, want %+v", m.Lexicons, want)
+	}
+	if m, err := Parse([]byte(kitControlUX)); err != nil || m.Lexicons != nil {
+		t.Errorf("kitControl-ux Lexicons = %+v, %v; want none", m, err)
+	}
+}

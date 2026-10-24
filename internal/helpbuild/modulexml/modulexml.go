@@ -2,7 +2,8 @@
 // (META-INF/module.xml) into the record nh keeps in indexes/module-index.json:
 // the module's identity, its dependencies, the types it registers, the agents
 // (views and editors) those types register on other types, its java-permissions,
-// its defs and its adapters. It is a leaf: it reads bytes, not jars.
+// its defs and its adapters; and the lexicons a translation module overrides
+// (read by lexicon-index.json, not module-index.json). It is a leaf: it reads bytes, not jars.
 //
 // The reader walks the elements wherever they sit, so an element indented or
 // nested off its usual place still counts; a document that is not well-formed
@@ -31,6 +32,7 @@ type Module struct {
 	JavaPermissions []JavaPermission
 	Defs            []Def
 	Adapters        []Adapter
+	Lexicons        []Lexicon
 }
 
 // Dependency is one <dependency>: the module required and its minimum version.
@@ -55,6 +57,11 @@ type Def struct{ Name, Value string }
 
 // Adapter is one <adapter from to> of a type.
 type Adapter struct{ Type, From, To string }
+
+// Lexicon is one <lexicon> of a translation module (a niagaraLexicon* jar):
+// the base module whose lexicon it overrides, the resource holding the
+// translation in this module's jar, its language and the default attribute.
+type Lexicon struct{ Module, Resource, Language, Default string }
 
 // Counts are how many of each indexed element a descriptor holds.
 type Counts struct{ Dependencies, Types, Agents, JavaPermissions, Defs, Adapters int }
@@ -158,6 +165,8 @@ func (p *parser) start(depth int, name string, a map[string]string) error {
 			return errors.New("<adapter> outside a <type>")
 		}
 		m.Adapters = append(m.Adapters, Adapter{m.Types[p.typ].Name, a["from"], a["to"]})
+	case "lexicon":
+		m.Lexicons = append(m.Lexicons, Lexicon{a["module"], a["resource"], a["language"], a["default"]})
 	case "def":
 		m.Defs = append(m.Defs, Def{a["name"], a["value"]})
 	case "java-permissions":
