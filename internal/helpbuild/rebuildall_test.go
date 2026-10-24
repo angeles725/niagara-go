@@ -103,11 +103,13 @@ func TestRebuildAllOnly(t *testing.T) {
 }
 
 // --stamp-only writes indexes/.manifest.json (json.dumps indent=2, sources
-// in SOURCE_DIRS order, null for an absent folder) and runs nothing.
+// in SOURCE_DIRS order, null for an absent folder; then the Go-only content
+// digest of each derived folder, #199) and runs nothing.
 func TestRebuildAllStampOnly(t *testing.T) {
 	root := sourceOnlyRoot(t)
 	testkit.WriteFile(t, filepath.Join(root, "source", "B.java"), []byte("0123456789"))
 	testkit.WriteFile(t, filepath.Join(root, "docs", "report.md"), []byte("not a manual"))
+	testkit.WriteFile(t, filepath.Join(root, "bajadoc-clean", "a.txt"), []byte("alpha"))
 	now := func() time.Time { return time.Date(2026, 1, 2, 3, 4, 5, 0, time.UTC) }
 	res, out, _, err := rebuildRun(t, root, RebuildOptions{StampOnly: true, Now: now})
 	if err != nil {
@@ -127,6 +129,18 @@ func TestRebuildAllStampOnly(t *testing.T) {
     "guides": null,
     "devguide": null,
     "docs": null
+  },
+  "derived": {
+    "bajadoc-clean": "da0fbea065af52db94ef24e6c9621711b98334a6ff44a7e57b6489ea23a260ec",
+    "devguide-clean": null,
+    "guides-clean": null,
+    "docs-text": null,
+    "course-text": null,
+    "devguide-rc": null,
+    "devguide-examples": null,
+    "package-text": null,
+    "lexicon-text": null,
+    "indexes": null
   }
 }`
 	if got := testkit.ReadText(t, filepath.Join(root, "indexes", ".manifest.json")); got != want {

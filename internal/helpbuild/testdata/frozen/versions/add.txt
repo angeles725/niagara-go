@@ -36,7 +36,7 @@ RESULT: NOT READY - see the gate reports above
 
 # exit 1
 # tree
-@@ 0,0 0,344
+@@ 0,0 0,356
 + fulltext.sqlite:
 + [meta fingerprint engine=3|devguide-clean=<dir>/repo/versions/1.0.0.0/devguide-clean:3:135:<mtime>:<sha1>|guides-clean=<dir>/repo/versions/1.0.0.0/guides-clean:19:1068:<mtime>:<sha1>|source=<dir>/repo/versions/1.0.0.0/source:1:24:<mtime>:<sha1>|devguide-rc=<dir>/repo/versions/1.0.0.0/devguide-rc:2:26:<mtime>:<sha1>|devguide-examples=<dir>/repo/versions/1.0.0.0/devguide-examples:1:9:<mtime>:<sha1>|lexicon-text=<dir>/repo/versions/1.0.0.0/lexicon-text:1:95:<mtime>:<sha1>   ]
 + [docs 1 devguide-clean changes37.txt changes37.txt 4 0]
@@ -379,9 +379,21 @@ RESULT: NOT READY - see the gate reports above
 +       "bytes": 139
 +     },
 +     "docs": null
++   },
++   "derived": {
++     "bajadoc-clean": null,
++     "devguide-clean": "592307c99bd5827806da64e6dcd7af9176155c56a95d4bbe085f48fafc0011e4",
++     "guides-clean": "db696c60d80b282f32fe2adda7761ae5f1b9f0d9f51698e5766c6ac8b57e5fb3",
++     "docs-text": null,
++     "course-text": null,
++     "devguide-rc": "253082fa4469352e10c83dc7380862a212ec782638a1f1b22a3524e4455b426a",
++     "devguide-examples": "a41ffedcc3526bda1b914657c10be53ae4571eb4a12c7d87ddce609ab78077da",
++     "package-text": null,
++     "lexicon-text": "0b849996c17ea29efd3455627350fff6805f0ae18286eaa626b2256a8bf75d72",
++     "indexes": "0a3d72f817785e645fcebc52a917996976a5c1e4dfda4a2367dd4f3a6f805954"
 +   }
 + }
-@@ 1,1 345,362
+@@ 1,1 357,374
 + .cache d--------- 755
 + .cache/jar-listings d--------- 755
 + .cache/jar-listings/<install hash>.json ---------- 644 <size> <sha256>
@@ -527,7 +539,10 @@ RESULT: NOT READY - see the gate reports above
 @@ 295,296 295,296
 - indexes/guides-index.json ---------- 644 1157 6004758efb57e1bc870c3a083112194ddf70e6e721d832a443037320a59daacc
 + indexes/guides-index.json ---------- 644 1236 155614e109f7600dd3ba1d6a6f76698d20fef8baab9d11664d70c1782bd24e43
-@@ 349,350 349,350
+@@ 353,354 353,354
+-     "indexes": "0a3d72f817785e645fcebc52a917996976a5c1e4dfda4a2367dd4f3a6f805954"
++     "indexes": "4d3418a0f6ae0c4040ae74389c7f202d1f7a6e7006ffce5d2316ec6017db594c"
+@@ 361,362 361,362
 - versions/1.0.0.0.manifest.json ---------- 644 {
  "version": "1.0.0.0",
  "label": "install",
@@ -686,7 +701,7 @@ RESULT: NOT READY - see the gate reports above
   }
  ]
 }
-@@ 355,356 355,356
+@@ 367,368 367,368
 - |       "label": "install",
 + |       "label": "Synthetic \u00f1",
 ## <dir>/install/. --id 1.0.0.0

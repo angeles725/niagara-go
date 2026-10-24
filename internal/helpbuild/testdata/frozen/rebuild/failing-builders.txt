@@ -21,6 +21,18 @@ indexes/.manifest.json 644
     "guides": null,
     "devguide": null,
     "docs": null
+  },
+  "derived": {
+    "bajadoc-clean": null,
+    "devguide-clean": null,
+    "guides-clean": null,
+    "docs-text": null,
+    "course-text": null,
+    "devguide-rc": null,
+    "devguide-examples": null,
+    "package-text": null,
+    "lexicon-text": null,
+    "indexes": null
   }
 }
 ## run
@@ -80,6 +92,18 @@ indexes/.manifest.json 644
     "guides": null,
     "devguide": null,
     "docs": null
+  },
+  "derived": {
+    "bajadoc-clean": null,
+    "devguide-clean": null,
+    "guides-clean": null,
+    "docs-text": null,
+    "course-text": null,
+    "devguide-rc": null,
+    "devguide-examples": null,
+    "package-text": null,
+    "lexicon-text": null,
+    "indexes": null
   }
 }
 ## log
@@ -128,6 +152,18 @@ indexes/.manifest.json 644
     "guides": null,
     "devguide": null,
     "docs": null
+  },
+  "derived": {
+    "bajadoc-clean": null,
+    "devguide-clean": null,
+    "guides-clean": null,
+    "docs-text": null,
+    "course-text": null,
+    "devguide-rc": null,
+    "devguide-examples": null,
+    "package-text": null,
+    "lexicon-text": null,
+    "indexes": null
   }
 }
 build.log 644

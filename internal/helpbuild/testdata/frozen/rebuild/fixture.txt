@@ -256,6 +256,18 @@ indexes/.manifest.json 644
       "bytes": 11926
     },
     "docs": null
+  },
+  "derived": {
+    "bajadoc-clean": "0daad442d87f8ded48d3197f4694a3c5b3f47fe9446fef7ae25c965dab2f8c7b",
+    "devguide-clean": "8f516c8384639bea5e63bd5f2b1a3864d8738566a222750d5979ab9b12f93369",
+    "guides-clean": "178476975e58905148fef871038bb6b8ddf2918b6f0042a2d1a339f22d960c94",
+    "docs-text": null,
+    "course-text": null,
+    "devguide-rc": "11083aa1748648e129c7896f0ef53c62e076af47b0d488dc4b048422ce5ba80a",
+    "devguide-examples": null,
+    "package-text": null,
+    "lexicon-text": null,
+    "indexes": "fe27305da2d13f3741f0ae5e044b26d6de1dc731ee1453046ab8baf7780adced"
   }
 }
 ## run --stamp-only
@@ -286,6 +298,18 @@ indexes/.manifest.json 644
       "bytes": 11926
     },
     "docs": null
+  },
+  "derived": {
+    "bajadoc-clean": "0daad442d87f8ded48d3197f4694a3c5b3f47fe9446fef7ae25c965dab2f8c7b",
+    "devguide-clean": "8f516c8384639bea5e63bd5f2b1a3864d8738566a222750d5979ab9b12f93369",
+    "guides-clean": "178476975e58905148fef871038bb6b8ddf2918b6f0042a2d1a339f22d960c94",
+    "docs-text": null,
+    "course-text": null,
+    "devguide-rc": "11083aa1748648e129c7896f0ef53c62e076af47b0d488dc4b048422ce5ba80a",
+    "devguide-examples": null,
+    "package-text": null,
+    "lexicon-text": null,
+    "indexes": "fe27305da2d13f3741f0ae5e044b26d6de1dc731ee1453046ab8baf7780adced"
   }
 }
 ## run
@@ -395,6 +419,18 @@ indexes/.manifest.json 644
       "bytes": 11926
     },
     "docs": null
+  },
+  "derived": {
+    "bajadoc-clean": "0daad442d87f8ded48d3197f4694a3c5b3f47fe9446fef7ae25c965dab2f8c7b",
+    "devguide-clean": "8f516c8384639bea5e63bd5f2b1a3864d8738566a222750d5979ab9b12f93369",
+    "guides-clean": "178476975e58905148fef871038bb6b8ddf2918b6f0042a2d1a339f22d960c94",
+    "docs-text": null,
+    "course-text": null,
+    "devguide-rc": "11083aa1748648e129c7896f0ef53c62e076af47b0d488dc4b048422ce5ba80a",
+    "devguide-examples": null,
+    "package-text": null,
+    "lexicon-text": null,
+    "indexes": "fe27305da2d13f3741f0ae5e044b26d6de1dc731ee1453046ab8baf7780adced"
   }
 }
 ## log
@@ -427,6 +463,18 @@ indexes/.manifest.json 644
       "bytes": 11926
     },
     "docs": null
+  },
+  "derived": {
+    "bajadoc-clean": "0daad442d87f8ded48d3197f4694a3c5b3f47fe9446fef7ae25c965dab2f8c7b",
+    "devguide-clean": "8f516c8384639bea5e63bd5f2b1a3864d8738566a222750d5979ab9b12f93369",
+    "guides-clean": "178476975e58905148fef871038bb6b8ddf2918b6f0042a2d1a339f22d960c94",
+    "docs-text": null,
+    "course-text": null,
+    "devguide-rc": "11083aa1748648e129c7896f0ef53c62e076af47b0d488dc4b048422ce5ba80a",
+    "devguide-examples": null,
+    "package-text": null,
+    "lexicon-text": null,
+    "indexes": "9b11885573184557484def1d0c4a61decd93bf221f85c7b2cd5ddc608169a220"
   }
 }
 build.log 644

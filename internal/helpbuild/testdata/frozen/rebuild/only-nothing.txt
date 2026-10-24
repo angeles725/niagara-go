@@ -31,5 +31,17 @@ indexes/.manifest.json 644
       "bytes": 11926
     },
     "docs": null
+  },
+  "derived": {
+    "bajadoc-clean": "67d6b1d7428014107bdff0b0f6521a70c6894bb289d0ef7dd5d4cb873810b759",
+    "devguide-clean": null,
+    "guides-clean": null,
+    "docs-text": null,
+    "course-text": null,
+    "devguide-rc": "11083aa1748648e129c7896f0ef53c62e076af47b0d488dc4b048422ce5ba80a",
+    "devguide-examples": null,
+    "package-text": null,
+    "lexicon-text": null,
+    "indexes": null
   }
 }

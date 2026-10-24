@@ -1,12 +1,18 @@
 package fts
 
 // The derived folders of a data root: what rebuild-all writes before it stamps the
-// manifest, and which of their files the baseline covers.
+// manifest, read by both sides of the stamp. helpbuild records a content digest of each
+// at stamp time; nh freshness compares it when a folder was touched after the stamp
+// (#199: a git checkout rewrites unchanged files), so both sides select the same files.
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"path/filepath"
 	"slices"
 	"strings"
+
+	"github.com/angeles725/niagara-go/internal/pycompat"
 )
 
 // RetiredIndexes are the index files the Go port no longer builds nor reads
@@ -44,4 +50,22 @@ func WalkDerived(dir, name string, fn func(path, rel string)) {
 		}
 		fn(path, r)
 	})
+}
+
+// DerivedDigest is the content digest of the derived folder name of root: the hex sha256
+// of one "<rel>\x00<sha256 of the file>\n" line per WalkDerived file, in walk order. A
+// file that cannot be read (a dangling link) is left out, as the fingerprints leave it.
+// ok is false when the folder is absent.
+func DerivedDigest(root, name string) (digest string, ok bool) {
+	dir := filepath.Join(root, name)
+	if !pycompat.IsDir(dir) {
+		return "", false
+	}
+	h := sha256.New()
+	WalkDerived(dir, name, func(path, rel string) {
+		if sum, err := pycompat.FileSHA256(path); err == nil {
+			h.Write([]byte(rel + "\x00" + sum + "\n"))
+		}
+	})
+	return hex.EncodeToString(h.Sum(nil)), true
 }
