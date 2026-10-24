@@ -13,6 +13,7 @@ import (
 	"github.com/angeles725/niagara-go/internal/nav/core"
 	"github.com/angeles725/niagara-go/internal/nav/registry"
 	"github.com/angeles725/niagara-go/internal/pycompat"
+	"github.com/angeles725/niagara-go/internal/pyxml"
 )
 
 // palette-lexicon-agents (niagara-research tools/palette-lexicon-agents.py,
@@ -74,20 +75,25 @@ func readArtifactFile(dir, artifact, name string) (string, bool) {
 	return readFromJar(filepath.Join(dir, artifact+".jar"), name)
 }
 
+// fromString is ET.fromstring(text) on a str: the root element, or expat's ParseError.
+func fromString(text string) (*pyxml.Element, error) {
+	return pyxml.Parse([]byte(text), pyxml.Mode{ETree: true, Text: true})
+}
+
 // parsePalette is parse_palette: every <p> with an n, t or m attribute.
 func parsePalette(text string) []paletteEntry {
 	if text == "" {
 		return nil
 	}
-	root, err := parseET(text)
+	root, err := fromString(text)
 	if err != nil {
 		return nil
 	}
 	var out []paletteEntry
-	root.iter("p", func(e *etElement) {
+	root.Iter("p", func(e *pyxml.Element) {
 		var p paletteEntry
 		for _, k := range []string{"n", "t", "m"} {
-			if v, ok := e.get(k); ok {
+			if v, ok := e.Get(k); ok {
 				p.keys = append(p.keys, k)
 				p.values = append(p.values, v)
 			}
@@ -120,18 +126,18 @@ func parseAgents(text string) []agent {
 	if text == "" {
 		return nil
 	}
-	root, err := parseET(text)
+	root, err := fromString(text)
 	if err != nil {
 		return nil
 	}
 	var out []agent
-	root.iter("type", func(t *etElement) {
-		name, _ := t.get("name")
-		class, _ := t.get("class")
-		for _, a := range t.findAll("agent") {
+	root.Iter("type", func(t *pyxml.Element) {
+		name, _ := t.Get("name")
+		class, _ := t.Get("class")
+		for _, a := range t.FindAll("agent") {
 			ag := agent{typeName: name, typeClass: class, onTypes: []string{}}
-			for _, on := range a.findAll("on") {
-				v, _ := on.get("type")
+			for _, on := range a.FindAll("on") {
+				v, _ := on.Get("type")
 				ag.onTypes = append(ag.onTypes, v)
 			}
 			out = append(out, ag)
