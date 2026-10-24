@@ -1398,7 +1398,9 @@ Reader (`internal/help`, `lexicons.go`): `nh lexicon <key|glob> [--module m] [--
 [--json]` prints each matching key (exact first, then any letter case, then a glob) per
 lexicon module (`overrides` for a translation, else `module`): the base value first, then
 each translation, each naming `jar!path`; a translation whose key no base file holds says
-`base  (none: ...)`. `--module` keeps one lexicon module (name or glob, translations
+`base  (none: ...)`. The printed form `module:key` finds that key too: when the whole
+query matches no key, the part before the first `:` keeps that module (name or glob, with
+`--module`) and the rest is the key. `--module` keeps one lexicon module (name or glob, translations
 included); `--lang` one language code, `base` or `all` (the default for a key). `nh lexicon
 --text "<words>"` reads the query as words and names the keys whose value holds every one,
 lower-cased with accents folded (`textfold.Options{Lower: true}`: other letters are kept,

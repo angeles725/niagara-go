@@ -205,3 +205,31 @@ func TestLexiconTranslationWithoutBase(t *testing.T) {
 		t.Errorf("got:\n%s", out.String())
 	}
 }
+
+// TestLexiconPrintedForm: the key as the answer prints it, module:key, finds that
+// module's key (the prefix filters the module, in any letter case or as a glob, and
+// combines with --module); a module that holds no such key is still a miss.
+func TestLexiconPrintedForm(t *testing.T) {
+	for _, tt := range []struct {
+		p          LexiconParams
+		want, lack string
+	}{
+		{LexiconParams{Query: "kitControl:BooleanLatch.displayName"}, "(1 keys, 2 matching entries):\n\nkitControl:BooleanLatch.displayName\n", "baja:"},
+		{LexiconParams{Query: "BAJA:booleanlatch.displayname"}, "(1 keys, 1 matching entries):\n\nbaja:BooleanLatch.displayName\n", "kitControl:"},
+		{LexiconParams{Query: "kit*:*Latch.*", Lang: "base"}, "kitControl:BooleanLatch.displayName", "baja:"},
+		{LexiconParams{Query: "kitControl:BooleanLatch.displayName", Module: "kitControl"}, "(1 keys, 2 matching entries)", "baja:"},
+	} {
+		got, misses := runLexicon(t, tt.p)
+		if misses != 0 || !strings.Contains(got, tt.want) || strings.Contains(got, tt.lack) {
+			t.Errorf("%+v: misses %d, got:\n%s", tt.p, misses, got)
+		}
+	}
+	for _, p := range []LexiconParams{
+		{Query: "baja:latch.description"},
+		{Query: "kitControl:BooleanLatch.displayName", Module: "baja"},
+	} {
+		if got, misses := runLexicon(t, p); misses != 1 {
+			t.Errorf("%+v: misses %d, want a miss; got:\n%s", p, misses, got)
+		}
+	}
+}

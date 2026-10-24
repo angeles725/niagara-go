@@ -169,29 +169,44 @@ func (e *Env) Lexicon(p LexiconParams) error {
 	default:
 		p.Lang = "all"
 	}
-	var files []*lexiconFile
-	for _, f := range lexiconFiles(idx) {
-		if p.Module == "" || nameMatches(f.lexModule(), p.Module) {
-			files = append(files, f)
-		}
-	}
+	files := moduleFiles(lexiconFiles(idx), p.Module)
 	if len(words) > 0 {
 		keys, matches := lexiconKeys(files, func(f *lexiconFile, _, value string) bool {
 			return langSelected(p.Lang, f.language) && holdsWords(value, words)
 		})
 		return e.printLexicon(idx, p, keys, matches, fmt.Sprintf("entries with '%s' in %s", p.Text, p.Lang))
 	}
-	var keys []*lexiconKey
-	var matches int
+	keys, matches := keysMatching(files, p.Lang, p.Query)
+	if module, key, ok := strings.Cut(p.Query, ":"); len(keys) == 0 && ok {
+		// The answer prints a key as module:key: that form finds it too.
+		keys, matches = keysMatching(moduleFiles(files, module), p.Lang, key)
+	}
+	return e.printLexicon(idx, p, keys, matches, fmt.Sprintf("keys matching '%s'", p.Query))
+}
+
+// moduleFiles are the files of the lexicon of module (name or glob; "" keeps all).
+func moduleFiles(files []*lexiconFile, module string) []*lexiconFile {
+	var out []*lexiconFile
+	for _, f := range files {
+		if module == "" || nameMatches(f.lexModule(), module) {
+			out = append(out, f)
+		}
+	}
+	return out
+}
+
+// keysMatching are the keys of files in language lang matching query: exactly,
+// else in any letter case, else as a glob (the first round that finds any).
+func keysMatching(files []*lexiconFile, lang, query string) (keys []*lexiconKey, matches int) {
 	for _, match := range matchRounds {
 		keys, matches = lexiconKeys(files, func(f *lexiconFile, key, _ string) bool {
-			return langSelected(p.Lang, f.language) && match(key, p.Query)
+			return langSelected(lang, f.language) && match(key, query)
 		})
 		if len(keys) > 0 {
 			break
 		}
 	}
-	return e.printLexicon(idx, p, keys, matches, fmt.Sprintf("keys matching '%s'", p.Query))
+	return keys, matches
 }
 
 // holdsWords reports whether value holds every one of the folded words.
