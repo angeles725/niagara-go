@@ -3,3 +3,4 @@ FRESHNESS PER NIAGARA VERSION (default 4.14.0.162)
   4.14.0.162   .                    STALE; INSTALL CHANGED (+1 -1 ~1 jars)
   4.15.0.1     versions/4.15.0.1    UNKNOWN; no jar manifest
   9.0.0        versions/9.0.0       NOT EXTRACTED (nh versions extract 9.0.0)
+RESULT: 0 FRESH, 1 STALE, 1 UNKNOWN, 1 not extracted (exit 1 if any is STALE, 2 if any is UNKNOWN; a version not extracted does not count)

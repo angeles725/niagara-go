@@ -939,7 +939,10 @@ nh `freshness`'s exit status is its result, so a script can gate on it: `RESULT:
 `RESULT: STALE` 1 (checked and out of date, as a miss), and a corpus it could not check is 2
 (`UNKNOWN`, with no baseline manifest or derived folders it could not compare, on stdout;
 an unreadable manifest as `ERROR: ...` on stderr), the `cli.Exit*` convention. Python exited
-0 on all three. `freshness --all` still exits 0: it reports every version, extracted or not.
+0 on all three. `freshness --all` ends with `RESULT: n FRESH, m STALE, k UNKNOWN, j not
+extracted` and exits with the worst extracted version: 1 when one is STALE (its indexes, or its
+install's doc jars: `INSTALL CHANGED`), 2 when one is UNKNOWN; a version not extracted yet is
+listed and counted but never changes the exit status.
 
 `fulltext.sqlite` is not a rebuild-all builder on either side: the full-text index is
 built on demand by the search scope when its own fingerprint changes (Integrante2's

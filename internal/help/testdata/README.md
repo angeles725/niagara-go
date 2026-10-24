@@ -95,4 +95,5 @@ freshness status, and `install/` with doc jars against `versions/4.14.0.162.mani
 fresh copy per case and wrote `s5-cli/<case>.txt` (stdout, `<ROOT>` for the checkout) and
 `s5-cli/cases.json` (arguments, exit status, stderr), checked by `s5_test.go`. The `freshness` case
 exits 1 where Python exited 0: Go's STALE is exit 1 (FRESH 0, not checkable 2), so a
-script can gate on the status.
+script can gate on the status. The `freshness-all` case exits 2 (one version UNKNOWN) and
+ends with the `RESULT:` line counting each verdict, which Python did not print.

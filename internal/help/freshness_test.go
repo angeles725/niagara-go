@@ -169,3 +169,37 @@ func TestFreshnessTouchedNoDigest(t *testing.T) {
 		t.Errorf("--all index state %q, want STALE", state)
 	}
 }
+
+// TestFreshnessAllExitStatus: freshness --all exits 1 when an extracted version is STALE
+// (its indexes or its install's doc jars changed) and 2 when one cannot be checked
+// (UNKNOWN), the worse of the two; a version not extracted yet is listed and counted but
+// never changes the exit status. The last line counts each and states that rule.
+func TestFreshnessAllExitStatus(t *testing.T) {
+	dir := repo(t, `{"default": "1.0.0.1", "versions": {
+ "1.0.0.1": {"install_dir": "", "data_root": "."},
+ "2.0.0.1": {"install_dir": "", "data_root": "versions/2.0.0.1"}}}`)
+	write(t, filepath.Join(dir, "indexes", "class-index.json"), "{}")
+	stamp := time.Now().Add(time.Hour)
+	if _, err := helpbuild.RebuildAll(dir, helpbuild.RebuildOptions{StampOnly: true, Now: func() time.Time { return stamp }}); err != nil {
+		t.Fatal(err)
+	}
+	const rule = " (exit 1 if any is STALE, 2 if any is UNKNOWN; a version not extracted does not count)\n"
+	out, errs, code := run(t, dir, "freshness", "--all")
+	if want := "RESULT: 1 FRESH, 0 STALE, 0 UNKNOWN, 1 not extracted" + rule; code != 0 || !strings.HasSuffix(out, want) {
+		t.Errorf("fresh: exit %d, want 0 and %q:\n%s%s", code, want, out, errs)
+	}
+	later := stamp.Add(time.Hour)
+	write(t, filepath.Join(dir, "indexes", "class-index.json"), "[]")
+	if err := os.Chtimes(filepath.Join(dir, "indexes", "class-index.json"), later, later); err != nil {
+		t.Fatal(err)
+	}
+	out, errs, code = run(t, dir, "freshness", "--all")
+	if want := "RESULT: 0 FRESH, 1 STALE, 0 UNKNOWN, 1 not extracted" + rule; code != 1 || !strings.HasSuffix(out, want) {
+		t.Errorf("stale: exit %d, want 1 and %q:\n%s%s", code, want, out, errs)
+	}
+	write(t, filepath.Join(dir, "versions", "2.0.0.1", "indexes", "class-index.json"), "{}") // extracted, never stamped
+	out, errs, code = run(t, dir, "freshness", "--all")
+	if want := "RESULT: 0 FRESH, 1 STALE, 1 UNKNOWN, 0 not extracted" + rule; code != 2 || !strings.HasSuffix(out, want) {
+		t.Errorf("stale and unknown: exit %d, want 2 and %q:\n%s%s", code, want, out, errs)
+	}
+}
