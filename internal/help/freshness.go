@@ -72,21 +72,8 @@ func computeFingerprint(baseDir string) map[string]*dirPrint {
 }
 
 // derivedNames are the folders freshness checks against the stamp time after the raw
-// sources: the text sources of the full-text index (fts.Labels, the one source registry)
-// that are not raw sources themselves (source/ is), and indexes/.
-var derivedNames = func() []string {
-	raw := map[string]bool{}
-	for _, d := range freshnessDirs {
-		raw[d] = true
-	}
-	var out []string
-	for _, l := range fts.Labels {
-		if !raw[l] {
-			out = append(out, l)
-		}
-	}
-	return append(out, "indexes")
-}()
+// sources (fts.DerivedNames, the one list the stamp digests too).
+var derivedNames = fts.DerivedNames(freshnessDirs)
 
 // derived is what freshness reads of one derived folder: its files, their size and how
 // many of its files and folders (an added or removed file touches its folder) were
@@ -96,9 +83,9 @@ type derived struct {
 	files, bytes, newer int64
 }
 
-// derivedPrint walks one derived folder of root with statcache stamps; nil when absent.
-// indexes/ keeps its top-level JSON indexes but the manifest: fulltext.sqlite is checked
-// against its own fingerprint (fulltextLine), retired indexes are reported apart.
+// derivedPrint walks one derived folder of root (fts.WalkDerived) with statcache stamps;
+// nil when absent. fulltext.sqlite is checked against its own fingerprint (fulltextLine),
+// retired indexes are reported apart.
 func derivedPrint(root, name string, stamped int64) *derived {
 	dir := filepath.Join(root, name)
 	if !pycompat.IsDir(dir) {
@@ -111,16 +98,7 @@ func derivedPrint(root, name string, stamped int64) *derived {
 	if name != "indexes" && statcache.Stat(dir).MtimeNs > stamped {
 		fp.newer++
 	}
-	fts.WalkFiles(dir, func(path string) {
-		rel, err := filepath.Rel(dir, path)
-		if err != nil {
-			return
-		}
-		rel = filepath.ToSlash(rel)
-		if name == "indexes" && (strings.Contains(rel, "/") || !strings.HasSuffix(rel, ".json") || rel == ".manifest.json" ||
-			isRetiredIndex(rel)) {
-			return
-		}
+	fts.WalkDerived(dir, name, func(path, _ string) {
 		st := statcache.Stat(path)
 		if !st.Exists() {
 			return
@@ -140,6 +118,23 @@ func derivedPrint(root, name string, stamped int64) *derived {
 	return fp
 }
 
+// derivedChanged is derivedPrint with the baseline's verdict: a folder with files or
+// folders modified after the stamp changed unless the stamp recorded its content digest
+// (manifest "derived", #199) and the folder still has it; touched is true then (a git
+// checkout rewrites unchanged files). Only a touched folder is hashed.
+func derivedChanged(root, name string, stamped int64, digests *index.Object) (fp *derived, changed, touched bool) {
+	fp = derivedPrint(root, name, stamped)
+	if fp == nil || fp.newer == 0 {
+		return fp, false, false
+	}
+	was, ok := get(digests, name, nil).(string)
+	if !ok {
+		return fp, true, false
+	}
+	now, _ := fts.DerivedDigest(root, name)
+	return fp, now != was, now == was
+}
+
 // stampedNs is the manifest's stamped_utc as Unix ns; ok false when it cannot be read.
 func stampedNs(manifest *index.Object) (int64, bool) {
 	s, _ := get(manifest, "stamped_utc", nil).(string)
@@ -150,8 +145,8 @@ func stampedNs(manifest *index.Object) (int64, bool) {
 	return t.UnixNano(), true
 }
 
-// derivedLines prints the derived folders against the baseline time and returns the
-// changed ones; unknown is true when the baseline has no readable stamp time.
+// derivedLines prints the derived folders against the baseline (derivedChanged) and
+// returns the changed ones; unknown is true when the baseline has no readable stamp time.
 func (e *Env) derivedLines(manifest *index.Object) (stale []string, unknown bool) {
 	fmt.Fprintln(e.Out)
 	fmt.Fprintln(e.Out, "Text sources of the full-text index and the indexes (written before the stamp):")
@@ -160,16 +155,20 @@ func (e *Env) derivedLines(manifest *index.Object) (stale []string, unknown bool
 		fmt.Fprintln(e.Out, "  UNKNOWN — the baseline has no readable stamped_utc to compare them with")
 		return nil, true
 	}
+	digests := getObj(manifest, "derived")
 	for _, name := range derivedNames {
-		fp := derivedPrint(e.BaseDir, name, stamped)
+		fp, changed, touched := derivedChanged(e.BaseDir, name, stamped, digests)
 		status, detail := "OK", "(absent)"
 		if fp != nil {
 			detail = fmt.Sprintf("%s files, %s bytes", pycompat.Commas(int(fp.files)), pycompat.Commas(int(fp.bytes)))
-			if fp.newer > 0 {
-				status = "CHANGED"
-				detail += " — modified after the baseline was stamped"
-				stale = append(stale, name)
-			}
+		}
+		switch {
+		case changed:
+			status = "CHANGED"
+			detail += " — modified after the baseline was stamped"
+			stale = append(stale, name)
+		case touched:
+			detail += " — touched, content unchanged"
 		}
 		fmt.Fprintf(e.Out, "  %s %s now: %s\n", pycompat.LJust(status, 14, ' '), pycompat.LJust(name, 18, ' '), detail)
 	}
@@ -354,8 +353,9 @@ func indexState(root string) (string, error) {
 	if !ok {
 		return "UNKNOWN (no readable baseline time)", nil
 	}
+	digests := getObj(manifest, "derived")
 	for _, name := range derivedNames {
-		if fp := derivedPrint(root, name, stamped); fp != nil && fp.newer > 0 {
+		if _, changed, _ := derivedChanged(root, name, stamped, digests); changed {
 			return "STALE", nil
 		}
 	}

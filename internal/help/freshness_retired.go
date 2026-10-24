@@ -5,28 +5,15 @@ import (
 	"os"
 	"strings"
 
+	"github.com/angeles725/niagara-go/internal/help/fts"
 	"github.com/angeles725/niagara-go/internal/index"
 )
 
-// retiredIndexes are the index files the Go port no longer builds nor reads
-// (call-index.json, decision I3-5). One left in a data root is harmless but
-// misleading: freshness names it so it can be deleted by hand, and never
-// deletes it (freshness only reads the data root).
-var retiredIndexes = []string{"call-index.json"}
-
-func isRetiredIndex(name string) bool {
-	for _, r := range retiredIndexes {
-		if name == r {
-			return true
-		}
-	}
-	return false
-}
-
-// retiredLeft lists the retired index files present under root/indexes/.
+// retiredLeft lists the retired index files (fts.RetiredIndexes: freshness names one
+// left on disk so it can be deleted by hand, and never deletes it) under root/indexes/.
 func retiredLeft(root string) []string {
 	var out []string
-	for _, name := range retiredIndexes {
+	for _, name := range fts.RetiredIndexes {
 		if st, err := os.Stat(index.Path(root, name)); err == nil && st.Mode().IsRegular() {
 			out = append(out, name)
 		}

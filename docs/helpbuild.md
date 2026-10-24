@@ -879,7 +879,7 @@ and the rewritten `class-index.json`, `jdk-class-index.json` and manifest. Measu
 | File | Ports | Notes |
 |---|---|---|
 | `rebuildall.go` | `maintenance.BUILDERS`, `OPTIONAL_ARTIFACTS`, `cmd_rebuild_all`; `version_setup._rebuild`'s build.log part (`RebuildToLog`) | the plan is `Builders()` (14 rows, `call-index.json` retired); each builder is the Go entry point of its slice, called in process with the data root, and what the script prints is written to `Stdout`/`Stderr` after it returns (pdf_extractor streams through `PDFOptions.Emit`, progress entries included); the exit status is the script's, an error or a panic of the builder is exit 1 |
-| `rebuildall_stamp.go` | `SOURCE_DIRS`, `SOURCE_EXT`, `_fingerprint_dir`, `compute_fingerprint`, `_write_manifest` | `CorpusFingerprint` walks the five folders concurrently (`os.walk`: links to folders listed, not entered; a file whose size cannot be read not counted; `docs/` counts `*.pdf` by `str.lower()`); `StampManifest` takes the time first, then the fingerprint, as the dict literal does, and writes `json.dumps(indent=2)` atomically; `stamped_utc` is `isoformat()` (microseconds only when not zero) |
+| `rebuildall_stamp.go` | `SOURCE_DIRS`, `SOURCE_EXT`, `_fingerprint_dir`, `compute_fingerprint`, `_write_manifest` | `CorpusFingerprint` walks the five folders concurrently (`os.walk`: links to folders listed, not entered; a file whose size cannot be read not counted; `docs/` counts `*.pdf` by `str.lower()`); `StampManifest` takes the time first, then the fingerprint, as the dict literal does, then the Go-only derived digests (below), and writes `json.dumps(indent=2)` atomically; `stamped_utc` is `isoformat()` (microseconds only when not zero) |
 
 API for the nh wiring (`internal/help` routes `rebuild-all` to it under the full-text scope
 lock; helpbuild never imports `internal/help` and takes no lock itself):
@@ -912,8 +912,19 @@ What it prints, in order (stdout unless noted):
   `Manifest re-stamped. Run 'freshness' to confirm FRESH.` (stamped after the line is
   printed) or `Builders failed — manifest NOT updated (still reflects last good build).`
 
-The manifest Go writes is the bytes Python writes (`stamped_utc` aside), so nh `freshness`
-reads it as it reads Python's.
+The manifest Go writes is the bytes Python writes (`stamped_utc` aside) plus one Go-only
+key after `sources` (#199): `"derived": {<folder>: <sha256 hex> | null}`, the content digest
+of each derived folder (`fts.DerivedNames`: the full-text text sources that are not raw
+sources, then `indexes/`), null when the folder is absent. `fts.DerivedDigest` hashes one
+`<rel>\x00<sha256 of the file>\n` line per file `fts.WalkDerived` selects (in `indexes/`:
+the top-level JSON indexes but the manifest and the retired ones), in walk order; both
+stamp paths (`rebuild-all`, `--stamp-only` and the `RebuildToLog` hook of `versions add`)
+record it. nh `freshness` (and `freshness --all`) still decides a derived folder on the
+mtimes against `stamped_utc`, and hashes only a folder with a file or folder modified
+after the stamp: the same digest is `OK ... — touched, content unchanged` (a `git
+switch` or fast-forward rewrites unchanged files), a different one `CHANGED`. A manifest
+stamped before the digests (no `derived` key) keeps the mtime rule, so Python's manifest
+reads as before. The full-text index keeps its own size+mtime fingerprint.
 
 `fulltext.sqlite` is not a rebuild-all builder on either side: the full-text index is
 built on demand by the search scope when its own fingerprint changes (Integrante2's
