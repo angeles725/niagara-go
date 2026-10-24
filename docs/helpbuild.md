@@ -935,6 +935,12 @@ switch` or fast-forward rewrites unchanged files), a different one `CHANGED`. A 
 stamped before the digests (no `derived` key) keeps the mtime rule, so Python's manifest
 reads as before. The full-text index keeps its own size+mtime fingerprint.
 
+nh `freshness`'s exit status is its result, so a script can gate on it: `RESULT: FRESH` is 0,
+`RESULT: STALE` 1 (checked and out of date, as a miss), and a corpus it could not check is 2
+(`UNKNOWN`, with no baseline manifest or derived folders it could not compare, on stdout;
+an unreadable manifest as `ERROR: ...` on stderr), the `cli.Exit*` convention. Python exited
+0 on all three. `freshness --all` still exits 0: it reports every version, extracted or not.
+
 `fulltext.sqlite` is not a rebuild-all builder on either side: the full-text index is
 built on demand by the search scope when its own fingerprint changes (Integrante2's
 `internal/helpbuild/fulltext`, called by nh), not by `maintenance.BUILDERS`.

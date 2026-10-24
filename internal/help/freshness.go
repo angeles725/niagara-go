@@ -14,6 +14,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/angeles725/niagara-go/internal/cli"
 	"github.com/angeles725/niagara-go/internal/help/fts"
 	"github.com/angeles725/niagara-go/internal/index"
 	"github.com/angeles725/niagara-go/internal/pycompat"
@@ -260,7 +261,8 @@ func (e *Env) Freshness(all bool) error {
 	return e.freshness()
 }
 
-// freshness is maintenance.cmd_freshness.
+// freshness is maintenance.cmd_freshness. Its exit status is the answer: FRESH is
+// 0, STALE 1 and a corpus it could not check (UNKNOWN, an unreadable manifest) 2.
 func (e *Env) freshness() error {
 	current := computeFingerprint(e.BaseDir)
 	manifest, err := loadManifest(e.BaseDir)
@@ -279,7 +281,7 @@ func (e *Env) freshness() error {
 		fmt.Fprintln(e.Out)
 		fmt.Fprintln(e.Out, "Run 'rebuild-all --stamp-only' to record the current indexes")
 		fmt.Fprintln(e.Out, "as the trusted baseline, or 'rebuild-all' to rebuild + stamp.")
-		return nil
+		return ExitCode(cli.ExitCannotSearch)
 	}
 	recorded := getObj(manifest, "sources")
 	var stale []string
@@ -317,12 +319,13 @@ func (e *Env) freshness() error {
 	case len(stale) > 0:
 		fmt.Fprintf(e.Out, "RESULT: STALE — %d source(s) changed: %s\n", len(stale), strings.Join(stale, ", "))
 		fmt.Fprintln(e.Out, "Reindex with 'rebuild-all' (then the manifest re-stamps).")
+		return ExitCode(cli.ExitNoMatch)
 	case unknown:
 		fmt.Fprintln(e.Out, "RESULT: UNKNOWN — the raw sources match the baseline; the derived text and indexes")
 		fmt.Fprintln(e.Out, "could not be compared with it (run 'rebuild-all --stamp-only' to re-stamp).")
-	default:
-		fmt.Fprintln(e.Out, "RESULT: FRESH — corpus matches the recorded baseline.")
+		return ExitCode(cli.ExitCannotSearch)
 	}
+	fmt.Fprintln(e.Out, "RESULT: FRESH — corpus matches the recorded baseline.")
 	return nil
 }
 

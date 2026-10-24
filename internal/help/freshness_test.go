@@ -88,10 +88,16 @@ func stampedCorpus(t *testing.T) (root string, touch func()) {
 func freshnessOf(t *testing.T, root string) (report, state string) {
 	t.Helper()
 	var out bytes.Buffer
-	if err := (&Env{BaseDir: root, Out: &out}).freshness(); err != nil {
-		t.Fatal(err)
+	err := (&Env{BaseDir: root, Out: &out}).freshness()
+	// The exit status says the result line: FRESH 0, STALE 1.
+	wantErr := error(ExitCode(1))
+	if strings.Contains(out.String(), "RESULT: FRESH") {
+		wantErr = nil
 	}
-	state, err := indexState(root)
+	if err != wantErr {
+		t.Fatalf("freshness: %v, want %v:\n%s", err, wantErr, out.String())
+	}
+	state, err = indexState(root)
 	if err != nil {
 		t.Fatal(err)
 	}

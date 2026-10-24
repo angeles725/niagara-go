@@ -93,4 +93,6 @@ name, a missing file), guide and devguide pages, a stamped `indexes/.manifest.js
 freshness status, and `install/` with doc jars against `versions/4.14.0.162.manifest.json`.
 `s5_gen.py` (retired in D47) ran the Python niagara-help on a
 fresh copy per case and wrote `s5-cli/<case>.txt` (stdout, `<ROOT>` for the checkout) and
-`s5-cli/cases.json` (arguments, exit status, stderr), checked by `s5_test.go`.
+`s5-cli/cases.json` (arguments, exit status, stderr), checked by `s5_test.go`. The `freshness` case
+exits 1 where Python exited 0: Go's STALE is exit 1 (FRESH 0, not checkable 2), so a
+script can gate on the status.
