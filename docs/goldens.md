@@ -182,9 +182,9 @@ niagara-help `tests/golden_cli.py`, as real bytes: 70 mnav cases (48 command cas
 `no-command`). Retired-command ids are dropped. `help` (and nh `no-command`) keep Python's
 output and declare the Go one in `intended.json` (reason D32: only kept commands are listed);
 nh `stats` and `stats-json` do the same with reason I3-5 (`call-index.json` is retired: nh
-counts 9 indexes and prints no call-index line). mnav `stats` (golden-real and the hermetic
+counts 12 indexes and prints no call-index line). mnav `stats` (golden-real and the hermetic
 `nav-stats`, `nav-stats-sparse`) lists the registry's runnable commands instead of Python's
-hand-kept list (D32), and golden-real counts 11 niagara-help indexes (I3-5).
+hand-kept list (D32), and golden-real counts the 14 files of niagara-help `indexes/` (I3-5, NH3-NH5).
 
 `palette-lexicon-agents` follows niagara-research `tools/palette-lexicon-agents.py`, not
 `module_nav.py` (D39 e), so its cases come from that script: the kept
