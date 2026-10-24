@@ -18,6 +18,11 @@ lines (the size gate enforces it).
 | `helpbuild/pyfs` | `os.walk`, `os.remove`, `shutil.copyfile`, `json.load`, the atomic JSON write and its dump options | none |
 | `helpbuild/zipfile` | Python's `zipfile` central directory and entry reader | none |
 | `helpbuild/fulltext` | `fulltext.sqlite` | none |
+| `helpbuild/modulexml` | `META-INF/module.xml` descriptors (`module-index.json`, lexicon declarations) | none |
+| `helpbuild/shippedxml` | `module-permissions.xml` templates and `.xsd`/`.dtd` schemas | none |
+| `helpbuild/palettexml` | `*.palette` files (`palette-index.json`) | none |
+| `helpbuild/tagdict` | the Haystack and Niagara tag dictionaries (`tag-index.json`) | none |
+| `helpbuild/classfile` | Java `.class` files and their Niagara slots (`bytecode-index.json`) | none |
 | `helpbuild/internal/testkit` | the shared test harness (frozen checks, tree listings, zip and PDF fixtures) | none |
 
 The coverage reports and the sweep stay in the root with the course (the sweep reports the
@@ -62,7 +67,7 @@ document disagree, the code wins and this document is corrected.
 | S10 | orchestration (`extract`, `versions add`, `freshness`) and the nh wiring of `rebuild-all` | `extract_version.py`, `version_setup.py`, `version_report.py`, `maintenance.py` (rest) | ~750 |
 | **S10b-2** (done) | `versions add` (detect, register, extract and index, both gates, the summary, the rollback) and the nh wiring of `versions add` and `versions extract` | `version_setup.py` (rest), `version_report.py`, `extract_version.py` (CLI) | ~1,300 with tests |
 | **S10b-1** (done) | the coverage reports: `coverage`, `coverage <module>`, `coverage --doc-jars` (library + printers; the nh wiring is a later slice) | `coverage_report.py`, `doc_coverage.py` (+ `doc_types.classify`, `classify_unmapped`, `content_type`, `example_skip_reason`) | ~1,300 + tests |
-| **S11a** (done) | whole-install sweep gate (`coverage --sweep`, a `versions add` gate) as a library + report, on S10b-1's `Classify` and `Indexed`; nh wiring is a later slice | `install_sweep.py`, `course.gate` / `print_gate` | ~1,700 with tests |
+| **S11a** (done) | whole-install sweep gate (`coverage --sweep`, a `versions add` gate) as a library + report, on S10b-1's `classify` and `Indexed`; nh wiring is a later slice | `install_sweep.py`, `course.gate` / `print_gate` | ~1,700 with tests |
 | **S11** (done) | nh wiring: `coverage [module]`, `--doc-jars`, `--sweep`, and `rebuild-all` under the build lock (`internal/help/cmds_maint.go`, `internal/help/scope/buildlock.go`) | `cli/cmd_export.py` `run_coverage`, `cli/cmd_admin.py` `run_rebuild_all` | ~600 with tests |
 
 `fulltext.sqlite` is outside this plan (owned by the full-text port).
@@ -100,8 +105,8 @@ res, err := helpbuild.ExtractAndIndex(repo, vid, helpbuild.SetupOptions{
 `Rebuild` is `_rebuild` minus the parts the library keeps: `ExtractAndIndex` writes the
 `indexes/pdf-index.json` stub before the hook and the `{}` empty indexes after it. A nil
 hook skips the step, which is `extract_and_index(no_index=True)`; that is what
-`TestExtractFrozen` runs, since the index builders are later slices. `extract_version --no-index`
-has no caller and is not ported as a flag.
+`TestExtractFrozen` runs, since the index builders are later slices, and what
+`nh versions extract --no-index` passes.
 
 ### Why a zip reader of its own
 
@@ -135,7 +140,7 @@ changes the ones it touches on purpose: regenerate them from Go and name the cha
 Until D47 the tests here compared this package with the niagara-help Python reference (the
 `pre-go-retire` worktree) through driver scripts under `testdata/`. The drivers are gone. Each
 synthetic comparison whose output is deterministic became a Go-only test against
-`testdata/frozen/<area>/` (`frozen_test.go`); every frozen file was checked byte-identical to
+`testdata/frozen/<area>/` (the `*frozen_test.go` files); every frozen file was checked byte-identical to
 the driver output of the same fixture before the drivers were deleted, so it is Python's
 output. Paths are relabeled (`<base>`, `<root>`, `<dir>`; any other temporary folder shows as
 `<tmp>`), trees are `treeLines` listings (or, per step, the `treeDelta` / `lineDelta` of the
@@ -143,8 +148,12 @@ listing), and the frozen tests run on Linux only, as the parity tests did. A del
 is regenerated from Go and reviewed:
 
 ```sh
-go test ./internal/helpbuild/... -run <Test> -update-frozen
+go test ./internal/helpbuild/<package> -run <Test> -update-frozen
 ```
+
+Name the package that holds the test (`.` for the root): the flag is defined only in the packages
+that use the shared `internal/testkit`, so `./internal/helpbuild/...` fails in the others
+(`flag provided but not defined: -update-frozen`).
 
 Dropped with the drivers: the real-data parity runs and the cases whose output was not
 deterministic (fuzz snippets drawn by Python's RNG, listing-cache bytes that hold jar mtimes,
@@ -182,7 +191,7 @@ produces.
 
 - **Zip version above 6.3**: Python raises `NotImplementedError`, which `read_listing`
   does not catch (the whole tool stops); `ReadListing` reports the jar unreadable
-  (`readListing` returns `ErrUnsupportedZip`). Not in the frozen set for that reason.
+  (`readListing` returns `errUnsupportedZip`). Not in the frozen set for that reason.
 - **Malformed cache content** (a cache whose top level, `jars` or a jar record is not a
   dict, or a listing of another shape): Python fails with `AttributeError`/`TypeError` on
   first use; Go treats it as a miss (the jar is listed again).
@@ -211,7 +220,7 @@ produces.
 S2 additions (none changes an output Python produces from a well-formed install):
 
 - **bzip2, lzma and zstd entries** (methods 12, 14, 93): Python inflates them; Go returns
-  `ErrUnsupportedMethod`. Niagara jars use stored and deflated only.
+  `errUnsupportedMethod`. Niagara jars use stored and deflated only.
 - **A deflate stream that ends early** while every compressed byte is present: zlib's
   `flush()` hands Python the decoded prefix, then the CRC decides; Go's `flate` may hold
   back the tail of the last block, so a prefix whose CRC would match fails. A short file
@@ -225,7 +234,7 @@ S2 additions (none changes an output Python produces from a well-formed install)
   and `\`), a leading `/` or `\`, or a drive letter (`C:`, `C:x`, `C:\x`). Python writes
   wherever `os.path.join` points, also outside the data root, and on Linux writes a
   name such as `..\x` verbatim as one file; `Extract` and `FillMissing` return
-  `ErrUnsafeEntry` on every OS, so the same jar is refused wherever the corpus is built
+  `errUnsafeEntry` on every OS, so the same jar is refused wherever the corpus is built
   (safety over parity). The joined path is also checked to stay under the root. A `\`
   in an otherwise safe name (`a\b.txt`) is kept: one file with that name on Linux, as
   Python writes it, the folder `a` and the file `b.txt` on Windows. Fidelity only reads
@@ -250,7 +259,7 @@ S2 additions (none changes an output Python produces from a well-formed install)
 
 | File | Ports | Notes |
 |---|---|---|
-| `pdftext/pdftext.go` | `classify`, `sanitize`, `top_folder`, `find_pdfs`, `fix_unmapped_bullets`, `extract_text`, `resolve_name` | one pdftotext run: argv list, no shell, `PDFTimeout` (120 s); a failure is a `*PDFError` whose `Failure` says which of the four cases `extract_text` catches (exit status, timeout, output not UTF-8, could not start); the run goes through `internal/procgroup` (own process group, SIGINT/SIGTERM relay), shared with `internal/secaudit` |
+| `pdftext/pdftext.go` | `classify`, `sanitize`, `top_folder`, `find_pdfs`, `fix_unmapped_bullets`, `extract_text`, `resolve_name` | one pdftotext run: argv list, no shell, `PDFTimeout` (120 s); a failure is a `*pdfError` whose `Failure` says which of the four cases `extract_text` catches (exit status, timeout, output not UTF-8, could not start); the run goes through `internal/procgroup` (own process group, SIGINT/SIGTERM relay), shared with `internal/secaudit` |
 | `pdftext/pdfindex.go` | `pdf_extractor.main()` | `ExtractPDFs`; the early exits, the `-v` probe, keep-last-good, the index save, the prune after a clean run, the summary |
 | `registry/registry.go` | `versions.identify`, `versions.install_dir`, `course.course_dir` | read with pyjson so every malformed entry takes Python's branch: skipped where Python catches, an error where it raises |
 | `pyfs/pyfs.go` | `os.walk`, `os.remove`, `shutil.copyfile`, `json.load` | `Walk` lists a symlinked folder without entering it and skips unreadable ones; `RemoveFile` refuses a directory; `Copyfile` raises `SameFileError` when source and destination are the same file, refuses a named pipe before opening it and a directory as source (`EISDIR`, Python's `IsADirectoryError`) or destination (the open fails); `LoadJSON` returns a `*JSONLoadError` (Python's `str(e)`) for what the builders catch |
@@ -261,7 +270,7 @@ S2 additions (none changes an output Python produces from a well-formed install)
 API for S10 (`rebuild-all` runs both tools as builders):
 
 ```go
-res, err := helpbuild.ExtractPDFs(root, helpbuild.PDFOptions{
+res, err := pdftext.ExtractPDFs(root, pdftext.PDFOptions{
 	DocsDir: docsDir,          // --docs-dir; "" = <install_dir>/docs of the registered version
 	Emit:    func(e string) {}, // optional live output; an entry starting with "\r" is a progress write
 })
@@ -274,7 +283,7 @@ out, err := courseExtractor(root, rules) // package-internal; rules from helpbui
 
 `Pdftotext` (`"pdftotext"`) is resolved on PATH when each run starts, as `subprocess.run`
 does without a shell; `PDFOptions.Pdftotext` names another program. The tests put a fake
-`pdftotext` first on PATH (`fakeBin`) that hands every real PDF to the real binary.
+`pdftotext` first on PATH (`fakePdftotext`) that hands every real PDF to the real binary.
 
 S3/S4 frozen tests:
 
@@ -353,7 +362,7 @@ take `parseBajadocFiles` (`indexes/classindexxml.go`) for the same concurrency.
 | `htmltext/htmltext.go` | `html_text.convert` as `HTMLToText(page) (title, text)` | Python's Unicode `\s`, `strip` and `\w` (`textfold.IsSpace`, `pycompat.IsWordRune`) |
 | `guidetoc.go` | `guide_toc.find_toc`, `parse_toc`, `count_items` | ElementTree is `internal/pyxml` in ETree mode; the warning is returned, not printed |
 | `guidesparser.go` | `guides_parser.parse_guides`, `_markdown_title`, `devguide_parser.parse_devguide` | `RebuiltDir`; `TextResult.Log` = stdout lines, `.Warnings` = stderr lines |
-| `guidesindex.go` | `build_guides_index` (`topic_name`, `known_jar_names`, `modules_dir_of`, `jar_for_folder`, `previous_jars`, `build`, `main`) | `JarSources` replaces the `_MANIFEST` sentinels; `Unknown` is `jar_names=None`; the walk, `json.load` and registry lookups are S3's (`pyfs/pyfs.go`, `registry/registry.go`) |
+| `guidesindex.go` | `build_guides_index` (`topic_name`, `known_jar_names`, `modules_dir_of`, `jar_for_folder`, `previous_jars`, `build`, `main`) | `jarSources` replaces the `_MANIFEST` sentinels; `Unknown` is `jar_names=None`; the walk, `json.load` and registry lookups are S3's (`pyfs/pyfs.go`, `registry/registry.go`) |
 | `devguidetoc.go` | `build_devguide_toc.build`, `main` | its regexes run through `internal/pyre` (Python semantics, code-point offsets) |
 
 Guide builders (package-internal; `RebuildAll` runs them in process from its builder table in
@@ -372,8 +381,8 @@ Both indexes are `json.dumps(indent=2)` with `ensure_ascii` on (`DumpIndent2`).
 ### The html.parser port
 
 The port lives in the shared `internal/pyhtml` package (decision D37, owner Integrante3;
-its `doc.go` holds the contract), which depends on `textfold` only so that
-`pycompat.HTMLUnescape` can forward to it. Its frozen tests stay in helpbuild
+its `doc.go` holds the contract), which depends on `textfold` only (`str.lower`,
+`str.isspace`); callers use `pyhtml.Unescape` directly. Its frozen tests stay in helpbuild
 (`htmltext/htmlfrozen_test.go`).
 
 One `feed()` of the whole page and `close()` parse exactly like one `goahead(end=1)`: each
@@ -401,7 +410,7 @@ indicator, which backtracks one space before a quote that is never closed (`x= '
 CDATA end tag folds ASCII letters only (`re.ASCII`). Offsets are byte offsets into valid
 UTF-8: every delimiter is ASCII and every class excludes ASCII bytes only.
 
-`html.unescape` is `pyhtml.Unescape` (`pycompat.HTMLUnescape` forwards to it): Go's
+`html.unescape` is `pyhtml.Unescape`: Go's
 `html` entity table plus `&nGt;` and `&nLt;`, the two WHATWG names it lacks (found by the
 parity test over all 2,231 names of `html.entities.html5`, now `TestHTML5EntitiesFrozen`). The attribute rule
 (`_unescape_attrvalue`) needs `name in html5`; Go does not export its table, so
@@ -442,7 +451,7 @@ parity test over all 2,231 names of `html.entities.html5`, now `TestHTML5Entitie
 API for S10 (`maintenance.BUILDERS` runs `bajadoc_parser.py <data root>`):
 
 ```go
-res, err := helpbuild.ParseBajadoc(root)
+res, err := indexes.ParseBajadoc(root)
 // print res.Log line by line, exit res.Status (1: bajadoc/javax/baja missing);
 // err != nil is a Python traceback (exit 1), res.Log holds what was printed before it.
 ```
@@ -470,8 +479,8 @@ one run):
 
 - **A class name that would put its page outside `bajadoc-clean/`** (absolute, or `..`
   segments that climb above it): Python writes wherever `os.path.join` points;
-  `ParseBajadoc` stops with `ErrUnsafeClassName` before writing (safety over parity, as
-  S2's `ErrUnsafeEntry`). Javadoc class names hold no `/`.
+  `ParseBajadoc` stops with `errUnsafeClassName` before writing (safety over parity, as
+  S2's `errUnsafeEntry`). Javadoc class names hold no `/`.
 - **Page names that are not UTF-8** (Python's surrogateescape, sorted as decoded names) are
   not modelled; the tests run on Linux with UTF-8 names.
 - **Generic names are whole and unescaped** (quality round 8 T33): the class name of a
@@ -499,7 +508,7 @@ API for S10 (`maintenance.BUILDERS` runs `bajadoc_xml_parser.py <data root>` aft
 `bajadoc_parser.py`):
 
 ```go
-res, err := helpbuild.ParseBajadocXML(root)
+res, err := indexes.ParseBajadocXML(root)
 // print res.Log (one line); err != nil is a Python traceback (exit 1): a .bajadoc file
 // that cannot be read (ET.parse raises the OSError, nothing is written) or a failed write.
 ```
@@ -523,7 +532,7 @@ Python 3.15 vs Go, wall time of one run of each step):
 
 ### S7b intended differences
 
-- **A class name that would put its page outside `bajadoc-clean/`**: `ErrUnsafeClassName`,
+- **A class name that would put its page outside `bajadoc-clean/`**: `errUnsafeClassName`,
   as in S7a.
 - **Encodings other than UTF-8, ISO-8859-1 and US-ASCII** (`encoding="windows-1252"`,
   `"latin1"`): expat hands them to Python's codecs, which decode any single-byte codec and
@@ -544,9 +553,9 @@ Python 3.15 vs Go, wall time of one run of each step):
 API for S10 (`maintenance.BUILDERS` runs the three scripts with the data root as argument):
 
 ```go
-res, err := helpbuild.BuildClassIndex(root)  // indexes/class-index.json (+ jdk-class-index.json when jdk/ exists)
-res, err := helpbuild.BuildInheritance(root) // indexes/inheritance.json; res.Status 1 without bajadoc-clean/
-res, err := helpbuild.BuildMethodIndex(root) // indexes/method-index.json
+res, err := indexes.BuildClassIndex(root)  // indexes/class-index.json (+ jdk-class-index.json when jdk/ exists)
+res, err := indexes.BuildInheritance(root) // indexes/inheritance.json; res.Status 1 without bajadoc-clean/
+res, err := indexes.BuildMethodIndex(root) // indexes/method-index.json
 // print res.Log line by line, exit res.Status; err != nil is a Python traceback (exit 1),
 // res.Log holds what was printed before it.
 ```
@@ -610,9 +619,9 @@ path in `pyjson.EncodeString` is the place to win it back.
 API for S10 (`maintenance.BUILDERS` runs the three scripts with the data root as argument):
 
 ```go
-res, err := helpbuild.BuildSourceIndex(root) // indexes/source-index.json
-res, err := helpbuild.BuildSlotsIndex(root)  // indexes/slots-index.json; err without source/
-res, err := helpbuild.BuildXrefIndex(root)   // indexes/xref-index.json
+res, err := indexes.BuildSourceIndex(root) // indexes/source-index.json
+res, err := indexes.BuildSlotsIndex(root)  // indexes/slots-index.json; err without source/
+res, err := indexes.BuildXrefIndex(root)   // indexes/xref-index.json
 // print res.Log on stdout and res.Stderr on stderr line by line, exit res.Status (always 0);
 // err != nil is a Python traceback (exit 1), res.Log holds what was printed before it.
 ```
@@ -644,7 +653,7 @@ The slots time is mostly the `.bajadoc` XML of `devguide/` and `guides/`; xref's
 ### S9 intended differences
 
 - **`call-index.json` is retired** (decision I3-5): `build_call_index.py` is not ported,
-  `BuilderIndexes` no longer lists it, so `EmptyIndexes` (Python's `_empty_indexes`) does
+  `builderIndexes` no longer lists it, so `emptyIndexes` (Python's `_empty_indexes`) does
   not write an empty one for a new version (`TestEmptyIndexesFrozen` holds Python's output
   without that line and file); nh `stats` neither
   counts nor prints it, even when a stale file is on disk, and nh's search scopes have no
@@ -662,7 +671,7 @@ The slots time is mostly the `.bajadoc` XML of `devguide/` and `guides/`; xref's
 | `coveragereport.go` | `coverage_report.guide_coverage`, `cmd_guide_coverage`, `cmd_coverage` (entry), `index_cache.load_index` for the four report indexes, `module_export.module_classes` | `MissingIndexError` has Python's message; the four indexes (class, source, method, slots) are loaded before anything prints, in Python's order |
 | `coveragereportmodule.go` | the module and overview halves of `cmd_coverage` | `Total methods` counts each method-index entry once against the module's class set (Python's per-class loop over distinct keys gives the same number) |
 | `doccoverageclassify.go` | `doc_types.classify`, `classify_unmapped`, `content_type`, `example_skip_reason`, `REASONS`, `_GUIDE_JUNK` | extensions lower-cased with Python's full Unicode `lower()` (`textfold.Lower`) |
-| `doccoverage.go` | `doc_coverage.Indexed` | lazy views, each index loaded on first use (so an index error surfaces at the same entry); `FulltextDocsAt` is `FtsIndex.docs()` of one database |
+| `doccoverage.go` | `doc_coverage.Indexed` | lazy views, each index loaded on first use (so an index error surfaces at the same entry); `fulltextDocsAt` is `FtsIndex.docs()` of one database |
 | `doccoveragereport.go` | `_entries`, `_verdict`, `scan`, `cmd_doc_jar_coverage`, `_print_report` | the table is `format()` through `pycompat.Format` (`{:34s}`, `{:>7,}`: code-point widths, comma groups); the listing cache is saved before the scan, as Python does |
 
 API for the nh wiring (`cli/cmd_export.py` `coverage`):
@@ -686,8 +695,8 @@ status, err := helpbuild.DocJarCoverage(os.Stdout, repoRoot, baseDir, versionID,
 // returned 2, else max(status, sweep) (install_sweep, ported separately).
 ```
 
-`PrintGuideCoverage(w, baseDir)` is `cmd_guide_coverage` alone (`GuideCoverage` its rows);
-`ScanDocJars(install, root, jars, docs)` is `scan` (rows, reasons in first-met order, gaps).
+`printGuideCoverage(w, baseDir)` is `cmd_guide_coverage` alone (`guideCoverage` its rows);
+`scanDocJars(install, root, jars, docs)` is `scan` (rows, reasons in first-met order, gaps).
 
 S10b-1 tests (a run is two lines: `["out", <stdout>]`, then `["status", <return value>]`,
 `["missing", str(e)]` for a `MissingIndexError` or `["raise"]`; `scope.report_miss` is a
@@ -695,7 +704,7 @@ S10b-1 tests (a run is two lines: `["out", <stdout>]`, then `["status", <return 
 
 | Test | Checks |
 |---|---|
-| `TestClassify`, `TestPyNormpath`, `TestModuleClasses`, `TestScanDocJarsNeedsFulltextForExamples` | one row per classification branch, `posixpath.normpath`, the module match, the full-text reader requirement |
+| `TestClassify`, `TestPosixNormpath` (`internal/pypath`), `TestModuleClasses`, `TestScanDocJarsNeedsFulltextForExamples` | one row per classification branch, `posixpath.normpath`, the module match, the full-text reader requirement |
 | `TestCoverageReportGolden`, `TestDocJarCoverageGolden` | the Go reports of the synthetic fixtures against `testdata/cov/golden/*.jsonl` (Python's output; `-update-cov` rewrites them from Go) |
 | `TestDocJarCoverageFrozen` | the gate on the synthetic install (11 jars: every index kind indexed, not indexed and not extracted, every exclusion reason, unmapped and unknown entries, duplicates, an unreadable jar, a module help jar, a jar name cut at 34 code points around non-ASCII letters, a content type cut at 20) by version id and identified from the data root, an unregistered version, no `install_dir`, no registry, more than 25 gaps, a PASS, a FAIL from a guide folder alone, no indexes, a malformed index |
 | `TestCoverageMalformedIndexes`, `TestCoverageMalformedFrozen` | indexes of an unexpected shape (see the intended differences): the Go outcome of each, and the frozen report where Python read no bad value |
@@ -717,7 +726,7 @@ over /mnt/c, so the page cache (cold or warm) decides most of them.
 
 - **An index of an unexpected shape** (a top level that is not an object in any of the four
   report indexes, a class, source or method record of another type, a non-string module)
-  is an `*IndexShapeError` before any output. Python raises after printing the lines before
+  is an `*indexShapeError` before any output. Python raises after printing the lines before
   the failing lookup (the module report up to its methods line, the overview up to its
   header) or before any line (a source-index problem in a module report); where it reads
   no bad value it prints the whole report: a class or method index the overview does not
@@ -743,13 +752,13 @@ with a reason, or UNCLASSIFIED; a directory the walk cannot list is UNCLASSIFIED
 
 | File | Ports | Notes |
 |---|---|---|
-| `sweep.go` | `install_sweep.find_jars`, `location`, `is_installed`, `Sweep` (`installed_entry`, `_mapped`, `classify`, `_shadowed`, `shadowed_entries`, `classify_loose_doc`), `scan` | the walks are `os.walk(onerror=...)` (`pycompat.WalkWith` with `WalkOptions{OnError}`, sorted folders and files); in-jar collisions use `MappedEntries`, the extractor's rule |
-| `sweepreport.go` | `install_sweep.cmd_sweep`, `print_report`, `_print_pdf_line`; `course.gate`, `print_gate`; the read-only side of `open_index` (`FreshFulltextPath`, `FreshFulltextDocs`) | widths and comma groups through `pyFmt` (code points, as `str.format`); reasons sort by (-count, rule, reason) |
+| `sweep.go` | `install_sweep.find_jars`, `location`, `is_installed`, `Sweep` (`installed_entry`, `_mapped`, `classify`, `_shadowed`, `shadowed_entries`, `classify_loose_doc`), `scan` | the walks are `os.walk(onerror=...)` (`pycompat.WalkWith` with `WalkOptions{OnError}`, sorted folders and files); in-jar collisions use `mappedEntries`, the extractor's rule |
+| `sweepreport.go` | `install_sweep.cmd_sweep`, `print_report`, `_print_pdf_line`; `course.gate`, `print_gate`; the read-only side of `open_index` (`freshFulltextPath`, `FreshFulltextDocs`) | widths and comma groups through `pyFmt` (code points, as `str.format`); reasons sort by (-count, rule, reason) |
 
-One rule per concept, shared with the S10b-1 coverage gate: `Classify` and `Reasons`
+One rule per concept, shared with the S10b-1 coverage gate: `classify` and `reasons`
 (`doccoverageclassify.go`), `doc_coverage.Indexed` (`indexedViews.check`,
-`doccoverage.go`), the `FulltextDocs` reader type and `FulltextDocsAt`,
-`loadReportIndex` / `IndexShapeError` for the index files, and `registeredInstall`, the
+`doccoverage.go`), the `FulltextDocs` reader type and `fulltextDocsAt`,
+`loadReportIndex` / `indexShapeError` for the index files, and `registeredInstall`, the
 `reg["versions"].get(vid, {}).get("install_dir", "")` read both `cmd_sweep` and
 `cmd_doc_jar_coverage` make.
 
@@ -759,7 +768,7 @@ API for the wiring slice (nh `coverage --sweep`, and the `versions add` gate of 
 status, err := helpbuild.RunSweep(repo, baseDir, versionID, os.Stdout, helpbuild.SweepOptions{
 	Fulltext: rebuildingDocs, // a FulltextDocs; nil: FreshFulltextDocs (read only, *fts.StaleIndexError when stale)
 })
-// status: helpbuild.SweepPass (0), SweepFail (1, at least one UNCLASSIFIED entry),
+// status: helpbuild.SweepPass (0), sweepFail (1, at least one UNCLASSIFIED entry),
 // SweepUnavailable (2, one "INSTALL SWEEP <vid>: install not available (...)" line).
 // The report ends with the RESULT line: "RESULT: PASS - every documentation-like entry is
 // indexed or excluded with a reason" or "RESULT: FAIL - <n> unclassified entr{y,ies}".
@@ -771,9 +780,9 @@ status, err := helpbuild.RunSweep(repo, baseDir, versionID, os.Stdout, helpbuild
 prints `None`). The jar listings go through `<repo>/.cache/jar-listings/` (the S1 cache,
 byte-identical with Python's). `SweepOptions.Rules` replaces `install_rules.default()`
 everywhere `cmd_sweep` reads it (scan, course gate, the documentation-like line). The
-lower-level pieces are exported for `coverage --doc-jars` and tests: `Scan` (the `scan`
-dict as `*SweepResult`), `SweepReport` (the report lines), `GateCourse`, `FindJars`,
-`FreshFulltextDocs`.
+lower-level pieces are package-internal, for `coverage --doc-jars` and tests: `scan` (the `scan`
+dict as `*sweepResult`), `sweepReport` (the report lines), `gateCourse`, `findJars`; only
+`FreshFulltextDocs` is exported.
 
 `SweepOptions.Fulltext` exists because Python's `open_index` **builds** a missing or
 stale full-text index (in `indexes/`, then the user cache, then memory) before the course
@@ -781,7 +790,7 @@ gate or an `example` check reads it, printing notes on stderr. The library print
 and does not build: the default `FreshFulltextDocs` reads the up-to-date database or
 returns `*fts.StaleIndexError`. nh should pass the same rebuilding `FulltextDocs` it
 gives `DocJarCoverage` (backed by `internal/help/scope`'s opener: a path-returning export
-of its `ensure`, then `FulltextDocsAt`), which keeps Python's behaviour and adds the build
+of its `ensure`, then `fulltextDocsAt`), which keeps Python's behaviour and adds the build
 lock. The index is opened only when a course is bound or an `example` entry has
 its corpus file, as in Python.
 
@@ -878,8 +887,8 @@ and the rewritten `class-index.json`, `jdk-class-index.json` and manifest. Measu
 
 | File | Ports | Notes |
 |---|---|---|
-| `rebuildall.go` | `maintenance.BUILDERS`, `OPTIONAL_ARTIFACTS`, `cmd_rebuild_all`; `version_setup._rebuild`'s build.log part (`RebuildToLog`) | the plan is `Builders()` (14 rows, `call-index.json` retired); each builder is the Go entry point of its slice, called in process with the data root, and what the script prints is written to `Stdout`/`Stderr` after it returns (pdf_extractor streams through `PDFOptions.Emit`, progress entries included); the exit status is the script's, an error or a panic of the builder is exit 1 |
-| `rebuildall_stamp.go` | `SOURCE_DIRS`, `SOURCE_EXT`, `_fingerprint_dir`, `compute_fingerprint`, `_write_manifest` | `CorpusFingerprint` walks the five folders concurrently (`os.walk`: links to folders listed, not entered; a file whose size cannot be read not counted; `docs/` counts `*.pdf` by `str.lower()`); `StampManifest` takes the time first, then the fingerprint, as the dict literal does, then the Go-only derived digests (below), and writes `json.dumps(indent=2)` atomically; `stamped_utc` is `isoformat()` (microseconds only when not zero) |
+| `rebuildall.go` | `maintenance.BUILDERS`, `OPTIONAL_ARTIFACTS`, `cmd_rebuild_all`; `version_setup._rebuild`'s build.log part (`RebuildToLog`) | the plan is `rebuildBuilders` (21 rows: Python's 14 with `call-index.json` retired, then the seven Go-only steps of the sections below); each builder is the Go entry point of its slice, called in process with the data root, and what the script prints is written to `Stdout`/`Stderr` after it returns (pdf_extractor streams through `PDFOptions.Emit`, progress entries included); the exit status is the script's, an error or a panic of the builder is exit 1 |
+| `rebuildall_stamp.go` | `SOURCE_DIRS`, `SOURCE_EXT`, `_fingerprint_dir`, `compute_fingerprint`, `_write_manifest` | `corpusFingerprint` walks the five folders concurrently (`os.walk`: links to folders listed, not entered; a file whose size cannot be read not counted; `docs/` counts `*.pdf` by `str.lower()`); `stampManifest` takes the time first, then the fingerprint, as the dict literal does, then the Go-only derived digests (below), and writes `json.dumps(indent=2)` atomically; `stamped_utc` is `isoformat()` (microseconds only when not zero) |
 
 API for the nh wiring (`internal/help` routes `rebuild-all` to it under the full-text scope
 lock; helpbuild never imports `internal/help` and takes no lock itself):
@@ -998,7 +1007,7 @@ Most of the time is pdftotext on the manuals (the same binary on both sides).
 | File | Ports | Notes |
 |---|---|---|
 | `versionsetup_add.go` | `valid_version_id`, `detect_version`, `register`, `_restore_registry`, `_rollback`, `add_version` | `AddVersion(repo, install, w, AddOptions)` writes add_version's lines to `w` and returns its status (0 ready, 1 a gate or the fidelity check failed, 2 cannot add); an error is what Python raises, after the rollback when extraction raised; `\d`/`\s` are Unicode classes as in Python's `re` |
-| `versionreport.go` | `run_gates`, `_result_line`, `_counts`, `print_summary`, `KINDS`, `GATES_LOG` | `RunGates` runs `DocJarCoverage` then `RunSweep` into buffers of their own, writes both to `<data root>/gates.log`; `PrintSummary` counts the full-text documents per source through the `FulltextDocs` it is given |
+| `versionreport.go` | `run_gates`, `_result_line`, `_counts`, `print_summary`, `KINDS`, `GATES_LOG` | `runGates` runs `DocJarCoverage` then `RunSweep` into buffers of their own, writes both to `<data root>/gates.log`; `printSummary` counts the full-text documents per source through the `FulltextDocs` it is given |
 
 API for nh (`internal/help/cmds_maint_versions.go`):
 
@@ -1081,8 +1090,8 @@ stayed out of `find`'s ten results; paged at factor 1.0, all 15 are found. A fil
 last key segment is `description`, `desc`, `help`, `tooltip` or `summary`, any letter case, or
 the value has five words or more: messages, prompts, warnings) are written as `key = value`;
 every other row is a UI display label, written `[label] key = value`, so a label lookup
-(`nh find "Boolean Latch"`) reaches the module that names it (kitControl's `BooleanLatch`
-row) and a hit shows whether it matched help text or a label. Each label row is its own
+(`nh find "AX Email Account Manager"`) reaches the module that names it (email-rt's
+`EmailAccountManager.displayName` row) and a hit shows whether it matched help text or a label. Each label row is its own
 page, so a file of hundreds of labels still scores one hit (its best rows plus decayed
 further ones). The marker adds the word `label` to every label row: a query with the
 word `label` also matches label rows, and that word weighs less in BM25.
@@ -1140,7 +1149,7 @@ them.
 Every module jar ships `META-INF/module.xml`: its dependencies, the types it registers (name
 and class), the agents (views, editors, type extensions) those types register on other
 types, its java-permissions per profile, its defs and its adapters. The doc-jar extraction
-never copies `META-INF/` (`destPath`); the last rebuild-all step, `module_index_builder`
+never copies `META-INF/` (`destPath`); the rebuild-all step after `lexicon_extractor`, `module_index_builder`
 (`moduleindex.go`), reads the descriptor of every jar of the registered install's
 `modules/` (the jars `lexiconJars` lists, through the same `zipfile` reader) with
 `modulexml.Parse` and writes one structured index, `indexes/module-index.json`:
@@ -1498,7 +1507,7 @@ registered classes without `bytecode-index.json` and passes with it.
 TestCoverageRealGoldens`, part of `make realdata`; it skips with `-short` or without the
 variable. The `HELPBUILD_PARITY_*` variables and the real-version parity runs retired with
 D47; their last measurements stay in the sections above. `go test ./internal/helpbuild/`
-takes about 20 s on the development laptop.
+takes about 2 s once compiled (197 tests, 2026-10-24).
 
 ## Dead code not ported
 
