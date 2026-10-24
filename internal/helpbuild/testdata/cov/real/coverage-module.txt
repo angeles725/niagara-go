@@ -1,0 +1,8 @@
+DOCUMENTATION COVERAGE: alarm-rt
+============================================================
+
+Classes: 61 total, 61 documented, 0 undocumented
+Coverage: 100.0%
+
+Slot coverage: 31/61 classes have @Niagara annotations
+Total methods: 926

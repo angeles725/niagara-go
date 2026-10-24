@@ -709,7 +709,7 @@ S10b-1 tests (a run is two lines: `["out", <stdout>]`, then `["status", <return 
 | `TestDocJarCoverageFrozen` | the gate on the synthetic install (11 jars: every index kind indexed, not indexed and not extracted, every exclusion reason, unmapped and unknown entries, duplicates, an unreadable jar, a module help jar, a jar name cut at 34 code points around non-ASCII letters, a content type cut at 20) by version id and identified from the data root, an unregistered version, no `install_dir`, no registry, more than 25 gaps, a PASS, a FAIL from a guide folder alone, no indexes, a malformed index |
 | `TestCoverageMalformedIndexes`, `TestCoverageMalformedFrozen` | indexes of an unexpected shape (see the intended differences): the Go outcome of each, and the frozen report where Python read no bad value |
 | `TestCoverageReportFrozen` | the overview (ties on the percentage, a class without module, non-ASCII modules, `str.replace` of every `.txt`), module reports (`alarm-rt`, `ALARM`, `alarm-ux`, `zeta-rt`, `école`, `rt`), a miss, the guide coverage alone, an empty source index, each missing index |
-| `TestCoverageRealGoldens` | with `NIAGARA_HELP_DIR` (`make realdata`; skipped with `-short`): the SHA-256 and exit status of `coverage`, `coverage alarm-rt` and, with the install mounted, `coverage --doc-jars` on 4.14.0.162 against the `coverage`, `coverage-module` and `coverage-doc-jars` cases of niagara-help `tests/golden/cli.json` at `pre-go-retire`, copied into `testdata/cov/cli-goldens.json`; the full-text index must be up to date (the test never writes the corpus) and the listing cache goes to a temporary repository |
+| `TestCoverageRealGoldens` | with `NIAGARA_HELP_DIR` (`make realdata`; skipped with `-short`): the stdout and exit status of `coverage`, `coverage alarm-rt` and, with the install mounted, `coverage --doc-jars` on 4.14.0.162 against `testdata/cov/real/<case>.txt` and `recorded.json`; it fails first, naming the re-record command, when the corpus was re-stamped since the recording. `TestCoverageRealRecordingMatchesCode` (no corpus, runs in CI) fails when the report code changed since the recording`; the full-text index must be up to date (the test never writes the corpus) and the listing cache goes to a temporary repository |
 
 Measured 2026-10-18 by the parity run (byte-identical; wall time, Python's driver start-up
 included):
@@ -1505,7 +1505,13 @@ registered classes without `bytecode-index.json` and passes with it.
 `TestCoverageRealGoldens` (S10b-1) is the package's one real-data test:
 `NIAGARA_HELP_DIR=~/niagara-research/niagara-help go test ./internal/helpbuild -run
 TestCoverageRealGoldens`, part of `make realdata`; it skips with `-short` or without the
-variable. The `HELPBUILD_PARITY_*` variables and the real-version parity runs retired with
+variable. The reports are recorded from Go on the live corpus as text under `testdata/cov/real/`
+(the case files, plus `recorded.json`: each exit status, the corpus `stamped_utc` and a digest of
+the five report source files); `-update-cov-real` re-records them (the install must be mounted).
+The Python-era SHA-256 values they replace went stale silently when 8bdcc06c changed the report
+wording, because realdata does not run in CI; two checks now name the re-record instead:
+`TestCoverageRealRecordingMatchesCode` in CI when the report code changes, and
+`TestCoverageRealGoldens` when the corpus is re-stamped. The `HELPBUILD_PARITY_*` variables and the real-version parity runs retired with
 D47; their last measurements stay in the sections above. `go test ./internal/helpbuild/`
 takes about 2 s once compiled (197 tests, 2026-10-24).
 
