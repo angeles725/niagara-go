@@ -1069,6 +1069,8 @@ all when the version has nothing to write.
 
 | `lexicon_extractor` (`lexicon.go`) | `lexicon-text/<jar stem>/<entry>.txt`: `TITLE`, `MODULE`, `LEXICON` header, then one `key = value` line per entry with a value, in file order, a UI display label marked `[label] key = value`, entries separated by form feeds | every `*.lexicon` entry of the registered install's `modules/*.jar` (translation jars included) that the doc-jar extraction does not copy; an install that is not mounted keeps the last copy | `.lexicon` is in `doc_like`, so `coverage --sweep` sees every lexicon: UNCLASSIFIED when `lexicon-index.json` does not hold it (see Lexicons below), else indexed when its page is in the full-text index or, holding no entry with a value, by `lexicon-index.json` alone, UNCLASSIFIED otherwise. A lexicon of a jar outside `modules/` (`bin/ext/niagarad.jar`, `sw/` copies) is excluded by the `lexicon-outside-modules` rule; extracted lexicons (doc jars, `doc/`) keep the `doc_types` translation-lexicon exclusion. |
 
+| `module_examples_extractor` (`moduleexamples.go`) | `module-examples/<jar stem>/<entry>`, the entry's own extension kept: `TITLE` (`<jar stem> <file name>`), `MODULE`, `ENTRY` header, then the template as the jar holds it (a UTF-8 BOM dropped) | every `.px`, `.hbs`, `.vm` and `.bog` entry of the registered install's `modules/*.jar` that the doc-jar extraction does not copy (`fts.IsModuleExample`); a vendored copy (`node_modules`, `rc/vendor/`, `rc/ext/`, a top-level `ext/`) is counted and skipped; an entry with a NUL byte or invalid UTF-8, or a `.bog` that is not XML (every real `.bog` but three 4.14 ones is a zipped bog), writes no page and is a `WARNING: module_examples_extractor: <jar>!<entry>: ...` line, as is a jar or member that cannot be read; an install that is not mounted keeps the last copy | `coverage --sweep` sees every template of an installed jar (kind `example`, `sweepexample.go`): indexed when its page is in the full-text index, excluded when vendored (`example-vendored`) or without text (`example-not-text`, the sweep reads the entry with the extractor's rule), UNCLASSIFIED otherwise; a copy outside `modules/` is `shipped-file-outside-modules`. Permissions templates (`.xml.vm`) and tag dictionaries (`.bog`) keep their own index first. kitControl's `rc/examples/` Px views are claimed before the documentation rules, so the `kitControl-examples` exclusion covers its chart data and images only. |
+
 `nh package <name>` prints the description block above the class list, with the page path.
 
 Lexicon granularity and filter: one file per lexicon file, indexed as a paged source (one
@@ -1086,6 +1088,30 @@ row) and a hit shows whether it matched help text or a label. Each label row is 
 page, so a file of hundreds of labels still scores one hit (its best rows plus decayed
 further ones). The marker adds the word `label` to every label row: a query with the
 word `label` also matches label rows, and that word weighs less in BM25.
+
+Module examples rank as code: `module-examples` has the 0.5 source factor of `source/` and
+`devguide-rc/` (`fts/search.go`), so a template whose file name spells the query words (a
+title match) ranks below the manual for them (`networkPasswordExpirationFormN4.vm` was first
+for `password expiration form` on 4.15 at factor 1.0) and does not count toward the
+documentation hits that keep a search in AND mode. `selftest` checks that `find 'loginN4'`
+ranks web-rt's `loginN4.vm` first among the module-examples hits; `stats`, `freshness`, the
+stamp and the honest-zero line list the source like every other one, and `versions add`
+describes it.
+
+Built on 2026-10-24 into scratch data roots (symlinks to the corpus, `build.log` and the
+manifests copied; the live corpus untouched) with `rebuild-all --only module_examples`, then
+the full-text index:
+
+| Install | pages (.px / .hbs / .vm / .bog) | not text | vendored | module-examples/ | full-text documents |
+|---|---|---|---|---|---|
+| 4.15.6.20 | 270 (29 / 150 / 91 / 0) | 1 (tagdictionary-rt `bog/Niagara.bog`, zipped) | 0 | 0.4 MB | 69,092 |
+| 4.14.0.162 | 554 (168 / 280 / 103 / 3) | 8 zipped bogs | 0 | 6.7 MB | 116,000 |
+| 4.3.58.18 | 142 (17 / 97 / 28 / 0) | 4 zipped bogs (tagdictionary-rt, three tls-rt profiles) | 0 | 0.2 MB | 40,163 |
+
+On the 4.14 scratch root the real golden doc set stays at hit@1 35/69, hit@5 61/69, and
+`coverage --sweep` on the 4.3 scratch root passes (the 3 tls-rt bogs excluded as
+`example-not-text`). Most of the 4.14 bytes are Honeywell wizard and graphics Px views
+(honeywellTB3026BWizard 3.1 MB, honeywellVenomGraphics 2.3 MB).
 
 ## Vendor Java source in module jars
 
