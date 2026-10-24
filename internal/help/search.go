@@ -18,6 +18,15 @@ func lowerGlob(name, pat string) bool {
 	return fnmatch.Fnmatch(textfold.Lower(name), textfold.Lower(pat))
 }
 
+// matchRounds are the rounds a name lookup (type, palette, tag) tries in
+// turn: exactly, in any letter case, as a glob, as a glob in any letter case.
+var matchRounds = []func(got, want string) bool{
+	func(got, want string) bool { return got == want },
+	func(got, want string) bool { return textfold.Lower(got) == textfold.Lower(want) },
+	fnmatch.Fnmatch,
+	lowerGlob,
+}
+
 // SearchParams are the arguments of `search`.
 type SearchParams struct {
 	Pattern string

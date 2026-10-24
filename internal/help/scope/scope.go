@@ -208,24 +208,31 @@ func moduleCount(data *index.Object) string {
 }
 
 // paletteCount is the palette-index.json part of a scope line: its palettes
-// and those it could not read (the first three named jar!path).
+// and those it could not read.
 func paletteCount(data *index.Object) string {
 	pals, _ := getAny(data, "palettes").([]any)
-	line := fmt.Sprintf("palette-index.json: %s palettes", pycompat.Commas(len(pals)))
+	return fmt.Sprintf("palette-index.json: %s palettes", pycompat.Commas(len(pals))) + unreadable(data)
+}
+
+// unreadable is " (N unreadable: jar!path, ...)" for the errors rows of an
+// index built from the install (the first three named), "" when none.
+func unreadable(data *index.Object) string {
 	errs, _ := getAny(data, "errors").([]any)
 	if len(errs) == 0 {
-		return line
+		return ""
 	}
 	var where []string
 	for _, e := range errs[:min(3, len(errs))] {
 		jar, _ := getAny(asObject(e), "jar").(string)
-		path, _ := getAny(asObject(e), "path").(string)
-		where = append(where, jar+"!"+path)
+		if path, _ := getAny(asObject(e), "path").(string); path != "" {
+			jar += "!" + path
+		}
+		where = append(where, jar)
 	}
 	if len(errs) > 3 {
 		where = append(where, "...")
 	}
-	return fmt.Sprintf("%s (%d unreadable: %s)", line, len(errs), strings.Join(where, ", "))
+	return fmt.Sprintf(" (%d unreadable: %s)", len(errs), strings.Join(where, ", "))
 }
 
 func asObject(v any) *index.Object { o, _ := v.(*index.Object); return o }

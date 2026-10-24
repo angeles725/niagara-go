@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/angeles725/niagara-go/internal/fnmatch"
 	"github.com/angeles725/niagara-go/internal/index"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 	"github.com/angeles725/niagara-go/internal/textfold"
@@ -43,13 +42,7 @@ func resolveTypes(mods *index.Object, query string) []typeHit {
 			all = append(all, typeHit{k, r, t})
 		}
 	}
-	rounds := []func(got, want string) bool{
-		func(got, want string) bool { return got == want },
-		func(got, want string) bool { return textfold.Lower(got) == textfold.Lower(want) },
-		fnmatch.Fnmatch,
-		lowerGlob,
-	}
-	for i, match := range rounds {
+	for i, match := range matchRounds {
 		var out []typeHit
 		for _, h := range all {
 			hp, hn, _ := strings.Cut(h.spec(), ":")
