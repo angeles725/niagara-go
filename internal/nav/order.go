@@ -16,11 +16,11 @@ type Group struct{ Name, Title string }
 // the groups that keep a command.
 var Groups = []Group{
 	{"inventory", "Inventory and self-checks"},
-	{"lookup", "Find classes and concepts"},
-	{"source", "Source text, strings and resources"},
-	{"structure", "Types: hierarchy, members, imports"},
+	{"lookup", "Look up classes and concepts"},
+	{"source", "Source text and resources"},
+	{"structure", "Types: hierarchy and implementors"},
 	{"flow", "Call and data flow"},
-	{"domain", "Niagara domain: drivers, servlets, ORDs, topics, BQL, alarms, BOG"},
-	{"security", "Security, licensing and permissions"},
+	{"domain", "Niagara domain: drivers"},
+	{"security", "Security and licensing"},
 	{"audits", "Module audits"},
 }
