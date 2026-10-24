@@ -107,7 +107,7 @@ const epilog = "Examples:\n" +
 	"  %(prog)s type kitControl:BooleanLatch\n" +
 	"  %(prog)s palette BooleanLatch\n" +
 	"  %(prog)s tag ahu\n" +
-	"  %(prog)s lexicon BooleanLatch.displayName --lang fr\n" +
+	"  %(prog)s lexicon WbHtmlView.displayName --lang fr\n" +
 	"  %(prog)s find \"setpoint reference\"\n" +
 	"  %(prog)s devguide-search \"web servlet\"\n" +
 	"  %(prog)s versions add /mnt/c/Niagara/Niagara-4.16.0.1\n"
