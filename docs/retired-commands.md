@@ -31,7 +31,8 @@ recovered from this repository's history (the commit that retired it names the f
 Kept: class (with --jdk), search, package, method, slots (all modes), guide, guide-search,
 devguide, devguide-search, pdf, find, source (with --code, --grep), source-grep, stats,
 coverage (with --doc-jars, --sweep), freshness (with --all), rebuild-all (with --only,
---dry-run, --stamp-only), selftest (with --recall), versions.
+--dry-run, --stamp-only), selftest (with --recall), versions. Added after D32 (2026-10-23/24): module
+(a new command under a retired name, see its row below), type, palette, tag, lexicon.
 
 `coverage` and `rebuild-all` were retired here first and then ported (S11: nh runs the
 reports, gates and index builders of `internal/helpbuild` in process, `docs/helpbuild.md`).
