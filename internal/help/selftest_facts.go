@@ -85,6 +85,18 @@ var indexFacts = []indexFact{
 			}
 			return false
 		}},
+	{"lexicon-index", "lexicon-index.json", "lexicon 'linkcheck.level6' has kitControl's base value and its fr translation",
+		func(sub *Env) error {
+			return sub.Lexicon(LexiconParams{Query: "linkcheck.level6", Module: "kitControl", Lang: "fr"})
+		},
+		func(out string) bool { // a base row from kitControl-rt and an fr row from niagaraLexiconFr-rt
+			base, fr := false, false
+			for _, l := range strings.Split(out, "\n") {
+				base = base || strings.HasPrefix(l, "  base  ") && strings.HasSuffix(l, "  (kitControl-rt.jar!kitControl-rt.lexicon)")
+				fr = fr || strings.HasPrefix(l, "  fr    ") && strings.HasSuffix(l, "  (niagaraLexiconFr-rt.jar!kitControl.lexicon)")
+			}
+			return base && fr
+		}},
 }
 
 // missingNeed is why fact f cannot be checked in this version ("" when it can):

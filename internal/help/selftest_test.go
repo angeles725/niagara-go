@@ -10,7 +10,8 @@ import (
 )
 
 // TestSelftestChecksEveryIndexKind: besides the full-text assertions, selftest checks one
-// stable fact of each lookup kind (lexicon, course, package, class, slots, method, module, palette, tag); a fact
+// stable fact of each lookup kind (lexicon, course, package, class, slots, method, module, palette, tag,
+// lexicon-index); a fact
 // whose index or text source this version lacks (or holds empty) is a SKIP, never a PASS.
 func TestSelftestChecksEveryIndexKind(t *testing.T) {
 	testdata, err := filepath.Abs("testdata")
@@ -19,7 +20,7 @@ func TestSelftestChecksEveryIndexKind(t *testing.T) {
 	}
 	t.Setenv("XDG_CACHE_HOME", t.TempDir())
 	checkout := ftsfixture.Checkout(t, testdata, false)
-	for _, name := range []string{"module-index.json", "palette-index.json", "tag-index.json"} {
+	for _, name := range []string{"module-index.json", "palette-index.json", "tag-index.json", "lexicon-index.json"} {
 		data, err := os.ReadFile(filepath.Join(testdata, "indexes", name))
 		if err != nil {
 			t.Fatal(err)
@@ -39,6 +40,7 @@ func TestSelftestChecksEveryIndexKind(t *testing.T) {
 		"  PASS  module: module 'kitControl-rt' lists its dependency on baja\n",
 		"  PASS  palette: palette 'BooleanLatch' finds it in kitControl-rt's module.palette\n",
 		"  PASS  tag: tag 'hs:ahu' is a Marker in haystack-rt's tags.csv\n",
+		"  PASS  lexicon-index: lexicon 'linkcheck.level6' has kitControl's base value and its fr translation\n",
 		"selftest: all assertions passed (5 skipped: their index or text source is absent or empty).\n",
 	} {
 		if !strings.Contains(out, want) {
@@ -70,62 +72,34 @@ func TestSelftestFactFails(t *testing.T) {
 	}
 }
 
-// TestSelftestModuleFactFails: a module-index.json whose kitControl-rt lost its
-// baja dependency fails the module fact.
-func TestSelftestModuleFactFails(t *testing.T) {
+// TestSelftestInstallFactsFail: an install-built index that lost its fact
+// fails that fact: kitControl-rt without its baja dependency, a palette
+// whose BooleanLatch is another module's, an hs:ahu outside haystack-rt's
+// tags.csv, a linkcheck.level6 without its French translation.
+func TestSelftestInstallFactsFail(t *testing.T) {
 	testdata, err := filepath.Abs("testdata")
 	if err != nil {
 		t.Fatal(err)
 	}
 	t.Setenv("XDG_CACHE_HOME", t.TempDir())
-	checkout := ftsfixture.Checkout(t, testdata, false)
-	wrong := `{"modules": {"kitControl-rt": {"name": "kitControl-rt", "dependencies": [{"name": "control-rt"}]}}}`
-	if err := os.WriteFile(filepath.Join(checkout, "indexes", "module-index.json"), []byte(wrong), 0o644); err != nil {
-		t.Fatal(err)
-	}
-	out, errs, code := run(t, checkout, "--niagara-version", "1.0", "selftest")
-	want := "  FAIL  module: expected: module 'kitControl-rt' lists its dependency on baja\n"
-	if code != 1 || errs != want {
-		t.Errorf("code %d stderr %q stdout:\n%s", code, errs, out)
-	}
-}
-
-// TestSelftestPaletteFactFails: a palette-index.json whose kitControl-rt
-// palette lost BooleanLatch fails the palette fact.
-func TestSelftestPaletteFactFails(t *testing.T) {
-	testdata, err := filepath.Abs("testdata")
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Setenv("XDG_CACHE_HOME", t.TempDir())
-	checkout := ftsfixture.Checkout(t, testdata, false)
-	wrong := `{"palettes": [{"module": "other-rt", "path": "module.palette", "tree": [{"name": "BooleanLatch", "type": "other:BooleanLatch"}]}]}`
-	if err := os.WriteFile(filepath.Join(checkout, "indexes", "palette-index.json"), []byte(wrong), 0o644); err != nil {
-		t.Fatal(err)
-	}
-	out, errs, code := run(t, checkout, "--niagara-version", "1.0", "selftest")
-	want := "  FAIL  palette: expected: palette 'BooleanLatch' finds it in kitControl-rt's module.palette\n"
-	if code != 1 || errs != want {
-		t.Errorf("code %d stderr %q stdout:\n%s", code, errs, out)
-	}
-}
-
-// TestSelftestTagFactFails: a tag-index.json whose hs:ahu is not a Marker
-// of haystack-rt's tags.csv fails the tag fact.
-func TestSelftestTagFactFails(t *testing.T) {
-	testdata, err := filepath.Abs("testdata")
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Setenv("XDG_CACHE_HOME", t.TempDir())
-	checkout := ftsfixture.Checkout(t, testdata, false)
-	wrong := `{"files": [], "tags": [{"dict": "hs", "name": "ahu", "file": "other-rt.jar!data/tags.csv", "kind": "Marker"}]}`
-	if err := os.WriteFile(filepath.Join(checkout, "indexes", "tag-index.json"), []byte(wrong), 0o644); err != nil {
-		t.Fatal(err)
-	}
-	out, errs, code := run(t, checkout, "--niagara-version", "1.0", "selftest")
-	want := "  FAIL  tag: expected: tag 'hs:ahu' is a Marker in haystack-rt's tags.csv\n"
-	if code != 1 || errs != want {
-		t.Errorf("code %d stderr %q stdout:\n%s", code, errs, out)
+	for _, tt := range []struct{ index, wrong, want string }{
+		{"module-index.json", `{"modules": {"kitControl-rt": {"name": "kitControl-rt", "dependencies": [{"name": "control-rt"}]}}}`,
+			"  FAIL  module: expected: module 'kitControl-rt' lists its dependency on baja\n"},
+		{"palette-index.json", `{"palettes": [{"module": "other-rt", "path": "module.palette", "tree": [{"name": "BooleanLatch", "type": "other:BooleanLatch"}]}]}`,
+			"  FAIL  palette: expected: palette 'BooleanLatch' finds it in kitControl-rt's module.palette\n"},
+		{"tag-index.json", `{"files": [], "tags": [{"dict": "hs", "name": "ahu", "file": "other-rt.jar!data/tags.csv", "kind": "Marker"}]}`,
+			"  FAIL  tag: expected: tag 'hs:ahu' is a Marker in haystack-rt's tags.csv\n"},
+		{"lexicon-index.json", `{"files": [{"jar": "kitControl-rt.jar", "path": "kitControl-rt.lexicon", "module": "kitControl",
+			"language": "", "overrides": "", "entries": [["linkcheck.level6", "Level 6"]]}]}`,
+			"  FAIL  lexicon-index: expected: lexicon 'linkcheck.level6' has kitControl's base value and its fr translation\n"},
+	} {
+		checkout := ftsfixture.Checkout(t, testdata, false)
+		if err := os.WriteFile(filepath.Join(checkout, "indexes", tt.index), []byte(tt.wrong), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		out, errs, code := run(t, checkout, "--niagara-version", "1.0", "selftest")
+		if code != 1 || errs != tt.want {
+			t.Errorf("%s: code %d stderr %q stdout:\n%s", tt.index, code, errs, out)
+		}
 	}
 }

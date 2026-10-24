@@ -112,11 +112,11 @@ func TestLexiconKeysShownAreCapped(t *testing.T) {
 	defer func(n int) { lexiconKeysShown = n }(lexiconKeysShown)
 	lexiconKeysShown = 1
 	got, _ := runLexicon(t, LexiconParams{Query: "*"})
-	if !strings.Contains(got, "(6 keys, 9 matching entries)") || !strings.Contains(got, "\n... and 5 more keys (--json lists them all)\n") {
+	if !strings.Contains(got, "(7 keys, 11 matching entries)") || !strings.Contains(got, "\n... and 6 more keys (--json lists them all)\n") {
 		t.Errorf("got:\n%s", got)
 	}
 	got, _ = runLexicon(t, LexiconParams{Query: "*", JSON: true})
-	if strings.Count(got, `"key": `) != 6 {
+	if strings.Count(got, `"key": `) != 7 {
 		t.Errorf("json does not list every key:\n%s", got)
 	}
 }
@@ -146,7 +146,7 @@ func TestLexiconJSON(t *testing.T) {
 // or with both, is a usage error.
 func TestLexiconMiss(t *testing.T) {
 	got, misses := runLexicon(t, LexiconParams{Query: "nope"})
-	if misses != 1 || !strings.Contains(got, "lexicon-index.json: 4 lexicon files (2 base, 2 translations), 9 entries (1 unreadable: broken-rt.jar)") {
+	if misses != 1 || !strings.Contains(got, "lexicon-index.json: 4 lexicon files (2 base, 2 translations), 11 entries (1 unreadable: broken-rt.jar)") {
 		t.Errorf("misses %d, got:\n%s", misses, got)
 	}
 	e := &Env{BaseDir: t.TempDir(), Out: &bytes.Buffer{}}

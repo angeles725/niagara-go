@@ -309,7 +309,7 @@ func TestStatsCountsLexiconIndex(t *testing.T) {
 	if err := (&Env{BaseDir: dir, Out: &out}).Stats(false); err != nil {
 		t.Fatal(err)
 	}
-	want := "  lexicon-index.json          4 files (2 base, 2 translations; 2 modules, 1 languages; 9 entries, 6 distinct module keys; 1 unreadable)\n"
+	want := "  lexicon-index.json          4 files (2 base, 2 translations; 2 modules, 1 languages; 11 entries, 7 distinct module keys; 1 unreadable)\n"
 	if !strings.Contains(out.String(), want) {
 		t.Errorf("stats lacks %q:\n%s", want, out.String())
 	}
@@ -323,8 +323,8 @@ func TestStatsCountsLexiconIndex(t *testing.T) {
       "translations": 2,
       "modules": 2,
       "languages": 1,
-      "entries": 9,
-      "distinct_module_keys": 6,
+      "entries": 11,
+      "distinct_module_keys": 7,
       "unreadable": 1
     }`
 	if !strings.Contains(out.String(), want) {
