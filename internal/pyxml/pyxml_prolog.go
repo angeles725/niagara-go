@@ -150,6 +150,7 @@ func (p *xparser) notAllowed(s int) error {
 const (
 	tokOther = iota
 	tokPERef
+	tokNmtoken
 )
 
 // prologToken scans one DTD token at i (not white space, not '<'): an invalid or cut token is
@@ -160,7 +161,7 @@ func (p *xparser) prologToken(i int) (int, int, error) {
 	case c == bad || !isXMLChar(c):
 		return i, 0, p.fail(i, errInvalid)
 	case isNameChar(c):
-		return p.afterName(p.scanName(i), ">)[%,|", true)
+		return p.prologName(i)
 	case c == '"' || c == '\'':
 		e := i + 1
 		for ; !p.eof(e) && p.r[e] != c; e++ {
@@ -179,10 +180,10 @@ func (p *xparser) prologToken(i int) (int, int, error) {
 		if c == '%' && isS(p.r[i+1]) {
 			return i + 1, tokOther, nil
 		}
-		if !isNameStart(p.r[i+1]) {
+		if !p.qStart(p.r[i+1]) {
 			return i, 0, p.fail(i+1, errInvalid)
 		}
-		e := p.scanName(i + 1)
+		e := p.scanNC(i + 1)
 		if c == '#' {
 			return p.afterName(e, ")|>%,", false)
 		}
@@ -199,6 +200,33 @@ func (p *xparser) prologToken(i int) (int, int, error) {
 		return i + 1, tokOther, nil
 	}
 	return i, 0, p.fail(i, errInvalid)
+}
+
+// prologName scans a name token at i: an NMTOKEN when it does not start with a name start
+// character. Under namespace processing a ':' makes a name prefixed; a ':' at the start, a
+// second one or one not followed by a name character makes it an NMTOKEN, and a name cut right
+// after its ':' is unclosed. An NMTOKEN takes no occurrence indicator.
+func (p *xparser) prologName(i int) (int, int, error) {
+	nmtoken, prefixed := !p.qStart(p.r[i]), false
+	e := i + 1
+	for ; e < p.n && isNameChar(p.r[e]); e++ {
+		switch {
+		case !p.mode.ETree || p.r[e] != ':' || nmtoken:
+		case prefixed:
+			nmtoken = true
+		case p.eof(e + 1):
+			return i, 0, p.fail(i, errUnclosed)
+		case p.r[e+1] != ':' && isNameChar(p.r[e+1]):
+			prefixed = true
+		default:
+			nmtoken = true
+		}
+	}
+	end, _, err := p.afterName(e, ">)[%,|", !nmtoken)
+	if nmtoken {
+		return end, tokNmtoken, err
+	}
+	return end, tokOther, err
 }
 
 // afterName checks the character ending a name-like token at e: white space, the end of

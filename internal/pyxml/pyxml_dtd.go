@@ -22,9 +22,12 @@ func (p *xparser) doctype(i int) (int, error) {
 	if !isNameStart(p.r[i]) {
 		return p.unexpected(i)
 	}
-	e, _, err := p.prologToken(i)
+	e, kind, err := p.prologToken(i)
 	if err != nil {
 		return i, err
+	}
+	if kind == tokNmtoken {
+		return i, p.fail(i, errSyntax) // a DOCTYPE name is a name, not an NMTOKEN
 	}
 	if i = p.skipS(e); p.eof(i) {
 		return i, p.failEOF()

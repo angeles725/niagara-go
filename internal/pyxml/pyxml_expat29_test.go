@@ -56,3 +56,29 @@ func TestExpat29ASCIIKeyword(t *testing.T) {
 		{"<r/><!é>", "not well-formed (invalid token): line 1, column 6", "not well-formed (invalid token): line 1, column 6"},
 	})
 }
+
+// A prolog name is an NMTOKEN when it does not start with a name start character; under
+// namespace processing a ':' makes it prefixed, or an NMTOKEN when it leads, repeats or is
+// not followed by a name character, and a name cut right after its ':' is unclosed. An
+// NMTOKEN takes no occurrence indicator and is no DOCTYPE name; '#' and '%' names stop at ':'.
+func TestExpat29PrologNames(t *testing.T) {
+	checkExpat29(t, []expat29Case{
+		{":?<r/>", "syntax error: line 1, column 0", "not well-formed (invalid token): line 1, column 1"},
+		{"a:b:c?<r/>", "syntax error: line 1, column 0", "not well-formed (invalid token): line 1, column 5"},
+		{"a:", "syntax error: line 1, column 0", "unclosed token: line 1, column 0"},
+		{"a:b:", "syntax error: line 1, column 0", "syntax error: line 1, column 0"},
+		{"a::b<r/>", "not well-formed (invalid token): line 1, column 4", "not well-formed (invalid token): line 1, column 4"},
+		{"a:b:<r/>", "not well-formed (invalid token): line 1, column 4", "not well-formed (invalid token): line 1, column 4"},
+		{"a:b<r/>", "not well-formed (invalid token): line 1, column 3", "not well-formed (invalid token): line 1, column 3"},
+		{"1a?<r/>", "not well-formed (invalid token): line 1, column 2", "not well-formed (invalid token): line 1, column 2"},
+		{"#a:b<r/>", "not well-formed (invalid token): line 1, column 4", "not well-formed (invalid token): line 1, column 2"},
+		{"#a:<r/>", "not well-formed (invalid token): line 1, column 3", "not well-formed (invalid token): line 1, column 2"},
+		{"%a:b<r/>", "not well-formed (invalid token): line 1, column 4", "not well-formed (invalid token): line 1, column 2"},
+		{"<r/>a:", "junk after document element: line 1, column 4", "unclosed token: line 1, column 4"},
+		{"<!DOCTYPE :a><r/>", "", "syntax error: line 1, column 10"},
+		{"<!DOCTYPE a:><r/>", "", "syntax error: line 1, column 10"},
+		{"<!DOCTYPE a:b:c><a/>", "", "syntax error: line 1, column 10"},
+		{"<!DOCTYPE a:b><a:b xmlns:a='u'/>", "", ""},
+		{"<!DOCTYPE r [%a:b;]><r/>", "", "not well-formed (invalid token): line 1, column 15"},
+	})
+}
