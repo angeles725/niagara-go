@@ -28,6 +28,7 @@ SUMMARY 1.0.0.0
     devguide-examples        1  developer example sources
     docs-text                0  PDF manuals  (none: no docs/ PDFs here and no registered version has any)
     course-text              0  developer course pages
+    module-examples          0  module jar templates (.px .hbs .vm .bog)
     lexicon-text             1
   gates (full reports: versions/1.0.0.0/gates.log):
     coverage --doc-jars  exit 1  FAIL - 6 unexplained entries
@@ -537,6 +538,7 @@ SUMMARY 1.0.0.0
     devguide-examples        1  developer example sources
     docs-text                0  PDF manuals  (none: no docs/ PDFs here and no registered version has any)
     course-text              0  developer course pages
+    module-examples          0  module jar templates (.px .hbs .vm .bog)
     lexicon-text             1
   gates (full reports: versions/1.0.0.0/gates.log):
     coverage --doc-jars  exit 1  FAIL - 6 unexplained entries

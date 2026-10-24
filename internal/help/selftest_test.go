@@ -11,7 +11,7 @@ import (
 
 // TestSelftestChecksEveryIndexKind: besides the full-text assertions, selftest checks one
 // stable fact of each lookup kind (lexicon, course, package, class, slots, method, module, palette, tag,
-// lexicon-index, bytecode-index); a fact
+// lexicon-index, bytecode-index, example); a fact
 // whose index or text source this version lacks (or holds empty) is a SKIP, never a PASS.
 func TestSelftestChecksEveryIndexKind(t *testing.T) {
 	testdata, err := filepath.Abs("testdata")
@@ -42,7 +42,8 @@ func TestSelftestChecksEveryIndexKind(t *testing.T) {
 		"  PASS  tag: tag 'hs:ahu' is a Marker in haystack-rt's tags.csv\n",
 		"  PASS  lexicon-index: lexicon 'linkcheck.level6' has kitControl's base value and its fr translation\n",
 		"  PASS  bytecode-index: class BBooleanLatch --bytecode extends BLatch and declares facets, out and in\n",
-		"selftest: all assertions passed (5 skipped: their index or text source is absent or empty).\n",
+		"  SKIP  example: module-examples/ is absent in this version\n",
+		"selftest: all assertions passed (6 skipped: their index or text source is absent or empty).\n",
 	} {
 		if !strings.Contains(out, want) {
 			t.Errorf("missing %q", want)
@@ -105,6 +106,35 @@ func TestSelftestInstallFactsFail(t *testing.T) {
 		out, errs, code := run(t, checkout, "--niagara-version", "1.0", "selftest")
 		if code != 1 || errs != tt.want {
 			t.Errorf("%s: code %d stderr %q stdout:\n%s", tt.index, code, errs, out)
+		}
+	}
+}
+
+// TestSelftestExampleFact: the module-examples fact passes when find ranks web-rt's
+// loginN4.vm first among the module-examples hits, and fails when another template is first.
+func TestSelftestExampleFact(t *testing.T) {
+	testdata, err := filepath.Abs("testdata")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("XDG_CACHE_HOME", t.TempDir())
+	for _, tt := range []struct{ title, want string }{
+		{"web-rt loginN4.vm", ""},
+		{"other-rt loginN4.vm", "  FAIL  example: expected: find 'loginN4' ranks web-rt's loginN4.vm first among module-examples hits\n"},
+	} {
+		checkout := ftsfixture.Checkout(t, testdata, false)
+		page := filepath.Join(checkout, "module-examples", "web-rt", "com", "tridium", "web", "rc", "loginN4.vm")
+		if err := os.MkdirAll(filepath.Dir(page), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		text := "TITLE: " + tt.title + "\nMODULE: web-rt\nENTRY: com/tridium/web/rc/loginN4.vm\n\n<link href=\"/login/loginN4.css\">\n"
+		if err := os.WriteFile(page, []byte(text), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		out, errs, code := run(t, checkout, "--niagara-version", "1.0", "selftest")
+		pass := "  PASS  example: find 'loginN4' ranks web-rt's loginN4.vm first among module-examples hits\n"
+		if tt.want == "" && (code != 0 || !strings.Contains(out, pass)) || tt.want != "" && (code != 1 || !strings.HasSuffix(errs, "\n"+tt.want)) { // after the index build lines
+			t.Errorf("%s: code %d stderr %q stdout:\n%s", tt.title, code, errs, out)
 		}
 	}
 }

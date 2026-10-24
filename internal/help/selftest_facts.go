@@ -110,6 +110,11 @@ var indexFacts = []indexFact{
 			}
 			return strings.Contains(out, "\nSUPER: com.tridium.kitControl.util.BLatch") && declared["facets"] && declared["out"] && declared["in"]
 		}},
+	{"example", "module-examples", "find 'loginN4' ranks web-rt's loginN4.vm first among module-examples hits",
+		findFact("loginN4"),
+		func(out string) bool {
+			return firstHit(out, "module-examples") == "[module-examples] web-rt loginN4.vm"
+		}},
 }
 
 // missingNeed is why fact f cannot be checked in this version ("" when it can):

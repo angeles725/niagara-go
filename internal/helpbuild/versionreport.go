@@ -43,6 +43,7 @@ var summaryKinds = [][2]string{
 	{"devguide-examples", "developer example sources"},
 	{"docs-text", "PDF manuals"},
 	{"course-text", "developer course pages"},
+	{"module-examples", "module jar templates (.px .hbs .vm .bog)"},
 }
 
 // runGates is run_gates: DocJarCoverage, then RunSweep, each into a buffer
