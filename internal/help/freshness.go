@@ -72,21 +72,8 @@ func computeFingerprint(baseDir string) map[string]*dirPrint {
 }
 
 // derivedNames are the folders freshness checks against the stamp time after the raw
-// sources: the text sources of the full-text index (fts.Labels, the one source registry)
-// that are not raw sources themselves (source/ is), and indexes/.
-var derivedNames = func() []string {
-	raw := map[string]bool{}
-	for _, d := range freshnessDirs {
-		raw[d] = true
-	}
-	var out []string
-	for _, l := range fts.Labels {
-		if !raw[l] {
-			out = append(out, l)
-		}
-	}
-	return append(out, "indexes")
-}()
+// sources (fts.DerivedNames).
+var derivedNames = fts.DerivedNames(freshnessDirs)
 
 // derived is what freshness reads of one derived folder: its files, their size and how
 // many of its files and folders (an added or removed file touches its folder) were
@@ -96,9 +83,9 @@ type derived struct {
 	files, bytes, newer int64
 }
 
-// derivedPrint walks one derived folder of root with statcache stamps; nil when absent.
-// indexes/ keeps its top-level JSON indexes but the manifest: fulltext.sqlite is checked
-// against its own fingerprint (fulltextLine), retired indexes are reported apart.
+// derivedPrint walks one derived folder of root (fts.WalkDerived) with statcache stamps;
+// nil when absent. fulltext.sqlite is checked against its own fingerprint (fulltextLine),
+// retired indexes are reported apart.
 func derivedPrint(root, name string, stamped int64) *derived {
 	dir := filepath.Join(root, name)
 	if !pycompat.IsDir(dir) {
@@ -111,16 +98,7 @@ func derivedPrint(root, name string, stamped int64) *derived {
 	if name != "indexes" && statcache.Stat(dir).MtimeNs > stamped {
 		fp.newer++
 	}
-	fts.WalkFiles(dir, func(path string) {
-		rel, err := filepath.Rel(dir, path)
-		if err != nil {
-			return
-		}
-		rel = filepath.ToSlash(rel)
-		if name == "indexes" && (strings.Contains(rel, "/") || !strings.HasSuffix(rel, ".json") || rel == ".manifest.json" ||
-			isRetiredIndex(rel)) {
-			return
-		}
+	fts.WalkDerived(dir, name, func(path, _ string) {
 		st := statcache.Stat(path)
 		if !st.Exists() {
 			return
