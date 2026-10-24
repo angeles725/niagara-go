@@ -122,3 +122,35 @@ func TestSweepCountsTagDictionaries(t *testing.T) {
 		t.Errorf("%d .csv entries out of scope, want webChart-ux's only", n)
 	}
 }
+
+// TestSweepCountsRegisteredClasses: the class file of each type an installed
+// jar's module.xml registers (module-index.json) is no longer outside the
+// documentation scope: indexed when bytecode-index.json holds it, UNCLASSIFIED
+// when it does not or could not read it; other classes stay out of scope.
+func TestSweepCountsRegisteredClasses(t *testing.T) {
+	install, root := t.TempDir(), t.TempDir()
+	testkit.WriteJar(t, filepath.Join(install, "modules", "a-rt.jar"), [2]string{"META-INF/module.xml", `<module name="a-rt"/>`},
+		[2]string{"a/BOne.class", "x"}, [2]string{"a/BTwo.class", "x"}, [2]string{"a/BThree.class", "x"},
+		[2]string{"a/Helper.class", "x"})
+	testkit.WriteFile(t, filepath.Join(root, "indexes", moduleIndexName), []byte(`{"jars": 1, "jar_bytes": 0,
+	 "modules": {"a-rt": {"name": "a-rt", "jar": "a-rt.jar", "types": [{"name": "One", "class": "a.BOne"},
+	   {"name": "Two", "class": "a.BTwo"}, {"name": "Three", "class": "a.BThree"}]}},
+	 "errors": [], "without_descriptor": []}`))
+	testkit.WriteFile(t, filepath.Join(root, "indexes", bytecodeIndexName), []byte(`{"jars": 1, "jar_bytes": 0,
+	 "classes": [{"class": "a.BOne", "jar": "a-rt.jar"}],
+	 "errors": [{"jar": "a-rt.jar", "path": "a/BTwo.class", "error": "classfile: bad magic"}]}`))
+	res := scanOK(t, install, root, SweepOptions{Rules: sweepTestRules(t)})
+	if row := res.Rows["modules/"]; row.DocLike != 4 || row.Indexed != 2 || row.Unclassified != 2 {
+		t.Errorf("modules/ row = %+v, want 4 doc-like, 2 indexed, 2 unclassified", *row)
+	}
+	want := []gap{
+		{"modules/a-rt.jar", "a/BTwo.class", "registered class bytecode-index.json could not read: classfile: bad magic"},
+		{"modules/a-rt.jar", "a/BThree.class", "registered class not in bytecode-index.json (rebuild-all builds it)"},
+	}
+	if !slices.Equal(res.Unclassified, want) {
+		t.Errorf("unclassified = %q", res.Unclassified)
+	}
+	if n := res.OutOfScope[".class"]; n != 1 {
+		t.Errorf("%d .class entries out of scope, want the unregistered one", n)
+	}
+}

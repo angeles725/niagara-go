@@ -137,6 +137,9 @@ type ClassParams struct {
 	Name    string
 	Verbose bool
 	JDK     bool // the separate JDK index; members rendered from the .bajadoc XML
+	// Bytecode shows the class from bytecode-index.json (its class file)
+	// even when it has javadoc.
+	Bytecode bool
 }
 
 // Class looks up a class by simple, nested or qualified name (cmd_class):
@@ -144,6 +147,12 @@ type ClassParams struct {
 func (e *Env) Class(p ClassParams) error {
 	if pycompat.Strip(p.Name) == "" { // invalid input like find "" (exit 2), not a miss
 		return usageError("class needs a class name (got '" + p.Name + "')")
+	}
+	if p.Bytecode {
+		if ok, err := e.classFromBytecode(p.Name, false); ok || err != nil {
+			return err
+		}
+		return e.reportMiss("class", p.Name, "bytecode")
 	}
 	idx, err := e.loadIndex(classIndexName(p.JDK), false)
 	if err != nil {
@@ -158,12 +167,19 @@ func (e *Env) Class(p ClassParams) error {
 			if ok, err := e.classFromSource(p.Name); ok || err != nil {
 				return err
 			}
+			if ok, err := e.classFromBytecode(p.Name, true); ok || err != nil {
+				return err
+			}
 		}
 		simple := p.Name[strings.LastIndex(p.Name, ".")+1:]
 		if close := suggest(idx.Keys(), simple, 5); len(close) > 0 {
 			fmt.Fprintf(e.Out, "Did you mean: %s\n", strings.Join(close, ", "))
 		}
-		return e.reportMiss("class", p.Name, classScope(p.JDK))
+		scope := "class" // the javadoc and the class files of the registered classes
+		if p.JDK {
+			scope = "jdk"
+		}
+		return e.reportMiss("class", p.Name, scope)
 	}
 	if len(hits) > 1 {
 		fmt.Fprintf(e.Out, "%d classes named '%s':\n", len(hits), p.Name)

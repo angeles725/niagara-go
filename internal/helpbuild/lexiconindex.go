@@ -2,7 +2,6 @@ package helpbuild
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/angeles725/niagara-go/internal/helpbuild/modulexml"
 	"github.com/angeles725/niagara-go/internal/helpbuild/pyfs"
@@ -55,10 +54,7 @@ func lexiconModule(module, overrides string) string {
 // resource; a descriptor that cannot be read is an errors row and the module
 // is named after the jar.
 func (x *lexiconIndex) descriptorOf(res *textResult, name string, members []jarMember) (string, map[string]modulexml.Lexicon) {
-	module := strings.TrimSuffix(name, ".jar")
-	if i := strings.LastIndexByte(module, '-'); i > 0 {
-		module = module[:i]
-	}
+	module := moduleOf(name, nil)
 	for _, m := range members {
 		if m.name != modulexml.Member {
 			continue

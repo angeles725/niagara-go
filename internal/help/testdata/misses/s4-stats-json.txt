@@ -36,6 +36,9 @@
     },
     "lexicon-index": {
       "absent": true
+    },
+    "bytecode-index": {
+      "absent": true
     }
   },
   "text_dirs": {

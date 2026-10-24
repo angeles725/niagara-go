@@ -50,11 +50,11 @@ func TestModuleIndexFreshness(t *testing.T) {
 	}
 }
 
-// TestInstallIndexFreshness: palette-index.json, tag-index.json and
-// lexicon-index.json are compared with the install the same way, each under
+// TestInstallIndexFreshness: palette-index.json, tag-index.json,
+// lexicon-index.json and bytecode-index.json are compared with the install the same way, each under
 // its own name, and freshness checks every one.
 func TestInstallIndexFreshness(t *testing.T) {
-	for _, name := range []string{paletteIndexName, tagIndexName, lexiconIndexName} {
+	for _, name := range []string{paletteIndexName, tagIndexName, lexiconIndexName, bytecodeIndexName} {
 		install, root := t.TempDir(), t.TempDir()
 		write(t, filepath.Join(install, "modules", "a-rt.jar"), "123")
 		write(t, filepath.Join(root, "indexes", name), `{"jars": 1, "jar_bytes": 3, "files": []}`)

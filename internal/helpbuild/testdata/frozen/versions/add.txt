@@ -7,7 +7,7 @@ extracted 39 files (1,084 bytes)
   COLLISION guides/thing-ux/rc/notes.md (thing-ux.jar overwritten by thing-ux.jar)
   SKIP  inheritance_builder.py     -> inheritance.json  (source 'bajadoc-clean/' absent)
   SKIP  method_indexer.py          -> method-index.json  (source 'bajadoc-clean/' absent)
-Ran 18, skipped 2, failed 0.
+Ran 19, skipped 2, failed 0.
   EMPTY inheritance.json (its source is not in this install)
   EMPTY method-index.json (its source is not in this install)
 fidelity 1.0.0.0: jars 13 checked 39 sha256-exact 38 eol-only 0 mismatched 1 missing 0
@@ -36,7 +36,7 @@ RESULT: NOT READY - see the gate reports above
 
 # exit 1
 # tree
-@@ 0,0 0,362
+@@ 0,0 0,365
 + fulltext.sqlite:
 + [meta fingerprint engine=3|devguide-clean=<dir>/repo/versions/1.0.0.0/devguide-clean:3:135:<mtime>:<sha1>|guides-clean=<dir>/repo/versions/1.0.0.0/guides-clean:19:1068:<mtime>:<sha1>|source=<dir>/repo/versions/1.0.0.0/source:1:24:<mtime>:<sha1>|devguide-rc=<dir>/repo/versions/1.0.0.0/devguide-rc:2:26:<mtime>:<sha1>|devguide-examples=<dir>/repo/versions/1.0.0.0/devguide-examples:1:9:<mtime>:<sha1>|lexicon-text=<dir>/repo/versions/1.0.0.0/lexicon-text:1:95:<mtime>:<sha1>   ]
 + [docs 1 devguide-clean changes37.txt changes37.txt 4 0]
@@ -116,8 +116,10 @@ RESULT: NOT READY - see the gate reports above
 + tag-index.json: 0 tag rows (0 distinct tags), 0 protos, 0 groups, 0 relations, 0 rules, 0 migrations from 0 files in 15 jars (0 errors) -> <dir>/repo/versions/1.0.0.0/indexes/tag-index.json
 +   RUN   lexicon_index_builder      -> lexicon-index.json
 + lexicon-index.json: 1 lexicon files (1 base, 0 translations) of 1 modules in 0 languages, 1 entries (1 distinct module keys) from 15 jars (1 errors) -> <dir>/repo/versions/1.0.0.0/indexes/lexicon-index.json
++   RUN   bytecode_index_builder     -> bytecode-index.json
++ bytecode-index.json: 0 of 0 registered classes (0 of 0 registered types; 0 registered classes unreadable), 0 slots (0 by annotation, 0 by field) from 15 jars (1 errors) -> <dir>/repo/versions/1.0.0.0/indexes/bytecode-index.json
 + 
-+ Ran 18, skipped 2, failed 0.
++ Ran 19, skipped 2, failed 0.
 + Manifest re-stamped. Run 'freshness' to confirm FRESH.
 + data root:
 + bajadoc d--------- 755
@@ -334,6 +336,7 @@ RESULT: NOT READY - see the gate reports above
 + guides-clean/workbench-wb/res/x d--------- 755
 + guides-clean/workbench-wb/res/x/home.txt ---------- 644 56 d6cd230b314fb2ed83814ec956f777908735e84faba7152a459101e49662eb0c
 + indexes d--------- 755
++ indexes/bytecode-index.json ---------- 644 109 f5c9d00096d619deb97d60bda4966f1871b9381d1681a498694bb60c1745f17e
 + indexes/class-index.json ---------- 644 2 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a
 + indexes/devguide-toc.json ---------- 644 20 6bdcb024aaaf24a6ad3986b5fdcde3e032796ee1a2b1981423cb40da9a574c37
 + indexes/guides-index.json ---------- 644 1157 6004758efb57e1bc870c3a083112194ddf70e6e721d832a443037320a59daacc
@@ -396,10 +399,10 @@ RESULT: NOT READY - see the gate reports above
 +     "devguide-examples": "a41ffedcc3526bda1b914657c10be53ae4571eb4a12c7d87ddce609ab78077da",
 +     "package-text": null,
 +     "lexicon-text": "0b849996c17ea29efd3455627350fff6805f0ae18286eaa626b2256a8bf75d72",
-+     "indexes": "d469cd06cf3678ad9cfae24f8f5ed3545139fb41516abeb78eec5b0a14976512"
++     "indexes": "a0c29a484952680acef18fc8b3ebf54d1f3b42084edc0edebb34af446782fb3c"
 +   }
 + }
-@@ 1,1 363,380
+@@ 1,1 366,383
 + .cache d--------- 755
 + .cache/jar-listings d--------- 755
 + .cache/jar-listings/<install hash>.json ---------- 644 <size> <sha256>
@@ -510,7 +513,7 @@ extracted 39 files (1,084 bytes)
   COLLISION guides/thing-ux/rc/notes.md (thing-ux.jar overwritten by thing-ux.jar)
   SKIP  inheritance_builder.py     -> inheritance.json  (source 'bajadoc-clean/' absent)
   SKIP  method_indexer.py          -> method-index.json  (source 'bajadoc-clean/' absent)
-Ran 18, skipped 2, failed 0.
+Ran 19, skipped 2, failed 0.
   EMPTY inheritance.json (its source is not in this install)
   EMPTY method-index.json (its source is not in this install)
 fidelity 1.0.0.0: jars 13 checked 39 sha256-exact 38 eol-only 0 mismatched 1 missing 0
@@ -539,16 +542,16 @@ RESULT: NOT READY - see the gate reports above
 
 # exit 1
 # tree
-@@ 181,182 181,182
+@@ 183,184 183,184
 - | INSTALL SWEEP 1.0.0.0 (16 jars under <dir>/install; 10 listed anew, the rest from the jar-listing cache)
 + | INSTALL SWEEP 1.0.0.0 (16 jars under <dir>/install; 0 listed anew, the rest from the jar-listing cache)
-@@ 299,300 299,300
+@@ 302,303 302,303
 - indexes/guides-index.json ---------- 644 1157 6004758efb57e1bc870c3a083112194ddf70e6e721d832a443037320a59daacc
 + indexes/guides-index.json ---------- 644 1236 155614e109f7600dd3ba1d6a6f76698d20fef8baab9d11664d70c1782bd24e43
-@@ 359,360 359,360
--     "indexes": "d469cd06cf3678ad9cfae24f8f5ed3545139fb41516abeb78eec5b0a14976512"
-+     "indexes": "4eeb2f4878497e0720df40f04a4f7f9ad659979a31639972d58e73d599672885"
-@@ 367,368 367,368
+@@ 362,363 362,363
+-     "indexes": "a0c29a484952680acef18fc8b3ebf54d1f3b42084edc0edebb34af446782fb3c"
++     "indexes": "3487e07cf634da97d8665da60031884e29b06f3560566b0a85d29ed4cc686e38"
+@@ 370,371 370,371
 - versions/1.0.0.0.manifest.json ---------- 644 {
  "version": "1.0.0.0",
  "label": "install",
@@ -707,7 +710,7 @@ RESULT: NOT READY - see the gate reports above
   }
  ]
 }
-@@ 373,374 373,374
+@@ 376,377 376,377
 - |       "label": "install",
 + |       "label": "Synthetic \u00f1",
 ## <dir>/install/. --id 1.0.0.0

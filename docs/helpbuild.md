@@ -1421,6 +1421,76 @@ entries of 382, 4,941 help and 18,044 label rows; the 5 more entries are empty v
 the shipped files): on the 4.3 scratch copy it fails on exactly those 382 lexicons without
 `lexicon-index.json` and passes with it.
 
+## Class files: bytecode-index.json
+
+bajadoc documents only part of what an install registers: of the 8,798 types the 4.15
+module.xml files register, 3,994 have a `class-index.json` entry (4.14: 4,085 of 14,193;
+4.13: 3,865 of 8,749; 4.3: 3,363 of 6,341). `bytecode_index_builder` (`bytecodeindex.go`,
+rows in `bytecoderows.go`), the step after `lexicon_index_builder`, reads the class file of
+every registered type with `internal/helpbuild/classfile` and writes
+`indexes/bytecode-index.json` on one line:
+
+    {"jars": N, "jar_bytes": B,
+     "classes": [{"class", "jar", "types", "access", "super", "interfaces", "fields",
+                  "methods", "slots": [{"name", "kind", "type", "return_type", "default",
+                                        "flags", "flag_letters", "override", "via"}]}],
+     "errors": [{"jar", "path", "error"}]}
+
+Only the classes a jar's own `META-INF/module.xml` registers are read (one zip open per jar:
+`membersOf` reads the descriptor, then exactly those members), never the other classes of
+the install. `types` are the `module:Type` names registering the class (`moduleOf`: the
+descriptor's `moduleName`). Class names are dotted; `super` is the direct superclass only,
+`""` for `java.lang.Object`; `fields` and `methods` are the public ones the class declares (a
+method as name + JVM descriptor). `slots` are `classfile.NiagaraSlots`: the Niagara slot
+annotations (CLASS retention, so read from `RuntimeInvisibleAnnotations`) in annotation
+order, then the public static final Property/Action/Topic fields no annotation names (`via`
+`field`: only kind and name are known; 4.3 classes predate the annotations and are almost
+all field-only). `flags` is the decimal number javac folds the flags element into and
+`flag_letters` its Slot Sheet letters (`niagaraannot.EncodeFlags`); `override` marks a slot
+that re-declares an inherited one. Inherited slots are not stored: nh walks the supers. A
+registered class the jar lacks or that cannot be parsed, a corrupt jar and an unreadable
+descriptor are `errors` rows and `WARNING: bytecode_index_builder: ...` lines, never a
+silent skip. The builder line names every count apart: `N of R registered classes (C of T
+registered types; U registered classes unreadable), S slots (A by annotation, F by field)
+from J jars (E errors)`.
+
+Reader (`internal/help`, `bytecode.go`, `bytecoderows.go`):
+
+- `nh class <Name>` falls back, after `source-index.json`, to the class file: CLASS,
+  PACKAGE, TYPES, ACCESS, SUPER (the chain of supers the index holds, then the first it does
+  not), INTERFACES, SLOTS (declared, then `inherited from X` for each super, a slot a nearer
+  class re-declares shown once) and the public METHODS, every line tagged `[bytecode]`.
+  `nh class <Name> --bytecode` shows that view for any registered class, javadoc or not. A
+  class miss names `bytecode-index.json` in its scope (scope `class`; `--bytecode` misses in
+  scope `bytecode`).
+- `nh type` prints, under the DOCS line of a type without javadoc, `BYTECODE:` with the
+  class file it holds (declared slot count and the `class --bytecode` command), the error it
+  could not read it with, or that it is not indexed; `--json` adds `bytecode_index`. Every
+  `nh type` now loads the index (about 0.2 s more on 4.14's 18.6 MB).
+- `freshness` compares its jar count and bytes with the install; `stats` prints
+  `bytecode-index.json N classes (T registered types; S slots: A by annotation, F by field; U
+  registered classes unreadable, J jars or descriptors unreadable)`; `selftest` checks that
+  `class com.tridium.kitControl.util.BBooleanLatch --bytecode` extends BLatch and declares
+  facets, out and in (true on 4.3, 4.13, 4.14 and 4.15).
+- `coverage --sweep` checks, in every installed jar, the class file of each type its
+  module.xml registers (`module-index.json`) against the index (`heldGap`); the other
+  classes stay out of scope, counted by type.
+
+Built on 2026-10-24 into scratch data roots (symlinks to the corpus, `build.log` and the
+manifests copied; the live corpus untouched) with `rebuild-all --only bytecode_index_builder`:
+
+| Install | registered types | classes indexed | registered classes unreadable | slots (annotation + field) | without class-index, now covered | jars | bytecode-index.json |
+|---|---|---|---|---|---|---|---|
+| 4.15.6.20 | 8,798 | 8,798 | 0 | 14,543 (14,536 + 7) | 4,804 of 4,804 | 733 | 9.0 MB |
+| 4.14.0.162 | 14,193 | 14,190 | 3 | 35,581 (25,951 + 9,630) | 10,105 of 10,108 | 995 | 18.6 MB |
+| 4.13.2.18 | 8,749 | 8,749 | 0 | 15,681 (14,551 + 1,130) | 4,884 of 4,884 | 740 | 9.2 MB |
+| 4.3.58.18 | 6,341 | 6,341 | 0 | 10,826 (1,087 + 9,739) | 2,978 of 2,978 | 578 | 6.3 MB |
+
+The 3 unreadable 4.14 classes are registered by honeywellTCThermostatWizard-rt's
+module.xml (ThermostatDownloadJob, ThermostatUploadJob, FirmwareDownloadConfig) but absent
+from its jar. On the 4.3 scratch copy `coverage --sweep` fails on exactly the 6,341
+registered classes without `bytecode-index.json` and passes with it.
+
 ## Real data
 
 `TestCoverageRealGoldens` (S10b-1) is the package's one real-data test:

@@ -111,6 +111,7 @@ type corpusStats struct {
 	pals                            *paletteCounts // nil when palette-index.json is absent
 	tags                            pyjson.Obj     // nil when tag-index.json is absent
 	lexicons                        pyjson.Obj     // nil when lexicon-index.json is absent
+	bytecode                        pyjson.Obj     // nil when bytecode-index.json is absent
 }
 
 // tagStats counts tag-index.json, nil when it is absent: its distinct tags
@@ -267,7 +268,10 @@ func (e *Env) corpusStats() (*corpusStats, error) {
 	if s.tags, err = e.tagStats(); err != nil {
 		return nil, err
 	}
-	s.lexicons, err = e.lexiconStats()
+	if s.lexicons, err = e.lexiconStats(); err != nil {
+		return nil, err
+	}
+	s.bytecode, err = e.bytecodeStats()
 	return s, err
 }
 
@@ -307,6 +311,7 @@ func (e *Env) statsJSON(s *corpusStats) {
 			{"palette-index", s.paletteJSON()},
 			{"tag-index", orAbsent(s.tags)},
 			{"lexicon-index", orAbsent(s.lexicons)},
+			{"bytecode-index", orAbsent(s.bytecode)},
 		}},
 		{"text_dirs", dirs},
 		{"packages", s.packages},
@@ -325,7 +330,7 @@ func (e *Env) statsText(s *corpusStats) {
 	for _, d := range fts.Labels {
 		totalBytes += s.text[d].bytes
 	}
-	indexCount := len(statsIndexNames) + 4 // and module-index.json, palette-index.json, tag-index.json, lexicon-index.json
+	indexCount := len(statsIndexNames) + 5 // and module-, palette-, tag-, lexicon- and bytecode-index.json
 	out := e.Out
 	fmt.Fprintf(out, "Niagara Help Navigator - Corpus Statistics\n%s\n", strings.Repeat("=", 55))
 	fmt.Fprintf(out, "Niagara version: %s  (%s)\n", vid, s.abs)
@@ -369,6 +374,11 @@ func (e *Env) statsText(s *corpusStats) {
 		fmt.Fprintln(out, "  lexicon-index.json     absent (rebuild-all builds it from the install's modules/)")
 	} else {
 		fmt.Fprintf(out, "  lexicon-index.json     %s\n", lexiconStatsLine(c, w))
+	}
+	if c := s.bytecode; c == nil {
+		fmt.Fprintln(out, "  bytecode-index.json    absent (rebuild-all builds it from the install's modules/)")
+	} else {
+		fmt.Fprintf(out, "  bytecode-index.json    %s\n", bytecodeStatsLine(c, w))
 	}
 	fmt.Fprintf(out, "\nTEXT SOURCES (%d sources of the full-text index, %s MB total):\n\n", len(fts.Labels), mb(totalBytes))
 	for _, d := range fts.Labels {

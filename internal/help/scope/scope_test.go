@@ -72,8 +72,9 @@ func TestMissOnFulltextCheckout(t *testing.T) {
 }
 
 // TestMissCountsClassIndexAndUsesTheLoader: the class index line counts names
-// and classes (others included), and an existing index is read through the
-// given loader, so nh's cache serves it.
+// and classes (others included), the bytecode index its classes and the rows
+// it could not read, and an existing index is read through the given loader,
+// so nh's cache serves it.
 func TestMissCountsClassIndexAndUsesTheLoader(t *testing.T) {
 	root := abs(t, helpTestdata)
 	want := recorded(t, filepath.Join("misses", "class-qualified-miss.txt"), "<TESTDATA>", root)
@@ -82,11 +83,11 @@ func TestMissCountsClassIndexAndUsesTheLoader(t *testing.T) {
 		asked = append(asked, name)
 		return index.LoadObject(index.Path(root, name))
 	}
-	lines, err := Miss(root, "class", "nope.BZzz", "classes", load)
+	lines, err := Miss(root, "class", "nope.BZzz", "class", load)
 	if err != nil || joined(lines) != want {
 		t.Errorf("err %v, got:\n%s\nwant:\n%s", err, joined(lines), want)
 	}
-	if strings.Join(asked, ",") != "class-index.json" {
+	if strings.Join(asked, ",") != "class-index.json,bytecode-index.json" {
 		t.Errorf("loader asked for %v", asked)
 	}
 }

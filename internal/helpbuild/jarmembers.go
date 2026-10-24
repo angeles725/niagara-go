@@ -3,7 +3,9 @@ package helpbuild
 import (
 	"fmt"
 	"os"
+	"strings"
 
+	"github.com/angeles725/niagara-go/internal/helpbuild/modulexml"
 	"github.com/angeles725/niagara-go/internal/helpbuild/zipfile"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 )
@@ -15,16 +17,21 @@ type jarMember struct {
 	err  error
 }
 
-// readMembers reads the members of jar whose name match accepts, in the order
-// they first appear; a repeated name reads its last copy, as ZipFile.open
-// does. A member that cannot be inflated carries its error; err is for a jar
-// that cannot be opened.
+// readMembers reads the members of jar whose name match accepts (membersOf);
+// err is for a jar that cannot be opened.
 func readMembers(jar string, match func(name string) bool) ([]jarMember, error) {
 	z, err := zipfile.Open(jar)
 	if err != nil {
 		return nil, err
 	}
 	defer z.Close()
+	return membersOf(z, match), nil
+}
+
+// membersOf reads the members of the open jar z whose name match accepts, in
+// the order they first appear; a repeated name reads its last copy, as
+// ZipFile.open does. A member that cannot be inflated carries its error.
+func membersOf(z *zipfile.File, match func(name string) bool) []jarMember {
 	last := map[string]int{}
 	var order []string
 	for i := range z.Infos {
@@ -42,7 +49,20 @@ func readMembers(jar string, match func(name string) bool) ([]jarMember, error) 
 		data, err := z.ReadEntry(&z.Infos[last[name]], true)
 		out[i] = jarMember{name, data, err}
 	}
-	return out, nil
+	return out
+}
+
+// moduleOf is the module of a jar: its descriptor's moduleName, else the jar
+// name before its last "-".
+func moduleOf(jar string, mod *modulexml.Module) string {
+	if mod != nil && mod.Part != "" {
+		return mod.Part
+	}
+	stem := strings.TrimSuffix(jar, ".jar")
+	if i := strings.LastIndexByte(stem, '-'); i > 0 {
+		stem = stem[:i]
+	}
+	return stem
 }
 
 // jarCensus is what an install-fed index counts of every jar of modules/

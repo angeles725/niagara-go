@@ -45,6 +45,11 @@ var scopes = map[string]def{
 		[]string{"devguide-search", "find", "guide-search"}},
 	"classes": {[]string{"class-index.json"}, "JDK API (opt-in: --jdk); " + docTypesExcluded,
 		[]string{"find", "class --jdk", "source-grep"}},
+	"class": {[]string{"class-index.json", "bytecode-index.json"}, "JDK API (opt-in: --jdk); " + docTypesExcluded,
+		[]string{"find", "class --jdk", "source-grep"}},
+	"bytecode": {[]string{"bytecode-index.json"}, "classes no module.xml registers as a type (only registered " +
+		"classes are read); a class is matched by qualified or simple name, exactly",
+		[]string{"class (without --bytecode)", "source-grep", "find"}},
 	"jdk": {[]string{"jdk-class-index.json"}, "Niagara classes (drop --jdk)",
 		[]string{"class (without --jdk)", "find"}},
 	"methods": {[]string{"method-index.json"}, "JDK members (class --jdk <Name> renders them)",
@@ -193,6 +198,10 @@ func indexCount(baseDir, name string, load Loader) (string, error) {
 	}
 	if name == "lexicon-index.json" {
 		return lexiconCount(data), nil
+	}
+	if name == "bytecode-index.json" {
+		classes, _ := getAny(data, "classes").([]any)
+		return fmt.Sprintf("bytecode-index.json: %s classes", pycompat.Commas(len(classes))) + unreadable(data), nil
 	}
 	return fmt.Sprintf("%s: %s entries", name, pycompat.Commas(data.Len())), nil
 }

@@ -1,0 +1,6 @@
+{
+ "exit": 0,
+ "reason": "NH7b: class gains --bytecode (the class from its class file in bytecode-index.json)",
+ "stderr": "",
+ "stdout": "usage: niagara_help class [-h] [-v] [--jdk] [--bytecode] name\n\npositional arguments:\n  name           Class name (e.g. BWebServlet)\n\noptions:\n  -h, --help     show this help message and exit\n  -v, --verbose\n  --jdk          Look up the JDK API (separate opt-in index) instead of Niagara\n  --bytecode     Show the class from its class file (bytecode-index.json): super chain, slots\n                 declared and inherited\n"
+}

@@ -122,7 +122,7 @@ type sweeper struct {
 	installed []jarPath
 	identical map[Entry]string
 	lexJar    *openLexiconJar // the module jar whose lexicons are being read
-	// shippedIdx is what module-index.json and palette-index.json hold (sweepshipped.go), loaded on first use.
+	// shippedIdx is what the shipped-file indexes hold (sweepshipped.go), loaded on first use.
 	shippedIdx *shippedIndexes
 }
 
@@ -401,8 +401,8 @@ func scan(installDir, root string, opts SweepOptions) (*sweepResult, error) {
 			res.Unclassified = append(res.Unclassified, gap{j.Rel, "(whole jar)", "unreadable jar (corrupt zip or I/O error)"})
 			continue
 		}
-		if l.Classes > 0 { // the listing keeps only their number
-			res.OutOfScope[".class"] += l.Classes
+		if err := s.classFiles(res, row, j.Rel, l.Classes); err != nil {
+			return nil, err
 		}
 		var docs []int
 		for pos, e := range l.Entries {

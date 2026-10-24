@@ -22,6 +22,7 @@ REBUILD-ALL (dry run)
   PLAN  palette_index_builder      -> palette-index.json
   PLAN  tag_index_builder          -> tag-index.json
   PLAN  lexicon_index_builder      -> lexicon-index.json
+  PLAN  bytecode_index_builder     -> bytecode-index.json
 
 Dry run — nothing executed. Drop --dry-run to build.
 # stderr
@@ -59,8 +60,10 @@ palette-index.json: no install registered; skipped (the last copy is kept)
 tag-index.json: no install registered; skipped (the last copy is kept)
   RUN   lexicon_index_builder      -> lexicon-index.json
 lexicon-index.json: no install registered; skipped (the last copy is kept)
+  RUN   bytecode_index_builder     -> bytecode-index.json
+bytecode-index.json: no install registered; skipped (the last copy is kept)
 
-Ran 7, skipped 13, failed 0.
+Ran 8, skipped 13, failed 0.
 Manifest re-stamped. Run 'freshness' to confirm FRESH.
 # stderr
 
@@ -105,7 +108,7 @@ indexes/.manifest.json 644
   SKIP  devguide_parser.py         -> devguide-clean/  (source 'devguide/' absent)
   SKIP  build_devguide_toc.py      -> devguide-toc.json  (source 'devguide/' absent)
   SKIP  package_text_builder       -> package-text/  (source 'devguide/' absent)
-Ran 7, skipped 13, failed 0.
+Ran 8, skipped 13, failed 0.
   EMPTY class-index.json (its source is not in this install)
   EMPTY inheritance.json (its source is not in this install)
   EMPTY method-index.json (its source is not in this install)
@@ -180,6 +183,8 @@ palette-index.json: no install registered; skipped (the last copy is kept)
 tag-index.json: no install registered; skipped (the last copy is kept)
   RUN   lexicon_index_builder      -> lexicon-index.json
 lexicon-index.json: no install registered; skipped (the last copy is kept)
+  RUN   bytecode_index_builder     -> bytecode-index.json
+bytecode-index.json: no install registered; skipped (the last copy is kept)
 
-Ran 7, skipped 13, failed 0.
+Ran 8, skipped 13, failed 0.
 Manifest re-stamped. Run 'freshness' to confirm FRESH.
