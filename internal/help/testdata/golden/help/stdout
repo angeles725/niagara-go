@@ -31,7 +31,8 @@ positional arguments:
     source-grep         Full-text regex search across ALL source files
     coverage            Documentation coverage report (overview exits 1 on guide folders with
                         unindexed HTML pages)
-    freshness           Check whether indexes are in sync with the raw corpus
+    freshness           Check whether indexes are in sync with the raw corpus (exit 0 FRESH, 1
+                        STALE, 2 cannot check)
     rebuild-all         Rebuild all indexes in dependency order, then stamp the manifest
     selftest            Assert core search behaviours (exits non-zero on failure)
     versions            Manage Niagara versions: 'versions add <install>' onboards a new install

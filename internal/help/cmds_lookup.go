@@ -115,7 +115,7 @@ var moduleCommands = []command{
 		}},
 	{name: "lexicon", help: "Lexicon entries (*.lexicon): a key's value in each language, the base value next to each translation",
 		args: func(p *argparse.Parser) {
-			optionalPositional(p, "query", "", "Lexicon key or glob (e.g. WbHtmlView.displayName, *.description), or words with --text")
+			optionalPositional(p, "query", "", "Lexicon key or glob (e.g. WbHtmlView.displayName, *.description), or module:key as printed, or words with --text")
 			p.Add(argparse.Arg{Dest: "lexicon_text", Action: argparse.StoreTrue,
 				Help: "Read the query as words: the keys whose value holds every one (any case, accents folded)"}, "--text")
 			p.Add(argparse.Arg{Dest: "lexicon_module", Default: "", Metavar: "MODULE", Help: "Only this module's lexicon (name or glob; translations included)"}, "--module")

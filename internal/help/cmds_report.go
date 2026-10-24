@@ -11,8 +11,11 @@ var adminCommands = []command{
 				"--json")
 		},
 		run: func(e *Env, ns *argparse.Namespace) error { return e.Stats(ns.Bool("stats_json")) }},
-	{name: "freshness", help: "Check whether indexes are in sync with the raw corpus",
+	{name: "freshness", help: "Check whether indexes are in sync with the raw corpus (exit 0 FRESH, 1 STALE, 2 cannot check)",
 		args: func(p *argparse.Parser) {
+			p.SetEpilog("exit status: 0 FRESH, 1 STALE, 2 cannot check (UNKNOWN, or an unreadable " +
+				"baseline manifest). With --all: the worst extracted version; a version not " +
+				"extracted does not count.")
 			p.Add(argparse.Arg{Dest: "fresh_all", Action: argparse.StoreTrue,
 				Help: "One line per registered Niagara version (index + install drift)"}, "--all")
 		},

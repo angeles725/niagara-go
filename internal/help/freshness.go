@@ -9,11 +9,11 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"sort"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/angeles725/niagara-go/internal/cli"
 	"github.com/angeles725/niagara-go/internal/help/fts"
 	"github.com/angeles725/niagara-go/internal/index"
 	"github.com/angeles725/niagara-go/internal/pycompat"
@@ -260,7 +260,9 @@ func (e *Env) Freshness(all bool) error {
 	return e.freshness()
 }
 
-// freshness is maintenance.cmd_freshness.
+// freshness is maintenance.cmd_freshness. Its exit status is the answer: FRESH is
+// 0, STALE 1 and a corpus it could not check (UNKNOWN, an unreadable manifest) 2.
+// freshness --all (freshnessAll) gives the worst of its extracted versions.
 func (e *Env) freshness() error {
 	current := computeFingerprint(e.BaseDir)
 	manifest, err := loadManifest(e.BaseDir)
@@ -279,7 +281,7 @@ func (e *Env) freshness() error {
 		fmt.Fprintln(e.Out)
 		fmt.Fprintln(e.Out, "Run 'rebuild-all --stamp-only' to record the current indexes")
 		fmt.Fprintln(e.Out, "as the trusted baseline, or 'rebuild-all' to rebuild + stamp.")
-		return nil
+		return ExitCode(cli.ExitCannotSearch)
 	}
 	recorded := getObj(manifest, "sources")
 	var stale []string
@@ -317,12 +319,13 @@ func (e *Env) freshness() error {
 	case len(stale) > 0:
 		fmt.Fprintf(e.Out, "RESULT: STALE — %d source(s) changed: %s\n", len(stale), strings.Join(stale, ", "))
 		fmt.Fprintln(e.Out, "Reindex with 'rebuild-all' (then the manifest re-stamps).")
+		return ExitCode(cli.ExitNoMatch)
 	case unknown:
 		fmt.Fprintln(e.Out, "RESULT: UNKNOWN — the raw sources match the baseline; the derived text and indexes")
 		fmt.Fprintln(e.Out, "could not be compared with it (run 'rebuild-all --stamp-only' to re-stamp).")
-	default:
-		fmt.Fprintln(e.Out, "RESULT: FRESH — corpus matches the recorded baseline.")
+		return ExitCode(cli.ExitCannotSearch)
 	}
+	fmt.Fprintln(e.Out, "RESULT: FRESH — corpus matches the recorded baseline.")
 	return nil
 }
 
@@ -441,57 +444,4 @@ func installStatus(repoRoot, vid, install string) (string, error) {
 		return fmt.Sprintf("INSTALL CHANGED (+%d -%d ~%d jars)", added, removed, changed), nil
 	}
 	return "install jars match", nil
-}
-
-// freshnessAll is maintenance.cmd_freshness_all.
-func (e *Env) freshnessAll() error {
-	reg, err := index.LoadRegistry(e.RepoRoot)
-	if err != nil {
-		return err
-	}
-	if reg == nil {
-		fmt.Fprintln(e.Out, "No versions/registry.json; use plain 'freshness'.")
-		return nil
-	}
-	fmt.Fprintf(e.Out, "FRESHNESS PER NIAGARA VERSION (default %s)\n", reg.Default)
-	fmt.Fprintln(e.Out, strings.Repeat("=", 60))
-	ids := reg.IDs()
-	sort.Strings(ids)
-	// Each version's status is computed concurrently, then printed in order.
-	statuses := make([]string, len(ids))
-	errs := make([]error, len(ids))
-	var wg sync.WaitGroup
-	for i, vid := range ids {
-		wg.Go(func() { statuses[i], errs[i] = e.versionFreshness(reg, vid) })
-	}
-	wg.Wait()
-	for i, vid := range ids {
-		if errs[i] != nil {
-			return errs[i]
-		}
-		entry, _ := reg.Entry(vid)
-		fmt.Fprintf(e.Out, "  %s %s %s\n", pycompat.LJust(vid, 12, ' '), pycompat.LJust(entry.DataRoot, 20, ' '), statuses[i])
-	}
-	return nil
-}
-
-// versionFreshness is the status column of freshness --all for one version.
-func (e *Env) versionFreshness(reg *index.Registry, vid string) (string, error) {
-	entry, _ := reg.Entry(vid)
-	root, err := index.DataRoot(e.RepoRoot, vid)
-	if err != nil {
-		return "", err
-	}
-	if !index.IsExtracted(root) {
-		return fmt.Sprintf("NOT EXTRACTED (nh versions extract %s)", vid), nil
-	}
-	idx, err := indexStatus(root)
-	if err != nil {
-		return "", err
-	}
-	inst, err := installStatus(e.RepoRoot, vid, getStr(entry.Raw, "install_dir", ""))
-	if err != nil {
-		return "", err
-	}
-	return idx + "; " + inst, nil
 }

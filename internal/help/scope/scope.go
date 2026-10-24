@@ -79,7 +79,7 @@ var scopes = map[string]def{
 		"dictionaries are not shipped); a name is matched as dict:name or name, exactly, in any letter case or as a glob",
 		[]string{"find", "source-grep", "type"}},
 	"lexicons": {[]string{"lexicon-index.json"}, "lexicon files outside the module jars (a station's own lexicons " +
-		"are not shipped); a key is matched exactly, in any letter case or as a glob, within --module and --lang (default all); " +
+		"are not shipped); a key (or module:key) is matched exactly, in any letter case or as a glob, within --module and --lang (default all); " +
 		"--text needs every word in a value (base files unless --lang)",
 		[]string{"lexicon --text", "find", "source-grep"}},
 	"pdf": {[]string{"pdf-index.json"}, "manual pages without a text layer (scanned images)",

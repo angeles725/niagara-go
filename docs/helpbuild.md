@@ -935,6 +935,15 @@ switch` or fast-forward rewrites unchanged files), a different one `CHANGED`. A 
 stamped before the digests (no `derived` key) keeps the mtime rule, so Python's manifest
 reads as before. The full-text index keeps its own size+mtime fingerprint.
 
+nh `freshness`'s exit status is its result, so a script can gate on it: `RESULT: FRESH` is 0,
+`RESULT: STALE` 1 (checked and out of date, as a miss), and a corpus it could not check is 2
+(`UNKNOWN`, with no baseline manifest or derived folders it could not compare, on stdout;
+an unreadable manifest as `ERROR: ...` on stderr), the `cli.Exit*` convention. Python exited
+0 on all three. `freshness --all` ends with `RESULT: n FRESH, m STALE, k UNKNOWN, j not
+extracted` and exits with the worst extracted version: 1 when one is STALE (its indexes, or its
+install's doc jars: `INSTALL CHANGED`), 2 when one is UNKNOWN; a version not extracted yet is
+listed and counted but never changes the exit status.
+
 `fulltext.sqlite` is not a rebuild-all builder on either side: the full-text index is
 built on demand by the search scope when its own fingerprint changes (Integrante2's
 `internal/helpbuild/fulltext`, called by nh), not by `maintenance.BUILDERS`.
@@ -1398,7 +1407,9 @@ Reader (`internal/help`, `lexicons.go`): `nh lexicon <key|glob> [--module m] [--
 [--json]` prints each matching key (exact first, then any letter case, then a glob) per
 lexicon module (`overrides` for a translation, else `module`): the base value first, then
 each translation, each naming `jar!path`; a translation whose key no base file holds says
-`base  (none: ...)`. `--module` keeps one lexicon module (name or glob, translations
+`base  (none: ...)`. The printed form `module:key` finds that key too: when the whole
+query matches no key, the part before the first `:` keeps that module (name or glob, with
+`--module`) and the rest is the key. `--module` keeps one lexicon module (name or glob, translations
 included); `--lang` one language code, `base` or `all` (the default for a key). `nh lexicon
 --text "<words>"` reads the query as words and names the keys whose value holds every one,
 lower-cased with accents folded (`textfold.Options{Lower: true}`: other letters are kept,

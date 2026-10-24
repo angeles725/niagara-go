@@ -1,6 +1,6 @@
 {
  "exit": 0,
- "reason": "freshness --all also checks the full-text text sources and the JSON indexes against the stamp time, and appends the retired index files left on disk (call-index.json, decision I3-5) to the version status (NH1 honesty fixes)",
+ "reason": "freshness --all also checks the full-text text sources and the JSON indexes against the stamp time, and appends the retired index files left on disk (call-index.json, decision I3-5) to the version status (NH1 honesty fixes), and ends with a RESULT line counting the FRESH, STALE, UNKNOWN and not-extracted versions; it exits 1 when an extracted version is STALE and 2 when one is UNKNOWN (the exit status is the answer)",
  "stderr": "",
- "stdout": "FRESHNESS PER NIAGARA VERSION (default 4.15.6.20)\n============================================================\n  4.13.2.18    versions/4.13.2.18   FRESH; install jars match\n  4.14.0.162   .                    FRESH; install jars match\n  4.15.6.20    versions/4.15.6.20   FRESH; install jars match\n  4.3.58.18    versions/4.3.58.18   FRESH; install jars match\n"
+ "stdout": "FRESHNESS PER NIAGARA VERSION (default 4.15.6.20)\n============================================================\n  4.13.2.18    versions/4.13.2.18   FRESH; install jars match\n  4.14.0.162   .                    FRESH; install jars match\n  4.15.6.20    versions/4.15.6.20   FRESH; install jars match\n  4.3.58.18    versions/4.3.58.18   FRESH; install jars match\nRESULT: 4 FRESH, 0 STALE, 0 UNKNOWN, 0 not extracted (exit 1 if any is STALE, 2 if any is UNKNOWN; a version not extracted does not count)\n"
 }
