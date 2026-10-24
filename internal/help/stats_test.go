@@ -43,7 +43,7 @@ func TestStatsUnregisteredRoot(t *testing.T) {
 =======================================================
 Niagara version: unregistered  (<DIR>)
 
-INDEXES (12):
+INDEXES (13):
 
   class-index.json            0 classes (0 packages)
   devguide-toc.json           0 guides
@@ -57,6 +57,7 @@ INDEXES (12):
   module-index.json      absent (rebuild-all builds it from the install's modules/)
   palette-index.json     absent (rebuild-all builds it from the install's modules/)
   tag-index.json         absent (rebuild-all builds it from the install's modules/)
+  lexicon-index.json     absent (rebuild-all builds it from the install's modules/)
 
 TEXT SOURCES (10 sources of the full-text index, 0.0 MB total):
 
@@ -77,7 +78,7 @@ RAW HTML:
   devguide/                0 HTML
   guides/                  0 HTML
 
-INDEXES: 12
+INDEXES: 13
 CLI: 24 commands
 `
 	if got := strings.ReplaceAll(out.String(), dir, "<DIR>"); got != want {
@@ -285,6 +286,45 @@ func TestStatsCountsTagIndex(t *testing.T) {
       "rules": 1,
       "migrations": 1,
       "files": 7,
+      "unreadable": 1
+    }`
+	if !strings.Contains(out.String(), want) {
+		t.Errorf("stats --json lacks %s:\n%s", want, out.String())
+	}
+}
+
+// TestStatsCountsLexiconIndex: stats counts lexicon-index.json's files (base
+// and translations), the modules and languages they cover, the entry rows,
+// the distinct module keys and the files it could not read, in text and JSON.
+func TestStatsCountsLexiconIndex(t *testing.T) {
+	dir := statsRoot(t, "")
+	data, err := os.ReadFile(filepath.Join("testdata", "indexes", "lexicon-index.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "indexes", "lexicon-index.json"), data, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	var out bytes.Buffer
+	if err := (&Env{BaseDir: dir, Out: &out}).Stats(false); err != nil {
+		t.Fatal(err)
+	}
+	want := "  lexicon-index.json          4 files (2 base, 2 translations; 2 modules, 1 languages; 9 entries, 6 distinct module keys; 1 unreadable)\n"
+	if !strings.Contains(out.String(), want) {
+		t.Errorf("stats lacks %q:\n%s", want, out.String())
+	}
+	out.Reset()
+	if err := (&Env{BaseDir: dir, Out: &out}).Stats(true); err != nil {
+		t.Fatal(err)
+	}
+	want = `"lexicon-index": {
+      "files": 4,
+      "base": 2,
+      "translations": 2,
+      "modules": 2,
+      "languages": 1,
+      "entries": 9,
+      "distinct_module_keys": 6,
       "unreadable": 1
     }`
 	if !strings.Contains(out.String(), want) {

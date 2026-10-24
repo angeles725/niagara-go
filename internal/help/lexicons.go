@@ -12,6 +12,7 @@ import (
 
 	"github.com/angeles725/niagara-go/internal/fnmatch"
 	"github.com/angeles725/niagara-go/internal/index"
+	"github.com/angeles725/niagara-go/internal/pycompat"
 	"github.com/angeles725/niagara-go/internal/pyjson"
 	"github.com/angeles725/niagara-go/internal/textfold"
 )
@@ -239,4 +240,44 @@ func (e *Env) lexiconJSON(idx *index.Object, p LexiconParams, keys []*lexiconKey
 	fmt.Fprintln(e.Out, pyjson.DumpsAny(pyjson.Obj{{"query", p.Query}, {"text", p.Text}, {"module", p.Module}, {"lang", p.Lang},
 		{"keys", list}, {"unreadable", anyList(objList(idx, "errors"))}}, pyjson.Indent2))
 	return nil
+}
+
+// lexiconStats counts lexicon-index.json for stats, nil when it is absent:
+// its files (base and translations), the lexicon modules and languages they
+// cover, the entry rows, the distinct module + key pairs and the files it
+// could not read.
+func (e *Env) lexiconStats() (pyjson.Obj, error) {
+	if !pycompat.IsFile(index.Path(e.BaseDir, lexiconIndexName)) {
+		return nil, nil
+	}
+	idx, err := e.loadIndex(lexiconIndexName, false)
+	if err != nil {
+		return nil, err
+	}
+	files := lexiconFiles(idx)
+	base, entries := 0, 0
+	modules, languages, keys := map[string]bool{}, map[string]bool{}, map[string]bool{}
+	for _, f := range files {
+		if f.language == "" {
+			base++
+		} else {
+			languages[f.language] = true
+		}
+		modules[f.lexModule()] = true
+		entries += len(f.entries)
+		for _, en := range f.entries {
+			key, _ := pair(en)
+			keys[f.lexModule()+"\x00"+key] = true
+		}
+	}
+	return pyjson.Obj{{"files", len(files)}, {"base", base}, {"translations", len(files) - base}, {"modules", len(modules)},
+		{"languages", len(languages)}, {"entries", entries}, {"distinct_module_keys", len(keys)},
+		{"unreadable", listLen(idx, "errors")}}, nil
+}
+
+// lexiconStatsLine is the stats text line of the lexiconStats counts c.
+func lexiconStatsLine(c pyjson.Obj, w func(int) string) string {
+	n := func(i int) string { return pycompat.Commas(c[i].Val.(int)) }
+	return fmt.Sprintf("%s files (%s base, %s translations; %s modules, %s languages; %s entries, %s distinct module keys; %s unreadable)",
+		w(c[0].Val.(int)), n(1), n(2), n(3), n(4), n(5), n(6), n(7))
 }
