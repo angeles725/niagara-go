@@ -1056,7 +1056,7 @@ all when the version has nothing to write.
 |---|---|---|---|
 | `package_text_builder` (`packagetext.go`) | `package-text/<package>.txt`: `TITLE`, `PACKAGE`, `MODULE` header, then the `<description>` of the package as text (`htmltext.HTMLToText` of its escaped HTML); one page per package, a description repeated by another module or by the `guides/` copy written once | every `package-index.bajadoc` under `devguide/` and `guides/` | `doc_types` kind `bajadoc-package` (it was the `bajadoc-listing` exclusion): indexed when the page is in the full-text index; a listing with an empty description counts as indexed (its classes are indexed one by one, as the old reason said). `jdk/` listings and `module-index.bajadoc` stay excluded. |
 
-| `lexicon_extractor` (`lexicon.go`) | `lexicon-text/<jar stem>/<entry>.txt`: `TITLE`, `MODULE`, `LEXICON` header, then one `key = value` line per entry with a value, in file order, a UI display label marked `[label] key = value`, entries separated by form feeds | every `*.lexicon` entry of the registered install's `modules/*.jar` (translation jars included) that the doc-jar extraction does not copy; an install that is not mounted keeps the last copy | `.lexicon` is in `doc_like`, so `coverage --sweep` sees every lexicon: indexed when its page is in the full-text index, excluded (`lexicon-empty`) when it holds no entry with a value, UNCLASSIFIED otherwise. A lexicon of a jar outside `modules/` (`bin/ext/niagarad.jar`, `sw/` copies) is excluded by the `lexicon-outside-modules` rule; extracted lexicons (doc jars, `doc/`) keep the `doc_types` translation-lexicon exclusion. |
+| `lexicon_extractor` (`lexicon.go`) | `lexicon-text/<jar stem>/<entry>.txt`: `TITLE`, `MODULE`, `LEXICON` header, then one `key = value` line per entry with a value, in file order, a UI display label marked `[label] key = value`, entries separated by form feeds | every `*.lexicon` entry of the registered install's `modules/*.jar` (translation jars included) that the doc-jar extraction does not copy; an install that is not mounted keeps the last copy | `.lexicon` is in `doc_like`, so `coverage --sweep` sees every lexicon: UNCLASSIFIED when `lexicon-index.json` does not hold it (see Lexicons below), else indexed when its page is in the full-text index or, holding no entry with a value, by `lexicon-index.json` alone, UNCLASSIFIED otherwise. A lexicon of a jar outside `modules/` (`bin/ext/niagarad.jar`, `sw/` copies) is excluded by the `lexicon-outside-modules` rule; extracted lexicons (doc jars, `doc/`) keep the `doc_types` translation-lexicon exclusion. |
 
 `nh package <name>` prints the description block above the class list, with the page path.
 
@@ -1347,6 +1347,68 @@ UNCLASSIFIED when it does not (not rebuilt yet) or could not read it (the error 
 copy outside `modules/` is excluded by `shipped-file-outside-modules` (8 on 4.15). The same names in any other jar stay outside the documentation
 scope. On a scratch copy of 4.15 and 4.3 the sweep fails on the 8 (4.15) and 2 (4.3)
 dictionary files before the tag step runs and passes after it.
+
+## Lexicons: lexicon-index.json
+
+`lexicon-text/` makes the lexicons findable as text; `lexicon_index_builder`
+(`lexiconindex.go`), the step after `tag_index_builder`, keeps them as data. It reads the
+lexicon files `lexicon_extractor` reads (`isLexiconEntry`, the same `lexiconJars` list and
+the same `parseLexicon`) and the `<lexicons>` of each jar's `META-INF/module.xml`
+(`modulexml.Lexicon`: a `niagaraLexicon<Lang>-rt` descriptor names, per translated
+resource, the base module it overrides and its language), and writes
+`indexes/lexicon-index.json` on one line (indentation would triple its size):
+
+    {"jars": N, "jar_bytes": B,
+     "files": [{"jar", "path", "module", "language", "overrides",
+                "entries": [["key", "value"], ...]}],
+     "errors": [{"jar", "path", "error"}]}
+
+`module` is the jar's `moduleName` (the jar name before its last `-` when the descriptor
+cannot be read, which is then an `errors` row too). A file the descriptor declares is a
+translation (`language` its code, `overrides` the base module); any other is a base lexicon
+(both `""`). `entries` keep every pair in file order, an empty value included, as ordered
+pairs since a key may repeat. A corrupt jar or member is an `errors` row and a
+`WARNING: lexicon_index_builder: ...` line, never a silent skip; a data root with no
+registered install keeps its last copy. The builder line names every count apart:
+`N lexicon files (B base, T translations) of M modules in L languages, E entries (K distinct
+module keys)`, where entries are rows and a distinct module key is one lexicon module + key
+pair (a key translated into 42 languages is 43 entries, 1 key).
+
+Reader (`internal/help`, `lexicons.go`): `nh lexicon <key|glob> [--module m] [--lang l]
+[--json]` prints each matching key (exact first, then any letter case, then a glob) per
+lexicon module (`overrides` for a translation, else `module`): the base value first, then
+each translation, each naming `jar!path`; a translation whose key no base file holds says
+`base  (none: ...)`. `--module` keeps one lexicon module (name or glob, translations
+included); `--lang` one language code, `base` or `all` (the default for a key). `nh lexicon
+--text "<words>"` reads the query as words and names the keys whose value holds every one,
+lower-cased with accents folded (`textfold.Options{Lower: true}`: other letters are kept,
+so Chinese or Russian values are found), in the base files unless `--lang` says otherwise;
+a matching translation shows the base value it overrides. Past 25 keys the text answer says
+how many more; `--json` lists them all with a `matched` flag per row (false for a base row
+shown only as what a translation overrides). Every answer ends with `UNREADABLE (N):` when
+the index holds errors rows; a miss names `lexicon-index.json`, its files and entries
+(scope `lexicons`). `freshness` compares its recorded jar count and bytes with the install,
+`stats` prints `lexicon-index.json N files (B base, T translations; M modules, L languages;
+E entries, K distinct module keys; U unreadable)` (text and `--json`; `absent` until
+rebuild-all builds it), and `selftest` checks that `nh lexicon linkcheck.level6 --module
+kitControl --lang fr` shows kitControl-rt's base value and niagaraLexiconFr-rt's
+translation (true on 4.3, 4.13, 4.14 and 4.15).
+
+Built on 2026-10-24 into a scratch data root (symlinks to the corpus, `build.log` and the
+manifest copied; the live corpus untouched) with `rebuild-all --only lexicon_index_builder`:
+
+| Install | files (base + translations) | modules | languages | entries | distinct module keys | jars | errors | lexicon-index.json |
+|---|---|---|---|---|---|---|---|---|
+| 4.15.6.20 | 525 (291 + 234) | 236 | 42 | 33,167 | 22,478 | 733 | 0 | 2.1 MB |
+| 4.14.0.162 | 889 (497 + 392) | 377 | 42 | 75,667 | 45,901 | 995 | 0 | 4.8 MB |
+| 4.13.2.18 | 516 (281 + 235) | 239 | 42 | 31,761 | 20,929 | 740 | 0 | 2.0 MB |
+| 4.3.58.18 | 382 (179 + 203) | 172 | 42 | 22,990 | 14,431 | 578 | 0 | 1.3 MB |
+
+4.3's 382 files equal what `lexicon_extractor` read there (its build.log line: 375 with
+entries of 382, 4,941 help and 18,044 label rows; the 5 more entries are empty values).
+`coverage --sweep` checks every installed lexicon against the index (`heldGap`, shared with
+the shipped files): on the 4.3 scratch copy it fails on exactly those 382 lexicons without
+`lexicon-index.json` and passes with it.
 
 ## Real data
 
