@@ -72,7 +72,11 @@ func (p *xparser) epilog(i int) error {
 		case p.eof(i + 1):
 			return p.fail(i, errUnclosed)
 		case c1 == '?':
+			// expat 2.9 reads a whole XML declaration here as junk, not as a misplaced one
 			i, err = p.pi(i, false)
+			if e, ok := err.(*Error); ok && e.Msg == errMisplaced {
+				return p.fail(i, errJunk)
+			}
 		case c1 == '!':
 			i, _, err = p.bang(i, false)
 		case p.qStart(c1):
