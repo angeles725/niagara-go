@@ -22,6 +22,7 @@ REBUILD-ALL (dry run)
   PLAN  palette_index_builder      -> palette-index.json
   PLAN  tag_index_builder          -> tag-index.json
   PLAN  lexicon_index_builder      -> lexicon-index.json
+  PLAN  bytecode_index_builder     -> bytecode-index.json
 
 Dry run — nothing executed. Drop --dry-run to build.
 # stderr
@@ -123,8 +124,10 @@ palette-index.json: no install registered; skipped (the last copy is kept)
 tag-index.json: no install registered; skipped (the last copy is kept)
   RUN   lexicon_index_builder      -> lexicon-index.json
 lexicon-index.json: no install registered; skipped (the last copy is kept)
+  RUN   bytecode_index_builder     -> bytecode-index.json
+bytecode-index.json: no install registered; skipped (the last copy is kept)
 
-Ran 20, skipped 0, failed 0.
+Ran 21, skipped 0, failed 0.
 Manifest re-stamped. Run 'freshness' to confirm FRESH.
 # stderr
 WARNING: toc not read, page titles fall back to <title>: <root>/guides/Bad/toc.xml: mismatched tag: line 1, column 16
@@ -400,8 +403,10 @@ palette-index.json: no install registered; skipped (the last copy is kept)
 tag-index.json: no install registered; skipped (the last copy is kept)
   RUN   lexicon_index_builder      -> lexicon-index.json
 lexicon-index.json: no install registered; skipped (the last copy is kept)
+  RUN   bytecode_index_builder     -> bytecode-index.json
+bytecode-index.json: no install registered; skipped (the last copy is kept)
 
-Ran 20, skipped 0, failed 0.
+Ran 21, skipped 0, failed 0.
 Manifest re-stamped. Run 'freshness' to confirm FRESH.
 # stderr
 WARNING: toc not read, page titles fall back to <title>: <root>/guides/Bad/toc.xml: mismatched tag: line 1, column 16
@@ -445,7 +450,7 @@ indexes/.manifest.json 644
 }
 ## log
 # stdout
-Ran 20, skipped 0, failed 0.
+Ran 21, skipped 0, failed 0.
 # stderr
 WARNING: toc not read, page titles fall back to <title>: <root>/guides/Bad/toc.xml: mismatched tag: line 1, column 16
 WARNING: toc not read, page titles fall back to <title>: <root>/guides/Bad/toc.xml: mismatched tag: line 1, column 16
@@ -568,6 +573,8 @@ palette-index.json: no install registered; skipped (the last copy is kept)
 tag-index.json: no install registered; skipped (the last copy is kept)
   RUN   lexicon_index_builder      -> lexicon-index.json
 lexicon-index.json: no install registered; skipped (the last copy is kept)
+  RUN   bytecode_index_builder     -> bytecode-index.json
+bytecode-index.json: no install registered; skipped (the last copy is kept)
 
-Ran 20, skipped 0, failed 0.
+Ran 21, skipped 0, failed 0.
 Manifest re-stamped. Run 'freshness' to confirm FRESH.
