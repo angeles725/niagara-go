@@ -59,7 +59,7 @@ func buildRegistry() map[string]*command {
 // retired commands).
 var order = []string{
 	"class", "search", "guide", "guide-search", "devguide", "pdf", "method",
-	"source", "package", "slots", "module", "type", "palette", "tag", "find", "devguide-search", "stats",
+	"source", "package", "slots", "module", "type", "palette", "tag", "lexicon", "find", "devguide-search", "stats",
 	"source-grep", "coverage", "freshness", "rebuild-all", "selftest", "versions",
 }
 
@@ -107,6 +107,7 @@ const epilog = "Examples:\n" +
 	"  %(prog)s type kitControl:BooleanLatch\n" +
 	"  %(prog)s palette BooleanLatch\n" +
 	"  %(prog)s tag ahu\n" +
+	"  %(prog)s lexicon BooleanLatch.displayName --lang fr\n" +
 	"  %(prog)s find \"setpoint reference\"\n" +
 	"  %(prog)s devguide-search \"web servlet\"\n" +
 	"  %(prog)s versions add /mnt/c/Niagara/Niagara-4.16.0.1\n"

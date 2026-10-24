@@ -69,9 +69,10 @@ var moduleDetails = [][2]string{
 	{"schemas", "List the .xsd/.dtd schemas the jar ships (root element, targetNamespace)"},
 }
 
-// Module descriptor commands (Go-only, modules.go, palettes.go, tags.go and
-// types.go): module and type over indexes/module-index.json, palette over
-// indexes/palette-index.json, tag over indexes/tag-index.json.
+// Module descriptor commands (Go-only, modules.go, palettes.go, tags.go,
+// lexicons.go and types.go): module and type over indexes/module-index.json,
+// palette over indexes/palette-index.json, tag over indexes/tag-index.json,
+// lexicon over indexes/lexicon-index.json.
 var moduleCommands = []command{
 	{name: "module", help: "Module descriptor (module.xml): dependencies both ways, types, permissions",
 		args: func(p *argparse.Parser) {
@@ -109,6 +110,17 @@ var moduleCommands = []command{
 		},
 		run: func(e *Env, ns *argparse.Namespace) error {
 			return e.Tag(TagParams{Query: ns.String("query"), List: ns.Bool("tag_list"), JSON: ns.Bool("tag_json")})
+		}},
+	{name: "lexicon", help: "Lexicon entries (*.lexicon): a key's value in each language, the base value next to each translation",
+		args: func(p *argparse.Parser) {
+			optionalPositional(p, "query", "", "Lexicon key or glob (e.g. BooleanLatch.displayName, *.description)")
+			p.Add(argparse.Arg{Dest: "lexicon_module", Default: "", Metavar: "MODULE", Help: "Only this module's lexicon (name or glob; translations included)"}, "--module")
+			p.Add(argparse.Arg{Dest: "lexicon_lang", Default: "", Metavar: "LANG", Help: "Only this language: a code (fr, zh), base or all (default all)"}, "--lang")
+			p.Add(argparse.Arg{Dest: "lexicon_json", Action: argparse.StoreTrue, Help: "Output as JSON"}, "--json")
+		},
+		run: func(e *Env, ns *argparse.Namespace) error {
+			return e.Lexicon(LexiconParams{Query: ns.String("query"), Module: ns.String("lexicon_module"),
+				Lang: ns.String("lexicon_lang"), JSON: ns.Bool("lexicon_json")})
 		}},
 	{name: "type", help: "Niagara type (module:Type): its module, class, docs and the agents (views) on it",
 		args: func(p *argparse.Parser) {

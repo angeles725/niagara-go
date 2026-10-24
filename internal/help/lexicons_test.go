@@ -120,3 +120,30 @@ func TestLexiconMiss(t *testing.T) {
 		}
 	}
 }
+
+// TestLexiconCLI: lexicon takes a key, --module, --lang and --json; a miss
+// exits 1 and no key is a usage error (exit 2).
+func TestLexiconCLI(t *testing.T) {
+	dir := repo(t, `{"default": "1.0.0.1", "versions": {"1.0.0.1": {"install_dir": ".", "data_root": "."}}}`, ".")
+	data, err := os.ReadFile(filepath.Join("testdata", "indexes", "lexicon-index.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	write(t, filepath.Join(dir, "indexes", "lexicon-index.json"), string(data))
+	for _, tt := range []struct {
+		args []string
+		code int
+		out  string
+	}{
+		{[]string{"lexicon", "clock"}, 0, "LEXICON keys matching 'clock' (1 keys, 2 matching entries):\n"},
+		{[]string{"lexicon", "*Latch.*", "--module", "kit*", "--lang", "fr"}, 0, "LEXICON keys matching '*Latch.*' (1 keys, 1 matching entries):\n"},
+		{[]string{"lexicon", "clock", "--json"}, 0, "{\n  \"query\": \"clock\","},
+		{[]string{"lexicon", "nope"}, 1, ""},
+		{[]string{"lexicon"}, 2, ""},
+	} {
+		out, errs, code := run(t, dir, tt.args...)
+		if code != tt.code || !strings.HasPrefix(out, tt.out) {
+			t.Errorf("%v: code %d stdout %q stderr %q", tt.args, code, out, errs)
+		}
+	}
+}
