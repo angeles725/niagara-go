@@ -25,8 +25,8 @@ func (r *reader) take(n int, what string) []byte {
 	if r.err != nil {
 		return nil
 	}
-	if left := len(r.b) - r.off; n > left {
-		r.fail(&TruncatedError{Offset: r.pos(), Need: n - left, What: what})
+	if left := len(r.b) - r.off; n < 0 || n > left {
+		r.fail(&TruncatedError{Offset: r.pos(), Need: max(n-left, 1), What: what}) // n < 0: a u4 length past int on 32-bit
 		return nil
 	}
 	s := r.b[r.off : r.off+n]

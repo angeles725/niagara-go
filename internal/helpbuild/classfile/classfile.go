@@ -1,6 +1,9 @@
 package classfile
 
-import "io"
+import (
+	"fmt"
+	"io"
+)
 
 const magic = 0xCAFEBABE
 
@@ -27,6 +30,9 @@ type ClassFile struct {
 	ThisClass    string
 	SuperClass   string
 	Interfaces   []string
+	Fields       []Member     // non-synthetic, in file order
+	Methods      []Member     // non-synthetic, in file order
+	Annotations  []Annotation // the class's own, in file order
 }
 
 // ParseReader reads r to the end and parses it as Parse does.
@@ -52,6 +58,12 @@ func Parse(b []byte) (*ClassFile, error) {
 	ifaces := make([]uint16, r.u2("interfaces_count"))
 	for i := range ifaces {
 		ifaces[i] = r.u2("interface")
+	}
+	cf.Fields = parseMembers(r, cf.Pool, "fields")
+	cf.Methods = parseMembers(r, cf.Pool, "methods")
+	cf.Annotations = parseAttributes(r, cf.Pool)
+	if r.err == nil && r.off != len(b) {
+		r.fail(&FormatError{Offset: r.pos(), Msg: fmt.Sprintf("%d bytes after the class attributes", len(b)-r.off)})
 	}
 	if r.err != nil {
 		return nil, r.err
