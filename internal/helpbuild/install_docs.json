@@ -246,7 +246,7 @@
       "id": "kitControl-examples",
       "jar": "kitControl-rt.jar",
       "entry": "rc/examples/**",
-      "reason": "example chart data, Px views and images of the kitControl palette (data files, no prose)"
+      "reason": "example chart data and images of the kitControl palette (data files, no prose; its Px views are in module-examples/)"
     },
     {
       "id": "haystack-data",

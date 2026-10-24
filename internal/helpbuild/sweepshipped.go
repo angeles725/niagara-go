@@ -22,7 +22,8 @@ import (
 // holds it and UNCLASSIFIED when it does not (not rebuilt yet) or could not
 // read it; a copy outside modules/ is excluded, since these indexes read the
 // installed modules/ only (a registered class outside modules/ stays an
-// out-of-scope .class).
+// out-of-scope .class). The templates module_examples_extractor reads are in
+// the full-text index instead (sweepexample.go).
 
 // shippedKinds name each kind in sweep reasons, and the index holding it.
 var shippedKinds = map[string][2]string{
@@ -32,6 +33,7 @@ var shippedKinds = map[string][2]string{
 	"palette":    {"palette", paletteIndexName},
 	"tagdict":    {"tag dictionary", tagIndexName},
 	"class":      {"registered class", bytecodeIndexName},
+	"example":    {"module example", moduleExamplesDir + "/"},
 }
 
 // isDescriptor reports whether entry is a module jar's descriptor.
@@ -45,6 +47,9 @@ func shippedKind(rel, entry string, rules *Rules) string {
 	case isDescriptor(entry):
 		return "descriptor"
 	case rules.IsDocLike(entry):
+		if isModuleExampleEntry(pyBasename(rel), entry, rules) {
+			return "example" // kitControl's example Px views are in rc/examples/
+		}
 		return ""
 	case isPalette(entry):
 		return "palette"
@@ -54,6 +59,8 @@ func shippedKind(rel, entry string, rules *Rules) string {
 		return "template"
 	case shippedxml.IsSchema(entry):
 		return "schema"
+	case isModuleExampleEntry(pyBasename(rel), entry, rules):
+		return "example"
 	}
 	return ""
 }
@@ -154,6 +161,9 @@ func (s *sweeper) shipped(rel, entry, kind string) (verdict, error) {
 		}
 		return verdict{statusExcluded, label + " of a jar outside modules/ (" + idxName + " reads the installed " +
 			"modules/ only)", "shipped-file-outside-modules"}, nil
+	}
+	if kind == "example" {
+		return s.example(rel, entry)
 	}
 	member := entry
 	if kind == "descriptor" {

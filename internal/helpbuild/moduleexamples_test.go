@@ -106,3 +106,48 @@ func TestBuildModuleExamples(t *testing.T) {
 		t.Errorf("unmounted install: %+v %v", res, err)
 	}
 }
+
+// coverage --sweep classifies every template of a module jar: indexed when
+// its module-examples/ page is in the full-text index, excluded when it has
+// no text (a zipped bog) or is vendored, UNCLASSIFIED when it has text but no
+// indexed page; kitControl's example Px views are no longer excluded by rule.
+func TestSweepClassifiesModuleExamples(t *testing.T) {
+	root, install := exampleInstall(t)
+	if !mustDefault(t).IsDocLike("rc/examples/px/LineView.px") || mustDefault(t).IsDocLike("rc/fe/templates/Row.hbs") {
+		t.Fatal("the fixture no longer covers a doc-like and a plain template")
+	}
+	testkit.WriteJar(t, filepath.Join(install, "sw", "1.0", "kitControl-rt.jar"), [2]string{"rc/a.px", linePx})
+	if _, err := buildModuleExamples(root); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Remove(filepath.Join(root, moduleExamplesDir, "kitControl-rt", "rc", "fe", "templates", "Row.hbs")); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := ftbuild.Build(root, ftbuild.Options{}); err != nil {
+		t.Fatal(err)
+	}
+	docs := func(string) (map[string]bool, error) { return fulltextDocsAt(fts.DBPath(root)) }
+	res := scanOK(t, install, root, SweepOptions{Fulltext: docs})
+	got := map[string]int{}
+	for k, n := range res.Reasons {
+		got[k.Rule] += n
+	}
+	if want := map[string]int{"example-not-text": 2, "example-vendored": 1, "shipped-file-outside-modules": 1}; got["example-not-text"] != 2 ||
+		got["example-vendored"] != 1 || got["shipped-file-outside-modules"] != 1 || got["kitControl-examples"] != 0 {
+		t.Errorf("exclusions %v, want %v", got, want)
+	}
+	var gaps []string
+	for _, g := range res.Unclassified {
+		if strings.HasPrefix(g.Jar, "modules/kitControl") || strings.HasPrefix(g.Jar, "modules/tls") {
+			gaps = append(gaps, g.Jar+" "+g.Entry+" -- "+g.Why)
+		}
+	}
+	want := []string{"modules/kitControl-rt.jar rc/fe/templates/Row.hbs -- module example is not indexed " +
+		"(module-examples/kitControl-rt/rc/fe/templates/Row.hbs): run rebuild-all, then find"}
+	if !reflect.DeepEqual(gaps, want) {
+		t.Errorf("unclassified %q\nwant %q", gaps, want)
+	}
+	if row := res.Rows["modules/"]; row == nil || row.Indexed < 2 {
+		t.Errorf("modules/ row %+v: LineView.px and Console.bog are indexed", row)
+	}
+}

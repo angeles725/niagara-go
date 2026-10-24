@@ -121,7 +121,7 @@ type sweeper struct {
 	indexed   *indexedViews
 	installed []jarPath
 	identical map[Entry]string
-	lexJar    *openLexiconJar // the module jar whose lexicons are being read
+	jar       *sweepJar // the module jar whose entries are being read (jarEntry)
 	// shippedIdx is what the shipped-file indexes hold (sweepshipped.go), loaded on first use.
 	shippedIdx *shippedIndexes
 }
@@ -376,7 +376,7 @@ func scan(installDir, root string, opts SweepOptions) (*sweepResult, error) {
 		ls = newListings("")
 	}
 	s := &sweeper{root: root, rules: rules, ls: ls, indexed: newIndexedViews(root, opts.fulltext())}
-	defer s.closeLexiconJar()
+	defer s.closeJar()
 	jars, skipped, badDirs := findJars(installDir, rules)
 	for _, j := range jars {
 		if isInstalledJar(j.Rel) {

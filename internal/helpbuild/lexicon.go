@@ -287,20 +287,6 @@ func buildLexiconText(baseDir string) (*textResult, error) {
 	return res, nil
 }
 
-// openLexiconJar is the jar the sweep reads lexicon entries from: entries
-// of one jar are classified one after the other, so one jar stays open.
-type openLexiconJar struct {
-	path string
-	z    *zipfile.File
-}
-
-func (s *sweeper) closeLexiconJar() {
-	if s.lexJar != nil {
-		_ = s.lexJar.z.Close()
-		s.lexJar = nil
-	}
-}
-
 // lexicon is the sweep verdict of a lexicon entry of an installed module
 // jar (isLexiconEntry): UNCLASSIFIED when lexicon-index.json does not hold
 // it or could not read it; else indexed when its lexicon-text/ page is in
@@ -309,40 +295,24 @@ func (s *sweeper) closeLexiconJar() {
 // the entry itself (the listing cache has no contents), with lexiconPage's
 // rule of what makes a page.
 func (s *sweeper) lexicon(jar string, e Entry) (verdict, error) {
-	if s.lexJar == nil || s.lexJar.path != jar {
-		s.closeLexiconJar()
-		z, err := zipfile.Open(jar)
-		if err != nil {
-			return verdict{statusUnclassified, "lexicon not readable: " + err.Error(), ""}, nil
-		}
-		s.lexJar = &openLexiconJar{jar, z}
+	data, err := s.jarEntry(jar, e.Name)
+	if err != nil {
+		return verdict{statusUnclassified, "lexicon not readable: " + err.Error(), ""}, nil
 	}
-	z := s.lexJar.z
-	for i := range z.Infos {
-		x := &z.Infos[i]
-		if x.Name != e.Name {
-			continue
-		}
-		data, err := z.ReadEntry(x, true)
-		if err != nil {
-			return verdict{statusUnclassified, "lexicon not readable: " + err.Error(), ""}, nil
-		}
-		if v, gap, err := s.heldGap(pyBasename(jar), e.Name, "lexicon", lexiconIndexName); gap || err != nil {
-			return v, err
-		}
-		page, ok := lexiconPage(pyBasename(jar), e.Name, data)
-		if !ok { // its keys are in lexicon-index.json, there is no text to find
-			return verdict{statusIndexed, lexiconIndexName, "lexicon-index"}, nil
-		}
-		key := lexiconTextDir + "/" + page.rel
-		docs, err := s.indexed.fulltextDocs()
-		if err != nil {
-			return verdict{}, err
-		}
-		if docs[key] {
-			return verdict{statusIndexed, key, "lexicon"}, nil
-		}
-		return verdict{statusUnclassified, "lexicon help text is not indexed (" + key + "): run rebuild-all, then find", ""}, nil
+	if v, gap, err := s.heldGap(pyBasename(jar), e.Name, "lexicon", lexiconIndexName); gap || err != nil {
+		return v, err
 	}
-	return verdict{statusUnclassified, "lexicon not readable: entry not found in the jar", ""}, nil
+	page, ok := lexiconPage(pyBasename(jar), e.Name, data)
+	if !ok { // its keys are in lexicon-index.json, there is no text to find
+		return verdict{statusIndexed, lexiconIndexName, "lexicon-index"}, nil
+	}
+	key := lexiconTextDir + "/" + page.rel
+	docs, err := s.indexed.fulltextDocs()
+	if err != nil {
+		return verdict{}, err
+	}
+	if docs[key] {
+		return verdict{statusIndexed, key, "lexicon"}, nil
+	}
+	return verdict{statusUnclassified, "lexicon help text is not indexed (" + key + "): run rebuild-all, then find", ""}, nil
 }
