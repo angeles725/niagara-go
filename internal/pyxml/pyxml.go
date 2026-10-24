@@ -1,5 +1,5 @@
 // Package pyxml is an expat-compatible XML parser shared by the ports that check or read
-// XML the way their Python tool does (bog-cycles, bog-write, station-modules).
+// XML the way their Python tool does (bog-cycles, bog-write, station-modules, nav audits).
 //
 // It reproduces the well-formedness verdict and the error text of Python's pyexpat (expat
 // 2.x): "<message>: line L, column C" with expat's token-start positions, so a malformed
@@ -20,6 +20,9 @@ type Mode struct {
 	// ETree is xml.etree.ElementTree.fromstring(bytes): namespace processing, encoding from
 	// the declaration. Without it, pyexpat ParserCreate().Parse(str): no namespaces, UTF-8.
 	ETree bool
+	// Text is ElementTree.fromstring(str) (with ETree): pyexpat feeds the string as UTF-8,
+	// so the declared encoding is ignored (an unknown or UTF-16 name included).
+	Text bool
 }
 
 // Element is an ElementTree element: Tag is "{uri}local" for a namespaced name.
@@ -40,6 +43,27 @@ func (e *Element) Get(name string) (string, bool) {
 		}
 	}
 	return "", false
+}
+
+// Iter is Element.iter(tag): the element and its descendants with that tag, in document order.
+func (e *Element) Iter(tag string, f func(*Element)) {
+	if e.Tag == tag {
+		f(e)
+	}
+	for _, c := range e.Children {
+		c.Iter(tag, f)
+	}
+}
+
+// FindAll is Element.findall(tag) for a plain tag: the direct children with that tag.
+func (e *Element) FindAll(tag string) []*Element {
+	var out []*Element
+	for _, c := range e.Children {
+		if c.Tag == tag {
+			out = append(out, c)
+		}
+	}
+	return out
 }
 
 // Error is expat's error: ExpatError / ParseError str(); Line is 1-based, Col 0-based.
@@ -101,7 +125,7 @@ func Parse(data []byte, mode Mode) (*Element, error) {
 	if p.at(0) == 0xFEFF {
 		p.bom = 1
 	}
-	if mode.ETree {
+	if mode.ETree && !mode.Text {
 		if err := p.applyEncoding(data); err != nil {
 			return nil, err
 		}
