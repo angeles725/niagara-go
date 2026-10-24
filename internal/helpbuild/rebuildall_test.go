@@ -60,6 +60,7 @@ func TestRebuildAllDryRunPlan(t *testing.T) {
   PLAN  lexicon_extractor          -> lexicon-text/
   PLAN  module_index_builder       -> module-index.json
   PLAN  palette_index_builder      -> palette-index.json
+  PLAN  tag_index_builder          -> tag-index.json
 
 Dry run — nothing executed. Drop --dry-run to build.
 `
@@ -216,13 +217,13 @@ func TestRebuildAllRunsAndStamps(t *testing.T) {
 		"\n  RUN   source_indexer.py          -> source-index.json\n",
 		"\n  RUN   pdf_extractor.py           -> pdf-index.json, docs-text/\nSKIP: no PDF manuals for ",
 		"\n  RUN   course_extractor.py        -> course-text/\ncourse: no course bound to this version; skipped\n",
-		"\n\nRan 8, skipped 10, failed 0.\nManifest re-stamped. Run 'freshness' to confirm FRESH.\n",
+		"\n\nRan 9, skipped 10, failed 0.\nManifest re-stamped. Run 'freshness' to confirm FRESH.\n",
 	} {
 		if !strings.Contains(out, want) {
 			t.Errorf("stdout lacks %q:\n%s", want, out)
 		}
 	}
-	if res.Ran != 8 || res.Skipped != 10 || res.Failed != 0 || res.Stamped != "2026-10-17T15:08:07.000654+00:00" {
+	if res.Ran != 9 || res.Skipped != 10 || res.Failed != 0 || res.Stamped != "2026-10-17T15:08:07.000654+00:00" {
 		t.Errorf("result %+v", res)
 	}
 	for _, name := range []string{"source-index.json", "slots-index.json", "xref-index.json", ".manifest.json"} {
@@ -255,7 +256,7 @@ func TestRebuildAllFailingBuilders(t *testing.T) {
 		"\n  FAIL  bajadoc_parser.py (exit 1)\n",
 		"\n  RUN   xref_builder.py            -> xref-index.json\n  FAIL  xref_builder.py (exit 1)\n",
 		"\n  RUN   course_extractor.py        -> course-text/\n",
-		"\nRan 7, skipped 9, failed 2.\nBuilders failed — manifest NOT updated (still reflects last good build).\n",
+		"\nRan 8, skipped 9, failed 2.\nBuilders failed — manifest NOT updated (still reflects last good build).\n",
 	} {
 		if !strings.Contains(out, want) {
 			t.Errorf("stdout lacks %q:\n%s", want, out)
@@ -289,7 +290,7 @@ func TestRebuildAllRecoversAPanic(t *testing.T) {
 		t.Fatal(err)
 	}
 	if !strings.Contains(out, "  FAIL  slots_indexer.py (exit 1)\n") || !strings.Contains(errs, "ERROR: slots_indexer.py raised: panic: boom") ||
-		res.Failed != 1 || res.Ran != 7 {
+		res.Failed != 1 || res.Ran != 8 {
 		t.Fatalf("%+v\n%s\n%s", res, out, errs)
 	}
 }

@@ -109,6 +109,37 @@ type corpusStats struct {
 	abs, vid                        string         // the absolute data root, its version ("" unregistered)
 	mods                            *moduleCounts  // nil when module-index.json is absent
 	pals                            *paletteCounts // nil when palette-index.json is absent
+	tags                            pyjson.Obj     // nil when tag-index.json is absent
+}
+
+// tagStats counts tag-index.json, nil when it is absent: its distinct tags
+// (dict:name), the records of its Haystack 4 defs files, the rows of every
+// other section, the files read and those it could not read.
+func (e *Env) tagStats() (pyjson.Obj, error) {
+	if !pycompat.IsFile(index.Path(e.BaseDir, tagIndexName)) {
+		return nil, nil
+	}
+	idx, err := e.loadIndex(tagIndexName, false)
+	if err != nil {
+		return nil, err
+	}
+	tags, defs := 0, 0
+	for _, t := range tagEntries(idx) {
+		if t.kind == "tag" {
+			tags++
+		}
+	}
+	for _, f := range objList(idx, "files") {
+		if getStr(f, "kind", "") == "defs" {
+			n, _ := index.Int(get(f, "records", nil))
+			defs += int(n)
+		}
+	}
+	c := pyjson.Obj{{"tags", tags}, {"defs", defs}}
+	for _, sec := range []string{"protos", "groups", "relations", "rules", "migrations", "files"} {
+		c = append(c, pyjson.KV{sec, listLen(idx, sec)})
+	}
+	return append(c, pyjson.KV{"unreadable", listLen(idx, "errors")}), nil
 }
 
 // paletteCounts are the palette-index.json totals stats reports.
@@ -229,7 +260,10 @@ func (e *Env) corpusStats() (*corpusStats, error) {
 	if s.mods, err = e.moduleStats(); err != nil {
 		return nil, err
 	}
-	s.pals, err = e.paletteStats()
+	if s.pals, err = e.paletteStats(); err != nil {
+		return nil, err
+	}
+	s.tags, err = e.tagStats()
 	return s, err
 }
 
@@ -267,6 +301,7 @@ func (e *Env) statsJSON(s *corpusStats) {
 				{"actions", s.actions}, {"topics", s.topics}}},
 			{"module-index", s.moduleJSON()},
 			{"palette-index", s.paletteJSON()},
+			{"tag-index", orAbsent(s.tags)},
 		}},
 		{"text_dirs", dirs},
 		{"packages", s.packages},
@@ -285,7 +320,7 @@ func (e *Env) statsText(s *corpusStats) {
 	for _, d := range fts.Labels {
 		totalBytes += s.text[d].bytes
 	}
-	indexCount := len(statsIndexNames) + 2 // and module-index.json, palette-index.json
+	indexCount := len(statsIndexNames) + 3 // and module-index.json, palette-index.json, tag-index.json
 	out := e.Out
 	fmt.Fprintf(out, "Niagara Help Navigator - Corpus Statistics\n%s\n", strings.Repeat("=", 55))
 	fmt.Fprintf(out, "Niagara version: %s  (%s)\n", vid, s.abs)
@@ -314,6 +349,16 @@ func (e *Env) statsText(s *corpusStats) {
 		fmt.Fprintln(out, "  palette-index.json     absent (rebuild-all builds it from the install's modules/)")
 	} else {
 		fmt.Fprintf(out, "  palette-index.json     %s palettes (%s entries; %d unreadable)\n", w(p.palettes), pycompat.Commas(p.entries), p.unreadable)
+	}
+	if c := s.tags; c == nil {
+		fmt.Fprintln(out, "  tag-index.json         absent (rebuild-all builds it from the install's modules/)")
+	} else {
+		var parts []string // "N defs", ... in tagStats order, the files and unreadable counts last
+		for _, kv := range c[1:] {
+			parts = append(parts, pycompat.Commas(kv.Val.(int))+" "+kv.Key)
+		}
+		k := len(parts) - 2
+		fmt.Fprintf(out, "  tag-index.json         %s tags (%s; %s)\n", w(c[0].Val.(int)), strings.Join(parts[:k], ", "), strings.Join(parts[k:], ", "))
 	}
 	fmt.Fprintf(out, "\nTEXT SOURCES (%d sources of the full-text index, %s MB total):\n\n", len(fts.Labels), mb(totalBytes))
 	for _, d := range fts.Labels {
@@ -354,6 +399,15 @@ func (s *corpusStats) paletteJSON() pyjson.Obj {
 		return pyjson.Obj{{"absent", true}}
 	}
 	return pyjson.Obj{{"palettes", s.pals.palettes}, {"entries", s.pals.entries}, {"unreadable", s.pals.unreadable}}
+}
+
+// orAbsent is an install-built index's entry of stats --json: {"absent": true}
+// when the index is not built.
+func orAbsent(c pyjson.Obj) pyjson.Obj {
+	if c == nil {
+		return pyjson.Obj{{"absent", true}}
+	}
+	return c
 }
 
 // sourceStatsJSON is the source-index record of stats --json; module_jar_classes

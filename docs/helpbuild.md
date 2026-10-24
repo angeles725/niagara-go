@@ -1181,7 +1181,9 @@ the class, whether `class-index.json` and `source-index.json` hold that class, t
 every module registers on the type and, for a view, the types it is an agent on; with
 `palette-index.json` built, a type that sits in a palette also prints `PALETTES:` (module,
 palette file and path of each entry of that type, then the entries that hold it) and
-`--json` carries a `palettes` list. A `find`
+`--json` carries a `palettes` list; with `tag-index.json` built, a type a tag condition names
+also prints `TAGS (isType module:Type):` (see the next sections) and `--json` carries a `tags`
+list. A `find`
 miss on a module-looking or type-looking query names these two commands. `stats` counts the
 index (optional: built from the install), `freshness` compares its recorded jar count and
 bytes with the registered install's `modules/`, and `selftest` checks that
@@ -1275,6 +1277,76 @@ temporary root. On 2026-10-23, equal to the 2026-10-22 audit:
 | 4.14.0.162 | 523 (522; ipcProgrammingTool-rt also ships webs.palette) | 9,460 | 0 | 7.4 MB |
 | 4.13.2.18 | 358 (358) | 9,025 | 0 | 7.3 MB |
 | 4.3.58.18 | 305 (305) | 4,927 | 0 | 2.6 MB |
+
+## Tags: tag-index.json
+
+Niagara ships its tag dictionaries in two jars: `haystack-rt` holds the Haystack 4 defs
+(`haystack-4-defs/defs/defs.json`) and protos (`protos/protos.json`), the implied-tag rules
+`HS4toN4.json` and the CSV tables `tags.csv`, `smartRefsImport.csv`, `equip.csv` (tag groups)
+and `haystack3MigrationConfig.csv`; `tagdictionary-rt` holds the Niagara dictionary
+`bog/Niagara.bog`. `tag_index_builder` (`tagindex.go`), the step after
+`palette_index_builder`, reads every `.json`/`.csv` of a `haystack*` jar and every `.bog` of a
+`tagdictionary*` jar of the registered install's `modules/` (the same `lexiconJars` list), one
+reader per format in `internal/helpbuild/tagdict` (`haystack.go`, `csv.go`, `niagara.go` over
+the typed bajaObjectGraph tree of `graph.go`; `value.go` writes every record as its index
+row), and writes `indexes/tag-index.json`:
+
+    {"jars": N, "jar_bytes": B,
+     "files": [{"jar", "path", "kind", "records"}],
+     "tags": [{"dict", "name", "file", "kind"?, "doc"?, "is"?, "supertypes"?, "tagOn"?, "of"?,
+               "lib"?, "smartType"?, "units"?, "implied"?, "validity"?}],
+     "protos": [{"file", "proto"}], "groups": [{"dict", "name", "file", "tags", "validity"?}],
+     "relations": [{"dict", "name", "file", "type"}],
+     "rules": [{"dict", "name", "file", "condition", "tags"?, "groups"?, "relations"?}],
+     "migrations": [{"file", "from", "fromType"?, "query"?, "to", "toType"?}],
+     "errors": [{"jar", "path", "error"}]}
+
+`dict` is the dictionary namespace (`hs` Haystack, `n` Niagara); `file` is `<jar>!<path>`. A
+tag defined in several files has one row per file. It fails closed: a corrupt jar, a file of
+an unknown shape or one that lacks what its kind requires is an `errors` row and a
+`WARNING: tag_index_builder: <jar>[!<path>]: <why>` line, never a silent skip. As for
+`palette-index.json`, a data root with no registered install keeps its last copy.
+
+Reader (`internal/help`, `tags.go`, `tags_list.go`): `nh tag <name|dict:name|glob> [--json]`
+prints each matching tag, tag group or relation (exact first, then any letter case, then a
+glob, as `nh type` resolves) with every file's definition (kind, doc, is, supertypes, lib,
+validity, implied cells), the N4 rules applying it (`HS4toN4.json` and the Niagara
+dictionary), the tag groups and Haystack 4 protos holding it (five protos shown, `--json`
+lists all) and the Haystack 3 names migrating to it. `nh tag --list [--json]` names every
+entry once with its kind, value kind and the files defining it. Every answer ends with
+`UNREADABLE (N):` when the index holds errors rows, so a partial dictionary never passes for
+the whole one; a miss names `tag-index.json`, its names, files and unreadable files (scope
+`tags`). `nh type` names the dictionary names a rule, tag group or tag condition gives the
+type (`isType module:Type` for the type itself; a supertype's rules are not followed).
+`freshness` compares the jar count and bytes it recorded with the registered install's
+`modules/`, `stats` prints `tag-index.json N tags (D defs, P protos, G groups, R relations,
+U rules, M migrations; F files, K unreadable)` (N distinct `dict:name` tags, D the records of
+the Haystack 4 defs files; text and `--json`; `absent` until rebuild-all builds it), and
+`selftest` checks that `nh tag hs:ahu` has a Marker definition in haystack-rt's `tags.csv`
+(true on 4.3, 4.13, 4.14 and 4.15).
+
+`TestTagIndexDryProbe` (`NH_TAG_INDEX_PROBE=<install>`) builds it read-only into a temporary
+root. On 2026-10-24, equal to the 2026-10-22 audit (8 dictionary files in 2 jars on
+4.13-4.15, 2 in 2 on 4.3):
+
+| Install | files (jars) | tags (distinct) | defs | protos | groups | relations | rules | migrations | errors | tag-index.json |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 4.15.6.20 | 8 (2) | 916 (734) | 658 | 1,002 | 227 | 8 | 41 | 231 | 0 | 663 KB |
+| 4.14.0.162 | 8 (2) | 915 (733) | 658 | 1,002 | 227 | 8 | 41 | 231 | 0 | 663 KB |
+| 4.13.2.18 | 8 (2) | 914 (732) | 658 | 1,002 | 227 | 8 | 41 | 231 | 0 | 662 KB |
+| 4.3.58.18 | 2 (2) | 218 (218) | 0 | 0 | 0 | 8 | 6 | 0 | 0 | 48 KB |
+
+4.3 ships `tags.csv` and `Niagara.bog` only (no Haystack 4 defs, protos, rules or groups).
+The builder line names both counts, `916 tag rows (734 distinct tags)` on 4.15: a tag defined
+in several files has one row per file.
+
+`coverage --sweep` classifies the dictionary files as it does palettes (`sweepshipped.go`, kind
+`tag dictionary`; an entry the documentation rules call doc-like stays with them): in a jar of
+`modules/` each is indexed when `tag-index.json` lists that jar and path in `files`,
+UNCLASSIFIED when it does not (not rebuilt yet) or could not read it (the error is quoted); a
+copy outside `modules/` is excluded by `shipped-file-outside-modules` (8 on 4.15). The same names in any other jar stay outside the documentation
+scope. On a scratch copy of 4.15 and 4.3 the sweep fails on the 8 (4.15) and 2 (4.3)
+dictionary files before the tag step runs and passes after it.
 
 ## Real data
 

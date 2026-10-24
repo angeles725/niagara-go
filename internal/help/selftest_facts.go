@@ -75,6 +75,16 @@ var indexFacts = []indexFact{
 			}
 			return false
 		}},
+	{"tag", "tag-index.json", "tag 'hs:ahu' is a Marker in haystack-rt's tags.csv",
+		func(sub *Env) error { return sub.Tag(TagParams{Query: "hs:ahu"}) },
+		func(out string) bool { // a definition from haystack-rt's tags.csv whose kind is Marker
+			for _, def := range strings.Split(out, "\n  haystack-rt.jar!")[1:] {
+				if path, rest, _ := strings.Cut(def, "\n"); strings.HasSuffix(path, "/tags.csv") && strings.HasPrefix(rest, "    kind: Marker\n") {
+					return true
+				}
+			}
+			return false
+		}},
 }
 
 // missingNeed is why fact f cannot be checked in this version ("" when it can):

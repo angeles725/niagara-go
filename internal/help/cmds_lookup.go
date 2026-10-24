@@ -69,9 +69,9 @@ var moduleDetails = [][2]string{
 	{"schemas", "List the .xsd/.dtd schemas the jar ships (root element, targetNamespace)"},
 }
 
-// Module descriptor commands (Go-only, modules.go, palettes.go and types.go):
-// module and type over indexes/module-index.json, palette over
-// indexes/palette-index.json.
+// Module descriptor commands (Go-only, modules.go, palettes.go, tags.go and
+// types.go): module and type over indexes/module-index.json, palette over
+// indexes/palette-index.json, tag over indexes/tag-index.json.
 var moduleCommands = []command{
 	{name: "module", help: "Module descriptor (module.xml): dependencies both ways, types, permissions",
 		args: func(p *argparse.Parser) {
@@ -100,6 +100,15 @@ var moduleCommands = []command{
 		},
 		run: func(e *Env, ns *argparse.Namespace) error {
 			return e.Palette(PaletteParams{Query: ns.String("query"), Module: ns.Bool("palette_module"), JSON: ns.Bool("palette_json")})
+		}},
+	{name: "tag", help: "Tag dictionaries (Haystack, Niagara): a tag's kind, doc, supertypes, protos and N4 rules",
+		args: func(p *argparse.Parser) {
+			optionalPositional(p, "query", "", "Tag, tag group or relation: name, dict:name or glob (e.g. ahu, hs:ahu, n:point)")
+			p.Add(argparse.Arg{Dest: "tag_list", Action: argparse.StoreTrue, Help: "List every tag, tag group and relation"}, "--list")
+			p.Add(argparse.Arg{Dest: "tag_json", Action: argparse.StoreTrue, Help: "Output as JSON"}, "--json")
+		},
+		run: func(e *Env, ns *argparse.Namespace) error {
+			return e.Tag(TagParams{Query: ns.String("query"), List: ns.Bool("tag_list"), JSON: ns.Bool("tag_json")})
 		}},
 	{name: "type", help: "Niagara type (module:Type): its module, class, docs and the agents (views) on it",
 		args: func(p *argparse.Parser) {

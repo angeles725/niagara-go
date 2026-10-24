@@ -30,6 +30,9 @@
     },
     "palette-index": {
       "absent": true
+    },
+    "tag-index": {
+      "absent": true
     }
   },
   "text_dirs": {
