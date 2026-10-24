@@ -1,0 +1,13 @@
+{"jars": 4, "jar_bytes": 4000,
+ "files": [
+  {"jar": "kitControl-rt.jar", "path": "kitControl-rt.lexicon", "module": "kitControl", "language": "", "overrides": "",
+   "entries": [["BooleanLatch.displayName", "Boolean Latch"], ["NumericLatch.displayName", "Numeric Latch"],
+               ["latch.description", "Holds the input value when the clock goes true"], ["empty", ""]]},
+  {"jar": "niagaraLexiconFr-rt.jar", "path": "kitControl.lexicon", "module": "niagaraLexiconFr", "language": "fr", "overrides": "kitControl",
+   "entries": [["BooleanLatch.displayName", "Verrou booléen"], ["latch.description", "Garde la valeur d'entrée"]]},
+  {"jar": "niagaraLexiconFr-rt.jar", "path": "baja.lexicon", "module": "niagaraLexiconFr", "language": "fr", "overrides": "baja",
+   "entries": [["clock", "Horloge"]]},
+  {"jar": "baja.jar", "path": "baja.lexicon", "module": "baja", "language": "", "overrides": "",
+   "entries": [["clock", "Clock"], ["BooleanLatch.displayName", "Latch (baja)"]]}
+ ],
+ "errors": [{"jar": "broken-rt.jar", "path": "", "error": "zip: not a valid zip file"}]}

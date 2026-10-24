@@ -73,6 +73,9 @@ var scopes = map[string]def{
 	"tags": {[]string{"tag-index.json"}, "tag dictionaries outside haystack*.jar and tagdictionary*.jar (a station's own " +
 		"dictionaries are not shipped); a name is matched as dict:name or name, exactly, in any letter case or as a glob",
 		[]string{"find", "source-grep", "type"}},
+	"lexicons": {[]string{"lexicon-index.json"}, "lexicon files outside the module jars (a station's own lexicons " +
+		"are not shipped); a key is matched exactly, in any letter case or as a glob, within --module and --lang (default all)",
+		[]string{"find", "source-grep", "module"}},
 	"pdf": {[]string{"pdf-index.json"}, "manual pages without a text layer (scanned images)",
 		[]string{"find", "guide-search", "pdf --no-fulltext"}},
 	"fulltext": {nil, "JDK API (class --jdk); " + docTypesExcluded,
@@ -187,6 +190,9 @@ func indexCount(baseDir, name string, load Loader) (string, error) {
 	if name == "tag-index.json" {
 		return tagCount(data), nil
 	}
+	if name == "lexicon-index.json" {
+		return lexiconCount(data), nil
+	}
 	return fmt.Sprintf("%s: %s entries", name, pycompat.Commas(data.Len())), nil
 }
 
@@ -234,6 +240,22 @@ func tagCount(data *index.Object) string {
 	}
 	files, _ := getAny(data, "files").([]any)
 	return fmt.Sprintf("tag-index.json: %s names from %s files", pycompat.Commas(len(names)), pycompat.Commas(len(files))) + unreadable(data)
+}
+
+// lexiconCount is the lexicon-index.json part of a scope line: its files
+// (base and translations), their entries and the files it could not read.
+func lexiconCount(data *index.Object) string {
+	files, _ := getAny(data, "files").([]any)
+	base, entries := 0, 0
+	for _, f := range files {
+		if lang, _ := getAny(asObject(f), "language").(string); lang == "" {
+			base++
+		}
+		e, _ := getAny(asObject(f), "entries").([]any)
+		entries += len(e)
+	}
+	return fmt.Sprintf("lexicon-index.json: %s lexicon files (%s base, %s translations), %s entries", pycompat.Commas(len(files)),
+		pycompat.Commas(base), pycompat.Commas(len(files)-base), pycompat.Commas(entries)) + unreadable(data)
 }
 
 // unreadable is " (N unreadable: jar!path, ...)" for the errors rows of an

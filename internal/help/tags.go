@@ -177,9 +177,9 @@ func (e *Env) printTag(t *tagEntry, l tagLinks) {
 	}
 }
 
-// printTagUnreadable names the dictionary files the index could not read, so
-// an answer never passes for the whole dictionary when it is not.
-func (e *Env) printTagUnreadable(idx *index.Object) {
+// printUnreadable names the files an install-fed index could not read, so
+// an answer never passes for the whole install when it is not.
+func (e *Env) printUnreadable(idx *index.Object) {
 	errs := objList(idx, "errors")
 	if len(errs) == 0 {
 		return
@@ -237,7 +237,7 @@ func (e *Env) Tag(p TagParams) error {
 		fmt.Fprintln(e.Out)
 		e.printTag(t, linksOf(idx, t))
 	}
-	e.printTagUnreadable(idx)
+	e.printUnreadable(idx)
 	return nil
 }
 
