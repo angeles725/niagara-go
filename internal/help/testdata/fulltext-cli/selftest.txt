@@ -13,4 +13,5 @@
   SKIP  palette: indexes/palette-index.json is absent in this version
   SKIP  tag: indexes/tag-index.json is absent in this version
   SKIP  lexicon-index: indexes/lexicon-index.json is absent in this version
-selftest: all assertions passed (9 skipped: their index or text source is absent or empty).
+  SKIP  bytecode-index: indexes/bytecode-index.json is absent in this version
+selftest: all assertions passed (10 skipped: their index or text source is absent or empty).

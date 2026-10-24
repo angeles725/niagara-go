@@ -10,3 +10,4 @@
   SKIP  palette: indexes/palette-index.json is absent in this version
   SKIP  tag: indexes/tag-index.json is absent in this version
   SKIP  lexicon-index: indexes/lexicon-index.json is absent in this version
+  SKIP  bytecode-index: indexes/bytecode-index.json is absent in this version

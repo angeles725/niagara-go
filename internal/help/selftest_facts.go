@@ -97,6 +97,19 @@ var indexFacts = []indexFact{
 			}
 			return base && fr
 		}},
+	{"bytecode-index", "bytecode-index.json", "class BBooleanLatch --bytecode extends BLatch and declares facets, out and in",
+		func(sub *Env) error {
+			return sub.Class(ClassParams{Name: "com.tridium.kitControl.util.BBooleanLatch", Bytecode: true})
+		},
+		func(out string) bool { // the super chain starts at BLatch; declared slots are indented two spaces
+			declared := map[string]bool{}
+			for _, l := range strings.Split(out, "\n") {
+				if f := strings.Fields(l); strings.HasPrefix(l, "  ") && !strings.HasPrefix(l, "   ") && len(f) > 1 {
+					declared[strings.TrimSuffix(f[1], ":")] = true
+				}
+			}
+			return strings.Contains(out, "\nSUPER: com.tridium.kitControl.util.BLatch") && declared["facets"] && declared["out"] && declared["in"]
+		}},
 }
 
 // missingNeed is why fact f cannot be checked in this version ("" when it can):

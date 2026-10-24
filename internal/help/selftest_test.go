@@ -11,7 +11,7 @@ import (
 
 // TestSelftestChecksEveryIndexKind: besides the full-text assertions, selftest checks one
 // stable fact of each lookup kind (lexicon, course, package, class, slots, method, module, palette, tag,
-// lexicon-index); a fact
+// lexicon-index, bytecode-index); a fact
 // whose index or text source this version lacks (or holds empty) is a SKIP, never a PASS.
 func TestSelftestChecksEveryIndexKind(t *testing.T) {
 	testdata, err := filepath.Abs("testdata")
@@ -20,7 +20,7 @@ func TestSelftestChecksEveryIndexKind(t *testing.T) {
 	}
 	t.Setenv("XDG_CACHE_HOME", t.TempDir())
 	checkout := ftsfixture.Checkout(t, testdata, false)
-	for _, name := range []string{"module-index.json", "palette-index.json", "tag-index.json", "lexicon-index.json"} {
+	for _, name := range []string{"module-index.json", "palette-index.json", "tag-index.json", "lexicon-index.json", "bytecode-index.json"} {
 		data, err := os.ReadFile(filepath.Join(testdata, "indexes", name))
 		if err != nil {
 			t.Fatal(err)
@@ -41,6 +41,7 @@ func TestSelftestChecksEveryIndexKind(t *testing.T) {
 		"  PASS  palette: palette 'BooleanLatch' finds it in kitControl-rt's module.palette\n",
 		"  PASS  tag: tag 'hs:ahu' is a Marker in haystack-rt's tags.csv\n",
 		"  PASS  lexicon-index: lexicon 'linkcheck.level6' has kitControl's base value and its fr translation\n",
+		"  PASS  bytecode-index: class BBooleanLatch --bytecode extends BLatch and declares facets, out and in\n",
 		"selftest: all assertions passed (5 skipped: their index or text source is absent or empty).\n",
 	} {
 		if !strings.Contains(out, want) {
@@ -75,7 +76,8 @@ func TestSelftestFactFails(t *testing.T) {
 // TestSelftestInstallFactsFail: an install-built index that lost its fact
 // fails that fact: kitControl-rt without its baja dependency, a palette
 // whose BooleanLatch is another module's, an hs:ahu outside haystack-rt's
-// tags.csv, a linkcheck.level6 without its French translation.
+// tags.csv, a linkcheck.level6 without its French translation, a
+// BBooleanLatch that no longer declares in.
 func TestSelftestInstallFactsFail(t *testing.T) {
 	testdata, err := filepath.Abs("testdata")
 	if err != nil {
@@ -92,6 +94,9 @@ func TestSelftestInstallFactsFail(t *testing.T) {
 		{"lexicon-index.json", `{"files": [{"jar": "kitControl-rt.jar", "path": "kitControl-rt.lexicon", "module": "kitControl",
 			"language": "", "overrides": "", "entries": [["linkcheck.level6", "Level 6"]]}]}`,
 			"  FAIL  lexicon-index: expected: lexicon 'linkcheck.level6' has kitControl's base value and its fr translation\n"},
+		{"bytecode-index.json", `{"classes": [{"class": "com.tridium.kitControl.util.BBooleanLatch", "super": "com.tridium.kitControl.util.BLatch",
+			"slots": [{"name": "facets", "kind": "property"}, {"name": "out", "kind": "property"}]}]}`,
+			"  FAIL  bytecode-index: expected: class BBooleanLatch --bytecode extends BLatch and declares facets, out and in\n"},
 	} {
 		checkout := ftsfixture.Checkout(t, testdata, false)
 		if err := os.WriteFile(filepath.Join(checkout, "indexes", tt.index), []byte(tt.wrong), 0o644); err != nil {
