@@ -2,7 +2,6 @@ package helpbuild
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/helpbuild/palettexml"
@@ -32,28 +31,14 @@ func isPalette(name string) bool { return strings.HasSuffix(name, ".palette") }
 
 // paletteIndex is the index being built.
 type paletteIndex struct {
-	jars, bytes, entries int
-	palettes, errors     []pyjson.Value
-}
-
-func (x *paletteIndex) fail(res *textResult, jar, path string, err error) {
-	str := pyjson.String
-	x.errors = append(x.errors, pyjson.ObjectOf(pyjson.Field{Key: "jar", Value: str(jar)},
-		pyjson.Field{Key: "path", Value: str(path)}, pyjson.Field{Key: "error", Value: str(err.Error())}))
-	where := jar
-	if path != "" {
-		where += "!" + path
-	}
-	res.Warnings = append(res.Warnings, fmt.Sprintf("WARNING: %s: %s: %v", paletteIndexScript, where, err))
+	jarCensus
+	entries  int
+	palettes []pyjson.Value
 }
 
 // add indexes the palettes of one jar, or records why it cannot.
 func (x *paletteIndex) add(jar string, res *textResult) {
-	name := pyBasename(jar)
-	x.jars++
-	if st, err := os.Stat(jar); err == nil {
-		x.bytes += int(st.Size())
-	}
+	name := x.count(jar)
 	members, err := readMembers(jar, isPalette)
 	if err != nil {
 		x.fail(res, name, "", err)
@@ -92,7 +77,7 @@ func buildPaletteIndexFrom(root, installDir string) (*textResult, error) {
 		return nil, err
 	}
 	res := &textResult{}
-	x := &paletteIndex{}
+	x := &paletteIndex{jarCensus: jarCensus{script: paletteIndexScript}}
 	for _, jar := range jars {
 		x.add(jar, res)
 	}

@@ -2,7 +2,6 @@ package helpbuild
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/angeles725/niagara-go/internal/helpbuild/pyfs"
@@ -55,29 +54,15 @@ func isTagDictionaryJar(jar string) bool {
 
 // tagIndex is the index being built.
 type tagIndex struct {
-	jars, bytes   int
-	files, errors []pyjson.Value
-	sections      map[string][]pyjson.Value
-	distinct      map[string]bool // dict:name of every tag row
-}
-
-func (x *tagIndex) fail(res *textResult, jar, path string, err error) {
-	x.errors = append(x.errors, pyjson.ObjectOf(pyjson.Field{Key: "jar", Value: pyjson.String(jar)},
-		pyjson.Field{Key: "path", Value: pyjson.String(path)}, pyjson.Field{Key: "error", Value: pyjson.String(err.Error())}))
-	where := jar
-	if path != "" {
-		where += "!" + path
-	}
-	res.Warnings = append(res.Warnings, fmt.Sprintf("WARNING: %s: %s: %v", tagIndexScript, where, err))
+	jarCensus
+	files    []pyjson.Value
+	sections map[string][]pyjson.Value
+	distinct map[string]bool // dict:name of every tag row
 }
 
 // add indexes the dictionary files of one jar, or records why it cannot.
 func (x *tagIndex) add(jar string, res *textResult) {
-	name := pyBasename(jar)
-	x.jars++
-	if st, err := os.Stat(jar); err == nil {
-		x.bytes += int(st.Size())
-	}
+	name := x.count(jar)
 	if !isTagDictionaryJar(name) {
 		return
 	}
@@ -116,7 +101,7 @@ func buildTagIndexFrom(root, installDir string) (*textResult, error) {
 		return nil, err
 	}
 	res := &textResult{}
-	x := &tagIndex{sections: map[string][]pyjson.Value{}, distinct: map[string]bool{}}
+	x := &tagIndex{jarCensus: jarCensus{script: tagIndexScript}, sections: map[string][]pyjson.Value{}, distinct: map[string]bool{}}
 	for _, jar := range jars {
 		x.add(jar, res)
 	}
