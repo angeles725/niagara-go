@@ -4,12 +4,14 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/angeles725/niagara-go/internal/pyxml"
 )
 
-// TestParseETMatchesElementTree: the attributes of every <p> (root.iter("p"))
+// TestFromStringMatchesElementTree: the attributes of every <p> (root.iter("p"))
 // or a parse error, as Python's xml.etree.ElementTree.fromstring gives them
 // for the same text (expected values captured from Python 3.15).
-func TestParseETMatchesElementTree(t *testing.T) {
+func TestFromStringMatchesElementTree(t *testing.T) {
 	cases := []struct {
 		name, text string
 		want       []map[string]string // nil: ParseError
@@ -42,7 +44,6 @@ func TestParseETMatchesElementTree(t *testing.T) {
 		{"comment after the root", "<a><p n=\"z\"/></a><!-- ok -->\n", []map[string]string{{"n": "z"}}},
 		{"unclosed", `<a><p n="1"/>`, nil},
 		{"doctype", `<!DOCTYPE a><a><p n="d"/></a>`, []map[string]string{{"n": "d"}}},
-		{"doctype after the root", `<a/><!DOCTYPE a>`, nil},
 		// fromstring(str) parses the text as it is and ignores the declared encoding.
 		{"declared latin-1", `<?xml version="1.0" encoding="ISO-8859-1"?><a><p n="é€"/></a>`,
 			[]map[string]string{{"n": "é€"}}},
@@ -53,7 +54,7 @@ func TestParseETMatchesElementTree(t *testing.T) {
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			root, err := parseET(c.text)
+			root, err := fromString(c.text)
 			if c.want == nil {
 				if err == nil {
 					t.Fatalf("parsed, want a ParseError")
@@ -64,10 +65,10 @@ func TestParseETMatchesElementTree(t *testing.T) {
 				t.Fatalf("error %v", err)
 			}
 			got := []map[string]string{}
-			root.iter("p", func(e *etElement) {
+			root.Iter("p", func(e *pyxml.Element) {
 				m := map[string]string{}
-				for _, a := range e.attrs {
-					m[a.Name.Local] = a.Value
+				for _, a := range e.Attrs {
+					m[a.Name] = a.Value
 				}
 				got = append(got, m)
 			})
@@ -75,5 +76,22 @@ func TestParseETMatchesElementTree(t *testing.T) {
 				t.Errorf("got %v, want %v", got, c.want)
 			}
 		})
+	}
+}
+
+// TestFromStringErrorText: a declaration or a DOCTYPE after the root is ElementTree's "junk after
+// document element" at its start (#210; CPython 3.15, expat 2.9.0).
+func TestFromStringErrorText(t *testing.T) {
+	cases := []struct{ text, want string }{
+		{`<r/><?xml version='1.0'?>`, "junk after document element: line 1, column 4"},
+		{"<r/>\n<?xml version='1.0'?>", "junk after document element: line 2, column 0"},
+		{`<?xml version='1.0'?><r/><?xml version='1.0'?>`, "junk after document element: line 1, column 25"},
+		{`<r/><!DOCTYPE r>`, "junk after document element: line 1, column 4"},
+		{`<a>&nbsp;</a>`, "undefined entity: line 1, column 3"},
+	}
+	for _, c := range cases {
+		if _, err := fromString(c.text); err == nil || err.Error() != c.want {
+			t.Errorf("fromString(%q) error %v, want %q", c.text, err, c.want)
+		}
 	}
 }
