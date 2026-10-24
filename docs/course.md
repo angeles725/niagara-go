@@ -5,8 +5,8 @@ counts them by verification status, checks a station against the labs (`course c
 decides the predicted answers (`course verify-predictions`), or the answers of any status
 (`course verify --status`), from the stations; `course progress` shows how far the labs, review
 assignments and exam are and what to do next, and `course quiz` draws study questions.
-It reads three Markdown files of a niagara-research checkout and one or two course text
-files. It is new (no Python original), so its golden cases run over the synthetic tree
+It reads three Markdown files of a niagara-research checkout and the course text files
+(one or two for an item; every one for `find --slides`). It is new (no Python original), so its golden cases run over the synthetic tree
 `internal/course/testdata/root/`.
 
 ## Packages
@@ -611,7 +611,7 @@ Then the next steps, in answer-key order (the `redo` from the live run, the `mar
 `predict-root` fixture with the `good` station):
 
     redo C3.4 (lab 3): Add.out -> NumericWritable.in10 (Output): found 0, want at least 1 (searched 18 links)
-      L3.7 (labs.md:239, LI:576): Link `Add.Out → Output.In10` (`LI:576`).
+      L3.7 (labs.md:254, LI:576): Link `Add.Out → Output.In10` (`LI:576`).
     mark L4.13 (labs.md:25): *(verified live 2026-10-18)* evidence: C4.5 Lab4/My Tstat.diff = 2.0 (stored)
 
 - `redo`: one per FAIL check, at the first item it links: the check's lab, description and
@@ -674,8 +674,8 @@ the answer is neither empty nor a placeholder (`(step only)`, `Setup.`, `Setup o
 requirement's `(no traceability row)`); a lab
 question (why, recall, predict) points at a course text range (`LI:`), the source its answer is
 traced to; a predict answer holds at least 30 runes once its status markers and evidence lines
-are dropped (this leaves out "as stated.", "The wizard wrote it." and "standard JDWP banner.", 10
-to 21 runes; the shortest kept is 40). A recall answer is the value itself, so it has no length
+are dropped (on the real keys of 2026-10-24 this leaves out "The wizard wrote it." and "standard
+JDWP banner.", 20 and 21 runes; the shortest kept is 40). A recall answer is the value itself, so it has no length
 floor. Decisions, traps, requirements and exam problems are answered by their own key, which
 has no course text range: they keep the empty/placeholder rule only (so an exam problem that states
 only its requirement is left out). Requirements may share an answer: one traceability row can
@@ -702,7 +702,7 @@ statelessly: the replay line keeps `--ids`. `--lab` and `--kind` still narrow th
 must belong to. An empty ID or one the keys do not hold is a usage error (exit 2, `course quiz:
 error: --ids: no item Z9 (...)`); an item that is no question of the selection (an item the
 pool leaves out, one outside `--kind`) is refused before any question is printed (exit 1, `course:
-L3.1: not a question of why, decision, trap, recall, predict, requirement, exam in every group (157
+L3.1: not a question of why, decision, trap, recall, predict, requirement, exam in every group (164
 questions)`). Without `--interactive` the quiz reads no input and writes no state.
 
 `--interactive` asks the drawn questions one at a time and scores them. Each question prints as
@@ -745,7 +745,7 @@ history moves on. Combine either with `--interactive` to grade the review. `--mi
 `--ids` exclude each other, and a `--now` without `--due` or not in RFC 3339 is a usage error
 (exit 2). A history
 that selects nothing is the honest zero (exit 1, `course: no missed why, decision, trap, recall,
-predict question in every group (history <path>: 0 records)`); a missing history file is an empty
+predict, requirement, exam question in every group (history <path>: 0 records)`); a missing history file is an empty
 one; a line that is not a record (a write cut short, or any line whose text is over 64 KiB, which
 is dropped as it is read, the last line too) is skipped with `course: history
 <path>:<line>: not a record, skipped` on stderr, so one bad line never locks the history.
@@ -823,7 +823,7 @@ keys at `5abc827e9`.
 | `course verify --status verified` | 83: CONFIRMED 83 (31 live, 52 offline lines); 110 checks run |
 | `course progress` | 370 items: checked 125, CONFIRMED 83, PARTIAL 39, CONTRADICTED 3, UNDECIDED 245; 155 checks run; 3 `redo` (C3.4, CRA1.2, CRA1.10), 0 `mark` |
 | `course status` | verified 83: live 34, offline 49 |
-| `course quiz -n 500` (2026-10-19) | 157 questions: why 43, decision 29, trap 26, recall 11, predict 16, requirement 29, exam 3 |
+| `course quiz -n 500` (2026-10-24, keys at `a115bae55`) | 164 questions: why 43, decision 29, trap 26, recall 11, predict 21, requirement 31, exam 3 |
 
 To regenerate it, set the variables and run the commands of the table (zsh: run loops in `bash -c`):
 
@@ -841,7 +841,8 @@ bash -c 'for st in predicted written identical corrected unverified verified; do
 course check | tail -1; course progress | tail -1; course status
 ```
 
-Then replace the table and its date in one edit. The live tests (`TestCheckLiveStations`,
+Then replace the table and its date in one edit. Re-run 2026-10-24 with the keys at `a115bae55`:
+every row but the quiz row gave the same counts. The live tests (`TestCheckLiveStations`,
 `TestVerifyPredictionsTrainingStation`, `TestRecallReal`) pin only what must not regress (the known
 FAILs, no CONTRADICTED prediction, the item and status counts), not this table.
 
